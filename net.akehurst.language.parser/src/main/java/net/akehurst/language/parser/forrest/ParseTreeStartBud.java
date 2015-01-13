@@ -1,13 +1,14 @@
-package net.akehurst.language.parser;
+package net.akehurst.language.parser.forrest;
 
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TangibleItem;
+import net.akehurst.language.parser.CannotExtendTreeException;
 
-public class ParseTreeStartBud extends SubParseTree {
+public class ParseTreeStartBud extends AbstractParseTree {
 
-	public ParseTreeStartBud(int inputLength) {
-		super(inputLength);
+	public ParseTreeStartBud(Input input) {
+		super(input);
 		this.root = new EmptyLeaf();
 		this.canGrow = true;
 		this.complete = false;
@@ -20,7 +21,7 @@ public class ParseTreeStartBud extends SubParseTree {
 
 	@Override
 	public ParseTreeStartBud deepClone() {
-		return new ParseTreeStartBud(this.inputLength);
+		return new ParseTreeStartBud(this.input);
 	}
 
 	public ParseTreeBranch extendWith(IParseTree extension) throws CannotExtendTreeException {
@@ -28,7 +29,7 @@ public class ParseTreeStartBud extends SubParseTree {
 	}
 	
 	@Override
-	public SubParseTree expand(SubParseTree newBranch) throws CannotExtendTreeException, RuleNotFoundException {
+	public AbstractParseTree expand(AbstractParseTree newBranch) throws CannotExtendTreeException, RuleNotFoundException {
 		return newBranch;
 	}
 

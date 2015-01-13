@@ -1,12 +1,14 @@
-package net.akehurst.language.parser;
+package net.akehurst.language.parser.forrest;
 
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.ogl.semanticModel.TangibleItem;
+import net.akehurst.language.parser.CannotExtendTreeException;
+import net.akehurst.language.parser.forrest.EmptyLeaf;
 
-public class ParseTreeEmptyBud extends SubParseTree {
+public class ParseTreeEmptyBud extends AbstractParseTree {
 
-	public ParseTreeEmptyBud(int inputLength) {
-		super(inputLength);
+	public ParseTreeEmptyBud(Input input) {
+		super(input);
 		this.root = new EmptyLeaf();
 		this.canGrow = false;
 		this.complete = true;
@@ -19,7 +21,7 @@ public class ParseTreeEmptyBud extends SubParseTree {
 
 	@Override
 	public ParseTreeEmptyBud deepClone() {
-		return new ParseTreeEmptyBud(this.inputLength);
+		return new ParseTreeEmptyBud(this.input);
 	}
 
 	public ParseTreeBranch extendWith(IParseTree extension) throws CannotExtendTreeException {

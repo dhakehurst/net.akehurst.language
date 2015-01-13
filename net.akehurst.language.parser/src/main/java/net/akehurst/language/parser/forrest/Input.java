@@ -11,4 +11,8 @@ public class Input {
 		return this.text.subSequence(start, end);
 	}
 
+	public int getLength() {
+		return text.length();
+	}
+
 }

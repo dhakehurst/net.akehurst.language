@@ -1,15 +1,10 @@
 package net.akehurst.language.parser;
 
-import java.util.List;
-
-import net.akehurst.language.core.lexicalAnalyser.ILexicalAnalyser;
-import net.akehurst.language.core.lexicalAnalyser.IToken;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.lexicalanalyser.LexicalAnalyser;
 import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.GrammarBuilder;
 import net.akehurst.language.ogl.semanticModel.Namespace;

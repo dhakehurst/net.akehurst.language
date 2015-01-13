@@ -1,16 +1,19 @@
-package net.akehurst.language.parser;
+package net.akehurst.language.parser.forrest;
 
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.ogl.semanticModel.TangibleItem;
+import net.akehurst.language.parser.CannotExtendTreeException;
+import net.akehurst.language.parser.ToStringVisitor;
 
-public class ParseTreeBud extends SubParseTree {
+public class ParseTreeBud extends AbstractParseTree {
 
-	public ParseTreeBud(Leaf leaf, int inputLength) {
-		super(inputLength);
+	ParseTreeBud(Leaf leaf, Input input) {
+		super(input);
 		this.root = leaf;
-		this.complete = true;
+		super.canGrow = false;
+		super.complete = true;
 	}
-
+	
 	@Override
 	public Leaf getRoot() {
 		return (Leaf)super.getRoot();
@@ -21,20 +24,21 @@ public class ParseTreeBud extends SubParseTree {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	public ParseTreeBud deepClone() {
-		ParseTreeBud clone = new ParseTreeBud(this.getRoot(), this.inputLength);
-		return clone;
-	}
-	
+
 	public ParseTreeBranch extendWith(IParseTree extension) throws CannotExtendTreeException {
 		throw new CannotExtendTreeException();
+	}
+	
+	public ParseTreeBud deepClone() {
+		ParseTreeBud clone = new ParseTreeBud(this.getRoot().deepClone(), this.input);
+		return clone;
 	}
 	
 	//--- Object ---
 	@Override
 	public String toString() {
-		return this.getRoot().toString();
+		ToStringVisitor v = new ToStringVisitor();
+		return this.accept(v, "");
 	}
 	
 	@Override
@@ -51,5 +55,4 @@ public class ParseTreeBud extends SubParseTree {
 			return false;
 		}
 	}
-
 }

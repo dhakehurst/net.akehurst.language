@@ -1,15 +1,32 @@
-package net.akehurst.language.parser;
+package net.akehurst.language.parser.forrest;
 
 import net.akehurst.language.core.parser.ILeaf;
+import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
+import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.LeafNodeType;
+import net.akehurst.language.parser.ToStringVisitor;
 
-public class EmptyLeaf extends AbstractNode implements ILeaf {
+public class EmptyLeaf implements ILeaf {
 
 	public EmptyLeaf() {
-		super(new LeafNodeType());
+	}
+	
+	@Override
+	public INodeType getNodeType() throws ParseTreeException {
+		return new LeafNodeType();
 	}
 
+	@Override
+	public String getName() {
+		return "";
+	}
+
+	@Override
+	public int getLength() {
+		return 0;
+	}
+	
 	@Override
 	public String getMatchedText() {
 		return "";

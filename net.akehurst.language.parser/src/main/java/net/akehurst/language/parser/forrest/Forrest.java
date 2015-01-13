@@ -1,4 +1,4 @@
-package net.akehurst.language.parser;
+package net.akehurst.language.parser.forrest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,32 +10,36 @@ import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
+import net.akehurst.language.parser.CannotExtendTreeException;
+import net.akehurst.language.parser.CannotGrowTreeException;
 
-public 	class Forrest2 {
+public 	class Forrest {
 
-	Forrest2(INodeType goal, Grammar grammar) {
+	public Forrest(INodeType goal, Grammar grammar, Input input) {
 		this.goal = goal;
 		this.grammar = grammar;
+		this.input = input;
 		this.canGrow = false;
 	}
 	Grammar grammar;
 	INodeType goal;
-	List<SubParseTree> possibleTrees = new ArrayList<>();
+	Input input;
+	List<AbstractParseTree> possibleTrees = new ArrayList<>();
 	List<IParseTree> goalTrees = new ArrayList<>();
 
-	public Forrest2 clone() {
-		Forrest2 clone = new Forrest2(this.goal, this.grammar);
+	public Forrest clone() {
+		Forrest clone = new Forrest(this.goal, this.grammar, this.input);
 		clone.possibleTrees.addAll(this.possibleTrees);
 		clone.goalTrees.addAll(this.goalTrees);
 		return clone;
 	}
 	
 	boolean canGrow;
-	boolean getCanGrow() {
+	public boolean getCanGrow() {
 		return this.canGrow;
 	}
 	
-	IParseTree getLongestMatch(CharSequence text) throws ParseFailedException {
+	public IParseTree getLongestMatch(CharSequence text) throws ParseFailedException {
 		if (!this.goalTrees.isEmpty() && this.goalTrees.size() >= 1) {
 			IParseTree lt = this.goalTrees.get(0);
 			for (IParseTree gt : this.goalTrees) {
@@ -65,18 +69,18 @@ public 	class Forrest2 {
 	 * @throws RuleNotFoundException 
 	 * @throws ParseTreeException 
 	 */
-	public Forrest2 grow(CharSequence text) throws RuleNotFoundException, ParseTreeException {
-		Forrest2 newForrest = new Forrest2(this.goal, this.grammar);
+	public Forrest grow(CharSequence text) throws RuleNotFoundException, ParseTreeException {
+		Forrest newForrest = new Forrest(this.goal, this.grammar, this.input);
 		newForrest.goalTrees.addAll(this.goalTrees);
-		for(SubParseTree tree: this.possibleTrees) {
-			List<SubParseTree> buds = tree.createNewBuds(text, this.grammar.getAllTerminal()); //grab all possible next tokens
+		for(AbstractParseTree tree: this.possibleTrees) {
+			List<AbstractParseTree> buds = tree.createNewBuds(text, this.grammar.getAllTerminal()); //grab all possible next tokens
 			//grow buds according to rules
-			List<SubParseTree> newBranches = new ArrayList<>();
-			for(SubParseTree bud : buds) {
+			List<AbstractParseTree> newBranches = new ArrayList<>();
+			for(AbstractParseTree bud : buds) {
 				try {
 					List<IParseTree> newTrees = bud.grow(this.grammar.getRule());
 					for (IParseTree pt : newTrees) {
-						SubParseTree npt = (SubParseTree) pt;
+						AbstractParseTree npt = (AbstractParseTree) pt;
 						newBranches.add(npt);
 						newForrest.addIfGoal(npt);
 					}
@@ -85,14 +89,14 @@ public 	class Forrest2 {
 				}
 			}
 
-			for(SubParseTree newBranch: newBranches) {
+			for(AbstractParseTree newBranch: newBranches) {
 				try {
-					SubParseTree newTree = tree.expand(newBranch);
+					AbstractParseTree newTree = tree.expand(newBranch);
 					newForrest.add(newTree);
 					if (newTree.getIsComplete()) {
 						List<IParseTree> newTrees = newTree.grow(this.grammar.getRule());
 						for (IParseTree pt : newTrees) {
-							SubParseTree npt = (SubParseTree) pt;
+							AbstractParseTree npt = (AbstractParseTree) pt;
 							newForrest.add(npt);
 						}
 					}
@@ -106,9 +110,9 @@ public 	class Forrest2 {
 		return newForrest;
 	}
 		
-	void add(SubParseTree tree) {
+	public void add(AbstractParseTree tree) throws ParseTreeException {
 		if (tree.getIsComplete()) {
-			if (goal.equals(((SubParseTree) tree).getRoot().getNodeType())) {
+			if ( goal.equals(tree.getRoot().getNodeType()) ) {
 				goalTrees.add(tree.deepClone());
 			}
 		}
@@ -123,9 +127,9 @@ public 	class Forrest2 {
 		
 	}
 	
-	void addIfGoal(SubParseTree tree) {
+	void addIfGoal(AbstractParseTree tree) throws ParseTreeException {
 		if (tree.getIsComplete()) {
-			if (goal.equals(((SubParseTree) tree).getRoot().getNodeType())) {
+			if (goal.equals(tree.getRoot().getNodeType())) {
 				goalTrees.add(tree.deepClone());
 			}
 		}
