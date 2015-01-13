@@ -69,6 +69,7 @@ public 	class Forrest {
 	 * @throws ParseTreeException 
 	 */
 	public Forrest grow(CharSequence text) throws RuleNotFoundException, ParseTreeException {
+		//TODO: What to do with expandable trees, whilst they wait for next branches!
 		Forrest newForrest = new Forrest(this.goal, this.grammar, this.input);
 		newForrest.goalTrees.addAll(this.goalTrees);
 		for(AbstractParseTree tree: this.possibleTrees) {
@@ -91,16 +92,21 @@ public 	class Forrest {
 			for(AbstractParseTree newBranch: newBranches) {
 				try {
 					AbstractParseTree newTree = tree.expand(newBranch);
-					newForrest.add(newTree);
+					
 					if (newTree.getIsComplete()) {
 						List<IParseTree> newTrees = newTree.grow(this.grammar.getRule());
 						for (IParseTree pt : newTrees) {
 							AbstractParseTree npt = (AbstractParseTree) pt;
 							newForrest.add(npt);
 						}
+					} else {
+						newForrest.add(newTree);
 					}
 				} catch (CannotExtendTreeException e) {
-					
+					//Can't extend tree...yet!
+					//if do this: newForrest.add(tree);
+					// doesn't terminate
+					// could make the isComplete dynamically evaluated, but this is time consuming!
 				} catch (CannotGrowTreeException e) {
 				
 				}

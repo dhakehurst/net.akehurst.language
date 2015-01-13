@@ -65,6 +65,16 @@ public class Parser_Test {
 		return b.get();
 	}
 	
+	Grammar a__b_c() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("abc").concatination(new NonTerminal("a"), new NonTerminal("bc"));
+		b.rule("bc").concatination(new NonTerminal("b"), new NonTerminal("c"));
+		b.rule("a").concatination(new TerminalLiteral("a"));
+		b.rule("b").concatination(new TerminalLiteral("b"));
+		b.rule("c").concatination(new TerminalLiteral("c"));
+		return b.get();
+	}
+	
 	IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
 		try {
 			INodeType goal = grammar.findRule(goalName).getNodeType();
@@ -265,7 +275,6 @@ public class Parser_Test {
 		}
 	}
 
-	
 	@Test
 	public void abc2_abc_abc() {
 		// grammar, goal, input
@@ -323,5 +332,25 @@ public class Parser_Test {
 		}
 	}
 
+	@Test
+	public void abc4_abc_acb() {
+		// grammar, goal, input
+		try {
+			Grammar g = a__b_c();
+			String goal = "abc";
+			String text = "abc";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("abc : [a : ['a' : \"a\"], bc : [b : ['b' : \"b\"], c : ['c' : \"c\"]]]",st);
+
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
 
 }

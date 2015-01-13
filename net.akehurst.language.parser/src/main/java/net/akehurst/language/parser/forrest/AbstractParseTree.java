@@ -61,7 +61,7 @@ public abstract class AbstractParseTree implements IParseTree {
 		int pos = this.getRoot().getMatchedTextLength();
 		String subString = text.toString().substring(pos);
 		List<AbstractParseTree> buds = new ArrayList<>();
-		buds.add(new ParseTreeEmptyBud(this.input)); // always add empty bud as a new bud
+		//buds.add(new ParseTreeEmptyBud(this.input)); // always add empty bud as a new bud
 		for (Terminal terminal : allTerminal) {
 			Matcher m = terminal.getPattern().matcher(subString);
 			if (m.lookingAt()) {
@@ -81,14 +81,16 @@ public abstract class AbstractParseTree implements IParseTree {
 		if (this.getIsComplete()) {
 			grownTrees.add(this);
 			for (Rule rule : rules) {
-				List<IParseTree> newTree = this.grow(rule.getRhs());
-				for (IParseTree nt : newTree) {
+				List<IParseTree> newTrees = this.grow(rule.getRhs());
+				for (IParseTree nt : newTrees) {
 					if (((AbstractParseTree) nt).getIsComplete()) {
 						List<IParseTree> newTree2 = ((AbstractParseTree) nt).grow(rules);
 						grownTrees.addAll(newTree2);
+					} else {
+						grownTrees.add(nt);
 					}
 				}
-				grownTrees.addAll(newTree);
+				//grownTrees.addAll(newTree);
 			}
 		}
 		return grownTrees;
