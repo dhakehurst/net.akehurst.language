@@ -3,8 +3,6 @@ package net.akehurst.language.ogl.semanticModel;
 import java.util.Arrays;
 import java.util.List;
 
-import net.akehurst.language.core.parser.INodeType;
-
 
 public class Choice extends RuleItem {
 	

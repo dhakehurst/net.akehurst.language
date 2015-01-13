@@ -17,7 +17,7 @@ public class Branch implements IBranch {
 		this.children = children;
 		this.length = 0;
 		for(INode n: this.children) {
-			this.length += n.getLength();
+			this.length += n.getMatchedTextLength();
 		}
 	}
 	
@@ -40,7 +40,7 @@ public class Branch implements IBranch {
 	}
 
 	@Override
-	public int getLength() {
+	public int getMatchedTextLength() {
 		return this.length;
 	}
 

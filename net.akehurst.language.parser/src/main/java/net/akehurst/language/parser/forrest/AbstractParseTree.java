@@ -27,8 +27,9 @@ import net.akehurst.language.parser.CannotGrowTreeException;
 
 public abstract class AbstractParseTree implements IParseTree {
 
-	public AbstractParseTree(Input input) {
+	public AbstractParseTree(Input input, INode root) {
 		this.input = input;
+		this.root = root;
 	}
 
 	Input input;
@@ -39,17 +40,9 @@ public abstract class AbstractParseTree implements IParseTree {
 		return this.root;
 	}
 
-	boolean complete;
+	abstract boolean getIsComplete();
 
-	public boolean getIsComplete() {
-		return this.complete;
-	}
-
-	boolean canGrow;
-
-	public boolean getCanGrow() {
-		return this.canGrow;
-	}
+	abstract boolean getCanGrow();
 
 	public abstract TangibleItem getNextExpectedItem();
 
@@ -65,7 +58,7 @@ public abstract class AbstractParseTree implements IParseTree {
 	}
 
 	public List<AbstractParseTree> createNewBuds(CharSequence text, Set<Terminal> allTerminal) throws RuleNotFoundException {
-		int pos = this.getRoot().getLength();
+		int pos = this.getRoot().getMatchedTextLength();
 		String subString = text.toString().substring(pos);
 		List<AbstractParseTree> buds = new ArrayList<>();
 		buds.add(new ParseTreeEmptyBud(this.input)); // always add empty bud as a new bud
@@ -76,7 +69,7 @@ public abstract class AbstractParseTree implements IParseTree {
 				int start = pos + m.start();
 				int end = pos + m.end();
 				Leaf leaf = new Leaf(this.input, start, end, terminal);
-				ParseTreeBud bud = new ParseTreeBud(leaf, this.input);
+				ParseTreeBud bud = new ParseTreeBud(this.input, leaf);
 				buds.add(bud);
 			}
 		}
@@ -135,14 +128,21 @@ public abstract class AbstractParseTree implements IParseTree {
 		}
 	}
 
+	IParseTree growMe(RuleItem target) {
+		INodeType nodeType = target.getOwningRule().getNodeType();
+		List<INode> children = new ArrayList<>();
+		children.add(this.getRoot());
+		Branch newBranch = new Branch(nodeType, children);
+		ParseTreeBranch newTree = new ParseTreeBranch(this.input, newBranch, target.getOwningRule(), 1);
+		return newTree;
+	}
+	
 	public List<IParseTree> grow(Concatination target) throws CannotGrowTreeException {
 		try {
-			IParseTree oldBranch = this;
 			List<IParseTree> result = new ArrayList<>();
-			if (target.getItem().get(0).getNodeType().equals(oldBranch.getRoot().getNodeType())) {
-				INodeType nodeType = target.getOwningRule().getNodeType();
-				ParseTreeBranch branch = new ParseTreeBranch(nodeType, oldBranch, target.getOwningRule(), this.input);
-				result.add(branch);
+			if (target.getItem().get(0).getNodeType().equals(this.getRoot().getNodeType())) {
+				IParseTree newTree = this.growMe(target);
+				result.add(newTree);
 			}
 			return result;
 		} catch (Exception e) {
@@ -152,13 +152,11 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	public List<IParseTree> grow(Choice target) throws CannotGrowTreeException {
 		try {
-			IParseTree oldBranch = this;
 			List<IParseTree> result = new ArrayList<>();
 			for (TangibleItem alt : target.getAlternative()) {
-				if (oldBranch.getRoot().getNodeType().equals(alt.getNodeType())) {
-					INodeType nodeType = target.getOwningRule().getNodeType();
-					ParseTreeBranch branch = new ParseTreeBranch(nodeType, oldBranch, target.getOwningRule(), this.input);
-					result.add(branch);
+				if (this.getRoot().getNodeType().equals(alt.getNodeType())) {
+					IParseTree newTree = this.growMe(target);
+					result.add(newTree);
 				}
 			}
 			return result;
@@ -173,9 +171,8 @@ public abstract class AbstractParseTree implements IParseTree {
 			List<IParseTree> result = new ArrayList<>();
 			if (target.getItem().getNodeType().equals(oldBranch.getRoot().getNodeType())
 					|| (0 == target.getMin() && oldBranch.getRoot().getNodeType().equals(new LeafNodeType()))) {
-				INodeType nodeType = target.getOwningRule().getNodeType();
-				ParseTreeBranch branch = new ParseTreeBranch(nodeType, oldBranch, target.getOwningRule(), this.input);
-				result.add(branch);
+				IParseTree newTree = this.growMe(target);
+				result.add(newTree);
 			}
 			return result;
 		} catch (Exception e) {
@@ -188,9 +185,8 @@ public abstract class AbstractParseTree implements IParseTree {
 			IParseTree oldBranch = this;
 			List<IParseTree> result = new ArrayList<>();
 			if (target.getConcatination().getNodeType().equals(oldBranch.getRoot().getNodeType())) {
-				INodeType nodeType = target.getOwningRule().getNodeType();
-				ParseTreeBranch branch = new ParseTreeBranch(nodeType, oldBranch, target.getOwningRule(), this.input);
-				result.add(branch);
+				IParseTree newTree = this.growMe(target);
+				result.add(newTree);
 			}
 			return result;
 		} catch (Exception e) {

@@ -8,7 +8,6 @@ import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.Grammar;
-import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.parser.CannotExtendTreeException;
 import net.akehurst.language.parser.CannotGrowTreeException;
@@ -43,11 +42,11 @@ public 	class Forrest {
 		if (!this.goalTrees.isEmpty() && this.goalTrees.size() >= 1) {
 			IParseTree lt = this.goalTrees.get(0);
 			for (IParseTree gt : this.goalTrees) {
-				if (gt.getRoot().getLength() > lt.getRoot().getLength()) {
+				if (gt.getRoot().getMatchedTextLength() > lt.getRoot().getMatchedTextLength()) {
 					lt = gt;
 				}
 			}
-			if (lt.getRoot().getLength() < text.length()) {
+			if (lt.getRoot().getMatchedTextLength() < text.length()) {
 				throw new ParseFailedException("Goal does not match full text");
 			} else {
 				return lt;

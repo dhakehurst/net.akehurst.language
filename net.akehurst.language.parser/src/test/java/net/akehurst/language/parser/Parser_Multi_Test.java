@@ -27,6 +27,16 @@ public class Parser_Multi_Test {
 		return b.get();
 	}
 	
+	Grammar ab01_2() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("ab01").concatination(new NonTerminal("a"), new NonTerminal("b"));
+		b.rule("ab01").concatination(new NonTerminal("a"));
+		b.rule("a").concatination(new TerminalLiteral("a"));
+		b.rule("b").concatination(new TerminalLiteral("b"));
+
+		return b.get();
+	}
+	
 	Grammar as13() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("as").multi(1, 3, new NonTerminal("a"));
@@ -131,6 +141,48 @@ public class Parser_Multi_Test {
 		}
 	}
 
+	@Test
+	public void ab01_2_ab01_a() {
+		// grammar, goal, input
+		try {
+			Grammar g = ab01_2();
+			String goal = "ab01";
+			String text = "a";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("","");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("ab01 : [a : ['a' : \"a\"]]",st);
+
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void ab01_2_ab01_ab() {
+		// grammar, goal, input
+		try {
+			Grammar g = ab01_2();
+			String goal = "ab01";
+			String text = "ab";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("","");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("ab01 : [a : ['a' : \"a\"], b : ['b' : \"b\"]]",st);
+
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
 	@Test
 	public void ab01_ab01_ab() {
 		// grammar, goal, input

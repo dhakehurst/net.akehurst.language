@@ -6,7 +6,6 @@ import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.transform.binary.AbstractTransformer;
-import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 
 public class SemanicAnalyser extends AbstractTransformer implements ISemanticAnalyser {

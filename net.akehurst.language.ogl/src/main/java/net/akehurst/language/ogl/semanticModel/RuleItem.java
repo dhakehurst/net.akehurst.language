@@ -1,6 +1,5 @@
 package net.akehurst.language.ogl.semanticModel;
 
-import net.akehurst.language.core.parser.INodeType;
 
 
 public abstract class RuleItem implements Visitable {

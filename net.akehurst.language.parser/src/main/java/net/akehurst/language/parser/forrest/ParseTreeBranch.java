@@ -1,11 +1,6 @@
 package net.akehurst.language.parser.forrest;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.Choice;
@@ -20,36 +15,41 @@ import net.akehurst.language.parser.ToStringVisitor;
 
 public class ParseTreeBranch extends AbstractParseTree {
 
-	public ParseTreeBranch(Rule rule, IBranch root, Input input,int nextItemIndex, int length) {
-		super(input);
+	public ParseTreeBranch(Input input, IBranch root, Rule rule, int nextItemIndex) {
+		super(input, root);
 		this.rule = rule;
-		this.root = root;
 		this.nextItemIndex = nextItemIndex;
-		this.length = length;
-		super.canGrow = this.calculateCanGrow();
-		super.complete = this.calculateIsComplete();
+		this.canGrow = this.calculateCanGrow();
+		this.complete = this.calculateIsComplete();
 	}
 	
-	public ParseTreeBranch(INodeType nodeType, IParseTree branchTree, Rule rule, Input input) {
-		super(input);
-		List<INode> children = new ArrayList<>();
-		children.add(branchTree.getRoot());
-		Branch branch = new Branch(nodeType,children);
-		this.rule = rule;
-		this.root = branch;
-		this.nextItemIndex = 1;
-		this.length = 1;
-		super.canGrow = this.calculateCanGrow();
-		super.complete = this.calculateIsComplete();
-	}
-	
-	ParseTreeBranch(Input input) {
-		super(input);
-	}
+//	public ParseTreeBranch(INodeType nodeType, IParseTree branchTree, Rule rule, Input input) {
+//		super(input);
+//		List<INode> children = new ArrayList<>();
+//		children.add(branchTree.getRoot());
+//		Branch branch = new Branch(nodeType,children);
+//		this.rule = rule;
+//		this.root = branch;
+//		this.nextItemIndex = 1;
+//		this.length = 1;
+//		super.canGrow = this.calculateCanGrow();
+//		super.complete = this.calculateIsComplete();
+//	}
 	
 	Rule rule;
 	int nextItemIndex;
-	int length;
+	boolean canGrow;
+	boolean complete;
+	
+	@Override
+	boolean getCanGrow() {
+		return this.canGrow;
+	}
+	
+	@Override
+	boolean getIsComplete() {
+		return this.complete;
+	}
 	
 	@Override
 	public Branch getRoot() {
@@ -60,10 +60,10 @@ public class ParseTreeBranch extends AbstractParseTree {
 		IBranch nb = this.getRoot().addChild(extension.getRoot());
 
 		if (extension.getRoot().getNodeType() instanceof SkipNodeType) {
-			ParseTreeBranch newBranch = new ParseTreeBranch(this.rule, nb, this.input, this.nextItemIndex, this.length);
+			ParseTreeBranch newBranch = new ParseTreeBranch(this.input, nb, this.rule, this.nextItemIndex);
 			return newBranch;			
 		} else {
-			ParseTreeBranch newBranch = new ParseTreeBranch(this.rule, nb, this.input, this.nextItemIndex+1, this.length+1);
+			ParseTreeBranch newBranch = new ParseTreeBranch(this.input, nb, this.rule, this.nextItemIndex+1);
 			return newBranch;
 		}
 	}
@@ -79,7 +79,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 			return m.getItem();
 		} else if (item instanceof SeparatedList) {
 			SeparatedList sl = (SeparatedList)item;
-			if ( (this.length % 2) == 1 ) {
+			if ( (this.nextItemIndex % 2) == 1 ) {
 				return sl.getSeparator();
 			} else {
 				return sl.getConcatination();
@@ -93,16 +93,16 @@ public class ParseTreeBranch extends AbstractParseTree {
 		RuleItem item = this.rule.getRhs();
 		if (item instanceof Concatination) {
 			Concatination c = (Concatination)item;
-			return c.getItem().size() == this.length;
+			return c.getItem().size() == this.nextItemIndex;
 		} else if (item instanceof Choice) {
 			return true;
 		} else if (item instanceof Multi) {
 			Multi m = (Multi)item;
-			int size = this.length;
+			int size = this.nextItemIndex;
 			return m.getMin() <= size && (size <= m.getMax() || -1 == m.getMax());
 		} else if (item instanceof SeparatedList) {
 			SeparatedList sl = (SeparatedList)item;
-			int size = this.length;
+			int size = this.nextItemIndex;
 			return (size % 2) == 1;
 		} else {
 			throw new RuntimeException("Should never happen");
@@ -110,20 +110,20 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	boolean calculateCanGrow() {
 		RuleItem item = this.rule.getRhs();
-		boolean reachedEnd = this.getRoot().getLength() >= this.input.getLength();
+		boolean reachedEnd = this.getRoot().getMatchedTextLength() >= this.input.getLength();
 		if (reachedEnd) return false;
 		if (item instanceof Concatination) {
 			Concatination c = (Concatination)item;
-			return this.length < c.getItem().size();
+			return this.nextItemIndex < c.getItem().size();
 		} else if (item instanceof Choice) {
 			return false;
 		} else if (item instanceof Multi) {
 			Multi m = (Multi)item;
-			int size = this.length;
+			int size = this.nextItemIndex;
 			return size < m.getMax();
 		} else if (item instanceof SeparatedList) {
 			SeparatedList sl = (SeparatedList)item;
-			int size = this.length;
+			int size = this.nextItemIndex;
 			return true;
 		} else {
 			throw new RuntimeException("Should never happen");
@@ -131,13 +131,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	
 	public ParseTreeBranch deepClone() {
-		ParseTreeBranch clone = new ParseTreeBranch(this.input);
-		clone.root = this.getRoot().deepClone();
-		clone.rule = this.rule;
-		clone.nextItemIndex = this.nextItemIndex;
-		clone.length = this.length;
-		clone.complete = this.complete;
-		clone.canGrow = this.canGrow;
+		ParseTreeBranch clone = new ParseTreeBranch(this.input, this.getRoot(), this.rule, this.nextItemIndex);
 		return clone;
 	}
 	

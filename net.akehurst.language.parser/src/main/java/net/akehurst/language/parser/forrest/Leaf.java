@@ -16,7 +16,12 @@ public class Leaf implements ILeaf {
 		this.end = end;
 		this.terminal = terminal;
 	}
+	
 	Input input;
+	public Input getInput() {
+		return this.input;
+	}
+	
 	int start;
 	int end;
 	Terminal terminal;
@@ -40,7 +45,7 @@ public class Leaf implements ILeaf {
 	}
 
 	@Override
-	public int getLength() {
+	public int getMatchedTextLength() {
 		return end - start;
 	}
 

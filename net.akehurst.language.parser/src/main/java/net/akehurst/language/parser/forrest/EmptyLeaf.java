@@ -23,7 +23,7 @@ public class EmptyLeaf implements ILeaf {
 	}
 
 	@Override
-	public int getLength() {
+	public int getMatchedTextLength() {
 		return 0;
 	}
 	

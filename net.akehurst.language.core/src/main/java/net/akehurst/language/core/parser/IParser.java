@@ -2,8 +2,6 @@ package net.akehurst.language.core.parser;
 
 import java.util.List;
 
-import net.akehurst.language.core.lexicalAnalyser.IToken;
-
 public interface IParser {
 
 	List<INodeType> getNodeTypes();

@@ -6,8 +6,6 @@ public interface Visitor<T, E extends Throwable> {
 
 	T visit(Concatination target, Object... arg) throws E;
 
-	T visit(Group target, Object... arg) throws E;
-
 	T visit(Multi target, Object... arg) throws E;
 
 	T visit(NonTerminal target, Object... arg) throws E;
