@@ -2,11 +2,12 @@ package net.akehurst.language.parser.forrest;
 
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.parser.CannotExtendTreeException;
+import net.akehurst.language.parser.ToStringVisitor;
 
 public class ParseTreeStartBud extends ParseTreeBud {
 
 	public ParseTreeStartBud(Input input) {
-		super(input, new EmptyLeaf());
+		super(input, new EmptyLeaf(0));
 	}
 	
 	@Override
@@ -27,7 +28,8 @@ public class ParseTreeStartBud extends ParseTreeBud {
 	//--- Object ---
 	@Override
 	public String toString() {
-		return this.getRoot().toString();
+		ToStringVisitor v = new ToStringVisitor();
+		return this.accept(v, "");
 	}
 	
 	@Override

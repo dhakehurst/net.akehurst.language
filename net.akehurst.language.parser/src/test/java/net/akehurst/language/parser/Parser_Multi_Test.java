@@ -73,7 +73,10 @@ public class Parser_Multi_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 1}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : ['a' : \"a\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -93,7 +96,10 @@ public class Parser_Multi_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], a : ['a' : \"a\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 2}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : ['a' : \"a\"], a : ['a' : \"a\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -113,7 +119,10 @@ public class Parser_Multi_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], a : ['a' : \"a\"], a : ['a' : \"a\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 3}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : ['a' : \"a\"], a : ['a' : \"a\"], a : ['a' : \"a\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -133,7 +142,10 @@ public class Parser_Multi_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("ab01 : [a : ['a' : \"a\"], b01 : [ : \"\"]]",st);
+			Assert.assertEquals("Tree {*ab01 0, 1}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("ab01 : [a : ['a' : \"a\"], b01 : [ : \"\"]]",nt);
 
 			
 		} catch (ParseFailedException e) {
@@ -154,7 +166,10 @@ public class Parser_Multi_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("ab01 : [a : ['a' : \"a\"]]",st);
+			Assert.assertEquals("Tree {*ab01 0, 1}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("ab01 : [a : ['a' : \"a\"]]",nt);
 
 			
 		} catch (ParseFailedException e) {
@@ -175,7 +190,10 @@ public class Parser_Multi_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("ab01 : [a : ['a' : \"a\"], b : ['b' : \"b\"]]",st);
+			Assert.assertEquals("Tree {*ab01 0, 2}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("ab01 : [a : ['a' : \"a\"], b : ['b' : \"b\"]]",nt);
 
 			
 		} catch (ParseFailedException e) {
@@ -196,7 +214,10 @@ public class Parser_Multi_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("ab01 : [a : ['a' : \"a\"], b01 : [b : ['b' : \"b\"]]]",st);
+			Assert.assertEquals("Tree {*ab01 0, 2}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("ab01 : [a : ['a' : \"a\"], b01 : [b : ['b' : \"b\"]]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

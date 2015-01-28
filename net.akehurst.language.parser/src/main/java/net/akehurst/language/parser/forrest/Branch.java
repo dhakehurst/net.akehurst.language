@@ -15,6 +15,7 @@ public class Branch implements IBranch {
 	public Branch(INodeType nodeType, List<INode> children) {
 		this.nodeType = nodeType;
 		this.children = children;
+		this.start = this.children.get(0).getStart();
 		this.length = 0;
 		for(INode n: this.children) {
 			this.length += n.getMatchedTextLength();
@@ -24,6 +25,7 @@ public class Branch implements IBranch {
 	INodeType nodeType;
 	List<INode> children;
 	int length;
+	int start;
 	
 	@Override
 	public INodeType getNodeType() throws ParseTreeException {
@@ -39,6 +41,16 @@ public class Branch implements IBranch {
 		}
 	}
 
+	@Override
+	public int getStart() {
+		return this.start;
+	}
+	
+	@Override
+	public int getEnd() {
+		return this.start + this.length;
+	}
+	
 	@Override
 	public int getMatchedTextLength() {
 		return this.length;

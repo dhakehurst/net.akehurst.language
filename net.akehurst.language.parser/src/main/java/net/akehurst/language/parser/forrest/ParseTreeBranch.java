@@ -47,7 +47,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	
 	@Override
-	boolean getIsComplete() {
+	public boolean getIsComplete() {
 		return this.complete;
 	}
 	
@@ -93,7 +93,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 		RuleItem item = this.rule.getRhs();
 		if (item instanceof Concatination) {
 			Concatination c = (Concatination)item;
-			return c.getItem().size() == this.nextItemIndex;
+			return c.getItem().size() <= this.nextItemIndex;
 		} else if (item instanceof Choice) {
 			return true;
 		} else if (item instanceof Multi) {

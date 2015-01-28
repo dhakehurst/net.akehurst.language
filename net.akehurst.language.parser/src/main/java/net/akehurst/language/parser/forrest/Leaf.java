@@ -45,6 +45,16 @@ public class Leaf implements ILeaf {
 	}
 
 	@Override
+	public int getStart() {
+		return this.start;
+	}
+	
+	@Override
+	public int getEnd() {
+		return this.end;
+	}
+	
+	@Override
 	public int getMatchedTextLength() {
 		return end - start;
 	}

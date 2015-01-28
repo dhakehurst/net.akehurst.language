@@ -56,7 +56,10 @@ public class Parser_PascalRange_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("expr : [real : [\"([0-9]+[.][0-9]*)|([.][0-9]+)\" : \".5\"]]",st);
+			Assert.assertEquals("Tree {*expr 0, 2}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("expr : [real : [\"([0-9]+[.][0-9]*)|([.][0-9]+)\" : \".5\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -76,7 +79,10 @@ public class Parser_PascalRange_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("expr : [real : [\"([0-9]+[.][0-9]*)|([.][0-9]+)\" : \"1.\"]]",st);
+			Assert.assertEquals("Tree {*expr 0, 2}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("expr : [real : [\"([0-9]+[.][0-9]*)|([.][0-9]+)\" : \"1.\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -96,7 +102,10 @@ public class Parser_PascalRange_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("expr : [range : [integer : [\"[0-9]+\" : \"1\"], '..' : \"..\", integer : [\"[0-9]+\" : \"5\"]]]",st);
+			Assert.assertEquals("Tree {*expr 0, 4}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("expr : [range : [integer : [\"[0-9]+\" : \"1\"], '..' : \"..\", integer : [\"[0-9]+\" : \"5\"]]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

@@ -54,7 +54,10 @@ public class Parser_Choice_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("abc : [a : ['a' : \"a\"]]",st);
+			Assert.assertEquals("Tree {*abc 0, 1}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("abc : [a : ['a' : \"a\"]]",nt);
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -74,7 +77,10 @@ public class Parser_Choice_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("abc : [b : ['b' : \"b\"]]",st);
+			Assert.assertEquals("Tree {*abc 0, 1}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("abc : [b : ['b' : \"b\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -94,7 +100,10 @@ public class Parser_Choice_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("abc : [c : ['c' : \"c\"]]",st);
+			Assert.assertEquals("Tree {*abc 0, 1}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("abc : [c : ['c' : \"c\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

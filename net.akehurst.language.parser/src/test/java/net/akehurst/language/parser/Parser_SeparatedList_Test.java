@@ -79,7 +79,10 @@ public class Parser_SeparatedList_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : ['a' : \"a\"]",st);
+			Assert.assertEquals("Tree {*as 0, 1}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : ['a' : \"a\"]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -99,7 +102,10 @@ public class Parser_SeparatedList_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : ['a' : \"a\", ',' : \",\", 'a' : \"a\"]",st);
+			Assert.assertEquals("Tree {*as 0, 3}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : ['a' : \"a\", ',' : \",\", 'a' : \"a\"]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -119,7 +125,10 @@ public class Parser_SeparatedList_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : ['a' : \"a\", ',' : \",\", 'a' : \"a\", ',' : \",\", 'a' : \"a\"]",st);
+			Assert.assertEquals("Tree {*as 0, 5}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : ['a' : \"a\", ',' : \",\", 'a' : \"a\", ',' : \",\", 'a' : \"a\"]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -139,7 +148,10 @@ public class Parser_SeparatedList_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 1}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : ['a' : \"a\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -159,7 +171,10 @@ public class Parser_SeparatedList_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", a : ['a' : \"a\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 3}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", a : ['a' : \"a\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -179,7 +194,10 @@ public class Parser_SeparatedList_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", a : ['a' : \"a\"], ',' : \",\", a : ['a' : \"a\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 5}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", a : ['a' : \"a\"], ',' : \",\", a : ['a' : \"a\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -199,7 +217,10 @@ public class Parser_SeparatedList_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 7}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -219,7 +240,10 @@ public class Parser_SeparatedList_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], SP : [' ' : \" \"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], SP : [' ' : \" \"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], SP : [' ' : \" \"]]",st);
+			Assert.assertEquals("Tree {*as 0, 10}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : ['a' : \"a\"], SP : [' ' : \" \"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], SP : [' ' : \" \"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], SP : [' ' : \" \"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

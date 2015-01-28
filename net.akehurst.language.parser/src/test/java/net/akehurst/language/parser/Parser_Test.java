@@ -103,7 +103,10 @@ public class Parser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("a : ['a' : \"a\"]",st);
+			Assert.assertEquals("Tree {*a 0, 1}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("a : ['a' : \"a\"]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -140,7 +143,10 @@ public class Parser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("abc : ['abc' : \"abc\"]",st);
+			Assert.assertEquals("Tree {*abc 0, 3}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("abc : ['abc' : \"abc\"]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -160,7 +166,10 @@ public class Parser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("a : ['a' : \"a\"]",st);
+			Assert.assertEquals("Tree {*a 0, 1}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("a : ['a' : \"a\"]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -196,7 +205,10 @@ public class Parser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("b : ['b' : \"b\"]",st);
+			Assert.assertEquals("Tree {*b 0, 1}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("b : ['b' : \"b\"]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -216,7 +228,10 @@ public class Parser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("ab : [a : ['a' : \"a\"], b : ['b' : \"b\"]]",st);
+			Assert.assertEquals("Tree {*ab 0, 2}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("ab : [a : ['a' : \"a\"], b : ['b' : \"b\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -268,7 +283,10 @@ public class Parser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("abc : [ab : [a : ['a' : \"a\"], b : ['b' : \"b\"]], c : ['c' : \"c\"]]",st);
+			Assert.assertEquals("Tree {*abc 0, 3}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("abc : [ab : [a : ['a' : \"a\"], b : ['b' : \"b\"]], c : ['c' : \"c\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -288,7 +306,10 @@ public class Parser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("abc : [a : ['a' : \"a\"], b : ['b' : \"b\"], c : ['c' : \"c\"]]",st);
+			Assert.assertEquals("Tree {*abc 0, 3}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("abc : [a : ['a' : \"a\"], b : ['b' : \"b\"], c : ['c' : \"c\"]]",nt);
 
 			
 		} catch (ParseFailedException e) {
@@ -309,7 +330,10 @@ public class Parser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("abc : [a : ['a' : \"a\"], SPACE : [' ' : \" \"], b : ['b' : \"b\"], SPACE : [' ' : \" \"], c : ['c' : \"c\"]]",st);
+			Assert.assertEquals("Tree {*abc 0, 5}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("abc : [a : ['a' : \"a\"], SPACE : [' ' : \" \"], b : ['b' : \"b\"], SPACE : [' ' : \" \"], c : ['c' : \"c\"]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -345,7 +369,10 @@ public class Parser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("abc : [a : ['a' : \"a\"], bc : [b : ['b' : \"b\"], c : ['c' : \"c\"]]]",st);
+			Assert.assertEquals("Tree {*abc 0, 3}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("abc : [a : ['a' : \"a\"], bc : [b : ['b' : \"b\"], c : ['c' : \"c\"]]]",nt);
 
 			
 		} catch (ParseFailedException e) {

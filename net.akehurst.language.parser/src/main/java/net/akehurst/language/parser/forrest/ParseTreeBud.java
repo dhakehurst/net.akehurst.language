@@ -18,7 +18,7 @@ public class ParseTreeBud extends AbstractParseTree {
 	}
 
 	@Override
-	boolean getIsComplete() {
+	public boolean getIsComplete() {
 		return true;
 	}
 

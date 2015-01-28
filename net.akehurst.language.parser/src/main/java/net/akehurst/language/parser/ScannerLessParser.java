@@ -87,13 +87,17 @@ public class ScannerLessParser implements IParser {
 	 */
 	IParseTree doParse2(INodeType goal, CharSequence text) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
 		Input input = new Input(text);
-		Forrest forrest = new Forrest(goal, this.grammar, input);
-		forrest.add(new ParseTreeStartBud(input));
+		Forrest newForrest = new Forrest(goal, this.grammar, input);
+		Forrest oldForrest = null;
+		newForrest.add(new ParseTreeStartBud(input));
+		oldForrest=newForrest.shallowClone();
+		newForrest = oldForrest.grow();
 		do {
-			forrest = forrest.grow(text);
-		} while (forrest.getCanGrow());
+			oldForrest=newForrest.shallowClone();
+			newForrest = oldForrest.grow();
+		} while (newForrest.getCanGrow() && !oldForrest.equals(newForrest));
 
-		IParseTree match = forrest.getLongestMatch(text);
+		IParseTree match = newForrest.getLongestMatch(text);
 
 		return match;
 	}

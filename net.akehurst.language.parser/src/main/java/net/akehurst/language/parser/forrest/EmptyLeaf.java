@@ -9,8 +9,11 @@ import net.akehurst.language.parser.ToStringVisitor;
 
 public class EmptyLeaf implements ILeaf {
 
-	public EmptyLeaf() {
+	public EmptyLeaf(int start) {
+		this.start = start;
 	}
+	
+	int start;
 	
 	@Override
 	public INodeType getNodeType() throws ParseTreeException {
@@ -22,6 +25,16 @@ public class EmptyLeaf implements ILeaf {
 		return "";
 	}
 
+	@Override
+	public int getStart() {
+		return this.start;
+	}
+	
+	@Override
+	public int getEnd() {
+		return this.start;
+	}
+	
 	@Override
 	public int getMatchedTextLength() {
 		return 0;
@@ -38,8 +51,8 @@ public class EmptyLeaf implements ILeaf {
 	}
 	
 	@Override
-	public EmptyLeaf deepClone() {
-		return new EmptyLeaf();
+	public ILeaf deepClone() {
+		return new EmptyLeaf(this.start);
 	}
 
 	//--- Object ---

@@ -6,6 +6,8 @@ public interface INode extends IParseTreeVisitable{
 
 	String getName();
 	
+	int getStart();
+	int getEnd();
 	int getMatchedTextLength();
 	
 	INode deepClone();

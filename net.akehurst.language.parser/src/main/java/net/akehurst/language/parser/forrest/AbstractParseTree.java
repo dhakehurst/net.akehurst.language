@@ -40,7 +40,7 @@ public abstract class AbstractParseTree implements IParseTree {
 		return this.root;
 	}
 
-	abstract boolean getIsComplete();
+	abstract public boolean getIsComplete();
 
 	abstract boolean getCanGrow();
 
@@ -58,7 +58,7 @@ public abstract class AbstractParseTree implements IParseTree {
 	}
 
 	public List<AbstractParseTree> createNewBuds(CharSequence text, Set<Terminal> allTerminal) throws RuleNotFoundException {
-		int pos = this.getRoot().getMatchedTextLength();
+		int pos = this.getRoot().getEnd();
 		String subString = text.toString().substring(pos);
 		List<AbstractParseTree> buds = new ArrayList<>();
 		//buds.add(new ParseTreeEmptyBud(this.input)); // always add empty bud as a new bud
@@ -142,7 +142,12 @@ public abstract class AbstractParseTree implements IParseTree {
 	public List<IParseTree> grow(Concatination target) throws CannotGrowTreeException {
 		try {
 			List<IParseTree> result = new ArrayList<>();
-			if (target.getItem().get(0).getNodeType().equals(this.getRoot().getNodeType())) {
+			if (0==target.getItem().size()) {
+				if (this.getRoot() instanceof EmptyLeaf) {
+					IParseTree newTree = this.growMe(target);
+					result.add(newTree);
+				}
+			} else if (target.getItem().get(0).getNodeType().equals(this.getRoot().getNodeType())) {
 				IParseTree newTree = this.growMe(target);
 				result.add(newTree);
 			}
