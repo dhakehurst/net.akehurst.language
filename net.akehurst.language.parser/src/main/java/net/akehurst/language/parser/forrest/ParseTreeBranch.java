@@ -1,6 +1,9 @@
 package net.akehurst.language.parser.forrest;
 
+import java.util.Stack;
+
 import net.akehurst.language.core.parser.IBranch;
+import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.Choice;
@@ -15,8 +18,8 @@ import net.akehurst.language.parser.ToStringVisitor;
 
 public class ParseTreeBranch extends AbstractParseTree {
 
-	public ParseTreeBranch(Input input, IBranch root, Rule rule, int nextItemIndex) {
-		super(input, root);
+	public ParseTreeBranch(Input input, IBranch root, Stack<AbstractParseTree> stack, Rule rule, int nextItemIndex) {
+		super(input, root, stack);
 		this.rule = rule;
 		this.nextItemIndex = nextItemIndex;
 		this.canGrow = this.calculateCanGrow();
@@ -56,14 +59,15 @@ public class ParseTreeBranch extends AbstractParseTree {
 		return (Branch)super.getRoot();
 	}
 	
-	public ParseTreeBranch extendWith(IParseTree extension) throws ParseTreeException {
-		IBranch nb = this.getRoot().addChild(extension.getRoot());
-
-		if (extension.getRoot().getNodeType() instanceof SkipNodeType) {
-			ParseTreeBranch newBranch = new ParseTreeBranch(this.input, nb, this.rule, this.nextItemIndex);
+	public ParseTreeBranch extendWith(INode extension) throws ParseTreeException {
+		IBranch nb = this.getRoot().addChild(extension);
+		Stack<AbstractParseTree> stack = new Stack<>();
+		stack.addAll(this.stackedRoots);
+		if (extension.getNodeType() instanceof SkipNodeType) {
+			ParseTreeBranch newBranch = new ParseTreeBranch(this.input, nb, stack, this.rule, this.nextItemIndex);
 			return newBranch;			
 		} else {
-			ParseTreeBranch newBranch = new ParseTreeBranch(this.input, nb, this.rule, this.nextItemIndex+1);
+			ParseTreeBranch newBranch = new ParseTreeBranch(this.input, nb, stack, this.rule, this.nextItemIndex+1);
 			return newBranch;
 		}
 	}
@@ -112,6 +116,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 		RuleItem item = this.rule.getRhs();
 		boolean reachedEnd = this.getRoot().getMatchedTextLength() >= this.input.getLength();
 		if (reachedEnd) return false;
+		if (!this.stackedRoots.isEmpty()) return true;
 		if (item instanceof Concatination) {
 			Concatination c = (Concatination)item;
 			return this.nextItemIndex < c.getItem().size();
@@ -131,7 +136,9 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	
 	public ParseTreeBranch deepClone() {
-		ParseTreeBranch clone = new ParseTreeBranch(this.input, this.getRoot(), this.rule, this.nextItemIndex);
+		Stack<AbstractParseTree> stack = new Stack<>();
+		stack.addAll(this.stackedRoots);
+		ParseTreeBranch clone = new ParseTreeBranch(this.input, this.getRoot(), stack, this.rule, this.nextItemIndex);
 		return clone;
 	}
 	

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.akehurst.language.core.lexicalAnalyser.IToken;
 import net.akehurst.language.core.lexicalAnalyser.ITokenType;
@@ -17,9 +18,10 @@ import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.Terminal;
+import net.akehurst.language.parser.forrest.AbstractParseTree;
 import net.akehurst.language.parser.forrest.Forrest;
 import net.akehurst.language.parser.forrest.Input;
-import net.akehurst.language.parser.forrest.ParseTreeStartBud;
+import net.akehurst.language.parser.forrest.ParseTreeBud;
 
 public class ScannerLessParser implements IParser {
 
@@ -89,13 +91,17 @@ public class ScannerLessParser implements IParser {
 		Input input = new Input(text);
 		Forrest newForrest = new Forrest(goal, this.grammar, input);
 		Forrest oldForrest = null;
-		newForrest.add(new ParseTreeStartBud(input));
-		oldForrest=newForrest.shallowClone();
-		newForrest = oldForrest.grow();
-		do {
+		
+		List<ParseTreeBud> buds = input.createNewBuds(this.grammar.getAllTerminal(), 0);
+		for(ParseTreeBud bud : buds) {
+			Set<AbstractParseTree> newTrees = bud.growHeight(this.grammar.getRule());
+			newForrest.addAll(newTrees);
+		}
+		
+		while (newForrest.getCanGrow() ) {
 			oldForrest=newForrest.shallowClone();
 			newForrest = oldForrest.grow();
-		} while (newForrest.getCanGrow() && !oldForrest.equals(newForrest));
+		} 
 
 		IParseTree match = newForrest.getLongestMatch(text);
 
@@ -118,4 +124,6 @@ public class ScannerLessParser implements IParser {
 		return terminal;
 	}
 
+
+	
 }

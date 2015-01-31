@@ -1,6 +1,9 @@
 package net.akehurst.language.parser.forrest;
 
+import java.util.Stack;
+
 import net.akehurst.language.core.parser.ILeaf;
+import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.ogl.semanticModel.TangibleItem;
 import net.akehurst.language.parser.CannotExtendTreeException;
@@ -8,13 +11,17 @@ import net.akehurst.language.parser.ToStringVisitor;
 
 public class ParseTreeBud extends AbstractParseTree {
 
-	ParseTreeBud(Input input, ILeaf root) {
-		super(input, root);
+	ParseTreeBud(Input input, ILeaf root, Stack<AbstractParseTree> stack) {
+		super(input, root, stack);
 	}
 
 	@Override
 	boolean getCanGrow() {
-		return false;
+		if (!this.stackedRoots.isEmpty()) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	@Override
@@ -32,12 +39,14 @@ public class ParseTreeBud extends AbstractParseTree {
 		throw new RuntimeException("Should never happen");
 	}
 
-	public ParseTreeBranch extendWith(IParseTree extension) throws CannotExtendTreeException {
+	public ParseTreeBranch extendWith(INode extension) throws CannotExtendTreeException {
 		throw new CannotExtendTreeException();
 	}
 
 	public ParseTreeBud deepClone() {
-		ParseTreeBud clone = new ParseTreeBud(this.input, this.getRoot().deepClone());
+		Stack<AbstractParseTree> stack = new Stack<>();
+		stack.addAll(this.stackedRoots);
+		ParseTreeBud clone = new ParseTreeBud(this.input, this.getRoot(), stack);
 		return clone;
 	}
 

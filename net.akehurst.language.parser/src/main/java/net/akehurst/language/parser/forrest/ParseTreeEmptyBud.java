@@ -1,12 +1,14 @@
 package net.akehurst.language.parser.forrest;
 
+import java.util.Stack;
+
 import net.akehurst.language.parser.ToStringVisitor;
 
 
 public class ParseTreeEmptyBud extends ParseTreeBud {
 
 	public ParseTreeEmptyBud(Input input, int start) {
-		super(input, new EmptyLeaf(start));
+		super(input, new EmptyLeaf(start), new Stack<>());
 	}
 	
 

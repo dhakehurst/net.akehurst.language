@@ -1,16 +1,20 @@
 package net.akehurst.language.parser.forrest;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
 
+import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
+import net.akehurst.language.ogl.semanticModel.Terminal;
 import net.akehurst.language.parser.CannotExtendTreeException;
 import net.akehurst.language.parser.CannotGrowTreeException;
 import net.akehurst.language.parser.ToStringVisitor;
@@ -22,7 +26,7 @@ public 	class Forrest {
 		this.grammar = grammar;
 		this.input = input;
 		this.canGrow = false;
-		this.newGrownBranches = new ArrayList<>();
+		this.newGrownBranches = new HashSet<>();
 	}
 	Grammar grammar;
 	INodeType goal;
@@ -31,7 +35,7 @@ public 	class Forrest {
 	Set<IParseTree> goalTrees = new HashSet<>();
 	ArrayList<IParseTree> gt = new ArrayList<>();
 	
-	List<AbstractParseTree> newGrownBranches;
+	Set<AbstractParseTree> newGrownBranches;
 	
 	public ArrayList<IParseTree> getGT() {
 		gt = new ArrayList<>();
@@ -88,15 +92,17 @@ public 	class Forrest {
 			boolean grown = false;
 			boolean expanded = false;
 
-			Forrest fgh = this.growHeight(newForrest, tree);
+			try {
+				AbstractParseTree nt = tree.tryGraftBack();
+				Set<AbstractParseTree> nts = nt.growHeight(this.grammar.getRule());
+				newForrest.addAll(nts);
+			} catch (CannotGraftBackException e) {
 
-			Forrest fnb = this.growNewBranches(newForrest, tree);
+			}
 			
-			//if tree has not expanded, need to hang on to it as it may grow later,
-			// but if it didnt expand, then it can't count towards forrest growing
-//			if (!expanded) {
-//				newForrest.addNonGrowing(tree); 
-//			}
+			Set<AbstractParseTree> newBranches = tree.growWidth( this.grammar.getAllTerminal(), this.grammar.getRule() );
+			newForrest.addAll(newBranches);
+
 		}
 
 		return newForrest;
@@ -110,68 +116,76 @@ public 	class Forrest {
 	 * @throws RuleNotFoundException 
 	 *  
 	 **/
-	void growHeight(Forrest newForrest, AbstractParseTree tree) throws RuleNotFoundException, ParseTreeException {
-		List<AbstractParseTree> newGrowth = new ArrayList<>();
-		for(AbstractParseTree newBranch: this.newGrownBranches) {
-			try {
-				AbstractParseTree newTree = tree.expand(newBranch);
-				newForrest.add(newTree);
-				if (newTree.getIsComplete()) {
-					newGrowth.add(newTree);
-					List<IParseTree> newTrees = newTree.grow(this.grammar.getRule());
-					for (IParseTree pt : newTrees) {
-						AbstractParseTree npt = (AbstractParseTree) pt;
-						newForrest.add(npt);
-						//expanded = true;
-					}
-					//newGrowth.add(newTree);
-				} else {
-					newForrest.add(newTree);
-					//expanded = true;
-				}
-			} catch (CannotExtendTreeException e) {
-				//Can't extend tree...yet!
-				//if do this: newForrest.add(tree);
-				// doesn't terminate
-				// could make the isComplete dynamically evaluated, but this is time consuming!
-				newForrest.add(newBranch);
-			} catch (CannotGrowTreeException e) {
-			
-			}
-		}
-		this.newGrownBranches.addAll(newGrowth);
-	}
+//	Set<AbstractParseTree> growHeight(AbstractParseTree tree) throws RuleNotFoundException, ParseTreeException {
+//		Set<AbstractParseTree> newGrowth = new HashSet<>();
+//		for(AbstractParseTree newBranch: this.newGrownBranches) {
+//			try {
+//				AbstractParseTree newTree = tree.expand(newBranch);
+//				newGrowth.add(newTree);
+////				if (newTree.getIsComplete()) {
+////					newGrowth.add(newTree);
+////					List<IParseTree> newTrees = newTree.grow(this.grammar.getRule());
+////					for (IParseTree pt : newTrees) {
+////						AbstractParseTree npt = (AbstractParseTree) pt;
+////						newForrest.add(npt);
+////						//expanded = true;
+////					}
+//					//newGrowth.add(newTree);
+////				} else {
+////					newForrest.add(newTree);
+////					//expanded = true;
+////				}
+//			} catch (CannotExtendTreeException e) {
+//				//Can't extend tree...yet!
+//				//if do this: newForrest.add(tree);
+//				// doesn't terminate
+//				// could make the isComplete dynamically evaluated, but this is time consuming!
+//				newGrowth.add(newBranch);
+////			} catch (CannotGrowTreeException e) {
+////			
+//			}
+//		}
+//		return newGrowth;
+//	}
 	
 	/** shift 
 	 * @throws RuleNotFoundException 
 	 * @throws ParseTreeException **/
-	void growNewBranches(Forrest newForrest, AbstractParseTree tree) throws RuleNotFoundException, ParseTreeException {
+//	Set<AbstractParseTree> growNewBranches(AbstractParseTree tree) throws RuleNotFoundException, ParseTreeException {
+//		Set<AbstractParseTree> newGrowth = new HashSet<>();
+//		List<AbstractParseTree> buds = tree.createNewBuds(this.input.text, this.grammar.getAllTerminal()); //grab all possible next tokens
+//		buds.add(new ParseTreeEmptyBud(input, -1));
+//		List<AbstractParseTree> newBranches = buds;
+//		newBranches.addAll(this.newGrownBranches);
+//		for(AbstractParseTree ng : newBranches) {
+//			try {
+//				List<IParseTree> newTrees = ng.grow(this.grammar.getRule());
+//				for (IParseTree pt : newTrees) {
+//					AbstractParseTree npt = (AbstractParseTree) pt;
+//					newGrowth.add(npt);
+//					//grown = true;
+//				}
+//			} catch (CannotGrowTreeException e) {
+//				
+//			}
+//		}
+//		return newGrowth;
+//	}
 
-		List<AbstractParseTree> buds = tree.createNewBuds(this.input.text, this.grammar.getAllTerminal()); //grab all possible next tokens
-		buds.add(new ParseTreeEmptyBud(input, -1));
-		List<AbstractParseTree> newGrowth = buds;
-		newGrowth.addAll(this.newGrownBranches);
-		for(AbstractParseTree ng : newGrowth) {
-			try {
-				List<IParseTree> newTrees = ng.grow(this.grammar.getRule());
-				for (IParseTree pt : newTrees) {
-					AbstractParseTree npt = (AbstractParseTree) pt;
-					newForrest.newGrownBranches.add(npt);
-					newForrest.addIfGoal(npt);
-					//grown = true;
-				}
-			} catch (CannotGrowTreeException e) {
-				
-			}
-		}
-	}
 	
 	public void addNonGrowing(AbstractParseTree tree) {
 		possibleTrees.add(tree);
 	}
 	
+	public void addAll(Collection<? extends AbstractParseTree> trees) throws ParseTreeException {
+		for(AbstractParseTree tree: trees) {
+			this.add(tree);
+		}
+	}
+	
 	public void add(AbstractParseTree tree) throws ParseTreeException {
 		if (tree.getIsComplete()) {
+			this.newGrownBranches.add(tree);
 			if ( goal.equals(tree.getRoot().getNodeType()) ) {
 				goalTrees.add(tree.deepClone());
 			}
