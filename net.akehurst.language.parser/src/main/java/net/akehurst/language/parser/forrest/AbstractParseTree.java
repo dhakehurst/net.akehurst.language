@@ -139,21 +139,26 @@ public abstract class AbstractParseTree implements IParseTree {
 	 **/
 	public AbstractParseTree tryGraftBack() throws RuleNotFoundException, CannotGraftBackException {
 		try {
-			AbstractParseTree parent = this.peekTopStackedRoot();
-			if (parent.getIsComplete()) {
-				throw new CannotExtendTreeException();
+			if (this.getIsComplete()) {
+				AbstractParseTree parent = this.peekTopStackedRoot();
+				if (parent.getCanGrow()) {
+					return this.tryGraftInto(parent);
+				} else {
+					throw new CannotExtendTreeException("parent cannot grow");
+				}
 			} else {
-				return this.tryGraftInto(parent);
+				throw new CannotExtendTreeException("tree not complete");
 			}
 		} catch (CannotExtendTreeException e) {
-			throw new CannotGraftBackException("", e);
+			throw new CannotGraftBackException(e.getMessage(), e);
 		} catch (ParseTreeException e) { // StackEmpty
-			throw new CannotGraftBackException("", null);
+			throw new CannotGraftBackException(e.getMessage(), null);
 		}
 	}
 
 	public Set<AbstractParseTree> growHeight(List<Rule> rules) throws RuleNotFoundException, ParseTreeException {
 		Set<AbstractParseTree> result = new HashSet<>();
+		result.add((AbstractParseTree) this);
 		for (Rule rule : rules) {
 			try {
 				List<IParseTree> newTrees = this.grow(rule.getRhs());
@@ -180,13 +185,13 @@ public abstract class AbstractParseTree implements IParseTree {
 			} else if (this.getIsSkip()) {
 				return parent.extendWith(this.getRoot());
 			} else {
-				throw new CannotExtendTreeException();
+				throw new CannotExtendTreeException("not is not next expected item or a skip node");
 			}
 		} catch (CannotExtendTreeException e) {
 			throw e;
 		} catch (RuntimeException e) {
 			e.printStackTrace();
-			throw new CannotExtendTreeException();
+			throw new CannotExtendTreeException(e.getMessage());
 		}
 	}
 
@@ -276,8 +281,12 @@ public abstract class AbstractParseTree implements IParseTree {
 			if (target.getConcatination().getNodeType().equals(oldBranch.getRoot().getNodeType())) {
 				IParseTree newTree = this.growMe(target);
 				result.add(newTree);
+			} else {
+				throw new CannotGrowTreeException(target.toString() + " cannot grow " + this);
 			}
 			return result;
+		} catch (CannotGrowTreeException e) {
+			throw e;
 		} catch (Exception e) {
 			throw new RuntimeException("Should not happen", e);
 		}

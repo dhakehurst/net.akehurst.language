@@ -158,7 +158,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 	public boolean equals(Object arg) {
 		if (arg instanceof ParseTreeBranch) {
 			ParseTreeBranch other = (ParseTreeBranch)arg;
-			return this.getRoot().equals(other.getRoot());
+			return this.toString().equals(other.toString());
 		} else {
 			return false;
 		}

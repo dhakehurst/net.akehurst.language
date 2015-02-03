@@ -89,19 +89,17 @@ public 	class Forrest {
 		newForrest.goalTrees.addAll(this.goalTrees);
 
 		for(AbstractParseTree tree: this.possibleTrees) {
-			boolean grown = false;
-			boolean expanded = false;
 
 			try {
 				AbstractParseTree nt = tree.tryGraftBack();
 				Set<AbstractParseTree> nts = nt.growHeight(this.grammar.getRule());
 				newForrest.addAll(nts);
 			} catch (CannotGraftBackException e) {
-
+				int i=1;
+				Set<AbstractParseTree> newBranches = tree.growWidth( this.grammar.getAllTerminal(), this.grammar.getRule() );
+				newForrest.addAll(newBranches);
 			}
 			
-			Set<AbstractParseTree> newBranches = tree.growWidth( this.grammar.getAllTerminal(), this.grammar.getRule() );
-			newForrest.addAll(newBranches);
 
 		}
 

@@ -40,7 +40,7 @@ public class ParseTreeBud extends AbstractParseTree {
 	}
 
 	public ParseTreeBranch extendWith(INode extension) throws CannotExtendTreeException {
-		throw new CannotExtendTreeException();
+		throw new CannotExtendTreeException("cannot extend a bud");
 	}
 
 	public ParseTreeBud deepClone() {

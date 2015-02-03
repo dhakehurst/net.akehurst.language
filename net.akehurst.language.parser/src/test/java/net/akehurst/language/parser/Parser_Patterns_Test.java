@@ -60,7 +60,10 @@ public class Parser_Patterns_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"a\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 1}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : [\"[a]+\" : \"a\"]]",nt);
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -80,7 +83,10 @@ public class Parser_Patterns_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"aa\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 2}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : [\"[a]+\" : \"aa\"]]",nt);
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -100,7 +106,10 @@ public class Parser_Patterns_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"aaa\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 3}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : [\"[a]+\" : \"aaa\"]]",nt);
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -152,7 +161,10 @@ public class Parser_Patterns_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"a\"], ':' : \":\", a : [\"[a]+\" : \"a\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 3}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : [\"[a]+\" : \"a\"], ':' : \":\", a : [\"[a]+\" : \"a\"]]",nt);
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -172,7 +184,10 @@ public class Parser_Patterns_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"aa\"], ':' : \":\", a : [\"[a]+\" : \"a\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 4}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : [\"[a]+\" : \"aa\"], ':' : \":\", a : [\"[a]+\" : \"a\"]]",nt);
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -192,7 +207,10 @@ public class Parser_Patterns_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"a\"], ':' : \":\", a : [\"[a]+\" : \"aa\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 4}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : [\"[a]+\" : \"a\"], ':' : \":\", a : [\"[a]+\" : \"aa\"]]",nt);
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -212,7 +230,10 @@ public class Parser_Patterns_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"aaa\"], ':' : \":\", a : [\"[a]+\" : \"aaa\"]]",st);
+			Assert.assertEquals("Tree {*as 0, 7}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : [\"[a]+\" : \"aaa\"], ':' : \":\", a : [\"[a]+\" : \"aaa\"]]",nt);
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
