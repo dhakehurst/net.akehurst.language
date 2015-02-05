@@ -73,14 +73,21 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	
 	@Override
-	public TangibleItem getNextExpectedItem() {
+	public TangibleItem getNextExpectedItem() throws NoNextExpectedItemException {
 		RuleItem item = this.rule.getRhs();
 		if (item instanceof Concatination) {
 			Concatination c = (Concatination)item;
-			return c.getItem().get(this.nextItemIndex);
+			if (this.nextItemIndex >= c.getItem().size()) {
+				throw new NoNextExpectedItemException();
+			} else {
+				return c.getItem().get(this.nextItemIndex);
+			}
 		} else if (item instanceof Multi) {
 			Multi m = (Multi)item;
 			return m.getItem();
+		} else if (item instanceof Choice) {
+			Choice m = (Choice)item;
+			throw new NoNextExpectedItemException();
 		} else if (item instanceof SeparatedList) {
 			SeparatedList sl = (SeparatedList)item;
 			if ( (this.nextItemIndex % 2) == 1 ) {

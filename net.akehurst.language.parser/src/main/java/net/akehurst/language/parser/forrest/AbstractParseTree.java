@@ -57,7 +57,7 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	abstract boolean getCanGrow();
 
-	public abstract TangibleItem getNextExpectedItem();
+	public abstract TangibleItem getNextExpectedItem() throws NoNextExpectedItemException;
 
 	public abstract AbstractParseTree deepClone();
 
@@ -116,6 +116,9 @@ public abstract class AbstractParseTree implements IParseTree {
 	public Set<AbstractParseTree> growWidth(Set<Terminal> allTerminal, List<Rule> rules) throws RuleNotFoundException, ParseTreeException {
 		Set<AbstractParseTree> result = new HashSet<>();
 		List<ParseTreeBud> buds = this.input.createNewBuds(allTerminal, this.getRoot().getEnd());
+// doing this causes non termination of parser
+//		ParseTreeBud empty = new ParseTreeEmptyBud(this.input, this.getRoot().getEnd());
+//		buds.add(empty);
 		for (ParseTreeBud bud : buds) {
 			Stack<AbstractParseTree> stack = new Stack<>();
 			stack.addAll(this.stackedRoots);
@@ -180,15 +183,21 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	AbstractParseTree tryGraftInto(AbstractParseTree parent) throws CannotExtendTreeException, RuleNotFoundException, ParseTreeException {
 		try {
-			if (parent.getNextExpectedItem().getNodeType().equals(this.getRoot().getNodeType())) {
-				return parent.extendWith(this.getRoot());
-			} else if (this.getIsSkip()) {
-				return parent.extendWith(this.getRoot());
+			if (parent instanceof ParseTreeBud) {
+				throw new CannotExtendTreeException("parent is a bud, cannot extend it");
 			} else {
-				throw new CannotExtendTreeException("not is not next expected item or a skip node");
+				if (parent.getNextExpectedItem().getNodeType().equals(this.getRoot().getNodeType())) {
+					return parent.extendWith(this.getRoot());
+				} else if (this.getIsSkip()) {
+					return parent.extendWith(this.getRoot());
+				} else {
+					throw new CannotExtendTreeException("not is not next expected item or a skip node");
+				}
 			}
 		} catch (CannotExtendTreeException e) {
 			throw e;
+		} catch (NoNextExpectedItemException e) {
+			throw new CannotExtendTreeException(e.getMessage());
 		} catch (RuntimeException e) {
 			e.printStackTrace();
 			throw new CannotExtendTreeException(e.getMessage());
@@ -225,15 +234,16 @@ public abstract class AbstractParseTree implements IParseTree {
 		ParseTreeBranch newTree = new ParseTreeBranch(this.input, newBranch, stack, target.getOwningRule(), 1);
 		return newTree;
 	}
-
+	
 	List<IParseTree> grow(Concatination target) throws CannotGrowTreeException, RuleNotFoundException, ParseTreeException {
 
 		List<IParseTree> result = new ArrayList<>();
 		if (0 == target.getItem().size()) {
-			if (this.getRoot() instanceof EmptyLeaf) {
-				IParseTree newTree = this.growMe(target);
-				result.add(newTree);
-			}
+			throw new CannotGrowTreeException("tree cannot grow with item " + target);
+			//if (this.getRoot() instanceof EmptyLeaf) {
+//				IParseTree newTree = this.empty(target, this.getRoot().getEnd());
+//				result.add(newTree);
+			//}
 		} else if (target.getItem().get(0).getNodeType().equals(this.getRoot().getNodeType())) {
 			IParseTree newTree = this.growMe(target);
 			result.add(newTree);
