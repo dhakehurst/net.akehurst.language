@@ -44,6 +44,10 @@ public abstract class AbstractParseTree implements IParseTree {
 	public INode getRoot() {
 		return this.root;
 	}
+	
+	public boolean getIsEmpty() {
+		return this.getRoot().getIsEmpty();
+	}
 
 	public AbstractParseTree peekTopStackedRoot() throws ParseTreeException {
 		if (this.stackedRoots.isEmpty()) {
@@ -55,7 +59,7 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	abstract public boolean getIsComplete();
 
-	abstract boolean getCanGrow();
+	public abstract boolean getCanGrow();
 
 	public abstract TangibleItem getNextExpectedItem() throws NoNextExpectedItemException;
 
@@ -120,10 +124,7 @@ public abstract class AbstractParseTree implements IParseTree {
 //		ParseTreeBud empty = new ParseTreeEmptyBud(this.input, this.getRoot().getEnd());
 //		buds.add(empty);
 		for (ParseTreeBud bud : buds) {
-			Stack<AbstractParseTree> stack = new Stack<>();
-			stack.addAll(this.stackedRoots);
-			stack.push(this);
-			ParseTreeBud nt = new ParseTreeBud(this.input, bud.getRoot(), stack);
+			AbstractParseTree nt = this.pushStackNewRoot(bud.getRoot());
 			Set<AbstractParseTree> nts = nt.growHeight(rules);
 			result.addAll(nts);
 		}
@@ -131,6 +132,13 @@ public abstract class AbstractParseTree implements IParseTree {
 		return result;
 	}
 
+	AbstractParseTree pushStackNewRoot(ILeaf n) {
+		Stack<AbstractParseTree> stack = new Stack<>();
+		stack.addAll(this.stackedRoots);
+		stack.push(this);
+		return new ParseTreeBud(this.input, n, stack);
+	}
+	
 	/**
 	 * reduce for this tree, see if the current root will expand (fit into the top stacked root)
 	 * 

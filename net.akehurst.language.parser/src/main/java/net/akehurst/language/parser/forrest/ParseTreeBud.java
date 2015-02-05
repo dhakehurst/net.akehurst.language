@@ -16,7 +16,7 @@ public class ParseTreeBud extends AbstractParseTree {
 	}
 
 	@Override
-	boolean getCanGrow() {
+	public boolean getCanGrow() {
 		if (!this.stackedRoots.isEmpty()) {
 			return true;
 		} else {
@@ -42,7 +42,7 @@ public class ParseTreeBud extends AbstractParseTree {
 	public ParseTreeBranch extendWith(INode extension) throws CannotExtendTreeException {
 		throw new CannotExtendTreeException("cannot extend a bud");
 	}
-
+	
 	public ParseTreeBud deepClone() {
 		Stack<AbstractParseTree> stack = new Stack<>();
 		stack.addAll(this.stackedRoots);

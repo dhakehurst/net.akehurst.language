@@ -22,7 +22,7 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 	@Override
 	public String visit(IParseTree target, String indent) throws RuntimeException {
 		String s = indent;
-		s += "Tree {" +(target.getIsComplete()?"*":"?") + target.getRoot().getName() + " " + target.getRoot().getStart() + ", " + target.getRoot().getEnd() + "}";
+		s += "Tree {" +(target.getIsComplete()?"*":"+")+(target.getCanGrow()?"?":"") + target.getRoot().getName() + " " + target.getRoot().getStart() + ", " + target.getRoot().getEnd() + "}";
 		//s += target.getRoot().accept(this, indent);
 		return s;
 	}

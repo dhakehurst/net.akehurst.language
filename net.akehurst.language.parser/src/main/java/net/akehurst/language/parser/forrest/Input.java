@@ -28,7 +28,7 @@ public class Input {
 	public List<ParseTreeBud> createNewBuds(Set<Terminal> allTerminal, int pos) throws RuleNotFoundException {
 		String subString = this.text.toString().substring(pos);
 		List<ParseTreeBud> buds = new ArrayList<>();
-		//buds.add(new ParseTreeEmptyBud(this.input)); // always add empty bud as a new bud
+		buds.add(new ParseTreeEmptyBud(this,pos)); // always add empty bud as a new bud
 		for (Terminal terminal : allTerminal) {
 			try {
 //				if (terminal.getNodeType() instanceof SkipNodeType) {

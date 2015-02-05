@@ -16,6 +16,11 @@ public class EmptyLeaf implements ILeaf {
 	int start;
 	
 	@Override
+	public boolean getIsEmpty() {
+		return true;
+	}
+	
+	@Override
 	public INodeType getNodeType() throws ParseTreeException {
 		return new LeafNodeType();
 	}

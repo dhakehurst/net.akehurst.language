@@ -27,6 +27,11 @@ public class Leaf implements ILeaf {
 	Terminal terminal;
 
 	@Override
+	public boolean getIsEmpty() {
+		return false;
+	}
+	
+	@Override
 	public INodeType getNodeType() throws ParseTreeException {
 		try {
 			return this.terminal.getNodeType();

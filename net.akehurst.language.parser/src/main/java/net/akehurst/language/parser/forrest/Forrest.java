@@ -96,8 +96,12 @@ public 	class Forrest {
 				newForrest.addAll(nts);
 			} catch (CannotGraftBackException e) {
 				int i=1;
-				Set<AbstractParseTree> newBranches = tree.growWidth( this.grammar.getAllTerminal(), this.grammar.getRule() );
-				newForrest.addAll(newBranches);
+				if (tree.getIsEmpty()) {
+					//don't grow width
+				} else {
+					Set<AbstractParseTree> newBranches = tree.growWidth( this.grammar.getAllTerminal(), this.grammar.getRule() );
+					newForrest.addAll(newBranches);
+				}
 			}
 			
 
@@ -184,7 +188,7 @@ public 	class Forrest {
 	public void add(AbstractParseTree tree) throws ParseTreeException {
 		if (tree.getIsComplete()) {
 			this.newGrownBranches.add(tree);
-			if ( goal.equals(tree.getRoot().getNodeType()) ) {
+			if ( tree.stackedRoots.isEmpty() && goal.equals(tree.getRoot().getNodeType()) ) {
 				goalTrees.add(tree.deepClone());
 			}
 		}

@@ -45,7 +45,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 	boolean complete;
 	
 	@Override
-	boolean getCanGrow() {
+	public boolean getCanGrow() {
 		return this.canGrow;
 	}
 	
@@ -121,12 +121,17 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	boolean calculateCanGrow() {
 		RuleItem item = this.rule.getRhs();
-		boolean reachedEnd = this.getRoot().getMatchedTextLength() >= this.input.getLength();
-		if (reachedEnd) return false;
 		if (!this.stackedRoots.isEmpty()) return true;
+		boolean reachedEnd = this.getRoot().getMatchedTextLength() >= this.input.getLength();
+//		if (reachedEnd)
+//			return false;
 		if (item instanceof Concatination) {
 			Concatination c = (Concatination)item;
-			return this.nextItemIndex < c.getItem().size();
+			if ( this.nextItemIndex < c.getItem().size() ) {
+				return true;
+			} else {
+				return false; //!reachedEnd;
+			}
 		} else if (item instanceof Choice) {
 			return false;
 		} else if (item instanceof Multi) {
@@ -136,7 +141,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 		} else if (item instanceof SeparatedList) {
 			SeparatedList sl = (SeparatedList)item;
 			int size = this.nextItemIndex;
-			return true;
+			return !reachedEnd;
 		} else {
 			throw new RuntimeException("Should never happen");
 		}

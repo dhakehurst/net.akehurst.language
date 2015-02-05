@@ -28,6 +28,15 @@ public class Branch implements IBranch {
 	int start;
 	
 	@Override
+	public boolean getIsEmpty() {
+		boolean res = true;
+		for(INode n: this.children) {
+			res &= n.getIsEmpty();
+		}
+		return res;
+	}
+	
+	@Override
 	public INodeType getNodeType() throws ParseTreeException {
 		return this.nodeType;
 	}
