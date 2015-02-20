@@ -73,7 +73,7 @@ public class Parser_Multi_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 0, 1}",st);
+			Assert.assertEquals("Tree {*?as 0, 1}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : ['a' : \"a\"]]",nt);
@@ -96,7 +96,7 @@ public class Parser_Multi_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 0, 2}",st);
+			Assert.assertEquals("Tree {*?as 0, 2}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : ['a' : \"a\"], a : ['a' : \"a\"]]",nt);

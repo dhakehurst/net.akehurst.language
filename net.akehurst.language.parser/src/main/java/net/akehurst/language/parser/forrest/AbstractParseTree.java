@@ -39,7 +39,10 @@ public abstract class AbstractParseTree implements IParseTree {
 	Input input;
 	INode root;
 	Stack<AbstractParseTree> stackedRoots;
-
+	public Stack<AbstractParseTree> getStackedTrees() {
+		return this.stackedRoots;
+	}
+	
 	@Override
 	public INode getRoot() {
 		return this.root;

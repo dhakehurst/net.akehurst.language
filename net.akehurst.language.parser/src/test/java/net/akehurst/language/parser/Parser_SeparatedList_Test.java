@@ -228,6 +228,29 @@ public class Parser_SeparatedList_Test {
 	}
 	
 	@Test
+	public void asSP_as_aaaa() {
+		// grammar, goal, input
+		try {
+			Grammar g = asSP();
+			String goal = "as";
+			String text = "a, a, a, a";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("","");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("Tree {*as 0, 10}",st);
+			
+			String nt = tree.getRoot().accept(v, "");
+			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"]]",nt);
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
 	public void asSP_as_aaa2() {
 		// grammar, goal, input
 		try {

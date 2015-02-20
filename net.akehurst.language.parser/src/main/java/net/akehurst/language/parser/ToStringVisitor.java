@@ -4,6 +4,7 @@ import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
+import net.akehurst.language.parser.forrest.AbstractParseTree;
 
 public class ToStringVisitor implements IParseTreeVisitor<String, String, RuntimeException> {
 
@@ -22,11 +23,26 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 	@Override
 	public String visit(IParseTree target, String indent) throws RuntimeException {
 		String s = indent;
-		s += "Tree {" +(target.getIsComplete()?"*":"+")+(target.getCanGrow()?"?":"") + target.getRoot().getName() + " " + target.getRoot().getStart() + ", " + target.getRoot().getEnd() + "}";
+		s += "Tree {" +(target.getIsComplete()?"*":"+")+(target.getCanGrow()?"?":"")
+				+ target.getRoot().getName()
+				+ getStackRootsAsString(target)
+				+ " " + target.getRoot().getStart() + ", " + target.getRoot().getEnd() + "}";
 		//s += target.getRoot().accept(this, indent);
 		return s;
 	}
 
+	String getStackRootsAsString(IParseTree target) {
+		if (((AbstractParseTree)target).getStackedTrees().isEmpty()) {
+			return "";
+		} else {
+			String s = "";
+			for(AbstractParseTree st : ((AbstractParseTree)target).getStackedTrees()) {
+				s += " " + st.getRoot().getName();
+			}
+			return s;
+		}
+	}
+	
 	@Override
 	public String visit(ILeaf target, String indent) throws RuntimeException {
 		String s = indent + target.getName() + " : \"" + target.getMatchedText().replace("\n", new String(Character.toChars(0x23CE))) + "\"";

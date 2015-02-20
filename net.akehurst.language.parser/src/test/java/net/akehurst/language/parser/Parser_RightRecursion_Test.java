@@ -19,8 +19,8 @@ public class Parser_RightRecursion_Test {
 
 	Grammar as() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").concatination(new NonTerminal("a"), new NonTerminal("as"));
-		b.rule("as").concatination(new NonTerminal("a"));
+		b.rule("as").choice(new NonTerminal("as.group1"), new NonTerminal("a"));
+		b.rule("as.group1").concatination(new NonTerminal("a"), new NonTerminal("as"));
 		b.rule("a").concatination(new TerminalLiteral("a"));
 		return b.get();
 	}
