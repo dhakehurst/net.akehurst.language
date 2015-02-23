@@ -15,7 +15,7 @@ import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class Parser_LeftRecursion_Test {
+public class Parser_LeftRecursion_Test extends AbstractParser_Test {
 
 	Grammar as() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
@@ -23,21 +23,6 @@ public class Parser_LeftRecursion_Test {
 		b.rule("as$group1").concatination(new NonTerminal("as"), new NonTerminal("a"));
 		b.rule("a").concatination(new TerminalLiteral("a"));
 		return b.get();
-	}
-	
-	IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
-		try {
-			INodeType goal = grammar.findRule(goalName).getNodeType();
-			IParser parser = new ScannerLessParser(grammar);
-			IParseTree tree = parser.parse(goal, text);
-			return tree;
-		} catch (RuleNotFoundException e) {
-			Assert.fail(e.getMessage());
-			return null;
-		} catch (ParseTreeException e) {
-			Assert.fail(e.getMessage());
-			return null;
-		}
 	}
 	
 	@Test

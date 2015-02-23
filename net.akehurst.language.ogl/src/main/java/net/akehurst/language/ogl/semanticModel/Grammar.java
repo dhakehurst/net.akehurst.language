@@ -42,6 +42,30 @@ public class Grammar {
 		this.rule = value;
 	}
 	
+	public List<Rule> getAllRule() {
+		ArrayList<Rule> allRules = new ArrayList<>();
+		allRules.addAll(this.getRule());
+		for(Grammar pg: this.getExtends()) {
+			allRules.addAll(pg.getAllRule());
+		}
+		return allRules;
+	}
+	
+	
+	public Rule findAllRule(String ruleName) throws RuleNotFoundException {
+		try {
+			return this.findRule(ruleName);
+		} catch (RuleNotFoundException e) {
+		}
+		for(Grammar pg: this.getExtends()) {
+			try {
+				return pg.findRule(ruleName);
+			} catch (RuleNotFoundException e) {
+			}	
+		}
+		throw new RuleNotFoundException(ruleName + " in Grammar("+this.getName()+").findAllRule");
+	}
+	
 	public Rule findRule(String ruleName) throws RuleNotFoundException {
 		ArrayList<Rule> rules = new ArrayList<>();
 		for(Rule r : this.getRule()) {
@@ -68,7 +92,7 @@ public class Grammar {
 	
 	Set<Terminal> findAllTerminal() {
 		Set<Terminal> result = new HashSet<>();
-		for (Rule rule : this.getRule()) {
+		for (Rule rule : this.getAllRule()) {
 			RuleItem ri = rule.getRhs();
 			result.addAll(this.findAllTerminal(0, rule, ri ) );
 		}
@@ -114,7 +138,14 @@ public class Grammar {
 	@Override
 	public String toString() {
 		String r = this.getNamespace() + System.lineSeparator();
-		r += "grammar "+this.getName() + "{" + System.lineSeparator();
+		String extendStr = "";
+		if (! this.getExtends().isEmpty()) {
+			extendStr += " extends ";
+			for(Grammar pg : this.getExtends()) {
+				extendStr += pg.getName() + ", ";
+			}
+		}
+		r += "grammar "+this.getName() + extendStr +"{" + System.lineSeparator();
 		for(Rule i : this.getRule()) {
 			r += i.toString() + System.lineSeparator();
 		}

@@ -15,7 +15,7 @@ import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class Parser_Test {
+public class Parser_Concatination_Test extends AbstractParser_Test {
 
 	/**
 	 * namespace test ;
@@ -73,21 +73,6 @@ public class Parser_Test {
 		b.rule("b").concatination(new TerminalLiteral("b"));
 		b.rule("c").concatination(new TerminalLiteral("c"));
 		return b.get();
-	}
-	
-	IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
-		try {
-			INodeType goal = grammar.findRule(goalName).getNodeType();
-			IParser parser = new ScannerLessParser(grammar);
-			IParseTree tree = parser.parse(goal, text);
-			return tree;
-		} catch (RuleNotFoundException e) {
-			Assert.fail(e.getMessage());
-			return null;
-		} catch (ParseTreeException e) {
-			Assert.fail(e.getMessage());
-			return null;
-		}
 	}
 	
 	@Test

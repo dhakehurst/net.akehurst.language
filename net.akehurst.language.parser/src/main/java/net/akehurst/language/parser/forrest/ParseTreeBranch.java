@@ -26,19 +26,6 @@ public class ParseTreeBranch extends AbstractParseTree {
 		this.complete = this.calculateIsComplete();
 	}
 	
-//	public ParseTreeBranch(INodeType nodeType, IParseTree branchTree, Rule rule, Input input) {
-//		super(input);
-//		List<INode> children = new ArrayList<>();
-//		children.add(branchTree.getRoot());
-//		Branch branch = new Branch(nodeType,children);
-//		this.rule = rule;
-//		this.root = branch;
-//		this.nextItemIndex = 1;
-//		this.length = 1;
-//		super.canGrow = this.calculateCanGrow();
-//		super.complete = this.calculateIsComplete();
-//	}
-	
 	Rule rule;
 	int nextItemIndex;
 	boolean canGrow;

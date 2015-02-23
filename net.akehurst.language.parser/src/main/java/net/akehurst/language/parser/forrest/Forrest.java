@@ -22,14 +22,16 @@ import net.akehurst.language.parser.ToStringVisitor;
 
 public 	class Forrest {
 
-	public Forrest(INodeType goal, Grammar grammar, Input input) {
+	public Forrest(INodeType goal, Grammar grammar, List<Rule> allRules, Input input) {
 		this.goal = goal;
 		this.grammar = grammar;
+		this.allRules = allRules;
 		this.input = input;
 		this.canGrow = false;
 		this.newGrownBranches = new HashSet<>();
 	}
 	Grammar grammar;
+	List<Rule> allRules;
 	INodeType goal;
 	Input input;
 	Set<AbstractParseTree> possibleTrees = new HashSet<>();
@@ -44,7 +46,7 @@ public 	class Forrest {
 		return gt;
 	}
 	public Forrest clone() {
-		Forrest clone = new Forrest(this.goal, this.grammar, this.input);
+		Forrest clone = new Forrest(this.goal, this.grammar, this.allRules, this.input);
 		clone.possibleTrees.addAll(this.possibleTrees);
 		clone.goalTrees.addAll(this.goalTrees);
 		return clone;
@@ -86,21 +88,21 @@ public 	class Forrest {
 	 * @throws ParseTreeException 
 	 */
 	public Forrest grow() throws RuleNotFoundException, ParseTreeException {
-		Forrest newForrest = new Forrest(this.goal, this.grammar, this.input);
+		Forrest newForrest = new Forrest(this.goal, this.grammar, this.allRules, this.input);
 		newForrest.goalTrees.addAll(this.goalTrees);
 
 		for(AbstractParseTree tree: this.possibleTrees) {
 
 			try {
 				AbstractParseTree nt = tree.tryGraftBack();
-				Set<AbstractParseTree> nts = nt.growHeight(this.grammar.getRule());
+				Set<AbstractParseTree> nts = nt.growHeight(this.allRules);
 				newForrest.addAll(nts);
 			} catch (CannotGraftBackException e) {
 				int i=1;
 				if (tree.getIsEmpty()) {
 					//don't grow width
 				} else {
-					Set<AbstractParseTree> newBranches = tree.growWidth( this.grammar.getAllTerminal(), this.grammar.getRule() );
+					Set<AbstractParseTree> newBranches = tree.growWidth( this.grammar.getAllTerminal(), this.allRules );
 					newForrest.addAll(newBranches);
 				}
 			}
@@ -214,7 +216,7 @@ public 	class Forrest {
 	}
 	
 	public Forrest shallowClone() {
-		Forrest clone = new Forrest(this.goal, this.grammar, this.input);
+		Forrest clone = new Forrest(this.goal, this.grammar, this.allRules, this.input);
 		clone.canGrow = this.canGrow;
 		clone.goalTrees.addAll(this.goalTrees);
 		clone.possibleTrees.addAll(this.possibleTrees);

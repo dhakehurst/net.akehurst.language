@@ -12,7 +12,7 @@ public class NonTerminal extends TangibleItem {
 	Rule referencedRule;
 	public Rule getReferencedRule() throws RuleNotFoundException {
 		if (null == this.referencedRule) {
-			this.referencedRule = this.getOwningRule().getGrammar().findRule(this.referencedRuleName);
+			this.referencedRule = this.getOwningRule().getGrammar().findAllRule(this.referencedRuleName);
 		}
 		return this.referencedRule;
 	}
