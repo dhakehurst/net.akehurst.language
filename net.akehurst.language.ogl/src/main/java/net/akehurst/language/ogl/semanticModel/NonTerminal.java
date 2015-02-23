@@ -50,11 +50,7 @@ public class NonTerminal extends TangibleItem {
 	//--- Object ---
 	@Override
 	public String toString() {
-		try {
-			return this.getReferencedRule().getName();
-		} catch (RuleNotFoundException e) {
-			return "ERROR: cannot find rule "+this.referencedRuleName;
-		}
+		return this.referencedRuleName;
 	}
 	
 	@Override

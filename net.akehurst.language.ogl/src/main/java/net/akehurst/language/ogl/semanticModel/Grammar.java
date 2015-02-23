@@ -43,12 +43,19 @@ public class Grammar {
 	}
 	
 	public Rule findRule(String ruleName) throws RuleNotFoundException {
+		ArrayList<Rule> rules = new ArrayList<>();
 		for(Rule r : this.getRule()) {
 			if (r.getName().equals(ruleName)) {
-				return r;
+				rules.add(r);
 			}
 		}
-		throw new RuleNotFoundException(ruleName + " in Grammar("+this.getName()+").findRule");
+		if (rules.isEmpty()) {
+			throw new RuleNotFoundException(ruleName + " in Grammar("+this.getName()+").findRule");
+		} else if (rules.size() == 1) {
+			return  rules.get(0);
+		} else {
+			throw new RuleNotFoundException(ruleName + "too many rules in Grammar("+this.getName()+").findRule with name "+ruleName);
+		}
 	}
 	
 	Set<Terminal> allTerminal;

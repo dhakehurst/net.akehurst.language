@@ -54,14 +54,14 @@ public class ScannerLessParser implements IParser {
 		}
 		return result;
 	}
-
+	
 	@Override
 	public IParseTree parse(INodeType goal, CharSequence text) throws ParseFailedException, ParseTreeException {
 		try {
 			return this.doParse2(goal, text);
 		} catch (RuleNotFoundException e) {
 			// Should never happen!
-			throw new RuntimeException("Should never happen");
+			throw new RuntimeException("Should never happen", e);
 		}
 	}
 

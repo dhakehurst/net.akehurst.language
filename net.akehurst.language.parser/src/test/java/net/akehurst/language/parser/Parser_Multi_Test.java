@@ -29,8 +29,8 @@ public class Parser_Multi_Test {
 	
 	Grammar ab01_2() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("ab01").concatination(new NonTerminal("a"), new NonTerminal("b"));
-		b.rule("ab01").concatination(new NonTerminal("a"));
+		b.rule("ab01$group1").concatination(new NonTerminal("a"), new NonTerminal("b"));
+		b.rule("ab01").choice(new NonTerminal("ab01$group1"), new NonTerminal("a"));
 		b.rule("a").concatination(new TerminalLiteral("a"));
 		b.rule("b").concatination(new TerminalLiteral("b"));
 
@@ -193,7 +193,7 @@ public class Parser_Multi_Test {
 			Assert.assertEquals("Tree {*ab01 0, 2}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("ab01 : [a : ['a' : \"a\"], b : ['b' : \"b\"]]",nt);
+			Assert.assertEquals("ab01 : [ab01$group1 : [a : ['a' : \"a\"], b : ['b' : \"b\"]]]",nt);
 
 			
 		} catch (ParseFailedException e) {

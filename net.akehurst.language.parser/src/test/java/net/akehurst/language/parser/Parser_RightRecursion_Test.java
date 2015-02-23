@@ -19,8 +19,8 @@ public class Parser_RightRecursion_Test {
 
 	Grammar as() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").choice(new NonTerminal("as.group1"), new NonTerminal("a"));
-		b.rule("as.group1").concatination(new NonTerminal("a"), new NonTerminal("as"));
+		b.rule("as").choice(new NonTerminal("as$group1"), new NonTerminal("a"));
+		b.rule("as$group1").concatination(new NonTerminal("a"), new NonTerminal("as"));
 		b.rule("a").concatination(new TerminalLiteral("a"));
 		return b.get();
 	}
@@ -79,7 +79,7 @@ public class Parser_RightRecursion_Test {
 			Assert.assertEquals("Tree {*as 0, 2}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], as : [a : ['a' : \"a\"]]]",nt);
+			Assert.assertEquals("as : [as$group1 : [a : ['a' : \"a\"], as : [a : ['a' : \"a\"]]]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -102,7 +102,7 @@ public class Parser_RightRecursion_Test {
 			Assert.assertEquals("Tree {*as 0, 3}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], as : [a : ['a' : \"a\"], as : [a : ['a' : \"a\"]]]]",nt);
+			Assert.assertEquals("as : [as$group1 : [a : ['a' : \"a\"], as : [as$group1 : [a : ['a' : \"a\"], as : [a : ['a' : \"a\"]]]]]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

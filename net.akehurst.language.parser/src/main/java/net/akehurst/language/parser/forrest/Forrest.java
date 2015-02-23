@@ -13,6 +13,7 @@ import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.Grammar;
+import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.Terminal;
 import net.akehurst.language.parser.CannotExtendTreeException;
@@ -109,6 +110,7 @@ public 	class Forrest {
 
 		return newForrest;
 	}
+	
 	
 	/**
 	 * reduce
