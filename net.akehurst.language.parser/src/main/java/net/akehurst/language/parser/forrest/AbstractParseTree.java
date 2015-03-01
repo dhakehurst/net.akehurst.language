@@ -64,6 +64,8 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	public abstract boolean getCanGrow();
 
+	abstract boolean getCanGraftBack();
+	
 	public abstract TangibleItem getNextExpectedItem() throws NoNextExpectedItemException;
 
 	public abstract AbstractParseTree deepClone();
@@ -153,7 +155,7 @@ public abstract class AbstractParseTree implements IParseTree {
 	 **/
 	public AbstractParseTree tryGraftBack() throws RuleNotFoundException, CannotGraftBackException {
 		try {
-			if (this.getIsComplete()) {
+			if (this.getCanGraftBack()) {
 				AbstractParseTree parent = this.peekTopStackedRoot();
 				if (parent.getCanGrow()) {
 					return this.tryGraftInto(parent);
@@ -286,8 +288,13 @@ public abstract class AbstractParseTree implements IParseTree {
 			List<IParseTree> result = new ArrayList<>();
 			if (target.getItem().getNodeType().equals(oldBranch.getRoot().getNodeType())
 					|| (0 == target.getMin() && oldBranch.getRoot().getNodeType().equals(new LeafNodeType()))) {
+				
+				//need to create a 'complete' version and a 'non-complete' version of the tree
 				IParseTree newTree = this.growMe(target);
+				ParseTreeBranch newTree2 = ((ParseTreeBranch)newTree).deepClone();
+				newTree2.complete = true;
 				result.add(newTree);
+				//result.add(newTree2);
 			}
 			return result;
 		} catch (Exception e) {
@@ -301,7 +308,10 @@ public abstract class AbstractParseTree implements IParseTree {
 			List<IParseTree> result = new ArrayList<>();
 			if (target.getConcatination().getNodeType().equals(oldBranch.getRoot().getNodeType())) {
 				IParseTree newTree = this.growMe(target);
+				ParseTreeBranch newTree2 = ((ParseTreeBranch)newTree).deepClone();
+				newTree2.complete = false;
 				result.add(newTree);
+				//result.add(newTree2);
 			} else {
 				throw new CannotGrowTreeException(target.toString() + " cannot grow " + this);
 			}

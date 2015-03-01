@@ -17,7 +17,7 @@ import net.akehurst.language.ogl.semanticModel.TangibleItem;
 import net.akehurst.language.parser.ToStringVisitor;
 
 public class ParseTreeBranch extends AbstractParseTree {
-
+	
 	public ParseTreeBranch(Input input, IBranch root, Stack<AbstractParseTree> stack, Rule rule, int nextItemIndex) {
 		super(input, root, stack);
 		this.rule = rule;
@@ -39,6 +39,11 @@ public class ParseTreeBranch extends AbstractParseTree {
 	@Override
 	public boolean getIsComplete() {
 		return this.complete;
+	}
+	
+	@Override
+	public boolean getCanGraftBack() {
+		return this.getIsComplete();
 	}
 	
 	@Override
@@ -97,7 +102,8 @@ public class ParseTreeBranch extends AbstractParseTree {
 		} else if (item instanceof Multi) {
 			Multi m = (Multi)item;
 			int size = this.nextItemIndex;
-			return m.getMin() <= size && (size <= m.getMax() || -1 == m.getMax());
+			return size >= m.getMin();
+			//return m.getMin() <= size && (size <= m.getMax() || -1 == m.getMax());
 		} else if (item instanceof SeparatedList) {
 			SeparatedList sl = (SeparatedList)item;
 			int size = this.nextItemIndex;
@@ -110,8 +116,8 @@ public class ParseTreeBranch extends AbstractParseTree {
 		RuleItem item = this.rule.getRhs();
 		if (!this.stackedRoots.isEmpty()) return true;
 		boolean reachedEnd = this.getRoot().getMatchedTextLength() >= this.input.getLength();
-//		if (reachedEnd)
-//			return false;
+		if (reachedEnd)
+			return false;
 		if (item instanceof Concatination) {
 			Concatination c = (Concatination)item;
 			if ( this.nextItemIndex < c.getItem().size() ) {
@@ -124,7 +130,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 		} else if (item instanceof Multi) {
 			Multi m = (Multi)item;
 			int size = this.nextItemIndex;
-			return size < m.getMax();
+			return -1==m.getMax() || size < m.getMax();
 		} else if (item instanceof SeparatedList) {
 			SeparatedList sl = (SeparatedList)item;
 			int size = this.nextItemIndex;

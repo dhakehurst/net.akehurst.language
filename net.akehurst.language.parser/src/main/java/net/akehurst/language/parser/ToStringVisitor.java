@@ -37,7 +37,7 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 		} else {
 			String s = "";
 			for(AbstractParseTree st : ((AbstractParseTree)target).getStackedTrees()) {
-				s += " " + st.getRoot().getName();
+				s = " {" + st.getRoot().getName() + " " + st.getRoot().getStart() + ", " + st.getRoot().getEnd() + "}" + s;
 			}
 			return s;
 		}

@@ -1,13 +1,14 @@
 package net.akehurst.language.parser;
 
+import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.parserTree.simple.ParseTreeFactory;
 import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.GrammarBuilder;
 import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -37,27 +38,25 @@ public class Special_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*S 0, 3}",st);
+			Assert.assertEquals("Tree {*S 1, 4}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			
-			ParseTreeFactory ptb = new ParseTreeFactory();
-//			IParseTree expected =
-//				ptb.createBranch("S",
-//					ptb.createBranch("S$group1",
-//						ptb.createLeaf("a", "a"),
-//						ptb.createBranch("S",
-//							ptb.createLeaf("a", "a")
-//						),
-//						ptb.createBranch("B",
-//							ptb.createEmptyLeaf()
-//						),
-//						ptb.createBranch("B",
-//							ptb.createLeaf("b", "b")
-//						)
-//					)
-//				);
-			Assert.assertEquals("S : [S$group1 : ['a' : \"a\", S : ['a' : \"a\"], B : [ : \"\"], B : ['b' : \"b\"]]]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected =
+				b.branch("S",
+					b.branch("S$group1",
+						b.leaf("a", "a"),
+						b.branch("S",
+							b.leaf("a", "a")
+						),
+						b.branch("B",
+							b.emptyLeaf()
+						),
+						b.branch("B",
+							b.leaf("b", "b")
+						)
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot()); //fails because and extra emptyLeaf is in the result!
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

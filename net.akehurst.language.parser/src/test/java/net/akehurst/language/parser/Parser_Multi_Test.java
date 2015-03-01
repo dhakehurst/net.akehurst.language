@@ -1,5 +1,6 @@
 package net.akehurst.language.parser;
 
+import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
@@ -11,6 +12,7 @@ import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -58,10 +60,16 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*?as 0, 1}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
+			Assert.assertEquals("Tree {*as 1, 2}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"]]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+				b.branch("as",
+					b.branch("a",
+						b.leaf("a", "a")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -81,10 +89,19 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*?as 0, 2}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
+			Assert.assertEquals("Tree {*as 1, 3}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], a : ['a' : \"a\"]]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+				b.branch("as",
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.branch("a",
+						b.leaf("a", "a")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -104,11 +121,23 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 0, 3}",st);
-			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], a : ['a' : \"a\"], a : ['a' : \"a\"]]",nt);
-			
+			Assert.assertEquals("Tree {*as 1, 4}",st);
+						
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+				b.branch("as",
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.branch("a",
+						b.leaf("a", "a")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+						
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
@@ -127,11 +156,19 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*ab01 0, 1}",st);
+			Assert.assertEquals("Tree {*ab01 1, 2}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("ab01 : [a : ['a' : \"a\"], b01 : [ : \"\"]]",nt);
-
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+				b.branch("ab01",
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.branch("b01",
+						b.emptyLeaf()
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -151,12 +188,17 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*ab01 0, 1}",st);
+			Assert.assertEquals("Tree {*ab01 1, 2}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("ab01 : [a : ['a' : \"a\"]]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+				b.branch("ab01",
+					b.branch("a",
+						b.leaf("a", "a")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 
-			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
@@ -175,11 +217,21 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*ab01 0, 2}",st);
+			Assert.assertEquals("Tree {*ab01 1, 3}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("ab01 : [ab01$group1 : [a : ['a' : \"a\"], b : ['b' : \"b\"]]]",nt);
-
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+				b.branch("ab01",
+					b.branch("ab01$group1",
+						b.branch("a",
+							b.leaf("a", "a")
+						),
+						b.branch("b",
+							b.leaf("b", "b")
+						)
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -199,10 +251,21 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*ab01 0, 2}",st);
+			Assert.assertEquals("Tree {*ab01 1, 3}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("ab01 : [a : ['a' : \"a\"], b01 : [b : ['b' : \"b\"]]]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+				b.branch("ab01",
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.branch("b01",
+						b.branch("b",
+							b.leaf("b", "b")
+						)
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

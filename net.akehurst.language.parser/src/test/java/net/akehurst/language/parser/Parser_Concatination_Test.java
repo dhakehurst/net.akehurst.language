@@ -1,5 +1,6 @@
 package net.akehurst.language.parser;
 
+import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
@@ -11,6 +12,7 @@ import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -88,10 +90,14 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*a 0, 1}",st);
+			Assert.assertEquals("Tree {*a 1, 2}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("a : ['a' : \"a\"]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+					b.branch("a",
+						b.leaf("a", "a")
+					);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -128,10 +134,14 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*abc 0, 3}",st);
+			Assert.assertEquals("Tree {*abc 1, 4}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("abc : ['abc' : \"abc\"]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+					b.branch("abc",
+						b.leaf("abc", "abc")
+					);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -151,10 +161,14 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*a 0, 1}",st);
+			Assert.assertEquals("Tree {*a 1, 2}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("a : ['a' : \"a\"]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+					b.branch("a",
+						b.leaf("a", "a")
+					);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -190,10 +204,14 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*b 0, 1}",st);
+			Assert.assertEquals("Tree {*b 1, 2}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("b : ['b' : \"b\"]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+					b.branch("b",
+						b.leaf("b", "b")
+					);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -213,10 +231,19 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*ab 0, 2}",st);
+			Assert.assertEquals("Tree {*ab 1, 3}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("ab : [a : ['a' : \"a\"], b : ['b' : \"b\"]]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+				b.branch("ab",
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.branch("b",
+						b.leaf("b", "b")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -268,10 +295,24 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*abc 0, 3}",st);
+			Assert.assertEquals("Tree {*abc 1, 4}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("abc : [ab : [a : ['a' : \"a\"], b : ['b' : \"b\"]], c : ['c' : \"c\"]]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+				b.branch("abc", 
+					b.branch("ab",
+						b.branch("a",
+							b.leaf("a", "a")
+						),
+						b.branch("b",
+							b.leaf("b", "b")
+						)
+					),
+					b.branch("c",
+						b.leaf("c", "c")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -291,11 +332,22 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*abc 0, 3}",st);
+			Assert.assertEquals("Tree {*abc 1, 4}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("abc : [a : ['a' : \"a\"], b : ['b' : \"b\"], c : ['c' : \"c\"]]",nt);
-
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected =
+				b.branch("abc", 
+						b.branch("a",
+							b.leaf("a", "a")
+						),
+						b.branch("b",
+							b.leaf("b", "b")
+						),
+					b.branch("c",
+						b.leaf("c", "c")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -303,7 +355,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void abc2_abc_asbsc() {
+	public void abc2_abc_aSPbSPc() {
 		// grammar, goal, input
 		try {
 			Grammar g = a_b_c();
@@ -315,11 +367,29 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*abc 0, 5}",st);
-			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("abc : [a : ['a' : \"a\"], SPACE : [' ' : \" \"], b : ['b' : \"b\"], SPACE : [' ' : \" \"], c : ['c' : \"c\"]]",nt);
-			
+			Assert.assertEquals("Tree {*abc 1, 6}",st);
+
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected =
+				b.branch("abc", 
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.branch("SPACE",
+							b.leaf(" ", " ")
+					),
+					b.branch("b",
+						b.leaf("b", "b")
+					),
+					b.branch("SPACE",
+							b.leaf(" ", " ")
+					),
+					b.branch("c",
+						b.leaf("c", "c")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
@@ -354,11 +424,24 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*abc 0, 3}",st);
+			Assert.assertEquals("Tree {*abc 1, 4}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("abc : [a : ['a' : \"a\"], bc : [b : ['b' : \"b\"], c : ['c' : \"c\"]]]",nt);
-
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected =
+				b.branch("abc", 
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.branch("bc",
+						b.branch("b",
+							b.leaf("b", "b")
+						),
+						b.branch("c",
+							b.leaf("c", "c")
+						)
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

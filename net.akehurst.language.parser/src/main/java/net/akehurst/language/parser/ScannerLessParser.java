@@ -11,6 +11,7 @@ import java.util.Stack;
 import net.akehurst.language.core.lexicalAnalyser.IToken;
 import net.akehurst.language.core.lexicalAnalyser.ITokenType;
 import net.akehurst.language.core.parser.IBranch;
+import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.INodeIdentity;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
@@ -23,9 +24,11 @@ import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
+import net.akehurst.language.ogl.semanticModel.SkipRule;
 import net.akehurst.language.ogl.semanticModel.Terminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.parser.forrest.AbstractParseTree;
+import net.akehurst.language.parser.forrest.Branch;
 import net.akehurst.language.parser.forrest.Forrest;
 import net.akehurst.language.parser.forrest.Input;
 import net.akehurst.language.parser.forrest.ParseTreeBranch;
@@ -33,8 +36,8 @@ import net.akehurst.language.parser.forrest.ParseTreeBud;
 
 public class ScannerLessParser implements IParser {
 
-	final String START_SYMBOL = "\uE000";
-	final String FINISH_SYMBOL = "\uE001";
+	public final static String START_SYMBOL = "\uE000";
+	public final static String FINISH_SYMBOL = "\uE001";
 	
 	
 	public ScannerLessParser(Grammar grammar) {
@@ -59,6 +62,19 @@ public class ScannerLessParser implements IParser {
 		return this.allRules_cache;
 	}
 	
+	List<SkipRule> allSkipRules_cache;
+	List<SkipRule> getAllSkipRules() {
+		if (null==this.allSkipRules_cache) {
+			this.allSkipRules_cache = new ArrayList<>();
+			for(Rule r: this.getAllRules()) {
+				if (r instanceof SkipRule) {
+					this.allSkipRules_cache.add((SkipRule)r);
+				}
+			}
+		}
+		return this.allSkipRules_cache;
+	}
+	
 	@Override
 	public List<INodeType> getNodeTypes() {
 		List<INodeType> result = new ArrayList<INodeType>();
@@ -80,7 +96,16 @@ public class ScannerLessParser implements IParser {
 	
 	@Override
 	public IParseTree parse(INodeType goal, CharSequence text) throws ParseFailedException, ParseTreeException {
-		try {
+		try {			
+			//return this.doParse2(goal, text);
+			return this.parse2(goal, text);
+		} catch (RuleNotFoundException e) {
+			// Should never happen!
+			throw new RuntimeException("Should never happen", e);
+		}
+	}
+
+	public IParseTree parse2(INodeType goal, CharSequence text) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
 			Rule goalRule = new Rule(this.pseudoGrammar, "$goal$");
 			goalRule.setRhs(new Concatination(new TerminalLiteral(START_SYMBOL), new NonTerminal(goal.getIdentity().asPrimitive()), new TerminalLiteral(FINISH_SYMBOL)));
 			this.pseudoGrammar.setRule(Arrays.asList(new Rule[]{
@@ -90,15 +115,23 @@ public class ScannerLessParser implements IParser {
 			CharSequence pseudoText = START_SYMBOL + text + FINISH_SYMBOL;
 			
 			ParseTreeBranch pseudoTree = (ParseTreeBranch)this.doParse2(goalRule.getNodeType(), pseudoText);
+			//return pseudoTree;
 			Rule r = this.getGrammar().findAllRule(goal.getIdentity().asPrimitive());
-			IParseTree pt = new ParseTreeBranch(new Input(text), (IBranch)pseudoTree.getRoot().getChildren().get(1), new Stack<>(), r, Integer.MAX_VALUE);
+			Input inp = new Input(text);
+			int s = pseudoTree.getRoot().getChildren().size();
+			IBranch root = (IBranch)pseudoTree.getRoot().getChildren().stream().filter(n -> n.getName().equals(goal.getIdentity().asPrimitive())).findFirst().get();
+			int indexOfRoot = pseudoTree.getRoot().getChildren().indexOf(root);
+			List<INode> before = pseudoTree.getRoot().getChildren().subList(1, indexOfRoot);
+			ArrayList<INode> children = new ArrayList<>();
+			List<INode> after = pseudoTree.getRoot().getChildren().subList(indexOfRoot+1, s-1);
+			children.addAll(before);
+			children.addAll(root.getChildren());
+			children.addAll(after);
+			Branch nb = new Branch(root.getNodeType(), children);
+			ParseTreeBranch pt = new ParseTreeBranch(inp, nb, new Stack<>(), r, Integer.MAX_VALUE);
 			return pt;
-		} catch (RuleNotFoundException e) {
-			// Should never happen!
-			throw new RuntimeException("Should never happen", e);
-		}
 	}
-
+	
 	/**
 	 * <code>
 	 * starting tree is an empty node
@@ -120,6 +153,7 @@ public class ScannerLessParser implements IParser {
 	 */
 	IParseTree doParse2(INodeType goal, CharSequence text) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
 		Input input = new Input(text);
+		
 		Forrest newForrest = new Forrest(goal, this.getGrammar(), this.getAllRules() ,input);
 		Forrest oldForrest = null;
 		

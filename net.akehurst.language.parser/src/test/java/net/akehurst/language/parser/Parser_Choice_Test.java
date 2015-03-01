@@ -1,5 +1,6 @@
 package net.akehurst.language.parser;
 
+import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.ogl.semanticModel.Grammar;
@@ -7,6 +8,7 @@ import net.akehurst.language.ogl.semanticModel.GrammarBuilder;
 import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,10 +37,16 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*abc 0, 1}",st);
+			Assert.assertEquals("Tree {*abc 1, 2}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("abc : [a : ['a' : \"a\"]]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.abc(), goal, text);
+			IBranch expected = 
+				b.branch("abc",
+					b.branch("a",
+						b.leaf("a", "a")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -58,10 +66,17 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*abc 0, 1}",st);
+			Assert.assertEquals("Tree {*abc 1, 2}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("abc : [b : ['b' : \"b\"]]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.abc(), goal, text);
+			IBranch expected = 
+				b.branch("abc",
+					b.branch("b",
+						b.leaf("b", "b")
+					)
+				);
+			
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -81,10 +96,17 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*abc 0, 1}",st);
+			Assert.assertEquals("Tree {*abc 1, 2}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("abc : [c : ['c' : \"c\"]]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.abc(), goal, text);
+			IBranch expected = 
+				b.branch("abc",
+					b.branch("c",
+						b.leaf("c", "c")
+					)
+				);
+			
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

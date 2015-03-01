@@ -30,6 +30,11 @@ public class ParseTreeBud extends AbstractParseTree {
 	}
 
 	@Override
+	public boolean getCanGraftBack() {
+		return true;
+	}
+	
+	@Override
 	public ILeaf getRoot() {
 		return (ILeaf) super.getRoot();
 	}
@@ -66,7 +71,7 @@ public class ParseTreeBud extends AbstractParseTree {
 	public boolean equals(Object arg) {
 		if (arg instanceof ParseTreeBud) {
 			ParseTreeBud other = (ParseTreeBud) arg;
-			return this.getRoot().equals(other.getRoot());
+			return this.toString().equals(other.toString());
 		} else {
 			return false;
 		}
