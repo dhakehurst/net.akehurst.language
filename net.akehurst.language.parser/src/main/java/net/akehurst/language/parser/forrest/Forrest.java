@@ -16,6 +16,7 @@ import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.SkipRule;
 import net.akehurst.language.ogl.semanticModel.Terminal;
+import net.akehurst.language.parser.ScannerLessParser;
 
 public class Forrest {
 
@@ -30,6 +31,7 @@ public class Forrest {
 		this.possibleSubRule = new HashMap<>();
 		this.possibleTerminal = new HashMap<>();
 		this.possibleSuperRule = new HashMap<>();
+		this.longestMatch = new ParseTreeEmptyBud(input, 0);
 	}
 
 	//Grammar grammar;
@@ -40,7 +42,8 @@ public class Forrest {
 	Set<AbstractParseTree> possibleTrees = new HashSet<>();
 	Set<IParseTree> goalTrees = new HashSet<>();
 	ArrayList<IParseTree> gt = new ArrayList<>();
-
+	AbstractParseTree longestMatch;
+	
 	Set<AbstractParseTree> newGrownBranches;
 
 	Map<Rule, Set<Terminal>> possibleTerminal;
@@ -161,12 +164,12 @@ public class Forrest {
 				}
 			}
 			if (lt.getRoot().getMatchedTextLength() < text.length()) {
-				throw new ParseFailedException("Goal does not match full text");
+				throw new ParseFailedException("Goal does not match full text", this.longestMatch);
 			} else {
 				return lt;
 			}
 		} else {
-			throw new ParseFailedException("Could not match goal");
+			throw new ParseFailedException("Could not match goal", this.longestMatch);
 		}
 	}
 
@@ -186,6 +189,7 @@ public class Forrest {
 	public Forrest grow() throws RuleNotFoundException, ParseTreeException {
 		Forrest newForrest = new Forrest(this.goal, this.allRules, this.input);
 		newForrest.goalTrees.addAll(this.goalTrees);
+		newForrest.longestMatch = this.longestMatch;
 
 		for (AbstractParseTree tree : this.possibleTrees) {
 			Set<Terminal> possibleSubTerminals = this.getPossibleSubTerminal(tree);
@@ -245,7 +249,15 @@ public class Forrest {
 			// drop tree
 			int i = 0;
 		}
-
+		if (tree.getRoot().getMatchedTextLength() > this.longestMatch.getRoot().getMatchedTextLength()) {
+			if (tree.getRoot().getNodeType().equals(ScannerLessParser.START_SYMBOL_TERMINAL.getNodeType())
+					|| tree.getRoot().getName().contains("$")
+			) {
+				//don't use
+			} else {
+				this.longestMatch = tree;
+			}
+		}
 	}
 
 	void addIfGoal(AbstractParseTree tree) throws ParseTreeException {
@@ -265,6 +277,7 @@ public class Forrest {
 		clone.possibleSubRule = this.possibleSubRule;
 		clone.possibleTerminal = this.possibleTerminal;
 		clone.allSkipTerminal_cache = this.allSkipTerminal_cache;
+		clone.longestMatch = this.longestMatch;
 		return clone;
 	}
 

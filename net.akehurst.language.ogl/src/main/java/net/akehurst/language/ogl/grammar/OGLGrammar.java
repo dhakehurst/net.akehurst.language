@@ -48,9 +48,11 @@ public class OGLGrammar extends Grammar {
 		
 		b.rule("grammarDefinition").concatination( new NonTerminal("namespace"), new NonTerminal("grammar") );
 		b.rule("namespace").concatination( new TerminalLiteral("namespace"), new NonTerminal("qualifiedName"), new TerminalLiteral(";") );
-		b.rule("grammar").concatination( new TerminalLiteral("grammar"), new NonTerminal("IDENTIFIER"), new TerminalLiteral("{"), new NonTerminal("rules"),new TerminalLiteral("}") );
-		b.rule("rules").multi(1,-1,new NonTerminal("rule") );
-		b.rule("rule").concatination( new NonTerminal("IDENTIFIER"), new TerminalLiteral("="), new NonTerminal("choice") );
+		b.rule("grammar").concatination( new TerminalLiteral("grammar"), new NonTerminal("IDENTIFIER"), new TerminalLiteral("{"), new NonTerminal("rules"), new TerminalLiteral("}") );
+		b.rule("rules").multi(1,-1,new NonTerminal("anyRule") );
+		b.rule("anyRule").choice(new NonTerminal("normalRule"), new NonTerminal("skipRule") );
+		b.rule("skipRule").concatination( new NonTerminal("IDENTIFIER"), new TerminalLiteral("?="), new NonTerminal("choice"), new TerminalLiteral(";") );
+		b.rule("normalRule").concatination( new NonTerminal("IDENTIFIER"), new TerminalLiteral(":="), new NonTerminal("choice"), new TerminalLiteral(";") );
 		b.rule("choice").separatedList(1, new TerminalLiteral("|"), new NonTerminal("concatination") );
 		b.rule("concatination").multi(1,-1,new NonTerminal("item") );
 		b.rule("item").choice( new NonTerminal("LITERAL"),

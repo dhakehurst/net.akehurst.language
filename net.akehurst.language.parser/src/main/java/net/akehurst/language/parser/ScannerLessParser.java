@@ -43,6 +43,7 @@ import net.akehurst.language.parser.forrest.ParseTreeBud;
 public class ScannerLessParser implements IParser {
 
 	public final static String START_SYMBOL = "\uE000";
+	public final static TerminalLiteral START_SYMBOL_TERMINAL = new TerminalLiteral(START_SYMBOL);
 	public final static String FINISH_SYMBOL = "\uE001";
 	
 	

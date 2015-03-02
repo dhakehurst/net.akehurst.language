@@ -410,9 +410,39 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			//
 		}
 	}
+	
+	@Test
+	public void abc_abc_abcd() {
+		// grammar, goal, input
+		Grammar g = a_b_c();
+		String goal = "abc";
+		String text = "abcd";
+		try {
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.fail("This parse should fail");
+			
+		} catch (ParseFailedException e) {
+			IParseTree tree = e.getLongestMatch();
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected =
+				b.branch("abc", 
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.branch("b",
+						b.leaf("b", "b")
+					),
+					b.branch("c",
+						b.leaf("c", "c")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+		}
+	}
 
 	@Test
-	public void abc4_abc_acb() {
+	public void abc4_abc_abc() {
 		// grammar, goal, input
 		try {
 			Grammar g = a__b_c();
