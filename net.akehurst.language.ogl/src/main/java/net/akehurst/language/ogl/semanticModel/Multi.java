@@ -1,5 +1,8 @@
 package net.akehurst.language.ogl.semanticModel;
 
+import java.util.HashSet;
+import java.util.Set;
+
 
 
 public class Multi extends RuleItem {
@@ -47,11 +50,19 @@ public class Multi extends RuleItem {
 //		return result;
 //	}
 //	
-//	public Set<Terminal> findFirstTerminal() throws RuleNotFoundException {
-//		Set<Terminal> result = new HashSet<>();
-//		result.addAll( this.getItem().findFirstTerminal() );
-//		return result;
-//	}
+	@Override
+	public Set<Terminal> findAllTerminal() {
+		Set<Terminal> result = new HashSet<>();
+		result.addAll( this.getItem().findAllTerminal() );
+		return result;
+	}
+	
+	@Override
+	public Set<NonTerminal> findAllNonTerminal() {
+		Set<NonTerminal> result = new HashSet<>();
+		result.addAll( this.getItem().findAllNonTerminal() );
+		return result;
+	}
 //	
 //	@Override
 //	public boolean isMatchedBy(INode node) {

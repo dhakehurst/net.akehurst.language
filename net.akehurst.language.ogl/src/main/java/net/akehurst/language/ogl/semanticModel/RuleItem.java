@@ -1,5 +1,7 @@
 package net.akehurst.language.ogl.semanticModel;
 
+import java.util.Set;
+
 
 
 public abstract class RuleItem implements Visitable {
@@ -10,11 +12,7 @@ public abstract class RuleItem implements Visitable {
 	}
 	public abstract void setOwningRule(Rule value);
 	
-//	public abstract INodeType getNodeType();
+	public abstract Set<Terminal> findAllTerminal();
+	public abstract Set<NonTerminal> findAllNonTerminal();
 	
-//	public abstract Set<TangibleItem> findFirstTangibleItem();
-//	
-//	public abstract Set<Terminal> findFirstTerminal() throws RuleNotFoundException;
-//
-//	public abstract boolean isMatchedBy(INode node) throws RuleNotFoundException;
 }

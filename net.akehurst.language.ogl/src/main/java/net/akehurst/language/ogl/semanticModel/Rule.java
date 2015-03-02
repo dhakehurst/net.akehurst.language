@@ -1,5 +1,8 @@
 package net.akehurst.language.ogl.semanticModel;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import net.akehurst.language.core.parser.INodeType;
 
 public class Rule {
@@ -8,6 +11,7 @@ public class Rule {
 		this.grammar = grammar;
 		this.name = name;
 	}
+
 	
 	Grammar grammar;
 	public Grammar getGrammar() {
@@ -28,21 +32,41 @@ public class Rule {
 		this.rhs.setOwningRule(this);
 	}
 	
-//	public Set<TangibleItem> findFirstTangibleItem() {
-//		return this.getRhs().findFirstTangibleItem();
-//	}
-//	
-//	public Set<Terminal> findFirstTerminal() throws RuleNotFoundException {
-//		return this.getRhs().findFirstTerminal();
-//	}
+	public Set<Terminal> findAllSubTerminal() throws RuleNotFoundException {
+		Set<Terminal> result = new HashSet<>();
+		result.addAll(this.getRhs().findAllTerminal());
+		for(Rule r: this.findAllSubRule()) {
+			result.addAll(r.getRhs().findAllTerminal());
+		}	
+		return result;
+	}
+	
+	public Set<NonTerminal> findAllSubNonTerminal() throws RuleNotFoundException {
+		Set<NonTerminal> result = this.getRhs().findAllNonTerminal();
+		Set<NonTerminal> oldResult = new HashSet<>();
+		while (!oldResult.containsAll(result)) {
+			oldResult = new HashSet<>();
+			oldResult.addAll(result);
+			for(NonTerminal nt: oldResult) {
+				Set<NonTerminal> newNts = nt.getReferencedRule().getRhs().findAllNonTerminal();
+				newNts.removeAll(result);
+				result.addAll(newNts);
+			}
+		}
+		return result;
+	}
+	
+	public Set<Rule> findAllSubRule() throws RuleNotFoundException {
+		Set<Rule> result = new HashSet<>();
+		for(NonTerminal nt: this.findAllSubNonTerminal()) {
+			result.add( nt.getReferencedRule() );
+		}
+		return result;
+	}
 	
 	public INodeType getNodeType() {
 		return new RuleNodeType(this);
 	}
-	
-//	public boolean isMatchedBy(INode node) throws RuleNotFoundException {
-//		return this.getRhs().isMatchedBy(node);
-//	}
 	
 	//--- Object ---
 	@Override

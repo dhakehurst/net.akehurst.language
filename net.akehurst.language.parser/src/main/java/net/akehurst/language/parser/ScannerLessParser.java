@@ -3,6 +3,7 @@ package net.akehurst.language.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,13 +19,18 @@ import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.ogl.semanticModel.Choice;
 import net.akehurst.language.ogl.semanticModel.Concatination;
 import net.akehurst.language.ogl.semanticModel.Grammar;
+import net.akehurst.language.ogl.semanticModel.Multi;
 import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.Rule;
+import net.akehurst.language.ogl.semanticModel.RuleItem;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
+import net.akehurst.language.ogl.semanticModel.SeparatedList;
 import net.akehurst.language.ogl.semanticModel.SkipRule;
+import net.akehurst.language.ogl.semanticModel.TangibleItem;
 import net.akehurst.language.ogl.semanticModel.Terminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.parser.forrest.AbstractParseTree;
@@ -54,10 +60,11 @@ public class ScannerLessParser implements IParser {
 		return this.pseudoGrammar;
 	}
 
-	List<Rule> allRules_cache;
-	List<Rule> getAllRules() {
+	Set<Rule> allRules_cache;
+	Set<Rule> getAllRules() {
 		if (null==this.allRules_cache) {
-			this.allRules_cache = this.getGrammar().getAllRule();
+			this.allRules_cache = new HashSet<>();
+			this.allRules_cache.addAll(this.getGrammar().getAllRule());
 		}
 		return this.allRules_cache;
 	}
@@ -73,6 +80,53 @@ public class ScannerLessParser implements IParser {
 			}
 		}
 		return this.allSkipRules_cache;
+	}
+	
+	Rule findRule(String ruleName) throws RuleNotFoundException {
+		for(Rule r : this.getAllRules()) {
+			if (r.getName().equals(ruleName)) {
+				return r;
+			}
+		}
+		throw new RuleNotFoundException(ruleName);
+	}
+	
+	Set<Terminal> allTerminal;
+	public Set<Terminal> getAllTerminal() {
+		if (null==this.allTerminal) {
+			this.allTerminal = this.findAllTerminal();
+		}
+		return this.allTerminal;
+	}
+	Set<Terminal> findAllTerminal() {
+		Set<Terminal> result = new HashSet<>();
+		for (Rule rule : this.getAllRules()) {
+			RuleItem ri = rule.getRhs();
+			result.addAll(this.findAllTerminal(0, rule, ri ) );
+		}
+		return result;
+	}
+	
+	Set<Terminal> findAllTerminal(final int totalItems, final Rule rule, RuleItem item) {
+		Set<Terminal> result = new HashSet<>();
+		if (item instanceof Terminal) {
+			Terminal t = (Terminal) item;
+			result.add(t);
+		} else if (item instanceof Multi) {
+			result.addAll( this.findAllTerminal( totalItems, rule, ((Multi)item).getItem() ) );
+		} else if (item instanceof Choice) {
+			for(TangibleItem ti : ((Choice)item).getAlternative()) {
+				result.addAll( this.findAllTerminal( totalItems, rule, ti ) );
+			}
+		} else if (item instanceof Concatination) {
+			for(TangibleItem ti : ((Concatination)item).getItem()) {
+				result.addAll( this.findAllTerminal( totalItems, rule, ti ) );
+			}
+		} else if (item instanceof SeparatedList) {
+			result.addAll(this.findAllTerminal(totalItems, rule,((SeparatedList)item).getSeparator()));
+			result.addAll( this.findAllTerminal(totalItems, rule, ((SeparatedList)item).getConcatination() ) );
+		}
+		return result;
 	}
 	
 	@Override
@@ -108,15 +162,13 @@ public class ScannerLessParser implements IParser {
 	public IParseTree parse2(INodeType goal, CharSequence text) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
 			Rule goalRule = new Rule(this.pseudoGrammar, "$goal$");
 			goalRule.setRhs(new Concatination(new TerminalLiteral(START_SYMBOL), new NonTerminal(goal.getIdentity().asPrimitive()), new TerminalLiteral(FINISH_SYMBOL)));
-			this.pseudoGrammar.setRule(Arrays.asList(new Rule[]{
-					goalRule
-			}));
+			this.getGrammar().getRule().add(goalRule);
 			
 			CharSequence pseudoText = START_SYMBOL + text + FINISH_SYMBOL;
 			
 			ParseTreeBranch pseudoTree = (ParseTreeBranch)this.doParse2(goalRule.getNodeType(), pseudoText);
 			//return pseudoTree;
-			Rule r = this.getGrammar().findAllRule(goal.getIdentity().asPrimitive());
+			Rule r = this.findRule(goal.getIdentity().asPrimitive());
 			Input inp = new Input(text);
 			int s = pseudoTree.getRoot().getChildren().size();
 			IBranch root = (IBranch)pseudoTree.getRoot().getChildren().stream().filter(n -> n.getName().equals(goal.getIdentity().asPrimitive())).findFirst().get();
@@ -154,10 +206,10 @@ public class ScannerLessParser implements IParser {
 	IParseTree doParse2(INodeType goal, CharSequence text) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
 		Input input = new Input(text);
 		
-		Forrest newForrest = new Forrest(goal, this.getGrammar(), this.getAllRules() ,input);
+		Forrest newForrest = new Forrest(goal, this.getAllRules() ,input);
 		Forrest oldForrest = null;
 		
-		List<ParseTreeBud> buds = input.createNewBuds(this.getGrammar().getAllTerminal(), 0);
+		List<ParseTreeBud> buds = input.createNewBuds(this.getAllTerminal(), 0);
 		for(ParseTreeBud bud : buds) {
 			Set<AbstractParseTree> newTrees = bud.growHeight(this.getAllRules());
 			newForrest.addAll(newTrees);
@@ -178,7 +230,7 @@ public class ScannerLessParser implements IParser {
 	Terminal findTerminal(IToken token) {
 		Terminal terminal = this.findTerminal_cache.get(token.getType());
 		if (null == terminal) {
-			for (Terminal term : this.getGrammar().getAllTerminal()) {
+			for (Terminal term : this.getAllTerminal()) {
 				if ((!token.getType().getIsRegEx() && term.getValue().equals(token.getType().getIdentity()))
 						|| (token.getType().getIsRegEx() && term.getValue().equals(token.getType().getPatternString()))) {
 					this.findTerminal_cache.put(token.getType(), term);

@@ -1,5 +1,7 @@
 package net.akehurst.language.ogl.semanticModel;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public abstract class Terminal extends TangibleItem {
@@ -25,11 +27,20 @@ public abstract class Terminal extends TangibleItem {
 //		return result;
 //	}
 //	
-//	public Set<Terminal> findFirstTerminal() {
-//		Set<Terminal> result = new HashSet<>();
-//		result.add( this );
-//		return result;
-//	}
+	
+	@Override
+	public Set<Terminal> findAllTerminal() {
+		Set<Terminal> result = new HashSet<>();
+		result.add(this);
+		return result;
+	}
+	
+	@Override
+	public Set<NonTerminal> findAllNonTerminal() {
+		Set<NonTerminal> result = new HashSet<>();
+		return result;
+	}
+	
 //	
 //	@Override
 //	public boolean isMatchedBy(INode node) throws RuleNotFoundException {

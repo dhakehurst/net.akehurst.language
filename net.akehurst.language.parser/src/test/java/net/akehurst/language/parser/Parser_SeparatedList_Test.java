@@ -1,5 +1,6 @@
 package net.akehurst.language.parser;
 
+import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
@@ -11,6 +12,7 @@ import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -89,8 +91,14 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("Tree {*as 1, 4}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : ['a' : \"a\", ',' : \",\", 'a' : \"a\"]",nt);
+			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			IBranch expected = 
+				b.branch("as",
+					b.leaf("a", "a"),
+					b.leaf(",", ","),
+					b.leaf("a", "a")
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

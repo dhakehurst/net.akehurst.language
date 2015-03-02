@@ -1,5 +1,8 @@
 package net.akehurst.language.ogl.semanticModel;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import net.akehurst.language.core.parser.INodeType;
 
 public class NonTerminal extends TangibleItem {
@@ -32,15 +35,19 @@ public class NonTerminal extends TangibleItem {
 //		return result;
 //	}
 //	
-//	public Set<Terminal> findFirstTerminal() throws RuleNotFoundException {
-//		Set<Terminal> result = new HashSet<>();
-//		Set<TangibleItem> items = this.getReferencedRule().findFirstTangibleItem();
-//		items.remove(this);
-//		for(TangibleItem item: items) {
-//			result.addAll( item.findFirstTerminal() );
-//		}
-//		return result;
-//	}
+	@Override
+	public Set<Terminal> findAllTerminal() {
+		Set<Terminal> result = new HashSet<>();
+		return result;
+	}
+	
+	@Override
+	public Set<NonTerminal> findAllNonTerminal() {
+		Set<NonTerminal> result = new HashSet<>();
+		result.add(this);
+		return result;
+	}
+	
 //	
 //	@Override
 //	public boolean isMatchedBy(INode node) throws RuleNotFoundException {

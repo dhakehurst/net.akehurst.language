@@ -1,7 +1,9 @@
 package net.akehurst.language.ogl.semanticModel;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Concatination extends RuleItem {
 
@@ -37,11 +39,22 @@ public class Concatination extends RuleItem {
 //		return result;
 //	}
 //	
-//	public Set<Terminal> findFirstTerminal() throws RuleNotFoundException {
-//		Set<Terminal> result = new HashSet<>();
-//		result.addAll( this.getItem().get(0).findFirstTerminal() );
-//		return result;
-//	}
+	public Set<Terminal> findAllTerminal() {
+		Set<Terminal> result = new HashSet<>();
+		for(TangibleItem ti: this.getItem()) {
+			result.addAll( ti.findAllTerminal() );
+		}
+		return result;
+	}
+	
+	@Override
+	public Set<NonTerminal> findAllNonTerminal() {
+		Set<NonTerminal> result = new HashSet<>();
+		for(TangibleItem ti: this.getItem()) {
+			result.addAll( ti.findAllNonTerminal() );
+		}
+		return result;
+	}
 	
 //	@Override
 //	public boolean isMatchedBy(INode node) throws RuleNotFoundException {

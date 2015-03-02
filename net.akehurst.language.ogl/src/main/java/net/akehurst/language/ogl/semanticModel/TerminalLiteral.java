@@ -1,5 +1,7 @@
 package net.akehurst.language.ogl.semanticModel;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import net.akehurst.language.core.parser.INodeType;

@@ -1,5 +1,8 @@
 package net.akehurst.language.ogl.semanticModel;
 
+import java.util.HashSet;
+import java.util.Set;
+
 
 
 public class SeparatedList extends RuleItem {
@@ -48,11 +51,21 @@ public class SeparatedList extends RuleItem {
 //		return result;
 //	}
 //	
-//	public Set<Terminal> findFirstTerminal() throws RuleNotFoundException {
-//		Set<Terminal> result = new HashSet<>();
-//		result.addAll( this.getConcatination().findFirstTerminal() );
-//		return result;
-//	}
+	@Override
+	public Set<Terminal> findAllTerminal() {
+		Set<Terminal> result = new HashSet<>();
+		result.add(this.getSeparator());
+		result.addAll( this.getConcatination().findAllTerminal() );
+		return result;
+	}
+	
+	@Override
+	public Set<NonTerminal> findAllNonTerminal() {
+		Set<NonTerminal> result = new HashSet<>();
+		result.addAll( this.getConcatination().findAllNonTerminal() );
+		return result;
+	}
+	
 //	
 //	@Override
 //	public boolean isMatchedBy(INode node) throws RuleNotFoundException {

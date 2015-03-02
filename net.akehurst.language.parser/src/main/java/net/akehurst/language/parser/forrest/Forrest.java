@@ -2,37 +2,39 @@ package net.akehurst.language.parser.forrest;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
 
-import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.ogl.semanticModel.Grammar;
+import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
+import net.akehurst.language.ogl.semanticModel.SkipRule;
 import net.akehurst.language.ogl.semanticModel.Terminal;
-import net.akehurst.language.parser.CannotExtendTreeException;
-import net.akehurst.language.parser.CannotGrowTreeException;
-import net.akehurst.language.parser.ToStringVisitor;
 
 public class Forrest {
 
-	public Forrest(INodeType goal, Grammar grammar, List<Rule> allRules, Input input) {
+	public Forrest(INodeType goal, Set<Rule> allRules, Input input) {
 		this.goal = goal;
-		this.grammar = grammar;
+		//this.grammar = grammar;
+		//this.allTerminals = allTerminals;
 		this.allRules = allRules;
 		this.input = input;
 		this.canGrow = false;
 		this.newGrownBranches = new HashSet<>();
+		this.possibleSubRule = new HashMap<>();
+		this.possibleTerminal = new HashMap<>();
+		this.possibleSuperRule = new HashMap<>();
 	}
 
-	Grammar grammar;
-	List<Rule> allRules;
+	//Grammar grammar;
+	Set<Terminal> allTerminals;
+	Set<Rule> allRules;
 	INodeType goal;
 	Input input;
 	Set<AbstractParseTree> possibleTrees = new HashSet<>();
@@ -41,17 +43,107 @@ public class Forrest {
 
 	Set<AbstractParseTree> newGrownBranches;
 
+	Map<Rule, Set<Terminal>> possibleTerminal;
+	Map<Rule, Set<Rule>> possibleSubRule;
+	Map<Rule, Set<Rule>> possibleSuperRule;
+	
+	Set<Rule> getPossibleSuperRule(AbstractParseTree tree) throws RuleNotFoundException {
+		if (tree instanceof ParseTreeBranch) {
+			ParseTreeBranch bTree = (ParseTreeBranch)tree;
+			Rule treeRule = bTree.rule;
+			Set<Rule> result = this.possibleSuperRule.get(treeRule);
+			if (null==result) {
+				result = this.findAllSuperRule(treeRule);
+				this.possibleSuperRule.put(treeRule, result);
+			}
+			return result;
+		} else {
+			return new HashSet<>();
+		}
+	}
+	
+	Set<Rule> findAllSuperRule(Rule rule) throws RuleNotFoundException {
+		Set<Rule> result = new HashSet<>();
+		for(Rule r: this.allRules) {
+			if (r.findAllSubNonTerminal().contains(new NonTerminal(rule.getName()))) {
+				result.add(r);
+			}
+		}
+		return result;
+	}
+	
+	Set<Rule> getPossibleSubRule(AbstractParseTree tree) throws RuleNotFoundException {
+		if (tree instanceof ParseTreeBranch) {
+			ParseTreeBranch bTree = (ParseTreeBranch)tree;
+			Rule treeRule = bTree.rule;
+			Set<Rule> result = this.possibleSubRule.get(treeRule);
+			if (null==result) {
+				result = this.findPossibleSubRule(treeRule);
+				this.possibleSubRule.put(treeRule, result);
+			}
+			return result;
+		} else {
+			return new HashSet<>();
+		}
+	}
+	
+	Set<Rule> findPossibleSubRule(Rule rule) throws RuleNotFoundException {
+		Set<Rule> result = rule.findAllSubRule();
+		result.addAll(this.getAllSkipRule());
+		return result;
+	}
+	
+	Set<Terminal> getPossibleSubTerminal(AbstractParseTree tree) throws RuleNotFoundException {
+		if (tree instanceof ParseTreeBranch) {
+			ParseTreeBranch bTree = (ParseTreeBranch)tree;
+			Rule treeRule = bTree.rule;
+			Set<Terminal> result = this.possibleTerminal.get(treeRule);
+			if (null==result) {
+				result = this.findPossibleTerminal(treeRule);
+				this.possibleTerminal.put(treeRule, result);
+			}
+			return result;
+		} else {
+			return new HashSet<>();
+		}
+	}
+	
+	Set<Rule> allSkipRule_cache;
+	Set<Rule> getAllSkipRule() throws RuleNotFoundException {
+		if (null==this.allSkipRule_cache) {
+			Set<Rule> result = new HashSet<>();
+			for(Rule r: this.allRules) {
+				if (r instanceof SkipRule) {
+					result.add( r );
+				}
+			}
+			this.allSkipRule_cache = result;
+		}
+		return this.allSkipRule_cache;
+	}
+	
+	Set<Terminal> findPossibleTerminal(Rule rule) throws RuleNotFoundException {
+		Set<Terminal> result = rule.findAllSubTerminal();
+		result.addAll(this.getAllSkipTerminal());
+		return result;
+	}
+	
+	Set<Terminal> allSkipTerminal_cache;
+	Set<Terminal> getAllSkipTerminal() throws RuleNotFoundException {
+		if (null==this.allSkipTerminal_cache) {
+			Set<Terminal> result = new HashSet<>();
+			for(Rule r: this.getAllSkipRule()) {
+				result.addAll( r.findAllSubTerminal() );
+			}
+			this.allSkipTerminal_cache = result;
+		}
+		return this.allSkipTerminal_cache;
+	}
+	
 	public ArrayList<IParseTree> getGT() {
 		gt = new ArrayList<>();
 		gt.addAll(this.goalTrees);
 		return gt;
-	}
-
-	public Forrest clone() {
-		Forrest clone = new Forrest(this.goal, this.grammar, this.allRules, this.input);
-		clone.possibleTrees.addAll(this.possibleTrees);
-		clone.goalTrees.addAll(this.goalTrees);
-		return clone;
 	}
 
 	boolean canGrow;
@@ -92,18 +184,22 @@ public class Forrest {
 	 * @throws ParseTreeException
 	 */
 	public Forrest grow() throws RuleNotFoundException, ParseTreeException {
-		Forrest newForrest = new Forrest(this.goal, this.grammar, this.allRules, this.input);
+		Forrest newForrest = new Forrest(this.goal, this.allRules, this.input);
 		newForrest.goalTrees.addAll(this.goalTrees);
 
 		for (AbstractParseTree tree : this.possibleTrees) {
+			Set<Terminal> possibleSubTerminals = this.getPossibleSubTerminal(tree);
+			Set<Rule> possibleSubRules = this.getPossibleSubRule(tree);
+			Set<Rule> possibleSuperRules = this.getPossibleSuperRule(tree);
 
 			try {
 				AbstractParseTree nt = tree.tryGraftBack();
-				Set<AbstractParseTree> nts = nt.growHeight(this.allRules);
+				Set<AbstractParseTree> nts = nt.growHeight(possibleSuperRules);
 				newForrest.addAll(nts);
 				
 				if (tree.getCanGrow()) {
-					Set<AbstractParseTree> newBranches = tree.growWidth(this.grammar.getAllTerminal(), this.allRules);
+					//pass in subRules because any subTerminal will only grow by any subRule
+					Set<AbstractParseTree> newBranches = tree.growWidth(possibleSubTerminals, possibleSubRules);
 					newForrest.addAll(newBranches);
 				}
 				
@@ -113,7 +209,7 @@ public class Forrest {
 				if (tree.getIsEmpty()) {
 					// don't grow width
 				} else {
-					Set<AbstractParseTree> newBranches = tree.growWidth(this.grammar.getAllTerminal(), this.allRules);
+					Set<AbstractParseTree> newBranches = tree.growWidth(possibleSubTerminals, possibleSubRules);
 					newForrest.addAll(newBranches);
 				}
 			}
@@ -122,73 +218,6 @@ public class Forrest {
 
 		return newForrest;
 	}
-
-	/**
-	 * reduce for the given tree, see if any of the newly grown branches will expand it (are any of the new branches able to be the next expected node for the
-	 * given tree)
-	 * 
-	 * @throws ParseTreeException
-	 * @throws RuleNotFoundException
-	 * 
-	 **/
-	// Set<AbstractParseTree> growHeight(AbstractParseTree tree) throws RuleNotFoundException, ParseTreeException {
-	// Set<AbstractParseTree> newGrowth = new HashSet<>();
-	// for(AbstractParseTree newBranch: this.newGrownBranches) {
-	// try {
-	// AbstractParseTree newTree = tree.expand(newBranch);
-	// newGrowth.add(newTree);
-	// // if (newTree.getIsComplete()) {
-	// // newGrowth.add(newTree);
-	// // List<IParseTree> newTrees = newTree.grow(this.grammar.getRule());
-	// // for (IParseTree pt : newTrees) {
-	// // AbstractParseTree npt = (AbstractParseTree) pt;
-	// // newForrest.add(npt);
-	// // //expanded = true;
-	// // }
-	// //newGrowth.add(newTree);
-	// // } else {
-	// // newForrest.add(newTree);
-	// // //expanded = true;
-	// // }
-	// } catch (CannotExtendTreeException e) {
-	// //Can't extend tree...yet!
-	// //if do this: newForrest.add(tree);
-	// // doesn't terminate
-	// // could make the isComplete dynamically evaluated, but this is time consuming!
-	// newGrowth.add(newBranch);
-	// // } catch (CannotGrowTreeException e) {
-	// //
-	// }
-	// }
-	// return newGrowth;
-	// }
-
-	/**
-	 * shift
-	 * 
-	 * @throws RuleNotFoundException
-	 * @throws ParseTreeException
-	 **/
-	// Set<AbstractParseTree> growNewBranches(AbstractParseTree tree) throws RuleNotFoundException, ParseTreeException {
-	// Set<AbstractParseTree> newGrowth = new HashSet<>();
-	// List<AbstractParseTree> buds = tree.createNewBuds(this.input.text, this.grammar.getAllTerminal()); //grab all possible next tokens
-	// buds.add(new ParseTreeEmptyBud(input, -1));
-	// List<AbstractParseTree> newBranches = buds;
-	// newBranches.addAll(this.newGrownBranches);
-	// for(AbstractParseTree ng : newBranches) {
-	// try {
-	// List<IParseTree> newTrees = ng.grow(this.grammar.getRule());
-	// for (IParseTree pt : newTrees) {
-	// AbstractParseTree npt = (AbstractParseTree) pt;
-	// newGrowth.add(npt);
-	// //grown = true;
-	// }
-	// } catch (CannotGrowTreeException e) {
-	//
-	// }
-	// }
-	// return newGrowth;
-	// }
 
 	public void addNonGrowing(AbstractParseTree tree) {
 		possibleTrees.add(tree);
@@ -227,11 +256,14 @@ public class Forrest {
 	}
 
 	public Forrest shallowClone() {
-		Forrest clone = new Forrest(this.goal, this.grammar, this.allRules, this.input);
+		Forrest clone = new Forrest(this.goal, this.allRules, this.input);
 		clone.canGrow = this.canGrow;
 		clone.goalTrees.addAll(this.goalTrees);
 		clone.possibleTrees.addAll(this.possibleTrees);
 		clone.newGrownBranches.addAll(this.newGrownBranches);
+		clone.possibleSubRule = this.possibleSubRule;
+		clone.possibleTerminal = this.possibleTerminal;
+		clone.allSkipTerminal_cache = this.allSkipTerminal_cache;
 		return clone;
 	}
 

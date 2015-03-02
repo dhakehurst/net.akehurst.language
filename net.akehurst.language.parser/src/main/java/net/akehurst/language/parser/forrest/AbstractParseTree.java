@@ -79,39 +79,6 @@ public abstract class AbstractParseTree implements IParseTree {
 		return visitor.visit(this, arg);
 	}
 
-	// List<ILeaf> createNewBuds(Set<Terminal> allTerminal) throws RuleNotFoundException {
-	// int pos = this.getRoot().getEnd();
-	// String subString = this.input.text.toString().substring(pos);
-	// List<ILeaf> buds = new ArrayList<>();
-	// //buds.add(new ParseTreeEmptyBud(this.input)); // always add empty bud as a new bud
-	// for (Terminal terminal : allTerminal) {
-	// try {
-	// // if (terminal.getNodeType() instanceof SkipNodeType) {
-	// ILeaf l = this.tryCreateBud(terminal, subString, pos);
-	// buds.add(l);
-	// // } else if ( terminal.getNodeType().equals( this.getNextExpectedItem().getNodeType() ) ) {
-	// // ILeaf l = this.tryCreateBud(terminal, subString, pos);
-	// // buds.add(l);
-	// // }
-	// } catch (CannotCreateNewBud e) {
-	//
-	// }
-	// }
-	// return buds;
-	// }
-
-	// ILeaf tryCreateBud(Terminal terminal, String subString, int pos) throws CannotCreateNewBud {
-	// Matcher m = terminal.getPattern().matcher(subString);
-	// if (m.lookingAt()) {
-	// String matchedText = subString.substring(0, m.end());
-	// int start = pos + m.start();
-	// int end = pos + m.end();
-	// Leaf leaf = new Leaf(this.input, start, end, terminal);
-	// return leaf;
-	// }
-	// throw new CannotCreateNewBud();
-	// }
-
 	/**
 	 * shift
 	 * 
@@ -122,7 +89,7 @@ public abstract class AbstractParseTree implements IParseTree {
 	 * @throws ParseTreeException
 	 * 
 	 */
-	public Set<AbstractParseTree> growWidth(Set<Terminal> allTerminal, List<Rule> rules) throws RuleNotFoundException, ParseTreeException {
+	public Set<AbstractParseTree> growWidth(Set<Terminal> allTerminal, Set<Rule> rules) throws RuleNotFoundException, ParseTreeException {
 		Set<AbstractParseTree> result = new HashSet<>();
 		List<ParseTreeBud> buds = this.input.createNewBuds(allTerminal, this.getRoot().getEnd());
 // doing this causes non termination of parser
@@ -172,7 +139,7 @@ public abstract class AbstractParseTree implements IParseTree {
 		}
 	}
 
-	public Set<AbstractParseTree> growHeight(List<Rule> rules) throws RuleNotFoundException, ParseTreeException {
+	public Set<AbstractParseTree> growHeight(Set<Rule> rules) throws RuleNotFoundException, ParseTreeException {
 		Set<AbstractParseTree> result = new HashSet<>();
 		result.add((AbstractParseTree) this);
 		for (Rule rule : rules) {

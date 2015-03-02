@@ -1,7 +1,9 @@
 package net.akehurst.language.ogl.semanticModel;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public class Choice extends RuleItem {
@@ -40,14 +42,25 @@ public class Choice extends RuleItem {
 //		}		return result;
 //	}
 //	
-//	public Set<Terminal> findFirstTerminal() throws RuleNotFoundException {
-//		Set<Terminal> result = new HashSet<>();
-//		for(Concatination c : this.getAlternative()) {
-//			Set<Terminal> ft = c.findFirstTerminal();
-//			result.addAll(ft);
-//		}
-//		return result;
-//	}
+	@Override
+	public Set<Terminal> findAllTerminal() {
+		Set<Terminal> result = new HashSet<>();
+		for(TangibleItem c : this.getAlternative()) {
+			Set<Terminal> ft = c.findAllTerminal();
+			result.addAll(ft);
+		}
+		return result;
+	}
+	
+	@Override
+	public Set<NonTerminal> findAllNonTerminal() {
+		Set<NonTerminal> result = new HashSet<>();
+		for(TangibleItem c : this.getAlternative()) {
+			Set<NonTerminal> ft = c.findAllNonTerminal();
+			result.addAll(ft);
+		}
+		return result;
+	}
 	
 //	public boolean isMatchedBy(INode node) throws RuleNotFoundException {
 //		for(Concatination c : this.getAlternative()) {
