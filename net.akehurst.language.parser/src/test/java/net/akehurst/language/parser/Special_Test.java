@@ -56,7 +56,7 @@ public class Special_Test extends AbstractParser_Test {
 						)
 					)
 				);
-			Assert.assertEquals(expected, tree.getRoot()); //fails because and extra emptyLeaf is in the result!
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

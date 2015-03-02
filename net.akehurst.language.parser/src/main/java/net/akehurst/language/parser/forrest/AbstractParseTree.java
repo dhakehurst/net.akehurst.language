@@ -142,6 +142,7 @@ public abstract class AbstractParseTree implements IParseTree {
 	public Set<AbstractParseTree> growHeight(Set<Rule> rules) throws RuleNotFoundException, ParseTreeException {
 		Set<AbstractParseTree> result = new HashSet<>();
 		result.add((AbstractParseTree) this);
+		if (this.getIsComplete()) {
 		for (Rule rule : rules) {
 			try {
 				List<IParseTree> newTrees = this.grow(rule.getRhs());
@@ -157,7 +158,7 @@ public abstract class AbstractParseTree implements IParseTree {
 				result.add((AbstractParseTree) this);
 			}
 		}
-
+		}
 		return result;
 	}
 

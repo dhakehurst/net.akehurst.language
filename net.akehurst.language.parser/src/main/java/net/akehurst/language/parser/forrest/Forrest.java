@@ -190,10 +190,11 @@ public class Forrest {
 		for (AbstractParseTree tree : this.possibleTrees) {
 			Set<Terminal> possibleSubTerminals = this.getPossibleSubTerminal(tree);
 			Set<Rule> possibleSubRules = this.getPossibleSubRule(tree);
-			Set<Rule> possibleSuperRules = this.getPossibleSuperRule(tree);
+			
 
 			try {
 				AbstractParseTree nt = tree.tryGraftBack();
+				Set<Rule> possibleSuperRules = this.getPossibleSuperRule(nt);
 				Set<AbstractParseTree> nts = nt.growHeight(possibleSuperRules);
 				newForrest.addAll(nts);
 				
