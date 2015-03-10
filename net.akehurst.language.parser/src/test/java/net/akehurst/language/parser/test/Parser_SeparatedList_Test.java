@@ -1,4 +1,4 @@
-package net.akehurst.language.parser;
+package net.akehurst.language.parser.test;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INodeType;
@@ -12,6 +12,7 @@ import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.parser.ToStringVisitor;
 import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
@@ -29,7 +30,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	Grammar as2() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("as").separatedList(1, new TerminalLiteral(","), new NonTerminal("a"));
-		b.rule("a").concatination(new TerminalLiteral("a"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
 
 		return b.get();
 	}
@@ -38,17 +39,17 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.skip("SP").concatination(new TerminalLiteral(" "));
 		b.rule("as").separatedList(1, new TerminalLiteral(","), new NonTerminal("a"));
-		b.rule("a").concatination(new TerminalLiteral("a"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
 
 		return b.get();
 	}
 	
 	Grammar asb() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("asb").concatination(new NonTerminal("as"), new NonTerminal("b"));
+		b.rule("asb").concatenation(new NonTerminal("as"), new NonTerminal("b"));
 		b.rule("as").separatedList(1, new TerminalLiteral(","), new NonTerminal("b"));
-		b.rule("a").concatination(new TerminalLiteral("a"));
-		b.rule("b").concatination(new TerminalLiteral("b"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		b.rule("b").concatenation(new TerminalLiteral("b"));
 
 		return b.get();
 	}

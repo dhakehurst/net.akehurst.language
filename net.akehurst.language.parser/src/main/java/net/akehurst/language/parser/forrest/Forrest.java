@@ -200,6 +200,7 @@ public class Forrest {
 				AbstractParseTree nt = tree.tryGraftBack();
 				Set<Rule> possibleSuperRules = this.getPossibleSuperRule(nt);
 				Set<AbstractParseTree> nts = nt.growHeight(possibleSuperRules);
+				newForrest.add(nt); //must add nt as well here, as higher multi rules might need it
 				newForrest.addAll(nts);
 				
 				if (tree.getCanGrow()) {
@@ -233,17 +234,21 @@ public class Forrest {
 			this.add(tree);
 		}
 	}
-
+int overwrites;
 	public void add(AbstractParseTree tree) throws ParseTreeException {
 		if (tree.getIsComplete()) {
 			this.newGrownBranches.add(tree);
 			if (tree.stackedRoots.isEmpty() && goal.equals(tree.getRoot().getNodeType())) {
-				goalTrees.add(tree.deepClone());
+				this.goalTrees.add(tree.deepClone());
 			}
 		}
 		if (tree.getCanGrow()) {
 			// tree is incomplete but still possible to grow it
-			possibleTrees.add(tree);
+			if (this.possibleTrees.contains(tree)) {
+				overwrites++;
+				//throw new ParseTreeException("Overwriting and existing tree", null);
+			}
+			this.possibleTrees.add(tree);
 			this.canGrow |= tree.getCanGrow();
 		} else {
 			// drop tree

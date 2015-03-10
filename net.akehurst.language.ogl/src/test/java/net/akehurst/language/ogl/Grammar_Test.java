@@ -1,4 +1,4 @@
-package net.akehurst.language.ebnf;
+package net.akehurst.language.ogl;
 
 import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.GrammarBuilder;
@@ -21,9 +21,9 @@ public class Grammar_Test {
 		// }
 		
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "HelloWorld");
-		b.rule("root").concatination(new NonTerminal("hello"), new NonTerminal("world"));
-		b.rule("hello").concatination(new TerminalLiteral("hello"));
-		b.rule("world").concatination(new TerminalLiteral("world!"));
+		b.rule("root").concatenation(new NonTerminal("hello"), new NonTerminal("world"));
+		b.rule("hello").concatenation(new TerminalLiteral("hello"));
+		b.rule("world").concatenation(new TerminalLiteral("world!"));
 		Grammar g = b.get();
 	}
 }

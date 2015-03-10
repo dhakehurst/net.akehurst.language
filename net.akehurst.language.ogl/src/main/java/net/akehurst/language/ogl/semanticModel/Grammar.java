@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import net.akehurst.language.core.lexicalAnalyser.ITokenType;
+import net.akehurst.language.core.parser.INodeType;
 
 public class Grammar {
 
@@ -110,8 +111,8 @@ public class Grammar {
 			for(TangibleItem ti : ((Choice)item).getAlternative()) {
 				result.addAll( this.findAllTerminal( totalItems, rule, ti ) );
 			}
-		} else if (item instanceof Concatination) {
-			for(TangibleItem ti : ((Concatination)item).getItem()) {
+		} else if (item instanceof Concatenation) {
+			for(TangibleItem ti : ((Concatenation)item).getItem()) {
 				result.addAll( this.findAllTerminal( totalItems, rule, ti ) );
 			}
 		} else if (item instanceof SeparatedList) {
@@ -132,6 +133,15 @@ public class Grammar {
 			}			
 		}
 		return result;
+	}
+	
+	public INodeType findNodeType(String ruleName) throws RuleNotFoundException {
+		for(Rule r: this.getAllRule()) {
+			if (r.getName().equals(ruleName)) {
+				return new RuleNodeType(r);
+			}
+		}
+		throw new RuleNotFoundException(ruleName);
 	}
 	
 	//--- Object ---

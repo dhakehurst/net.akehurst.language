@@ -20,6 +20,8 @@ public class Branch implements IBranch {
 		for(INode n: this.children) {
 			this.length += n.getMatchedTextLength();
 		}
+		ToStringVisitor v = new ToStringVisitor();
+		this.toString_cache = this.accept(v, "");
 	}
 	
 	INodeType nodeType;
@@ -95,10 +97,10 @@ public class Branch implements IBranch {
 	}
 	
 	//--- Object ---
+	String toString_cache;
 	@Override
 	public String toString() {
-		ToStringVisitor v = new ToStringVisitor();
-		return this.accept(v, "");
+		return this.toString_cache;
 	}
 	
 	@Override

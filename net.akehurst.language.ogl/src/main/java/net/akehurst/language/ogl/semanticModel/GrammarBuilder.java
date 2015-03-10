@@ -25,8 +25,8 @@ public class GrammarBuilder {
 
 		Rule rule;
 
-		public void concatination(TangibleItem... sequence) {
-			this.rule.setRhs(new Concatination(sequence));
+		public void concatenation(TangibleItem... sequence) {
+			this.rule.setRhs(new Concatenation(sequence));
 		}
 
 		public void choice(TangibleItem... alternative) {
@@ -56,7 +56,7 @@ public class GrammarBuilder {
 		Rule rule;
 
 		public void concatination(TangibleItem... sequence) {
-			this.rule.setRhs(new Concatination(sequence));
+			this.rule.setRhs(new Concatenation(sequence));
 		}
 
 		public void choice(TangibleItem... alternative) {

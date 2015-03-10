@@ -5,9 +5,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class Concatination extends RuleItem {
+public class Concatenation extends RuleItem {
 
-	public Concatination(TangibleItem... item) {
+	public Concatenation(TangibleItem... item) {
 		this.item = Arrays.asList(item);
 	}
 
@@ -92,8 +92,8 @@ public class Concatination extends RuleItem {
 	
 	@Override
 	public boolean equals(Object arg) {
-		if (arg instanceof Concatination) {
-			Concatination other = (Concatination)arg;
+		if (arg instanceof Concatenation) {
+			Concatenation other = (Concatenation)arg;
 			return this.toString().equals(other.toString());
 		} else {
 			return false;

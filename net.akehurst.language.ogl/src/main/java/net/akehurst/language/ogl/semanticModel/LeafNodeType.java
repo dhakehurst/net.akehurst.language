@@ -6,7 +6,7 @@ import net.akehurst.language.core.parser.INodeType;
 public class LeafNodeType implements INodeType {
 
 	public LeafNodeType() {
-		this.identity = new NodeIdentity("");
+		this.identity = new NodeIdentity("''");
 	}
 	
 	public LeafNodeType(TerminalLiteral terminal) {

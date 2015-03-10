@@ -53,6 +53,12 @@ public class Multi extends RuleItem {
 	@Override
 	public Set<Terminal> findAllTerminal() {
 		Set<Terminal> result = new HashSet<>();
+		//must add the empty terminal first, or later we get over writing due to 
+		// no identity distiction between tree with empty and tree without,
+		//tree id uses position and empty leaf doesn't change the star-end position
+		if (this.getMin() == 0) {
+			result.add( new TerminalEmpty() ); //empty terminal
+		}
 		result.addAll( this.getItem().findAllTerminal() );
 		return result;
 	}

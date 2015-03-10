@@ -14,7 +14,7 @@ import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.Choice;
-import net.akehurst.language.ogl.semanticModel.Concatination;
+import net.akehurst.language.ogl.semanticModel.Concatenation;
 import net.akehurst.language.ogl.semanticModel.LeafNodeType;
 import net.akehurst.language.ogl.semanticModel.Multi;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
@@ -98,7 +98,11 @@ public abstract class AbstractParseTree implements IParseTree {
 		for (ParseTreeBud bud : buds) {
 			AbstractParseTree nt = this.pushStackNewRoot(bud.getRoot());
 			Set<AbstractParseTree> nts = nt.growHeight(rules);
-			result.addAll(nts);
+			if (nts.isEmpty()) {
+				result.add(nt);
+			} else {
+				result.addAll(nts);
+			}
 		}
 
 		return result;
@@ -141,23 +145,32 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	public Set<AbstractParseTree> growHeight(Set<Rule> rules) throws RuleNotFoundException, ParseTreeException {
 		Set<AbstractParseTree> result = new HashSet<>();
-		result.add((AbstractParseTree) this);
+		//result.add((AbstractParseTree) this);
 		if (this.getIsComplete()) {
-		for (Rule rule : rules) {
-			try {
-				List<IParseTree> newTrees = this.grow(rule.getRhs());
-				for (IParseTree nt : newTrees) {
-					if (((AbstractParseTree) nt).getIsComplete()) {
-						Set<AbstractParseTree> newTree2 = ((AbstractParseTree) nt).growHeight(rules);
-						result.addAll(newTree2);
-					} else {
-						result.add((AbstractParseTree) nt);
-					}
+			for (Rule rule : rules) {
+				if (this.getRoot().getNodeType().equals(rule.getNodeType())) {
+					result.add(this);
 				}
-			} catch (CannotGrowTreeException e) {
-				result.add((AbstractParseTree) this);
+				try {
+					List<IParseTree> newTrees = this.grow(rule.getRhs());
+					for (IParseTree nt : newTrees) {
+						if (((AbstractParseTree) nt).getIsComplete()) {
+							Set<AbstractParseTree> newTree2 = ((AbstractParseTree) nt).growHeight(rules);
+							if (newTree2.isEmpty()) {
+								result.add((AbstractParseTree)nt);
+							} else {
+								result.addAll(newTree2);
+							}
+						} else {
+							result.add((AbstractParseTree) nt);
+						}
+					}
+				} catch (CannotGrowTreeException e) {
+					//result.add((AbstractParseTree) this);
+				}
 			}
-		}
+		} else {
+			result.add(this);
 		}
 		return result;
 	}
@@ -188,8 +201,8 @@ public abstract class AbstractParseTree implements IParseTree {
 	public abstract ParseTreeBranch extendWith(INode extension) throws CannotExtendTreeException, ParseTreeException;
 
 	List<IParseTree> grow(RuleItem item) throws CannotGrowTreeException, RuleNotFoundException, ParseTreeException {
-		if (item instanceof Concatination) {
-			return this.grow((Concatination) item);
+		if (item instanceof Concatenation) {
+			return this.grow((Concatenation) item);
 		} else if (item instanceof Choice) {
 			return this.grow((Choice) item);
 		} else if (item instanceof Multi) {
@@ -216,7 +229,7 @@ public abstract class AbstractParseTree implements IParseTree {
 		return newTree;
 	}
 	
-	List<IParseTree> grow(Concatination target) throws CannotGrowTreeException, RuleNotFoundException, ParseTreeException {
+	List<IParseTree> grow(Concatenation target) throws CannotGrowTreeException, RuleNotFoundException, ParseTreeException {
 
 		List<IParseTree> result = new ArrayList<>();
 		if (0 == target.getItem().size()) {

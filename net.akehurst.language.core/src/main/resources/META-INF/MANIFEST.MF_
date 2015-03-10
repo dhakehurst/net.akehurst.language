@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Binary Transform
+Bundle-SymbolicName: net.akehurst.language.core
+Bundle-Version: 1.0.0.qualifier
+Export-Package: net.akehurst.language.core,
+ net.akehurst.language.core.analyser,
+ net.akehurst.language.core.parser
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7

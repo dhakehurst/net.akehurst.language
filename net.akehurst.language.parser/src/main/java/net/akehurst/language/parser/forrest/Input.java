@@ -25,11 +25,11 @@ public class Input {
 		return text.length();
 	}
 
-	public List<ParseTreeBud> createNewBuds(Set<Terminal> allTerminal, int pos) throws RuleNotFoundException {
+	public List<ParseTreeBud> createNewBuds(Set<Terminal> possibleNextTerminals, int pos) throws RuleNotFoundException {
 		String subString = this.text.toString().substring(pos);
 		List<ParseTreeBud> buds = new ArrayList<>();
-		buds.add(new ParseTreeEmptyBud(this,pos)); // always add empty bud as a new bud
-		for (Terminal terminal : allTerminal) {
+//		buds.add(new ParseTreeEmptyBud(this,pos)); // always add empty bud as a new bud
+		for (Terminal terminal : possibleNextTerminals) {
 			try {
 //				if (terminal.getNodeType() instanceof SkipNodeType) {
 					ILeaf l = this.tryCreateBud(terminal, subString, pos);

@@ -4,7 +4,7 @@ public interface Visitor<T, E extends Throwable> {
 
 	T visit(Choice target, Object... arg) throws E;
 
-	T visit(Concatination target, Object... arg) throws E;
+	T visit(Concatenation target, Object... arg) throws E;
 
 	T visit(Multi target, Object... arg) throws E;
 

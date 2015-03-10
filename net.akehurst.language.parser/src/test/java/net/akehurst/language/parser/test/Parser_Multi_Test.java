@@ -1,4 +1,4 @@
-package net.akehurst.language.parser;
+package net.akehurst.language.parser.test;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INodeType;
@@ -12,6 +12,7 @@ import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.parser.ToStringVisitor;
 import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
@@ -21,20 +22,20 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 
 	Grammar ab01() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("ab01").concatination(new NonTerminal("a"), new NonTerminal("b01"));
+		b.rule("ab01").concatenation(new NonTerminal("a"), new NonTerminal("b01"));
 		b.rule("b01").multi(0, 1, new NonTerminal("b"));
-		b.rule("a").concatination(new TerminalLiteral("a"));
-		b.rule("b").concatination(new TerminalLiteral("b"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		b.rule("b").concatenation(new TerminalLiteral("b"));
 
 		return b.get();
 	}
 	
 	Grammar ab01_2() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("ab01$group1").concatination(new NonTerminal("a"), new NonTerminal("b"));
+		b.rule("ab01$group1").concatenation(new NonTerminal("a"), new NonTerminal("b"));
 		b.rule("ab01").choice(new NonTerminal("ab01$group1"), new NonTerminal("a"));
-		b.rule("a").concatination(new TerminalLiteral("a"));
-		b.rule("b").concatination(new TerminalLiteral("b"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		b.rule("b").concatenation(new TerminalLiteral("b"));
 
 		return b.get();
 	}
@@ -42,7 +43,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 	Grammar as13() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("as").multi(1, 3, new NonTerminal("a"));
-		b.rule("a").concatination(new TerminalLiteral("a"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
 
 		return b.get();
 	}

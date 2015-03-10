@@ -10,7 +10,7 @@ import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
-import net.akehurst.language.ogl.semanticModel.Concatination;
+import net.akehurst.language.ogl.semanticModel.Concatenation;
 import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.Rule;
@@ -51,7 +51,7 @@ public class ParseTreeBuilder {
 
 	public ILeaf emptyLeaf() {
 		int start = this.textLength;
-		return new EmptyLeaf(start);
+		return new Leaf(this.input, start, start, new TerminalLiteral(""));
 	}
 
 	public IBranch branch(String ruleName, INode... children) {

@@ -7,7 +7,7 @@ import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.Choice;
-import net.akehurst.language.ogl.semanticModel.Concatination;
+import net.akehurst.language.ogl.semanticModel.Concatenation;
 import net.akehurst.language.ogl.semanticModel.Multi;
 import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.RuleItem;
@@ -67,8 +67,8 @@ public class ParseTreeBranch extends AbstractParseTree {
 	@Override
 	public TangibleItem getNextExpectedItem() throws NoNextExpectedItemException {
 		RuleItem item = this.rule.getRhs();
-		if (item instanceof Concatination) {
-			Concatination c = (Concatination)item;
+		if (item instanceof Concatenation) {
+			Concatenation c = (Concatenation)item;
 			if (this.nextItemIndex >= c.getItem().size()) {
 				throw new NoNextExpectedItemException();
 			} else {
@@ -94,8 +94,8 @@ public class ParseTreeBranch extends AbstractParseTree {
 
 	boolean calculateIsComplete() {
 		RuleItem item = this.rule.getRhs();
-		if (item instanceof Concatination) {
-			Concatination c = (Concatination)item;
+		if (item instanceof Concatenation) {
+			Concatenation c = (Concatenation)item;
 			return c.getItem().size() <= this.nextItemIndex;
 		} else if (item instanceof Choice) {
 			return true;
@@ -118,8 +118,8 @@ public class ParseTreeBranch extends AbstractParseTree {
 		boolean reachedEnd = this.getRoot().getMatchedTextLength() >= this.input.getLength();
 		if (reachedEnd)
 			return false;
-		if (item instanceof Concatination) {
-			Concatination c = (Concatination)item;
+		if (item instanceof Concatenation) {
+			Concatenation c = (Concatenation)item;
 			if ( this.nextItemIndex < c.getItem().size() ) {
 				return true;
 			} else {

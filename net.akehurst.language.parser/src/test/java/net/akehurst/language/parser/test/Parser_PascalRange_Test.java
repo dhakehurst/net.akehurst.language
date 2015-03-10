@@ -1,4 +1,4 @@
-package net.akehurst.language.parser;
+package net.akehurst.language.parser.test;
 
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
@@ -12,6 +12,7 @@ import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.ogl.semanticModel.TerminalPattern;
+import net.akehurst.language.parser.ToStringVisitor;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -21,9 +22,9 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 	Grammar pascal() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("expr").choice(new NonTerminal("range"), new NonTerminal("real"));
-		b.rule("range").concatination(new NonTerminal("integer"), new TerminalLiteral(".."), new NonTerminal("integer"));
-		b.rule("integer").concatination(new TerminalPattern("[0-9]+"));
-		b.rule("real").concatination(new TerminalPattern("([0-9]+[.][0-9]*)|([.][0-9]+)"));
+		b.rule("range").concatenation(new NonTerminal("integer"), new TerminalLiteral(".."), new NonTerminal("integer"));
+		b.rule("integer").concatenation(new TerminalPattern("[0-9]+"));
+		b.rule("real").concatenation(new TerminalPattern("([0-9]+[.][0-9]*)|([.][0-9]+)"));
 
 		return b.get();
 	}

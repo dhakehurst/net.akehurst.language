@@ -1,4 +1,4 @@
-package net.akehurst.language.parser;
+package net.akehurst.language.parser.test;
 
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
@@ -11,17 +11,18 @@ import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.parser.ToStringVisitor;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class Parser_LeftRecursion_Test extends AbstractParser_Test {
+public class Parser_RightRecursion_Test extends AbstractParser_Test {
 
 	Grammar as() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("as").choice(new NonTerminal("as$group1"), new NonTerminal("a"));
-		b.rule("as$group1").concatination(new NonTerminal("as"), new NonTerminal("a"));
-		b.rule("a").concatination(new TerminalLiteral("a"));
+		b.rule("as$group1").concatenation(new NonTerminal("a"), new NonTerminal("as"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
 		return b.get();
 	}
 	
@@ -64,7 +65,7 @@ public class Parser_LeftRecursion_Test extends AbstractParser_Test {
 			Assert.assertEquals("Tree {*as 1, 3}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [as$group1 : [as : [a : ['a' : \"a\"]], a : ['a' : \"a\"]]]",nt);
+			Assert.assertEquals("as : [as$group1 : [a : ['a' : \"a\"], as : [a : ['a' : \"a\"]]]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -87,7 +88,7 @@ public class Parser_LeftRecursion_Test extends AbstractParser_Test {
 			Assert.assertEquals("Tree {*as 1, 4}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [as$group1 : [as : [as$group1 : [as : [a : ['a' : \"a\"]], a : ['a' : \"a\"]]], a : ['a' : \"a\"]]]",nt);
+			Assert.assertEquals("as : [as$group1 : [a : ['a' : \"a\"], as : [as$group1 : [a : ['a' : \"a\"], as : [a : ['a' : \"a\"]]]]]]",nt);
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

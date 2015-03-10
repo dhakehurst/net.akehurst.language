@@ -1,4 +1,4 @@
-package net.akehurst.language.parser;
+package net.akehurst.language.parser.test;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
@@ -8,6 +8,7 @@ import net.akehurst.language.ogl.semanticModel.GrammarBuilder;
 import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.parser.ToStringVisitor;
 import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
@@ -18,9 +19,9 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 	Grammar abc() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("abc").choice(new NonTerminal("a"), new NonTerminal("b"), new NonTerminal("c"));
-		b.rule("a").concatination(new TerminalLiteral("a"));
-		b.rule("b").concatination(new TerminalLiteral("b"));
-		b.rule("c").concatination(new TerminalLiteral("c"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		b.rule("b").concatenation(new TerminalLiteral("b"));
+		b.rule("c").concatenation(new TerminalLiteral("c"));
 		return b.get();
 	}
 	

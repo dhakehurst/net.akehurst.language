@@ -1,4 +1,4 @@
-package net.akehurst.language.parser;
+package net.akehurst.language.parser.test;
 
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
@@ -12,6 +12,7 @@ import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.ogl.semanticModel.TerminalPattern;
+import net.akehurst.language.parser.ScannerLessParser;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -19,7 +20,7 @@ import org.junit.Test;
 abstract
 public class AbstractParser_Test {
 	
-	IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
+	protected IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
 		try {
 			INodeType goal = grammar.findAllRule(goalName).getNodeType();
 			IParser parser = new ScannerLessParser(grammar);

@@ -20,7 +20,7 @@ import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.Choice;
-import net.akehurst.language.ogl.semanticModel.Concatination;
+import net.akehurst.language.ogl.semanticModel.Concatenation;
 import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.Multi;
 import net.akehurst.language.ogl.semanticModel.Namespace;
@@ -45,20 +45,30 @@ public class ScannerLessParser implements IParser {
 	public final static String START_SYMBOL = "\uE000";
 	public final static TerminalLiteral START_SYMBOL_TERMINAL = new TerminalLiteral(START_SYMBOL);
 	public final static String FINISH_SYMBOL = "\uE001";
+	public final static TerminalLiteral FINISH_SYMBOL_TERMINAL = new TerminalLiteral(FINISH_SYMBOL);
 	
 	
 	public ScannerLessParser(Grammar grammar) {
 		this.grammar = grammar;
-		this.pseudoGrammar = new Grammar(new Namespace(grammar.getNamespace().getQualifiedName()+"::pseudo"), "Pseudo");
-		this.pseudoGrammar.setExtends(Arrays.asList(new Grammar[]{this.grammar}));
 		this.findTerminal_cache = new HashMap<ITokenType, Terminal>();
 	}
 
 	Grammar grammar;
 	Grammar pseudoGrammar;
-
+	Rule createPseudoGrammar(INodeType goal) {
+		this.pseudoGrammar = new Grammar(new Namespace(grammar.getNamespace().getQualifiedName()+"::pseudo"), "Pseudo");
+		this.pseudoGrammar.setExtends(Arrays.asList(new Grammar[]{this.grammar}));
+		Rule goalRule = new Rule(this.pseudoGrammar, "$goal$");
+		goalRule.setRhs(new Concatenation(new TerminalLiteral(START_SYMBOL), new NonTerminal(goal.getIdentity().asPrimitive()), new TerminalLiteral(FINISH_SYMBOL)));
+		this.pseudoGrammar.getRule().add(goalRule);
+		this.allRules_cache = null;
+		this.getAllRules();
+		this.allRules_cache.add(goalRule);
+		return goalRule;
+	}
+	
 	Grammar getGrammar() {
-		return this.pseudoGrammar;
+		return this.grammar;
 	}
 
 	Set<Rule> allRules_cache;
@@ -96,6 +106,9 @@ public class ScannerLessParser implements IParser {
 	public Set<Terminal> getAllTerminal() {
 		if (null==this.allTerminal) {
 			this.allTerminal = this.findAllTerminal();
+			this.allTerminal.add(START_SYMBOL_TERMINAL);
+			this.allTerminal.add(FINISH_SYMBOL_TERMINAL);
+			
 		}
 		return this.allTerminal;
 	}
@@ -119,8 +132,8 @@ public class ScannerLessParser implements IParser {
 			for(TangibleItem ti : ((Choice)item).getAlternative()) {
 				result.addAll( this.findAllTerminal( totalItems, rule, ti ) );
 			}
-		} else if (item instanceof Concatination) {
-			for(TangibleItem ti : ((Concatination)item).getItem()) {
+		} else if (item instanceof Concatenation) {
+			for(TangibleItem ti : ((Concatenation)item).getItem()) {
 				result.addAll( this.findAllTerminal( totalItems, rule, ti ) );
 			}
 		} else if (item instanceof SeparatedList) {
@@ -161,10 +174,7 @@ public class ScannerLessParser implements IParser {
 	}
 
 	public IParseTree parse2(INodeType goal, CharSequence text) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
-			Rule goalRule = new Rule(this.pseudoGrammar, "$goal$");
-			goalRule.setRhs(new Concatination(new TerminalLiteral(START_SYMBOL), new NonTerminal(goal.getIdentity().asPrimitive()), new TerminalLiteral(FINISH_SYMBOL)));
-			this.getGrammar().getRule().add(goalRule);
-			
+			Rule goalRule = this.createPseudoGrammar(goal);
 			CharSequence pseudoText = START_SYMBOL + text + FINISH_SYMBOL;
 			
 			ParseTreeBranch pseudoTree = (ParseTreeBranch)this.doParse2(goalRule.getNodeType(), pseudoText);

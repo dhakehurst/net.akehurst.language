@@ -1,4 +1,4 @@
-package net.akehurst.language.parser;
+package net.akehurst.language.parser.test;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INodeType;
@@ -12,6 +12,7 @@ import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.parser.ToStringVisitor;
 import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
@@ -29,51 +30,51 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	 */
 	Grammar a() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("a").concatination(new TerminalLiteral("a"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
 		return b.get();
 	}
 	
 	Grammar abc() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("abc").concatination(new TerminalLiteral("abc"));
+		b.rule("abc").concatenation(new TerminalLiteral("abc"));
 		return b.get();
 	}
 	
 	Grammar a_b() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("ab").concatination(new NonTerminal("a"), new NonTerminal("b"));
-		b.rule("a").concatination(new TerminalLiteral("a"));
-		b.rule("b").concatination(new TerminalLiteral("b"));
+		b.rule("ab").concatenation(new NonTerminal("a"), new NonTerminal("b"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		b.rule("b").concatenation(new TerminalLiteral("b"));
 		return b.get();
 	}
 	
 	Grammar a_b_c() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.skip("SPACE").concatination(new TerminalLiteral(" "));
-		b.rule("abc").concatination(new NonTerminal("a"), new NonTerminal("b"), new NonTerminal("c"));
-		b.rule("a").concatination(new TerminalLiteral("a"));
-		b.rule("b").concatination(new TerminalLiteral("b"));
-		b.rule("c").concatination(new TerminalLiteral("c"));
+		b.rule("abc").concatenation(new NonTerminal("a"), new NonTerminal("b"), new NonTerminal("c"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		b.rule("b").concatenation(new TerminalLiteral("b"));
+		b.rule("c").concatenation(new TerminalLiteral("c"));
 		return b.get();
 	}
 	
 	Grammar a_b__c() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("abc").concatination(new NonTerminal("ab"), new NonTerminal("c"));
-		b.rule("ab").concatination(new NonTerminal("a"), new NonTerminal("b"));
-		b.rule("a").concatination(new TerminalLiteral("a"));
-		b.rule("b").concatination(new TerminalLiteral("b"));
-		b.rule("c").concatination(new TerminalLiteral("c"));
+		b.rule("abc").concatenation(new NonTerminal("ab"), new NonTerminal("c"));
+		b.rule("ab").concatenation(new NonTerminal("a"), new NonTerminal("b"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		b.rule("b").concatenation(new TerminalLiteral("b"));
+		b.rule("c").concatenation(new TerminalLiteral("c"));
 		return b.get();
 	}
 	
 	Grammar a__b_c() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("abc").concatination(new NonTerminal("a"), new NonTerminal("bc"));
-		b.rule("bc").concatination(new NonTerminal("b"), new NonTerminal("c"));
-		b.rule("a").concatination(new TerminalLiteral("a"));
-		b.rule("b").concatination(new TerminalLiteral("b"));
-		b.rule("c").concatination(new TerminalLiteral("c"));
+		b.rule("abc").concatenation(new NonTerminal("a"), new NonTerminal("bc"));
+		b.rule("bc").concatenation(new NonTerminal("b"), new NonTerminal("c"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		b.rule("b").concatenation(new TerminalLiteral("b"));
+		b.rule("c").concatenation(new TerminalLiteral("c"));
 		return b.get();
 	}
 	

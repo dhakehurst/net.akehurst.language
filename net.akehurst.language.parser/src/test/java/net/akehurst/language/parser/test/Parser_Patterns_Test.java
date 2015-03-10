@@ -1,4 +1,4 @@
-package net.akehurst.language.parser;
+package net.akehurst.language.parser.test;
 
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
@@ -12,6 +12,7 @@ import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.ogl.semanticModel.TerminalPattern;
+import net.akehurst.language.parser.ToStringVisitor;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -20,15 +21,15 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 
 	Grammar as() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").concatination(new NonTerminal("a"));
-		b.rule("a").concatination(new TerminalPattern("[a]+"));
+		b.rule("as").concatenation(new NonTerminal("a"));
+		b.rule("a").concatenation(new TerminalPattern("[a]+"));
 		return b.get();
 	}
 	
 	Grammar asxas() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").concatination(new NonTerminal("a"), new TerminalLiteral(":"), new NonTerminal("a"));
-		b.rule("a").concatination(new TerminalPattern("[a]+"));
+		b.rule("as").concatenation(new NonTerminal("a"), new TerminalLiteral(":"), new NonTerminal("a"));
+		b.rule("a").concatenation(new TerminalPattern("[a]+"));
 		return b.get();
 	}
 	
