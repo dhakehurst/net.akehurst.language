@@ -1,7 +1,5 @@
 package net.akehurst.language.ogl.semanticModel;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import net.akehurst.language.core.parser.INodeType;
@@ -12,6 +10,7 @@ public class TerminalLiteral extends Terminal {
 	public TerminalLiteral(String value) {
 		super(value);
 		this.pattern = Pattern.compile(value, Pattern.LITERAL);
+		this.nodeType = new LeafNodeType(this);
 	}
 	
 	Pattern pattern;
@@ -20,8 +19,9 @@ public class TerminalLiteral extends Terminal {
 		return this.pattern;
 	}
 	
+	LeafNodeType nodeType;
 	public INodeType getNodeType() {
-		return new LeafNodeType(this);
+		return this.nodeType;
 	}
 	
 	@Override

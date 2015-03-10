@@ -4,6 +4,7 @@ import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
+import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.parser.forrest.AbstractParseTree;
 
 public class ToStringVisitor implements IParseTreeVisitor<String, String, RuntimeException> {
@@ -23,27 +24,24 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 	@Override
 	public String visit(IParseTree target, String indent) throws RuntimeException {
 		String s = indent;
-		s += "Tree {" +(target.getIsComplete()?"*":"+")+(target.getCanGrow()?"?":"")
-				+ target.getRoot().getName()
-				+ " " + target.getRoot().getStart() + ", " + target.getRoot().getEnd()
-				+ getStackRootsAsString(target)
-				+ "}";
-		//s += target.getRoot().accept(this, indent);
+		s += "{" + (target.getIsComplete() ? "*" : "+") + (target.getCanGrow() ? "?" : "") + target.getRoot().getName() + " " + target.getRoot().getStart()
+				+ ", " + target.getRoot().getEnd() + getStackRootsAsString(target) + "}";
+		// s += target.getRoot().accept(this, indent);
 		return s;
 	}
 
 	String getStackRootsAsString(IParseTree target) {
-		if (((AbstractParseTree)target).getStackedTrees().isEmpty()) {
+		AbstractParseTree st = ((AbstractParseTree) target).getStackedTree();
+		if (null == st) {
 			return "";
 		} else {
-			String s = "";
-			for(AbstractParseTree st : ((AbstractParseTree)target).getStackedTrees()) {
-				s = " {" + st.getRoot().getName() + " " + st.getRoot().getStart() + ", " + st.getRoot().getEnd() + "}" + s;
-			}
+			String s = " " + "[" + (st.getIsComplete() ? "*" : "+") + (st.getCanGrow() ? "?" : "") + st.getRoot().getName() + " " + st.getRoot().getStart()
+					+ ", " + st.getRoot().getEnd() + "]";
+			s += getStackRootsAsString(st);
 			return s;
 		}
 	}
-	
+
 	@Override
 	public String visit(ILeaf target, String indent) throws RuntimeException {
 		String s = indent + target.getName() + " : \"" + target.getMatchedText().replace("\n", new String(Character.toChars(0x23CE))) + "\"";
@@ -57,7 +55,7 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 		if (0 < target.getChildren().size()) {
 			s += this.lineSeparator;
 			s += target.getChildren().get(0).accept(this, indent + indentIncrement);
-			for (int i=1;i<target.getChildren().size(); ++i) {
+			for (int i = 1; i < target.getChildren().size(); ++i) {
 				s += ", " + this.lineSeparator;
 				s += target.getChildren().get(i).accept(this, indent + indentIncrement);
 			}

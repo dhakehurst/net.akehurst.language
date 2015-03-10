@@ -11,13 +11,13 @@ import net.akehurst.language.parser.ToStringVisitor;
 
 public class ParseTreeBud extends AbstractParseTree {
 
-	ParseTreeBud(Input input, ILeaf root, Stack<AbstractParseTree> stack) {
-		super(input, root, stack);
+	ParseTreeBud(Factory factory, Input input, ILeaf root, AbstractParseTree stackedTree) {
+		super(factory, input, root, stackedTree);
 	}
 
 	@Override
 	public boolean getCanGrow() {
-		if (!this.stackedRoots.isEmpty()) {
+		if (null!=this.stackedTree) {
 			return true;
 		} else {
 			return false;
@@ -48,12 +48,12 @@ public class ParseTreeBud extends AbstractParseTree {
 		throw new CannotExtendTreeException("cannot extend a bud");
 	}
 	
-	public ParseTreeBud deepClone() {
-		Stack<AbstractParseTree> stack = new Stack<>();
-		stack.addAll(this.stackedRoots);
-		ParseTreeBud clone = new ParseTreeBud(this.input, this.getRoot(), stack);
-		return clone;
-	}
+//	public ParseTreeBud deepClone() {
+//		Stack<AbstractParseTree> stack = new Stack<>();
+//		stack.addAll(this.stackedRoots);
+//		ParseTreeBud clone = new ParseTreeBud(this.input, this.getRoot(), stack);
+//		return clone;
+//	}
 
 	// --- Object ---
 	@Override

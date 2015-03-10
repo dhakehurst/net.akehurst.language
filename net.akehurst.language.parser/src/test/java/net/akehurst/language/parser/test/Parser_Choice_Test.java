@@ -9,13 +9,20 @@ import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.parser.ToStringVisitor;
+import net.akehurst.language.parser.forrest.Factory;
 import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class Parser_Choice_Test extends AbstractParser_Test {
 
+	@Before
+	public void before() {
+		this.parseTreeFactory = new Factory();
+	}
+	
 	Grammar abc() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("abc").choice(new NonTerminal("a"), new NonTerminal("b"), new NonTerminal("c"));
@@ -38,9 +45,9 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*abc 1, 2}",st);
+			Assert.assertEquals("{*abc 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.abc(), goal, text);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, this.abc(), goal, text);
 			IBranch expected = 
 				b.branch("abc",
 					b.branch("a",
@@ -67,9 +74,9 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*abc 1, 2}",st);
+			Assert.assertEquals("{*abc 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.abc(), goal, text);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, this.abc(), goal, text);
 			IBranch expected = 
 				b.branch("abc",
 					b.branch("b",
@@ -97,9 +104,9 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*abc 1, 2}",st);
+			Assert.assertEquals("{*abc 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.abc(), goal, text);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, this.abc(), goal, text);
 			IBranch expected = 
 				b.branch("abc",
 					b.branch("c",

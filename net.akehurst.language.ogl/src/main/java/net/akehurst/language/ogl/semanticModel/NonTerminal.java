@@ -20,6 +20,7 @@ public class NonTerminal extends TangibleItem {
 		return this.referencedRule;
 	}
 
+	INodeType nodeType;
 	public INodeType getNodeType() throws RuleNotFoundException {
 		return new RuleNodeType(this.getReferencedRule());
 	}

@@ -1,10 +1,7 @@
 package net.akehurst.language.parser.forrest;
 
-import java.util.Stack;
-
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.Choice;
 import net.akehurst.language.ogl.semanticModel.Concatenation;
@@ -18,12 +15,13 @@ import net.akehurst.language.parser.ToStringVisitor;
 
 public class ParseTreeBranch extends AbstractParseTree {
 	
-	public ParseTreeBranch(Input input, IBranch root, Stack<AbstractParseTree> stack, Rule rule, int nextItemIndex) {
-		super(input, root, stack);
+	public ParseTreeBranch(Factory factory, Input input, IBranch root, AbstractParseTree stack, Rule rule, int nextItemIndex) {
+		super(factory, input, root, stack);
 		this.rule = rule;
 		this.nextItemIndex = nextItemIndex;
 		this.canGrow = this.calculateCanGrow();
 		this.complete = this.calculateIsComplete();
+		this.hashCode_cache = this.getRoot().hashCode();
 	}
 	
 	Rule rule;
@@ -47,19 +45,19 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	
 	@Override
-	public Branch getRoot() {
-		return (Branch)super.getRoot();
+	public IBranch getRoot() {
+		return (IBranch)super.getRoot();
 	}
 	
 	public ParseTreeBranch extendWith(INode extension) throws ParseTreeException {
 		IBranch nb = this.getRoot().addChild(extension);
-		Stack<AbstractParseTree> stack = new Stack<>();
-		stack.addAll(this.stackedRoots);
+//		Stack<AbstractParseTree> stack = new Stack<>();
+//		stack.addAll(this.stackedRoots);
 		if (extension.getNodeType() instanceof SkipNodeType) {
-			ParseTreeBranch newBranch = new ParseTreeBranch(this.input, nb, stack, this.rule, this.nextItemIndex);
+			ParseTreeBranch newBranch = new ParseTreeBranch(this.factory, this.input, nb, this.stackedTree, this.rule, this.nextItemIndex);
 			return newBranch;			
 		} else {
-			ParseTreeBranch newBranch = new ParseTreeBranch(this.input, nb, stack, this.rule, this.nextItemIndex+1);
+			ParseTreeBranch newBranch = new ParseTreeBranch(this.factory, this.input, nb, this.stackedTree, this.rule, this.nextItemIndex+1);
 			return newBranch;
 		}
 	}
@@ -114,7 +112,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	boolean calculateCanGrow() {
 		RuleItem item = this.rule.getRhs();
-		if (!this.stackedRoots.isEmpty()) return true;
+		if (this.stackedTree!=null) return true;
 		boolean reachedEnd = this.getRoot().getMatchedTextLength() >= this.input.getLength();
 		if (reachedEnd)
 			return false;
@@ -140,32 +138,55 @@ public class ParseTreeBranch extends AbstractParseTree {
 		}
 	}
 	
-	public ParseTreeBranch deepClone() {
-		Stack<AbstractParseTree> stack = new Stack<>();
-		stack.addAll(this.stackedRoots);
-		ParseTreeBranch clone = new ParseTreeBranch(this.input, this.getRoot(), stack, this.rule, this.nextItemIndex);
-		return clone;
-	}
+//	public ParseTreeBranch deepClone() {
+//		Stack<AbstractParseTree> stack = new Stack<>();
+//		stack.addAll(this.stackedRoots);
+//		ParseTreeBranch clone = new ParseTreeBranch(this.input, this.getRoot(), stack, this.rule, this.nextItemIndex);
+//		return clone;
+//	}
 	
 	//--- Object ---
+	static ToStringVisitor v = new ToStringVisitor();
+	String toString_cache;
 	@Override
 	public String toString() {
-		ToStringVisitor v = new ToStringVisitor();
-		return this.accept(v, "");
+		if (null==this.toString_cache) {
+			this.toString_cache = this.accept(v, "");
+		}
+		return this.toString_cache;
 	}
 	
+	int hashCode_cache;
 	@Override
 	public int hashCode() {
-		return this.getRoot().hashCode();
+		return hashCode_cache;
 	}
 	
 	@Override
 	public boolean equals(Object arg) {
-		if (arg instanceof ParseTreeBranch) {
-			ParseTreeBranch other = (ParseTreeBranch)arg;
-			return this.toString().equals(other.toString());
-		} else {
+		if (!(arg instanceof ParseTreeBranch)) {
 			return false;
 		}
+		ParseTreeBranch other = (ParseTreeBranch)arg;
+		if ( this.getRoot().getStart() != other.getRoot().getStart() ) {
+			return false;
+		}
+		if ( this.getRoot().getEnd() != other.getRoot().getEnd() ) {
+			return false;
+		}
+		if ( ((Branch)this.getRoot()).getNodeTypeNumber() != ((Branch)other.getRoot()).getNodeTypeNumber() ) {
+			return false;
+		}
+		if (this.complete != other.complete) {
+			return false;
+		}
+		if (null==this.stackedTree && null==other.stackedTree) {
+			return true;
+		}
+		if (!this.stackedTree.equals(other.stackedTree)) {
+			return false;
+		}
+		return true;
+
 	}
 }

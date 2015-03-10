@@ -81,24 +81,26 @@ public class Leaf implements ILeaf {
 	}
 	
 	//--- Object ---
+	static ToStringVisitor v = new ToStringVisitor();
 	@Override
 	public String toString() {
-		ToStringVisitor v = new ToStringVisitor();
 		return this.accept(v, "");
 	}
 	
 	@Override
 	public int hashCode() {
-		return this.toString().hashCode();
+		return this.start ^ this.end;
 	}
 	
 	@Override
 	public boolean equals(Object arg) {
-		if (arg instanceof Leaf) {
-			Leaf other = (Leaf)arg;
-			return this.toString().equals(other.toString());
-		} else {
+		if (!(arg instanceof Leaf) ) {
 			return false;
 		}
+		Leaf other = (Leaf)arg;
+		if (this.start!=other.start || this.end!=other.end) {
+			return false;
+		}
+		return true;
 	}
 }

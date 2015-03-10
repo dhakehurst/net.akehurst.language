@@ -9,12 +9,19 @@ import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.parser.ToStringVisitor;
+import net.akehurst.language.parser.forrest.Factory;
 import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class Special_Test extends AbstractParser_Test {
+	
+	@Before
+	public void before() {
+		this.parseTreeFactory = new Factory();
+	}
 	
 	Grammar S() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
@@ -39,9 +46,9 @@ public class Special_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*S 1, 4}",st);
+			Assert.assertEquals("{*S 1, 4}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
 			IBranch expected =
 				b.branch("S",
 					b.branch("S$group1",

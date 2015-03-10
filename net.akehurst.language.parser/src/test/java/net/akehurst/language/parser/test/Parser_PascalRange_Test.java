@@ -13,12 +13,19 @@ import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.ogl.semanticModel.TerminalPattern;
 import net.akehurst.language.parser.ToStringVisitor;
+import net.akehurst.language.parser.forrest.Factory;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class Parser_PascalRange_Test extends AbstractParser_Test {
 
+	@Before
+	public void before() {
+		this.parseTreeFactory = new Factory();
+	}
+	
 	Grammar pascal() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("expr").choice(new NonTerminal("range"), new NonTerminal("real"));
@@ -42,7 +49,7 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*expr 1, 3}",st);
+			Assert.assertEquals("{*expr 1, 3}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("expr : [real : [\"([0-9]+[.][0-9]*)|([.][0-9]+)\" : \".5\"]]",nt);
@@ -65,7 +72,7 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*expr 1, 3}",st);
+			Assert.assertEquals("{*expr 1, 3}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("expr : [real : [\"([0-9]+[.][0-9]*)|([.][0-9]+)\" : \"1.\"]]",nt);
@@ -88,7 +95,7 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*expr 1, 5}",st);
+			Assert.assertEquals("{*expr 1, 5}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("expr : [range : [integer : [\"[0-9]+\" : \"1\"], '..' : \"..\", integer : [\"[0-9]+\" : \"5\"]]]",nt);

@@ -13,6 +13,7 @@ import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.ogl.semanticModel.TerminalPattern;
 import net.akehurst.language.parser.ScannerLessParser;
+import net.akehurst.language.parser.forrest.Factory;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -20,10 +21,12 @@ import org.junit.Test;
 abstract
 public class AbstractParser_Test {
 	
+	protected Factory parseTreeFactory;
+	
 	protected IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
 		try {
 			INodeType goal = grammar.findAllRule(goalName).getNodeType();
-			IParser parser = new ScannerLessParser(grammar);
+			IParser parser = new ScannerLessParser(this.parseTreeFactory, grammar);
 			IParseTree tree = parser.parse(goal, text);
 			return tree;
 		} catch (RuleNotFoundException e) {

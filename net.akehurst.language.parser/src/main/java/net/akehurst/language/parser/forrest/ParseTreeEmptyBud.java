@@ -7,15 +7,15 @@ import net.akehurst.language.parser.ToStringVisitor;
 
 public class ParseTreeEmptyBud extends ParseTreeBud {
 
-	public ParseTreeEmptyBud(Input input, int start) {
-		super(input, new EmptyLeaf(start), new Stack<>());
+	public ParseTreeEmptyBud(Factory f, Input input, int start) {
+		super(input, new EmptyLeaf(start), null);
 	}
 	
 
-	@Override
-	public ParseTreeEmptyBud deepClone() {
-		return new ParseTreeEmptyBud(this.input, this.getRoot().getStart());
-	}
+//	@Override
+//	public ParseTreeEmptyBud deepClone() {
+//		return new ParseTreeEmptyBud(this.input, this.getRoot().getStart());
+//	}
 	
 	//--- Object ---
 	@Override

@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Matcher;
 
+import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.INodeType;
@@ -30,17 +31,20 @@ import net.akehurst.language.parser.CannotGrowTreeException;
 
 public abstract class AbstractParseTree implements IParseTree {
 
-	public AbstractParseTree(Input input, INode root, Stack<AbstractParseTree> stack) {
+	public AbstractParseTree(Factory factory, Input input, INode root, AbstractParseTree stackedTree) {
+		this.factory = factory;
 		this.input = input;
 		this.root = root;
-		this.stackedRoots = stack;
+		this.stackedTree = stackedTree;
 	}
 
+	Factory factory;
 	Input input;
 	INode root;
-	Stack<AbstractParseTree> stackedRoots;
-	public Stack<AbstractParseTree> getStackedTrees() {
-		return this.stackedRoots;
+	
+	AbstractParseTree stackedTree;
+	public AbstractParseTree getStackedTree() {
+		return this.stackedTree;
 	}
 	
 	@Override
@@ -53,10 +57,10 @@ public abstract class AbstractParseTree implements IParseTree {
 	}
 
 	public AbstractParseTree peekTopStackedRoot() throws ParseTreeException {
-		if (this.stackedRoots.isEmpty()) {
+		if (null==this.stackedTree) {
 			throw new ParseTreeException("Nothing on the stack", null);
 		} else {
-			return this.stackedRoots.peek();
+			return this.stackedTree;
 		}
 	}
 
@@ -68,7 +72,7 @@ public abstract class AbstractParseTree implements IParseTree {
 	
 	public abstract TangibleItem getNextExpectedItem() throws NoNextExpectedItemException;
 
-	public abstract AbstractParseTree deepClone();
+//	public abstract AbstractParseTree deepClone();
 
 	public boolean getIsSkip() throws ParseTreeException {
 		return this.getRoot().getNodeType() instanceof SkipNodeType;
@@ -109,10 +113,7 @@ public abstract class AbstractParseTree implements IParseTree {
 	}
 
 	AbstractParseTree pushStackNewRoot(ILeaf n) {
-		Stack<AbstractParseTree> stack = new Stack<>();
-		stack.addAll(this.stackedRoots);
-		stack.push(this);
-		return new ParseTreeBud(this.input, n, stack);
+		return new ParseTreeBud(this.factory, this.input, n, this);
 	}
 	
 	/**
@@ -222,10 +223,8 @@ public abstract class AbstractParseTree implements IParseTree {
 		INodeType nodeType = target.getOwningRule().getNodeType();
 		List<INode> children = new ArrayList<>();
 		children.add(this.getRoot());
-		Branch newBranch = new Branch(nodeType, children);
-		Stack<AbstractParseTree> stack = new Stack<>();
-		stack.addAll(this.stackedRoots);
-		ParseTreeBranch newTree = new ParseTreeBranch(this.input, newBranch, stack, target.getOwningRule(), 1);
+		IBranch newBranch = this.factory.createBranch(nodeType, children);
+		ParseTreeBranch newTree = new ParseTreeBranch(this.factory, this.input, newBranch, this.stackedTree, target.getOwningRule(), 1);
 		return newTree;
 	}
 	
@@ -272,7 +271,8 @@ public abstract class AbstractParseTree implements IParseTree {
 				
 				//need to create a 'complete' version and a 'non-complete' version of the tree
 				IParseTree newTree = this.growMe(target);
-				ParseTreeBranch newTree2 = ((ParseTreeBranch)newTree).deepClone();
+				ParseTreeBranch ntB = (ParseTreeBranch)newTree;
+				ParseTreeBranch newTree2 = new ParseTreeBranch(this.factory, ntB.input, (IBranch)ntB.root, ntB.stackedTree, ntB.rule, ntB.nextItemIndex);
 				newTree2.complete = true;
 				result.add(newTree);
 				//result.add(newTree2);
@@ -289,7 +289,8 @@ public abstract class AbstractParseTree implements IParseTree {
 			List<IParseTree> result = new ArrayList<>();
 			if (target.getConcatination().getNodeType().equals(oldBranch.getRoot().getNodeType())) {
 				IParseTree newTree = this.growMe(target);
-				ParseTreeBranch newTree2 = ((ParseTreeBranch)newTree).deepClone();
+				ParseTreeBranch ntB = (ParseTreeBranch)newTree;
+				ParseTreeBranch newTree2 = new ParseTreeBranch(this.factory, ntB.input, (IBranch)ntB.root, ntB.stackedTree, ntB.rule, ntB.nextItemIndex);
 				newTree2.complete = false;
 				result.add(newTree);
 				//result.add(newTree2);

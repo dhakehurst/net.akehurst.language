@@ -10,21 +10,20 @@ import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.parser.ToStringVisitor;
 
-public class Branch implements IBranch {
+public class Branch extends Node implements IBranch {
 
-	public Branch(INodeType nodeType, List<INode> children) {
-		this.nodeType = nodeType;
+	public Branch(Factory factory, int nodeTypeNumber, INodeType nodeType, List<INode> children) {
+		super(factory, nodeTypeNumber, nodeType);
 		this.children = children;
 		this.start = this.children.get(0).getStart();
 		this.length = 0;
 		for(INode n: this.children) {
 			this.length += n.getMatchedTextLength();
 		}
-		ToStringVisitor v = new ToStringVisitor();
-		this.toString_cache = this.accept(v, "");
+		this.hashCode_cache = this.nodeTypeNumber ^ this.start ^ this.length;
 	}
 	
-	INodeType nodeType;
+	
 	List<INode> children;
 	int length;
 	int start;
@@ -38,11 +37,6 @@ public class Branch implements IBranch {
 		return res;
 	}
 	
-	@Override
-	public INodeType getNodeType() throws ParseTreeException {
-		return this.nodeType;
-	}
-
 	@Override
 	public String getName() {
 		try {
@@ -82,7 +76,7 @@ public class Branch implements IBranch {
 		List<INode> newChildren = new ArrayList<>();
 		newChildren.addAll(this.getChildren());
 		newChildren.add(newChild);
-		IBranch newBranch = new Branch(this.nodeType, newChildren);
+		IBranch newBranch = this.factory.createBranch(this.nodeType, newChildren);
 		return newBranch;
 	}
 	
@@ -92,30 +86,40 @@ public class Branch implements IBranch {
 		for(INode n:this.getChildren()) {
 			clonedChildren.add( n.deepClone() );
 		}
-		Branch clone = new Branch(this.nodeType, clonedChildren);
-		return clone;
+		IBranch clone = this.factory.createBranch(this.nodeType, clonedChildren);
+		return (Branch)clone;
 	}
 	
 	//--- Object ---
+	static ToStringVisitor v = new ToStringVisitor();
 	String toString_cache;
 	@Override
 	public String toString() {
+		if (null==this.toString_cache) {
+			this.toString_cache = this.accept(v, "");
+		}
 		return this.toString_cache;
 	}
 	
+	int hashCode_cache;
 	@Override
 	public int hashCode() {
-		return this.toString().hashCode();
+		return this.hashCode_cache;
 	}
 	
 	@Override
 	public boolean equals(Object arg) {
-		if (arg instanceof Branch) {
-			Branch other = (Branch)arg;
-			return this.toString().equals(other.toString());
-		} else {
+		if (!(arg instanceof Branch)) {
 			return false;
 		}
+		Branch other = (Branch)arg;
+		if (this.nodeTypeNumber != other.nodeTypeNumber) {
+			return false;
+		}
+		if (this.start!=other.start || this.length!=other.length) {
+			return false;
+		}
+		return this.children.equals(other.children);
 	}
 	
 }

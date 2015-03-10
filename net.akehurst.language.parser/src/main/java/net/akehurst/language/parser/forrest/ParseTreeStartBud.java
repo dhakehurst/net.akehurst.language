@@ -6,8 +6,8 @@ import net.akehurst.language.parser.ToStringVisitor;
 
 public class ParseTreeStartBud extends ParseTreeBud {
 
-	public ParseTreeStartBud(Input input) {
-		super(input, new EmptyLeaf(0), new Stack<>());
+	public ParseTreeStartBud(Factory f, Input input) {
+		super(input, new EmptyLeaf(0), null);
 	}
 	
 	@Override
@@ -15,10 +15,10 @@ public class ParseTreeStartBud extends ParseTreeBud {
 		return true;
 	}
 
-	@Override
-	public ParseTreeStartBud deepClone() {
-		return new ParseTreeStartBud(this.input);
-	}
+//	@Override
+//	public ParseTreeStartBud deepClone() {
+//		return new ParseTreeStartBud(this.input);
+//	}
 	
 //	@Override
 //	public AbstractParseTree expand(AbstractParseTree newBranch) throws CannotExtendTreeException, RuleNotFoundException {

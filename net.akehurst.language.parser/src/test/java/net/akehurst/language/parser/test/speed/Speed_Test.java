@@ -1,6 +1,7 @@
 package net.akehurst.language.parser.test.speed;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.IParseTree;
@@ -11,10 +12,16 @@ import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.ogl.semanticModel.TerminalPattern;
+import net.akehurst.language.parser.forrest.Factory;
 import net.akehurst.language.parser.test.AbstractParser_Test;
 
 public class Speed_Test extends AbstractParser_Test {
 
+	@Before
+	public void before() {
+		this.parseTreeFactory = new Factory();
+	}
+	
 	Grammar abcds() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("abcds").choice(new NonTerminal("abcd"), new NonTerminal("abcds.group1"));
@@ -99,5 +106,7 @@ public class Speed_Test extends AbstractParser_Test {
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
+		
+		
 	}
 }

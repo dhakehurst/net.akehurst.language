@@ -13,13 +13,20 @@ import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.parser.ToStringVisitor;
+import net.akehurst.language.parser.forrest.Factory;
 import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class Parser_Multi_Test extends AbstractParser_Test {
 
+	@Before
+	public void before() {
+		this.parseTreeFactory = new Factory();
+	}
+	
 	Grammar ab01() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("ab01").concatenation(new NonTerminal("a"), new NonTerminal("b01"));
@@ -61,9 +68,9 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 2}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
+			Assert.assertEquals("{*as 1, 2}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a",
@@ -90,9 +97,9 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 3}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
+			Assert.assertEquals("{*as 1, 3}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a",
@@ -122,9 +129,9 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 4}",st);
+			Assert.assertEquals("{*as 1, 4}",st);
 						
-			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a",
@@ -157,9 +164,9 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*ab01 1, 2}",st);
+			Assert.assertEquals("{*ab01 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
 			IBranch expected = 
 				b.branch("ab01",
 					b.branch("a",
@@ -189,9 +196,9 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*ab01 1, 2}",st);
+			Assert.assertEquals("{*ab01 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
 			IBranch expected = 
 				b.branch("ab01",
 					b.branch("a",
@@ -218,9 +225,9 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*ab01 1, 3}",st);
+			Assert.assertEquals("{*ab01 1, 3}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
 			IBranch expected = 
 				b.branch("ab01",
 					b.branch("ab01$group1",
@@ -252,9 +259,9 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*ab01 1, 3}",st);
+			Assert.assertEquals("{*ab01 1, 3}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
 			IBranch expected = 
 				b.branch("ab01",
 					b.branch("a",

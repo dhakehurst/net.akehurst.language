@@ -12,9 +12,11 @@ import net.akehurst.language.ogl.semanticModel.Terminal;
 
 public class Input {
 
-	public Input(CharSequence text) {
+	public Input(Factory factory, CharSequence text) {
+		this.factory = factory;
 		this.text = text;
 	}
+	Factory factory;
 	public CharSequence text;
 	
 	public CharSequence get(int start, int end) {
@@ -33,7 +35,7 @@ public class Input {
 			try {
 //				if (terminal.getNodeType() instanceof SkipNodeType) {
 					ILeaf l = this.tryCreateBud(terminal, subString, pos);
-					ParseTreeBud bud = new ParseTreeBud(this, l, new Stack<>() );
+					ParseTreeBud bud = new ParseTreeBud(this.factory, this, l, null );
 					buds.add(bud);
 //				} else if ( terminal.getNodeType().equals( this.getNextExpectedItem().getNodeType() ) ) {
 //					ILeaf l = this.tryCreateBud(terminal, subString, pos);

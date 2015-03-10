@@ -13,12 +13,19 @@ import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.ogl.semanticModel.TerminalPattern;
 import net.akehurst.language.parser.ToStringVisitor;
+import net.akehurst.language.parser.forrest.Factory;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class Parser_Patterns_Test extends AbstractParser_Test {
 
+	@Before
+	public void before() {
+		this.parseTreeFactory = new Factory();
+	}
+	
 	Grammar as() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("as").concatenation(new NonTerminal("a"));
@@ -46,7 +53,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 2}",st);
+			Assert.assertEquals("{*as 1, 2}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : [\"[a]+\" : \"a\"]]",nt);
@@ -69,7 +76,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 3}",st);
+			Assert.assertEquals("{*as 1, 3}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : [\"[a]+\" : \"aa\"]]",nt);
@@ -92,7 +99,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 4}",st);
+			Assert.assertEquals("{*as 1, 4}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : [\"[a]+\" : \"aaa\"]]",nt);
@@ -147,7 +154,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 4}",st);
+			Assert.assertEquals("{*as 1, 4}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : [\"[a]+\" : \"a\"], ':' : \":\", a : [\"[a]+\" : \"a\"]]",nt);
@@ -170,7 +177,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 5}",st);
+			Assert.assertEquals("{*as 1, 5}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : [\"[a]+\" : \"aa\"], ':' : \":\", a : [\"[a]+\" : \"a\"]]",nt);
@@ -193,7 +200,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 5}",st);
+			Assert.assertEquals("{*as 1, 5}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : [\"[a]+\" : \"a\"], ':' : \":\", a : [\"[a]+\" : \"aa\"]]",nt);
@@ -216,7 +223,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 8}",st);
+			Assert.assertEquals("{*as 1, 8}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : [\"[a]+\" : \"aaa\"], ':' : \":\", a : [\"[a]+\" : \"aaa\"]]",nt);

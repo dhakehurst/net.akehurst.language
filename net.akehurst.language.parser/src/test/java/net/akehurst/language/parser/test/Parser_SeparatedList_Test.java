@@ -13,13 +13,20 @@ import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.parser.ToStringVisitor;
+import net.akehurst.language.parser.forrest.Factory;
 import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class Parser_SeparatedList_Test extends AbstractParser_Test {
 
+	@Before
+	public void before() {
+		this.parseTreeFactory = new Factory();
+	}
+	
 	Grammar as1() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("as").separatedList(1, new TerminalLiteral(","), new TerminalLiteral("a"));
@@ -67,7 +74,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 2}",st);
+			Assert.assertEquals("{*as 1, 2}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : ['a' : \"a\"]",nt);
@@ -90,9 +97,9 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 4}",st);
+			Assert.assertEquals("{*as 1, 4}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
 			IBranch expected = 
 				b.branch("as",
 					b.leaf("a", "a"),
@@ -119,7 +126,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 6}",st);
+			Assert.assertEquals("{*as 1, 6}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : ['a' : \"a\", ',' : \",\", 'a' : \"a\", ',' : \",\", 'a' : \"a\"]",nt);
@@ -142,7 +149,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 2}",st);
+			Assert.assertEquals("{*as 1, 2}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : ['a' : \"a\"]]",nt);
@@ -165,7 +172,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 4}",st);
+			Assert.assertEquals("{*as 1, 4}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", a : ['a' : \"a\"]]",nt);
@@ -188,7 +195,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 6}",st);
+			Assert.assertEquals("{*as 1, 6}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", a : ['a' : \"a\"], ',' : \",\", a : ['a' : \"a\"]]",nt);
@@ -211,7 +218,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 8}",st);
+			Assert.assertEquals("{*as 1, 8}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"]]",nt);
@@ -234,7 +241,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 11}",st);
+			Assert.assertEquals("{*as 1, 11}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"]]",nt);
@@ -257,7 +264,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*as 1, 11}",st);
+			Assert.assertEquals("{*as 1, 11}",st);
 			
 			String nt = tree.getRoot().accept(v, "");
 			Assert.assertEquals("as : [a : ['a' : \"a\"], SP : [' ' : \" \"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], SP : [' ' : \" \"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], SP : [' ' : \" \"]]",nt);

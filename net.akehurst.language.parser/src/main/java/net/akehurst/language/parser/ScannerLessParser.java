@@ -35,6 +35,7 @@ import net.akehurst.language.ogl.semanticModel.Terminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.parser.forrest.AbstractParseTree;
 import net.akehurst.language.parser.forrest.Branch;
+import net.akehurst.language.parser.forrest.Factory;
 import net.akehurst.language.parser.forrest.Forrest;
 import net.akehurst.language.parser.forrest.Input;
 import net.akehurst.language.parser.forrest.ParseTreeBranch;
@@ -48,11 +49,13 @@ public class ScannerLessParser implements IParser {
 	public final static TerminalLiteral FINISH_SYMBOL_TERMINAL = new TerminalLiteral(FINISH_SYMBOL);
 	
 	
-	public ScannerLessParser(Grammar grammar) {
+	public ScannerLessParser(Factory parseTreeFactory, Grammar grammar) {
 		this.grammar = grammar;
 		this.findTerminal_cache = new HashMap<ITokenType, Terminal>();
+		this.factory = parseTreeFactory;
 	}
-
+	
+	Factory factory;
 	Grammar grammar;
 	Grammar pseudoGrammar;
 	Rule createPseudoGrammar(INodeType goal) {
@@ -180,7 +183,7 @@ public class ScannerLessParser implements IParser {
 			ParseTreeBranch pseudoTree = (ParseTreeBranch)this.doParse2(goalRule.getNodeType(), pseudoText);
 			//return pseudoTree;
 			Rule r = this.findRule(goal.getIdentity().asPrimitive());
-			Input inp = new Input(text);
+			Input inp = new Input(this.factory, text);
 			int s = pseudoTree.getRoot().getChildren().size();
 			IBranch root = (IBranch)pseudoTree.getRoot().getChildren().stream().filter(n -> n.getName().equals(goal.getIdentity().asPrimitive())).findFirst().get();
 			int indexOfRoot = pseudoTree.getRoot().getChildren().indexOf(root);
@@ -190,8 +193,8 @@ public class ScannerLessParser implements IParser {
 			children.addAll(before);
 			children.addAll(root.getChildren());
 			children.addAll(after);
-			Branch nb = new Branch(root.getNodeType(), children);
-			ParseTreeBranch pt = new ParseTreeBranch(inp, nb, new Stack<>(), r, Integer.MAX_VALUE);
+			IBranch nb = this.factory.createBranch(root.getNodeType(), children);
+			ParseTreeBranch pt = new ParseTreeBranch(this.factory, inp, nb, null, r, Integer.MAX_VALUE);
 			return pt;
 	}
 	
@@ -215,7 +218,7 @@ public class ScannerLessParser implements IParser {
 	 * @throws ParseTreeException
 	 */
 	IParseTree doParse2(INodeType goal, CharSequence text) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
-		Input input = new Input(text);
+		Input input = new Input(this.factory, text);
 		
 		Forrest newForrest = new Forrest(goal, this.getAllRules() ,input);
 		Forrest oldForrest = null;
