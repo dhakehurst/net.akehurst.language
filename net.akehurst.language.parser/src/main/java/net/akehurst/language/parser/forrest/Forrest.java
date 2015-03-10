@@ -213,7 +213,7 @@ public class Forrest {
 			} catch (CannotGraftBackException e) {
 				int i = 1;
 
-				if (tree.getIsEmpty()) {
+				if (tree.getIsEmpty() || tree.getIsComplete()) {
 					// don't grow width
 				} else {
 					Set<AbstractParseTree> newBranches = tree.growWidth(possibleSubTerminals, possibleSubRules);
