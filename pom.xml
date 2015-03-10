@@ -1,0 +1,17 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <groupId>net.akehurst.language</groupId>
+  <artifactId>net.akehurst.language</artifactId>
+  <version>1.0.0</version>
+
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>net.akehurst.language.core</module>
+    <module>net.akehurst.language.ogl</module>
+    <module>net.akehurst.language.parser</module>
+    <module>net.akehurst.language.processor</module>
+  </modules>
+
+</project>
