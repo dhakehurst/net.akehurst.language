@@ -15,16 +15,25 @@ import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.ogl.semanticModel.TerminalPattern;
 import net.akehurst.language.parser.ScannerLessParser;
 import net.akehurst.language.parser.ToStringVisitor;
+import net.akehurst.language.parser.forrest.Factory;
 import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class OGLParser_Test {
+	Factory parseTreeFactory;
+	
+	@Before
+	public void before() {
+		this.parseTreeFactory = new Factory();
+	}
+	
 	IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
 		try {
 			INodeType goal = grammar.findRule(goalName).getNodeType();
-			IParser parser = new ScannerLessParser(grammar);
+			IParser parser = new ScannerLessParser(this.parseTreeFactory, grammar);
 			IParseTree tree = parser.parse(goal, text);
 			return tree;
 		} catch (RuleNotFoundException e) {
@@ -63,7 +72,7 @@ public class OGLParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("Tree {*grammarDefinition 1, 17}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(g, goal, text);
+			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
 			IBranch expected =
 				b.branch("grammarDefinition",
 					b.branch("namespace",

@@ -21,6 +21,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 		this.nextItemIndex = nextItemIndex;
 		this.canGrow = this.calculateCanGrow();
 		this.complete = this.calculateIsComplete();
+		this.canGrowWidth = this.calculateCanGrowWidth();
 		this.hashCode_cache = this.getRoot().hashCode();
 	}
 	
@@ -28,6 +29,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 	int nextItemIndex;
 	boolean canGrow;
 	boolean complete;
+	boolean canGrowWidth;
 	
 	@Override
 	public boolean getCanGrow() {
@@ -41,7 +43,12 @@ public class ParseTreeBranch extends AbstractParseTree {
 	
 	@Override
 	public boolean getCanGraftBack() {
-		return this.getIsComplete();
+		return this.getIsComplete() ;
+	}
+	
+	@Override
+	public boolean getCanGrowWidth() {
+		return this.canGrowWidth;
 	}
 	
 	@Override
@@ -63,12 +70,12 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	
 	@Override
-	public TangibleItem getNextExpectedItem() throws NoNextExpectedItemException {
+	public TangibleItem getNextExpectedItem() {
 		RuleItem item = this.rule.getRhs();
 		if (item instanceof Concatenation) {
 			Concatenation c = (Concatenation)item;
 			if (this.nextItemIndex >= c.getItem().size()) {
-				throw new NoNextExpectedItemException();
+				throw new RuntimeException("Should never happen, no NextExpectedItem");
 			} else {
 				return c.getItem().get(this.nextItemIndex);
 			}
@@ -77,7 +84,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 			return m.getItem();
 		} else if (item instanceof Choice) {
 			Choice m = (Choice)item;
-			throw new NoNextExpectedItemException();
+			throw new RuntimeException("Should never happen, item is choice");
 		} else if (item instanceof SeparatedList) {
 			SeparatedList sl = (SeparatedList)item;
 			if ( (this.nextItemIndex % 2) == 1 ) {
@@ -111,8 +118,12 @@ public class ParseTreeBranch extends AbstractParseTree {
 		}
 	}
 	boolean calculateCanGrow() {
-		RuleItem item = this.rule.getRhs();
 		if (this.stackedTree!=null) return true;
+		return this.calculateCanGrowWidth();
+	}
+	
+	boolean calculateCanGrowWidth() {
+		RuleItem item = this.rule.getRhs();
 		boolean reachedEnd = this.getRoot().getMatchedTextLength() >= this.input.getLength();
 		if (reachedEnd)
 			return false;

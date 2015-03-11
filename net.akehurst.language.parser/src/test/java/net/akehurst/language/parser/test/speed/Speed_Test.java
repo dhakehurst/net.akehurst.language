@@ -106,7 +106,22 @@ public class Speed_Test extends AbstractParser_Test {
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
+	}
+	
+	@Test
+	public void abcds_abcds_abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd() {
+		// grammar, goal, input
+		try {
+			Grammar g = abcds();
+			String goal = "abcds";
+			String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
+			
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
 		
-		
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
 	}
 }

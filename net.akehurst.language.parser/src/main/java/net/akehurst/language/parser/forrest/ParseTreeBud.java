@@ -31,7 +31,12 @@ public class ParseTreeBud extends AbstractParseTree {
 
 	@Override
 	public boolean getCanGraftBack() {
-		return true;
+		return this.stackedTree!=null;
+	}
+	
+	@Override
+	public boolean getCanGrowWidth() {
+		return false;
 	}
 	
 	@Override
@@ -44,8 +49,8 @@ public class ParseTreeBud extends AbstractParseTree {
 		throw new RuntimeException("Should never happen");
 	}
 
-	public ParseTreeBranch extendWith(INode extension) throws CannotExtendTreeException {
-		throw new CannotExtendTreeException("cannot extend a bud");
+	public ParseTreeBranch extendWith(INode extension)  {
+		throw new RuntimeException("Should not happen, cannot extend a bud");
 	}
 	
 //	public ParseTreeBud deepClone() {

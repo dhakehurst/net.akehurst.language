@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Binary Transform
+Bundle-SymbolicName: net.akehurst.language.processor
+Bundle-Version: 1.0.0.qualifier
+Export-Package: net.akehurst.language.processor
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Require-Bundle: net.akehurst.language.core;bundle-version="1.0.0";visibility:=reexport,
+ net.akehurst.language.ogl;bundle-version="1.0.0",
+ net.akehurst.language.parser;bundle-version="1.0.0"

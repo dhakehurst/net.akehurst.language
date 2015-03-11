@@ -197,23 +197,25 @@ public class Forrest {
 			Set<Terminal> possibleSubTerminals = this.getPossibleSubTerminal(tree);
 			Set<Rule> possibleSubRules = this.getPossibleSubRule(tree);
 
-			try {
+			if (tree.getCanGraftBack() ) {
 				AbstractParseTree nt = tree.tryGraftBack();
-				Set<Rule> possibleSuperRules = this.getPossibleSuperRule(nt);
-				Set<AbstractParseTree> nts = nt.growHeight(possibleSuperRules);
-				newForrest.add(nt); // must add nt as well here, as higher multi rules might need it
-				newForrest.addAll(nts);
-
-				if (tree.getCanGrow()) {
-					// pass in subRules because any subTerminal will only grow by any subRule
-					Set<AbstractParseTree> newBranches = tree.growWidth(possibleSubTerminals, possibleSubRules);
-					newForrest.addAll(newBranches);
+				if (null!=nt) {
+					Set<Rule> possibleSuperRules = this.getPossibleSuperRule(nt);
+					Set<AbstractParseTree> nts = nt.growHeight(possibleSuperRules);
+					newForrest.add(nt); // must add nt as well here, as higher multi rules might need it
+					newForrest.addAll(nts);
+	
+//					if (tree.getCanGrow() ) {
+//						// pass in subRules because any subTerminal will only grow by any subRule
+//						Set<AbstractParseTree> newBranches = tree.growWidth(possibleSubTerminals, possibleSubRules);
+//						newForrest.addAll(newBranches);
+//					}
 				}
-
-			} catch (CannotGraftBackException e) {
+			}
+			if (tree.getCanGrow() ) {
 				int i = 1;
 
-				if (tree.getIsEmpty() || tree.getIsComplete()) {
+				if (tree.getIsEmpty() || (tree.getIsComplete() && !tree.getCanGrow())) {
 					// don't grow width
 				} else {
 					Set<AbstractParseTree> newBranches = tree.growWidth(possibleSubTerminals, possibleSubRules);

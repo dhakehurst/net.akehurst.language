@@ -8,6 +8,7 @@ import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.parser.ScannerLessParser;
+import net.akehurst.language.parser.forrest.Factory;
 
 public class LanguageProcessor implements ILanguageProcessor {
 
@@ -15,10 +16,13 @@ public class LanguageProcessor implements ILanguageProcessor {
 		this.grammar = grammar;
 		this.defaultGoalName = defaultGoalName;
 //		this.lexicalAnalyser = new LexicalAnalyser(grammar.findTokenTypes());
-		this.parser = new ScannerLessParser(grammar);
+		this.parseTreeFactory = new Factory();
+		this.parser = new ScannerLessParser(this.parseTreeFactory, grammar);
 		this.semanticAnalyser = semanticAnalyser;
 	}
 
+	Factory parseTreeFactory;
+	
 	Grammar grammar;
 	public Grammar getGrammar() {
 		return this.grammar;

@@ -58,6 +58,7 @@ public class ScannerLessParser implements IParser {
 	Factory factory;
 	Grammar grammar;
 	Grammar pseudoGrammar;
+		
 	Rule createPseudoGrammar(INodeType goal) {
 		this.pseudoGrammar = new Grammar(new Namespace(grammar.getNamespace().getQualifiedName()+"::pseudo"), "Pseudo");
 		this.pseudoGrammar.setExtends(Arrays.asList(new Grammar[]{this.grammar}));
@@ -198,6 +199,8 @@ public class ScannerLessParser implements IParser {
 			return pt;
 	}
 	
+	int numberOfSeasons;
+	
 	/**
 	 * <code>
 	 * starting tree is an empty node
@@ -230,6 +233,7 @@ public class ScannerLessParser implements IParser {
 		}
 		
 		while (newForrest.getCanGrow() ) {
+			++numberOfSeasons;
 			oldForrest=newForrest.shallowClone();
 			newForrest = oldForrest.grow();
 		} 

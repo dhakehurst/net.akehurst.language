@@ -35,8 +35,10 @@ public class Input {
 			try {
 //				if (terminal.getNodeType() instanceof SkipNodeType) {
 					ILeaf l = this.tryCreateBud(terminal, subString, pos);
-					ParseTreeBud bud = new ParseTreeBud(this.factory, this, l, null );
-					buds.add(bud);
+					if (null!=l) {
+						ParseTreeBud bud = new ParseTreeBud(this.factory, this, l, null );
+						buds.add(bud);
+					}
 //				} else if ( terminal.getNodeType().equals( this.getNextExpectedItem().getNodeType() ) ) {
 //					ILeaf l = this.tryCreateBud(terminal, subString, pos);
 //					buds.add(l);
@@ -57,7 +59,8 @@ public class Input {
 			Leaf leaf = new Leaf(this, start, end, terminal);
 			return leaf;
 		}
-		throw new CannotCreateNewBudException();
+		//throw new CannotCreateNewBudException();
+		return null;
 	}
 	
 }
