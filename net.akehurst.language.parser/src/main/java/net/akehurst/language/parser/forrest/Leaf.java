@@ -4,18 +4,20 @@ import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.Terminal;
 import net.akehurst.language.parser.ToStringVisitor;
+import net.akehurst.language.parser.runtime.Factory;
+import net.akehurst.language.parser.runtime.RuntimeRule;
 
-public class Leaf implements ILeaf {
+public class Leaf extends Node implements ILeaf {
 
-	public Leaf(Input input, int start, int end, Terminal terminal) {
+	public Leaf(Factory factory, Input input, int start, int end, RuntimeRule terminalRule) {
+		super(factory, terminalRule);
 		this.input = input;
 		this.start = start;
 		this.end = end;
-		this.terminal = terminal;
+		this.terminalRule = terminalRule;
 	}
 	
 	Input input;
@@ -25,7 +27,7 @@ public class Leaf implements ILeaf {
 	
 	int start;
 	int end;
-	Terminal terminal;
+	RuntimeRule terminalRule;
 
 	@Override
 	public boolean getIsEmpty() {
@@ -35,7 +37,7 @@ public class Leaf implements ILeaf {
 	@Override
 	public INodeType getNodeType() throws ParseTreeException {
 		try {
-			return this.terminal.getNodeType();
+			return this.terminalRule.getTerminal().getNodeType();
 		} catch (RuleNotFoundException e) {
 			throw new ParseTreeException("Rule Not Found",e);
 		}
@@ -76,7 +78,7 @@ public class Leaf implements ILeaf {
 	}
 	
 	public Leaf deepClone() {
-		Leaf clone = new Leaf(this.input, this.start, this.end, this.terminal);
+		Leaf clone = new Leaf(this.factory, this.input, this.start, this.end, this.terminalRule);
 		return clone;
 	}
 	

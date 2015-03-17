@@ -1,37 +1,27 @@
 package net.akehurst.language.parser.forrest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Stack;
-import java.util.regex.Matcher;
 
-import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.ogl.semanticModel.Choice;
-import net.akehurst.language.ogl.semanticModel.Concatenation;
-import net.akehurst.language.ogl.semanticModel.LeafNodeType;
-import net.akehurst.language.ogl.semanticModel.Multi;
-import net.akehurst.language.ogl.semanticModel.NonTerminal;
-import net.akehurst.language.ogl.semanticModel.Rule;
-import net.akehurst.language.ogl.semanticModel.RuleItem;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
-import net.akehurst.language.ogl.semanticModel.SeparatedList;
 import net.akehurst.language.ogl.semanticModel.SkipNodeType;
-import net.akehurst.language.ogl.semanticModel.TangibleItem;
 import net.akehurst.language.ogl.semanticModel.Terminal;
-import net.akehurst.language.parser.CannotExtendTreeException;
 import net.akehurst.language.parser.CannotGrowTreeException;
+import net.akehurst.language.parser.runtime.Factory;
+import net.akehurst.language.parser.runtime.RuntimeRule;
+import net.akehurst.language.parser.runtime.RuntimeRuleSet;
 
 public abstract class AbstractParseTree implements IParseTree {
 
-	public AbstractParseTree(Factory factory, Input input, INode root, AbstractParseTree stackedTree) {
+	public AbstractParseTree(Factory factory, Input input, Node root, AbstractParseTree stackedTree) {
 		this.factory = factory;
 		this.input = input;
 		this.root = root;
@@ -40,7 +30,7 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	Factory factory;
 	Input input;
-	INode root;
+	Node root;
 	
 	AbstractParseTree stackedTree;
 	public AbstractParseTree getStackedTree() {
@@ -48,7 +38,7 @@ public abstract class AbstractParseTree implements IParseTree {
 	}
 	
 	@Override
-	public INode getRoot() {
+	public Node getRoot() {
 		return this.root;
 	}
 	
@@ -56,12 +46,8 @@ public abstract class AbstractParseTree implements IParseTree {
 		return this.getRoot().getIsEmpty();
 	}
 
-	public AbstractParseTree peekTopStackedRoot() {//throws ParseTreeException {
-		//if (null==this.stackedTree) {
-		//	throw new ParseTreeException("Nothing on the stack", null);
-		//} else {
-			return this.stackedTree;
-		//}
+	public AbstractParseTree peekTopStackedRoot() {
+		return this.stackedTree;
 	}
 
 	abstract public boolean getIsComplete();
@@ -72,7 +58,7 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	abstract boolean getCanGrowWidth();
 	
-	public abstract TangibleItem getNextExpectedItem() ;
+	public abstract RuntimeRule getNextExpectedItem() ;
 
 //	public abstract AbstractParseTree deepClone();
 
@@ -95,27 +81,27 @@ public abstract class AbstractParseTree implements IParseTree {
 	 * @throws ParseTreeException
 	 * 
 	 */
-	public Set<AbstractParseTree> growWidth(Set<Terminal> allTerminal, Set<Rule> rules) throws RuleNotFoundException, ParseTreeException {
+	public Set<AbstractParseTree> growWidth(RuntimeRule[] terminalRules, RuntimeRuleSet ruleSet) throws RuleNotFoundException, ParseTreeException {
 		Set<AbstractParseTree> result = new HashSet<>();
 		if ( this.getCanGrowWidth() ) { //don't grow width if its complete...cant graft back
-			List<ParseTreeBud> buds = this.input.createNewBuds(allTerminal, this.getRoot().getEnd());
+			List<ParseTreeBud> buds = this.input.createNewBuds(terminalRules, this.getRoot().getEnd());
 	// doing this causes non termination of parser
 	//		ParseTreeBud empty = new ParseTreeEmptyBud(this.input, this.getRoot().getEnd());
 	//		buds.add(empty);
 			for (ParseTreeBud bud : buds) {
 				AbstractParseTree nt = this.pushStackNewRoot(bud.getRoot());
-				Set<AbstractParseTree> nts = nt.growHeight(rules);
-				if (nts.isEmpty()) {
+				ArrayList<AbstractParseTree> nts = nt.growHeight(ruleSet);
+				//if (nts.isEmpty()) {
 					result.add(nt);
-				} else {
+				//} else {
 					result.addAll(nts);
-				}
+				//}
 			}
 		}
 		return result;
 	}
 
-	AbstractParseTree pushStackNewRoot(ILeaf n) {
+	AbstractParseTree pushStackNewRoot(Leaf n) {
 		return new ParseTreeBud(this.factory, this.input, n, this);
 	}
 	
@@ -147,30 +133,27 @@ public abstract class AbstractParseTree implements IParseTree {
 //		}
 	}
 
-	public Set<AbstractParseTree> growHeight(Set<Rule> rules) throws RuleNotFoundException, ParseTreeException {
-		Set<AbstractParseTree> result = new HashSet<>();
+	public ArrayList<AbstractParseTree> growHeight(RuntimeRuleSet ruleSet) {
+		ArrayList<AbstractParseTree> result = new ArrayList<>();
 		//result.add((AbstractParseTree) this);
 		if (this.getIsComplete()) {
-			for (Rule rule : rules) {
-				if (this.getRoot().getNodeType().equals(rule.getNodeType())) {
+			RuntimeRule[] rules = ruleSet.getPossibleSuperRule(this.getRoot().getRuntimeRule());
+			for (RuntimeRule rule : rules) {
+				if (this.root.getRuntimeRule().getRuleNumber() == rule.getRuleNumber()) {
 					result.add(this);
 				}
-				try {
-					List<IParseTree> newTrees = this.grow(rule.getRhs());
-					for (IParseTree nt : newTrees) {
-						if (((AbstractParseTree) nt).getIsComplete()) {
-							Set<AbstractParseTree> newTree2 = ((AbstractParseTree) nt).growHeight(rules);
-							if (newTree2.isEmpty()) {
-								result.add((AbstractParseTree)nt);
-							} else {
-								result.addAll(newTree2);
-							}
-						} else {
-							result.add((AbstractParseTree) nt);
-						}
+				ArrayList<ParseTreeBranch> newTrees = this.grow(rule);
+				for (ParseTreeBranch nt : newTrees) {
+					if (nt.getIsComplete()) {
+						ArrayList<AbstractParseTree> newTree2 = nt.growHeight(ruleSet);
+						//if (newTree2.isEmpty()) {
+							result.add(nt);
+						//} else {
+							result.addAll(newTree2);
+						//}
+					} else {
+						result.add(nt);
 					}
-				} catch (CannotGrowTreeException e) {
-					//result.add((AbstractParseTree) this);
 				}
 			}
 		} else {
@@ -184,7 +167,7 @@ public abstract class AbstractParseTree implements IParseTree {
 //			if (parent instanceof ParseTreeBud) {
 //				throw new CannotExtendTreeException("parent is a bud, cannot extend it");
 //			} else {
-				if (parent.getNextExpectedItem().getNodeType().equals(this.getRoot().getNodeType())) {
+				if (parent.getNextExpectedItem().getRuleNumber() == this.getRoot().getRuntimeRule().getRuleNumber()) {
 					return parent.extendWith(this.getRoot());
 				} else if (this.getIsSkip()) {
 					return parent.extendWith(this.getRoot());
@@ -202,122 +185,97 @@ public abstract class AbstractParseTree implements IParseTree {
 //			throw new CannotExtendTreeException(e.getMessage());
 //		}
 		} catch (ParseTreeException e) {
-			throw new RuntimeException("Should not happen",e);
+			throw new RuntimeException("Internal Error: Should not happen",e);
 		}
 	}
 
 	public abstract ParseTreeBranch extendWith(INode extension) throws ParseTreeException;
 
-	List<IParseTree> grow(RuleItem item) throws CannotGrowTreeException, RuleNotFoundException, ParseTreeException {
-		if (item instanceof Concatenation) {
-			return this.grow((Concatenation) item);
-		} else if (item instanceof Choice) {
-			return this.grow((Choice) item);
-		} else if (item instanceof Multi) {
-			return this.grow((Multi) item);
-		} else if (item instanceof SeparatedList) {
-			return this.grow((SeparatedList) item);
-		} else if (item instanceof NonTerminal) {
-			return this.grow((NonTerminal) item);
-		} else if (item instanceof Terminal) {
-			return this.grow((Terminal) item);
-		} else {
-			throw new CannotGrowTreeException("RuleItem subtype not handled.");
+	ArrayList<ParseTreeBranch> grow(RuntimeRule runtimeRule) {
+		switch(runtimeRule.getRhs().getKind()) {
+		case CHOICE:
+			return this.growChoice(runtimeRule);
+		case CONCATENATION:
+			return this.growConcatenation(runtimeRule);
+		case MULTI:
+			return this.growMulti(runtimeRule);
+		case SEPARATED_LIST:
+			return this.growSeparatedList(runtimeRule);
+		default:
+			break;
 		}
+		throw new RuntimeException("Internal Error: RuleItem kind not handled.");
 	}
 
-	IParseTree growMe(RuleItem target) {
-		INodeType nodeType = target.getOwningRule().getNodeType();
-		List<INode> children = new ArrayList<>();
-		children.add(this.getRoot());
-		IBranch newBranch = this.factory.createBranch(nodeType, children);
-		ParseTreeBranch newTree = new ParseTreeBranch(this.factory, this.input, newBranch, this.stackedTree, target.getOwningRule(), 1);
+	ParseTreeBranch growMe(RuntimeRule target) {
+		//INodeType nodeType = target.getOwningRule().getNodeType();
+		List<INode> children = Arrays.asList(new INode[] {this.getRoot()});
+		Branch newBranch = this.factory.createBranch(target, children);
+		ParseTreeBranch newTree = new ParseTreeBranch(this.factory, this.input, newBranch, this.stackedTree, target, 1);
 		return newTree;
 	}
 	
-	List<IParseTree> grow(Concatenation target) throws CannotGrowTreeException, RuleNotFoundException, ParseTreeException {
+	ArrayList<ParseTreeBranch> growConcatenation(RuntimeRule target) {
 
-		List<IParseTree> result = new ArrayList<>();
-		if (0 == target.getItem().size()) {
-//			throw new CannotGrowTreeException("tree cannot grow with item " + target);
-			//if (this.getRoot() instanceof EmptyLeaf) {
-//				IParseTree newTree = this.empty(target, this.getRoot().getEnd());
-//				result.add(newTree);
-			//}
-			
-		} else if (target.getItem().get(0).getNodeType().equals(this.getRoot().getNodeType())) {
-			IParseTree newTree = this.growMe(target);
+		ArrayList<ParseTreeBranch> result = new ArrayList<>();
+		if (0 == target.getRhs().getItems().length) {
+			//do nothing
+		} else if (target.getRhsItem(0).getRuleNumber() == this.getRoot().getRuntimeRule().getRuleNumber() ) {
+			ParseTreeBranch newTree = this.growMe(target);
 			result.add(newTree);
 		} else {
-//			throw new CannotGrowTreeException("tree cannot grow with item " + target);
+			//do nothing
 		}
 		return result;
 
 	}
 
-	List<IParseTree> grow(Choice target) throws CannotGrowTreeException {
-		try {
-			List<IParseTree> result = new ArrayList<>();
-			for (TangibleItem alt : target.getAlternative()) {
-				if (this.getRoot().getNodeType().equals(alt.getNodeType())) {
-					IParseTree newTree = this.growMe(target);
-					result.add(newTree);
-				}
+	ArrayList<ParseTreeBranch> growChoice(RuntimeRule target) {
+		ArrayList<ParseTreeBranch> result = new ArrayList<>();
+		for (RuntimeRule alt : target.getRhs().getItems()) {
+			if (this.getRoot().getRuntimeRule().getRuleNumber() == alt.getRuleNumber() ) {
+				ParseTreeBranch newTree = this.growMe(target);
+				result.add(newTree);
 			}
-			return result;
-		} catch (Exception e) {
-			throw new RuntimeException("Should not happend");
 		}
+		return result;
 	}
 
-	List<IParseTree> grow(Multi target) throws CannotGrowTreeException {
+	ArrayList<ParseTreeBranch> growMulti(RuntimeRule target) {
 		try {
-			IParseTree oldBranch = this;
-			List<IParseTree> result = new ArrayList<>();
-			if (target.getItem().getNodeType().equals(oldBranch.getRoot().getNodeType())
-					|| (0 == target.getMin() && oldBranch.getRoot().getNodeType().equals(new LeafNodeType()))) {
+			ArrayList<ParseTreeBranch> result = new ArrayList<>();
+			if (target.getRhsItem(0).getRuleNumber() == this.getRoot().getRuntimeRule().getRuleNumber() 
+			|| (0 == target.getRhs().getMultiMin() && this.getRoot() instanceof Leaf) ) {
 				
 				//need to create a 'complete' version and a 'non-complete' version of the tree
-				IParseTree newTree = this.growMe(target);
+				ParseTreeBranch newTree = this.growMe(target);
 				ParseTreeBranch ntB = (ParseTreeBranch)newTree;
-				ParseTreeBranch newTree2 = new ParseTreeBranch(this.factory, ntB.input, (IBranch)ntB.root, ntB.stackedTree, ntB.rule, ntB.nextItemIndex);
-				newTree2.complete = true;
-				result.add(newTree);
-				//result.add(newTree2);
-			}
-			return result;
-		} catch (Exception e) {
-			throw new RuntimeException("Should not happen", e);
-		}
-	}
-
-	List<IParseTree> grow(SeparatedList target) throws CannotGrowTreeException {
-		try {
-			IParseTree oldBranch = this;
-			List<IParseTree> result = new ArrayList<>();
-			if (target.getConcatination().getNodeType().equals(oldBranch.getRoot().getNodeType())) {
-				IParseTree newTree = this.growMe(target);
-				ParseTreeBranch ntB = (ParseTreeBranch)newTree;
-				ParseTreeBranch newTree2 = new ParseTreeBranch(this.factory, ntB.input, (IBranch)ntB.root, ntB.stackedTree, ntB.rule, ntB.nextItemIndex);
+				ParseTreeBranch newTree2 = new ParseTreeBranch(this.factory, ntB.input, (Branch)ntB.root, ntB.stackedTree, ntB.rule, ntB.nextItemIndex);
 				newTree2.complete = false;
 				result.add(newTree);
 				//result.add(newTree2);
-			} else {
-				throw new CannotGrowTreeException(target.toString() + " cannot grow " + this);
 			}
 			return result;
-		} catch (CannotGrowTreeException e) {
-			throw e;
 		} catch (Exception e) {
 			throw new RuntimeException("Should not happen", e);
 		}
 	}
 
-	List<IParseTree> grow(NonTerminal target) throws CannotGrowTreeException {
-		return new ArrayList<>();
+	ArrayList<ParseTreeBranch> growSeparatedList(RuntimeRule target) {
+		try {
+			ArrayList<ParseTreeBranch> result = new ArrayList<>();
+			if (target.getRhsItem(0).getRuleNumber() == this.getRoot().getRuntimeRule().getRuleNumber() ) {
+				ParseTreeBranch newTree = this.growMe(target);
+//				ParseTreeBranch ntB = (ParseTreeBranch)newTree;
+//				ParseTreeBranch newTree2 = new ParseTreeBranch(this.factory, ntB.input, (Branch)ntB.root, ntB.stackedTree, ntB.rule, ntB.nextItemIndex);
+//				newTree2.complete = false;
+				result.add(newTree);
+				//result.add(newTree2);
+			}
+			return result;
+		} catch (Exception e) {
+			throw new RuntimeException("Should not happen", e);
+		}
 	}
 
-	List<IParseTree> grow(Terminal target) throws CannotGrowTreeException {
-		return new ArrayList<>();
-	}
 }

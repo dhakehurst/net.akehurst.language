@@ -4,7 +4,6 @@ import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
-import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.parser.forrest.AbstractParseTree;
 
 public class ToStringVisitor implements IParseTreeVisitor<String, String, RuntimeException> {

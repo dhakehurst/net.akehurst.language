@@ -1,17 +1,15 @@
 package net.akehurst.language.parser.forrest;
 
-import java.util.Stack;
-
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.ogl.semanticModel.TangibleItem;
-import net.akehurst.language.parser.CannotExtendTreeException;
 import net.akehurst.language.parser.ToStringVisitor;
+import net.akehurst.language.parser.runtime.Factory;
+import net.akehurst.language.parser.runtime.RuntimeRule;
 
 public class ParseTreeBud extends AbstractParseTree {
 
-	ParseTreeBud(Factory factory, Input input, ILeaf root, AbstractParseTree stackedTree) {
+	ParseTreeBud(Factory factory, Input input, Leaf root, AbstractParseTree stackedTree) {
 		super(factory, input, root, stackedTree);
 	}
 
@@ -40,13 +38,13 @@ public class ParseTreeBud extends AbstractParseTree {
 	}
 	
 	@Override
-	public ILeaf getRoot() {
-		return (ILeaf) super.getRoot();
+	public Leaf getRoot() {
+		return (Leaf) super.getRoot();
 	}
 
 	@Override
-	public TangibleItem getNextExpectedItem() {
-		throw new RuntimeException("Should never happen");
+	public RuntimeRule getNextExpectedItem() {
+		throw new RuntimeException("Internal Error: Should never happen");
 	}
 
 	public ParseTreeBranch extendWith(INode extension)  {

@@ -1,9 +1,5 @@
 package net.akehurst.language.parser.test.speed;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.ogl.semanticModel.Grammar;
@@ -11,9 +7,12 @@ import net.akehurst.language.ogl.semanticModel.GrammarBuilder;
 import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
-import net.akehurst.language.ogl.semanticModel.TerminalPattern;
-import net.akehurst.language.parser.forrest.Factory;
+import net.akehurst.language.parser.runtime.Factory;
 import net.akehurst.language.parser.test.AbstractParser_Test;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public class Speed_Test extends AbstractParser_Test {
 
@@ -98,6 +97,23 @@ public class Speed_Test extends AbstractParser_Test {
 			Grammar g = abcds();
 			String goal = "abcds";
 			String text = "abababcdcdcdabababcdcdcdabababcdcdcd";
+			
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+		
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void abcds_abcds_abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd() {
+		// grammar, goal, input
+		try {
+			Grammar g = abcds();
+			String goal = "abcds";
+			String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
 			
 			
 			IParseTree tree = this.process(g, text, goal);

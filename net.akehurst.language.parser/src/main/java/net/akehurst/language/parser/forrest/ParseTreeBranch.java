@@ -1,22 +1,21 @@
 package net.akehurst.language.parser.forrest;
 
-import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.Choice;
 import net.akehurst.language.ogl.semanticModel.Concatenation;
 import net.akehurst.language.ogl.semanticModel.Multi;
-import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.RuleItem;
 import net.akehurst.language.ogl.semanticModel.SeparatedList;
 import net.akehurst.language.ogl.semanticModel.SkipNodeType;
-import net.akehurst.language.ogl.semanticModel.TangibleItem;
 import net.akehurst.language.parser.ToStringVisitor;
+import net.akehurst.language.parser.runtime.Factory;
+import net.akehurst.language.parser.runtime.RuntimeRule;
 
 public class ParseTreeBranch extends AbstractParseTree {
 	
-	public ParseTreeBranch(Factory factory, Input input, IBranch root, AbstractParseTree stack, Rule rule, int nextItemIndex) {
-		super(factory, input, root, stack);
+	public ParseTreeBranch(Factory factory, Input input, Branch root, AbstractParseTree stackedTree, RuntimeRule rule, int nextItemIndex) {
+		super(factory, input, root, stackedTree);
 		this.rule = rule;
 		this.nextItemIndex = nextItemIndex;
 		this.canGrow = this.calculateCanGrow();
@@ -25,7 +24,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 		this.hashCode_cache = this.getRoot().hashCode();
 	}
 	
-	Rule rule;
+	RuntimeRule rule;
 	int nextItemIndex;
 	boolean canGrow;
 	boolean complete;
@@ -52,12 +51,12 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	
 	@Override
-	public IBranch getRoot() {
-		return (IBranch)super.getRoot();
+	public Branch getRoot() {
+		return (Branch)super.getRoot();
 	}
 	
 	public ParseTreeBranch extendWith(INode extension) throws ParseTreeException {
-		IBranch nb = this.getRoot().addChild(extension);
+		Branch nb = (Branch)this.getRoot().addChild(extension);
 //		Stack<AbstractParseTree> stack = new Stack<>();
 //		stack.addAll(this.stackedRoots);
 		if (extension.getNodeType() instanceof SkipNodeType) {
@@ -70,52 +69,54 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	
 	@Override
-	public TangibleItem getNextExpectedItem() {
-		RuleItem item = this.rule.getRhs();
-		if (item instanceof Concatenation) {
-			Concatenation c = (Concatenation)item;
-			if (this.nextItemIndex >= c.getItem().size()) {
-				throw new RuntimeException("Should never happen, no NextExpectedItem");
-			} else {
-				return c.getItem().get(this.nextItemIndex);
-			}
-		} else if (item instanceof Multi) {
-			Multi m = (Multi)item;
-			return m.getItem();
-		} else if (item instanceof Choice) {
-			Choice m = (Choice)item;
-			throw new RuntimeException("Should never happen, item is choice");
-		} else if (item instanceof SeparatedList) {
-			SeparatedList sl = (SeparatedList)item;
-			if ( (this.nextItemIndex % 2) == 1 ) {
-				return sl.getSeparator();
-			} else {
-				return sl.getConcatination();
-			}
-		} else {
-			throw new RuntimeException("Should never happen");
+	public RuntimeRule getNextExpectedItem() {
+		switch(this.rule.getRhs().getKind()) {
+		case CHOICE: {
+			throw new RuntimeException("Internal Error: item is choice");
 		}
+		case CONCATENATION: {
+			if (this.nextItemIndex >= this.rule.getRhs().getItems().length) {
+				throw new RuntimeException("Internal Error: No NextExpectedItem");
+			} else {
+				return this.rule.getRhsItem(this.nextItemIndex);
+			}
+		}
+		case MULTI: {
+			return this.rule.getRhsItem(0);
+		}
+		case SEPARATED_LIST: {
+			if ( (this.nextItemIndex % 2) == 1 ) {
+				return this.rule.getSeparator();
+			} else {
+				return this.rule.getRhsItem(0);
+			}
+		}
+		default:
+			break;
+		}
+		throw new RuntimeException("Internal Error: rule kind not recognised");
 	}
 
 	boolean calculateIsComplete() {
-		RuleItem item = this.rule.getRhs();
-		if (item instanceof Concatenation) {
-			Concatenation c = (Concatenation)item;
-			return c.getItem().size() <= this.nextItemIndex;
-		} else if (item instanceof Choice) {
+		switch(this.rule.getRhs().getKind()) {
+		case CHOICE:
 			return true;
-		} else if (item instanceof Multi) {
-			Multi m = (Multi)item;
+
+		case CONCATENATION: {
+			return this.rule.getRhs().getItems().length <= this.nextItemIndex;
+		}
+		case MULTI: {
 			int size = this.nextItemIndex;
-			return size >= m.getMin();
-			//return m.getMin() <= size && (size <= m.getMax() || -1 == m.getMax());
-		} else if (item instanceof SeparatedList) {
-			SeparatedList sl = (SeparatedList)item;
+			return size >= this.rule.getRhs().getMultiMin();
+		}
+		case SEPARATED_LIST: {
 			int size = this.nextItemIndex;
 			return (size % 2) == 1;
-		} else {
-			throw new RuntimeException("Should never happen");
 		}
+		default:
+			break;
+		}
+		throw new RuntimeException("Internal Error: rule kind not recognised");
 	}
 	boolean calculateCanGrow() {
 		if (this.stackedTree!=null) return true;
@@ -123,30 +124,32 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	
 	boolean calculateCanGrowWidth() {
-		RuleItem item = this.rule.getRhs();
 		boolean reachedEnd = this.getRoot().getMatchedTextLength() >= this.input.getLength();
 		if (reachedEnd)
 			return false;
-		if (item instanceof Concatenation) {
-			Concatenation c = (Concatenation)item;
-			if ( this.nextItemIndex < c.getItem().size() ) {
+		switch(this.rule.getRhs().getKind()) {
+		case CHOICE: {
+			return false;
+		}
+		case CONCATENATION: {
+			if ( this.nextItemIndex < this.rule.getRhs().getItems().length ) {
 				return true;
 			} else {
 				return false; //!reachedEnd;
 			}
-		} else if (item instanceof Choice) {
-			return false;
-		} else if (item instanceof Multi) {
-			Multi m = (Multi)item;
-			int size = this.nextItemIndex;
-			return -1==m.getMax() || size < m.getMax();
-		} else if (item instanceof SeparatedList) {
-			SeparatedList sl = (SeparatedList)item;
-			int size = this.nextItemIndex;
-			return !reachedEnd;
-		} else {
-			throw new RuntimeException("Should never happen");
 		}
+		case MULTI: {
+			int size = this.nextItemIndex;
+			int max = this.rule.getRhs().getMultiMax();
+			return -1==max || size < max;
+		}
+		case SEPARATED_LIST: {
+			return true;
+		}
+		default:
+			break;
+		}
+		throw new RuntimeException("Internal Error: rule kind not recognised");
 	}
 	
 //	public ParseTreeBranch deepClone() {
@@ -185,7 +188,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 		if ( this.getRoot().getEnd() != other.getRoot().getEnd() ) {
 			return false;
 		}
-		if ( ((Branch)this.getRoot()).getNodeTypeNumber() != ((Branch)other.getRoot()).getNodeTypeNumber() ) {
+		if ( this.getRoot().getRuntimeRule().getRuleNumber() != other.getRoot().getRuntimeRule().getRuleNumber() ) {
 			return false;
 		}
 		if (this.complete != other.complete) {

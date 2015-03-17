@@ -22,13 +22,20 @@
 			<version>1.0.0</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>net.akehurst.language</groupId>
 			<artifactId>net.akehurst.language.ogl</artifactId>
 			<version>1.0.0</version>
 			<scope>provided</scope>
 		</dependency>
-	
+
+		<dependency>
+			<groupId>net.akehurst.transform</groupId>
+			<artifactId>net.akehurst.transform.binary</artifactId>
+			<version>1.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+
 	</dependencies>
 </project>

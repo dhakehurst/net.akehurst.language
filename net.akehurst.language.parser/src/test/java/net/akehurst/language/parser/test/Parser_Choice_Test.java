@@ -9,8 +9,8 @@ import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.parser.ToStringVisitor;
-import net.akehurst.language.parser.forrest.Factory;
 import net.akehurst.language.parser.forrest.ParseTreeBuilder;
+import net.akehurst.language.parser.runtime.Factory;
 
 import org.junit.Assert;
 import org.junit.Before;

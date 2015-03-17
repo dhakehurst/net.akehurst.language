@@ -10,10 +10,11 @@ import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.Rule;
-import net.akehurst.language.ogl.semanticModel.RuleNodeType;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.Terminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.parser.runtime.Factory;
+import net.akehurst.language.parser.runtime.RuntimeRule;
 
 public class ParseTreeBuilder {
 
@@ -36,21 +37,24 @@ public class ParseTreeBuilder {
 		this.textLength+=text.length();
 		int end = this.textLength +1;
 		Terminal terminal = this.grammar.getAllTerminal().stream().filter(t -> t.getPattern().pattern().equals(terminalPattern)).findFirst().get();
-		ILeaf l = new Leaf(this.input, start, end, terminal);
+		RuntimeRule terminalRule = this.factory.createRuntimeRuleSet().getForTerminal(terminal);
+		ILeaf l = new Leaf(this.factory, this.input, start, end, terminalRule);
 		return l;
 	}
 
 	public ILeaf emptyLeaf() {
 		int start = this.textLength +1;
-		return new Leaf(this.input, start, start, new TerminalLiteral(""));
+		Terminal terminal = new TerminalLiteral("");
+		RuntimeRule terminalRule = this.factory.createRuntimeRuleSet().getForTerminal(terminal);
+		return new Leaf(this.factory, this.input, start, start, terminalRule);
 	}
 
 	public IBranch branch(String ruleName, INode... children) {
 		try {
 			List<INode> childrenLst = Arrays.asList(children);
 			Rule rule = this.grammar.findRule(ruleName);
-			INodeType nodeType = rule.getNodeType();
-			IBranch b = this.factory.createBranch(nodeType, childrenLst);
+			RuntimeRule rr = this.factory.createRuntimeRuleSet().getRuntimeRule(rule);
+			IBranch b = this.factory.createBranch(rr, childrenLst);
 			return b;
 		} catch (RuleNotFoundException e) {
 			throw new RuntimeException("Error", e);
@@ -60,7 +64,8 @@ public class ParseTreeBuilder {
 	public IParseTree tree(IBranch root) {
 		try {
 			Rule rule = this.grammar.findRule(root.getName());
-			IParseTree t = new ParseTreeBranch(this.factory, input, root, null, rule, Integer.MAX_VALUE);
+			RuntimeRule rr = this.factory.createRuntimeRuleSet().getRuntimeRule(rule);
+			IParseTree t = new ParseTreeBranch(this.factory, input, (Branch)root, null, rr, Integer.MAX_VALUE);
 			return t;
 		} catch (RuleNotFoundException e) {
 			throw new RuntimeException("Error", e);
