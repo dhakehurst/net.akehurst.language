@@ -2,6 +2,7 @@ package net.akehurst.language.parser.converter;
 
 import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.RuleItem;
+import net.akehurst.language.ogl.semanticModel.SkipRule;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.parser.runtime.RuntimeRuleKind;
@@ -29,6 +30,7 @@ public class Rule2RuntimeRule implements Relation<Rule, RuntimeRule>{
 		try {
 			RuntimeRuleItem rrItem = transformer.transformLeft2Right((Class<? extends Relation<RuleItem, RuntimeRuleItem>>)AbstractRuleItem2RuntimeRuleItem.class, left.getRhs());
 			right.setRhs(rrItem);
+			right.setIsSkipRule(left instanceof SkipRule);
 		} catch (RelationNotFoundException e) {
 			e.printStackTrace();
 		}

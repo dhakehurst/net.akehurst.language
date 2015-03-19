@@ -29,6 +29,14 @@ public class RuntimeRule {
 		return this.kind;
 	}
 	
+	boolean isSkipRule;
+	public boolean getIsSkipRule() {
+		return this.isSkipRule;
+	}
+	public void setIsSkipRule(boolean value) {
+		this.isSkipRule = value;
+	}
+	
 	RuntimeRuleItem rhs;
 	public void setRhs(RuntimeRuleItem value) {
 		this.rhs = value;

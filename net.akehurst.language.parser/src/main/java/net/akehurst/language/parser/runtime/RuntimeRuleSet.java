@@ -57,18 +57,30 @@ public class RuntimeRuleSet {
 		return this.getRuntimeRule(ruleNumber).getGrammarRule();
 	}
 	
-//	List<SkipRule> allSkipRules_cache;
-//	List<SkipRule> getAllSkipRules() {
-//		if (null==this.allSkipRules_cache) {
-//			this.allSkipRules_cache = new ArrayList<>();
-//			for(RuntimeRule r: this.getAllRules()) {
-//				if (r instanceof SkipRule) {
-//					this.allSkipRules_cache.add((SkipRule)r);
-//				}
-//			}
-//		}
-//		return this.allSkipRules_cache;
-//	}
+	List<RuntimeRule> allSkipRules_cache;
+	List<RuntimeRule> getAllSkipRules() {
+		if (null==this.allSkipRules_cache) {
+			this.allSkipRules_cache = new ArrayList<>();
+			for(RuntimeRule r: this.getAllRules()) {
+				if (r.getIsSkipRule()) {
+					this.allSkipRules_cache.add(r);
+				}
+			}
+		}
+		return this.allSkipRules_cache;
+	}
+	
+	Set<RuntimeRule> getAllSkipTerminals() {
+		Set<RuntimeRule> result = new HashSet<>();
+		for(RuntimeRule r: this.getAllSkipRules()) {
+			for(RuntimeRule rr: r.getRhs().getItems()) {
+				if (RuntimeRuleKind.TERMINAL==rr.getKind()) {
+					result.add(rr);
+				}
+			}
+		}
+		return result;
+	}
 	
 	ArrayList<INodeType> nodeTypes;
 	public INodeType getNodeType(int nodeTypeNumber) {
@@ -123,6 +135,8 @@ public class RuntimeRuleSet {
 			for(RuntimeRule r : this.getPossibleSubRule(runtimeRule)) {
 				rr.addAll( r.findAllTerminal() );
 			}
+			Set<RuntimeRule> skipTerminal = this.getAllSkipTerminals();
+			rr.addAll( skipTerminal );
 			result = rr.toArray(new RuntimeRule[rr.size()]);
 			this.possibleSubTerminal[runtimeRule.getRuleNumber()] = result;
 		}
