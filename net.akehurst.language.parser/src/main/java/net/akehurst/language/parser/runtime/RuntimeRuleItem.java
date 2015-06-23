@@ -1,10 +1,13 @@
 package net.akehurst.language.parser.runtime;
 
+import java.util.ArrayList;
+
 
 public class RuntimeRuleItem {
 	
-	public RuntimeRuleItem(RuntimeRuleItemKind kind) {
+	public RuntimeRuleItem(RuntimeRuleItemKind kind, int maxRuleNumber) {
 		this.kind = kind;
+		this.itemsByType = new RuntimeRule[maxRuleNumber][];
 	}
 	
 	RuntimeRuleItemKind kind;
@@ -18,6 +21,22 @@ public class RuntimeRuleItem {
 	}
 	public void setItems(RuntimeRule[] value) {
 		this.items = value;
+	}
+	
+	RuntimeRule[][] itemsByType; 
+	public RuntimeRule[] getItems(int ruleNumber) {
+		RuntimeRule[] res = this.itemsByType[ruleNumber];
+		if (null==res) {
+			ArrayList<RuntimeRule> rrs = new ArrayList<>();
+			for(RuntimeRule r : this.getItems()) {
+				if (ruleNumber == r.getRuleNumber()) {
+					rrs.add(r);
+				}
+			}
+			this.itemsByType[ruleNumber] = rrs.toArray(new RuntimeRule[rrs.size()]);
+			res = this.itemsByType[ruleNumber];
+		}
+		return res;
 	}
 	
 	/**

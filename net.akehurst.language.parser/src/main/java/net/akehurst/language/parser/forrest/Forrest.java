@@ -17,14 +17,14 @@ import net.akehurst.language.parser.runtime.RuntimeRuleSet;
 
 public class Forrest {
 
-	public Forrest(RuntimeRule goalRRule, RuntimeRuleSet runtimeRuleSet, Input input) {
+	public Forrest(RuntimeRule goalRRule, RuntimeRuleSet runtimeRuleSet) {
 		//this.goal = goal;
 		// this.grammar = grammar;
 		// this.allTerminals = allTerminals;
 		this.goalRRule = goalRRule;
 		this.runtimeRuleSet = runtimeRuleSet;
 		//this.allRules = allRules;
-		this.input = input;
+//		this.input = input;
 		this.canGrow = false;
 		//this.newGrownBranches = new HashSet<>();
 //		this.possibleSubRule = new HashMap<>();
@@ -191,7 +191,7 @@ public class Forrest {
 	 * @throws ParseTreeException
 	 */
 	public Forrest grow() throws RuleNotFoundException, ParseTreeException {
-		Forrest newForrest = new Forrest(this.goalRRule, this.runtimeRuleSet, this.input);
+		Forrest newForrest = new Forrest(this.goalRRule, this.runtimeRuleSet);
 		newForrest.goalTrees.addAll(this.goalTrees);
 		newForrest.longestMatch = this.longestMatch;
 
@@ -221,7 +221,7 @@ public class Forrest {
 				if (tree.getIsEmpty() || (tree.getIsComplete() && !tree.getCanGrow())) {
 					// don't grow width
 				} else {
-					Set<AbstractParseTree> newBranches = tree.growWidth(possibleSubTerminals, this.runtimeRuleSet);
+					ArrayList<AbstractParseTree> newBranches = tree.growWidth(possibleSubTerminals, this.runtimeRuleSet);
 					newForrest.addAll(newBranches);
 				}
 			}
@@ -280,7 +280,7 @@ public class Forrest {
 	}
 
 	public Forrest shallowClone() {
-		Forrest clone = new Forrest(this.goalRRule, this.runtimeRuleSet, this.input);
+		Forrest clone = new Forrest(this.goalRRule, this.runtimeRuleSet);
 		clone.canGrow = this.canGrow;
 		clone.goalTrees.addAll(this.goalTrees);
 		clone.possibleTrees.addAll(this.possibleTrees);

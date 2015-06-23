@@ -49,7 +49,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 			
 			Assert.assertEquals("{*as 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, this.as(), goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a",
@@ -83,7 +83,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 			String nt = tree.getRoot().accept(v, "");
 			//Assert.assertEquals("as : [WS : [\"\\s+\" : \" \"], a : ['a' : \"a\"]]",nt);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, this.as(), goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.branch("WS",
@@ -119,7 +119,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 			String nt = tree.getRoot().accept(v, "");
 			//Assert.assertEquals("as : [a : ['a' : \"a\"], a : ['a' : \"a\"], a : ['a' : \"a\"]]",nt);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, this.as(), goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a",
@@ -157,7 +157,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 			
 			String nt = tree.getRoot().accept(v, "");
 			//Assert.assertEquals("as : [a : ['a' : \"a\"], WS : [\"\\s+\" : \" \"], a : ['a' : \"a\"], WS : [\"\\s+\" : \" \"], a : ['a' : \"a\"]]",nt);
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, this.as(), goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a",
@@ -201,7 +201,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 			
 			String nt = tree.getRoot().accept(v, "");
 			//Assert.assertEquals("as : [a : ['a' : \"a\"], WS : [\"\\s+\" : \" \"], a : ['a' : \"a\"], WS : [\"\\s+\" : \" \"], a : ['a' : \"a\"]]",nt);
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, this.as(), goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.branch("WS",
@@ -247,7 +247,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 			
 			String nt = tree.getRoot().accept(v, "");
 			//Assert.assertEquals("as : [a : ['a' : \"a\"], WS : [\"\\s+\" : \" \"], a : ['a' : \"a\"], WS : [\"\\s+\" : \" \"], a : ['a' : \"a\"]]",nt);
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, this.as(), goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a",
@@ -293,7 +293,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 			
 			String nt = tree.getRoot().accept(v, "");
 			//Assert.assertEquals("as : [a : ['a' : \"a\"], WS : [\"\\s+\" : \" \"], a : ['a' : \"a\"], WS : [\"\\s+\" : \" \"], a : ['a' : \"a\"]]",nt);
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, this.as(), goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.branch("WS",
@@ -351,7 +351,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 			
 			Assert.assertEquals("{*as 1, 3}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a_dot",
@@ -385,7 +385,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 			
 			Assert.assertEquals("{*as 1, 7}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a_dot",
@@ -431,7 +431,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 			
 			Assert.assertEquals("{*as 1, 4}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a_dot",

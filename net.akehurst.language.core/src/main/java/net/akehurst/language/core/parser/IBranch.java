@@ -11,6 +11,6 @@ public interface IBranch extends INode, IParseTreeVisitable {
 	 * @param child
 	 * @return
 	 */
-	IBranch addChild(INode child);
+//	IBranch addChild(INode child);
 	
 }

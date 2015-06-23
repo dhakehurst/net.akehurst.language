@@ -5,6 +5,6 @@ public interface ILeaf extends INode, IParseTreeVisitable {
 
 	String getMatchedText();
 	
-	@Override
-	ILeaf deepClone();
+//	@Override
+//	ILeaf deepClone();
 }

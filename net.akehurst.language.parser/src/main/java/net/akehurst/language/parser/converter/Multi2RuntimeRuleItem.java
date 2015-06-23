@@ -21,7 +21,9 @@ public class Multi2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleItem<Mult
 	
 	@Override
 	public RuntimeRuleItem constructLeft2Right(Multi left, Transformer transformer) {
-		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.MULTI);
+		Converter converter = (Converter)transformer;
+		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
+		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.MULTI,maxRuleRumber);
 		return right;
 	}
 	

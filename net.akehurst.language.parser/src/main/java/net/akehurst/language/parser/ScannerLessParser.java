@@ -23,12 +23,13 @@ import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.parser.converter.Converter;
 import net.akehurst.language.parser.converter.Grammar2RuntimeRuleSet;
 import net.akehurst.language.parser.forrest.AbstractParseTree;
-import net.akehurst.language.parser.forrest.Branch;
 import net.akehurst.language.parser.runtime.Factory;
 import net.akehurst.language.parser.forrest.Forrest;
+import net.akehurst.language.parser.forrest.ForrestFactory;
 import net.akehurst.language.parser.forrest.Input;
 import net.akehurst.language.parser.forrest.ParseTreeBranch;
 import net.akehurst.language.parser.forrest.ParseTreeBud;
+import net.akehurst.language.parser.runtime.Branch;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleSet;
 
@@ -40,15 +41,15 @@ public class ScannerLessParser implements IParser {
 	public final static TerminalLiteral FINISH_SYMBOL_TERMINAL = new TerminalLiteral(FINISH_SYMBOL);
 	
 	
-	public ScannerLessParser(Factory parseTreeFactory, Grammar grammar) {
+	public ScannerLessParser(Factory runtimeFactory, Grammar grammar) {
 		this.grammar = grammar;
 //		this.findTerminal_cache = new HashMap<ITokenType, Terminal>();
-		this.factory = parseTreeFactory;
-		this.converter = new Converter(this.factory);
+		this.runtimeFactory = runtimeFactory;
+		this.converter = new Converter(this.runtimeFactory);
 	}
 	
 	Converter converter;
-	Factory factory;
+	Factory runtimeFactory;
 	Grammar grammar;
 	Grammar pseudoGrammar;
 		
@@ -172,7 +173,7 @@ public class ScannerLessParser implements IParser {
 			ParseTreeBranch pseudoTree = (ParseTreeBranch)this.doParse2(pseudoGoalRule, pseudoText);
 			//return pseudoTree;
 			//Rule r = this.findRule(goal.getIdentity().asPrimitive());
-			Input inp = new Input(this.factory, text);
+			ForrestFactory ffactory = new ForrestFactory(this.runtimeFactory, text);
 			int s = pseudoTree.getRoot().getChildren().size();
 			IBranch root = (IBranch)pseudoTree.getRoot().getChildren().stream().filter(n -> n.getName().equals(goal.getIdentity().asPrimitive())).findFirst().get();
 			int indexOfRoot = pseudoTree.getRoot().getChildren().indexOf(root);
@@ -182,8 +183,9 @@ public class ScannerLessParser implements IParser {
 			children.addAll(before);
 			children.addAll(root.getChildren());
 			children.addAll(after);
-			Branch nb = (Branch)this.factory.createBranch(goalRR, children);
-			ParseTreeBranch pt = new ParseTreeBranch(this.factory, inp, nb, null, goalRR, Integer.MAX_VALUE);
+//			Branch nb = (Branch)this.factory.createBranch(goalRR, children.toArray(new INode[children.size()]));
+//			ParseTreeBranch pt = new ParseTreeBranch(this.factory, inp, nb, null, goalRR, Integer.MAX_VALUE);
+			ParseTreeBranch pt = ffactory.fetchOrCreateBranch(goalRR, children.toArray(new INode[children.size()]), null, Integer.MAX_VALUE);
 			return pt;
 	}
 	
@@ -209,9 +211,9 @@ public class ScannerLessParser implements IParser {
 	 * @throws ParseTreeException
 	 */
 	IParseTree doParse2(RuntimeRule pseudoGoalRule, CharSequence text) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
-		Input input = new Input(this.factory, text);
+		ForrestFactory ff = new ForrestFactory(this.runtimeFactory, text);
 		
-		Forrest newForrest = new Forrest(pseudoGoalRule, this.getRuntimeRuleSet() ,input);
+		Forrest newForrest = new Forrest(pseudoGoalRule, this.getRuntimeRuleSet());
 		Forrest oldForrest = null;
 		
 		//List<ParseTreeBud> buds = input.createNewBuds(this.getAllTerminal(), 0);
@@ -220,7 +222,7 @@ public class ScannerLessParser implements IParser {
 		//	newForrest.addAll(newTrees);
 		//}
 		RuntimeRule sst = this.getRuntimeRuleSet().getForTerminal(START_SYMBOL_TERMINAL);
-		ParseTreeBud startBud = input.createBud(sst, 0);
+		ParseTreeBud startBud = ff.createNewBuds(new RuntimeRule[] {sst}, 0).get(0);
 		ArrayList<AbstractParseTree> newTrees = startBud.growHeight(this.runtimeRuleSet);//new RuntimeRule[] {pseudoGoalRule});
 		newForrest.addAll(newTrees);
 		

@@ -66,7 +66,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 2}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a",
@@ -95,7 +95,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 3}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a",
@@ -127,7 +127,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 4}",st);
 						
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a",
@@ -162,7 +162,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*ab01 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("ab01",
 					b.branch("a",
@@ -194,7 +194,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*ab01 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("ab01",
 					b.branch("a",
@@ -223,7 +223,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*ab01 1, 3}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("ab01",
 					b.branch("ab01$group1",
@@ -257,7 +257,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*ab01 1, 3}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("ab01",
 					b.branch("a",

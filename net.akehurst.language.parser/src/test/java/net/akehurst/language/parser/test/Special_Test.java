@@ -48,7 +48,7 @@ public class Special_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*S 1, 4}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected =
 				b.branch("S",
 					b.branch("S$group1",

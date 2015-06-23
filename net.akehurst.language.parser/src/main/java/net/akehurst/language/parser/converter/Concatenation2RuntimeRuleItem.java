@@ -19,8 +19,10 @@ public class Concatenation2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleI
 	}
 	
 	@Override
-	public RuntimeRuleItem constructLeft2Right(Concatenation arg0, Transformer arg1) {
-		return new RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION);
+	public RuntimeRuleItem constructLeft2Right(Concatenation left, Transformer transformer) {
+		Converter converter = (Converter)transformer;
+		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
+		return new RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, maxRuleRumber);
 	}
 	
 	@Override

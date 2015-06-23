@@ -1,20 +1,15 @@
-package net.akehurst.language.parser.forrest;
+package net.akehurst.language.parser.runtime;
 
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.parser.runtime.Factory;
-import net.akehurst.language.parser.runtime.RuntimeRule;
 
 abstract
 public class Node implements INode {
 
-	public Node(Factory factory, RuntimeRule runtimeRule) {
-		this.factory = factory;
+	public Node(final RuntimeRule runtimeRule) {
 		this.runtimeRule = runtimeRule;
 	}
-	
-	Factory factory;
 	
 	RuntimeRule runtimeRule;
 	public RuntimeRule getRuntimeRule() {

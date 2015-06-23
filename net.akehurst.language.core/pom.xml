@@ -3,7 +3,7 @@
   
   <parent>
   	<groupId>net.akehurst.build</groupId>
-	<artifactId>net.akehurst.build.configuration</artifactId>
+	<artifactId>net.akehurst.build.maven.configuration</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
   </parent>
   

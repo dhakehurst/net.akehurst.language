@@ -8,7 +8,7 @@ import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.parser.ScannerLessParser;
-import net.akehurst.language.parser.forrest.Factory;
+import net.akehurst.language.parser.runtime.Factory;
 
 public class LanguageProcessor implements ILanguageProcessor {
 

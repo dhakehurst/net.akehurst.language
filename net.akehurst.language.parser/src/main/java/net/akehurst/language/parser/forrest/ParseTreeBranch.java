@@ -1,5 +1,8 @@
 package net.akehurst.language.parser.forrest;
 
+import java.util.Arrays;
+
+import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.Choice;
@@ -9,13 +12,14 @@ import net.akehurst.language.ogl.semanticModel.RuleItem;
 import net.akehurst.language.ogl.semanticModel.SeparatedList;
 import net.akehurst.language.ogl.semanticModel.SkipNodeType;
 import net.akehurst.language.parser.ToStringVisitor;
+import net.akehurst.language.parser.runtime.Branch;
 import net.akehurst.language.parser.runtime.Factory;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 
 public class ParseTreeBranch extends AbstractParseTree {
 	
-	public ParseTreeBranch(Factory factory, Input input, Branch root, AbstractParseTree stackedTree, RuntimeRule rule, int nextItemIndex) {
-		super(factory, input, root, stackedTree);
+	public ParseTreeBranch(ForrestFactory factory, Branch root, AbstractParseTree stackedTree, RuntimeRule rule, int nextItemIndex) {
+		super(factory, root, stackedTree);
 		this.rule = rule;
 		this.nextItemIndex = nextItemIndex;
 		this.canGrow = this.calculateCanGrow();
@@ -56,16 +60,24 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	
 	public ParseTreeBranch extendWith(INode extension) throws ParseTreeException {
-		Branch nb = (Branch)this.getRoot().addChild(extension);
+		INode[] nc = this.addChild(this.getRoot(), extension);
 //		Stack<AbstractParseTree> stack = new Stack<>();
 //		stack.addAll(this.stackedRoots);
 		if (extension.getNodeType() instanceof SkipNodeType) {
-			ParseTreeBranch newBranch = new ParseTreeBranch(this.factory, this.input, nb, this.stackedTree, this.rule, this.nextItemIndex);
+//			ParseTreeBranch newBranch = new ParseTreeBranch(this.factory, this.input, nb, this.stackedTree, this.rule, this.nextItemIndex);
+			ParseTreeBranch newBranch = this.ffactory.fetchOrCreateBranch(this.rule, nc, this.stackedTree, this.nextItemIndex);
 			return newBranch;			
 		} else {
-			ParseTreeBranch newBranch = new ParseTreeBranch(this.factory, this.input, nb, this.stackedTree, this.rule, this.nextItemIndex+1);
+	//		ParseTreeBranch newBranch = new ParseTreeBranch(this.factory, this.input, nc, this.stackedTree, this.rule, this.nextItemIndex+1);
+			ParseTreeBranch newBranch = this.ffactory.fetchOrCreateBranch(this.rule, nc, this.stackedTree, this.nextItemIndex+1);
 			return newBranch;
 		}
+	}
+	
+	public INode[] addChild(Branch old, INode newChild) {
+		INode[] newChildren = Arrays.copyOf(old.children, old.children.length+1);
+		newChildren[old.children.length] = newChild;
+		return newChildren;
 	}
 	
 	@Override
@@ -124,7 +136,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 	}
 	
 	boolean calculateCanGrowWidth() {
-		boolean reachedEnd = this.getRoot().getMatchedTextLength() >= this.input.getLength();
+		boolean reachedEnd = this.getRoot().getMatchedTextLength() >= this.ffactory.input.getLength();
 		if (reachedEnd)
 			return false;
 		switch(this.rule.getRhs().getKind()) {

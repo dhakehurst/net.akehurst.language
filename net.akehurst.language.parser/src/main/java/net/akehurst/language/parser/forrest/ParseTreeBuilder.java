@@ -13,14 +13,16 @@ import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.Terminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.parser.runtime.Branch;
 import net.akehurst.language.parser.runtime.Factory;
+import net.akehurst.language.parser.runtime.Leaf;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 
 public class ParseTreeBuilder {
 
-	public ParseTreeBuilder(Factory factory, Grammar grammar, String goal, CharSequence text) {
-		this.factory = factory;
-		this.input = new Input(factory, " "+text);
+	public ParseTreeBuilder(ForrestFactory ffactory, Grammar grammar, String goal, CharSequence text) {
+		this.factory = ffactory.runtimeFactory;
+		this.input = new Input(ffactory, " "+text);
 		this.grammar = grammar;
 		this.textAccumulator = "";
 		this.textLength = 0;
@@ -37,39 +39,38 @@ public class ParseTreeBuilder {
 		this.textLength+=text.length();
 		int end = this.textLength +1;
 		Terminal terminal = this.grammar.getAllTerminal().stream().filter(t -> t.getPattern().pattern().equals(terminalPattern)).findFirst().get();
-		RuntimeRule terminalRule = this.factory.createRuntimeRuleSet().getForTerminal(terminal);
-		ILeaf l = new Leaf(this.factory, this.input, start, end, terminalRule);
+		RuntimeRule terminalRule = this.factory.getRuntimeRuleSet().getForTerminal(terminal);
+		ILeaf l = this.factory.createLeaf(this.input, start, end, terminalRule);
 		return l;
 	}
 
 	public ILeaf emptyLeaf() {
 		int start = this.textLength +1;
 		Terminal terminal = new TerminalLiteral("");
-		RuntimeRule terminalRule = this.factory.createRuntimeRuleSet().getForTerminal(terminal);
-		return new Leaf(this.factory, this.input, start, start, terminalRule);
+		RuntimeRule terminalRule = this.factory.getRuntimeRuleSet().getForTerminal(terminal);
+		return new Leaf(this.input, start, start, terminalRule);
 	}
 
 	public IBranch branch(String ruleName, INode... children) {
 		try {
-			List<INode> childrenLst = Arrays.asList(children);
 			Rule rule = this.grammar.findRule(ruleName);
-			RuntimeRule rr = this.factory.createRuntimeRuleSet().getRuntimeRule(rule);
-			IBranch b = this.factory.createBranch(rr, childrenLst);
+			RuntimeRule rr = this.factory.getRuntimeRuleSet().getRuntimeRule(rule);
+			IBranch b = this.factory.createBranch(rr, children);
 			return b;
 		} catch (RuleNotFoundException e) {
 			throw new RuntimeException("Error", e);
 		}
 	}
 
-	public IParseTree tree(IBranch root) {
-		try {
-			Rule rule = this.grammar.findRule(root.getName());
-			RuntimeRule rr = this.factory.createRuntimeRuleSet().getRuntimeRule(rule);
-			IParseTree t = new ParseTreeBranch(this.factory, input, (Branch)root, null, rr, Integer.MAX_VALUE);
-			return t;
-		} catch (RuleNotFoundException e) {
-			throw new RuntimeException("Error", e);
-		}
-	}
+//	public IParseTree tree(IBranch root) {
+//		try {
+//			Rule rule = this.grammar.findRule(root.getName());
+//			RuntimeRule rr = this.factory.getRuntimeRuleSet().getRuntimeRule(rule);
+//			IParseTree t = new ParseTreeBranch(this.factory, input, (Branch)root, null, rr, Integer.MAX_VALUE);
+//			return t;
+//		} catch (RuleNotFoundException e) {
+//			throw new RuntimeException("Error", e);
+//		}
+//	}
 
 }

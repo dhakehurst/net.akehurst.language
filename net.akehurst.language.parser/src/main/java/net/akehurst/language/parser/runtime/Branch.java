@@ -1,6 +1,7 @@
-package net.akehurst.language.parser.forrest;
+package net.akehurst.language.parser.runtime;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import net.akehurst.language.core.parser.IBranch;
@@ -9,15 +10,13 @@ import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.parser.ToStringVisitor;
-import net.akehurst.language.parser.runtime.Factory;
-import net.akehurst.language.parser.runtime.RuntimeRule;
 
 public class Branch extends Node implements IBranch {
 
-	public Branch(Factory factory, RuntimeRule runtimeRule, List<INode> children) {
-		super(factory, runtimeRule);
+	public Branch(final RuntimeRule runtimeRule, final INode[] children) {
+		super(runtimeRule);
 		this.children = children;
-		this.start = this.children.get(0).getStart();
+		this.start = this.children[0].getStart();
 		this.length = 0;
 		this.isEmpty = true;
 		for(INode n: this.children) {
@@ -27,8 +26,7 @@ public class Branch extends Node implements IBranch {
 		this.hashCode_cache = this.runtimeRule.getRuleNumber() ^ this.start ^ this.length;
 	}
 	
-	
-	List<INode> children;
+	public INode[] children;
 	int length;
 	int start;
 	
@@ -69,27 +67,16 @@ public class Branch extends Node implements IBranch {
 
 	@Override
 	public List<INode> getChildren() {
-		return this.children;
+		return Arrays.asList(this.children);
 	}
+
 	
-	@Override
-	public IBranch addChild(INode newChild) {
-		List<INode> newChildren = new ArrayList<>();
-		newChildren.addAll(this.getChildren());
-		newChildren.add(newChild);
-		IBranch newBranch = this.factory.createBranch(this.getRuntimeRule(), newChildren);
-		return newBranch;
-	}
-	
-	@Override
-	public Branch deepClone() {
-		List<INode> clonedChildren = new ArrayList<>();
-		for(INode n:this.getChildren()) {
-			clonedChildren.add( n.deepClone() );
-		}
-		IBranch clone = this.factory.createBranch(this.getRuntimeRule(), clonedChildren);
-		return (Branch)clone;
-	}
+//	@Override
+//	public Branch deepClone() {
+//		INode[] clonedChildren = Arrays.copyOf(this.children, this.children.length);
+//		IBranch clone = this.factory.createBranch(this.getRuntimeRule(), clonedChildren);
+//		return (Branch)clone;
+//	}
 	
 	//--- Object ---
 	static ToStringVisitor v = new ToStringVisitor();
@@ -120,7 +107,7 @@ public class Branch extends Node implements IBranch {
 		if (this.start!=other.start || this.length!=other.length) {
 			return false;
 		}
-		return this.children.equals(other.children);
+		return Arrays.equals(this.children,other.children);
 	}
 	
 }

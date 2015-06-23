@@ -96,7 +96,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*a 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
 					b.branch("a",
 						b.leaf("a", "a")
@@ -140,7 +140,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*abc 1, 4}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 					b.branch("abc",
 						b.leaf("abc", "abc")
@@ -167,7 +167,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*a 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 					b.branch("a",
 						b.leaf("a", "a")
@@ -210,7 +210,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*b 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 					b.branch("b",
 						b.leaf("b", "b")
@@ -237,7 +237,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*ab 1, 3}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("ab",
 					b.branch("a",
@@ -301,7 +301,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*abc 1, 4}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("abc", 
 					b.branch("ab",
@@ -338,7 +338,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*abc 1, 4}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected =
 				b.branch("abc", 
 						b.branch("a",
@@ -373,7 +373,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*abc 1, 6}",st);
 
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected =
 				b.branch("abc", 
 					b.branch("a",
@@ -428,7 +428,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			
 		} catch (ParseFailedException e) {
 			IParseTree tree = e.getLongestMatch();
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected =
 				b.branch("abc", 
 					b.branch("a",
@@ -460,7 +460,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*abc 1, 4}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected =
 				b.branch("abc", 
 					b.branch("a",

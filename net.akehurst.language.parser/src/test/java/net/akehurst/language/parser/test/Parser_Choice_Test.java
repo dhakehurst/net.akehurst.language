@@ -9,6 +9,7 @@ import net.akehurst.language.ogl.semanticModel.Namespace;
 import net.akehurst.language.ogl.semanticModel.NonTerminal;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.parser.ToStringVisitor;
+import net.akehurst.language.parser.forrest.ForrestFactory;
 import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.parser.runtime.Factory;
 
@@ -17,11 +18,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class Parser_Choice_Test extends AbstractParser_Test {
-
-	@Before
-	public void before() {
-		this.parseTreeFactory = new Factory();
-	}
 	
 	Grammar abc() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
@@ -47,7 +43,7 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*abc 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, this.abc(), goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
 				b.branch("abc",
 					b.branch("a",
@@ -76,7 +72,7 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*abc 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, this.abc(), goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
 				b.branch("abc",
 					b.branch("b",
@@ -106,7 +102,7 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*abc 1, 2}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, this.abc(), goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
 				b.branch("abc",
 					b.branch("c",

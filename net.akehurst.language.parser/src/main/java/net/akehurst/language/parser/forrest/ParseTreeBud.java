@@ -5,12 +5,13 @@ import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticModel.TangibleItem;
 import net.akehurst.language.parser.ToStringVisitor;
 import net.akehurst.language.parser.runtime.Factory;
+import net.akehurst.language.parser.runtime.Leaf;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 
 public class ParseTreeBud extends AbstractParseTree {
 
-	ParseTreeBud(Factory factory, Input input, Leaf root, AbstractParseTree stackedTree) {
-		super(factory, input, root, stackedTree);
+	ParseTreeBud(ForrestFactory factory, Leaf root, AbstractParseTree stackedTree) {
+		super(factory, root, stackedTree);
 	}
 
 	@Override

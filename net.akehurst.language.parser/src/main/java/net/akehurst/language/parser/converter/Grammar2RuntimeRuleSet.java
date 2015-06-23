@@ -24,7 +24,8 @@ public class Grammar2RuntimeRuleSet implements Relation<Grammar, RuntimeRuleSet>
 	@Override
 	public RuntimeRuleSet constructLeft2Right(Grammar left, Transformer transformer) {
 		Converter converter = (Converter)transformer;
-		RuntimeRuleSet right = converter.getFactory().createRuntimeRuleSet();
+		int totalRuleNumber = left.getAllRule().size() + left.getAllTerminal().size();
+		RuntimeRuleSet right = converter.getFactory().createRuntimeRuleSet(totalRuleNumber);
 		return right;
 	}
 	

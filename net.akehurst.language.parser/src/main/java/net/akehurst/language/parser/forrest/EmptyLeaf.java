@@ -55,10 +55,10 @@ public class EmptyLeaf implements ILeaf {
 		return visitor.visit(this, arg);
 	}
 	
-	@Override
-	public ILeaf deepClone() {
-		return new EmptyLeaf(this.start);
-	}
+//	@Override
+//	public ILeaf deepClone() {
+//		return new EmptyLeaf(this.start);
+//	}
 
 	//--- Object ---
 	@Override

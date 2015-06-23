@@ -1,19 +1,17 @@
-package net.akehurst.language.parser.forrest;
+package net.akehurst.language.parser.runtime;
 
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
-import net.akehurst.language.ogl.semanticModel.Terminal;
 import net.akehurst.language.parser.ToStringVisitor;
-import net.akehurst.language.parser.runtime.Factory;
-import net.akehurst.language.parser.runtime.RuntimeRule;
+import net.akehurst.language.parser.forrest.Input;
 
 public class Leaf extends Node implements ILeaf {
 
-	public Leaf(Factory factory, Input input, int start, int end, RuntimeRule terminalRule) {
-		super(factory, terminalRule);
+	public Leaf(Input input, int start, int end, RuntimeRule terminalRule) {
+		super(terminalRule);
 		this.input = input;
 		this.start = start;
 		this.end = end;
@@ -21,7 +19,7 @@ public class Leaf extends Node implements ILeaf {
 	}
 	
 	Input input;
-	public Input getInput() {
+	Input getInput() {
 		return this.input;
 	}
 	
@@ -77,10 +75,10 @@ public class Leaf extends Node implements ILeaf {
 		return this.input.get(this.start, this.end).toString();
 	}
 	
-	public Leaf deepClone() {
-		Leaf clone = new Leaf(this.factory, this.input, this.start, this.end, this.terminalRule);
-		return clone;
-	}
+//	public Leaf deepClone() {
+//		Leaf clone = new Leaf(this.input, this.start, this.end, this.terminalRule);
+//		return clone;
+//	}
 	
 	//--- Object ---
 	static ToStringVisitor v = new ToStringVisitor();

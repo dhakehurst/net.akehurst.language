@@ -5,12 +5,12 @@ import java.util.List;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.Terminal;
-import net.akehurst.language.parser.forrest.Branch;
+import net.akehurst.language.parser.forrest.Input;
 
 public class Factory {
 
 	public Factory() {
-		this.runtimeRuleSet = new RuntimeRuleSet();
+		
 	}
 	
 	RuntimeRuleSet runtimeRuleSet;
@@ -30,13 +30,27 @@ public class Factory {
 		return rr;
 	}
 	
-	public RuntimeRuleSet createRuntimeRuleSet() {
+	public RuntimeRuleSet createRuntimeRuleSet(int totalRuleNumber) {
+		if (null==this.runtimeRuleSet) {
+			this.runtimeRuleSet = new RuntimeRuleSet(totalRuleNumber);
+		}
 		return this.runtimeRuleSet;
 	}
+	public RuntimeRuleSet getRuntimeRuleSet() {
+		if (null==this.runtimeRuleSet) {
+			throw new RuntimeException("Internal Error: must createRuntimeRuleSet before getting");
+		} else {
+			return this.runtimeRuleSet;
+		}
+	}
 	
-	public Branch createBranch(RuntimeRule r, List<INode> children) {
-		Branch b = new Branch(this, r, children);
+	public Branch createBranch(final RuntimeRule r, final INode[] children) {
+		Branch b = new Branch(r, children);
 		return b;
 	}
 	
+	public Leaf createLeaf(Input input, int start, int end, RuntimeRule terminalRule) {
+		Leaf l = new Leaf(input, start, end, terminalRule);
+		return l;
+	}
 }

@@ -15,7 +15,7 @@ import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.ogl.semanticModel.TerminalPattern;
 import net.akehurst.language.parser.ScannerLessParser;
 import net.akehurst.language.parser.ToStringVisitor;
-import net.akehurst.language.parser.forrest.Factory;
+import net.akehurst.language.parser.runtime.Factory;
 import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;

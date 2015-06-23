@@ -23,7 +23,9 @@ public class SeparatedList2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleI
 	
 	@Override
 	public RuntimeRuleItem constructLeft2Right(SeparatedList left, Transformer transformer) {
-		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST);
+		Converter converter = (Converter)transformer;
+		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
+		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST,maxRuleRumber);
 		return right;
 	}
 	

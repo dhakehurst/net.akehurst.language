@@ -17,7 +17,17 @@ import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 
 public class RuntimeRuleSet {
 
-	public RuntimeRuleSet() {
+	/*
+	 * necessary to know total number of rules up front,
+	 * so it can be used in RuntimeRuleItem
+	 */
+	public RuntimeRuleSet(int totalRuleNumber) {
+		this.totalRuleNumber = totalRuleNumber;
+	}
+	
+	int totalRuleNumber;
+	public int getTotalRuleNumber() {
+		return this.totalRuleNumber;
 	}
 	
 	RuntimeRule[] runtimeRules;

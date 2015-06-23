@@ -95,7 +95,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 4}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
 					b.leaf("a", "a"),

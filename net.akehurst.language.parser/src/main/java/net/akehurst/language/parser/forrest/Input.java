@@ -11,17 +11,18 @@ import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.Terminal;
 import net.akehurst.language.parser.runtime.Factory;
+import net.akehurst.language.parser.runtime.Leaf;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 
 public class Input {
 
-	public Input(Factory factory, CharSequence text) {
-		this.factory = factory;
+	public Input(ForrestFactory ffactory, CharSequence text) {
+		this.ffactory = ffactory;
 		this.text = text;
 		this.leaf_cache = new HashMap<>();
 		this.bud_cache = new HashMap<>();
 	}
-	Factory factory;
+	ForrestFactory ffactory;
 	public CharSequence text;
 	
 	public CharSequence get(int start, int end) {
@@ -52,7 +53,7 @@ public class Input {
 		if (null==bud) {
 			Leaf l = this.fetchOrCreateBud(terminalRule, pos);
 			if (NO_LEAF!=l) {
-				bud = new ParseTreeBud(this.factory, this, l, null );
+				bud = new ParseTreeBud(this.ffactory, l, null );
 				this.bud_cache.put(key, bud);
 				return bud;
 			}
@@ -60,7 +61,7 @@ public class Input {
 		return bud;
 	}
 	
-	static final Leaf NO_LEAF = new Leaf(null, null, -1, -1, null);
+	static final Leaf NO_LEAF = new Leaf(null, -1, -1, null);
 	class IntPair {
 		public IntPair(int nodeType, int position) {
 			this.nodeType = nodeType;
@@ -88,7 +89,6 @@ public class Input {
 	Map<IntPair, Leaf> leaf_cache;
 	
 	public Leaf fetchOrCreateBud(RuntimeRule terminalRule, int pos) {
-
 		int terminalTypeNumber = terminalRule.getRuleNumber();
 		IntPair key = new IntPair(terminalTypeNumber, pos);
 		Leaf l = this.leaf_cache.get(key);
@@ -99,7 +99,7 @@ public class Input {
 				String matchedText = m.group();
 				int start = m.start();
 				int end = m.end();
-				Leaf leaf = new Leaf(this.factory, this, start, end, terminalRule);
+				Leaf leaf = new Leaf(this, start, end, terminalRule);
 				this.leaf_cache.put(key, leaf);
 				return leaf;
 			} else {
