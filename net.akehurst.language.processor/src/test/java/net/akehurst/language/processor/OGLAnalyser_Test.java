@@ -5,16 +5,13 @@ import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 public class OGLAnalyser_Test {
-
-	class A {
-
-	}
 
 	<T> T process(String grammarText, Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
 		try {
@@ -41,12 +38,11 @@ public class OGLAnalyser_Test {
 		try {
 			String grammar = "namespace test;" + System.lineSeparator();
 			grammar += "grammar A {" + System.lineSeparator();
-			grammar += " a = 'a' ;" + System.lineSeparator();
+			grammar += " a := 'a' ;" + System.lineSeparator();
 			grammar += "}";
 
-			Class<A> targetType = A.class;
 
-			A target = this.process(grammar, targetType);
+			Grammar target = this.process(grammar, Grammar.class);
 
 			Assert.assertNotNull(target);
 

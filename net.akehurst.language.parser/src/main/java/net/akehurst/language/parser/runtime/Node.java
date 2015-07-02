@@ -20,4 +20,8 @@ public class Node implements INode {
 	public INodeType getNodeType() throws ParseTreeException {
 		return this.runtimeRule.getRuntimeRuleSet().getNodeType(this.runtimeRule.getRuleNumber());
 	}
+	
+	public boolean getIsSkip() {
+		return this.runtimeRule.isSkipRule;
+	}
 }

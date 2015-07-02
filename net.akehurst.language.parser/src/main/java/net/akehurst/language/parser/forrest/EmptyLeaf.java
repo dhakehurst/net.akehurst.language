@@ -21,6 +21,11 @@ public class EmptyLeaf implements ILeaf {
 	}
 	
 	@Override
+	public boolean getIsSkip() {
+		return false;
+	}
+	
+	@Override
 	public INodeType getNodeType() throws ParseTreeException {
 		return new LeafNodeType();
 	}

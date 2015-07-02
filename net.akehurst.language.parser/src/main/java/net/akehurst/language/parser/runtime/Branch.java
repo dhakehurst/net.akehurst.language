@@ -70,6 +70,32 @@ public class Branch extends Node implements IBranch {
 		return Arrays.asList(this.children);
 	}
 
+	@Override
+	public INode getChild(int index) {
+		List<INode> children = this.getChildren();
+
+		//get first non skip child
+		int child=0;
+		INode n = children.get(child);
+		while(n.getIsSkip()) {
+			++child;
+			n = children.get(child);
+		}
+		
+		int count=0;
+
+		while(count < index) {
+			++child;
+			n = children.get(child);
+			while(n.getIsSkip()) {
+				++child;
+				n = children.get(child);
+			}
+			++count;
+		}
+
+		return n;
+	}
 	
 //	@Override
 //	public Branch deepClone() {

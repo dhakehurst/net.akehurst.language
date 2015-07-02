@@ -12,6 +12,10 @@ public class SemanicAnalyser extends AbstractTransformer implements ISemanticAna
 
 	public SemanicAnalyser() {
 		super.registerRule(GrammarDefinitionBranch2Grammar.class);
+		super.registerRule(IDENTIFIERBranch2String.class);
+		super.registerRule(NamespaceBranch2Namespace.class);
+		super.registerRule(TerminalLiteralNode2Terminal.class);
+		super.registerRule(TerminalPatternNode2Terminal.class);
 	}
 	
 	

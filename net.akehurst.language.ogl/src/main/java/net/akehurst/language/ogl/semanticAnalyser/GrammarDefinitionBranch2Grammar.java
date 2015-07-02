@@ -24,9 +24,9 @@ public class GrammarDefinitionBranch2Grammar implements Relation<IBranch, Gramma
 	@Override
 	public Grammar constructLeft2Right(IBranch left, Transformer transformer) {
 		try {
-			IBranch namespaceBranch = (IBranch)left.getChildren().get(0);
-			IBranch grammarBranch = (IBranch)left.getChildren().get(1);
-			IBranch grammarNameBranch = (IBranch)grammarBranch.getChildren().get(1);
+			IBranch namespaceBranch = (IBranch)left.getChild(0);
+			IBranch grammarBranch = (IBranch)left.getChild(1);
+			IBranch grammarNameBranch = (IBranch)grammarBranch.getChild(1);
 			
 			Namespace namespace = transformer.transformLeft2Right(NamespaceBranch2Namespace.class, namespaceBranch);
 			String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, grammarNameBranch);

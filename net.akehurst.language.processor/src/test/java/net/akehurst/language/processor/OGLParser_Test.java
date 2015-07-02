@@ -16,6 +16,7 @@ import net.akehurst.language.ogl.semanticModel.TerminalPattern;
 import net.akehurst.language.parser.ScannerLessParser;
 import net.akehurst.language.parser.ToStringVisitor;
 import net.akehurst.language.parser.runtime.Factory;
+import net.akehurst.language.parser.forrest.ForrestFactory;
 import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import org.junit.Assert;
@@ -28,6 +29,11 @@ public class OGLParser_Test {
 	@Before
 	public void before() {
 		this.parseTreeFactory = new Factory();
+	}
+	
+	ParseTreeBuilder builder(Grammar grammar, String text, String goal) {
+		ForrestFactory ff = new ForrestFactory(this.parseTreeFactory, text);
+		return new ParseTreeBuilder(ff, grammar, goal, text);
 	}
 	
 	IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
@@ -70,9 +76,9 @@ public class OGLParser_Test {
 			Assert.assertNotNull(tree);
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("Tree {*grammarDefinition 1, 17}",st);
+			Assert.assertEquals("{*grammarDefinition 1, 17}",st);
 			
-			ParseTreeBuilder b = new ParseTreeBuilder(this.parseTreeFactory, g, goal, text);
+			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected =
 				b.branch("grammarDefinition",
 					b.branch("namespace",

@@ -235,9 +235,9 @@ public class ScannerLessParser implements IParser {
 			oldForrest=newForrest.shallowClone();
 			newForrest = oldForrest.grow();
 		} 
-System.out.println(this.numberOfSeasons);
+//System.out.println(this.numberOfSeasons);
 		IParseTree match = newForrest.getLongestMatch(text);
-		System.out.println(((ParseTreeBranch)match).getIdString());
+//		System.out.println(((ParseTreeBranch)match).getIdString());
 
 		return match;
 	}
