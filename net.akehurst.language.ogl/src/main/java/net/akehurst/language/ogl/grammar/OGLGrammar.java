@@ -56,9 +56,11 @@ public class OGLGrammar extends Grammar {
 		b.rule("choice").separatedList(1, new TerminalLiteral("|"), new NonTerminal("concatination") );
 		b.rule("concatination").multi(1,-1,new NonTerminal("item") );
 		b.rule("item").choice( new NonTerminal("LITERAL"),
+							   new NonTerminal("PATTERN"),
 				               new NonTerminal("nonTerminal"),
 				               new NonTerminal("multi"),
-				               new NonTerminal("group")
+				               new NonTerminal("group"),
+				               new NonTerminal("separatedList")
 						);
 		b.rule("multi").concatenation( new NonTerminal("item"), new NonTerminal("multi.group1") );
 		b.rule("multi.group1").choice(new TerminalLiteral("*"), new TerminalLiteral("+"));

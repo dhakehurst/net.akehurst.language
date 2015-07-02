@@ -37,9 +37,40 @@ public class ListsSpeed_Test extends AbstractParser_Test {
 		return b.get();
 	}
 
-	Grammar as_sl() {
+	Grammar as_multi() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").separatedList(1, new TerminalLiteral(","), new NonTerminal("a"));
+		b.rule("as").multi(1, -1, new NonTerminal("a"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		return b.get();
+	}
+	
+	Grammar as2_rr() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("as").choice(new NonTerminal("as$group1"), new NonTerminal("a"));
+		b.rule("as$group1").concatenation(new NonTerminal("a"), new TerminalLiteral(","), new NonTerminal("as"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		return b.get();
+	}
+
+	Grammar as2_lr() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("as").choice(new NonTerminal("as$group1"), new NonTerminal("a"));
+		b.rule("as$group1").concatenation(new NonTerminal("as"), new TerminalLiteral(","), new NonTerminal("a"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		return b.get();
+	}
+
+	Grammar as2_multi() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("as").multi(1, -1, new NonTerminal("as$group1"));
+		b.rule("as$group1").concatenation(new NonTerminal("a"), new TerminalLiteral(","));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		return b.get();
+	}
+	
+	Grammar as2_sl() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("as").separatedList(1, new TerminalLiteral(","), new TerminalLiteral("a"));
 		b.rule("a").concatenation(new TerminalLiteral("a"));
 		return b.get();
 	}
@@ -79,10 +110,10 @@ public class ListsSpeed_Test extends AbstractParser_Test {
 	}
 	
 	@Test
-	public void sl_as_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() {
+	public void multi_as_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() {
 		// grammar, goal, input
 		try {
-			Grammar g = as_sl();
+			Grammar g = as_multi();
 			String goal = "as";
 			String text = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 			
@@ -95,4 +126,73 @@ public class ListsSpeed_Test extends AbstractParser_Test {
 		}
 	}
 
+	@Test
+	public void rr_as2_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() {
+		// grammar, goal, input
+		try {
+			Grammar g = as2_rr();
+			String goal = "as";
+			String text = "a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a";
+			
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+		
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+
+	
+	@Test
+	public void lr_as2_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() {
+		// grammar, goal, input
+		try {
+			Grammar g = as2_lr();
+			String goal = "as";
+			String text = "a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a";
+			
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+		
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+
+	@Test
+	public void multi_as2_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() {
+		// grammar, goal, input
+		try {
+			Grammar g = as2_multi();
+			String goal = "as";
+			String text = "a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,";
+			
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+		
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void sl_as2_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() {
+		// grammar, goal, input
+		try {
+			Grammar g = as2_sl();
+			String goal = "as";
+			String text = "a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a";
+			
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+		
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
 }
