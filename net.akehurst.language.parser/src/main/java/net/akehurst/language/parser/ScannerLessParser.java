@@ -223,16 +223,21 @@ public class ScannerLessParser implements IParser {
 		//}
 		RuntimeRule sst = this.getRuntimeRuleSet().getForTerminal(START_SYMBOL_TERMINAL);
 		ParseTreeBud startBud = ff.createNewBuds(new RuntimeRule[] {sst}, 0).get(0);
-		ArrayList<AbstractParseTree> newTrees = startBud.growHeight(this.runtimeRuleSet);//new RuntimeRule[] {pseudoGoalRule});
+		RuntimeRule[] terminalRules = runtimeRuleSet.getPossibleSubTerminal(sst);
+
+		
+		ArrayList<AbstractParseTree> newTrees = startBud.growHeight(terminalRules, this.runtimeRuleSet);//new RuntimeRule[] {pseudoGoalRule});
 		newForrest.addAll(newTrees);
 		
 		while (newForrest.getCanGrow() ) {
 			++numberOfSeasons;
+//			System.out.println(this.numberOfSeasons);
 			oldForrest=newForrest.shallowClone();
 			newForrest = oldForrest.grow();
 		} 
-
+System.out.println(this.numberOfSeasons);
 		IParseTree match = newForrest.getLongestMatch(text);
+		System.out.println(((ParseTreeBranch)match).getIdString());
 
 		return match;
 	}

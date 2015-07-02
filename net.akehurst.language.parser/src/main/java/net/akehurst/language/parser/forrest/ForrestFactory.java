@@ -1,6 +1,7 @@
 package net.akehurst.language.parser.forrest;
 
 import java.util.List;
+import java.util.Map;
 
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
@@ -19,6 +20,8 @@ public class ForrestFactory {
 	Factory runtimeFactory;
 	Input input;
 
+	Map<BranchIdentifier, Branch> branch_cache;
+	
 	public List<ParseTreeBud> createNewBuds(RuntimeRule[] possibleNextTerminals, int pos) throws RuleNotFoundException {
 		return this.input.createNewBuds(possibleNextTerminals, pos);
 	}
@@ -29,6 +32,11 @@ public class ForrestFactory {
 	}
 	
 	public ParseTreeBranch fetchOrCreateBranch(RuntimeRule target, INode[] children, AbstractParseTree stackedTree, int nextItemIndex) {
+//		BranchIdentifier bid = new BranchIdentifier(target, );
+//		Branch newBranch = this.branch_cache.get(bid);
+//		if (null==newBranch) {
+//			newBranch = this.runtimeFactory.createBranch(target, children);
+//		}
 		Branch newBranch = this.runtimeFactory.createBranch(target, children);
 		ParseTreeBranch newTree = new ParseTreeBranch(this, newBranch, stackedTree, target, nextItemIndex);
 

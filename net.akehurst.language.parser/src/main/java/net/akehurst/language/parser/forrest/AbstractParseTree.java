@@ -19,6 +19,7 @@ import net.akehurst.language.parser.runtime.Factory;
 import net.akehurst.language.parser.runtime.Leaf;
 import net.akehurst.language.parser.runtime.Node;
 import net.akehurst.language.parser.runtime.RuntimeRule;
+import net.akehurst.language.parser.runtime.RuntimeRuleKind;
 import net.akehurst.language.parser.runtime.RuntimeRuleSet;
 
 public abstract class AbstractParseTree implements IParseTree {
@@ -27,10 +28,12 @@ public abstract class AbstractParseTree implements IParseTree {
 		this.ffactory = factory;
 		this.root = root;
 		this.stackedTree = stackedTree;
+		this.identifier = new BranchIdentifier(root.getRuntimeRule().getRuleNumber(), root.getStart(), root.getEnd());
 	}
 
 	ForrestFactory ffactory;
 	Node root;
+	public BranchIdentifier identifier;
 	
 	AbstractParseTree stackedTree;
 	public AbstractParseTree getStackedTree() {
@@ -50,6 +53,11 @@ public abstract class AbstractParseTree implements IParseTree {
 		return this.stackedTree;
 	}
 
+	/**
+	 * true indicates that this tree is valid (complete) for the given rule
+	 * it could still grow (width) if e.g. it is a multi or separated list 
+	 * MayGrowHeight!
+	 */
 	abstract public boolean getIsComplete();
 
 	public abstract boolean getCanGrow();
@@ -58,8 +66,43 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	abstract boolean getCanGrowWidth();
 	
-	public abstract RuntimeRule getNextExpectedItem() ;
+	public abstract RuntimeRule getNextExpectedItem();
 
+	/**
+	 * if tree can grow in width or height and if it can at some point grow into something that can be 
+	 * grafted back (reduced).
+	 * 
+	 * i.e., if the current node is a possible sub node of the current stackedTree
+	 * 
+	 * @return
+	 */
+	public boolean getHasPotential(RuntimeRuleSet runtimeRuleSet) {
+		if (!this.getCanGrow()) {
+			return false;
+		} else {
+			if(null==this.getStackedTree()) {
+				return true;
+			} else {
+				RuntimeRule thisRule = this.getRoot().getRuntimeRule();
+				RuntimeRule nextExpectedRule = this.getStackedTree().getNextExpectedItem();
+				if (thisRule==nextExpectedRule || thisRule.getIsSkipRule()) {
+					return true;
+				} else {
+					if (thisRule.getKind() == RuntimeRuleKind.NON_TERMINAL) {
+						List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleSubRule(nextExpectedRule));
+						boolean res = possibles.contains(thisRule);
+						return res;
+					} else {
+						List<RuntimeRule> possibles1 = Arrays.asList(runtimeRuleSet.getPossibleSubTerminal(nextExpectedRule));
+						boolean res = possibles1.contains(thisRule);
+						return res;
+					}
+				}
+			}
+
+		}
+	}
+	
 //	public abstract AbstractParseTree deepClone();
 
 	public boolean getIsSkip() throws ParseTreeException {
@@ -90,11 +133,11 @@ public abstract class AbstractParseTree implements IParseTree {
 	//		buds.add(empty);
 			for (ParseTreeBud bud : buds) {
 				AbstractParseTree nt = this.pushStackNewRoot(bud.getRoot());
-				ArrayList<AbstractParseTree> nts = nt.growHeight(ruleSet);
+//				ArrayList<AbstractParseTree> nts = nt.growHeight(terminalRules, ruleSet);
 				//if (nts.isEmpty()) {
 					result.add(nt);
 				//} else {
-					result.addAll(nts);
+//					result.addAll(nts);
 				//}
 			}
 		}
@@ -103,6 +146,39 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	AbstractParseTree pushStackNewRoot(Leaf n) {
 		return this.ffactory.fetchOrCreateBud(n, this);
+	}
+	
+	public ArrayList<AbstractParseTree> growWidthAndHeight(RuntimeRule[] terminalRules,RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
+		return this.growWidthAndHeight1(terminalRules, runtimeRuleSet);
+	}
+	
+	public ArrayList<AbstractParseTree> growWidthAndHeight1(RuntimeRule[] terminalRules,RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
+		ArrayList<AbstractParseTree> result = new ArrayList<AbstractParseTree>();
+		
+		ArrayList<AbstractParseTree> nts = this.growHeight(terminalRules, runtimeRuleSet);
+		result.addAll(nts);
+		
+		if (this.getCanGraftBack() ) {
+			AbstractParseTree nt = this.tryGraftBack();
+			if (null!=nt) {
+				//RuntimeRule[] possibleSuperRules = this.runtimeRuleSet.getPossibleSuperRule(nt.getRoot().getRuntimeRule());
+				ArrayList<AbstractParseTree> nts2 = nt.growWidthAndHeight(terminalRules, runtimeRuleSet);
+				result.add(nt); // must add nt as well here, as higher multi rules might need it
+				result.addAll(nts2);
+			}
+		}
+		
+		if (this.getCanGrow() ) {
+			int i = 1;
+
+			if (this.getIsEmpty() || (this.getIsComplete() && !this.getCanGrow())) {
+				// don't grow width
+			} else {
+				ArrayList<AbstractParseTree> newBranches = this.growWidth(terminalRules, runtimeRuleSet);
+				result.addAll(newBranches);
+			}
+		}
+		return result;
 	}
 	
 	/**
@@ -132,10 +208,12 @@ public abstract class AbstractParseTree implements IParseTree {
 //			throw new CannotGraftBackException(e.getMessage(), null);
 //		}
 	}
-	public ArrayList<AbstractParseTree> growHeight(RuntimeRuleSet ruleSet) {
-		return this.growHeight2(ruleSet);
+	public ArrayList<AbstractParseTree> growHeight(RuntimeRule[] terminalRules, RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
+//		RuntimeRule treeRR = this.getRoot().getRuntimeRule();
+//		RuntimeRule[] terminalRules = runtimeRuleSet.getPossibleSubTerminal(treeRR);
+		return this.growHeight3(terminalRules, runtimeRuleSet);
 	}
-	public ArrayList<AbstractParseTree> growHeight1(RuntimeRuleSet ruleSet) {
+	public ArrayList<AbstractParseTree> growHeight1(RuntimeRule[] terminalRules, RuntimeRuleSet ruleSet) {
 		if (this.getIsComplete()) {
 			ArrayList<AbstractParseTree> toGrowUp = new ArrayList<>();
 			final ArrayList<AbstractParseTree> result = new ArrayList<>();
@@ -168,7 +246,7 @@ public abstract class AbstractParseTree implements IParseTree {
 		}
 	}
 	
-	public ArrayList<AbstractParseTree> growHeight2(RuntimeRuleSet ruleSet) {
+	public ArrayList<AbstractParseTree> growHeight2(RuntimeRule[] terminalRules, RuntimeRuleSet ruleSet) throws RuleNotFoundException, ParseTreeException {
 		ArrayList<AbstractParseTree> result = new ArrayList<>();
 		//result.add((AbstractParseTree) this);
 		if (this.getIsComplete()) {
@@ -180,7 +258,7 @@ public abstract class AbstractParseTree implements IParseTree {
 				ParseTreeBranch[] newTrees = this.grow(rule);
 				for (ParseTreeBranch nt : newTrees) {
 					if (nt.getIsComplete()) {
-						ArrayList<AbstractParseTree> newTree2 = nt.growHeight(ruleSet);
+						ArrayList<AbstractParseTree> newTree2 = nt.growHeight(terminalRules, ruleSet);
 						//if (newTree2.isEmpty()) {
 							result.add(nt);
 						//} else {
@@ -197,6 +275,35 @@ public abstract class AbstractParseTree implements IParseTree {
 		return result;
 	}
 
+	public ArrayList<AbstractParseTree> growHeight3(RuntimeRule[] terminalRules, RuntimeRuleSet ruleSet) throws RuleNotFoundException, ParseTreeException {
+		ArrayList<AbstractParseTree> result = new ArrayList<>();
+		//result.add((AbstractParseTree) this);
+		if (this.getIsComplete()) {
+			RuntimeRule[] rules = ruleSet.getPossibleSuperRule(this.getRoot().getRuntimeRule());
+			for (RuntimeRule rule : rules) {
+				if (this.root.getRuntimeRule().getRuleNumber() == rule.getRuleNumber()) {
+					result.add(this);
+				}
+				ParseTreeBranch[] newTrees = this.grow(rule);
+				for (ParseTreeBranch nt : newTrees) {
+////					if (nt.getIsComplete()) {
+//						ArrayList<AbstractParseTree> newTree2 = nt.growWidthAndHeight(terminalRules, ruleSet);
+//						//if (newTree2.isEmpty()) {
+							result.add(nt);
+//						//} else {
+//							result.addAll(newTree2);
+//						//}
+////					} else {
+////						result.add(nt);
+////					}
+				}
+			}
+		} else {
+//			result.add(this);
+		}
+		return result;
+	}
+	
 	AbstractParseTree tryGraftInto(AbstractParseTree parent) throws RuleNotFoundException {
 		try {
 //			if (parent instanceof ParseTreeBud) {
@@ -309,6 +416,16 @@ public abstract class AbstractParseTree implements IParseTree {
 		} catch (Exception e) {
 			throw new RuntimeException("Should not happen", e);
 		}
+	}
+
+	public String getIdString() {
+		String s = this.identifier.toString();
+		AbstractParseTree t = this.stackedTree;
+		while(null!=t) {
+			s += " " + t.identifier;
+			t = t.stackedTree;
+		}
+		return s;
 	}
 
 }

@@ -46,7 +46,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 	
 	@Override
 	public boolean getCanGraftBack() {
-		return this.getIsComplete() ;
+		return this.getIsComplete() && null!=this.peekTopStackedRoot();
 	}
 	
 	@Override
