@@ -85,4 +85,9 @@ public class EmptyLeaf implements ILeaf {
 			return false;
 		}
 	}
+
+	@Override
+	public int getNumberOfLines() {
+		return 0;
+	}
 }

@@ -61,6 +61,15 @@ public class Branch extends Node implements IBranch {
 	}
 
 	@Override
+	public String getMatchedText() {
+		String str = "";
+		for(INode n: this.getChildren()) {
+			str += n.getMatchedText();
+		}
+		return str;
+	}
+	
+	@Override
 	public <T, A, E extends Throwable> T accept(IParseTreeVisitor<T, A, E> visitor, A arg) throws E {
 		return visitor.visit(this, arg);
 	}

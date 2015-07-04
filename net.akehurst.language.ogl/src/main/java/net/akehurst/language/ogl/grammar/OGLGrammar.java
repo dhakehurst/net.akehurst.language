@@ -45,6 +45,7 @@ public class OGLGrammar extends Grammar {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
 		b.skip("WHITESPACE").concatination( new TerminalPattern("\\s+") );
 		b.skip("COMMENT").concatination( new TerminalPattern("(?s)/\\*.*?\\*/") );
+		//b.skip("COMMENT").concatination( new TerminalPattern("/\\*(?:.|[\\n\\r])*?\\*/") );
 		
 		b.rule("grammarDefinition").concatenation( new NonTerminal("namespace"), new NonTerminal("grammar") );
 		b.rule("namespace").concatenation( new TerminalLiteral("namespace"), new NonTerminal("qualifiedName"), new TerminalLiteral(";") );
@@ -52,7 +53,7 @@ public class OGLGrammar extends Grammar {
 		b.rule("rules").multi(1,-1,new NonTerminal("anyRule") );
 		b.rule("anyRule").choice(new NonTerminal("normalRule"), new NonTerminal("skipRule") );
 		b.rule("skipRule").concatenation( new NonTerminal("IDENTIFIER"), new TerminalLiteral("?="), new NonTerminal("choice"), new TerminalLiteral(";") );
-		b.rule("normalRule").concatenation( new NonTerminal("IDENTIFIER"), new TerminalLiteral(":="), new NonTerminal("choice"), new TerminalLiteral(";") );
+		b.rule("normalRule").concatenation( new NonTerminal("IDENTIFIER"), new TerminalLiteral(":"), new NonTerminal("choice"), new TerminalLiteral(";") );
 		b.rule("choice").separatedList(1, new TerminalLiteral("|"), new NonTerminal("concatination") );
 		b.rule("concatination").multi(1,-1,new NonTerminal("item") );
 		b.rule("item").choice( new NonTerminal("LITERAL"),
@@ -63,13 +64,15 @@ public class OGLGrammar extends Grammar {
 				               new NonTerminal("separatedList")
 						);
 		b.rule("multi").concatenation( new NonTerminal("item"), new NonTerminal("multiplicity") );
-		b.rule("multiplicity").choice(new TerminalLiteral("*"), new TerminalLiteral("+"));
+		b.rule("multiplicity").choice(new TerminalLiteral("*"), new TerminalLiteral("+"), new TerminalLiteral("?"));
 		b.rule("group").concatenation( new TerminalLiteral("("), new NonTerminal("choice"), new TerminalLiteral(")") );
 		b.rule("separatedList").concatenation( new TerminalLiteral("("), new NonTerminal("concatination"), new TerminalLiteral("/"), new NonTerminal("LITERAL"), new TerminalLiteral(")"), new NonTerminal("multiplicity") );
 		b.rule("nonTerminal").choice(new NonTerminal("IDENTIFIER"));
 		b.rule("qualifiedName").separatedList(1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
-		b.rule("LITERAL").concatenation( new TerminalPattern("\\x27[^\\x27]*\\x27") );
-		b.rule("PATTERN").concatenation( new TerminalPattern("\\x22[^\\x22]*\\x22") );
+//		b.rule("LITERAL").concatenation( new TerminalPattern("\\x27([^\\x27])*\\x27") );
+		b.rule("LITERAL").concatenation( new TerminalPattern("'(?:\\\\?.)*?'") );
+//		b.rule("PATTERN").concatenation( new TerminalPattern("\\x22[^\\x22]*\\x22") );
+		b.rule("PATTERN").concatenation( new TerminalPattern("\"(?:\\\\?.)*?\"") );
 		b.rule("IDENTIFIER").concatenation( new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*") );
 		
 		return b.get().getRule();

@@ -1,5 +1,8 @@
 package net.akehurst.language.parser.runtime;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.ParseTreeException;
@@ -23,5 +26,17 @@ public class Node implements INode {
 	
 	public boolean getIsSkip() {
 		return this.runtimeRule.isSkipRule;
+	}
+	
+	@Override
+	public int getNumberOfLines() {
+		String str = this.getMatchedText();
+		Pattern p = Pattern.compile(System.lineSeparator());
+	    Matcher m = p.matcher(str);
+	    int count = 0;
+	    while (m.find()){
+	    	count +=1;
+	    }
+	    return count;
 	}
 }

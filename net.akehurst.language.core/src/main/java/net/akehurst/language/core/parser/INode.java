@@ -9,7 +9,10 @@ public interface INode extends IParseTreeVisitable{
 	int getStart();
 	int getEnd();
 	int getMatchedTextLength();
+	String getMatchedText();
 
 	boolean getIsEmpty();
 	boolean getIsSkip();
+
+	int getNumberOfLines();
 }
