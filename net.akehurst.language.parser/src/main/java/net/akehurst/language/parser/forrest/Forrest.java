@@ -202,6 +202,7 @@ public class Forrest {
 	}
 
 	public Forrest growBreadthFirst() throws RuleNotFoundException, ParseTreeException {
+		System.out.println("posibles: "+this.possibleTrees.size());
 		Forrest newForrest = new Forrest(this.goalRRule, this.runtimeRuleSet);
 		newForrest.goalTrees.addAll(this.goalTrees);
 		newForrest.longestMatch = this.longestMatch;
@@ -332,8 +333,12 @@ public class Forrest {
 			// // throw new ParseTreeException("Overwriting and existing tree",
 			// null);
 			// }
-			this.possibleTrees.add(tree);
-			this.canGrow |= tree.getCanGrow();
+			if (this.possibleTrees.contains(tree)) {
+				//don't add
+			} else {
+				this.possibleTrees.add(tree);
+				this.canGrow |= tree.getCanGrow();
+			}
 		} else {
 			// drop tree
 			int i = 0;

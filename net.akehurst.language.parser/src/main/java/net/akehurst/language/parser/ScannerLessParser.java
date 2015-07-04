@@ -231,7 +231,7 @@ public class ScannerLessParser implements IParser {
 		
 		while (newForrest.getCanGrow() ) {
 			++numberOfSeasons;
-//			System.out.println(this.numberOfSeasons);
+			System.out.println(this.numberOfSeasons);
 			oldForrest=newForrest.shallowClone();
 			newForrest = oldForrest.grow();
 		} 

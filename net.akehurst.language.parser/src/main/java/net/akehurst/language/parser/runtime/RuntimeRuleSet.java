@@ -37,7 +37,9 @@ public class RuntimeRuleSet {
 	public void setRuntimeRules(List<? extends RuntimeRule> value) {
 		int numberOfRules = value.size();
 		this.possibleSubTerminal = new RuntimeRule[numberOfRules][];
+		this.possibleFirstTerminals = new RuntimeRule[numberOfRules][];
 		this.possibleSubRule = new RuntimeRule[numberOfRules][];
+		this.possibleFirstRule = new RuntimeRule[numberOfRules][];
 		this.possibleSuperRule = new RuntimeRule[numberOfRules][];
 		this.runtimeRules = new RuntimeRule[numberOfRules];
 		this.nodeTypes = new ArrayList<>(Arrays.asList(new INodeType[numberOfRules]));
@@ -103,7 +105,9 @@ public class RuntimeRuleSet {
 	}
 
 	RuntimeRule[][] possibleSubTerminal;
+	RuntimeRule[][] possibleFirstTerminals;
 	RuntimeRule[][] possibleSubRule;
+	RuntimeRule[][] possibleFirstRule;
 	RuntimeRule[][] possibleSuperRule;
 	
 	public RuntimeRule[] getPossibleSubRule(RuntimeRule runtimeRule) {
@@ -116,6 +120,16 @@ public class RuntimeRuleSet {
 		return result;
 	}
 
+	public RuntimeRule[] getPossibleFirstSubRule(RuntimeRule runtimeRule) {
+		RuntimeRule[] result = this.possibleFirstRule[runtimeRule.getRuleNumber()];
+		if (null==result) {
+			Set<RuntimeRule> rr = runtimeRule.findSubRulesAt(0);
+			result = rr.toArray(new RuntimeRule[rr.size()]);
+			this.possibleFirstRule[runtimeRule.getRuleNumber()] = result;
+		}
+		return result;
+	}
+	
 	public RuntimeRule[] getPossibleSuperRule(RuntimeRule runtimeRule) {
 		RuntimeRule[] result = this.possibleSuperRule[runtimeRule.getRuleNumber()];
 		if (null == result) {
@@ -153,6 +167,21 @@ public class RuntimeRuleSet {
 		return result;
 	}
 
+	public RuntimeRule[] getPossibleFirstTerminals(RuntimeRule runtimeRule) {
+		RuntimeRule[] result = this.possibleFirstTerminals[runtimeRule.getRuleNumber()];
+		if (null == result) {
+			Set<RuntimeRule> rr = runtimeRule.findTerminalAt(0);
+			for(RuntimeRule r : this.getPossibleFirstSubRule(runtimeRule)) {
+				rr.addAll( r.findTerminalAt(0) );
+			}
+			Set<RuntimeRule> skipTerminal = this.getAllSkipTerminals();
+			rr.addAll( skipTerminal );
+			result = rr.toArray(new RuntimeRule[rr.size()]);
+			this.possibleFirstTerminals[runtimeRule.getRuleNumber()] = result;
+		}
+		return result;
+	}
+	
 	Map<Terminal, RuntimeRule> terminalMap;
 	public RuntimeRule getForTerminal(Terminal terminal) {
 		RuntimeRule rr = this.terminalMap.get(terminal);

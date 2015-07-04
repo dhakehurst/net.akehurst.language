@@ -89,12 +89,14 @@ public abstract class AbstractParseTree implements IParseTree {
 					return true;
 				} else {
 					if (thisRule.getKind() == RuntimeRuleKind.NON_TERMINAL) {
-						List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleSubRule(nextExpectedRule));
+//						List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleSubRule(nextExpectedRule));
+						List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleFirstSubRule(nextExpectedRule));
 						boolean res = possibles.contains(thisRule);
 						return res;
 					} else {
-						List<RuntimeRule> possibles1 = Arrays.asList(runtimeRuleSet.getPossibleSubTerminal(nextExpectedRule));
-						boolean res = possibles1.contains(thisRule);
+//						List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleSubTerminal(nextExpectedRule));
+						List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleFirstTerminals(nextExpectedRule));
+						boolean res = possibles.contains(thisRule);
 						return res;
 					}
 				}

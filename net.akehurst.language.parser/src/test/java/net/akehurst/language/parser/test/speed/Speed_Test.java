@@ -39,25 +39,6 @@ public class Speed_Test extends AbstractParser_Test {
 		return b.get();
 	}
 
-	Grammar abcds_2() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("abcds").choice(new NonTerminal("abcds.group1"), new NonTerminal("abcd"));
-		b.rule("abcds.group1").concatenation(new NonTerminal("abcd"), new NonTerminal("abcds"));
-		b.rule("abcd").concatenation(new NonTerminal("abs"), new NonTerminal("cds"));
-		b.rule("abs").choice(new NonTerminal("abs.group1"), new NonTerminal("ab"));
-		b.rule("abs.group1").concatenation(new NonTerminal("ab"), new NonTerminal("abs"));
-		b.rule("cds").choice(new NonTerminal("cds.group1"), new NonTerminal("cd"));
-		b.rule("cds.group1").concatenation(new NonTerminal("cd"), new NonTerminal("cds"));
-		b.rule("ab").concatenation(new NonTerminal("a"), new NonTerminal("b"));
-		b.rule("cd").concatenation(new NonTerminal("c"), new NonTerminal("d"));
-		b.rule("a").choice(new TerminalLiteral("a"));
-		b.rule("b").choice(new TerminalLiteral("b"));
-		b.rule("c").choice(new TerminalLiteral("c"));
-		b.rule("d").choice(new TerminalLiteral("d"));
-		return b.get();
-	}
-
-	
 	@Test
 	public void abcds_abcds_abcd() {
 		// grammar, goal, input
@@ -147,9 +128,26 @@ public class Speed_Test extends AbstractParser_Test {
 	public void abcds_abcds_abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd() {
 		// grammar, goal, input
 		try {
-			Grammar g = abcds_2();
+			Grammar g = abcds();
 			String goal = "abcds";
 			String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
+			
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+		
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void abcds_abcds_2_x_abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd() {
+		// grammar, goal, input
+		try {
+			Grammar g = abcds();
+			String goal = "abcds";
+			String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
 			
 			
 			IParseTree tree = this.process(g, text, goal);

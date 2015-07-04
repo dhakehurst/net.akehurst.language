@@ -51,6 +51,16 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 		return b.get();
 	}
 	
+	Grammar abs1m1() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("abs").multi(1, -1, new NonTerminal("ab"));
+		b.rule("ab").choice(new NonTerminal("a"), new NonTerminal("b"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		b.rule("b").concatenation(new TerminalLiteral("b"));
+
+		return b.get();
+	}
+	
 	@Test
 	public void as13_as_a() {
 		// grammar, goal, input
@@ -292,4 +302,34 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			// this should occur
 		}
 	}
+
+	@Test
+	public void abs1m1_abs_ababababababab() {
+		// grammar, goal, input
+		try {
+			Grammar g = abs1m1();
+			String goal = "abs";
+			String text = "ababababababababababababababababababababababababababababababababababababababababababababababababab";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("","");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*abs 1, 99}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
+			
+//			ParseTreeBuilder b = this.builder(g, text, goal);;
+//			IBranch expected = 
+//				b.branch("as",
+//					b.branch("a",
+//						b.leaf("a", "a")
+//					)
+//				);
+//			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+
 }

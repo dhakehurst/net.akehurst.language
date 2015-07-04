@@ -285,4 +285,55 @@ public class OGLParser_Test {
 			Assert.fail(e.getMessage());
 		}
 	}
+	
+	@Test
+	public void a2() {
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+			
+			String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
+
+			IParseTree tree = this.process(g, text, "grammarDefinition");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void separatedList_1n() {
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+			
+			String text = "namespace test; grammar A { sepList := ('a' / ',')+; }";
+
+			IParseTree tree = this.process(g, text, "grammarDefinition");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void separatedList_0n() {
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+			
+			String text = "namespace test; grammar A { sepList := ('a' / ',')*; }";
+
+			IParseTree tree = this.process(g, text, "grammarDefinition");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
 }

@@ -1,0 +1,9 @@
+namespace net::akehurst::language::java;
+
+grammar JavaFile {
+	WHITESPACE ?= "\\s+" ;
+	COMMENT ?= "(?s)/\\*.*?\\*/" ;
+
+	file := package declaration ;
+
+}

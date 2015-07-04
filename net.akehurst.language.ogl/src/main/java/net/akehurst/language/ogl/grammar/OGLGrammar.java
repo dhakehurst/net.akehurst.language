@@ -62,11 +62,10 @@ public class OGLGrammar extends Grammar {
 				               new NonTerminal("group"),
 				               new NonTerminal("separatedList")
 						);
-		b.rule("multi").concatenation( new NonTerminal("item"), new NonTerminal("multi.group1") );
-		b.rule("multi.group1").choice(new TerminalLiteral("*"), new TerminalLiteral("+"));
+		b.rule("multi").concatenation( new NonTerminal("item"), new NonTerminal("multiplicity") );
+		b.rule("multiplicity").choice(new TerminalLiteral("*"), new TerminalLiteral("+"));
 		b.rule("group").concatenation( new TerminalLiteral("("), new NonTerminal("choice"), new TerminalLiteral(")") );
-		b.rule("separatedList").concatenation( new TerminalLiteral("("), new NonTerminal("concatination"), new TerminalLiteral("/"), new NonTerminal("LITERAL"), new TerminalLiteral(")"), new NonTerminal("separatedList.group1") );
-		b.rule("separatedList.group1").choice(new TerminalLiteral("*"), new TerminalLiteral("+"));
+		b.rule("separatedList").concatenation( new TerminalLiteral("("), new NonTerminal("concatination"), new TerminalLiteral("/"), new NonTerminal("LITERAL"), new TerminalLiteral(")"), new NonTerminal("multiplicity") );
 		b.rule("nonTerminal").choice(new NonTerminal("IDENTIFIER"));
 		b.rule("qualifiedName").separatedList(1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
 		b.rule("LITERAL").concatenation( new TerminalPattern("\\x27[^\\x27]*\\x27") );
