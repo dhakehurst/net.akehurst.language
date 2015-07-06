@@ -1,3 +1,18 @@
+/**
+ * Copyright (C) 2015 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package net.akehurst.language.parser.converter;
 
 import net.akehurst.language.ogl.semanticModel.Rule;
@@ -28,7 +43,7 @@ public class Rule2RuntimeRule implements Relation<Rule, RuntimeRule>{
 	public void configureLeft2Right(Rule left, RuntimeRule right, Transformer transformer) {
 
 		try {
-			RuntimeRuleItem rrItem = transformer.transformLeft2Right((Class<? extends Relation<RuleItem, RuntimeRuleItem>>)AbstractRuleItem2RuntimeRuleItem.class, left.getRhs());
+			RuntimeRuleItem rrItem = transformer.transformLeft2Right((Class<? extends Relation<RuleItem, RuntimeRuleItem>>) (Class<?>) AbstractRuleItem2RuntimeRuleItem.class, left.getRhs());
 			right.setRhs(rrItem);
 			right.setIsSkipRule(left instanceof SkipRule);
 		} catch (RelationNotFoundException e) {

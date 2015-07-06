@@ -3,9 +3,10 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>net.akehurst.build</groupId>
-		<artifactId>net.akehurst.build.maven.configuration</artifactId>
+		<groupId>net.akehurst.language</groupId>
+		<artifactId>net.akehurst.language.build</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
+		<relativePath>../net.akehurst.language.build</relativePath>
 	</parent>
 
 	<groupId>net.akehurst.language</groupId>
@@ -37,7 +38,7 @@
 		<dependency>
 			<groupId>net.akehurst.transform</groupId>
 			<artifactId>net.akehurst.transform.binary</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.0-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 
