@@ -84,9 +84,9 @@ public class RuntimeRuleItem {
 			case SEPARATED_LIST: {
 				int i = n % 2;
 				result.add( this.getItems()[i] );
-//				if ((this.multiMax==-1 || n <= (this.multiMax-1)) && n >= (this.multiMin-1) ) {
-//					result.add( this.getItems()[1] );
-//				}
+				if ((this.multiMax==-1 || n <= (this.multiMax-1)) && n >= (this.multiMin-1) ) {
+					result.add( this.getItems()[1] );
+				}
 			} break;
 		default:
 			break;

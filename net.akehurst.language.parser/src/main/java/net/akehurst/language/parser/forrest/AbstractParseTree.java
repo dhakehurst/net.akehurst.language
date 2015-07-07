@@ -419,7 +419,8 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	ParseTreeBranch[] growSeparatedList(RuntimeRule target) {
 		try {
-			if (target.getRhsItem(0).getRuleNumber() == this.getRoot().getRuntimeRule().getRuleNumber() ) {
+			if (target.getRhsItem(0).getRuleNumber() == this.getRoot().getRuntimeRule().getRuleNumber() 
+			|| (0 == target.getRhs().getMultiMin() && this.getRoot() instanceof Leaf) ) {
 				ParseTreeBranch newTree = this.growMe(target);
 //				ParseTreeBranch ntB = (ParseTreeBranch)newTree;
 //				ParseTreeBranch newTree2 = new ParseTreeBranch(this.factory, ntB.input, (Branch)ntB.root, ntB.stackedTree, ntB.rule, ntB.nextItemIndex);

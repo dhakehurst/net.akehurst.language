@@ -152,12 +152,14 @@ public class OGLParser_Test {
 	@Test
 	public void g1_emptyRule() {
 		try {
-			Grammar g = g1();
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+
 			String text = "namespace test;" + System.lineSeparator();
 			text += "grammar A {" + System.lineSeparator();
-			text += "  empty : ;";
+			text += " a :=  ;" + System.lineSeparator();
 			text += "}";
-
+			
 			IParseTree tree = this.process(g, text, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
