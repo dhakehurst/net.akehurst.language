@@ -46,6 +46,7 @@ public class Grammar2RuntimeRuleSet implements Relation<Grammar, RuntimeRuleSet>
 	
 	@Override
 	public void configureLeft2Right(Grammar left, RuntimeRuleSet right, Transformer transformer) {
+		Converter converter = (Converter)transformer;
 		List<Rule> rules = left.getAllRule();
 		List<Terminal> terminals = Arrays.asList(left.getAllTerminal().toArray(new Terminal[0]));
 		
@@ -55,6 +56,7 @@ public class Grammar2RuntimeRuleSet implements Relation<Grammar, RuntimeRuleSet>
 			List<? extends RuntimeRule> runtimeRules2 = transformer.transformAllLeft2Right(Terminal2RuntimeRule.class, terminals);
 
 			List<RuntimeRule> rr = new ArrayList<>();
+			rr.add(converter.getFactory().getEmptyRule());
 			rr.addAll(runtimeRules);
 			rr.addAll(runtimeRules2);
 			

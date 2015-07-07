@@ -38,14 +38,12 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 		this.parseTreeFactory = new Factory();
 	}
 	
-	/**
-	 * namespace test ;
-	 * grammar Test {
-	 *   a = 'a' ;
-	 * }
-	 * 
-	 * @return
-	 */
+	Grammar aempty() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("a").concatenation();
+		return b.get();
+	}
+	
 	Grammar a() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("a").concatenation(new TerminalLiteral("a"));
@@ -94,6 +92,33 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 		b.rule("b").concatenation(new TerminalLiteral("b"));
 		b.rule("c").concatenation(new TerminalLiteral("c"));
 		return b.get();
+	}
+	
+	@Test
+	public void aempty_a_empty() {
+		// grammar, goal, input
+		try {
+			Grammar g = aempty();
+			String goal = "a";
+			String text = "";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*a 1, 1}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+					b.branch("a",
+						b.leaf("", "")
+					);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
 	}
 	
 	@Test

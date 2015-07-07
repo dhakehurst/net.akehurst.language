@@ -36,8 +36,14 @@ public class RuntimeRuleSet {
 	 * necessary to know total number of rules up front,
 	 * so it can be used in RuntimeRuleItem
 	 */
-	public RuntimeRuleSet(int totalRuleNumber) {
+	public RuntimeRuleSet(int totalRuleNumber, int emptyRuleNumber) {
 		this.totalRuleNumber = totalRuleNumber;
+		this.emptyRuleNumber = emptyRuleNumber;
+	}
+	
+	int emptyRuleNumber;
+	public RuntimeRule getEmptyRule() {
+		return this.getRuntimeRule(this.emptyRuleNumber);
 	}
 	
 	int totalRuleNumber;

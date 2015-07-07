@@ -217,7 +217,7 @@ public class Forrest {
 	}
 
 	public Forrest growBreadthFirst() throws RuleNotFoundException, ParseTreeException {
-		System.out.println("posibles: "+this.possibleTrees.size());
+//		System.out.println("posibles: "+this.possibleTrees.size());
 		Forrest newForrest = new Forrest(this.goalRRule, this.runtimeRuleSet);
 		newForrest.goalTrees.addAll(this.goalTrees);
 		newForrest.longestMatch = this.longestMatch;

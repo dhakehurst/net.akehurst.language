@@ -27,6 +27,7 @@ import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticModel.Terminal;
+import net.akehurst.language.ogl.semanticModel.TerminalEmpty;
 import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
 import net.akehurst.language.parser.runtime.Branch;
 import net.akehurst.language.parser.runtime.Factory;
@@ -53,7 +54,12 @@ public class ParseTreeBuilder {
 		int start = this.textLength+1;
 		this.textLength+=text.length();
 		int end = this.textLength +1;
-		Terminal terminal = this.grammar.getAllTerminal().stream().filter(t -> t.getPattern().pattern().equals(terminalPattern)).findFirst().get();
+		Terminal terminal = null;
+		if (terminalPattern.isEmpty()) {
+			terminal = new TerminalEmpty();
+		} else {
+			this.grammar.getAllTerminal().stream().filter(t -> t.getPattern().pattern().equals(terminalPattern)).findFirst().get();
+		}
 		RuntimeRule terminalRule = this.factory.getRuntimeRuleSet().getForTerminal(terminal);
 		ILeaf l = this.factory.createLeaf(this.input, start, end, terminalRule);
 		return l;

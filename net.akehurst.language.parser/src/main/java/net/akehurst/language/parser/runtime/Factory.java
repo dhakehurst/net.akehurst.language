@@ -15,20 +15,25 @@
  */
 package net.akehurst.language.parser.runtime;
 
-import java.util.List;
-
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.language.ogl.semanticModel.Terminal;
+import net.akehurst.language.ogl.semanticModel.TerminalEmpty;
 import net.akehurst.language.parser.forrest.Input;
 
 public class Factory {
 
 	public Factory() {
-		
+		this.emptyRule = createRuntimeRule(new TerminalEmpty(), RuntimeRuleKind.TERMINAL);
+		this.emptyRule.setIsSkipRule(false);
 	}
 	
 	RuntimeRuleSet runtimeRuleSet;
+	
+	RuntimeRule emptyRule;
+	public RuntimeRule getEmptyRule() {
+		return this.emptyRule;
+	}
 	
 	int nextRuleNumber;
 	public RuntimeRule createRuntimeRule(Rule grammarRule, RuntimeRuleKind kind) {
@@ -47,7 +52,7 @@ public class Factory {
 	
 	public RuntimeRuleSet createRuntimeRuleSet(int totalRuleNumber) {
 		if (null==this.runtimeRuleSet) {
-			this.runtimeRuleSet = new RuntimeRuleSet(totalRuleNumber);
+			this.runtimeRuleSet = new RuntimeRuleSet(totalRuleNumber, this.getEmptyRule().getRuleNumber());
 		}
 		return this.runtimeRuleSet;
 	}
