@@ -40,14 +40,14 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	
 	Grammar as1() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").separatedList(1, new TerminalLiteral(","), new TerminalLiteral("a"));
+		b.rule("as").separatedList(1, -1, new TerminalLiteral(","), new TerminalLiteral("a"));
 
 		return b.get();
 	}
 	
 	Grammar as2() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").separatedList(1, new TerminalLiteral(","), new NonTerminal("a"));
+		b.rule("as").separatedList(1, -1, new TerminalLiteral(","), new NonTerminal("a"));
 		b.rule("a").concatenation(new TerminalLiteral("a"));
 
 		return b.get();
@@ -56,7 +56,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	Grammar asSP() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.skip("SP").concatination(new TerminalLiteral(" "));
-		b.rule("as").separatedList(1, new TerminalLiteral(","), new NonTerminal("a"));
+		b.rule("as").separatedList(1, -1, new TerminalLiteral(","), new NonTerminal("a"));
 		b.rule("a").concatenation(new TerminalLiteral("a"));
 
 		return b.get();
@@ -65,7 +65,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	Grammar asb() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("asb").concatenation(new NonTerminal("as"), new NonTerminal("b"));
-		b.rule("as").separatedList(1, new TerminalLiteral(","), new NonTerminal("b"));
+		b.rule("as").separatedList(1, -1, new TerminalLiteral(","), new NonTerminal("b"));
 		b.rule("a").concatenation(new TerminalLiteral("a"));
 		b.rule("b").concatenation(new TerminalLiteral("b"));
 

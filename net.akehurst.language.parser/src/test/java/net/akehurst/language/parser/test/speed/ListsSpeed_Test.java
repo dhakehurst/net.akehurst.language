@@ -85,7 +85,7 @@ public class ListsSpeed_Test extends AbstractParser_Test {
 	
 	Grammar as2_sl() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").separatedList(1, new TerminalLiteral(","), new TerminalLiteral("a"));
+		b.rule("as").separatedList(1, -1, new TerminalLiteral(","), new TerminalLiteral("a"));
 		b.rule("a").concatenation(new TerminalLiteral("a"));
 		return b.get();
 	}

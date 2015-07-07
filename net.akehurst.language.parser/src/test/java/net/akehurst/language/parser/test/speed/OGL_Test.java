@@ -49,7 +49,7 @@ public class OGL_Test extends AbstractParser_Test {
 		b.rule("anyRule").choice(new NonTerminal("normalRule"), new NonTerminal("skipRule") );
 		b.rule("skipRule").concatenation( new NonTerminal("IDENTIFIER"), new TerminalLiteral("?="), new NonTerminal("choice"), new TerminalLiteral(";") );
 		b.rule("normalRule").concatenation( new NonTerminal("IDENTIFIER"), new TerminalLiteral(":="), new NonTerminal("choice"), new TerminalLiteral(";") );
-		b.rule("choice").separatedList(1, new TerminalLiteral("|"), new NonTerminal("concatination") );
+		b.rule("choice").separatedList(0, -1, new TerminalLiteral("|"), new NonTerminal("concatination") );
 		b.rule("concatination").multi(1,-1,new NonTerminal("item") );
 		b.rule("item").choice( new NonTerminal("LITERAL"),
 							   new NonTerminal("PATTERN"),
@@ -64,7 +64,7 @@ public class OGL_Test extends AbstractParser_Test {
 		b.rule("separatedList").concatenation( new TerminalLiteral("("), new NonTerminal("concatination"), new TerminalLiteral("/"), new NonTerminal("LITERAL"), new TerminalLiteral(")"), new NonTerminal("separatedList.group1") );
 		b.rule("separatedList.group1").choice(new TerminalLiteral("*"), new TerminalLiteral("+"));
 		b.rule("nonTerminal").choice(new NonTerminal("IDENTIFIER"));
-		b.rule("qualifiedName").separatedList(1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
+		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
 		b.rule("LITERAL").concatenation( new TerminalPattern("\\x27[^\\x27]*\\x27") );
 		b.rule("PATTERN").concatenation( new TerminalPattern("\\x22[^\\x22]*\\x22") );
 		b.rule("IDENTIFIER").concatenation( new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*") );

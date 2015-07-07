@@ -22,7 +22,7 @@ import java.util.Set;
 
 public class SeparatedList extends RuleItem {
 
-	public SeparatedList(int min, TerminalLiteral separator, TangibleItem concatination) {
+	public SeparatedList(int min, int max, TerminalLiteral separator, TangibleItem concatination) {
 		this.min = min;
 		this.separator = separator;
 		this.concatination = concatination;
@@ -38,6 +38,11 @@ public class SeparatedList extends RuleItem {
 	int min;
 	public int getMin() {
 		return this.min;
+	}
+	
+	int max;
+	public int getMax() {
+		return this.max;
 	}
 	
 	TerminalLiteral separator;

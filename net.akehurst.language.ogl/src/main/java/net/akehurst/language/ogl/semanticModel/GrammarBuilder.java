@@ -52,8 +52,8 @@ public class GrammarBuilder {
 			this.rule.setRhs(new Multi(min, max, item));
 		}
 
-		public void separatedList(int min, TerminalLiteral separator, TangibleItem item) {
-			this.rule.setRhs(new SeparatedList(min, separator, item));
+		public void separatedList(int min, int max, TerminalLiteral separator, TangibleItem item) {
+			this.rule.setRhs(new SeparatedList(min, max, separator, item));
 		}
 	}
 
@@ -82,8 +82,8 @@ public class GrammarBuilder {
 			this.rule.setRhs(new Multi(min, max, item));
 		}
 
-		public void separatedList(int min, TerminalLiteral separator, TangibleItem item) {
-			this.rule.setRhs(new SeparatedList(min, separator, item));
+		public void separatedList(int min, int max, TerminalLiteral separator, TangibleItem item) {
+			this.rule.setRhs(new SeparatedList(min, max, separator, item));
 		}
 
 	}

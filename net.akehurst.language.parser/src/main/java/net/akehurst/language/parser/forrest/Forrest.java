@@ -225,7 +225,7 @@ public class Forrest {
 		for (AbstractParseTree tree : this.possibleTrees) {
 //			System.out.println(tree.getIdString());
 			RuntimeRule treeRR = tree.getRoot().getRuntimeRule();
-			RuntimeRule[] possibleSubTerminals = this.runtimeRuleSet.getPossibleSubTerminal(treeRR);
+			RuntimeRule[] possibleSubTerminals = this.runtimeRuleSet.getPossibleSubTerminal(treeRR); //should be possible to be more specific than this!
 
 			if(tree.getIsComplete()) {
 				ArrayList<AbstractParseTree> nts = tree.growHeight(possibleSubTerminals, this.runtimeRuleSet);

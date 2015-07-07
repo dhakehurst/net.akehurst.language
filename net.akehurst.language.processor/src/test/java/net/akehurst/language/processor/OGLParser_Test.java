@@ -149,11 +149,29 @@ public class OGLParser_Test {
 		}
 	}
 	
+	@Test
+	public void g1_emptyRule() {
+		try {
+			Grammar g = g1();
+			String text = "namespace test;" + System.lineSeparator();
+			text += "grammar A {" + System.lineSeparator();
+			text += "  empty : ;";
+			text += "}";
+
+			IParseTree tree = this.process(g, text, "grammarDefinition");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
 	Grammar qualifiedName() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
 		b.skip("WHITESPACE").concatination( new TerminalPattern("\\s+") );
 		
-		b.rule("qualifiedName").separatedList(1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
+		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
 
 		b.rule("IDENTIFIER").concatenation( new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*") );
 		
@@ -217,7 +235,7 @@ public class OGLParser_Test {
 		b.rule("namespace").concatenation( new TerminalLiteral("namespace"), new NonTerminal("qualifiedName"), new TerminalLiteral(";") );
 		b.rule("grammar").concatenation( new TerminalLiteral("grammar"), new NonTerminal("IDENTIFIER"), new TerminalLiteral("{"), new TerminalLiteral("}") );
 
-		b.rule("qualifiedName").separatedList(1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
+		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
 
 		b.rule("IDENTIFIER").concatenation( new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*") );
 		
@@ -254,7 +272,7 @@ public class OGLParser_Test {
 		b.rule("rule").concatenation( new NonTerminal("IDENTIFIER"), new TerminalLiteral("="), new NonTerminal("nonTerminal"), new TerminalLiteral(";"));
 		b.rule("nonTerminal").choice(new NonTerminal("IDENTIFIER"));
 
-		b.rule("qualifiedName").separatedList(1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
+		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
 
 		b.rule("IDENTIFIER").concatenation( new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*") );
 		

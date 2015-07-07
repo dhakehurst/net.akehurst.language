@@ -43,6 +43,39 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 		return b.get();
 	}
 	
+	Grammar aempty() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("a").choice();
+		return b.get();
+	}
+	
+	@Test
+	public void aempty_a_empty() {
+		// grammar, goal, input
+		try {
+			Grammar g = aempty();
+			String goal = "a";
+			String text = "";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*a 1, 1}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+					b.branch("a",
+						b.leaf("", "")
+					);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
 	@Test
 	public void abc_abc_a() {
 		// grammar, goal, input

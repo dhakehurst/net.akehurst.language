@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.parser.converter;
 
+import java.util.Arrays;
 import java.util.List;
 
 import net.akehurst.language.ogl.semanticModel.Choice;
@@ -47,6 +48,11 @@ public class Choice2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleItem<Cho
 		
 		try {
 			List<? extends RuntimeRule> rr = transformer.transformAllLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>)(Class<?>)AbstractTangibleItem2RuntimeRule.class, tis);
+			if (rr.isEmpty()) {
+				//add the EMPTY_RULE
+				Converter converter = (Converter)transformer;
+				rr = Arrays.asList( converter.getFactory().getEmptyRule() );
+			}
 			RuntimeRule[] items = rr.toArray(new RuntimeRule[rr.size()]);
 			
 			right.setItems(items);

@@ -55,6 +55,8 @@ public class SeparatedList2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleI
 			RuntimeRule[] items = new RuntimeRule[]{ rr, rrsep };
 			
 			right.setItems(items);
+			right.setMultiMin(left.getMin());
+			right.setMultiMax(left.getMax());
 		
 		} catch (RelationNotFoundException e) {
 			e.printStackTrace();

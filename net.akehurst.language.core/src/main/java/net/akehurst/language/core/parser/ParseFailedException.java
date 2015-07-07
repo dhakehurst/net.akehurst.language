@@ -17,7 +17,7 @@ package net.akehurst.language.core.parser;
 
 public class ParseFailedException extends Exception {
 	public ParseFailedException(String message, IParseTree longestMatch) {
-		super(message+" ("+(null==longestMatch?0:longestMatch.getRoot().getNumberOfLines())+")");
+		super(message+" ("+(null==longestMatch?0:longestMatch.getRoot().getNumberOfLines()+longestMatch.getRoot().getStart())+")");
 		this.longestMatch = longestMatch;
 	}
 	
