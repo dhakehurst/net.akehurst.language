@@ -94,6 +94,22 @@ public class Branch extends Node implements IBranch {
 		return Arrays.asList(this.children);
 	}
 
+	List<INode> nonSkipChildren_cache;
+	@Override
+	public List<INode> getNonSkipChildren() {
+		if (null==nonSkipChildren_cache) {
+			this.nonSkipChildren_cache = new ArrayList<>();
+			for (INode n:this.getChildren()) {
+				if (n.getIsSkip()) {
+					
+				} else {
+					this.nonSkipChildren_cache.add(n);
+				}
+			}
+		}
+		return this.nonSkipChildren_cache;
+	}
+	
 	@Override
 	public INode getChild(int index) {
 		List<INode> children = this.getChildren();

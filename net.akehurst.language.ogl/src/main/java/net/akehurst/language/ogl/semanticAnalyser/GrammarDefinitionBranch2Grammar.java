@@ -33,8 +33,8 @@ public class GrammarDefinitionBranch2Grammar implements Relation<INode, Grammar>
 		try {
 			IBranch grammarBranch = (IBranch) ((IBranch)left).getChild(1);
 			IBranch rulesBranch = (IBranch) grammarBranch.getChild(3);
-			List<INode> ruleBranches = rulesBranch.getChildren();
-			List<? extends Rule> rules = transformer.transformAllLeft2Right(RuleBranch2Rule.class, ruleBranches);
+			List<INode> ruleBranches = rulesBranch.getNonSkipChildren();
+			List<? extends Rule> rules = transformer.transformAllLeft2Right(AnyRuleNode2Rule.class, ruleBranches);
 			right.setRule((List<Rule>) rules);
 		} catch (RelationNotFoundException e) {
 			throw new RuntimeException("Unable to configure Grammar", e);

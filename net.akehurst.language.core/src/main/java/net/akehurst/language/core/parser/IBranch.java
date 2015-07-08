@@ -24,6 +24,8 @@ public interface IBranch extends INode, IParseTreeVisitable {
 	 */
 	List<INode> getChildren();
 	
+	List<INode> getNonSkipChildren();
+	
 	/**
 	 * this creates a new branch it does not modify current one
 	 *  
