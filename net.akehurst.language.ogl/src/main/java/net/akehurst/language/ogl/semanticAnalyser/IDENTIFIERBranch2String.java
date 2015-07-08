@@ -17,26 +17,27 @@ package net.akehurst.language.ogl.semanticAnalyser;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
+import net.akehurst.language.core.parser.INode;
 import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.Transformer;
 
-public class IDENTIFIERBranch2String implements Relation<IBranch, String>{
+public class IDENTIFIERBranch2String implements Relation<INode, String>{
 
 	@Override
-	public void configureLeft2Right(IBranch arg0, String arg1, Transformer arg2) {
+	public void configureLeft2Right(INode arg0, String arg1, Transformer arg2) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void configureRight2Left(IBranch arg0, String arg1, Transformer arg2) {
+	public void configureRight2Left(INode arg0, String arg1, Transformer arg2) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public String constructLeft2Right(IBranch left, Transformer transformer) {
-		ILeaf leaf = (ILeaf)left.getChildren().get(0);
+	public String constructLeft2Right(INode left, Transformer transformer) {
+		ILeaf leaf = (ILeaf)((IBranch)left).getChildren().get(0);
 		String right = leaf.getMatchedText();
 		return right;
 	}
@@ -48,7 +49,7 @@ public class IDENTIFIERBranch2String implements Relation<IBranch, String>{
 	}
 
 	@Override
-	public boolean isValidForLeft2Right(IBranch left) {
+	public boolean isValidForLeft2Right(INode left) {
 		return left.getName().equals("IDENTIFIER");
 	}
 

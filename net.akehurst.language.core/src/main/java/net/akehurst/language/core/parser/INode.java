@@ -17,6 +17,9 @@ package net.akehurst.language.core.parser;
 
 public interface INode extends IParseTreeVisitable{
 	
+	IBranch getParent();
+	void setParent(IBranch value);
+	
 	INodeType getNodeType() throws ParseTreeException;
 
 	String getName();

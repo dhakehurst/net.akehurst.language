@@ -82,7 +82,7 @@ public class OGL_Java_Test {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();
 
-			String text = this.readFile("src/test/resources/Java1.ebnf", Charset.defaultCharset());
+			String text = this.readFile("src/test/resources/Java1.og", Charset.defaultCharset());
 
 			IParseTree tree = this.process(g, text, "grammarDefinition");
 
@@ -100,7 +100,7 @@ public class OGL_Java_Test {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();
 
-			String text = this.readFile("src/test/resources/Java2.ebnf", Charset.defaultCharset());
+			String text = this.readFile("src/test/resources/Java2.og", Charset.defaultCharset());
 
 			IParseTree tree = this.process(g, text, "grammarDefinition");
 
@@ -118,7 +118,7 @@ public class OGL_Java_Test {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();
 
-			String text = this.readFile("src/test/resources/Java.ebnf", Charset.defaultCharset());
+			String text = this.readFile("src/test/resources/Java.og", Charset.defaultCharset());
 
 			IParseTree tree = this.process(g, text, "grammarDefinition");
 

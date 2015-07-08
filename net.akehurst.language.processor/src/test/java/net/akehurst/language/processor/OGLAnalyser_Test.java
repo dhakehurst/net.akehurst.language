@@ -53,7 +53,7 @@ public class OGLAnalyser_Test {
 		try {
 			String grammar = "namespace test;" + System.lineSeparator();
 			grammar += "grammar A {" + System.lineSeparator();
-			grammar += " a := 'a' ;" + System.lineSeparator();
+			grammar += " a : 'a' ;" + System.lineSeparator();
 			grammar += "}";
 
 

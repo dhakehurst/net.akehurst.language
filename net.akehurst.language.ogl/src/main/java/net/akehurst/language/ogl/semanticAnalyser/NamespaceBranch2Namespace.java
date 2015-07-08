@@ -35,9 +35,9 @@ public class NamespaceBranch2Namespace implements Relation<IBranch, Namespace> {
 	}
 
 	@Override
-	public Namespace constructLeft2Right(IBranch arg0, Transformer arg1) {
-		// TODO Auto-generated method stub
-		return null;
+	public Namespace constructLeft2Right(IBranch left, Transformer arg1) {
+		String qualifiedName = left.getChild(1).getMatchedText();
+		return new Namespace(qualifiedName);
 	}
 
 	@Override
@@ -47,9 +47,9 @@ public class NamespaceBranch2Namespace implements Relation<IBranch, Namespace> {
 	}
 
 	@Override
-	public boolean isValidForLeft2Right(IBranch arg0) {
+	public boolean isValidForLeft2Right(IBranch left) {
 		// TODO Auto-generated method stub
-		return false;
+		return "'namespace'".equals(left.getChild(0).getName());
 	}
 
 	@Override

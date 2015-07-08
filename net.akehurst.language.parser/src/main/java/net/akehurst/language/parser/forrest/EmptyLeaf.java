@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.parser.forrest;
 
+import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
@@ -29,6 +30,14 @@ public class EmptyLeaf implements ILeaf {
 	}
 	
 	int start;
+	
+	IBranch parent;
+	public IBranch getParent() {
+		return parent;
+	}
+	public void setParent(IBranch value) {
+		this.parent = value;
+	}
 	
 	@Override
 	public boolean getIsEmpty() {

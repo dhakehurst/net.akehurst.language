@@ -14,4 +14,73 @@
 
 	<packaging>jar</packaging>
 
+
+	<dependencies>
+
+		<dependency>
+			<groupId>net.akehurst.language</groupId>
+			<artifactId>net.akehurst.language.core</artifactId>
+			<version>1.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>net.akehurst.language</groupId>
+			<artifactId>net.akehurst.language.ogl</artifactId>
+			<version>1.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>net.akehurst.language</groupId>
+			<artifactId>net.akehurst.language.parser</artifactId>
+			<version>1.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>net.akehurst.language</groupId>
+			<artifactId>net.akehurst.language.processor</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>net.akehurst.transform</groupId>
+			<artifactId>net.akehurst.transform.binary</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.antlr</groupId>
+			<artifactId>antlr4-runtime</artifactId>
+			<version>4.5</version>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.antlr</groupId>
+				<artifactId>antlr4-maven-plugin</artifactId>
+				<version>4.5</version>
+				<executions>
+					<execution>
+						<id>antlr</id>
+						<phase>generate-test-sources</phase>
+						<goals>
+							<goal>antlr4</goal>
+						</goals>
+						<configuration>
+							<sourceDirectory>src/test/antlr4</sourceDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+
+	</build>
+
 </project>

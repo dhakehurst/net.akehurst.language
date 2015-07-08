@@ -157,7 +157,7 @@ public class OGLParser_Test {
 
 			String text = "namespace test;" + System.lineSeparator();
 			text += "grammar A {" + System.lineSeparator();
-			text += " a :=  ;" + System.lineSeparator();
+			text += " a :  ;" + System.lineSeparator();
 			text += "}";
 			
 			IParseTree tree = this.process(g, text, "grammarDefinition");
@@ -308,8 +308,8 @@ public class OGLParser_Test {
 			
 			String text = "namespace test;" + System.lineSeparator();
 			text += "grammar A {" + System.lineSeparator();
-			text += " SP ?= ' ' ;" + System.lineSeparator();
-			text += " a := 'a' ;" + System.lineSeparator();
+			text += " skip SP : ' ' ;" + System.lineSeparator();
+			text += " a : 'a' ;" + System.lineSeparator();
 			text += "}";
 
 			IParseTree tree = this.process(g, text, "grammarDefinition");
@@ -327,7 +327,7 @@ public class OGLParser_Test {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();
 			
-			String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
+			String text = "namespace test; grammar A { skip SP : ' ' ; a : 'a' ; }";
 
 			IParseTree tree = this.process(g, text, "grammarDefinition");
 
@@ -344,7 +344,7 @@ public class OGLParser_Test {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();
 			
-			String text = "namespace test; grammar A { sepList := ('a' / ',')+; }";
+			String text = "namespace test; grammar A { sepList : ('a' / ',')+; }";
 
 			IParseTree tree = this.process(g, text, "grammarDefinition");
 
@@ -361,7 +361,7 @@ public class OGLParser_Test {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();
 			
-			String text = "namespace test; grammar A { sepList := ('a' / ',')*; }";
+			String text = "namespace test; grammar A { sepList : ('a' / ',')*; }";
 
 			IParseTree tree = this.process(g, text, "grammarDefinition");
 

@@ -15,42 +15,53 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
+import java.util.List;
+
 import net.akehurst.language.core.parser.IBranch;
+import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.Namespace;
+import net.akehurst.language.ogl.semanticModel.Rule;
 import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class GrammarDefinitionBranch2Grammar implements Relation<IBranch, Grammar>{
+public class GrammarDefinitionBranch2Grammar implements Relation<INode, Grammar> {
 
 	@Override
-	public void configureLeft2Right(IBranch arg0, Grammar arg1, Transformer arg2) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void configureRight2Left(IBranch arg0, Grammar arg1, Transformer arg2) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public Grammar constructLeft2Right(IBranch left, Transformer transformer) {
+	public void configureLeft2Right(INode left, Grammar right, Transformer transformer) {
 		try {
-			IBranch namespaceBranch = (IBranch)left.getChild(0);
-			IBranch grammarBranch = (IBranch)left.getChild(1);
-			IBranch grammarNameBranch = (IBranch)grammarBranch.getChild(1);
-			
+			IBranch grammarBranch = (IBranch) ((IBranch)left).getChild(1);
+			IBranch rulesBranch = (IBranch) grammarBranch.getChild(3);
+			List<INode> ruleBranches = rulesBranch.getChildren();
+			List<? extends Rule> rules = transformer.transformAllLeft2Right(RuleBranch2Rule.class, ruleBranches);
+			right.setRule((List<Rule>) rules);
+		} catch (RelationNotFoundException e) {
+			throw new RuntimeException("Unable to configure Grammar", e);
+		}
+	}
+
+	@Override
+	public void configureRight2Left(INode arg0, Grammar arg1, Transformer arg2) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Grammar constructLeft2Right(INode left, Transformer transformer) {
+		try {
+			IBranch namespaceBranch = (IBranch) ((IBranch)left).getChild(0);
+			IBranch grammarBranch = (IBranch) ((IBranch)left).getChild(1);
+			IBranch grammarNameBranch = (IBranch) grammarBranch.getChild(1);
+
 			Namespace namespace = transformer.transformLeft2Right(NamespaceBranch2Namespace.class, namespaceBranch);
 			String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, grammarNameBranch);
 
 			Grammar right = new Grammar(namespace, name);
-			
+
 			return right;
 		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Unable to complete semantic analysis", e);
+			throw new RuntimeException("Unable to construct Grammar", e);
 		}
 	}
 
@@ -61,7 +72,7 @@ public class GrammarDefinitionBranch2Grammar implements Relation<IBranch, Gramma
 	}
 
 	@Override
-	public boolean isValidForLeft2Right(IBranch left) {
+	public boolean isValidForLeft2Right(INode left) {
 		return left.getName().equals("grammarDefinition");
 	}
 

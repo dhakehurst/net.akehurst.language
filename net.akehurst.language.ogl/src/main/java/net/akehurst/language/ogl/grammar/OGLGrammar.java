@@ -68,7 +68,7 @@ public class OGLGrammar extends Grammar {
 		b.rule("grammar").concatenation( new TerminalLiteral("grammar"), new NonTerminal("IDENTIFIER"), new TerminalLiteral("{"), new NonTerminal("rules"), new TerminalLiteral("}") );
 		b.rule("rules").multi(1,-1,new NonTerminal("anyRule") );
 		b.rule("anyRule").choice(new NonTerminal("normalRule"), new NonTerminal("skipRule") );
-		b.rule("skipRule").concatenation( new NonTerminal("IDENTIFIER"), new TerminalLiteral("?="), new NonTerminal("choice"), new TerminalLiteral(";") );
+		b.rule("skipRule").concatenation( new TerminalLiteral("skip"), new NonTerminal("IDENTIFIER"), new TerminalLiteral(":"), new NonTerminal("choice"), new TerminalLiteral(";") );
 		b.rule("normalRule").concatenation( new NonTerminal("IDENTIFIER"), new TerminalLiteral(":"), new NonTerminal("choice"), new TerminalLiteral(";") );
 		b.rule("choice").separatedList(0, -1, new TerminalLiteral("|"), new NonTerminal("concatination") );
 		b.rule("concatination").multi(1,-1,new NonTerminal("item") );

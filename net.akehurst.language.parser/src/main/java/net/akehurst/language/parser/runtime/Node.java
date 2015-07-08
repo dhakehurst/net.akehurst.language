@@ -18,6 +18,7 @@ package net.akehurst.language.parser.runtime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.ParseTreeException;
@@ -27,6 +28,14 @@ public class Node implements INode {
 
 	public Node(final RuntimeRule runtimeRule) {
 		this.runtimeRule = runtimeRule;
+	}
+	
+	IBranch parent;
+	public IBranch getParent() {
+		return parent;
+	}
+	public void setParent(IBranch value) {
+		this.parent = value;
 	}
 	
 	RuntimeRule runtimeRule;

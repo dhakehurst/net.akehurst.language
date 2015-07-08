@@ -15,9 +15,11 @@
  */
 package net.akehurst.language.core;
 
+import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.lexicalAnalyser.ILexicalAnalyser;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParser;
+import net.akehurst.language.core.parser.ParseFailedException;
 
 public interface ILanguageProcessor {
 
@@ -26,4 +28,6 @@ public interface ILanguageProcessor {
 	IParser getParser();
 
 	INodeType getDefaultGoal();
+	
+	<T> T process(String grammarText, Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception;
 }

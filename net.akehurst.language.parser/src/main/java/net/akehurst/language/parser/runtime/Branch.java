@@ -101,14 +101,16 @@ public class Branch extends Node implements IBranch {
 		//get first non skip child
 		int child=0;
 		INode n = children.get(child);
-		while(n.getIsSkip()) {
+		while(n.getIsSkip() && child < (children.size()-1)) {
 			++child;
 			n = children.get(child);
 		}
-		
+		if (child >= children.size()) {
+			return null;
+		}
 		int count=0;
 
-		while(count < index) {
+		while(count < index && child < (children.size()-1)) {
 			++child;
 			n = children.get(child);
 			while(n.getIsSkip()) {
@@ -118,7 +120,11 @@ public class Branch extends Node implements IBranch {
 			++count;
 		}
 
-		return n;
+		if (child < children.size()) {
+			return n;
+		} else {
+			return null;
+		}
 	}
 	
 //	@Override

@@ -15,11 +15,17 @@
  */
 package net.akehurst.language.processor;
 
+import org.junit.Assert;
+
 import net.akehurst.language.core.ILanguageProcessor;
 import net.akehurst.language.core.analyser.ISemanticAnalyser;
+import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.lexicalAnalyser.ILexicalAnalyser;
 import net.akehurst.language.core.parser.INodeType;
+import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
+import net.akehurst.language.core.parser.ParseFailedException;
+import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.ogl.semanticModel.Grammar;
 import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
 import net.akehurst.language.parser.ScannerLessParser;
@@ -76,5 +82,17 @@ public class LanguageProcessor implements ILanguageProcessor {
 		return this.semanticAnalyser;
 	}
 
+	public <T> T process(String grammarText, Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
+		try {
+			INodeType goal = this.getGrammar().findRule("grammarDefinition").getNodeType();
+			IParseTree tree = this.getParser().parse(goal, grammarText);
+			T t = this.getSemanticAnalyser().analyse(targetType, tree);
 
+			return t;
+		} catch (RuleNotFoundException e) {
+			throw new ParseFailedException(e.getMessage(), null);
+		} catch (ParseTreeException e) {
+			throw new ParseFailedException(e.getMessage(), null);
+		}
+	}
 }

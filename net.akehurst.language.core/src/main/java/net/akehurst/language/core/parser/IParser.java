@@ -17,8 +17,16 @@ package net.akehurst.language.core.parser;
 
 import java.util.List;
 
+
 public interface IParser {
 
+	/**
+	 * It is not necessary to call this method,
+	 * but doing so will speed up future calls to parse
+	 * as it will build the internal caches for the parser, 
+	 */
+	void build(INodeType goalNodeType);
+	
 	List<INodeType> getNodeTypes();
 
 	IParseTree parse(INodeType goal, CharSequence text) throws ParseFailedException, ParseTreeException;
