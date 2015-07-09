@@ -45,7 +45,19 @@ public class GrammarBuilder {
 		}
 
 		public void choice(TangibleItem... alternative) {
-			this.rule.setRhs(new Choice(alternative));
+			Concatenation[] alternativeConcats = new Concatenation[alternative.length];
+			for(int i=0;i<alternative.length;++i) {
+				alternativeConcats[i] = new Concatenation(alternative[i]);
+			}
+			this.rule.setRhs(new Choice(alternativeConcats));
+		}
+		
+		public void priorityChoice(TangibleItem... alternative) {
+			Concatenation[] alternativeConcats = new Concatenation[alternative.length];
+			for(int i=0;i<alternative.length;++i) {
+				alternativeConcats[i] = new Concatenation(alternative[i]);
+			}
+			this.rule.setRhs(new PriorityChoice(alternativeConcats));
 		}
 
 		public void multi(int min, int max, TangibleItem item) {
@@ -74,7 +86,7 @@ public class GrammarBuilder {
 			this.rule.setRhs(new Concatenation(sequence));
 		}
 
-		public void choice(TangibleItem... alternative) {
+		public void choice(Concatenation... alternative) {
 			this.rule.setRhs(new Choice(alternative));
 		}
 

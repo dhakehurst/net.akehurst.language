@@ -21,9 +21,9 @@ import java.util.List;
 import java.util.Set;
 
 
-public class Choice extends RuleItem {
+public class PriorityChoice extends RuleItem {
 	
-	public Choice(Concatenation... alternative) {
+	public PriorityChoice(Concatenation... alternative) {
 		this.alternative = Arrays.asList(alternative);
 	}
 	
@@ -104,8 +104,8 @@ public class Choice extends RuleItem {
 	
 	@Override
 	public boolean equals(Object arg) {
-		if (arg instanceof Choice) {
-			Choice other = (Choice)arg;
+		if (arg instanceof PriorityChoice) {
+			PriorityChoice other = (PriorityChoice)arg;
 			return this.toString().equals(other.toString());
 		} else {
 			return false;

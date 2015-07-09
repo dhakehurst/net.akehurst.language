@@ -18,7 +18,7 @@ package net.akehurst.language.ogl.abstractSyntax;
 import java.util.Arrays;
 import java.util.List;
 
-public class Grammar {
+public class GrammarZ {
 
 	public Grammar(Namespace namespace, String name, Grammar[] extends_, Rule... rule) {
 		this.namespace = namespace;

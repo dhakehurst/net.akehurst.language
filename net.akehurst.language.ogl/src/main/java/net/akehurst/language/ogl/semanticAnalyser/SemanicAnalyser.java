@@ -27,16 +27,21 @@ import net.akehurst.transform.binary.Relation;
 public class SemanicAnalyser extends AbstractTransformer implements ISemanticAnalyser {
 
 	public SemanicAnalyser() {
+		super.registerRule((Class<? extends Relation<?,?>>)AbstractNode2TangibleItem.class);
+		super.registerRule((Class<? extends Relation<?,?>>)AbstractNode2Terminal.class);
+		super.registerRule((Class<? extends Relation<?,?>>)AbstractRhsNode2RuleItem.class);
+		super.registerRule(AnyRuleNode2Rule.class);
+		super.registerRule(ChoceNode2Choice.class);
 		super.registerRule(GrammarDefinitionBranch2Grammar.class);
 		super.registerRule(IDENTIFIERBranch2String.class);
+		super.registerRule(ItemNode2TangibleItem.class);
 		super.registerRule(NamespaceBranch2Namespace.class);
+		super.registerRule(Node2Concatenation.class);
+		super.registerRule(Node2NonTerminal.class);
 		super.registerRule(NormalRuleNode2Rule.class);
 		super.registerRule(SkipRuleNode2SkipRule.class);
-		super.registerRule(AnyRuleNode2Rule.class);
 		super.registerRule(TerminalLiteralNode2Terminal.class);
 		super.registerRule(TerminalPatternNode2Terminal.class);
-		super.registerRule((Class<? extends Relation<?,?>>)RhsNode2RuleItem.class);
-		super.registerRule(ChoceNode2Choice.class);
 	}
 	
 	

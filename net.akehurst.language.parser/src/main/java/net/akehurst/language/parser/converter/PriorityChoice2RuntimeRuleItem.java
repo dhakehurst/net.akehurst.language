@@ -21,6 +21,7 @@ import java.util.List;
 
 import net.akehurst.language.ogl.semanticModel.Choice;
 import net.akehurst.language.ogl.semanticModel.Concatenation;
+import net.akehurst.language.ogl.semanticModel.PriorityChoice;
 import net.akehurst.language.ogl.semanticModel.TangibleItem;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleItem;
@@ -29,15 +30,15 @@ import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class Choice2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleItem<Choice> {
+public class PriorityChoice2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleItem<PriorityChoice> {
 
 	@Override
-	public boolean isValidForLeft2Right(Choice arg0) {
+	public boolean isValidForLeft2Right(PriorityChoice left) {
 		return true;
 	}
 	
 	@Override
-	public RuntimeRuleItem constructLeft2Right(Choice left, Transformer transformer) {
+	public RuntimeRuleItem constructLeft2Right(PriorityChoice left, Transformer transformer) {
 		Converter converter = (Converter)transformer;
 		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
 		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, maxRuleRumber);
@@ -45,7 +46,7 @@ public class Choice2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleItem<Cho
 	}
 	
 	@Override
-	public void configureLeft2Right(Choice left, RuntimeRuleItem right, Transformer transformer) {
+	public void configureLeft2Right(PriorityChoice left, RuntimeRuleItem right, Transformer transformer) {
 		try {
 			List<TangibleItem> tangibleAlternatives = new ArrayList<>();
 			for(Concatenation concat: left.getAlternative()) {
@@ -72,13 +73,13 @@ public class Choice2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleItem<Cho
 	}
 
 	@Override
-	public void configureRight2Left(Choice arg0, RuntimeRuleItem arg1, Transformer arg2) {
+	public void configureRight2Left(PriorityChoice arg0, RuntimeRuleItem arg1, Transformer arg2) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public Choice constructRight2Left(RuntimeRuleItem arg0, Transformer arg1) {
+	public PriorityChoice constructRight2Left(RuntimeRuleItem arg0, Transformer arg1) {
 		// TODO Auto-generated method stub
 		return null;
 	}

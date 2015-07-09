@@ -45,9 +45,9 @@ public class NormalRuleNode2Rule implements Relation<INode, Rule> {
 	@Override
 	public void configureLeft2Right(INode left, Rule right, Transformer transformer) {
 		try {
-			INode rhsNode = ((IBranch) left).getChild(0);
+			INode rhsNode = ((IBranch) left).getChild(2);
 			RuleItem ruleItem = transformer
-					.transformLeft2Right((Class<Relation<INode, RuleItem>>) (Class<?>) RhsNode2RuleItem.class, rhsNode);
+					.transformLeft2Right((Class<Relation<INode, RuleItem>>) (Class<?>) AbstractRhsNode2RuleItem.class, rhsNode);
 			right.setRhs(ruleItem);
 		} catch (RelationNotFoundException e) {
 			throw new RuntimeException("Unable to configure Grammar", e);

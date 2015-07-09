@@ -29,6 +29,7 @@ public class Converter extends AbstractTransformer {
 		this.registerRule(Rule2RuntimeRule.class);
 		this.registerRule((Class<? extends Relation<?,?>>) (Class<?>) AbstractRuleItem2RuntimeRuleItem.class);
 		this.registerRule(Choice2RuntimeRuleItem.class);
+		this.registerRule(PriorityChoice2RuntimeRuleItem.class);
 		this.registerRule(Concatenation2RuntimeRuleItem.class);
 		this.registerRule(Multi2RuntimeRuleItem.class);
 		this.registerRule(SeparatedList2RuntimeRuleItem.class);

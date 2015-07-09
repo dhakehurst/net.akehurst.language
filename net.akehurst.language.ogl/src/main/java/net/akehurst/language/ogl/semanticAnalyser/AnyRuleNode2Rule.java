@@ -24,11 +24,8 @@ public class AnyRuleNode2Rule implements Relation<INode, Rule> {
 	public Rule constructLeft2Right(INode left, Transformer transformer) {
 		try {
 			INode rule = ((IBranch) left).getChild(1);
-//			if ("normalRule".equals(rule.getName())) {
-				return transformer.transformLeft2Right(NormalRuleNode2Rule.class, rule);
-//			} else {
-//				return null;
-//			}
+			Rule right = transformer.transformLeft2Right(NormalRuleNode2Rule.class, rule);
+			return right;
 		} catch (RelationNotFoundException e) {
 			throw new RuntimeException("Unable to configure Grammar", e);
 		}

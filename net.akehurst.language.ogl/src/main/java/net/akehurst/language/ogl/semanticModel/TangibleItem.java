@@ -17,7 +17,7 @@ package net.akehurst.language.ogl.semanticModel;
 
 import net.akehurst.language.core.parser.INodeType;
 
-public abstract class TangibleItem extends ConcatinationItem {
+public abstract class TangibleItem extends RuleItem {
 
 	@Override
 	public void setOwningRule(Rule value) {
