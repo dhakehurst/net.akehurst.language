@@ -20,9 +20,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import net.akehurst.language.ogl.semanticModel.Grammar;
-import net.akehurst.language.ogl.semanticModel.Rule;
-import net.akehurst.language.ogl.semanticModel.Terminal;
+import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.Rule;
+import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleSet;
 import net.akehurst.transform.binary.Relation;
@@ -59,6 +59,7 @@ public class Grammar2RuntimeRuleSet implements Relation<Grammar, RuntimeRuleSet>
 			rr.add(converter.getFactory().getEmptyRule());
 			rr.addAll(runtimeRules);
 			rr.addAll(runtimeRules2);
+			rr.addAll(converter.virtualRule_cache);
 			
 			right.setRuntimeRules(rr);
 			

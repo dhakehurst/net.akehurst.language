@@ -18,7 +18,7 @@ package net.akehurst.language.ogl.semanticAnalyser;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.Transformer;
 

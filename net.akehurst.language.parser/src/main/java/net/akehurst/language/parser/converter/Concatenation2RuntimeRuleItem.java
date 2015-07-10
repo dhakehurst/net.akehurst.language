@@ -19,8 +19,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import net.akehurst.language.ogl.semanticModel.Concatenation;
-import net.akehurst.language.ogl.semanticModel.TangibleItem;
+import net.akehurst.language.ogl.semanticStructure.Concatenation;
+import net.akehurst.language.ogl.semanticStructure.ConcatinationItem;
+import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.parser.runtime.RuntimeRuleItemKind;
@@ -44,10 +45,10 @@ public class Concatenation2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleI
 	
 	@Override
 	public void configureLeft2Right(Concatenation left, RuntimeRuleItem right, Transformer transformer) {
-		List<TangibleItem> tis = left.getItem();
+		List<ConcatinationItem> tis = left.getItem();
 		
 		try {
-			List<? extends RuntimeRule> rr = transformer.transformAllLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>)(Class<?>)AbstractTangibleItem2RuntimeRule.class, tis);
+			List<? extends RuntimeRule> rr = transformer.transformAllLeft2Right((Class<? extends Relation<ConcatinationItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, tis);
 			if (rr.isEmpty()) {
 				//add the EMPTY_RULE
 				Converter converter = (Converter)transformer;

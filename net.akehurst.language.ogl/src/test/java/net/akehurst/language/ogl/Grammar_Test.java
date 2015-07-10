@@ -15,13 +15,13 @@
  */
 package net.akehurst.language.ogl;
 
-import net.akehurst.language.ogl.semanticModel.Grammar;
-import net.akehurst.language.ogl.semanticModel.GrammarBuilder;
-import net.akehurst.language.ogl.semanticModel.Namespace;
-import net.akehurst.language.ogl.semanticModel.NonTerminal;
-import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
-
 import org.junit.Test;
+
+import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
+import net.akehurst.language.ogl.semanticStructure.Namespace;
+import net.akehurst.language.ogl.semanticStructure.NonTerminal;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
 public class Grammar_Test {
 

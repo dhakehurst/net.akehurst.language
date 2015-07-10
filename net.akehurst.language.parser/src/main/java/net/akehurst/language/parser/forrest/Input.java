@@ -23,8 +23,8 @@ import java.util.regex.Matcher;
 
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INodeType;
-import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
-import net.akehurst.language.ogl.semanticModel.Terminal;
+import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
+import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.language.parser.runtime.Factory;
 import net.akehurst.language.parser.runtime.Leaf;
 import net.akehurst.language.parser.runtime.RuntimeRule;

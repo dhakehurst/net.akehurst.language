@@ -125,4 +125,13 @@ public class RuntimeRuleItem {
 		this.multiMax = value;
 	}
 
+	
+	@Override
+	public String toString() {
+		String s = "";
+		for(RuntimeRule r: this.getItems()) {
+			s+=r.getRuleNumber() + " ";
+		}
+		return s;
+	}
 }

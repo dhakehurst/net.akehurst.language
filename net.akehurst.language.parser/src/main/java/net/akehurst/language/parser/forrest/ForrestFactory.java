@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
+import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
 import net.akehurst.language.parser.runtime.Branch;
 import net.akehurst.language.parser.runtime.Factory;
 import net.akehurst.language.parser.runtime.Leaf;

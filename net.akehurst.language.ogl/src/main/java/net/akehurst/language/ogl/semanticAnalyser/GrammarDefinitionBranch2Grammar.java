@@ -19,9 +19,9 @@ import java.util.List;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.ogl.semanticModel.Grammar;
-import net.akehurst.language.ogl.semanticModel.Namespace;
-import net.akehurst.language.ogl.semanticModel.Rule;
+import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.Namespace;
+import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;

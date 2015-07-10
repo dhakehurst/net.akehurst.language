@@ -18,8 +18,8 @@ package net.akehurst.language.parser.runtime;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.akehurst.language.ogl.semanticModel.Rule;
-import net.akehurst.language.ogl.semanticModel.Terminal;
+import net.akehurst.language.ogl.semanticStructure.Rule;
+import net.akehurst.language.ogl.semanticStructure.Terminal;
 
 public class RuntimeRule {
 
@@ -229,7 +229,7 @@ public class RuntimeRule {
 	public String toString() {
 		if (null == this.toString_cache) {
 			if (RuntimeRuleKind.NON_TERMINAL == this.getKind()) {
-				this.toString_cache = this.getGrammarRule().toString();
+				this.toString_cache =  this.getRuleNumber() + " [" + this.getGrammarRule().getName() + "] : " + this.getRhs() + " ["+this.getGrammarRule().toString()+"]";
 			} else {
 				this.toString_cache = this.getTerminal().toString();
 			}

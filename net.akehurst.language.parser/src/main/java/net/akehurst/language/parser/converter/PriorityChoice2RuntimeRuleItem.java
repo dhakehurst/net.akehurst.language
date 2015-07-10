@@ -19,10 +19,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import net.akehurst.language.ogl.semanticModel.Choice;
-import net.akehurst.language.ogl.semanticModel.Concatenation;
-import net.akehurst.language.ogl.semanticModel.PriorityChoice;
-import net.akehurst.language.ogl.semanticModel.TangibleItem;
+import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
+import net.akehurst.language.ogl.semanticStructure.Concatenation;
+import net.akehurst.language.ogl.semanticStructure.ConcatinationItem;
+import net.akehurst.language.ogl.semanticStructure.ChoicePriority;
+import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.parser.runtime.RuntimeRuleItemKind;
@@ -30,15 +31,15 @@ import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class PriorityChoice2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleItem<PriorityChoice> {
+public class PriorityChoice2RuntimeRuleItem extends AbstractChoice2RuntimeRuleItem<ChoicePriority> {
 
 	@Override
-	public boolean isValidForLeft2Right(PriorityChoice left) {
+	public boolean isValidForLeft2Right(ChoicePriority left) {
 		return true;
 	}
 	
 	@Override
-	public RuntimeRuleItem constructLeft2Right(PriorityChoice left, Transformer transformer) {
+	public RuntimeRuleItem constructLeft2Right(ChoicePriority left, Transformer transformer) {
 		Converter converter = (Converter)transformer;
 		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
 		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, maxRuleRumber);
@@ -46,9 +47,9 @@ public class PriorityChoice2RuntimeRuleItem extends AbstractRuleItem2RuntimeRule
 	}
 	
 	@Override
-	public void configureLeft2Right(PriorityChoice left, RuntimeRuleItem right, Transformer transformer) {
+	public void configureLeft2Right(ChoicePriority left, RuntimeRuleItem right, Transformer transformer) {
 		try {
-			List<TangibleItem> tangibleAlternatives = new ArrayList<>();
+			List<ConcatinationItem> tangibleAlternatives = new ArrayList<>();
 			for(Concatenation concat: left.getAlternative()) {
 				if (concat.getItem().size() > 1) {
 					throw new UnsupportedOperationException("concatinations in choice not yet supported");
@@ -57,7 +58,7 @@ public class PriorityChoice2RuntimeRuleItem extends AbstractRuleItem2RuntimeRule
 				}
 			}
 			
-			List<? extends RuntimeRule> rr = transformer.transformAllLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>)(Class<?>)AbstractTangibleItem2RuntimeRule.class, tangibleAlternatives);
+			List<? extends RuntimeRule> rr = transformer.transformAllLeft2Right((Class<? extends Relation<ConcatinationItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, tangibleAlternatives);
 			if (rr.isEmpty()) {
 				//add the EMPTY_RULE
 				Converter converter = (Converter)transformer;
@@ -73,13 +74,13 @@ public class PriorityChoice2RuntimeRuleItem extends AbstractRuleItem2RuntimeRule
 	}
 
 	@Override
-	public void configureRight2Left(PriorityChoice arg0, RuntimeRuleItem arg1, Transformer arg2) {
+	public void configureRight2Left(ChoicePriority arg0, RuntimeRuleItem arg1, Transformer arg2) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public PriorityChoice constructRight2Left(RuntimeRuleItem arg0, Transformer arg1) {
+	public ChoicePriority constructRight2Left(RuntimeRuleItem arg0, Transformer arg1) {
 		// TODO Auto-generated method stub
 		return null;
 	}

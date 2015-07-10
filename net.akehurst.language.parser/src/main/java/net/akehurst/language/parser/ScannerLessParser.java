@@ -28,13 +28,14 @@ import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.ogl.semanticModel.Concatenation;
-import net.akehurst.language.ogl.semanticModel.Grammar;
-import net.akehurst.language.ogl.semanticModel.Namespace;
-import net.akehurst.language.ogl.semanticModel.NonTerminal;
-import net.akehurst.language.ogl.semanticModel.Rule;
-import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
-import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
+import net.akehurst.language.ogl.semanticStructure.Concatenation;
+import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.Namespace;
+import net.akehurst.language.ogl.semanticStructure.NonTerminal;
+import net.akehurst.language.ogl.semanticStructure.Rule;
+import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.parser.converter.Converter;
 import net.akehurst.language.parser.converter.Grammar2RuntimeRuleSet;
 import net.akehurst.language.parser.forrest.AbstractParseTree;
@@ -94,8 +95,15 @@ public class ScannerLessParser implements IParser {
 					"Pseudo");
 			this.pseudoGrammar.setExtends(Arrays.asList(new Grammar[] { this.grammar }));
 			Rule goalRule = new Rule(this.pseudoGrammar, "$goal$");
-			goalRule.setRhs(new Concatenation(new TerminalLiteral(START_SYMBOL),
-					new NonTerminal(goal.getIdentity().asPrimitive()), new TerminalLiteral(FINISH_SYMBOL)));
+			goalRule.setRhs(
+					new ChoiceSimple(
+							new Concatenation(
+									new TerminalLiteral(START_SYMBOL),
+									new NonTerminal(goal.getIdentity().asPrimitive()),
+									new TerminalLiteral(FINISH_SYMBOL)
+							)
+					)
+			);
 			this.pseudoGrammar.getRule().add(goalRule);
 			this.runtimeRuleSet = this.converter.transformLeft2Right(Grammar2RuntimeRuleSet.class, this.pseudoGrammar);
 			int pseudoGoalNumber = this.runtimeRuleSet.getRuleNumber(goalRule.getNodeType());

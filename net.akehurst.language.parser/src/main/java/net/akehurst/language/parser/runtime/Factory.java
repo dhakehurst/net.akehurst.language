@@ -16,9 +16,9 @@
 package net.akehurst.language.parser.runtime;
 
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.ogl.semanticModel.Rule;
-import net.akehurst.language.ogl.semanticModel.Terminal;
-import net.akehurst.language.ogl.semanticModel.TerminalEmpty;
+import net.akehurst.language.ogl.semanticStructure.Rule;
+import net.akehurst.language.ogl.semanticStructure.Terminal;
+import net.akehurst.language.ogl.semanticStructure.TerminalEmpty;
 import net.akehurst.language.parser.forrest.Input;
 
 public class Factory {

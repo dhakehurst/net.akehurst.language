@@ -15,12 +15,12 @@
  */
 package net.akehurst.language.parser.converter;
 
-import net.akehurst.language.ogl.semanticModel.Terminal;
+import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleKind;
 import net.akehurst.transform.binary.Transformer;
 
-public class Terminal2RuntimeRule extends AbstractTangibleItem2RuntimeRule<Terminal> {
+public class Terminal2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<Terminal> {
 
 	@Override
 	public boolean isValidForLeft2Right(Terminal arg0) {

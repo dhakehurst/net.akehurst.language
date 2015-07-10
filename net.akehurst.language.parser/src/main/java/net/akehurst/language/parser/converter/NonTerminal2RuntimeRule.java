@@ -15,13 +15,13 @@
  */
 package net.akehurst.language.parser.converter;
 
-import net.akehurst.language.ogl.semanticModel.NonTerminal;
-import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
+import net.akehurst.language.ogl.semanticStructure.NonTerminal;
+import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleKind;
 import net.akehurst.transform.binary.Transformer;
 
-public class NonTerminal2RuntimeRule extends AbstractTangibleItem2RuntimeRule<NonTerminal> {
+public class NonTerminal2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<NonTerminal> {
 
 	@Override
 	public boolean isValidForLeft2Right(NonTerminal arg0) {

@@ -22,7 +22,7 @@ import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
+import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
 import net.akehurst.language.parser.ToStringVisitor;
 import net.akehurst.language.parser.forrest.Input;
 

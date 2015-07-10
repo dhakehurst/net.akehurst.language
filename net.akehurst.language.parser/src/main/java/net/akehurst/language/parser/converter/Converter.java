@@ -16,7 +16,17 @@
 package net.akehurst.language.parser.converter;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
+import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
+import net.akehurst.language.ogl.semanticStructure.Concatenation;
+import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.Multi;
+import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.parser.runtime.Factory;
+import net.akehurst.language.parser.runtime.RuntimeRule;
+import net.akehurst.language.parser.runtime.RuntimeRuleKind;
 import net.akehurst.transform.binary.AbstractTransformer;
 import net.akehurst.transform.binary.Relation;
 
@@ -24,17 +34,24 @@ public class Converter extends AbstractTransformer {
 
 	public Converter(Factory factory) {
 		this.factory = factory;
+		this.virtualRule_cache = new ArrayList<>();
 		
+		this.registerRule((Class<? extends Relation<?,?>>) (Class<?>) AbstractChoice2RuntimeRuleItem.class);
+		this.registerRule((Class<? extends Relation<?,?>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class);
+		this.registerRule(AbstractSimpleItem2RuntimeRule.class);
+		this.registerRule(ChoiceEmpty2RuntimeRuleItem.class);
+		this.registerRule(ChoiceMultiple2RuntimeRuleItem.class);
+		this.registerRule(ChoiceSingleConcatenation2RuntimeRuleItem.class);
+		this.registerRule(ChoiceSingleOneMulti.class);
+		this.registerRule(Concatenation2RuntimeRule.class);
+//		this.registerRule(Concatenation2RuntimeRuleItem.class);
 		this.registerRule(Grammar2RuntimeRuleSet.class);
 		this.registerRule(Rule2RuntimeRule.class);
-		this.registerRule((Class<? extends Relation<?,?>>) (Class<?>) AbstractRuleItem2RuntimeRuleItem.class);
-		this.registerRule(Choice2RuntimeRuleItem.class);
-		this.registerRule(PriorityChoice2RuntimeRuleItem.class);
-		this.registerRule(Concatenation2RuntimeRuleItem.class);
+		this.registerRule(Multi2RuntimeRule.class);
 		this.registerRule(Multi2RuntimeRuleItem.class);
-		this.registerRule(SeparatedList2RuntimeRuleItem.class);
-		this.registerRule((Class<? extends Relation<?, ?>>) (Class<?>) AbstractTangibleItem2RuntimeRule.class);
 		this.registerRule(NonTerminal2RuntimeRule.class);
+		this.registerRule(PriorityChoice2RuntimeRuleItem.class);
+//		this.registerRule(SeparatedList2RuntimeRuleItem.class);
 		this.registerRule(Terminal2RuntimeRule.class);
 	}
 	
@@ -43,4 +60,19 @@ public class Converter extends AbstractTransformer {
 		return this.factory;
 	}
 	
+	List<RuntimeRule> virtualRule_cache;
+	RuntimeRule createVirtualRule(Concatenation concatenation) {
+		Grammar grammar = concatenation.getOwningRule().getGrammar();
+		RuleForGroup r = new RuleForGroup(grammar, new ChoiceSimple(concatenation));
+		RuntimeRule rr = this.getFactory().createRuntimeRule(r, RuntimeRuleKind.NON_TERMINAL);
+		this.virtualRule_cache.add(rr);
+		return rr;
+	}
+	RuntimeRule createVirtualRule(Multi multi) {
+		Grammar grammar = multi.getOwningRule().getGrammar();
+		RuleForGroup r = new RuleForGroup(grammar, new ChoiceSimple(new Concatenation(multi)));
+		RuntimeRule rr = this.getFactory().createRuntimeRule(r, RuntimeRuleKind.NON_TERMINAL);
+		this.virtualRule_cache.add(rr);
+		return rr;
+	}
 }

@@ -15,8 +15,6 @@
  */
 package net.akehurst.language.processor;
 
-import org.junit.Assert;
-
 import net.akehurst.language.core.ILanguageProcessor;
 import net.akehurst.language.core.analyser.ISemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
@@ -26,8 +24,8 @@ import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.ogl.semanticModel.Grammar;
-import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
+import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
 import net.akehurst.language.parser.ScannerLessParser;
 import net.akehurst.language.parser.runtime.Factory;
 

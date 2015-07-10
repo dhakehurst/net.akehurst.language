@@ -15,11 +15,8 @@
  */
 package net.akehurst.language.parser.converter;
 
-import java.util.List;
-
-import net.akehurst.language.ogl.semanticModel.Choice;
-import net.akehurst.language.ogl.semanticModel.Multi;
-import net.akehurst.language.ogl.semanticModel.TangibleItem;
+import net.akehurst.language.ogl.semanticStructure.Multi;
+import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.parser.runtime.RuntimeRuleItemKind;
@@ -27,10 +24,10 @@ import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class Multi2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleItem<Multi> {
+public class Multi2RuntimeRuleItem implements Relation<Multi, RuntimeRuleItem> {
 
 	@Override
-	public boolean isValidForLeft2Right(Multi arg0) {
+	public boolean isValidForLeft2Right(Multi left) {
 		return true;
 	}
 	
@@ -47,7 +44,7 @@ public class Multi2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleItem<Mult
 		TangibleItem ti = left.getItem();
 		
 		try {
-			RuntimeRule rr = transformer.transformLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>)(Class<?>)AbstractTangibleItem2RuntimeRule.class, ti);
+			RuntimeRule rr = transformer.transformLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, ti);
 			RuntimeRule[] items = new RuntimeRule[]{ rr };
 			
 			right.setItems(items);

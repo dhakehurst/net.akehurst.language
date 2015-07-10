@@ -17,11 +17,11 @@ package net.akehurst.language.parser.converter;
 
 import java.util.List;
 
-import net.akehurst.language.ogl.semanticModel.Choice;
-import net.akehurst.language.ogl.semanticModel.Multi;
-import net.akehurst.language.ogl.semanticModel.SeparatedList;
-import net.akehurst.language.ogl.semanticModel.TangibleItem;
-import net.akehurst.language.ogl.semanticModel.Terminal;
+import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
+import net.akehurst.language.ogl.semanticStructure.Multi;
+import net.akehurst.language.ogl.semanticStructure.SeparatedList;
+import net.akehurst.language.ogl.semanticStructure.TangibleItem;
+import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.parser.runtime.RuntimeRuleItemKind;
@@ -50,8 +50,8 @@ public class SeparatedList2RuntimeRuleItem extends AbstractRuleItem2RuntimeRuleI
 		Terminal sep = left.getSeparator();
 		
 		try {
-			RuntimeRule rr = transformer.transformLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>) (Class<?>) AbstractTangibleItem2RuntimeRule.class, ti);
-			RuntimeRule rrsep = transformer.transformLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>) (Class<?>) AbstractTangibleItem2RuntimeRule.class, sep);
+			RuntimeRule rr = transformer.transformLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, ti);
+			RuntimeRule rrsep = transformer.transformLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, sep);
 			RuntimeRule[] items = new RuntimeRule[]{ rr, rrsep };
 			
 			right.setItems(items);

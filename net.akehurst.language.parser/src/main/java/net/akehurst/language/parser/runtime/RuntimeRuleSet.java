@@ -25,10 +25,10 @@ import java.util.Set;
 
 import net.akehurst.language.core.parser.INodeIdentity;
 import net.akehurst.language.core.parser.INodeType;
-import net.akehurst.language.ogl.semanticModel.Rule;
-import net.akehurst.language.ogl.semanticModel.SkipRule;
-import net.akehurst.language.ogl.semanticModel.Terminal;
-import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.Rule;
+import net.akehurst.language.ogl.semanticStructure.SkipRule;
+import net.akehurst.language.ogl.semanticStructure.Terminal;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
 public class RuntimeRuleSet {
 

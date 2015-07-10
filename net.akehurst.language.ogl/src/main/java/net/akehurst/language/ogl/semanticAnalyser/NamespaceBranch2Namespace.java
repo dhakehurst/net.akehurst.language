@@ -16,7 +16,7 @@
 package net.akehurst.language.ogl.semanticAnalyser;
 
 import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.ogl.semanticModel.Namespace;
+import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.Transformer;
 

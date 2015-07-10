@@ -23,12 +23,12 @@ import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
-import net.akehurst.language.ogl.semanticModel.Grammar;
-import net.akehurst.language.ogl.semanticModel.Rule;
-import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
-import net.akehurst.language.ogl.semanticModel.Terminal;
-import net.akehurst.language.ogl.semanticModel.TerminalEmpty;
-import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.Rule;
+import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
+import net.akehurst.language.ogl.semanticStructure.Terminal;
+import net.akehurst.language.ogl.semanticStructure.TerminalEmpty;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.parser.runtime.Branch;
 import net.akehurst.language.parser.runtime.Factory;
 import net.akehurst.language.parser.runtime.Leaf;
@@ -58,7 +58,7 @@ public class ParseTreeBuilder {
 		if (terminalPattern.isEmpty()) {
 			terminal = new TerminalEmpty();
 		} else {
-			this.grammar.getAllTerminal().stream().filter(t -> t.getPattern().pattern().equals(terminalPattern)).findFirst().get();
+			terminal = this.grammar.getAllTerminal().stream().filter(t -> t.getPattern().pattern().equals(terminalPattern)).findFirst().get();
 		}
 		RuntimeRule terminalRule = this.factory.getRuntimeRuleSet().getForTerminal(terminal);
 		ILeaf l = this.factory.createLeaf(this.input, start, end, terminalRule);

@@ -19,7 +19,7 @@ import net.akehurst.language.core.analyser.ISemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
-import net.akehurst.language.ogl.semanticModel.Grammar;
+import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.transform.binary.AbstractTransformer;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Relation;
@@ -27,11 +27,11 @@ import net.akehurst.transform.binary.Relation;
 public class SemanicAnalyser extends AbstractTransformer implements ISemanticAnalyser {
 
 	public SemanicAnalyser() {
-		super.registerRule((Class<? extends Relation<?,?>>)AbstractNode2TangibleItem.class);
-		super.registerRule((Class<? extends Relation<?,?>>)AbstractNode2Terminal.class);
-		super.registerRule((Class<? extends Relation<?,?>>)AbstractRhsNode2RuleItem.class);
+		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractNode2TangibleItem.class);
+		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractNode2Terminal.class);
+		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractRhsNode2RuleItem.class);
 		super.registerRule(AnyRuleNode2Rule.class);
-		super.registerRule(ChoceNode2Choice.class);
+		super.registerRule(Node2Choice.class);
 		super.registerRule(GrammarDefinitionBranch2Grammar.class);
 		super.registerRule(IDENTIFIERBranch2String.class);
 		super.registerRule(ItemNode2TangibleItem.class);

@@ -15,20 +15,20 @@
  */
 package net.akehurst.language.parser.converter;
 
-import net.akehurst.language.ogl.semanticModel.Choice;
-import net.akehurst.language.ogl.semanticModel.Concatenation;
-import net.akehurst.language.ogl.semanticModel.Multi;
-import net.akehurst.language.ogl.semanticModel.RuleItem;
-import net.akehurst.language.ogl.semanticModel.SeparatedList;
+import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
+import net.akehurst.language.ogl.semanticStructure.Concatenation;
+import net.akehurst.language.ogl.semanticStructure.Multi;
+import net.akehurst.language.ogl.semanticStructure.RuleItem;
+import net.akehurst.language.ogl.semanticStructure.SeparatedList;
 import net.akehurst.language.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.parser.runtime.RuntimeRuleItemKind;
 import net.akehurst.transform.binary.Relation;
 
 abstract
-public class AbstractRuleItem2RuntimeRuleItem<L extends RuleItem> implements Relation<L, RuntimeRuleItem> {
+public class AbstractChoice2RuntimeRuleItem<L extends RuleItem> implements Relation<L, RuntimeRuleItem> {
 
 	RuntimeRuleItemKind getRuleItemKind(RuleItem item) {
-		if (item instanceof Choice) {
+		if (item instanceof ChoiceSimple) {
 			return RuntimeRuleItemKind.CHOICE;
 		} else if (item instanceof Concatenation) {
 			return RuntimeRuleItemKind.CONCATENATION;

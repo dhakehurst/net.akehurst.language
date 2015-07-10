@@ -17,7 +17,7 @@ package net.akehurst.language.parser.forrest;
 
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.ogl.semanticModel.TangibleItem;
+import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.parser.ToStringVisitor;
 import net.akehurst.language.parser.runtime.Factory;
 import net.akehurst.language.parser.runtime.Leaf;
