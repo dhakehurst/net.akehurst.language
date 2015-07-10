@@ -37,28 +37,17 @@ public class ChoiceSingleOneMulti extends AbstractChoice2RuntimeRuleItem<Abstrac
 	
 	@Override
 	public RuntimeRuleItem constructLeft2Right(AbstractChoice left, Transformer transformer) {
-		Converter converter = (Converter)transformer;
-		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
-		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.MULTI,maxRuleRumber);
-		return right;
+		Multi multi = (Multi)left.getAlternative().get(0).getItem().get(0);
+		try {
+			RuntimeRuleItem right = transformer.transformLeft2Right(Multi2RuntimeRuleItem.class, multi);
+			return right;
+		} catch (RelationNotFoundException e) {
+			throw new RuntimeException("Cannot constrcut right item for AbstractChoice "+left);
+		}
 	}
 	
 	@Override
 	public void configureLeft2Right(AbstractChoice left, RuntimeRuleItem right, Transformer transformer) {
-		Multi multi = (Multi)left.getAlternative().get(0).getItem().get(0);
-		TangibleItem ti = multi.getItem();
-		
-		try {
-			RuntimeRule rr = transformer.transformLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, ti);
-			RuntimeRule[] items = new RuntimeRule[]{ rr };
-			
-			right.setItems(items);
-			right.setMultiMin(multi.getMin());
-			right.setMultiMax(multi.getMax());
-		
-		} catch (RelationNotFoundException e) {
-			e.printStackTrace();
-		}
 	}
 
 	@Override

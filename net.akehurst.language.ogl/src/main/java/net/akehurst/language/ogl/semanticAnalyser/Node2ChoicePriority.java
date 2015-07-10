@@ -20,6 +20,7 @@ import java.util.List;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
+import net.akehurst.language.ogl.semanticStructure.ChoicePriority;
 import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
@@ -27,21 +28,21 @@ import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class Node2Choice extends AbstractRhsNode2RuleItem<ChoiceSimple> {
+public class Node2ChoicePriority extends AbstractNode2Choice<ChoicePriority> {
 
 	@Override
-	public boolean isValidForLeft2Right(INode left) {
-		return "simpleChoice".equals(left.getName());
+	public String getNodeName() {
+		return "priorityChoice";
 	}
-
+	
 	@Override
-	public boolean isValidForRight2Left(ChoiceSimple right) {
+	public boolean isValidForRight2Left(ChoicePriority right) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public ChoiceSimple constructLeft2Right(INode left, Transformer transformer) {
+	public ChoicePriority constructLeft2Right(INode left, Transformer transformer) {
 		try {
 			List<? extends INode> allLeft = ((IBranch) left).getNonSkipChildren();
 			List<? extends Concatenation> allRight;
@@ -56,7 +57,7 @@ public class Node2Choice extends AbstractRhsNode2RuleItem<ChoiceSimple> {
 			allRight = transformer.transformAllLeft2Right(
 					(Class<Relation<INode, Concatenation>>) (Class<?>) Node2Concatenation.class, concatenationNodes);
 
-			ChoiceSimple right = new ChoiceSimple(allRight.toArray(new Concatenation[0]));
+			ChoicePriority right = new ChoicePriority(allRight.toArray(new Concatenation[0]));
 			return right;
 		} catch (RelationNotFoundException e) {
 			throw new RuntimeException("Unable to configure Grammar", e);
@@ -64,19 +65,19 @@ public class Node2Choice extends AbstractRhsNode2RuleItem<ChoiceSimple> {
 	}
 
 	@Override
-	public INode constructRight2Left(ChoiceSimple right, Transformer transformer) {
+	public INode constructRight2Left(ChoicePriority right, Transformer transformer) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void configureLeft2Right(INode left, ChoiceSimple right, Transformer transformer) {
+	public void configureLeft2Right(INode left, ChoicePriority right, Transformer transformer) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void configureRight2Left(INode left, ChoiceSimple right, Transformer transformer) {
+	public void configureRight2Left(INode left, ChoicePriority right, Transformer transformer) {
 		// TODO Auto-generated method stub
 
 	}

@@ -15,61 +15,55 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import java.util.List;
-
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
-import net.akehurst.language.ogl.semanticStructure.Concatenation;
-import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
-import net.akehurst.language.ogl.semanticStructure.TangibleItem;
+import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
+import net.akehurst.language.ogl.semanticStructure.Group;
+import net.akehurst.language.ogl.semanticStructure.NonTerminal;
+import net.akehurst.language.ogl.semanticStructure.SimpleItem;
 import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class Node2Concatenation extends AbstractSemanticAnalysisRelation<Concatenation> {
+public class Node2Group extends AbstractNode2TangibleItem<Group> {
 
 	@Override
 	public String getNodeName() {
-		return "concatenation";
+		return "group";
 	}
 	
 	@Override
-	public boolean isValidForRight2Left(Concatenation right) {
+	public boolean isValidForRight2Left(Group right) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Concatenation constructLeft2Right(INode left, Transformer transformer) {
+	public Group constructLeft2Right(INode left, Transformer transformer) {
 		try {
-			List<? extends INode> allLeft = ((IBranch) left).getNonSkipChildren();
-			List<? extends ConcatenationItem> allRight;
-
-			allRight = transformer.transformAllLeft2Right(
-					(Class<Relation<INode, ConcatenationItem>>) (Class<?>) Node2ConcatenationItem.class, allLeft);
-
-			Concatenation right = new Concatenation(allRight.toArray(new ConcatenationItem[allRight.size()]));
+			INode choiceNode = ((IBranch)left).getChild(1);
+			AbstractChoice choice = transformer.transformLeft2Right((Class<Relation<INode, AbstractChoice>>) (Class<?>)AbstractNode2Choice.class, ((IBranch)choiceNode).getChild(0));
+			Group right = new Group(choice);
 			return right;
 		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Unable to construct Concatenation", e);
+			throw new RuntimeException("Unable to construct NonTerminal", e);
 		}
 	}
 
 	@Override
-	public INode constructRight2Left(Concatenation right, Transformer transformer) {
+	public INode constructRight2Left(Group right, Transformer transformer) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void configureLeft2Right(INode left, Concatenation right, Transformer transformer) {
+	public void configureLeft2Right(INode left, Group right, Transformer transformer) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void configureRight2Left(INode left, Concatenation right, Transformer transformer) {
+	public void configureRight2Left(INode left, Group right, Transformer transformer) {
 		// TODO Auto-generated method stub
 
 	}

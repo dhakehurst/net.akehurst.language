@@ -29,6 +29,8 @@ public interface Visitor<T, E extends Throwable> {
 
 	T visit(SeparatedList target, Object... arg) throws E;
 
+	T visit(Group target, Object... arg) throws E;
+
 	T visit(TerminalPattern target, Object... arg) throws E;
 
 	T visit(TerminalLiteral target, Object... arg) throws E;

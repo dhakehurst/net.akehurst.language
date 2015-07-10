@@ -22,19 +22,22 @@ import java.util.Set;
 
 public class Concatenation extends RuleItem {
 
-	public Concatenation(ConcatinationItem... item) {
+	public Concatenation(ConcatenationItem... item) {
+		if (item.length < 1) {
+			throw new RuntimeException("A concatentation must have 1 or more items in it.");
+		}
 		this.item = Arrays.asList(item);
 	}
 
 	public void setOwningRule(Rule value) {
 		this.owningRule = value;
-		for(ConcatinationItem c: this.getItem()) {
+		for(ConcatenationItem c: this.getItem()) {
 			c.setOwningRule(value);
 		}
 	}
 	
-	List<ConcatinationItem> item;
-	public List<ConcatinationItem> getItem() {
+	List<ConcatenationItem> item;
+	public List<ConcatenationItem> getItem() {
 		return this.item;
 	}
 	
@@ -56,7 +59,7 @@ public class Concatenation extends RuleItem {
 //	
 	public Set<Terminal> findAllTerminal() {
 		Set<Terminal> result = new HashSet<>();
-		for(ConcatinationItem ti: this.getItem()) {
+		for(ConcatenationItem ti: this.getItem()) {
 			result.addAll( ti.findAllTerminal() );
 		}
 		return result;
@@ -65,7 +68,7 @@ public class Concatenation extends RuleItem {
 	@Override
 	public Set<NonTerminal> findAllNonTerminal() {
 		Set<NonTerminal> result = new HashSet<>();
-		for(ConcatinationItem ti: this.getItem()) {
+		for(ConcatenationItem ti: this.getItem()) {
 			result.addAll( ti.findAllNonTerminal() );
 		}
 		return result;

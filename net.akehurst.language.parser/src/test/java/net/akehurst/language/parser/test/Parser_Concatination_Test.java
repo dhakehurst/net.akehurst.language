@@ -40,7 +40,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	
 	Grammar aempty() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("a").concatenation();
+		b.rule("a").choice();
 		return b.get();
 	}
 	

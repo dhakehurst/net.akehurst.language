@@ -20,18 +20,18 @@ import java.util.Set;
 
 
 
-public class SeparatedList extends ConcatinationItem {
+public class SeparatedList extends ConcatenationItem {
 
-	public SeparatedList(int min, int max, TerminalLiteral separator, TangibleItem concatination) {
+	public SeparatedList(int min, int max, TerminalLiteral separator, TangibleItem item) {
 		this.min = min;
 		this.separator = separator;
-		this.concatination = concatination;
+		this.item = item;
 	}
 	
 	@Override
 	public void setOwningRule(Rule value) {
 		this.owningRule = value;
-		this.getConcatination().setOwningRule(value);
+		this.getItem().setOwningRule(value);
 		this.getSeparator().setOwningRule(value);
 	}
 	
@@ -50,9 +50,9 @@ public class SeparatedList extends ConcatinationItem {
 		return this.separator;
 	}
 	
-	TangibleItem concatination;
-	public TangibleItem getConcatination() {
-		return this.concatination;
+	TangibleItem item;
+	public TangibleItem getItem() {
+		return this.item;
 	}
 	
 //	@Override
@@ -75,14 +75,14 @@ public class SeparatedList extends ConcatinationItem {
 	public Set<Terminal> findAllTerminal() {
 		Set<Terminal> result = new HashSet<>();
 		result.add(this.getSeparator());
-		result.addAll( this.getConcatination().findAllTerminal() );
+		result.addAll( this.getItem().findAllTerminal() );
 		return result;
 	}
 	
 	@Override
 	public Set<NonTerminal> findAllNonTerminal() {
 		Set<NonTerminal> result = new HashSet<>();
-		result.addAll( this.getConcatination().findAllNonTerminal() );
+		result.addAll( this.getItem().findAllNonTerminal() );
 		return result;
 	}
 	
@@ -96,7 +96,7 @@ public class SeparatedList extends ConcatinationItem {
 	//--- Object ---
 	@Override
 	public String toString() {
-		return "( "+this.getConcatination()+" / "+this.getSeparator()+" )"+(this.min==0?"*":"+");
+		return "( "+this.getItem()+" / "+this.getSeparator()+" )"+(this.min==0?"*":"+");
 	}
 	
 	@Override

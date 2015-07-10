@@ -24,10 +24,10 @@ import net.akehurst.transform.binary.Transformer;
 public class Node2NonTerminal extends AbstractNode2TangibleItem<NonTerminal> {
 
 	@Override
-	public boolean isValidForLeft2Right(INode left) {
-		return "nonTerminal".equals(left.getName());
+	public String getNodeName() {
+		return "nonTerminal";
 	}
-
+	
 	@Override
 	public boolean isValidForRight2Left(NonTerminal right) {
 		// TODO Auto-generated method stub
@@ -41,7 +41,7 @@ public class Node2NonTerminal extends AbstractNode2TangibleItem<NonTerminal> {
 			NonTerminal right = new NonTerminal(referencedRuleName);
 			return right;
 		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Unable to copnstruct TangibleItem", e);
+			throw new RuntimeException("Unable to construct NonTerminal", e);
 		}
 	}
 

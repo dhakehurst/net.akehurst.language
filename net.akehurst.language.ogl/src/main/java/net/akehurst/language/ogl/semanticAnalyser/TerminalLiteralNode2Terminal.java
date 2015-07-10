@@ -25,8 +25,8 @@ import net.akehurst.transform.binary.Transformer;
 public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<TerminalLiteral> {
 
 	@Override
-	public boolean isValidForLeft2Right(INode left) {
-		return left.getName().equals("LITERAL");
+	public String getNodeName() {
+		return "LITERAL";
 	}
 
 	@Override
@@ -36,9 +36,11 @@ public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<Terminal
 
 	@Override
 	public TerminalLiteral constructLeft2Right(INode left, Transformer transformer) {
-		INode child = ((IBranch)left).getChildren().get(0);
-		ILeaf leaf = (ILeaf)child;
-		TerminalLiteral right = new TerminalLiteral(leaf.getMatchedText());
+		INode child = ((IBranch) left).getChildren().get(0);
+		ILeaf leaf = (ILeaf) child;
+		String text = leaf.getMatchedText();
+		String literal = text.substring(1, text.length() - 1);
+		TerminalLiteral right = new TerminalLiteral(literal);
 		return right;
 	}
 
@@ -46,10 +48,10 @@ public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<Terminal
 	public IBranch constructRight2Left(TerminalLiteral left, Transformer right) {
 		return null;
 	}
-	
+
 	@Override
 	public void configureLeft2Right(INode left, TerminalLiteral right, Transformer arg2) {
-		
+
 	}
 
 	@Override

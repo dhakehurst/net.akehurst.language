@@ -86,7 +86,7 @@ public class Rule {
 	//--- Object ---
 	@Override
 	public String toString() {
-		return this.getName()+" = "+this.getRhs();
+		return this.getName()+" : "+this.getRhs();
 	}
 	
 	@Override

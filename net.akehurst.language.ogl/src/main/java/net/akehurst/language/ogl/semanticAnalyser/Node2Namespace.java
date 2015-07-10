@@ -20,7 +20,7 @@ import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.Transformer;
 
-public class NamespaceBranch2Namespace implements Relation<IBranch, Namespace> {
+public class Node2Namespace implements Relation<IBranch, Namespace> {
 
 	@Override
 	public void configureLeft2Right(IBranch arg0, Namespace arg1, Transformer arg2) {

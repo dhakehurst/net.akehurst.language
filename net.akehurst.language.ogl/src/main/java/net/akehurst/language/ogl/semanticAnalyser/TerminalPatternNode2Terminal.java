@@ -19,49 +19,48 @@ import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.Transformer;
 
-public class TerminalPatternNode2Terminal extends AbstractNode2Terminal<TerminalLiteral> {
-
+public class TerminalPatternNode2Terminal extends AbstractNode2Terminal<TerminalPattern> {
 
 	@Override
-	public boolean isValidForLeft2Right(INode left) {
-		return "LITERAL".equals(left.getName());
+	public String getNodeName() {
+		return "PATTERN";
 	}
 
 	@Override
-	public boolean isValidForRight2Left(TerminalLiteral right) {
+	public boolean isValidForRight2Left(TerminalPattern right) {
 		return true;
 	}
-	
 
 	@Override
-	public TerminalLiteral constructLeft2Right(INode left, Transformer transformer) {
-		INode child = ((IBranch)left).getChild(0);
-		ILeaf leaf = (ILeaf)child;
-		TerminalLiteral right = new TerminalLiteral(leaf.getMatchedText());
+	public TerminalPattern constructLeft2Right(INode left, Transformer transformer) {
+		INode child = ((IBranch) left).getChildren().get(0);
+		ILeaf leaf = (ILeaf) child;
+		String text = leaf.getMatchedText();
+		String pattern = text.substring(1, text.length() - 1);
+		TerminalPattern right = new TerminalPattern(pattern);
 		return right;
 	}
 
 	@Override
-	public INode constructRight2Left(TerminalLiteral arg0, Transformer arg1) {
+	public INode constructRight2Left(TerminalPattern arg0, Transformer arg1) {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 	@Override
-	public void configureLeft2Right(INode left, TerminalLiteral right, Transformer arg2) {
+	public void configureLeft2Right(INode left, TerminalPattern right, Transformer arg2) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public void configureRight2Left(INode left, TerminalLiteral right, Transformer arg2) {
+	public void configureRight2Left(INode left, TerminalPattern right, Transformer arg2) {
 		// TODO Auto-generated method stub
-		
+
 	}
-
-
 
 }

@@ -15,12 +15,12 @@
  */
 package net.akehurst.language.parser.converter;
 
-import net.akehurst.language.ogl.semanticStructure.ConcatinationItem;
+import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.transform.binary.Relation;
 
 abstract
-public class AbstractConcatinationItem2RuntimeRule<L extends ConcatinationItem> implements Relation<L, RuntimeRule>{
+public class AbstractConcatinationItem2RuntimeRule<L extends ConcatenationItem> implements Relation<L, RuntimeRule>{
 
 }

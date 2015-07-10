@@ -15,9 +15,13 @@
  */
 package net.akehurst.language.parser.converter;
 
+import java.util.List;
+
+import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
+import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
+import net.akehurst.language.ogl.semanticStructure.Multi;
 import net.akehurst.language.ogl.semanticStructure.SeparatedList;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.parser.runtime.RuntimeRuleItemKind;
@@ -25,48 +29,36 @@ import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class SeparatedList2RuntimeRuleItem implements Relation<SeparatedList, RuntimeRuleItem> {
+public class ChoiceSingleOneSeparatedList extends AbstractChoice2RuntimeRuleItem<AbstractChoice> {
 
 	@Override
-	public boolean isValidForLeft2Right(SeparatedList left) {
-		return true;
+	public boolean isValidForLeft2Right(AbstractChoice left) {
+		return (1==left.getAlternative().size()) && 1==left.getAlternative().get(0).getItem().size() && left.getAlternative().get(0).getItem().get(0) instanceof SeparatedList;
 	}
 	
 	@Override
-	public RuntimeRuleItem constructLeft2Right(SeparatedList left, Transformer transformer) {
-		Converter converter = (Converter)transformer;
-		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
-		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST,maxRuleRumber);
-		return right;
-	}
-	
-	@Override
-	public void configureLeft2Right(SeparatedList left, RuntimeRuleItem right, Transformer transformer) {
-		TangibleItem ti = left.getItem();
-		TerminalLiteral sep = left.getSeparator();
-		
+	public RuntimeRuleItem constructLeft2Right(AbstractChoice left, Transformer transformer) {
+		SeparatedList multi = (SeparatedList)left.getAlternative().get(0).getItem().get(0);
 		try {
-			RuntimeRule rr = transformer.transformLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, ti);
-			RuntimeRule rrsep = transformer.transformLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, sep);
-			RuntimeRule[] items = new RuntimeRule[]{ rr, rrsep };
-			
-			right.setItems(items);
-			right.setMultiMin(left.getMin());
-			right.setMultiMax(left.getMax());
-		
+			RuntimeRuleItem right = transformer.transformLeft2Right(SeparatedList2RuntimeRuleItem.class, multi);
+			return right;
 		} catch (RelationNotFoundException e) {
-			e.printStackTrace();
+			throw new RuntimeException("Cannot constrcut right item for AbstractChoice "+left);
 		}
 	}
+	
+	@Override
+	public void configureLeft2Right(AbstractChoice left, RuntimeRuleItem right, Transformer transformer) {
+	}
 
 	@Override
-	public void configureRight2Left(SeparatedList arg0, RuntimeRuleItem arg1, Transformer arg2) {
+	public void configureRight2Left(AbstractChoice arg0, RuntimeRuleItem arg1, Transformer arg2) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public SeparatedList constructRight2Left(RuntimeRuleItem arg0, Transformer arg1) {
+	public AbstractChoice constructRight2Left(RuntimeRuleItem arg0, Transformer arg1) {
 		// TODO Auto-generated method stub
 		return null;
 	}

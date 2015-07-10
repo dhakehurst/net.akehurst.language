@@ -27,11 +27,11 @@ import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class Node2PriorityChoice extends AbstractRhsNode2RuleItem<ChoiceSimple> {
+public class Node2ChoiceSimple extends AbstractNode2Choice<ChoiceSimple> {
 
 	@Override
-	public boolean isValidForLeft2Right(INode left) {
-		return "simpleChoice".equals(left.getName());
+	public String getNodeName() {
+		return "simpleChoice";
 	}
 
 	@Override

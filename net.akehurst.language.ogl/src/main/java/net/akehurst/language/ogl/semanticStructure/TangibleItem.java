@@ -17,13 +17,12 @@ package net.akehurst.language.ogl.semanticStructure;
 
 import net.akehurst.language.core.parser.INodeType;
 
-public abstract class TangibleItem extends ConcatinationItem {
+public abstract class TangibleItem extends SimpleItem {
+
+	public abstract INodeType getNodeType() throws RuleNotFoundException;
 
 	@Override
 	public void setOwningRule(Rule value) {
 		this.owningRule = value;
 	}
-	
-	public abstract INodeType getNodeType() throws RuleNotFoundException;
-
 }

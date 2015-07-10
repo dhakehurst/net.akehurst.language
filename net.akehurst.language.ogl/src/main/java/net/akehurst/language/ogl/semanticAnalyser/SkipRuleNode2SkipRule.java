@@ -17,8 +17,11 @@ package net.akehurst.language.ogl.semanticAnalyser;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
+import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.SkipRule;
+import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
@@ -37,6 +40,19 @@ public class SkipRuleNode2SkipRule extends NormalRuleNode2Rule {
 			String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, ((IBranch)left).getChild(1));
 			SkipRule right = new SkipRule(grammar, name);
 			return right;
+		} catch (RelationNotFoundException e) {
+			throw new RuntimeException("Unable to configure Grammar", e);
+		}
+	}
+	
+	@Override
+	public void configureLeft2Right(INode left, Rule right, Transformer transformer) {
+		try {
+			INode rhsNode = ((IBranch) left).getChild(3);
+			INode item = ((IBranch) rhsNode).getChild(0);
+			AbstractChoice ruleItem = transformer
+					.transformLeft2Right((Class<Relation<INode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class, item);
+			right.setRhs(ruleItem);
 		} catch (RelationNotFoundException e) {
 			throw new RuntimeException("Unable to configure Grammar", e);
 		}

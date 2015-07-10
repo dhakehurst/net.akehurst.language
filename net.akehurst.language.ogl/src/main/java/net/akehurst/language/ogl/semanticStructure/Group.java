@@ -15,32 +15,25 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
-import java.util.HashSet;
 import java.util.Set;
 
-import net.akehurst.language.core.parser.INodeType;
+public class Group extends SimpleItem {
 
-public class NonTerminal extends TangibleItem {
-
-	public NonTerminal(String referencedRuleName) {
-		this.referencedRuleName = referencedRuleName;
+	public Group(AbstractChoice choice) {
+		this.choice = choice;
 	}
 	
-	String referencedRuleName;
-	Rule referencedRule;
-	public Rule getReferencedRule() throws RuleNotFoundException {
-		if (null == this.referencedRule) {
-			this.referencedRule = this.getOwningRule().getGrammar().findAllRule(this.referencedRuleName);
-		}
-		return this.referencedRule;
+	AbstractChoice choice;
+	public AbstractChoice getChoice() {
+		return this.choice;
 	}
-
-	INodeType nodeType;
-	public INodeType getNodeType() throws RuleNotFoundException {
-		return new RuleNodeType(this.getReferencedRule());
-	}
-
 	
+	@Override
+	public void setOwningRule(Rule value) {
+		this.owningRule = value;
+		this.getChoice().setOwningRule(value);
+	}
+
 	@Override
 	public <T, E extends Throwable> T accept(Visitor<T,E> visitor, Object... arg) throws E {
 		return visitor.visit(this, arg);
@@ -54,14 +47,13 @@ public class NonTerminal extends TangibleItem {
 //	
 	@Override
 	public Set<Terminal> findAllTerminal() {
-		Set<Terminal> result = new HashSet<>();
+		Set<Terminal> result = this.choice.findAllTerminal();
 		return result;
 	}
 	
 	@Override
 	public Set<NonTerminal> findAllNonTerminal() {
-		Set<NonTerminal> result = new HashSet<>();
-		result.add(this);
+		Set<NonTerminal> result = this.choice.findAllNonTerminal();
 		return result;
 	}
 	
@@ -74,7 +66,7 @@ public class NonTerminal extends TangibleItem {
 	//--- Object ---
 	@Override
 	public String toString() {
-		return this.referencedRuleName;
+		return "("+this.choice+")";
 	}
 	
 	@Override
@@ -84,8 +76,8 @@ public class NonTerminal extends TangibleItem {
 	
 	@Override
 	public boolean equals(Object arg) {
-		if (arg instanceof NonTerminal) {
-			NonTerminal other = (NonTerminal)arg;
+		if (arg instanceof Group) {
+			Group other = (Group)arg;
 			return this.toString().equals(other.toString());
 		} else {
 			return false;

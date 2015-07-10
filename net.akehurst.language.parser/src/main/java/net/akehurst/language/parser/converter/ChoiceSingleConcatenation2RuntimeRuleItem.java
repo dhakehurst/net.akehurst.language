@@ -21,7 +21,8 @@ import java.util.List;
 
 import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
-import net.akehurst.language.ogl.semanticStructure.ConcatinationItem;
+import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
+import net.akehurst.language.ogl.semanticStructure.SimpleItem;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleItem;
@@ -34,7 +35,7 @@ public class ChoiceSingleConcatenation2RuntimeRuleItem extends AbstractChoice2Ru
 
 	@Override
 	public boolean isValidForLeft2Right(ChoiceSimple left) {
-		return (1==left.getAlternative().size()) && (left.getAlternative().get(0).getItem().get(0) instanceof TangibleItem);
+		return (1==left.getAlternative().size()) && (left.getAlternative().get(0).getItem().get(0) instanceof SimpleItem || 1<left.getAlternative().get(0).getItem().size());
 	}
 	
 	@Override
@@ -51,7 +52,7 @@ public class ChoiceSingleConcatenation2RuntimeRuleItem extends AbstractChoice2Ru
 			List<RuntimeRule> rrAlternatives = new ArrayList<>();
 			//we know there is only one alternative from isValid 
 			Concatenation concat = left.getAlternative().get(0);
-			rrAlternatives = (List<RuntimeRule>)transformer.transformAllLeft2Right((Class<? extends Relation<ConcatinationItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, concat.getItem());
+			rrAlternatives = (List<RuntimeRule>)transformer.transformAllLeft2Right((Class<? extends Relation<ConcatenationItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, concat.getItem());
 		
 			RuntimeRule[] items = rrAlternatives.toArray(new RuntimeRule[rrAlternatives.size()]);
 			right.setItems(items);

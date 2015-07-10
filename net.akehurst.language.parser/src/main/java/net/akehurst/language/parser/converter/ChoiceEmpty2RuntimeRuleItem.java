@@ -21,7 +21,7 @@ import java.util.List;
 
 import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
-import net.akehurst.language.ogl.semanticStructure.ConcatinationItem;
+import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleItem;

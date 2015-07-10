@@ -15,12 +15,11 @@
  */
 package net.akehurst.language.parser.converter;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import net.akehurst.language.ogl.semanticStructure.Concatenation;
-import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
+import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
+import net.akehurst.language.ogl.semanticStructure.Multi;
+import net.akehurst.language.ogl.semanticStructure.SeparatedList;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleItem;
@@ -29,55 +28,46 @@ import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class Concatenation2RuntimeRuleItem implements Relation<Concatenation, RuntimeRuleItem> {
+public class SeparatedList2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<SeparatedList> {
 
 	@Override
-	public boolean isValidForLeft2Right(Concatenation arg0) {
+	public boolean isValidForLeft2Right(SeparatedList arg0) {
 		return true;
 	}
 	
 	@Override
-	public RuntimeRuleItem constructLeft2Right(Concatenation left, Transformer transformer) {
+	public RuntimeRule constructLeft2Right(SeparatedList left, Transformer transformer) {
 		Converter converter = (Converter)transformer;
-		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
-		return new RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, maxRuleRumber);
+		RuntimeRule right = converter.createVirtualRule(left);
+		return right;
 	}
 	
 	@Override
-	public void configureLeft2Right(Concatenation left, RuntimeRuleItem right, Transformer transformer) {
-		List<ConcatenationItem> tis = left.getItem();
-		
+	public void configureLeft2Right(SeparatedList left, RuntimeRule right, Transformer transformer) {
 		try {
-			List<? extends RuntimeRule> rr = transformer.transformAllLeft2Right((Class<? extends Relation<ConcatenationItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, tis);
-			if (rr.isEmpty()) {
-				//add the EMPTY_RULE
-				Converter converter = (Converter)transformer;
-				rr = Arrays.asList( converter.getFactory().getEmptyRule() );
-			}
-			RuntimeRule[] items = rr.toArray(new RuntimeRule[rr.size()]);
 			
-			right.setItems(items);
-		
+			RuntimeRuleItem ruleItem = transformer.transformLeft2Right(SeparatedList2RuntimeRuleItem.class, left);
+			right.setRhs(ruleItem);
+
 		} catch (RelationNotFoundException e) {
 			e.printStackTrace();
 		}
-		
 	}
 
 	@Override
-	public void configureRight2Left(Concatenation arg0, RuntimeRuleItem arg1, Transformer arg2) {
+	public void configureRight2Left(SeparatedList arg0, RuntimeRule arg1, Transformer arg2) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public Concatenation constructRight2Left(RuntimeRuleItem arg0, Transformer arg1) {
+	public SeparatedList constructRight2Left(RuntimeRule arg0, Transformer arg1) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean isValidForRight2Left(RuntimeRuleItem arg0) {
+	public boolean isValidForRight2Left(RuntimeRule arg0) {
 		// TODO Auto-generated method stub
 		return false;
 	}

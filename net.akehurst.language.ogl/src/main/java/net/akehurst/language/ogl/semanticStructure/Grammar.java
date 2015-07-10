@@ -127,12 +127,12 @@ public class Grammar {
 				result.addAll( this.findAllTerminal( totalItems, rule, ti ) );
 			}
 		} else if (item instanceof Concatenation) {
-			for(ConcatinationItem ti : ((Concatenation)item).getItem()) {
+			for(ConcatenationItem ti : ((Concatenation)item).getItem()) {
 				result.addAll( this.findAllTerminal( totalItems, rule, ti ) );
 			}
 		} else if (item instanceof SeparatedList) {
 			result.addAll(this.findAllTerminal(totalItems, rule,((SeparatedList)item).getSeparator()));
-			result.addAll( this.findAllTerminal(totalItems, rule, ((SeparatedList)item).getConcatination() ) );
+			result.addAll( this.findAllTerminal(totalItems, rule, ((SeparatedList)item).getItem() ) );
 		}
 		return result;
 	}
@@ -170,7 +170,7 @@ public class Grammar {
 				extendStr += pg.getName() + ", ";
 			}
 		}
-		r += "grammar "+this.getName() + extendStr +"{" + System.lineSeparator();
+		r += "grammar "+this.getName() + extendStr +" {" + System.lineSeparator();
 		for(Rule i : this.getRule()) {
 			r += i.toString() + System.lineSeparator();
 		}

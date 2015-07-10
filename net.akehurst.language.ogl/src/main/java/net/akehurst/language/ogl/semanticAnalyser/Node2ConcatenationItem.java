@@ -17,51 +17,46 @@ package net.akehurst.language.ogl.semanticAnalyser;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
+import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class ItemNode2TangibleItem extends AbstractSemanticAnalysisRelation<TangibleItem> {
+public class Node2ConcatenationItem extends AbstractSemanticAnalysisRelation<ConcatenationItem> {
 
 	@Override
 	public String getNodeName() {
-		return "item";
+		return "concatenationItem";
 	}
 
 	@Override
-	public TangibleItem constructLeft2Right(INode left, Transformer transformer) {
+	public ConcatenationItem constructLeft2Right(INode left, Transformer transformer) {
 		try {
 			INode itemNode = ((IBranch) left).getChild(0);
-			if ("singleItem".equals(itemNode.getName())) {
-				INode tNode = ((IBranch) itemNode).getChild(0);
-				TangibleItem right = transformer.transformLeft2Right(
-						(Class<Relation<INode, TangibleItem>>) (Class<?>) AbstractNode2TangibleItem.class, tNode);
-				return right;
-			} else if ("multi".equals(itemNode.getName())) {
-				TangibleItem right = transformer.transformLeft2Right(
-						(Class<Relation<INode, TangibleItem>>) (Class<?>) AbstractNode2TangibleItem.class, tNode);
-				return right;
-			} 
+			
+			ConcatenationItem right = transformer.transformLeft2Right(
+					(Class<Relation<INode, TangibleItem>>) (Class<?>) AbstractNode2ConcatenationItem.class, itemNode);
+			return right;
 		} catch (RelationNotFoundException e) {
 			throw new RuntimeException("Unable to construct TangibleItem", e);
 		}
 	}
 
 	@Override
-	public INode constructRight2Left(TangibleItem right, Transformer transformer) {
+	public INode constructRight2Left(ConcatenationItem right, Transformer transformer) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void configureLeft2Right(INode left, TangibleItem right, Transformer transformer) {
+	public void configureLeft2Right(INode left, ConcatenationItem right, Transformer transformer) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void configureRight2Left(INode left, TangibleItem right, Transformer transformer) {
+	public void configureRight2Left(INode left, ConcatenationItem right, Transformer transformer) {
 		// TODO Auto-generated method stub
 
 	}

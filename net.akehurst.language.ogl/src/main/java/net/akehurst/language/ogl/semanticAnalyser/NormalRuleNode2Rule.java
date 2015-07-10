@@ -64,7 +64,7 @@ public class NormalRuleNode2Rule implements Relation<INode, Rule> {
 			INode rhsNode = ((IBranch) left).getChild(2);
 			INode item = ((IBranch) rhsNode).getChild(0);
 			AbstractChoice ruleItem = transformer
-					.transformLeft2Right((Class<Relation<INode, AbstractChoice>>) (Class<?>) AbstractRhsNode2RuleItem.class, item);
+					.transformLeft2Right((Class<Relation<INode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class, item);
 			right.setRhs(ruleItem);
 		} catch (RelationNotFoundException e) {
 			throw new RuntimeException("Unable to configure Grammar", e);

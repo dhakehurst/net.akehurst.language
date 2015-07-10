@@ -25,7 +25,7 @@ import net.akehurst.language.parser.runtime.RuntimeRuleItemKind;
 import net.akehurst.transform.binary.Relation;
 
 abstract
-public class AbstractChoice2RuntimeRuleItem<L extends RuleItem> implements Relation<L, RuntimeRuleItem> {
+public class AbstractRuleItem2RuntimeRuleItem<L extends RuleItem> implements Relation<L, RuntimeRuleItem> {
 
 	RuntimeRuleItemKind getRuleItemKind(RuleItem item) {
 		if (item instanceof ChoiceSimple) {

@@ -16,6 +16,7 @@
 package net.akehurst.language.parser.converter;
 
 import net.akehurst.language.ogl.semanticStructure.Multi;
+import net.akehurst.language.ogl.semanticStructure.SimpleItem;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleItem;
@@ -41,10 +42,10 @@ public class Multi2RuntimeRuleItem implements Relation<Multi, RuntimeRuleItem> {
 	
 	@Override
 	public void configureLeft2Right(Multi left, RuntimeRuleItem right, Transformer transformer) {
-		TangibleItem ti = left.getItem();
+		SimpleItem ti = left.getItem();
 		
 		try {
-			RuntimeRule rr = transformer.transformLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, ti);
+			RuntimeRule rr = transformer.transformLeft2Right((Class<? extends Relation<SimpleItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, ti);
 			RuntimeRule[] items = new RuntimeRule[]{ rr };
 			
 			right.setItems(items);

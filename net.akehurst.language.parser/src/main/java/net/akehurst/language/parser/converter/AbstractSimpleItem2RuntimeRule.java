@@ -15,9 +15,9 @@
  */
 package net.akehurst.language.parser.converter;
 
-import net.akehurst.language.ogl.semanticStructure.TangibleItem;
+import net.akehurst.language.ogl.semanticStructure.SimpleItem;
 
 abstract
-public class AbstractSimpleItem2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<TangibleItem> {
+public class AbstractSimpleItem2RuntimeRule<R extends SimpleItem> extends AbstractConcatinationItem2RuntimeRule<R> {
 
 }

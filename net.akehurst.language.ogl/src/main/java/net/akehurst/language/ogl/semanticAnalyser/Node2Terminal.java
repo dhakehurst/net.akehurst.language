@@ -15,68 +15,53 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
-import net.akehurst.language.ogl.semanticStructure.Concatenation;
-import net.akehurst.language.ogl.semanticStructure.Multi;
-import net.akehurst.language.ogl.semanticStructure.SeparatedList;
+import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class Node2SeparatedList extends AbstractNode2ConcatenationItem<SeparatedList> {
+public class Node2Terminal extends AbstractNode2TangibleItem<Terminal> {
 
 	@Override
 	public String getNodeName() {
-		return "separatedList";
+		return "terminal";
 	}
-
+	
 	@Override
-	public boolean isValidForRight2Left(SeparatedList right) {
+	public boolean isValidForRight2Left(Terminal right) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public SeparatedList constructLeft2Right(INode left, Transformer transformer) {
+	public Terminal constructLeft2Right(INode left, Transformer transformer) {
 		try {
-			INode itemNode = ((IBranch) left).getChild(0);
-			
-			TangibleItem item = transformer.transformLeft2Right(
-					(Class<Relation<INode, TangibleItem>>) (Class<?>) AbstractNode2TangibleItem.class, itemNode);
-			
-			TerminalLiteral separator = null;
-			
-			int min = 0;
-			int max = -1;
-			
-			SeparatedList right = new SeparatedList(min, max, separator, item);
+			INode terminalNode = ((IBranch) left).getChild(0);
+			Terminal right = transformer.transformLeft2Right((Class<Relation<INode, Terminal>>) (Class<?>)AbstractNode2Terminal.class, terminalNode);
 			return right;
 		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Unable to configure Grammar", e);
+			throw new RuntimeException("Unable to construct NonTerminal", e);
 		}
 	}
 
 	@Override
-	public INode constructRight2Left(SeparatedList right, Transformer transformer) {
+	public INode constructRight2Left(Terminal right, Transformer transformer) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void configureLeft2Right(INode left, SeparatedList right, Transformer transformer) {
+	public void configureLeft2Right(INode left, Terminal right, Transformer transformer) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void configureRight2Left(INode left, SeparatedList right, Transformer transformer) {
+	public void configureRight2Left(INode left, Terminal right, Transformer transformer) {
 		// TODO Auto-generated method stub
 
 	}

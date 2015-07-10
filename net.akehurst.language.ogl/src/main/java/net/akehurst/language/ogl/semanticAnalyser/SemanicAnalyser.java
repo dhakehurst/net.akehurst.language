@@ -27,17 +27,25 @@ import net.akehurst.transform.binary.Relation;
 public class SemanicAnalyser extends AbstractTransformer implements ISemanticAnalyser {
 
 	public SemanicAnalyser() {
+		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractNode2Choice.class);
+		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractNode2ConcatenationItem.class);
 		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractNode2TangibleItem.class);
 		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractNode2Terminal.class);
 		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractRhsNode2RuleItem.class);
 		super.registerRule(AnyRuleNode2Rule.class);
-		super.registerRule(Node2Choice.class);
 		super.registerRule(GrammarDefinitionBranch2Grammar.class);
 		super.registerRule(IDENTIFIERBranch2String.class);
-		super.registerRule(ItemNode2TangibleItem.class);
-		super.registerRule(NamespaceBranch2Namespace.class);
+		super.registerRule(Node2ChoicePriority.class);
+		super.registerRule(Node2ChoiceSimple.class);
 		super.registerRule(Node2Concatenation.class);
+		super.registerRule(Node2ConcatenationItem.class);
+		super.registerRule(Node2Group.class);
+		super.registerRule(Node2Multi.class);
+		super.registerRule(Node2Namespace.class);
 		super.registerRule(Node2NonTerminal.class);
+		super.registerRule(Node2SeparatedList.class);
+		super.registerRule(Node2SimpleItem.class);
+		super.registerRule(Node2Terminal.class);
 		super.registerRule(NormalRuleNode2Rule.class);
 		super.registerRule(SkipRuleNode2SkipRule.class);
 		super.registerRule(TerminalLiteralNode2Terminal.class);

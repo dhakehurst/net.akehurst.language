@@ -21,7 +21,7 @@ import java.util.List;
 
 import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
-import net.akehurst.language.ogl.semanticStructure.ConcatinationItem;
+import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
 import net.akehurst.language.ogl.semanticStructure.ChoicePriority;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.parser.runtime.RuntimeRule;
@@ -49,7 +49,7 @@ public class PriorityChoice2RuntimeRuleItem extends AbstractChoice2RuntimeRuleIt
 	@Override
 	public void configureLeft2Right(ChoicePriority left, RuntimeRuleItem right, Transformer transformer) {
 		try {
-			List<ConcatinationItem> tangibleAlternatives = new ArrayList<>();
+			List<ConcatenationItem> tangibleAlternatives = new ArrayList<>();
 			for(Concatenation concat: left.getAlternative()) {
 				if (concat.getItem().size() > 1) {
 					throw new UnsupportedOperationException("concatinations in choice not yet supported");
@@ -58,7 +58,7 @@ public class PriorityChoice2RuntimeRuleItem extends AbstractChoice2RuntimeRuleIt
 				}
 			}
 			
-			List<? extends RuntimeRule> rr = transformer.transformAllLeft2Right((Class<? extends Relation<ConcatinationItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, tangibleAlternatives);
+			List<? extends RuntimeRule> rr = transformer.transformAllLeft2Right((Class<? extends Relation<ConcatenationItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, tangibleAlternatives);
 			if (rr.isEmpty()) {
 				//add the EMPTY_RULE
 				Converter converter = (Converter)transformer;

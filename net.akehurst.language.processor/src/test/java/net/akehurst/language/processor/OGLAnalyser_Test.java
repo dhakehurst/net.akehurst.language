@@ -51,20 +51,26 @@ public class OGLAnalyser_Test {
 	public void a_a_a_A() {
 		// grammar, goal, input, target
 		try {
-			String grammar = "namespace test;" + System.lineSeparator();
-			grammar += "grammar A {" + System.lineSeparator();
-			grammar += " a : 'a' ;" + System.lineSeparator();
-			grammar += "}";
+			String grammarText = "namespace test;" + System.lineSeparator();
+			grammarText += "grammar A {" + System.lineSeparator();
+			grammarText += " a : 'a' ;" + System.lineSeparator();
+			grammarText += "}";
 
+			Grammar grammar = this.process(grammarText, Grammar.class);
+			Assert.assertNotNull(grammar);
 
-			Grammar target = this.process(grammar, Grammar.class);
-
-			Assert.assertNotNull(target);
-
+			LanguageProcessor proc = new LanguageProcessor(grammar, "a", null);
+			
+			IParseTree tree = proc.getParser().parse(proc.getDefaultGoal(), "a");
+			Assert.assertNotNull(tree);
+			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		} catch (UnableToAnalyseExeception e) {
 			Assert.fail(e.getMessage());
+		} catch (ParseTreeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 

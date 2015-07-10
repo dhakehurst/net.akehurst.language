@@ -21,7 +21,7 @@ import java.util.List;
 
 import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
-import net.akehurst.language.ogl.semanticStructure.ConcatinationItem;
+import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.runtime.RuntimeRuleItem;
@@ -61,7 +61,7 @@ public class ChoiceMultiple2RuntimeRuleItem extends AbstractChoice2RuntimeRuleIt
 					rrAlternatives.add(rr);
 				} else {
 					RuntimeRule rr = transformer.transformLeft2Right(
-							(Class<? extends Relation<ConcatinationItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class,
+							(Class<? extends Relation<ConcatenationItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class,
 							concat.getItem().get(0));
 					rrAlternatives.add(rr);
 				}

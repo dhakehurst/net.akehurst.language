@@ -20,9 +20,9 @@ import java.util.Set;
 
 
 
-public class Multi extends ConcatinationItem {
+public class Multi extends ConcatenationItem {
 
-	public Multi(int min, int max, TangibleItem item) {
+	public Multi(int min, int max, SimpleItem item) {
 		this.min = min;
 		this.max = max;
 		this.item = item;
@@ -44,8 +44,8 @@ public class Multi extends ConcatinationItem {
 		return this.max;
 	}
 	
-	TangibleItem item;
-	public TangibleItem getItem() {
+	SimpleItem item;
+	public SimpleItem getItem() {
 		return this.item;
 	}
 	

@@ -54,7 +54,7 @@ public class GrammarDefinitionBranch2Grammar implements Relation<INode, Grammar>
 			IBranch grammarBranch = (IBranch) ((IBranch)left).getChild(1);
 			IBranch grammarNameBranch = (IBranch) grammarBranch.getChild(1);
 
-			Namespace namespace = transformer.transformLeft2Right(NamespaceBranch2Namespace.class, namespaceBranch);
+			Namespace namespace = transformer.transformLeft2Right(Node2Namespace.class, namespaceBranch);
 			String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, grammarNameBranch);
 
 			Grammar right = new Grammar(namespace, name);

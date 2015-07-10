@@ -13,16 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.ogl.semanticStructure;
+package net.akehurst.language.ogl.semanticAnalyser;
 
-import java.util.List;
+import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
 
 abstract
-public class AbstractChoice extends RuleItem {
+public class AbstractNode2Choice<R extends AbstractChoice> extends AbstractSemanticAnalysisRelation<R> {
 
-	
-	List<Concatenation> alternative;
-	public List<Concatenation> getAlternative() {
-		return this.alternative;
-	}
 }
