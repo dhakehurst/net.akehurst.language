@@ -70,7 +70,8 @@ public class Java8_Test {
 	static IParseTree parseWithOG(Path file) {
 		try {
 			byte[] bytes = Files.readAllBytes(file);
-			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), new String(bytes));
+			String text = new String(bytes);
+			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), text);
 			System.out.println("Successfull Parse: "+file);
 			return tree;
 		} catch (ParseFailedException e) {
@@ -143,7 +144,7 @@ public class Java8_Test {
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 					if (attrs.isRegularFile() && matcher.matches(file)) {						
 						Object o = parseWithOG(file);
-//						Assert.assertNotNull(o);
+						Assert.assertNotNull(o);
 					}
 					return FileVisitResult.CONTINUE;
 				}

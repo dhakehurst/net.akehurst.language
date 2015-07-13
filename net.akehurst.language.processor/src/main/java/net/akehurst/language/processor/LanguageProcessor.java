@@ -24,10 +24,10 @@ import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.grammar.parser.ScannerLessParser;
+import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
-import net.akehurst.language.parser.ScannerLessParser;
-import net.akehurst.language.parser.runtime.Factory;
 
 public class LanguageProcessor implements ILanguageProcessor {
 
@@ -35,12 +35,12 @@ public class LanguageProcessor implements ILanguageProcessor {
 		this.grammar = grammar;
 		this.defaultGoalName = defaultGoalName;
 //		this.lexicalAnalyser = new LexicalAnalyser(grammar.findTokenTypes());
-		this.parseTreeFactory = new Factory();
+		this.parseTreeFactory = new RuntimeRuleSetBuilder();
 		this.parser = new ScannerLessParser(this.parseTreeFactory, grammar);
 		this.semanticAnalyser = semanticAnalyser;
 	}
 
-	Factory parseTreeFactory;
+	RuntimeRuleSetBuilder parseTreeFactory;
 	
 	Grammar grammar;
 	public Grammar getGrammar() {

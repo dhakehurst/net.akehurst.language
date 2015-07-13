@@ -15,25 +15,25 @@
  */
 package net.akehurst.language.parser.test.speed;
 
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
+import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.parser.runtime.Factory;
-import net.akehurst.language.parser.test.AbstractParser_Test;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import net.akehurst.language.parser.AbstractParser_Test;
 
 public class Speed_Test extends AbstractParser_Test {
 
 	@Before
 	public void before() {
-		this.parseTreeFactory = new Factory();
+		this.parseTreeFactory = new RuntimeRuleSetBuilder();
 	}
 	
 	Grammar abcds() {

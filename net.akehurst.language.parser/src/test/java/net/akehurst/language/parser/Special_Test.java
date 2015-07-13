@@ -13,53 +13,77 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.parser.test.speed;
+package net.akehurst.language.parser;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
+import net.akehurst.language.grammar.parser.ToStringVisitor;
+import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.parser.AbstractParser_Test;
 
-public class Memory_Test extends AbstractParser_Test {
-
+public class Special_Test extends AbstractParser_Test {
+	
 	@Before
 	public void before() {
 		this.parseTreeFactory = new RuntimeRuleSetBuilder();
 	}
 	
-	Grammar as_rr() {
+	Grammar S() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").choice(new NonTerminal("as$group1"), new NonTerminal("a"));
-		b.rule("as$group1").concatenation(new NonTerminal("a"), new NonTerminal("as"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+		//b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"));
+		b.rule("S$group1").concatenation(new TerminalLiteral("a"), new NonTerminal("S"), new NonTerminal("B"), new NonTerminal("B"));
+		b.rule("S").choice(new NonTerminal("S$group1"), new TerminalLiteral("a"));
+		//b.rule("B").choice(new NonTerminal("B1"), new NonTerminal("B2"));
+		b.rule("B").multi(0,1,new TerminalLiteral("b"));
 		return b.get();
 	}
-
+	
 	@Test
-	public void rr_as_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() {
+	public void S_S_aab() {
 		// grammar, goal, input
 		try {
-			Grammar g = as_rr();
-			String goal = "as";
-			String text = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-			
+			Grammar g = S();
+			String goal = "S";
+			String text = "aab";
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-		
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*S 1, 4}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected =
+				b.branch("S",
+					b.branch("S$group1",
+						b.leaf("a", "a"),
+						b.branch("S",
+							b.leaf("a", "a")
+						),
+						b.branch("B",
+							b.emptyLeaf()
+						),
+						b.branch("B",
+							b.leaf("b", "b")
+						)
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
 	
-
 }

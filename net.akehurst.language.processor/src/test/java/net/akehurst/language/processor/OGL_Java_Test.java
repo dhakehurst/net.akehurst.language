@@ -21,6 +21,11 @@ import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.grammar.parser.ScannerLessParser;
+import net.akehurst.language.grammar.parser.ToStringVisitor;
+import net.akehurst.language.grammar.parser.forrest.ForrestFactory;
+import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
+import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
@@ -28,11 +33,6 @@ import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
-import net.akehurst.language.parser.ScannerLessParser;
-import net.akehurst.language.parser.ToStringVisitor;
-import net.akehurst.language.parser.runtime.Factory;
-import net.akehurst.language.parser.forrest.ForrestFactory;
-import net.akehurst.language.parser.forrest.ParseTreeBuilder;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -44,11 +44,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class OGL_Java_Test {
-	Factory parseTreeFactory;
+	RuntimeRuleSetBuilder parseTreeFactory;
 
 	@Before
 	public void before() {
-		this.parseTreeFactory = new Factory();
+		this.parseTreeFactory = new RuntimeRuleSetBuilder();
 	}
 
 	String readFile(String path, Charset encoding) throws IOException {
