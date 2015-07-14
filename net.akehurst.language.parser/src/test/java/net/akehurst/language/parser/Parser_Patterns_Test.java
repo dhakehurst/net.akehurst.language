@@ -19,9 +19,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
+import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -66,8 +68,16 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 2}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"a\"]]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+						b.branch("a",
+							b.leaf("[a]+", "a")
+						)
+			
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -89,8 +99,14 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 3}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"aa\"]]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+						b.branch("a",
+							b.leaf("[a]+", "aa")
+						)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -112,8 +128,14 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 4}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"aaa\"]]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+						b.branch("a",
+							b.leaf("[a]+", "aaa")
+						)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -167,8 +189,18 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 4}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"a\"], ':' : \":\", a : [\"[a]+\" : \"a\"]]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+						b.branch("a",
+							b.leaf("[a]+", "a")
+						),
+						b.leaf(":", ":"),
+						b.branch("a",
+								b.leaf("[a]+", "a")
+							)					
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -190,8 +222,18 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 5}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"aa\"], ':' : \":\", a : [\"[a]+\" : \"a\"]]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+						b.branch("a",
+							b.leaf("[a]+", "aa")
+						),
+						b.leaf(":", ":"),
+						b.branch("a",
+								b.leaf("[a]+", "a")
+							)					
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -213,8 +255,18 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 5}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"a\"], ':' : \":\", a : [\"[a]+\" : \"aa\"]]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+						b.branch("a",
+							b.leaf("[a]+", "a")
+						),
+						b.leaf(":", ":"),
+						b.branch("a",
+								b.leaf("[a]+", "aa")
+							)					
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -236,8 +288,18 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 8}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : [\"[a]+\" : \"aaa\"], ':' : \":\", a : [\"[a]+\" : \"aaa\"]]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+						b.branch("a",
+							b.leaf("[a]+", "aaa")
+						),
+						b.leaf(":", ":"),
+						b.branch("a",
+								b.leaf("[a]+", "aaa")
+							)					
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

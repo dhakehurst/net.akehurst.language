@@ -20,8 +20,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.akehurst.language.core.parser.INodeType;
+import net.akehurst.language.grammar.parse.tree.EmptyLeaf;
 import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
@@ -106,7 +108,10 @@ public class Input {
 		IntPair key = new IntPair(terminalTypeNumber, pos);
 		Leaf l = this.leaf_cache.get(key);
 		if (null==l) {
-			Matcher m = terminalRule.getTerminal().getPattern().matcher(this.text);
+			if (terminalRule.getIsEmptyRule()) {
+				return new EmptyLeaf(this, pos, terminalRule);
+			}
+			Matcher m = Pattern.compile(terminalRule.getTerminalPatternText(),terminalRule.getPatternFlags()).matcher(this.text);
 			m.region(pos, this.text.length());
 			if (m.lookingAt()) {
 				String matchedText = m.group();

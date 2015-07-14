@@ -211,40 +211,58 @@ public class Forrest {
 	 */
 	public Forrest grow() throws RuleNotFoundException, ParseTreeException {
 		return this.growBreadthFirst();
-//		return this.growDepthFirst();
+		// return this.growDepthFirst();
 	}
 
 	public Forrest growBreadthFirst() throws RuleNotFoundException, ParseTreeException {
-//		System.out.println("posibles: "+this.possibleTrees.size());
+		// System.out.println("posibles: "+this.possibleTrees.size());
 		Forrest newForrest = new Forrest(this.goalRRule, this.runtimeRuleSet);
 		newForrest.goalTrees.addAll(this.goalTrees);
 		newForrest.longestMatch = this.longestMatch;
 
 		for (AbstractParseTree tree : this.possibleTrees) {
-//			System.out.println(tree.getIdString());
+			// System.out.println(tree.getIdString());
 			RuntimeRule treeRR = tree.getRoot().getRuntimeRule();
-			RuntimeRule[] possibleSubTerminals = this.runtimeRuleSet.getPossibleSubTerminal(treeRR); //should be possible to be more specific than this!
+			RuntimeRule[] possibleSubTerminals = this.runtimeRuleSet.getPossibleSubTerminal(treeRR); // should
+																										// be
+																										// possible
+																										// to
+																										// be
+																										// more
+																										// specific
+																										// than
+																										// this!
 
-			if(tree.getIsComplete()) {
-				ArrayList<AbstractParseTree> nts = tree.growHeight(possibleSubTerminals, this.runtimeRuleSet);
-				newForrest.addAll(nts);
-			}
-
-			if (tree.getCanGraftBack()) {
+			if (tree.getIsSkip()) {
 				AbstractParseTree nt = tree.tryGraftBack();
 				if (null != nt) {
 					newForrest.add(nt);
 				}
-			}
-			
-			if (tree.getCanGrow()) {
-				int i = 1;
+			} else {
 
-				if (tree.getIsEmpty() || (tree.getIsComplete() && !tree.getCanGrow())) {
-					// don't grow width
-				} else {
-					ArrayList<AbstractParseTree> newBranches = tree.growWidth(possibleSubTerminals, this.runtimeRuleSet);
-					newForrest.addAll(newBranches);
+				if (tree.getIsComplete()) {
+					ArrayList<AbstractParseTree> nts = tree.growHeight(possibleSubTerminals, this.runtimeRuleSet);
+					newForrest.addAll(nts);
+				}
+
+				if (tree.getCanGraftBack()) {
+					AbstractParseTree nt = tree.tryGraftBack();
+					if (null != nt) {
+						newForrest.add(nt);
+					}
+				}
+
+				if (tree.getCanGrow()) {
+					int i = 1;
+
+//					if (tree.getIsEmpty() || (tree.getIsComplete() && !tree.getCanGrow())) {
+					if ((tree.getIsComplete() && !tree.getCanGrow())) {
+						// don't grow width
+					} else {
+						ArrayList<AbstractParseTree> newBranches = tree.growWidth(possibleSubTerminals,
+								this.runtimeRuleSet);
+						newForrest.addAll(newBranches);
+					}
 				}
 			}
 
@@ -259,14 +277,14 @@ public class Forrest {
 		newForrest.longestMatch = this.longestMatch;
 
 		for (AbstractParseTree tree : this.possibleTrees) {
-//			System.out.println(tree.getIdString());
+			// System.out.println(tree.getIdString());
 			RuntimeRule treeRR = tree.getRoot().getRuntimeRule();
 			RuntimeRule[] possibleSubTerminals = this.runtimeRuleSet.getPossibleSubTerminal(treeRR);
-			
+
 			AbstractParseTree ntree = tree;
-			while(null!=tree && tree.getCanGrow()) {
+			while (null != tree && tree.getCanGrow()) {
 				ntree = null;
-				
+
 				while (tree.getCanGraftBack()) {
 					AbstractParseTree nt = tree.tryGraftBack();
 					if (null != nt) {
@@ -276,32 +294,30 @@ public class Forrest {
 						break;
 					}
 				}
-				
-				while(tree.getIsComplete()) {
+
+				while (tree.getIsComplete()) {
 					ArrayList<AbstractParseTree> nts = tree.growHeight(possibleSubTerminals, this.runtimeRuleSet);
-					if(!nts.isEmpty()) {
+					if (!nts.isEmpty()) {
 						ntree = nts.get(0);
 						tree = ntree;
-						for(int i=0;i<nts.size();++i) {
+						for (int i = 0; i < nts.size(); ++i) {
 							newForrest.add(nts.get(i));
 						}
 					} else {
 						break;
 					}
 				}
-	
 
-				
 				if (tree.getCanGrowWidth()) {
 					if (tree.getIsEmpty() || (tree.getIsComplete() && !tree.getCanGrow())) {
 						// don't grow width
-						
+
 					} else {
 						ArrayList<AbstractParseTree> nts = tree.growWidth(possibleSubTerminals, this.runtimeRuleSet);
-						if(!nts.isEmpty()) {
+						if (!nts.isEmpty()) {
 							ntree = nts.get(0);
 							tree = ntree;
-							for(int i=1;i<nts.size();++i) {
+							for (int i = 1; i < nts.size(); ++i) {
 								newForrest.add(nts.get(i));
 							}
 						} else {
@@ -311,7 +327,7 @@ public class Forrest {
 				}
 				tree = ntree;
 			}
-			if(null!=ntree) {
+			if (null != ntree) {
 				newForrest.add(ntree);
 			}
 		}
@@ -347,7 +363,7 @@ public class Forrest {
 			// null);
 			// }
 			if (this.possibleTrees.contains(tree)) {
-				//don't add
+				// don't add
 			} else {
 				this.possibleTrees.add(tree);
 				this.canGrow |= tree.getCanGrow();
@@ -358,8 +374,8 @@ public class Forrest {
 		}
 		if (null == this.longestMatch
 				|| tree.getRoot().getMatchedTextLength() > this.longestMatch.getRoot().getMatchedTextLength()) {
-			if (tree.getRoot().getNodeType().equals(ScannerLessParser.START_SYMBOL_TERMINAL.getNodeType())
-					|| tree.getRoot().getName().contains("$") /* don't use non user rules*/) {
+			if (tree.getRoot().getName().equals(ScannerLessParser.START_SYMBOL_TERMINAL.getValue()) || tree.getRoot()
+					.getName().contains("$") /* don't use non user rules */) {
 				// don't use
 			} else {
 				this.longestMatch = tree;
@@ -392,7 +408,7 @@ public class Forrest {
 	@Override
 	public String toString() {
 		String s = "Forrest {";
-		s += "goal==" + this.goalRRule.getGrammarRule().getNodeType();
+		s += "goal==" + this.goalRRule.getName();
 		s += ", canGrow==" + this.possibleTrees;
 		s += "}";
 		return s;

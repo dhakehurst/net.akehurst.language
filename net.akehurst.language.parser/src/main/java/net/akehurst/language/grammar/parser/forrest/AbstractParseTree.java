@@ -117,7 +117,7 @@ public abstract class AbstractParseTree implements IParseTree {
 //	public abstract AbstractParseTree deepClone();
 
 	public boolean getIsSkip() throws ParseTreeException {
-		return this.getRoot().getNodeType() instanceof SkipNodeType;
+		return this.getRoot().getIsSkip();
 	}
 
 	@Override
@@ -135,7 +135,7 @@ public abstract class AbstractParseTree implements IParseTree {
 	 * @throws ParseTreeException
 	 * 
 	 */
-	public ArrayList<AbstractParseTree> growWidth(RuntimeRule[] terminalRules, RuntimeRuleSet ruleSet) throws RuleNotFoundException, ParseTreeException {
+	public ArrayList<AbstractParseTree> growWidth(RuntimeRule[] terminalRules, RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
 		ArrayList<AbstractParseTree> result = new ArrayList<>();
 		if ( this.getCanGrowWidth() ) { //don't grow width if its complete...cant graft back
 			List<ParseTreeBud> buds = this.ffactory.createNewBuds(terminalRules, this.getRoot().getEnd());
@@ -144,12 +144,24 @@ public abstract class AbstractParseTree implements IParseTree {
 	//		buds.add(empty);
 			for (ParseTreeBud bud : buds) {
 				AbstractParseTree nt = this.pushStackNewRoot(bud.getRoot());
+				if (nt.getIsEmpty()) {
+					nt.growMe(nt.getRoot().getRuntimeRule().getRuleThatIsEmpty());
+//					ArrayList<AbstractParseTree> nts = nt.growHeight(terminalRules, runtimeRuleSet);
+//					for(AbstractParseTree pt: nts) {
+//						if (pt.getHasPotential(runtimeRuleSet)) {
+//							result.add(pt);
+//						} else {
+//							int i=0;
+//						}
+//					}
+				} else {
 //				ArrayList<AbstractParseTree> nts = nt.growHeight(terminalRules, ruleSet);
 				//if (nts.isEmpty()) {
 					result.add(nt);
 				//} else {
 //					result.addAll(nts);
 				//}
+				}
 			}
 		}
 		return result;

@@ -130,7 +130,7 @@ public class RuntimeRuleItem {
 	public String toString() {
 		String s = "";
 		for(RuntimeRule r: this.getItems()) {
-			s+=r.getRuleNumber() + " ";
+			s+=r.getRuleNumber() + " ("+r.getName()+") ";
 		}
 		return s;
 	}

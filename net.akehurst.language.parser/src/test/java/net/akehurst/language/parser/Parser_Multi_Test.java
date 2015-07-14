@@ -66,6 +66,25 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 		return b.get();
 	}
 	
+	Grammar as0n() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("as").multi(0, -1, new NonTerminal("a"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+
+		return b.get();
+	}
+	
+	Grammar as0nbs0n() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("asbs").concatenation(new NonTerminal("as"),new NonTerminal("bs"));
+		b.rule("as").multi(0, -1, new NonTerminal("a"));
+		b.rule("bs").multi(0, -1, new NonTerminal("b"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+		b.rule("b").concatenation(new TerminalLiteral("b"));
+
+		return b.get();
+	}
+	
 	Grammar abs1m1() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("abs").multi(1, -1, new NonTerminal("ab"));
@@ -74,6 +93,65 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 		b.rule("b").concatenation(new TerminalLiteral("b"));
 
 		return b.get();
+	}
+	
+	@Test
+	public void as0n_as_empty() {
+		// grammar, goal, input
+		try {
+			Grammar g = as0n();
+			String goal = "as";
+			String text = "";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("","");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*as 1, 1}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+					b.leaf("", "")
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}	
+	}
+	
+	@Test
+	public void as0nbs0n_asbs_empty() {
+		// grammar, goal, input
+		try {
+			Grammar g = as0nbs0n();
+			String goal = "asbs";
+			String text = "";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("","");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*asbs 1, 1}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected =
+				b.branch("asbs",
+					b.branch("as",
+						b.leaf("", "")
+					),
+					b.branch("bs",
+						b.leaf("", "")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}	
 	}
 	
 	@Test

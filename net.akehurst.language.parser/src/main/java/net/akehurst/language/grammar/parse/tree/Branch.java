@@ -53,11 +53,7 @@ public class Branch extends Node implements IBranch {
 	
 	@Override
 	public String getName() {
-		try {
-			return this.getNodeType().getIdentity().asPrimitive();
-		} catch (ParseTreeException e) {
-			throw new RuntimeException("", e);
-		}
+		return this.runtimeRule.getName();
 	}
 
 	@Override

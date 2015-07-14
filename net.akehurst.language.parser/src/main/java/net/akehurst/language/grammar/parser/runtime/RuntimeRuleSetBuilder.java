@@ -15,6 +15,8 @@
  */
 package net.akehurst.language.grammar.parser.runtime;
 
+import java.util.regex.Pattern;
+
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.grammar.parse.tree.Branch;
 import net.akehurst.language.grammar.parse.tree.Factory;
@@ -23,34 +25,35 @@ import net.akehurst.language.grammar.parser.forrest.Input;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalEmpty;
+import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class RuntimeRuleSetBuilder {
 
 	public RuntimeRuleSetBuilder() {
 		this.parseTreeFactory = new Factory();
-		this.emptyRule = createRuntimeRule(new TerminalEmpty());
-		this.emptyRule.setIsSkipRule(false);
+//		this.emptyRule = createRuntimeRule(new TerminalEmpty());
+//		this.emptyRule.setIsSkipRule(false);
+//		this.emptyRule.setIsEmptyRule(true);
 	}
 	
 	Factory parseTreeFactory;
 	RuntimeRuleSet runtimeRuleSet;
 	
-	RuntimeRule emptyRule;
-	public RuntimeRule getEmptyRule() {
-		return this.emptyRule;
-	}
+//	RuntimeRule emptyRule;
+//	public RuntimeRule getEmptyRule(RuntimeRule ruleThatIsEmpty) {
+//		return this.emptyRule;
+//	}
 	
 	int nextRuleNumber;
 	public RuntimeRule createRuntimeRule(Rule grammarRule) {
-		RuntimeRule rr = new RuntimeRule(this.runtimeRuleSet, nextRuleNumber, RuntimeRuleKind.NON_TERMINAL);
-		rr.setGrammarRule(grammarRule);
+		RuntimeRule rr = new RuntimeRule(this.runtimeRuleSet, grammarRule.getName(), nextRuleNumber, RuntimeRuleKind.NON_TERMINAL, Pattern.LITERAL);
 		++nextRuleNumber;
 		return rr;
 	}
 	
 	public RuntimeRule createRuntimeRule(Terminal terminal) {
-		RuntimeRule rr = new RuntimeRule(this.runtimeRuleSet, nextRuleNumber, RuntimeRuleKind.TERMINAL);
-		rr.setTerminal(terminal);
+		int patternFlags = (terminal instanceof TerminalPattern) ? Pattern.MULTILINE : Pattern.LITERAL;
+		RuntimeRule rr = new RuntimeRule(this.runtimeRuleSet, terminal.getValue(), nextRuleNumber, RuntimeRuleKind.TERMINAL, patternFlags);
 		++nextRuleNumber;
 		return rr;
 	}
@@ -75,5 +78,10 @@ public class RuntimeRuleSetBuilder {
 	
 	public Leaf createLeaf(Input input, int start, int end, RuntimeRule terminalRule) {
 		return this.parseTreeFactory.createLeaf(input, start, end, terminalRule);
+	}
+
+	public RuntimeRuleItem createRuntimeRuleItem(RuntimeRuleItemKind kind) {
+		int maxRuleRumber = this.getRuntimeRuleSet().getTotalRuleNumber();
+		return new RuntimeRuleItem(kind,maxRuleRumber);
 	}
 }

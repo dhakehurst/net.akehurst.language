@@ -19,9 +19,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
+import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -62,9 +64,15 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*expr 1, 3}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("expr : [real : [\"([0-9]+[.][0-9]*)|([.][0-9]+)\" : \".5\"]]",nt);
-			
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("expr",
+					b.branch("real",
+						b.leaf("([0-9]+[.][0-9]*)|([.][0-9]+)", ".5")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
@@ -85,8 +93,14 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*expr 1, 3}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("expr : [real : [\"([0-9]+[.][0-9]*)|([.][0-9]+)\" : \"1.\"]]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("expr",
+					b.branch("real",
+						b.leaf("([0-9]+[.][0-9]*)|([.][0-9]+)", "1.")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -108,8 +122,20 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*expr 1, 5}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("expr : [range : [integer : [\"[0-9]+\" : \"1\"], '..' : \"..\", integer : [\"[0-9]+\" : \"5\"]]]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("expr",
+					b.branch("range",
+						b.branch("integer",
+							b.leaf("[0-9]+", "1")
+						),
+						b.leaf("..", ".."),
+						b.branch("integer",
+							b.leaf("[0-9]+", "5")
+						)
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

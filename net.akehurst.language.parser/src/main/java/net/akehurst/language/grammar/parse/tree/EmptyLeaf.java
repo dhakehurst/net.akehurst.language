@@ -13,30 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.grammar.parser.forrest;
+package net.akehurst.language.grammar.parse.tree;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.ILeaf;
-import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
-import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
-import net.akehurst.language.ogl.semanticStructure.LeafNodeType;
+import net.akehurst.language.grammar.parser.forrest.Input;
+import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
-public class EmptyLeaf implements ILeaf {
+public class EmptyLeaf extends Leaf {
 
-	public EmptyLeaf(int start) {
-		this.start = start;
-	}
-	
-	int start;
-	
-	IBranch parent;
-	public IBranch getParent() {
-		return parent;
-	}
-	public void setParent(IBranch value) {
-		this.parent = value;
+	public EmptyLeaf(Input input, int pos, RuntimeRule terminalRule) {
+		super(input, pos, pos, terminalRule);
 	}
 	
 	@Override
@@ -45,30 +32,10 @@ public class EmptyLeaf implements ILeaf {
 	}
 	
 	@Override
-	public boolean getIsSkip() {
-		return false;
-	}
-	
-	@Override
-	public INodeType getNodeType() throws ParseTreeException {
-		return new LeafNodeType();
-	}
-
-	@Override
 	public String getName() {
-		return "";
+		return "<empty>";
 	}
 
-	@Override
-	public int getStart() {
-		return this.start;
-	}
-	
-	@Override
-	public int getEnd() {
-		return this.start;
-	}
-	
 	@Override
 	public int getMatchedTextLength() {
 		return 0;
@@ -84,11 +51,6 @@ public class EmptyLeaf implements ILeaf {
 		return visitor.visit(this, arg);
 	}
 	
-//	@Override
-//	public ILeaf deepClone() {
-//		return new EmptyLeaf(this.start);
-//	}
-
 	//--- Object ---
 	@Override
 	public String toString() {

@@ -39,7 +39,7 @@ public class RuntimeRuleSet {
 	}
 	
 	int emptyRuleNumber;
-	public RuntimeRule getEmptyRule() {
+	public RuntimeRule getEmptyRule(RuntimeRule ruleThatIsEmpty) {
 		return this.getRuntimeRule(this.emptyRuleNumber);
 	}
 	
@@ -60,7 +60,7 @@ public class RuntimeRuleSet {
 		this.possibleFirstRule = new RuntimeRule[numberOfRules][];
 		this.possibleSuperRule = new RuntimeRule[numberOfRules][];
 		this.runtimeRules = new RuntimeRule[numberOfRules];
-		this.nodeTypes = new ArrayList<>(Arrays.asList(new INodeType[numberOfRules]));
+		this.nodeTypes = new ArrayList<>(Arrays.asList(new String[numberOfRules]));
 		this.ruleNumbers = new HashMap<>();
 		this.terminalMap = new HashMap<>();
 
@@ -68,10 +68,10 @@ public class RuntimeRuleSet {
 			int i = rrule.getRuleNumber();
 			this.runtimeRules[i] = rrule;
 			if (RuntimeRuleKind.NON_TERMINAL == rrule.getKind()) {
-				this.nodeTypes.set(i, rrule.getGrammarRule().getNodeType());
-				this.ruleNumbers.put(rrule.getGrammarRule().getNodeType(), i);
+				this.nodeTypes.set(i, rrule.getNodeTypeName());
+				this.ruleNumbers.put(rrule.getNodeTypeName(), i);
 			} else {
-				this.terminalMap.put(rrule.getTerminal(), rrule);
+				this.terminalMap.put(rrule.getTerminalPatternText(), rrule);
 			}
 		}
 	}
@@ -79,13 +79,13 @@ public class RuntimeRuleSet {
 		return this.runtimeRules[index];
 	}
 	public RuntimeRule getRuntimeRule(Rule rule) {
-		int index = this.getRuleNumber(rule.getNodeType());
+		int index = this.getRuleNumber(rule.getName());
 		return this.getRuntimeRule(index);
 	}
 	
-	public Rule getRule(int ruleNumber) {
-		return this.getRuntimeRule(ruleNumber).getGrammarRule();
-	}
+//	public Rule getRule(int ruleNumber) {
+//		return this.getRuntimeRule(ruleNumber).getGrammarRule();
+//	}
 	
 	List<RuntimeRule> allSkipRules_cache;
 	private List<RuntimeRule> getAllSkipRules() {
@@ -112,13 +112,13 @@ public class RuntimeRuleSet {
 		return result;
 	}
 	
-	ArrayList<INodeType> nodeTypes;
-	public INodeType getNodeType(int nodeTypeNumber) {
+	ArrayList<String> nodeTypes;
+	public String getNodeType(int nodeTypeNumber) {
 		return this.nodeTypes.get(nodeTypeNumber);
 	}
 	
-	Map<INodeType, Integer> ruleNumbers;
-	public int getRuleNumber(INodeType rule) {
+	Map<String, Integer> ruleNumbers;
+	public int getRuleNumber(String rule) {
 		return this.ruleNumbers.get(rule);
 	}
 
@@ -209,10 +209,13 @@ public class RuntimeRuleSet {
 		return result.toArray(new RuntimeRule[result.size()]);
 	}
 	
-	Map<Terminal, RuntimeRule> terminalMap;
-	public RuntimeRule getForTerminal(Terminal terminal) {
+	Map<String, RuntimeRule> terminalMap;
+	public RuntimeRule getForTerminal(String terminal) {
 		RuntimeRule rr = this.terminalMap.get(terminal);
 		return rr;
+	}
+	public void putForTerminal(String terminal, RuntimeRule runtimeRule) {
+		this.terminalMap.put(terminal, runtimeRule);
 	}
 	
 	String toString_cache;

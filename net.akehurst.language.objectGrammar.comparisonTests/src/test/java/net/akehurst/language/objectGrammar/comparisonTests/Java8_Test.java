@@ -95,21 +95,6 @@ public class Java8_Test {
 		}
 	}
 	
-	@Test
-	public void og_compilationUnit() {
-		
-		try {
-			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), this.file1);
-			Assert.assertNotNull(tree);
-		} catch (ParseFailedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ParseTreeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
 	static antlr4.Java8Parser antlr4_parser;
 	static {
 		CharStream input = new ANTLRInputStream(file1);
@@ -124,6 +109,21 @@ public class Java8_Test {
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 		Java8Parser p = new Java8Parser(tokens);
 		return p.compilationUnit();
+	}
+	
+	@Test
+	public void og_compilationUnit() {
+		
+		try {
+			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), this.file1);
+			Assert.assertNotNull(tree);
+		} catch (ParseFailedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseTreeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	@Test

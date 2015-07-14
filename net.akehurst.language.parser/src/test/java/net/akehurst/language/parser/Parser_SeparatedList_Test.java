@@ -87,8 +87,12 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 2}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : ['a' : \"a\"]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+					b.leaf("a", "a")
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -171,8 +175,14 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 2}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"]]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+					b.branch("a",
+						b.leaf("a", "a")
+					)				
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -194,8 +204,18 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 4}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", a : ['a' : \"a\"]]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.leaf(",", ","),
+					b.branch("a",
+						b.leaf("a", "a")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -217,8 +237,22 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 6}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", a : ['a' : \"a\"], ',' : \",\", a : ['a' : \"a\"]]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.leaf(",", ","),
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.leaf(",", ","),
+					b.branch("a",
+						b.leaf("a", "a")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -240,8 +274,28 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 8}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"]]",nt);
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.leaf(",", ","),
+					b.branch("SP",
+						b.leaf(" ", " ")
+					),
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.leaf(",", ","),
+					b.branch("SP",
+						b.leaf(" ", " ")
+					),
+					b.branch("a",
+						b.leaf("a", "a")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -263,9 +317,35 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 11}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"]]",nt);
-			
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.leaf(",", ","),
+					b.branch("SP",
+						b.leaf(" ", " ")
+					),
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.leaf(",", ","),
+					b.branch("SP",
+						b.leaf(" ", " ")
+					),
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.leaf(",", ","),
+					b.branch("SP",
+						b.leaf(" ", " ")
+					),
+					b.branch("a",
+						b.leaf("a", "a")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
@@ -286,9 +366,37 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			String st = tree.accept(v, "");
 			Assert.assertEquals("{*as 1, 11}",st);
 			
-			String nt = tree.getRoot().accept(v, "");
-			Assert.assertEquals("as : [a : ['a' : \"a\"], SP : [' ' : \" \"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], SP : [' ' : \" \"], ',' : \",\", SP : [' ' : \" \"], a : ['a' : \"a\"], SP : [' ' : \" \"]]",nt);
-			
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.branch("SP",
+						b.leaf(" ", " ")
+					),
+					b.leaf(",", ","),
+					b.branch("SP",
+						b.leaf(" ", " ")
+					),
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.branch("SP",
+						b.leaf(" ", " ")
+					),
+					b.leaf(",", ","),
+					b.branch("SP",
+						b.leaf(" ", " ")
+					),
+					b.branch("a",
+						b.leaf("a", "a")
+					),
+					b.branch("SP",
+						b.leaf(" ", " ")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}

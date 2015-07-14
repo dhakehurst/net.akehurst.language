@@ -34,8 +34,7 @@ public class Multi2RuntimeRuleItem implements Relation<Multi, RuntimeRuleItem> {
 	@Override
 	public RuntimeRuleItem constructLeft2Right(Multi left, Transformer transformer) {
 		Converter converter = (Converter)transformer;
-		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
-		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.MULTI,maxRuleRumber);
+		RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.MULTI);
 		return right;
 	}
 	

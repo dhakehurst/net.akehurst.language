@@ -103,7 +103,7 @@ public class ScannerLessParser implements IParser {
 			);
 			this.pseudoGrammar.getRule().add(goalRule);
 			this.runtimeRuleSet = this.converter.transformLeft2Right(Grammar2RuntimeRuleSet.class, this.pseudoGrammar);
-			int pseudoGoalNumber = this.runtimeRuleSet.getRuleNumber(goalRule.getNodeType());
+			int pseudoGoalNumber = this.runtimeRuleSet.getRuleNumber(goalRule.getName());
 			RuntimeRule pseudoGoalRR = this.runtimeRuleSet.getRuntimeRule(pseudoGoalNumber);
 			//
 			// this.allRules_cache = null;
@@ -217,7 +217,7 @@ public class ScannerLessParser implements IParser {
 			throws ParseFailedException, RuleNotFoundException, ParseTreeException {
 		RuntimeRule pseudoGoalRule = this.createPseudoGrammar(goal);
 		Rule goalRule = this.grammar.findAllRule(goal.getIdentity().asPrimitive());
-		int goalRuleNumber = this.runtimeRuleSet.getRuleNumber(goal);
+		int goalRuleNumber = this.runtimeRuleSet.getRuleNumber(goal.getIdentity().asPrimitive());
 		RuntimeRule goalRR = this.runtimeRuleSet.getRuntimeRule(goalRuleNumber);
 		CharSequence pseudoText = START_SYMBOL + text + FINISH_SYMBOL;
 
@@ -278,7 +278,7 @@ public class ScannerLessParser implements IParser {
 		// Set<AbstractParseTree> newTrees = bud.growHeight(this.getAllRules());
 		// newForrest.addAll(newTrees);
 		// }
-		RuntimeRule sst = this.getRuntimeRuleSet().getForTerminal(START_SYMBOL_TERMINAL);
+		RuntimeRule sst = this.getRuntimeRuleSet().getForTerminal(START_SYMBOL_TERMINAL.getValue());
 		ParseTreeBud startBud = ff.createNewBuds(new RuntimeRule[] { sst }, 0).get(0);
 		RuntimeRule[] terminalRules = runtimeRuleSet.getPossibleSubTerminal(sst);
 

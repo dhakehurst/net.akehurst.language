@@ -54,7 +54,7 @@ public class ParseTreeBuilder {
 		} else {
 			terminal = this.grammar.getAllTerminal().stream().filter(t -> t.getPattern().pattern().equals(terminalPattern)).findFirst().get();
 		}
-		RuntimeRule terminalRule = this.runtimeBuilder.getRuntimeRuleSet().getForTerminal(terminal);
+		RuntimeRule terminalRule = this.runtimeBuilder.getRuntimeRuleSet().getForTerminal(terminal.getValue());
 		ILeaf l = this.runtimeBuilder.createLeaf(this.input, start, end, terminalRule);
 		return l;
 	}

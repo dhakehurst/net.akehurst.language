@@ -49,7 +49,7 @@ public class Node2Namespace implements Relation<IBranch, Namespace> {
 	@Override
 	public boolean isValidForLeft2Right(IBranch left) {
 		// TODO Auto-generated method stub
-		return "'namespace'".equals(left.getChild(0).getName());
+		return "namespace".equals(left.getChild(0).getName());
 	}
 
 	@Override

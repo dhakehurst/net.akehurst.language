@@ -21,50 +21,58 @@ import java.util.Set;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.Terminal;
 
-
-
 public class RuntimeRule {
 
-	RuntimeRule(RuntimeRuleSet runtimeRuleSet, int ruleNumber, RuntimeRuleKind kind) {
+	RuntimeRule(RuntimeRuleSet runtimeRuleSet, String name, int ruleNumber, RuntimeRuleKind kind, int patternFlags) {
 		this.runtimeRuleSet = runtimeRuleSet;
+		this.name = name;
 		this.ruleNumber = ruleNumber;
 		this.kind = kind;
+		this.patternFlags = patternFlags;
 	}
 
 	RuntimeRuleSet runtimeRuleSet;
-
 	public RuntimeRuleSet getRuntimeRuleSet() {
 		return this.runtimeRuleSet;
 	}
 
+	String name;
+	public String getName() {
+		return this.name;
+	}
+	
 	int ruleNumber;
-
 	public int getRuleNumber() {
 		return this.ruleNumber;
 	}
 
 	RuntimeRuleKind kind;
-
 	public RuntimeRuleKind getKind() {
 		return this.kind;
 	}
 
+	int patternFlags;
+	public int getPatternFlags() {
+		return this.patternFlags;
+	}
+	
+	boolean isEmptyRule;
+	public boolean getIsEmptyRule() {
+		return this.getRhs().getKind() == RuntimeRuleItemKind.EMPTY;
+	}
+	
 	boolean isSkipRule;
-
 	public boolean getIsSkipRule() {
 		return this.isSkipRule;
 	}
-
 	public void setIsSkipRule(boolean value) {
 		this.isSkipRule = value;
 	}
 
 	RuntimeRuleItem rhs;
-
 	public void setRhs(RuntimeRuleItem value) {
 		this.rhs = value;
 	}
-
 	public RuntimeRuleItem getRhs() {
 		return rhs;
 	}
@@ -77,6 +85,11 @@ public class RuntimeRule {
 		return this.getRhsItem(1);
 	}
 
+	public RuntimeRule getRuleThatIsEmpty() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	Set<RuntimeRule> findAllNonTerminal() {
 		Set<RuntimeRule> result = new HashSet<>();
 		if (RuntimeRuleKind.TERMINAL == this.getKind()) {
@@ -121,13 +134,13 @@ public class RuntimeRule {
 			break;
 		case MULTI: {
 			if (0 == this.getRhs().getMultiMin()) {
-				result.add(this.runtimeRuleSet.getEmptyRule());
+				result.add(this.runtimeRuleSet.getEmptyRule(this));
 			}
 		}
 			break;
 		case SEPARATED_LIST: {
 			if (0 == this.getRhs().getMultiMin()) {
-				result.add(this.runtimeRuleSet.getEmptyRule());
+				result.add(this.runtimeRuleSet.getEmptyRule(this));
 			}
 		}
 			break;
@@ -215,13 +228,13 @@ public class RuntimeRule {
 				break;
 			case MULTI: {
 				if (0 == this.getRhs().getMultiMin()) {
-					result.add(this.runtimeRuleSet.getEmptyRule());
+					result.add(this.runtimeRuleSet.getEmptyRule(this));
 				}
 			}
 				break;
 			case SEPARATED_LIST: {
 				if (0 == this.getRhs().getMultiMin()) {
-					result.add(this.runtimeRuleSet.getEmptyRule());
+					result.add(this.runtimeRuleSet.getEmptyRule(this));
 				}
 			}
 				break;
@@ -233,24 +246,12 @@ public class RuntimeRule {
 		return result;
 	}
 
-	Rule grammarRule;
-
-	public Rule getGrammarRule() {
-		return this.grammarRule;
+	public String getNodeTypeName() {
+		return this.getName();
 	}
 
-	public void setGrammarRule(Rule value) {
-		this.grammarRule = value;
-	}
-
-	Terminal terminal;
-
-	public Terminal getTerminal() {
-		return this.terminal;
-	}
-
-	public void setTerminal(Terminal value) {
-		this.terminal = value;
+	public String getTerminalPatternText() {
+		return this.getName();
 	}
 
 	String toString_cache;
@@ -259,9 +260,9 @@ public class RuntimeRule {
 	public String toString() {
 		if (null == this.toString_cache) {
 			if (RuntimeRuleKind.NON_TERMINAL == this.getKind()) {
-				this.toString_cache =  this.getRuleNumber() + " [" + this.getGrammarRule().getName() + "] : " + this.getRhs() + " ["+this.getGrammarRule().toString()+"]";
+				this.toString_cache =  this.getRuleNumber() + " [" + this.getNodeTypeName() + "] : " + this.getRhs();
 			} else {
-				this.toString_cache = this.getTerminal().toString();
+				this.toString_cache = this.getTerminalPatternText();
 			}
 		}
 		return this.toString_cache;
@@ -280,5 +281,6 @@ public class RuntimeRule {
 		RuntimeRule other = (RuntimeRule) arg;
 		return this.getRuleNumber() == other.getRuleNumber();
 	}
+
 
 }

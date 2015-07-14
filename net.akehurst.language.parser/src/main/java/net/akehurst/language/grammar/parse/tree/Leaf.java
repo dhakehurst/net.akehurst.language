@@ -22,6 +22,7 @@ import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 import net.akehurst.language.grammar.parser.forrest.Input;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
+import net.akehurst.language.ogl.semanticStructure.LeafNodeType;
 import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
 
 public class Leaf extends Node implements ILeaf {
@@ -59,11 +60,7 @@ public class Leaf extends Node implements ILeaf {
 
 	@Override
 	public String getName() {
-		try {
-			return this.getNodeType().getIdentity().asPrimitive();
-		} catch (ParseTreeException e) {
-			throw new RuntimeException("", e);
-		}
+		return this.terminalRule.getName();
 	}
 
 	@Override
