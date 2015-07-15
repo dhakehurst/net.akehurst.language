@@ -30,6 +30,11 @@ public abstract class Terminal extends TangibleItem {
 		return this.value;
 	}
 
+	@Override
+	public String getName() {
+		return this.getValue();
+	}
+	
 	abstract public Pattern getPattern();
 	
 	public boolean matches(String value) {

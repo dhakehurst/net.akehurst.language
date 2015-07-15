@@ -19,6 +19,7 @@ package net.akehurst.language.grammar.parser.converter;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.akehurst.language.grammar.parser.runtime.RuleForGroup;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
@@ -81,20 +82,39 @@ public class Converter extends AbstractTransformer {
 		this.virtualRule_cache.add(rr);
 		return rr;
 	}
+	
+	int multiNum;
 	RuntimeRule createVirtualRule(Multi multi) {
 		Grammar grammar = multi.getOwningRule().getGrammar();
-		String name = "$multiG."+multi.getOwningRule().getName()+"$";
+		String name = "$"+multi.getOwningRule().getName()+"."+multi.getItem().getName()+".multi"+(multiNum++);
 		RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(new Concatenation(multi)));
 		RuntimeRule rr = this.getFactory().createRuntimeRule(r);
 		this.virtualRule_cache.add(rr);
+		
+		if (0 == multi.getMin()) {
+			RuntimeRule ruleThatIsEmpty = rr;
+			RuntimeRule rhs = this.createEmptyRuleFor(ruleThatIsEmpty);
+		}
+		
 		return rr;
 	}
+	int sepListNum;
 	RuntimeRule createVirtualRule(SeparatedList sepList) {
 		Grammar grammar = sepList.getOwningRule().getGrammar();
-		String name = "$sepListG."+sepList.getOwningRule().getName()+"$";
+		String name = "$sepListG."+sepList.getOwningRule().getName()+(sepListNum++);
 		RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(new Concatenation(sepList)));
 		RuntimeRule rr = this.getFactory().createRuntimeRule(r);
 		this.virtualRule_cache.add(rr);
+		if (0 == sepList.getMin()) {
+			RuntimeRule ruleThatIsEmpty = rr;
+			RuntimeRule rhs = this.createEmptyRuleFor(ruleThatIsEmpty);
+		}
 		return rr;
 	}
+	public RuntimeRule createEmptyRuleFor(RuntimeRule right) {
+		RuntimeRule rr = this.getFactory().createEmptyRule(right);
+		this.virtualRule_cache.add(rr);
+		return rr;
+	}
+
 }

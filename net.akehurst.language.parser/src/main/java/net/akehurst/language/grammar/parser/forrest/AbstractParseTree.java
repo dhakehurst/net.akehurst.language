@@ -138,14 +138,22 @@ public abstract class AbstractParseTree implements IParseTree {
 	public ArrayList<AbstractParseTree> growWidth(RuntimeRule[] terminalRules, RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
 		ArrayList<AbstractParseTree> result = new ArrayList<>();
 		if ( this.getCanGrowWidth() ) { //don't grow width if its complete...cant graft back
-			List<ParseTreeBud> buds = this.ffactory.createNewBuds(terminalRules, this.getRoot().getEnd());
+			RuntimeRule nextExpectedRule = this.getNextExpectedItem();
+			RuntimeRule[] expectedNextTerminal = runtimeRuleSet.getPossibleFirstTerminals(nextExpectedRule);
+			List<ParseTreeBud> buds = this.ffactory.createNewBuds(expectedNextTerminal, this.getRoot().getEnd()); //could use smaller subset of terminals here! getTerminalAt(nextExpectedPosition)
 	// doing this causes non termination of parser
 	//		ParseTreeBud empty = new ParseTreeEmptyBud(this.input, this.getRoot().getEnd());
 	//		buds.add(empty);
 			for (ParseTreeBud bud : buds) {
 				AbstractParseTree nt = this.pushStackNewRoot(bud.getRoot());
 				if (nt.getIsEmpty()) {
-					nt.growMe(nt.getRoot().getRuntimeRule().getRuleThatIsEmpty());
+					ParseTreeBranch pt = nt.growMe(nt.getRoot().getRuntimeRule().getRuleThatIsEmpty());
+					ArrayList<AbstractParseTree> nts = pt.growHeightClosure(runtimeRuleSet);
+					for(AbstractParseTree pt2: nts) {
+						if (pt2.getHasPotential(runtimeRuleSet)) {
+							result.add(pt2);
+						}
+					}
 //					ArrayList<AbstractParseTree> nts = nt.growHeight(terminalRules, runtimeRuleSet);
 //					for(AbstractParseTree pt: nts) {
 //						if (pt.getHasPotential(runtimeRuleSet)) {
@@ -157,7 +165,9 @@ public abstract class AbstractParseTree implements IParseTree {
 				} else {
 //				ArrayList<AbstractParseTree> nts = nt.growHeight(terminalRules, ruleSet);
 				//if (nts.isEmpty()) {
-					result.add(nt);
+					if (nt.getHasPotential(runtimeRuleSet)) {
+						result.add(nt);
+					}
 				//} else {
 //					result.addAll(nts);
 				//}
@@ -167,6 +177,24 @@ public abstract class AbstractParseTree implements IParseTree {
 		return result;
 	}
 
+	ArrayList<AbstractParseTree> growHeightClosure(RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
+		ArrayList<AbstractParseTree> nts = this.growHeight3(runtimeRuleSet);
+		if (nts.isEmpty()) {
+			nts.add(this);
+			return nts;
+		} else {
+			ArrayList<AbstractParseTree> result = new ArrayList<>();
+			for(AbstractParseTree pt: nts) {
+				ArrayList<AbstractParseTree> nts2 = pt.growHeightClosure(runtimeRuleSet);
+				result.addAll(nts2);
+			}
+			if (result.isEmpty()) {
+				return nts;
+			}
+			return result;
+		}
+	}
+	
 	AbstractParseTree pushStackNewRoot(Leaf n) {
 		return this.ffactory.fetchOrCreateBud(n, this);
 	}
@@ -234,7 +262,7 @@ public abstract class AbstractParseTree implements IParseTree {
 	public ArrayList<AbstractParseTree> growHeight(RuntimeRule[] terminalRules, RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
 //		RuntimeRule treeRR = this.getRoot().getRuntimeRule();
 //		RuntimeRule[] terminalRules = runtimeRuleSet.getPossibleSubTerminal(treeRR);
-		return this.growHeight3(terminalRules, runtimeRuleSet);
+		return this.growHeight3(runtimeRuleSet);
 	}
 	public ArrayList<AbstractParseTree> growHeight1(RuntimeRule[] terminalRules, RuntimeRuleSet ruleSet) {
 		if (this.getIsComplete()) {
@@ -298,11 +326,11 @@ public abstract class AbstractParseTree implements IParseTree {
 		return result;
 	}
 
-	public ArrayList<AbstractParseTree> growHeight3(RuntimeRule[] terminalRules, RuntimeRuleSet ruleSet) throws RuleNotFoundException, ParseTreeException {
+	public ArrayList<AbstractParseTree> growHeight3(RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
 		ArrayList<AbstractParseTree> result = new ArrayList<>();
 		//result.add((AbstractParseTree) this);
 		if (this.getIsComplete()) {
-			RuntimeRule[] rules = ruleSet.getPossibleSuperRule(this.getRoot().getRuntimeRule());
+			RuntimeRule[] rules = runtimeRuleSet.getPossibleSuperRule(this.getRoot().getRuntimeRule());
 			for (RuntimeRule rule : rules) {
 				if (this.root.getRuntimeRule().getRuleNumber() == rule.getRuleNumber()) {
 					result.add(this);
@@ -366,6 +394,8 @@ public abstract class AbstractParseTree implements IParseTree {
 			return this.growMulti(runtimeRule);
 		case SEPARATED_LIST:
 			return this.growSeparatedList(runtimeRule);
+		case EMPTY:
+			throw new RuntimeException("Internal Error: Should never have called grow on an EMPTY Rule (growMe is called as there should only be one growth option)");
 		default:
 			break;
 		}

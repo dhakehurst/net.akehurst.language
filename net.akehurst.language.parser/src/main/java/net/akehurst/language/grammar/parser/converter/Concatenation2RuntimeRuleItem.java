@@ -37,8 +37,7 @@ public class Concatenation2RuntimeRuleItem implements Relation<Concatenation, Ru
 	@Override
 	public RuntimeRuleItem constructLeft2Right(Concatenation left, Transformer transformer) {
 		Converter converter = (Converter)transformer;
-		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
-		return new RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, maxRuleRumber);
+		return converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION);
 	}
 	
 	@Override
@@ -48,9 +47,11 @@ public class Concatenation2RuntimeRuleItem implements Relation<Concatenation, Ru
 		try {
 			List<? extends RuntimeRule> rr = transformer.transformAllLeft2Right((Class<? extends Relation<ConcatenationItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, tis);
 			if (rr.isEmpty()) {
-				//add the EMPTY_RULE
+				//add an EMPTY_RULE
+				RuntimeRule ruleThatIsEmpty = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getOwningRule());
 				Converter converter = (Converter)transformer;
-				rr = Arrays.asList( converter.getFactory().getEmptyRule() );
+				RuntimeRule rhs = converter.createEmptyRuleFor(ruleThatIsEmpty);
+				rr = Arrays.asList( rhs );
 			}
 			RuntimeRule[] items = rr.toArray(new RuntimeRule[rr.size()]);
 			

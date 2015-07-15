@@ -89,7 +89,7 @@ public class ChoicePriority extends AbstractChoice {
 	public String toString() {
 		String r = "";
 		for(Concatenation a : this.getAlternative()) {
-			r += a.toString() + " | ";
+			r += a.toString() + " < ";
 		}
 		return r;
 	}

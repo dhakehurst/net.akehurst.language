@@ -40,34 +40,22 @@ public class PriorityChoice2RuntimeRuleItem extends AbstractChoice2RuntimeRuleIt
 	public RuntimeRuleItem constructLeft2Right(ChoicePriority left, Transformer transformer) {
 		Converter converter = (Converter)transformer;
 		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
-		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, maxRuleRumber);
+		RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.CHOICE);
 		return right;
 	}
 	
 	@Override
 	public void configureLeft2Right(ChoicePriority left, RuntimeRuleItem right, Transformer transformer) {
 		try {
-			List<ConcatenationItem> tangibleAlternatives = new ArrayList<>();
-			for(Concatenation concat: left.getAlternative()) {
-				if (concat.getItem().size() > 1) {
-					throw new UnsupportedOperationException("concatinations in choice not yet supported");
-				} else {
-					tangibleAlternatives.add(concat.getItem().get(0));
-				}
-			}
-			
-			List<? extends RuntimeRule> rr = transformer.transformAllLeft2Right((Class<? extends Relation<ConcatenationItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, tangibleAlternatives);
-			if (rr.isEmpty()) {
-				//add the EMPTY_RULE
-				Converter converter = (Converter)transformer;
-				rr = Arrays.asList( converter.getFactory().getEmptyRule() );
-			}
-			RuntimeRule[] items = rr.toArray(new RuntimeRule[rr.size()]);
-			
+			RuntimeRule ruleThatIsEmpty = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getOwningRule());
+			Converter converter = (Converter) transformer;
+			RuntimeRule rhs = converter.createEmptyRuleFor(ruleThatIsEmpty);
+			List<RuntimeRule> rrAlternatives = Arrays.asList(rhs);
+	
+			RuntimeRule[] items = rrAlternatives.toArray(new RuntimeRule[rrAlternatives.size()]);
 			right.setItems(items);
-		
-		} catch (RelationNotFoundException e) {
-			e.printStackTrace();
+		} catch (RelationNotFoundException ex) {
+			throw new RuntimeException("Cannot configure ChoicePriority");
 		}
 	}
 

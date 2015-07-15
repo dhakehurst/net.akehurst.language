@@ -44,6 +44,10 @@ public class ParseTreeBuilder {
 	String textAccumulator;
 	int textLength;
 
+	public ILeaf leaf(String text) {
+		return this.leaf(text, text);
+	}
+	
 	public ILeaf leaf(String terminalPattern, String text) {
 		int start = this.textLength+1;
 		this.textLength+=text.length();
@@ -59,9 +63,10 @@ public class ParseTreeBuilder {
 		return l;
 	}
 
-	public ILeaf emptyLeaf() {
+	public ILeaf emptyLeaf(String ruleNameThatIsEmpty) {
 		int start = this.textLength +1;
-		RuntimeRule terminalRule = this.runtimeBuilder.getEmptyRule();
+		RuntimeRule ruleThatIsEmpty = this.runtimeBuilder.getRuntimeRuleSet().getRuntimeRule(ruleNameThatIsEmpty);
+		RuntimeRule terminalRule = this.runtimeBuilder.getRuntimeRuleSet().getEmptyRule(ruleThatIsEmpty);
 		return this.runtimeBuilder.createLeaf(this.input, start, start, terminalRule);
 	}
 

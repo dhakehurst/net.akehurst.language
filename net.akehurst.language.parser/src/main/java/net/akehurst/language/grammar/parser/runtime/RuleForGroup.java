@@ -1,4 +1,4 @@
-package net.akehurst.language.grammar.parser.converter;
+package net.akehurst.language.grammar.parser.runtime;
 
 import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
 import net.akehurst.language.ogl.semanticStructure.Grammar;

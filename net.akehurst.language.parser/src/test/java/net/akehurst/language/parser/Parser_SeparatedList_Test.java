@@ -72,6 +72,41 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 		return b.get();
 	}
 	
+	Grammar as0n() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("as").separatedList(0, -1, new TerminalLiteral(","), new NonTerminal("a"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+
+		return b.get();
+	}
+	
+	@Test
+	public void as0n_as_empty() {
+		// grammar, goal, input
+		try {
+			Grammar g = as0n();
+			String goal = "as";
+			String text = "";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("","");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*as 1, 1}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+					b.emptyLeaf("as")
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}	
+	}
+	
 	@Test
 	public void as1_as_a() {
 		// grammar, goal, input

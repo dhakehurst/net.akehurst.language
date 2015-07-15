@@ -15,8 +15,10 @@
  */
 package net.akehurst.language.grammar.parser.converter;
 
+import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
+import net.akehurst.language.ogl.semanticStructure.Multi;
 import net.akehurst.language.ogl.semanticStructure.SeparatedList;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
@@ -30,9 +32,9 @@ public class ChoiceSingleOneSeparatedList extends AbstractChoice2RuntimeRuleItem
 	
 	@Override
 	public RuntimeRuleItem constructLeft2Right(AbstractChoice left, Transformer transformer) {
-		SeparatedList multi = (SeparatedList)left.getAlternative().get(0).getItem().get(0);
+		SeparatedList item = (SeparatedList)left.getAlternative().get(0).getItem().get(0);
 		try {
-			RuntimeRuleItem right = transformer.transformLeft2Right(SeparatedList2RuntimeRuleItem.class, multi);
+			RuntimeRuleItem right = transformer.transformLeft2Right(SeparatedList2RuntimeRuleItem.class, item);
 			return right;
 		} catch (RelationNotFoundException e) {
 			throw new RuntimeException("Cannot constrcut right item for AbstractChoice "+left);
@@ -41,6 +43,18 @@ public class ChoiceSingleOneSeparatedList extends AbstractChoice2RuntimeRuleItem
 	
 	@Override
 	public void configureLeft2Right(AbstractChoice left, RuntimeRuleItem right, Transformer transformer) {
+		//in other cases, a multi is converted to a group and the empty rule is added then,
+		// but not in this special case
+		try {
+			SeparatedList item = (SeparatedList)left.getAlternative().get(0).getItem().get(0);
+			if (0 == item.getMin()) {
+				Converter converter = (Converter)transformer;
+				RuntimeRule ruleThatIsEmpty = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getOwningRule());
+				RuntimeRule rhs = converter.createEmptyRuleFor(ruleThatIsEmpty);
+			}
+		} catch (RelationNotFoundException ex) {
+			throw new RuntimeException("Cannont configure AbstractChoice");
+		}
 	}
 
 	@Override

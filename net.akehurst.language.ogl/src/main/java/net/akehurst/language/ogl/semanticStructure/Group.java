@@ -29,6 +29,11 @@ public class Group extends SimpleItem {
 	}
 	
 	@Override
+	public String getName() {
+		return "$group";
+	}
+	
+	@Override
 	public void setOwningRule(Rule value) {
 		this.owningRule = value;
 		this.getChoice().setOwningRule(value);

@@ -14,7 +14,13 @@ grammar JavaFile {
 		: packageDeclaration? importDeclaration* typeDeclaration* 
 	    ;
 	    
-	packageDeclaration : 'package' ;
+	packageDeclaration : packageModifier* 'package' ;
+	
+	packageModifier
+	:	annotation
+	;
+	
+	annotation : '@' ;
 	
 	importDeclaration : 'import' ;
 	

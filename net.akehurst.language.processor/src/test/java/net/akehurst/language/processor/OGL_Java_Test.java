@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.processor;
 
+import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
@@ -76,42 +77,135 @@ public class OGL_Java_Test {
 		}
 	}
 
-	@Test
-	public void java1() {
+	IParseTree parse(String grammarFile, String goal, String text) {
 		try {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			String grammarText = this.readFile(grammarFile, Charset.defaultCharset());
+			Grammar grammar = proc.process(grammarText, Grammar.class);
 
-			String text = this.readFile("src/test/resources/Java1.og", Charset.defaultCharset());
+			IParseTree tree = this.process(grammar, text, goal);
 
-			IParseTree tree = this.process(g, text, "grammarDefinition");
-
-			Assert.assertNotNull(tree);
-
+			return tree;
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		} catch (IOException e) {
 			Assert.fail(e.getMessage());
+		} catch (UnableToAnalyseExeception e) {
+			Assert.fail(e.getMessage());
 		}
+		return null;
 	}
+	
 	@Test
-	public void java2() {
-		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
-
-			String text = this.readFile("src/test/resources/Java2.og", Charset.defaultCharset());
-
-			IParseTree tree = this.process(g, text, "grammarDefinition");
-
-			Assert.assertNotNull(tree);
-
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		} catch (IOException e) {
-			Assert.fail(e.getMessage());
-		}
+	public void java1_empty() {
+		IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", "");
+		Assert.assertNotNull(tree);
 	}
+	
+	@Test
+	public void java1_comment() {
+		IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", "/* comment */");
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java1_package() {
+		IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", "package");
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java1_comment_package() {
+		String text = "/* comment */  package";
+		IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java1_package_comment() {
+		String text = "package  /* comment */";
+		IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java2_empty() {
+		String text = "";
+		IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java2_comment() {
+		String text = "/* comment */";
+		IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java2_comment_package() {
+		String text = "/* comment */  package";
+		IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java2_package_comment() {
+		String text = "package  /* comment */";
+		IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java2_import() {
+		String text = "import";
+		IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java2_type() {
+		String text = "type";
+		IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java3_empty() {
+		String text = "";
+		IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java3_comment() {
+		String text = "/* comment */";
+		IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java3_package() {
+		String text = "package";
+		IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java3_comment_package() {
+		String text = "/* comment */  package";
+		IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java3_package_comment() {
+		String text = "package  /* comment */";
+		IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	
 	@Test
 	public void java() {
 		try {

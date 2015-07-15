@@ -39,8 +39,7 @@ public class ChoiceSingleConcatenation2RuntimeRuleItem extends AbstractChoice2Ru
 	@Override
 	public RuntimeRuleItem constructLeft2Right(ChoiceSimple left, Transformer transformer) {
 		Converter converter = (Converter)transformer;
-		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
-		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, maxRuleRumber);
+		RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION);
 		return right;
 	}
 	

@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.grammar.parser.converter;
 
+import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
 import net.akehurst.language.ogl.semanticStructure.Multi;
@@ -41,6 +42,18 @@ public class ChoiceSingleOneMulti extends AbstractChoice2RuntimeRuleItem<Abstrac
 	
 	@Override
 	public void configureLeft2Right(AbstractChoice left, RuntimeRuleItem right, Transformer transformer) {
+		//in other cases, a multi is converted to a group and the empty rule is added then,
+		// but not in this special case
+		try {
+			Multi multi = (Multi)left.getAlternative().get(0).getItem().get(0);
+			if (0 == multi.getMin()) {
+				Converter converter = (Converter)transformer;
+				RuntimeRule ruleThatIsEmpty = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getOwningRule());
+				RuntimeRule rhs = converter.createEmptyRuleFor(ruleThatIsEmpty);
+			}
+		} catch (RelationNotFoundException ex) {
+			throw new RuntimeException("Cannont configure AbstractChoice");
+		}
 	}
 
 	@Override

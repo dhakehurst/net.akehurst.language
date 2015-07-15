@@ -23,6 +23,7 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
 import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
+import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
 public class ChoiceEmpty2RuntimeRuleItem extends AbstractChoice2RuntimeRuleItem<ChoiceSimple> {
@@ -36,19 +37,23 @@ public class ChoiceEmpty2RuntimeRuleItem extends AbstractChoice2RuntimeRuleItem<
 	public RuntimeRuleItem constructLeft2Right(ChoiceSimple left, Transformer transformer) {
 		Converter converter = (Converter) transformer;
 		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
-		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, maxRuleRumber);
+		RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION);
 		return right;
 	}
 
 	@Override
 	public void configureLeft2Right(ChoiceSimple left, RuntimeRuleItem right, Transformer transformer) {
-		List<RuntimeRule> rrAlternatives = new ArrayList<>();
-
-		Converter converter = (Converter) transformer;
-		rrAlternatives = Arrays.asList(converter.getFactory().getEmptyRule());
-
-		RuntimeRule[] items = rrAlternatives.toArray(new RuntimeRule[rrAlternatives.size()]);
-		right.setItems(items);
+		try {
+			RuntimeRule ruleThatIsEmpty = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getOwningRule());
+			Converter converter = (Converter) transformer;
+			RuntimeRule rhs = converter.createEmptyRuleFor(ruleThatIsEmpty);
+			List<RuntimeRule> rrAlternatives = Arrays.asList(rhs);
+	
+			RuntimeRule[] items = rrAlternatives.toArray(new RuntimeRule[rrAlternatives.size()]);
+			right.setItems(items);
+		} catch (RelationNotFoundException ex) {
+			throw new RuntimeException("Cannot configure ChoiceSimple");
+		}
 	}
 
 	@Override

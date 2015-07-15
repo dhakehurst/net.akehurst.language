@@ -35,8 +35,7 @@ public class SeparatedList2RuntimeRuleItem implements Relation<SeparatedList, Ru
 	@Override
 	public RuntimeRuleItem constructLeft2Right(SeparatedList left, Transformer transformer) {
 		Converter converter = (Converter)transformer;
-		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
-		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST,maxRuleRumber);
+		RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST);
 		return right;
 	}
 	
@@ -53,7 +52,7 @@ public class SeparatedList2RuntimeRuleItem implements Relation<SeparatedList, Ru
 			right.setItems(items);
 			right.setMultiMin(left.getMin());
 			right.setMultiMax(left.getMax());
-		
+			
 		} catch (RelationNotFoundException e) {
 			e.printStackTrace();
 		}

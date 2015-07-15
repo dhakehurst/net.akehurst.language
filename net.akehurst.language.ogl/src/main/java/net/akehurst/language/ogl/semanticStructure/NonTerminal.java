@@ -34,6 +34,15 @@ public class NonTerminal extends TangibleItem {
 		}
 		return this.referencedRule;
 	}
+	
+	@Override
+	public String getName() {
+		try {
+			return this.getNodeType().getIdentity().asPrimitive();
+		} catch (RuleNotFoundException e) {
+			throw new RuntimeException(e.getMessage(),e);
+		}
+	}
 
 	INodeType nodeType;
 	public INodeType getNodeType() throws RuleNotFoundException {

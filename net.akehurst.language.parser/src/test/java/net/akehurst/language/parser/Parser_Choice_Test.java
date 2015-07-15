@@ -64,7 +64,7 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
 					b.branch("a",
-						b.leaf("", "")
+						b.emptyLeaf("a")
 					);
 			Assert.assertEquals(expected, tree.getRoot());
 			

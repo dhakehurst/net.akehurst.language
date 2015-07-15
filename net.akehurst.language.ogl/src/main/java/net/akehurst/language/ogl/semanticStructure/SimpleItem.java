@@ -21,6 +21,6 @@ public abstract class SimpleItem extends ConcatenationItem {
 	public SimpleItem() {
 	}
 
-
+	abstract public String getName();
 	
 }

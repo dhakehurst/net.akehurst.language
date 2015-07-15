@@ -1,9 +1,19 @@
 namespace net::akehurst::language::java;
 
 grammar JavaFile {
-	skip WHITESPACE : "\\s+" ;
-	skip COMMENT : "(?s)/\\*.*?\\*/" ;
+	skip
+	WS :  "[ \t\r\n\u000C]+" ;
 
-	file : package declaration ;
+	skip
+	COMMENT :   "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
+
+	skip
+	LINE_COMMENT :   "(?s)//.*?$" ;
+
+	compilationUnit
+		: packageDeclaration?
+	    ;
+	    
+	packageDeclaration : 'package' ;
 
 }

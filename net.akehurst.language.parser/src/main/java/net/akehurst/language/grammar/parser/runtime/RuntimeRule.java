@@ -58,7 +58,7 @@ public class RuntimeRule {
 	
 	boolean isEmptyRule;
 	public boolean getIsEmptyRule() {
-		return this.getRhs().getKind() == RuntimeRuleItemKind.EMPTY;
+		return null!=this.getRhs() && this.getRhs().getKind() == RuntimeRuleItemKind.EMPTY;
 	}
 	
 	boolean isSkipRule;
@@ -86,8 +86,7 @@ public class RuntimeRule {
 	}
 
 	public RuntimeRule getRuleThatIsEmpty() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.getRhsItem(0);
 	}
 	
 	Set<RuntimeRule> findAllNonTerminal() {
@@ -212,6 +211,7 @@ public class RuntimeRule {
 	public Set<RuntimeRule> findTerminalAt(int n) {
 		Set<RuntimeRule> result = new HashSet<>();
 		if (RuntimeRuleKind.TERMINAL == this.getKind()) {
+			result.add(this);
 			return result;
 		}
 		RuntimeRule[] firstItems = this.getRhs().getItemAt(n);
@@ -260,7 +260,7 @@ public class RuntimeRule {
 	public String toString() {
 		if (null == this.toString_cache) {
 			if (RuntimeRuleKind.NON_TERMINAL == this.getKind()) {
-				this.toString_cache =  this.getRuleNumber() + " [" + this.getNodeTypeName() + "] : " + this.getRhs();
+				this.toString_cache =  this.getRuleNumber() + "(" + this.getNodeTypeName() + ") : " + this.getRhs();
 			} else {
 				this.toString_cache = this.getTerminalPatternText();
 			}

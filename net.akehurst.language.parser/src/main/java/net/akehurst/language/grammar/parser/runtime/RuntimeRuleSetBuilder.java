@@ -58,9 +58,18 @@ public class RuntimeRuleSetBuilder {
 		return rr;
 	}
 	
+	public RuntimeRule createEmptyRule(RuntimeRule ruleThatIsEmpty) {
+		RuntimeRule rr = new RuntimeRule(this.runtimeRuleSet, "$empty."+ruleThatIsEmpty.getName()+"$", nextRuleNumber, RuntimeRuleKind.TERMINAL, Pattern.LITERAL);
+		++nextRuleNumber;
+		RuntimeRuleItem emptyRhs = this.createRuntimeRuleItem(RuntimeRuleItemKind.EMPTY);
+		rr.setRhs(emptyRhs);
+		emptyRhs.setItems(new RuntimeRule[]{ruleThatIsEmpty});
+		return rr;
+	}
+	
 	public RuntimeRuleSet createRuntimeRuleSet(int totalRuleNumber) {
 		if (null==this.runtimeRuleSet) {
-			this.runtimeRuleSet = new RuntimeRuleSet(totalRuleNumber, this.getEmptyRule().getRuleNumber());
+			this.runtimeRuleSet = new RuntimeRuleSet(totalRuleNumber);//, this.getEmptyRule().getRuleNumber());
 		}
 		return this.runtimeRuleSet;
 	}

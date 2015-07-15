@@ -42,6 +42,7 @@ public class SeparatedList2RuntimeRule extends AbstractConcatinationItem2Runtime
 			RuntimeRuleItem ruleItem = transformer.transformLeft2Right(SeparatedList2RuntimeRuleItem.class, left);
 			right.setRhs(ruleItem);
 
+
 		} catch (RelationNotFoundException e) {
 			e.printStackTrace();
 		}

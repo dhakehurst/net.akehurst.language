@@ -113,7 +113,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
-					b.leaf("", "")
+					b.emptyLeaf("as")
 				);
 			Assert.assertEquals(expected, tree.getRoot());
 			
@@ -141,10 +141,81 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			IBranch expected =
 				b.branch("asbs",
 					b.branch("as",
-						b.leaf("", "")
+						b.emptyLeaf("as")
 					),
 					b.branch("bs",
-						b.leaf("", "")
+						b.emptyLeaf("bs")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}	
+	}
+	
+	@Test
+	public void as0nbs0n_asbs_b() {
+		// grammar, goal, input
+		try {
+			Grammar g = as0nbs0n();
+			String goal = "asbs";
+			String text = "b";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("","");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*asbs 1, 2}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected =
+				b.branch("asbs",
+					b.branch("as",
+						b.emptyLeaf("as")
+					),
+					b.branch("bs",
+						b.branch("b",
+							b.leaf("b")
+						)
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}	
+	}
+	
+	@Test
+	public void as0nbs0n_asbs_bb() {
+		// grammar, goal, input
+		try {
+			Grammar g = as0nbs0n();
+			String goal = "asbs";
+			String text = "bb";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("","");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*asbs 1, 3}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected =
+				b.branch("asbs",
+					b.branch("as",
+						b.emptyLeaf("as")
+					),
+					b.branch("bs",
+						b.branch("b",
+							b.leaf("b")
+						),
+						b.branch("b",
+								b.leaf("b")
+						)
 					)
 				);
 			Assert.assertEquals(expected, tree.getRoot());
@@ -272,7 +343,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 						b.leaf("a", "a")
 					),
 					b.branch("b01",
-						b.emptyLeaf()
+						b.emptyLeaf("b01")
 					)
 				);
 			Assert.assertEquals(expected, tree.getRoot());

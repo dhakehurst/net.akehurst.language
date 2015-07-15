@@ -71,12 +71,13 @@ public class Special_Test extends AbstractParser_Test {
 						b.branch("S",
 							b.leaf("a", "a")
 						),
-						b.branch("B",
-							b.emptyLeaf()
-						),
+
 						b.branch("B",
 							b.leaf("b", "b")
-						)
+						),
+						b.branch("B",
+								b.emptyLeaf("B")
+							)
 					)
 				);
 			Assert.assertEquals(expected, tree.getRoot());

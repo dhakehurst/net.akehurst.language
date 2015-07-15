@@ -39,7 +39,7 @@ public class ChoiceMultiple2RuntimeRuleItem extends AbstractChoice2RuntimeRuleIt
 	public RuntimeRuleItem constructLeft2Right(ChoiceSimple left, Transformer transformer) {
 		Converter converter = (Converter) transformer;
 		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
-		RuntimeRuleItem right = new RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, maxRuleRumber);
+		RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.CHOICE);
 		return right;
 	}
 

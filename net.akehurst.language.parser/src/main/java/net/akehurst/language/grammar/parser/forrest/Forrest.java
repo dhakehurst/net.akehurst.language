@@ -364,6 +364,7 @@ public class Forrest {
 			// }
 			if (this.possibleTrees.contains(tree)) {
 				// don't add
+				int i=0;
 			} else {
 				this.possibleTrees.add(tree);
 				this.canGrow |= tree.getCanGrow();
@@ -408,8 +409,8 @@ public class Forrest {
 	@Override
 	public String toString() {
 		String s = "Forrest {";
-		s += "goal==" + this.goalRRule.getName();
-		s += ", canGrow==" + this.possibleTrees;
+		s += this.possibleTrees.size();
+		s += ", " + this.possibleTrees;
 		s += "}";
 		return s;
 	}

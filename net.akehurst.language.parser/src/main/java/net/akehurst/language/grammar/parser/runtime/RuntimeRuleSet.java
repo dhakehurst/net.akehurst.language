@@ -33,14 +33,15 @@ public class RuntimeRuleSet {
 	 * necessary to know total number of rules up front,
 	 * so it can be used in RuntimeRuleItem
 	 */
-	public RuntimeRuleSet(int totalRuleNumber, int emptyRuleNumber) {
+	public RuntimeRuleSet(int totalRuleNumber) { //, int emptyRuleNumber) {
 		this.totalRuleNumber = totalRuleNumber;
-		this.emptyRuleNumber = emptyRuleNumber;
+//		this.emptyRuleNumber = emptyRuleNumber;
 	}
 	
-	int emptyRuleNumber;
+//	int emptyRuleNumber;
+	RuntimeRule[] emptyRulesFor;
 	public RuntimeRule getEmptyRule(RuntimeRule ruleThatIsEmpty) {
-		return this.getRuntimeRule(this.emptyRuleNumber);
+		return this.emptyRulesFor[ ruleThatIsEmpty.getRuleNumber() ];
 	}
 	
 	int totalRuleNumber;
@@ -63,8 +64,12 @@ public class RuntimeRuleSet {
 		this.nodeTypes = new ArrayList<>(Arrays.asList(new String[numberOfRules]));
 		this.ruleNumbers = new HashMap<>();
 		this.terminalMap = new HashMap<>();
+		this.emptyRulesFor = new RuntimeRule[numberOfRules];
 
 		for(RuntimeRule rrule: value) {
+			if (null==rrule) {
+				throw new RuntimeException("RuntimeRuleSet must not containa  null rule!");
+			}
 			int i = rrule.getRuleNumber();
 			this.runtimeRules[i] = rrule;
 			if (RuntimeRuleKind.NON_TERMINAL == rrule.getKind()) {
@@ -72,8 +77,15 @@ public class RuntimeRuleSet {
 				this.ruleNumbers.put(rrule.getNodeTypeName(), i);
 			} else {
 				this.terminalMap.put(rrule.getTerminalPatternText(), rrule);
+				if (rrule.getIsEmptyRule()) {
+					this.emptyRulesFor[rrule.getRuleThatIsEmpty().getRuleNumber()] = rrule;
+				}
 			}
 		}
+	}
+	public RuntimeRule getRuntimeRule(String ruleName) {
+		int index = this.getRuleNumber(ruleName);
+		return this.runtimeRules[index];
 	}
 	public RuntimeRule getRuntimeRule(int index) {
 		return this.runtimeRules[index];

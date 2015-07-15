@@ -33,7 +33,7 @@ public class EmptyLeaf extends Leaf {
 	
 	@Override
 	public String getName() {
-		return "<empty>";
+		return this.terminalRule.getName();
 	}
 
 	@Override
