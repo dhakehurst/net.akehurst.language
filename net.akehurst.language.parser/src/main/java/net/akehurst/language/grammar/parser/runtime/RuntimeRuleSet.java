@@ -30,29 +30,33 @@ import net.akehurst.language.ogl.semanticStructure.Terminal;
 public class RuntimeRuleSet {
 
 	/*
-	 * necessary to know total number of rules up front,
-	 * so it can be used in RuntimeRuleItem
+	 * necessary to know total number of rules up front, so it can be used in
+	 * RuntimeRuleItem
 	 */
-	public RuntimeRuleSet(int totalRuleNumber) { //, int emptyRuleNumber) {
+	public RuntimeRuleSet(int totalRuleNumber) { // , int emptyRuleNumber) {
 		this.totalRuleNumber = totalRuleNumber;
-//		this.emptyRuleNumber = emptyRuleNumber;
+		// this.emptyRuleNumber = emptyRuleNumber;
 	}
-	
-//	int emptyRuleNumber;
+
+	// int emptyRuleNumber;
 	RuntimeRule[] emptyRulesFor;
+
 	public RuntimeRule getEmptyRule(RuntimeRule ruleThatIsEmpty) {
-		return this.emptyRulesFor[ ruleThatIsEmpty.getRuleNumber() ];
+		return this.emptyRulesFor[ruleThatIsEmpty.getRuleNumber()];
 	}
-	
+
 	int totalRuleNumber;
+
 	public int getTotalRuleNumber() {
 		return this.totalRuleNumber;
 	}
-	
+
 	RuntimeRule[] runtimeRules;
+
 	public RuntimeRule[] getAllRules() {
 		return this.runtimeRules;
 	}
+
 	public void setRuntimeRules(List<? extends RuntimeRule> value) {
 		int numberOfRules = value.size();
 		this.possibleSubTerminal = new RuntimeRule[numberOfRules][];
@@ -66,8 +70,8 @@ public class RuntimeRuleSet {
 		this.terminalMap = new HashMap<>();
 		this.emptyRulesFor = new RuntimeRule[numberOfRules];
 
-		for(RuntimeRule rrule: value) {
-			if (null==rrule) {
+		for (RuntimeRule rrule : value) {
+			if (null == rrule) {
 				throw new RuntimeException("RuntimeRuleSet must not containa  null rule!");
 			}
 			int i = rrule.getRuleNumber();
@@ -83,27 +87,31 @@ public class RuntimeRuleSet {
 			}
 		}
 	}
+
 	public RuntimeRule getRuntimeRule(String ruleName) {
 		int index = this.getRuleNumber(ruleName);
 		return this.runtimeRules[index];
 	}
+
 	public RuntimeRule getRuntimeRule(int index) {
 		return this.runtimeRules[index];
 	}
+
 	public RuntimeRule getRuntimeRule(Rule rule) {
 		int index = this.getRuleNumber(rule.getName());
 		return this.getRuntimeRule(index);
 	}
-	
-//	public Rule getRule(int ruleNumber) {
-//		return this.getRuntimeRule(ruleNumber).getGrammarRule();
-//	}
-	
+
+	// public Rule getRule(int ruleNumber) {
+	// return this.getRuntimeRule(ruleNumber).getGrammarRule();
+	// }
+
 	List<RuntimeRule> allSkipRules_cache;
+
 	private List<RuntimeRule> getAllSkipRules() {
-		if (null==this.allSkipRules_cache) {
+		if (null == this.allSkipRules_cache) {
 			this.allSkipRules_cache = new ArrayList<>();
-			for(RuntimeRule r: this.getAllRules()) {
+			for (RuntimeRule r : this.getAllRules()) {
 				if (r.getIsSkipRule()) {
 					this.allSkipRules_cache.add(r);
 				}
@@ -111,33 +119,41 @@ public class RuntimeRuleSet {
 		}
 		return this.allSkipRules_cache;
 	}
-	
-	private Set<RuntimeRule> getAllSkipTerminals() {
-		Set<RuntimeRule> result = new HashSet<>();
-		for(RuntimeRule r: this.getAllSkipRules()) {
-			for(RuntimeRule rr: r.getRhs().getItems()) {
-				if (RuntimeRuleKind.TERMINAL==rr.getKind()) {
-					result.add(rr);
+
+	Set<RuntimeRule> allSkipTerminals;
+
+	public Set<RuntimeRule> getAllSkipTerminals() {
+		if (null == this.allSkipTerminals) {
+			Set<RuntimeRule> result = new HashSet<>();
+			for (RuntimeRule r : this.getAllSkipRules()) {
+				for (RuntimeRule rr : r.getRhs().getItems()) {
+					if (RuntimeRuleKind.TERMINAL == rr.getKind()) {
+						result.add(rr);
+					}
 				}
 			}
+			this.allSkipTerminals = result;
 		}
-		return result;
+		return this.allSkipTerminals;
 	}
-	
+
 	ArrayList<String> nodeTypes;
+
 	public String getNodeType(int nodeTypeNumber) {
 		return this.nodeTypes.get(nodeTypeNumber);
 	}
-	
+
 	Map<String, Integer> ruleNumbers;
+
 	public int getRuleNumber(String rule) {
 		return this.ruleNumbers.get(rule);
 	}
 
 	RuntimeRule[][] possibleSubRule;
+
 	public RuntimeRule[] getPossibleSubRule(RuntimeRule runtimeRule) {
 		RuntimeRule[] result = this.possibleSubRule[runtimeRule.getRuleNumber()];
-		if (null==result) {
+		if (null == result) {
 			Set<RuntimeRule> rr = runtimeRule.findSubRules();
 			result = rr.toArray(new RuntimeRule[rr.size()]);
 			this.possibleSubRule[runtimeRule.getRuleNumber()] = result;
@@ -146,17 +162,19 @@ public class RuntimeRuleSet {
 	}
 
 	RuntimeRule[][] possibleFirstRule;
+
 	public RuntimeRule[] getPossibleFirstSubRule(RuntimeRule runtimeRule) {
 		RuntimeRule[] result = this.possibleFirstRule[runtimeRule.getRuleNumber()];
-		if (null==result) {
+		if (null == result) {
 			Set<RuntimeRule> rr = runtimeRule.findSubRulesAt(0);
 			result = rr.toArray(new RuntimeRule[rr.size()]);
 			this.possibleFirstRule[runtimeRule.getRuleNumber()] = result;
 		}
 		return result;
 	}
-	
+
 	RuntimeRule[][] possibleSuperRule;
+
 	public RuntimeRule[] getPossibleSuperRule(RuntimeRule runtimeRule) {
 		RuntimeRule[] result = this.possibleSuperRule[runtimeRule.getRuleNumber()];
 		if (null == result) {
@@ -167,15 +185,16 @@ public class RuntimeRuleSet {
 	}
 
 	RuntimeRule[][] possibleSubTerminal;
+
 	public RuntimeRule[] getPossibleSubTerminal(RuntimeRule runtimeRule) {
 		RuntimeRule[] result = this.possibleSubTerminal[runtimeRule.getRuleNumber()];
 		if (null == result) {
 			Set<RuntimeRule> rr = runtimeRule.findAllTerminal();
-			for(RuntimeRule r : this.getPossibleSubRule(runtimeRule)) {
-				rr.addAll( r.findAllTerminal() );
+			for (RuntimeRule r : this.getPossibleSubRule(runtimeRule)) {
+				rr.addAll(r.findAllTerminal());
 			}
 			Set<RuntimeRule> skipTerminal = this.getAllSkipTerminals();
-			rr.addAll( skipTerminal );
+			rr.addAll(skipTerminal);
 			result = rr.toArray(new RuntimeRule[rr.size()]);
 			this.possibleSubTerminal[runtimeRule.getRuleNumber()] = result;
 		}
@@ -183,23 +202,36 @@ public class RuntimeRuleSet {
 	}
 
 	RuntimeRule[][] possibleFirstTerminals;
+
 	public RuntimeRule[] getPossibleFirstTerminals(RuntimeRule runtimeRule) {
 		RuntimeRule[] result = this.possibleFirstTerminals[runtimeRule.getRuleNumber()];
 		if (null == result) {
 			Set<RuntimeRule> rr = runtimeRule.findTerminalAt(0);
-			for(RuntimeRule r : this.getPossibleFirstSubRule(runtimeRule)) {
-				rr.addAll( r.findTerminalAt(0) );
+			for (RuntimeRule r : this.getPossibleFirstSubRule(runtimeRule)) {
+				rr.addAll(r.findTerminalAt(0));
 			}
-			Set<RuntimeRule> skipTerminal = this.getAllSkipTerminals();
-			rr.addAll( skipTerminal );
+			// Set<RuntimeRule> skipTerminal = this.getAllSkipTerminals();
+			// rr.addAll( skipTerminal );
 			result = rr.toArray(new RuntimeRule[rr.size()]);
 			this.possibleFirstTerminals[runtimeRule.getRuleNumber()] = result;
 		}
 		return result;
 	}
-		
+
+	RuntimeRule[] possibleFirstSkipTerminals;
+
+	public RuntimeRule[] getPossibleFirstSkipTerminals() {
+		RuntimeRule[] result = this.possibleFirstSkipTerminals;
+		if (null == result) {
+			Set<RuntimeRule> skipTerminal = this.getAllSkipTerminals();
+			result = skipTerminal.toArray(new RuntimeRule[skipTerminal.size()]);
+			this.possibleFirstSkipTerminals = result;
+		}
+		return result;
+	}
+
 	public void build() {
-		for(RuntimeRule runtimeRule: this.getAllRules()) {
+		for (RuntimeRule runtimeRule : this.getAllRules()) {
 			this.getPossibleSubTerminal(runtimeRule);
 			this.getPossibleFirstTerminals(runtimeRule);
 			this.getPossibleSubRule(runtimeRule);
@@ -207,40 +239,40 @@ public class RuntimeRuleSet {
 			this.getPossibleSuperRule(runtimeRule);
 		}
 	}
-	
+
 	RuntimeRule[] findAllSuperRule(RuntimeRule runtimeRule) {
 		Set<RuntimeRule> result = new HashSet<>();
 		for (RuntimeRule r : this.runtimeRules) {
-			if (
-					RuntimeRuleKind.NON_TERMINAL == runtimeRule.getKind() && r.findAllNonTerminal().contains(runtimeRule)
-					|| RuntimeRuleKind.TERMINAL == runtimeRule.getKind() && r.findAllTerminal().contains(runtimeRule)
-			) {
+			if (RuntimeRuleKind.NON_TERMINAL == runtimeRule.getKind() && r.findAllNonTerminal().contains(runtimeRule)
+					|| RuntimeRuleKind.TERMINAL == runtimeRule.getKind() && r.findAllTerminal().contains(runtimeRule)) {
 				result.add(r);
 			}
 		}
 		return result.toArray(new RuntimeRule[result.size()]);
 	}
-	
+
 	Map<String, RuntimeRule> terminalMap;
+
 	public RuntimeRule getForTerminal(String terminal) {
 		RuntimeRule rr = this.terminalMap.get(terminal);
 		return rr;
 	}
+
 	public void putForTerminal(String terminal, RuntimeRule runtimeRule) {
 		this.terminalMap.put(terminal, runtimeRule);
 	}
-	
+
 	String toString_cache;
+
 	@Override
 	public String toString() {
-		if (null==this.toString_cache) {
+		if (null == this.toString_cache) {
 			this.toString_cache = "";
-			for(RuntimeRule r : this.getAllRules()) {
+			for (RuntimeRule r : this.getAllRules()) {
 				this.toString_cache += r + System.lineSeparator();
 			}
 		}
 		return this.toString_cache;
 	}
 
-	
 }

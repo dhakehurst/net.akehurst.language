@@ -206,6 +206,7 @@ public class RuntimeRule {
 			default:
 				break;
 		}
+		return result;
 	}
 	
 	public Set<RuntimeRule> findTerminalAt(int n) {

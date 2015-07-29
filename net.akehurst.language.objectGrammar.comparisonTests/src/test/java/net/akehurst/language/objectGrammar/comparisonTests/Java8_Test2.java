@@ -9,6 +9,8 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
@@ -16,6 +18,9 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Lexer;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import antlr4.Java8Parser;
 import net.akehurst.language.core.ILanguageProcessor;
@@ -27,7 +32,36 @@ import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;
 
-public class Java8_Test {
+@RunWith(Parameterized.class)
+public class Java8_Test2 {
+
+	@Parameters(name="{index}: {0}")
+	public static Collection<Object[]> getFiles() {
+		ArrayList<Object[]> params = new ArrayList<>();
+		try {
+			PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**/*.java");
+
+			Files.walkFileTree(Paths.get("src/test/resources/javac"), new SimpleFileVisitor<Path>() {
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					if (attrs.isRegularFile() && matcher.matches(file)) {
+						params.add(new Object[] {file});
+					}
+					return FileVisitResult.CONTINUE;
+				}
+			});
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return params;
+	}
+
+	public Java8_Test2(Path file) {
+		this.file = file;
+	}
+
+	Path file;
 
 	static OGLanguageProcessor processor;
 
@@ -75,12 +109,12 @@ public class Java8_Test {
 		try {
 			byte[] bytes = Files.readAllBytes(file);
 			String text = new String(bytes);
-			
+
 			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), text);
-			
+
 			return tree;
 		} catch (ParseFailedException e) {
-			
+			return e.getLongestMatch();
 		} catch (ParseTreeException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -109,70 +143,14 @@ public class Java8_Test {
 	@Test
 	public void og_compilationUnit() {
 
-		Path file = Paths.get("src/test/resources/File1.java");
-		IParseTree tree = parseWithOG(file);
+		IParseTree tree = parseWithOG(this.file);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
 	public void antlr4_compilationUnit() {
-		Path file = Paths.get("src/test/resources/File1.java");
-		Object tree = parseWithAntlr4(file);
+		Object tree = parseWithAntlr4(this.file);
 		Assert.assertNotNull(tree);
 	}
 
-	PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**/*.java");
-
-	@Test
-	public void og_openjdk_javac_files() {
-
-		try {
-			Files.walkFileTree(Paths.get("src/test/resources/javac"), new SimpleFileVisitor<Path>() {
-				@Override
-				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-					if (attrs.isRegularFile() && matcher.matches(file)) {
-						System.out.print("Parse: " + file + "    ");
-						Object o = parseWithOG(file);
-						if (null!=o) {
-							System.out.println("Success");
-						} else {
-							System.out.println("Failed");
-						}
-						// Assert.assertNotNull(o);
-					}
-					return FileVisitResult.CONTINUE;
-				}
-			});
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
-
-	@Test
-	public void antlr_openjdk_javac_files() {
-
-		try {
-			Files.walkFileTree(Paths.get("src/test/resources/javac"), new SimpleFileVisitor<Path>() {
-				@Override
-				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-					if (attrs.isRegularFile() && matcher.matches(file)) {
-						System.out.print("Parse: " + file + "    ");
-						Object o = parseWithAntlr4(file);
-						if (null!=o) {
-							System.out.println("Success");
-						} else {
-							System.out.println("Failed");
-						}
-					}
-					return FileVisitResult.CONTINUE;
-				}
-			});
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
 }

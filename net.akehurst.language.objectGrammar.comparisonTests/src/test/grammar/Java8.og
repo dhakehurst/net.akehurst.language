@@ -1738,9 +1738,9 @@ URSHIFT_ASSIGN : '>>>=';
 // §3.8 Identifiers (must appear after all keywords in the grammar)
 
 Identifier
-	:	JavaLetter JavaLetterOrDigit*
+	:	"([a-zA-Z$_]|~[\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|~[\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*"   //JavaLetter JavaLetterOrDigit*
 	;
-
+/*
 JavaLetter
 	:	"[a-zA-Z$_]" // these are the "java letters" below 0xFF
 	|	// covers all characters above 0xFF which are not a surrogate
@@ -1756,7 +1756,7 @@ JavaLetterOrDigit
 	|	// covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
 		"[\uD800-\uDBFF] [\uDC00-\uDFFF]"
 	;
-
+*/
 //
 // Additional symbols not defined in the lexical specification
 //

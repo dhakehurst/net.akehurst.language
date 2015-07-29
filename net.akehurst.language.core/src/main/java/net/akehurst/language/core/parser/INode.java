@@ -20,8 +20,6 @@ public interface INode extends IParseTreeVisitable{
 	IBranch getParent();
 	void setParent(IBranch value);
 	
-	INodeType getNodeType() throws ParseTreeException;
-
 	String getName();
 	
 	int getStart();

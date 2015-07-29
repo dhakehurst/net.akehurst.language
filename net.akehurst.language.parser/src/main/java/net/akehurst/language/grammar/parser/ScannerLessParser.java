@@ -282,7 +282,7 @@ public class ScannerLessParser implements IParser {
 		ParseTreeBud startBud = ff.createNewBuds(new RuntimeRule[] { sst }, 0).get(0);
 		RuntimeRule[] terminalRules = runtimeRuleSet.getPossibleSubTerminal(sst);
 
-		ArrayList<AbstractParseTree> newTrees = startBud.growHeight(terminalRules, this.runtimeRuleSet);// new
+		ArrayList<AbstractParseTree> newTrees = startBud.growHeight(this.runtimeRuleSet);// new
 																										// RuntimeRule[]
 																										// {pseudoGoalRule});
 		newForrest.addAll(newTrees);

@@ -50,15 +50,6 @@ public class Leaf extends Node implements ILeaf {
 	}
 	
 	@Override
-	public INodeType getNodeType() throws ParseTreeException {
-		try {
-			return this.terminalRule.getTerminal().getNodeType();
-		} catch (RuleNotFoundException e) {
-			throw new ParseTreeException("Rule Not Found",e);
-		}
-	}
-
-	@Override
 	public String getName() {
 		return this.terminalRule.getName();
 	}

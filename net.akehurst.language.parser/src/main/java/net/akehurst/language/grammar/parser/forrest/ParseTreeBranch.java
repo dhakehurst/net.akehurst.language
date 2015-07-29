@@ -146,7 +146,13 @@ public class ParseTreeBranch extends AbstractParseTree {
 		boolean reachedEnd = this.getRoot().getMatchedTextLength() >= this.ffactory.input.getLength();
 		if (reachedEnd)
 			return false;
+		if (this.complete && this.getIsEmpty()) {
+			return false;
+		}
 		switch(this.rule.getRhs().getKind()) {
+		case EMPTY : {
+			return false;
+		}
 		case CHOICE: {
 			return false;
 		}
