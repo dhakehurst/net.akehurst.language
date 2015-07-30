@@ -95,7 +95,7 @@ public class NonTerminal extends TangibleItem {
 	public boolean equals(Object arg) {
 		if (arg instanceof NonTerminal) {
 			NonTerminal other = (NonTerminal)arg;
-			return this.toString().equals(other.toString());
+			return this.referencedRuleName.equals(other.referencedRuleName) && this.index.equals(other.index) && this.getOwningRule().equals(other.getOwningRule());
 		} else {
 			return false;
 		}

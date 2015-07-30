@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,10 +29,17 @@ public class Multi extends ConcatenationItem {
 		this.item = item;
 	}
 	
+	ArrayList<Integer> index;
+	public ArrayList<Integer> getIndex() {
+		return this.index;
+	}
 	@Override
-	public void setOwningRule(Rule value) {
+	public void setOwningRule(Rule value, ArrayList<Integer> index) {
 		this.owningRule = value;
-		this.getItem().setOwningRule(value);
+		this.index = index;
+		ArrayList<Integer> nextIndex0 = new ArrayList<>(index);
+		nextIndex0.add(0);
+		this.getItem().setOwningRule(value, nextIndex0);
 	}
 	
 	int min;
@@ -94,7 +102,7 @@ public class Multi extends ConcatenationItem {
 	//--- Object ---
 	@Override
 	public String toString() {
-		return this.getItem() + (0==min?(0==max?"*":"?"):"+");
+		return this.getItem() + (0==min?(-1==max?"*":"?"):"+");
 	}
 	
 	@Override
@@ -106,7 +114,7 @@ public class Multi extends ConcatenationItem {
 	public boolean equals(Object arg) {
 		if (arg instanceof Multi) {
 			Multi other = (Multi)arg;
-			return this.toString().equals(other.toString());
+			return this.getOwningRule().equals(other.getOwningRule()) && this.index.equals(other.index);
 		} else {
 			return false;
 		}

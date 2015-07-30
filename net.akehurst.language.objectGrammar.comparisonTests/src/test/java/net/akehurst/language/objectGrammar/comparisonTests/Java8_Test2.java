@@ -17,6 +17,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Lexer;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -35,7 +36,7 @@ import net.akehurst.language.processor.OGLanguageProcessor;
 @RunWith(Parameterized.class)
 public class Java8_Test2 {
 
-	@Parameters(name="{index}: {0}")
+	@Parameters(name = "{index}: {0}")
 	public static Collection<Object[]> getFiles() {
 		ArrayList<Object[]> params = new ArrayList<>();
 		try {
@@ -45,7 +46,7 @@ public class Java8_Test2 {
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 					if (attrs.isRegularFile() && matcher.matches(file)) {
-						params.add(new Object[] {file});
+						params.add(new Object[] { file });
 					}
 					return FileVisitResult.CONTINUE;
 				}
@@ -105,39 +106,39 @@ public class Java8_Test2 {
 		return javaProcessor;
 	}
 
-	static IParseTree parseWithOG(Path file) {
+	@Before
+	public void setUp() {
 		try {
 			byte[] bytes = Files.readAllBytes(file);
-			String text = new String(bytes);
+			og_input = new String(bytes);
+			antlr_input = new ANTLRInputStream(new String(bytes));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
-			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), text);
-
+	static String og_input;
+	static IParseTree parseWithOG(Path file) {
+		try {
+			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), og_input);
 			return tree;
 		} catch (ParseFailedException e) {
 			return e.getLongestMatch();
 		} catch (ParseTreeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
 	}
 
+	static CharStream antlr_input;
+
 	static Object parseWithAntlr4(Path file) {
-		try {
-			byte[] bytes = Files.readAllBytes(file);
-			CharStream input = new ANTLRInputStream(new String(bytes));
-			Lexer lexer = new antlr4.Java8Lexer(input);
-			CommonTokenStream tokens = new CommonTokenStream(lexer);
-			Java8Parser p = new Java8Parser(tokens);
-			return p.compilationUnit();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
+
+		Lexer lexer = new antlr4.Java8Lexer(antlr_input);
+		CommonTokenStream tokens = new CommonTokenStream(lexer);
+		Java8Parser p = new Java8Parser(tokens);
+		return p.compilationUnit();
 	}
 
 	@Test

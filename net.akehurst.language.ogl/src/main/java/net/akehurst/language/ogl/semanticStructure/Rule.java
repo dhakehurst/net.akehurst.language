@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -44,7 +45,9 @@ public class Rule {
 	}
 	public void setRhs(AbstractChoice value) {
 		this.rhs = value;
-		this.rhs.setOwningRule(this);
+		ArrayList<Integer> nextIndex0 = new ArrayList<>();
+		nextIndex0.add(0);
+		this.rhs.setOwningRule(this, nextIndex0);
 	}
 	
 	public Set<Terminal> findAllSubTerminal() throws RuleNotFoundException {

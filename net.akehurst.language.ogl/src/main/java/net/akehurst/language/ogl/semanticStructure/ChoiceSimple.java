@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -27,10 +28,18 @@ public class ChoiceSimple extends AbstractChoice {
 		this.alternative = Arrays.asList(alternative);
 	}
 	
-	public void setOwningRule(Rule value) {
+	ArrayList<Integer> index;
+	public ArrayList<Integer> getIndex() {
+		return this.index;
+	}
+	public void setOwningRule(Rule value, ArrayList<Integer> index) {
 		this.owningRule = value;
+		this.index = index;
+		int i=0;
 		for(Concatenation c: this.getAlternative()) {
-			c.setOwningRule(value);
+			ArrayList<Integer> nextIndex = new ArrayList<>(index);
+			nextIndex.add(i++);
+			c.setOwningRule(value, nextIndex);
 		}
 	}
 
@@ -73,16 +82,6 @@ public class ChoiceSimple extends AbstractChoice {
 		return result;
 	}
 	
-//	public boolean isMatchedBy(INode node) throws RuleNotFoundException {
-//		for(Concatination c : this.getAlternative()) {
-//			boolean isMatched = c.isMatchedBy(node);
-//			if (isMatched) {
-//				return true;
-//			}
-//		}
-//		return false;
-//	}
-	
 	//--- Object ---
 	@Override
 	public String toString() {
@@ -102,7 +101,7 @@ public class ChoiceSimple extends AbstractChoice {
 	public boolean equals(Object arg) {
 		if (arg instanceof ChoiceSimple) {
 			ChoiceSimple other = (ChoiceSimple)arg;
-			return this.toString().equals(other.toString());
+			return this.getOwningRule().equals(other.getOwningRule()) && this.index.equals(other.index);
 		} else {
 			return false;
 		}

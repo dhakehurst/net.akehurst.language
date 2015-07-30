@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -29,10 +30,18 @@ public class Concatenation extends RuleItem {
 		this.item = Arrays.asList(item);
 	}
 
-	public void setOwningRule(Rule value) {
+	ArrayList<Integer> index;
+	public ArrayList<Integer> getIndex() {
+		return this.index;
+	}
+	public void setOwningRule(Rule value, ArrayList<Integer> index) {
 		this.owningRule = value;
+		this.index = index;
+		int i=0;
 		for(ConcatenationItem c: this.getItem()) {
-			c.setOwningRule(value);
+			ArrayList<Integer> nextIndex = new ArrayList<>(index);
+			nextIndex.add(i++);
+			c.setOwningRule(value, nextIndex);
 		}
 	}
 	
@@ -112,7 +121,7 @@ public class Concatenation extends RuleItem {
 	public boolean equals(Object arg) {
 		if (arg instanceof Concatenation) {
 			Concatenation other = (Concatenation)arg;
-			return this.toString().equals(other.toString());
+			return this.getOwningRule().equals(other.getOwningRule()) && this.index.equals(other.index);
 		} else {
 			return false;
 		}

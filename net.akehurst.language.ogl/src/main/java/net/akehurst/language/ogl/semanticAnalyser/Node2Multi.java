@@ -40,14 +40,27 @@ public class Node2Multi extends AbstractNode2ConcatenationItem<Multi> {
 	public Multi constructLeft2Right(INode left, Transformer transformer) {
 		try {
 			INode itemNode = ((IBranch) left).getChild(0);
+			INode multiplicityNode = ((IBranch) left).getChild(1);
 			
 			SimpleItem item = transformer.transformLeft2Right(
 					(Class<Relation<INode, SimpleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
 			
-			int min = 0;
-			int max = -1;
-			
-			Multi right = new Multi(min, max, item);
+			//TODO: this should really be done with transform rules!
+			Multi right = null;
+			String multiplicityString = ((IBranch) multiplicityNode).getChild(0).getName();
+			if ("*".equals(multiplicityString)) {
+				int min = 0;
+				int max = -1;
+				right = new Multi(min, max, item);
+			} else if ("+".equals(multiplicityString)) {
+				int min = 1;
+				int max = -1;
+				right = new Multi(min, max, item);
+			} else if ("?".equals(multiplicityString)) {
+				int min = 0;
+				int max = 1;
+				right = new Multi(min, max, item);
+			}
 			return right;
 		} catch (RelationNotFoundException e) {
 			throw new RuntimeException("Unable to configure Grammar", e);

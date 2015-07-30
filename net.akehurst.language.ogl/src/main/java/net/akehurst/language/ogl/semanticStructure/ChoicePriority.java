@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -26,11 +27,18 @@ public class ChoicePriority extends AbstractChoice {
 	public ChoicePriority(Concatenation... alternative) {
 		this.alternative = Arrays.asList(alternative);
 	}
-	
-	public void setOwningRule(Rule value) {
+	ArrayList<Integer> index;
+	public ArrayList<Integer> getIndex() {
+		return this.index;
+	}
+	public void setOwningRule(Rule value, ArrayList<Integer> index) {
 		this.owningRule = value;
+		this.index = index;
+		int i=0;
 		for(Concatenation c: this.getAlternative()) {
-			c.setOwningRule(value);
+			ArrayList<Integer> nextIndex = new ArrayList<>(index);
+			nextIndex.add(i++);
+			c.setOwningRule(value, nextIndex);
 		}
 	}
 	
@@ -103,7 +111,7 @@ public class ChoicePriority extends AbstractChoice {
 	public boolean equals(Object arg) {
 		if (arg instanceof ChoicePriority) {
 			ChoicePriority other = (ChoicePriority)arg;
-			return this.toString().equals(other.toString());
+			return this.getOwningRule().equals(other.getOwningRule()) && this.index.equals(other.index);
 		} else {
 			return false;
 		}

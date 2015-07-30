@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 public class Group extends SimpleItem {
@@ -33,10 +34,17 @@ public class Group extends SimpleItem {
 		return "$group";
 	}
 	
+	ArrayList<Integer> index;
+	public ArrayList<Integer> getIndex() {
+		return this.index;
+	}
 	@Override
-	public void setOwningRule(Rule value) {
+	public void setOwningRule(Rule value, ArrayList<Integer> index) {
 		this.owningRule = value;
-		this.getChoice().setOwningRule(value);
+		this.index = index;
+		ArrayList<Integer> nextIndex0 = new ArrayList<>(index);
+		nextIndex0.add(0);
+		this.getChoice().setOwningRule(value, nextIndex0);
 	}
 
 	@Override

@@ -28,6 +28,7 @@ import net.akehurst.language.ogl.semanticStructure.Concatenation;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.Group;
 import net.akehurst.language.ogl.semanticStructure.Multi;
+import net.akehurst.language.ogl.semanticStructure.RuleItem;
 import net.akehurst.language.ogl.semanticStructure.SeparatedList;
 import net.akehurst.transform.binary.AbstractTransformer;
 import net.akehurst.transform.binary.Relation;
@@ -65,6 +66,15 @@ public class Converter extends AbstractTransformer {
 		return this.factory;
 	}
 	
+	String createIndexString(RuleItem item) {
+		String str = "";
+		for(Integer i: item.getIndex()) {
+			str+=i + ".";
+		}
+		str = str.substring(0,str.length()-1);
+		return str;
+	}
+	
 	List<RuntimeRule> virtualRule_cache;
 	RuntimeRule createVirtualRule(Group group) {
 		Grammar grammar = group.getOwningRule().getGrammar();
@@ -86,7 +96,7 @@ public class Converter extends AbstractTransformer {
 	int multiNum;
 	RuntimeRule createVirtualRule(Multi multi) {
 		Grammar grammar = multi.getOwningRule().getGrammar();
-		String name = "$"+multi.getOwningRule().getName()+"."+multi.getItem().getName()+".multi"+(multiNum++);
+		String name = "$"+multi.getOwningRule().getName()+"."+multi.getItem().getName()+".multi"+createIndexString(multi);//(multiNum++);
 		RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(new Concatenation(multi)));
 		RuntimeRule rr = this.getFactory().createRuntimeRule(r);
 		this.virtualRule_cache.add(rr);
