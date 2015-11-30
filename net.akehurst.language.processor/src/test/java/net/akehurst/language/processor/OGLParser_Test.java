@@ -1,3 +1,18 @@
+/**
+ * Copyright (C) 2015 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package net.akehurst.language.processor;
 
 import net.akehurst.language.core.parser.IBranch;
@@ -6,29 +21,29 @@ import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.ogl.semanticModel.Grammar;
-import net.akehurst.language.ogl.semanticModel.GrammarBuilder;
-import net.akehurst.language.ogl.semanticModel.Namespace;
-import net.akehurst.language.ogl.semanticModel.NonTerminal;
-import net.akehurst.language.ogl.semanticModel.RuleNotFoundException;
-import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
-import net.akehurst.language.ogl.semanticModel.TerminalPattern;
-import net.akehurst.language.parser.ScannerLessParser;
-import net.akehurst.language.parser.ToStringVisitor;
-import net.akehurst.language.parser.runtime.Factory;
-import net.akehurst.language.parser.forrest.ForrestFactory;
-import net.akehurst.language.parser.forrest.ParseTreeBuilder;
+import net.akehurst.language.grammar.parser.ScannerLessParser;
+import net.akehurst.language.grammar.parser.ToStringVisitor;
+import net.akehurst.language.grammar.parser.forrest.ForrestFactory;
+import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
+import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
+import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
+import net.akehurst.language.ogl.semanticStructure.Namespace;
+import net.akehurst.language.ogl.semanticStructure.NonTerminal;
+import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 public class OGLParser_Test {
-	Factory parseTreeFactory;
+	RuntimeRuleSetBuilder parseTreeFactory;
 	
 	@Before
 	public void before() {
-		this.parseTreeFactory = new Factory();
+		this.parseTreeFactory = new RuntimeRuleSetBuilder();
 	}
 	
 	ParseTreeBuilder builder(Grammar grammar, String text, String goal) {
@@ -134,11 +149,31 @@ public class OGLParser_Test {
 		}
 	}
 	
+	@Test
+	public void g1_emptyRule() {
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+
+			String text = "namespace test;" + System.lineSeparator();
+			text += "grammar A {" + System.lineSeparator();
+			text += " a :  ;" + System.lineSeparator();
+			text += "}";
+			
+			IParseTree tree = this.process(g, text, "grammarDefinition");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
 	Grammar qualifiedName() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
 		b.skip("WHITESPACE").concatination( new TerminalPattern("\\s+") );
 		
-		b.rule("qualifiedName").separatedList(1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
+		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
 
 		b.rule("IDENTIFIER").concatenation( new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*") );
 		
@@ -202,7 +237,7 @@ public class OGLParser_Test {
 		b.rule("namespace").concatenation( new TerminalLiteral("namespace"), new NonTerminal("qualifiedName"), new TerminalLiteral(";") );
 		b.rule("grammar").concatenation( new TerminalLiteral("grammar"), new NonTerminal("IDENTIFIER"), new TerminalLiteral("{"), new TerminalLiteral("}") );
 
-		b.rule("qualifiedName").separatedList(1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
+		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
 
 		b.rule("IDENTIFIER").concatenation( new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*") );
 		
@@ -239,7 +274,7 @@ public class OGLParser_Test {
 		b.rule("rule").concatenation( new NonTerminal("IDENTIFIER"), new TerminalLiteral("="), new NonTerminal("nonTerminal"), new TerminalLiteral(";"));
 		b.rule("nonTerminal").choice(new NonTerminal("IDENTIFIER"));
 
-		b.rule("qualifiedName").separatedList(1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
+		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
 
 		b.rule("IDENTIFIER").concatenation( new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*") );
 		
@@ -273,8 +308,8 @@ public class OGLParser_Test {
 			
 			String text = "namespace test;" + System.lineSeparator();
 			text += "grammar A {" + System.lineSeparator();
-			text += " SP ?= ' ' ;" + System.lineSeparator();
-			text += " a := 'a' ;" + System.lineSeparator();
+			text += " skip SP : ' ' ;" + System.lineSeparator();
+			text += " a : 'a' ;" + System.lineSeparator();
 			text += "}";
 
 			IParseTree tree = this.process(g, text, "grammarDefinition");
@@ -292,7 +327,7 @@ public class OGLParser_Test {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();
 			
-			String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
+			String text = "namespace test; grammar A { skip SP : ' ' ; a : 'a' ; }";
 
 			IParseTree tree = this.process(g, text, "grammarDefinition");
 
@@ -309,7 +344,7 @@ public class OGLParser_Test {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();
 			
-			String text = "namespace test; grammar A { sepList := ('a' / ',')+; }";
+			String text = "namespace test; grammar A { sepList : ('a' / ',')+; }";
 
 			IParseTree tree = this.process(g, text, "grammarDefinition");
 
@@ -326,7 +361,7 @@ public class OGLParser_Test {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();
 			
-			String text = "namespace test; grammar A { sepList := ('a' / ',')*; }";
+			String text = "namespace test; grammar A { sepList : ('a' / ',')*; }";
 
 			IParseTree tree = this.process(g, text, "grammarDefinition");
 

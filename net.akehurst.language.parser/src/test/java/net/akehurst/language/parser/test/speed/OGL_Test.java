@@ -1,25 +1,40 @@
+/**
+ * Copyright (C) 2015 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package net.akehurst.language.parser.test.speed;
-
-import net.akehurst.language.core.parser.IParseTree;
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.ogl.semanticModel.Grammar;
-import net.akehurst.language.ogl.semanticModel.GrammarBuilder;
-import net.akehurst.language.ogl.semanticModel.Namespace;
-import net.akehurst.language.ogl.semanticModel.NonTerminal;
-import net.akehurst.language.ogl.semanticModel.TerminalLiteral;
-import net.akehurst.language.ogl.semanticModel.TerminalPattern;
-import net.akehurst.language.parser.runtime.Factory;
-import net.akehurst.language.parser.test.AbstractParser_Test;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import net.akehurst.language.core.parser.IParseTree;
+import net.akehurst.language.core.parser.ParseFailedException;
+import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
+import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
+import net.akehurst.language.ogl.semanticStructure.Namespace;
+import net.akehurst.language.ogl.semanticStructure.NonTerminal;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.parser.AbstractParser_Test;
+
 public class OGL_Test extends AbstractParser_Test {
 
 	@Before
 	public void before() {
-		this.parseTreeFactory = new Factory();
+		this.parseTreeFactory = new RuntimeRuleSetBuilder();
 	}
 	
 	Grammar ogl() {
@@ -34,7 +49,7 @@ public class OGL_Test extends AbstractParser_Test {
 		b.rule("anyRule").choice(new NonTerminal("normalRule"), new NonTerminal("skipRule") );
 		b.rule("skipRule").concatenation( new NonTerminal("IDENTIFIER"), new TerminalLiteral("?="), new NonTerminal("choice"), new TerminalLiteral(";") );
 		b.rule("normalRule").concatenation( new NonTerminal("IDENTIFIER"), new TerminalLiteral(":="), new NonTerminal("choice"), new TerminalLiteral(";") );
-		b.rule("choice").separatedList(1, new TerminalLiteral("|"), new NonTerminal("concatination") );
+		b.rule("choice").separatedList(0, -1, new TerminalLiteral("|"), new NonTerminal("concatination") );
 		b.rule("concatination").multi(1,-1,new NonTerminal("item") );
 		b.rule("item").choice( new NonTerminal("LITERAL"),
 							   new NonTerminal("PATTERN"),
@@ -49,7 +64,7 @@ public class OGL_Test extends AbstractParser_Test {
 		b.rule("separatedList").concatenation( new TerminalLiteral("("), new NonTerminal("concatination"), new TerminalLiteral("/"), new NonTerminal("LITERAL"), new TerminalLiteral(")"), new NonTerminal("separatedList.group1") );
 		b.rule("separatedList.group1").choice(new TerminalLiteral("*"), new TerminalLiteral("+"));
 		b.rule("nonTerminal").choice(new NonTerminal("IDENTIFIER"));
-		b.rule("qualifiedName").separatedList(1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
+		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
 		b.rule("LITERAL").concatenation( new TerminalPattern("\\x27[^\\x27]*\\x27") );
 		b.rule("PATTERN").concatenation( new TerminalPattern("\\x22[^\\x22]*\\x22") );
 		b.rule("IDENTIFIER").concatenation( new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*") );
