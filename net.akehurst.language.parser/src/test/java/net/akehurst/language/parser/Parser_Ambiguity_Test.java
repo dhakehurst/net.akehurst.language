@@ -65,11 +65,11 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 	}
 	
 	@Test
-	public void aempty_a_empty() {
+	public void am_S_empty() {
 		// grammar, goal, input
 		try {
-			Grammar g = aempty();
-			String goal = "a";
+			Grammar g = am();
+			String goal = "S";
 			String text = "";
 			
 			IParseTree tree = this.process(g, text, goal);
@@ -77,12 +77,12 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*a 1, 1}",st);
+			Assert.assertEquals("{*S 1, 1}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
-					b.branch("a",
-						b.emptyLeaf("a")
+					b.branch("S",
+						b.emptyLeaf("S")
 					);
 			Assert.assertEquals(expected, tree.getRoot());
 			
@@ -91,92 +91,9 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 		}
 	}
 	
-	@Test
-	public void abc_abc_a() {
-		// grammar, goal, input
-		try {
-			Grammar g = abc();
-			String goal = "abc";
-			String text = "a";
-			
-			IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*abc 1, 2}",st);
-			
-			ParseTreeBuilder b = this.builder(g, text, goal);
-			IBranch expected = 
-				b.branch("abc",
-					b.branch("a",
-						b.leaf("a", "a")
-					)
-				);
-			Assert.assertEquals(expected, tree.getRoot());
 
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
-	}
 
-	@Test
-	public void abc_abc_b() {
-		// grammar, goal, input
-		try {
-			Grammar g = abc();
-			String goal = "abc";
-			String text = "b";
-			
-			IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*abc 1, 2}",st);
-			
-			ParseTreeBuilder b = this.builder(g, text, goal);
-			IBranch expected = 
-				b.branch("abc",
-					b.branch("b",
-						b.leaf("b", "b")
-					)
-				);
-			
-			Assert.assertEquals(expected, tree.getRoot());
-			
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
-	}
 
-	@Test
-	public void abc_abc_c() {
-		// grammar, goal, input
-		try {
-			Grammar g = abc();
-			String goal = "abc";
-			String text = "c";
-			
-			IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*abc 1, 2}",st);
-			
-			ParseTreeBuilder b = this.builder(g, text, goal);
-			IBranch expected = 
-				b.branch("abc",
-					b.branch("c",
-						b.leaf("c", "c")
-					)
-				);
-			
-			Assert.assertEquals(expected, tree.getRoot());
-			
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
-	}
+
+
 }
