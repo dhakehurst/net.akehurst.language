@@ -125,4 +125,66 @@ public class Java8_Tests {
 
 	}
 
+	
+	@Test
+	public void tryfinally0() {
+
+		String input = "class Test {";
+		input += "  static public int test(int i) {";
+		input += "    try {";
+		input += "      if(i==1) return 1;";
+		input += "    } finally {";
+		input += "       if(i==1) return 1;";
+		input += "    }";
+		input += "  }";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+
+	}
+	
+	@Test
+	public void tryfinally1() {
+
+		String input = "class Test {";
+		input += "  void test() {";
+		input += "    try {";
+		input += "      if(i==1) return 1;";
+		input += "    } finally {";
+		for (int i = 0; i < 100; ++i) {
+			input += "       if("+i+") return "+i+";";
+		}
+		input += "    }";
+		input += "  }";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+
+	}
+	
+	
+	@Test
+	public void tryfinally2() {
+
+		String input = "class Test {";
+		input += "  void test() {";
+		input += "    try {";
+		input += "      if(i==1) return 1;";
+		input += "    } finally {";
+		input += "      try {";
+		for (int i = 0; i < 100; ++i) {
+			input += "       if("+i+") return "+i+";";
+		}
+		input += "      } finally {";
+		input += "      }";
+		input += "    }";
+		input += "  }";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+
+	}
+	
+	
+	
 }

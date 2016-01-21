@@ -171,19 +171,12 @@ public abstract class AbstractParseTree implements IParseTree {
 					RuntimeRule ruleThatIsEmpty = nt.getRoot().getRuntimeRule().getRuleThatIsEmpty();
 					ParseTreeBranch pt = nt.growMe(ruleThatIsEmpty);
 
-					ArrayList<AbstractParseTree> nts = pt.growWidthAndHeight(null, runtimeRuleSet); // TODO:
+					ArrayList<AbstractParseTree> nts = pt.growWidthAndHeightUntilNotEmpty(runtimeRuleSet); // TODO:
 																									// make
 																									// this
 																									// recuse
 																									// properly
-					for (AbstractParseTree pt2 : nts) {
-						if (pt2.getIsEmpty()) {
-							ArrayList<AbstractParseTree> nts2 = pt2.growWidthAndHeight(null, runtimeRuleSet);
-							result.addAll(nts2);
-						} else {
-							result.add(pt2);
-						}
-					}
+					result.addAll(nts);
 
 					// ArrayList<AbstractParseTree> nts =
 					// pt.growHeightClosure(runtimeRuleSet);
@@ -217,6 +210,20 @@ public abstract class AbstractParseTree implements IParseTree {
 		return result;
 	}
 
+	public ArrayList<AbstractParseTree> growWidthAndHeightUntilNotEmpty(RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
+		ArrayList<AbstractParseTree> result = new ArrayList<>();
+		ArrayList<AbstractParseTree> nts = this.growWidthAndHeight(null, runtimeRuleSet);
+		for (AbstractParseTree pt2 : nts) {
+			if (pt2.getIsEmpty()) {
+				ArrayList<AbstractParseTree> nts2 = pt2.growWidthAndHeightUntilNotEmpty(runtimeRuleSet);
+				result.addAll(nts2);
+			} else {
+				result.add(pt2);
+			}
+		}
+		return result;
+	}
+	
 	public ArrayList<AbstractParseTree> growWidthWithSkipRules(RuntimeRuleSet runtimeRuleSet)
 			throws RuleNotFoundException, ParseTreeException {
 		ArrayList<AbstractParseTree> result = new ArrayList<>();

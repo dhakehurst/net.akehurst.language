@@ -126,6 +126,10 @@ public class Forrest {
 					ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeight(null, this.runtimeRuleSet);
 					newForrest.addAll(newBranches);
 					
+					//TODO: should have some kind of merge so we don't continue with existing trees
+					// i.e. if head is present in the stack of an existing tree!
+					
+					
 //					if (tree.getIsComplete()) {
 //						ArrayList<AbstractParseTree> nts = tree.growHeight(this.runtimeRuleSet);
 //						newForrest.addAll(nts);
