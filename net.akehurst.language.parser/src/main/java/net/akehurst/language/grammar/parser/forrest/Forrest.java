@@ -116,19 +116,19 @@ public class Forrest {
 //		 System.out.println("posibles: "+this.possibleTrees.size());
 		Forrest newForrest = this.newForrest();
 		for (AbstractParseTree tree : this.possibleTrees) {
-			ArrayList<AbstractParseTree> newSkipBranches = tree.growWidthWithSkipRules(this.runtimeRuleSet);
-			if (!newSkipBranches.isEmpty()) {
-				newForrest.addAll(newSkipBranches);
-			} else {
+//			ArrayList<AbstractParseTree> newSkipBranches = tree.growWidthWithSkipRules(this.runtimeRuleSet);
+//			if (!newSkipBranches.isEmpty()) {
+//				newForrest.addAll(newSkipBranches);
+//			} else {
 	
-					ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeight(this.runtimeRuleSet);
-//				ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeightUntilProgress(this.runtimeRuleSet);
+//					ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeight(this.runtimeRuleSet);
+				ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeightUntilProgress(this.runtimeRuleSet);
 					newForrest.addAll(newBranches);
 					
 					//TODO: should have some kind of merge so we don't continue with existing trees
 					// i.e. if head is present in the stack of an existing tree!
 					
-			}
+//			}
 		}
 
 		return newForrest;

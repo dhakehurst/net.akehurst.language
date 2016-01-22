@@ -89,7 +89,7 @@ public abstract class AbstractParseTree implements IParseTree {
 			return false;
 		} else {
 			if (null == this.getStackedTree()) {
-				return true;
+				return true; //only happens when tree is dealing with goal stuff
 			} else {
 				RuntimeRule thisRule = this.getRoot().getRuntimeRule();
 				RuntimeRule nextExpectedRule = this.getStackedTree().getNextExpectedItem();
@@ -170,15 +170,20 @@ public abstract class AbstractParseTree implements IParseTree {
 		ArrayList<AbstractParseTree> result = new ArrayList<>();
 		ArrayList<AbstractParseTree> nts = this.growWidthAndHeight(runtimeRuleSet);
 		for (AbstractParseTree pt2 : nts) {
-			if (pt2.getIsEmpty()) {
-				ArrayList<AbstractParseTree> nts2 = pt2.growWidthAndHeightUntilProgress(runtimeRuleSet);
-				result.addAll(nts2);
+			if (null==pt2.peekTopStackedRoot()) {
+//			if (pt2.getIsComplete() || pt2.getIsSkip()) {
+				result.add(pt2);
 			} else {
-				if (this.getRoot().getEnd() >= pt2.getRoot().getEnd()) {
+				if (pt2.getIsEmpty()) {
 					ArrayList<AbstractParseTree> nts2 = pt2.growWidthAndHeightUntilProgress(runtimeRuleSet);
-					result.addAll(nts2);					
+					result.addAll(nts2);
 				} else {
-					result.add(pt2);
+					if (this.getRoot().getEnd() >= pt2.getRoot().getEnd()) {
+						ArrayList<AbstractParseTree> nts2 = pt2.growWidthAndHeightUntilProgress(runtimeRuleSet);
+						result.addAll(nts2);					
+					} else {
+						result.add(pt2);
+					}
 				}
 			}
 		}
@@ -249,6 +254,11 @@ public abstract class AbstractParseTree implements IParseTree {
 			throws RuleNotFoundException, ParseTreeException {
 		ArrayList<AbstractParseTree> result = new ArrayList<AbstractParseTree>();
 
+		ArrayList<AbstractParseTree> newSkipBranches = this.growWidthWithSkipRules(runtimeRuleSet);
+		if (!newSkipBranches.isEmpty()) {
+			result.addAll(newSkipBranches);
+		} else {
+		
 		if (this.getIsSkip()) {
 			AbstractParseTree nt = this.tryGraftBack();
 			if (null != nt) {
@@ -303,6 +313,7 @@ public abstract class AbstractParseTree implements IParseTree {
 					}
 				}
 			}
+		}
 		}
 		return result;
 	}
