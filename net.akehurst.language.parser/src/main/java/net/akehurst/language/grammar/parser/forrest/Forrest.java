@@ -15,16 +15,21 @@
  */
 package net.akehurst.language.grammar.parser.forrest;
 
+import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.akehurst.language.core.parser.IBranch;
+import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.grammar.parse.tree.Branch;
 import net.akehurst.language.grammar.parser.ScannerLessParser;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet;
@@ -76,6 +81,23 @@ public class Forrest {
 		return this.canGrow;
 	}
 
+	AbstractParseTree extractLongestMatch() {
+		if (this.longestMatch.getRoot().getRuntimeRule().equals(this.goalRRule)) {
+			
+			RuntimeRule target = null;
+			IBranch root = (IBranch) this.longestMatch.getRoot();
+			if (root.getChildren().size() <=1) {
+				return null;
+			} else {
+			Branch nr =(Branch) root.getChildren().get(1);
+			ParseTreeBranch lm = new ParseTreeBranch(this.longestMatch.ffactory, nr, null, nr.getRuntimeRule(), -1);
+			return lm;
+			}
+		} else {
+			return this.longestMatch;
+		}
+	}
+	
 	public IParseTree getLongestMatch(CharSequence text) throws ParseFailedException {
 		if (!this.goalTrees.isEmpty() && this.goalTrees.size() >= 1) {
 			IParseTree lt = this.getGT().get(0);
@@ -85,12 +107,12 @@ public class Forrest {
 				}
 			}
 			if (lt.getRoot().getMatchedTextLength() < text.length()) {
-				throw new ParseFailedException("Goal does not match full text", this.longestMatch);
+				throw new ParseFailedException("Goal does not match full text", this.extractLongestMatch());
 			} else {
 				return lt;
 			}
 		} else {
-			throw new ParseFailedException("Could not match goal", this.longestMatch);
+			throw new ParseFailedException("Could not match goal", this.extractLongestMatch());
 		}
 	}
 
@@ -113,22 +135,11 @@ public class Forrest {
 	}
 
 	public Forrest growBreadthFirst() throws RuleNotFoundException, ParseTreeException {
-//		 System.out.println("posibles: "+this.possibleTrees.size());
+		// System.out.println("posibles: "+this.possibleTrees.size());
 		Forrest newForrest = this.newForrest();
 		for (AbstractParseTree tree : this.possibleTrees) {
-//			ArrayList<AbstractParseTree> newSkipBranches = tree.growWidthWithSkipRules(this.runtimeRuleSet);
-//			if (!newSkipBranches.isEmpty()) {
-//				newForrest.addAll(newSkipBranches);
-//			} else {
-	
-//					ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeight(this.runtimeRuleSet);
-				ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeightUntilProgress(this.runtimeRuleSet);
-					newForrest.addAll(newBranches);
-					
-					//TODO: should have some kind of merge so we don't continue with existing trees
-					// i.e. if head is present in the stack of an existing tree!
-					
-//			}
+			ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeightUntilProgress(this.runtimeRuleSet);
+			newForrest.addAll(newBranches);
 		}
 
 		return newForrest;
@@ -240,12 +251,12 @@ public class Forrest {
 		}
 		if (null == this.longestMatch
 				|| tree.getRoot().getMatchedTextLength() > this.longestMatch.getRoot().getMatchedTextLength()) {
-			if (tree.getRoot().getName().equals(ScannerLessParser.START_SYMBOL_TERMINAL.getValue()) || tree.getRoot()
-					.getName().contains("$") /* don't use non user rules */) {
-				// don't use
-			} else {
+//			if (tree.getRoot().getName().equals(ScannerLessParser.START_SYMBOL_TERMINAL.getValue()) || tree.getRoot()
+//					.getName().contains("$") /* don't use non user rules */) {
+//				// don't use
+//			} else {
 				this.longestMatch = tree;
-			}
+//			}
 		}
 	}
 
