@@ -272,28 +272,23 @@ public class ScannerLessParser implements IParser {
 		Forrest newForrest = new Forrest(pseudoGoalRule, this.getRuntimeRuleSet());
 		Forrest oldForrest = null;
 
-		// List<ParseTreeBud> buds = input.createNewBuds(this.getAllTerminal(),
-		// 0);
-		// for(ParseTreeBud bud : buds) {
-		// Set<AbstractParseTree> newTrees = bud.growHeight(this.getAllRules());
-		// newForrest.addAll(newTrees);
-		// }
 		RuntimeRule sst = this.getRuntimeRuleSet().getForTerminal(START_SYMBOL_TERMINAL.getValue());
 		ParseTreeBud startBud = ff.createNewBuds(new RuntimeRule[] { sst }, 0).get(0);
 		RuntimeRule[] terminalRules = runtimeRuleSet.getPossibleSubTerminal(sst);
 
-		ArrayList<AbstractParseTree> newTrees = startBud.growHeight(this.runtimeRuleSet);// new
-																										// RuntimeRule[]
-																										// {pseudoGoalRule});
+		ArrayList<AbstractParseTree> newTrees = startBud.growHeight(this.runtimeRuleSet);
 		newForrest.addAll(newTrees);
 
+		int max = 0;
 		while (newForrest.getCanGrow()) {
 			++numberOfSeasons;
 			// System.out.println(this.numberOfSeasons);
 			oldForrest = newForrest.shallowClone();
 			newForrest = oldForrest.grow();
+			max = Math.max(max, newForrest.size());
 		}
 		// System.out.println(this.numberOfSeasons);
+		System.out.println("Max "+max);
 		IParseTree match = newForrest.getLongestMatch(text);
 		// System.out.println(((ParseTreeBranch)match).getIdString());
 

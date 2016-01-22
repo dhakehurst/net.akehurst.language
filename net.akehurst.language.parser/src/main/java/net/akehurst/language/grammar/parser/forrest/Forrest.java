@@ -52,6 +52,10 @@ public class Forrest {
 
 	Map<BranchIdentifier, AbstractParseTree> done;
 
+	public int size() {
+		return this.possibleTrees.size();
+	}
+	
 	Forrest newForrest() {
 		Forrest newForrest = new Forrest(this.goalRRule, this.runtimeRuleSet);
 		newForrest.goalTrees.addAll(this.goalTrees);
@@ -116,45 +120,14 @@ public class Forrest {
 			if (!newSkipBranches.isEmpty()) {
 				newForrest.addAll(newSkipBranches);
 			} else {
-//				if (tree.getIsSkip()) {
-//					AbstractParseTree nt = tree.tryGraftBack();
-//					if (null != nt) {
-//						newForrest.add(nt);
-//					}
-//				} else {
 	
-					ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeight(null, this.runtimeRuleSet);
+					ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeight(this.runtimeRuleSet);
+//				ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeightUntilProgress(this.runtimeRuleSet);
 					newForrest.addAll(newBranches);
 					
 					//TODO: should have some kind of merge so we don't continue with existing trees
 					// i.e. if head is present in the stack of an existing tree!
 					
-					
-//					if (tree.getIsComplete()) {
-//						ArrayList<AbstractParseTree> nts = tree.growHeight(this.runtimeRuleSet);
-//						newForrest.addAll(nts);
-//					}
-//	
-//					if (tree.getCanGraftBack()) {
-//						AbstractParseTree nt = tree.tryGraftBack();
-//						if (null != nt) {
-//							newForrest.add(nt);
-//						}
-//					}
-//	
-//					if (tree.getCanGrowWidth() ) {
-//						int i = 1;
-//	
-//	//					if (tree.getIsEmpty() || (tree.getIsComplete() && !tree.getCanGrow())) {
-//						if ((tree.getIsComplete() && !tree.getCanGrowWidth())) {
-//							// don't grow width
-//							//this never happens!
-//						} else {
-//							ArrayList<AbstractParseTree> newBranches = tree.growWidth(this.runtimeRuleSet);
-//							newForrest.addAll(newBranches);
-//						}
-//					}
-//				}
 			}
 		}
 

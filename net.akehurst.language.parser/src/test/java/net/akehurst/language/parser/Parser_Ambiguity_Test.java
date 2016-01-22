@@ -91,9 +91,60 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 		}
 	}
 	
+	@Test
+	public void am_S_a() {
+		// grammar, goal, input
+		try {
+			Grammar g = am();
+			String goal = "S";
+			String text = "a";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*S 1, 2}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+					b.branch("S",
+						b.leaf("a")
+					);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
 
-
-
+	@Test
+	public void am_S_aa() {
+		// grammar, goal, input
+		try {
+			Grammar g = am();
+			String goal = "S";
+			String text = "aa";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*S 1, 3}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+					b.branch("S",
+							b.leaf("a"),
+							b.leaf("a")
+					);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
 
 
 }
