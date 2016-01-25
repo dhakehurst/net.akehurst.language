@@ -175,9 +175,9 @@ public abstract class AbstractParseTree implements IParseTree {
 					RuntimeRule ruleThatIsEmpty = nt.getRuntimeRule().getRuleThatIsEmpty();
 					ParseTreeBranch pt = nt.growMe(ruleThatIsEmpty);
 
-					ArrayList<AbstractParseTree> nts = nt.growWidthAndHeightUntilProgress(runtimeRuleSet);
-					result.addAll(nts);
-
+//					ArrayList<AbstractParseTree> nts = pt.growWidthAndHeightUntilProgress(runtimeRuleSet);
+//					result.addAll(nts);
+result.add(pt);
 				} else { //bud is not empty, so progress has been made already
 					if (nt.getHasPotential(runtimeRuleSet)) {
 						result.add(nt);

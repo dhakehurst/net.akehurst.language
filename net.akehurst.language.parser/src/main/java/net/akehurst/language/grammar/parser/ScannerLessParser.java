@@ -189,6 +189,12 @@ public class ScannerLessParser implements IParser {
 		return result;
 	}
 
+//	@Override
+	public IParseTree parse(String goalRuleName, CharSequence text) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		INodeType goal = this.getGrammar().findRule(goalRuleName).getNodeType();
+		return this.parse(goal, text);
+	}
+	
 	@Override
 	public IParseTree parse(INodeType goal, CharSequence text) throws ParseFailedException, ParseTreeException {
 		try {
@@ -215,6 +221,9 @@ public class ScannerLessParser implements IParser {
 
 	public IParseTree parse2(INodeType goal, CharSequence text)
 			throws ParseFailedException, RuleNotFoundException, ParseTreeException {
+		if (null==this.runtimeRuleSet) {
+			this.build(goal);
+		}
 		RuntimeRule pseudoGoalRule = this.createPseudoGrammar(goal);
 		Rule goalRule = this.grammar.findAllRule(goal.getIdentity().asPrimitive());
 		int goalRuleNumber = this.runtimeRuleSet.getRuleNumber(goal.getIdentity().asPrimitive());
@@ -279,9 +288,11 @@ public class ScannerLessParser implements IParser {
 		ArrayList<AbstractParseTree> newTrees = startBud.growHeight(this.runtimeRuleSet);
 		newForrest.addAll(newTrees);
 
+		int numSeasons = 1;
 		int max = 0;
 		while (newForrest.getCanGrow()) {
-			++numberOfSeasons;
+			++numSeasons;
+			//++numberOfSeasons;
 			// System.out.println(this.numberOfSeasons);
 			oldForrest = newForrest.shallowClone();
 			newForrest = oldForrest.grow();
@@ -289,10 +300,10 @@ public class ScannerLessParser implements IParser {
 			max = Math.max(max, newForrest.size());
 		}
 		// System.out.println(this.numberOfSeasons);
-		System.out.println("Max "+max);
+		System.out.println("Max "+max + " "+numSeasons);
 		IParseTree match = newForrest.getLongestMatch(text);
 		// System.out.println(((ParseTreeBranch)match).getIdString());
-
+int len = text.length();
 		return match;
 	}
 

@@ -17,6 +17,8 @@ package net.akehurst.language.core.parser;
 
 import java.util.List;
 
+//import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
+
 
 public interface IParser {
 
@@ -29,5 +31,6 @@ public interface IParser {
 	
 	List<INodeType> getNodeTypes();
 
+//	IParseTree parse(String goalRuleName, CharSequence text) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
 	IParseTree parse(INodeType goal, CharSequence text) throws ParseFailedException, ParseTreeException;
 }

@@ -13,7 +13,9 @@ import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.grammar.parser.ScannerLessParser;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;
 
@@ -78,7 +80,7 @@ public class Java8_Tests {
 			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), input);
 			return tree;
 		} catch (ParseFailedException e) {
-			return e.getLongestMatch();
+			return null;//e.getLongestMatch();
 		} catch (ParseTreeException e) {
 			e.printStackTrace();
 		}
@@ -99,7 +101,7 @@ public class Java8_Tests {
 
 		String input = "class Test {";
 		input += "void test() {";
-		for (int i = 0; i < 100; ++i) {
+		for (int i = 0; i < 1; ++i) {
 			input += "  if(" + i + ") return " + i + ";";
 		}
 		input += "}";
@@ -171,10 +173,24 @@ public class Java8_Tests {
 	public void multipleFields() {
 
 		String input = "class Test {";
-		input += "  Integer i1";
-		input += "  Integer i2";
-		input += "  Integer i3";
-		input += "  Integer i4";
+		input += "  Integer i1;";
+		input += "  Integer i2;";
+		input += "  Integer i3;";
+		input += "  Integer i4;";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+
+	}
+
+	
+	@Test
+	public void manyFields() {
+
+		String input = "class Test {";
+		for (int i = 0; i < 100; ++i) {
+			input += "  Integer i"+i+";";
+		}
 		input += "}";
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);
@@ -182,13 +198,31 @@ public class Java8_Tests {
 	}
 	
 	@Test
+	public void xx() {
+
+		String input = "Visitor<E> v";
+		IParseTree tree = null;
+		try {
+			String grammarText = new String(Files.readAllBytes(Paths.get("src/test/grammar/Java8.og")));
+			Grammar javaGrammar = getOGLProcessor().process(grammarText, Grammar.class);
+			LanguageProcessor jp = new LanguageProcessor(javaGrammar, "compilationUnit", null);
+			tree = ((ScannerLessParser)jp.getParser()).parse("formalParameters", input);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Assert.assertNotNull(tree);
+
+	}	
+	
+	@Test
 	public void multipleMethods() {
 
 		String input = "class Test {";
+		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
 //		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
 //		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
-		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
-		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
+//		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
 		input += "}";
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);

@@ -126,7 +126,7 @@ public class Java8_compare_Test {
 			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), og_input);
 			return tree;
 		} catch (ParseFailedException e) {
-			return e.getLongestMatch();
+			return null;//e.getLongestMatch();
 		} catch (ParseTreeException e) {
 			e.printStackTrace();
 		}
@@ -162,7 +162,7 @@ public class Java8_compare_Test {
 		
 		Assert.assertTrue( totalInSignificant || ogFaster );
 		
-		Assert.assertNotNull(tree1);
+		Assert.assertNotNull("Failed to parse",tree1);
 		Assert.assertNotNull(tree2);
 	}
 
