@@ -1,29 +1,13 @@
 package net.akehurst.language.objectGrammar.comparisonTests;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Collection;
 
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.Lexer;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
-import antlr4.Java8Parser;
 import net.akehurst.language.core.ILanguageProcessor;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IParseTree;
@@ -116,7 +100,7 @@ public class Java8_Tests {
 		String input = "class Test {";
 		input += "void test() {";
 		for (int i = 0; i < 100; ++i) {
-			input += "  if("+i+") return "+i+";";
+			input += "  if(" + i + ") return " + i + ";";
 		}
 		input += "}";
 		input += "}";
@@ -125,7 +109,6 @@ public class Java8_Tests {
 
 	}
 
-	
 	@Test
 	public void tryfinally0() {
 
@@ -142,7 +125,7 @@ public class Java8_Tests {
 		Assert.assertNotNull(tree);
 
 	}
-	
+
 	@Test
 	public void tryfinally1() {
 
@@ -152,7 +135,7 @@ public class Java8_Tests {
 		input += "      if(i==1) return 1;";
 		input += "    } finally {";
 		for (int i = 0; i < 100; ++i) {
-			input += "       if("+i+") return "+i+";";
+			input += "       if(" + i + ") return " + i + ";";
 		}
 		input += "    }";
 		input += "  }";
@@ -161,8 +144,7 @@ public class Java8_Tests {
 		Assert.assertNotNull(tree);
 
 	}
-	
-	
+
 	@Test
 	public void tryfinally2() {
 
@@ -173,7 +155,7 @@ public class Java8_Tests {
 		input += "    } finally {";
 		input += "      try {";
 		for (int i = 0; i < 100; ++i) {
-			input += "       if("+i+") return "+i+";";
+			input += "       if(" + i + ") return " + i + ";";
 		}
 		input += "      } finally {";
 		input += "      }";
@@ -184,7 +166,65 @@ public class Java8_Tests {
 		Assert.assertNotNull(tree);
 
 	}
+
+	@Test
+	public void multipleFields() {
+
+		String input = "class Test {";
+		input += "  Integer i1";
+		input += "  Integer i2";
+		input += "  Integer i3";
+		input += "  Integer i4";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+
+	}
 	
-	
-	
+	@Test
+	public void abstractGeneric() {
+
+		String input = "class Test {";
+		input += "  /** Visit this tree with a given visitor.";
+		input += "  */";
+		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v) throws E;";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+
+	}
+
+	@Test
+	public void genericVisitorMethod() {
+
+		String input = "class Test {";
+		input += "  /** A generic visitor class for trees.";
+		input += "  */";
+		input += "  public static abstract class Visitor<E extends Throwable> {";
+		input += "      public void visitTree(Tree that)                   throws E { assert false; }";
+		input += "  }";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+
+	}
+
+	@Test
+	public void tree() {
+
+		String input = "class Test {";
+		input += "  /** Visit this tree with a given visitor.";
+		input += "  */";
+		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v) throws E;";
+		input += "";
+		input += "  /** A generic visitor class for trees.";
+		input += "  */";
+		input += "  public static abstract class Visitor<E extends Throwable> {";
+		input += "      public void visitTree(Tree that)                   throws E { assert false; }";
+		input += "  }";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+
+	}
 }

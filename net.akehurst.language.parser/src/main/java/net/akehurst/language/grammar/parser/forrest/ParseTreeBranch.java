@@ -53,7 +53,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 	
 	@Override
 	public boolean getCanGraftBack() {
-		return this.getIsComplete() && null!=this.peekTopStackedRoot();
+		return this.getIsComplete() && this.getIsStacked();
 	}
 	
 	@Override
@@ -138,7 +138,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 		throw new RuntimeException("Internal Error: rule kind not recognised");
 	}
 	boolean calculateCanGrow() {
-		if (this.stackedTree!=null) return true;
+		if (this.getIsStacked()) return true;
 		return this.calculateCanGrowWidth();
 	}
 	
@@ -219,13 +219,13 @@ public class ParseTreeBranch extends AbstractParseTree {
 		if (this.complete != other.complete) {
 			return false;
 		}
-		if (null==this.stackedTree && null==other.stackedTree) {
-			return true;
+		if (!this.getIsStacked() && !other.getIsStacked()) {
+			return this.getRoot().equals(other.getRoot());
 		}
-		if (!this.stackedTree.equals(other.stackedTree)) {
+		if (!this.peekTopStackedRoot().equals(other.peekTopStackedRoot())) {
 			return false;
 		}
-		return true;
+		return this.getRoot().equals(other.getRoot());
 
 	}
 }

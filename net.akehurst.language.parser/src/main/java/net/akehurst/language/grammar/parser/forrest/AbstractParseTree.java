@@ -37,13 +37,17 @@ public abstract class AbstractParseTree implements IParseTree {
 		this.ffactory = factory;
 		this.root = root;
 		this.stackedTree = stackedTree;
-		this.identifier = new BranchIdentifier(root.getRuntimeRule().getRuleNumber(), root.getStart(), root.getEnd());
+		this.identifier = new NodeIdentifier(root);
 	}
 
 	ForrestFactory ffactory;
 	Node root;
-	public BranchIdentifier identifier;
+	NodeIdentifier identifier;
 
+	NodeIdentifier stackedTreesIdentifier;
+	//need a list if we are to hold on to all options, but if we only need one complete tree
+	// then we can throw away duplicates - see Forrest.add
+	//List<AbstractParseTree> stackedTrees;
 	AbstractParseTree stackedTree;
 
 	public AbstractParseTree getStackedTree() {
@@ -59,6 +63,10 @@ public abstract class AbstractParseTree implements IParseTree {
 		return this.getRoot().getIsEmpty();
 	}
 
+	public boolean getIsStacked() {
+		return this.stackedTree != null;
+	}
+	
 	public AbstractParseTree peekTopStackedRoot() {
 		return this.stackedTree;
 	}
@@ -88,11 +96,11 @@ public abstract class AbstractParseTree implements IParseTree {
 		if (!this.getCanGrow()) {
 			return false;
 		} else {
-			if (null == this.getStackedTree()) {
+			if (!this.getIsStacked()) {
 				return true; //only happens when tree is dealing with goal stuff
 			} else {
 				RuntimeRule thisRule = this.getRoot().getRuntimeRule();
-				RuntimeRule nextExpectedRule = this.getStackedTree().getNextExpectedItem();
+				RuntimeRule nextExpectedRule = this.getStackedTree().getNextExpectedItem(); //TODO: nextexpected from all the stacked trees
 				if (thisRule == nextExpectedRule || thisRule.getIsSkipRule()) {
 					return true;
 				} else {
@@ -170,11 +178,12 @@ public abstract class AbstractParseTree implements IParseTree {
 		ArrayList<AbstractParseTree> result = new ArrayList<>();
 		ArrayList<AbstractParseTree> nts = this.growWidthAndHeight(runtimeRuleSet);
 		for (AbstractParseTree pt2 : nts) {
-			if (null==pt2.peekTopStackedRoot()) {
+			if (!pt2.getIsStacked()) {
 //			if (pt2.getIsComplete() || pt2.getIsSkip()) {
 				result.add(pt2);
 			} else {
-				if (pt2.getIsEmpty()) {
+				//TODO: maybe keep going if skip?
+				if (pt2.getIsEmpty() || pt2.getIsSkip()) {
 					ArrayList<AbstractParseTree> nts2 = pt2.growWidthAndHeightUntilProgress(runtimeRuleSet);
 					result.addAll(nts2);
 				} else {
@@ -327,9 +336,8 @@ public abstract class AbstractParseTree implements IParseTree {
 	 * @throws CannotGraftBackException
 	 * 
 	 **/
-	public AbstractParseTree tryGraftBack() throws RuleNotFoundException {// ,
-																			// CannotGraftBackException
-																			// {
+	public AbstractParseTree tryGraftBack() throws RuleNotFoundException {
+		//TODO: handle multiple stackedRoot  - of same node but other differences (i.e. children or other stacked roots)
 		// try {
 		// if (this.getCanGraftBack()) {
 		AbstractParseTree parent = this.peekTopStackedRoot();
@@ -504,7 +512,7 @@ public abstract class AbstractParseTree implements IParseTree {
 		// children);
 		// ParseTreeBranch newTree = new ParseTreeBranch(this.factory,
 		// this.input, newBranch, this.stackedTree, target, 1);
-		ParseTreeBranch newTree = this.ffactory.fetchOrCreateBranch(target, children, this.stackedTree, 1);
+		ParseTreeBranch newTree = this.ffactory.fetchOrCreateBranch(target, children, this.getStackedTree(), 1);
 		return newTree;
 	}
 
@@ -574,14 +582,14 @@ public abstract class AbstractParseTree implements IParseTree {
 		}
 	}
 
-	public String getIdString() {
-		String s = this.identifier.toString();
-		AbstractParseTree t = this.stackedTree;
-		while (null != t) {
-			s += " " + t.identifier;
-			t = t.stackedTree;
-		}
-		return s;
-	}
+//	public String getIdString() {
+//		String s = this.identifier.toString();
+//		AbstractParseTree t = this.stackedTree;
+//		while (null != t) {
+//			s += " " + t.identifier;
+//			t = t.stackedTree;
+//		}
+//		return s;
+//	}
 
 }

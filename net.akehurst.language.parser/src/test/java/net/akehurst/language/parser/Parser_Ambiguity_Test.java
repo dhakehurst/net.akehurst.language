@@ -64,6 +64,16 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 		return b.get();
 	}
 	
+	Grammar x() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("S").multi(0, 1, new NonTerminal("aaa"));
+		b.rule("aaa").choice(new NonTerminal("a1"),new NonTerminal("a2"),new NonTerminal("a3"));
+		b.rule("a1").multi(0, 1, new TerminalLiteral("a"));
+		b.rule("a2").multi(0, 2, new TerminalLiteral("a"));
+		b.rule("a3").multi(0, 3, new TerminalLiteral("a"));
+		return b.get();
+	}
+	
 	@Test
 	public void am_S_empty() {
 		// grammar, goal, input
@@ -146,5 +156,36 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 		}
 	}
 
+	@Test
+	public void x_S_aa() {
+		// grammar, goal, input
+		try {
+			Grammar g = x();
+			String goal = "S";
+			String text = "aa";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*S 1, 3}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+					b.branch("S",
+						b.branch("aaa", 
+							b.branch("a2",
+								b.leaf("a"),
+								b.leaf("a")
+							)
+						)
+					);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
 
 }

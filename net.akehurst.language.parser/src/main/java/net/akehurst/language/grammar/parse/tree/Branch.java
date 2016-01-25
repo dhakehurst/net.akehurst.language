@@ -18,6 +18,7 @@ package net.akehurst.language.grammar.parse.tree;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
@@ -38,7 +39,7 @@ public class Branch extends Node implements IBranch {
 			this.isEmpty &= n.getIsEmpty();
 			this.length += n.getMatchedTextLength();
 		}
-		this.hashCode_cache = this.runtimeRule.getRuleNumber() ^ this.start ^ this.length;
+		this.hashCode_cache = Objects.hash(this.runtimeRule.getRuleNumber(),this.start,this.length);
 	}
 	
 	public INode[] children;

@@ -55,7 +55,7 @@ public class Forrest {
 	ArrayList<IParseTree> gt = new ArrayList<>();
 	AbstractParseTree longestMatch;
 
-	Map<BranchIdentifier, AbstractParseTree> done;
+	Map<NodeIdentifier, AbstractParseTree> done;
 
 	public int size() {
 		return this.possibleTrees.size();
@@ -218,15 +218,30 @@ public class Forrest {
 
 	
 	public void add(AbstractParseTree tree) throws ParseTreeException {
+		//To keep all possible parses, if already done (rule,start,end) then merge stackedTrees
+		//however, we only need one, so can throw out duplicates
+		//TODO: might be better to keep the longest
 		AbstractParseTree old = this.done.get(tree.identifier);
-		if (null!=old) {
-			return;
-		} else {
+		if (null==old) {
 			this.done.put(tree.identifier, tree);
+		} else {
+			//check for longest and keep it.
+			if (tree.getRoot() instanceof Branch && old.getRoot() instanceof Branch) {
+				if (((Branch)tree.getRoot()).getChildren().size() > ((Branch)old.getRoot()).getChildren().size()) {
+					//keep it
+					this.done.put(tree.identifier, tree);
+				} else {
+					//throw it out
+					return;
+				}
+			} else {
+				//throw it
+//				return;
+			}
 		}
 		if (tree.getIsComplete()) {
 			// this.newGrownBranches.add(tree);
-			if (null == tree.stackedTree
+			if (!tree.getIsStacked()
 					&& this.goalRRule.getRuleNumber() == tree.getRoot().getRuntimeRule().getRuleNumber()) {
 				this.goalTrees.add(tree);
 			}

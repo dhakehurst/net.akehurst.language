@@ -42,7 +42,7 @@ public class ForrestFactory {
 	
 	Input input;
 
-	Map<BranchIdentifier, Branch> branch_cache;
+	Map<NodeIdentifier, Branch> branch_cache;
 	
 	public List<ParseTreeBud> createNewBuds(RuntimeRule[] possibleNextTerminals, int pos) throws RuleNotFoundException {
 		return this.input.createNewBuds(possibleNextTerminals, pos);

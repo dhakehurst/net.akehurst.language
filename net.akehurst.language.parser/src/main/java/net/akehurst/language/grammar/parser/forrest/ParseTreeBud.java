@@ -28,7 +28,7 @@ public class ParseTreeBud extends AbstractParseTree {
 
 	@Override
 	public boolean getCanGrow() {
-		if (null!=this.stackedTree) {
+		if (this.getIsStacked()) {
 			return true;
 		} else {
 			return false;
@@ -42,7 +42,7 @@ public class ParseTreeBud extends AbstractParseTree {
 
 	@Override
 	public boolean getCanGraftBack() {
-		return this.stackedTree!=null;
+		return this.getIsStacked();
 	}
 	
 	@Override
@@ -98,10 +98,10 @@ public class ParseTreeBud extends AbstractParseTree {
 		if ( this.getRoot().getRuntimeRule().getRuleNumber() != other.getRoot().getRuntimeRule().getRuleNumber() ) {
 			return false;
 		}
-		if (null==this.stackedTree && null==other.stackedTree) {
+		if (!this.getIsStacked() && !other.getIsStacked()) {
 			return true;
 		}
-		if (!this.stackedTree.equals(other.stackedTree)) {
+		if (!this.peekTopStackedRoot().equals(other.peekTopStackedRoot())) {
 			return false;
 		}
 		return true;
