@@ -115,6 +115,20 @@ public class Java8_Test {
 	}
 
 	@Test
+	public void og_longName() {
+		Path file = Paths.get("src/test/resources/javac/limits/LongName.java");
+		IParseTree tree = parseWithOG(file);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void og_numArgs1() {
+		Path file = Paths.get("src/test/resources/javac/limits/NumArgs1.java");
+		IParseTree tree = parseWithOG(file);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
 	public void antlr4_compilationUnit() {
 		Path file = Paths.get("src/test/resources/File1.java");
 		Object tree = parseWithAntlr4(file);

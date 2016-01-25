@@ -17,7 +17,9 @@ package net.akehurst.language.grammar.parser.forrest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTree;
@@ -78,6 +80,11 @@ public abstract class AbstractParseTree implements IParseTree {
 		return this.stackedTree;
 	}
 
+	boolean getIsGoal(RuntimeRuleSet runtimeRuleSet) {
+		//TODO: this use of constant is not reliable / appropriate
+		return this.getIsComplete() && !this.getIsStacked() && (runtimeRuleSet.getRuleNumber("$goal$") == this.getRuntimeRule().getRuleNumber());
+	}
+	
 	/**
 	 * true indicates that this tree is valid (complete) for the given rule it could still grow (width) if e.g. it is a multi or separated list MayGrowHeight!
 	 */
@@ -276,8 +283,8 @@ public abstract class AbstractParseTree implements IParseTree {
 		} else {
 		
 		if (this.getIsSkip()) {
-			AbstractParseTree nt = this.tryGraftBack();
-			if (null != nt) {
+			ArrayList<AbstractParseTree> nts = this.tryGraftBack();
+			for (AbstractParseTree nt : nts) {
 				if (nt.getHasPotential(runtimeRuleSet)) {
 					result.add(nt);
 				} else {
@@ -299,14 +306,13 @@ public abstract class AbstractParseTree implements IParseTree {
 			}
 
 			if (this.getCanGraftBack()) {
-				AbstractParseTree nt = this.tryGraftBack();
-				if (null != nt) {
-					result.add(nt);
-					// if (nt.getHasPotential(runtimeRuleSet)) {
-					// result.add(nt);
-					// } else {
-					// // drop it
-					// }
+				ArrayList<AbstractParseTree> nts = this.tryGraftBack();
+				for (AbstractParseTree nt : nts) {
+					if (nt.getHasPotential(runtimeRuleSet) || nt.getIsGoal(runtimeRuleSet) ) {
+						result.add(nt);
+					} else {
+						// drop it
+					}
 				}
 			}
 
@@ -343,24 +349,21 @@ public abstract class AbstractParseTree implements IParseTree {
 	 * @throws CannotGraftBackException
 	 * 
 	 **/
-	public AbstractParseTree tryGraftBack() throws RuleNotFoundException {
+	public ArrayList<AbstractParseTree> tryGraftBack() throws RuleNotFoundException {
 		//TODO: handle multiple stackedRoot  - of same node but other differences (i.e. children or other stacked roots)
-		// try {
-		// if (this.getCanGraftBack()) {
+		ArrayList<AbstractParseTree> result = new ArrayList<>();
 		AbstractParseTree parent = this.peekTopStackedRoot();
-		// if (parent.getCanGrow()) {
-		return this.tryGraftInto(parent);
-		// } else {
-		// throw new CannotExtendTreeException("parent cannot grow");
-		// }
-		// } else {
-		// throw new CannotExtendTreeException("tree not complete");
-		// }
-		// } catch (CannotExtendTreeException e) {
-		// throw new CannotGraftBackException(e.getMessage(), e);
-		// } catch (ParseTreeException e) { // StackEmpty
-		// throw new CannotGraftBackException(e.getMessage(), null);
-		// }
+		AbstractParseTree pt = this.tryGraftInto(parent);
+		if (null!=pt) {
+			result.add(pt);
+		}
+		for(AbstractParseTree dt: this.duplicateRoots) {
+			AbstractParseTree pt2 = dt.tryGraftInto(dt.peekTopStackedRoot());
+			if (null!=pt2) {
+				result.add(pt2);
+			}
+		}
+		return result;
 	}
 
 	public ArrayList<AbstractParseTree> growHeight(RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {

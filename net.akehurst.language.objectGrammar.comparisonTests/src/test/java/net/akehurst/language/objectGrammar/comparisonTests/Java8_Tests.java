@@ -182,6 +182,20 @@ public class Java8_Tests {
 	}
 	
 	@Test
+	public void multipleMethods() {
+
+		String input = "class Test {";
+//		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
+//		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
+		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
+		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+
+	}
+	
+	@Test
 	public void abstractGeneric() {
 
 		String input = "class Test {";

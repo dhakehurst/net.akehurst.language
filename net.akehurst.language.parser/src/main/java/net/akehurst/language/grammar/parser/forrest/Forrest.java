@@ -63,6 +63,10 @@ public class Forrest {
 		return this.possTrees2.size();
 	}
 	
+	public AbstractParseTree[] getPossibles() {
+		return this.possTrees2.values().toArray(new AbstractParseTree[this.possTrees2.size()]);
+	}
+	
 	Forrest newForrest() {
 		Forrest newForrest = new Forrest(this.goalRRule, this.runtimeRuleSet);
 		newForrest.goalTrees.addAll(this.goalTrees);
@@ -141,13 +145,14 @@ public class Forrest {
 		Forrest newForrest = this.newForrest();
 //		for (AbstractParseTree tree : this.possibleTrees) {
 		for (AbstractParseTree tree : this.possTrees2.values()) {
-			ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeightUntilProgress(this.runtimeRuleSet);
+//			ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeightUntilProgress(this.runtimeRuleSet);
+			ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeight(this.runtimeRuleSet);
 			newForrest.addAll(newBranches);
 		}
 
 		return newForrest;
 	}
-
+/*
 	Forrest growDepthFirst() throws RuleNotFoundException, ParseTreeException {
 		Forrest newForrest = new Forrest(this.goalRRule, this.runtimeRuleSet);
 		newForrest.goalTrees.addAll(this.goalTrees);
@@ -211,7 +216,7 @@ public class Forrest {
 
 		return newForrest;
 	}
-
+*/
 	public void addAll(Collection<? extends AbstractParseTree> trees) throws ParseTreeException {
 		for (AbstractParseTree tree : trees) {
 			this.add(tree);
@@ -247,7 +252,11 @@ public class Forrest {
 			// null);
 			// }
 			if (this.possTrees2.containsKey(tree.identifier)) {
+				if (tree.getIsComplete()) {
 				this.possTrees2.get(tree.identifier).duplicateRoots.add(tree);
+				} else {
+					int i=0;
+				}
 			} else {
 				this.possTrees2.put(tree.identifier, tree);
 			}

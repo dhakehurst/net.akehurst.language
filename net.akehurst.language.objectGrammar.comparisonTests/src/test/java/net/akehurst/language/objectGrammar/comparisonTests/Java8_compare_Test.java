@@ -154,7 +154,13 @@ public class Java8_compare_Test {
 		Object tree2 = parseWithAntlr4(this.file);
 		Instant e2 = Instant.now();
 
-		Assert.assertTrue( Duration.between(s1, e1).compareTo(Duration.between(s2, e2)) < 0 );
+		Duration d1 = Duration.between(s1, e1);
+		Duration d2 = Duration.between(s2, e2);
+		boolean ogFaster = d1.compareTo(d2) < 0;
+		
+		boolean totalInSignificant = Duration.ofMillis(200).compareTo(d1) > 0;
+		
+		Assert.assertTrue( totalInSignificant || ogFaster );
 		
 		Assert.assertNotNull(tree1);
 		Assert.assertNotNull(tree2);

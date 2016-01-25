@@ -285,6 +285,7 @@ public class ScannerLessParser implements IParser {
 			// System.out.println(this.numberOfSeasons);
 			oldForrest = newForrest.shallowClone();
 			newForrest = oldForrest.grow();
+			AbstractParseTree[] arr = newForrest.getPossibles();
 			max = Math.max(max, newForrest.size());
 		}
 		// System.out.println(this.numberOfSeasons);
