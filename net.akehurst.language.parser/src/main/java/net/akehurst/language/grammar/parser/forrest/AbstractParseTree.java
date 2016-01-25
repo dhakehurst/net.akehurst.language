@@ -38,6 +38,7 @@ public abstract class AbstractParseTree implements IParseTree {
 		this.root = root;
 		this.stackedTree = stackedTree;
 		this.identifier = new NodeIdentifier(root);
+		this.duplicateRoots = new ArrayList<>();
 	}
 
 	ForrestFactory ffactory;
@@ -57,6 +58,12 @@ public abstract class AbstractParseTree implements IParseTree {
 	@Override
 	public Node getRoot() {
 		return this.root;
+	}
+	
+	List<AbstractParseTree> duplicateRoots;
+	
+	public RuntimeRule getRuntimeRule() {
+		return this.root.getRuntimeRule();
 	}
 
 	public boolean getIsEmpty() {
@@ -99,7 +106,7 @@ public abstract class AbstractParseTree implements IParseTree {
 			if (!this.getIsStacked()) {
 				return true; //only happens when tree is dealing with goal stuff
 			} else {
-				RuntimeRule thisRule = this.getRoot().getRuntimeRule();
+				RuntimeRule thisRule = this.getRuntimeRule();
 				RuntimeRule nextExpectedRule = this.getStackedTree().getNextExpectedItem(); //TODO: nextexpected from all the stacked trees
 				if (thisRule == nextExpectedRule || thisRule.getIsSkipRule()) {
 					return true;
@@ -158,7 +165,7 @@ public abstract class AbstractParseTree implements IParseTree {
 			for (ParseTreeBud bud : buds) {
 				AbstractParseTree nt = this.pushStackNewRoot(bud.getRoot());
 				if (nt.getIsEmpty()) {
-					RuntimeRule ruleThatIsEmpty = nt.getRoot().getRuntimeRule().getRuleThatIsEmpty();
+					RuntimeRule ruleThatIsEmpty = nt.getRuntimeRule().getRuleThatIsEmpty();
 					ParseTreeBranch pt = nt.growMe(ruleThatIsEmpty);
 
 					ArrayList<AbstractParseTree> nts = nt.growWidthAndHeightUntilProgress(runtimeRuleSet);
@@ -216,7 +223,7 @@ public abstract class AbstractParseTree implements IParseTree {
 			for (ParseTreeBud bud : buds) {
 				AbstractParseTree nt = this.pushStackNewRoot(bud.getRoot());
 				if (nt.getIsEmpty()) {
-					RuntimeRule ruleThatIsEmpty = nt.getRoot().getRuntimeRule().getRuleThatIsEmpty();
+					RuntimeRule ruleThatIsEmpty = nt.getRuntimeRule().getRuleThatIsEmpty();
 					ParseTreeBranch pt = nt.growMe(ruleThatIsEmpty);
 
 					if (pt.getHasPotential(runtimeRuleSet)) {
@@ -371,7 +378,7 @@ public abstract class AbstractParseTree implements IParseTree {
 			while (!toGrowUp.isEmpty()) {
 				ArrayList<AbstractParseTree> newToGrowUp = new ArrayList<>();
 				for (AbstractParseTree t : toGrowUp) {
-					final RuntimeRule[] rules = ruleSet.getPossibleSuperRule(t.getRoot().getRuntimeRule());
+					final RuntimeRule[] rules = ruleSet.getPossibleSuperRule(t.getRuntimeRule());
 					for (RuntimeRule rule : rules) {
 						if (t.root.getRuntimeRule().getRuleNumber() == rule.getRuleNumber()) {
 							result.add(t);
@@ -400,7 +407,7 @@ public abstract class AbstractParseTree implements IParseTree {
 		ArrayList<AbstractParseTree> result = new ArrayList<>();
 		// result.add((AbstractParseTree) this);
 		if (this.getIsComplete()) {
-			RuntimeRule[] rules = ruleSet.getPossibleSuperRule(this.getRoot().getRuntimeRule());
+			RuntimeRule[] rules = ruleSet.getPossibleSuperRule(this.getRuntimeRule());
 			for (RuntimeRule rule : rules) {
 				if (this.root.getRuntimeRule().getRuleNumber() == rule.getRuleNumber()) {
 					result.add(this);
@@ -427,26 +434,21 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	public ArrayList<AbstractParseTree> growHeight3(RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
 		ArrayList<AbstractParseTree> result = new ArrayList<>();
-		// result.add((AbstractParseTree) this);
 		if (this.getIsComplete()) {
-			RuntimeRule[] rules = runtimeRuleSet.getPossibleSuperRule(this.getRoot().getRuntimeRule());
+			RuntimeRule[] rules = runtimeRuleSet.getPossibleSuperRule(this.getRuntimeRule());
 			for (RuntimeRule rule : rules) {
 				if (this.root.getRuntimeRule().getRuleNumber() == rule.getRuleNumber()) {
 					result.add(this);
 				}
 				ParseTreeBranch[] newTrees = this.grow(rule);
 				for (ParseTreeBranch nt : newTrees) {
-					//// if (nt.getIsComplete()) {
-					// ArrayList<AbstractParseTree> newTree2 =
-					//// nt.growWidthAndHeight(terminalRules, ruleSet);
-					// //if (newTree2.isEmpty()) {
 					result.add(nt);
-					// //} else {
-					// result.addAll(newTree2);
-					// //}
-					//// } else {
-					//// result.add(nt);
-					//// }
+				}
+				for(AbstractParseTree dt: this.duplicateRoots) {
+					ParseTreeBranch[] newDTrees = dt.grow(rule);
+					for (ParseTreeBranch nt : newDTrees) {
+						result.add(nt);
+					}
 				}
 			}
 		} else {
@@ -461,7 +463,7 @@ public abstract class AbstractParseTree implements IParseTree {
 			// throw new CannotExtendTreeException("parent is a bud, cannot
 			// extend it");
 			// } else {
-			if (parent.getNextExpectedItem().getRuleNumber() == this.getRoot().getRuntimeRule().getRuleNumber()) {
+			if (parent.getNextExpectedItem().getRuleNumber() == this.getRuntimeRule().getRuleNumber()) {
 				return parent.extendWith(this.getRoot());
 			} else if (this.getIsSkip()) {
 				return parent.extendWith(this.getRoot());
@@ -519,7 +521,7 @@ public abstract class AbstractParseTree implements IParseTree {
 	ParseTreeBranch[] growConcatenation(RuntimeRule target) {
 		if (0 == target.getRhs().getItems().length) {
 			return new ParseTreeBranch[0];
-		} else if (target.getRhsItem(0).getRuleNumber() == this.getRoot().getRuntimeRule().getRuleNumber()) {
+		} else if (target.getRhsItem(0).getRuleNumber() == this.getRuntimeRule().getRuleNumber()) {
 			ParseTreeBranch newTree = this.growMe(target);
 			return new ParseTreeBranch[] { newTree };
 		} else {
@@ -528,7 +530,7 @@ public abstract class AbstractParseTree implements IParseTree {
 	}
 
 	ParseTreeBranch[] growChoice(RuntimeRule target) {
-		RuntimeRule[] rrs = target.getRhs().getItems(this.getRoot().getRuntimeRule().getRuleNumber());
+		RuntimeRule[] rrs = target.getRhs().getItems(this.getRuntimeRule().getRuleNumber());
 		ParseTreeBranch[] result = new ParseTreeBranch[rrs.length];
 		for (int i = 0; i < rrs.length; ++i) {
 			ParseTreeBranch newTree = this.growMe(target);
@@ -539,7 +541,7 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	ParseTreeBranch[] growMulti(RuntimeRule target) {
 		try {
-			if (target.getRhsItem(0).getRuleNumber() == this.getRoot().getRuntimeRule().getRuleNumber()
+			if (target.getRhsItem(0).getRuleNumber() == this.getRuntimeRule().getRuleNumber()
 					|| (0 == target.getRhs().getMultiMin() && this.getRoot() instanceof Leaf)) {
 
 				// need to create a 'complete' version and a 'non-complete'
@@ -563,7 +565,7 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	ParseTreeBranch[] growSeparatedList(RuntimeRule target) {
 		try {
-			if (target.getRhsItem(0).getRuleNumber() == this.getRoot().getRuntimeRule().getRuleNumber()
+			if (target.getRhsItem(0).getRuleNumber() == this.getRuntimeRule().getRuleNumber()
 					|| (0 == target.getRhs().getMultiMin() && this.getRoot() instanceof Leaf)) {
 				ParseTreeBranch newTree = this.growMe(target);
 				// ParseTreeBranch ntB = (ParseTreeBranch)newTree;

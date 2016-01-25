@@ -50,7 +50,8 @@ public class Forrest {
 
 
 	Input input;
-	ArrayList<AbstractParseTree> possibleTrees = new ArrayList<>();
+//	ArrayList<AbstractParseTree> possibleTrees = new ArrayList<>();
+	Map<NodeIdentifier, AbstractParseTree> possTrees2 = new HashMap<>();
 	Set<IParseTree> goalTrees = new HashSet<>();
 	ArrayList<IParseTree> gt = new ArrayList<>();
 	AbstractParseTree longestMatch;
@@ -58,7 +59,8 @@ public class Forrest {
 	Map<NodeIdentifier, AbstractParseTree> done;
 
 	public int size() {
-		return this.possibleTrees.size();
+//		return this.possibleTrees.size();
+		return this.possTrees2.size();
 	}
 	
 	Forrest newForrest() {
@@ -82,7 +84,7 @@ public class Forrest {
 	}
 
 	AbstractParseTree extractLongestMatch() {
-		if (this.longestMatch.getRoot().getRuntimeRule().equals(this.goalRRule)) {
+		if (this.longestMatch.getRuntimeRule().equals(this.goalRRule)) {
 			
 			RuntimeRule target = null;
 			IBranch root = (IBranch) this.longestMatch.getRoot();
@@ -137,7 +139,8 @@ public class Forrest {
 	public Forrest growBreadthFirst() throws RuleNotFoundException, ParseTreeException {
 		// System.out.println("posibles: "+this.possibleTrees.size());
 		Forrest newForrest = this.newForrest();
-		for (AbstractParseTree tree : this.possibleTrees) {
+//		for (AbstractParseTree tree : this.possibleTrees) {
+		for (AbstractParseTree tree : this.possTrees2.values()) {
 			ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeightUntilProgress(this.runtimeRuleSet);
 			newForrest.addAll(newBranches);
 		}
@@ -150,9 +153,10 @@ public class Forrest {
 		newForrest.goalTrees.addAll(this.goalTrees);
 		newForrest.longestMatch = this.longestMatch;
 
-		for (AbstractParseTree tree : this.possibleTrees) {
+//		for (AbstractParseTree tree : this.possibleTrees) {
+		for (AbstractParseTree tree : this.possTrees2.values()) {
 			// System.out.println(tree.getIdString());
-			RuntimeRule treeRR = tree.getRoot().getRuntimeRule();
+			RuntimeRule treeRR = tree.getRuntimeRule();
 
 			AbstractParseTree ntree = tree;
 			while (null != tree && tree.getCanGrow()) {
@@ -221,28 +225,17 @@ public class Forrest {
 		//To keep all possible parses, if already done (rule,start,end) then merge stackedTrees
 		//however, we only need one, so can throw out duplicates
 		//TODO: might be better to keep the longest
-		AbstractParseTree old = this.done.get(tree.identifier);
-		if (null==old) {
-			this.done.put(tree.identifier, tree);
-		} else {
-			//check for longest and keep it.
-			if (tree.getRoot() instanceof Branch && old.getRoot() instanceof Branch) {
-				if (((Branch)tree.getRoot()).getChildren().size() > ((Branch)old.getRoot()).getChildren().size()) {
-					//keep it
-					this.done.put(tree.identifier, tree);
-				} else {
-					//throw it out
-					return;
-				}
-			} else {
-				//throw it
-//				return;
-			}
-		}
+//		AbstractParseTree old = this.done.get(tree.identifier);
+//		if (null==old) {
+//			this.done.put(tree.identifier, tree);
+//		} else {
+//			old.duplicateRoots.add(tree);
+//			return;
+//		}
 		if (tree.getIsComplete()) {
 			// this.newGrownBranches.add(tree);
 			if (!tree.getIsStacked()
-					&& this.goalRRule.getRuleNumber() == tree.getRoot().getRuntimeRule().getRuleNumber()) {
+					&& this.goalRRule.getRuleNumber() == tree.getRuntimeRule().getRuleNumber()) {
 				this.goalTrees.add(tree);
 			}
 		}
@@ -253,13 +246,20 @@ public class Forrest {
 			// // throw new ParseTreeException("Overwriting and existing tree",
 			// null);
 			// }
-			if (this.possibleTrees.contains(tree)) {
-				// don't add
-				int i=0;
+			if (this.possTrees2.containsKey(tree.identifier)) {
+				this.possTrees2.get(tree.identifier).duplicateRoots.add(tree);
 			} else {
-				this.possibleTrees.add(tree);
-				this.canGrow |= tree.getCanGrow();
+				this.possTrees2.put(tree.identifier, tree);
 			}
+			this.canGrow |= tree.getCanGrow();
+			
+//			if (this.possibleTrees.contains(tree)) {
+//				// don't add
+//				int i=0;
+//			} else {
+//				this.possibleTrees.add(tree);
+//				this.canGrow |= tree.getCanGrow();
+//			}
 		} else {
 			// drop tree
 			int i = 0;
@@ -279,7 +279,8 @@ public class Forrest {
 		Forrest clone = new Forrest(this.goalRRule, this.runtimeRuleSet);
 		clone.canGrow = this.canGrow;
 		clone.goalTrees.addAll(this.goalTrees);
-		clone.possibleTrees.addAll(this.possibleTrees);
+//		clone.possibleTrees.addAll(this.possibleTrees);
+		clone.possTrees2 = new HashMap<>(this.possTrees2);
 		// clone.newGrownBranches.addAll(this.newGrownBranches);
 		// clone.possibleSubRule = this.possibleSubRule;
 		// clone.possibleTerminal = this.possibleTerminal;
@@ -293,8 +294,10 @@ public class Forrest {
 	@Override
 	public String toString() {
 		String s = "Forrest {";
-		s += this.possibleTrees.size();
-		s += ", " + this.possibleTrees;
+//		s += this.possibleTrees.size();
+//		s += ", " + this.possibleTrees;
+		s += this.possTrees2.size();
+		s += ", " + this.possTrees2.values();
 		s += "}";
 		return s;
 	}
@@ -308,7 +311,8 @@ public class Forrest {
 	public boolean equals(Object arg) {
 		if (arg instanceof Forrest) {
 			Forrest other = (Forrest) arg;
-			return this.possibleTrees.equals(other.possibleTrees);
+//			return this.possibleTrees.equals(other.possibleTrees);
+			return this.possTrees2.equals(other.possTrees2);
 		} else {
 			return false;
 		}
