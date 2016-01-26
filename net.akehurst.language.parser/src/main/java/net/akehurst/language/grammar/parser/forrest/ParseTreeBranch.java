@@ -32,7 +32,7 @@ public class ParseTreeBranch extends AbstractParseTree {
 		this.canGrow = this.calculateCanGrow();
 		this.complete = this.calculateIsComplete();
 		this.canGrowWidth = this.calculateCanGrowWidth();
-		this.hashCode_cache = this.getRoot().hashCode();
+//		this.hashCode_cache = this.getRoot().hashCode();
 	}
 	
 	RuntimeRule rule;
@@ -195,37 +195,37 @@ public class ParseTreeBranch extends AbstractParseTree {
 		return this.toString_cache;
 	}
 	
-	int hashCode_cache;
-	@Override
-	public int hashCode() {
-		return hashCode_cache;
-	}
-	
-	@Override
-	public boolean equals(Object arg) {
-		if (!(arg instanceof ParseTreeBranch)) {
-			return false;
-		}
-		ParseTreeBranch other = (ParseTreeBranch)arg;
-		if ( this.getRoot().getStart() != other.getRoot().getStart() ) {
-			return false;
-		}
-		if ( this.getRoot().getEnd() != other.getRoot().getEnd() ) {
-			return false;
-		}
-		if ( this.getRoot().getRuntimeRule().getRuleNumber() != other.getRoot().getRuntimeRule().getRuleNumber() ) {
-			return false;
-		}
-		if (this.complete != other.complete) {
-			return false;
-		}
-		if (!this.getIsStacked() && !other.getIsStacked()) {
-			return this.getRoot().equals(other.getRoot());
-		}
-		if (!this.peekTopStackedRoot().equals(other.peekTopStackedRoot())) {
-			return false;
-		}
-		return this.getRoot().equals(other.getRoot());
-
-	}
+//	int hashCode_cache;
+//	@Override
+//	public int hashCode() {
+//		return hashCode_cache;
+//	}
+//	
+//	@Override
+//	public boolean equals(Object arg) {
+//		if (!(arg instanceof ParseTreeBranch)) {
+//			return false;
+//		}
+//		ParseTreeBranch other = (ParseTreeBranch)arg;
+//		if ( this.getRoot().getStart() != other.getRoot().getStart() ) {
+//			return false;
+//		}
+//		if ( this.getRoot().getEnd() != other.getRoot().getEnd() ) {
+//			return false;
+//		}
+//		if ( this.getRoot().getRuntimeRule().getRuleNumber() != other.getRoot().getRuntimeRule().getRuleNumber() ) {
+//			return false;
+//		}
+//		if (this.complete != other.complete) {
+//			return false;
+//		}
+//		if (!this.getIsStacked() && !other.getIsStacked()) {
+//			return this.getRoot().equals(other.getRoot());
+//		}
+//		if (!this.peekTopStackedRoot().equals(other.peekTopStackedRoot())) {
+//			return false;
+//		}
+//		return this.getRoot().equals(other.getRoot());
+//
+//	}
 }

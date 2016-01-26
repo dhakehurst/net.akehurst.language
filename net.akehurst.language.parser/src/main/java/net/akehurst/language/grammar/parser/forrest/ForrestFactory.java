@@ -19,11 +19,11 @@ import java.util.List;
 import java.util.Map;
 
 import net.akehurst.language.core.parser.INode;
+import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.grammar.parse.tree.Branch;
 import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
 
 public class ForrestFactory {
 	

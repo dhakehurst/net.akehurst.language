@@ -13,9 +13,9 @@ import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.grammar.parser.ScannerLessParser;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
-import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;
 
@@ -63,6 +63,26 @@ public class Java8_Tests {
 		return javaProcessor;
 	}
 
+	static ILanguageProcessor getJavaProcessor(String goalName) {
+			try {
+				String grammarText = new String(Files.readAllBytes(Paths.get("src/test/grammar/Java8.og")));
+				Grammar javaGrammar = getOGLProcessor().process(grammarText, Grammar.class);
+				LanguageProcessor jp = new LanguageProcessor(javaGrammar, goalName, null);
+				jp.getParser().build(jp.getDefaultGoal());
+				return jp;
+			} catch (IOException e) {
+				e.printStackTrace();
+				Assert.fail(e.getMessage());
+			} catch (ParseFailedException e) {
+				e.printStackTrace();
+				Assert.fail(e.getMessage());
+			} catch (UnableToAnalyseExeception e) {
+				e.printStackTrace();
+				Assert.fail(e.getMessage());
+			}
+return null;
+	}
+	
 	String toString(Path file) {
 		try {
 			byte[] bytes = Files.readAllBytes(file);
@@ -87,6 +107,19 @@ public class Java8_Tests {
 		return null;
 	}
 
+	static IParseTree parse(String goalName, String input) {
+		try {
+
+			IParseTree tree = getJavaProcessor(goalName).getParser().parse(goalName, input);
+			return tree;
+		} catch (ParseFailedException e) {
+			return null;//e.getLongestMatch();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	@Test
 	public void emptyCompilationUnit() {
 
@@ -112,18 +145,37 @@ public class Java8_Tests {
 	}
 
 	@Test
+	public void ifThenStatement() {
+
+		String input = "if(i==1) return 1;";
+
+		IParseTree tree = parse("ifThenStatement", input);
+		Assert.assertNotNull(tree);
+
+	}
+	
+	@Test
+	public void trycatch0() {
+
+		String input = "try {";
+		input += "      if(i==1) return 1;";
+		input += "    } catch(E e) {";
+		input += "       if(i==1) return 1;";
+		input += "    }";
+		IParseTree tree = parse("tryStatement", input);
+		Assert.assertNotNull(tree);
+
+	}
+	
+	@Test
 	public void tryfinally0() {
 
-		String input = "class Test {";
-		input += "  static public int test(int i) {";
-		input += "    try {";
+		String input = "try {";
 		input += "      if(i==1) return 1;";
 		input += "    } finally {";
 		input += "       if(i==1) return 1;";
 		input += "    }";
-		input += "  }";
-		input += "}";
-		IParseTree tree = parse(input);
+		IParseTree tree = parse("tryStatement", input);
 		Assert.assertNotNull(tree);
 
 	}
@@ -188,7 +240,7 @@ public class Java8_Tests {
 	public void manyFields() {
 
 		String input = "class Test {";
-		for (int i = 0; i < 100; ++i) {
+		for (int i = 0; i < 8; ++i) {
 			input += "  Integer i"+i+";";
 		}
 		input += "}";
@@ -198,15 +250,27 @@ public class Java8_Tests {
 	}
 	
 	@Test
-	public void xx() {
+	public void formalParameters() {
 
 		String input = "Visitor<E> v";
 		IParseTree tree = null;
 		try {
-			String grammarText = new String(Files.readAllBytes(Paths.get("src/test/grammar/Java8.og")));
-			Grammar javaGrammar = getOGLProcessor().process(grammarText, Grammar.class);
-			LanguageProcessor jp = new LanguageProcessor(javaGrammar, "compilationUnit", null);
-			tree = ((ScannerLessParser)jp.getParser()).parse("formalParameters", input);
+			tree = parse("formalParameters", input);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Assert.assertNotNull(tree);
+
+	}	
+	
+	@Test
+	public void classBody() {
+
+		String input = "{ int i1; int i2; int i3; int i4; int i5; int i6; int i7; int i8; }";
+		IParseTree tree = null;
+		try {
+			tree = parse("classBody", input);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -220,9 +284,9 @@ public class Java8_Tests {
 
 		String input = "class Test {";
 		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
-//		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
-//		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
-//		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
+		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
+		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
+		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
 		input += "}";
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);

@@ -29,11 +29,11 @@ import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.grammar.parse.tree.Branch;
 import net.akehurst.language.grammar.parser.ScannerLessParser;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet;
-import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
 
 public class Forrest {
 
@@ -42,7 +42,8 @@ public class Forrest {
 		this.runtimeRuleSet = runtimeRuleSet;
 		this.canGrow = false;
 		this.longestMatch = null;
-		this.done = new HashMap<>();
+		this.containedTrees = new HashMap<>();
+		this.fails = new HashSet<>();
 	}
 
 	RuntimeRule goalRRule;
@@ -56,7 +57,8 @@ public class Forrest {
 	ArrayList<IParseTree> gt = new ArrayList<>();
 	AbstractParseTree longestMatch;
 
-	Map<NodeIdentifier, AbstractParseTree> done;
+	Map<NodeIdentifier, AbstractParseTree> containedTrees;
+	public Set<NodeIdentifier> fails;
 
 	public int size() {
 //		return this.possibleTrees.size();
@@ -71,7 +73,8 @@ public class Forrest {
 		Forrest newForrest = new Forrest(this.goalRRule, this.runtimeRuleSet);
 		newForrest.goalTrees.addAll(this.goalTrees);
 		newForrest.longestMatch = this.longestMatch;
-		newForrest.done = this.done;
+		newForrest.fails = this.fails;
+//		newForrest.done = this.done;
 		return newForrest;
 	}
 	
@@ -146,11 +149,87 @@ public class Forrest {
 //		for (AbstractParseTree tree : this.possibleTrees) {
 		for (AbstractParseTree tree : this.possTrees2.values()) {
 //			ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeightUntilProgress(this.runtimeRuleSet);
-			ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeight(this.runtimeRuleSet);
+//			ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeight(this.runtimeRuleSet);
+			ArrayList<AbstractParseTree> newBranches = this.growTreeWidthAndHeight(tree);
 			newForrest.addAll(newBranches);
 		}
 
 		return newForrest;
+	}
+	
+	public ArrayList<AbstractParseTree> growTreeWidthAndHeight(AbstractParseTree tree) throws RuleNotFoundException, ParseTreeException {
+		ArrayList<AbstractParseTree> result = new ArrayList<AbstractParseTree>();
+
+		ArrayList<AbstractParseTree> newSkipBranches = tree.growWidthWithSkipRules(runtimeRuleSet);
+		if (!newSkipBranches.isEmpty()) {
+			result.addAll(newSkipBranches);
+		} else {
+		
+		if (tree.getIsSkip()) {
+			ArrayList<AbstractParseTree> nts = tree.tryGraftBack();
+//			if (nts.isEmpty() && !tree.getHasGoalRoot(this.runtimeRuleSet)) {
+//				this.fails.add(tree.identifier);
+//			} else {
+				for (AbstractParseTree nt : nts) {
+					if (nt.getHasPotential(runtimeRuleSet)) {
+						result.add(nt);
+					} else {
+						// drop it
+					}
+				}
+//			}
+		} else {
+
+			if (tree.getIsComplete()) {
+				ArrayList<AbstractParseTree> nts = tree.growHeight(runtimeRuleSet);
+//				if (nts.isEmpty() && !tree.getHasGoalRoot(this.runtimeRuleSet)) {
+//					this.fails.add(tree.identifier);
+//				} else {
+					for (AbstractParseTree nt : nts) {
+						if (nt.getHasPotential(runtimeRuleSet)) {
+							result.add(nt);
+						} else {
+							// drop it
+						}
+					}
+//				}
+			}
+
+			if (tree.getCanGraftBack()) {
+				ArrayList<AbstractParseTree> nts = tree.tryGraftBack();
+				for (AbstractParseTree nt : nts) {
+					if (nt.getHasPotential(runtimeRuleSet) || nt.getIsGoal(runtimeRuleSet) ) {
+						result.add(nt);
+					} else {
+						// drop it
+					}
+				}
+			}
+
+			if (tree.getCanGrowWidth()) {
+				int i = 1;
+
+				// if (tree.getIsEmpty() || (tree.getIsComplete() &&
+				// !tree.getCanGrow())) {
+				if ((tree.getIsComplete() && !tree.getCanGrowWidth())) {
+					// don't grow width
+					// this never happens!
+				} else {
+					ArrayList<AbstractParseTree> newBranches = tree.growWidth(runtimeRuleSet);
+					for (AbstractParseTree nt : newBranches) {
+						if (nt.getHasPotential(runtimeRuleSet)) {
+							result.add(nt);
+						} else {
+							// drop it
+						}
+					}
+					
+					
+				}
+			}
+		}
+		}
+		return result;
 	}
 /*
 	Forrest growDepthFirst() throws RuleNotFoundException, ParseTreeException {
@@ -225,18 +304,52 @@ public class Forrest {
 
 	int overwrites;
 
+	void mergeContainedTree(AbstractParseTree tree) {
+		AbstractParseTree old = this.containedTrees.get(tree.identifier);
+		if (null==old) {
+			this.containedTrees.put(tree.identifier, tree);
+			AbstractParseTree st = tree.stackedTree;
+			if(null==st) {
+				//do nothing
+			} else {
+				this.mergeContainedTree(st);
+			}
+		} else {
+			if (tree == old) {
+				//don't add self
+			} else {
+				old.duplicateRoots.add(tree);
+			}
+		}
+
+	}
 	
 	public void add(AbstractParseTree tree) throws ParseTreeException {
 		//To keep all possible parses, if already done (rule,start,end) then merge stackedTrees
-		//however, we only need one, so can throw out duplicates
-		//TODO: might be better to keep the longest
-//		AbstractParseTree old = this.done.get(tree.identifier);
-//		if (null==old) {
-//			this.done.put(tree.identifier, tree);
-//		} else {
-//			old.duplicateRoots.add(tree);
-//			return;
+//		AbstractParseTree t = tree;
+//		while (null!=t) {
+//			if (this.fails.contains(t.identifier)) {
+//				return;
+//			}
+//			t = t.stackedTree;
 //		}
+		if (tree.getHasPotential(this.runtimeRuleSet)) {
+//			AbstractParseTree old = this.containedTrees.get(tree.identifier);
+//			this.mergeContainedTree(tree);
+			this.canGrow |= tree.getCanGrow();
+//			if (null==old) {
+				AbstractParseTree poss = this.possTrees2.get(tree.identifier);
+				if (null==poss) {
+					this.possTrees2.put(tree.identifier, tree);
+				} else {
+					poss.duplicateRoots.add(tree); //prob no need to do this as it is added in the merge?
+				}
+//			} else {
+				//has been merged into existing tree
+//			}
+		} else {
+			//drop no potential
+		}
 		if (tree.getIsComplete()) {
 			// this.newGrownBranches.add(tree);
 			if (!tree.getIsStacked()
@@ -244,35 +357,35 @@ public class Forrest {
 				this.goalTrees.add(tree);
 			}
 		}
-		if (tree.getHasPotential(this.runtimeRuleSet)) {
-			// tree is incomplete but still possible to grow it
-			// if (this.possibleTrees.contains(tree)) {
-			// overwrites++;
-			// // throw new ParseTreeException("Overwriting and existing tree",
-			// null);
-			// }
-			if (this.possTrees2.containsKey(tree.identifier)) {
-				if (tree.getIsComplete()) {
-				this.possTrees2.get(tree.identifier).duplicateRoots.add(tree);
-				} else {
-					int i=0;
-				}
-			} else {
-				this.possTrees2.put(tree.identifier, tree);
-			}
-			this.canGrow |= tree.getCanGrow();
-			
-//			if (this.possibleTrees.contains(tree)) {
-//				// don't add
-//				int i=0;
+//		if (tree.getHasPotential(this.runtimeRuleSet)) {
+//			// tree is incomplete but still possible to grow it
+//			// if (this.possibleTrees.contains(tree)) {
+//			// overwrites++;
+//			// // throw new ParseTreeException("Overwriting and existing tree",
+//			// null);
+//			// }
+//			if (this.possTrees2.containsKey(tree.identifier)) {
+////				if (tree.getIsComplete()) {
+////				this.possTrees2.get(tree.identifier).duplicateRoots.add(tree);
+////				} else {
+//					int i=0;
+////				}
 //			} else {
-//				this.possibleTrees.add(tree);
-//				this.canGrow |= tree.getCanGrow();
+//				this.possTrees2.put(tree.identifier, tree);
 //			}
-		} else {
-			// drop tree
-			int i = 0;
-		}
+//			this.canGrow |= tree.getCanGrow();
+//			
+////			if (this.possibleTrees.contains(tree)) {
+////				// don't add
+////				int i=0;
+////			} else {
+////				this.possibleTrees.add(tree);
+////				this.canGrow |= tree.getCanGrow();
+////			}
+//		} else {
+//			// drop tree
+//			int i = 0;
+//		}
 		if (null == this.longestMatch
 				|| tree.getRoot().getMatchedTextLength() > this.longestMatch.getRoot().getMatchedTextLength()) {
 //			if (tree.getRoot().getName().equals(ScannerLessParser.START_SYMBOL_TERMINAL.getValue()) || tree.getRoot()
@@ -295,7 +408,8 @@ public class Forrest {
 		// clone.possibleTerminal = this.possibleTerminal;
 		// clone.allSkipTerminal_cache = this.allSkipTerminal_cache;
 		clone.longestMatch = this.longestMatch;
-		clone.done = this.done;
+		clone.containedTrees = this.containedTrees;
+		clone.fails = this.fails;
 		return clone;
 	}
 

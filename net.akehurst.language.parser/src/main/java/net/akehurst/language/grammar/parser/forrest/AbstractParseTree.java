@@ -17,6 +17,7 @@ package net.akehurst.language.grammar.parser.forrest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,12 +26,12 @@ import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parse.tree.Node;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet;
-import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticStructure.SkipNodeType;
 
 public abstract class AbstractParseTree implements IParseTree {
@@ -40,13 +41,15 @@ public abstract class AbstractParseTree implements IParseTree {
 		this.root = root;
 		this.stackedTree = stackedTree;
 		this.identifier = new NodeIdentifier(root);
-		this.duplicateRoots = new ArrayList<>();
+		this.duplicateRoots = new HashSet<>();
+
 	}
 
 	ForrestFactory ffactory;
 	Node root;
 	NodeIdentifier identifier;
 
+	
 	NodeIdentifier stackedTreesIdentifier;
 	//need a list if we are to hold on to all options, but if we only need one complete tree
 	// then we can throw away duplicates - see Forrest.add
@@ -62,7 +65,7 @@ public abstract class AbstractParseTree implements IParseTree {
 		return this.root;
 	}
 	
-	List<AbstractParseTree> duplicateRoots;
+	Set<AbstractParseTree> duplicateRoots;
 	
 	public RuntimeRule getRuntimeRule() {
 		return this.root.getRuntimeRule();
@@ -80,6 +83,11 @@ public abstract class AbstractParseTree implements IParseTree {
 		return this.stackedTree;
 	}
 
+	boolean getHasGoalRoot(RuntimeRuleSet runtimeRuleSet) {
+		//TODO: this use of constant is not reliable / appropriate
+		return !this.getIsStacked() && (runtimeRuleSet.getRuleNumber("$goal$") == this.getRuntimeRule().getRuleNumber());
+	}
+	
 	boolean getIsGoal(RuntimeRuleSet runtimeRuleSet) {
 		//TODO: this use of constant is not reliable / appropriate
 		return this.getIsComplete() && !this.getIsStacked() && (runtimeRuleSet.getRuleNumber("$goal$") == this.getRuntimeRule().getRuleNumber());
@@ -161,6 +169,14 @@ public abstract class AbstractParseTree implements IParseTree {
 	 * 
 	 */
 	public ArrayList<AbstractParseTree> growWidth(RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
+		ArrayList<AbstractParseTree> result = this.growWidth1(runtimeRuleSet);
+		for(AbstractParseTree dt: this.duplicateRoots) {
+			ArrayList<AbstractParseTree> dr = dt.growWidth1(runtimeRuleSet);
+			result.addAll(dr);
+		}
+		return result;
+	}
+	public ArrayList<AbstractParseTree> growWidth1(RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
 		ArrayList<AbstractParseTree> result = new ArrayList<>();
 		if (this.getCanGrowWidth()) { // don't grow width if its complete...cant graft back
 			RuntimeRule nextExpectedRule = this.getNextExpectedItem();
@@ -177,7 +193,7 @@ public abstract class AbstractParseTree implements IParseTree {
 
 //					ArrayList<AbstractParseTree> nts = pt.growWidthAndHeightUntilProgress(runtimeRuleSet);
 //					result.addAll(nts);
-result.add(pt);
+					result.add(pt);
 				} else { //bud is not empty, so progress has been made already
 					if (nt.getHasPotential(runtimeRuleSet)) {
 						result.add(nt);
@@ -214,6 +230,19 @@ result.add(pt);
 	}
 
 	public ArrayList<AbstractParseTree> growWidthWithSkipRules(RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
+		if (this.getCanGrowWidth()) {
+		ArrayList<AbstractParseTree> result = this.growWidthWithSkipRules1(runtimeRuleSet);
+		for(AbstractParseTree dt: this.duplicateRoots) {
+			ArrayList<AbstractParseTree> dr = dt.growWidthWithSkipRules1(runtimeRuleSet);
+			result.addAll(dr);
+		}
+		return result;
+		} else {
+			return new ArrayList<>();//Collections.emptyList();
+		}
+	}
+	
+	public ArrayList<AbstractParseTree> growWidthWithSkipRules1(RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
 		ArrayList<AbstractParseTree> result = new ArrayList<>();
 		if (this.getCanGrowWidth()) { // don't grow width if its complete...cant
 										// graft back
@@ -367,12 +396,9 @@ result.add(pt);
 	}
 
 	public ArrayList<AbstractParseTree> growHeight(RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
-		// RuntimeRule treeRR = this.getRoot().getRuntimeRule();
-		// RuntimeRule[] terminalRules =
-		// runtimeRuleSet.getPossibleSubTerminal(treeRR);
 		return this.growHeight3(runtimeRuleSet);
 	}
-
+/*
 	public ArrayList<AbstractParseTree> growHeight1(RuntimeRule[] terminalRules, RuntimeRuleSet ruleSet) {
 		if (this.getIsComplete()) {
 			ArrayList<AbstractParseTree> toGrowUp = new ArrayList<>();
@@ -434,7 +460,7 @@ result.add(pt);
 		}
 		return result;
 	}
-
+*/
 	public ArrayList<AbstractParseTree> growHeight3(RuntimeRuleSet runtimeRuleSet) throws RuleNotFoundException, ParseTreeException {
 		ArrayList<AbstractParseTree> result = new ArrayList<>();
 		if (this.getIsComplete()) {
@@ -448,9 +474,11 @@ result.add(pt);
 					result.add(nt);
 				}
 				for(AbstractParseTree dt: this.duplicateRoots) {
-					ParseTreeBranch[] newDTrees = dt.grow(rule);
-					for (ParseTreeBranch nt : newDTrees) {
-						result.add(nt);
+					if (dt.getIsComplete()) {
+						ParseTreeBranch[] newDTrees = dt.grow(rule);
+						for (ParseTreeBranch nt : newDTrees) {
+							result.add(nt);
+						}
 					}
 				}
 			}

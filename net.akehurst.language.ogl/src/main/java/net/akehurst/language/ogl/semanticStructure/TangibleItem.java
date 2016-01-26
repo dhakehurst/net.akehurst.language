@@ -18,6 +18,7 @@ package net.akehurst.language.ogl.semanticStructure;
 import java.util.ArrayList;
 
 import net.akehurst.language.core.parser.INodeType;
+import net.akehurst.language.core.parser.RuleNotFoundException;
 
 public abstract class TangibleItem extends SimpleItem {
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.ogl.semanticStructure;
+package net.akehurst.language.core.parser;
 
 
 public class RuleNotFoundException extends Exception {

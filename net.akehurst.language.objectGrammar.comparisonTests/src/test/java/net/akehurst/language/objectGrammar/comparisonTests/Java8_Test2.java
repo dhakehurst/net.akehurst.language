@@ -124,7 +124,7 @@ public class Java8_Test2 {
 			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), og_input);
 			return tree;
 		} catch (ParseFailedException e) {
-			return e.getLongestMatch();
+			return null;//e.getLongestMatch();
 		} catch (ParseTreeException e) {
 			e.printStackTrace();
 		}
@@ -145,7 +145,7 @@ public class Java8_Test2 {
 	public void og_compilationUnit() {
 
 		IParseTree tree = parseWithOG(this.file);
-		Assert.assertNotNull(tree);
+		Assert.assertNotNull("Failed to Parse", tree);
 	}
 
 	@Test

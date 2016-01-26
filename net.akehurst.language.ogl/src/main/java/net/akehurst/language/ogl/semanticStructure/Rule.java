@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import net.akehurst.language.core.parser.INodeType;
+import net.akehurst.language.core.parser.RuleNotFoundException;
 
 public class Rule {
 

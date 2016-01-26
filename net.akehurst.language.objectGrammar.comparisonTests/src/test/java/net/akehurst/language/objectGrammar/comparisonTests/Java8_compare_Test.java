@@ -160,7 +160,7 @@ public class Java8_compare_Test {
 		
 		boolean totalInSignificant = Duration.ofMillis(200).compareTo(d1) > 0;
 		
-		Assert.assertTrue( totalInSignificant || ogFaster );
+		Assert.assertTrue("Slower", totalInSignificant || ogFaster );
 		
 		Assert.assertNotNull("Failed to parse",tree1);
 		Assert.assertNotNull(tree2);

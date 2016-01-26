@@ -27,6 +27,7 @@ import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.converter.Grammar2RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.forrest.AbstractParseTree;
@@ -43,7 +44,6 @@ import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.Rule;
-import net.akehurst.language.ogl.semanticStructure.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
 public class ScannerLessParser implements IParser {
@@ -57,7 +57,7 @@ public class ScannerLessParser implements IParser {
 		this.grammar = grammar;
 		// this.findTerminal_cache = new HashMap<ITokenType, Terminal>();
 		this.runtimeBuilder = runtimeFactory;
-		this.converter = new Converter(this.runtimeBuilder);
+		this.converter = new Converter(this.runtimeBuilder); //TODO: might not be needed here as it is set elsewhere, below
 	}
 
 	Converter converter;
@@ -192,6 +192,7 @@ public class ScannerLessParser implements IParser {
 //	@Override
 	public IParseTree parse(String goalRuleName, CharSequence text) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
 		INodeType goal = this.getGrammar().findRule(goalRuleName).getNodeType();
+		this.build(goal);
 		return this.parse(goal, text);
 	}
 	

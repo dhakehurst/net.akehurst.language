@@ -28,6 +28,7 @@ import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class Parser_Ambiguity_Test extends AbstractParser_Test {
 	
@@ -71,6 +72,25 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 		b.rule("a1").multi(0, 1, new TerminalLiteral("a"));
 		b.rule("a2").multi(0, 2, new TerminalLiteral("a"));
 		b.rule("a3").multi(0, 3, new TerminalLiteral("a"));
+		return b.get();
+	}
+	
+	Grammar tg() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.skip("WS").concatination( new TerminalPattern("\\s+") );
+		b.rule("fps").choice(new NonTerminal("fps.choice1"), new NonTerminal("fps.choice2"));
+		b.rule("fps.choice1").concatenation(new NonTerminal("fp"), new NonTerminal("fps.choice1.group.multi"));
+		b.rule("fps.choice1.group.multi").multi(0, -1, new NonTerminal("fps.choice1.group"));
+		b.rule("fps.choice1.group").concatenation(new TerminalLiteral(","), new NonTerminal("fp"));
+		b.rule("fps.choice2").concatenation(new NonTerminal("rp"), new NonTerminal("fps.choice1.group.multi"));
+		b.rule("fp").concatenation(new NonTerminal("t"), new NonTerminal("name"));
+		b.rule("rp").concatenation(new NonTerminal("name"), new NonTerminal("rp.multi"), new TerminalLiteral("this"));
+		b.rule("rp.multi").multi(0, 1, new NonTerminal("rp.multi.group"));
+		b.rule("rp.multi.group").concatenation(new NonTerminal("name"), new TerminalLiteral("."));
+		b.rule("t").choice(new NonTerminal("bt"),new NonTerminal("gt"));
+		b.rule("bt").concatenation(new NonTerminal("name"));
+		b.rule("gt").concatenation(new NonTerminal("name"), new TerminalLiteral("("),new NonTerminal("name"), new TerminalLiteral(")"));
+		b.rule("name").choice(new TerminalPattern("[a-zA-Z]+"));
 		return b.get();
 	}
 	
@@ -188,4 +208,234 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 		}
 	}
 
+	@Test
+	public void tg_fp_V() {
+		// grammar, goal, input
+		try {
+			Grammar g = tg();
+			String goal = "fp";
+			String text = "V v";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*fp 1, 4}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+					b.branch("fp",
+						b.branch("t", 
+							b.branch("bt",
+								b.branch("name",
+									b.leaf("[a-zA-Z]+","V")
+								)
+							)
+						),
+						b.branch("WS",
+							b.leaf("\\s+", " ")
+						),
+						b.branch("name",
+							b.leaf("[a-zA-Z]+","v")
+						)
+					);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void tg_fp_VE() {
+		// grammar, goal, input
+		try {
+			Grammar g = tg();
+			String goal = "fp";
+			String text = "V(E) v";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*fp 1, 7}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+					b.branch("fp",
+						b.branch("t", 
+							b.branch("gt",
+								b.branch("name",
+									b.leaf("[a-zA-Z]+","V")
+								),
+								b.leaf("("),
+								b.branch("name",
+									b.leaf("[a-zA-Z]+","E")
+								),				
+								b.leaf(")")
+							)
+						),
+						b.branch("WS",
+							b.leaf("\\s+", " ")
+						),
+						b.branch("name",
+							b.leaf("[a-zA-Z]+","v")
+						)
+					);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void tg_fps_choice1_VE() {
+		// grammar, goal, input
+		try {
+			Grammar g = tg();
+			String goal = "fps.choice1";
+			String text = "V(E) v";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*fps.choice1 1, 7}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+				b.branch("fps.choice1",
+					b.branch("fp",
+						b.branch("t", 
+							b.branch("gt",
+								b.branch("name",
+									b.leaf("[a-zA-Z]+","V")
+								),
+								b.leaf("("),
+								b.branch("name",
+									b.leaf("[a-zA-Z]+","E")
+								),				
+								b.leaf(")")
+							)
+						),
+						b.branch("WS",
+							b.leaf("\\s+", " ")
+						),
+						b.branch("name",
+							b.leaf("[a-zA-Z]+","v")
+						)
+					),
+					b.branch("fps.choice1.group.multi",
+						b.emptyLeaf("fps.choice1.group.multi")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void tg_fps_VE() {
+		// grammar, goal, input
+		try {
+			Grammar g = tg();
+			String goal = "fps";
+			String text = "V(E) v";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*fps 1, 7}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+				b.branch("fps",
+					b.branch("fps.choice1",
+						b.branch("fp",
+							b.branch("t", 
+								b.branch("gt",
+									b.branch("name",
+										b.leaf("[a-zA-Z]+","V")
+									),
+									b.leaf("("),
+									b.branch("name",
+										b.leaf("[a-zA-Z]+","E")
+									),				
+									b.leaf(")")
+								)
+							),
+							b.branch("WS",
+								b.leaf("\\s+", " ")
+							),
+							b.branch("name",
+								b.leaf("[a-zA-Z]+","v")
+							)
+						),
+						b.branch("fps.choice1.group.multi",
+							b.emptyLeaf("fps.choice1.group.multi")
+						)
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void tg_fps_V_this() {
+		// grammar, goal, input
+		try {
+			Grammar g = tg();
+			String goal = "fps";
+			String text = "V A.this";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*fps 1, 9}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+				b.branch("fps",
+					b.branch("fps.choice2",
+						b.branch("rp",
+							b.branch("name",
+								b.leaf("[a-zA-Z]+","V")
+							),
+							b.branch("WS",
+								b.leaf("\\s+", " ")
+							),
+							b.branch("rp.multi",
+								b.branch("rp.multi.group",
+									b.branch("name",
+										b.leaf("[a-zA-Z]+","A")
+									),
+									b.leaf(".")
+								)
+							),
+							b.leaf("this")
+						),
+						b.branch("fps.choice1.group.multi",
+							b.emptyLeaf("fps.choice1.group.multi")
+						)
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
 }
