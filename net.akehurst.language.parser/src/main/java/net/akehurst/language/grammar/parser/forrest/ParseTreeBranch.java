@@ -26,7 +26,7 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 public class ParseTreeBranch extends AbstractParseTree {
 	
 	public ParseTreeBranch(ForrestFactory factory, Branch root, AbstractParseTree stackedTree, RuntimeRule rule, int nextItemIndex) {
-		super(factory, root, stackedTree);
+		super(factory, root, stackedTree, nextItemIndex);
 		this.rule = rule;
 		this.nextItemIndex = nextItemIndex;
 		this.canGrow = this.calculateCanGrow();

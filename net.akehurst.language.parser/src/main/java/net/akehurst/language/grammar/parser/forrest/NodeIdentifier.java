@@ -27,21 +27,23 @@ import net.akehurst.language.grammar.parse.tree.Node;
 // as children can be different
 public class NodeIdentifier {
 
-	public NodeIdentifier(Node node) {
+	public NodeIdentifier(Node node, int nextItemIndex) {
 //		this.node = node;
 		this.ruleNumber = node.getRuntimeRule().getRuleNumber();
 		this.start = node.getStart();
 		this.end = node.getEnd();
+		this.nextItemIndex = nextItemIndex;
 //		this.childrenHash_cache = 0;
 //		if (node instanceof Branch) {
 //			this.childrenHash_cache = Objects.hash(((Branch)node).getChildren().toArray(new Object[0]));
 //		}
-		this.hashCode_cache = Objects.hash(ruleNumber, start, end);//, childrenHash_cache);
+		this.hashCode_cache = Objects.hash(ruleNumber, start, end, nextItemIndex);//, childrenHash_cache);
 	}
 //	Node node;
 	int ruleNumber;
 	int start;
 	int end;
+	int nextItemIndex;
 //	int childrenHash_cache;
 	
 	@Override
@@ -53,7 +55,9 @@ public class NodeIdentifier {
 			
 			boolean f = ( this.start == other.start
 				&& this.end == other.end
-				&& this.ruleNumber==other.ruleNumber);
+				&& this.ruleNumber==other.ruleNumber
+				&& this.nextItemIndex==other.nextItemIndex
+			);
 //				&& this.childrenHash_cache==other.childrenHash_cache);
 			if (!f) {
 				return false;
@@ -71,7 +75,7 @@ public class NodeIdentifier {
 
 	@Override
 	public String toString() {
-		return "("+this.ruleNumber+","+this.start+","+this.end+")";//","+this.childrenHash_cache+")";
+		return "("+this.ruleNumber+","+this.start+","+this.end+","+this.nextItemIndex+")";//","+this.childrenHash_cache+")";
 	}
 	
 }

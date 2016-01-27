@@ -23,7 +23,7 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 public class ParseTreeBud extends AbstractParseTree {
 
 	ParseTreeBud(ForrestFactory factory, Leaf root, AbstractParseTree stackedTree) {
-		super(factory, root, stackedTree);
+		super(factory, root, stackedTree, -1);
 	}
 
 	@Override

@@ -36,11 +36,11 @@ import net.akehurst.language.ogl.semanticStructure.SkipNodeType;
 
 public abstract class AbstractParseTree implements IParseTree {
 
-	public AbstractParseTree(ForrestFactory factory, Node root, AbstractParseTree stackedTree) {
+	public AbstractParseTree(ForrestFactory factory, Node root, AbstractParseTree stackedTree, int nextItemIndex) {
 		this.ffactory = factory;
 		this.root = root;
 		this.stackedTree = stackedTree;
-		this.identifier = new NodeIdentifier(root);
+		this.identifier = new NodeIdentifier(root, nextItemIndex);
 		this.duplicateRoots = new HashSet<>();
 
 	}

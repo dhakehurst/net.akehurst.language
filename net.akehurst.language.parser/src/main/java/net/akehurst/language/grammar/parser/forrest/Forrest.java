@@ -151,7 +151,11 @@ public class Forrest {
 //			ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeightUntilProgress(this.runtimeRuleSet);
 //			ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeight(this.runtimeRuleSet);
 			ArrayList<AbstractParseTree> newBranches = this.growTreeWidthAndHeight(tree);
-			newForrest.addAll(newBranches);
+			if (newBranches.isEmpty()) {
+				this.fails.add(tree.identifier);
+			} else {
+				newForrest.addAll(newBranches);
+			}
 		}
 
 		return newForrest;
@@ -326,27 +330,27 @@ public class Forrest {
 	
 	public void add(AbstractParseTree tree) throws ParseTreeException {
 		//To keep all possible parses, if already done (rule,start,end) then merge stackedTrees
-//		AbstractParseTree t = tree;
-//		while (null!=t) {
-//			if (this.fails.contains(t.identifier)) {
-//				return;
-//			}
-//			t = t.stackedTree;
-//		}
+		AbstractParseTree t = tree;
+		while (null!=t) {
+			if (this.fails.contains(t.identifier)) {
+				return;
+			}
+			t = t.stackedTree;
+		}
 		if (tree.getHasPotential(this.runtimeRuleSet)) {
-//			AbstractParseTree old = this.containedTrees.get(tree.identifier);
-//			this.mergeContainedTree(tree);
+			AbstractParseTree old = this.containedTrees.get(tree.identifier);
+			this.mergeContainedTree(tree);
 			this.canGrow |= tree.getCanGrow();
-//			if (null==old) {
+			if (null==old) {
 				AbstractParseTree poss = this.possTrees2.get(tree.identifier);
 				if (null==poss) {
 					this.possTrees2.put(tree.identifier, tree);
 				} else {
 					poss.duplicateRoots.add(tree); //prob no need to do this as it is added in the merge?
 				}
-//			} else {
+			} else {
 				//has been merged into existing tree
-//			}
+			}
 		} else {
 			//drop no potential
 		}
