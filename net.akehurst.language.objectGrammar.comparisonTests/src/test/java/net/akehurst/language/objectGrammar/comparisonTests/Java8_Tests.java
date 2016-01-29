@@ -1,6 +1,7 @@
 package net.akehurst.language.objectGrammar.comparisonTests;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -263,6 +264,17 @@ return null;
 		Assert.assertNotNull(tree);
 
 	}	
+	@Test
+	public void ISO8859encoding() {
+		String input = "";
+		input += "class T6302184 {";
+		input += "  int ������ = 1;";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+
+	
+	}	
 	
 	@Test
 	public void classBody() {
@@ -333,6 +345,57 @@ return null;
 		input += "  */";
 		input += "  public static abstract class Visitor<E extends Throwable> {";
 		input += "      public void visitTree(Tree that)                   throws E { assert false; }";
+		input += "  }";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+
+	}
+	
+	@Test
+	public void stringLiteral() {
+		String input = "";
+		input += "\"xxxx\"";
+		IParseTree tree = parse("StringLiteral", input);
+		Assert.assertNotNull(tree);		
+	}
+	
+	@Test
+	public void localStringVariableDeclarationStatement() {
+		String input = "";
+		input += "String s = \"xxxx\";";
+		IParseTree tree = parse("localVariableDeclarationStatement",input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void stringMemberInitialised() {
+		String input = "";
+		input += "public class Test {";
+		input += "  String s = \"xxxx\";";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void T6257443() {
+
+		String input = "";
+		input += "import java.net.URL;";
+		input += "public class T6257443 {";
+		input += "  public static void main(String[] args) {";
+		input += "    if (args.length != 2)";
+		input += "       throw new Error(\"wrong number of args\");";
+		input += "    String state = args[0];";
+		input += "    String file = args[1];";
+		input += "    if (state.equals(\"-no\")) {";
+		input += "       URL u = find(file);";
+		input += "       if (u != null) throw new Error(\"file \" + file + \" found unexpectedly\");";
+		input += "    } else if (state.equals(\"-yes\")) {";
+		input += "       URL u = find(file);";
+		input += "       if (u == null) throw new Error(\"file \" + file + \" not found\");";
+		input += "    } else throw new Error(\"bad args\");";
 		input += "  }";
 		input += "}";
 		IParseTree tree = parse(input);

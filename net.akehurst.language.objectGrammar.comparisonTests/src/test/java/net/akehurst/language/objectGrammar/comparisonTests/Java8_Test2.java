@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Lexer;
@@ -119,12 +120,13 @@ public class Java8_Test2 {
 	}
 
 	static String og_input;
+
 	static IParseTree parseWithOG(Path file) {
 		try {
 			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), og_input);
 			return tree;
 		} catch (ParseFailedException e) {
-			return null;//e.getLongestMatch();
+			return null;// e.getLongestMatch();
 		} catch (ParseTreeException e) {
 			e.printStackTrace();
 		}
@@ -133,12 +135,17 @@ public class Java8_Test2 {
 
 	static CharStream antlr_input;
 
-	static Object parseWithAntlr4(Path file) {
+	static Java8Parser.CompilationUnitContext parseWithAntlr4(Path file) {
 
 		Lexer lexer = new antlr4.Java8Lexer(antlr_input);
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 		Java8Parser p = new Java8Parser(tokens);
-		return p.compilationUnit();
+		p.setErrorHandler(new BailErrorStrategy());
+		try {
+			return p.compilationUnit();
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	@Test
@@ -150,8 +157,8 @@ public class Java8_Test2 {
 
 	@Test
 	public void antlr4_compilationUnit() {
-		Object tree = parseWithAntlr4(this.file);
-		Assert.assertNotNull(tree);
+		Java8Parser.CompilationUnitContext tree = parseWithAntlr4(this.file);
+		Assert.assertNotNull("Failed to Parse", tree);
 	}
 
 }
