@@ -249,8 +249,7 @@ public class ScannerLessParser implements IParser {
 		// children.toArray(new INode[children.size()]));
 		// ParseTreeBranch pt = new ParseTreeBranch(this.factory, inp, nb, null,
 		// goalRR, Integer.MAX_VALUE);
-		ParseTreeBranch pt = ffactory.fetchOrCreateBranch(goalRR, children.toArray(new INode[children.size()]), null,
-				Integer.MAX_VALUE);
+		ParseTreeBranch pt = ffactory.fetchOrCreateBranch(goalRR, children.toArray(new INode[children.size()]), null, -1); //Integer.MAX_VALUE);
 		return pt;
 	}
 

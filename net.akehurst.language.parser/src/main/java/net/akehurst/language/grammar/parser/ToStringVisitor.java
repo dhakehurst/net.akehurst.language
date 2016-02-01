@@ -38,8 +38,8 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 	@Override
 	public String visit(IParseTree target, String indent) throws RuntimeException {
 		String s = indent;
-		s += "{" + (target.getIsComplete() ? "*" : "+") + (target.getCanGrow() ? "?" : "") + target.getRoot().getName() + " " + target.getRoot().getStart()
-				+ ", " + target.getRoot().getEnd() + getStackRootsAsString(target) + "}";
+		AbstractParseTree t = (AbstractParseTree) target;
+		s += "{" + (target.getIsComplete() ? "*" : "+") + (target.getCanGrow() ? "?" : "") + target.getRoot().getName() + " " + t.identifier + getStackRootsAsString(target) + "}";
 		// s += target.getRoot().accept(this, indent);
 		return s;
 	}
@@ -49,8 +49,7 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 		if (null == st) {
 			return "";
 		} else {
-			String s = " " + "[" + (st.getIsComplete() ? "*" : "+") + (st.getCanGrow() ? "?" : "") + st.getRoot().getName() + " " + st.getRoot().getStart()
-					+ ", " + st.getRoot().getEnd() + "]";
+			String s = " " + "[" + (st.getIsComplete() ? "*" : "+") + (st.getCanGrow() ? "?" : "") + st.getRoot().getName() + " " + st.identifier + "]";
 			s += getStackRootsAsString(st);
 			return s;
 		}

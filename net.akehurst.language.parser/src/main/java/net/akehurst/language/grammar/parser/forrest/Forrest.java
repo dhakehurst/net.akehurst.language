@@ -51,8 +51,8 @@ public class Forrest {
 
 
 	Input input;
-//	ArrayList<AbstractParseTree> possibleTrees = new ArrayList<>();
-	Map<NodeIdentifier, AbstractParseTree> possTrees2 = new HashMap<>();
+	HashSet<AbstractParseTree> possibleTrees = new HashSet<>();
+//	Map<NodeIdentifier, AbstractParseTree> possTrees2 = new HashMap<>();
 	Set<IParseTree> goalTrees = new HashSet<>();
 	ArrayList<IParseTree> gt = new ArrayList<>();
 	AbstractParseTree longestMatch;
@@ -61,12 +61,13 @@ public class Forrest {
 	public Set<NodeIdentifier> fails;
 
 	public int size() {
-//		return this.possibleTrees.size();
-		return this.possTrees2.size();
+		return this.possibleTrees.size();
+//		return this.possTrees2.size();
 	}
 	
 	public AbstractParseTree[] getPossibles() {
-		return this.possTrees2.values().toArray(new AbstractParseTree[this.possTrees2.size()]);
+		return this.possibleTrees.toArray(new AbstractParseTree[this.possibleTrees.size()]);
+//		return this.possTrees2.values().toArray(new AbstractParseTree[this.possTrees2.size()]);
 	}
 	
 	Forrest newForrest() {
@@ -146,8 +147,8 @@ public class Forrest {
 	public Forrest growBreadthFirst() throws RuleNotFoundException, ParseTreeException {
 		// System.out.println("posibles: "+this.possibleTrees.size());
 		Forrest newForrest = this.newForrest();
-//		for (AbstractParseTree tree : this.possibleTrees) {
-		for (AbstractParseTree tree : this.possTrees2.values()) {
+		for (AbstractParseTree tree : this.possibleTrees) {
+//		for (AbstractParseTree tree : this.possTrees2.values()) {
 //			ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeightUntilProgress(this.runtimeRuleSet);
 //			ArrayList<AbstractParseTree> newBranches = tree.growWidthAndHeight(this.runtimeRuleSet);
 			ArrayList<AbstractParseTree> newBranches = this.growTreeWidthAndHeight(tree);
@@ -306,20 +307,21 @@ public class Forrest {
 		}
 	}
 
-	int overwrites;
+//	int overwrites;
 
 	void mergeContainedTree(AbstractParseTree tree) {
 		AbstractParseTree old = this.containedTrees.get(tree.identifier);
 		if (null==old) {
 			this.containedTrees.put(tree.identifier, tree);
+			this.possibleTrees.add(tree);
 			AbstractParseTree st = tree.stackedTree;
 			if(null==st) {
 				//do nothing
 			} else {
-				this.mergeContainedTree(st);
+				//this.mergeContainedTree(st);
 			}
 		} else {
-			if (tree == old) {
+			if (tree.equals(old)) {
 				//don't add self
 			} else {
 				old.duplicateRoots.add(tree);
@@ -338,19 +340,20 @@ public class Forrest {
 			t = t.stackedTree;
 		}
 		if (tree.getHasPotential(this.runtimeRuleSet)) {
-			AbstractParseTree old = this.containedTrees.get(tree.identifier);
+//			AbstractParseTree old = this.containedTrees.get(tree.identifier);
 			this.mergeContainedTree(tree);
 			this.canGrow |= tree.getCanGrow();
-			if (null==old) {
-				AbstractParseTree poss = this.possTrees2.get(tree.identifier);
-				if (null==poss) {
-					this.possTrees2.put(tree.identifier, tree);
-				} else {
-					poss.duplicateRoots.add(tree); //prob no need to do this as it is added in the merge?
-				}
-			} else {
+//			this.possibleTrees.add(tree);
+//			if (null==old) {
+//				AbstractParseTree poss = this.possTrees2.get(tree.identifier);
+//				if (null==poss) {
+//					this.possTrees2.put(tree.identifier, tree);
+//				} else {
+//					poss.duplicateRoots.add(tree); //prob no need to do this as it is added in the merge?
+//				}
+//			} else {
 				//has been merged into existing tree
-			}
+//			}
 		} else {
 			//drop no potential
 		}
@@ -405,8 +408,8 @@ public class Forrest {
 		Forrest clone = new Forrest(this.goalRRule, this.runtimeRuleSet);
 		clone.canGrow = this.canGrow;
 		clone.goalTrees.addAll(this.goalTrees);
-//		clone.possibleTrees.addAll(this.possibleTrees);
-		clone.possTrees2 = new HashMap<>(this.possTrees2);
+		clone.possibleTrees.addAll(this.possibleTrees);
+//		clone.possTrees2 = new HashMap<>(this.possTrees2);
 		// clone.newGrownBranches.addAll(this.newGrownBranches);
 		// clone.possibleSubRule = this.possibleSubRule;
 		// clone.possibleTerminal = this.possibleTerminal;
@@ -421,10 +424,10 @@ public class Forrest {
 	@Override
 	public String toString() {
 		String s = "Forrest {";
-//		s += this.possibleTrees.size();
-//		s += ", " + this.possibleTrees;
-		s += this.possTrees2.size();
-		s += ", " + this.possTrees2.values();
+		s += this.possibleTrees.size();
+		s += ", " + this.possibleTrees;
+//		s += this.possTrees2.size();
+//		s += ", " + this.possTrees2.values();
 		s += "}";
 		return s;
 	}
@@ -438,8 +441,8 @@ public class Forrest {
 	public boolean equals(Object arg) {
 		if (arg instanceof Forrest) {
 			Forrest other = (Forrest) arg;
-//			return this.possibleTrees.equals(other.possibleTrees);
-			return this.possTrees2.equals(other.possTrees2);
+			return this.possibleTrees.equals(other.possibleTrees);
+//			return this.possTrees2.equals(other.possTrees2);
 		} else {
 			return false;
 		}

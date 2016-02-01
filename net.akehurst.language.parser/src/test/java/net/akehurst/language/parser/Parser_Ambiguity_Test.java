@@ -94,6 +94,29 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 		return b.get();
 	}
 	
+	Grammar caseBlock() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.skip("WS").concatination( new TerminalPattern("\\s+") );
+		b.rule("block").concatenation(new TerminalLiteral("{"), new NonTerminal("group1"), new NonTerminal("group2"), new TerminalLiteral("}"));
+		b.rule("group1").multi(0, -1, new NonTerminal("labelBlock"));
+		b.rule("group2").multi(0, -1, new NonTerminal("label"));
+		b.rule("labelBlock").concatenation(new NonTerminal("labels"), new TerminalLiteral("{"), new TerminalLiteral("}"));
+		b.rule("labels").multi(0, -1, new NonTerminal("label"));
+		b.rule("label").concatenation(new TerminalLiteral("case"), new NonTerminal("int"), new TerminalLiteral(":"));
+		b.rule("int").choice(new TerminalPattern("[0-9]+"));
+		return b.get();
+	}
+	
+	Grammar varDeclBlock() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.skip("WS").concatination( new TerminalPattern("\\s+") );
+		b.rule("block").concatenation(new TerminalLiteral("{"), new NonTerminal("decls"), new TerminalLiteral("}"));
+		b.rule("decls").multi(0, -1, new NonTerminal("decl"));
+		b.rule("decl").concatenation(new TerminalLiteral("int"), new NonTerminal("name"), new TerminalLiteral(";"));
+		b.rule("name").choice(new TerminalPattern("[a-zA-Z0-9]+"));
+		return b.get();
+	}
+	
 	@Test
 	public void am_S_empty() {
 		// grammar, goal, input
@@ -107,7 +130,7 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*S 1, 1}",st);
+			Assert.assertEquals("{*S (2,1,1,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -134,7 +157,7 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*S 1, 2}",st);
+			Assert.assertEquals("{*S (2,1,2,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -161,7 +184,7 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*S 1, 3}",st);
+			Assert.assertEquals("{*S (2,1,3,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -189,7 +212,7 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*S 1, 3}",st);
+			Assert.assertEquals("{*S (2,1,3,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -221,7 +244,7 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*fp 1, 4}",st);
+			Assert.assertEquals("{*fp (2,1,4,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -260,7 +283,7 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*fp 1, 7}",st);
+			Assert.assertEquals("{*fp (2,1,7,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -304,7 +327,7 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*fps.choice1 1, 7}",st);
+			Assert.assertEquals("{*fps.choice1 (2,1,7,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -353,7 +376,7 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*fps 1, 7}",st);
+			Assert.assertEquals("{*fps (2,1,7,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -404,7 +427,7 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*fps 1, 9}",st);
+			Assert.assertEquals("{*fps (2,1,9,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -431,6 +454,342 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 							b.emptyLeaf("fps.choice1.group.multi")
 						)
 					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+
+	@Test
+	public void ambiguity_int() {
+		// grammar, goal, input
+		try {
+			Grammar g = caseBlock();
+			String goal = "int";
+			String text = "1";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*int (2,1,2,-1)}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+					b.branch("int",
+						b.leaf("[0-9]+","1")
+					);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}		
+	}
+	
+	@Test
+	public void ambiguity_label() {
+		// grammar, goal, input
+		try {
+			Grammar g = caseBlock();
+			String goal = "label";
+			String text = "case 1 :";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*label (2,1,9,-1)}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+				b.branch("label",
+					b.leaf("case"),
+					b.branch("WS", b.leaf("\\s+"," ")),
+					b.branch("int",
+						b.leaf("[0-9]+","1")
+					),
+					b.branch("WS", b.leaf("\\s+"," ")),
+					b.leaf(":")
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}		
+	}
+
+	@Test
+	public void ambiguity_labels() {
+		// grammar, goal, input
+		try {
+			Grammar g = caseBlock();
+			String goal = "labels";
+			String text = "case 1 :";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*labels (2,1,9,-1)}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+				b.branch("labels",
+				b.branch("label",
+					b.leaf("case"),
+					b.branch("WS", b.leaf("\\s+"," ")),
+					b.branch("int",
+						b.leaf("[0-9]+","1")
+					),
+					b.branch("WS", b.leaf("\\s+"," ")),
+					b.leaf(":")
+				));
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}		
+	}
+
+	@Test
+	public void ambiguity_labelBlock() {
+		// grammar, goal, input
+		try {
+			Grammar g = caseBlock();
+			String goal = "labelBlock";
+			String text = "case 1 : { }";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*labelBlock (2,1,13,-1)}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+				b.branch("labelBlock",
+					b.branch("labels",
+						b.branch("label",
+							b.leaf("case"),
+							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("int",
+								b.leaf("[0-9]+","1")
+							),
+							b.branch("WS", b.leaf("\\s+"," ")),
+							b.leaf(":")
+						),
+						b.branch("WS", b.leaf("\\s+"," "))
+					),
+					b.leaf("{"),
+					b.branch("WS", b.leaf("\\s+"," ")),
+					b.leaf("}")
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}		
+	}
+	
+	@Test
+	public void ambiguity_block() {
+		// grammar, goal, input
+		try {
+			Grammar g = caseBlock();
+			String goal = "block";
+			String text = "{ case 1 : { } }";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*block (2,1,17,-1)}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+				b.branch("block",
+					b.leaf("{"),
+					b.branch("WS", b.leaf("\\s+"," ")),
+					b.branch("group1",
+						b.branch("labelBlock",
+							b.branch("labels",
+								b.branch("label",
+									b.leaf("case"),
+									b.branch("WS", b.leaf("\\s+"," ")),
+									b.branch("int",
+										b.leaf("[0-9]+","1")
+									),
+									b.branch("WS", b.leaf("\\s+"," ")),
+									b.leaf(":")
+								),
+								b.branch("WS", b.leaf("\\s+"," "))
+							),
+							b.leaf("{"),
+							b.branch("WS", b.leaf("\\s+"," ")),
+							b.leaf("}")
+						),
+						b.branch("WS", b.leaf("\\s+"," "))
+					),
+					b.branch("group2",
+						b.emptyLeaf("group2")
+					),
+					b.leaf("}")
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}		
+	}
+
+	@Test
+	public void ambiguity_block2() {
+		// grammar, goal, input
+		try {
+			Grammar g = caseBlock();
+			String goal = "block";
+			String text = "{ case 1 : }";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*block (2,1,13,-1)}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+				b.branch("block",
+					b.leaf("{"),
+					b.branch("WS", b.leaf("\\s+"," ")),
+					b.branch("group1",
+							b.emptyLeaf("group1")
+					),
+					b.branch("group2",
+						b.branch("label",
+								b.leaf("case"),
+								b.branch("WS", b.leaf("\\s+"," ")),
+								b.branch("int",
+									b.leaf("[0-9]+","1")
+								),
+								b.branch("WS", b.leaf("\\s+"," ")),
+								b.leaf(":")
+							),
+						b.branch("WS", b.leaf("\\s+"," "))
+					),
+					b.leaf("}")
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}		
+	}
+
+	@Test
+	public void varDeclBlock_block_empty() {
+		// grammar, goal, input
+		try {
+			Grammar g = varDeclBlock();
+			String goal = "block";
+			String text = "{}";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*block (2,1,3,-1)}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+					b.branch("block",
+						b.leaf("{"),
+						b.branch("decls", b.emptyLeaf("decls")),
+						b.leaf("}")
+					);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+
+	@Test
+	public void varDeclBlock_block_1() {
+		// grammar, goal, input
+		try {
+			Grammar g = varDeclBlock();
+			String goal = "block";
+			String text = "{ int i; }";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*block (2,1,11,-1)}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+				b.branch("block",
+					b.leaf("{"),
+					b.branch("WS", b.leaf("\\s+"," ")),
+					b.branch("decls",
+						b.branch("decl",
+							b.leaf("int"),
+							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i")),
+							b.leaf(";")
+						),
+						b.branch("WS", b.leaf("\\s+"," "))
+					),
+					b.leaf("}")
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void varDeclBlock_block_8() {
+		// grammar, goal, input
+		try {
+			Grammar g = varDeclBlock();
+			String goal = "block";
+			String text = "{ int i1; int i1; int i1; int i1; int i1; int i1; int i1; int i1; }";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ToStringVisitor v = new ToStringVisitor("", "");
+			String st = tree.accept(v, "");
+			Assert.assertEquals("{*block (2,1,68,-1)}",st);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+				b.branch("block",
+					b.leaf("{"),
+					b.branch("WS", b.leaf("\\s+"," ")),
+					b.branch("decls",
+						b.branch("decl",
+							b.leaf("int"),
+							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i")),
+							b.leaf(";")
+						),
+						b.branch("WS", b.leaf("\\s+"," "))
+					),
+					b.leaf("}")
 				);
 			Assert.assertEquals(expected, tree.getRoot());
 			

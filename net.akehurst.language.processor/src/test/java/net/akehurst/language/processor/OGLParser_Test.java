@@ -27,6 +27,7 @@ import net.akehurst.language.grammar.parser.ToStringVisitor;
 import net.akehurst.language.grammar.parser.forrest.ForrestFactory;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
+import net.akehurst.language.ogl.grammar.OGLGrammar;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
@@ -371,4 +372,41 @@ public class OGLParser_Test {
 			Assert.fail(e.getMessage());
 		}
 	}
+
+	@Test
+	public void multiLineComment1() {
+		//this fails because skip rules can't be a goal at present!
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+			
+			String text = "/* this is a comment */";
+
+			IParseTree tree = this.process(g, text, "MULTI_LINE_COMMENT");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void singleLineComment() {
+		//this fails because skip rules can't be a goal at present!
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+			
+			String text = "// this is a comment"+System.lineSeparator();
+
+			IParseTree tree = this.process(g, text, "SINGLE_LINE_COMMENT");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+
 }

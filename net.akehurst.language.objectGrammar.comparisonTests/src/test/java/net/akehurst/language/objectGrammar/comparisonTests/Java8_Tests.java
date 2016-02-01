@@ -5,6 +5,8 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -263,7 +265,8 @@ return null;
 		}
 		Assert.assertNotNull(tree);
 
-	}	
+	}
+	
 	@Test
 	public void ISO8859encoding() {
 		String input = "";
@@ -272,8 +275,6 @@ return null;
 		input += "}";
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);
-
-	
 	}	
 	
 	@Test
@@ -402,4 +403,66 @@ return null;
 		Assert.assertNotNull(tree);
 
 	}
+	
+	@Test
+	public void switchLabel() {
+		String input = "";
+		input += "  case 1:";
+		IParseTree tree = parse("switchLabel",input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void switchStatement() {
+		String input = "";
+		input += "switch (i) {";
+		input += "  case 1:";
+		input += "    i++;";
+		input += "    // fallthrough"+ System.lineSeparator();
+		input += "  default:";
+		input += "}";
+
+		IParseTree tree = parse("switchStatement",input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void T6304921() {
+		String input = "";
+		input += "import java.util.ArrayList;";
+		input += "import java.util.List;";
+		input += "class T6304921 {";
+		input += "    void m1(int i) {";
+		input += "      switch (i) {";
+		input += "        case 1:";
+		input += "           i++;";
+		input += "           // fallthrough"+ System.lineSeparator();
+		input += "        default:";
+		input += "      }";
+        input += "    }";
+		input += "    void m2() {";
+		input += "      List<Integer> list = new ArrayList();";
+		input += "    }";
+		input += "}";
+		input += "class X {";
+		input += "    void m1() {";
+		input += "      System.err.println(\"abc\"); // name not found"+ System.lineSeparator();
+		input += "    }";
+		input += "    boolean m2() {";
+		input += "      return 123 + true; // bad binary expression"+ System.lineSeparator();
+		input += "    }";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void singleLineComment() {
+		String input = "";
+		input += "//single line comment" + System.lineSeparator();
+		input += "class Test {";
+		input += "}";
+		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+	}	
 }

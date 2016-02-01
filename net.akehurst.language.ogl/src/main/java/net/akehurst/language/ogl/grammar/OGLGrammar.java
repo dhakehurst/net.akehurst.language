@@ -67,7 +67,7 @@ public class OGLGrammar extends Grammar {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
 		b.skip("WHITESPACE").concatination( new TerminalPattern("\\s+") );
 		b.skip("MULTI_LINE_COMMENT").concatination( new TerminalPattern("/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/") );
-		b.skip("SINGLE_LINE_COMMENT").concatination( new TerminalPattern("(?s)//.*?$") );
+		b.skip("SINGLE_LINE_COMMENT").concatination( new TerminalPattern("//.*?$") );
 		
 		b.rule("grammarDefinition").concatenation( new NonTerminal("namespace"), new NonTerminal("grammar") );
 		b.rule("namespace").concatenation( new TerminalLiteral("namespace"), new NonTerminal("qualifiedName"), new TerminalLiteral(";") );

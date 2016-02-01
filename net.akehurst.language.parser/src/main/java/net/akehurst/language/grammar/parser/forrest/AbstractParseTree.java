@@ -47,7 +47,7 @@ public abstract class AbstractParseTree implements IParseTree {
 
 	ForrestFactory ffactory;
 	Node root;
-	NodeIdentifier identifier;
+	public NodeIdentifier identifier;
 
 	
 	NodeIdentifier stackedTreesIdentifier;
@@ -382,15 +382,11 @@ public abstract class AbstractParseTree implements IParseTree {
 		//TODO: handle multiple stackedRoot  - of same node but other differences (i.e. children or other stacked roots)
 		ArrayList<AbstractParseTree> result = new ArrayList<>();
 		AbstractParseTree parent = this.peekTopStackedRoot();
-		AbstractParseTree pt = this.tryGraftInto(parent);
-		if (null!=pt) {
-			result.add(pt);
-		}
+		ArrayList<AbstractParseTree> pts = this.tryGraftInto(parent);
+		result.addAll(pts);
 		for(AbstractParseTree dt: this.duplicateRoots) {
-			AbstractParseTree pt2 = dt.tryGraftInto(dt.peekTopStackedRoot());
-			if (null!=pt2) {
-				result.add(pt2);
-			}
+			ArrayList<AbstractParseTree> pts2 = dt.tryGraftInto(dt.peekTopStackedRoot());
+			result.addAll(pts2);
 		}
 		return result;
 	}
@@ -488,30 +484,26 @@ public abstract class AbstractParseTree implements IParseTree {
 		return result;
 	}
 
-	AbstractParseTree tryGraftInto(AbstractParseTree parent) throws RuleNotFoundException {
+	ArrayList<AbstractParseTree> tryGraftInto(AbstractParseTree parent) throws RuleNotFoundException {
 		try {
-			// if (parent instanceof ParseTreeBud) {
-			// throw new CannotExtendTreeException("parent is a bud, cannot
-			// extend it");
-			// } else {
+			ArrayList<AbstractParseTree> result = new ArrayList<>();
 			if (parent.getNextExpectedItem().getRuleNumber() == this.getRuntimeRule().getRuleNumber()) {
-				return parent.extendWith(this.getRoot());
+				result.add( parent.extendWith(this.getRoot()) );
 			} else if (this.getIsSkip()) {
-				return parent.extendWith(this.getRoot());
+				result.add( parent.extendWith(this.getRoot()) );
 			} else {
-				// throw new CannotExtendTreeException("node is not next
-				// expected item or a skip node");
-				return null;
+				//
 			}
-			// }
-			// } catch (CannotExtendTreeException e) {
-			// throw e;
-			// } catch (NoNextExpectedItemException e) {
-			// throw new CannotExtendTreeException(e.getMessage());
-			// } catch (RuntimeException e) {
-			// e.printStackTrace();
-			// throw new CannotExtendTreeException(e.getMessage());
-			// }
+			for(AbstractParseTree dp: parent.duplicateRoots) {
+				if (dp.getNextExpectedItem().getRuleNumber() == this.getRuntimeRule().getRuleNumber()) {
+					result.add( dp.extendWith(this.getRoot()) );
+				} else if (this.getIsSkip()) {
+					result.add( dp.extendWith(this.getRoot()) );
+				} else {
+					//
+				}
+			}
+			return result;
 		} catch (ParseTreeException e) {
 			throw new RuntimeException("Internal Error: Should not happen", e);
 		}

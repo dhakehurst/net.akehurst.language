@@ -1779,6 +1779,6 @@ COMMENT
 
 skip
 LINE_COMMENT
-    :   "(?s)//.*?$"
+    :   "//.*?$"
     ;
 }

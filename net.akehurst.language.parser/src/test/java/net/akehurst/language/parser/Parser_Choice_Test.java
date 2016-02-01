@@ -59,7 +59,7 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("", "");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*a 1, 1}",st);
+			Assert.assertEquals("{*a (2,1,1,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -86,7 +86,7 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*abc 1, 2}",st);
+			Assert.assertEquals("{*abc (2,1,2,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -115,7 +115,7 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*abc 1, 2}",st);
+			Assert.assertEquals("{*abc (2,1,2,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -145,7 +145,7 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 			
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*abc 1, 2}",st);
+			Assert.assertEquals("{*abc (2,1,2,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
