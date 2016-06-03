@@ -1,0 +1,8 @@
+
+dependencies {
+
+	compile project(':net.akehurst.language.parser')
+
+	testCompile 'junit:junit:+'
+	
+}

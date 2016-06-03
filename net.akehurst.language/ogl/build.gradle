@@ -1,0 +1,9 @@
+
+dependencies {
+
+	compile project(':net.akehurst.language.core')
+	compile 'net.akehurst.transform:net.akehurst.transform.binary:1.0.0-SNAPSHOT'
+
+	testCompile 'junit:junit:+'
+	
+}
