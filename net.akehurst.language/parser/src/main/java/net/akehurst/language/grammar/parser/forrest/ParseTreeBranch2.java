@@ -1,5 +1,6 @@
 package net.akehurst.language.grammar.parser.forrest;
 
+import net.akehurst.language.grammar.parse.tree.Branch;
 import net.akehurst.language.grammar.parse.tree.Node;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
@@ -11,6 +12,11 @@ public class ParseTreeBranch2 extends AbstractParseTree2 {
 		this.canGrowWidth = this.calculateCanGrowWidth(inputLength);
 	}
 
+	@Override
+	public Branch getRoot() {
+		return (Branch)super.getRoot();
+	}
+	
 	boolean isComplete;
 	@Override
 	public boolean getIsComplete() {

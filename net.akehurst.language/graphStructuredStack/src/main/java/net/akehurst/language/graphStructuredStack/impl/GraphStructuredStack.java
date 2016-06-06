@@ -22,6 +22,19 @@ public class GraphStructuredStack<K, V> implements IGraphStructuredStack<K, V> {
 	public List<IGssNode<K, V>> getTops() {
 		return this.tops;
 	}
+	
+	@Override
+	public void addTop(K key, V value) {
+		IGssNode<K, V> n = this.nodes.get(key);
+		if (this.getTops().contains(n)) {
+			
+		} else {
+			if(n==null) {
+				n = this.newNode(key, value);
+			}
+			this.getTops().add(n);
+		}
+	}
 
 	@Override
 	public IGssNode<K, V> newBottom(K key, V value) {
@@ -41,6 +54,15 @@ public class GraphStructuredStack<K, V> implements IGraphStructuredStack<K, V> {
 		return this.nodes.get(key);
 	}
 
+	@Override
+	public void pop(K key) {
+		IGssNode<K, V> n = this.peek(key);
+		if (this.getTops().contains(n)) {
+			this.getTops().remove(n);
+			this.getTops().addAll(n.previous());
+		}
+	}
+	
 	@Override
 	public IGraphStructuredStack<K, V> shallowClone() {
 		// TODO clone it

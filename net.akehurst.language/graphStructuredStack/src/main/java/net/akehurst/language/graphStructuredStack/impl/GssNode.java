@@ -42,6 +42,47 @@ public class GssNode<K, V> implements IGssNode<K, V> {
 		}
 	}
 
+	@Override
+	public void duplicate(K key, V value) {
+		GssNode<K, V> n2 = this.gss.newNode(key, value);
+		n2.previous().addAll(this.previous());
+		n2.next().addAll(this.next());
+		
+		for(IGssNode<K, V> p: this.previous() ) {
+			p.next().add(n2);
+		}
+		
+		for(IGssNode<K, V> p: this.next() ) {
+			p.previous().add(n2);
+		}
+		
+		if (gss.getTops().contains(this)) {
+			gss.getTops().add(n2);
+		}
+	}
+	
+	@Override
+	public void replace(K key, V value) {
+		GssNode<K, V> n2 = this.gss.newNode(key, value);
+		n2.previous().addAll(this.previous());
+		n2.next().addAll(this.next());
+		
+		for(IGssNode<K, V> p: this.previous() ) {
+			p.next().remove(this);
+			p.next().add(n2);
+		}
+		
+		for(IGssNode<K, V> p: this.next() ) {
+			p.previous().remove(this);
+			p.previous().add(n2);
+		}
+		
+		if (this.gss.getTops().contains(this)) {
+			this.gss.getTops().remove(this);
+			this.gss.getTops().add(n2);
+		}
+	}
+	
 	List<IGssNode<K, V>> next;
 
 	@Override
@@ -79,6 +120,6 @@ public class GssNode<K, V> implements IGssNode<K, V> {
 	
 	@Override
 	public String toString() {
-		return this.getKey().toString();
+		return this.getKey().toString() + "="+this.getValue().toString();
 	}
 }

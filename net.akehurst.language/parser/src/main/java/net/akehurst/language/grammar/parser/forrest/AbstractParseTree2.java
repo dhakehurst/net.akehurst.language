@@ -1,9 +1,13 @@
 package net.akehurst.language.grammar.parser.forrest;
 
+import java.util.Arrays;
+import java.util.List;
+
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.grammar.parse.tree.Node;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
+import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet;
 
 abstract
@@ -41,11 +45,6 @@ public class AbstractParseTree2 implements IParseTree {
 	
 	public RuntimeRule getRuntimeRule() {
 		return this.getRoot().getRuntimeRule();
-	}
-	
-	public boolean getHasPotential(RuntimeRuleSet runtimeRuleSet) {
-		// TODO Auto-generated method stub
-		return true;
 	}
 
 	@Override

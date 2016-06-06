@@ -15,4 +15,8 @@ public interface IGraphStructuredStack<K,V> {
 	IGraphStructuredStack<K,V> shallowClone();
 
 	IGssNode<K,V> peek(K key);
+
+	void pop(K key);
+
+	void addTop(K key, V value);
 }

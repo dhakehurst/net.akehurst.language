@@ -24,6 +24,7 @@ import net.akehurst.language.grammar.parser.forrest.ForrestFactory;
 import net.akehurst.language.grammar.parser.forrest.ForrestFactory2;
 import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBranch;
+import net.akehurst.language.grammar.parser.forrest.ParseTreeBranch2;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBud;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBud2;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
@@ -138,7 +139,7 @@ public class ScannerLessParser2 implements IParser {
 		RuntimeRule goalRR = this.runtimeRuleSet.getRuntimeRule(goalRuleNumber);
 		CharSequence pseudoText = START_SYMBOL + text + FINISH_SYMBOL;
 
-		ParseTreeBranch pseudoTree = (ParseTreeBranch) this.doParse2(pseudoGoalRule, pseudoText);
+		ParseTreeBranch2 pseudoTree = (ParseTreeBranch2) this.doParse2(pseudoGoalRule, pseudoText);
 		ForrestFactory ffactory = new ForrestFactory(this.runtimeBuilder, text);
 		int s = pseudoTree.getRoot().getChildren().size();
 		IBranch root = (IBranch) pseudoTree.getRoot().getChildren().stream().filter(n -> n.getName().equals(goal.getIdentity().asPrimitive())).findFirst()
@@ -158,17 +159,21 @@ public class ScannerLessParser2 implements IParser {
 		ForrestFactory2 ff = new ForrestFactory2(this.runtimeBuilder, text);
 		RuntimeRule sst = this.getRuntimeRuleSet().getForTerminal(START_SYMBOL_TERMINAL.getValue());
 		ParseTreeBud2 startBud = ff.createNewBuds(new RuntimeRule[] { sst }, 0).get(0);
-		
 		Forrest2 newForrest = new Forrest2(ff, this.getRuntimeRuleSet());
-		List<AbstractParseTree2> newTrees = newForrest.growHeight(startBud);
-		newForrest.newSeeds(newTrees);
+		newForrest.newSeeds(Arrays.asList(startBud));
+
+		int seasons = 1;
+		//List<AbstractParseTree2> newTrees = newForrest.growHeight(startBud);
+		
 		Forrest2 oldForrest = null;
-		while(newForrest.getCanGrow()) {
+		do {
 			oldForrest = newForrest.shallowClone(); // remove this later, its for debugging
 			newForrest = oldForrest.grow();
-		}
+			seasons++;
+		} while(newForrest.getCanGrow());
 		
-		return null;
+		IParseTree match = newForrest.getLongestMatch(text);
+		return match;
 	}
 
 }

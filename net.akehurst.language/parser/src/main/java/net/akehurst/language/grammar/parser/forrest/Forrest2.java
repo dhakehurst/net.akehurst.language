@@ -5,12 +5,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import net.akehurst.language.core.parser.INode;
+import net.akehurst.language.core.parser.IParseTree;
+import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.grammar.parse.tree.Branch;
 import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parse.tree.Node;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
+import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet;
 import net.akehurst.language.graphStructuredStack.IGraphStructuredStack;
 import net.akehurst.language.graphStructuredStack.IGssNode;
@@ -22,7 +25,6 @@ public class Forrest2 {
 		this.ffactory = ffactory;
 		this.runtimeRuleSet = runtimeRuleSet;
 		this.gss = new GraphStructuredStack<>();
-
 	}
 
 	ForrestFactory2 ffactory;
@@ -32,6 +34,7 @@ public class Forrest2 {
 	protected Forrest2 newForrest() {
 		Forrest2 f2 = new Forrest2(this.ffactory, this.runtimeRuleSet);
 		f2.gss = this.gss;
+		
 		return f2;
 	}
 
@@ -51,7 +54,7 @@ public class Forrest2 {
 			gss.newBottom(t.getIdentifier(), t);
 		}
 	}
-
+	
 	public boolean getCanGrow() {
 		boolean b = false;
 		for (IGssNode<NodeIdentifier, AbstractParseTree2> n : this.gss.getTops()) {
@@ -66,13 +69,42 @@ public class Forrest2 {
 		return tree.getCanGrowWidth();
 	}
 
+	public IParseTree getLongestMatch(CharSequence text) throws ParseFailedException {
+		if (!this.gss.getTops().isEmpty() && this.gss.getTops().size() >= 1) {
+			IParseTree lt = this.gss.getTops().get(0).getValue();
+			for (IGssNode<NodeIdentifier, AbstractParseTree2> top : this.gss.getTops()) {
+				IParseTree gt = top.getValue();
+				if (gt.getRoot().getMatchedTextLength() > lt.getRoot().getMatchedTextLength()) {
+					lt = gt;
+				}
+			}
+			if (lt.getRoot().getMatchedTextLength() < text.length()) {
+				throw new ParseFailedException("Goal does not match full text", null);//this.extractLongestMatch());
+			} else {
+				return lt;
+			}
+		} else {
+			throw new ParseFailedException("Could not match goal", null);//this.extractLongestMatch());
+		}
+	}
+	
 	public Forrest2 grow() throws RuleNotFoundException, ParseTreeException {
 		Forrest2 newForrest = this.newForrest();
 
-		for (IGssNode<NodeIdentifier, AbstractParseTree2> gn : gss.getTops()) {
-			ArrayList<AbstractParseTree2> newBranches = this.growTreeWidthAndHeight(gn.getValue());
+		ArrayList<IGssNode<NodeIdentifier, AbstractParseTree2>> toGrow = new ArrayList<>(gss.getTops());
+		gss.getTops().clear();
+		for (IGssNode<NodeIdentifier, AbstractParseTree2> gn : toGrow) {
+			AbstractParseTree2 tree = gn.getValue();
+			ArrayList<AbstractParseTree2> newBranches = this.growTreeWidthAndHeight(tree);
 			// newForrest.addAll(newBranches);
 			int c = newBranches.size();
+			if (newBranches.isEmpty()) {
+				this.gss.getTops().remove(gn);
+			} else {
+				for(AbstractParseTree2 t: newBranches) {
+					this.gss.addTop(t.getIdentifier(), t);
+				}
+			}
 		}
 
 		return newForrest;
@@ -88,21 +120,21 @@ public class Forrest2 {
 			if (tree.getIsSkip()) {
 				ArrayList<AbstractParseTree2> nts = this.tryGraftBack(tree);
 				for (AbstractParseTree2 nt : nts) {
-					if (nt.getHasPotential(this.runtimeRuleSet)) {
-						result.add(nt);
-					} else {
-						// drop it
-					}
+					// if (nt.getHasPotential(this.runtimeRuleSet)) {
+					result.add(nt);
+					// } else {
+					// // drop it
+					// }
 				}
 			} else {
 				if (tree.getIsComplete()) {
 					ArrayList<AbstractParseTree2> nts = this.growHeight(tree);
 					for (AbstractParseTree2 nt : nts) {
-						if (nt.getHasPotential(this.runtimeRuleSet)) {
-							result.add(nt);
-						} else {
-							// drop it
-						}
+						// if (nt.getHasPotential(this.runtimeRuleSet)) {
+						result.add(nt);
+						// } else {
+						// // drop it
+						// }
 					}
 				}
 
@@ -110,11 +142,11 @@ public class Forrest2 {
 				if (this.getCanGraftBack(tree)) {
 					ArrayList<AbstractParseTree2> nts = this.tryGraftBack(tree);
 					for (AbstractParseTree2 nt : nts) {
-						if (nt.getHasPotential(this.runtimeRuleSet) || this.getIsGoal(nt)) {
-							result.add(nt);
-						} else {
-							// drop it
-						}
+						// if (nt.getHasPotential(this.runtimeRuleSet) || this.getIsGoal(nt)) {
+						result.add(nt);
+						// } else {
+						// // drop it
+						// }
 					}
 				}
 
@@ -127,11 +159,11 @@ public class Forrest2 {
 					} else {
 						ArrayList<AbstractParseTree2> newBranches = this.growWidth(tree);
 						for (AbstractParseTree2 nt : newBranches) {
-							if (nt.getHasPotential(runtimeRuleSet)) {
-								result.add(nt);
-							} else {
-								// drop it
-							}
+							// if (nt.getHasPotential(runtimeRuleSet)) {
+							result.add(nt);
+							// } else {
+							// // drop it
+							// }
 						}
 					}
 				}
@@ -152,13 +184,17 @@ public class Forrest2 {
 			// buds.add(empty);
 			for (ParseTreeBud2 bud : buds) {
 				AbstractParseTree2 nt = this.pushStackNewRoot(tree, bud.getRoot());
-				if (nt.getRoot().getIsEmpty()) {
-					RuntimeRule ruleThatIsEmpty = nt.getRuntimeRule().getRuleThatIsEmpty();
-					ParseTreeBranch2 pt = this.growHeightTree(nt, ruleThatIsEmpty);
-					result.add(pt);
-				} else { // bud is not empty, so progress has been made already
-					if (nt.getHasPotential(runtimeRuleSet)) {
+				if (null == nt) {
+					// has been dropped
+				} else {
+					if (nt.getRoot().getIsEmpty()) {
+						RuntimeRule ruleThatIsEmpty = nt.getRuntimeRule().getRuleThatIsEmpty();
+						ParseTreeBranch2 pt = this.growHeightTree(nt, ruleThatIsEmpty);
+						result.add(pt);
+					} else { // bud is not empty, so progress has been made already
+						// if (nt.getHasPotential(runtimeRuleSet)) {
 						result.add(nt);
+						// }
 					}
 				}
 			}
@@ -192,9 +228,9 @@ public class Forrest2 {
 		try {
 			ArrayList<AbstractParseTree2> result = new ArrayList<>();
 			if (parent.getNextExpectedItem().getRuleNumber() == tree.getRuntimeRule().getRuleNumber()) {
-				result.add(this.extendWith(parent, tree.getRoot()));
+				result.add(this.extendWith(parent, tree));
 			} else if (tree.getIsSkip()) {
-				result.add(this.extendWith(parent, tree.getRoot()));
+				result.add(this.extendWith(parent, tree));
 			} else {
 				//
 			}
@@ -204,14 +240,23 @@ public class Forrest2 {
 		}
 	}
 
-	protected ParseTreeBranch2 extendWith(AbstractParseTree2 parent, INode extension) throws ParseTreeException {
+	protected ParseTreeBranch2 extendWith(AbstractParseTree2 parent, AbstractParseTree2 extension) throws ParseTreeException {
 		// TODO: need to modify GSS here!
-		INode[] nc = this.addChild((Branch) parent.getRoot(), extension);
+		INode[] nc = this.addChild((Branch) parent.getRoot(), extension.getRoot());
 		if (extension.getIsSkip()) {
 			ParseTreeBranch2 newBranch = this.ffactory.fetchOrCreateBranch(parent.getRuntimeRule(), nc, parent.nextItemIndex);
+			this.gss.pop(extension.getIdentifier());
+			this.gss.peek(parent.getIdentifier()).duplicate(newBranch.getIdentifier(), newBranch);
 			return newBranch;
 		} else {
 			ParseTreeBranch2 newBranch = this.ffactory.fetchOrCreateBranch(parent.getRuntimeRule(), nc, parent.nextItemIndex + 1);
+			this.gss.pop(extension.getIdentifier());
+			IGssNode<NodeIdentifier, AbstractParseTree2> n  = this.gss.peek(parent.getIdentifier());
+			if(newBranch.getIsComplete()) {
+				n.replace(newBranch.getIdentifier(), newBranch);
+			} else {
+				n.duplicate(newBranch.getIdentifier(), newBranch);
+			}
 			return newBranch;
 		}
 	}
@@ -232,17 +277,20 @@ public class Forrest2 {
 			List<ParseTreeBud2> buds = this.ffactory.createNewBuds(expectedNextTerminal, tree.getRoot().getEnd());
 			for (ParseTreeBud2 bud : buds) {
 				AbstractParseTree2 nt = this.pushStackNewRoot(tree, bud.getRoot());
-				if (nt.getRoot().getIsEmpty()) {
-					RuntimeRule ruleThatIsEmpty = nt.getRuntimeRule().getRuleThatIsEmpty();
-					ParseTreeBranch2 pt = this.growHeightTree(nt, ruleThatIsEmpty);
-
-					if (pt.getHasPotential(runtimeRuleSet)) {
-						result.add(pt);
-					} else {
-						int i = 0;
-					}
+				if (null == nt) {
+					// has been dropped
 				} else {
-					result.add(nt);
+					if (nt.getRoot().getIsEmpty()) {
+						RuntimeRule ruleThatIsEmpty = nt.getRuntimeRule().getRuleThatIsEmpty();
+						ParseTreeBranch2 pt = this.growHeightTree(nt, ruleThatIsEmpty);
+//						if (pt.getHasPotential(runtimeRuleSet)) {
+							result.add(pt);
+//						} else {
+//							int i = 0;
+//						}
+					} else {
+						result.add(nt);
+					}
 				}
 			}
 		}
@@ -259,7 +307,9 @@ public class Forrest2 {
 				}
 				ParseTreeBranch2[] newTrees = this.growHeightByType(tree, rule);
 				for (ParseTreeBranch2 nt : newTrees) {
-					result.add(nt);
+					if(null!=nt) {
+						result.add(nt);
+					}
 				}
 			}
 		} else {
@@ -292,7 +342,11 @@ public class Forrest2 {
 		ParseTreeBranch2[] result = new ParseTreeBranch2[rrs.length];
 		for (int i = 0; i < rrs.length; ++i) {
 			ParseTreeBranch2 newTree = this.growHeightTree(tree, target);
-			result[i] = newTree;
+			if (null==newTree) {
+				// has been dropped
+			} else {
+				result[i] = newTree;
+			}
 		}
 		return result;
 	}
@@ -300,9 +354,14 @@ public class Forrest2 {
 	ParseTreeBranch2[] growHeightConcatenation(AbstractParseTree2 tree, RuntimeRule target) {
 		if (0 == target.getRhs().getItems().length) {
 			return new ParseTreeBranch2[0];
-		} else if (target.getRhsItem(0).getRuleNumber() == tree.getRuntimeRule().getRuleNumber()) {
+		} if (target.getRhsItem(0).getRuleNumber() == tree.getRuntimeRule().getRuleNumber()) {
 			ParseTreeBranch2 newTree = this.growHeightTree(tree, target);
-			return new ParseTreeBranch2[] { newTree };
+			if (null==newTree) {
+				// has been dropped
+				return new ParseTreeBranch2[0];
+			} else {
+				return new ParseTreeBranch2[] { newTree };
+			}
 		} else {
 			return new ParseTreeBranch2[0];
 		}
@@ -313,7 +372,12 @@ public class Forrest2 {
 			if (target.getRhsItem(0).getRuleNumber() == tree.getRuntimeRule().getRuleNumber()
 					|| (0 == target.getRhs().getMultiMin() && tree.getRoot() instanceof Leaf)) {
 				ParseTreeBranch2 newTree = this.growHeightTree(tree, target);
-				return new ParseTreeBranch2[] { newTree };
+				if (null==newTree) {
+					// has been dropped
+					return new ParseTreeBranch2[0];
+				} else {
+					return new ParseTreeBranch2[] { newTree };
+				}
 			} else {
 				return new ParseTreeBranch2[0];
 			}
@@ -327,7 +391,12 @@ public class Forrest2 {
 			if (target.getRhsItem(0).getRuleNumber() == tree.getRuntimeRule().getRuleNumber()
 					|| (0 == target.getRhs().getMultiMin() && tree.getRoot() instanceof Leaf)) {
 				ParseTreeBranch2 newTree = this.growHeightTree(tree, target);
-				return new ParseTreeBranch2[] { newTree };
+				if (null==newTree) {
+					// has been dropped
+					return new ParseTreeBranch2[0];
+				} else {
+					return new ParseTreeBranch2[] { newTree };
+				}
 			} else {
 				return new ParseTreeBranch2[0];
 			}
@@ -339,14 +408,24 @@ public class Forrest2 {
 	ParseTreeBranch2 growHeightTree(AbstractParseTree2 tree, RuntimeRule target) {
 		INode[] children = new INode[] { tree.getRoot() };
 		ParseTreeBranch2 newTree = this.ffactory.fetchOrCreateBranch(target, children, 1);
-		return newTree;
+		IGssNode<NodeIdentifier, AbstractParseTree2> n = this.gss.peek(tree.getIdentifier());
+		if (this.getHasPotential(newTree, n.previous())) {
+			n.replace(newTree.getIdentifier(), newTree);
+			return newTree;
+		} else {
+			return null;
+		}
 	}
 
 	protected AbstractParseTree2 pushStackNewRoot(AbstractParseTree2 tree, Leaf leaf) {
-		IGssNode<NodeIdentifier, AbstractParseTree2> n = this.gss.peek(tree.getIdentifier());
 		ParseTreeBud2 bud = this.ffactory.fetchOrCreateBud(leaf);
-		n.push(bud.getIdentifier(), bud);
-		return bud;
+		IGssNode<NodeIdentifier, AbstractParseTree2> n = this.gss.peek(tree.getIdentifier());
+		if (this.getHasPotential(bud, Arrays.asList(n))) {
+			n.push(bud.getIdentifier(), bud);
+			return bud;
+		} else {
+			return null;
+		}
 	}
 
 	private AbstractParseTree2 peekTopStackedRoot(AbstractParseTree2 tree) {
@@ -356,6 +435,48 @@ public class Forrest2 {
 			return n.previous().get(0).getValue();
 		} else {
 			return null;
+		}
+	}
+
+	/**
+	 * Filters out trees that won't grow
+	 * 
+	 * @param runtimeRuleSet
+	 * @return
+	 */
+	public boolean getHasPotential(AbstractParseTree2 tree, List<IGssNode<NodeIdentifier, AbstractParseTree2>> stackedTreeNodes) {
+		if ( (!tree.getCanGrowWidth() && stackedTreeNodes.isEmpty()) ) { // !this.getCanGrow(tree)) {
+			return false;
+		} else {
+			if (stackedTreeNodes.isEmpty()) {
+				return true; // only happens when tree is dealing with goal stuff
+			} else {
+				RuntimeRule thisRule = tree.getRuntimeRule();
+				IGssNode<NodeIdentifier, AbstractParseTree2> n = this.gss.peek(tree.getIdentifier()); //TODO: what if it is already in the gss?
+
+					AbstractParseTree2 stackedTree = stackedTreeNodes.get(0).getValue(); //TODO: handle multiples
+					RuntimeRule nextExpectedRule = stackedTree.getNextExpectedItem(); // TODO: nextexpected from all the stacked trees
+					if (thisRule == nextExpectedRule || thisRule.getIsSkipRule()) {
+						return true;
+					} else {
+						if (thisRule.getKind() == RuntimeRuleKind.NON_TERMINAL) {
+							// List<RuntimeRule> possibles =
+							// Arrays.asList(runtimeRuleSet.getPossibleSubRule(nextExpectedRule));
+							List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleFirstSubRule(nextExpectedRule));
+							boolean res = possibles.contains(thisRule);
+							return res;
+						} else if (runtimeRuleSet.getAllSkipTerminals().contains(thisRule)) {
+							return true;
+						} else {
+							// List<RuntimeRule> possibles =
+							// Arrays.asList(runtimeRuleSet.getPossibleSubTerminal(nextExpectedRule));
+							List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleFirstTerminals(nextExpectedRule));
+							boolean res = possibles.contains(thisRule);
+							return res;
+						}
+					}
+
+			}
 		}
 	}
 }
