@@ -104,7 +104,8 @@ public class Forrest2 {
 		gss.getTops().clear();
 		for (IGssNode<NodeIdentifier, AbstractParseTree2> gn : toGrow) {
 			if (this.getIsGoal(gn)) {
-				this.goals.add(gn.getValue());
+				AbstractParseTree2 g = gn.getValue();
+				this.goals.add(g);
 			} else {
 				ArrayList<IGssNode<NodeIdentifier, AbstractParseTree2>> newNodes = this.growTreeWidthAndHeight(gn);
 				// newForrest.addAll(newBranches);

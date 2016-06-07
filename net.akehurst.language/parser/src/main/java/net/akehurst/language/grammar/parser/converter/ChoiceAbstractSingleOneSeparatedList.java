@@ -19,21 +19,22 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
 import net.akehurst.language.ogl.semanticStructure.Multi;
+import net.akehurst.language.ogl.semanticStructure.SeparatedList;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class ChoiceSingleOneMulti extends AbstractChoice2RuntimeRuleItem<AbstractChoice> {
+public class ChoiceAbstractSingleOneSeparatedList extends AbstractChoice2RuntimeRuleItem<AbstractChoice> {
 
 	@Override
 	public boolean isValidForLeft2Right(AbstractChoice left) {
-		return (1==left.getAlternative().size()) && 1==left.getAlternative().get(0).getItem().size() && left.getAlternative().get(0).getItem().get(0) instanceof Multi;
+		return (1==left.getAlternative().size()) && 1==left.getAlternative().get(0).getItem().size() && left.getAlternative().get(0).getItem().get(0) instanceof SeparatedList;
 	}
 	
 	@Override
 	public RuntimeRuleItem constructLeft2Right(AbstractChoice left, Transformer transformer) {
-		Multi multi = (Multi)left.getAlternative().get(0).getItem().get(0);
+		SeparatedList item = (SeparatedList)left.getAlternative().get(0).getItem().get(0);
 		try {
-			RuntimeRuleItem right = transformer.transformLeft2Right(Multi2RuntimeRuleItem.class, multi);
+			RuntimeRuleItem right = transformer.transformLeft2Right(SeparatedList2RuntimeRuleItem.class, item);
 			return right;
 		} catch (RelationNotFoundException e) {
 			throw new RuntimeException("Cannot constrcut right item for AbstractChoice "+left);
@@ -45,8 +46,8 @@ public class ChoiceSingleOneMulti extends AbstractChoice2RuntimeRuleItem<Abstrac
 		//in other cases, a multi is converted to a group and the empty rule is added then,
 		// but not in this special case
 		try {
-			Multi multi = (Multi)left.getAlternative().get(0).getItem().get(0);
-			if (0 == multi.getMin()) {
+			SeparatedList item = (SeparatedList)left.getAlternative().get(0).getItem().get(0);
+			if (0 == item.getMin()) {
 				Converter converter = (Converter)transformer;
 				RuntimeRule ruleThatIsEmpty = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getOwningRule());
 				RuntimeRule rhs = converter.createEmptyRuleFor(ruleThatIsEmpty);

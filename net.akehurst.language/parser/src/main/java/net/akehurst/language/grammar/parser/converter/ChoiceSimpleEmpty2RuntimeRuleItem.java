@@ -16,53 +16,50 @@
 package net.akehurst.language.grammar.parser.converter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
 import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
-import net.akehurst.language.ogl.semanticStructure.Concatenation;
-import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
-import net.akehurst.language.ogl.semanticStructure.SimpleItem;
-import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class ChoiceSingleConcatenation2RuntimeRuleItem extends AbstractChoice2RuntimeRuleItem<ChoiceSimple> {
+public class ChoiceSimpleEmpty2RuntimeRuleItem extends AbstractChoice2RuntimeRuleItem<ChoiceSimple> {
 
 	@Override
 	public boolean isValidForLeft2Right(ChoiceSimple left) {
-		return (1==left.getAlternative().size()) && (left.getAlternative().get(0).getItem().get(0) instanceof SimpleItem || 1<left.getAlternative().get(0).getItem().size());
+		return 0 == left.getAlternative().size();
 	}
-	
+
 	@Override
 	public RuntimeRuleItem constructLeft2Right(ChoiceSimple left, Transformer transformer) {
-		Converter converter = (Converter)transformer;
+		Converter converter = (Converter) transformer;
+		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
 		RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION);
 		return right;
 	}
-	
+
 	@Override
 	public void configureLeft2Right(ChoiceSimple left, RuntimeRuleItem right, Transformer transformer) {
 		try {
-			List<RuntimeRule> rrAlternatives = new ArrayList<>();
-			//we know there is only one alternative from isValid 
-			Concatenation concat = left.getAlternative().get(0);
-			rrAlternatives = (List<RuntimeRule>)transformer.transformAllLeft2Right((Class<? extends Relation<ConcatenationItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, concat.getItem());
-		
+			RuntimeRule ruleThatIsEmpty = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getOwningRule());
+			Converter converter = (Converter) transformer;
+			RuntimeRule rhs = converter.createEmptyRuleFor(ruleThatIsEmpty);
+			List<RuntimeRule> rrAlternatives = Arrays.asList(rhs);
+	
 			RuntimeRule[] items = rrAlternatives.toArray(new RuntimeRule[rrAlternatives.size()]);
 			right.setItems(items);
-		
-		} catch (RelationNotFoundException e) {
-			e.printStackTrace();
+		} catch (RelationNotFoundException ex) {
+			throw new RuntimeException("Cannot configure ChoiceSimple");
 		}
 	}
 
 	@Override
 	public void configureRight2Left(ChoiceSimple arg0, RuntimeRuleItem arg1, Transformer arg2) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override

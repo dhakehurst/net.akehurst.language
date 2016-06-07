@@ -72,7 +72,7 @@ public class RuntimeRuleSet {
 
 		for (RuntimeRule rrule : value) {
 			if (null == rrule) {
-				throw new RuntimeException("RuntimeRuleSet must not containa  null rule!");
+				throw new RuntimeException("RuntimeRuleSet must not containan  null rule!");
 			}
 			int i = rrule.getRuleNumber();
 			this.runtimeRules[i] = rrule;

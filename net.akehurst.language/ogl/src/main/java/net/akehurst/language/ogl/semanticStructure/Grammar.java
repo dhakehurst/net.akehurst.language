@@ -123,8 +123,8 @@ public class Grammar {
 			result.add(t);
 		} else if (item instanceof Multi) {
 			result.addAll( this.findAllTerminal( totalItems, rule, ((Multi)item).getItem() ) );
-		} else if (item instanceof ChoiceSimple) {
-			for(Concatenation ti : ((ChoiceSimple)item).getAlternative()) {
+		} else if (item instanceof AbstractChoice) {
+			for(Concatenation ti : ((AbstractChoice)item).getAlternative()) {
 				result.addAll( this.findAllTerminal( totalItems, rule, ti ) );
 			}
 		} else if (item instanceof Concatenation) {

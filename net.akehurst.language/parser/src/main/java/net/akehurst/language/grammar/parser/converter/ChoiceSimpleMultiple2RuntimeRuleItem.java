@@ -28,7 +28,7 @@ import net.akehurst.transform.binary.Relation;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;
 
-public class ChoiceMultiple2RuntimeRuleItem extends AbstractChoice2RuntimeRuleItem<ChoiceSimple> {
+public class ChoiceSimpleMultiple2RuntimeRuleItem extends AbstractChoice2RuntimeRuleItem<ChoiceSimple> {
 
 	@Override
 	public boolean isValidForLeft2Right(ChoiceSimple left) {
