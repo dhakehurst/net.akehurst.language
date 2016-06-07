@@ -22,7 +22,7 @@ import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.parser.RuleNotFoundException;
-import net.akehurst.language.grammar.parser.ScannerLessParser;
+import net.akehurst.language.grammar.parser.ScannerLessParser2;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 import net.akehurst.language.grammar.parser.forrest.ForrestFactory;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
@@ -55,7 +55,7 @@ public class OGLParser_Test {
 	IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
 		try {
 			INodeType goal = grammar.findRule(goalName).getNodeType();
-			IParser parser = new ScannerLessParser(this.parseTreeFactory, grammar);
+			IParser parser = new ScannerLessParser2(this.parseTreeFactory, grammar);
 			IParseTree tree = parser.parse(goal, text);
 			return tree;
 		} catch (RuleNotFoundException e) {
@@ -92,7 +92,7 @@ public class OGLParser_Test {
 			Assert.assertNotNull(tree);
 			ToStringVisitor v = new ToStringVisitor("","");
 			String st = tree.accept(v, "");
-			Assert.assertEquals("{*grammarDefinition 1, 17}",st);
+			Assert.assertEquals("{*grammarDefinition (2,1,17,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected =

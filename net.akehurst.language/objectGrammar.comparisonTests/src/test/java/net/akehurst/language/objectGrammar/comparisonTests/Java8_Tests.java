@@ -1,12 +1,9 @@
 package net.akehurst.language.objectGrammar.comparisonTests;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,8 +13,6 @@ import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.parser.RuleNotFoundException;
-import net.akehurst.language.grammar.parser.ScannerLessParser;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;

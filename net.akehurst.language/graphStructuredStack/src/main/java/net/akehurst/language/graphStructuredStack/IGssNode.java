@@ -13,9 +13,10 @@ public interface IGssNode<K,V> {
 	 * 
 	 * @param key
 	 * @param value
+	 * @return new node that was pushed
 	 */
-	void push(K key, V value);
-	void duplicate(K key, V value);
+	IGssNode<K,V> push(K key, V value);
+	IGssNode<K,V> duplicate(K key, V value);
 	
 	/**
 	 * Replace this node with the new values
@@ -24,7 +25,7 @@ public interface IGssNode<K,V> {
 	 * @param key
 	 * @param value
 	 */
-	void replace(K key, V value);
+	IGssNode<K,V> replace(K key, V value);
 	
 	List<IGssNode<K, V>> next();
 	List<IGssNode<K, V>> previous();

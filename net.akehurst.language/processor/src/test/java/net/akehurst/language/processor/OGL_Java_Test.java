@@ -23,7 +23,7 @@ import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.parser.RuleNotFoundException;
-import net.akehurst.language.grammar.parser.ScannerLessParser;
+import net.akehurst.language.grammar.parser.ScannerLessParser2;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 import net.akehurst.language.grammar.parser.forrest.ForrestFactory;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
@@ -65,7 +65,7 @@ public class OGL_Java_Test {
 	IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
 		try {
 			INodeType goal = grammar.findRule(goalName).getNodeType();
-			IParser parser = new ScannerLessParser(this.parseTreeFactory, grammar);
+			IParser parser = new ScannerLessParser2(this.parseTreeFactory, grammar);
 			IParseTree tree = parser.parse(goal, text);
 			return tree;
 		} catch (RuleNotFoundException e) {

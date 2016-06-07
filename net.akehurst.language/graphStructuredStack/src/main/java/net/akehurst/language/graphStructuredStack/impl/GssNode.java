@@ -31,7 +31,7 @@ public class GssNode<K, V> implements IGssNode<K, V> {
 	}
 
 	@Override
-	public void push(K key, V value) {
+	public IGssNode<K, V> push(K key, V value) {
 		GssNode<K, V> next = this.gss.newNode(key, value);
 		next.previous().add(this);
 		this.next().add(next);
@@ -40,10 +40,11 @@ public class GssNode<K, V> implements IGssNode<K, V> {
 			gss.getTops().remove(this);
 			gss.getTops().add(next);
 		}
+		return next;
 	}
 
 	@Override
-	public void duplicate(K key, V value) {
+	public IGssNode<K,V> duplicate(K key, V value) {
 		GssNode<K, V> n2 = this.gss.newNode(key, value);
 		n2.previous().addAll(this.previous());
 		n2.next().addAll(this.next());
@@ -52,17 +53,18 @@ public class GssNode<K, V> implements IGssNode<K, V> {
 			p.next().add(n2);
 		}
 		
-		for(IGssNode<K, V> p: this.next() ) {
+		for(IGssNode<K, V> p: this.next() ) { //TODO: should we modify the nexts? maybe not!
 			p.previous().add(n2);
 		}
 		
 		if (gss.getTops().contains(this)) {
 			gss.getTops().add(n2);
 		}
+		return n2;
 	}
 	
 	@Override
-	public void replace(K key, V value) {
+	public IGssNode<K,V> replace(K key, V value) {
 		GssNode<K, V> n2 = this.gss.newNode(key, value);
 		n2.previous().addAll(this.previous());
 		n2.next().addAll(this.next());
@@ -81,6 +83,7 @@ public class GssNode<K, V> implements IGssNode<K, V> {
 			this.gss.getTops().remove(this);
 			this.gss.getTops().add(n2);
 		}
+		return n2;
 	}
 	
 	List<IGssNode<K, V>> next;
