@@ -40,7 +40,7 @@ public class PriorityChoice2RuntimeRuleItem extends AbstractChoice2RuntimeRuleIt
 	public RuntimeRuleItem constructLeft2Right(ChoicePriority left, Transformer transformer) {
 		Converter converter = (Converter)transformer;
 		int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
-		RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.CHOICE);
+		RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.PRIORITY_CHOICE);
 		return right;
 	}
 	

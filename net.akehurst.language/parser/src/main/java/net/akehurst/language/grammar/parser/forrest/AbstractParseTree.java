@@ -515,6 +515,9 @@ public abstract class AbstractParseTree implements IParseTree {
 		switch (runtimeRule.getRhs().getKind()) {
 			case CHOICE:
 				return this.growChoice(runtimeRule);
+			case PRIORITY_CHOICE:
+				break; //unsupported
+				//return this.growChoice(runtimeRule);
 			case CONCATENATION:
 				return this.growConcatenation(runtimeRule);
 			case MULTI:

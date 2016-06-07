@@ -27,8 +27,18 @@ public class ParseTreeBud2 extends AbstractParseTree2 {
 	}
 	
 	@Override
+	public boolean hasNextExpectedItem() {
+		return false;
+	}
+	
+	@Override
 	public RuntimeRule getNextExpectedItem() {
 		throw new RuntimeException("Internal Error: Should never happen");
 	}
 
+	@Override
+	public String toString() {
+		return this.identifier + this.getRuntimeRule().getTerminalPatternText();
+	}
+	
 }

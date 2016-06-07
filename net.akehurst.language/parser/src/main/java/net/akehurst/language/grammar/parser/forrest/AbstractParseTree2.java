@@ -19,6 +19,7 @@ public class AbstractParseTree2 implements IParseTree {
 		this.identifier = new NodeIdentifier(root, nextItemIndex);
 	}
 
+	public abstract boolean hasNextExpectedItem();
 	public abstract RuntimeRule getNextExpectedItem();
 	
 	Node root;

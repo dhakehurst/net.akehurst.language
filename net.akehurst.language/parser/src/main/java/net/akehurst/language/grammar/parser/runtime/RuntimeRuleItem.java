@@ -61,10 +61,15 @@ public class RuntimeRuleItem {
 	public RuntimeRule[] getItemAt(int n) {
 		ArrayList<RuntimeRule> result = new ArrayList<RuntimeRule>();
 		switch(this.getKind())  {
+			case EMPTY: break;
+			case PRIORITY_CHOICE: {
+				if (0==n) {
+					result.addAll( Arrays.asList(this.getItems()) );
+				} else {
+					throw new UnsupportedOperationException("this is not implemented yet!");
+				}
+			} break;
 			case CHOICE: {
-//				for(RuntimeRule rr: this.getItems()) {
-//					result.addAll( Arrays.asList(rr.getRhs().getItemAt(n)) );
-//				}
 				if (0==n) {
 					result.addAll( Arrays.asList(this.getItems()) );
 				} else {

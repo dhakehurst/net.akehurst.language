@@ -46,7 +46,7 @@ import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
-public class XScannerLessParser implements IParser {
+public class ScannerLessParser implements IParser {
 
 	public final static String START_SYMBOL = "\uE000";
 	public final static TerminalLiteral START_SYMBOL_TERMINAL = new TerminalLiteral(START_SYMBOL);

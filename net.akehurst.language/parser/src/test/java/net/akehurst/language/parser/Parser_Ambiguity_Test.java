@@ -690,7 +690,7 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 		b.rule("block").concatenation(new TerminalLiteral("{"), new NonTerminal("decls"), new TerminalLiteral("}"));
 		b.rule("decls").multi(0, -1, new NonTerminal("decl"));
 		b.rule("decl").concatenation(new NonTerminal("type"), new NonTerminal("name"), new TerminalLiteral(";"));
-		b.rule("type").choice(new NonTerminal("name"), new TerminalLiteral("int"));
+		b.rule("type").choice(new NonTerminal("name"),new TerminalLiteral("int"));
 		b.rule("name").choice(new TerminalPattern("[a-zA-Z0-9]+"));
 		return b.get();
 	}

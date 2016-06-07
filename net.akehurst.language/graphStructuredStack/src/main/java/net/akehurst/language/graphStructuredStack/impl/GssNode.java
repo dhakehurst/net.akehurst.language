@@ -123,6 +123,6 @@ public class GssNode<K, V> implements IGssNode<K, V> {
 	
 	@Override
 	public String toString() {
-		return this.getKey().toString() + "="+this.getValue().toString();
+		return this.getKey().toString() + "="+this.getValue().toString() + "["+System.identityHashCode(this)+"]";
 	}
 }

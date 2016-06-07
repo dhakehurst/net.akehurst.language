@@ -16,5 +16,5 @@
 package net.akehurst.language.grammar.parser.runtime;
 
 public enum RuntimeRuleItemKind {
-	EMPTY, CHOICE, CONCATENATION, MULTI, SEPARATED_LIST
+	EMPTY, CHOICE, PRIORITY_CHOICE, CONCATENATION, MULTI, SEPARATED_LIST
 }
