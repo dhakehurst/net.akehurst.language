@@ -17,6 +17,7 @@ import net.akehurst.language.grammar.parse.tree.Branch;
 import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parse.tree.Node;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
+import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet;
 import net.akehurst.language.graphStructuredStack.IGraphStructuredStack;
@@ -65,11 +66,11 @@ public class Forrest2 {
 	}
 
 	public boolean getCanGrow() {
-//		boolean b = false;
-//		for (IGssNode<NodeIdentifier, AbstractParseTree2> n : this.gss.getTops()) {
-//			b = b || this.getCanGrow(n);
-//		}
-//		return b;
+		// boolean b = false;
+		// for (IGssNode<NodeIdentifier, AbstractParseTree2> n : this.gss.getTops()) {
+		// b = b || this.getCanGrow(n);
+		// }
+		// return b;
 		return !this.gss.getTops().isEmpty();
 	}
 
@@ -276,7 +277,7 @@ public class Forrest2 {
 				ArrayList<IGssNode<NodeIdentifier, AbstractParseTree2>> pts = this.tryGraftInto(tree, parentNode);
 				result.addAll(pts);
 			} else {
-				//can't push back
+				// can't push back
 			}
 		}
 		return result;
@@ -457,8 +458,18 @@ public class Forrest2 {
 		INode[] children = new INode[] { tree.getRoot() };
 		ParseTreeBranch2 newTree = this.ffactory.fetchOrCreateBranch(target, children, 1);
 		if (this.getHasPotential(newTree, gssnode.previous())) {
-			IGssNode<NodeIdentifier, AbstractParseTree2> nn = gssnode.replace(newTree.getIdentifier(), newTree);
-			return nn;
+			if (target.getRhs().getKind() == RuntimeRuleItemKind.PRIORITY_CHOICE) {
+				IGssNode<NodeIdentifier, AbstractParseTree2> existing = this.gss.peek(newTree.getIdentifier());
+				if (null == existing) {
+					IGssNode<NodeIdentifier, AbstractParseTree2> nn = gssnode.replace(newTree.getIdentifier(), newTree);
+					return nn;
+				} else {
+					
+				}
+			} else {
+				IGssNode<NodeIdentifier, AbstractParseTree2> nn = gssnode.replace(newTree.getIdentifier(), newTree);
+				return nn;
+			}
 		} else {
 			return null;
 		}
