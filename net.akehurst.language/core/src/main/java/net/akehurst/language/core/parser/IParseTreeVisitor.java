@@ -15,6 +15,14 @@
  */
 package net.akehurst.language.core.parser;
 
+/**
+ * 
+ * @author akehurst
+ *
+ * @param <T> result type of visit methods
+ * @param <A> parameter type for visit methods
+ * @param <E> exception type for visit methods
+ */
 public interface IParseTreeVisitor<T, A extends Object, E extends Throwable> {
 
 	T visit(IParseTree target, A arg) throws E;

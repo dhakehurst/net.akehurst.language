@@ -75,8 +75,13 @@ public class GraphStructuredStack<K, V> implements IGraphStructuredStack<K, V> {
 		for(IGssNode<K, V> n : this.getTops()) {
 			out += n;
 			while(n.hasPrevious()) {
-				n = n.previous().get(0); //TODO: handle multiple
-				out += " -> " + n;
+				if (n.previous().size() > 1) {
+					n = n.previous().get(0); //TODO: handle multiple
+					out += " ->* " + n;					
+				} else {
+					n = n.previous().get(0); //TODO: handle multiple
+					out += " -> " + n;
+				}
 			}
 			out += System.lineSeparator();
 		}

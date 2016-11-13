@@ -53,9 +53,9 @@ public class GssNode<K, V> implements IGssNode<K, V> {
 			p.next().add(n2);
 		}
 		
-		for(IGssNode<K, V> p: this.next() ) { //TODO: should we modify the nexts? maybe not!
-			p.previous().add(n2);
-		}
+//		for(IGssNode<K, V> p: this.next() ) { //TODO: should we modify the nexts? maybe not!
+//			p.previous().add(n2);
+//		}
 		
 		if (gss.getTops().contains(this)) {
 			gss.getTops().add(n2);

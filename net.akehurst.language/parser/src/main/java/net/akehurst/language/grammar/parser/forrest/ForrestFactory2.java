@@ -53,9 +53,9 @@ public class ForrestFactory2 {
 		return bud;
 	}
 	
-	public ParseTreeBranch2 fetchOrCreateBranch(RuntimeRule runtimeRule, INode[] children, int nextItemIndex) {
+	public ParseTreeBranch2 fetchOrCreateBranch(RuntimeRule runtimeRule, int priority, INode[] children, int nextItemIndex) {
 		Branch newBranch = this.runtimeBuilder.createBranch(runtimeRule, children);
-		ParseTreeBranch2 newTree = new ParseTreeBranch2(newBranch, nextItemIndex, this.input.getLength());
+		ParseTreeBranch2 newTree = new ParseTreeBranch2(newBranch, priority, nextItemIndex, this.input.getLength());
 		return newTree;
 	}
 	

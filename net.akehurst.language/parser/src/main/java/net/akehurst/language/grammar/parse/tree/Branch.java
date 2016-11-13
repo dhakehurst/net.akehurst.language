@@ -30,7 +30,7 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class Branch extends Node implements IBranch {
 
-	Branch(final RuntimeRule runtimeRule, final INode[] children) {
+	public Branch(final RuntimeRule runtimeRule, final INode[] children) {
 		super(runtimeRule);
 		this.children = children;
 		this.start = this.children[0].getStart();

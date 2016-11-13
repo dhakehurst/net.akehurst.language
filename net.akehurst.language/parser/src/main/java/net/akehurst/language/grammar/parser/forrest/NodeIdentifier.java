@@ -27,11 +27,11 @@ import net.akehurst.language.grammar.parse.tree.Node;
 // as children can be different
 public class NodeIdentifier {
 
-	public NodeIdentifier(Node node, int nextItemIndex) {
+	public NodeIdentifier(int ruleNumber, int start, int end, int nextItemIndex) {
 //		this.node = node;
-		this.ruleNumber = node.getRuntimeRule().getRuleNumber();
-		this.start = node.getStart();
-		this.end = node.getEnd();
+		this.ruleNumber = ruleNumber;
+		this.start = start;
+		this.end = end;
 		this.nextItemIndex = nextItemIndex;
 //		this.childrenHash_cache = 0;
 //		if (node instanceof Branch) {

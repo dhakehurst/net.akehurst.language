@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.grammar.parser.runtime;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -91,6 +92,10 @@ public class RuntimeRule {
 		return this.getRhs().getItems()[index];
 	}
 
+	public int getRhsIndexOf(RuntimeRule rule) {
+		return Arrays.asList(this.getRhs().getItems()).indexOf(rule);
+	}
+	
 	public RuntimeRule getSeparator() {
 		return this.getRhsItem(1);
 	}

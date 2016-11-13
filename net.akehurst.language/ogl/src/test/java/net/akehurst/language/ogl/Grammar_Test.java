@@ -51,7 +51,6 @@ public class Grammar_Test {
 		b.rule("world").concatenation(new TerminalLiteral("world!"));
 		Grammar g = b.get();
 	}
-	
-	
+
 
 }

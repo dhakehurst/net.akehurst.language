@@ -262,6 +262,11 @@ public class Forrest2 {
 		return tree.getIsComplete() && !this.getIsStacked(n) && (runtimeRuleSet.getRuleNumber("$goal$") == tree.getRuntimeRule().getRuleNumber());
 	}
 
+	protected boolean getIsGoal(AbstractParseTree2 tree) {
+		// TODO: this use of constant is not reliable / appropriate
+		return tree.getIsComplete() && (runtimeRuleSet.getRuleNumber("$goal$") == tree.getRuntimeRule().getRuleNumber());
+	}
+	
 	protected boolean getIsStacked(IGssNode<NodeIdentifier, AbstractParseTree2> n) {
 		return null == n ? false : n.hasPrevious();
 	}
@@ -290,12 +295,16 @@ public class Forrest2 {
 			AbstractParseTree2 parent = parentNode.getValue();
 			if (parent.getNextExpectedItem().getRuleNumber() == tree.getRuntimeRule().getRuleNumber()) {
 				IGssNode<NodeIdentifier, AbstractParseTree2> extended = this.extendWith(parentNode, tree);
-				result.add(extended);
+				if (null!=extended) {
+					result.add(extended);
+				}
 			} else if (tree.getIsSkip()) {
 				IGssNode<NodeIdentifier, AbstractParseTree2> extended = this.extendWith(parentNode, tree);
-				result.add(extended);
+				if (null!=extended) {
+					result.add(extended);
+				}
 			} else {
-				//
+				//drop
 			}
 			return result;
 		} catch (ParseTreeException e) {
@@ -307,20 +316,26 @@ public class Forrest2 {
 			throws ParseTreeException {
 		AbstractParseTree2 parent = parentNode.getValue();
 		INode[] nc = this.addChild((Branch) parent.getRoot(), extension.getRoot());
+		//priority doesn't change
+		int priority = parent.getPriority();
 		if (extension.getIsSkip()) {
-			ParseTreeBranch2 newBranch = this.ffactory.fetchOrCreateBranch(parent.getRuntimeRule(), nc, parent.nextItemIndex);
+			ParseTreeBranch2 newBranch = this.ffactory.fetchOrCreateBranch(parent.getRuntimeRule(), priority, nc, parent.nextItemIndex);
 			// this.gss.pop(extension.getIdentifier());
 			IGssNode<NodeIdentifier, AbstractParseTree2> nn = parentNode.duplicate(newBranch.getIdentifier(), newBranch);
 			return nn;
 		} else {
-			ParseTreeBranch2 newBranch = this.ffactory.fetchOrCreateBranch(parent.getRuntimeRule(), nc, parent.nextItemIndex + 1);
+			ParseTreeBranch2 newBranch = this.ffactory.fetchOrCreateBranch(parent.getRuntimeRule(), priority, nc, parent.nextItemIndex + 1);
 			// this.gss.pop(extension.getIdentifier());
 			// if(newBranch.getIsComplete()) {
 			// n.replace(newBranch.getIdentifier(), newBranch);
 			// } else {
-			IGssNode<NodeIdentifier, AbstractParseTree2> nn = parentNode.duplicate(newBranch.getIdentifier(), newBranch);
-			// }
-			return nn;
+			if (this.getHasPotential(newBranch, parentNode.previous())) {
+				IGssNode<NodeIdentifier, AbstractParseTree2> nn = parentNode.duplicate(newBranch.getIdentifier(), newBranch);
+				// }
+				return nn;
+			} else {
+				return null;
+			}
 		}
 	}
 
@@ -358,7 +373,7 @@ public class Forrest2 {
 			case CHOICE:
 				return this.growHeightChoice(gssnode, runtimeRule);
 			case PRIORITY_CHOICE:
-				return this.growHeightChoice(gssnode, runtimeRule);
+				return this.growHeightPriorityChoice(gssnode, runtimeRule);
 			case CONCATENATION:
 				return this.growHeightConcatenation(gssnode, runtimeRule);
 			case MULTI:
@@ -389,6 +404,21 @@ public class Forrest2 {
 		return result;
 	}
 
+	ArrayList<IGssNode<NodeIdentifier, AbstractParseTree2>> growHeightPriorityChoice(IGssNode<NodeIdentifier, AbstractParseTree2> gssnode, RuntimeRule target) {
+		AbstractParseTree2 tree = gssnode.getValue();
+		RuntimeRule[] rrs = target.getRhs().getItems(tree.getRuntimeRule().getRuleNumber());
+		ArrayList<IGssNode<NodeIdentifier, AbstractParseTree2>> result = new ArrayList<>();
+		for (int i = 0; i < rrs.length; ++i) {
+			IGssNode<NodeIdentifier, AbstractParseTree2> nn = this.growHeightTree(gssnode, target);
+			if (null == nn) {
+				// has been dropped
+			} else {
+				result.add(nn);
+			}
+		}
+		return result;
+	}
+	
 	ArrayList<IGssNode<NodeIdentifier, AbstractParseTree2>> growHeightConcatenation(IGssNode<NodeIdentifier, AbstractParseTree2> gssnode, RuntimeRule target) {
 		AbstractParseTree2 tree = gssnode.getValue();
 		if (0 == target.getRhs().getItems().length) {
@@ -456,15 +486,26 @@ public class Forrest2 {
 	IGssNode<NodeIdentifier, AbstractParseTree2> growHeightTree(IGssNode<NodeIdentifier, AbstractParseTree2> gssnode, RuntimeRule target) {
 		AbstractParseTree2 tree = gssnode.getValue();
 		INode[] children = new INode[] { tree.getRoot() };
-		ParseTreeBranch2 newTree = this.ffactory.fetchOrCreateBranch(target, children, 1);
+		int priority = target.getRhsIndexOf(tree.getRoot().getRuntimeRule());
+		ParseTreeBranch2 newTree = this.ffactory.fetchOrCreateBranch(target, priority, children, 1);
 		if (this.getHasPotential(newTree, gssnode.previous())) {
 			if (target.getRhs().getKind() == RuntimeRuleItemKind.PRIORITY_CHOICE) {
 				IGssNode<NodeIdentifier, AbstractParseTree2> existing = this.gss.peek(newTree.getIdentifier());
+				//TODO:
 				if (null == existing) {
 					IGssNode<NodeIdentifier, AbstractParseTree2> nn = gssnode.replace(newTree.getIdentifier(), newTree);
 					return nn;
 				} else {
-					
+					//lower value is higher priority
+					//TODO: don't think this is correct
+					if ( newTree.getPriority() < existing.getValue().getPriority() ) {
+						existing.replace(newTree.getIdentifier(), newTree);
+						IGssNode<NodeIdentifier, AbstractParseTree2> nn = gssnode.replace(newTree.getIdentifier(), newTree);
+						return nn;
+					} else {
+						IGssNode<NodeIdentifier, AbstractParseTree2> nn = existing;//gssnode.replace(newTree.getIdentifier(), newTree);
+						return nn;
+					}
 				}
 			} else {
 				IGssNode<NodeIdentifier, AbstractParseTree2> nn = gssnode.replace(newTree.getIdentifier(), newTree);
@@ -502,6 +543,9 @@ public class Forrest2 {
 	 * @return
 	 */
 	public boolean getHasPotential(AbstractParseTree2 tree, List<IGssNode<NodeIdentifier, AbstractParseTree2>> stackedTreeNodes) {
+		if(this.getIsGoal(tree)) { //TODO: not sure we should do this test here
+			return true;
+		} else {
 		if ((!tree.getCanGrowWidth() && stackedTreeNodes.isEmpty())) { // !this.getCanGrow(tree)) {
 			return false;
 		} else {
@@ -535,5 +579,14 @@ public class Forrest2 {
 
 			}
 		}
+		}
+	}
+	
+	
+	
+	@Override
+	public String toString() {
+		
+		return this.goals + System.lineSeparator() + this.gss;
 	}
 }

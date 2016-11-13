@@ -26,6 +26,7 @@ import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.grammar.parser.ScannerLessParser2;
+import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 
@@ -36,7 +37,7 @@ public class LanguageProcessor implements ILanguageProcessor {
 		this.defaultGoalName = defaultGoalName;
 //		this.lexicalAnalyser = new LexicalAnalyser(grammar.findTokenTypes());
 		this.parseTreeFactory = new RuntimeRuleSetBuilder();
-		this.parser = new ScannerLessParser2(this.parseTreeFactory, grammar);
+		this.parser = new ScannerLessParser3(this.parseTreeFactory, grammar);
 		this.semanticAnalyser = semanticAnalyser;
 	}
 

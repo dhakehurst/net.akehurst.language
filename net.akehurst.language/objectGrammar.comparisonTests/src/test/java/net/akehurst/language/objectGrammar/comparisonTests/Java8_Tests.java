@@ -13,6 +13,7 @@ import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.grammar.parser.ParseTreeToString;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;
@@ -62,25 +63,25 @@ public class Java8_Tests {
 	}
 
 	static ILanguageProcessor getJavaProcessor(String goalName) {
-			try {
-				String grammarText = new String(Files.readAllBytes(Paths.get("src/test/grammar/Java8.og")));
-				Grammar javaGrammar = getOGLProcessor().process(grammarText, Grammar.class);
-				LanguageProcessor jp = new LanguageProcessor(javaGrammar, goalName, null);
-				jp.getParser().build(jp.getDefaultGoal());
-				return jp;
-			} catch (IOException e) {
-				e.printStackTrace();
-				Assert.fail(e.getMessage());
-			} catch (ParseFailedException e) {
-				e.printStackTrace();
-				Assert.fail(e.getMessage());
-			} catch (UnableToAnalyseExeception e) {
-				e.printStackTrace();
-				Assert.fail(e.getMessage());
-			}
-return null;
+		try {
+			String grammarText = new String(Files.readAllBytes(Paths.get("src/test/grammar/Java8.og")));
+			Grammar javaGrammar = getOGLProcessor().process(grammarText, Grammar.class);
+			LanguageProcessor jp = new LanguageProcessor(javaGrammar, goalName, null);
+			jp.getParser().build(jp.getDefaultGoal());
+			return jp;
+		} catch (IOException e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		} catch (ParseFailedException e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		} catch (UnableToAnalyseExeception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+		return null;
 	}
-	
+
 	String toString(Path file) {
 		try {
 			byte[] bytes = Files.readAllBytes(file);
@@ -98,7 +99,7 @@ return null;
 			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), input);
 			return tree;
 		} catch (ParseFailedException e) {
-			return null;//e.getLongestMatch();
+			return null;// e.getLongestMatch();
 		} catch (ParseTreeException e) {
 			e.printStackTrace();
 		}
@@ -111,13 +112,13 @@ return null;
 			IParseTree tree = getJavaProcessor(goalName).getParser().parse(goalName, input);
 			return tree;
 		} catch (ParseFailedException e) {
-			return null;//e.getLongestMatch();
+			return null;// e.getLongestMatch();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
-	
+
 	@Test
 	public void emptyCompilationUnit() {
 
@@ -151,7 +152,7 @@ return null;
 		Assert.assertNotNull(tree);
 
 	}
-	
+
 	@Test
 	public void trycatch0() {
 
@@ -164,7 +165,7 @@ return null;
 		Assert.assertNotNull(tree);
 
 	}
-	
+
 	@Test
 	public void tryfinally0() {
 
@@ -233,20 +234,22 @@ return null;
 
 	}
 
-	
 	@Test
 	public void manyFields() {
 
 		String input = "class Test {";
 		for (int i = 0; i < 8; ++i) {
-			input += "  Integer i"+i+";";
+			input += "  Integer i" + i + ";";
 		}
 		input += "}";
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);
 
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
 	}
-	
+
 	@Test
 	public void formalParameters() {
 
@@ -260,8 +263,12 @@ return null;
 		}
 		Assert.assertNotNull(tree);
 
+
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
 	}
-	
+
 	@Test
 	public void ISO8859encoding() {
 		String input = "";
@@ -270,8 +277,12 @@ return null;
 		input += "}";
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);
-	}	
-	
+
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
 	@Test
 	public void classBody() {
 
@@ -285,8 +296,12 @@ return null;
 		}
 		Assert.assertNotNull(tree);
 
-	}	
-	
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+
+	}
+
 	@Test
 	public void multipleMethods() {
 
@@ -299,8 +314,12 @@ return null;
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);
 
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+
 	}
-	
+
 	@Test
 	public void abstractGeneric() {
 
@@ -312,6 +331,9 @@ return null;
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);
 
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
 	}
 
 	@Test
@@ -327,6 +349,9 @@ return null;
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);
 
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
 	}
 
 	@Test
@@ -344,26 +369,31 @@ return null;
 		input += "  }";
 		input += "}";
 		IParseTree tree = parse(input);
+
 		Assert.assertNotNull(tree);
 
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+
 	}
-	
+
 	@Test
 	public void stringLiteral() {
 		String input = "";
 		input += "\"xxxx\"";
 		IParseTree tree = parse("StringLiteral", input);
-		Assert.assertNotNull(tree);		
+		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void localStringVariableDeclarationStatement() {
 		String input = "";
 		input += "String s = \"xxxx\";";
-		IParseTree tree = parse("localVariableDeclarationStatement",input);
+		IParseTree tree = parse("localVariableDeclarationStatement", input);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void stringMemberInitialised() {
 		String input = "";
@@ -373,7 +403,7 @@ return null;
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void T6257443() {
 
@@ -398,29 +428,29 @@ return null;
 		Assert.assertNotNull(tree);
 
 	}
-	
+
 	@Test
 	public void switchLabel() {
 		String input = "";
 		input += "  case 1:";
-		IParseTree tree = parse("switchLabel",input);
+		IParseTree tree = parse("switchLabel", input);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void switchStatement() {
 		String input = "";
 		input += "switch (i) {";
 		input += "  case 1:";
 		input += "    i++;";
-		input += "    // fallthrough"+ System.lineSeparator();
+		input += "    // fallthrough" + System.lineSeparator();
 		input += "  default:";
 		input += "}";
 
-		IParseTree tree = parse("switchStatement",input);
+		IParseTree tree = parse("switchStatement", input);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void T6304921() {
 		String input = "";
@@ -431,26 +461,26 @@ return null;
 		input += "      switch (i) {";
 		input += "        case 1:";
 		input += "           i++;";
-		input += "           // fallthrough"+ System.lineSeparator();
+		input += "           // fallthrough" + System.lineSeparator();
 		input += "        default:";
 		input += "      }";
-        input += "    }";
+		input += "    }";
 		input += "    void m2() {";
 		input += "      List<Integer> list = new ArrayList();";
 		input += "    }";
 		input += "}";
 		input += "class X {";
 		input += "    void m1() {";
-		input += "      System.err.println(\"abc\"); // name not found"+ System.lineSeparator();
+		input += "      System.err.println(\"abc\"); // name not found" + System.lineSeparator();
 		input += "    }";
 		input += "    boolean m2() {";
-		input += "      return 123 + true; // bad binary expression"+ System.lineSeparator();
+		input += "      return 123 + true; // bad binary expression" + System.lineSeparator();
 		input += "    }";
 		input += "}";
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void singleLineComment() {
 		String input = "";
@@ -459,5 +489,5 @@ return null;
 		input += "}";
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);
-	}	
+	}
 }

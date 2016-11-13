@@ -24,6 +24,7 @@ import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.grammar.parser.ScannerLessParser2;
+import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 import net.akehurst.language.grammar.parser.forrest.ForrestFactory;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
@@ -65,7 +66,7 @@ public class OGL_Java_Test {
 	IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
 		try {
 			INodeType goal = grammar.findRule(goalName).getNodeType();
-			IParser parser = new ScannerLessParser2(this.parseTreeFactory, grammar);
+			IParser parser = new ScannerLessParser3(this.parseTreeFactory, grammar);
 			IParseTree tree = parser.parse(goal, text);
 			return tree;
 		} catch (RuleNotFoundException e) {
@@ -205,6 +206,19 @@ public class OGL_Java_Test {
 		Assert.assertNotNull(tree);
 	}
 	
+	@Test
+	public void java4_type_int() {
+		String text = "int";
+		IParseTree tree = this.parse("src/test/resources/Java4.og", "type", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java4_type_Integer() {
+		String text = "Integer";
+		IParseTree tree = this.parse("src/test/resources/Java4.og", "type", text);
+		Assert.assertNotNull(tree);
+	}
 	
 	@Test
 	public void java() {

@@ -6,8 +6,8 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class ParseTreeBranch2 extends AbstractParseTree2 {
 
-	public ParseTreeBranch2(Node root, int nextItemIndex, int inputLength) {
-		super(root, nextItemIndex);
+	public ParseTreeBranch2(Node root, int priority, int nextItemIndex, int inputLength) {
+		super(root, priority, nextItemIndex);
 		this.isComplete = this.calculateIsComplete();
 		this.canGrowWidth = this.calculateCanGrowWidth(inputLength);
 	}
@@ -77,9 +77,7 @@ public class ParseTreeBranch2 extends AbstractParseTree2 {
 			case PRIORITY_CHOICE:
 				return true;
 			case CONCATENATION: {
-				return this.getRuntimeRule().getRhs().getItems().length <= this.nextItemIndex || this.nextItemIndex == -1; // the -1 is used when creating dummy
-																															// branch...should really need the
-																															// test here!
+				return this.getRuntimeRule().getRhs().getItems().length <= this.nextItemIndex || this.nextItemIndex == -1; // the -1 is used when creating dummy																											// test here!
 			}
 			case MULTI: {
 				int size = this.nextItemIndex;
@@ -151,4 +149,5 @@ public class ParseTreeBranch2 extends AbstractParseTree2 {
 		}
 		throw new RuntimeException("Internal Error: rule kind not recognised");
 	}
+
 }

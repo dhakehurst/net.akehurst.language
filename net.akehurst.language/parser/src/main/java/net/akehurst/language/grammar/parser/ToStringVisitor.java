@@ -38,7 +38,8 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 	@Override
 	public String visit(IParseTree target, String indent) throws RuntimeException {
 		String s = indent;
-		AbstractParseTree t = (AbstractParseTree) target;
+		//AbstractParseTree t = (AbstractParseTree) target;
+		IParseTree t = target;
 		s += "{" + (target.getIsComplete() ? "*" : "+") + (target.getCanGrowWidth() ? "?" : "") + target.getRoot().getName() + " " + t.identifier + getStackRootsAsString(target) + "}";
 		// s += target.getRoot().accept(this, indent);
 		return s;

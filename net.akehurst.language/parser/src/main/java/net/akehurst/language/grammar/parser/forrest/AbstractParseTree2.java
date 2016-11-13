@@ -13,8 +13,9 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet;
 abstract
 public class AbstractParseTree2 implements IParseTree {
 
-	public AbstractParseTree2(Node root, int nextItemIndex) {
+	public AbstractParseTree2(Node root, int priority, int nextItemIndex) {
 		this.root = root;
+		this.priority = priority;
 		this.nextItemIndex = nextItemIndex;
 		this.identifier = new NodeIdentifier(root, nextItemIndex);
 	}
@@ -48,6 +49,13 @@ public class AbstractParseTree2 implements IParseTree {
 		return this.getRoot().getRuntimeRule();
 	}
 
+	int priority;
+	public int getPriority() {
+		return this.priority;
+//		Arrays.asList(this.getRuntimeRule().getRhs()).indexOf(this.getRoot().get)
+//		return 0;
+	}
+	
 	@Override
 	public String toString() {
 		return this.identifier + this.getRoot().getName();

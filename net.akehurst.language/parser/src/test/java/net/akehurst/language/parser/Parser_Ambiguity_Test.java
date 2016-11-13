@@ -118,10 +118,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*S (2,1,1,-1)}",st);
-			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
 					b.branch("S",
@@ -144,10 +140,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*S (2,1,2,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -172,10 +164,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*S (2,1,3,-1)}",st);
-			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
 					b.branch("S",
@@ -199,10 +187,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*S (2,1,3,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -231,10 +215,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*fp (2,1,4,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -270,10 +250,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*fp (2,1,7,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -314,10 +290,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*fps.choice1 (2,1,7,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -363,10 +335,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*fps (2,1,7,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -415,10 +383,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*fps (2,1,9,-1)}",st);
-			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
 				b.branch("fps",
@@ -463,10 +427,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*int (2,1,2,-1)}",st);
-			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
 					b.branch("int",
@@ -489,10 +449,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*label (2,1,9,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -523,10 +479,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*labels (2,1,9,-1)}",st);
-			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
 				b.branch("labels",
@@ -556,10 +508,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*labelBlock (2,1,13,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -597,10 +545,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*block (2,1,17,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -649,10 +593,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*block (2,1,13,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -706,10 +646,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*block (2,1,3,-1)}",st);
-			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
 					b.branch("block",
@@ -734,10 +670,6 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*block (2,1,11,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -770,14 +702,10 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 		try {
 			Grammar g = varDeclBlock();
 			String goal = "block";
-			String text = "{ int i1; int i1; int i1; int i1; int i1; int i1; int i1; int i1; }";
+			String text = "{ int i1; int i2; int i3; int i4; int i5; int i6; int i7; int i8; }";
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*block (2,1,68,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
@@ -786,9 +714,58 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 					b.branch("WS", b.leaf("\\s+"," ")),
 					b.branch("decls",
 						b.branch("decl",
-							b.leaf("int"),
+							b.branch("type", b.leaf("int")),
 							b.branch("WS", b.leaf("\\s+"," ")),
-							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i")),
+							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i1")),
+							b.leaf(";")
+						),
+						b.branch("WS", b.leaf("\\s+"," ")),
+						b.branch("decl",
+							b.branch("type", b.leaf("int")),
+							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i2")),
+							b.leaf(";")
+						),
+						b.branch("WS", b.leaf("\\s+"," ")),
+						b.branch("decl",
+							b.branch("type", b.leaf("int")),
+							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i3")),
+							b.leaf(";")
+						),
+						b.branch("WS", b.leaf("\\s+"," ")),
+						b.branch("decl",
+							b.branch("type", b.leaf("int")),
+							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i4")),
+							b.leaf(";")
+						),
+						b.branch("WS", b.leaf("\\s+"," ")),
+						b.branch("decl",
+							b.branch("type", b.leaf("int")),
+							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i5")),
+							b.leaf(";")
+						),
+						b.branch("WS", b.leaf("\\s+"," ")),
+						b.branch("decl",
+							b.branch("type", b.leaf("int")),
+							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i6")),
+							b.leaf(";")
+						),
+						b.branch("WS", b.leaf("\\s+"," ")),
+						b.branch("decl",
+								b.branch("type", b.leaf("int")),
+							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i7")),
+							b.leaf(";")
+						),
+						b.branch("WS", b.leaf("\\s+"," ")),
+						b.branch("decl",
+							b.branch("type", b.leaf("int")),
+							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i8")),
 							b.leaf(";")
 						),
 						b.branch("WS", b.leaf("\\s+"," "))
