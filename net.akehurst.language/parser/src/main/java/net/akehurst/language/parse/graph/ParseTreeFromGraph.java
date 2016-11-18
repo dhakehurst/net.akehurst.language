@@ -14,24 +14,29 @@ public class ParseTreeFromGraph implements IParseTree {
 	public ParseTreeFromGraph(GraphNodeRoot gr) {
 		this.gr = gr;
 	}
-	
+
 	GraphNodeRoot gr;
-	
+
 	@Override
 	public <T, A, E extends Throwable> T accept(IParseTreeVisitor<T, A, E> visitor, A arg) throws E {
 		return visitor.visit(this, arg);
 	}
 
+	Branch root;
+
 	@Override
 	public INode getRoot() {
-		return new Branch(gr.goalRule, createChildNodes(gr.children));
+		if (null == this.root) {
+			this.root = new Branch(gr.goalRule, createChildNodes(gr.children));
+		}
+		return this.root;
 	}
 
 	INode[] createChildNodes(List<IGraphNode> children) {
 		ArrayList<INode> nodes = new ArrayList<>();
-		for(IGraphNode gn:children){
+		for (IGraphNode gn : children) {
 			if (gn.getIsLeaf()) {
-				INode l = ((GraphNodeLeaf)gn).leaf;
+				INode l = ((GraphNodeLeaf) gn).leaf;
 				nodes.add(l);
 			} else {
 				INode n = new Branch(gn.getRuntimeRule(), createChildNodes(gn.getChildren()));
@@ -40,7 +45,7 @@ public class ParseTreeFromGraph implements IParseTree {
 		}
 		return nodes.toArray(new INode[nodes.size()]);
 	}
-	
+
 	@Override
 	public boolean getIsComplete() {
 		// TODO Auto-generated method stub

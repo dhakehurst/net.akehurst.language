@@ -91,9 +91,6 @@ public class OGLParser_Test {
 			IParseTree tree = this.process(g, text, goal);
 
 			Assert.assertNotNull(tree);
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*grammarDefinition (2,1,17,-1)}", st);
 
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = b
