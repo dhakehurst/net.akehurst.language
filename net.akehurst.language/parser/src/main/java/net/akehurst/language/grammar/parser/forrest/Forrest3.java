@@ -446,7 +446,7 @@ public class Forrest3 {
 		// if (null==existing2 || gn.getMatchedTextLength() > existing2.getMatchedTextLength()) {
 		
 		if (this.hasHeightPotential(info.getRuntimeRule(), gn)) {
-		
+
 		newParent = this.graph.createBranch(info.getRuntimeRule(), priority, gn.getStartPosition());
 		newParent.getPrevious().addAll(gn.getPrevious());
 		newParent.addNextChild(gn);
@@ -487,7 +487,29 @@ public class Forrest3 {
 	
 	boolean hasHeightPotential(RuntimeRule newParentRule, IGraphNode child) {
 		if (newParentRule.couldHaveChild(child.getRuntimeRule(), 0)) {
-			return true;
+			if (runtimeRuleSet.getAllSkipTerminals().contains(child.getRuntimeRule())) {
+				return true;
+			} else if (child.getIsStacked()) {
+				RuntimeRule nextExpectedForStacked = child.getPrevious().get(0).node.getNextExpectedItem();
+				if (nextExpectedForStacked.getRuleNumber() == newParentRule.getRuleNumber()) {
+					return true;
+				} else {
+					
+				if (nextExpectedForStacked.getKind() == RuntimeRuleKind.NON_TERMINAL) {
+					List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleSubRule(nextExpectedForStacked));
+					boolean res = possibles.contains(newParentRule);
+					return res;
+				} else {
+					List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleSubTerminal(nextExpectedForStacked));
+					boolean res = possibles.contains(newParentRule);
+					return res;
+				}
+				}
+//				SuperRuleInfo[] infos = runtimeRuleSet.getPossibleSuperRuleInfo(child.getRuntimeRule());
+//				return this.hasStackedPotential(newParentRule, child.getPrevious().get(0).node.getRuntimeRule());
+			} else {
+				return true;
+			}
 		} else {
 			return false;
 		}
@@ -496,7 +518,7 @@ public class Forrest3 {
 	protected IGraphNode pushStackNewRoot(IGraphNode gn, IGraphNode bud) {
 		// ParseTreeBud2 bud = this.ffactory.fetchOrCreateBud(leaf);
 		// if (this.getHasPotential(bud, Arrays.asList(new IGraphNode.PreviousInfo(gn,gn.getNextItemIndex())), gn.getNextItemIndex())) {
-		if (this.hasStackedPotential(bud, gn)) {
+		if (this.hasStackedPotential(bud.getRuntimeRule(), gn.getRuntimeRule())) {
 			IGraphNode nn = gn.pushToStackOf(bud, gn.getNextItemIndex());
 			return nn;
 		} else {
@@ -504,23 +526,20 @@ public class Forrest3 {
 		}
 	}
 
-	boolean hasStackedPotential(IGraphNode gn, IGraphNode stacked) {
-
-		if (gn.getRuntimeRule().getKind() == RuntimeRuleKind.NON_TERMINAL) {
-			// List<RuntimeRule> possibles =
-			// Arrays.asList(runtimeRuleSet.getPossibleSubRule(nextExpectedRule));
-			// List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleFirstSubRule(expectedRule));
-			List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleSubRule(stacked.getRuntimeRule()));
-			boolean res = possibles.contains(gn.getRuntimeRule());
+	boolean hasStackedPotential(RuntimeRule gnRule, RuntimeRule stackedRule) {
+		if (gnRule.getIsSkipRule()) {
+			return true;
+		}
+		
+		if (gnRule.getKind() == RuntimeRuleKind.NON_TERMINAL) {
+			List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleSubRule(stackedRule));
+			boolean res = possibles.contains(gnRule);
 			return res;
-		} else if (runtimeRuleSet.getAllSkipTerminals().contains(gn.getRuntimeRule())) {
+		} else if (runtimeRuleSet.getAllSkipTerminals().contains(gnRule)) {
 			return true;
 		} else {
-			// List<RuntimeRule> possibles =
-			// Arrays.asList(runtimeRuleSet.getPossibleSubTerminal(nextExpectedRule));
-			// List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleFirstTerminals(expectedRule));
-			List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleSubTerminal(stacked.getRuntimeRule()));
-			boolean res = possibles.contains(gn.getRuntimeRule());
+			List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleSubTerminal(stackedRule));
+			boolean res = possibles.contains(gnRule);
 			return res;
 		}
 	}
