@@ -15,8 +15,10 @@
  */
 package net.akehurst.language.grammar.parser.runtime;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import net.akehurst.language.ogl.semanticStructure.Rule;
@@ -95,7 +97,7 @@ public class RuntimeRule {
 	public int getRhsIndexOf(RuntimeRule rule) {
 		return Arrays.asList(this.getRhs().getItems()).indexOf(rule);
 	}
-	
+
 	public RuntimeRule getSeparator() {
 		return this.getRhsItem(1);
 	}
@@ -167,6 +169,45 @@ public class RuntimeRule {
 
 		}
 		return result;
+	}
+
+	/**
+	 * depending on the kind of rule, determine if the given possibleChild rule could be a child at the given position
+	 * 
+	 * @param position
+	 * @return
+	 */
+	public boolean couldHaveChild(RuntimeRule possibleChild, int atPosition) {
+		if (possibleChild.getIsSkipRule()) {
+			return true;
+		} else {
+			switch (this.getRhs().getKind()) {
+				case EMPTY:
+					return false;
+				case CHOICE:
+					return 0 == atPosition ? true : false;
+				case PRIORITY_CHOICE:
+					return 0 == atPosition ? true : false;
+				case CONCATENATION:
+					return atPosition >= this.getRhs().getItems().length ? false : this.getRhsItem(atPosition).getRuleNumber() == possibleChild.getRuleNumber();
+				case MULTI:
+					return this.getRhsItem(0).getRuleNumber() == possibleChild.getRuleNumber()
+					|| (this.getRhs().getMultiMin() == 0 && possibleChild.getIsEmptyRule() && possibleChild.getRuleThatIsEmpty().getRuleNumber()==this.getRuleNumber());
+				case SEPARATED_LIST: {
+					if (possibleChild.getIsEmptyRule()) {
+						return this.getRhs().getMultiMin() == 0 && possibleChild.getRuleThatIsEmpty().getRuleNumber()==this.getRuleNumber();
+					} else {
+						if (atPosition % 2 == 0) {
+							return this.getRhsItem(0).getRuleNumber() == possibleChild.getRuleNumber();
+						} else {
+							return this.getSeparator().getRuleNumber() == possibleChild.getRuleNumber();
+						}
+					}
+				}
+				default:
+					throw new RuntimeException("Internal Error: rule kind not recognised " + this.getRhs().getKind());
+			}
+		}
 	}
 
 	Set<RuntimeRule> findSubRules() {
@@ -247,25 +288,27 @@ public class RuntimeRule {
 		if (0 == n) {
 			switch (this.getRhs().getKind()) {
 				case EMPTY:
-					break;
+				break;
 				case PRIORITY_CHOICE:
-					break;
+				break;
 				case CHOICE:
-					break;
+				break;
 				case CONCATENATION:
-					break;
+				break;
 				case MULTI: {
 					if (0 == this.getRhs().getMultiMin()) {
 						result.add(this.runtimeRuleSet.getEmptyRule(this));
 					}
-				} break;
+				}
+				break;
 				case SEPARATED_LIST: {
 					if (0 == this.getRhs().getMultiMin()) {
 						result.add(this.runtimeRuleSet.getEmptyRule(this));
 					}
-				} break;
+				}
+				break;
 				default:
-					break;
+				break;
 
 			}
 		}

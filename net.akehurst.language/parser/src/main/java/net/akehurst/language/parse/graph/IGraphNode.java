@@ -1,15 +1,17 @@
 package net.akehurst.language.parse.graph;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.parse.graph.AbstractGraphNode.ParentsIndex;
 
 public interface IGraphNode {
 
-	NodeIdentifier getIdentifier();
 
 	RuntimeRule getRuntimeRule();
 
@@ -17,7 +19,12 @@ public interface IGraphNode {
 
 	int getStartPosition();
 
-	int getEndPosition();
+
+	int getNextItemIndex();
+	
+//	int getEndPosition();
+	
+	int getNextInputPosition();
 
 	int getMatchedTextLength();
 	
@@ -52,31 +59,63 @@ public interface IGraphNode {
 
 	RuntimeRule getNextExpectedItem();
 
+	RuntimeRule getExpectedItemAt(int atPosition);
+	
+	Map<ParentsIndex, IGraphNode> getParents();
+//	void addParent(GraphNodeBranch graphNodeBranch, int nextItemIndex);
+	
 	List<IGraphNode> getChildren();
 
 	
 	/**
-	 * push this node onto the stack of next
+	 * push this node onto the stack of next, where net would fit into this 'atPosition'
 	 * 
 	 * @param next
 	 * @return next with this node as its stack
 	 */
-	IGraphNode pushToStackOf(IGraphNode next);
+	IGraphNode pushToStackOf(IGraphNode next, int atPosition);
 
 	/**
 	 * return list of things that are stacked previous to this one
 	 * 
 	 * @return
 	 */
-	List<IGraphNode> getPrevious();
+	List<PreviousInfo> getPrevious();
+	static final class PreviousInfo {
+		public PreviousInfo(IGraphNode node, int atPosition) {
+			this.node = node;
+			this.atPosition = atPosition;
+			this.hashCode_cache = Objects.hash(node, atPosition);
+		}
+		public IGraphNode node;
+		public int atPosition;
+		
+		int hashCode_cache;
+		@Override
+		public int hashCode() {
+			return this.hashCode_cache;
+		}
+		@Override
+		public boolean equals(Object arg) {
+			if (!(arg instanceof PreviousInfo)) {
+				return false;
+			}
+			PreviousInfo other = (PreviousInfo)arg;
+			return this.atPosition == other.atPosition && this.node==other.node;
+		}
+		@Override
+		public String toString() {
+			return "(".concat(Integer.toString(this.atPosition)).concat(",").concat(this.node.toString()).concat(")");
+		}
+	}
 
-	IGraphNode addChild(IGraphNode gn);
+	IGraphNode addNextChild(IGraphNode gn);
 
 	IGraphNode addSkipChild(IGraphNode gn);
 
 	IGraphNode replace(IGraphNode newNode);
 
-
+	IGraphNode duplicate();
 
 
 }

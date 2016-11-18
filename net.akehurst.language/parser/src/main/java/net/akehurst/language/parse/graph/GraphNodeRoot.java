@@ -13,4 +13,6 @@ public class GraphNodeRoot {
 	}
 	RuntimeRule goalRule;
 	List<IGraphNode> children;
+	
+	
 }

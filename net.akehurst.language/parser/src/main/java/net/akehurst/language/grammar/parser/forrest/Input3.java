@@ -124,7 +124,7 @@ public class Input3 implements IInput {
 				this.leaf_cache.put(key, leaf);
 				return leaf;
 			} else {
-				this.leaf_cache.put(key, NO_LEAF);
+				this.leaf_cache.put(key, null);
 				return null;
 			}
 		} else {

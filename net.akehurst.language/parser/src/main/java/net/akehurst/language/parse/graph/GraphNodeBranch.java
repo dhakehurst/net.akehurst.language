@@ -1,6 +1,7 @@
 package net.akehurst.language.parse.graph;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import net.akehurst.language.core.parser.INode;
@@ -9,34 +10,49 @@ import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 
-public class GraphNodeBranch implements IGraphNode {
+public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 
-	public GraphNodeBranch(IParseGraph graph, RuntimeRule rr, int priority, IGraphNode firstChild, int nextItemIndex) {
+	public GraphNodeBranch(IParseGraph graph, RuntimeRule rr, int priority, int startPosition) {
 		this.graph = graph;
 		this.runtimeRule = rr;
 		this.priority = priority;
 		this.children = new ArrayList<>();
-		this.children.add(firstChild);
-		this.nextItemIndex = nextItemIndex;
-		this.identifier = new NodeIdentifier(rr.getRuleNumber(), firstChild.getStartPosition(), firstChild.getEndPosition(), nextItemIndex);
-		this.previous = new ArrayList<>();
+//		this.children.add(firstChild);
+		this.nextItemIndex = 0;//nextItemIndex;
+//		this.identifier = new NodeIdentifier(rr.getRuleNumber(), firstChild.getStartPosition());// , firstChild.getEndPosition(), nextItemIndex);
+		this.startPosition = startPosition;
+//		this.nextInputPosition = firstChild.getNextInputPosition();
+//		this.currentLength = firstChild.getMatchedTextLength();
+//		firstChild.addParent(this, 0);
+
 	}
 
 	IParseGraph graph;
 	RuntimeRule runtimeRule;
 	int priority;
+	int startPosition;
+	int currentLength;
 	List<IGraphNode> children;
 	int nextItemIndex;
-
-	List<IGraphNode> previous;
-
-	NodeIdentifier identifier;
+	int nextInputPosition;
 
 	@Override
-	public NodeIdentifier getIdentifier() {
-		return this.identifier;
+	public IGraphNode duplicate() {
+		GraphNodeBranch duplicate = (GraphNodeBranch)this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition);
+		duplicate.currentLength = this.currentLength;
+		duplicate.nextInputPosition = this.nextInputPosition;
+		duplicate.nextItemIndex = this.nextItemIndex;
+		duplicate.parents = new HashMap<>(this.parents);
+		duplicate.children = new ArrayList<>(this.children);
+		duplicate.getPrevious().addAll(this.getPrevious());
+		return duplicate;
 	}
 
+	@Override
+	public int getNextItemIndex() {
+		return this.nextItemIndex;
+	}
+	
 	@Override
 	public boolean getIsLeaf() {
 		return false;
@@ -44,11 +60,13 @@ public class GraphNodeBranch implements IGraphNode {
 
 	@Override
 	public boolean getIsEmpty() {
-		boolean empty = true;
-		for (IGraphNode c : this.children) {
-			empty &= c.getIsEmpty();
-		}
-		return empty;
+		//FIXME: temp, will mean empty nodes may have issues
+		return false;
+//		boolean empty = true;
+//		for (IGraphNode c : this.children) {
+//			empty &= c.getIsEmpty();
+//		}
+//		return empty;
 	}
 
 	@Override
@@ -63,14 +81,21 @@ public class GraphNodeBranch implements IGraphNode {
 
 	@Override
 	public int getStartPosition() {
-		return this.children.get(0).getStartPosition();
+		return this.startPosition;
+	}
+
+//	@Override
+	public int getEndPosition() {
+		return this.getNextInputPosition();
+//		throw new RuntimeException("Internal Error: Should never happen");
+//		return this.children.get(this.children.size() - 1).getEndPosition();
 	}
 
 	@Override
-	public int getEndPosition() {
-		return this.children.get(this.children.size() - 1).getEndPosition();
+	public int getNextInputPosition() {
+		return this.nextInputPosition;
 	}
-
+	
 	@Override
 	public int getMatchedTextLength() {
 		return getEndPosition() - getStartPosition();
@@ -121,7 +146,11 @@ public class GraphNodeBranch implements IGraphNode {
 
 	@Override
 	public boolean getCanGraftBack() {
-		return this.getIsComplete() && this.getIsStacked();
+		if (getPrevious().isEmpty()) {
+			return this.getIsComplete();
+		}
+		PreviousInfo info = this.getPrevious().get(0);
+		return this.getIsComplete() && this.getIsStacked() && info.node.getExpectedItemAt(info.atPosition).getRuleNumber() == this.getRuntimeRule().getRuleNumber();
 	}
 
 	@Override
@@ -228,38 +257,76 @@ public class GraphNodeBranch implements IGraphNode {
 			break;
 		}
 		throw new RuntimeException("Internal Error: rule kind not recognised");
-
 	}
 
 	@Override
+	public RuntimeRule getExpectedItemAt(int atPosition) {
+		switch (this.getRuntimeRule().getRhs().getKind()) {
+			case EMPTY:
+			break;
+			case CHOICE: {
+				throw new RuntimeException("Internal Error: item is choice");
+			}
+			case PRIORITY_CHOICE: {
+				throw new RuntimeException("Internal Error: item is priority choice");
+			}
+			case CONCATENATION: {
+				if (atPosition >= this.getRuntimeRule().getRhs().getItems().length) {
+					throw new RuntimeException("Internal Error: No Item at position "+atPosition);
+				} else {
+					return this.getRuntimeRule().getRhsItem(atPosition);
+				}
+			}
+			case MULTI: {
+				return this.getRuntimeRule().getRhsItem(0);
+			}
+			case SEPARATED_LIST: {
+				if ((this.nextItemIndex % 2) == 1) {
+					return this.getRuntimeRule().getSeparator();
+				} else {
+					return this.getRuntimeRule().getRhsItem(0);
+				}
+			}
+			default:
+			break;
+		}
+		throw new RuntimeException("Internal Error: rule kind not recognised");
+	}
+	
+	@Override
 	public List<IGraphNode> getChildren() {
+//		return this.graph.getChildren(this);
 		return this.children;
 	}
 
 	@Override
-	public IGraphNode pushToStackOf(IGraphNode next) {
-		next.getPrevious().add(this);
-		return next;
-	}
-
-	@Override
-	public List<IGraphNode> getPrevious() {
-		return this.previous;
-	}
-
-	@Override
-	public IGraphNode addChild(IGraphNode gn) {
+	public IGraphNode addNextChild(IGraphNode gn) {
+		//try not adding children, rather adding parents!
+		
+//		gn.addParent(this,this.nextItemIndex);
+		this.nextInputPosition = gn.getNextInputPosition();
+//		this.children.add(this.nextItemIndex, gn);
 		this.children.add(gn);
+		this.currentLength+=gn.getMatchedTextLength();
 		this.nextItemIndex++;
 		if (this.getCanGrow()) {
 			this.graph.getGrowable().add(this);
+		}
+		if (this.getIsComplete()) {
+			this.graph.registerCompleteNode(this);
 		}
 		return this;
 	}
 
 	@Override
 	public IGraphNode addSkipChild(IGraphNode gn) {
+//		gn.addParent(this,this.nextItemIndex);
+		this.nextInputPosition = gn.getNextInputPosition();
 		this.children.add(gn);
+		this.currentLength+=gn.getMatchedTextLength();
+		if (this.getCanGrow()) {
+			this.graph.getGrowable().add(this);
+		}
 		return this;
 	}
 
@@ -271,6 +338,8 @@ public class GraphNodeBranch implements IGraphNode {
 
 	@Override
 	public String toString() {
-		return this.getIdentifier().toString();
+		return this.getRuntimeRule().getNodeTypeName()
+				+ "(" +this.getRuntimeRule().getRuleNumber()+","+this.startPosition+","+this.currentLength+")"
+				+ (this.getPrevious().isEmpty() ? "" : " -> " + this.getPrevious().get(0));
 	}
 }

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import net.akehurst.language.core.parser.INodeType;
@@ -64,6 +65,7 @@ public class RuntimeRuleSet {
 		this.possibleSubRule = new RuntimeRule[numberOfRules][];
 		this.possibleFirstRule = new RuntimeRule[numberOfRules][];
 		this.possibleSuperRule = new RuntimeRule[numberOfRules][];
+		this.possibleSuperRuleInfo = new SuperRuleInfo[numberOfRules][];
 		this.runtimeRules = new RuntimeRule[numberOfRules];
 		this.nodeTypes = new ArrayList<>(Arrays.asList(new String[numberOfRules]));
 		this.ruleNumbers = new HashMap<>();
@@ -184,6 +186,16 @@ public class RuntimeRuleSet {
 		return result;
 	}
 
+	SuperRuleInfo[][] possibleSuperRuleInfo;
+	public SuperRuleInfo[] getPossibleSuperRuleInfo(RuntimeRule runtimeRule) {
+		SuperRuleInfo[] result = this.possibleSuperRuleInfo[runtimeRule.getRuleNumber()];
+		if (null == result) {
+			result = this.findAllSuperRuleInfo(runtimeRule);
+			this.possibleSuperRuleInfo[runtimeRule.getRuleNumber()] = result;
+		}
+		return result;
+	}
+	
 	RuntimeRule[][] possibleSubTerminal;
 
 	public RuntimeRule[] getPossibleSubTerminal(RuntimeRule runtimeRule) {
@@ -237,9 +249,65 @@ public class RuntimeRuleSet {
 			this.getPossibleSubRule(runtimeRule);
 			this.getPossibleFirstSubRule(runtimeRule);
 			this.getPossibleSuperRule(runtimeRule);
+			this.getPossibleSuperRuleInfo(runtimeRule);
 		}
 	}
 
+	public static final class SuperRuleInfo {
+		public SuperRuleInfo(RuntimeRule runtimeRule, int index) {
+			this.runtimeRule = runtimeRule;
+			this.index = index;
+			this.hashCode_cache = Objects.hash(runtimeRule, index);
+		}
+		
+		RuntimeRule runtimeRule;
+		int index;
+		
+		public RuntimeRule getRuntimeRule() {
+			return this.runtimeRule;
+		}
+		public int getIndex() {
+			return this.index;
+		}
+
+		
+		int hashCode_cache;
+		@Override
+		public int hashCode() {
+			return this.hashCode_cache;
+		}
+		@Override
+		public boolean equals(Object arg) {
+			if (!(arg instanceof SuperRuleInfo)) {
+				return false;
+			}
+			SuperRuleInfo other = (SuperRuleInfo)arg;
+			return this.index == other.index && this.runtimeRule==other.runtimeRule;
+		}
+		@Override
+		public String toString() {
+			return "(".concat(this.runtimeRule.toString()).concat(",").concat(Integer.toString(this.index)).concat(")");
+		}
+	}
+	SuperRuleInfo[] findAllSuperRuleInfo(RuntimeRule runtimeRule) {
+		Set<SuperRuleInfo> result = new HashSet<>();
+		for (RuntimeRule r : this.runtimeRules) {
+			if (RuntimeRuleKind.TERMINAL == r.getKind()) {
+//				if (r.equals(runtimeRule)) {
+//					int index = 0;
+//					result.add(new SuperRuleInfo(r, index));
+//				}
+			} else {
+				List<RuntimeRule> rhs = Arrays.asList(r.getRhs().getItems());
+				if (  rhs.contains(runtimeRule) ) {
+					int index = rhs.indexOf(runtimeRule);
+					result.add(new SuperRuleInfo(r, index));
+				}
+			}
+		}
+		return result.toArray(new SuperRuleInfo[result.size()]);
+	}
+	
 	RuntimeRule[] findAllSuperRule(RuntimeRule runtimeRule) {
 		Set<RuntimeRule> result = new HashSet<>();
 		for (RuntimeRule r : this.runtimeRules) {

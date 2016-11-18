@@ -63,11 +63,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*as (2,1,2,-1)}",st);
-			
+
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
@@ -94,11 +90,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*as (2,1,3,-1)}",st);
-			
+
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
@@ -123,11 +115,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*as (2,1,4,-1)}",st);
-			
+
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
@@ -184,11 +172,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*as (2,1,4,-1)}",st);
-			
+
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
@@ -217,11 +201,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*as (2,1,5,-1)}",st);
-			
+
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
@@ -250,11 +230,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*as (2,1,5,-1)}",st);
-			
+
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
@@ -283,11 +259,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*as (2,1,8,-1)}",st);
-			
+
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",

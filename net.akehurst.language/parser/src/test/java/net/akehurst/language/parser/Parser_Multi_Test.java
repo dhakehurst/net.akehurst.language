@@ -105,11 +105,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*as (2,1,1,-1)}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
-			
+
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
@@ -132,11 +128,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*asbs (2,1,1,-1)}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
-			
+	
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected =
 				b.branch("asbs",
@@ -164,11 +156,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*asbs (2,1,2,-1)}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
-			
+
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected =
 				b.branch("asbs",
@@ -198,11 +186,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*asbs (2,1,3,-1)}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
-			
+
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected =
 				b.branch("asbs",
@@ -235,11 +219,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*as (2,1,2,-1)}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
-			
+
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("as",
@@ -264,10 +244,6 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*as (2,1,3,-1)}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
@@ -296,10 +272,6 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*as (2,1,4,-1)}",st);
 						
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
@@ -332,10 +304,6 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*ab01 (2,1,2,-1)}",st);
-			
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("ab01",
@@ -364,10 +332,6 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*ab01 (2,1,2,-1)}",st);
-			
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
 				b.branch("ab01",
@@ -392,10 +356,6 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*ab01 (2,1,3,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
@@ -426,10 +386,6 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*ab01 (2,1,3,-1)}",st);
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
@@ -477,19 +433,113 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 			
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*abs (2,1,99,-1)}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
-			
-//			ParseTreeBuilder b = this.builder(g, text, goal);;
-//			IBranch expected = 
-//				b.branch("as",
-//					b.branch("a",
-//						b.leaf("a", "a")
-//					)
-//				);
-//			Assert.assertEquals(expected, tree.getRoot());
+						
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("abs",
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) ),
+						b.branch("ab", b.branch("a", b.leaf("a")) ),
+						b.branch("ab", b.branch("b", b.leaf("b")) )
+				);
+			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

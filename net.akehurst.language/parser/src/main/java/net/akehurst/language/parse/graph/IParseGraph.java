@@ -14,7 +14,7 @@ public interface IParseGraph {
 
 	IGraphNode createLeaf(RuntimeRule terminalRule, int position);
 
-	IGraphNode createBranch(RuntimeRule rr, int priority, IGraphNode firstChild, int nextItemIndex);
+	IGraphNode createBranch(RuntimeRule rr, int priority, int startPosition);
 
 	
 	/**
@@ -24,5 +24,9 @@ public interface IParseGraph {
 	 * @return the node with the given identifier
 	 */
 	IGraphNode peek(NodeIdentifier identifier);
+
+	List<IGraphNode> getChildren(IGraphNode parent);
+
+	void registerCompleteNode(IGraphNode node);
 	
 }

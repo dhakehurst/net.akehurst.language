@@ -61,9 +61,7 @@ public class Parser_Expressions_Test extends AbstractParser_Test {
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*S (2,1,2,-1)}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
+//the tree is marked as if it can still grow because the top rule is multi(1-3)
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 
@@ -92,9 +90,7 @@ public class Parser_Expressions_Test extends AbstractParser_Test {
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 			
-			ToStringVisitor v = new ToStringVisitor("","");
-			String st = tree.accept(v, "");
-			Assert.assertEquals("{*S (2,1,4,-1)}",st); //the tree is marked as if it can still grow because the top rule is multi(1-3)
+			//the tree is marked as if it can still grow because the top rule is multi(1-3)
 			
 			ParseTreeBuilder b = this.builder(g, text, goal);;
 			IBranch expected = 

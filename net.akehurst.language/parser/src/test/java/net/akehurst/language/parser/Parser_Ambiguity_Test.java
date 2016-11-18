@@ -192,7 +192,7 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			IBranch expected = 
 					b.branch("S",
 						b.branch("aaa", 
-							b.branch("a2",
+							b.branch("a3",
 								b.leaf("a"),
 								b.leaf("a")
 							)

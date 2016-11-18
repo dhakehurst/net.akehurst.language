@@ -105,10 +105,6 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 			
-			ToStringVisitor v = new ToStringVisitor("", "");
-			String st = tree.getRoot().accept(v, "");
-//			Assert.assertEquals("{*a (2,1,1,-1)}",st);
-			
 			ParseTreeBuilder b = this.builder(g, text, goal);
 			IBranch expected = 
 					b.branch("a",

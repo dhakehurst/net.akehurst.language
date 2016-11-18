@@ -1,9 +1,11 @@
 package net.akehurst.language.parse.graph;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import net.akehurst.language.core.parser.INodeIdentity;
 import net.akehurst.language.grammar.parse.tree.Leaf;
@@ -12,6 +14,7 @@ import net.akehurst.language.grammar.parser.forrest.Input3;
 import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
+import net.akehurst.language.parse.graph.AbstractGraphNode.ParentsIndex;
 
 public class ParseGraph implements IParseGraph {
 
@@ -33,6 +36,12 @@ public class ParseGraph implements IParseGraph {
 	}
 
 	@Override
+	public void registerCompleteNode(IGraphNode node) {
+		NodeIdentifier id = new NodeIdentifier(node.getRuntimeRule().getRuleNumber(), node.getStartPosition(), node.getMatchedTextLength());
+		this.nodes.put(id, node);
+	}
+	
+	@Override
 	public List<IGraphNode> getGrowable() {
 		return this.growable;
 	}
@@ -46,22 +55,58 @@ public class ParseGraph implements IParseGraph {
 	}
 
 	@Override
+	public List<IGraphNode> getChildren(IGraphNode parent) {
+		Vector<IGraphNode> children = new Vector<>();
+		for(IGraphNode pc: this.nodes.values()) {
+			for(Map.Entry<ParentsIndex, IGraphNode> pp: pc.getParents().entrySet()) {
+				if (pp.getValue().equals(parent)) {
+					int i = pp.getKey().childIndex;
+					if (i >= children.size()) {
+						children.setSize(i+1);
+					}
+					children.set(i,  pc);
+				}
+			}
+		}
+		return children;
+	}
+	
+	@Override
 	public IGraphNode createLeaf(RuntimeRule terminalRule, int position) {
 		Leaf l = this.input.fetchOrCreateBud(terminalRule, position);
 		if (null == l) {
 			return null;
 		} else {
-			IGraphNode gn = new GraphNodeLeaf(l);
-			this.growable.add(gn);
+			NodeIdentifier id = new NodeIdentifier(terminalRule.getRuleNumber(), l.getStart(), l.getMatchedTextLength());//, l.getEnd(), -1);
+			IGraphNode gn = this.nodes.get(id);
+			if (null == gn) {
+				gn = new GraphNodeLeaf(l);
+//				this.nodes.put(id, gn);
+				this.growable.add(gn);
+				return gn;
+			} else {
+				return gn;
+			}
+		}
+	}
+
+	@Override
+	public IGraphNode createBranch(RuntimeRule rr, int priority, int startPosition) {
+		//NodeIdentifier id = new NodeIdentifier(rr.getRuleNumber(), firstChild.getStartPosition());//, firstChild.getEndPosition(), nextItemIndex);
+		IGraphNode gn = null;//this.nodes.get(id);
+		if (null == gn) {
+			gn = new GraphNodeBranch(this, rr, priority, startPosition);
+//			this.growable.add(gn);
+			return gn;
+		} else {
+//			this.growable.add(gn);
 			return gn;
 		}
 	}
 
 	@Override
-	public IGraphNode createBranch(RuntimeRule rr, int priority, IGraphNode firstChild, int nextItemIndex) {
-		IGraphNode gn = new GraphNodeBranch(this, rr, priority, firstChild, nextItemIndex);
-		this.growable.add(gn);
-		return gn;
+	public String toString() {
+		return Arrays.toString(this.growable.toArray());
 	}
-
+	
 }

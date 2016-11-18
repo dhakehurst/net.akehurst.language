@@ -27,23 +27,28 @@ import net.akehurst.language.grammar.parse.tree.Node;
 // as children can be different
 public class NodeIdentifier {
 
-	public NodeIdentifier(int ruleNumber, int start, int end, int nextItemIndex) {
+	public NodeIdentifier(int ruleNumber, int start, int length) {//, int end, int nextItemIndex) {
 //		this.node = node;
 		this.ruleNumber = ruleNumber;
 		this.start = start;
-		this.end = end;
-		this.nextItemIndex = nextItemIndex;
+		this.length = length;
+//		this.end = end;
+//		this.nextItemIndex = nextItemIndex;
 //		this.childrenHash_cache = 0;
 //		if (node instanceof Branch) {
 //			this.childrenHash_cache = Objects.hash(((Branch)node).getChildren().toArray(new Object[0]));
 //		}
-		this.hashCode_cache = Objects.hash(ruleNumber, start, end, nextItemIndex);//, childrenHash_cache);
+		this.hashCode_cache = Objects.hash(ruleNumber, start, length);//, end, nextItemIndex);//, childrenHash_cache);
 	}
 //	Node node;
 	int ruleNumber;
 	int start;
-	int end;
-	int nextItemIndex;
+	int length;
+	public int getStart() {
+		return this.start;
+	}
+//	int end;
+//	int nextItemIndex;
 //	int childrenHash_cache;
 	
 	@Override
@@ -54,9 +59,10 @@ public class NodeIdentifier {
 			NodeIdentifier other = (NodeIdentifier)arg;
 			
 			boolean f = ( this.start == other.start
-				&& this.end == other.end
+//				&& this.end == other.end
 				&& this.ruleNumber==other.ruleNumber
-				&& this.nextItemIndex==other.nextItemIndex
+				&& this.length==other.length
+//				&& this.nextItemIndex==other.nextItemIndex
 			);
 //				&& this.childrenHash_cache==other.childrenHash_cache);
 			if (!f) {
@@ -75,7 +81,8 @@ public class NodeIdentifier {
 
 	@Override
 	public String toString() {
-		return "("+this.ruleNumber+","+this.start+","+this.end+","+this.nextItemIndex+")";//","+this.childrenHash_cache+")";
+//		return "("+this.ruleNumber+","+this.start+","+this.end+","+this.nextItemIndex+")";//","+this.childrenHash_cache+")";
+		return "("+this.ruleNumber+","+this.start+","+this.length+")";//","+this.childrenHash_cache+")";
 	}
 	
 }
