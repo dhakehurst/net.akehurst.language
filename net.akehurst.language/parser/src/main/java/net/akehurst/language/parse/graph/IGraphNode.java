@@ -85,7 +85,7 @@ public interface IGraphNode {
 		public PreviousInfo(IGraphNode node, int atPosition) {
 			this.node = node;
 			this.atPosition = atPosition;
-			this.hashCode_cache = Objects.hash(node, atPosition);
+			this.hashCode_cache = Objects.hash(node.getRuntimeRule().getRuleNumber(),atPosition);
 		}
 		public IGraphNode node;
 		public int atPosition;
@@ -109,13 +109,14 @@ public interface IGraphNode {
 		}
 	}
 
-	IGraphNode addNextChild(IGraphNode gn);
+//	IGraphNode addNextChild(IGraphNode gn);
+//
+//	IGraphNode addSkipChild(IGraphNode gn);
+//
+//	IGraphNode replace(IGraphNode newNode);
 
-	IGraphNode addSkipChild(IGraphNode gn);
-
-	IGraphNode replace(IGraphNode newNode);
-
-	IGraphNode duplicate();
+	IGraphNode duplicateWithNextChild(IGraphNode nextChild);
+	IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild);
 
 
 }

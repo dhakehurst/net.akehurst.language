@@ -1,12 +1,5 @@
-
 namespace test;
- 
 grammar Java8 {
-
-// LEXER
-
-// §3.9 Keywords
-
 ABSTRACT : 'abstract';
 ASSERT : 'assert';
 BOOLEAN : 'boolean';
@@ -19,6 +12,4 @@ CLASS : 'class';
 CONST : 'const';
 CONTINUE : 'continue';
 DEFAULT : 'default';
-
-
 }

@@ -11,6 +11,7 @@ import org.junit.Test;
 import net.akehurst.language.core.ILanguageProcessor;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IParseTree;
+import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.grammar.parser.ParseTreeToString;
@@ -108,8 +109,8 @@ public class Java8_Tests {
 
 	static IParseTree parse(String goalName, String input) {
 		try {
-
-			IParseTree tree = getJavaProcessor(goalName).getParser().parse(goalName, input);
+			IParser parser = getJavaProcessor(goalName).getParser();
+			IParseTree tree = parser.parse(goalName, input);
 			return tree;
 		} catch (ParseFailedException e) {
 			return null;// e.getLongestMatch();
@@ -250,6 +251,25 @@ public class Java8_Tests {
 		Assert.assertEquals(input, output);
 	}
 
+	@Test
+	public void formalParameter() {
+
+		String input = "Visitor<E> v";
+		IParseTree tree = null;
+		try {
+			tree = parse("formalParameter", input);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Assert.assertNotNull(tree);
+
+
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+	
 	@Test
 	public void formalParameters() {
 
@@ -430,6 +450,30 @@ public class Java8_Tests {
 	}
 
 	@Test
+	public void expression() {
+		String input = "i++";
+
+		IParseTree tree = parse("expression", input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void blockStatement() {
+		String input = "i++;";
+
+		IParseTree tree = parse("blockStatement", input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void blockStatements() {
+		String input = "i++;";
+
+		IParseTree tree = parse("blockStatements", input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
 	public void switchLabel() {
 		String input = "";
 		input += "  case 1:";
@@ -437,6 +481,34 @@ public class Java8_Tests {
 		Assert.assertNotNull(tree);
 	}
 
+	@Test
+	public void switchBlockStatementGroup() {
+		String input = "case 1 : i++;";
+
+		IParseTree tree = parse("switchBlockStatementGroup", input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void switchBlock() {
+		String input = "{case 1:i++;}";
+
+		IParseTree tree = parse("switchBlock", input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void switchStatement1() {
+		String input = "";
+		input += "switch (i) {";
+		input += "  case 1: ";
+		input += "  default:";
+		input += "}";
+
+		IParseTree tree = parse("switchStatement", input);
+		Assert.assertNotNull(tree);
+	}
+	
 	@Test
 	public void switchStatement() {
 		String input = "";

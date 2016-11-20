@@ -10,11 +10,13 @@ import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
 
 abstract public class AbstractGraphNode implements IGraphNode {
 
-	public AbstractGraphNode() {
+	public AbstractGraphNode(IParseGraph graph) {
+		this.graph = graph;
 		this.previous = new ArrayList<>();
 		this.parents = new HashMap<>();
 	}
 
+	protected IParseGraph graph;
 	private List<PreviousInfo> previous;
 
 	@Override
@@ -25,6 +27,9 @@ abstract public class AbstractGraphNode implements IGraphNode {
 	@Override
 	public IGraphNode pushToStackOf(IGraphNode next, int atPosition) {
 		next.getPrevious().add(new PreviousInfo(this, atPosition));
+		if (next.getCanGrow()) {
+			this.graph.getGrowable().add(next);
+		}
 		return next;
 	}
 
@@ -97,7 +102,16 @@ abstract public class AbstractGraphNode implements IGraphNode {
 
 	@Override
 	public boolean equals(Object obj) {
-		return super.equals(obj);
+		if (obj instanceof IGraphNode) {
+			IGraphNode other = (IGraphNode)obj;
+			return this.getRuntimeRule().getRuleNumber() == other.getRuntimeRule().getRuleNumber()
+					&& this.getStartPosition() == other.getStartPosition()
+					&& this.getMatchedTextLength() == other.getMatchedTextLength()
+					&& this.getNextItemIndex() == other.getNextItemIndex()
+					&& ((this.getIsStacked() && other.getIsStacked()) ? this.getPrevious().get(0).node.getRuntimeRule().getRuleNumber()==other.getPrevious().get(0).node.getRuntimeRule().getRuleNumber(): true);
+		} else {
+		return false;
+		}
 	}
 
 }

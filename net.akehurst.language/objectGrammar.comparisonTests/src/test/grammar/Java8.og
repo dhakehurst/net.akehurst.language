@@ -469,7 +469,7 @@ formalParameterList
 
 formalParameters
 	:	formalParameter (',' formalParameter)*
-	|	receiverParameter (',' formalParameter)*
+	<	receiverParameter (',' formalParameter)*
 	;
 
 formalParameter

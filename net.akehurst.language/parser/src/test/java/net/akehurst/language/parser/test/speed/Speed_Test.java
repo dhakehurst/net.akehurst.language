@@ -27,6 +27,7 @@ import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 import net.akehurst.language.parser.AbstractParser_Test;
 
 public class Speed_Test extends AbstractParser_Test {
@@ -163,6 +164,66 @@ public class Speed_Test extends AbstractParser_Test {
 			Grammar g = abcds();
 			String goal = "abcds";
 			String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
+			
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+		
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	Grammar params() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("params").concatenation(new TerminalLiteral("("), new NonTerminal("paramList"),new TerminalLiteral(")"));
+		b.rule("paramList").separatedList(0, -1, new TerminalLiteral(","), new NonTerminal("param"));
+		b.rule("param").concatenation(new NonTerminal("type"),new NonTerminal("id"));
+		b.rule("type").choice(new TerminalLiteral("int"));
+		b.rule("id").choice(new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*"));
+		b.skip("WS").concatination( new TerminalPattern("\\s+") );
+		return b.get();
+	}
+	
+	@Test
+	public void params_1() {
+		// grammar, goal, input
+		try {
+			Grammar g = params();
+			String goal = "params";
+			String text = "(int a)";
+			
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+		
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	@Test
+	public void params_2() {
+		// grammar, goal, input
+		try {
+			Grammar g = params();
+			String goal = "params";
+			String text = "(int a,int b)";
+			
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+		
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	@Test
+	public void params_3() {
+		// grammar, goal, input
+		try {
+			Grammar g = params();
+			String goal = "params";
+			String text = "(int a, int b, int c)";
 			
 			
 			IParseTree tree = this.process(g, text, goal);

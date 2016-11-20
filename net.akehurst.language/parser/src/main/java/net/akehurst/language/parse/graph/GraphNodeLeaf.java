@@ -3,6 +3,7 @@ package net.akehurst.language.parse.graph;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
@@ -10,13 +11,20 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 
-	public GraphNodeLeaf(Leaf leaf) {
+	public GraphNodeLeaf(IParseGraph graph, Leaf leaf) {
+		super(graph);
+		this.hashCode_cache = Objects.hash(leaf.getRuntimeRule().getRuleNumber(), leaf.getStart(), leaf.getMatchedTextLength());
 		this.leaf = leaf;
 		this.nextInputPosition = leaf.getEnd();
 	}
 	
+	
 	@Override
-	public IGraphNode duplicate() {
+	public IGraphNode duplicateWithNextChild(IGraphNode nextChild) {
+		throw new RuntimeException("Internal Error: Should never happen");
+	}
+	@Override
+	public IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild) {
 		throw new RuntimeException("Internal Error: Should never happen");
 	}
 	
@@ -72,8 +80,7 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 	
 	@Override
 	public boolean getCanGrow() {
-		// TODO Auto-generated method stub
-		return false;
+		return this.getIsStacked();
 	}
 
 	@Override
@@ -122,21 +129,21 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 		return Collections.emptyList();
 	}
 
-	@Override
-	public IGraphNode addNextChild(IGraphNode gn) {
-		throw new RuntimeException("Internal Error: Should never happen");
-	}
-
-	@Override
-	public IGraphNode addSkipChild(IGraphNode gn) {
-		throw new RuntimeException("Internal Error: Should never happen");
-	}
-
-	@Override
-	public IGraphNode replace(IGraphNode newParent) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+//	@Override
+//	public IGraphNode addNextChild(IGraphNode gn) {
+//		throw new RuntimeException("Internal Error: Should never happen");
+//	}
+//
+//	@Override
+//	public IGraphNode addSkipChild(IGraphNode gn) {
+//		throw new RuntimeException("Internal Error: Should never happen");
+//	}
+//
+//	@Override
+//	public IGraphNode replace(IGraphNode newParent) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 
 	@Override
 	public String toString() {

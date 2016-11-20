@@ -327,6 +327,57 @@ public class OGLParser_Test {
 	}
 
 	@Test
+	public void separatedList() {
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+
+			String text = "('a' / ',')+";
+
+			IParseTree tree = this.process(g, text, "separatedList");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void separatedList_rule() {
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+
+			String text = "sepList:('a'/',')+;";
+
+			IParseTree tree = this.process(g, text, "normalRule");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void separatedList_rule_withWS() {
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+
+			String text = "sepList : ('a' / ',')+;";
+
+			IParseTree tree = this.process(g, text, "normalRule");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
 	public void separatedList_1n() {
 		try {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
@@ -397,11 +448,11 @@ public class OGLParser_Test {
 	}
 
 	@Test
-	public void t1() {
+	public void normalRule_1() {
 		try {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();
-			String text = "classType :	'.' annotation* ;";
+			String text = "classType:'.'annotation*;";
 
 			IParseTree tree = this.process(g, text, "normalRule");
 			
@@ -411,7 +462,7 @@ public class OGLParser_Test {
 	}
 	
 	@Test
-	public void t2() {
+	public void normalRule_2() {
 		try {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();

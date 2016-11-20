@@ -221,12 +221,71 @@ public class OGL_Java_Test {
 	}
 	
 	@Test
+	public void java6_switchBlock() {
+		String text = "{ case 1 : 2; }";
+		IParseTree tree = this.parse("src/test/resources/Java6.og", "switchBlock", text);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void java8_4980495_static_Test() {
+//		String text = "package p; import static p1.A1.f; import static p2.A2.f; public class Test { public static void main(String argv[]) { f = 1; } }";
+//		String text = "package p; import static p1.A1.f; import static p2.A2.f;  public class Test { public static void main(String argv[]) { f = 1; } }";
+		try {
+		String text = new String(Files.readAllBytes(Paths.get("src/test/resources/Test.txt")));
+		IParseTree tree = this.parse("src/test/resources/Java5.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+		} catch (Exception e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	
+	@Test
 	public void java() {
 		try {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();
 
 			String text = this.readFile("src/test/resources/Java.og", Charset.defaultCharset());
+
+			IParseTree tree = this.process(g, text, "grammarDefinition");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage() + " matched length "+ e.getLongestMatch().getRoot().getMatchedTextLength());
+		} catch (IOException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void java8_all() {
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+
+			String text = this.readFile("src/test/resources/Java8_all.og", Charset.defaultCharset());
+
+			IParseTree tree = this.process(g, text, "grammarDefinition");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage() + " matched length "+ e.getLongestMatch().getRoot().getMatchedTextLength());
+		} catch (IOException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void java_parts() {
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+
+			String text = this.readFile("src/test/resources/Java8_part2.og", Charset.defaultCharset());
 
 			IParseTree tree = this.process(g, text, "grammarDefinition");
 

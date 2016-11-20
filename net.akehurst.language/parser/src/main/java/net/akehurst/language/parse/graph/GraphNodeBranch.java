@@ -3,51 +3,73 @@ package net.akehurst.language.parse.graph;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
-import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.core.parser.INodeIdentity;
-import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
 
 public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 
-	public GraphNodeBranch(IParseGraph graph, RuntimeRule rr, int priority, int startPosition) {
-		this.graph = graph;
+	public GraphNodeBranch(IParseGraph graph, RuntimeRule rr, int priority, int startPosition, int textLength, int nextItemIndex) {
+		super(graph);
 		this.runtimeRule = rr;
 		this.priority = priority;
-		this.children = new ArrayList<>();
-//		this.children.add(firstChild);
-		this.nextItemIndex = 0;//nextItemIndex;
-//		this.identifier = new NodeIdentifier(rr.getRuleNumber(), firstChild.getStartPosition());// , firstChild.getEndPosition(), nextItemIndex);
 		this.startPosition = startPosition;
-//		this.nextInputPosition = firstChild.getNextInputPosition();
-//		this.currentLength = firstChild.getMatchedTextLength();
-//		firstChild.addParent(this, 0);
+		this.textLength = textLength;
+		this.nextItemIndex = nextItemIndex;
+		this.nextInputPosition = startPosition + textLength;
+		this.children = new ArrayList<>();
+		this.hashCode_cache = Objects.hash(rr.getRuleNumber(), startPosition, textLength, nextItemIndex);
 
 	}
 
-	IParseGraph graph;
 	RuntimeRule runtimeRule;
 	int priority;
 	int startPosition;
-	int currentLength;
+	int textLength;
 	List<IGraphNode> children;
 	int nextItemIndex;
 	int nextInputPosition;
 
 	@Override
-	public IGraphNode duplicate() {
-		GraphNodeBranch duplicate = (GraphNodeBranch)this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition);
-		duplicate.currentLength = this.currentLength;
-		duplicate.nextInputPosition = this.nextInputPosition;
-		duplicate.nextItemIndex = this.nextItemIndex;
+	public IGraphNode duplicateWithNextChild(IGraphNode nextChild) {
+		int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
+		int newNextItemIndex = this.getNextItemIndex() +1;
+		GraphNodeBranch duplicate = (GraphNodeBranch)this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex);
 		duplicate.parents = new HashMap<>(this.parents);
 		duplicate.children = new ArrayList<>(this.children);
+		duplicate.children.add(nextChild);
 		duplicate.getPrevious().addAll(this.getPrevious());
+		
+		if (duplicate.getCanGrow()) {
+			this.graph.getGrowable().add(duplicate);
+		}
+		if (duplicate.getIsComplete()) {
+			this.graph.registerCompleteNode(duplicate);
+		}
+		
 		return duplicate;
 	}
 
+	@Override
+	public IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild) {
+		int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
+		int newNextItemIndex = this.getNextItemIndex();
+		GraphNodeBranch duplicate = (GraphNodeBranch)this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex);
+		duplicate.parents = new HashMap<>(this.parents);
+		duplicate.children = new ArrayList<>(this.children);
+		duplicate.children.add(nextChild);
+		duplicate.getPrevious().addAll(this.getPrevious());
+		
+		if (duplicate.getCanGrow()) {
+			this.graph.getGrowable().add(duplicate);
+		}
+		if (duplicate.getIsComplete()) {
+			this.graph.registerCompleteNode(duplicate);
+		}
+		
+		return duplicate;
+	}
+	
 	@Override
 	public int getNextItemIndex() {
 		return this.nextItemIndex;
@@ -98,7 +120,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 	
 	@Override
 	public int getMatchedTextLength() {
-		return getEndPosition() - getStartPosition();
+		return this.textLength; //getEndPosition() - getStartPosition();
 	}
 
 	@Override
@@ -295,51 +317,47 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 	
 	@Override
 	public List<IGraphNode> getChildren() {
-//		return this.graph.getChildren(this);
 		return this.children;
 	}
 
-	@Override
-	public IGraphNode addNextChild(IGraphNode gn) {
-		//try not adding children, rather adding parents!
-		
-//		gn.addParent(this,this.nextItemIndex);
-		this.nextInputPosition = gn.getNextInputPosition();
-//		this.children.add(this.nextItemIndex, gn);
-		this.children.add(gn);
-		this.currentLength+=gn.getMatchedTextLength();
-		this.nextItemIndex++;
-		if (this.getCanGrow()) {
-			this.graph.getGrowable().add(this);
-		}
-		if (this.getIsComplete()) {
-			this.graph.registerCompleteNode(this);
-		}
-		return this;
-	}
+//	@Override
+//	public IGraphNode addNextChild(IGraphNode gn) {
+//		this.nextInputPosition = gn.getNextInputPosition();
+//		this.children.add(gn);
+//		this.currentLength+=gn.getMatchedTextLength();
+//		this.nextItemIndex++;
+//		if (this.getCanGrow()) {
+//			this.hashCode_cache = Objects.hash(this.runtimeRule.getRuleNumber(), this.startPosition, this.currentLength);
+//			this.graph.getGrowable().add(this);
+//		}
+//		if (this.getIsComplete()) {
+//			this.graph.registerCompleteNode(this);
+//		}
+//		return this;
+//	}
+//
+//	@Override
+//	public IGraphNode addSkipChild(IGraphNode gn) {
+//		this.nextInputPosition = gn.getNextInputPosition();
+//		this.children.add(gn);
+//		this.currentLength+=gn.getMatchedTextLength();
+//		if (this.getCanGrow()) {
+//			this.hashCode_cache = Objects.hash(this.runtimeRule.getRuleNumber(), this.startPosition, this.currentLength);
+//			this.graph.getGrowable().add(this);
+//		}
+//		return this;
+//	}
 
-	@Override
-	public IGraphNode addSkipChild(IGraphNode gn) {
-//		gn.addParent(this,this.nextItemIndex);
-		this.nextInputPosition = gn.getNextInputPosition();
-		this.children.add(gn);
-		this.currentLength+=gn.getMatchedTextLength();
-		if (this.getCanGrow()) {
-			this.graph.getGrowable().add(this);
-		}
-		return this;
-	}
-
-	@Override
-	public IGraphNode replace(IGraphNode newNode) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+//	@Override
+//	public IGraphNode replace(IGraphNode newNode) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 
 	@Override
 	public String toString() {
 		return this.getRuntimeRule().getNodeTypeName()
-				+ "(" +this.getRuntimeRule().getRuleNumber()+","+this.startPosition+","+this.currentLength+")"
+				+ "(" +this.getRuntimeRule().getRuleNumber()+","+this.startPosition+","+this.textLength+","+this.nextItemIndex+")"
 				+ (this.getPrevious().isEmpty() ? "" : " -> " + this.getPrevious().get(0));
 	}
 }

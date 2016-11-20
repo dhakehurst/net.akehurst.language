@@ -41,9 +41,9 @@ import net.akehurst.language.parse.graph.ParseTreeFromGraph;
 
 public class ScannerLessParser3 implements IParser {
 
-	public final static String START_SYMBOL = "\uE000";
+	public final static String START_SYMBOL = "\u0000";
 	public final static TerminalLiteral START_SYMBOL_TERMINAL = new TerminalLiteral(START_SYMBOL);
-	public final static String FINISH_SYMBOL = "\uE001";
+	public final static String FINISH_SYMBOL = "\u0001";
 	public final static TerminalLiteral FINISH_SYMBOL_TERMINAL = new TerminalLiteral(FINISH_SYMBOL);
 
 	public ScannerLessParser3(RuntimeRuleSetBuilder runtimeFactory, Grammar grammar) {
@@ -163,7 +163,8 @@ public class ScannerLessParser3 implements IParser {
 		RuntimeRule sst = this.getRuntimeRuleSet().getForTerminal(START_SYMBOL_TERMINAL.getValue());
 		
 		IParseGraph graph = new ParseGraph(this.runtimeBuilder, text);
-		graph.createLeaf(sst, 0);
+		IGraphNode gn= graph.createLeaf(sst, 0);
+		graph.getGrowable().add(gn);
 		
 //		ForrestFactory2 ff = new ForrestFactory2(this.runtimeBuilder, text);
 //		ParseTreeBud2 startBud = ff.createNewBuds(new RuntimeRule[] { sst }, 0).get(0);

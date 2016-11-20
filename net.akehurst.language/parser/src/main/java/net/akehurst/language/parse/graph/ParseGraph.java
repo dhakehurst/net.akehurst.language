@@ -3,8 +3,10 @@ package net.akehurst.language.parse.graph;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 import net.akehurst.language.core.parser.INodeIdentity;
@@ -22,13 +24,13 @@ public class ParseGraph implements IParseGraph {
 		this.runtimeBuilder = runtimeFactory;
 		this.input = new Input3(runtimeFactory, text);
 		this.nodes = new HashMap<>();
-		this.growable = new ArrayList<>();
+		this.growable = new HashSet<>();
 	}
 
 	RuntimeRuleSetBuilder runtimeBuilder;
 	Input3 input;
 	Map<NodeIdentifier, IGraphNode> nodes;
-	List<IGraphNode> growable;
+	Set<IGraphNode> growable;
 
 	@Override
 	public IGraphNode peek(NodeIdentifier identifier) {
@@ -42,7 +44,7 @@ public class ParseGraph implements IParseGraph {
 	}
 	
 	@Override
-	public List<IGraphNode> getGrowable() {
+	public Set<IGraphNode> getGrowable() {
 		return this.growable;
 	}
 
@@ -80,9 +82,9 @@ public class ParseGraph implements IParseGraph {
 			NodeIdentifier id = new NodeIdentifier(terminalRule.getRuleNumber(), l.getStart(), l.getMatchedTextLength());//, l.getEnd(), -1);
 			IGraphNode gn = this.nodes.get(id);
 			if (null == gn) {
-				gn = new GraphNodeLeaf(l);
+				gn = new GraphNodeLeaf(this,l);
 //				this.nodes.put(id, gn);
-				this.growable.add(gn);
+//				this.growable.add(gn);
 				return gn;
 			} else {
 				return gn;
@@ -91,11 +93,11 @@ public class ParseGraph implements IParseGraph {
 	}
 
 	@Override
-	public IGraphNode createBranch(RuntimeRule rr, int priority, int startPosition) {
+	public IGraphNode createBranch(RuntimeRule rr, int priority, int startPosition, int length, int nextItemIndex) {
 		//NodeIdentifier id = new NodeIdentifier(rr.getRuleNumber(), firstChild.getStartPosition());//, firstChild.getEndPosition(), nextItemIndex);
 		IGraphNode gn = null;//this.nodes.get(id);
 		if (null == gn) {
-			gn = new GraphNodeBranch(this, rr, priority, startPosition);
+			gn = new GraphNodeBranch(this, rr, priority, startPosition, length, nextItemIndex);
 //			this.growable.add(gn);
 			return gn;
 		} else {
@@ -106,7 +108,7 @@ public class ParseGraph implements IParseGraph {
 
 	@Override
 	public String toString() {
-		return Arrays.toString(this.growable.toArray());
+		return ""+this.growable.size() + "-" +Arrays.toString(this.growable.toArray());
 	}
 	
 }
