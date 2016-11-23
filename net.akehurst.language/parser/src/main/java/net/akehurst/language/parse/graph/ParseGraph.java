@@ -2,21 +2,16 @@ package net.akehurst.language.parse.graph;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
 
-import net.akehurst.language.core.parser.INodeIdentity;
 import net.akehurst.language.grammar.parse.tree.Leaf;
-import net.akehurst.language.grammar.parser.forrest.Input2;
 import net.akehurst.language.grammar.parser.forrest.Input3;
 import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.parse.graph.AbstractGraphNode.ParentsIndex;
 
 public class ParseGraph implements IParseGraph {
 
@@ -24,13 +19,19 @@ public class ParseGraph implements IParseGraph {
 		this.runtimeBuilder = runtimeFactory;
 		this.input = new Input3(runtimeFactory, text);
 		this.nodes = new HashMap<>();
-		this.growable = new HashSet<>();
+		this.growable = new ArrayList<>();
+//		this.growable = new HashSet<>();
 	}
 
 	RuntimeRuleSetBuilder runtimeBuilder;
 	Input3 input;
 	Map<NodeIdentifier, IGraphNode> nodes;
-	Set<IGraphNode> growable;
+	@Override
+	public List<IGraphNode> getNodes() {
+		return new ArrayList<>(nodes.values());
+	}
+	
+	Collection<IGraphNode> growable;
 
 	@Override
 	public IGraphNode peek(NodeIdentifier identifier) {
@@ -44,10 +45,19 @@ public class ParseGraph implements IParseGraph {
 	}
 	
 	@Override
-	public Set<IGraphNode> getGrowable() {
+	public Collection<IGraphNode> getGrowable() {
 		return this.growable;
 	}
 
+	@Override
+	public void addGrowable(IGraphNode value) {
+		if (this.getGrowable().contains(value)) {
+//			System.out.println("merged "+value);
+		} else {
+			this.getGrowable().add(value);
+		}
+	}
+	
 	@Override
 	public IParseGraph shallowClone() {
 		ParseGraph ng = new ParseGraph(this.runtimeBuilder, this.input.text);
@@ -56,25 +66,25 @@ public class ParseGraph implements IParseGraph {
 		return ng;
 	}
 
-	@Override
-	public List<IGraphNode> getChildren(IGraphNode parent) {
-		Vector<IGraphNode> children = new Vector<>();
-		for(IGraphNode pc: this.nodes.values()) {
-			for(Map.Entry<ParentsIndex, IGraphNode> pp: pc.getParents().entrySet()) {
-				if (pp.getValue().equals(parent)) {
-					int i = pp.getKey().childIndex;
-					if (i >= children.size()) {
-						children.setSize(i+1);
-					}
-					children.set(i,  pc);
-				}
-			}
-		}
-		return children;
-	}
+//	@Override
+//	public List<IGraphNode> getChildren(IGraphNode parent) {
+//		Vector<IGraphNode> children = new Vector<>();
+//		for(IGraphNode pc: this.nodes.values()) {
+//			for(Map.Entry<ParentsIndex, IGraphNode> pp: pc.getParents().entrySet()) {
+//				if (pp.getValue().equals(parent)) {
+//					int i = pp.getKey().childIndex;
+//					if (i >= children.size()) {
+//						children.setSize(i+1);
+//					}
+//					children.set(i,  pc);
+//				}
+//			}
+//		}
+//		return children;
+//	}
 	
 	@Override
-	public IGraphNode createLeaf(RuntimeRule terminalRule, int position) {
+	public IGraphNode createLeaf(IGraphNode parent, RuntimeRule terminalRule, int position) {
 		Leaf l = this.input.fetchOrCreateBud(terminalRule, position);
 		if (null == l) {
 			return null;
@@ -82,7 +92,7 @@ public class ParseGraph implements IParseGraph {
 			NodeIdentifier id = new NodeIdentifier(terminalRule.getRuleNumber(), l.getStart(), l.getMatchedTextLength());//, l.getEnd(), -1);
 			IGraphNode gn = this.nodes.get(id);
 			if (null == gn) {
-				gn = new GraphNodeLeaf(this,l);
+				gn = new GraphNodeLeaf(this,parent,l);
 //				this.nodes.put(id, gn);
 //				this.growable.add(gn);
 				return gn;
@@ -93,11 +103,11 @@ public class ParseGraph implements IParseGraph {
 	}
 
 	@Override
-	public IGraphNode createBranch(RuntimeRule rr, int priority, int startPosition, int length, int nextItemIndex) {
+	public IGraphNode createBranch(IGraphNode parent, RuntimeRule rr, int priority, int startPosition, int length, int nextItemIndex) {
 		//NodeIdentifier id = new NodeIdentifier(rr.getRuleNumber(), firstChild.getStartPosition());//, firstChild.getEndPosition(), nextItemIndex);
 		IGraphNode gn = null;//this.nodes.get(id);
 		if (null == gn) {
-			gn = new GraphNodeBranch(this, rr, priority, startPosition, length, nextItemIndex);
+			gn = new GraphNodeBranch(this, parent,rr, priority, startPosition, length, nextItemIndex);
 //			this.growable.add(gn);
 			return gn;
 		} else {

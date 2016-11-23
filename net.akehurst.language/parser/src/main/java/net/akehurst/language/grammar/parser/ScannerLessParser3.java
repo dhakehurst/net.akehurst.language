@@ -163,8 +163,8 @@ public class ScannerLessParser3 implements IParser {
 		RuntimeRule sst = this.getRuntimeRuleSet().getForTerminal(START_SYMBOL_TERMINAL.getValue());
 		
 		IParseGraph graph = new ParseGraph(this.runtimeBuilder, text);
-		IGraphNode gn= graph.createLeaf(sst, 0);
-		graph.getGrowable().add(gn);
+		IGraphNode gn= graph.createLeaf(null,sst, 0);
+		graph.addGrowable(gn);
 		
 //		ForrestFactory2 ff = new ForrestFactory2(this.runtimeBuilder, text);
 //		ParseTreeBud2 startBud = ff.createNewBuds(new RuntimeRule[] { sst }, 0).get(0);

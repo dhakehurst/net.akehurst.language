@@ -1,7 +1,7 @@
 package net.akehurst.language.parse.graph;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
@@ -10,11 +10,12 @@ public interface IParseGraph {
 
 	IParseGraph shallowClone();
 
-	Set<IGraphNode> getGrowable();
+	Collection<IGraphNode> getGrowable();
+	void addGrowable(IGraphNode value);
 
-	IGraphNode createLeaf(RuntimeRule terminalRule, int position);
+	IGraphNode createLeaf(IGraphNode parent, RuntimeRule terminalRule, int position);
 
-	IGraphNode createBranch(RuntimeRule rr, int priority, int startPosition, int length, int nextItemIndex);
+	IGraphNode createBranch(IGraphNode parent, RuntimeRule rr, int priority, int startPosition, int length, int nextItemIndex);
 
 	
 	/**
@@ -25,8 +26,10 @@ public interface IParseGraph {
 	 */
 	IGraphNode peek(NodeIdentifier identifier);
 
-	List<IGraphNode> getChildren(IGraphNode parent);
+//	List<IGraphNode> getChildren(IGraphNode parent);
 
 	void registerCompleteNode(IGraphNode node);
+
+	List<IGraphNode> getNodes();
 	
 }

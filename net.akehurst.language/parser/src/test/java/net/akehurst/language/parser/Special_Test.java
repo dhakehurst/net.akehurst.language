@@ -83,4 +83,60 @@ public class Special_Test extends AbstractParser_Test {
 		}
 	}
 	
+	Grammar parametersG() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+
+		b.rule("S").priorityChoice(new NonTerminal("fpfps"), new NonTerminal("rpfps"));
+		b.rule("fpfps").concatenation(new NonTerminal("fp"), new NonTerminal("fpList1"));
+		b.rule("rpfps").concatenation(new NonTerminal("rp"), new NonTerminal("fpList2"));
+		b.rule("fpList1").multi(0,-1,new NonTerminal("cmrFp1"));
+		b.rule("cmrFp1").concatenation(new TerminalLiteral(","), new NonTerminal("fp"));
+		b.rule("fpList2").multi(0,-1,new NonTerminal("cmrFp2"));
+		b.rule("cmrFp2").concatenation(new TerminalLiteral(","), new NonTerminal("fp"));
+		b.rule("fp").concatenation(new NonTerminal("vms"), new NonTerminal("unannType"));
+		b.rule("rp").concatenation(new NonTerminal("anns"), new NonTerminal("unannType"), new TerminalLiteral("this"));
+		b.rule("unannType").choice(new NonTerminal("unannReferenceType"));
+		b.rule("unannReferenceType").choice(new NonTerminal("unannClassOrInterfaceType"));
+		b.rule("unannClassOrInterfaceType").choice(new NonTerminal("unannClassType_lfno_unannClassOrInterfaceType"));
+		b.rule("unannClassType_lfno_unannClassOrInterfaceType").concatenation(new NonTerminal("Id"),new NonTerminal("typeArgs"));
+		b.rule("vms").multi(0,-1,new NonTerminal("vm"));
+		b.rule("vm").choice(new TerminalLiteral("final"), new NonTerminal("ann"));
+		b.rule("anns").multi(0,-1,new NonTerminal("ann"));
+		b.rule("ann").choice(new TerminalLiteral("@"), new NonTerminal("Id"));
+		b.rule("typeArgs").multi(0,1,new NonTerminal("typeArgList"));
+		b.rule("typeArgList").concatenation(new TerminalLiteral("<"), new TerminalLiteral(">"));
+		b.rule("Id").choice(new TerminalLiteral("a"));
+		
+		return b.get();
+	}
+	
+	@Test
+	public void parameters() {
+		//FIXME: This test repeats work.
+		// the fp and rp nodes duplicate the parsing, we only want to do it once
+		// grammar, goal, input
+		try {
+			Grammar g = parametersG();
+			String goal = "S";
+			String text = "a";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected =
+				b.branch("S",
+						b.branch("fpfps",
+							b.branch("fp",
+									b.leaf("a")
+							)
+						)
+
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
 }

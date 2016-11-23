@@ -46,6 +46,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class OGL_Java_Test {
+	
 	RuntimeRuleSetBuilder parseTreeFactory;
 
 	@Before
@@ -227,14 +228,14 @@ public class OGL_Java_Test {
 		Assert.assertNotNull(tree);
 	}
 	
+//	public void java7_formalParameters()
+	
 	@Test
-	public void java8_4980495_static_Test() {
-//		String text = "package p; import static p1.A1.f; import static p2.A2.f; public class Test { public static void main(String argv[]) { f = 1; } }";
-//		String text = "package p; import static p1.A1.f; import static p2.A2.f;  public class Test { public static void main(String argv[]) { f = 1; } }";
+	public void java5_4980495_static_Test() {
 		try {
-		String text = new String(Files.readAllBytes(Paths.get("src/test/resources/Test.txt")));
-		IParseTree tree = this.parse("src/test/resources/Java5.og", "compilationUnit", text);
-		Assert.assertNotNull(tree);
+			String text = new String(Files.readAllBytes(Paths.get("src/test/resources/Test.txt")));
+			IParseTree tree = this.parse("src/test/resources/Java5.og", "compilationUnit", text);
+			Assert.assertNotNull(tree);
 		} catch (Exception e) {
 			Assert.fail(e.getMessage());
 		}

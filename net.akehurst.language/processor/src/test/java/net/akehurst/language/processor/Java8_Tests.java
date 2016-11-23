@@ -1,4 +1,4 @@
-package net.akehurst.language.objectGrammar.comparisonTests;
+package net.akehurst.language.processor;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -44,7 +44,7 @@ public class Java8_Tests {
 	static ILanguageProcessor getJavaProcessor() {
 		if (null == javaProcessor) {
 			try {
-				String grammarText = new String(Files.readAllBytes(Paths.get("src/test/grammar/Java8.og")));
+				String grammarText = new String(Files.readAllBytes(Paths.get("src/test/resources/Java8_all.og")));
 				Grammar javaGrammar = getOGLProcessor().process(grammarText, Grammar.class);
 				javaProcessor = new LanguageProcessor(javaGrammar, "compilationUnit", null);
 				javaProcessor.getParser().build(javaProcessor.getDefaultGoal());
@@ -65,7 +65,7 @@ public class Java8_Tests {
 
 	static ILanguageProcessor getJavaProcessor(String goalName) {
 		try {
-			String grammarText = new String(Files.readAllBytes(Paths.get("src/test/grammar/Java8.og")));
+			String grammarText = new String(Files.readAllBytes(Paths.get("src/test/resources/Java8_all.og")));
 			Grammar javaGrammar = getOGLProcessor().process(grammarText, Grammar.class);
 			LanguageProcessor jp = new LanguageProcessor(javaGrammar, goalName, null);
 			jp.getParser().build(jp.getDefaultGoal());
@@ -271,6 +271,44 @@ public class Java8_Tests {
 	}
 	
 	@Test
+	public void formalParameters1() {
+
+		String input = "Visitor v";
+		IParseTree tree = null;
+		try {
+			tree = parse("formalParameters", input);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Assert.assertNotNull(tree);
+
+
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+	
+	@Test
+	public void formalParameters2() {
+
+		String input = "Visitor v, Type p2";
+		IParseTree tree = null;
+		try {
+			tree = parse("formalParameters", input);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Assert.assertNotNull(tree);
+
+
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+	
+	@Test
 	public void formalParameters() {
 
 		String input = "Visitor<E> v";
@@ -289,6 +327,25 @@ public class Java8_Tests {
 		Assert.assertEquals(input, output);
 	}
 
+	@Test
+	public void typeArguments() {
+
+		String input = "<E>";
+		IParseTree tree = null;
+		try {
+			tree = parse("typeArguments", input);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Assert.assertNotNull(tree);
+
+
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+	
 	@Test
 	public void ISO8859encoding() {
 		String input = "";
@@ -323,6 +380,69 @@ public class Java8_Tests {
 	}
 
 	@Test
+	public void methodDeclaration1() {
+		String input = "void f();";
+		IParseTree tree = parse("methodDeclaration",input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void methodDeclaration2() {
+		String input = "public void f();";
+		IParseTree tree = parse("methodDeclaration",input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void methodDeclaration3() {
+		String input = "public void f(Visitor v);";
+		IParseTree tree = parse("methodDeclaration",input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void methodDeclaration4() {
+		String input = "public abstract void f(Visitor v);";
+		IParseTree tree = parse("methodDeclaration",input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void methodDeclaration5() {
+		String input = "public abstract <T> void f(Visitor v);";
+		IParseTree tree = parse("methodDeclaration",input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void methodDeclaration6() {
+		String input = "public abstract <T> void f(Visitor<T> v);";
+		IParseTree tree = parse("methodDeclaration",input);
+		Assert.assertNotNull(tree);
+	}
+	
+	
+	@Test
+	public void methodDeclaration7() {
+		String input = "void f(Visitor<T> v);";
+		IParseTree tree = parse("methodDeclaration",input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void methodDeclaration() {
+
+		String input = "public abstract <E extends Throwable> void accept(Visitor<E> v);";
+
+		IParseTree tree = parse("methodDeclaration",input);
+		Assert.assertNotNull(tree);
+
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+	
+	@Test
 	public void multipleMethods() {
 
 		String input = "class Test {";
@@ -351,9 +471,7 @@ public class Java8_Tests {
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);
 
-		ParseTreeToString x = new ParseTreeToString();
-		String output = x.visit(tree, null);
-		Assert.assertEquals(input, output);
+
 	}
 
 	@Test
@@ -392,10 +510,6 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		ParseTreeToString x = new ParseTreeToString();
-		String output = x.visit(tree, null);
-		Assert.assertEquals(input, output);
-
 	}
 
 	@Test
@@ -424,7 +538,7 @@ public class Java8_Tests {
 		Assert.assertNotNull(tree);
 	}
 
-	@Test
+//	@Test
 	public void T6257443() {
 
 		String input = "";

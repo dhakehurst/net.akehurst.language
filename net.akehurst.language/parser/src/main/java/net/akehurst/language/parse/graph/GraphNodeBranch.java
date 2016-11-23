@@ -9,8 +9,8 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 
-	public GraphNodeBranch(IParseGraph graph, RuntimeRule rr, int priority, int startPosition, int textLength, int nextItemIndex) {
-		super(graph);
+	public GraphNodeBranch(IParseGraph graph, IGraphNode parent, RuntimeRule rr, int priority, int startPosition, int textLength, int nextItemIndex) {
+		super(graph, parent);
 		this.runtimeRule = rr;
 		this.priority = priority;
 		this.startPosition = startPosition;
@@ -18,7 +18,9 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 		this.nextItemIndex = nextItemIndex;
 		this.nextInputPosition = startPosition + textLength;
 		this.children = new ArrayList<>();
-		this.hashCode_cache = Objects.hash(rr.getRuleNumber(), startPosition, textLength, nextItemIndex);
+		int parentRuleNumber = null==parent ? -1 : parent.hashCode();
+//		int parentRuleNumber = null==parent ? -1 : parent.getRuntimeRule().getRuleNumber();
+		this.hashCode_cache = Objects.hash(rr.getRuleNumber(), startPosition, textLength, nextItemIndex, parentRuleNumber);
 
 	}
 
@@ -34,14 +36,18 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 	public IGraphNode duplicateWithNextChild(IGraphNode nextChild) {
 		int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
 		int newNextItemIndex = this.getNextItemIndex() +1;
-		GraphNodeBranch duplicate = (GraphNodeBranch)this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex);
-		duplicate.parents = new HashMap<>(this.parents);
+		
+		// if duplicate will be complete && if its id already exists
+		//   if (parents are the same) return already existing
+		
+		
+		GraphNodeBranch duplicate = (GraphNodeBranch)this.graph.createBranch(this.parent,this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex);
 		duplicate.children = new ArrayList<>(this.children);
 		duplicate.children.add(nextChild);
 		duplicate.getPrevious().addAll(this.getPrevious());
 		
 		if (duplicate.getCanGrow()) {
-			this.graph.getGrowable().add(duplicate);
+			this.graph.addGrowable(duplicate);
 		}
 		if (duplicate.getIsComplete()) {
 			this.graph.registerCompleteNode(duplicate);
@@ -54,14 +60,13 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 	public IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild) {
 		int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
 		int newNextItemIndex = this.getNextItemIndex();
-		GraphNodeBranch duplicate = (GraphNodeBranch)this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex);
-		duplicate.parents = new HashMap<>(this.parents);
+		GraphNodeBranch duplicate = (GraphNodeBranch)this.graph.createBranch(this.parent,this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex);
 		duplicate.children = new ArrayList<>(this.children);
 		duplicate.children.add(nextChild);
 		duplicate.getPrevious().addAll(this.getPrevious());
 		
 		if (duplicate.getCanGrow()) {
-			this.graph.getGrowable().add(duplicate);
+			this.graph.addGrowable(duplicate);
 		}
 		if (duplicate.getIsComplete()) {
 			this.graph.registerCompleteNode(duplicate);

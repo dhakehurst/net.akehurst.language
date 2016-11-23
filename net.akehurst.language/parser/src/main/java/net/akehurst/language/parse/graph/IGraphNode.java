@@ -8,7 +8,7 @@ import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
-import net.akehurst.language.parse.graph.AbstractGraphNode.ParentsIndex;
+
 
 public interface IGraphNode {
 
@@ -61,9 +61,10 @@ public interface IGraphNode {
 
 	RuntimeRule getExpectedItemAt(int atPosition);
 	
-	Map<ParentsIndex, IGraphNode> getParents();
+//	Map<ParentsIndex, IGraphNode> getParents();
 //	void addParent(GraphNodeBranch graphNodeBranch, int nextItemIndex);
 	
+	IGraphNode getParent();
 	List<IGraphNode> getChildren();
 
 	

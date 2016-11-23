@@ -11,13 +11,15 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 
-	public GraphNodeLeaf(IParseGraph graph, Leaf leaf) {
-		super(graph);
-		this.hashCode_cache = Objects.hash(leaf.getRuntimeRule().getRuleNumber(), leaf.getStart(), leaf.getMatchedTextLength());
+	public GraphNodeLeaf(IParseGraph graph, IGraphNode parent, Leaf leaf) {
+		super(graph, parent);
+		this.parent = parent;
+//		int parentRuleNumber = null==parent ? -1 : parent.getRuntimeRule().getRuleNumber();
+		int parentRuleNumber = null==parent ? -1 : parent.hashCode();
+		this.hashCode_cache = Objects.hash(leaf.getRuntimeRule().getRuleNumber(), leaf.getStart(), leaf.getMatchedTextLength(),parentRuleNumber);
 		this.leaf = leaf;
 		this.nextInputPosition = leaf.getEnd();
 	}
-	
 	
 	@Override
 	public IGraphNode duplicateWithNextChild(IGraphNode nextChild) {
