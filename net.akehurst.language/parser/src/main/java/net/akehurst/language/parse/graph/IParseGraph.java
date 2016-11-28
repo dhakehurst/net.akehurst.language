@@ -1,35 +1,30 @@
 package net.akehurst.language.parse.graph;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
-import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
+import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public interface IParseGraph {
 
-	IParseGraph shallowClone();
-
 	Collection<IGraphNode> getGrowable();
-	void addGrowable(IGraphNode value);
+	Collection<IGraphNode> getCompleteNodes();
 
-	IGraphNode createLeaf(IGraphNode parent, RuntimeRule terminalRule, int position);
-
-	IGraphNode createBranch(IGraphNode parent, RuntimeRule rr, int priority, int startPosition, int length, int nextItemIndex);
-
+	void removeGrowable(IGraphNode node);
 	
-	/**
-	 * find a node with the given identifier
-	 * 
-	 * @param identifier
-	 * @return the node with the given identifier
-	 */
-	IGraphNode peek(NodeIdentifier identifier);
+	IGraphNode createLeaf(Leaf leaf, RuntimeRule terminalRule, int startPosition, int matchedLength);
+	IGraphNode findOrCreateLeaf(Leaf leaf, RuntimeRule terminalRule, int startPosition, int matchedLength);
 
-//	List<IGraphNode> getChildren(IGraphNode parent);
+	IGraphNode createBranch(RuntimeRule rr, int priority, int startPosition, int length, int nextItemIndex, int height);
+	IGraphNode findCompleteNode(int ruleNumber, int start, int length);
+	IGraphNode findOrCreateBranch(RuntimeRule rr, int priority, int startPosition, int machedTextLength, int nextItemIndex, int height);
 
-	void registerCompleteNode(IGraphNode node);
+	IGraphNode createWithFirstChild(RuntimeRule runtimeRule, int priority, IGraphNode firstChild);
 
-	List<IGraphNode> getNodes();
-	
+
+//	IGraphNode fetchGrowing(int ruleNumber, int start, int nextItemIndex);
+//
+//	IGraphNode fetchNode(int ruleNumber, int start, int length);
+
 }

@@ -7,9 +7,9 @@ import java.util.Objects;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
-public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
+public class GraphNodeBranch_old extends AbstractGraphNode implements IGraphNode {
 
-	public GraphNodeBranch(ParseGraph graph,  RuntimeRule rr, int priority, int startPosition, int textLength, int nextItemIndex, int height) {
+	public GraphNodeBranch_old(ParseGraph graph,  RuntimeRule rr, int priority, int startPosition, int textLength, int nextItemIndex, int height) {
 		super(graph, rr, startPosition, textLength);
 		this.priority = priority;
 		this.nextItemIndex = nextItemIndex;
@@ -29,11 +29,9 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 		
 		// if duplicate will be complete && if its id already exists
 		//   if (parents are the same) return already existing
-		IGraphNode gn = this.graph.findCompleteNode(this.runtimeRule.getRuleNumber(), startPosition, newLength);
-
 		
-//		GraphNodeBranch duplicate = (GraphNodeBranch)this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex, this.height);
-		GraphNodeBranch duplicate = new GraphNodeBranch(graph, this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex, this.height);
+		
+		GraphNodeBranch_old duplicate = (GraphNodeBranch_old)this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex, this.height);
 		duplicate.children = new ArrayList<>(this.children);
 		duplicate.children.add(nextChild);
 		duplicate.getPrevious().addAll(this.getPrevious());
@@ -52,7 +50,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 	public IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild) {
 		int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
 		int newNextItemIndex = this.getNextItemIndex();
-		GraphNodeBranch duplicate = (GraphNodeBranch)this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex, this.height);
+		GraphNodeBranch_old duplicate = (GraphNodeBranch_old)this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex, this.height);
 		duplicate.children = new ArrayList<>(this.children);
 		duplicate.children.add(nextChild);
 		duplicate.getPrevious().addAll(this.getPrevious());
@@ -79,7 +77,18 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 
 	@Override
 	public boolean getIsEmpty() {
-		return 0==this.getMatchedTextLength();
+		//FIXME: temp, will mean empty nodes may have issues
+		return false;
+//		boolean empty = true;
+//		for (IGraphNode c : this.children) {
+//			empty &= c.getIsEmpty();
+//		}
+//		return empty;
+	}
+
+	@Override
+	public RuntimeRule getRuntimeRule() {
+		return this.runtimeRule;
 	}
 
 	@Override
@@ -87,10 +96,31 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 		return this.priority;
 	}
 
+	@Override
+	public int getStartPosition() {
+		return this.startPosition;
+	}
+
+//	@Override
+	public int getEndPosition() {
+		return this.getNextInputPosition();
+//		throw new RuntimeException("Internal Error: Should never happen");
+//		return this.children.get(this.children.size() - 1).getEndPosition();
+	}
 
 	@Override
 	public int getHeight() {
 		return this.height;
+	}
+	
+	@Override
+	public int getNextInputPosition() {
+		return this.nextInputPosition;
+	}
+	
+	@Override
+	public int getMatchedTextLength() {
+		return this.textLength; //getEndPosition() - getStartPosition();
 	}
 
 	@Override
@@ -289,6 +319,40 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 	public List<IGraphNode> getChildren() {
 		return this.children;
 	}
+
+//	@Override
+//	public IGraphNode addNextChild(IGraphNode gn) {
+//		this.nextInputPosition = gn.getNextInputPosition();
+//		this.children.add(gn);
+//		this.currentLength+=gn.getMatchedTextLength();
+//		this.nextItemIndex++;
+//		if (this.getCanGrow()) {
+//			this.hashCode_cache = Objects.hash(this.runtimeRule.getRuleNumber(), this.startPosition, this.currentLength);
+//			this.graph.getGrowable().add(this);
+//		}
+//		if (this.getIsComplete()) {
+//			this.graph.registerCompleteNode(this);
+//		}
+//		return this;
+//	}
+//
+//	@Override
+//	public IGraphNode addSkipChild(IGraphNode gn) {
+//		this.nextInputPosition = gn.getNextInputPosition();
+//		this.children.add(gn);
+//		this.currentLength+=gn.getMatchedTextLength();
+//		if (this.getCanGrow()) {
+//			this.hashCode_cache = Objects.hash(this.runtimeRule.getRuleNumber(), this.startPosition, this.currentLength);
+//			this.graph.getGrowable().add(this);
+//		}
+//		return this;
+//	}
+
+//	@Override
+//	public IGraphNode replace(IGraphNode newNode) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 
 	@Override
 	public String toString() {

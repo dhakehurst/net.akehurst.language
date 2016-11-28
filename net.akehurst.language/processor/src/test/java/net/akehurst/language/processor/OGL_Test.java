@@ -31,43 +31,7 @@ import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class OGL_Test extends AbstractParser_Test {
 
-//	@Before
-//	public void before() {
-//		this.parseTreeFactory = new RuntimeRuleSetBuilder();
-//	}
-	
 	Grammar ogl() {
-//		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "OglTest");
-//		b.skip("WHITESPACE").concatination( new TerminalPattern("\\s+") );
-//		b.skip("COMMENT").concatination( new TerminalPattern("(?s)/\\*.*?\\*/") );
-//		
-//		b.rule("grammarDefinition").concatenation( new NonTerminal("namespace"), new NonTerminal("grammar") );
-//		b.rule("namespace").concatenation( new TerminalLiteral("namespace"), new NonTerminal("qualifiedName"), new TerminalLiteral(";") );
-//		b.rule("grammar").concatenation( new TerminalLiteral("grammar"), new NonTerminal("IDENTIFIER"), new TerminalLiteral("{"), new NonTerminal("rules"), new TerminalLiteral("}") );
-//		b.rule("rules").multi(1,-1,new NonTerminal("anyRule") );
-//		b.rule("anyRule").choice(new NonTerminal("normalRule"), new NonTerminal("skipRule") );
-//		b.rule("skipRule").concatenation( new NonTerminal("IDENTIFIER"), new TerminalLiteral("?="), new NonTerminal("choice"), new TerminalLiteral(";") );
-//		b.rule("normalRule").concatenation( new NonTerminal("IDENTIFIER"), new TerminalLiteral(":="), new NonTerminal("choice"), new TerminalLiteral(";") );
-//		b.rule("choice").separatedList(0, -1, new TerminalLiteral("|"), new NonTerminal("concatination") );
-//		b.rule("concatination").multi(1,-1,new NonTerminal("item") );
-//		b.rule("item").choice( new NonTerminal("LITERAL"),
-//							   new NonTerminal("PATTERN"),
-//				               new NonTerminal("nonTerminal"),
-//				               new NonTerminal("multi"),
-//				               new NonTerminal("group"),
-//				               new NonTerminal("separatedList")
-//						);
-//		b.rule("multi").concatenation( new NonTerminal("item"), new NonTerminal("multi.group1") );
-//		b.rule("multi.group1").choice(new TerminalLiteral("*"), new TerminalLiteral("+"));
-//		b.rule("group").concatenation( new TerminalLiteral("("), new NonTerminal("choice"), new TerminalLiteral(")") );
-//		b.rule("separatedList").concatenation( new TerminalLiteral("("), new NonTerminal("concatination"), new TerminalLiteral("/"), new NonTerminal("LITERAL"), new TerminalLiteral(")"), new NonTerminal("separatedList.group1") );
-//		b.rule("separatedList.group1").choice(new TerminalLiteral("*"), new TerminalLiteral("+"));
-//		b.rule("nonTerminal").choice(new NonTerminal("IDENTIFIER"));
-//		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
-//		b.rule("LITERAL").concatenation( new TerminalPattern("\\x27[^\\x27]*\\x27") );
-//		b.rule("PATTERN").concatenation( new TerminalPattern("\\x22[^\\x22]*\\x22") );
-//		b.rule("IDENTIFIER").concatenation( new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*") );
-//		return b.get();
 		return new OGLGrammar();
 	}
 

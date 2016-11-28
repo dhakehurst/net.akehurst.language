@@ -12,12 +12,14 @@ import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.parser.RuleNotFoundException;
+import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.converter.Grammar2RuntimeRuleSet;
 
 import net.akehurst.language.grammar.parser.forrest.Forrest3;
 import net.akehurst.language.grammar.parser.forrest.ForrestFactory;
 import net.akehurst.language.grammar.parser.forrest.ForrestFactory2;
+import net.akehurst.language.grammar.parser.forrest.Input3;
 import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBranch;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBranch2;
@@ -144,7 +146,13 @@ public class ScannerLessParser3 implements IParser {
 		int s = pseudoTree.getChildren().size();
 		IGraphNode root = (IGraphNode) pseudoTree.getChildren().stream().filter(n -> n.getRuntimeRule().getRuleNumber()==goalRuleNumber).findFirst()
 				.get();
-		int indexOfRoot = pseudoTree.getChildren().indexOf(root);
+//		int indexOfRoot = pseudoTree.getChildren().indexOf(root);
+		int indexOfRoot = 1;
+		IGraphNode n = pseudoTree.getChildren().get(indexOfRoot);
+		while(n.getIsSkip()) {
+			indexOfRoot++;
+			n = pseudoTree.getChildren().get(indexOfRoot);
+		}
 		//ensure we catch the skip nodes before and after the real root
 		List<IGraphNode> before = pseudoTree.getChildren().subList(1, indexOfRoot);
 		ArrayList<IGraphNode> children = new ArrayList<>();
@@ -161,14 +169,15 @@ public class ScannerLessParser3 implements IParser {
 	IGraphNode doParse2(RuntimeRule pseudoGoalRule, CharSequence text) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
 		
 		RuntimeRule sst = this.getRuntimeRuleSet().getForTerminal(START_SYMBOL_TERMINAL.getValue());
-		
-		IParseGraph graph = new ParseGraph(this.runtimeBuilder, text);
-		IGraphNode gn= graph.createLeaf(null,sst, 0);
-		graph.addGrowable(gn);
+		Input3 input = new Input3(this.runtimeBuilder, text);
+		Leaf l = input.fetchOrCreateBud(sst,0);
+		IParseGraph graph = new ParseGraph();
+		IGraphNode gn= graph.findOrCreateLeaf(l, sst,0,0);
+//		graph.addGrowable(gn);
 		
 //		ForrestFactory2 ff = new ForrestFactory2(this.runtimeBuilder, text);
 //		ParseTreeBud2 startBud = ff.createNewBuds(new RuntimeRule[] { sst }, 0).get(0);
-		Forrest3 newForrest = new Forrest3(graph, this.getRuntimeRuleSet());
+		Forrest3 newForrest = new Forrest3(graph, this.getRuntimeRuleSet(), input);
 //		newForrest.newSeeds(Arrays.asList(startBud));
 
 		int seasons = 1;

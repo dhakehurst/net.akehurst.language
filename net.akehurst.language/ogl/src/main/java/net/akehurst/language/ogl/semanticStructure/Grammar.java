@@ -107,6 +107,15 @@ public class Grammar {
 		return this.allTerminal;
 	}
 	
+	public Terminal findAllTerminal(String terminalPattern) {
+		for(Terminal t: this.findAllTerminal()) {
+			if (t.getValue().equals(terminalPattern)) {
+				return t;
+			}
+		}
+		return null;
+	}
+	
 	Set<Terminal> findAllTerminal() {
 		Set<Terminal> result = new HashSet<>();
 		for (Rule rule : this.getAllRule()) {

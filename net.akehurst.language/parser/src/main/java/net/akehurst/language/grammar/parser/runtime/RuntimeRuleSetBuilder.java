@@ -45,6 +45,14 @@ public class RuntimeRuleSetBuilder {
 //		return this.emptyRule;
 //	}
 	
+	public RuntimeRule getRuntimeRule(Terminal terminal) {
+		return this.runtimeRuleSet.getForTerminal(terminal.getValue());
+	}
+	
+	public RuntimeRule getRuntimeRule(Rule rule) {
+		return this.runtimeRuleSet.getRuntimeRule(rule);
+	}
+	
 	int nextRuleNumber;
 	public RuntimeRule createRuntimeRule(Rule grammarRule) {
 		RuntimeRule rr = new RuntimeRule(this.runtimeRuleSet, grammarRule.getName(), nextRuleNumber, RuntimeRuleKind.NON_TERMINAL, Pattern.LITERAL);

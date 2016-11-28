@@ -19,14 +19,13 @@ public interface IGraphNode {
 
 	int getStartPosition();
 
-
 	int getNextItemIndex();
-	
-//	int getEndPosition();
 	
 	int getNextInputPosition();
 
 	int getMatchedTextLength();
+	
+	int getHeight();
 	
 	boolean getIsEmpty();
 
@@ -61,10 +60,7 @@ public interface IGraphNode {
 
 	RuntimeRule getExpectedItemAt(int atPosition);
 	
-//	Map<ParentsIndex, IGraphNode> getParents();
-//	void addParent(GraphNodeBranch graphNodeBranch, int nextItemIndex);
-	
-	IGraphNode getParent();
+//	IGraphNode getParent();
 	List<IGraphNode> getChildren();
 
 	
@@ -86,24 +82,24 @@ public interface IGraphNode {
 		public PreviousInfo(IGraphNode node, int atPosition) {
 			this.node = node;
 			this.atPosition = atPosition;
-			this.hashCode_cache = Objects.hash(node.getRuntimeRule().getRuleNumber(),atPosition);
+//			this.hashCode_cache = Objects.hash(node.getRuntimeRule().getRuleNumber(),atPosition);
 		}
 		public IGraphNode node;
 		public int atPosition;
 		
-		int hashCode_cache;
-		@Override
-		public int hashCode() {
-			return this.hashCode_cache;
-		}
-		@Override
-		public boolean equals(Object arg) {
-			if (!(arg instanceof PreviousInfo)) {
-				return false;
-			}
-			PreviousInfo other = (PreviousInfo)arg;
-			return this.atPosition == other.atPosition && this.node==other.node;
-		}
+//		int hashCode_cache;
+//		@Override
+//		public int hashCode() {
+//			return this.hashCode_cache;
+//		}
+//		@Override
+//		public boolean equals(Object arg) {
+//			if (!(arg instanceof PreviousInfo)) {
+//				return false;
+//			}
+//			PreviousInfo other = (PreviousInfo)arg;
+//			return this.atPosition == other.atPosition && this.node==other.node;
+//		}
 		@Override
 		public String toString() {
 			return "(".concat(Integer.toString(this.atPosition)).concat(",").concat(this.node.toString()).concat(")");
@@ -118,6 +114,7 @@ public interface IGraphNode {
 
 	IGraphNode duplicateWithNextChild(IGraphNode nextChild);
 	IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild);
+
 
 
 }

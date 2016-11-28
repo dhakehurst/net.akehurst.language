@@ -1,26 +1,19 @@
 package net.akehurst.language.parse.graph;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import net.akehurst.language.grammar.parse.tree.Leaf;
-import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 
-	public GraphNodeLeaf(IParseGraph graph, IGraphNode parent, Leaf leaf) {
-		super(graph, parent);
-		this.parent = parent;
-//		int parentRuleNumber = null==parent ? -1 : parent.getRuntimeRule().getRuleNumber();
-		int parentRuleNumber = null==parent ? -1 : parent.hashCode();
-		this.hashCode_cache = Objects.hash(leaf.getRuntimeRule().getRuleNumber(), leaf.getStart(), leaf.getMatchedTextLength(),parentRuleNumber);
+//	public GraphNodeLeaf(ParseGraph graph, RuntimeRule runtimeRule, int startPosition, int machedTextLength) {
+	public GraphNodeLeaf(ParseGraph graph, Leaf leaf) {
+		super(graph, leaf.getRuntimeRule(), leaf.getStart(),leaf.getMatchedTextLength());
 		this.leaf = leaf;
-		this.nextInputPosition = leaf.getEnd();
 	}
-	
+	Leaf leaf;
 	@Override
 	public IGraphNode duplicateWithNextChild(IGraphNode nextChild) {
 		throw new RuntimeException("Internal Error: Should never happen");
@@ -29,10 +22,6 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 	public IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild) {
 		throw new RuntimeException("Internal Error: Should never happen");
 	}
-	
-	Leaf leaf;
-
-	int nextInputPosition;
 	
 
 	@Override
@@ -50,10 +39,7 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 		return this.getRuntimeRule().getIsEmptyRule();
 	}
 
-	@Override
-	public RuntimeRule getRuntimeRule() {
-		return leaf.getRuntimeRule();
-	}
+
 
 	@Override
 	public int getPriority() {
@@ -61,23 +47,8 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 	}
 
 	@Override
-	public int getStartPosition() {
-		return this.leaf.getStart();
-	}
-
-//	@Override
-//	public int getEndPosition() {
-//		return this.leaf.getEnd();
-//	}
-
-	@Override
-	public int getNextInputPosition() {
-		return this.nextInputPosition;
-	}
-	
-	@Override
-	public int getMatchedTextLength() {
-		return this.leaf.getMatchedTextLength();
+	public int getHeight() {
+		return 1;
 	}
 	
 	@Override
@@ -131,26 +102,10 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 		return Collections.emptyList();
 	}
 
-//	@Override
-//	public IGraphNode addNextChild(IGraphNode gn) {
-//		throw new RuntimeException("Internal Error: Should never happen");
-//	}
-//
-//	@Override
-//	public IGraphNode addSkipChild(IGraphNode gn) {
-//		throw new RuntimeException("Internal Error: Should never happen");
-//	}
-//
-//	@Override
-//	public IGraphNode replace(IGraphNode newParent) {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-
 	@Override
 	public String toString() {
 		return "'"+this.getRuntimeRule().getTerminalPatternText()+"'"
-	    + "("+this.leaf.getRuntimeRule().getRuleNumber()+"," +this.leaf.getStart()+","+this.leaf.getMatchedTextLength()+")"
+	    + "("+this.getRuntimeRule().getRuleNumber()+"," +this.getStartPosition()+","+this.getMatchedTextLength()+")"
 		+ (this.getPrevious().isEmpty() ? "" : " -> " + this.getPrevious().get(0));
 	}
 	

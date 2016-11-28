@@ -430,7 +430,7 @@ public class Java8_Tests {
 	}
 	
 	@Test
-	public void methodDeclaration() {
+	public void methodDeclaration8() {
 
 		String input = "public abstract <E extends Throwable> void accept(Visitor<E> v);";
 
@@ -538,7 +538,7 @@ public class Java8_Tests {
 		Assert.assertNotNull(tree);
 	}
 
-//	@Test
+	@Test
 	public void T6257443() {
 
 		String input = "";
