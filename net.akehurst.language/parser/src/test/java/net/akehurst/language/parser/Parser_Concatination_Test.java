@@ -33,11 +33,6 @@ import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
 public class Parser_Concatination_Test extends AbstractParser_Test {
 
-	@Before
-	public void before() {
-		this.parseTreeFactory = new RuntimeRuleSetBuilder();
-	}
-	
 	Grammar aempty() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("a").choice();

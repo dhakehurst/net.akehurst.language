@@ -91,11 +91,19 @@ public class RuntimeRule {
 	}
 
 	public RuntimeRule getRhsItem(int index) {
-		return this.getRhs().getItems()[index];
+		if (this.getKind() == RuntimeRuleKind.TERMINAL) {
+			return null;
+		} else {
+			return this.getRhs().getItems()[index];
+		}
 	}
 
 	public int getRhsIndexOf(RuntimeRule rule) {
-		return Arrays.asList(this.getRhs().getItems()).indexOf(rule);
+		if (this.getKind() == RuntimeRuleKind.TERMINAL) {
+			return -1;
+		} else {
+			return Arrays.asList(this.getRhs().getItems()).indexOf(rule);
+		}
 	}
 
 	public RuntimeRule getSeparator() {
@@ -103,7 +111,11 @@ public class RuntimeRule {
 	}
 
 	public RuntimeRule getRuleThatIsEmpty() {
-		return this.getRhsItem(0);
+		if (this.getIsEmptyRule()) {
+			return this.getRhs().getItems()[0];
+		} else {
+			return null;
+		}
 	}
 
 	Set<RuntimeRule> findAllNonTerminal() {
@@ -178,34 +190,39 @@ public class RuntimeRule {
 	 * @return
 	 */
 	public boolean couldHaveChild(RuntimeRule possibleChild, int atPosition) {
-		if (possibleChild.getIsSkipRule()) {
-			return true;
+		if (this.getKind() == RuntimeRuleKind.TERMINAL) {
+			return false;
 		} else {
-			switch (this.getRhs().getKind()) {
-				case EMPTY:
-					return false;
-				case CHOICE:
-					return 0 == atPosition ? true : false;
-				case PRIORITY_CHOICE:
-					return 0 == atPosition ? true : false;
-				case CONCATENATION:
-					return atPosition >= this.getRhs().getItems().length ? false : this.getRhsItem(atPosition).getRuleNumber() == possibleChild.getRuleNumber();
-				case MULTI:
-					return this.getRhsItem(0).getRuleNumber() == possibleChild.getRuleNumber()
-					|| (this.getRhs().getMultiMin() == 0 && possibleChild.getIsEmptyRule() && possibleChild.getRuleThatIsEmpty().getRuleNumber()==this.getRuleNumber());
-				case SEPARATED_LIST: {
-					if (possibleChild.getIsEmptyRule()) {
-						return this.getRhs().getMultiMin() == 0 && possibleChild.getRuleThatIsEmpty().getRuleNumber()==this.getRuleNumber();
-					} else {
-						if (atPosition % 2 == 0) {
-							return this.getRhsItem(0).getRuleNumber() == possibleChild.getRuleNumber();
+			if (possibleChild.getIsSkipRule()) {
+				return true;
+			} else {
+				switch (this.getRhs().getKind()) {
+					case EMPTY:
+						return false;
+					case CHOICE:
+						return 0==atPosition && Arrays.asList(this.getRhs().getItems()).contains(possibleChild);
+					case PRIORITY_CHOICE:
+						return 0==atPosition && Arrays.asList(this.getRhs().getItems()).contains(possibleChild);
+					case CONCATENATION:
+						return atPosition >= this.getRhs().getItems().length ? false
+								: this.getRhsItem(atPosition).getRuleNumber() == possibleChild.getRuleNumber();
+					case MULTI:
+						return this.getRhsItem(0).getRuleNumber() == possibleChild.getRuleNumber() || (this.getRhs().getMultiMin() == 0 && atPosition==0
+								&& possibleChild.getIsEmptyRule() && possibleChild.getRuleThatIsEmpty().getRuleNumber() == this.getRuleNumber());
+					case SEPARATED_LIST: {
+						if (possibleChild.getIsEmptyRule()) {
+							return this.getRhs().getMultiMin() == 0 && possibleChild.getRuleThatIsEmpty().getRuleNumber() == this.getRuleNumber();
 						} else {
-							return this.getSeparator().getRuleNumber() == possibleChild.getRuleNumber();
+							if (atPosition % 2 == 0) {
+								return this.getRhsItem(0).getRuleNumber() == possibleChild.getRuleNumber();
+							} else {
+								return this.getSeparator().getRuleNumber() == possibleChild.getRuleNumber();
+							}
 						}
 					}
+					default:
+						throw new RuntimeException("Internal Error: rule kind not recognised " + this.getRhs().getKind());
 				}
-				default:
-					throw new RuntimeException("Internal Error: rule kind not recognised " + this.getRhs().getKind());
 			}
 		}
 	}
@@ -240,38 +257,41 @@ public class RuntimeRule {
 		return result;
 	}
 
-	public Set<RuntimeRule> findAllPossibleTerminalAt(int n) {
-		Set<RuntimeRule> result = new HashSet<>();
-		switch (this.getRhs().getKind()) {
-			case EMPTY:
-			break;
-			case CHOICE:
-				return this.findTerminalAt(n);
-			case PRIORITY_CHOICE:
-				return this.findTerminalAt(n);
-			case CONCATENATION:
-				return this.findTerminalAt(n);
-			case MULTI: {
-				if (0 == this.getRhs().getMultiMin()) {
-					Set<RuntimeRule> s = this.findAllPossibleTerminalAt(n + 1);
-					result.addAll(s);
-					// result.add(this.runtimeRuleSet.getEmptyRule());
-				}
-			}
-			break;
-			case SEPARATED_LIST: {
-				if (0 == this.getRhs().getMultiMin()) {
-					Set<RuntimeRule> s = this.findAllPossibleTerminalAt(n + 1);
-					result.addAll(s);
-					// result.add(this.runtimeRuleSet.getEmptyRule());
-				}
-			}
-			break;
-			default:
-			break;
-		}
-		return result;
-	}
+//	public Set<RuntimeRule> findAllPossibleTerminalAt(int n) {
+//		if (this.getKind() == RuntimeRuleKind.TERMINAL) {
+//			return this.findTerminalAt(n);
+//		}
+//		Set<RuntimeRule> result = new HashSet<>();
+//		switch (this.getRhs().getKind()) {
+//			case EMPTY:
+//			break;
+//			case CHOICE:
+//				return this.findTerminalAt(n);
+//			case PRIORITY_CHOICE:
+//				return this.findTerminalAt(n);
+//			case CONCATENATION:
+//				return this.findTerminalAt(n);
+//			case MULTI: {
+//				if (0 == this.getRhs().getMultiMin()) {
+//					Set<RuntimeRule> s = this.findTerminalAt(n);
+//					result.addAll(s);
+//					// result.add(this.runtimeRuleSet.getEmptyRule());
+//				}
+//			}
+//			break;
+//			case SEPARATED_LIST: {
+//				if (0 == this.getRhs().getMultiMin()) {
+//					Set<RuntimeRule> s = this.findTerminalAt(n);
+//					result.addAll(s);
+//					// result.add(this.runtimeRuleSet.getEmptyRule());
+//				}
+//			}
+//			break;
+//			default:
+//			break;
+//		}
+//		return result;
+//	}
 
 	public Set<RuntimeRule> findTerminalAt(int n) {
 		Set<RuntimeRule> result = new HashSet<>();

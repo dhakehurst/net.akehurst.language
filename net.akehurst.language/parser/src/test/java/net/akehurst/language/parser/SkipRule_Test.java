@@ -34,11 +34,6 @@ import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class SkipRule_Test extends AbstractParser_Test {
 	
-	@Before
-	public void before() {
-		this.parseTreeFactory = new RuntimeRuleSetBuilder();
-	}
-	
 	Grammar as() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.skip("WS").concatination( new TerminalPattern("\\s+") );

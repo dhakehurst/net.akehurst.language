@@ -66,14 +66,16 @@ public class RuntimeRuleItem {
 				if (0==n) {
 					result.addAll( Arrays.asList(this.getItems()) );
 				} else {
-					throw new UnsupportedOperationException("this is not implemented yet!");
+					//do nothing
+//					throw new UnsupportedOperationException("this is not implemented yet!");
 				}
 			} break;
 			case CHOICE: {
 				if (0==n) {
 					result.addAll( Arrays.asList(this.getItems()) );
 				} else {
-					throw new UnsupportedOperationException("this is not implemented yet!");
+					//do nothing
+//					throw new UnsupportedOperationException("Internal Error");
 				}
 			} break;
 			case CONCATENATION: {

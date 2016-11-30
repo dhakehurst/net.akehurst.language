@@ -8,21 +8,23 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 
-//	public GraphNodeLeaf(ParseGraph graph, RuntimeRule runtimeRule, int startPosition, int machedTextLength) {
+	// public GraphNodeLeaf(ParseGraph graph, RuntimeRule runtimeRule, int startPosition, int machedTextLength) {
 	public GraphNodeLeaf(ParseGraph graph, Leaf leaf) {
-		super(graph, leaf.getRuntimeRule(), leaf.getStart(),leaf.getMatchedTextLength());
+		super(graph, leaf.getRuntimeRule(), leaf.getStart(), leaf.getMatchedTextLength());
 		this.leaf = leaf;
 	}
+
 	Leaf leaf;
+
 	@Override
 	public IGraphNode duplicateWithNextChild(IGraphNode nextChild) {
 		throw new RuntimeException("Internal Error: Should never happen");
 	}
+
 	@Override
 	public IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild) {
 		throw new RuntimeException("Internal Error: Should never happen");
 	}
-	
 
 	@Override
 	public boolean getIsLeaf() {
@@ -33,13 +35,11 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 	public int getNextItemIndex() {
 		return -1;
 	}
-	
+
 	@Override
 	public boolean getIsEmpty() {
 		return this.getRuntimeRule().getIsEmptyRule();
 	}
-
-
 
 	@Override
 	public int getPriority() {
@@ -50,7 +50,7 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 	public int getHeight() {
 		return 1;
 	}
-	
+
 	@Override
 	public boolean getCanGrow() {
 		return this.getIsStacked();
@@ -86,15 +86,24 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 		return false;
 	}
 
+	@Override
+	public List<RuntimeRule> getNextExpectedTerminals() {
+		return Collections.emptyList();
+	}
 
 	@Override
-	public RuntimeRule getNextExpectedItem() {
+	public List<RuntimeRule> getNextExpectedItem() {
 		throw new RuntimeException("Internal Error: Should never happen");
 	}
-	
+
 	@Override
 	public RuntimeRule getExpectedItemAt(int atPosition) {
 		throw new RuntimeException("Internal Error: Should never happen");
+	}
+
+	@Override
+	public boolean getExpectsItemAt(RuntimeRule item, int atPosition) {
+		return false;
 	}
 	
 	@Override
@@ -104,9 +113,8 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 
 	@Override
 	public String toString() {
-		return "'"+this.getRuntimeRule().getTerminalPatternText()+"'"
-	    + "("+this.getRuntimeRule().getRuleNumber()+"," +this.getStartPosition()+","+this.getMatchedTextLength()+")"
-		+ (this.getPrevious().isEmpty() ? "" : " -> " + this.getPrevious().get(0));
+		return "'" + this.getRuntimeRule().getTerminalPatternText() + "'" + "(" + this.getRuntimeRule().getRuleNumber() + "," + this.getStartPosition() + ","
+				+ this.getMatchedTextLength() + ")" + (this.getPrevious().isEmpty() ? "" : " -> " + this.getPrevious().get(0));
 	}
-	
+
 }

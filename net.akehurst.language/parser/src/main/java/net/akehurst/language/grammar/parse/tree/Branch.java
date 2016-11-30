@@ -33,10 +33,10 @@ public class Branch extends Node implements IBranch {
 	public Branch(final RuntimeRule runtimeRule, final INode[] children) {
 		super(runtimeRule);
 		this.children = children;
-		this.start = this.children[0].getStart();
+		this.start = this.children.length==0 ? -1 : this.children[0].getStart();
 		this.length = 0;
 		this.isEmpty = true;
-		this.firstLeaf = children[0].getFirstLeaf();
+		this.firstLeaf = this.children.length==0 ? null : children[0].getFirstLeaf();
 		for(INode n: this.children) {
 			this.isEmpty &= n.getIsEmpty();
 			this.length += n.getMatchedTextLength();

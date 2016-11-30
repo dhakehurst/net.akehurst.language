@@ -31,11 +31,6 @@ import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 import net.akehurst.language.parser.AbstractParser_Test;
 
 public class Speed_Test extends AbstractParser_Test {
-
-	@Before
-	public void before() {
-		this.parseTreeFactory = new RuntimeRuleSetBuilder();
-	}
 	
 	Grammar abcds() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");

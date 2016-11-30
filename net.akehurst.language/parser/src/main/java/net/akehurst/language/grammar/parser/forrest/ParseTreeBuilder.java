@@ -30,28 +30,30 @@ import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
 public class ParseTreeBuilder {
 
-	public ParseTreeBuilder(ForrestFactory ffactory, Grammar grammar, String goal, CharSequence text) {
-		this.runtimeBuilder = ffactory.runtimeBuilder;
-		this.input = new Input(ffactory, " "+text);
+	public ParseTreeBuilder(RuntimeRuleSetBuilder runtimeRules, Grammar grammar, String goal, CharSequence text, int offset) {
+		this.runtimeBuilder = runtimeRules;
+		this.input = new Input3(runtimeRules, text);
 		this.grammar = grammar;
 		this.textAccumulator = "";
 		this.textLength = 0;
+		this.offset = offset;
 	}
 
 	RuntimeRuleSetBuilder runtimeBuilder;
 	Grammar grammar;
-	Input input;
+	Input3 input;
 	String textAccumulator;
 	int textLength;
+	int offset;
 
 	public ILeaf leaf(String text) {
 		return this.leaf(text, text);
 	}
 	
 	public ILeaf leaf(String terminalPattern, String text) {
-		int start = this.textLength+1;
+		int start = this.textLength+this.offset;
 		this.textLength+=text.length();
-		int end = this.textLength +1;
+		int end = this.textLength +this.offset;
 		Terminal terminal = null;
 		if (terminalPattern.isEmpty()) {
 			terminal = new TerminalEmpty();
@@ -64,7 +66,7 @@ public class ParseTreeBuilder {
 	}
 
 	public ILeaf emptyLeaf(String ruleNameThatIsEmpty) {
-		int start = this.textLength +1;
+		int start = this.textLength +this.offset;
 		RuntimeRule ruleThatIsEmpty = this.runtimeBuilder.getRuntimeRuleSet().getRuntimeRule(ruleNameThatIsEmpty);
 		RuntimeRule terminalRule = this.runtimeBuilder.getRuntimeRuleSet().getEmptyRule(ruleThatIsEmpty);
 		return this.runtimeBuilder.createLeaf(this.input, start, start, terminalRule);

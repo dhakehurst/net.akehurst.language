@@ -23,16 +23,16 @@ public class ParseGraph implements IParseGraph {
 	}
 
 	public static final class NodeIndex {
-		public NodeIndex(int ruleNumber, int startPosition, int length) {
+		public NodeIndex(int ruleNumber, int startPosition) { //, int length) {
 			this.ruleNumber = ruleNumber;
 			this.startPosition = startPosition;
-			this.length = length;
-			this.hashCode_cache = Objects.hash(ruleNumber, startPosition, length);
+//			this.length = length;
+			this.hashCode_cache = Objects.hash(ruleNumber, startPosition); //, length);
 		}
 
 		int ruleNumber;
 		int startPosition;
-		int length;
+//		int length;
 
 		int hashCode_cache;
 
@@ -47,13 +47,18 @@ public class ParseGraph implements IParseGraph {
 				return false;
 			}
 			NodeIndex other = (NodeIndex) arg;
-			return this.ruleNumber == other.ruleNumber && this.startPosition == other.startPosition && this.length == other.length;
+			return this.ruleNumber == other.ruleNumber
+					&& this.startPosition == other.startPosition
+//					&& this.length == other.length
+					;
 		}
 
 		@Override
 		public String toString() {
-			return "(".concat(Integer.toString(this.ruleNumber)).concat(",").concat(Integer.toString(this.startPosition)).concat(",")
-					.concat(Integer.toString(this.length)).concat(")");
+			return "(".concat(Integer.toString(this.ruleNumber)).concat(",")
+					.concat(Integer.toString(this.startPosition)).concat(",")
+//					.concat(Integer.toString(this.length))
+					.concat(")");
 		}
 	}
 
@@ -66,7 +71,7 @@ public class ParseGraph implements IParseGraph {
 
 	@Override
 	public IGraphNode findCompleteNode(int ruleNumber, int start, int length) {
-		NodeIndex id = new NodeIndex(ruleNumber, start, length);// , l.getEnd(), -1);
+		NodeIndex id = new NodeIndex(ruleNumber, start);//, length);// , l.getEnd(), -1);
 		IGraphNode gn = this.nodes.get(id);
 		return gn;
 	}
@@ -119,10 +124,15 @@ public class ParseGraph implements IParseGraph {
 	}
 
 	public void registerCompleteNode(IGraphNode node) {
-		NodeIndex index = new NodeIndex(node.getRuntimeRule().getRuleNumber(), node.getStartPosition(), node.getMatchedTextLength());
+		NodeIndex index = new NodeIndex(node.getRuntimeRule().getRuleNumber(), node.getStartPosition());//, node.getMatchedTextLength());
 		if (this.nodes.containsKey(index)) {
-//			IGraphNode existing = this.nodes.get(index);
-//			System.out.println("merging complete node " + node);
+			IGraphNode existing = this.nodes.get(index);
+			if (node.getMatchedTextLength() > existing.getMatchedTextLength()) {
+				this.nodes.put(index, node);
+			} else {
+//				System.out.println("complete node " + existing);
+//				System.out.println("is longer than " + node);
+			}
 		} else {
 			this.nodes.put(index, node);
 		}
@@ -155,7 +165,7 @@ public class ParseGraph implements IParseGraph {
 	@Override
 	public IGraphNode createLeaf(Leaf leaf, RuntimeRule terminalRule, int startPosition, int machedTextLength) {
 		IGraphNode gn = new GraphNodeLeaf(this, leaf);
-		this.addGrowable(gn);
+//		this.addGrowable(gn);
 //		this.registerCompleteNode(gn);
 		return gn;
 	}
@@ -166,7 +176,7 @@ public class ParseGraph implements IParseGraph {
 		if (null == gn) {
 			gn = new GraphNodeLeaf(this, leaf);
 			this.addGrowable(gn);
-			this.registerCompleteNode(gn);
+//			this.registerCompleteNode(gn);
 		}
 		return gn;
 	}
@@ -178,7 +188,9 @@ public class ParseGraph implements IParseGraph {
 			gn = this.createBranch(rr, priority, startPosition, machedTextLength, nextItemIndex, height);
 			return gn;
 		} else {
-			return gn;
+			IGraphNode gn2 = new GraphNodeBranch(this, gn.getRuntimeRule(), gn.getPriority(), gn.getStartPosition(), gn.getMatchedTextLength(), gn.getNextItemIndex(), gn.getHeight());
+			gn2.getChildren().addAll(gn.getChildren());
+			return gn2;
 		}
 	}
 

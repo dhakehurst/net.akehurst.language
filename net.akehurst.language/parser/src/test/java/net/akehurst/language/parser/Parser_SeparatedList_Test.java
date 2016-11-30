@@ -32,11 +32,6 @@ import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
 public class Parser_SeparatedList_Test extends AbstractParser_Test {
-
-	@Before
-	public void before() {
-		this.parseTreeFactory = new RuntimeRuleSetBuilder();
-	}
 	
 	Grammar as1() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");

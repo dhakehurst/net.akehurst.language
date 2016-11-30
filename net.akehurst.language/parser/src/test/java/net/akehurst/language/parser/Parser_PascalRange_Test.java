@@ -33,11 +33,6 @@ import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class Parser_PascalRange_Test extends AbstractParser_Test {
-
-	@Before
-	public void before() {
-		this.parseTreeFactory = new RuntimeRuleSetBuilder();
-	}
 	
 	Grammar pascal() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");

@@ -35,22 +35,22 @@ import net.akehurst.language.ogl.semanticStructure.Grammar;
 abstract
 public class AbstractParser_Test {
 	
-	protected RuntimeRuleSetBuilder parseTreeFactory;
+	protected RuntimeRuleSetBuilder runtimeRules;
 	
 	@Before
 	public void before() {
-		this.parseTreeFactory = new RuntimeRuleSetBuilder();
+		this.runtimeRules = new RuntimeRuleSetBuilder();
 	}
 	
 	ParseTreeBuilder builder(Grammar grammar, String text, String goal) {
-		ForrestFactory ff = new ForrestFactory(this.parseTreeFactory, text);
-		return new ParseTreeBuilder(ff, grammar, goal, text);
+
+		return new ParseTreeBuilder(runtimeRules, grammar, goal, text,0);
 	}
 	
 	protected IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
 		try {
 			INodeType goal = grammar.findAllRule(goalName).getNodeType();
-			IParser parser = new ScannerLessParser3(this.parseTreeFactory, grammar);
+			IParser parser = new ScannerLessParser3(this.runtimeRules, grammar);
 			IParseTree tree = parser.parse(goal, text);
 			return tree;
 		} catch (RuleNotFoundException e) {

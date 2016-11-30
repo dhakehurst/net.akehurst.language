@@ -72,10 +72,24 @@ public class ScannerLessParser3 implements IParser {
 
 	@Override
 	public void build(INodeType goalNodeType) {
-		this.createPseudoGrammar(goalNodeType);
+		//this.createPseudoGrammar(goalNodeType);
+		this.init();
 		this.runtimeRuleSet.build();
 	}
 
+	void init() {
+		try {
+
+			this.runtimeRuleSet = this.converter.transformLeft2Right(Grammar2RuntimeRuleSet.class, this.grammar);
+//			int pseudoGoalNumber = this.runtimeRuleSet.getRuleNumber(goalRule.getName());
+//			RuntimeRule pseudoGoalRR = this.runtimeRuleSet.getRuntimeRule(pseudoGoalNumber);
+//			return pseudoGoalRR;
+		} catch (Exception e) {
+			e.printStackTrace();
+
+		}
+	}
+	
 	RuntimeRule createPseudoGrammar(INodeType goal) {
 		try {
 			this.pseudoGrammar = new Grammar(new Namespace(grammar.getNamespace().getQualifiedName() + "::pseudo"), "Pseudo");
@@ -111,7 +125,7 @@ public class ScannerLessParser3 implements IParser {
 	public IParseTree parse(INodeType goal, CharSequence text) throws ParseFailedException, ParseTreeException {
 		try {
 			// return this.doParse2(goal, text);
-			GraphNodeRoot gr = this.parse2(goal, text);
+			GraphNodeRoot gr = this.parse3(goal, text);
 			IParseTree tree = new ParseTreeFromGraph(gr);
 			// set the parent property of each child, these are not set during parsing
 			this.setParentForChildren((IBranch) tree.getRoot());
@@ -166,6 +180,17 @@ public class ScannerLessParser3 implements IParser {
 		return gr;
 	}
 
+	public GraphNodeRoot parse3(INodeType goal, CharSequence text) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
+		if (null == this.runtimeRuleSet) {
+			this.build(goal);
+		}
+		int goalRuleNumber = this.runtimeRuleSet.getRuleNumber(goal.getIdentity().asPrimitive());
+		RuntimeRule goalRR = this.runtimeRuleSet.getRuntimeRule(goalRuleNumber);
+		IGraphNode node = this.doParse3(goalRR, text);
+		GraphNodeRoot gr = new GraphNodeRoot(goalRR, node.getChildren());
+		return gr;
+	}
+	
 	IGraphNode doParse2(RuntimeRule pseudoGoalRule, CharSequence text) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
 		
 		RuntimeRule sst = this.getRuntimeRuleSet().getForTerminal(START_SYMBOL_TERMINAL.getValue());
@@ -177,7 +202,7 @@ public class ScannerLessParser3 implements IParser {
 		
 //		ForrestFactory2 ff = new ForrestFactory2(this.runtimeBuilder, text);
 //		ParseTreeBud2 startBud = ff.createNewBuds(new RuntimeRule[] { sst }, 0).get(0);
-		Forrest3 newForrest = new Forrest3(graph, this.getRuntimeRuleSet(), input);
+		Forrest3 newForrest = new Forrest3(graph, this.getRuntimeRuleSet(), input, pseudoGoalRule);
 //		newForrest.newSeeds(Arrays.asList(startBud));
 
 		int seasons = 1;
@@ -193,5 +218,25 @@ public class ScannerLessParser3 implements IParser {
 		IGraphNode match = newForrest.getLongestMatch(text);
 		return match;
 	}
+
+	IGraphNode doParse3(RuntimeRule goalRule, CharSequence text) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
+		Input3 input = new Input3(this.runtimeBuilder, text);
+		IParseGraph graph = new ParseGraph();
+		Forrest3 newForrest = new Forrest3(graph, this.getRuntimeRuleSet(), input, goalRule);
+		newForrest.start(graph, goalRule, input);
+		int seasons = 1;
+		
+		Forrest3 oldForrest = null;
+		do {
+			oldForrest = newForrest.shallowClone(); // remove this later, its for debugging
+			newForrest = oldForrest.grow();
+			seasons++;
+		} while(newForrest.getCanGrow());
+		
+		IGraphNode match = newForrest.getLongestMatch(text);
+		return match;
+	}
+	
+	
 
 }

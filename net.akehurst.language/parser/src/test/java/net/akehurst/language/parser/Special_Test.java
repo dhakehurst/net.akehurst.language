@@ -33,11 +33,6 @@ import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
 public class Special_Test extends AbstractParser_Test {
 	
-	@Before
-	public void before() {
-		this.parseTreeFactory = new RuntimeRuleSetBuilder();
-	}
-	
 	Grammar S() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		//b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"));

@@ -56,10 +56,12 @@ public interface IGraphNode {
 
 	boolean hasNextExpectedItem();
 
-	RuntimeRule getNextExpectedItem();
+	List<RuntimeRule> getNextExpectedItem();
+	List<RuntimeRule> getNextExpectedTerminals();
 
 	RuntimeRule getExpectedItemAt(int atPosition);
-	
+	boolean getExpectsItemAt(RuntimeRule item, int atPosition);
+
 //	IGraphNode getParent();
 	List<IGraphNode> getChildren();
 
@@ -78,7 +80,7 @@ public interface IGraphNode {
 	 * @return
 	 */
 	List<PreviousInfo> getPrevious();
-	static final class PreviousInfo {
+	public static final class PreviousInfo {
 		public PreviousInfo(IGraphNode node, int atPosition) {
 			this.node = node;
 			this.atPosition = atPosition;
@@ -114,7 +116,5 @@ public interface IGraphNode {
 
 	IGraphNode duplicateWithNextChild(IGraphNode nextChild);
 	IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild);
-
-
 
 }

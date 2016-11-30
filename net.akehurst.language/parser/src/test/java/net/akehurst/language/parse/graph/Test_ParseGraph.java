@@ -129,4 +129,10 @@ public class Test_ParseGraph {
 		}
 
 	}
+	
+	@Test
+	public void f() {
+		create leaf at same position as existing, but with different stack?
+			// e.g. parse empty B followed by 'b' B (see special test)
+	}
 }
