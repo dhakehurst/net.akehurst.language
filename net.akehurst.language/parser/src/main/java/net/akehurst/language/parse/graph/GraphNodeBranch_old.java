@@ -36,9 +36,9 @@ public class GraphNodeBranch_old extends AbstractGraphNode implements IGraphNode
 		duplicate.children.add(nextChild);
 		duplicate.getPrevious().addAll(this.getPrevious());
 		
-		if (duplicate.getCanGrow()) {
-			this.graph.addGrowable(duplicate);
-		}
+
+			this.graph.tryAddGrowable(duplicate);
+
 		if (duplicate.getIsComplete()) {
 			this.graph.registerCompleteNode(duplicate);
 		}
@@ -55,9 +55,9 @@ public class GraphNodeBranch_old extends AbstractGraphNode implements IGraphNode
 		duplicate.children.add(nextChild);
 		duplicate.getPrevious().addAll(this.getPrevious());
 		
-		if (duplicate.getCanGrow()) {
-			this.graph.addGrowable(duplicate);
-		}
+
+			this.graph.tryAddGrowable(duplicate);
+
 		if (duplicate.getIsComplete()) {
 			this.graph.registerCompleteNode(duplicate);
 		}

@@ -24,7 +24,6 @@ import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
-import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 

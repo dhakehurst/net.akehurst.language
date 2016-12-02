@@ -15,6 +15,10 @@
  */
 package net.akehurst.language.processor;
 
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
@@ -22,23 +26,15 @@ import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.parser.RuleNotFoundException;
-import net.akehurst.language.grammar.parser.ScannerLessParser2;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
-import net.akehurst.language.grammar.parser.ToStringVisitor;
-import net.akehurst.language.grammar.parser.forrest.ForrestFactory;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.grammar.OGLGrammar;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 public class OGLParser_Test {
 	RuntimeRuleSetBuilder parseTreeFactory;
@@ -49,8 +45,7 @@ public class OGLParser_Test {
 	}
 
 	ParseTreeBuilder builder(Grammar grammar, String text, String goal) {
-		ForrestFactory ff = new ForrestFactory(this.parseTreeFactory, text);
-		return new ParseTreeBuilder(ff, grammar, goal, text);
+		return new ParseTreeBuilder(this.parseTreeFactory, grammar, goal, text,0);
 	}
 
 	IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
@@ -344,7 +339,7 @@ public class OGLParser_Test {
 	}
 	
 	@Test
-	public void separatedList_rule() {
+	public void separatedList_normalRule() {
 		try {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();
@@ -361,7 +356,7 @@ public class OGLParser_Test {
 	}
 	
 	@Test
-	public void separatedList_rule_withWS() {
+	public void separatedList_normalRule_withWS() {
 		try {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 			Grammar g = proc.getGrammar();
@@ -369,6 +364,76 @@ public class OGLParser_Test {
 			String text = "sepList : ('a' / ',')+;";
 
 			IParseTree tree = this.process(g, text, "normalRule");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void separatedList_rules() {
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+
+			String text = "sepList:('a'/',')+;";
+
+			IParseTree tree = this.process(g, text, "rules");
+
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void separatedList_rules_withWS() {
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+
+			String text = "sepList : ('a' / ',')+;";
+
+			IParseTree tree = this.process(g, text, "rules");
+
+			Assert.assertNotNull(tree);
+			Assert.assertEquals(text.length(), tree.getRoot().getMatchedTextLength());
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void separatedList_grammar() {
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+
+			String text = "grammarA{sepList:('a'/',')+;}";
+
+			IParseTree tree = this.process(g, text, "grammar");
+
+			Assert.assertNotNull(tree);
+			Assert.assertEquals(text.length(), tree.getRoot().getMatchedTextLength());
+
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void separatedList_grammar_withWS() {
+		try {
+			OGLanguageProcessor proc = new OGLanguageProcessor();
+			Grammar g = proc.getGrammar();
+
+			String text = "grammar A { sepList : ('a' / ',')+; }";
+
+			IParseTree tree = this.process(g, text, "grammar");
 
 			Assert.assertNotNull(tree);
 

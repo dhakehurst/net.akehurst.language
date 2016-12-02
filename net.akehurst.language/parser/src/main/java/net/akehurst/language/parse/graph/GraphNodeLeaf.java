@@ -27,6 +27,11 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 	}
 
 	@Override
+	public IGraphNode duplicateWithOtherStack(int priority, List<PreviousInfo> previous) {
+		throw new RuntimeException("Internal Error: Should never happen");
+	}
+	
+	@Override
 	public boolean getIsLeaf() {
 		return true;
 	}
@@ -36,14 +41,10 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 		return -1;
 	}
 
-	@Override
-	public boolean getIsEmpty() {
-		return this.getRuntimeRule().getIsEmptyRule();
-	}
 
 	@Override
 	public int getPriority() {
-		return 0;
+		return this.getRuntimeRule().getIsEmptyRule()? Integer.MAX_VALUE: 0;
 	}
 
 	@Override
@@ -76,6 +77,11 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 		return false;
 	}
 
+	@Override
+	public boolean getCanGrowWidthWithSkip() {
+		return false;
+	}
+	
 	@Override
 	public boolean getIsStacked() {
 		return !this.getPrevious().isEmpty();

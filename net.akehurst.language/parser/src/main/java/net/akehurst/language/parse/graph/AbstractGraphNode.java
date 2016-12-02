@@ -11,7 +11,7 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 abstract public class AbstractGraphNode implements IGraphNode {
 
-	public AbstractGraphNode(ParseGraph graph, RuntimeRule runtimeRule, int startPosition,int matchedTextLength) {
+	public AbstractGraphNode(ParseGraph graph, RuntimeRule runtimeRule, int startPosition, int matchedTextLength) {
 		this.graph = graph;
 		this.runtimeRule = runtimeRule;
 		this.startPosition = startPosition;
@@ -24,47 +24,58 @@ abstract public class AbstractGraphNode implements IGraphNode {
 	protected int startPosition;
 	protected int matchedTextLength;
 	private List<PreviousInfo> previous;
+	int stackHash;
 
 	@Override
 	public RuntimeRule getRuntimeRule() {
 		return this.runtimeRule;
 	}
-	
+
 	@Override
 	public int getStartPosition() {
 		return this.startPosition;
 	}
-	
+
 	@Override
 	public int getMatchedTextLength() {
 		return this.matchedTextLength;
 	}
-	
+
 	@Override
 	public int getNextInputPosition() {
 		return this.startPosition + this.matchedTextLength;
+	}
+
+	@Override
+	public int getStackHash() {
+		//TODO: pre-cache this value when stack changes
+		if (0==this.stackHash && !this.getPrevious().isEmpty()) {
+			for(PreviousInfo prev: this.getPrevious()) {
+				this.stackHash = Objects.hash(prev.node.getRuntimeRule().getRuleNumber(), prev.node.getStackHash());
+			}
+		}
+		return this.stackHash;
 	}
 	
 	@Override
 	public List<PreviousInfo> getPrevious() {
 		return this.previous;
 	}
-//
-//	IGraphNode parent;
-//	@Override
-//	public IGraphNode getParent() {
-//		return this.parent;
-//	}
-	
+	//
+	// IGraphNode parent;
+	// @Override
+	// public IGraphNode getParent() {
+	// return this.parent;
+	// }
+
 	@Override
 	public IGraphNode pushToStackOf(IGraphNode next, int atPosition) {
 		next.getPrevious().add(new PreviousInfo(this, atPosition));
-		if (next.getCanGrow()) {
-			this.graph.addGrowable(next);
-		}
+
+		this.graph.tryAddGrowable(next);
+
 		return next;
 	}
-
 
 	@Override
 	public int hashCode() {

@@ -196,7 +196,7 @@ public class ScannerLessParser3 implements IParser {
 		RuntimeRule sst = this.getRuntimeRuleSet().getForTerminal(START_SYMBOL_TERMINAL.getValue());
 		Input3 input = new Input3(this.runtimeBuilder, text);
 		Leaf l = input.fetchOrCreateBud(sst,0);
-		IParseGraph graph = new ParseGraph();
+		IParseGraph graph = new ParseGraph(pseudoGoalRule,text.length());
 		IGraphNode gn= graph.findOrCreateLeaf(l, sst,0,0);
 //		graph.addGrowable(gn);
 		
@@ -221,7 +221,7 @@ public class ScannerLessParser3 implements IParser {
 
 	IGraphNode doParse3(RuntimeRule goalRule, CharSequence text) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
 		Input3 input = new Input3(this.runtimeBuilder, text);
-		IParseGraph graph = new ParseGraph();
+		IParseGraph graph = new ParseGraph(goalRule,text.length());
 		Forrest3 newForrest = new Forrest3(graph, this.getRuntimeRuleSet(), input, goalRule);
 		newForrest.start(graph, goalRule, input);
 		int seasons = 1;

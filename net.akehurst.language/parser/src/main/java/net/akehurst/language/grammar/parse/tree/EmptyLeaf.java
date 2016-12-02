@@ -17,7 +17,6 @@ package net.akehurst.language.grammar.parse.tree;
 
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
-import net.akehurst.language.grammar.parser.forrest.Input;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class EmptyLeaf extends Leaf {

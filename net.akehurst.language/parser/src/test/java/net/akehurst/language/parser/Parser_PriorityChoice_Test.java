@@ -21,13 +21,13 @@ import org.junit.Test;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.grammar.parser.ToStringVisitor;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class Parser_PriorityChoice_Test extends AbstractParser_Test {
 	
@@ -136,6 +136,43 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
 				b.branch("abc",
 					b.branch("c",
 						b.leaf("c", "c")
+					)
+				);
+			
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	Grammar kwOrId() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("S").priorityChoice(new NonTerminal("type"));
+		b.rule("type").priorityChoice(new NonTerminal("id"), new NonTerminal("kw"));
+		b.rule("kw").concatenation(new TerminalLiteral("int"));
+		b.rule("id").concatenation(new TerminalPattern("[a-z]+"));
+		return b.get();
+	}
+	
+	@Test
+	public void kwOrId_S_int() {
+		// grammar, goal, input
+		try {
+			Grammar g = kwOrId();
+			String goal = "S";
+			String text = "int";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+
+			ParseTreeBuilder b = this.builder(g, text, goal);
+			IBranch expected = 
+				b.branch("S",
+					b.branch("type",
+						b.branch("id",
+							b.leaf("[a-z]+","int")
+						)
 					)
 				);
 			

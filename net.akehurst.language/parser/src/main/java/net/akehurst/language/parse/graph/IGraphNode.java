@@ -8,6 +8,7 @@ import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.parse.graph.IGraphNode.PreviousInfo;
 
 
 public interface IGraphNode {
@@ -27,8 +28,6 @@ public interface IGraphNode {
 	
 	int getHeight();
 	
-	boolean getIsEmpty();
-
 	boolean getIsLeaf();
 
 
@@ -51,7 +50,7 @@ public interface IGraphNode {
 	boolean getCanGraftBack();
 
 	boolean getCanGrowWidth();
-
+	boolean getCanGrowWidthWithSkip();
 	boolean getIsStacked();
 
 	boolean hasNextExpectedItem();
@@ -74,6 +73,8 @@ public interface IGraphNode {
 	 */
 	IGraphNode pushToStackOf(IGraphNode next, int atPosition);
 
+	int getStackHash();
+	
 	/**
 	 * return list of things that are stacked previous to this one
 	 * 
@@ -116,5 +117,11 @@ public interface IGraphNode {
 
 	IGraphNode duplicateWithNextChild(IGraphNode nextChild);
 	IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild);
+
+	IGraphNode duplicateWithOtherStack(int priority, List<PreviousInfo> previous);
+
+
+
+
 
 }

@@ -16,8 +16,6 @@ import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.grammar.parser.ParseTreeToString;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
-import net.akehurst.language.processor.LanguageProcessor;
-import net.akehurst.language.processor.OGLanguageProcessor;
 
 public class Java8_Tests {
 

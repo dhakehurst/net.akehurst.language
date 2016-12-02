@@ -15,26 +15,6 @@
  */
 package net.akehurst.language.processor;
 
-import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.INodeType;
-import net.akehurst.language.core.parser.IParseTree;
-import net.akehurst.language.core.parser.IParser;
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.parser.RuleNotFoundException;
-import net.akehurst.language.grammar.parser.ScannerLessParser2;
-import net.akehurst.language.grammar.parser.ToStringVisitor;
-import net.akehurst.language.grammar.parser.forrest.ForrestFactory;
-import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -43,6 +23,11 @@ import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.core.parser.ParseFailedException;
+import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
+import net.akehurst.language.ogl.semanticStructure.Grammar;
 
 public class OGL_ParseJava_Test {
 	RuntimeRuleSetBuilder parseTreeFactory;

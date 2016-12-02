@@ -16,15 +16,12 @@
 package net.akehurst.language.parser;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.grammar.parser.ToStringVisitor;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
@@ -391,6 +388,121 @@ public class SkipRule_Test extends AbstractParser_Test {
 					)
 				);
 			
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+
+	Grammar S() {
+		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.skip("WS").concatination( new TerminalPattern("\\s+") );
+
+		b.rule("S").concatenation(new TerminalLiteral("a"));
+		return b.get();
+	}
+
+	@Test
+	public void S_S_a() {
+		// grammar, goal, input
+		try {
+			Grammar g = S();
+			String goal = "S";
+			String text = "a";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("S",
+						b.leaf("a")
+				);
+			
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void S_S_WSa() {
+		// grammar, goal, input
+		try {
+			Grammar g = S();
+			String goal = "S";
+			String text = " a";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("S",
+					b.branch("WS",
+						b.leaf("\\s+", " ")
+					),
+					b.leaf("a")
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void S_S_aWS() {
+		// grammar, goal, input
+		try {
+			Grammar g = S();
+			String goal = "S";
+			String text = "a ";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("S",
+					b.leaf("a"),
+					b.branch("WS",
+						b.leaf("\\s+", " ")
+					)
+				);
+			Assert.assertEquals(expected, tree.getRoot());
+			
+		} catch (ParseFailedException e) {
+			Assert.fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void S_S_WSaWS() {
+		// grammar, goal, input
+		try {
+			Grammar g = as();
+			String goal = "as";
+			String text = " a ";
+			
+			IParseTree tree = this.process(g, text, goal);
+			Assert.assertNotNull(tree);
+			
+			ParseTreeBuilder b = this.builder(g, text, goal);;
+			IBranch expected = 
+				b.branch("as",
+					b.branch("WS",
+						b.leaf("\\s+", " ")
+					),
+					b.branch("a",
+						b.leaf("a", "a"),
+						b.branch("WS",
+								b.leaf("\\s+", " ")
+							)
+					)
+				);
 			Assert.assertEquals(expected, tree.getRoot());
 			
 		} catch (ParseFailedException e) {

@@ -20,8 +20,6 @@ import java.util.regex.Pattern;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.core.parser.INodeType;
-import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 abstract

@@ -25,7 +25,6 @@ import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
-import net.akehurst.language.grammar.parser.forrest.ForrestFactory;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
@@ -41,8 +40,7 @@ public class AbstractParser_Test {
 	}
 	
 	ParseTreeBuilder builder(Grammar grammar, String text, String goal) {
-		ForrestFactory ff = new ForrestFactory(this.parseTreeFactory, text);
-		return new ParseTreeBuilder(ff, grammar, goal, text);
+		return new ParseTreeBuilder(this.parseTreeFactory, grammar, goal, text,0);
 	}
 	
 	protected IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {

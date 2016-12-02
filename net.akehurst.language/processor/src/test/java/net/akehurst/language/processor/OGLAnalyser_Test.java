@@ -15,6 +15,9 @@
  */
 package net.akehurst.language.processor;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
@@ -22,9 +25,6 @@ import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 public class OGLAnalyser_Test {
 

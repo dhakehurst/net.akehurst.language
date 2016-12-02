@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
+import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 
 public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 
@@ -40,9 +41,9 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 		duplicate.children.add(nextChild);
 		duplicate.getPrevious().addAll(this.getPrevious());
 
-		if (duplicate.getCanGrow()) {
-			this.graph.addGrowable(duplicate);
-		}
+
+			this.graph.tryAddGrowable(duplicate);
+
 		if (duplicate.getIsComplete()) {
 			this.graph.registerCompleteNode(duplicate);
 		}
@@ -60,9 +61,9 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 		duplicate.children.add(nextChild);
 		duplicate.getPrevious().addAll(this.getPrevious());
 
-		if (duplicate.getCanGrow()) {
-			this.graph.addGrowable(duplicate);
-		}
+
+			this.graph.tryAddGrowable(duplicate);
+
 		if (duplicate.getIsComplete()) {
 			this.graph.registerCompleteNode(duplicate);
 		}
@@ -71,6 +72,23 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 	}
 
 	@Override
+	public IGraphNode duplicateWithOtherStack(int priority, List<PreviousInfo> previous) {
+		GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.getRuntimeRule(), priority, this.getStartPosition(), this.getMatchedTextLength(), this.getNextItemIndex(),
+				this.getHeight());
+		duplicate.children = new ArrayList<>(this.children);
+		duplicate.getPrevious().addAll(previous);
+
+			this.graph.tryAddGrowable(duplicate);
+
+		
+		if (duplicate.getIsComplete()) {
+			this.graph.registerCompleteNode(duplicate);
+		}
+
+		return duplicate;
+	}
+	
+	@Override
 	public int getNextItemIndex() {
 		return this.nextItemIndex;
 	}
@@ -78,11 +96,6 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 	@Override
 	public boolean getIsLeaf() {
 		return false;
-	}
-
-	@Override
-	public boolean getIsEmpty() {
-		return 0 == this.getMatchedTextLength();
 	}
 
 	@Override
@@ -200,6 +213,11 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 
 	}
 
+	@Override
+	public boolean getCanGrowWidthWithSkip() {
+		return !this.getRuntimeRule().getIsEmptyRule() && this.getRuntimeRule().getKind()==RuntimeRuleKind.NON_TERMINAL;
+	}
+	
 	@Override
 	public boolean getIsStacked() {
 		return !this.getPrevious().isEmpty();
