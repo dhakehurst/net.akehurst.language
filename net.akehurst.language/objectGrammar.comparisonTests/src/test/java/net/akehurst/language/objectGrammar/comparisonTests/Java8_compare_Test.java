@@ -54,8 +54,8 @@ public class Java8_compare_Test {
 				}
 			});
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 		return params;
 	}
@@ -115,8 +115,8 @@ public class Java8_compare_Test {
 			og_input = new String(bytes);
 			antlr_input = new ANTLRInputStream(new String(bytes));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 	}
 

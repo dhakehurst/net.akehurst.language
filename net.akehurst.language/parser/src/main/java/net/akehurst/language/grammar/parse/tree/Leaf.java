@@ -39,10 +39,10 @@ public class Leaf extends Node implements ILeaf {
 	int end;
 	RuntimeRule terminalRule;
 
-	@Override
-	public boolean getIsEmpty() {
-		return false;
-	}
+//	@Override
+//	public boolean getIsEmpty() {
+//		return false;
+//	}
 	
 	@Override
 	public String getName() {
@@ -50,24 +50,24 @@ public class Leaf extends Node implements ILeaf {
 	}
 
 	@Override
-	public int getStart() {
+	public int getStartPosition() {
 		return this.start;
 	}
 	
-	@Override
-	public int getEnd() {
-		return this.end;
-	}
+//	@Override
+//	public int getEnd() {
+//		return this.end;
+//	}
 	
 	@Override
 	public int getMatchedTextLength() {
 		return end - start;
 	}
 
-	@Override
-	public ILeaf getFirstLeaf() {
-		return this;
-	}
+//	@Override
+//	public ILeaf getFirstLeaf() {
+//		return this;
+//	}
 	
 	@Override
 	public <T, A, E extends Throwable> T accept(IParseTreeVisitor<T, A, E> visitor, A arg) throws E {

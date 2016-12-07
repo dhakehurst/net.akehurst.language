@@ -25,10 +25,10 @@ public class EmptyLeaf extends Leaf {
 		super(input, pos, pos, terminalRule);
 	}
 	
-	@Override
-	public boolean getIsEmpty() {
-		return true;
-	}
+//	@Override
+//	public boolean getIsEmpty() {
+//		return true;
+//	}
 	
 	@Override
 	public String getName() {

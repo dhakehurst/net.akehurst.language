@@ -19,14 +19,12 @@ import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.RuleNotFoundException;
-import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalEmpty;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
 public class ParseTreeBuilder {
 

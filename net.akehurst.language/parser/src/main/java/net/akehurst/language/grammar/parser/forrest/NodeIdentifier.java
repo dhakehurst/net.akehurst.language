@@ -15,12 +15,7 @@
  */
 package net.akehurst.language.grammar.parser.forrest;
 
-import java.util.Collections;
 import java.util.Objects;
-
-import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.grammar.parse.tree.Branch;
-import net.akehurst.language.grammar.parse.tree.Node;
 
 //Identifies a node as (rule,start,end)
 // comparing identifiers does not mean duplicate trees

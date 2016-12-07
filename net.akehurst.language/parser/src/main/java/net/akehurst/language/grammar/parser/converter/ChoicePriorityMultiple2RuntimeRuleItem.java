@@ -22,7 +22,6 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
 import net.akehurst.language.ogl.semanticStructure.ChoicePriority;
-import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
 import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
 import net.akehurst.transform.binary.Relation;

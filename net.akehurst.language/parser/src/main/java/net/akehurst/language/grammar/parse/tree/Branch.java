@@ -32,12 +32,12 @@ public class Branch extends Node implements IBranch {
 	public Branch(final RuntimeRule runtimeRule, final INode[] children) {
 		super(runtimeRule);
 		this.children = children;
-		this.start = this.children.length==0 ? -1 : this.children[0].getStart();
+		this.start = this.children.length==0 ? -1 : this.children[0].getStartPosition();
 		this.length = 0;
-		this.isEmpty = true;
-		this.firstLeaf = this.children.length==0 ? null : children[0].getFirstLeaf();
+//		this.isEmpty = true;
+//		this.firstLeaf = this.children.length==0 ? null : children[0].getFirstLeaf();
 		for(INode n: this.children) {
-			this.isEmpty &= n.getIsEmpty();
+//			this.isEmpty &= n.getIsEmpty();
 			this.length += n.getMatchedTextLength();
 		}
 		this.hashCode_cache = Objects.hash(this.runtimeRule.getRuleNumber(),this.start,this.length);
@@ -47,11 +47,11 @@ public class Branch extends Node implements IBranch {
 	int length;
 	int start;
 	
-	boolean isEmpty;
-	@Override
-	public boolean getIsEmpty() {
-		return isEmpty;
-	}
+//	boolean isEmpty;
+//	@Override
+//	public boolean getIsEmpty() {
+//		return isEmpty;
+//	}
 	
 	@Override
 	public String getName() {
@@ -59,25 +59,25 @@ public class Branch extends Node implements IBranch {
 	}
 
 	@Override
-	public int getStart() {
+	public int getStartPosition() {
 		return this.start;
 	}
 	
-	@Override
-	public int getEnd() {
-		return this.start + this.length;
-	}
+//	@Override
+//	public int getEnd() {
+//		return this.start + this.length;
+//	}
 	
 	@Override
 	public int getMatchedTextLength() {
 		return this.length;
 	}
 
-	ILeaf firstLeaf;
-	@Override
-	public ILeaf getFirstLeaf() {
-		return firstLeaf;
-	}
+//	ILeaf firstLeaf;
+//	@Override
+//	public ILeaf getFirstLeaf() {
+//		return firstLeaf;
+//	}
 	
 	@Override
 	public String getMatchedText() {

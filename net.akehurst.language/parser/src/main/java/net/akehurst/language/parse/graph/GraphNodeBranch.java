@@ -3,14 +3,15 @@ package net.akehurst.language.parse.graph;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 
+import net.akehurst.language.core.parser.IBranch;
+import net.akehurst.language.core.parser.INode;
+import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 
-public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
+public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IBranch {
 
 	public GraphNodeBranch(ParseGraph graph, RuntimeRule rr, int priority, int startPosition, int textLength, int nextItemIndex, int height) {
 		super(graph, rr, startPosition, textLength);
@@ -21,7 +22,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 	}
 
 	int priority;
-	List<IGraphNode> children;
+	List<INode> children;
 	int nextItemIndex;
 	int height;
 
@@ -38,9 +39,11 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 		// newNextItemIndex, this.height);
 		GraphNodeBranch duplicate = new GraphNodeBranch(graph, this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex, this.height);
 		duplicate.children = new ArrayList<>(this.children);
-		duplicate.children.add(nextChild);
-		duplicate.getPrevious().addAll(this.getPrevious());
+		duplicate.children.add((INode)nextChild);
 
+		for(PreviousInfo info: this.getPrevious()) {
+			duplicate.addPrevious(info.node, info.atPosition);
+		}
 
 			this.graph.tryAddGrowable(duplicate);
 
@@ -58,9 +61,11 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 		GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex,
 				this.height);
 		duplicate.children = new ArrayList<>(this.children);
-		duplicate.children.add(nextChild);
-		duplicate.getPrevious().addAll(this.getPrevious());
+		duplicate.children.add((INode)nextChild);
 
+		for(PreviousInfo info: this.getPrevious()) {
+			duplicate.addPrevious(info.node, info.atPosition);
+		}
 
 			this.graph.tryAddGrowable(duplicate);
 
@@ -76,8 +81,10 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 		GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.getRuntimeRule(), priority, this.getStartPosition(), this.getMatchedTextLength(), this.getNextItemIndex(),
 				this.getHeight());
 		duplicate.children = new ArrayList<>(this.children);
-		duplicate.getPrevious().addAll(previous);
 
+		for(PreviousInfo info: previous) {
+			duplicate.addPrevious(info.node, info.atPosition);
+		}
 			this.graph.tryAddGrowable(duplicate);
 
 		
@@ -141,7 +148,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 				boolean res = false;
 				if (0 == this.getRuntimeRule().getRhs().getMultiMin() && this.nextItemIndex == 1) {
 					// complete if we have an empty node as child
-					res = this.getChildren().isEmpty() ? false : this.getChildren().get(0).getRuntimeRule().getIsEmptyRule();
+					res = this.getChildren().isEmpty() ? false : this.getChildAt(0).getRuntimeRule().getIsEmptyRule();
 				}
 				int size = this.nextItemIndex;
 				return res || (size > 0 && size >= this.getRuntimeRule().getRhs().getMultiMin()) || this.nextItemIndex == -1; // the -1 is used when creating dummy branch...should
@@ -193,7 +200,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 				}
 			}
 			case MULTI: {
-				if (!this.getChildren().isEmpty() && this.getChildren().get(0).getRuntimeRule().getIsEmptyRule()) {
+				if (!this.getChildren().isEmpty() && this.getChildAt(0).getRuntimeRule().getIsEmptyRule()) {
 					return false;
 				}
 				int size = this.nextItemIndex;
@@ -201,7 +208,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 				return -1 == max || size < max;
 			}
 			case SEPARATED_LIST: {
-				if (!this.getChildren().isEmpty() && this.getChildren().get(0).getRuntimeRule().getIsEmptyRule()) {
+				if (!this.getChildren().isEmpty() && this.getChildAt(0).getRuntimeRule().getIsEmptyRule()) {
 					return false;
 				}
 				return true;
@@ -296,6 +303,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 
 	@Override
 	public List<RuntimeRule> getNextExpectedTerminals() {
+		//TODO: cache this
 		List<RuntimeRule> nextItem = this.getNextExpectedItem();
 		ArrayList<RuntimeRule> l = new ArrayList<>();
 		for (RuntimeRule r : nextItem) {
@@ -406,10 +414,76 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode {
 	}
 
 	@Override
-	public List<IGraphNode> getChildren() {
+	public List<INode> getChildren() {
 		return this.children;
 	}
+	
+	public IGraphNode getChildAt(int index) {
+		return (IGraphNode)this.children.get(index);
+	}
 
+	@Override
+	public INode getChild(int index) {
+		List<INode> children = this.getChildren();
+
+		//get first non skip child
+		int child=0;
+		INode n = children.get(child);
+		while(n.getIsSkip() && child < (children.size()-1)) {
+			++child;
+			n = children.get(child);
+		}
+		if (child >= children.size()) {
+			return null;
+		}
+		int count=0;
+
+		while(count < index && child < (children.size()-1)) {
+			++child;
+			n = children.get(child);
+			while(n.getIsSkip()) {
+				++child;
+				n = children.get(child);
+			}
+			++count;
+		}
+
+		if (child < children.size()) {
+			return n;
+		} else {
+			return null;
+		}}
+	
+	@Override
+	public String getMatchedText() {
+		String str = "";
+		for(INode n: this.getChildren()) {
+			str += n.getMatchedText();
+		}
+		return str;
+	}
+	
+	List<INode> nonSkipChildren_cache;
+	@Override
+	public List<INode> getNonSkipChildren() {
+		if (null==nonSkipChildren_cache) {
+			this.nonSkipChildren_cache = new ArrayList<>();
+			for (INode n:this.getChildren()) {
+				if (n.getIsSkip()) {
+					
+				} else {
+					this.nonSkipChildren_cache.add(n);
+				}
+			}
+		}
+		return this.nonSkipChildren_cache;
+	}
+	
+	@Override
+	public <T, A, E extends Throwable> T accept(IParseTreeVisitor<T, A, E> visitor, A arg) throws E {
+		return visitor.visit(this, arg);
+	}
+	
 	@Override
 	public String toString() {
 		return this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + "," + this.getStartPosition() + ","

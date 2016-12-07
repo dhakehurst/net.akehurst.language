@@ -24,9 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.ogl.semanticStructure.Rule;
-import net.akehurst.language.ogl.semanticStructure.Terminal;
 
 public class RuntimeRuleSet {
 

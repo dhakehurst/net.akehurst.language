@@ -22,10 +22,8 @@ import net.akehurst.language.grammar.parse.tree.Branch;
 import net.akehurst.language.grammar.parse.tree.Factory;
 import net.akehurst.language.grammar.parse.tree.IInput;
 import net.akehurst.language.grammar.parse.tree.Leaf;
-import net.akehurst.language.grammar.parser.forrest.Input;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.Terminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalEmpty;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class RuntimeRuleSetBuilder {

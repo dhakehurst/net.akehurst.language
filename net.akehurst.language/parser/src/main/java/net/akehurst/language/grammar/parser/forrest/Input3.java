@@ -15,21 +15,17 @@
  */
 package net.akehurst.language.grammar.parser.forrest;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.akehurst.language.core.parser.INodeType;
-import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.grammar.parse.tree.EmptyLeaf;
 import net.akehurst.language.grammar.parse.tree.IInput;
 import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.parse.graph.IParseGraph;
 
 public class Input3 implements IInput {
 
@@ -38,7 +34,7 @@ public class Input3 implements IInput {
 		this.NO_LEAF = this.ffactory.createLeaf(null, -1, -1, null);
 		this.text = text;
 		this.leaf_cache = new HashMap<>();
-		this.bud_cache = new HashMap<>();
+		//this.bud_cache = new HashMap<>();
 	}
 	RuntimeRuleSetBuilder ffactory;
 	public CharSequence text;
@@ -51,33 +47,22 @@ public class Input3 implements IInput {
 		return text.length();
 	}
 
-//	public List<ParseTreeBud2> createNewBuds(RuntimeRule[] possibleNextTerminals, int pos) throws RuleNotFoundException {
-//		List<ParseTreeBud2> buds = new ArrayList<>();
-////		buds.add(new ParseTreeEmptyBud(this,pos)); // always add empty bud as a new bud
-//		for (RuntimeRule terminalRule : possibleNextTerminals) {
-//			ParseTreeBud2 newBud = this.createBud(terminalRule, pos);
-//			if (null!=newBud) {
-//				buds.add(newBud);
+	
+	//Map<IntPair, ParseTreeBud2> bud_cache;
+//	public ParseTreeBud2 createBud(RuntimeRule terminalRule, int pos) {
+//		int terminalTypeNumber = terminalRule.getRuleNumber();
+//		IntPair key = new IntPair(terminalTypeNumber, pos);
+//		ParseTreeBud2 bud = this.bud_cache.get(key);
+//		if (null==bud) {
+//			Leaf l = this.fetchOrCreateBud(terminalRule, pos);
+//			if (NO_LEAF!=l) {
+//				bud = new ParseTreeBud2(l);
+//				this.bud_cache.put(key, bud);
+//				return bud;
 //			}
 //		}
-//		return buds;
+//		return bud;
 //	}
-	
-	Map<IntPair, ParseTreeBud2> bud_cache;
-	public ParseTreeBud2 createBud(RuntimeRule terminalRule, int pos) {
-		int terminalTypeNumber = terminalRule.getRuleNumber();
-		IntPair key = new IntPair(terminalTypeNumber, pos);
-		ParseTreeBud2 bud = this.bud_cache.get(key);
-		if (null==bud) {
-			Leaf l = this.fetchOrCreateBud(terminalRule, pos);
-			if (NO_LEAF!=l) {
-				bud = new ParseTreeBud2(l);
-				this.bud_cache.put(key, bud);
-				return bud;
-			}
-		}
-		return bud;
-	}
 	
 	final Leaf NO_LEAF;
 	class IntPair {

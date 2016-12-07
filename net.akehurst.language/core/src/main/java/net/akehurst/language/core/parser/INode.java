@@ -22,15 +22,15 @@ public interface INode extends IParseTreeVisitable{
 	
 	String getName();
 	
-	int getStart();
-	int getEnd();
+	int getStartPosition();
+//	int getEnd();
 	int getMatchedTextLength();
 	String getMatchedText();
 
-	boolean getIsEmpty();
+//	boolean getIsEmpty();
 	boolean getIsSkip();
 
 	int getNumberOfLines();
 	
-	ILeaf getFirstLeaf();
+//	ILeaf getFirstLeaf();
 }

@@ -7,13 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
+import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.grammar.parse.tree.Leaf;
-import net.akehurst.language.grammar.parser.forrest.Input3;
-import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
-import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
+import net.akehurst.language.parse.graph.IGraphNode.PreviousInfo;
 
 public class ParseGraph implements IParseGraph {
 
@@ -235,8 +233,11 @@ public class ParseGraph implements IParseGraph {
 	public IGraphNode createWithFirstChild(RuntimeRule runtimeRule, int priority, IGraphNode firstChild) {
 		IGraphNode gn = new GraphNodeBranch(this, runtimeRule, priority, firstChild.getStartPosition(), firstChild.getMatchedTextLength(), 1,
 				firstChild.getHeight() + 1);
-		gn.getChildren().add(firstChild);
-		gn.getPrevious().addAll(firstChild.getPrevious());
+		gn.getChildren().add((INode)firstChild);
+		for(PreviousInfo info: firstChild.getPrevious()) {
+			gn.addPrevious(info.node, info.atPosition);
+		}
+//		gn.getPrevious().addAll(firstChild.getPrevious());
 
 		this.tryAddGrowable(gn);
 

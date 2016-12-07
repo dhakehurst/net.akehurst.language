@@ -257,8 +257,8 @@ public class Java8_Tests {
 		try {
 			tree = parse("formalParameter", input);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 		Assert.assertNotNull(tree);
 
@@ -276,8 +276,8 @@ public class Java8_Tests {
 		try {
 			tree = parse("formalParameters", input);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 		Assert.assertNotNull(tree);
 
@@ -295,8 +295,8 @@ public class Java8_Tests {
 		try {
 			tree = parse("formalParameters", input);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 		Assert.assertNotNull(tree);
 
@@ -314,8 +314,8 @@ public class Java8_Tests {
 		try {
 			tree = parse("formalParameters", input);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 		Assert.assertNotNull(tree);
 
@@ -333,8 +333,8 @@ public class Java8_Tests {
 		try {
 			tree = parse("typeArguments", input);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 		Assert.assertNotNull(tree);
 
@@ -366,8 +366,8 @@ public class Java8_Tests {
 		try {
 			tree = parse("classBody", input);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 		Assert.assertNotNull(tree);
 
@@ -663,6 +663,10 @@ public class Java8_Tests {
 		input += "}";
 		IParseTree tree = parse(input);
 		Assert.assertNotNull(tree);
+		
+		ParseTreeToString x = new ParseTreeToString();
+		String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
 	}
 
 	@Test
@@ -672,6 +676,15 @@ public class Java8_Tests {
 		input += "class Test {";
 		input += "}";
 		IParseTree tree = parse(input);
+		Assert.assertNotNull(tree);
+	}
+	
+	@Test
+	public void HexFloatLiteral() {
+		String input = "check(+0Xfffffffffffffbcp-59D, Double.parseDouble(\"+0Xfffffffffffffbcp-59D\"));";
+
+		IParseTree tree = parse("blockStatement",input);
+		
 		Assert.assertNotNull(tree);
 	}
 }

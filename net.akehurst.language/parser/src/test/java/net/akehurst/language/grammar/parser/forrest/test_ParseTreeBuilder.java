@@ -6,7 +6,6 @@ import org.junit.Test;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.converter.Grammar2RuntimeRuleSet;
-import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -30,11 +29,11 @@ public class test_ParseTreeBuilder {
 			ParseTreeBuilder b = new ParseTreeBuilder(runtimeRules, grammar, "a", text,0);
 			ILeaf l = b.leaf("a");
 
-			Assert.assertEquals(0, l.getStart());
-			Assert.assertEquals(1, l.getEnd());
+			Assert.assertEquals(0, l.getStartPosition());
+//			Assert.assertEquals(1, l.getEnd());
 			Assert.assertEquals(1, l.getMatchedTextLength());
 			Assert.assertEquals(0, l.getNumberOfLines());
-			Assert.assertEquals(false, l.getIsEmpty());
+//			Assert.assertEquals(false, l.getIsEmpty());
 			Assert.assertEquals(false, l.getIsSkip());
 			Assert.assertEquals("a", l.getMatchedText());
 			Assert.assertEquals("a", l.getName());

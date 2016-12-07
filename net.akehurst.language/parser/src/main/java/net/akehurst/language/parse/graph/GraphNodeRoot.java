@@ -1,6 +1,5 @@
 package net.akehurst.language.parse.graph;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;

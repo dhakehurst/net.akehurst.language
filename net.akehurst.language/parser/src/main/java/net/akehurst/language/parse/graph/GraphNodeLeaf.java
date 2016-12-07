@@ -3,14 +3,17 @@ package net.akehurst.language.parse.graph;
 import java.util.Collections;
 import java.util.List;
 
+import net.akehurst.language.core.parser.ILeaf;
+import net.akehurst.language.core.parser.INode;
+import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
-public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
+public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode, ILeaf {
 
 	// public GraphNodeLeaf(ParseGraph graph, RuntimeRule runtimeRule, int startPosition, int machedTextLength) {
 	public GraphNodeLeaf(ParseGraph graph, Leaf leaf) {
-		super(graph, leaf.getRuntimeRule(), leaf.getStart(), leaf.getMatchedTextLength());
+		super(graph, leaf.getRuntimeRule(), leaf.getStartPosition(), leaf.getMatchedTextLength());
 		this.leaf = leaf;
 	}
 
@@ -113,10 +116,20 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode {
 	}
 	
 	@Override
-	public List<IGraphNode> getChildren() {
+	public List<INode> getChildren() {
 		return Collections.emptyList();
 	}
 
+	@Override
+	public String getMatchedText() {
+		return this.leaf.getMatchedText();//input.get(this.start, this.end).toString();
+	}
+	
+	@Override
+	public <T, A, E extends Throwable> T accept(IParseTreeVisitor<T, A, E> visitor, A arg) throws E {
+		return visitor.visit(this, arg);
+	}
+	
 	@Override
 	public String toString() {
 		return "'" + this.getRuntimeRule().getTerminalPatternText() + "'" + "(" + this.getRuntimeRule().getRuleNumber() + "," + this.getStartPosition() + ","

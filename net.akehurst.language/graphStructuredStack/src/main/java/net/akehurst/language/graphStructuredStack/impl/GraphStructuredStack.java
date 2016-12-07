@@ -64,12 +64,6 @@ public class GraphStructuredStack<K, V> implements IGraphStructuredStack<K, V> {
 	}
 	
 	@Override
-	public IGraphStructuredStack<K, V> shallowClone() {
-		// TODO clone it
-		return this;
-	}
-	
-	@Override
 	public String toString() {
 		String out = "";
 		for(IGssNode<K, V> n : this.getTops()) {

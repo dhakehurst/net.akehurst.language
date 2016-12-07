@@ -1,17 +1,13 @@
 package net.akehurst.language.parse.graph;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.grammar.parser.forrest.NodeIdentifier;
+import net.akehurst.language.core.parser.IParseTreeVisitable;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
-import net.akehurst.language.parse.graph.IGraphNode.PreviousInfo;
 
 
-public interface IGraphNode {
+public interface IGraphNode extends IParseTreeVisitable {
 
 
 	RuntimeRule getRuntimeRule();
@@ -62,7 +58,7 @@ public interface IGraphNode {
 	boolean getExpectsItemAt(RuntimeRule item, int atPosition);
 
 //	IGraphNode getParent();
-	List<IGraphNode> getChildren();
+	List<INode> getChildren();
 
 	
 	/**
@@ -81,6 +77,8 @@ public interface IGraphNode {
 	 * @return
 	 */
 	List<PreviousInfo> getPrevious();
+	void addPrevious(IGraphNode prev, int atPosition);
+
 	public static final class PreviousInfo {
 		public PreviousInfo(IGraphNode node, int atPosition) {
 			this.node = node;

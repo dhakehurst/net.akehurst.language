@@ -18,7 +18,6 @@ package net.akehurst.language.grammar.parser.converter;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
-import net.akehurst.language.ogl.semanticStructure.Multi;
 import net.akehurst.language.ogl.semanticStructure.SeparatedList;
 import net.akehurst.transform.binary.RelationNotFoundException;
 import net.akehurst.transform.binary.Transformer;

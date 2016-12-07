@@ -15,14 +15,9 @@
  */
 package net.akehurst.language.grammar.parser.runtime;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-
-import net.akehurst.language.ogl.semanticStructure.Rule;
-import net.akehurst.language.ogl.semanticStructure.Terminal;
 
 public class RuntimeRule {
 
@@ -200,6 +195,7 @@ public class RuntimeRule {
 					case EMPTY:
 						return false;
 					case CHOICE:
+						//TODO: cache this
 						return 0==atPosition && Arrays.asList(this.getRhs().getItems()).contains(possibleChild);
 					case PRIORITY_CHOICE:
 						return 0==atPosition && Arrays.asList(this.getRhs().getItems()).contains(possibleChild);

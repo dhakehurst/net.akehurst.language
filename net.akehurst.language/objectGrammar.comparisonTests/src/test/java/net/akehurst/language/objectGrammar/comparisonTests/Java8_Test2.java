@@ -53,8 +53,8 @@ public class Java8_Test2 {
 				}
 			});
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 		return params;
 	}
@@ -114,8 +114,8 @@ public class Java8_Test2 {
 			og_input = new String(bytes);
 			antlr_input = new ANTLRInputStream(new String(bytes));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 	}
 
@@ -125,10 +125,9 @@ public class Java8_Test2 {
 		try {
 			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), og_input);
 			return tree;
-		} catch (ParseFailedException e) {
-			return null;// e.getLongestMatch();
-		} catch (ParseTreeException e) {
+		} catch (ParseFailedException |ParseTreeException e) {
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 		return null;
 	}

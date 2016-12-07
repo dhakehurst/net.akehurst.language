@@ -15,7 +15,6 @@
  */
 package net.akehurst.language.grammar.parser.converter;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

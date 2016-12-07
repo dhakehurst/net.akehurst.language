@@ -17,7 +17,6 @@ package net.akehurst.language.grammar.parser.converter;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
-import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.SkipRule;

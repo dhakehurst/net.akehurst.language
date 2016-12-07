@@ -64,13 +64,9 @@ public class OGLAnalyser_Test {
 			IParseTree tree = proc.getParser().parse(proc.getDefaultGoal(), "a");
 			Assert.assertNotNull(tree);
 			
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		} catch (UnableToAnalyseExeception e) {
-			Assert.fail(e.getMessage());
-		} catch (ParseTreeException e) {
-			// TODO Auto-generated catch block
+		} catch (ParseFailedException | UnableToAnalyseExeception  | ParseTreeException e) {
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 	}
 

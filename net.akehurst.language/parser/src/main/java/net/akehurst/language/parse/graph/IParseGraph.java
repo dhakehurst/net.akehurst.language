@@ -2,7 +2,6 @@ package net.akehurst.language.parse.graph;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;

@@ -21,7 +21,6 @@ import java.util.List;
 
 import net.akehurst.language.grammar.parser.runtime.RuleForGroup;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
-import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;

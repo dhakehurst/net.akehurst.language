@@ -79,14 +79,9 @@ public class Java8_Test {
 			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), text);
 			
 			return tree;
-		} catch (ParseFailedException e) {
-			
-		} catch (ParseTreeException e) {
-			// TODO Auto-generated catch block
+		} catch (ParseFailedException |ParseTreeException | IOException e) {
 			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 		return null;
 	}
@@ -100,8 +95,8 @@ public class Java8_Test {
 			Java8Parser p = new Java8Parser(tokens);
 			return p.compilationUnit();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 		return null;
 	}
@@ -158,8 +153,8 @@ public class Java8_Test {
 				}
 			});
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 
 	}
@@ -184,8 +179,8 @@ public class Java8_Test {
 				}
 			});
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 
 	}
