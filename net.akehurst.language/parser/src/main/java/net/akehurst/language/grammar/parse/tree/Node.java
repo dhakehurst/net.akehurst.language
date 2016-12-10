@@ -22,39 +22,47 @@ import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
-abstract
-public class Node implements INode {
+abstract public class Node implements INode {
 
 	public Node(final RuntimeRule runtimeRule) {
 		this.runtimeRule = runtimeRule;
 	}
-		
+
 	IBranch parent;
+
 	public IBranch getParent() {
 		return parent;
 	}
+
 	public void setParent(IBranch value) {
 		this.parent = value;
 	}
-	
+
 	RuntimeRule runtimeRule;
+
 	public RuntimeRule getRuntimeRule() {
 		return this.runtimeRule;
+	}
+
+	@Override
+	public int getRuntimeRuleNumber() {
+		// TODO Auto-generated method stub
+		return this.getRuntimeRule().getRuleNumber();
 	}
 
 	public boolean getIsSkip() {
 		return this.runtimeRule.getIsSkipRule();
 	}
-	
+
 	@Override
 	public int getNumberOfLines() {
 		String str = this.getMatchedText();
 		Pattern p = Pattern.compile(System.lineSeparator());
-	    Matcher m = p.matcher(str);
-	    int count = 0;
-	    while (m.find()){
-	    	count +=1;
-	    }
-	    return count;
+		Matcher m = p.matcher(str);
+		int count = 0;
+		while (m.find()) {
+			count += 1;
+		}
+		return count;
 	}
 }

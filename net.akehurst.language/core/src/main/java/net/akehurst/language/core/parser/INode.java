@@ -21,6 +21,7 @@ public interface INode extends IParseTreeVisitable{
 	void setParent(IBranch value);
 	
 	String getName();
+	int getRuntimeRuleNumber();
 	
 	int getStartPosition();
 //	int getEnd();

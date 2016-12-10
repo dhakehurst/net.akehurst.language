@@ -120,6 +120,7 @@ public class ScannerLessParser3 implements IParser {
 			IGraphNode gr = this.parse3(goal, text);
 			IParseTree tree = new ParseTreeFromGraph(gr);
 			// set the parent property of each child, these are not set during parsing
+			//TODO: don't know if we need this, probably not
 			this.setParentForChildren((IBranch) tree.getRoot());
 			return tree;
 		} catch (RuleNotFoundException e) {

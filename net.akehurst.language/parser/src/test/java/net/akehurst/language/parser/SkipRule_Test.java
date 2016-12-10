@@ -140,16 +140,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a",
-						b.leaf("a", "a")
-					),
-					b.branch("WS",
-						b.leaf("\\s+", " ")
+						b.leaf("a", "a"),
+						b.branch("WS",
+							b.leaf("\\s+", " ")
+						)
 					),
 					b.branch("a",
-						b.leaf("a", "a")
-					),
-					b.branch("WS",
-						b.leaf("\\s+", " ")
+						b.leaf("a", "a"),
+						b.branch("WS",
+							b.leaf("\\s+", " ")
+						)
 					),
 					b.branch("a",
 						b.leaf("a", "a")
@@ -180,16 +180,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 						b.leaf("\\s+", " ")
 					),
 					b.branch("a",
-						b.leaf("a", "a")
-					),
-					b.branch("WS",
-						b.leaf("\\s+", " ")
+						b.leaf("a", "a"),
+						b.branch("WS",
+								b.leaf("\\s+", " ")
+							)
 					),
 					b.branch("a",
-						b.leaf("a", "a")
-					),
-					b.branch("WS",
-						b.leaf("\\s+", " ")
+						b.leaf("a", "a"),
+						b.branch("WS",
+								b.leaf("\\s+", " ")
+							)
 					),
 					b.branch("a",
 						b.leaf("a", "a")
@@ -216,22 +216,22 @@ public class SkipRule_Test extends AbstractParser_Test {
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a",
-						b.leaf("a", "a")
-					),
-					b.branch("WS",
-						b.leaf("\\s+", " ")
-					),
-					b.branch("a",
-						b.leaf("a", "a")
-					),
-					b.branch("WS",
-						b.leaf("\\s+", " ")
+						b.leaf("a", "a"),
+						b.branch("WS",
+								b.leaf("\\s+", " ")
+							)
 					),
 					b.branch("a",
-						b.leaf("a", "a")
+						b.leaf("a", "a"),
+						b.branch("WS",
+								b.leaf("\\s+", " ")
+							)
 					),
-					b.branch("WS",
-						b.leaf("\\s+", " ")
+					b.branch("a",
+						b.leaf("a", "a"),
+						b.branch("WS",
+								b.leaf("\\s+", " ")
+							)
 					)
 				);
 			Assert.assertEquals(expected, tree.getRoot());
@@ -258,22 +258,22 @@ public class SkipRule_Test extends AbstractParser_Test {
 						b.leaf("\\s+", " ")
 					),
 					b.branch("a",
-						b.leaf("a", "a")
-					),
-					b.branch("WS",
-						b.leaf("\\s+", " ")
-					),
-					b.branch("a",
-						b.leaf("a", "a")
-					),
-					b.branch("WS",
-						b.leaf("\\s+", " ")
+						b.leaf("a", "a"),
+						b.branch("WS",
+								b.leaf("\\s+", " ")
+							)
 					),
 					b.branch("a",
-						b.leaf("a", "a")
+						b.leaf("a", "a"),
+						b.branch("WS",
+								b.leaf("\\s+", " ")
+							)
 					),
-					b.branch("WS",
-						b.leaf("\\s+", " ")
+					b.branch("a",
+						b.leaf("a", "a"),
+						b.branch("WS",
+								b.leaf("\\s+", " ")
+							)
 					)
 				);
 			Assert.assertEquals(expected, tree.getRoot());
@@ -381,10 +381,10 @@ public class SkipRule_Test extends AbstractParser_Test {
 						b.branch("a",
 							b.leaf("a", "a")
 						),
-						b.leaf(".", ".")
-					),
-					b.branch("WS",
-						b.leaf("\\s+", " ")
+						b.leaf(".", "."),
+						b.branch("WS",
+							b.leaf("\\s+", " ")
+						)
 					)
 				);
 			

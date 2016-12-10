@@ -221,12 +221,12 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 						b.branch("t", 
 							b.branch("bt",
 								b.branch("name",
-									b.leaf("[a-zA-Z]+","V")
+									b.leaf("[a-zA-Z]+","V"),
+									b.branch("WS",
+										b.leaf("\\s+", " ")
+									)
 								)
 							)
-						),
-						b.branch("WS",
-							b.leaf("\\s+", " ")
 						),
 						b.branch("name",
 							b.leaf("[a-zA-Z]+","v")
@@ -262,11 +262,11 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 								b.branch("name",
 									b.leaf("[a-zA-Z]+","E")
 								),				
-								b.leaf(")")
+								b.leaf(")"),
+								b.branch("WS",
+										b.leaf("\\s+", " ")
+									)
 							)
-						),
-						b.branch("WS",
-							b.leaf("\\s+", " ")
 						),
 						b.branch("name",
 							b.leaf("[a-zA-Z]+","v")
@@ -303,11 +303,11 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 								b.branch("name",
 									b.leaf("[a-zA-Z]+","E")
 								),				
-								b.leaf(")")
+								b.leaf(")"),
+								b.branch("WS",
+										b.leaf("\\s+", " ")
+									)
 							)
-						),
-						b.branch("WS",
-							b.leaf("\\s+", " ")
 						),
 						b.branch("name",
 							b.leaf("[a-zA-Z]+","v")
@@ -349,11 +349,11 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 									b.branch("name",
 										b.leaf("[a-zA-Z]+","E")
 									),				
-									b.leaf(")")
+									b.leaf(")"),
+									b.branch("WS",
+											b.leaf("\\s+", " ")
+										)
 								)
-							),
-							b.branch("WS",
-								b.leaf("\\s+", " ")
 							),
 							b.branch("name",
 								b.leaf("[a-zA-Z]+","v")
@@ -388,10 +388,10 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 					b.branch("fps.choice2",
 						b.branch("rp",
 							b.branch("name",
-								b.leaf("[a-zA-Z]+","V")
-							),
-							b.branch("WS",
-								b.leaf("\\s+", " ")
+								b.leaf("[a-zA-Z]+","V"),
+								b.branch("WS",
+										b.leaf("\\s+", " ")
+									)
 							),
 							b.branch("rp.multi",
 								b.branch("rp.multi.group",
@@ -455,9 +455,9 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 					b.leaf("case"),
 					b.branch("WS", b.leaf("\\s+"," ")),
 					b.branch("int",
-						b.leaf("[0-9]+","1")
+						b.leaf("[0-9]+","1"),
+						b.branch("WS", b.leaf("\\s+"," "))
 					),
-					b.branch("WS", b.leaf("\\s+"," ")),
 					b.leaf(":")
 				);
 			Assert.assertEquals(expected, tree.getRoot());
@@ -485,9 +485,9 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 					b.leaf("case"),
 					b.branch("WS", b.leaf("\\s+"," ")),
 					b.branch("int",
-						b.leaf("[0-9]+","1")
+						b.leaf("[0-9]+","1"),
+						b.branch("WS", b.leaf("\\s+"," "))
 					),
-					b.branch("WS", b.leaf("\\s+"," ")),
 					b.leaf(":")
 				));
 			Assert.assertEquals(expected, tree.getRoot());
@@ -516,12 +516,12 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 							b.leaf("case"),
 							b.branch("WS", b.leaf("\\s+"," ")),
 							b.branch("int",
-								b.leaf("[0-9]+","1")
+								b.leaf("[0-9]+","1"),
+								b.branch("WS", b.leaf("\\s+"," "))
 							),
-							b.branch("WS", b.leaf("\\s+"," ")),
-							b.leaf(":")
-						),
-						b.branch("WS", b.leaf("\\s+"," "))
+							b.leaf(":"),
+							b.branch("WS", b.leaf("\\s+"," "))
+						)
 					),
 					b.leaf("{"),
 					b.branch("WS", b.leaf("\\s+"," ")),
@@ -557,18 +557,18 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 									b.leaf("case"),
 									b.branch("WS", b.leaf("\\s+"," ")),
 									b.branch("int",
-										b.leaf("[0-9]+","1")
+										b.leaf("[0-9]+","1"),
+										b.branch("WS", b.leaf("\\s+"," "))
 									),
-									b.branch("WS", b.leaf("\\s+"," ")),
-									b.leaf(":")
-								),
-								b.branch("WS", b.leaf("\\s+"," "))
+									b.leaf(":"),
+									b.branch("WS", b.leaf("\\s+"," "))
+								)
 							),
 							b.leaf("{"),
 							b.branch("WS", b.leaf("\\s+"," ")),
-							b.leaf("}")
-						),
-						b.branch("WS", b.leaf("\\s+"," "))
+							b.leaf("}"),
+							b.branch("WS", b.leaf("\\s+"," "))
+						)
 					),
 					b.branch("group2",
 						b.emptyLeaf("group2")
@@ -606,12 +606,12 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 								b.leaf("case"),
 								b.branch("WS", b.leaf("\\s+"," ")),
 								b.branch("int",
-									b.leaf("[0-9]+","1")
+									b.leaf("[0-9]+","1"),
+									b.branch("WS", b.leaf("\\s+"," "))
 								),
-								b.branch("WS", b.leaf("\\s+"," ")),
-								b.leaf(":")
-							),
-						b.branch("WS", b.leaf("\\s+"," "))
+								b.leaf(":"),
+								b.branch("WS", b.leaf("\\s+"," "))
+							)
 					),
 					b.leaf("}")
 				);
@@ -678,13 +678,13 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 					b.branch("decls",
 						b.branch("decl",
 							b.branch("type",
-								b.leaf("int")
+								b.leaf("int"),
+								b.branch("WS", b.leaf("\\s+"," "))
 							),
-							b.branch("WS", b.leaf("\\s+"," ")),
 							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i")),
-							b.leaf(";")
-						),
-						b.branch("WS", b.leaf("\\s+"," "))
+							b.leaf(";"),
+							b.branch("WS", b.leaf("\\s+"," "))
+						)
 					),
 					b.leaf("}")
 				);
@@ -713,61 +713,60 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 					b.branch("WS", b.leaf("\\s+"," ")),
 					b.branch("decls",
 						b.branch("decl",
-							b.branch("type", b.leaf("int")),
-							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+"," "))),
 							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i1")),
-							b.leaf(";")
+							b.leaf(";"),
+							b.branch("WS", b.leaf("\\s+"," "))
 						),
-						b.branch("WS", b.leaf("\\s+"," ")),
 						b.branch("decl",
-							b.branch("type", b.leaf("int")),
-							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("type", b.leaf("int"),
+									b.branch("WS", b.leaf("\\s+"," "))),
 							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i2")),
-							b.leaf(";")
+							b.leaf(";"),
+							b.branch("WS", b.leaf("\\s+"," "))
 						),
-						b.branch("WS", b.leaf("\\s+"," ")),
 						b.branch("decl",
-							b.branch("type", b.leaf("int")),
-							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("type", b.leaf("int"),
+									b.branch("WS", b.leaf("\\s+"," "))),
 							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i3")),
-							b.leaf(";")
+							b.leaf(";"),
+							b.branch("WS", b.leaf("\\s+"," "))
 						),
-						b.branch("WS", b.leaf("\\s+"," ")),
 						b.branch("decl",
-							b.branch("type", b.leaf("int")),
-							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("type", b.leaf("int"),
+									b.branch("WS", b.leaf("\\s+"," "))),
 							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i4")),
-							b.leaf(";")
+							b.leaf(";"),
+							b.branch("WS", b.leaf("\\s+"," "))
 						),
-						b.branch("WS", b.leaf("\\s+"," ")),
 						b.branch("decl",
-							b.branch("type", b.leaf("int")),
-							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("type", b.leaf("int"),
+									b.branch("WS", b.leaf("\\s+"," "))),
 							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i5")),
-							b.leaf(";")
+							b.leaf(";"),
+							b.branch("WS", b.leaf("\\s+"," "))
 						),
-						b.branch("WS", b.leaf("\\s+"," ")),
 						b.branch("decl",
-							b.branch("type", b.leaf("int")),
-							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("type", b.leaf("int"),
+									b.branch("WS", b.leaf("\\s+"," "))),
 							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i6")),
-							b.leaf(";")
+							b.leaf(";"),
+							b.branch("WS", b.leaf("\\s+"," "))
 						),
-						b.branch("WS", b.leaf("\\s+"," ")),
 						b.branch("decl",
-								b.branch("type", b.leaf("int")),
-							b.branch("WS", b.leaf("\\s+"," ")),
+								b.branch("type", b.leaf("int"),
+										b.branch("WS", b.leaf("\\s+"," "))),
 							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i7")),
-							b.leaf(";")
+							b.leaf(";"),
+							b.branch("WS", b.leaf("\\s+"," "))
 						),
-						b.branch("WS", b.leaf("\\s+"," ")),
 						b.branch("decl",
-							b.branch("type", b.leaf("int")),
-							b.branch("WS", b.leaf("\\s+"," ")),
+							b.branch("type", b.leaf("int"),
+									b.branch("WS", b.leaf("\\s+"," "))),
 							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i8")),
-							b.leaf(";")
-						),
-						b.branch("WS", b.leaf("\\s+"," "))
+							b.leaf(";"),
+							b.branch("WS", b.leaf("\\s+"," "))
+						)
 					),
 					b.leaf("}")
 				);

@@ -173,17 +173,17 @@ public class Branch extends Node implements IBranch {
 	
 	@Override
 	public boolean equals(Object arg) {
-		if (!(arg instanceof Branch)) {
+		if (!(arg instanceof IBranch)) {
 			return false;
 		}
-		Branch other = (Branch)arg;
-		if (this.runtimeRule.getRuleNumber() != other.runtimeRule.getRuleNumber()) {
+		IBranch other = (IBranch)arg;
+		if (this.getRuntimeRuleNumber() != other.getRuntimeRuleNumber()) {
 			return false;
 		}
-		if (this.start!=other.start || this.length!=other.length) {
+		if (this.getStartPosition()!=other.getStartPosition() || this.getMatchedTextLength()!=other.getMatchedTextLength()) {
 			return false;
 		}
-		return Arrays.equals(this.children,other.children);
+		return this.getChildren().equals(other.getChildren());
 	}
 	
 }

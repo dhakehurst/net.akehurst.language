@@ -33,6 +33,10 @@ abstract public class AbstractGraphNode implements IGraphNode {
 		return this.runtimeRule;
 	}
 
+	public int getRuntimeRuleNumber() {
+		return this.getRuntimeRule().getRuleNumber();
+	}
+	
 	public String getName() {
 		return this.getRuntimeRule().getName();
 	}

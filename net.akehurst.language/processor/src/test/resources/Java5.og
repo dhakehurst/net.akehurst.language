@@ -66,7 +66,7 @@ classModifier
 	;
 	
 classBody
-	:	'{' /*classBodyDeclaration* */ '}'
+	:	'{' /* classBodyDeclaration* */  '}'
 	;
 
 annotation
@@ -123,4 +123,6 @@ packageOrTypeName
 	Identifier
 	:	"([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*"   //JavaLetter JavaLetterOrDigit*
 	;
+	
+
 }

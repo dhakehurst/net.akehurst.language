@@ -165,19 +165,19 @@ public final class Forrest3 {
 				Leaf l = this.input.fetchOrCreateBud(rr, gn.getNextInputPosition());
 				if (null != l) {
 					IGraphNode bud = this.graph.createLeaf(l, rr, gn.getNextInputPosition(), l.getMatchedTextLength());
-					if (bud.getRuntimeRule().getIsEmptyRule()) {
-						RuntimeRule ruleThatIsEmpty = bud.getRuntimeRule().getRuleThatIsEmpty();
-						IGraphNode pt = this.graph.createWithFirstChild(ruleThatIsEmpty, bud.getPriority(), bud);
-						// if (this.getIsGoal(pt)) {
-						// this.goals.add(pt);
-						// }
-						IGraphNode nn = this.pushStackNewRoot(gn, pt);
-
-					} else {
+//					if (bud.getRuntimeRule().getIsEmptyRule()) {
+//						RuntimeRule ruleThatIsEmpty = bud.getRuntimeRule().getRuleThatIsEmpty();
+//						IGraphNode pt = this.graph.createWithFirstChild(ruleThatIsEmpty, bud.getPriority(), bud);
+//						// if (this.getIsGoal(pt)) {
+//						// this.goals.add(pt);
+//						// }
+//						IGraphNode nn = this.pushStackNewRoot(gn, pt);
+//
+//					} else {
 						// what if bud exists and already has stacked nodes?
 						IGraphNode nn = this.pushStackNewRoot(gn, bud);
 
-					}
+//					}
 				}
 			}
 			// }
@@ -261,6 +261,15 @@ public final class Forrest3 {
 		ArrayList<IGraphNode> result = new ArrayList<>();
 		// TODO: should have already done this test?
 		if (gn.getIsComplete()) {
+			if (gn.getRuntimeRule().getIsEmptyRule()) {
+				RuntimeRule ruleThatIsEmpty = gn.getRuntimeRule().getRuleThatIsEmpty();
+				IGraphNode pt = this.graph.createWithFirstChild(ruleThatIsEmpty, gn.getPriority(), gn);
+				// if (this.getIsGoal(pt)) {
+				// this.goals.add(pt);
+				// }
+//				IGraphNode nn = this.pushStackNewRoot(gn, pt);
+				
+			} else {
 			// RuntimeRule[] rules = runtimeRuleSet.getPossibleSuperRule(gn.getRuntimeRule());
 			SuperRuleInfo[] infos = runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
 			for (SuperRuleInfo info : infos) {
@@ -273,6 +282,7 @@ public final class Forrest3 {
 					this.growHeightByType(gn, info);
 
 				}
+			}
 			}
 		} else {
 			// result.add(this);

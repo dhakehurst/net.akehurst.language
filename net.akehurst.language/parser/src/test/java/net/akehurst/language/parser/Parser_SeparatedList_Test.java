@@ -357,30 +357,30 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 			IBranch expected = 
 				b.branch("as",
 					b.branch("a",
-						b.leaf("a", "a")
-					),
-					b.branch("SP",
-						b.leaf(" ", " ")
-					),
-					b.leaf(",", ","),
-					b.branch("SP",
-						b.leaf(" ", " ")
-					),
-					b.branch("a",
-						b.leaf("a", "a")
-					),
-					b.branch("SP",
-						b.leaf(" ", " ")
+						b.leaf("a", "a"),
+						b.branch("SP",
+								b.leaf(" ", " ")
+							)
 					),
 					b.leaf(",", ","),
 					b.branch("SP",
 						b.leaf(" ", " ")
 					),
 					b.branch("a",
-						b.leaf("a", "a")
+						b.leaf("a", "a"),
+						b.branch("SP",
+								b.leaf(" ", " ")
+							)
 					),
+					b.leaf(",", ","),
 					b.branch("SP",
 						b.leaf(" ", " ")
+					),
+					b.branch("a",
+						b.leaf("a", "a"),
+						b.branch("SP",
+								b.leaf(" ", " ")
+							)
 					)
 				);
 			Assert.assertEquals(expected, tree.getRoot());			

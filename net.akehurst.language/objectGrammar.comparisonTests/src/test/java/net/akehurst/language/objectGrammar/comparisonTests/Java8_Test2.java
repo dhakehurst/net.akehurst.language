@@ -125,9 +125,14 @@ public class Java8_Test2 {
 		try {
 			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), og_input);
 			return tree;
-		} catch (ParseFailedException |ParseTreeException e) {
-			e.printStackTrace();
-			Assert.fail(e.getMessage());
+		} catch (ParseFailedException e) {
+			System.out.println("Failed to parse: "+file);
+			System.out.println(e.getMessage());
+//			System.out.println("Longest Match: "+e.getLongestMatch().getRoot().getMatchedText());
+			//Assert.fail(e.getMessage());
+		} catch (ParseTreeException e) {
+			System.out.println("Failed to parse: "+file);
+			System.out.println(e.getMessage());
 		}
 		return null;
 	}

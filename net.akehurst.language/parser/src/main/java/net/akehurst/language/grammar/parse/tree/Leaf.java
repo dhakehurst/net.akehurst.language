@@ -98,14 +98,14 @@ public class Leaf extends Node implements ILeaf {
 	
 	@Override
 	public boolean equals(Object arg) {
-		if (!(arg instanceof Leaf) ) {
+		if (!(arg instanceof ILeaf) ) {
 			return false;
 		}
-		Leaf other = (Leaf)arg;
-		if (this.start!=other.start || this.end!=other.end) {
+		ILeaf other = (ILeaf)arg;
+		if (this.getStartPosition()!=other.getStartPosition() || this.getMatchedTextLength()!=other.getMatchedTextLength()) {
 			return false;
 		}
-		return this.terminalRule.getRuleNumber() == other.terminalRule.getRuleNumber();
+		return this.getRuntimeRuleNumber() == other.getRuntimeRuleNumber();
 	}
 
 }

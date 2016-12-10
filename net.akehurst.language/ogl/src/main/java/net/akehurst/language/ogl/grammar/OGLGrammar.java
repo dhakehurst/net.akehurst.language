@@ -40,15 +40,15 @@ import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
  *   normalRule : IDENTIFIER ':' choice ';' ;
  *   skipRule : 'skip' IDENTIFIER ':' choice ';' ;
  *   choice : simpleChoice < priorityChoice ;
- *   simpleChoice : (concatenation / '|')* ;
- *   priorityChoice : (concatenation / '<')* ;
+ *   simpleChoice : [concatenation / '|']* ;
+ *   priorityChoice : [concatenation / '<']* ;
  *   concatenation : concatenationItem+ ;
  *   concatenationItem : simpleItem | multi | separatedList ;
  *   simpleItem : terminal | nonTerminal | group ;
  *   multiplicity : '*' | '+' | '?'
  *   multi : simpleItem multiplicity ;
  *   group : '(' choice ')' ;
- *   separatedList : '(' simpleItem '/' terminal ')' multiplicity ;
+ *   separatedList : '[' simpleItem '/' terminal ']' multiplicity ;
  *   nonTerminal : IDENTIFIER ;
  *   terminal : LITERAL | PATTERN ;
  *   LITERAL : "'(?:\\\\?.)*?'" ;
@@ -93,7 +93,7 @@ public class OGLGrammar extends Grammar {
 		b.rule("multi").concatenation( new NonTerminal("simpleItem"), new NonTerminal("multiplicity") );
 		b.rule("multiplicity").choice(new TerminalLiteral("*"), new TerminalLiteral("+"), new TerminalLiteral("?"));
 		b.rule("group").concatenation( new TerminalLiteral("("), new NonTerminal("choice"), new TerminalLiteral(")") );
-		b.rule("separatedList").concatenation( new TerminalLiteral("("), new NonTerminal("simpleItem"), new TerminalLiteral("/"), new NonTerminal("LITERAL"), new TerminalLiteral(")"), new NonTerminal("multiplicity") );
+		b.rule("separatedList").concatenation( new TerminalLiteral("["), new NonTerminal("simpleItem"), new TerminalLiteral("/"), new NonTerminal("LITERAL"), new TerminalLiteral("]"), new NonTerminal("multiplicity") );
 		b.rule("nonTerminal").choice(new NonTerminal("IDENTIFIER"));
 		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER") );
 		b.rule("terminal").choice(

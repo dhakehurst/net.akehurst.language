@@ -19,7 +19,6 @@ import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
-import net.akehurst.language.grammar.parser.forrest.AbstractParseTree;
 
 public class ToStringVisitor implements IParseTreeVisitor<String, String, RuntimeException> {
 
@@ -40,21 +39,21 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 		String s = indent;
 		//AbstractParseTree t = (AbstractParseTree) target;
 		IParseTree t = target;
-		s += "{" + (target.getIsComplete() ? "*" : "+") + (target.getCanGrowWidth() ? "?" : "") + target.getRoot().getName() + " " + t.identifier + getStackRootsAsString(target) + "}";
-		// s += target.getRoot().accept(this, indent);
+//		s += "{" + (target.getIsComplete() ? "*" : "+") + (target.getCanGrowWidth() ? "?" : "") + target.getRoot().getName() + " " + t.identifier + getStackRootsAsString(target) + "}";
+		 s += target.getRoot().accept(this, indent);
 		return s;
 	}
 
-	String getStackRootsAsString(IParseTree target) {
-		AbstractParseTree st = ((AbstractParseTree) target).getStackedTree();
-		if (null == st) {
-			return "";
-		} else {
-			String s = " " + "[" + (st.getIsComplete() ? "*" : "+") + (st.getCanGrow() ? "?" : "") + st.getRoot().getName() + " " + st.identifier + "]";
-			s += getStackRootsAsString(st);
-			return s;
-		}
-	}
+//	String getStackRootsAsString(IParseTree target) {
+//		AbstractParseTree st = ((AbstractParseTree) target).getStackedTree();
+//		if (null == st) {
+//			return "";
+//		} else {
+//			String s = " " + "[" + (st.getIsComplete() ? "*" : "+") + (st.getCanGrow() ? "?" : "") + st.getRoot().getName() + " " + st.identifier + "]";
+//			s += getStackRootsAsString(st);
+//			return s;
+//		}
+//	}
 
 	@Override
 	public String visit(ILeaf target, String indent) throws RuntimeException {
