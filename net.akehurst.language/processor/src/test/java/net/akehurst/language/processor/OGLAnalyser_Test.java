@@ -15,6 +15,8 @@
  */
 package net.akehurst.language.processor;
 
+import java.io.StringReader;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,8 +35,7 @@ public class OGLAnalyser_Test {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
 
 			// List<IToken> tokens = proc.getLexicalAnaliser().lex(grammar);
-			INodeType goal = proc.getGrammar().findRule("grammarDefinition").getNodeType();
-			IParseTree tree = proc.getParser().parse(goal, grammarText);
+			IParseTree tree = proc.getParser().parse("grammarDefinition", new StringReader(grammarText));
 			T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
@@ -59,12 +60,12 @@ public class OGLAnalyser_Test {
 			Grammar grammar = this.process(grammarText, Grammar.class);
 			Assert.assertNotNull(grammar);
 
-			LanguageProcessor proc = new LanguageProcessor(grammar, "a", null);
+			LanguageProcessor proc = new LanguageProcessor(grammar, null);
 			
-			IParseTree tree = proc.getParser().parse(proc.getDefaultGoal(), "a");
+			IParseTree tree = proc.getParser().parse("a", new StringReader("a"));
 			Assert.assertNotNull(tree);
 			
-		} catch (ParseFailedException | UnableToAnalyseExeception  | ParseTreeException e) {
+		} catch (ParseFailedException | UnableToAnalyseExeception  | ParseTreeException | RuleNotFoundException e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}

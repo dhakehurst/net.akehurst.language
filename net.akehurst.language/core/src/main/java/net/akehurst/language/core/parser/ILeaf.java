@@ -15,11 +15,13 @@
  */
 package net.akehurst.language.core.parser;
 
-
 public interface ILeaf extends INode, IParseTreeVisitable {
 
+	@Override
 	String getMatchedText();
-	
-//	@Override
-//	ILeaf deepClone();
+
+	boolean isPattern();
+
+	// @Override
+	// ILeaf deepClone();
 }

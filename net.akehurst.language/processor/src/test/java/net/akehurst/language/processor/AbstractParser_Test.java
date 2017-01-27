@@ -15,6 +15,8 @@
  */
 package net.akehurst.language.processor;
 
+import java.io.StringReader;
+
 import org.junit.Assert;
 import org.junit.Before;
 
@@ -45,9 +47,8 @@ public class AbstractParser_Test {
 	
 	protected IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
 		try {
-			INodeType goal = grammar.findAllRule(goalName).getNodeType();
 			IParser parser = new ScannerLessParser3(this.parseTreeFactory, grammar);
-			IParseTree tree = parser.parse(goal, text);
+			IParseTree tree = parser.parse(goalName, new StringReader(text));
 			return tree;
 		} catch (RuleNotFoundException e) {
 			Assert.fail(e.getMessage());

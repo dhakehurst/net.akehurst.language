@@ -12,7 +12,7 @@ public interface IParseGraph {
 	Collection<IGraphNode> getGrowable();
 	Collection<IGraphNode> getCompleteNodes();
 
-	void removeGrowable(IGraphNode node);
+//	void removeGrowable(IGraphNode node);
 	
 	IGraphNode createLeaf(Leaf leaf, RuntimeRule terminalRule, int startPosition, int matchedLength);
 	IGraphNode findOrCreateLeaf(Leaf leaf, RuntimeRule terminalRule, int startPosition, int matchedLength);

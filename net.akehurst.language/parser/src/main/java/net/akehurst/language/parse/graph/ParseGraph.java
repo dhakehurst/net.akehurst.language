@@ -155,8 +155,9 @@ public class ParseGraph implements IParseGraph {
 //		int previousRRN = value.getPrevious().isEmpty() ? -1 : value.getPrevious().get(0).node.getRuntimeRule().getRuleNumber();
 		int stackHash = value.getStackHash();
 		GrowingNodeIndex index = new GrowingNodeIndex(runtimeRuleNumber, startPos, nextItemIndex, stackHash); //previousRRN);
+		//TODO: try comparing the stack not just its hash! maybe the hash is not unique
 		if (this.growable.containsKey(index)) {
-			// System.out.println("merging growable " + value);
+//			System.out.println("dropped growable " + value);
 		} else {
 			this.growable.put(index, value);
 		}
@@ -168,15 +169,15 @@ public class ParseGraph implements IParseGraph {
 		}
 	}
 
-	@Override
-	public void removeGrowable(IGraphNode value) {
-		int runtimeRuleNumber = value.getRuntimeRule().getRuleNumber();
-		int startPos = value.getStartPosition();
-		int nextItemIndex = value.getNextItemIndex();
-		int previousRRN = value.getPrevious().isEmpty() ? -1 : value.getPrevious().get(0).node.getRuntimeRule().getRuleNumber();
-		GrowingNodeIndex index = new GrowingNodeIndex(runtimeRuleNumber, startPos, nextItemIndex, previousRRN);
-		this.growable.remove(index);
-	}
+//	@Override
+//	public void removeGrowable(IGraphNode value) {
+//		int runtimeRuleNumber = value.getRuntimeRule().getRuleNumber();
+//		int startPos = value.getStartPosition();
+//		int nextItemIndex = value.getNextItemIndex();
+//		int previousRRN = value.getPrevious().isEmpty() ? -1 : value.getPrevious().get(0).node.getRuntimeRule().getRuleNumber();
+//		GrowingNodeIndex index = new GrowingNodeIndex(runtimeRuleNumber, startPos, nextItemIndex, previousRRN);
+//		this.growable.remove(index);
+//	}
 
 	protected boolean getIsGoal(IGraphNode gn) {
 		return gn.getMatchedTextLength()==this.inputLength && gn.getIsComplete() && !gn.getIsStacked() && (this.goalRule.getRuleNumber() == gn.getRuntimeRule().getRuleNumber());
@@ -234,7 +235,7 @@ public class ParseGraph implements IParseGraph {
 		IGraphNode gn = new GraphNodeBranch(this, runtimeRule, priority, firstChild.getStartPosition(), firstChild.getMatchedTextLength(), 1,
 				firstChild.getHeight() + 1);
 		gn.getChildren().add((INode)firstChild);
-		for(PreviousInfo info: firstChild.getPrevious()) {
+		for(PreviousInfo info: firstChild.getPossibleParent()) {
 			gn.addPrevious(info.node, info.atPosition);
 		}
 //		gn.getPrevious().addAll(firstChild.getPrevious());

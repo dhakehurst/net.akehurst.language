@@ -15,12 +15,14 @@
  */
 package net.akehurst.language.processor;
 
+import java.io.StringReader;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import net.akehurst.language.core.analyser.IGrammar;
 import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
@@ -44,27 +46,26 @@ public class OGLParser_Test {
 		this.parseTreeFactory = new RuntimeRuleSetBuilder();
 	}
 
-	ParseTreeBuilder builder(Grammar grammar, String text, String goal) {
-		return new ParseTreeBuilder(this.parseTreeFactory, grammar, goal, text,0);
+	ParseTreeBuilder builder(final Grammar grammar, final String text, final String goal) {
+		return new ParseTreeBuilder(this.parseTreeFactory, grammar, goal, text, 0);
 	}
 
-	IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
+	IParseTree process(final IGrammar grammar, final String text, final String goalName) throws ParseFailedException {
 		try {
-			INodeType goal = grammar.findRule(goalName).getNodeType();
-			IParser parser = new ScannerLessParser3(this.parseTreeFactory, grammar);
-			IParseTree tree = parser.parse(goal, text);
+			final IParser parser = new ScannerLessParser3(this.parseTreeFactory, grammar);
+			final IParseTree tree = parser.parse(goalName, new StringReader(text));
 			return tree;
-		} catch (RuleNotFoundException e) {
+		} catch (final RuleNotFoundException e) {
 			Assert.fail(e.getMessage());
 			return null;
-		} catch (ParseTreeException e) {
+		} catch (final ParseTreeException e) {
 			Assert.fail(e.getMessage());
 			return null;
 		}
 	}
 
 	Grammar ns1() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
 		b.skip("WHITESPACE").concatination(new TerminalPattern("\\s+"));
 		b.skip("COMMENT").concatination(new TerminalPattern("(?s)/\\*.*?\\*/"));
 
@@ -79,34 +80,26 @@ public class OGLParser_Test {
 	@Test
 	public void ns1_namespace_test() {
 		try {
-			Grammar g = ns1();
-			String goal = "grammarDefinition";
-			String text = "namespace test;" + System.lineSeparator();
+			final Grammar g = this.ns1();
+			final String goal = "grammarDefinition";
+			final String text = "namespace test;" + System.lineSeparator();
 
-			IParseTree tree = this.process(g, text, goal);
+			final IParseTree tree = this.process(g, text, goal);
 
 			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);
-			IBranch expected = b
-					.branch("grammarDefinition",
-						b.branch("namespace",
-							b.leaf("namespace"),
-							b.branch("WHITESPACE", b.leaf("\\s+", " ")),
-							b.branch("IDENTIFIER", b.leaf("[a-zA-Z_][a-zA-Z_0-9]*", "test")),
-							b.leaf(";", ";"),
-							b.branch("WHITESPACE", b.leaf("\\s+", " "))
-						)
-					);
+			final ParseTreeBuilder b = this.builder(g, text, goal);
+			final IBranch expected = b.branch("grammarDefinition", b.branch("namespace", b.leaf("namespace"), b.branch("WHITESPACE", b.leaf("\\s+", " ")),
+					b.branch("IDENTIFIER", b.leaf("[a-zA-Z_][a-zA-Z_0-9]*", "test")), b.leaf(";", ";")));
 			Assert.assertEquals(expected, tree.getRoot());
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
 
 	Grammar g1() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
 		b.skip("WHITESPACE").concatination(new TerminalPattern("\\s+"));
 		b.skip("COMMENT").concatination(new TerminalPattern("(?s)/\\*.*?\\*/"));
 
@@ -122,16 +115,16 @@ public class OGLParser_Test {
 	@Test
 	public void g1_noRules() {
 		try {
-			Grammar g = g1();
+			final IGrammar g = this.g1();
 			String text = "namespace test;" + System.lineSeparator();
 			text += "grammar A {" + System.lineSeparator();
 			text += "}";
 
-			IParseTree tree = this.process(g, text, "grammarDefinition");
+			final IParseTree tree = this.process(g, text, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -139,25 +132,25 @@ public class OGLParser_Test {
 	@Test
 	public void g1_emptyRule() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
 			String text = "namespace test;" + System.lineSeparator();
 			text += "grammar A {" + System.lineSeparator();
 			text += " a :  ;" + System.lineSeparator();
 			text += "}";
 
-			IParseTree tree = this.process(g, text, "grammarDefinition");
+			final IParseTree tree = this.process(g, text, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
 
 	Grammar qualifiedName() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
 		b.skip("WHITESPACE").concatination(new TerminalPattern("\\s+"));
 
 		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER"));
@@ -170,15 +163,15 @@ public class OGLParser_Test {
 	@Test
 	public void qualifiedName_a() {
 		try {
-			Grammar g = qualifiedName();
-			String goal = "qualifiedName";
-			String text = "a";
+			final Grammar g = this.qualifiedName();
+			final String goal = "qualifiedName";
+			final String text = "a";
 
-			IParseTree tree = this.process(g, text, goal);
+			final IParseTree tree = this.process(g, text, goal);
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -186,15 +179,15 @@ public class OGLParser_Test {
 	@Test
 	public void qualifiedName__a_b() {
 		try {
-			Grammar g = qualifiedName();
-			String goal = "qualifiedName";
-			String text = "a::b";
+			final Grammar g = this.qualifiedName();
+			final String goal = "qualifiedName";
+			final String text = "a::b";
 
-			IParseTree tree = this.process(g, text, goal);
+			final IParseTree tree = this.process(g, text, goal);
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -202,21 +195,21 @@ public class OGLParser_Test {
 	@Test
 	public void qualifiedName__a_b_c_d() {
 		try {
-			Grammar g = qualifiedName();
-			String goal = "qualifiedName";
-			String text = "a::b::c::d";
+			final Grammar g = this.qualifiedName();
+			final String goal = "qualifiedName";
+			final String text = "a::b::c::d";
 
-			IParseTree tree = this.process(g, text, goal);
+			final IParseTree tree = this.process(g, text, goal);
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
 
 	Grammar noRules() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
 		b.skip("WHITESPACE").concatination(new TerminalPattern("\\s+"));
 		b.skip("COMMENT").concatination(new TerminalPattern("(?s)/\\*.*?\\*/"));
 
@@ -234,23 +227,23 @@ public class OGLParser_Test {
 	@Test
 	public void noRules_1() {
 		try {
-			Grammar g = noRules();
-			String goal = "grammarDefinition";
+			final Grammar g = this.noRules();
+			final String goal = "grammarDefinition";
 			String text = "namespace test::ns::nss;" + System.lineSeparator();
 			text += "grammar A {" + System.lineSeparator();
 			text += "}";
 
-			IParseTree tree = this.process(g, text, goal);
+			final IParseTree tree = this.process(g, text, goal);
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
 
 	Grammar nonTerminalOnly() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
 		b.skip("WHITESPACE").concatination(new TerminalPattern("\\s+"));
 		b.skip("COMMENT").concatination(new TerminalPattern("(?s)/\\*.*?\\*/"));
 
@@ -272,18 +265,18 @@ public class OGLParser_Test {
 	@Test
 	public void nonTerminalOnly_1() {
 		try {
-			Grammar g = nonTerminalOnly();
-			String goal = "grammarDefinition";
+			final IGrammar g = this.nonTerminalOnly();
+			final String goal = "grammarDefinition";
 			String text = "namespace test;" + System.lineSeparator();
 			text += "grammar A {" + System.lineSeparator();
 			text += "a = b ;";
 			text += "}";
 
-			IParseTree tree = this.process(g, text, goal);
+			final IParseTree tree = this.process(g, text, goal);
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -291,8 +284,8 @@ public class OGLParser_Test {
 	@Test
 	public void a() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
 			String text = "namespace test;" + System.lineSeparator();
 			text += "grammar A {" + System.lineSeparator();
@@ -300,11 +293,11 @@ public class OGLParser_Test {
 			text += " a : 'a' ;" + System.lineSeparator();
 			text += "}";
 
-			IParseTree tree = this.process(g, text, "grammarDefinition");
+			final IParseTree tree = this.process(g, text, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -312,16 +305,16 @@ public class OGLParser_Test {
 	@Test
 	public void a2() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = "namespace test; grammar A { skip SP : ' ' ; a : 'a' ; }";
+			final String text = "namespace test; grammar A { skip SP : ' ' ; a : 'a' ; }";
 
-			IParseTree tree = this.process(g, text, "grammarDefinition");
+			final IParseTree tree = this.process(g, text, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -329,137 +322,137 @@ public class OGLParser_Test {
 	@Test
 	public void separatedList() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = "['a' / ',']+";
+			final String text = "['a' / ',']+";
 
-			IParseTree tree = this.process(g, text, "separatedList");
+			final IParseTree tree = this.process(g, text, "separatedList");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void separatedList_normalRule() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = "sepList:['a'/',']+;";
+			final String text = "sepList:['a'/',']+;";
 
-			IParseTree tree = this.process(g, text, "normalRule");
+			final IParseTree tree = this.process(g, text, "normalRule");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void separatedList_normalRule_withWS() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = "sepList : ['a' / ',']+;";
+			final String text = "sepList : ['a' / ',']+;";
 
-			IParseTree tree = this.process(g, text, "normalRule");
+			final IParseTree tree = this.process(g, text, "normalRule");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void separatedList_rules() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = "sepList:['a'/',']+;";
+			final String text = "sepList:['a'/',']+;";
 
-			IParseTree tree = this.process(g, text, "rules");
+			final IParseTree tree = this.process(g, text, "rules");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void separatedList_rules_withWS() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = "sepList : ['a' / ',']+;";
+			final String text = "sepList : ['a' / ',']+;";
 
-			IParseTree tree = this.process(g, text, "rules");
+			final IParseTree tree = this.process(g, text, "rules");
 
 			Assert.assertNotNull(tree);
 			Assert.assertEquals(text.length(), tree.getRoot().getMatchedTextLength());
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void separatedList_grammar() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = "grammarA{sepList:['a'/',']+;}";
+			final String text = "grammarA{sepList:['a'/',']+;}";
 
-			IParseTree tree = this.process(g, text, "grammar");
+			final IParseTree tree = this.process(g, text, "grammar");
 
 			Assert.assertNotNull(tree);
 			Assert.assertEquals(text.length(), tree.getRoot().getMatchedTextLength());
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void separatedList_grammar_withWS() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = "grammar A { sepList : ['a' / ',']+; }";
+			final String text = "grammar A { sepList : ['a' / ',']+; }";
 
-			IParseTree tree = this.process(g, text, "grammar");
+			final IParseTree tree = this.process(g, text, "grammar");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void separatedList_1n() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = "namespace test; grammar A { sepList : ['a' / ',']+; }";
+			final String text = "namespace test; grammar A { sepList : ['a' / ',']+; }";
 
-			IParseTree tree = this.process(g, text, "grammarDefinition");
+			final IParseTree tree = this.process(g, text, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -467,16 +460,16 @@ public class OGLParser_Test {
 	@Test
 	public void separatedList_0n() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = "namespace test; grammar A { sepList : ['a' / ',']*; }";
+			final String text = "namespace test; grammar A { sepList : ['a' / ',']*; }";
 
-			IParseTree tree = this.process(g, text, "grammarDefinition");
+			final IParseTree tree = this.process(g, text, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -485,16 +478,16 @@ public class OGLParser_Test {
 	public void multiLineComment1() {
 		// this fails because skip rules can't be a goal at present!
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = "/* this is a comment */";
+			final String text = "/* this is a comment */";
 
-			IParseTree tree = this.process(g, text, "MULTI_LINE_COMMENT");
+			final IParseTree tree = this.process(g, text, "MULTI_LINE_COMMENT");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -503,16 +496,16 @@ public class OGLParser_Test {
 	public void singleLineComment() {
 		// this fails because skip rules can't be a goal at present!
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = "// this is a comment" + System.lineSeparator();
+			final String text = "// this is a comment" + System.lineSeparator();
 
-			IParseTree tree = this.process(g, text, "SINGLE_LINE_COMMENT");
+			final IParseTree tree = this.process(g, text, "SINGLE_LINE_COMMENT");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -520,62 +513,62 @@ public class OGLParser_Test {
 	@Test
 	public void normalRule_1() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
-			String text = "classType:'.'annotation*;";
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
+			final String text = "classType:'.'annotation*;";
 
-			IParseTree tree = this.process(g, text, "normalRule");
-			
-		} catch (ParseFailedException e) {
+			final IParseTree tree = this.process(g, text, "normalRule");
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void normalRule_2() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
-			String text = "classType :	annotation* Identifier typeArguments? |	classOrInterfaceType '.' annotation* Identifier typeArguments?;";
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
+			final String text = "classType :	annotation* Identifier typeArguments? |	classOrInterfaceType '.' annotation* Identifier typeArguments?;";
 
-			IParseTree tree = this.process(g, text, "normalRule");
-			
-		} catch (ParseFailedException e) {
+			final IParseTree tree = this.process(g, text, "normalRule");
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void choice() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
-			String text = "type : primitiveType | referenceType ;";
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
+			final String text = "type : primitiveType | referenceType ;";
 
-			IParseTree tree = this.process(g, text, "normalRule");
-			
-		} catch (ParseFailedException e) {
+			final IParseTree tree = this.process(g, text, "normalRule");
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void priorityChoice() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
-			String text = "type : primitiveType < referenceType ;";
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
+			final String text = "type : primitiveType < referenceType ;";
 
-			IParseTree tree = this.process(g, text, "normalRule");
-			
-		} catch (ParseFailedException e) {
+			final IParseTree tree = this.process(g, text, "normalRule");
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void java8_part1() {
-		
+
 	}
-	
+
 }

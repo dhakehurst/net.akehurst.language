@@ -46,15 +46,31 @@ public class Node2SeparatedList extends AbstractNode2ConcatenationItem<Separated
 	@Override
 	public SeparatedList constructLeft2Right(INode left, Transformer transformer) {
 		try {
-			INode itemNode = ((IBranch) left).getChild(0);
+			INode itemNode = ((IBranch) left).getChild(1);
 			
 			TangibleItem item = transformer.transformLeft2Right(
-					(Class<Relation<INode, TangibleItem>>) (Class<?>) AbstractNode2TangibleItem.class, itemNode);
+					(Class<Relation<INode, TangibleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
 			
-			TerminalLiteral separator = null;
+			INode separatorNode = ((IBranch) left).getChild(3);
 			
-			int min = 0;
+			TerminalLiteral separator = transformer.transformLeft2Right(
+					(Class<Relation<INode, TerminalLiteral>>) (Class<?>) AbstractNode2Terminal.class, separatorNode);
+			
+			INode multiplicityNode = ((IBranch) left).getChild(5);
+			//TODO: this should really be done with transform rules!
+			String multiplicityString = ((IBranch) multiplicityNode).getChild(0).getName();
+			int min = -1;
 			int max = -1;
+			if ("*".equals(multiplicityString)) {
+				min = 0;
+				max = -1;
+			} else if ("+".equals(multiplicityString)) {
+				min = 1;
+				max = -1;
+			} else if ("?".equals(multiplicityString)) {
+				min = 0;
+				max = 1;
+			}
 			
 			SeparatedList right = new SeparatedList(min, max, separator, item);
 			return right;

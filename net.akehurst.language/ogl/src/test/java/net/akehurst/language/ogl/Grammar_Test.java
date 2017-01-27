@@ -15,17 +15,12 @@
  */
 package net.akehurst.language.ogl;
 
+import java.util.Set;
+
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.INodeType;
-import net.akehurst.language.core.parser.IParseTree;
-import net.akehurst.language.core.parser.IParser;
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.parser.RuleNotFoundException;
-import net.akehurst.language.ogl.grammar.OGLGrammar;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
@@ -34,23 +29,35 @@ import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
 public class Grammar_Test {
 
-	
 	@Test
 	public void helloWorld() {
 		// namespace test;
 		// grammar HelloWorld {
-		//   root = hello whitespace world ;
-		//   hello = 'hello' ;
-		//   world = 'world!' ;
-		//   whitespace = "\\s+";
+		// root = hello whitespace world ;
+		// hello = 'hello' ;
+		// world = 'world!' ;
+		// whitespace = "\\s+";
 		// }
-		
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "HelloWorld");
+
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "HelloWorld");
 		b.rule("root").concatenation(new NonTerminal("hello"), new NonTerminal("world"));
 		b.rule("hello").concatenation(new TerminalLiteral("hello"));
 		b.rule("world").concatenation(new TerminalLiteral("world!"));
-		Grammar g = b.get();
+		final Grammar g = b.get();
 	}
 
+	@Test
+	public void findAllNodeType() {
+
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "HelloWorld");
+		b.rule("root").concatenation(new NonTerminal("hello"), new NonTerminal("world"));
+		b.rule("hello").concatenation(new TerminalLiteral("hello"));
+		b.rule("world").concatenation(new TerminalLiteral("world!"));
+		final Grammar g = b.get();
+
+		final Set<INodeType> types = g.findAllNodeType();
+
+		Assert.assertEquals(5, types.size());
+	}
 
 }

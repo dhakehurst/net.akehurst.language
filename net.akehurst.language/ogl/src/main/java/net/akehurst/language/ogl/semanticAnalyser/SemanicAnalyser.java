@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
+import net.akehurst.language.core.analyser.IGrammarLoader;
 import net.akehurst.language.core.analyser.ISemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IBranch;
@@ -27,6 +28,7 @@ import net.akehurst.transform.binary.Relation;
 public class SemanicAnalyser extends AbstractTransformer implements ISemanticAnalyser {
 
 	public SemanicAnalyser() {
+		this.grammarLoader = grammarLoader;
 		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractNode2Choice.class);
 		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractNode2ConcatenationItem.class);
 		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractNode2TangibleItem.class);
@@ -69,5 +71,12 @@ public class SemanicAnalyser extends AbstractTransformer implements ISemanticAna
 		//this.transformLeft2Right(Relation.class, (IBranch)tree.getRoot());
 		return (T)this.analyse(tree);
 	}
-	
+
+	IGrammarLoader grammarLoader;
+	public IGrammarLoader getGrammarLoader() {
+		return grammarLoader;
+	}
+	public void setGrammarLoader(IGrammarLoader value) {
+		this.grammarLoader = value;
+	}
 }

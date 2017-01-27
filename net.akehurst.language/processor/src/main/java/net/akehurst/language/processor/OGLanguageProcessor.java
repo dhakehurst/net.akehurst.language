@@ -15,14 +15,63 @@
  */
 package net.akehurst.language.processor;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.akehurst.language.core.analyser.IGrammar;
+import net.akehurst.language.core.analyser.IGrammarLoader;
+import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.ogl.grammar.OGLGrammar;
 import net.akehurst.language.ogl.semanticAnalyser.SemanicAnalyser;
-
 
 public class OGLanguageProcessor extends LanguageProcessor {
 
 	public OGLanguageProcessor() {
-		super(new OGLGrammar(), "grammarDefinition", new SemanicAnalyser());
+		super(new OGLGrammar(), new SemanicAnalyser());
+		this.getSemanticAnalyser().setGrammarLoader(new Loader());
 	}
-	
+
+	class Loader implements IGrammarLoader {
+
+		public Loader() {
+			this.resolved = new HashMap<>();
+		}
+
+		Map<String, IGrammar> resolved;
+
+		@Override
+		public List<IGrammar> resolve(String... qualifiedGrammarNames) {
+			List<IGrammar> grammars = new ArrayList<>();
+
+			for (String qualifiedGrammarName : qualifiedGrammarNames) {
+				IGrammar grammar = this.resolved.get(qualifiedGrammarName);
+				if (null == grammar) {
+					grammar = resolve(qualifiedGrammarName);
+					this.resolved.put(qualifiedGrammarName, grammar);
+				}
+				grammars.add(grammar);
+			}
+
+			return grammars;
+		}
+
+		private IGrammar resolve(String qualifiedGrammarName) {
+			try {
+				String resourcePath = qualifiedGrammarName.replaceAll("::", "/") + ".ogl";
+				InputStream input = this.getClass().getClassLoader().getResourceAsStream(resourcePath);
+				Reader reader = new InputStreamReader(input);
+				IParseTree tree = getParser().parse("grammarDefinition", reader);
+				IGrammar grammar = getSemanticAnalyser().analyse(IGrammar.class, tree);
+				return grammar;
+			} catch (Exception e) {
+				throw new RuntimeException("Unable to resolve grammar "+qualifiedGrammarName,e);
+			}
+		}
+
+	}
 }

@@ -41,7 +41,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 		duplicate.children = new ArrayList<>(this.children);
 		duplicate.children.add((INode)nextChild);
 
-		for(PreviousInfo info: this.getPrevious()) {
+		for(PreviousInfo info: this.getPossibleParent()) {
 			duplicate.addPrevious(info.node, info.atPosition);
 		}
 
@@ -63,7 +63,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 		duplicate.children = new ArrayList<>(this.children);
 		duplicate.children.add((INode)nextChild);
 
-		for(PreviousInfo info: this.getPrevious()) {
+		for(PreviousInfo info: this.getPossibleParent()) {
 			duplicate.addPrevious(info.node, info.atPosition);
 		}
 
@@ -167,11 +167,14 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 
 	@Override
 	public boolean getCanGraftBack() {
-		if (getPrevious().isEmpty()) {
+		if (getPossibleParent().isEmpty()) {
 			return this.getIsComplete();
 		}
-		PreviousInfo info = this.getPrevious().get(0);
-		return this.getIsComplete() && this.getIsStacked() && info.node.getExpectsItemAt(this.getRuntimeRule(), info.atPosition);
+		boolean b = false;
+		for(PreviousInfo info: this.getPossibleParent()){
+			b = b || info.node.getExpectsItemAt(this.getRuntimeRule(), info.atPosition);
+		}
+		return b && this.getIsComplete() && this.getIsStacked();
 	}
 
 	@Override
@@ -223,11 +226,6 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	@Override
 	public boolean getCanGrowWidthWithSkip() {
 		return !this.getRuntimeRule().getIsEmptyRule() && this.getRuntimeRule().getKind()==RuntimeRuleKind.NON_TERMINAL;
-	}
-	
-	@Override
-	public boolean getIsStacked() {
-		return !this.getPrevious().isEmpty();
 	}
 
 	@Override
@@ -486,7 +484,15 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	
 	@Override
 	public String toString() {
+		String prev = "";
+		if (this.getPossibleParent().isEmpty()) {
+			//nothing
+		} else if (this.getPossibleParent().size()==1) {
+			prev = " -> " + this.getPossibleParent().get(0);
+		} else {
+			prev = " ->* " + this.getPossibleParent().get(0);
+		}
 		return this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + "," + this.getStartPosition() + ","
-				+ this.getMatchedTextLength() + "," + this.getNextItemIndex() + ")" + (this.getPrevious().isEmpty() ? "" : " -> " + this.getPrevious().get(0));
+				+ this.getMatchedTextLength() + "," + this.getNextItemIndex() + ")" + prev;
 	}
 }

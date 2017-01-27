@@ -34,7 +34,8 @@ import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
  * 
  *   grammarDefinition : namespace grammar ;
  *   namespace : 'namespace' qualifiedName ';' ;
- *   grammar : 'grammar' IDENTIFIER '{' rules '}' ;
+ *   grammar : 'grammar' IDENTIFIER extends? '{' rules '}' ;
+ *   extends : 'extends' [qualifiedName / ',']+ ;
  *   rules : anyRule+ ;
  *   anyRule : normalRule | skipRule ; 
  *   normalRule : IDENTIFIER ':' choice ';' ;
@@ -71,7 +72,10 @@ public class OGLGrammar extends Grammar {
 		
 		b.rule("grammarDefinition").concatenation( new NonTerminal("namespace"), new NonTerminal("grammar") );
 		b.rule("namespace").concatenation( new TerminalLiteral("namespace"), new NonTerminal("qualifiedName"), new TerminalLiteral(";") );
-		b.rule("grammar").concatenation( new TerminalLiteral("grammar"), new NonTerminal("IDENTIFIER"), new TerminalLiteral("{"), new NonTerminal("rules"), new TerminalLiteral("}") );
+		b.rule("grammar").concatenation( new TerminalLiteral("grammar"), new NonTerminal("IDENTIFIER"), new NonTerminal("extends"),new TerminalLiteral("{"), new NonTerminal("rules"), new TerminalLiteral("}") );
+		b.rule("extends").multi(0,1,new NonTerminal("extends1") );
+		b.rule("extends1").concatenation(new TerminalLiteral("extends"), new NonTerminal("extends2"));
+		b.rule("extends2").separatedList(1, -1, new TerminalLiteral(","), new NonTerminal("qualifiedName"));
 		b.rule("rules").multi(1,-1,new NonTerminal("anyRule") );
 		b.rule("anyRule").choice(new NonTerminal("normalRule"), new NonTerminal("skipRule") );
 		b.rule("skipRule").concatenation( new TerminalLiteral("skip"), new NonTerminal("IDENTIFIER"), new TerminalLiteral(":"), new NonTerminal("choice"), new TerminalLiteral(";") );

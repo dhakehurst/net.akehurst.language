@@ -15,19 +15,19 @@
  */
 package net.akehurst.language.core;
 
+import java.io.Reader;
+
+import net.akehurst.language.core.analyser.IGrammar;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.lexicalAnalyser.ILexicalAnalyser;
-import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 
 public interface ILanguageProcessor {
+	IGrammar getGrammar();
 
-	ILexicalAnalyser getLexicalAnaliser();
-	
 	IParser getParser();
 
-	INodeType getDefaultGoal();
-	
-	<T> T process(String grammarText, Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception;
+	// INodeType getDefaultGoal();
+
+	<T> T process(Reader grammarTextReader, Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception;
 }

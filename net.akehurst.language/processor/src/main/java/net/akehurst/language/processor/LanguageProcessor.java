@@ -15,11 +15,12 @@
  */
 package net.akehurst.language.processor;
 
+import java.io.Reader;
+
 import net.akehurst.language.core.ILanguageProcessor;
+import net.akehurst.language.core.analyser.IGrammar;
 import net.akehurst.language.core.analyser.ISemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.lexicalAnalyser.ILexicalAnalyser;
-import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
@@ -27,46 +28,40 @@ import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
 
 public class LanguageProcessor implements ILanguageProcessor {
 
-	public LanguageProcessor(Grammar grammar, String defaultGoalName, ISemanticAnalyser semanticAnalyser) {
+	public LanguageProcessor(final IGrammar grammar, final ISemanticAnalyser semanticAnalyser) {
 		this.grammar = grammar;
-		this.defaultGoalName = defaultGoalName;
-//		this.lexicalAnalyser = new LexicalAnalyser(grammar.findTokenTypes());
+		// this.defaultGoalName = defaultGoalName;
+		// this.lexicalAnalyser = new LexicalAnalyser(grammar.findTokenTypes());
 		this.parseTreeFactory = new RuntimeRuleSetBuilder();
 		this.parser = new ScannerLessParser3(this.parseTreeFactory, grammar);
 		this.semanticAnalyser = semanticAnalyser;
 	}
 
 	RuntimeRuleSetBuilder parseTreeFactory;
-	
-	Grammar grammar;
-	public Grammar getGrammar() {
+
+	IGrammar grammar;
+
+	@Override
+	public IGrammar getGrammar() {
 		return this.grammar;
 	}
-	
-	String defaultGoalName;
-	INodeType defaultGoal;
-	@Override
-	public INodeType getDefaultGoal() {
-		if (null==this.defaultGoal) {
-			try {
-				this.defaultGoal = grammar.findNodeType(this.defaultGoalName);
-			} catch (RuleNotFoundException e) {
-				e.printStackTrace();
-			}
-		}
-		return this.defaultGoal;
-	}
 
-	ILexicalAnalyser lexicalAnalyser;
-
-	@Override
-	public ILexicalAnalyser getLexicalAnaliser() {
-		return lexicalAnalyser;
-	}
+	// String defaultGoalName;
+	// INodeType defaultGoal;
+	// @Override
+	// public INodeType getDefaultGoal() {
+	// if (null==this.defaultGoal) {
+	// try {
+	// this.defaultGoal = grammar.findNodeType(this.defaultGoalName);
+	// } catch (RuleNotFoundException e) {
+	// e.printStackTrace();
+	// }
+	// }
+	// return this.defaultGoal;
+	// }
 
 	IParser parser;
 
@@ -76,20 +71,21 @@ public class LanguageProcessor implements ILanguageProcessor {
 	}
 
 	ISemanticAnalyser semanticAnalyser;
+
 	public ISemanticAnalyser getSemanticAnalyser() {
 		return this.semanticAnalyser;
 	}
 
-	public <T> T process(String grammarText, Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
+	@Override
+	public <T> T process(final Reader reader, final Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
 		try {
-			INodeType goal = this.getGrammar().findRule("grammarDefinition").getNodeType();
-			IParseTree tree = this.getParser().parse(goal, grammarText);
-			T t = this.getSemanticAnalyser().analyse(targetType, tree);
+			final IParseTree tree = this.getParser().parse("grammarDefinition", reader);
+			final T t = this.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
-		} catch (RuleNotFoundException e) {
+		} catch (final RuleNotFoundException e) {
 			throw new ParseFailedException(e.getMessage(), null);
-		} catch (ParseTreeException e) {
+		} catch (final ParseTreeException e) {
 			throw new ParseFailedException(e.getMessage(), null);
 		}
 	}

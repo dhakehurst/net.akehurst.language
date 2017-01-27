@@ -36,7 +36,7 @@ public class Node2Namespace implements Relation<IBranch, Namespace> {
 
 	@Override
 	public Namespace constructLeft2Right(IBranch left, Transformer arg1) {
-		String qualifiedName = left.getChild(1).getMatchedText();
+		String qualifiedName = left.getChild(1).getMatchedText().trim();
 		return new Namespace(qualifiedName);
 	}
 

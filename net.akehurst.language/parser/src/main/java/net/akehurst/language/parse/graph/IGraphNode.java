@@ -76,7 +76,7 @@ public interface IGraphNode extends IParseTreeVisitable {
 	 * 
 	 * @return
 	 */
-	List<PreviousInfo> getPrevious();
+	List<PreviousInfo> getPossibleParent();
 	void addPrevious(IGraphNode prev, int atPosition);
 
 	public static final class PreviousInfo {

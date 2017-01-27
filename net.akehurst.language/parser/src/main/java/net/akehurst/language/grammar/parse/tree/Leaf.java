@@ -15,6 +15,8 @@
  */
 package net.akehurst.language.grammar.parse.tree;
 
+import java.util.regex.Pattern;
+
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
@@ -22,55 +24,61 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class Leaf extends Node implements ILeaf {
 
-	Leaf(IInput input, int start, int end, RuntimeRule terminalRule) {
+	Leaf(final IInput input, final int start, final int end, final RuntimeRule terminalRule) {
 		super(terminalRule);
 		this.input = input;
 		this.start = start;
 		this.end = end;
 		this.terminalRule = terminalRule;
 	}
-	
+
 	IInput input;
+
 	IInput getInput() {
 		return this.input;
 	}
-	
+
 	int start;
 	int end;
 	RuntimeRule terminalRule;
 
-//	@Override
-//	public boolean getIsEmpty() {
-//		return false;
-//	}
-	
+	// @Override
+	// public boolean getIsEmpty() {
+	// return false;
+	// }
+
 	@Override
 	public String getName() {
 		return this.terminalRule.getName();
 	}
 
 	@Override
+	public boolean isPattern() {
+		return this.terminalRule.getPatternFlags() != Pattern.LITERAL;
+	}
+
+	@Override
 	public int getStartPosition() {
 		return this.start;
 	}
-	
-//	@Override
-//	public int getEnd() {
-//		return this.end;
-//	}
-	
+
+	// @Override
+	// public int getEnd() {
+	// return this.end;
+	// }
+
 	@Override
 	public int getMatchedTextLength() {
-		return end - start;
+		return this.end - this.start;
 	}
 
-//	@Override
-//	public ILeaf getFirstLeaf() {
-//		return this;
-//	}
-	
+	// @Override
+	// public ILeaf getFirstLeaf() {
+	// return this;
+	// }
+
 	@Override
-	public <T, A, E extends Throwable> T accept(IParseTreeVisitor<T, A, E> visitor, A arg) throws E {
+	public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
 		return visitor.visit(this, arg);
 	}
 
@@ -78,31 +86,32 @@ public class Leaf extends Node implements ILeaf {
 	public String getMatchedText() {
 		return this.input.get(this.start, this.end).toString();
 	}
-	
-//	public Leaf deepClone() {
-//		Leaf clone = new Leaf(this.input, this.start, this.end, this.terminalRule);
-//		return clone;
-//	}
-	
-	//--- Object ---
+
+	// public Leaf deepClone() {
+	// Leaf clone = new Leaf(this.input, this.start, this.end, this.terminalRule);
+	// return clone;
+	// }
+
+	// --- Object ---
 	static ToStringVisitor v = new ToStringVisitor();
+
 	@Override
 	public String toString() {
-		return this.accept(v, "");
+		return this.accept(Leaf.v, "");
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.start ^ this.end;
 	}
-	
+
 	@Override
-	public boolean equals(Object arg) {
-		if (!(arg instanceof ILeaf) ) {
+	public boolean equals(final Object arg) {
+		if (!(arg instanceof ILeaf)) {
 			return false;
 		}
-		ILeaf other = (ILeaf)arg;
-		if (this.getStartPosition()!=other.getStartPosition() || this.getMatchedTextLength()!=other.getMatchedTextLength()) {
+		final ILeaf other = (ILeaf) arg;
+		if (this.getStartPosition() != other.getStartPosition() || this.getMatchedTextLength() != other.getMatchedTextLength()) {
 			return false;
 		}
 		return this.getRuntimeRuleNumber() == other.getRuntimeRuleNumber();

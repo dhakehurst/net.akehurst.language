@@ -29,7 +29,10 @@ import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
 public class Special_Test extends AbstractParser_Test {
-	
+	/*
+	 * S : 'a' S B B | 'a' ;
+	 * B : 'b' ? ;
+	 */
 	Grammar S() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		//b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"));

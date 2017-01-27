@@ -19,5 +19,8 @@ import net.akehurst.language.core.parser.IParseTree;
 
 public interface ISemanticAnalyser {
 
+	IGrammarLoader getGrammarLoader();
+	void setGrammarLoader(IGrammarLoader value);
+	
 	<T> T analyse(Class<T> targetType, IParseTree tree) throws UnableToAnalyseExeception;
 }

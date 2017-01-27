@@ -15,8 +15,10 @@
  */
 package net.akehurst.language.processor;
 
+import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.io.Reader;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -24,8 +26,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import net.akehurst.language.core.analyser.IGrammar;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
@@ -37,7 +39,7 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 
 public class OGL_Java_Test {
-	
+
 	RuntimeRuleSetBuilder parseTreeFactory;
 
 	@Before
@@ -45,246 +47,236 @@ public class OGL_Java_Test {
 		this.parseTreeFactory = new RuntimeRuleSetBuilder();
 	}
 
-	String readFile(String path, Charset encoding) throws IOException {
-		byte[] encoded = Files.readAllBytes(Paths.get(path));
-		return new String(encoded, encoding);
+	ParseTreeBuilder builder(final Grammar grammar, final String text, final String goal) {
+		return new ParseTreeBuilder(this.parseTreeFactory, grammar, goal, text, 0);
 	}
 
-	ParseTreeBuilder builder(Grammar grammar, String text, String goal) {
-		return new ParseTreeBuilder(this.parseTreeFactory, grammar, goal, text,0);
-	}
-
-	IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
+	IParseTree process(final IGrammar grammar, final Reader reader, final String goalName) throws ParseFailedException {
 		try {
-			INodeType goal = grammar.findRule(goalName).getNodeType();
-			IParser parser = new ScannerLessParser3(this.parseTreeFactory, grammar);
-			IParseTree tree = parser.parse(goal, text);
+			final IParser parser = new ScannerLessParser3(this.parseTreeFactory, grammar);
+			final IParseTree tree = parser.parse(goalName, reader);
 			return tree;
-		} catch (RuleNotFoundException e) {
+		} catch (final RuleNotFoundException e) {
 			Assert.fail(e.getMessage());
 			return null;
-		} catch (ParseTreeException e) {
+		} catch (final ParseTreeException e) {
 			Assert.fail(e.getMessage());
 			return null;
 		}
 	}
 
-	IParseTree parse(String grammarFile, String goal, String text) {
+	IParseTree parse(final String grammarFile, final String goal, final String text) {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			String grammarText = this.readFile(grammarFile, Charset.defaultCharset());
-			Grammar grammar = proc.process(grammarText, Grammar.class);
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final FileReader reader = new FileReader(Paths.get(grammarFile).toFile());
+			final Grammar grammar = proc.process(reader, Grammar.class);
 
-			IParseTree tree = this.process(grammar, text, goal);
+			final IParseTree tree = this.process(grammar, new StringReader(text), goal);
 
 			return tree;
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			Assert.fail(e.getMessage());
-		} catch (UnableToAnalyseExeception e) {
+		} catch (final UnableToAnalyseExeception e) {
 			Assert.fail(e.getMessage());
 		}
 		return null;
 	}
-	
+
 	@Test
 	public void java1_empty() {
-		IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", "");
+		final IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", "");
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java1_comment() {
-		IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", "/* comment */");
+		final IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", "/* comment */");
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java1_package() {
-		IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", "package");
+		final IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", "package");
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java1_comment_package() {
-		String text = "/* comment */  package";
-		IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", text);
+		final String text = "/* comment */  package";
+		final IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java1_package_comment() {
-		String text = "package  /* comment */";
-		IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", text);
+		final String text = "package  /* comment */";
+		final IParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java2_empty() {
-		String text = "";
-		IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
+		final String text = "";
+		final IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java2_comment() {
-		String text = "/* comment */";
-		IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
+		final String text = "/* comment */";
+		final IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java2_comment_package() {
-		String text = "/* comment */  package";
-		IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
+		final String text = "/* comment */  package";
+		final IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java2_package_comment() {
-		String text = "package  /* comment */";
-		IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
+		final String text = "package  /* comment */";
+		final IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java2_import() {
-		String text = "import";
-		IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
+		final String text = "import";
+		final IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java2_type() {
-		String text = "type";
-		IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
+		final String text = "type";
+		final IParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java3_empty() {
-		String text = "";
-		IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
+		final String text = "";
+		final IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java3_comment() {
-		String text = "/* comment */";
-		IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
+		final String text = "/* comment */";
+		final IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java3_package() {
-		String text = "package";
-		IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
+		final String text = "package";
+		final IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java3_comment_package() {
-		String text = "/* comment */  package";
-		IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
+		final String text = "/* comment */  package";
+		final IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java3_package_comment() {
-		String text = "package  /* comment */";
-		IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
+		final String text = "package  /* comment */";
+		final IParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java4_type_int() {
-		String text = "int";
-		IParseTree tree = this.parse("src/test/resources/Java4.og", "type", text);
+		final String text = "int";
+		final IParseTree tree = this.parse("src/test/resources/Java4.og", "type", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java4_type_Integer() {
-		String text = "Integer";
-		IParseTree tree = this.parse("src/test/resources/Java4.og", "type", text);
+		final String text = "Integer";
+		final IParseTree tree = this.parse("src/test/resources/Java4.og", "type", text);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void java6_switchBlock() {
-		String text = "{ case 1 : 2; }";
-		IParseTree tree = this.parse("src/test/resources/Java6.og", "switchBlock", text);
+		final String text = "{ case 1 : 2; }";
+		final IParseTree tree = this.parse("src/test/resources/Java6.og", "switchBlock", text);
 		Assert.assertNotNull(tree);
 	}
-	
-//	public void java7_formalParameters()
-	
+
+	// public void java7_formalParameters()
+
 	@Test
 	public void java5_4980495_static_Test() {
 		try {
-			String text = new String(Files.readAllBytes(Paths.get("src/test/resources/Test.txt")));
-			IParseTree tree = this.parse("src/test/resources/Java5.og", "compilationUnit", text);
+			final String text = new String(Files.readAllBytes(Paths.get("src/test/resources/Test.txt")));
+			final IParseTree tree = this.parse("src/test/resources/Java5.og", "compilationUnit", text);
 			Assert.assertNotNull(tree);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
-	
+
 	@Test
 	public void java() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = this.readFile("src/test/resources/Java.og", Charset.defaultCharset());
-
-			IParseTree tree = this.process(g, text, "grammarDefinition");
+			final FileReader reader = new FileReader("src/test/resources/Java.og");
+			final IParseTree tree = this.process(g, reader, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage() + " matched length "+ e.getLongestMatch().getRoot().getMatchedTextLength());
-		} catch (IOException e) {
+		} catch (final ParseFailedException e) {
+			Assert.fail(e.getMessage() + " matched length " + e.getLongestMatch().getRoot().getMatchedTextLength());
+		} catch (final IOException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void java8_all() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = this.readFile("src/test/resources/Java8_all.og", Charset.defaultCharset());
-
-			IParseTree tree = this.process(g, text, "grammarDefinition");
+			final FileReader reader = new FileReader("src/test/resources/Java8_all.og");
+			final IParseTree tree = this.process(g, reader, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage() + " matched length "+ e.getLongestMatch().getRoot().getMatchedTextLength());
-		} catch (IOException e) {
+		} catch (final ParseFailedException e) {
+			Assert.fail(e.getMessage() + " matched length " + e.getLongestMatch().getRoot().getMatchedTextLength());
+		} catch (final IOException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void java_parts() {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			Grammar g = proc.getGrammar();
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final IGrammar g = proc.getGrammar();
 
-			String text = this.readFile("src/test/resources/Java8_part2.og", Charset.defaultCharset());
-
-			IParseTree tree = this.process(g, text, "grammarDefinition");
+			final FileReader reader = new FileReader("src/test/resources/Java8_part2.og");
+			final IParseTree tree = this.process(g, reader, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage() + " matched length "+ e.getLongestMatch().getRoot().getMatchedTextLength());
-		} catch (IOException e) {
+		} catch (final ParseFailedException e) {
+			Assert.fail(e.getMessage() + " matched length " + e.getLongestMatch().getRoot().getMatchedTextLength());
+		} catch (final IOException e) {
 			Assert.fail(e.getMessage());
 		}
 	}

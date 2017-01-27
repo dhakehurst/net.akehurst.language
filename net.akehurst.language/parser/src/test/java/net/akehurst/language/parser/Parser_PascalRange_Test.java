@@ -30,7 +30,13 @@ import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class Parser_PascalRange_Test extends AbstractParser_Test {
-	
+	/*
+	 * expr : range | real ;
+	 * range: integer '..' integer ;
+	 * integer : "[0-9]+" ;
+	 * real : "([0-9]+[.][0-9]*)|([.][0-9]+)" ;
+	 * 
+	 */
 	Grammar pascal() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("expr").choice(new NonTerminal("range"), new NonTerminal("real"));
@@ -41,6 +47,9 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 		return b.get();
 	}
 	
+	/**
+	 * @param 
+	 */
 	@Test
 	public void pascal_expr_p5() {
 		// grammar, goal, input

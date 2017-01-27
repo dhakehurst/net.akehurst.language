@@ -1,6 +1,7 @@
 package net.akehurst.language.objectGrammar.comparisonTests;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -31,6 +32,7 @@ import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;
@@ -75,7 +77,7 @@ public class Java8_compare_Test {
 	static OGLanguageProcessor getOGLProcessor() {
 		if (null == processor) {
 			processor = new OGLanguageProcessor();
-			processor.getParser().build(processor.getDefaultGoal());
+			processor.getParser().build();
 		}
 		return processor;
 	}
@@ -91,8 +93,8 @@ public class Java8_compare_Test {
 			try {
 				String grammarText = new String(Files.readAllBytes(Paths.get("src/test/grammar/Java8.og")));
 				Grammar javaGrammar = getOGLProcessor().process(grammarText, Grammar.class);
-				javaProcessor = new LanguageProcessor(javaGrammar, "compilationUnit", null);
-				javaProcessor.getParser().build(javaProcessor.getDefaultGoal());
+				javaProcessor = new LanguageProcessor(javaGrammar, null);
+				javaProcessor.getParser().build();
 			} catch (IOException e) {
 				e.printStackTrace();
 				Assert.fail(e.getMessage());
@@ -123,11 +125,14 @@ public class Java8_compare_Test {
 	static String og_input;
 	static IParseTree parseWithOG(Path file) {
 		try {
-			IParseTree tree = getJavaProcessor().getParser().parse(getJavaProcessor().getDefaultGoal(), og_input);
+			IParseTree tree = getJavaProcessor().getParser().parse("compliationUnit", new StringReader(og_input));
 			return tree;
 		} catch (ParseFailedException e) {
 			return null;//e.getLongestMatch();
 		} catch (ParseTreeException e) {
+			e.printStackTrace();
+		} catch (RuleNotFoundException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;

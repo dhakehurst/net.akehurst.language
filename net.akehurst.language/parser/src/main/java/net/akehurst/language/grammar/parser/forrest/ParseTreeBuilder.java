@@ -28,7 +28,7 @@ import net.akehurst.language.ogl.semanticStructure.TerminalEmpty;
 
 public class ParseTreeBuilder {
 
-	public ParseTreeBuilder(RuntimeRuleSetBuilder runtimeRules, Grammar grammar, String goal, CharSequence text, int offset) {
+	public ParseTreeBuilder(final RuntimeRuleSetBuilder runtimeRules, final Grammar grammar, final String goal, final CharSequence text, final int offset) {
 		this.runtimeBuilder = runtimeRules;
 		this.input = new Input3(runtimeRules, text);
 		this.grammar = grammar;
@@ -44,52 +44,53 @@ public class ParseTreeBuilder {
 	int textLength;
 	int offset;
 
-	public ILeaf leaf(String text) {
+	public ILeaf leaf(final String text) {
 		return this.leaf(text, text);
 	}
-	
-	public ILeaf leaf(String terminalPattern, String text) {
-		int start = this.textLength+this.offset;
-		this.textLength+=text.length();
-		int end = this.textLength +this.offset;
+
+	public ILeaf leaf(final String terminalPattern, final String text) {
+		final int start = this.textLength + this.offset;
+		this.textLength += text.length();
+		final int end = this.textLength + this.offset;
 		Terminal terminal = null;
 		if (terminalPattern.isEmpty()) {
 			terminal = new TerminalEmpty();
 		} else {
-			terminal = this.grammar.getAllTerminal().stream().filter(t -> t.getPattern().pattern().equals(terminalPattern)).findFirst().get();
+			terminal = (Terminal) this.grammar.getAllTerminal().stream().filter(t -> ((Terminal) t).getPattern().pattern().equals(terminalPattern)).findFirst()
+					.get();
 		}
-		RuntimeRule terminalRule = this.runtimeBuilder.getRuntimeRuleSet().getForTerminal(terminal.getValue());
-		ILeaf l = this.runtimeBuilder.createLeaf(this.input, start, end, terminalRule);
+		final RuntimeRule terminalRule = this.runtimeBuilder.getRuntimeRuleSet().getForTerminal(terminal.getValue());
+		final ILeaf l = this.runtimeBuilder.createLeaf(this.input, start, end, terminalRule);
 		return l;
 	}
 
-	public ILeaf emptyLeaf(String ruleNameThatIsEmpty) {
-		int start = this.textLength +this.offset;
-		RuntimeRule ruleThatIsEmpty = this.runtimeBuilder.getRuntimeRuleSet().getRuntimeRule(ruleNameThatIsEmpty);
-		RuntimeRule terminalRule = this.runtimeBuilder.getRuntimeRuleSet().getEmptyRule(ruleThatIsEmpty);
+	public ILeaf emptyLeaf(final String ruleNameThatIsEmpty) {
+		final int start = this.textLength + this.offset;
+		final RuntimeRule ruleThatIsEmpty = this.runtimeBuilder.getRuntimeRuleSet().getRuntimeRule(ruleNameThatIsEmpty);
+		final RuntimeRule terminalRule = this.runtimeBuilder.getRuntimeRuleSet().getEmptyRule(ruleThatIsEmpty);
 		return this.runtimeBuilder.createLeaf(this.input, start, start, terminalRule);
 	}
 
-	public IBranch branch(String ruleName, INode... children) {
+	public IBranch branch(final String ruleName, final INode... children) {
 		try {
-			Rule rule = this.grammar.findRule(ruleName);
-			RuntimeRule rr = this.runtimeBuilder.getRuntimeRuleSet().getRuntimeRule(rule);
-			IBranch b = this.runtimeBuilder.createBranch(rr, children);
+			final Rule rule = this.grammar.findRule(ruleName);
+			final RuntimeRule rr = this.runtimeBuilder.getRuntimeRuleSet().getRuntimeRule(rule);
+			final IBranch b = this.runtimeBuilder.createBranch(rr, children);
 			return b;
-		} catch (RuleNotFoundException e) {
+		} catch (final RuleNotFoundException e) {
 			throw new RuntimeException("Error", e);
 		}
 	}
 
-//	public IParseTree tree(IBranch root) {
-//		try {
-//			Rule rule = this.grammar.findRule(root.getName());
-//			RuntimeRule rr = this.factory.getRuntimeRuleSet().getRuntimeRule(rule);
-//			IParseTree t = new ParseTreeBranch(this.factory, input, (Branch)root, null, rr, Integer.MAX_VALUE);
-//			return t;
-//		} catch (RuleNotFoundException e) {
-//			throw new RuntimeException("Error", e);
-//		}
-//	}
+	// public IParseTree tree(IBranch root) {
+	// try {
+	// Rule rule = this.grammar.findRule(root.getName());
+	// RuntimeRule rr = this.factory.getRuntimeRuleSet().getRuntimeRule(rule);
+	// IParseTree t = new ParseTreeBranch(this.factory, input, (Branch)root, null, rr, Integer.MAX_VALUE);
+	// return t;
+	// } catch (RuleNotFoundException e) {
+	// throw new RuntimeException("Error", e);
+	// }
+	// }
 
 }

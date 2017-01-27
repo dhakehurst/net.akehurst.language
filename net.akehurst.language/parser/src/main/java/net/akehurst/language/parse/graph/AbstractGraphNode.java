@@ -68,7 +68,12 @@ abstract public class AbstractGraphNode implements IGraphNode {
 	}
 	
 	@Override
-	public List<PreviousInfo> getPrevious() {
+	public boolean getIsStacked() {
+		return !this.getPossibleParent().isEmpty();
+	}
+	
+	@Override
+	public List<PreviousInfo> getPossibleParent() {
 		//TODO: don't think this needs ot be a list
 		return this.previous;
 	}
@@ -129,5 +134,17 @@ abstract public class AbstractGraphNode implements IGraphNode {
 		}
 	}
 
-
+	@Override
+	public String toString() {
+		String prev = "";
+		if (this.getPossibleParent().isEmpty()) {
+			//nothing
+		} else if (this.getPossibleParent().size()==1) {
+			prev = " -> " + this.getPossibleParent().get(0);
+		} else {
+			prev = " ->* " + this.getPossibleParent().get(0);
+		}
+		return this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + "," + this.getStartPosition() + ","
+				+ this.getMatchedTextLength() + "," + this.getNextItemIndex() + ")" + prev;
+	}
 }

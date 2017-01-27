@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.processor;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -45,8 +46,8 @@ public class OGL_ParseJava_Test {
 	void parseGrammar(String grammarFile) {
 		try {
 			OGLanguageProcessor proc = new OGLanguageProcessor();
-			String grammarText = this.readFile(grammarFile, Charset.defaultCharset());
-			Grammar grammar = proc.process(grammarText, Grammar.class);
+			FileReader reader = new FileReader(grammarFile);
+			Grammar grammar = proc.process(reader, Grammar.class);
 
 		} catch (ParseFailedException e) {
 			Assert.fail(e.getMessage());

@@ -19,13 +19,16 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-public abstract class Terminal extends TangibleItem {
+import net.akehurst.language.core.analyser.ITerminal;
 
-	public Terminal(String value) {
+public abstract class Terminal extends TangibleItem implements ITerminal {
+
+	public Terminal(final String value) {
 		this.value = value;
 	}
-	
+
 	String value;
+
 	public String getValue() {
 		return this.value;
 	}
@@ -34,36 +37,36 @@ public abstract class Terminal extends TangibleItem {
 	public String getName() {
 		return this.getValue();
 	}
-	
+
 	abstract public Pattern getPattern();
-	
-	public boolean matches(String value) {
+
+	public boolean matches(final String value) {
 		return this.getPattern().matcher(value).matches();
 	}
-	
-//	public Set<TangibleItem> findFirstTangibleItem() {
-//		Set<TangibleItem> result = new HashSet<>();
-//		result.add( this );
-//		return result;
-//	}
-//	
-	
+
+	// public Set<TangibleItem> findFirstTangibleItem() {
+	// Set<TangibleItem> result = new HashSet<>();
+	// result.add( this );
+	// return result;
+	// }
+	//
+
 	@Override
 	public Set<Terminal> findAllTerminal() {
-		Set<Terminal> result = new HashSet<>();
+		final Set<Terminal> result = new HashSet<>();
 		result.add(this);
 		return result;
 	}
-	
+
 	@Override
 	public Set<NonTerminal> findAllNonTerminal() {
-		Set<NonTerminal> result = new HashSet<>();
+		final Set<NonTerminal> result = new HashSet<>();
 		return result;
 	}
-	
-//	
-//	@Override
-//	public boolean isMatchedBy(INode node) throws RuleNotFoundException {
-//		return node.getNodeType().equals(this.getNodeType());
-//	}
+
+	//
+	// @Override
+	// public boolean isMatchedBy(INode node) throws RuleNotFoundException {
+	// return node.getNodeType().equals(this.getNodeType());
+	// }
 }

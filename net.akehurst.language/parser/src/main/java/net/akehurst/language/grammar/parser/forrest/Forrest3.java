@@ -82,7 +82,7 @@ public final class Forrest3 {
 		}
 		IGraphNode longest = null;
 		for (IGraphNode n : this.graph.getCompleteNodes()) {
-			if (n.getStartPosition() == 1) {
+			if (n.getStartPosition() == 0) {
 				if (null == longest || n.getMatchedTextLength() > longest.getMatchedTextLength()) {
 					longest = n;
 				}
@@ -165,19 +165,19 @@ public final class Forrest3 {
 				Leaf l = this.input.fetchOrCreateBud(rr, gn.getNextInputPosition());
 				if (null != l) {
 					IGraphNode bud = this.graph.createLeaf(l, rr, gn.getNextInputPosition(), l.getMatchedTextLength());
-//					if (bud.getRuntimeRule().getIsEmptyRule()) {
-//						RuntimeRule ruleThatIsEmpty = bud.getRuntimeRule().getRuleThatIsEmpty();
-//						IGraphNode pt = this.graph.createWithFirstChild(ruleThatIsEmpty, bud.getPriority(), bud);
-//						// if (this.getIsGoal(pt)) {
-//						// this.goals.add(pt);
-//						// }
-//						IGraphNode nn = this.pushStackNewRoot(gn, pt);
-//
-//					} else {
-						// what if bud exists and already has stacked nodes?
-						IGraphNode nn = this.pushStackNewRoot(gn, bud);
+					if (bud.getRuntimeRule().getIsEmptyRule()) {
+					 RuntimeRule ruleThatIsEmpty = bud.getRuntimeRule().getRuleThatIsEmpty();
+					 IGraphNode pt = this.graph.createWithFirstChild(ruleThatIsEmpty, bud.getPriority(), bud);
+					// // if (this.getIsGoal(pt)) {
+					// // this.goals.add(pt);
+					// // }
+					 IGraphNode nn = this.pushStackNewRoot(gn, pt);
+					//
+					 } else {
+					// what if bud exists and already has stacked nodes?
+					IGraphNode nn = this.pushStackNewRoot(gn, bud);
 
-//					}
+					 }
 				}
 			}
 			// }
@@ -223,8 +223,7 @@ public final class Forrest3 {
 
 	protected void tryGraftBack(IGraphNode gn) throws RuleNotFoundException {
 
-		ArrayList<IGraphNode.PreviousInfo> prev = new ArrayList<>(gn.getPrevious());
-		for (IGraphNode.PreviousInfo info : prev) {
+		for (IGraphNode.PreviousInfo info : gn.getPossibleParent()) {
 			if (info.node.hasNextExpectedItem()) {
 				this.tryGraftInto(gn, info);
 			} else {
@@ -235,9 +234,7 @@ public final class Forrest3 {
 	}
 
 	protected void tryGraftBackSkipNode(IGraphNode gn) throws RuleNotFoundException {
-
-		ArrayList<IGraphNode.PreviousInfo> prev = new ArrayList<>(gn.getPrevious());
-		for (IGraphNode.PreviousInfo info : prev) {
+		for (IGraphNode.PreviousInfo info : gn.getPossibleParent()) {
 			this.tryGraftInto(gn, info);
 		}
 
@@ -267,22 +264,22 @@ public final class Forrest3 {
 				// if (this.getIsGoal(pt)) {
 				// this.goals.add(pt);
 				// }
-//				IGraphNode nn = this.pushStackNewRoot(gn, pt);
-				
+				// IGraphNode nn = this.pushStackNewRoot(gn, pt);
+
 			} else {
-			// RuntimeRule[] rules = runtimeRuleSet.getPossibleSuperRule(gn.getRuntimeRule());
-			SuperRuleInfo[] infos = runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
-			for (SuperRuleInfo info : infos) {
-				if (gn.getRuntimeRule().getRuleNumber() == info.getRuntimeRule().getRuleNumber()) {
-					// TODO: do we need to make this growable?
-					result.add(gn);
-				}
-				if (this.hasHeightPotential(info.getRuntimeRule(), gn)) {
+				// RuntimeRule[] rules = runtimeRuleSet.getPossibleSuperRule(gn.getRuntimeRule());
+				SuperRuleInfo[] infos = runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
+				for (SuperRuleInfo info : infos) {
+					if (gn.getRuntimeRule().getRuleNumber() == info.getRuntimeRule().getRuleNumber()) {
+						// TODO: do we need to make this growable?
+						result.add(gn);
+					}
+					if (this.hasHeightPotential(info.getRuntimeRule(), gn)) {
 
-					this.growHeightByType(gn, info);
+						this.growHeightByType(gn, info);
 
+					}
 				}
-			}
 			}
 		} else {
 			// result.add(this);
@@ -294,7 +291,7 @@ public final class Forrest3 {
 		switch (info.getRuntimeRule().getRhs().getKind()) {
 			case CHOICE:
 				this.growHeightChoice(gn, info);
-			return;
+				return;
 			case PRIORITY_CHOICE:
 				this.growHeightPriorityChoice(gn, info);
 				return;
@@ -381,7 +378,7 @@ public final class Forrest3 {
 					if (existingPriority == priority) {
 						if (existing.getMatchedTextLength() > gn.getMatchedTextLength()) {
 							// use existing
-							IGraphNode newParent = existing.duplicateWithOtherStack(existingPriority, gn.getPrevious());
+							IGraphNode newParent = existing.duplicateWithOtherStack(existingPriority, gn.getPossibleParent());
 
 						} else {
 							// use new
@@ -395,7 +392,7 @@ public final class Forrest3 {
 					} else {
 						if (existing.getMatchedTextLength() > gn.getMatchedTextLength()) {
 							// use existing
-							IGraphNode newParent = existing.duplicateWithOtherStack(existingPriority, gn.getPrevious());
+							IGraphNode newParent = existing.duplicateWithOtherStack(existingPriority, gn.getPossibleParent());
 
 						} else {
 							// use new
@@ -411,48 +408,50 @@ public final class Forrest3 {
 
 			}
 		} else {
-//			return null;
+			// return null;
 		}
 
 	}
 
-//	int getHeight(IGraphNode n) {
-//		int i = 0;
-//		while (!n.getChildren().isEmpty()) {
-//			i++;
-//			n = n.getChildren().get(0);
-//		}
-//		return i;
-//	}
+	// int getHeight(IGraphNode n) {
+	// int i = 0;
+	// while (!n.getChildren().isEmpty()) {
+	// i++;
+	// n = n.getChildren().get(0);
+	// }
+	// return i;
+	// }
 
 	boolean hasHeightPotential(RuntimeRule newParentRule, IGraphNode child) {
 		if (newParentRule.couldHaveChild(child.getRuntimeRule(), 0)) {
 			if (runtimeRuleSet.getAllSkipTerminals().contains(child.getRuntimeRule())) {
 				return true;
 			} else if (child.getIsStacked()) {
-				PreviousInfo prev = child.getPrevious().get(0);
-				List<RuntimeRule> nextExpectedForStacked = prev.node.getNextExpectedItem();
-				// if (nextExpectedForStacked.getRuleNumber() == newParentRule.getRuleNumber()) {
-				if (nextExpectedForStacked.contains(newParentRule)) {
-					return true;
-				} else {
-					for (RuntimeRule rr : nextExpectedForStacked) {
-						if (rr.getKind() == RuntimeRuleKind.NON_TERMINAL) {
-							List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleFirstSubRule(rr));
-							if (possibles.contains(newParentRule)) {
-								return true;
-							}
-						} else {
-							List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleFirstTerminals(rr));
-							if (possibles.contains(newParentRule)) {
-								return true;
+				for (PreviousInfo prev : child.getPossibleParent()) {
+					List<RuntimeRule> nextExpectedForStacked = prev.node.getNextExpectedItem();
+					// if (nextExpectedForStacked.getRuleNumber() == newParentRule.getRuleNumber()) {
+					if (nextExpectedForStacked.contains(newParentRule)) {
+						return true;
+					} else {
+						for (RuntimeRule rr : nextExpectedForStacked) {
+							if (rr.getKind() == RuntimeRuleKind.NON_TERMINAL) {
+								List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleFirstSubRule(rr));
+								if (possibles.contains(newParentRule)) {
+									return true;
+								}
+							} else {
+								List<RuntimeRule> possibles = Arrays.asList(runtimeRuleSet.getPossibleFirstTerminals(rr));
+								if (possibles.contains(newParentRule)) {
+									return true;
+								}
 							}
 						}
+						return false;
 					}
-					return false;
+					// SuperRuleInfo[] infos = runtimeRuleSet.getPossibleSuperRuleInfo(child.getRuntimeRule());
+					// return this.hasStackedPotential(newParentRule, child.getPrevious().get(0).node.getRuntimeRule());
 				}
-				// SuperRuleInfo[] infos = runtimeRuleSet.getPossibleSuperRuleInfo(child.getRuntimeRule());
-				// return this.hasStackedPotential(newParentRule, child.getPrevious().get(0).node.getRuntimeRule());
+				return false;
 			} else {
 				return false;
 			}

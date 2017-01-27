@@ -15,8 +15,15 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import javax.swing.event.ListSelectionEvent;
+
+import net.akehurst.language.core.analyser.IGrammar;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
@@ -32,10 +39,34 @@ public class GrammarDefinitionBranch2Grammar implements Relation<INode, Grammar>
 	public void configureLeft2Right(INode left, Grammar right, Transformer transformer) {
 		try {
 			IBranch grammarBranch = (IBranch) ((IBranch)left).getChild(1);
-			IBranch rulesBranch = (IBranch) grammarBranch.getChild(3);
+			IBranch extendsBranch = (IBranch) grammarBranch.getChild(2);
+			IBranch rulesBranch = (IBranch) grammarBranch.getChild(4);
 			List<INode> ruleBranches = rulesBranch.getNonSkipChildren();
+			
+			if (0==extendsBranch.getMatchedTextLength()) {
+				//no extended grammar
+			} else {
+				IBranch extendsListBranch = (IBranch) ((IBranch)extendsBranch.getChild(0)).getChild(1);
+				List<String> extendsList = new ArrayList<>();
+				for (INode n: extendsListBranch.getNonSkipChildren()) {
+					if ("qualifiedName".equals(n.getName())) {
+						IBranch b = (IBranch)n;
+						String qualifiedName = n.getMatchedText().trim();
+						if (1==b.getNonSkipChildren().size()) {
+							qualifiedName = right.getNamespace().getQualifiedName() + "::"+qualifiedName;
+						}
+						extendsList.add(qualifiedName);
+					}
+				}
+				
+				List<IGrammar> extendedGrammars =((SemanicAnalyser)transformer).getGrammarLoader().resolve(extendsList.toArray(new String[0]));
+				List<Grammar> grammars = extendedGrammars.stream().map((e)->(Grammar)e).collect(Collectors.toList());
+				right.setExtends(grammars);
+			}
+			
 			List<? extends Rule> rules = transformer.transformAllLeft2Right(AnyRuleNode2Rule.class, ruleBranches);
 			right.setRule((List<Rule>) rules);
+			
 		} catch (RelationNotFoundException e) {
 			throw new RuntimeException("Unable to configure Grammar", e);
 		}
