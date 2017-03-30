@@ -43,6 +43,7 @@ public class Grammar implements IGrammar {
 
 	String name;
 
+	@Override
 	public String getName() {
 		return this.name;
 	}
@@ -152,6 +153,12 @@ public class Grammar implements IGrammar {
 		} else if (item instanceof SeparatedList) {
 			result.addAll(this.findAllTerminal(totalItems, rule, ((SeparatedList) item).getSeparator()));
 			result.addAll(this.findAllTerminal(totalItems, rule, ((SeparatedList) item).getItem()));
+		} else if (item instanceof Group) {
+			result.addAll(this.findAllTerminal(totalItems, rule, ((Group) item).getChoice()));
+		} else if (item instanceof NonTerminal) {
+			// add nothing
+		} else {
+			throw new RuntimeException("Internal Error: Should never happen");
 		}
 		return result;
 	}

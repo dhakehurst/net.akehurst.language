@@ -26,6 +26,7 @@ import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class Grammar_Test {
 
@@ -53,6 +54,19 @@ public class Grammar_Test {
 		b.rule("root").concatenation(new NonTerminal("hello"), new NonTerminal("world"));
 		b.rule("hello").concatenation(new TerminalLiteral("hello"));
 		b.rule("world").concatenation(new TerminalLiteral("world!"));
+		final Grammar g = b.get();
+
+		final Set<INodeType> types = g.findAllNodeType();
+
+		Assert.assertEquals(5, types.size());
+	}
+
+	@Test
+	public void test() {
+
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "TestG");
+		b.skip("SKIP").concatination(new TerminalPattern("\\s+"));
+		b.rule("port").concatenation(new TerminalLiteral("port"));
 		final Grammar g = b.get();
 
 		final Set<INodeType> types = g.findAllNodeType();

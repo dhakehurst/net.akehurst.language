@@ -29,7 +29,7 @@ import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.parser.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 
-public class OGLAnalyser_Test {
+public class test_OGL_Dot {
 
 	<T> T process(final String grammarText, final Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
 		try {
@@ -65,24 +65,40 @@ public class OGLAnalyser_Test {
 		}
 	}
 
-	@Test
-	public void a_a_a_A() {
-		// grammar, goal, input, target
+	IParseTree processDot(final String ruleName, final String text) {
 		try {
-			String grammarText = "namespace test;" + System.lineSeparator();
-			grammarText += "grammar A {" + System.lineSeparator();
-			grammarText += " a : 'a' ;" + System.lineSeparator();
-			grammarText += "}";
-
-			final Grammar grammar = this.process(grammarText, Grammar.class);
+			final String grammarFile = "Dot.ogl";
+			final Grammar grammar = this.processFile(grammarFile, Grammar.class);
 			Assert.assertNotNull(grammar);
-
 			final LanguageProcessor proc = new LanguageProcessor(grammar, null);
+			final IParseTree tree = proc.getParser().parse(ruleName, new StringReader(text));
+			return tree;
+		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | RuleNotFoundException e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+			return null;
+		}
+	}
 
-			final IParseTree tree = proc.getParser().parse("a", new StringReader("a"));
+	@Test
+	public void test() {
+		try {
+			final IParseTree tree = this.processDot("graph", "graph { }");
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | RuleNotFoundException e) {
+		} catch (final Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+	}
+
+	@Test
+	public void test2() {
+		try {
+			final IParseTree tree = this.processDot("graph", "sTriCt GRapH { }");
+			Assert.assertNotNull(tree);
+
+		} catch (final Exception e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}

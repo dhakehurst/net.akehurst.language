@@ -45,13 +45,13 @@ public class OGLanguageProcessor extends LanguageProcessor {
 		Map<String, IGrammar> resolved;
 
 		@Override
-		public List<IGrammar> resolve(String... qualifiedGrammarNames) {
-			List<IGrammar> grammars = new ArrayList<>();
+		public List<IGrammar> resolve(final String... qualifiedGrammarNames) {
+			final List<IGrammar> grammars = new ArrayList<>();
 
-			for (String qualifiedGrammarName : qualifiedGrammarNames) {
+			for (final String qualifiedGrammarName : qualifiedGrammarNames) {
 				IGrammar grammar = this.resolved.get(qualifiedGrammarName);
 				if (null == grammar) {
-					grammar = resolve(qualifiedGrammarName);
+					grammar = this.resolve(qualifiedGrammarName);
 					this.resolved.put(qualifiedGrammarName, grammar);
 				}
 				grammars.add(grammar);
@@ -60,16 +60,19 @@ public class OGLanguageProcessor extends LanguageProcessor {
 			return grammars;
 		}
 
-		private IGrammar resolve(String qualifiedGrammarName) {
+		private IGrammar resolve(final String qualifiedGrammarName) {
 			try {
-				String resourcePath = qualifiedGrammarName.replaceAll("::", "/") + ".ogl";
-				InputStream input = this.getClass().getClassLoader().getResourceAsStream(resourcePath);
-				Reader reader = new InputStreamReader(input);
-				IParseTree tree = getParser().parse("grammarDefinition", reader);
-				IGrammar grammar = getSemanticAnalyser().analyse(IGrammar.class, tree);
+				final String resourcePath = qualifiedGrammarName.replaceAll("::", "/") + ".ogl";
+				final InputStream input = ClassLoader.getSystemClassLoader().getResourceAsStream(resourcePath);
+				final Reader reader = new InputStreamReader(input);
+				// If we use the same Processor/Analyser..then we get errors because parseTree nodes are already maped to the wrong things
+				// from analysing a previous grammar.
+				final OGLanguageProcessor proc = new OGLanguageProcessor(); // OGLanguageProcessor.this
+				final IParseTree tree = proc.getParser().parse("grammarDefinition", reader);
+				final IGrammar grammar = proc.getSemanticAnalyser().analyse(IGrammar.class, tree);
 				return grammar;
-			} catch (Exception e) {
-				throw new RuntimeException("Unable to resolve grammar "+qualifiedGrammarName,e);
+			} catch (final Exception e) {
+				throw new RuntimeException("Unable to resolve grammar " + qualifiedGrammarName, e);
 			}
 		}
 
