@@ -90,7 +90,8 @@ public class Converter extends AbstractTransformer {
 
 	RuntimeRule createVirtualRule(final Concatenation concatenation) {
 		final Grammar grammar = concatenation.getOwningRule().getGrammar();
-		final String name = "$group." + concatenation.getOwningRule().getName() + "$";
+		final String name = "$" + concatenation.getOwningRule().getName() + ".concatenation" + this.createIndexString(concatenation);// (multiNum++);
+		// final String name = "$group." + concatenation.getOwningRule().getName() + "$";
 		final RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(concatenation));
 		final RuntimeRule rr = this.getFactory().createRuntimeRule(r);
 		this.virtualRule_cache.add(rr);

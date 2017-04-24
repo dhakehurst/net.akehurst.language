@@ -34,69 +34,70 @@ public class Java8_Test {
 	static OGLanguageProcessor processor;
 
 	static {
-		getOGLProcessor();
+		Java8_Test.getOGLProcessor();
 	}
 
 	static OGLanguageProcessor getOGLProcessor() {
-		if (null == processor) {
-			processor = new OGLanguageProcessor();
-			processor.getParser().build();
+		if (null == Java8_Test.processor) {
+			Java8_Test.processor = new OGLanguageProcessor();
+			Java8_Test.processor.getParser().build();
 		}
-		return processor;
+		return Java8_Test.processor;
 	}
 
 	static ILanguageProcessor javaProcessor;
 
 	static {
-		getJavaProcessor();
+		Java8_Test.getJavaProcessor();
 	}
 
 	static ILanguageProcessor getJavaProcessor() {
-		if (null == javaProcessor) {
+		if (null == Java8_Test.javaProcessor) {
 			try {
-				String grammarText = new String(Files.readAllBytes(Paths.get("src/test/grammar/Java8.og")));
-				Grammar javaGrammar = getOGLProcessor().process(grammarText, Grammar.class);
-				javaProcessor = new LanguageProcessor(javaGrammar, null);
-				javaProcessor.getParser().build();
-			} catch (IOException e) {
+				// String grammarText = new String(Files.readAllBytes(Paths.get("src/test/grammar/Java8.og")));
+				final FileReader reader = new FileReader("src/test/grammar/Java8.og");
+				final Grammar javaGrammar = Java8_Test.getOGLProcessor().process(reader, Grammar.class);
+				Java8_Test.javaProcessor = new LanguageProcessor(javaGrammar, null);
+				Java8_Test.javaProcessor.getParser().build();
+			} catch (final IOException e) {
 				e.printStackTrace();
 				Assert.fail(e.getMessage());
-			} catch (ParseFailedException e) {
+			} catch (final ParseFailedException e) {
 				e.printStackTrace();
 				Assert.fail(e.getMessage());
-			} catch (UnableToAnalyseExeception e) {
+			} catch (final UnableToAnalyseExeception e) {
 				e.printStackTrace();
 				Assert.fail(e.getMessage());
 			}
 
 		}
-		return javaProcessor;
+		return Java8_Test.javaProcessor;
 	}
 
-	static IParseTree parseWithOG(Path file) {
+	static IParseTree parseWithOG(final Path file) {
 		try {
-			byte[] bytes = Files.readAllBytes(file);
-			FileReader reader = new FileReader(file.toFile());
-			
-			IParseTree tree = getJavaProcessor().getParser().parse("compilationUnit", reader);
-			
+			final byte[] bytes = Files.readAllBytes(file);
+			final FileReader reader = new FileReader(file.toFile());
+
+			final IParseTree tree = Java8_Test.getJavaProcessor().getParser().parse("compilationUnit", reader);
+
 			return tree;
-		} catch (ParseFailedException |ParseTreeException | IOException | RuleNotFoundException e) {
+		} catch (ParseFailedException | ParseTreeException | IOException | RuleNotFoundException e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
 		return null;
 	}
 
-	static Object parseWithAntlr4(Path file) {
+	static Object parseWithAntlr4(final Path file) {
 		try {
-			byte[] bytes = Files.readAllBytes(file);
-			CharStream input = new ANTLRInputStream(new String(bytes));
-			Lexer lexer = new antlr4.Java8Lexer(input);
-			CommonTokenStream tokens = new CommonTokenStream(lexer);
-			Java8Parser p = new Java8Parser(tokens);
+			final byte[] bytes = Files.readAllBytes(file);
+			final CharStream input = new ANTLRInputStream(new String(bytes));
+			final Lexer lexer = new antlr4.Java8Lexer(input);
+			final CommonTokenStream tokens = new CommonTokenStream(lexer);
+			final Java8Parser p = new Java8Parser(tokens);
 			return p.compilationUnit();
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -106,29 +107,29 @@ public class Java8_Test {
 	@Test
 	public void og_compilationUnit() {
 
-		Path file = Paths.get("src/test/resources/File1.java");
-		IParseTree tree = parseWithOG(file);
+		final Path file = Paths.get("src/test/resources/File1.java");
+		final IParseTree tree = Java8_Test.parseWithOG(file);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
 	public void og_longName() {
-		Path file = Paths.get("src/test/resources/javac/limits/LongName.java");
-		IParseTree tree = parseWithOG(file);
+		final Path file = Paths.get("src/test/resources/javac/limits/LongName.java");
+		final IParseTree tree = Java8_Test.parseWithOG(file);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void og_numArgs1() {
-		Path file = Paths.get("src/test/resources/javac/limits/NumArgs1.java");
-		IParseTree tree = parseWithOG(file);
+		final Path file = Paths.get("src/test/resources/javac/limits/NumArgs1.java");
+		final IParseTree tree = Java8_Test.parseWithOG(file);
 		Assert.assertNotNull(tree);
 	}
-	
+
 	@Test
 	public void antlr4_compilationUnit() {
-		Path file = Paths.get("src/test/resources/File1.java");
-		Object tree = parseWithAntlr4(file);
+		final Path file = Paths.get("src/test/resources/File1.java");
+		final Object tree = Java8_Test.parseWithAntlr4(file);
 		Assert.assertNotNull(tree);
 	}
 
@@ -140,11 +141,11 @@ public class Java8_Test {
 		try {
 			Files.walkFileTree(Paths.get("src/test/resources/javac"), new SimpleFileVisitor<Path>() {
 				@Override
-				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-					if (attrs.isRegularFile() && matcher.matches(file)) {
+				public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+					if (attrs.isRegularFile() && Java8_Test.this.matcher.matches(file)) {
 						System.out.print("Parse: " + file + "    ");
-						Object o = parseWithOG(file);
-						if (null!=o) {
+						final Object o = Java8_Test.parseWithOG(file);
+						if (null != o) {
 							System.out.println("Success");
 						} else {
 							System.out.println("Failed");
@@ -154,7 +155,7 @@ public class Java8_Test {
 					return FileVisitResult.CONTINUE;
 				}
 			});
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -167,11 +168,11 @@ public class Java8_Test {
 		try {
 			Files.walkFileTree(Paths.get("src/test/resources/javac"), new SimpleFileVisitor<Path>() {
 				@Override
-				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-					if (attrs.isRegularFile() && matcher.matches(file)) {
+				public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+					if (attrs.isRegularFile() && Java8_Test.this.matcher.matches(file)) {
 						System.out.print("Parse: " + file + "    ");
-						Object o = parseWithAntlr4(file);
-						if (null!=o) {
+						final Object o = Java8_Test.parseWithAntlr4(file);
+						if (null != o) {
 							System.out.println("Success");
 						} else {
 							System.out.println("Failed");
@@ -180,7 +181,7 @@ public class Java8_Test {
 					return FileVisitResult.CONTINUE;
 				}
 			});
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
