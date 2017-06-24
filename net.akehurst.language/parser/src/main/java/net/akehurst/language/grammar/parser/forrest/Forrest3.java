@@ -302,8 +302,10 @@ public final class Forrest3 {
 		// TODO: should have already done this test?
 		if (gn.getIsComplete()) {
 			if (gn.getRuntimeRule().getIsEmptyRule()) {
+				// TODO: I don't think we should be doing this!
+				// empty rule should get grafted back into its parent!
 				final RuntimeRule ruleThatIsEmpty = gn.getRuntimeRule().getRuleThatIsEmpty();
-				final IGraphNode pt = this.graph.createWithFirstChild(ruleThatIsEmpty, gn.getPriority(), gn);
+				// final IGraphNode pt = this.graph.createWithFirstChild(ruleThatIsEmpty, gn.getPriority(), gn);
 				// if (this.getIsGoal(pt)) {
 				// this.goals.add(pt);
 				// }

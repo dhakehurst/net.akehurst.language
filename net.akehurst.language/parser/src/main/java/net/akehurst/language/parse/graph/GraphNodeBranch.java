@@ -13,7 +13,8 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 
 public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IBranch {
 
-	public GraphNodeBranch(ParseGraph graph, RuntimeRule rr, int priority, int startPosition, int textLength, int nextItemIndex, int height) {
+	public GraphNodeBranch(final ParseGraph graph, final RuntimeRule rr, final int priority, final int startPosition, final int textLength,
+			final int nextItemIndex, final int height) {
 		super(graph, rr, startPosition, textLength);
 		this.priority = priority;
 		this.nextItemIndex = nextItemIndex;
@@ -27,25 +28,29 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	int height;
 
 	@Override
-	public IGraphNode duplicateWithNextChild(IGraphNode nextChild) {
-		int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
-		int newNextItemIndex = this.getNextItemIndex() + 1;
+	public IGraphNode duplicateWithNextChild(final IGraphNode nextChild) {
+		final int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
+		final int newNextItemIndex = this.getNextItemIndex() + 1;
 
 		// if duplicate will be complete && if its id already exists
 		// if (parents are the same) return already existing
-		IGraphNode gn = this.graph.findCompleteNode(this.runtimeRule.getRuleNumber(), startPosition, newLength);
+		final IGraphNode gn = this.graph.findCompleteNode(this.runtimeRule.getRuleNumber(), this.startPosition, newLength);
 
 		// GraphNodeBranch duplicate = (GraphNodeBranch)this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength,
 		// newNextItemIndex, this.height);
-		GraphNodeBranch duplicate = new GraphNodeBranch(graph, this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex, this.height);
+		int pri = this.priority;
+		if (nextChild.getRuntimeRule().getIsEmptyRule()) {
+			pri = nextChild.getPriority();
+		}
+		final GraphNodeBranch duplicate = new GraphNodeBranch(this.graph, this.runtimeRule, pri, this.startPosition, newLength, newNextItemIndex, this.height);
 		duplicate.children = new ArrayList<>(this.children);
-		duplicate.children.add((INode)nextChild);
+		duplicate.children.add((INode) nextChild);
 
-		for(PreviousInfo info: this.getPossibleParent()) {
+		for (final PreviousInfo info : this.getPossibleParent()) {
 			duplicate.addPrevious(info.node, info.atPosition);
 		}
 
-			this.graph.tryAddGrowable(duplicate);
+		this.graph.tryAddGrowable(duplicate);
 
 		if (duplicate.getIsComplete()) {
 			this.graph.registerCompleteNode(duplicate);
@@ -55,19 +60,19 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	}
 
 	@Override
-	public IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild) {
-		int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
-		int newNextItemIndex = this.getNextItemIndex();
-		GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength, newNextItemIndex,
-				this.height);
+	public IGraphNode duplicateWithNextSkipChild(final IGraphNode nextChild) {
+		final int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
+		final int newNextItemIndex = this.getNextItemIndex();
+		final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength,
+				newNextItemIndex, this.height);
 		duplicate.children = new ArrayList<>(this.children);
-		duplicate.children.add((INode)nextChild);
+		duplicate.children.add((INode) nextChild);
 
-		for(PreviousInfo info: this.getPossibleParent()) {
+		for (final PreviousInfo info : this.getPossibleParent()) {
 			duplicate.addPrevious(info.node, info.atPosition);
 		}
 
-			this.graph.tryAddGrowable(duplicate);
+		this.graph.tryAddGrowable(duplicate);
 
 		if (duplicate.getIsComplete()) {
 			this.graph.registerCompleteNode(duplicate);
@@ -77,24 +82,23 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	}
 
 	@Override
-	public IGraphNode duplicateWithOtherStack(int priority, List<PreviousInfo> previous) {
-		GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.getRuntimeRule(), priority, this.getStartPosition(), this.getMatchedTextLength(), this.getNextItemIndex(),
-				this.getHeight());
+	public IGraphNode duplicateWithOtherStack(final int priority, final List<PreviousInfo> previous) {
+		final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.getRuntimeRule(), priority, this.getStartPosition(),
+				this.getMatchedTextLength(), this.getNextItemIndex(), this.getHeight());
 		duplicate.children = new ArrayList<>(this.children);
 
-		for(PreviousInfo info: previous) {
+		for (final PreviousInfo info : previous) {
 			duplicate.addPrevious(info.node, info.atPosition);
 		}
-			this.graph.tryAddGrowable(duplicate);
+		this.graph.tryAddGrowable(duplicate);
 
-		
 		if (duplicate.getIsComplete()) {
 			this.graph.registerCompleteNode(duplicate);
 		}
 
 		return duplicate;
 	}
-	
+
 	@Override
 	public int getNextItemIndex() {
 		return this.nextItemIndex;
@@ -150,13 +154,14 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 					// complete if we have an empty node as child
 					res = this.getChildren().isEmpty() ? false : this.getChildAt(0).getRuntimeRule().getIsEmptyRule();
 				}
-				int size = this.nextItemIndex;
-				return res || (size > 0 && size >= this.getRuntimeRule().getRhs().getMultiMin()) || this.nextItemIndex == -1; // the -1 is used when creating dummy branch...should
-																											// really need the test here!
+				final int size = this.nextItemIndex;
+				return res || size > 0 && size >= this.getRuntimeRule().getRhs().getMultiMin() || this.nextItemIndex == -1; // the -1 is used when creating
+																															// dummy branch...should
+				// really need the test here!
 			}
 			case SEPARATED_LIST: {
-				int size = this.nextItemIndex;
-				return (size % 2) == 1 || this.nextItemIndex == -1; // the -1 is used when creating dummy branch...should really need the test here!
+				final int size = this.nextItemIndex;
+				return size % 2 == 1 || this.nextItemIndex == -1; // the -1 is used when creating dummy branch...should really need the test here!
 			}
 			default:
 			break;
@@ -167,11 +172,11 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 
 	@Override
 	public boolean getCanGraftBack() {
-		if (getPossibleParent().isEmpty()) {
+		if (this.getPossibleParent().isEmpty()) {
 			return this.getIsComplete();
 		}
 		boolean b = false;
-		for(PreviousInfo info: this.getPossibleParent()){
+		for (final PreviousInfo info : this.getPossibleParent()) {
 			b = b || info.node.getExpectsItemAt(this.getRuntimeRule(), info.atPosition);
 		}
 		return b && this.getIsComplete() && this.getIsStacked();
@@ -206,8 +211,8 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 				if (!this.getChildren().isEmpty() && this.getChildAt(0).getRuntimeRule().getIsEmptyRule()) {
 					return false;
 				}
-				int size = this.nextItemIndex;
-				int max = this.getRuntimeRule().getRhs().getMultiMax();
+				final int size = this.nextItemIndex;
+				final int max = this.getRuntimeRule().getRhs().getMultiMax();
 				return -1 == max || size < max;
 			}
 			case SEPARATED_LIST: {
@@ -225,7 +230,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 
 	@Override
 	public boolean getCanGrowWidthWithSkip() {
-		return !this.getRuntimeRule().getIsEmptyRule() && this.getRuntimeRule().getKind()==RuntimeRuleKind.NON_TERMINAL;
+		return !this.getRuntimeRule().getIsEmptyRule() && this.getRuntimeRule().getKind() == RuntimeRuleKind.NON_TERMINAL;
 	}
 
 	@Override
@@ -261,7 +266,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 			case EMPTY:
 			break;
 			case CHOICE: {
-				if (nextItemIndex == 0) {
+				if (this.nextItemIndex == 0) {
 					return Arrays.asList(this.getRuntimeRule().getRhs().getItems());
 				} else {
 					return Collections.emptyList();
@@ -269,7 +274,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 				// throw new RuntimeException("Internal Error: item is choice");
 			}
 			case PRIORITY_CHOICE: {
-				if (nextItemIndex == 0) {
+				if (this.nextItemIndex == 0) {
 					return Arrays.asList(this.getRuntimeRule().getRhs().getItems());
 				} else {
 					return Collections.emptyList();
@@ -287,7 +292,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 				return Arrays.asList(this.getRuntimeRule().getRhsItem(0));
 			}
 			case SEPARATED_LIST: {
-				if ((this.nextItemIndex % 2) == 1) {
+				if (this.nextItemIndex % 2 == 1) {
 					return Arrays.asList(this.getRuntimeRule().getSeparator());
 				} else {
 					return Arrays.asList(this.getRuntimeRule().getRhsItem(0));
@@ -301,10 +306,10 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 
 	@Override
 	public List<RuntimeRule> getNextExpectedTerminals() {
-		//TODO: cache this
-		List<RuntimeRule> nextItem = this.getNextExpectedItem();
-		ArrayList<RuntimeRule> l = new ArrayList<>();
-		for (RuntimeRule r : nextItem) {
+		// TODO: cache this
+		final List<RuntimeRule> nextItem = this.getNextExpectedItem();
+		final ArrayList<RuntimeRule> l = new ArrayList<>();
+		for (final RuntimeRule r : nextItem) {
 			l.addAll(Arrays.asList(this.getRuntimeRule().getRuntimeRuleSet().getPossibleFirstTerminals(r)));
 		}
 		// add a possible empty rule
@@ -339,7 +344,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	}
 
 	@Override
-	public boolean getExpectsItemAt(RuntimeRule item, int atPosition) {
+	public boolean getExpectsItemAt(final RuntimeRule item, final int atPosition) {
 		return this.getRuntimeRule().couldHaveChild(item, atPosition);
 
 		// switch (this.getRuntimeRule().getRhs().getKind()) {
@@ -378,7 +383,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	}
 
 	@Override
-	public RuntimeRule getExpectedItemAt(int atPosition) {
+	public RuntimeRule getExpectedItemAt(final int atPosition) {
 		switch (this.getRuntimeRule().getRhs().getKind()) {
 			case EMPTY:
 			break;
@@ -399,7 +404,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 				return this.getRuntimeRule().getRhsItem(0);
 			}
 			case SEPARATED_LIST: {
-				if ((this.nextItemIndex % 2) == 1) {
+				if (this.nextItemIndex % 2 == 1) {
 					return this.getRuntimeRule().getSeparator();
 				} else {
 					return this.getRuntimeRule().getRhsItem(0);
@@ -415,31 +420,31 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	public List<INode> getChildren() {
 		return this.children;
 	}
-	
-	public IGraphNode getChildAt(int index) {
-		return (IGraphNode)this.children.get(index);
+
+	public IGraphNode getChildAt(final int index) {
+		return (IGraphNode) this.children.get(index);
 	}
 
 	@Override
-	public INode getChild(int index) {
-		List<INode> children = this.getChildren();
+	public INode getChild(final int index) {
+		final List<INode> children = this.getChildren();
 
-		//get first non skip child
-		int child=0;
+		// get first non skip child
+		int child = 0;
 		INode n = children.get(child);
-		while(n.getIsSkip() && child < (children.size()-1)) {
+		while (n.getIsSkip() && child < children.size() - 1) {
 			++child;
 			n = children.get(child);
 		}
 		if (child >= children.size()) {
 			return null;
 		}
-		int count=0;
+		int count = 0;
 
-		while(count < index && child < (children.size()-1)) {
+		while (count < index && child < children.size() - 1) {
 			++child;
 			n = children.get(child);
-			while(n.getIsSkip()) {
+			while (n.getIsSkip()) {
 				++child;
 				n = children.get(child);
 			}
@@ -450,25 +455,27 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 			return n;
 		} else {
 			return null;
-		}}
-	
+		}
+	}
+
 	@Override
 	public String getMatchedText() {
 		String str = "";
-		for(INode n: this.getChildren()) {
+		for (final INode n : this.getChildren()) {
 			str += n.getMatchedText();
 		}
 		return str;
 	}
-	
+
 	List<INode> nonSkipChildren_cache;
+
 	@Override
 	public List<INode> getNonSkipChildren() {
-		if (null==nonSkipChildren_cache) {
+		if (null == this.nonSkipChildren_cache) {
 			this.nonSkipChildren_cache = new ArrayList<>();
-			for (INode n:this.getChildren()) {
+			for (final INode n : this.getChildren()) {
 				if (n.getIsSkip()) {
-					
+
 				} else {
 					this.nonSkipChildren_cache.add(n);
 				}
@@ -476,18 +483,18 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 		}
 		return this.nonSkipChildren_cache;
 	}
-	
+
 	@Override
-	public <T, A, E extends Throwable> T accept(IParseTreeVisitor<T, A, E> visitor, A arg) throws E {
+	public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
 		return visitor.visit(this, arg);
 	}
-	
+
 	@Override
 	public String toString() {
 		String prev = "";
 		if (this.getPossibleParent().isEmpty()) {
-			//nothing
-		} else if (this.getPossibleParent().size()==1) {
+			// nothing
+		} else if (this.getPossibleParent().size() == 1) {
 			prev = " -> " + this.getPossibleParent().get(0);
 		} else {
 			prev = " ->* " + this.getPossibleParent().get(0);

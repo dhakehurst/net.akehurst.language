@@ -33,8 +33,8 @@ import net.akehurst.transform.binary.Relation;
 
 public class Converter extends AbstractTransformer {
 
-	public Converter(final RuntimeRuleSetBuilder factory) {
-		this.factory = factory;
+	public Converter(final RuntimeRuleSetBuilder builder) {
+		this.builder = builder;
 		this.virtualRule_cache = new ArrayList<>();
 
 		this.registerRule((Class<? extends Relation<?, ?>>) (Class<?>) AbstractChoice2RuntimeRuleItem.class);
@@ -62,10 +62,10 @@ public class Converter extends AbstractTransformer {
 		this.registerRule(Terminal2RuntimeRule.class);
 	}
 
-	RuntimeRuleSetBuilder factory;
+	RuntimeRuleSetBuilder builder;
 
 	public RuntimeRuleSetBuilder getFactory() {
-		return this.factory;
+		return this.builder;
 	}
 
 	String createIndexString(final RuleItem item) {
@@ -102,7 +102,7 @@ public class Converter extends AbstractTransformer {
 
 	RuntimeRule createVirtualRule(final Multi multi) {
 		final Grammar grammar = multi.getOwningRule().getGrammar();
-		final String name = "$" + multi.getOwningRule().getName() + "." + multi.getItem().getName() + ".multi" + this.createIndexString(multi);// (multiNum++);
+		final String name = "$" + multi.getOwningRule().getName() + ".multi" + this.createIndexString(multi);// (multiNum++);
 		final RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(new Concatenation(multi)));
 		final RuntimeRule rr = this.getFactory().createRuntimeRule(r);
 		this.virtualRule_cache.add(rr);

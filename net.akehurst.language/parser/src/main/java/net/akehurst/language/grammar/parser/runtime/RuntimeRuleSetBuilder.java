@@ -17,87 +17,90 @@ package net.akehurst.language.grammar.parser.runtime;
 
 import java.util.regex.Pattern;
 
+import net.akehurst.language.core.analyser.ITerminal;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.grammar.parse.tree.Branch;
 import net.akehurst.language.grammar.parse.tree.Factory;
 import net.akehurst.language.grammar.parse.tree.IInput;
 import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.ogl.semanticStructure.Rule;
-import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class RuntimeRuleSetBuilder {
 
 	public RuntimeRuleSetBuilder() {
 		this.parseTreeFactory = new Factory();
-//		this.emptyRule = createRuntimeRule(new TerminalEmpty());
-//		this.emptyRule.setIsSkipRule(false);
-//		this.emptyRule.setIsEmptyRule(true);
+		// this.emptyRule = createRuntimeRule(new TerminalEmpty());
+		// this.emptyRule.setIsSkipRule(false);
+		// this.emptyRule.setIsEmptyRule(true);
 	}
-	
+
 	Factory parseTreeFactory;
 	RuntimeRuleSet runtimeRuleSet;
-	
-//	RuntimeRule emptyRule;
-//	public RuntimeRule getEmptyRule(RuntimeRule ruleThatIsEmpty) {
-//		return this.emptyRule;
-//	}
-	
-	public RuntimeRule getRuntimeRule(Terminal terminal) {
+
+	// RuntimeRule emptyRule;
+	// public RuntimeRule getEmptyRule(RuntimeRule ruleThatIsEmpty) {
+	// return this.emptyRule;
+	// }
+
+	public RuntimeRule getRuntimeRule(final ITerminal terminal) {
 		return this.runtimeRuleSet.getForTerminal(terminal.getValue());
 	}
-	
-	public RuntimeRule getRuntimeRule(Rule rule) {
+
+	public RuntimeRule getRuntimeRule(final Rule rule) {
 		return this.runtimeRuleSet.getRuntimeRule(rule);
 	}
-	
+
 	int nextRuleNumber;
-	public RuntimeRule createRuntimeRule(Rule grammarRule) {
-		RuntimeRule rr = new RuntimeRule(this.runtimeRuleSet, grammarRule.getName(), nextRuleNumber, RuntimeRuleKind.NON_TERMINAL, Pattern.LITERAL);
-		++nextRuleNumber;
+
+	public RuntimeRule createRuntimeRule(final Rule grammarRule) {
+		final RuntimeRule rr = new RuntimeRule(this.runtimeRuleSet, grammarRule.getName(), this.nextRuleNumber, RuntimeRuleKind.NON_TERMINAL, Pattern.LITERAL);
+		++this.nextRuleNumber;
 		return rr;
 	}
-	
-	public RuntimeRule createRuntimeRule(Terminal terminal) {
-		int patternFlags = (terminal instanceof TerminalPattern) ? Pattern.MULTILINE : Pattern.LITERAL;
-		RuntimeRule rr = new RuntimeRule(this.runtimeRuleSet, terminal.getValue(), nextRuleNumber, RuntimeRuleKind.TERMINAL, patternFlags);
-		++nextRuleNumber;
+
+	public RuntimeRule createRuntimeRule(final ITerminal terminal) {
+		final int patternFlags = terminal instanceof TerminalPattern ? Pattern.MULTILINE : Pattern.LITERAL;
+		final RuntimeRule rr = new RuntimeRule(this.runtimeRuleSet, terminal.getValue(), this.nextRuleNumber, RuntimeRuleKind.TERMINAL, patternFlags);
+		++this.nextRuleNumber;
 		return rr;
 	}
-	
-	public RuntimeRule createEmptyRule(RuntimeRule ruleThatIsEmpty) {
-		RuntimeRule rr = new RuntimeRule(this.runtimeRuleSet, "$empty."+ruleThatIsEmpty.getName()+"$", nextRuleNumber, RuntimeRuleKind.TERMINAL, Pattern.LITERAL);
-		++nextRuleNumber;
-		RuntimeRuleItem emptyRhs = this.createRuntimeRuleItem(RuntimeRuleItemKind.EMPTY);
+
+	public RuntimeRule createEmptyRule(final RuntimeRule ruleThatIsEmpty) {
+		final RuntimeRule rr = new RuntimeRule(this.runtimeRuleSet, "$empty." + ruleThatIsEmpty.getName() + "$", this.nextRuleNumber, RuntimeRuleKind.TERMINAL,
+				Pattern.LITERAL);
+		++this.nextRuleNumber;
+		final RuntimeRuleItem emptyRhs = this.createRuntimeRuleItem(RuntimeRuleItemKind.EMPTY);
 		rr.setRhs(emptyRhs);
-		emptyRhs.setItems(new RuntimeRule[]{ruleThatIsEmpty});
+		emptyRhs.setItems(new RuntimeRule[] { ruleThatIsEmpty });
 		return rr;
 	}
-	
-	public RuntimeRuleSet createRuntimeRuleSet(int totalRuleNumber) {
-		if (null==this.runtimeRuleSet) {
-			this.runtimeRuleSet = new RuntimeRuleSet(totalRuleNumber);//, this.getEmptyRule().getRuleNumber());
+
+	public RuntimeRuleSet createRuntimeRuleSet(final int totalRuleNumber) {
+		if (null == this.runtimeRuleSet) {
+			this.runtimeRuleSet = new RuntimeRuleSet(totalRuleNumber);// , this.getEmptyRule().getRuleNumber());
 		}
 		return this.runtimeRuleSet;
 	}
+
 	public RuntimeRuleSet getRuntimeRuleSet() {
-		if (null==this.runtimeRuleSet) {
+		if (null == this.runtimeRuleSet) {
 			throw new RuntimeException("Internal Error: must createRuntimeRuleSet before getting");
 		} else {
 			return this.runtimeRuleSet;
 		}
 	}
-	
+
 	public Branch createBranch(final RuntimeRule r, final INode[] children) {
 		return this.parseTreeFactory.createBranch(r, children);
 	}
-	
-	public Leaf createLeaf(IInput input, int start, int end, RuntimeRule terminalRule) {
+
+	public Leaf createLeaf(final IInput input, final int start, final int end, final RuntimeRule terminalRule) {
 		return this.parseTreeFactory.createLeaf(input, start, end, terminalRule);
 	}
 
-	public RuntimeRuleItem createRuntimeRuleItem(RuntimeRuleItemKind kind) {
-		int maxRuleRumber = this.getRuntimeRuleSet().getTotalRuleNumber();
-		return new RuntimeRuleItem(kind,maxRuleRumber);
+	public RuntimeRuleItem createRuntimeRuleItem(final RuntimeRuleItemKind kind) {
+		final int maxRuleRumber = this.getRuntimeRuleSet().getTotalRuleNumber();
+		return new RuntimeRuleItem(kind, maxRuleRumber);
 	}
 }

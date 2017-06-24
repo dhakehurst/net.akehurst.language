@@ -17,7 +17,7 @@ package net.akehurst.language.ogl.semanticStructure;
 
 public class GrammarBuilder {
 
-	public GrammarBuilder(Namespace namespace, String name) {
+	public GrammarBuilder(final Namespace namespace, final String name) {
 		this.grammar = new Grammar(namespace, name);
 	}
 
@@ -27,74 +27,74 @@ public class GrammarBuilder {
 		return this.grammar;
 	}
 
-	public RuleBuilder rule(String name) {
+	public RuleBuilder rule(final String name) {
 		return new RuleBuilder(name, this.grammar);
 	}
 
 	public class RuleBuilder {
 
-		public RuleBuilder(String name, Grammar grammar) {
+		public RuleBuilder(final String name, final Grammar grammar) {
 			this.rule = new Rule(grammar, name);
 			grammar.getRule().add(this.rule);
 		}
 
 		Rule rule;
 
-		public void concatenation(TangibleItem... sequence) {
+		public void concatenation(final ConcatenationItem... sequence) {
 			this.rule.setRhs(new ChoiceSimple(new Concatenation(sequence)));
 		}
 
-		public void choice(TangibleItem... alternative) {
-			Concatenation[] alternativeConcats = new Concatenation[alternative.length];
-			for(int i=0;i<alternative.length;++i) {
+		public void choice(final ConcatenationItem... alternative) {
+			final Concatenation[] alternativeConcats = new Concatenation[alternative.length];
+			for (int i = 0; i < alternative.length; ++i) {
 				alternativeConcats[i] = new Concatenation(alternative[i]);
 			}
 			this.rule.setRhs(new ChoiceSimple(alternativeConcats));
 		}
-		
-		public void priorityChoice(TangibleItem... alternative) {
-			Concatenation[] alternativeConcats = new Concatenation[alternative.length];
-			for(int i=0;i<alternative.length;++i) {
+
+		public void priorityChoice(final ConcatenationItem... alternative) {
+			final Concatenation[] alternativeConcats = new Concatenation[alternative.length];
+			for (int i = 0; i < alternative.length; ++i) {
 				alternativeConcats[i] = new Concatenation(alternative[i]);
 			}
 			this.rule.setRhs(new ChoicePriority(alternativeConcats));
 		}
 
-		public void multi(int min, int max, TangibleItem item) {
+		public void multi(final int min, final int max, final TangibleItem item) {
 			this.rule.setRhs(new ChoiceSimple(new Concatenation(new Multi(min, max, item))));
 		}
 
-		public void separatedList(int min, int max, TerminalLiteral separator, TangibleItem item) {
+		public void separatedList(final int min, final int max, final TerminalLiteral separator, final TangibleItem item) {
 			this.rule.setRhs(new ChoiceSimple(new Concatenation(new SeparatedList(min, max, separator, item))));
 		}
 	}
 
-	public SkipRuleBuilder skip(String name) {
+	public SkipRuleBuilder skip(final String name) {
 		return new SkipRuleBuilder(name, this.grammar);
 	}
 
 	public class SkipRuleBuilder {
 
-		public SkipRuleBuilder(String name, Grammar grammar) {
+		public SkipRuleBuilder(final String name, final Grammar grammar) {
 			this.rule = new SkipRule(grammar, name);
 			grammar.getRule().add(this.rule);
 		}
 
 		Rule rule;
 
-		public void concatination(TangibleItem... sequence) {
+		public void concatination(final TangibleItem... sequence) {
 			this.rule.setRhs(new ChoiceSimple(new Concatenation(sequence)));
 		}
 
-		public void choice(Concatenation... alternative) {
+		public void choice(final Concatenation... alternative) {
 			this.rule.setRhs(new ChoiceSimple(alternative));
 		}
 
-		public void multi(int min, int max, TangibleItem item) {
+		public void multi(final int min, final int max, final TangibleItem item) {
 			this.rule.setRhs(new ChoiceSimple(new Concatenation(new Multi(min, max, item))));
 		}
 
-		public void separatedList(int min, int max, TerminalLiteral separator, TangibleItem item) {
+		public void separatedList(final int min, final int max, final TerminalLiteral separator, final TangibleItem item) {
 			this.rule.setRhs(new ChoiceSimple(new Concatenation(new SeparatedList(min, max, separator, item))));
 		}
 
