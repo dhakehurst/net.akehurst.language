@@ -18,43 +18,49 @@ package net.akehurst.language.ogl.semanticAnalyser;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
 
-public class IDENTIFIERBranch2String implements Relation<INode, String>{
+public class IDENTIFIERBranch2String implements IBinaryRule<INode, String> {
 
 	@Override
-	public void configureLeft2Right(INode arg0, String arg1, Transformer arg2) {
-		// TODO Auto-generated method stub
-		
+	public boolean isAMatch(final INode left, final String right, final ITransformer transformer) throws RuleNotFoundException {
+		return true;
 	}
 
 	@Override
-	public void configureRight2Left(INode arg0, String arg1, Transformer arg2) {
+	public void updateLeft2Right(final INode arg0, final String arg1, final ITransformer arg2) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public String constructLeft2Right(INode left, Transformer transformer) {
-		ILeaf leaf = (ILeaf)((IBranch)left).getChildren().get(0);
-		String right = leaf.getMatchedText();
+	public void updateRight2Left(final INode arg0, final String arg1, final ITransformer arg2) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public String constructLeft2Right(final INode left, final ITransformer transformer) {
+		final ILeaf leaf = (ILeaf) ((IBranch) left).getChildren().get(0);
+		final String right = leaf.getMatchedText();
 		return right;
 	}
 
 	@Override
-	public IBranch constructRight2Left(String arg0, Transformer arg1) {
+	public IBranch constructRight2Left(final String arg0, final ITransformer arg1) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean isValidForLeft2Right(INode left) {
+	public boolean isValidForLeft2Right(final INode left) {
 		return left.getName().equals("IDENTIFIER");
 	}
 
 	@Override
-	public boolean isValidForRight2Left(String arg0) {
+	public boolean isValidForRight2Left(final String arg0) {
 		// TODO Auto-generated method stub
 		return false;
 	}

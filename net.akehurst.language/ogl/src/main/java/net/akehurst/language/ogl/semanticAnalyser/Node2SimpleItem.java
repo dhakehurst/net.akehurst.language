@@ -17,12 +17,11 @@ package net.akehurst.language.ogl.semanticAnalyser;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
 import net.akehurst.language.ogl.semanticStructure.SimpleItem;
-import net.akehurst.language.ogl.semanticStructure.TangibleItem;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.RelationNotFoundException;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
 public class Node2SimpleItem extends AbstractNode2ConcatenationItem<SimpleItem> {
 
@@ -32,32 +31,35 @@ public class Node2SimpleItem extends AbstractNode2ConcatenationItem<SimpleItem> 
 	}
 
 	@Override
-	public SimpleItem constructLeft2Right(INode left, Transformer transformer) {
-		try {
-			INode itemNode = ((IBranch) left).getChild(0);
-			
-			SimpleItem right = transformer.transformLeft2Right(
-					(Class<Relation<INode, SimpleItem>>) (Class<?>) AbstractNode2TangibleItem.class, itemNode);
-			return right;
-		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Unable to construct TangibleItem", e);
-		}
+	public boolean isAMatch(final INode left, final SimpleItem right, final ITransformer transformer) throws RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	@Override
-	public INode constructRight2Left(SimpleItem right, Transformer transformer) {
+	public SimpleItem constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+
+		final INode itemNode = ((IBranch) left).getChild(0);
+
+		final SimpleItem right = transformer.transformLeft2Right((Class<IBinaryRule<INode, SimpleItem>>) (Class<?>) AbstractNode2TangibleItem.class, itemNode);
+		return right;
+
+	}
+
+	@Override
+	public INode constructRight2Left(final SimpleItem right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void configureLeft2Right(INode left, SimpleItem right, Transformer transformer) {
+	public void updateLeft2Right(final INode left, final SimpleItem right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void configureRight2Left(INode left, SimpleItem right, Transformer transformer) {
+	public void updateRight2Left(final INode left, final SimpleItem right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

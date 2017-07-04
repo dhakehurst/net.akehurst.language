@@ -18,49 +18,52 @@ package net.akehurst.language.grammar.parser.converter;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.ogl.semanticStructure.Multi;
-import net.akehurst.transform.binary.RelationNotFoundException;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
 public class Multi2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<Multi> {
 
 	@Override
-	public boolean isValidForLeft2Right(Multi arg0) {
+	public boolean isValidForLeft2Right(final Multi arg0) {
 		return true;
 	}
-	
+
 	@Override
-	public RuntimeRule constructLeft2Right(Multi left, Transformer transformer) {
-		Converter converter = (Converter)transformer;
-		RuntimeRule right = converter.createVirtualRule(left);
+	public boolean isAMatch(final Multi left, final RuntimeRule right, final ITransformer transformer) throws RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public RuntimeRule constructLeft2Right(final Multi left, final ITransformer transformer) {
+		final Converter converter = (Converter) transformer;
+		final RuntimeRule right = converter.createVirtualRule(left);
 		return right;
 	}
-	
-	@Override
-	public void configureLeft2Right(Multi left, RuntimeRule right, Transformer transformer) {
-		try {
-			
-			RuntimeRuleItem ruleItem = transformer.transformLeft2Right(Multi2RuntimeRuleItem.class, left);
-			right.setRhs(ruleItem);
 
-		} catch (RelationNotFoundException e) {
-			e.printStackTrace();
-		}
+	@Override
+	public void updateLeft2Right(final Multi left, final RuntimeRule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+
+		final RuntimeRuleItem ruleItem = transformer.transformLeft2Right(Multi2RuntimeRuleItem.class, left);
+		right.setRhs(ruleItem);
+
 	}
 
 	@Override
-	public void configureRight2Left(Multi arg0, RuntimeRule arg1, Transformer arg2) {
+	public void updateRight2Left(final Multi arg0, final RuntimeRule arg1, final ITransformer transformer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public Multi constructRight2Left(RuntimeRule arg0, Transformer arg1) {
+	public Multi constructRight2Left(final RuntimeRule arg0, final ITransformer transformer) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean isValidForRight2Left(RuntimeRule arg0) {
+	public boolean isValidForRight2Left(final RuntimeRule arg0) {
 		// TODO Auto-generated method stub
 		return false;
 	}

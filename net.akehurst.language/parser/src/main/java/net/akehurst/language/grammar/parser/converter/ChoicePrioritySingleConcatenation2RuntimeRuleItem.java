@@ -25,54 +25,62 @@ import net.akehurst.language.ogl.semanticStructure.ChoicePriority;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
 import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
 import net.akehurst.language.ogl.semanticStructure.SimpleItem;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.RelationNotFoundException;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
 public class ChoicePrioritySingleConcatenation2RuntimeRuleItem extends AbstractChoice2RuntimeRuleItem<ChoicePriority> {
 
 	@Override
-	public boolean isValidForLeft2Right(ChoicePriority left) {
-		return (1==left.getAlternative().size()) && (left.getAlternative().get(0).getItem().get(0) instanceof SimpleItem || 1<left.getAlternative().get(0).getItem().size());
+	public boolean isValidForLeft2Right(final ChoicePriority left) {
+		return 1 == left.getAlternative().size()
+				&& (left.getAlternative().get(0).getItem().get(0) instanceof SimpleItem || 1 < left.getAlternative().get(0).getItem().size());
 	}
-	
+
 	@Override
-	public RuntimeRuleItem constructLeft2Right(ChoicePriority left, Transformer transformer) {
-		Converter converter = (Converter)transformer;
-		RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION);
+	public boolean isAMatch(final ChoicePriority left, final RuntimeRuleItem right, final ITransformer transformer) throws RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public RuntimeRuleItem constructLeft2Right(final ChoicePriority left, final ITransformer transformer) {
+		final Converter converter = (Converter) transformer;
+		final RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION);
 		return right;
 	}
-	
+
 	@Override
-	public void configureLeft2Right(ChoicePriority left, RuntimeRuleItem right, Transformer transformer) {
-		try {
-			List<RuntimeRule> rrAlternatives = new ArrayList<>();
-			//we know there is only one alternative from isValid 
-			Concatenation concat = left.getAlternative().get(0);
-			rrAlternatives = (List<RuntimeRule>)transformer.transformAllLeft2Right((Class<? extends Relation<ConcatenationItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, concat.getItem());
-		
-			RuntimeRule[] items = rrAlternatives.toArray(new RuntimeRule[rrAlternatives.size()]);
-			right.setItems(items);
-		
-		} catch (RelationNotFoundException e) {
-			e.printStackTrace();
-		}
+	public void updateLeft2Right(final ChoicePriority left, final RuntimeRuleItem right, final ITransformer transformer)
+			throws RuleNotFoundException, TransformException {
+
+		List<RuntimeRule> rrAlternatives = new ArrayList<>();
+		// we know there is only one alternative from isValid
+		final Concatenation concat = left.getAlternative().get(0);
+		rrAlternatives = (List<RuntimeRule>) transformer.transformAllLeft2Right(
+				(Class<? extends IBinaryRule<ConcatenationItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, concat.getItem());
+
+		final RuntimeRule[] items = rrAlternatives.toArray(new RuntimeRule[rrAlternatives.size()]);
+		right.setItems(items);
+
 	}
 
 	@Override
-	public void configureRight2Left(ChoicePriority arg0, RuntimeRuleItem arg1, Transformer arg2) {
+	public void updateRight2Left(final ChoicePriority arg0, final RuntimeRuleItem arg1, final ITransformer transformer)
+			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public ChoicePriority constructRight2Left(RuntimeRuleItem arg0, Transformer arg1) {
+	public ChoicePriority constructRight2Left(final RuntimeRuleItem arg0, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean isValidForRight2Left(RuntimeRuleItem arg0) {
+	public boolean isValidForRight2Left(final RuntimeRuleItem arg0) {
 		// TODO Auto-generated method stub
 		return false;
 	}

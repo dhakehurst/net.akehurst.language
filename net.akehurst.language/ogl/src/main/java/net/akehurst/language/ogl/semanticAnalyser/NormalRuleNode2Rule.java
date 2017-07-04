@@ -18,61 +18,56 @@ package net.akehurst.language.ogl.semanticAnalyser;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
-import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.Rule;
-import net.akehurst.language.ogl.semanticStructure.RuleItem;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.RelationNotFoundException;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
-public class NormalRuleNode2Rule implements Relation<INode, Rule> {
+public class NormalRuleNode2Rule implements IBinaryRule<INode, Rule> {
 
 	@Override
-	public boolean isValidForLeft2Right(INode left) {
+	public boolean isValidForLeft2Right(final INode left) {
 		return "normalRule".equals(left.getName());
 	}
 
 	@Override
-	public boolean isValidForRight2Left(Rule right) {
+	public boolean isValidForRight2Left(final Rule right) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Rule constructLeft2Right(INode left, Transformer transformer) {
-		try {
-			INode grammarNode = left.getParent().getParent().getParent().getParent();
-			Grammar grammar = transformer.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, grammarNode);
-			String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, ((IBranch) left).getChild(0));
-			Rule right = new Rule(grammar, name);
-			return right;
-		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Unable to configure Grammar", e);
-		}
+	public boolean isAMatch(final INode left, final Rule right, final ITransformer transformer) throws RuleNotFoundException {
+		return true;
 	}
 
 	@Override
-	public INode constructRight2Left(Rule right, Transformer transformer) {
+	public Rule constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+		final INode grammarNode = left.getParent().getParent().getParent().getParent();
+		final Grammar grammar = transformer.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, grammarNode);
+		final String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, ((IBranch) left).getChild(0));
+		final Rule right = new Rule(grammar, name);
+		return right;
+	}
+
+	@Override
+	public INode constructRight2Left(final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void configureLeft2Right(INode left, Rule right, Transformer transformer) {
-		try {
-			INode rhsNode = ((IBranch) left).getChild(2);
-			INode item = ((IBranch) rhsNode).getChild(0);
-			AbstractChoice ruleItem = transformer
-					.transformLeft2Right((Class<Relation<INode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class, item);
-			right.setRhs(ruleItem);
-		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Unable to configure Grammar", e);
-		}
+	public void updateLeft2Right(final INode left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+		final INode rhsNode = ((IBranch) left).getChild(2);
+		final INode item = ((IBranch) rhsNode).getChild(0);
+		final AbstractChoice ruleItem = transformer.transformLeft2Right((Class<IBinaryRule<INode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class, item);
+		right.setRhs(ruleItem);
 	}
 
 	@Override
-	public void configureRight2Left(INode left, Rule right, Transformer transformer) {
+	public void updateRight2Left(final INode left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

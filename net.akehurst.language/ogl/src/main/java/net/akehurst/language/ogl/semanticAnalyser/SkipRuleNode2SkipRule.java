@@ -21,41 +21,37 @@ import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.SkipRule;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.RelationNotFoundException;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
 public class SkipRuleNode2SkipRule extends NormalRuleNode2Rule {
 
 	@Override
-	public boolean isValidForLeft2Right(INode left) {
+	public boolean isValidForLeft2Right(final INode left) {
 		return "skipRule".equals(left.getName());
 	}
-	
+
 	@Override
-	public SkipRule constructLeft2Right(INode left, Transformer transformer) {
-		try {
-			INode grammarNode = left.getParent().getParent().getParent().getParent();
-			Grammar grammar = transformer.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, grammarNode);
-			String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, ((IBranch)left).getChild(1));
-			SkipRule right = new SkipRule(grammar, name);
-			return right;
-		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Unable to configure Grammar", e);
-		}
+	public SkipRule constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+
+		final INode grammarNode = left.getParent().getParent().getParent().getParent();
+		final Grammar grammar = transformer.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, grammarNode);
+		final String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, ((IBranch) left).getChild(1));
+		final SkipRule right = new SkipRule(grammar, name);
+		return right;
+
 	}
-	
+
 	@Override
-	public void configureLeft2Right(INode left, Rule right, Transformer transformer) {
-		try {
-			INode rhsNode = ((IBranch) left).getChild(3);
-			INode item = ((IBranch) rhsNode).getChild(0);
-			AbstractChoice ruleItem = transformer
-					.transformLeft2Right((Class<Relation<INode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class, item);
-			right.setRhs(ruleItem);
-		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Unable to configure Grammar", e);
-		}
+	public void updateLeft2Right(final INode left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+
+		final INode rhsNode = ((IBranch) left).getChild(3);
+		final INode item = ((IBranch) rhsNode).getChild(0);
+		final AbstractChoice ruleItem = transformer.transformLeft2Right((Class<IBinaryRule<INode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class, item);
+		right.setRhs(ruleItem);
+
 	}
-	
+
 }

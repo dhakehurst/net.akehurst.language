@@ -23,60 +23,64 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
 import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.RelationNotFoundException;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
-public class Concatenation2RuntimeRuleItem implements Relation<Concatenation, RuntimeRuleItem> {
+public class Concatenation2RuntimeRuleItem implements IBinaryRule<Concatenation, RuntimeRuleItem> {
 
 	@Override
-	public boolean isValidForLeft2Right(Concatenation arg0) {
+	public boolean isValidForLeft2Right(final Concatenation arg0) {
 		return true;
 	}
-	
+
 	@Override
-	public RuntimeRuleItem constructLeft2Right(Concatenation left, Transformer transformer) {
-		Converter converter = (Converter)transformer;
+	public boolean isAMatch(final Concatenation left, final RuntimeRuleItem right, final ITransformer transformer) throws RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public RuntimeRuleItem constructLeft2Right(final Concatenation left, final ITransformer transformer) {
+		final Converter converter = (Converter) transformer;
 		return converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION);
 	}
-	
+
 	@Override
-	public void configureLeft2Right(Concatenation left, RuntimeRuleItem right, Transformer transformer) {
-		List<ConcatenationItem> tis = left.getItem();
-		
-		try {
-			List<? extends RuntimeRule> rr = transformer.transformAllLeft2Right((Class<? extends Relation<ConcatenationItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, tis);
-			if (rr.isEmpty()) {
-				//add an EMPTY_RULE
-				RuntimeRule ruleThatIsEmpty = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getOwningRule());
-				Converter converter = (Converter)transformer;
-				RuntimeRule rhs = converter.createEmptyRuleFor(ruleThatIsEmpty);
-				rr = Arrays.asList( rhs );
-			}
-			RuntimeRule[] items = rr.toArray(new RuntimeRule[rr.size()]);
-			
-			right.setItems(items);
-		
-		} catch (RelationNotFoundException e) {
-			e.printStackTrace();
+	public void updateLeft2Right(final Concatenation left, final RuntimeRuleItem right, final ITransformer transformer)
+			throws RuleNotFoundException, TransformException {
+		final List<ConcatenationItem> tis = left.getItem();
+
+		List<? extends RuntimeRule> rr = transformer.transformAllLeft2Right(
+				(Class<? extends IBinaryRule<ConcatenationItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, tis);
+		if (rr.isEmpty()) {
+			// add an EMPTY_RULE
+			final RuntimeRule ruleThatIsEmpty = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getOwningRule());
+			final Converter converter = (Converter) transformer;
+			final RuntimeRule rhs = converter.createEmptyRuleFor(ruleThatIsEmpty);
+			rr = Arrays.asList(rhs);
 		}
-		
+		final RuntimeRule[] items = rr.toArray(new RuntimeRule[rr.size()]);
+
+		right.setItems(items);
+
 	}
 
 	@Override
-	public void configureRight2Left(Concatenation arg0, RuntimeRuleItem arg1, Transformer arg2) {
+	public void updateRight2Left(final Concatenation arg0, final RuntimeRuleItem arg1, final ITransformer transformer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public Concatenation constructRight2Left(RuntimeRuleItem arg0, Transformer arg1) {
+	public Concatenation constructRight2Left(final RuntimeRuleItem arg0, final ITransformer transformer) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean isValidForRight2Left(RuntimeRuleItem arg0) {
+	public boolean isValidForRight2Left(final RuntimeRuleItem arg0) {
 		// TODO Auto-generated method stub
 		return false;
 	}

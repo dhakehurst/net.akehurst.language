@@ -18,48 +18,50 @@ package net.akehurst.language.ogl.semanticAnalyser;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticStructure.Rule;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.RelationNotFoundException;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
-public class AnyRuleNode2Rule implements Relation<INode, Rule> {
+public class AnyRuleNode2Rule implements IBinaryRule<INode, Rule> {
 
 	@Override
-	public boolean isValidForLeft2Right(INode left) {
+	public boolean isValidForLeft2Right(final INode left) {
 		return "anyRule".equals(left.getName());
 	}
 
 	@Override
-	public boolean isValidForRight2Left(Rule right) {
+	public boolean isValidForRight2Left(final Rule right) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Rule constructLeft2Right(INode left, Transformer transformer) {
-		try {
-			INode rule = ((IBranch) left).getChild(1);
-			Rule right = transformer.transformLeft2Right(NormalRuleNode2Rule.class, rule);
-			return right;
-		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Unable to configure Grammar", e);
-		}
+	public boolean isAMatch(final INode left, final Rule right, final ITransformer transformer) throws RuleNotFoundException {
+		return true;
 	}
 
 	@Override
-	public INode constructRight2Left(Rule right, Transformer transformer) {
+	public Rule constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+		final INode rule = ((IBranch) left).getChild(1);
+		final Rule right = transformer.transformLeft2Right(NormalRuleNode2Rule.class, rule);
+		return right;
+	}
+
+	@Override
+	public INode constructRight2Left(final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void configureLeft2Right(INode left, Rule right, Transformer transformer) {
+	public void updateLeft2Right(final INode left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void configureRight2Left(INode left, Rule right, Transformer transformer) {
+	public void updateRight2Left(final INode left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

@@ -18,10 +18,9 @@ package net.akehurst.language.ogl.semanticAnalyser;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
 
 public class TerminalPatternNode2Terminal extends AbstractNode2Terminal<TerminalPattern> {
 
@@ -31,34 +30,40 @@ public class TerminalPatternNode2Terminal extends AbstractNode2Terminal<Terminal
 	}
 
 	@Override
-	public boolean isValidForRight2Left(TerminalPattern right) {
+	public boolean isValidForRight2Left(final TerminalPattern right) {
 		return true;
 	}
 
 	@Override
-	public TerminalPattern constructLeft2Right(INode left, Transformer transformer) {
-		INode child = ((IBranch) left).getChildren().get(0);
-		ILeaf leaf = (ILeaf) child;
-		String text = leaf.getMatchedText();
-		String pattern = text.substring(1, text.length() - 1);
-		TerminalPattern right = new TerminalPattern(pattern);
+	public boolean isAMatch(final INode left, final TerminalPattern right, final ITransformer transformer) throws RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public TerminalPattern constructLeft2Right(final INode left, final ITransformer transformer) {
+		final INode child = ((IBranch) left).getChildren().get(0);
+		final ILeaf leaf = (ILeaf) child;
+		final String text = leaf.getMatchedText();
+		final String pattern = text.substring(1, text.length() - 1);
+		final TerminalPattern right = new TerminalPattern(pattern);
 		return right;
 	}
 
 	@Override
-	public INode constructRight2Left(TerminalPattern arg0, Transformer arg1) {
+	public INode constructRight2Left(final TerminalPattern arg0, final ITransformer arg1) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void configureLeft2Right(INode left, TerminalPattern right, Transformer arg2) {
+	public void updateLeft2Right(final INode left, final TerminalPattern right, final ITransformer arg2) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void configureRight2Left(INode left, TerminalPattern right, Transformer arg2) {
+	public void updateRight2Left(final INode left, final TerminalPattern right, final ITransformer arg2) {
 		// TODO Auto-generated method stub
 
 	}

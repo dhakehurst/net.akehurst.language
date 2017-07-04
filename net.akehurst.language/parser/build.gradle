@@ -2,7 +2,7 @@
 dependencies {
 
 	compile project(':net.akehurst.language.ogl')
-	compile project(':net.akehurst.language.graphStructuredStack')
+	//compile project(':net.akehurst.language.graphStructuredStack')
 
 	testCompile 'junit:junit:+'
 	

@@ -21,57 +21,63 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
 import net.akehurst.language.ogl.semanticStructure.SeparatedList;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.RelationNotFoundException;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
-public class SeparatedList2RuntimeRuleItem implements Relation<SeparatedList, RuntimeRuleItem> {
+public class SeparatedList2RuntimeRuleItem implements IBinaryRule<SeparatedList, RuntimeRuleItem> {
 
 	@Override
-	public boolean isValidForLeft2Right(SeparatedList left) {
+	public boolean isValidForLeft2Right(final SeparatedList left) {
 		return true;
 	}
-	
+
 	@Override
-	public RuntimeRuleItem constructLeft2Right(SeparatedList left, Transformer transformer) {
-		Converter converter = (Converter)transformer;
-		RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST);
+	public boolean isAMatch(final SeparatedList left, final RuntimeRuleItem right, final ITransformer transformer) throws RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public RuntimeRuleItem constructLeft2Right(final SeparatedList left, final ITransformer transformer) {
+		final Converter converter = (Converter) transformer;
+		final RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST);
 		return right;
 	}
-	
+
 	@Override
-	public void configureLeft2Right(SeparatedList left, RuntimeRuleItem right, Transformer transformer) {
-		TangibleItem ti = left.getItem();
-		TerminalLiteral sep = left.getSeparator();
-		
-		try {
-			RuntimeRule rr = transformer.transformLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>)(Class<?>)AbstractConcatinationItem2RuntimeRule.class, ti);
-			RuntimeRule rrsep = transformer.transformLeft2Right((Class<? extends Relation<TangibleItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, sep);
-			RuntimeRule[] items = new RuntimeRule[]{ rr, rrsep };
-			
-			right.setItems(items);
-			right.setMultiMin(left.getMin());
-			right.setMultiMax(left.getMax());
-			
-		} catch (RelationNotFoundException e) {
-			e.printStackTrace();
-		}
+	public void updateLeft2Right(final SeparatedList left, final RuntimeRuleItem right, final ITransformer transformer)
+			throws RuleNotFoundException, TransformException {
+		final TangibleItem ti = left.getItem();
+		final TerminalLiteral sep = left.getSeparator();
+
+		final RuntimeRule rr = transformer
+				.transformLeft2Right((Class<? extends IBinaryRule<TangibleItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, ti);
+		final RuntimeRule rrsep = transformer
+				.transformLeft2Right((Class<? extends IBinaryRule<TangibleItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, sep);
+		final RuntimeRule[] items = new RuntimeRule[] { rr, rrsep };
+
+		right.setItems(items);
+		right.setMultiMin(left.getMin());
+		right.setMultiMax(left.getMax());
+
 	}
 
 	@Override
-	public void configureRight2Left(SeparatedList arg0, RuntimeRuleItem arg1, Transformer arg2) {
+	public void updateRight2Left(final SeparatedList arg0, final RuntimeRuleItem arg1, final ITransformer transformer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public SeparatedList constructRight2Left(RuntimeRuleItem arg0, Transformer arg1) {
+	public SeparatedList constructRight2Left(final RuntimeRuleItem arg0, final ITransformer transformer) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean isValidForRight2Left(RuntimeRuleItem arg0) {
+	public boolean isValidForRight2Left(final RuntimeRuleItem arg0) {
 		// TODO Auto-generated method stub
 		return false;
 	}

@@ -71,7 +71,7 @@ public class Grammar_Test {
 
 		final Set<INodeType> types = g.findAllNodeType();
 
-		Assert.assertEquals(5, types.size());
+		Assert.assertEquals(4, types.size());
 	}
 
 }

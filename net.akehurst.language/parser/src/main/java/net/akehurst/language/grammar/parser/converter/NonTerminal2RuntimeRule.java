@@ -17,52 +17,58 @@ package net.akehurst.language.grammar.parser.converter;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
 public class NonTerminal2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<NonTerminal> {
 
 	@Override
-	public boolean isValidForLeft2Right(NonTerminal arg0) {
+	public boolean isValidForLeft2Right(final NonTerminal arg0) {
 		return true;
 	}
-	
 
 	@Override
-	public RuntimeRule constructLeft2Right(NonTerminal left, Transformer transformer) {
-		Converter converter = (Converter)transformer;
+	public boolean isAMatch(final NonTerminal left, final RuntimeRule right, final ITransformer transformer) throws RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public RuntimeRule constructLeft2Right(final NonTerminal left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+		final Converter converter = (Converter) transformer;
 		RuntimeRule right = null;
+
 		try {
 			right = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getReferencedRule());
-			//right = converter.getFactory().createRuntimeRule(left.getReferencedRule(), RuntimeRuleKind.NON_TERMINAL);
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (final net.akehurst.language.core.parser.RuleNotFoundException e) {
+			throw new TransformException(e.getMessage(), e);
 		}
+		// right = converter.getFactory().createRuntimeRule(left.getReferencedRule(), RuntimeRuleKind.NON_TERMINAL);
+
 		return right;
 	}
-	
+
 	@Override
-	public void configureLeft2Right(NonTerminal arg0, RuntimeRule arg1, Transformer arg2) {
+	public void updateLeft2Right(final NonTerminal arg0, final RuntimeRule arg1, final ITransformer transformer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public void configureRight2Left(NonTerminal arg0, RuntimeRule arg1, Transformer arg2) {
+	public void updateRight2Left(final NonTerminal arg0, final RuntimeRule arg1, final ITransformer transformer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
-
 	@Override
-	public NonTerminal constructRight2Left(RuntimeRule arg0, Transformer arg1) {
+	public NonTerminal constructRight2Left(final RuntimeRule arg0, final ITransformer transformer) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-
-
 	@Override
-	public boolean isValidForRight2Left(RuntimeRule arg0) {
+	public boolean isValidForRight2Left(final RuntimeRule arg0) {
 		// TODO Auto-generated method stub
 		return false;
 	}

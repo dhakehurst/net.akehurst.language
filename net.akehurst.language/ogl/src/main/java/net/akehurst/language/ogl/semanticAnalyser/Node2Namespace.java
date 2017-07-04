@@ -17,43 +17,51 @@ package net.akehurst.language.ogl.semanticAnalyser;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
-public class Node2Namespace implements Relation<IBranch, Namespace> {
+public class Node2Namespace implements IBinaryRule<IBranch, Namespace> {
 
 	@Override
-	public void configureLeft2Right(IBranch arg0, Namespace arg1, Transformer arg2) {
+	public boolean isAMatch(final IBranch left, final Namespace right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
-		
+		return false;
 	}
 
 	@Override
-	public void configureRight2Left(IBranch arg0, Namespace arg1, Transformer arg2) {
+	public void updateLeft2Right(final IBranch arg0, final Namespace arg1, final ITransformer arg2) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public Namespace constructLeft2Right(IBranch left, Transformer arg1) {
-		String qualifiedName = left.getChild(1).getMatchedText().trim();
+	public void updateRight2Left(final IBranch arg0, final Namespace arg1, final ITransformer arg2) throws RuleNotFoundException, TransformException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Namespace constructLeft2Right(final IBranch left, final ITransformer arg1) throws RuleNotFoundException, TransformException {
+		final String qualifiedName = left.getChild(1).getMatchedText().trim();
 		return new Namespace(qualifiedName);
 	}
 
 	@Override
-	public IBranch constructRight2Left(Namespace arg0, Transformer arg1) {
+	public IBranch constructRight2Left(final Namespace arg0, final ITransformer arg1) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean isValidForLeft2Right(IBranch left) {
+	public boolean isValidForLeft2Right(final IBranch left) {
 		// TODO Auto-generated method stub
 		return "namespace".equals(left.getChild(0).getName());
 	}
 
 	@Override
-	public boolean isValidForRight2Left(Namespace arg0) {
+	public boolean isValidForRight2Left(final Namespace arg0) {
 		// TODO Auto-generated method stub
 		return false;
 	}

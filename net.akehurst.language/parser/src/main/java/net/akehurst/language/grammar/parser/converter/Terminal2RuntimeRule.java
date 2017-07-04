@@ -17,43 +17,49 @@ package net.akehurst.language.grammar.parser.converter;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.ogl.semanticStructure.Terminal;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
 
 public class Terminal2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<Terminal> {
 
 	@Override
-	public boolean isValidForLeft2Right(Terminal arg0) {
+	public boolean isValidForLeft2Right(final Terminal arg0) {
 		return true;
 	}
 
 	@Override
-	public RuntimeRule constructLeft2Right(Terminal left, Transformer transformer) {
-		Converter converter = (Converter)transformer;
-		RuntimeRule right =  converter.getFactory().createRuntimeRule(left);
+	public boolean isAMatch(final Terminal left, final RuntimeRule right, final ITransformer transformer) throws RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public RuntimeRule constructLeft2Right(final Terminal left, final ITransformer transformer) {
+		final Converter converter = (Converter) transformer;
+		final RuntimeRule right = converter.getFactory().createRuntimeRule(left);
 		return right;
 	}
-	
+
 	@Override
-	public void configureLeft2Right(Terminal arg0, RuntimeRule arg1, Transformer arg2) {
+	public void updateLeft2Right(final Terminal arg0, final RuntimeRule arg1, final ITransformer transformer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public void configureRight2Left(Terminal arg0, RuntimeRule arg1, Transformer arg2) {
+	public void updateRight2Left(final Terminal arg0, final RuntimeRule arg1, final ITransformer transformer) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public Terminal constructRight2Left(RuntimeRule arg0, Transformer arg1) {
+	public Terminal constructRight2Left(final RuntimeRule arg0, final ITransformer transformer) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-
 	@Override
-	public boolean isValidForRight2Left(RuntimeRule arg0) {
+	public boolean isValidForRight2Left(final RuntimeRule arg0) {
 		// TODO Auto-generated method stub
 		return false;
 	}

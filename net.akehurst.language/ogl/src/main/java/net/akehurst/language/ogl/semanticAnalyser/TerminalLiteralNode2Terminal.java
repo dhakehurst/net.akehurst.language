@@ -19,8 +19,8 @@ import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
 
 public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<TerminalLiteral> {
 
@@ -30,32 +30,37 @@ public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<Terminal
 	}
 
 	@Override
-	public boolean isValidForRight2Left(TerminalLiteral right) {
+	public boolean isValidForRight2Left(final TerminalLiteral right) {
 		return true;
 	}
 
 	@Override
-	public TerminalLiteral constructLeft2Right(INode left, Transformer transformer) {
-		INode child = ((IBranch) left).getChildren().get(0);
-		ILeaf leaf = (ILeaf) child;
-		String text = leaf.getMatchedText();
-		String literal = text.substring(1, text.length() - 1);
-		TerminalLiteral right = new TerminalLiteral(literal);
+	public boolean isAMatch(final INode left, final TerminalLiteral right, final ITransformer transformer) throws RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public TerminalLiteral constructLeft2Right(final INode left, final ITransformer transformer) {
+		final INode child = ((IBranch) left).getChildren().get(0);
+		final ILeaf leaf = (ILeaf) child;
+		final String text = leaf.getMatchedText();
+		final String literal = text.substring(1, text.length() - 1);
+		final TerminalLiteral right = new TerminalLiteral(literal);
 		return right;
 	}
 
 	@Override
-	public IBranch constructRight2Left(TerminalLiteral left, Transformer right) {
+	public IBranch constructRight2Left(final TerminalLiteral left, final ITransformer right) {
 		return null;
 	}
 
 	@Override
-	public void configureLeft2Right(INode left, TerminalLiteral right, Transformer arg2) {
+	public void updateLeft2Right(final INode left, final TerminalLiteral right, final ITransformer arg2) {
 
 	}
 
 	@Override
-	public void configureRight2Left(INode left, TerminalLiteral right, Transformer arg2) {
-	}
+	public void updateRight2Left(final INode left, final TerminalLiteral right, final ITransformer arg2) {}
 
 }

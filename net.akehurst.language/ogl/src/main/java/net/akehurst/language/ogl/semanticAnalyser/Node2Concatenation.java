@@ -19,57 +19,59 @@ import java.util.List;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
 import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
-import net.akehurst.language.ogl.semanticStructure.TangibleItem;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.RelationNotFoundException;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
-public class Node2Concatenation extends AbstractSemanticAnalysisRelation<Concatenation> {
+public class Node2Concatenation extends AbstractSemanticAnalysisRule<Concatenation> {
 
 	@Override
 	public String getNodeName() {
 		return "concatenation";
 	}
-	
+
 	@Override
-	public boolean isValidForRight2Left(Concatenation right) {
+	public boolean isValidForRight2Left(final Concatenation right) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Concatenation constructLeft2Right(INode left, Transformer transformer) {
-		try {
-			List<? extends INode> allLeft = ((IBranch) left).getNonSkipChildren();
-			List<? extends ConcatenationItem> allRight;
-
-			allRight = transformer.transformAllLeft2Right(
-					(Class<Relation<INode, ConcatenationItem>>) (Class<?>) Node2ConcatenationItem.class, allLeft);
-
-			Concatenation right = new Concatenation(allRight.toArray(new ConcatenationItem[allRight.size()]));
-			return right;
-		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Unable to construct Concatenation", e);
-		}
+	public boolean isAMatch(final INode left, final Concatenation right, final ITransformer transformer) throws RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	@Override
-	public INode constructRight2Left(Concatenation right, Transformer transformer) {
+	public Concatenation constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+
+		final List<? extends INode> allLeft = ((IBranch) left).getNonSkipChildren();
+		List<? extends ConcatenationItem> allRight;
+
+		allRight = transformer.transformAllLeft2Right((Class<IBinaryRule<INode, ConcatenationItem>>) (Class<?>) Node2ConcatenationItem.class, allLeft);
+
+		final Concatenation right = new Concatenation(allRight.toArray(new ConcatenationItem[allRight.size()]));
+		return right;
+
+	}
+
+	@Override
+	public INode constructRight2Left(final Concatenation right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void configureLeft2Right(INode left, Concatenation right, Transformer transformer) {
+	public void updateLeft2Right(final INode left, final Concatenation right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void configureRight2Left(INode left, Concatenation right, Transformer transformer) {
+	public void updateRight2Left(final INode left, final Concatenation right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

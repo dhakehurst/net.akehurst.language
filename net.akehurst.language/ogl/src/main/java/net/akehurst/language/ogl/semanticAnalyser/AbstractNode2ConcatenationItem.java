@@ -17,7 +17,6 @@ package net.akehurst.language.ogl.semanticAnalyser;
 
 import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
 
-abstract
-public class AbstractNode2ConcatenationItem<R extends ConcatenationItem> extends AbstractSemanticAnalysisRelation<R> {
+abstract public class AbstractNode2ConcatenationItem<R extends ConcatenationItem> extends AbstractSemanticAnalysisRule<R> {
 
 }

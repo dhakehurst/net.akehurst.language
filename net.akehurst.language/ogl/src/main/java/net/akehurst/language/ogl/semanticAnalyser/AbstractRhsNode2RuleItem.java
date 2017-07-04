@@ -17,9 +17,8 @@ package net.akehurst.language.ogl.semanticAnalyser;
 
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticStructure.RuleItem;
-import net.akehurst.transform.binary.Relation;
+import net.akehurst.transform.binary.IBinaryRule;
 
-abstract
-public class AbstractRhsNode2RuleItem<R extends RuleItem> implements Relation<INode, R> {
+abstract public class AbstractRhsNode2RuleItem<R extends RuleItem> implements IBinaryRule<INode, R> {
 
 }

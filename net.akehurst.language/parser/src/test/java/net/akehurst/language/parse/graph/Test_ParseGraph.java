@@ -120,38 +120,35 @@ public class Test_ParseGraph {
 	}
 
 	@Test
-	public void left_recursion() {
-		try {
-			final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
-			final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-			b.rule("S").choice(new TerminalLiteral("a"), new NonTerminal("S$group"));
-			b.rule("S$group").concatenation(new NonTerminal("S"), new TerminalLiteral("a"));
-			final Grammar g = b.get();
-			final Converter c = new Converter(rules);
-			c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
+	public void left_recursion() throws Exception {
 
-			final RuntimeRule goalRule = rules.getRuntimeRule(g.findAllRule("S"));
-			final IParseGraph graph = new ParseGraph(goalRule, 1);
-			final Input3 input = new Input3(rules, "aaa");
+		final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("S").choice(new TerminalLiteral("a"), new NonTerminal("S$group"));
+		b.rule("S$group").concatenation(new NonTerminal("S"), new TerminalLiteral("a"));
+		final Grammar g = b.get();
+		final Converter c = new Converter(rules);
+		c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
 
-			final RuntimeRule terminal_a = rules.getRuntimeRule(g.findAllTerminal("a"));
-			final RuntimeRule rule_S = rules.getRuntimeRule(g.findAllRule("S"));
-			final RuntimeRule rule_S_group = rules.getRuntimeRule(g.findAllRule("S$group"));
+		final RuntimeRule goalRule = rules.getRuntimeRule(g.findAllRule("S"));
+		final IParseGraph graph = new ParseGraph(goalRule, 1);
+		final Input3 input = new Input3(rules, "aaa");
 
-			// start
-			final IGraphNode node_start = graph.createBranch(goalRule, 0, 0, 0, 0, 0);
+		final RuntimeRule terminal_a = rules.getRuntimeRule(g.findAllTerminal("a"));
+		final RuntimeRule rule_S = rules.getRuntimeRule(g.findAllRule("S"));
+		final RuntimeRule rule_S_group = rules.getRuntimeRule(g.findAllRule("S$group"));
 
-			// grow width
-			graph.getGrowable().clear();
-			final Leaf leaf_a = input.fetchOrCreateBud(terminal_a, 0);
-			final IGraphNode node_a = graph.findOrCreateLeaf(leaf_a, terminal_a, 0, leaf_a.getMatchedTextLength());
-			node_start.pushToStackOf(node_a, 0);
+		// start
+		final IGraphNode node_start = graph.createBranch(goalRule, 0, 0, 0, 0, 0);
 
-			Assert.assertTrue(false);
+		// grow width
+		graph.getGrowable().clear();
+		final Leaf leaf_a = input.fetchOrCreateBud(terminal_a, 0);
+		final IGraphNode node_a = graph.findOrCreateLeaf(leaf_a, terminal_a, 0, leaf_a.getMatchedTextLength());
+		node_start.pushToStackOf(node_a, 0);
 
-		} catch (final Exception e) {
-			Assert.fail(e.getMessage());
-		}
+		Assert.assertTrue(false);
+
 	}
 
 	@Test

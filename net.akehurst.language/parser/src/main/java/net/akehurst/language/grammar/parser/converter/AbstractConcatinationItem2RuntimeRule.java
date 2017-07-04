@@ -17,9 +17,9 @@ package net.akehurst.language.grammar.parser.converter;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
-import net.akehurst.transform.binary.Relation;
+import net.akehurst.transform.binary.IBinaryRule;
 
 abstract
-public class AbstractConcatinationItem2RuntimeRule<L extends ConcatenationItem> implements Relation<L, RuntimeRule>{
+public class AbstractConcatinationItem2RuntimeRule<L extends ConcatenationItem> implements IBinaryRule<L, RuntimeRule>{
 
 }

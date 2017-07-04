@@ -17,7 +17,6 @@ package net.akehurst.language.ogl.semanticAnalyser;
 
 import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
 
-abstract
-public class AbstractNode2Choice<R extends AbstractChoice> extends AbstractSemanticAnalysisRelation<R> {
+abstract public class AbstractNode2Choice<R extends AbstractChoice> extends AbstractSemanticAnalysisRule<R> {
 
 }

@@ -29,15 +29,15 @@ import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 import net.akehurst.language.parser.AbstractParser_Test;
 
 public class Speed_Test extends AbstractParser_Test {
-	
+
 	Grammar abcds() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("abcds").choice(new NonTerminal("abcd"), new NonTerminal("abcds.group1"));
 		b.rule("abcds.group1").concatenation(new NonTerminal("abcd"), new NonTerminal("abcds"));
 		b.rule("abcd").concatenation(new NonTerminal("abs"), new NonTerminal("cds"));
-		b.rule("abs").choice(new NonTerminal("ab"),new NonTerminal("abs.group1"));
+		b.rule("abs").choice(new NonTerminal("ab"), new NonTerminal("abs.group1"));
 		b.rule("abs.group1").concatenation(new NonTerminal("ab"), new NonTerminal("abs"));
-		b.rule("cds").choice(new NonTerminal("cd"),new NonTerminal("cds.group1"));
+		b.rule("cds").choice(new NonTerminal("cd"), new NonTerminal("cds.group1"));
 		b.rule("cds.group1").concatenation(new NonTerminal("cd"), new NonTerminal("cds"));
 		b.rule("ab").concatenation(new NonTerminal("a"), new NonTerminal("b"));
 		b.rule("cd").concatenation(new NonTerminal("c"), new NonTerminal("d"));
@@ -52,178 +52,167 @@ public class Speed_Test extends AbstractParser_Test {
 	public void abcds_abcds_abcd() {
 		// grammar, goal, input
 		try {
-			Grammar g = abcds();
-			String goal = "abcds";
-			String text = "abcd";
-			
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.abcds();
+			final String goal = "abcds";
+			final String text = "abcd";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-		
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void abcds_abcds_abcdabcd() {
 		// grammar, goal, input
 		try {
-			Grammar g = abcds();
-			String goal = "abcds";
-			String text = "abcdabcd";
-			
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.abcds();
+			final String goal = "abcds";
+			final String text = "abcdabcd";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-		
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void abcds_abcds_ababcdcdababcdcd() {
 		// grammar, goal, input
 		try {
-			Grammar g = abcds();
-			String goal = "abcds";
-			String text = "ababcdcdababcdcd";
-			
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.abcds();
+			final String goal = "abcds";
+			final String text = "ababcdcdababcdcd";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-		
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void abcds_abcds_abababcdcdcdabababcdcdcdabababcdcdcd() {
 		// grammar, goal, input
 		try {
-			Grammar g = abcds();
-			String goal = "abcds";
-			String text = "abababcdcdcdabababcdcdcdabababcdcdcd";
-			
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.abcds();
+			final String goal = "abcds";
+			final String text = "abababcdcdcdabababcdcdcdabababcdcdcd";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-		
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void abcds_abcds_abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd() {
 		// grammar, goal, input
 		try {
-			Grammar g = abcds();
-			String goal = "abcds";
-			String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
-			
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.abcds();
+			final String goal = "abcds";
+			final String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-		
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void abcds_abcds_abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd() {
 		// grammar, goal, input
 		try {
-			Grammar g = abcds();
-			String goal = "abcds";
-			String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
-			
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.abcds();
+			final String goal = "abcds";
+			final String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-		
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void abcds_abcds_2_x_abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd() {
 		// grammar, goal, input
 		try {
-			Grammar g = abcds();
-			String goal = "abcds";
-			String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
-			
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.abcds();
+			final String goal = "abcds";
+			final String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-		
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	Grammar params() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("params").concatenation(new TerminalLiteral("("), new NonTerminal("paramList"),new TerminalLiteral(")"));
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("params").concatenation(new TerminalLiteral("("), new NonTerminal("paramList"), new TerminalLiteral(")"));
 		b.rule("paramList").separatedList(0, -1, new TerminalLiteral(","), new NonTerminal("param"));
-		b.rule("param").concatenation(new NonTerminal("type"),new NonTerminal("id"));
+		b.rule("param").concatenation(new NonTerminal("type"), new NonTerminal("id"));
 		b.rule("type").choice(new TerminalLiteral("int"));
 		b.rule("id").choice(new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*"));
-		b.skip("WS").concatination( new TerminalPattern("\\s+") );
+		b.skip("WS").concatination(new TerminalPattern("\\s+"));
 		return b.get();
 	}
-	
+
 	@Test
 	public void params_1() {
 		// grammar, goal, input
 		try {
-			Grammar g = params();
-			String goal = "params";
-			String text = "(int a)";
-			
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.params();
+			final String goal = "params";
+			final String text = "(int a)";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-		
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
+
 	@Test
 	public void params_2() {
 		// grammar, goal, input
 		try {
-			Grammar g = params();
-			String goal = "params";
-			String text = "(int a,int b)";
-			
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.params();
+			final String goal = "params";
+			final String text = "(int a,int b)";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-		
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
+
 	@Test
-	public void params_3() {
+	public void params_3() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			Grammar g = params();
-			String goal = "params";
-			String text = "(int a, int b, int c)";
-			
-			
-			IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
-		
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+
+		final Grammar g = this.params();
+		final String goal = "params";
+		final String text = "(int a, int b, int c)";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
 	}
 }

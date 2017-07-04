@@ -19,57 +19,60 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
 import net.akehurst.language.ogl.semanticStructure.Multi;
-import net.akehurst.transform.binary.RelationNotFoundException;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
 public class ChoiceAbstractSingleOneMulti extends AbstractChoice2RuntimeRuleItem<AbstractChoice> {
 
 	@Override
-	public boolean isValidForLeft2Right(AbstractChoice left) {
-		return (1==left.getAlternative().size()) && 1==left.getAlternative().get(0).getItem().size() && left.getAlternative().get(0).getItem().get(0) instanceof Multi;
+	public boolean isValidForLeft2Right(final AbstractChoice left) {
+		return 1 == left.getAlternative().size() && 1 == left.getAlternative().get(0).getItem().size()
+				&& left.getAlternative().get(0).getItem().get(0) instanceof Multi;
 	}
-	
+
 	@Override
-	public RuntimeRuleItem constructLeft2Right(AbstractChoice left, Transformer transformer) {
-		Multi multi = (Multi)left.getAlternative().get(0).getItem().get(0);
-		try {
-			RuntimeRuleItem right = transformer.transformLeft2Right(Multi2RuntimeRuleItem.class, multi);
-			return right;
-		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Cannot constrcut right item for AbstractChoice "+left);
-		}
+	public boolean isAMatch(final AbstractChoice left, final RuntimeRuleItem right, final ITransformer transformer) throws RuleNotFoundException {
+		return true;
 	}
-	
+
 	@Override
-	public void configureLeft2Right(AbstractChoice left, RuntimeRuleItem right, Transformer transformer) {
-		//in other cases, a multi is converted to a group and the empty rule is added then,
+	public RuntimeRuleItem constructLeft2Right(final AbstractChoice left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+		final Multi multi = (Multi) left.getAlternative().get(0).getItem().get(0);
+		final RuntimeRuleItem right = transformer.transformLeft2Right(Multi2RuntimeRuleItem.class, multi);
+		return right;
+	}
+
+	@Override
+	public void updateLeft2Right(final AbstractChoice left, final RuntimeRuleItem right, final ITransformer transformer)
+			throws RuleNotFoundException, TransformException {
+		// in other cases, a multi is converted to a group and the empty rule is added then,
 		// but not in this special case
-		try {
-			Multi multi = (Multi)left.getAlternative().get(0).getItem().get(0);
-			if (0 == multi.getMin()) {
-				Converter converter = (Converter)transformer;
-				RuntimeRule ruleThatIsEmpty = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getOwningRule());
-				RuntimeRule rhs = converter.createEmptyRuleFor(ruleThatIsEmpty);
-			}
-		} catch (RelationNotFoundException ex) {
-			throw new RuntimeException("Cannont configure AbstractChoice");
+
+		final Multi multi = (Multi) left.getAlternative().get(0).getItem().get(0);
+		if (0 == multi.getMin()) {
+			final Converter converter = (Converter) transformer;
+			final RuntimeRule ruleThatIsEmpty = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getOwningRule());
+			final RuntimeRule rhs = converter.createEmptyRuleFor(ruleThatIsEmpty);
 		}
+
 	}
 
 	@Override
-	public void configureRight2Left(AbstractChoice arg0, RuntimeRuleItem arg1, Transformer arg2) {
+	public void updateRight2Left(final AbstractChoice left, final RuntimeRuleItem right, final ITransformer transformer)
+			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public AbstractChoice constructRight2Left(RuntimeRuleItem arg0, Transformer arg1) {
+	public AbstractChoice constructRight2Left(final RuntimeRuleItem arg0, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean isValidForRight2Left(RuntimeRuleItem arg0) {
+	public boolean isValidForRight2Left(final RuntimeRuleItem arg0) {
 		// TODO Auto-generated method stub
 		return false;
 	}

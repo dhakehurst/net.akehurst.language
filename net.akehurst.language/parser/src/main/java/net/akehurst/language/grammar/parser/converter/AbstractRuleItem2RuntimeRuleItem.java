@@ -22,10 +22,10 @@ import net.akehurst.language.ogl.semanticStructure.Concatenation;
 import net.akehurst.language.ogl.semanticStructure.Multi;
 import net.akehurst.language.ogl.semanticStructure.RuleItem;
 import net.akehurst.language.ogl.semanticStructure.SeparatedList;
-import net.akehurst.transform.binary.Relation;
+import net.akehurst.transform.binary.IBinaryRule;
 
 abstract
-public class AbstractRuleItem2RuntimeRuleItem<L extends RuleItem> implements Relation<L, RuntimeRuleItem> {
+public class AbstractRuleItem2RuntimeRuleItem<L extends RuleItem> implements IBinaryRule<L, RuntimeRuleItem> {
 
 	RuntimeRuleItemKind getRuleItemKind(RuleItem item) {
 		if (item instanceof ChoiceSimple) {

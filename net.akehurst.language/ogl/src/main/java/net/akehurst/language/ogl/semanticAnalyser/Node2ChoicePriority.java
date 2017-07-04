@@ -21,12 +21,11 @@ import java.util.List;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticStructure.ChoicePriority;
-import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
-import net.akehurst.language.ogl.semanticStructure.TangibleItem;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.RelationNotFoundException;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
 public class Node2ChoicePriority extends AbstractNode2Choice<ChoicePriority> {
 
@@ -34,50 +33,55 @@ public class Node2ChoicePriority extends AbstractNode2Choice<ChoicePriority> {
 	public String getNodeName() {
 		return "priorityChoice";
 	}
-	
+
 	@Override
-	public boolean isValidForRight2Left(ChoicePriority right) {
+	public boolean isValidForRight2Left(final ChoicePriority right) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public ChoicePriority constructLeft2Right(INode left, Transformer transformer) {
-		try {
-			List<? extends INode> allLeft = ((IBranch) left).getNonSkipChildren();
-			List<? extends Concatenation> allRight;
-
-			List<INode> concatenationNodes = new ArrayList<>();
-			for (INode n: allLeft) {
-				if ("concatenation".equals(n.getName())) {
-					concatenationNodes.add(n);
-				}
-			}
-			
-			allRight = transformer.transformAllLeft2Right(
-					(Class<Relation<INode, Concatenation>>) (Class<?>) Node2Concatenation.class, concatenationNodes);
-
-			ChoicePriority right = new ChoicePriority(allRight.toArray(new Concatenation[0]));
-			return right;
-		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Unable to configure Grammar", e);
-		}
+	public boolean isAMatch(final INode left, final ChoicePriority right, final ITransformer transformer) throws RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	@Override
-	public INode constructRight2Left(ChoicePriority right, Transformer transformer) {
+	public ChoicePriority constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+
+		final List<? extends INode> allLeft = ((IBranch) left).getNonSkipChildren();
+		List<? extends Concatenation> allRight;
+
+		final List<INode> concatenationNodes = new ArrayList<>();
+		for (final INode n : allLeft) {
+			if ("concatenation".equals(n.getName())) {
+				concatenationNodes.add(n);
+			}
+		}
+
+		allRight = transformer.transformAllLeft2Right((Class<IBinaryRule<INode, Concatenation>>) (Class<?>) Node2Concatenation.class, concatenationNodes);
+
+		final ChoicePriority right = new ChoicePriority(allRight.toArray(new Concatenation[0]));
+		return right;
+
+	}
+
+	@Override
+	public INode constructRight2Left(final ChoicePriority right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void configureLeft2Right(INode left, ChoicePriority right, Transformer transformer) {
+	public void updateLeft2Right(final INode left, final ChoicePriority right, final ITransformer transformer)
+			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void configureRight2Left(INode left, ChoicePriority right, Transformer transformer) {
+	public void updateRight2Left(final INode left, final ChoicePriority right, final ITransformer transformer)
+			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

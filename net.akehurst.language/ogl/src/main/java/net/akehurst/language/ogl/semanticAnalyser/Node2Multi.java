@@ -19,9 +19,10 @@ import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticStructure.Multi;
 import net.akehurst.language.ogl.semanticStructure.SimpleItem;
-import net.akehurst.transform.binary.Relation;
-import net.akehurst.transform.binary.RelationNotFoundException;
-import net.akehurst.transform.binary.Transformer;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
 public class Node2Multi extends AbstractNode2ConcatenationItem<Multi> {
 
@@ -31,56 +32,59 @@ public class Node2Multi extends AbstractNode2ConcatenationItem<Multi> {
 	}
 
 	@Override
-	public boolean isValidForRight2Left(Multi right) {
+	public boolean isValidForRight2Left(final Multi right) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Multi constructLeft2Right(INode left, Transformer transformer) {
-		try {
-			INode itemNode = ((IBranch) left).getChild(0);
-			INode multiplicityNode = ((IBranch) left).getChild(1);
-			
-			SimpleItem item = transformer.transformLeft2Right(
-					(Class<Relation<INode, SimpleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
-			
-			//TODO: this should really be done with transform rules!
-			Multi right = null;
-			String multiplicityString = ((IBranch) multiplicityNode).getChild(0).getName();
-			if ("*".equals(multiplicityString)) {
-				int min = 0;
-				int max = -1;
-				right = new Multi(min, max, item);
-			} else if ("+".equals(multiplicityString)) {
-				int min = 1;
-				int max = -1;
-				right = new Multi(min, max, item);
-			} else if ("?".equals(multiplicityString)) {
-				int min = 0;
-				int max = 1;
-				right = new Multi(min, max, item);
-			}
-			return right;
-		} catch (RelationNotFoundException e) {
-			throw new RuntimeException("Unable to configure Grammar", e);
-		}
+	public boolean isAMatch(final INode left, final Multi right, final ITransformer transformer) throws RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	@Override
-	public INode constructRight2Left(Multi right, Transformer transformer) {
+	public Multi constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+
+		final INode itemNode = ((IBranch) left).getChild(0);
+		final INode multiplicityNode = ((IBranch) left).getChild(1);
+
+		final SimpleItem item = transformer.transformLeft2Right((Class<IBinaryRule<INode, SimpleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
+
+		// TODO: this should really be done with transform rules!
+		Multi right = null;
+		final String multiplicityString = ((IBranch) multiplicityNode).getChild(0).getName();
+		if ("*".equals(multiplicityString)) {
+			final int min = 0;
+			final int max = -1;
+			right = new Multi(min, max, item);
+		} else if ("+".equals(multiplicityString)) {
+			final int min = 1;
+			final int max = -1;
+			right = new Multi(min, max, item);
+		} else if ("?".equals(multiplicityString)) {
+			final int min = 0;
+			final int max = 1;
+			right = new Multi(min, max, item);
+		}
+		return right;
+
+	}
+
+	@Override
+	public INode constructRight2Left(final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void configureLeft2Right(INode left, Multi right, Transformer transformer) {
+	public void updateLeft2Right(final INode left, final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void configureRight2Left(INode left, Multi right, Transformer transformer) {
+	public void updateRight2Left(final INode left, final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

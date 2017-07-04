@@ -29,7 +29,7 @@ import net.akehurst.language.ogl.semanticStructure.Multi;
 import net.akehurst.language.ogl.semanticStructure.RuleItem;
 import net.akehurst.language.ogl.semanticStructure.SeparatedList;
 import net.akehurst.transform.binary.AbstractTransformer;
-import net.akehurst.transform.binary.Relation;
+import net.akehurst.transform.binary.IBinaryRule;
 
 public class Converter extends AbstractTransformer {
 
@@ -37,9 +37,9 @@ public class Converter extends AbstractTransformer {
 		this.builder = builder;
 		this.virtualRule_cache = new ArrayList<>();
 
-		this.registerRule((Class<? extends Relation<?, ?>>) (Class<?>) AbstractChoice2RuntimeRuleItem.class);
-		this.registerRule((Class<? extends Relation<?, ?>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class);
-		this.registerRule((Class<? extends Relation<?, ?>>) (Class<?>) AbstractSimpleItem2RuntimeRule.class);
+		this.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractChoice2RuntimeRuleItem.class);
+		this.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class);
+		this.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractSimpleItem2RuntimeRule.class);
 		this.registerRule(ChoiceSimpleEmpty2RuntimeRuleItem.class);
 		this.registerRule(ChoiceSimpleMultiple2RuntimeRuleItem.class);
 		this.registerRule(ChoiceSimpleSingleConcatenation2RuntimeRuleItem.class);

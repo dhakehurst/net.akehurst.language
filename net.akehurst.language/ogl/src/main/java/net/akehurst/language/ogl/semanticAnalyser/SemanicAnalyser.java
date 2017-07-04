@@ -22,18 +22,19 @@ import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.transform.binary.AbstractTransformer;
-import net.akehurst.transform.binary.RelationNotFoundException;
-import net.akehurst.transform.binary.Relation;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
 public class SemanicAnalyser extends AbstractTransformer implements ISemanticAnalyser {
 
 	public SemanicAnalyser() {
-		this.grammarLoader = grammarLoader;
-		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractNode2Choice.class);
-		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractNode2ConcatenationItem.class);
-		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractNode2TangibleItem.class);
-		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractNode2Terminal.class);
-		super.registerRule((Class<? extends Relation<?,?>>)(Class<?>)AbstractRhsNode2RuleItem.class);
+		this.grammarLoader = this.grammarLoader;
+		super.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractNode2Choice.class);
+		super.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractNode2ConcatenationItem.class);
+		super.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractNode2TangibleItem.class);
+		super.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractNode2Terminal.class);
+		super.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractRhsNode2RuleItem.class);
 		super.registerRule(AnyRuleNode2Rule.class);
 		super.registerRule(GrammarDefinitionBranch2Grammar.class);
 		super.registerRule(IDENTIFIERBranch2String.class);
@@ -53,30 +54,32 @@ public class SemanicAnalyser extends AbstractTransformer implements ISemanticAna
 		super.registerRule(TerminalLiteralNode2Terminal.class);
 		super.registerRule(TerminalPatternNode2Terminal.class);
 	}
-	
-	
-	Grammar analyse(IParseTree parseTree) throws UnableToAnalyseExeception {
+
+	Grammar analyse(final IParseTree parseTree) throws UnableToAnalyseExeception {
 		try {
-			Grammar grammar = this.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, (IBranch)parseTree.getRoot());
+			final Grammar grammar = this.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, (IBranch) parseTree.getRoot());
 			return grammar;
-		} catch (RelationNotFoundException e) {
-			throw new UnableToAnalyseExeception("Cannot Analyse ParseTree",e);
+		} catch (final RuleNotFoundException | TransformException e) {
+			throw new UnableToAnalyseExeception("Cannot Analyse ParseTree", e);
 		}
-		
+
 	}
 
-
 	@Override
-	public <T> T analyse(Class<T> targetType, IParseTree tree) throws UnableToAnalyseExeception {
-		//this.transformLeft2Right(Relation.class, (IBranch)tree.getRoot());
-		return (T)this.analyse(tree);
+	public <T> T analyse(final Class<T> targetType, final IParseTree tree) throws UnableToAnalyseExeception {
+		// this.transformLeft2Right(Relation.class, (IBranch)tree.getRoot());
+		return (T) this.analyse(tree);
 	}
 
 	IGrammarLoader grammarLoader;
+
+	@Override
 	public IGrammarLoader getGrammarLoader() {
-		return grammarLoader;
+		return this.grammarLoader;
 	}
-	public void setGrammarLoader(IGrammarLoader value) {
+
+	@Override
+	public void setGrammarLoader(final IGrammarLoader value) {
 		this.grammarLoader = value;
 	}
 }
