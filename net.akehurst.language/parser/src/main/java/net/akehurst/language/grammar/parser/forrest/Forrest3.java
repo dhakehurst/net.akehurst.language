@@ -242,8 +242,8 @@ public final class Forrest3 {
 	private void tryGraftInto(final IGraphNode gn, final IGraphNode.PreviousInfo info) throws RuleNotFoundException {
 
 		if (gn.getIsSkip()) {
-			// info.node.duplicateWithNextSkipChild(gn);
-			this.graftInto(gn, info);
+			info.node.duplicateWithNextSkipChild(gn);
+			// this.graftInto(gn, info);
 		} else if (info.node.getExpectsItemAt(gn.getRuntimeRule(), info.atPosition)) {
 
 			this.graftInto(gn, info);
@@ -301,31 +301,31 @@ public final class Forrest3 {
 		final ArrayList<IGraphNode> result = new ArrayList<>();
 		// TODO: should have already done this test?
 		if (gn.getIsComplete()) {
-			if (gn.getRuntimeRule().getIsEmptyRule()) {
-				// TODO: I don't think we should be doing this!
-				// empty rule should get grafted back into its parent!
-				final RuntimeRule ruleThatIsEmpty = gn.getRuntimeRule().getRuleThatIsEmpty();
-				// final IGraphNode pt = this.graph.createWithFirstChild(ruleThatIsEmpty, gn.getPriority(), gn);
-				// if (this.getIsGoal(pt)) {
-				// this.goals.add(pt);
-				// }
-				// IGraphNode nn = this.pushStackNewRoot(gn, pt);
+			// if (gn.getRuntimeRule().getIsEmptyRule()) {
+			// TODO: I don't think we should be doing this!
+			// empty rule should get grafted back into its parent!
+			final RuntimeRule ruleThatIsEmpty = gn.getRuntimeRule().getRuleThatIsEmpty();
+			// final IGraphNode pt = this.graph.createWithFirstChild(ruleThatIsEmpty, gn.getPriority(), gn);
+			// if (this.getIsGoal(pt)) {
+			// this.goals.add(pt);
+			// }
+			// IGraphNode nn = this.pushStackNewRoot(gn, pt);
 
-			} else {
-				// RuntimeRule[] rules = runtimeRuleSet.getPossibleSuperRule(gn.getRuntimeRule());
-				final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
-				for (final SuperRuleInfo info : infos) {
-					if (gn.getRuntimeRule().getRuleNumber() == info.getRuntimeRule().getRuleNumber()) {
-						// TODO: do we need to make this growable?
-						result.add(gn);
-					}
-					if (this.hasHeightPotential(info.getRuntimeRule(), gn)) {
+			// } else {
+			// RuntimeRule[] rules = runtimeRuleSet.getPossibleSuperRule(gn.getRuntimeRule());
+			final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
+			for (final SuperRuleInfo info : infos) {
+				if (gn.getRuntimeRule().getRuleNumber() == info.getRuntimeRule().getRuleNumber()) {
+					// TODO: do we need to make this growable?
+					result.add(gn);
+				}
+				if (this.hasHeightPotential(info.getRuntimeRule(), gn)) {
 
-						this.growHeightByType(gn, info);
+					this.growHeightByType(gn, info);
 
-					}
 				}
 			}
+			// }
 		} else {
 			// result.add(this);
 		}
