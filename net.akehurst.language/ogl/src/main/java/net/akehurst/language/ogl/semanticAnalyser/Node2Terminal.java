@@ -37,32 +37,32 @@ public class Node2Terminal extends AbstractNode2TangibleItem<Terminal> {
 	}
 
 	@Override
-	public boolean isAMatch(final INode left, final Terminal right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final IBranch left, final Terminal right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Terminal constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
-		final INode terminalNode = ((IBranch) left).getChild(0);
+	public Terminal constructLeft2Right(final IBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+		final INode terminalNode = left.getChild(0);
 		final Terminal right = transformer.transformLeft2Right((Class<IBinaryRule<INode, Terminal>>) (Class<?>) AbstractNode2Terminal.class, terminalNode);
 		return right;
 	}
 
 	@Override
-	public INode constructRight2Left(final Terminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public IBranch constructRight2Left(final Terminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final INode left, final Terminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateLeft2Right(final IBranch left, final Terminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final INode left, final Terminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final IBranch left, final Terminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

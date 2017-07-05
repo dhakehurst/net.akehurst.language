@@ -115,6 +115,11 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode, ILea
 	}
 
 	@Override
+	public boolean getIsEmptyLeaf() {
+		return this.leaf.getIsEmptyLeaf();
+	}
+
+	@Override
 	public List<INode> getChildren() {
 		return Collections.emptyList();
 	}

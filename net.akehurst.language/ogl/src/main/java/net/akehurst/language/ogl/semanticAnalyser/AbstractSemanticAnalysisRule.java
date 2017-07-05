@@ -15,20 +15,29 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import net.akehurst.language.core.parser.INode;
-import net.akehurst.transform.binary.IBinaryRule;
+import java.util.Objects;
 
-abstract public class AbstractSemanticAnalysisRule<R> implements IBinaryRule<INode, R> {
+import net.akehurst.language.core.parser.IBranch;
+import net.akehurst.transform.binary.IBinaryRule;
+import net.akehurst.transform.binary.ITransformer;
+import net.akehurst.transform.binary.RuleNotFoundException;
+
+abstract public class AbstractSemanticAnalysisRule<R> implements IBinaryRule<IBranch, R> {
 
 	abstract public String getNodeName();
 
 	@Override
-	public boolean isValidForLeft2Right(final INode left) {
+	public boolean isValidForLeft2Right(final IBranch left) {
 		return this.getNodeName().equals(left.getName());
 	}
 
 	@Override
 	public boolean isValidForRight2Left(final R right) {
-		return false;
+		return true;
+	}
+
+	@Override
+	public boolean isAMatch(final IBranch left, final R right, final ITransformer transformer) throws RuleNotFoundException {
+		return Objects.equals(left.getName(), this.getNodeName());
 	}
 }

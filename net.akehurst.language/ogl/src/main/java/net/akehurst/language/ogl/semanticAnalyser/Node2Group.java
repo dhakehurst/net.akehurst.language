@@ -38,15 +38,15 @@ public class Node2Group extends AbstractNode2TangibleItem<Group> {
 	}
 
 	@Override
-	public boolean isAMatch(final INode left, final Group right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final IBranch left, final Group right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Group constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public Group constructLeft2Right(final IBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
-		final INode choiceNode = ((IBranch) left).getChild(1);
+		final INode choiceNode = left.getChild(1);
 		final AbstractChoice choice = transformer.transformLeft2Right((Class<IBinaryRule<INode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class,
 				((IBranch) choiceNode).getChild(0));
 		final Group right = new Group(choice);
@@ -55,19 +55,19 @@ public class Node2Group extends AbstractNode2TangibleItem<Group> {
 	}
 
 	@Override
-	public INode constructRight2Left(final Group right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public IBranch constructRight2Left(final Group right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final INode left, final Group right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateLeft2Right(final IBranch left, final Group right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final INode left, final Group right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final IBranch left, final Group right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

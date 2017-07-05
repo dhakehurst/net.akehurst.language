@@ -21,15 +21,15 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class EmptyLeaf extends Leaf {
 
-	public EmptyLeaf(IInput input, int pos, RuntimeRule terminalRule) {
+	public EmptyLeaf(final IInput input, final int pos, final RuntimeRule terminalRule) {
 		super(input, pos, pos, terminalRule);
 	}
-	
-//	@Override
-//	public boolean getIsEmpty() {
-//		return true;
-//	}
-	
+
+	@Override
+	public boolean getIsEmptyLeaf() {
+		return true;
+	}
+
 	@Override
 	public String getName() {
 		return this.terminalRule.getName();
@@ -39,31 +39,31 @@ public class EmptyLeaf extends Leaf {
 	public int getMatchedTextLength() {
 		return 0;
 	}
-	
+
 	@Override
 	public String getMatchedText() {
 		return "";
 	}
 
 	@Override
-	public <T, A, E extends Throwable> T accept(IParseTreeVisitor<T, A, E> visitor, A arg) throws E {
+	public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
 		return visitor.visit(this, arg);
 	}
-	
-	//--- Object ---
+
+	// --- Object ---
 	@Override
 	public String toString() {
-		ToStringVisitor v = new ToStringVisitor();
+		final ToStringVisitor v = new ToStringVisitor();
 		return this.accept(v, "");
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.toString().hashCode();
 	}
-	
+
 	@Override
-	public boolean equals(Object arg) {
+	public boolean equals(final Object arg) {
 		if (arg instanceof EmptyLeaf) {
 			return true;
 		} else {

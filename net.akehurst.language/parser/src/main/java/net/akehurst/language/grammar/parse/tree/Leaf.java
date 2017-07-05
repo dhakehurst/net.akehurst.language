@@ -42,6 +42,11 @@ public class Leaf extends Node implements ILeaf {
 	int end;
 	RuntimeRule terminalRule;
 
+	@Override
+	public boolean getIsEmptyLeaf() {
+		return false;
+	}
+
 	// @Override
 	// public boolean getIsEmpty() {
 	// return false;

@@ -31,15 +31,15 @@ public class Node2SimpleItem extends AbstractNode2ConcatenationItem<SimpleItem> 
 	}
 
 	@Override
-	public boolean isAMatch(final INode left, final SimpleItem right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final IBranch left, final SimpleItem right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public SimpleItem constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public SimpleItem constructLeft2Right(final IBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
-		final INode itemNode = ((IBranch) left).getChild(0);
+		final INode itemNode = left.getChild(0);
 
 		final SimpleItem right = transformer.transformLeft2Right((Class<IBinaryRule<INode, SimpleItem>>) (Class<?>) AbstractNode2TangibleItem.class, itemNode);
 		return right;
@@ -47,19 +47,19 @@ public class Node2SimpleItem extends AbstractNode2ConcatenationItem<SimpleItem> 
 	}
 
 	@Override
-	public INode constructRight2Left(final SimpleItem right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public IBranch constructRight2Left(final SimpleItem right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final INode left, final SimpleItem right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateLeft2Right(final IBranch left, final SimpleItem right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final INode left, final SimpleItem right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final IBranch left, final SimpleItem right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

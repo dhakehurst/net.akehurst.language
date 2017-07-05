@@ -40,46 +40,33 @@ public class LanguageProcessor implements ILanguageProcessor {
 		this.semanticAnalyser = semanticAnalyser;
 	}
 
-	RuntimeRuleSetBuilder parseTreeFactory;
-
-	IGrammar grammar;
+	private final RuntimeRuleSetBuilder parseTreeFactory;
+	private final IGrammar grammar;
+	private final IParser parser;
+	private final ISemanticAnalyser semanticAnalyser;
 
 	@Override
 	public IGrammar getGrammar() {
 		return this.grammar;
 	}
 
-	// String defaultGoalName;
-	// INodeType defaultGoal;
-	// @Override
-	// public INodeType getDefaultGoal() {
-	// if (null==this.defaultGoal) {
-	// try {
-	// this.defaultGoal = grammar.findNodeType(this.defaultGoalName);
-	// } catch (RuleNotFoundException e) {
-	// e.printStackTrace();
-	// }
-	// }
-	// return this.defaultGoal;
-	// }
-
-	IParser parser;
-
 	@Override
 	public IParser getParser() {
 		return this.parser;
 	}
-
-	ISemanticAnalyser semanticAnalyser;
 
 	public ISemanticAnalyser getSemanticAnalyser() {
 		return this.semanticAnalyser;
 	}
 
 	@Override
-	public <T> T process(final Reader reader, final Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
+	public <T> T process(final Reader reader, final String grammarRuleName, final Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
 		try {
-			final IParseTree tree = this.getParser().parse("grammarDefinition", reader);
+
+			final IParseTree tree = this.getParser().parse(grammarRuleName, reader);
+			if (null == this.getSemanticAnalyser()) {
+				throw new UnableToAnalyseExeception("No SemanticAnalyser supplied", null);
+			}
 			final T t = this.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;

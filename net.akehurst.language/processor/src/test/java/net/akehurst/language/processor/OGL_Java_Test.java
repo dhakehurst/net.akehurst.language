@@ -69,7 +69,7 @@ public class OGL_Java_Test {
 		try {
 			final OGLanguageProcessor proc = new OGLanguageProcessor();
 			final FileReader reader = new FileReader(Paths.get(grammarFile).toFile());
-			final Grammar grammar = proc.process(reader, Grammar.class);
+			final Grammar grammar = proc.process(reader, "grammarDefinition", Grammar.class);
 
 			final IParseTree tree = this.process(grammar, new StringReader(text), goal);
 

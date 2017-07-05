@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
@@ -417,6 +418,24 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	}
 
 	@Override
+	public boolean getIsEmptyLeaf() {
+		return false;
+	}
+
+	@Override
+	public boolean getIsEmpty() {
+		if (this.getNonSkipChildren().isEmpty()) {
+			return true;
+		} else {
+			if (this.getNonSkipChildren().get(0).getIsEmptyLeaf()) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+
+	@Override
 	public List<INode> getChildren() {
 		return this.children;
 	}
@@ -456,6 +475,18 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 		} else {
 			return null;
 		}
+	}
+
+	@Override
+	public IBranch getBranchChild(final int i) {
+		final INode n = this.getChild(i);
+		return (IBranch) n;
+	}
+
+	@Override
+	public List<IBranch> getBranchNonSkipChildren() {
+		final List<IBranch> res = this.getNonSkipChildren().stream().filter(IBranch.class::isInstance).map(IBranch.class::cast).collect(Collectors.toList());
+		return res;
 	}
 
 	@Override

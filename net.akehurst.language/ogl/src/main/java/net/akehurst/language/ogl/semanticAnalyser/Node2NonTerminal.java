@@ -16,7 +16,6 @@
 package net.akehurst.language.ogl.semanticAnalyser;
 
 import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.transform.binary.ITransformer;
 import net.akehurst.transform.binary.RuleNotFoundException;
@@ -36,34 +35,37 @@ public class Node2NonTerminal extends AbstractNode2TangibleItem<NonTerminal> {
 	}
 
 	@Override
-	public boolean isAMatch(final INode left, final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final IBranch left, final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public NonTerminal constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public NonTerminal constructLeft2Right(final IBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
-		final String referencedRuleName = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, ((IBranch) left).getChild(0));
-		final NonTerminal right = new NonTerminal(referencedRuleName);
+		// final INode ruleOwner = left.getParent();
+
+		final String referencedRuleName = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, left.getChild(0));
+		// final Rule owner = transformer.transformLeft2Right(NormalRuleNode2Rule.class, left);
+		// final List<Integer> index = new ArrayList<>();
+		final NonTerminal right = new NonTerminal(referencedRuleName);// , owner, index);
 		return right;
 
 	}
 
 	@Override
-	public INode constructRight2Left(final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public IBranch constructRight2Left(final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final INode left, final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
-		// TODO Auto-generated method stub
+	public void updateLeft2Right(final IBranch left, final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
 	}
 
 	@Override
-	public void updateRight2Left(final INode left, final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final IBranch left, final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

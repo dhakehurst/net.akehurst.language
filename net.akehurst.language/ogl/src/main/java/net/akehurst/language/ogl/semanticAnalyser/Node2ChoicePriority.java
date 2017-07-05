@@ -41,15 +41,15 @@ public class Node2ChoicePriority extends AbstractNode2Choice<ChoicePriority> {
 	}
 
 	@Override
-	public boolean isAMatch(final INode left, final ChoicePriority right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final IBranch left, final ChoicePriority right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public ChoicePriority constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public ChoicePriority constructLeft2Right(final IBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
-		final List<? extends INode> allLeft = ((IBranch) left).getNonSkipChildren();
+		final List<? extends INode> allLeft = left.getNonSkipChildren();
 		List<? extends Concatenation> allRight;
 
 		final List<INode> concatenationNodes = new ArrayList<>();
@@ -67,20 +67,20 @@ public class Node2ChoicePriority extends AbstractNode2Choice<ChoicePriority> {
 	}
 
 	@Override
-	public INode constructRight2Left(final ChoicePriority right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public IBranch constructRight2Left(final ChoicePriority right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final INode left, final ChoicePriority right, final ITransformer transformer)
+	public void updateLeft2Right(final IBranch left, final ChoicePriority right, final ITransformer transformer)
 			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final INode left, final ChoicePriority right, final ITransformer transformer)
+	public void updateRight2Left(final IBranch left, final ChoicePriority right, final ITransformer transformer)
 			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 

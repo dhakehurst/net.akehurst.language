@@ -38,36 +38,36 @@ public class OGL_ParseJava_Test {
 		this.parseTreeFactory = new RuntimeRuleSetBuilder();
 	}
 
-	String readFile(String path, Charset encoding) throws IOException {
-		byte[] encoded = Files.readAllBytes(Paths.get(path));
+	String readFile(final String path, final Charset encoding) throws IOException {
+		final byte[] encoded = Files.readAllBytes(Paths.get(path));
 		return new String(encoded, encoding);
 	}
 
-	void parseGrammar(String grammarFile) {
+	void parseGrammar(final String grammarFile) {
 		try {
-			OGLanguageProcessor proc = new OGLanguageProcessor();
-			FileReader reader = new FileReader(grammarFile);
-			Grammar grammar = proc.process(reader, Grammar.class);
+			final OGLanguageProcessor proc = new OGLanguageProcessor();
+			final FileReader reader = new FileReader(grammarFile);
+			final Grammar grammar = proc.process(reader, "grammarDefinition", Grammar.class);
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			Assert.fail(e.getMessage());
-		} catch (UnableToAnalyseExeception e) {
+		} catch (final UnableToAnalyseExeception e) {
 			Assert.fail(e.getMessage());
 		}
 
 	}
-	
+
 	@Test
 	public void java8_part1() {
 		this.parseGrammar("src/test/resources/java8_part1.og");
 	}
-	
+
 	@Test
 	public void java8_part2() {
-		//FIXME: this takes too long
+		// FIXME: this takes too long
 		this.parseGrammar("src/test/resources/java8_part2.og");
 	}
-	
+
 }

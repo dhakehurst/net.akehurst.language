@@ -16,81 +16,86 @@
 package net.akehurst.language.ogl.semanticStructure;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class Group extends SimpleItem {
 
-	public Group(AbstractChoice choice) {
+	public Group(final AbstractChoice choice) {
 		this.choice = choice;
 	}
-	
+
 	AbstractChoice choice;
+
 	public AbstractChoice getChoice() {
 		return this.choice;
 	}
-	
+
 	@Override
 	public String getName() {
 		return "$group";
 	}
-	
-	ArrayList<Integer> index;
-	public ArrayList<Integer> getIndex() {
+
+	List<Integer> index;
+
+	@Override
+	public List<Integer> getIndex() {
 		return this.index;
 	}
+
 	@Override
-	public void setOwningRule(Rule value, ArrayList<Integer> index) {
+	public void setOwningRule(final Rule value, final List<Integer> index) {
 		this.owningRule = value;
 		this.index = index;
-		ArrayList<Integer> nextIndex0 = new ArrayList<>(index);
+		final ArrayList<Integer> nextIndex0 = new ArrayList<>(index);
 		nextIndex0.add(0);
 		this.getChoice().setOwningRule(value, nextIndex0);
 	}
 
 	@Override
-	public <T, E extends Throwable> T accept(Visitor<T,E> visitor, Object... arg) throws E {
+	public <T, E extends Throwable> T accept(final Visitor<T, E> visitor, final Object... arg) throws E {
 		return visitor.visit(this, arg);
 	}
-	
-//	public Set<TangibleItem> findFirstTangibleItem() {
-//		Set<TangibleItem> result = new HashSet<>();
-//		result.add( this );
-//		return result;
-//	}
-//	
+
+	// public Set<TangibleItem> findFirstTangibleItem() {
+	// Set<TangibleItem> result = new HashSet<>();
+	// result.add( this );
+	// return result;
+	// }
+	//
 	@Override
 	public Set<Terminal> findAllTerminal() {
-		Set<Terminal> result = this.choice.findAllTerminal();
+		final Set<Terminal> result = this.choice.findAllTerminal();
 		return result;
 	}
-	
+
 	@Override
 	public Set<NonTerminal> findAllNonTerminal() {
-		Set<NonTerminal> result = this.choice.findAllNonTerminal();
+		final Set<NonTerminal> result = this.choice.findAllNonTerminal();
 		return result;
 	}
-	
-//	
-//	@Override
-//	public boolean isMatchedBy(INode node) throws RuleNotFoundException {
-//		return node.getNodeType().equals(this.getNodeType());
-//	}
-	
-	//--- Object ---
+
+	//
+	// @Override
+	// public boolean isMatchedBy(INode node) throws RuleNotFoundException {
+	// return node.getNodeType().equals(this.getNodeType());
+	// }
+
+	// --- Object ---
 	@Override
 	public String toString() {
-		return "("+this.choice+")";
+		return "(" + this.choice + ")";
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.toString().hashCode();
 	}
-	
+
 	@Override
-	public boolean equals(Object arg) {
+	public boolean equals(final Object arg) {
 		if (arg instanceof Group) {
-			Group other = (Group)arg;
+			final Group other = (Group) arg;
 			return this.toString().equals(other.toString());
 		} else {
 			return false;

@@ -270,7 +270,7 @@ public final class Forrest3 {
 			break;
 			case MULTI:
 				if (-1 == info.node.getRuntimeRule().getRhs().getMultiMax()) {
-					if (info.node.getChildren().isEmpty()) {
+					if (0 == info.atPosition) {// info.node.getChildren().isEmpty()) {
 						info.node.duplicateWithNextChild(gn);
 					} else {
 						final IGraphNode previousChild = (IGraphNode) info.node.getChildren().get(info.atPosition - 1);

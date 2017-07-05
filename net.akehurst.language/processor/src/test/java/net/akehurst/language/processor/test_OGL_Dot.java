@@ -82,26 +82,18 @@ public class test_OGL_Dot {
 
 	@Test
 	public void test() {
-		try {
-			final IParseTree tree = this.processDot("graph", "graph { }");
-			Assert.assertNotNull(tree);
 
-		} catch (final Exception e) {
-			e.printStackTrace();
-			Assert.fail(e.getMessage());
-		}
+		final IParseTree tree = this.processDot("graph", "graph { }");
+		Assert.assertNotNull(tree);
+
 	}
 
 	@Test
 	public void test2() {
-		try {
-			final IParseTree tree = this.processDot("graph", "sTriCt GRapH { }");
-			Assert.assertNotNull(tree);
 
-		} catch (final Exception e) {
-			e.printStackTrace();
-			Assert.fail(e.getMessage());
-		}
+		final IParseTree tree = this.processDot("graph", "sTriCt GRapH { }");
+		Assert.assertNotNull(tree);
+
 	}
 
 }

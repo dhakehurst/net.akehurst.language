@@ -21,96 +21,98 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-
 public class ChoicePriority extends AbstractChoice {
-	
-	public ChoicePriority(Concatenation... alternative) {
+
+	public ChoicePriority(final Concatenation... alternative) {
 		this.alternative = Arrays.asList(alternative);
 	}
-	ArrayList<Integer> index;
-	public ArrayList<Integer> getIndex() {
+
+	List<Integer> index;
+
+	@Override
+	public List<Integer> getIndex() {
 		return this.index;
 	}
-	public void setOwningRule(Rule value, ArrayList<Integer> index) {
+
+	@Override
+	public void setOwningRule(final Rule value, final List<Integer> index) {
 		this.owningRule = value;
 		this.index = index;
-		int i=0;
-		for(Concatenation c: this.getAlternative()) {
-			ArrayList<Integer> nextIndex = new ArrayList<>(index);
+		int i = 0;
+		for (final Concatenation c : this.getAlternative()) {
+			final ArrayList<Integer> nextIndex = new ArrayList<>(index);
 			nextIndex.add(i++);
 			c.setOwningRule(value, nextIndex);
 		}
 	}
-	
 
-	
-//	@Override
-//	public INodeType getNodeType() {
-//		return new RuleNodeType(this.getOwningRule());
-//	}
-	
+	// @Override
+	// public INodeType getNodeType() {
+	// return new RuleNodeType(this.getOwningRule());
+	// }
+
 	@Override
-	public <T, E extends Throwable> T accept(Visitor<T,E> visitor, Object... arg) throws E {
+	public <T, E extends Throwable> T accept(final Visitor<T, E> visitor, final Object... arg) throws E {
 		return visitor.visit(this, arg);
 	}
-	
-//	public Set<TangibleItem> findFirstTangibleItem() {
-//		Set<TangibleItem> result = new HashSet<>();
-//		for(Concatination c : this.getAlternative()) {
-//			Set<TangibleItem> ft = c.findFirstTangibleItem();
-//			result.addAll(ft);
-//		}		return result;
-//	}
-//	
+
+	// public Set<TangibleItem> findFirstTangibleItem() {
+	// Set<TangibleItem> result = new HashSet<>();
+	// for(Concatination c : this.getAlternative()) {
+	// Set<TangibleItem> ft = c.findFirstTangibleItem();
+	// result.addAll(ft);
+	// } return result;
+	// }
+	//
 	@Override
 	public Set<Terminal> findAllTerminal() {
-		Set<Terminal> result = new HashSet<>();
-		for(Concatenation c : this.getAlternative()) {
-			Set<Terminal> ft = c.findAllTerminal();
+		final Set<Terminal> result = new HashSet<>();
+		for (final Concatenation c : this.getAlternative()) {
+			final Set<Terminal> ft = c.findAllTerminal();
 			result.addAll(ft);
 		}
 		return result;
 	}
-	
+
 	@Override
 	public Set<NonTerminal> findAllNonTerminal() {
-		Set<NonTerminal> result = new HashSet<>();
-		for(Concatenation c : this.getAlternative()) {
-			Set<NonTerminal> ft = c.findAllNonTerminal();
+		final Set<NonTerminal> result = new HashSet<>();
+		for (final Concatenation c : this.getAlternative()) {
+			final Set<NonTerminal> ft = c.findAllNonTerminal();
 			result.addAll(ft);
 		}
 		return result;
 	}
-	
-//	public boolean isMatchedBy(INode node) throws RuleNotFoundException {
-//		for(Concatination c : this.getAlternative()) {
-//			boolean isMatched = c.isMatchedBy(node);
-//			if (isMatched) {
-//				return true;
-//			}
-//		}
-//		return false;
-//	}
-	
-	//--- Object ---
+
+	// public boolean isMatchedBy(INode node) throws RuleNotFoundException {
+	// for(Concatination c : this.getAlternative()) {
+	// boolean isMatched = c.isMatchedBy(node);
+	// if (isMatched) {
+	// return true;
+	// }
+	// }
+	// return false;
+	// }
+
+	// --- Object ---
 	@Override
 	public String toString() {
 		String r = "";
-		for(Concatenation a : this.getAlternative()) {
+		for (final Concatenation a : this.getAlternative()) {
 			r += a.toString() + " < ";
 		}
 		return r;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.toString().hashCode();
 	}
-	
+
 	@Override
-	public boolean equals(Object arg) {
+	public boolean equals(final Object arg) {
 		if (arg instanceof ChoicePriority) {
-			ChoicePriority other = (ChoicePriority)arg;
+			final ChoicePriority other = (ChoicePriority) arg;
 			return this.getOwningRule().equals(other.getOwningRule()) && this.index.equals(other.index);
 		} else {
 			return false;

@@ -40,15 +40,15 @@ public class Node2Concatenation extends AbstractSemanticAnalysisRule<Concatenati
 	}
 
 	@Override
-	public boolean isAMatch(final INode left, final Concatenation right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final IBranch left, final Concatenation right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Concatenation constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public Concatenation constructLeft2Right(final IBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
-		final List<? extends INode> allLeft = ((IBranch) left).getNonSkipChildren();
+		final List<? extends INode> allLeft = left.getNonSkipChildren();
 		List<? extends ConcatenationItem> allRight;
 
 		allRight = transformer.transformAllLeft2Right((Class<IBinaryRule<INode, ConcatenationItem>>) (Class<?>) Node2ConcatenationItem.class, allLeft);
@@ -59,19 +59,21 @@ public class Node2Concatenation extends AbstractSemanticAnalysisRule<Concatenati
 	}
 
 	@Override
-	public INode constructRight2Left(final Concatenation right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public IBranch constructRight2Left(final Concatenation right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final INode left, final Concatenation right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateLeft2Right(final IBranch left, final Concatenation right, final ITransformer transformer)
+			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final INode left, final Concatenation right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final IBranch left, final Concatenation right, final ITransformer transformer)
+			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

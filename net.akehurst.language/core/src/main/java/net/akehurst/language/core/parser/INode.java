@@ -15,23 +15,29 @@
  */
 package net.akehurst.language.core.parser;
 
-public interface INode extends IParseTreeVisitable{
-	
+public interface INode extends IParseTreeVisitable {
+
 	IBranch getParent();
+
 	void setParent(IBranch value);
-	
+
 	String getName();
+
 	int getRuntimeRuleNumber();
-	
+
 	int getStartPosition();
-//	int getEnd();
+
+	// int getEnd();
 	int getMatchedTextLength();
+
 	String getMatchedText();
 
-//	boolean getIsEmpty();
+	boolean getIsEmptyLeaf();
+
+	// boolean getIsEmpty();
 	boolean getIsSkip();
 
 	int getNumberOfLines();
-	
-//	ILeaf getFirstLeaf();
+
+	// ILeaf getFirstLeaf();
 }

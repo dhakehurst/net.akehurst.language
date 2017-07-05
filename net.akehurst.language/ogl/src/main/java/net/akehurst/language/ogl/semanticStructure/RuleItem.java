@@ -15,21 +15,23 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
-
-
 
 public abstract class RuleItem implements Visitable {
 
 	Rule owningRule;
+
 	public Rule getOwningRule() {
 		return this.owningRule;
 	}
-	public abstract void setOwningRule(Rule value, ArrayList<Integer> index);
-	public abstract ArrayList<Integer> getIndex();
-	
+
+	public abstract void setOwningRule(Rule value, List<Integer> index);
+
+	public abstract List<Integer> getIndex();
+
 	public abstract Set<Terminal> findAllTerminal();
+
 	public abstract Set<NonTerminal> findAllNonTerminal();
-	
+
 }

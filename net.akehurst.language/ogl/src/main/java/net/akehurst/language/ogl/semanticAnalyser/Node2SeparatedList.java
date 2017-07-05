@@ -39,24 +39,24 @@ public class Node2SeparatedList extends AbstractNode2ConcatenationItem<Separated
 	}
 
 	@Override
-	public boolean isAMatch(final INode left, final SeparatedList right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final IBranch left, final SeparatedList right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public SeparatedList constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public SeparatedList constructLeft2Right(final IBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
-		final INode itemNode = ((IBranch) left).getChild(1);
+		final INode itemNode = left.getChild(1);
 
 		final TangibleItem item = transformer.transformLeft2Right((Class<IBinaryRule<INode, TangibleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
 
-		final INode separatorNode = ((IBranch) left).getChild(3);
+		final INode separatorNode = left.getChild(3);
 
 		final TerminalLiteral separator = transformer.transformLeft2Right((Class<IBinaryRule<INode, TerminalLiteral>>) (Class<?>) AbstractNode2Terminal.class,
 				separatorNode);
 
-		final INode multiplicityNode = ((IBranch) left).getChild(5);
+		final INode multiplicityNode = left.getChild(5);
 		// TODO: this should really be done with transform rules!
 		final String multiplicityString = ((IBranch) multiplicityNode).getChild(0).getName();
 		int min = -1;
@@ -78,19 +78,21 @@ public class Node2SeparatedList extends AbstractNode2ConcatenationItem<Separated
 	}
 
 	@Override
-	public INode constructRight2Left(final SeparatedList right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public IBranch constructRight2Left(final SeparatedList right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final INode left, final SeparatedList right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateLeft2Right(final IBranch left, final SeparatedList right, final ITransformer transformer)
+			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final INode left, final SeparatedList right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final IBranch left, final SeparatedList right, final ITransformer transformer)
+			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

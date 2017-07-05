@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.RuleNotFoundException;
@@ -24,12 +24,15 @@ public abstract class TangibleItem extends SimpleItem {
 
 	public abstract INodeType getNodeType() throws RuleNotFoundException;
 
-	ArrayList<Integer> index;
-	public ArrayList<Integer> getIndex() {
+	List<Integer> index;
+
+	@Override
+	public List<Integer> getIndex() {
 		return this.index;
 	}
+
 	@Override
-	public void setOwningRule(Rule value, ArrayList<Integer> index) {
+	public void setOwningRule(final Rule value, final List<Integer> index) {
 		this.owningRule = value;
 		this.index = index;
 	}

@@ -38,16 +38,16 @@ public class Node2Multi extends AbstractNode2ConcatenationItem<Multi> {
 	}
 
 	@Override
-	public boolean isAMatch(final INode left, final Multi right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final IBranch left, final Multi right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Multi constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public Multi constructLeft2Right(final IBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
-		final INode itemNode = ((IBranch) left).getChild(0);
-		final INode multiplicityNode = ((IBranch) left).getChild(1);
+		final INode itemNode = left.getChild(0);
+		final INode multiplicityNode = left.getChild(1);
 
 		final SimpleItem item = transformer.transformLeft2Right((Class<IBinaryRule<INode, SimpleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
 
@@ -72,19 +72,19 @@ public class Node2Multi extends AbstractNode2ConcatenationItem<Multi> {
 	}
 
 	@Override
-	public INode constructRight2Left(final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public IBranch constructRight2Left(final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final INode left, final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateLeft2Right(final IBranch left, final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final INode left, final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final IBranch left, final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

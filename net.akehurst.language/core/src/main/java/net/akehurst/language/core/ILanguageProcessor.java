@@ -29,5 +29,5 @@ public interface ILanguageProcessor {
 
 	// INodeType getDefaultGoal();
 
-	<T> T process(Reader grammarTextReader, Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception;
+	<T> T process(Reader grammarTextReader, String grammarRuleName, Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception;
 }

@@ -19,109 +19,116 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class Concatenation extends RuleItem {
 
-	public Concatenation(ConcatenationItem... item) {
+	public Concatenation(final ConcatenationItem... item) {
 		if (item.length < 1) {
 			throw new RuntimeException("A concatentation must have 1 or more items in it.");
 		}
 		this.item = Arrays.asList(item);
 	}
 
-	ArrayList<Integer> index;
-	public ArrayList<Integer> getIndex() {
+	List<Integer> index;
+
+	@Override
+	public List<Integer> getIndex() {
 		return this.index;
 	}
-	public void setOwningRule(Rule value, ArrayList<Integer> index) {
+
+	@Override
+	public void setOwningRule(final Rule value, final List<Integer> index) {
 		this.owningRule = value;
 		this.index = index;
-		int i=0;
-		for(ConcatenationItem c: this.getItem()) {
-			ArrayList<Integer> nextIndex = new ArrayList<>(index);
+		int i = 0;
+		for (final ConcatenationItem c : this.getItem()) {
+			final ArrayList<Integer> nextIndex = new ArrayList<>(index);
 			nextIndex.add(i++);
 			c.setOwningRule(value, nextIndex);
 		}
 	}
-	
+
 	List<ConcatenationItem> item;
+
 	public List<ConcatenationItem> getItem() {
 		return this.item;
 	}
-	
-//	@Override
-//	public INodeType getNodeType() {
-//		return new RuleNodeType(this.getOwningRule());
-//	}
-	
+
+	// @Override
+	// public INodeType getNodeType() {
+	// return new RuleNodeType(this.getOwningRule());
+	// }
+
 	@Override
-	public <T, E extends Throwable> T accept(Visitor<T,E> visitor, Object... arg) throws E {
+	public <T, E extends Throwable> T accept(final Visitor<T, E> visitor, final Object... arg) throws E {
 		return visitor.visit(this, arg);
 	}
-	
-//	public Set<TangibleItem> findFirstTangibleItem() {
-//		Set<TangibleItem> result = new HashSet<>();
-//		result.addAll( this.getItem().get(0).findFirstTangibleItem() );
-//		return result;
-//	}
-//	
+
+	// public Set<TangibleItem> findFirstTangibleItem() {
+	// Set<TangibleItem> result = new HashSet<>();
+	// result.addAll( this.getItem().get(0).findFirstTangibleItem() );
+	// return result;
+	// }
+	//
+	@Override
 	public Set<Terminal> findAllTerminal() {
-		Set<Terminal> result = new HashSet<>();
-		for(ConcatenationItem ti: this.getItem()) {
-			result.addAll( ti.findAllTerminal() );
+		final Set<Terminal> result = new HashSet<>();
+		for (final ConcatenationItem ti : this.getItem()) {
+			result.addAll(ti.findAllTerminal());
 		}
 		return result;
 	}
-	
+
 	@Override
 	public Set<NonTerminal> findAllNonTerminal() {
-		Set<NonTerminal> result = new HashSet<>();
-		for(ConcatenationItem ti: this.getItem()) {
-			result.addAll( ti.findAllNonTerminal() );
+		final Set<NonTerminal> result = new HashSet<>();
+		for (final ConcatenationItem ti : this.getItem()) {
+			result.addAll(ti.findAllNonTerminal());
 		}
 		return result;
 	}
-	
-//	@Override
-//	public boolean isMatchedBy(INode node) throws RuleNotFoundException {
-//		if (node instanceof IBranch) {
-//			IBranch branch = (IBranch)node;
-//			boolean isMatched = branch.getChildren().size() == this.getItem().size();
-//			if (isMatched) {
-//				for(int i=0; i < branch.getChildren().size(); ++i) {
-//					INode cn = branch.getChildren().get(i);
-//					ConcatinationItem item = this.getItem().get(i);
-//					if ( ! item.isMatchedBy(cn) ) {
-//						return false;
-//					}
-//				}
-//			}
-//			return isMatched;
-//		}
-//		return false;
-//	}
-	
-	//--- Object ---
+
+	// @Override
+	// public boolean isMatchedBy(INode node) throws RuleNotFoundException {
+	// if (node instanceof IBranch) {
+	// IBranch branch = (IBranch)node;
+	// boolean isMatched = branch.getChildren().size() == this.getItem().size();
+	// if (isMatched) {
+	// for(int i=0; i < branch.getChildren().size(); ++i) {
+	// INode cn = branch.getChildren().get(i);
+	// ConcatinationItem item = this.getItem().get(i);
+	// if ( ! item.isMatchedBy(cn) ) {
+	// return false;
+	// }
+	// }
+	// }
+	// return isMatched;
+	// }
+	// return false;
+	// }
+
+	// --- Object ---
 	@Override
 	public String toString() {
 		String r = "";
-		for(RuleItem i : this.getItem()) {
+		for (final RuleItem i : this.getItem()) {
 			r += i.toString() + " ";
 		}
 		return r;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.toString().hashCode();
 	}
-	
+
 	@Override
-	public boolean equals(Object arg) {
+	public boolean equals(final Object arg) {
 		if (arg instanceof Concatenation) {
-			Concatenation other = (Concatenation)arg;
-			return this.getOwningRule().equals(other.getOwningRule()) && this.index.equals(other.index);
+			final Concatenation other = (Concatenation) arg;
+			return Objects.equals(this.getOwningRule(), other.getOwningRule()) && Objects.equals(this.index, other.index);
 		} else {
 			return false;
 		}

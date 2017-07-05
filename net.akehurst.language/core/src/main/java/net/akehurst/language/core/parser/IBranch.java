@@ -18,20 +18,43 @@ package net.akehurst.language.core.parser;
 import java.util.List;
 
 public interface IBranch extends INode, IParseTreeVisitable {
+
 	/**
-	 * 
+	 * returns true if there are 0 non skip children or if the only child node is an EmptyLeaf
+	 *
+	 * @return
+	 */
+	boolean getIsEmpty();
+
+	/**
+	 *
 	 * @return the children of this branch.
 	 */
 	List<INode> getChildren();
-	
+
 	List<INode> getNonSkipChildren();
-	
+
 	/**
-	 * this creates a new branch it does not modify current one
-	 *  
-	 * @param i index of required child
+	 * this returns the i'th non skip child of this Branch
+	 *
+	 * @param i
+	 *            index of required child
 	 * @return i'th non skip child.
 	 */
 	INode getChild(int i);
-	
+
+	/**
+	 * Convenience method. returns the i'th non skip child of this Branch but assumes the child is also a Branch and casts the result.
+	 *
+	 * @param i
+	 * @return
+	 */
+	IBranch getBranchChild(int i);
+
+	/**
+	 * Filters out any children that are skip nodes or not branches
+	 *
+	 * @return all children that are branches and non skip
+	 */
+	List<IBranch> getBranchNonSkipChildren();
 }

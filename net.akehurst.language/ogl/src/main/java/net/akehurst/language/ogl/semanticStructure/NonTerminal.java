@@ -16,6 +16,7 @@
 package net.akehurst.language.ogl.semanticStructure;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import net.akehurst.language.core.parser.INodeType;
@@ -23,80 +24,84 @@ import net.akehurst.language.core.parser.RuleNotFoundException;
 
 public class NonTerminal extends TangibleItem {
 
-	public NonTerminal(String referencedRuleName) {
+	public NonTerminal(final String referencedRuleName) {// , final Rule owner, final List<Integer> index) {
 		this.referencedRuleName = referencedRuleName;
+		// super.setOwningRule(owner, index);
 	}
-	
+
 	String referencedRuleName;
 	Rule referencedRule;
+
 	public Rule getReferencedRule() throws RuleNotFoundException {
 		if (null == this.referencedRule) {
 			this.referencedRule = this.getOwningRule().getGrammar().findAllRule(this.referencedRuleName);
 		}
 		return this.referencedRule;
 	}
-	
+
 	@Override
 	public String getName() {
 		try {
 			return this.getNodeType().getIdentity().asPrimitive();
-		} catch (RuleNotFoundException e) {
-			throw new RuntimeException(e.getMessage(),e);
+		} catch (final RuleNotFoundException e) {
+			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
 
 	INodeType nodeType;
+
+	@Override
 	public INodeType getNodeType() throws RuleNotFoundException {
 		return new RuleNodeType(this.getReferencedRule());
 	}
 
-	
 	@Override
-	public <T, E extends Throwable> T accept(Visitor<T,E> visitor, Object... arg) throws E {
+	public <T, E extends Throwable> T accept(final Visitor<T, E> visitor, final Object... arg) throws E {
 		return visitor.visit(this, arg);
 	}
-	
-//	public Set<TangibleItem> findFirstTangibleItem() {
-//		Set<TangibleItem> result = new HashSet<>();
-//		result.add( this );
-//		return result;
-//	}
-//	
+
+	// public Set<TangibleItem> findFirstTangibleItem() {
+	// Set<TangibleItem> result = new HashSet<>();
+	// result.add( this );
+	// return result;
+	// }
+	//
 	@Override
 	public Set<Terminal> findAllTerminal() {
-		Set<Terminal> result = new HashSet<>();
+		final Set<Terminal> result = new HashSet<>();
 		return result;
 	}
-	
+
 	@Override
 	public Set<NonTerminal> findAllNonTerminal() {
-		Set<NonTerminal> result = new HashSet<>();
+		final Set<NonTerminal> result = new HashSet<>();
 		result.add(this);
 		return result;
 	}
-	
-//	
-//	@Override
-//	public boolean isMatchedBy(INode node) throws RuleNotFoundException {
-//		return node.getNodeType().equals(this.getNodeType());
-//	}
-	
-	//--- Object ---
+
+	//
+	// @Override
+	// public boolean isMatchedBy(INode node) throws RuleNotFoundException {
+	// return node.getNodeType().equals(this.getNodeType());
+	// }
+
+	// --- Object ---
 	@Override
 	public String toString() {
 		return this.referencedRuleName;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.toString().hashCode();
 	}
-	
+
 	@Override
-	public boolean equals(Object arg) {
+	public boolean equals(final Object arg) {
 		if (arg instanceof NonTerminal) {
-			NonTerminal other = (NonTerminal)arg;
-			return this.referencedRuleName.equals(other.referencedRuleName) && this.index.equals(other.index) && this.getOwningRule().equals(other.getOwningRule());
+			final NonTerminal other = (NonTerminal) arg;
+			return Objects.equals(this.referencedRuleName, other.referencedRuleName) && Objects.equals(this.index, other.index)
+					&& Objects.equals(this.getOwningRule(), other.getOwningRule());
 		} else {
 			return false;
 		}

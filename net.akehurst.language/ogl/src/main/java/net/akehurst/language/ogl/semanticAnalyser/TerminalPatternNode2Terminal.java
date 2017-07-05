@@ -35,14 +35,14 @@ public class TerminalPatternNode2Terminal extends AbstractNode2Terminal<Terminal
 	}
 
 	@Override
-	public boolean isAMatch(final INode left, final TerminalPattern right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final IBranch left, final TerminalPattern right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public TerminalPattern constructLeft2Right(final INode left, final ITransformer transformer) {
-		final INode child = ((IBranch) left).getChildren().get(0);
+	public TerminalPattern constructLeft2Right(final IBranch left, final ITransformer transformer) {
+		final INode child = left.getChildren().get(0);
 		final ILeaf leaf = (ILeaf) child;
 		final String text = leaf.getMatchedText();
 		final String pattern = text.substring(1, text.length() - 1);
@@ -51,19 +51,19 @@ public class TerminalPatternNode2Terminal extends AbstractNode2Terminal<Terminal
 	}
 
 	@Override
-	public INode constructRight2Left(final TerminalPattern arg0, final ITransformer arg1) {
+	public IBranch constructRight2Left(final TerminalPattern arg0, final ITransformer arg1) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final INode left, final TerminalPattern right, final ITransformer arg2) {
+	public void updateLeft2Right(final IBranch left, final TerminalPattern right, final ITransformer arg2) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final INode left, final TerminalPattern right, final ITransformer arg2) {
+	public void updateRight2Left(final IBranch left, final TerminalPattern right, final ITransformer arg2) {
 		// TODO Auto-generated method stub
 
 	}

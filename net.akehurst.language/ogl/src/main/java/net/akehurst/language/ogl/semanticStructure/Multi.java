@@ -17,104 +17,110 @@ package net.akehurst.language.ogl.semanticStructure;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
-
-
 
 public class Multi extends ConcatenationItem {
 
-	public Multi(int min, int max, SimpleItem item) {
+	public Multi(final int min, final int max, final SimpleItem item) {
 		this.min = min;
 		this.max = max;
 		this.item = item;
 	}
-	
-	ArrayList<Integer> index;
-	public ArrayList<Integer> getIndex() {
+
+	List<Integer> index;
+
+	@Override
+	public List<Integer> getIndex() {
 		return this.index;
 	}
+
 	@Override
-	public void setOwningRule(Rule value, ArrayList<Integer> index) {
+	public void setOwningRule(final Rule value, final List<Integer> index) {
 		this.owningRule = value;
 		this.index = index;
-		ArrayList<Integer> nextIndex0 = new ArrayList<>(index);
+		final ArrayList<Integer> nextIndex0 = new ArrayList<>(index);
 		nextIndex0.add(0);
 		this.getItem().setOwningRule(value, nextIndex0);
 	}
-	
+
 	int min;
+
 	public int getMin() {
 		return this.min;
 	}
-	
+
 	int max;
+
 	public int getMax() {
 		return this.max;
 	}
-	
+
 	SimpleItem item;
+
 	public SimpleItem getItem() {
 		return this.item;
 	}
-	
-//	@Override
-//	public INodeType getNodeType() {
-//		return new RuleNodeType(this.getOwningRule());
-//	}
-	
+
+	// @Override
+	// public INodeType getNodeType() {
+	// return new RuleNodeType(this.getOwningRule());
+	// }
+
 	@Override
-	public <T, E extends Throwable> T accept(Visitor<T,E> visitor, Object... arg) throws E {
+	public <T, E extends Throwable> T accept(final Visitor<T, E> visitor, final Object... arg) throws E {
 		return visitor.visit(this, arg);
 	}
-	
-//	public Set<TangibleItem> findFirstTangibleItem() {
-//		Set<TangibleItem> result = new HashSet<>();
-//		result.addAll( this.getItem().findFirstTangibleItem() );
-//		return result;
-//	}
-//	
+
+	// public Set<TangibleItem> findFirstTangibleItem() {
+	// Set<TangibleItem> result = new HashSet<>();
+	// result.addAll( this.getItem().findFirstTangibleItem() );
+	// return result;
+	// }
+	//
 	@Override
 	public Set<Terminal> findAllTerminal() {
-		Set<Terminal> result = new HashSet<>();
-		//must add the empty terminal first, or later we get over writing due to 
+		final Set<Terminal> result = new HashSet<>();
+		// must add the empty terminal first, or later we get over writing due to
 		// no identity distiction between tree with empty and tree without,
-		//tree id uses position and empty leaf doesn't change the star-end position
+		// tree id uses position and empty leaf doesn't change the star-end position
 		if (this.getMin() == 0) {
-			result.add( new TerminalEmpty() ); //empty terminal
+			result.add(new TerminalEmpty()); // empty terminal
 		}
-		result.addAll( this.getItem().findAllTerminal() );
+		result.addAll(this.getItem().findAllTerminal());
 		return result;
 	}
-	
+
 	@Override
 	public Set<NonTerminal> findAllNonTerminal() {
-		Set<NonTerminal> result = new HashSet<>();
-		result.addAll( this.getItem().findAllNonTerminal() );
+		final Set<NonTerminal> result = new HashSet<>();
+		result.addAll(this.getItem().findAllNonTerminal());
 		return result;
 	}
-//	
-//	@Override
-//	public boolean isMatchedBy(INode node) {
-//		// TODO Auto-generated method stub
-//		return false;
-//	}
-	
-	//--- Object ---
+	//
+	// @Override
+	// public boolean isMatchedBy(INode node) {
+	// // TODO Auto-generated method stub
+	// return false;
+	// }
+
+	// --- Object ---
 	@Override
 	public String toString() {
-		return this.getItem() + (0==min?(-1==max?"*":"?"):"+");
+		return this.getItem() + (0 == this.min ? -1 == this.max ? "*" : "?" : "+");
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.toString().hashCode();
 	}
-	
+
 	@Override
-	public boolean equals(Object arg) {
+	public boolean equals(final Object arg) {
 		if (arg instanceof Multi) {
-			Multi other = (Multi)arg;
-			return this.getOwningRule().equals(other.getOwningRule()) && this.index.equals(other.index);
+			final Multi other = (Multi) arg;
+			return Objects.equals(this.getOwningRule(), other.getOwningRule()) && Objects.equals(this.index, other.index);
 		} else {
 			return false;
 		}

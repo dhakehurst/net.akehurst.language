@@ -44,7 +44,7 @@ public class Xml_Tests {
 		if (null == Xml_Tests.xmlProcessor) {
 			try {
 				final FileReader reader = new FileReader(Paths.get("src/test/resources/Xml.og").toFile());
-				final Grammar grammar = Xml_Tests.getOGLProcessor().process(reader, Grammar.class);
+				final Grammar grammar = Xml_Tests.getOGLProcessor().process(reader, "grammarDefinition", Grammar.class);
 				final LanguageProcessor proc = new LanguageProcessor(grammar, null);
 				proc.getParser().build();
 				Xml_Tests.xmlProcessor = proc;
