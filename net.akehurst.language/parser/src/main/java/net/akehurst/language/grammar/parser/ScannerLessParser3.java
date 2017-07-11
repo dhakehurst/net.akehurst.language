@@ -2,6 +2,8 @@ package net.akehurst.language.grammar.parser;
 
 import java.io.BufferedReader;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -163,4 +165,43 @@ public class ScannerLessParser3 implements IParser {
 		return match;
 	}
 
+	@Override
+	public List<String> expectedAt(final String goalRuleName, final Reader inputReader, final int position) throws ParseFailedException, ParseTreeException {
+		try {
+			final INodeType goal = ((Grammar) this.getGrammar()).findRule(goalRuleName).getNodeType();
+			if (null == this.runtimeRuleSet) {
+				this.build();
+			}
+			final int goalRuleNumber = this.runtimeRuleSet.getRuleNumber(goal.getIdentity().asPrimitive());
+			final RuntimeRule goalRule = this.runtimeRuleSet.getRuntimeRule(goalRuleNumber);
+
+			final BufferedReader br = new BufferedReader(inputReader);
+			String text = br.lines().collect(Collectors.joining(System.lineSeparator()));
+			text = text.substring(0, position);
+			final Input3 input = new Input3(this.runtimeBuilder, text);
+			final IParseGraph graph = new ParseGraph(goalRule, text.length());
+			final Forrest3 newForrest = new Forrest3(graph, this.getRuntimeRuleSet(), input, goalRule);
+			newForrest.start(graph, goalRule, input);
+			int seasons = 1;
+			do {
+				newForrest.grow();
+				seasons++;
+			} while (newForrest.getCanGrow());
+
+			IGraphNode longest = newForrest.getLongestMatchFromStart();
+			while (!longest.getCanGrowWidth()) {
+				// TODO: sum from all parents
+				longest = longest.getPossibleParent().get(0).node;
+			}
+			final List<RuntimeRule> expected = longest.getNextExpectedItem();
+			final List<String> ruleNames = new ArrayList<>();
+			for (final RuntimeRule rr : expected) {
+				ruleNames.add(rr.getName());
+			}
+			return ruleNames;
+		} catch (final RuleNotFoundException e) {
+			// Should never happen!
+			throw new RuntimeException("Should never happen", e);
+		}
+	}
 }

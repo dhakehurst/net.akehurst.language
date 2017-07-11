@@ -16,6 +16,7 @@
 package net.akehurst.language.processor;
 
 import java.io.Reader;
+import java.util.List;
 
 import net.akehurst.language.core.ILanguageProcessor;
 import net.akehurst.language.core.analyser.IGrammar;
@@ -60,10 +61,10 @@ public class LanguageProcessor implements ILanguageProcessor {
 	}
 
 	@Override
-	public <T> T process(final Reader reader, final String grammarRuleName, final Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
+	public <T> T process(final Reader reader, final String goalRuleName, final Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
 		try {
 
-			final IParseTree tree = this.getParser().parse(grammarRuleName, reader);
+			final IParseTree tree = this.getParser().parse(goalRuleName, reader);
 			if (null == this.getSemanticAnalyser()) {
 				throw new UnableToAnalyseExeception("No SemanticAnalyser supplied", null);
 			}
@@ -75,5 +76,12 @@ public class LanguageProcessor implements ILanguageProcessor {
 		} catch (final ParseTreeException e) {
 			throw new ParseFailedException(e.getMessage(), null);
 		}
+	}
+
+	@Override
+	public List<String> expectedAt(final Reader reader, final String goalRuleName, final int position) throws ParseFailedException, ParseTreeException {
+		final List<String> parserExpected = this.getParser().expectedAt(goalRuleName, reader, position);
+
+		return parserExpected;
 	}
 }

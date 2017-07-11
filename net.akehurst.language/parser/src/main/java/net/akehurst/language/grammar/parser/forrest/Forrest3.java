@@ -26,7 +26,7 @@ public final class Forrest3 {
 		this.runtimeRuleSet = runtimeRuleSet;
 		this.input = input;
 		this.goalRule = goalRule;
-
+		this.toGrow = new ArrayList<>();
 	}
 
 	RuntimeRule goalRule;
@@ -36,6 +36,7 @@ public final class Forrest3 {
 
 	protected RuntimeRuleSet runtimeRuleSet;
 	Input3 input;
+	List<IGraphNode> toGrow;
 
 	public boolean getCanGrow() {
 		return !this.graph.getGrowable().isEmpty();
@@ -94,6 +95,18 @@ public final class Forrest3 {
 		}
 	}
 
+	public IGraphNode getLongestMatchFromStart() {
+		IGraphNode longest = null;
+		for (final IGraphNode n : this.toGrow) {
+			if (n.getStartPosition() == 0) {
+				if (null == longest || n.getMatchedTextLength() > longest.getMatchedTextLength()) {
+					longest = n;
+				}
+			}
+		}
+		return longest;
+	}
+
 	public void start(final IParseGraph graph, final RuntimeRule goalRule, final Input3 input) {
 
 		final IGraphNode gn = graph.createBranch(goalRule, 0, 0, 0, 0, 0);
@@ -105,9 +118,9 @@ public final class Forrest3 {
 
 	public void grow() throws RuleNotFoundException, ParseTreeException {
 
-		final List<IGraphNode> toGrow = new ArrayList<>(this.graph.getGrowable());
+		this.toGrow = new ArrayList<>(this.graph.getGrowable());
 		this.graph.getGrowable().clear();
-		for (final IGraphNode gn : toGrow) {
+		for (final IGraphNode gn : this.toGrow) {
 
 			this.growTreeWidthAndHeight(gn);
 

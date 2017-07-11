@@ -16,6 +16,7 @@
 package net.akehurst.language.core.parser;
 
 import java.io.Reader;
+import java.util.List;
 import java.util.Set;
 
 public interface IParser {
@@ -29,4 +30,6 @@ public interface IParser {
 
 	IParseTree parse(String goalRuleName, Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
 	// IParseTree parse(INodeType goal, CharSequence text) throws ParseFailedException, ParseTreeException;
+
+	List<String> expectedAt(String goalRuleName, Reader reader, int position) throws ParseFailedException, ParseTreeException;
 }

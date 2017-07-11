@@ -16,11 +16,13 @@
 package net.akehurst.language.core;
 
 import java.io.Reader;
+import java.util.List;
 
 import net.akehurst.language.core.analyser.IGrammar;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
+import net.akehurst.language.core.parser.ParseTreeException;
 
 public interface ILanguageProcessor {
 	IGrammar getGrammar();
@@ -29,5 +31,17 @@ public interface ILanguageProcessor {
 
 	// INodeType getDefaultGoal();
 
-	<T> T process(Reader grammarTextReader, String grammarRuleName, Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception;
+	<T> T process(Reader reader, String goalRuleName, Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception;
+
+	/**
+	 * returns list of names of expected rules
+	 * 
+	 * @param reader
+	 * @param goalRuleName
+	 * @param position
+	 * @return
+	 * @throws ParseFailedException
+	 * @throws ParseTreeException
+	 */
+	List<String> expectedAt(Reader reader, String goalRuleName, int position) throws ParseFailedException, ParseTreeException;
 }
