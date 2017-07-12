@@ -6,16 +6,16 @@ import net.akehurst.language.ogl.semanticStructure.Rule;
 
 public class RuleForGroup extends Rule {
 
-	public RuleForGroup(Grammar grammar, String name, AbstractChoice choice) {
+	public RuleForGroup(final Grammar grammar, final String name, final AbstractChoice choice) {
 		super(grammar, name);
 		this.choice = choice;
 	}
-	
-	AbstractChoice choice;
-	
+
+	private final AbstractChoice choice;
+
 	@Override
 	public AbstractChoice getRhs() {
 		return this.choice;
 	}
-	
+
 }

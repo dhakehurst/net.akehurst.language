@@ -24,6 +24,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import net.akehurst.language.core.analyser.IGrammar;
+import net.akehurst.language.core.analyser.IRuleItem;
+import net.akehurst.language.core.parser.RuleNotFoundException;
+import net.akehurst.language.grammar.parser.NonTerminalRuleReference;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 
 public class RuntimeRuleSet {
@@ -38,18 +42,29 @@ public class RuntimeRuleSet {
 
 	// int emptyRuleNumber;
 	RuntimeRule[] emptyRulesFor;
+	int totalRuleNumber;
+	RuntimeRule[] runtimeRules;
+	List<RuntimeRule> allSkipRules_cache;
+	Set<RuntimeRule> allSkipTerminals;
+	ArrayList<String> nodeTypes;
+	Map<String, Integer> ruleNumbers;
+	RuntimeRule[][] possibleSubRule;
+	RuntimeRule[][] possibleFirstRule;
+	RuntimeRule[][] possibleSuperRule;
+	SuperRuleInfo[][] possibleSuperRuleInfo;
+	RuntimeRule[][] possibleSubTerminal;
+	RuntimeRule[][] possibleFirstTerminals;
+	RuntimeRule[] possibleFirstSkipTerminals;
+	Map<String, RuntimeRule> terminalMap;
+	String toString_cache;
 
 	public RuntimeRule getEmptyRule(final RuntimeRule ruleThatIsEmpty) {
 		return this.emptyRulesFor[ruleThatIsEmpty.getRuleNumber()];
 	}
 
-	int totalRuleNumber;
-
 	public int getTotalRuleNumber() {
 		return this.totalRuleNumber;
 	}
-
-	RuntimeRule[] runtimeRules;
 
 	public RuntimeRule[] getAllRules() {
 		return this.runtimeRules;
@@ -105,9 +120,7 @@ public class RuntimeRuleSet {
 	// return this.getRuntimeRule(ruleNumber).getGrammarRule();
 	// }
 
-	List<RuntimeRule> allSkipRules_cache;
-
-	private List<RuntimeRule> getAllSkipRules() {
+	public List<RuntimeRule> getAllSkipRules() {
 		if (null == this.allSkipRules_cache) {
 			this.allSkipRules_cache = new ArrayList<>();
 			for (final RuntimeRule r : this.getAllRules()) {
@@ -118,8 +131,6 @@ public class RuntimeRuleSet {
 		}
 		return this.allSkipRules_cache;
 	}
-
-	Set<RuntimeRule> allSkipTerminals;
 
 	public Set<RuntimeRule> getAllSkipTerminals() {
 		if (null == this.allSkipTerminals) {
@@ -136,19 +147,13 @@ public class RuntimeRuleSet {
 		return this.allSkipTerminals;
 	}
 
-	ArrayList<String> nodeTypes;
-
 	public String getNodeType(final int nodeTypeNumber) {
 		return this.nodeTypes.get(nodeTypeNumber);
 	}
 
-	Map<String, Integer> ruleNumbers;
-
 	public int getRuleNumber(final String rule) {
 		return this.ruleNumbers.get(rule);
 	}
-
-	RuntimeRule[][] possibleSubRule;
 
 	public RuntimeRule[] getPossibleSubRule(final RuntimeRule runtimeRule) {
 		RuntimeRule[] result = this.possibleSubRule[runtimeRule.getRuleNumber()];
@@ -160,8 +165,6 @@ public class RuntimeRuleSet {
 		return result;
 	}
 
-	RuntimeRule[][] possibleFirstRule;
-
 	public RuntimeRule[] getPossibleFirstSubRule(final RuntimeRule runtimeRule) {
 		RuntimeRule[] result = this.possibleFirstRule[runtimeRule.getRuleNumber()];
 		if (null == result) {
@@ -172,8 +175,6 @@ public class RuntimeRuleSet {
 		return result;
 	}
 
-	RuntimeRule[][] possibleSuperRule;
-
 	public RuntimeRule[] getPossibleSuperRule(final RuntimeRule runtimeRule) {
 		RuntimeRule[] result = this.possibleSuperRule[runtimeRule.getRuleNumber()];
 		if (null == result) {
@@ -183,8 +184,6 @@ public class RuntimeRuleSet {
 		return result;
 	}
 
-	SuperRuleInfo[][] possibleSuperRuleInfo;
-
 	public SuperRuleInfo[] getPossibleSuperRuleInfo(final RuntimeRule runtimeRule) {
 		SuperRuleInfo[] result = this.possibleSuperRuleInfo[runtimeRule.getRuleNumber()];
 		if (null == result) {
@@ -193,8 +192,6 @@ public class RuntimeRuleSet {
 		}
 		return result;
 	}
-
-	RuntimeRule[][] possibleSubTerminal;
 
 	public RuntimeRule[] getPossibleSubTerminal(final RuntimeRule runtimeRule) {
 		RuntimeRule[] result = this.possibleSubTerminal[runtimeRule.getRuleNumber()];
@@ -211,8 +208,6 @@ public class RuntimeRuleSet {
 		return result;
 	}
 
-	RuntimeRule[][] possibleFirstTerminals;
-
 	public RuntimeRule[] getPossibleFirstTerminals(final RuntimeRule runtimeRule) {
 		RuntimeRule[] result = this.possibleFirstTerminals[runtimeRule.getRuleNumber()];
 		if (null == result) {
@@ -227,8 +222,6 @@ public class RuntimeRuleSet {
 		}
 		return result;
 	}
-
-	RuntimeRule[] possibleFirstSkipTerminals;
 
 	public RuntimeRule[] getPossibleFirstSkipTerminals() {
 		RuntimeRule[] result = this.possibleFirstSkipTerminals;
@@ -324,8 +317,6 @@ public class RuntimeRuleSet {
 		return result.toArray(new RuntimeRule[result.size()]);
 	}
 
-	Map<String, RuntimeRule> terminalMap;
-
 	public RuntimeRule getForTerminal(final String terminal) {
 		final RuntimeRule rr = this.terminalMap.get(terminal);
 		return rr;
@@ -335,7 +326,28 @@ public class RuntimeRuleSet {
 		this.terminalMap.put(terminal, runtimeRule);
 	}
 
-	String toString_cache;
+	public IRuleItem getOriginalItem(final RuntimeRule rr, final IGrammar grammar) throws RuleNotFoundException {
+		final String name = rr.getName();
+		if (name.startsWith("$")) {
+			// decode it (see Converter)
+			final String[] split = name.split("[.]");
+			final String ruleName = split[0].substring(1);
+			final IRuleItem rhs = grammar.findAllRule(ruleName).getRhs();
+			final String type = split[1];
+			final int[] index = new int[split.length-2];
+			for(int i = 2; i > split.length; ++i) {
+				final int ix = Integer.parseInt(split[i]);
+				index[i-2] = ix;
+			}
+
+			??
+
+			return null;
+		} else {
+			// find grammar rule
+			return new NonTerminalRuleReference(grammar, name);
+		}
+	}
 
 	@Override
 	public String toString() {

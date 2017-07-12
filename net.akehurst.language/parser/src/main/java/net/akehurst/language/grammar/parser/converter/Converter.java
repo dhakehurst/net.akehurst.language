@@ -81,7 +81,7 @@ public class Converter extends AbstractTransformer {
 
 	RuntimeRule createVirtualRule(final Group group) {
 		final Grammar grammar = group.getOwningRule().getGrammar();
-		final String name = "$" + group.getOwningRule().getName() + ".group" + this.createIndexString(group);
+		final String name = "$" + group.getOwningRule().getName() + ".group." + this.createIndexString(group);
 		final RuleForGroup r = new RuleForGroup(grammar, name, group.getChoice());
 		final RuntimeRule rr = this.getFactory().createRuntimeRule(r);
 		this.virtualRule_cache.add(rr);
@@ -90,7 +90,7 @@ public class Converter extends AbstractTransformer {
 
 	RuntimeRule createVirtualRule(final Concatenation concatenation) {
 		final Grammar grammar = concatenation.getOwningRule().getGrammar();
-		final String name = "$" + concatenation.getOwningRule().getName() + ".concatenation" + this.createIndexString(concatenation);// (multiNum++);
+		final String name = "$" + concatenation.getOwningRule().getName() + ".concatenation." + this.createIndexString(concatenation);// (multiNum++);
 		// final String name = "$group." + concatenation.getOwningRule().getName() + "$";
 		final RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(concatenation));
 		final RuntimeRule rr = this.getFactory().createRuntimeRule(r);
@@ -102,7 +102,7 @@ public class Converter extends AbstractTransformer {
 
 	RuntimeRule createVirtualRule(final Multi multi) {
 		final Grammar grammar = multi.getOwningRule().getGrammar();
-		final String name = "$" + multi.getOwningRule().getName() + ".multi" + this.createIndexString(multi);// (multiNum++);
+		final String name = "$" + multi.getOwningRule().getName() + ".multi." + this.createIndexString(multi);// (multiNum++);
 		final RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(new Concatenation(multi)));
 		final RuntimeRule rr = this.getFactory().createRuntimeRule(r);
 		this.virtualRule_cache.add(rr);
@@ -119,6 +119,7 @@ public class Converter extends AbstractTransformer {
 
 	RuntimeRule createVirtualRule(final SeparatedList sepList) {
 		final Grammar grammar = sepList.getOwningRule().getGrammar();
+		// TODO: fix like others
 		final String name = "$sepListG." + sepList.getOwningRule().getName() + this.sepListNum++;
 		final RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(new Concatenation(sepList)));
 		final RuntimeRule rr = this.getFactory().createRuntimeRule(r);

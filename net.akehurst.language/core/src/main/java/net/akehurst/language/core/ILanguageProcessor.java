@@ -35,7 +35,7 @@ public interface ILanguageProcessor {
 
 	/**
 	 * returns list of names of expected rules
-	 * 
+	 *
 	 * @param reader
 	 * @param goalRuleName
 	 * @param position
@@ -43,5 +43,5 @@ public interface ILanguageProcessor {
 	 * @throws ParseFailedException
 	 * @throws ParseTreeException
 	 */
-	List<String> expectedAt(Reader reader, String goalRuleName, int position) throws ParseFailedException, ParseTreeException;
+	List<ICompletionItem> expectedAt(Reader reader, String goalRuleName, int position) throws ParseFailedException, ParseTreeException;
 }

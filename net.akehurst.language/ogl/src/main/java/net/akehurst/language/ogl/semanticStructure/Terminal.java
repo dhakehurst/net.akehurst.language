@@ -27,8 +27,11 @@ public abstract class Terminal extends TangibleItem implements ITerminal {
 		this.value = value;
 	}
 
-	String value;
+	private final String value;
 
+	abstract public Pattern getPattern();
+
+	@Override
 	public String getValue() {
 		return this.value;
 	}
@@ -37,8 +40,6 @@ public abstract class Terminal extends TangibleItem implements ITerminal {
 	public String getName() {
 		return this.getValue();
 	}
-
-	abstract public Pattern getPattern();
 
 	public boolean matches(final String value) {
 		return this.getPattern().matcher(value).matches();

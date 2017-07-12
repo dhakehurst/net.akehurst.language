@@ -16,10 +16,13 @@
 package net.akehurst.language.processor;
 
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.List;
 
+import net.akehurst.language.core.ICompletionItem;
 import net.akehurst.language.core.ILanguageProcessor;
 import net.akehurst.language.core.analyser.IGrammar;
+import net.akehurst.language.core.analyser.IRuleItem;
 import net.akehurst.language.core.analyser.ISemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IParseTree;
@@ -45,6 +48,7 @@ public class LanguageProcessor implements ILanguageProcessor {
 	private final IGrammar grammar;
 	private final IParser parser;
 	private final ISemanticAnalyser semanticAnalyser;
+	private CompletionProvider completionProvider;
 
 	@Override
 	public IGrammar getGrammar() {
@@ -58,6 +62,13 @@ public class LanguageProcessor implements ILanguageProcessor {
 
 	public ISemanticAnalyser getSemanticAnalyser() {
 		return this.semanticAnalyser;
+	}
+
+	public CompletionProvider getCompletionProvider() {
+		if (null == this.completionProvider) {
+			this.completionProvider = new CompletionProvider();
+		}
+		return this.completionProvider;
 	}
 
 	@Override
@@ -79,9 +90,14 @@ public class LanguageProcessor implements ILanguageProcessor {
 	}
 
 	@Override
-	public List<String> expectedAt(final Reader reader, final String goalRuleName, final int position) throws ParseFailedException, ParseTreeException {
-		final List<String> parserExpected = this.getParser().expectedAt(goalRuleName, reader, position);
-
-		return parserExpected;
+	public List<ICompletionItem> expectedAt(final Reader reader, final String goalRuleName, final int position)
+			throws ParseFailedException, ParseTreeException {
+		final List<IRuleItem> parserExpected = this.getParser().expectedAt(goalRuleName, reader, position);
+		final List<ICompletionItem> expected = new ArrayList<>();
+		for (final IRuleItem item : parserExpected) {
+			final List<ICompletionItem> exp = this.getCompletionProvider().provideFor(item);
+			expected.addAll(exp);
+		}
+		return expected;
 	}
 }

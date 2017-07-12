@@ -17,10 +17,11 @@ package net.akehurst.language.ogl.semanticStructure;
 
 import java.util.List;
 
+import net.akehurst.language.core.analyser.ITangibleItem;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.RuleNotFoundException;
 
-public abstract class TangibleItem extends SimpleItem {
+public abstract class TangibleItem extends SimpleItem implements ITangibleItem {
 
 	public abstract INodeType getNodeType() throws RuleNotFoundException;
 

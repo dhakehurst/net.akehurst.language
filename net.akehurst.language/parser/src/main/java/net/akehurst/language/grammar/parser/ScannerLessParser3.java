@@ -3,11 +3,13 @@ package net.akehurst.language.grammar.parser;
 import java.io.BufferedReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import net.akehurst.language.core.analyser.IGrammar;
+import net.akehurst.language.core.analyser.IRuleItem;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.INodeType;
@@ -21,6 +23,7 @@ import net.akehurst.language.grammar.parser.converter.Grammar2RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.forrest.Forrest3;
 import net.akehurst.language.grammar.parser.forrest.Input3;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
+import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
@@ -166,7 +169,7 @@ public class ScannerLessParser3 implements IParser {
 	}
 
 	@Override
-	public List<String> expectedAt(final String goalRuleName, final Reader inputReader, final int position) throws ParseFailedException, ParseTreeException {
+	public List<IRuleItem> expectedAt(final String goalRuleName, final Reader inputReader, final int position) throws ParseFailedException, ParseTreeException {
 		try {
 			final INodeType goal = ((Grammar) this.getGrammar()).findRule(goalRuleName).getNodeType();
 			if (null == this.runtimeRuleSet) {
@@ -177,28 +180,63 @@ public class ScannerLessParser3 implements IParser {
 
 			final BufferedReader br = new BufferedReader(inputReader);
 			String text = br.lines().collect(Collectors.joining(System.lineSeparator()));
-			text = text.substring(0, position);
+			text = text.substring(0, Math.min(position, text.length()));
 			final Input3 input = new Input3(this.runtimeBuilder, text);
 			final IParseGraph graph = new ParseGraph(goalRule, text.length());
 			final Forrest3 newForrest = new Forrest3(graph, this.getRuntimeRuleSet(), input, goalRule);
 			newForrest.start(graph, goalRule, input);
 			int seasons = 1;
+			final int length = text.length();
+			final List<IGraphNode> matches = new ArrayList<>();
 			do {
 				newForrest.grow();
 				seasons++;
+				for (final IGraphNode gn : newForrest.getLastGrown()) {
+					if (length == gn.getNextInputPosition()) {
+						matches.add(gn);
+					}
+				}
 			} while (newForrest.getCanGrow());
 
-			IGraphNode longest = newForrest.getLongestMatchFromStart();
-			while (!longest.getCanGrowWidth()) {
-				// TODO: sum from all parents
-				longest = longest.getPossibleParent().get(0).node;
+			if (matches.isEmpty()) {
+
 			}
-			final List<RuntimeRule> expected = longest.getNextExpectedItem();
-			final List<String> ruleNames = new ArrayList<>();
+
+			final Set<RuntimeRule> expected = new HashSet<>();
+			for (final IGraphNode ep : matches) {
+				final IGraphNode gn = ep;
+				boolean done = false;
+				// while (!done) {
+				if (gn.getCanGrowWidth()) {
+					expected.addAll(gn.getNextExpectedItem());
+					done = true;
+					// TODO: sum from all parents
+					// gn = gn.getPossibleParent().get(0).node;// .getNextExpectedItem();
+				} else {
+					// if has height potential?
+					// gn = gn.getPossibleParent().get(0).node;
+
+				}
+				// }
+			}
+			// final List<RuntimeRule> expected = longest.getNextExpectedItem();
+			final List<IRuleItem> ruleItems = new ArrayList<>();
 			for (final RuntimeRule rr : expected) {
-				ruleNames.add(rr.getName());
+				if (RuntimeRuleKind.NON_TERMINAL == rr.getKind()) {
+					final IRuleItem ri = this.runtimeRuleSet.getOriginalItem(rr, this.getGrammar());
+					ruleItems.add(ri);
+				} else {
+					ruleItems.add(this.getGrammar().findAllTerminal(rr.getTerminalPatternText()));
+				}
 			}
-			return ruleNames;
+			// add skip rules at end
+			for (final RuntimeRule rr : this.runtimeRuleSet.getAllSkipRules()) {
+				// final IRule r = this.grammar.findAllRule(rr.getName());
+				final IRuleItem ri = this.runtimeRuleSet.getOriginalItem(rr, this.getGrammar());
+				ruleItems.add(ri);
+				// rules.add(new NonTerminalRuleReference(this.getGrammar(), rr.getName()));
+			}
+			return ruleItems;
 		} catch (final RuleNotFoundException e) {
 			// Should never happen!
 			throw new RuntimeException("Should never happen", e);

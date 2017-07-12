@@ -95,16 +95,16 @@ public final class Forrest3 {
 		}
 	}
 
-	public IGraphNode getLongestMatchFromStart() {
-		IGraphNode longest = null;
-		for (final IGraphNode n : this.toGrow) {
-			if (n.getStartPosition() == 0) {
-				if (null == longest || n.getMatchedTextLength() > longest.getMatchedTextLength()) {
-					longest = n;
-				}
-			}
-		}
-		return longest;
+	public List<IGraphNode> getLastGrown() {
+		// List<IGraphNode> longest = new ArrayList<>();
+		// for (final IGraphNode n : this.graph.) {
+		// if (n.getStartPosition() == 0) {
+		// if (null == longest || n.getMatchedTextLength() > longest.getMatchedTextLength()) {
+		// longest = n;
+		// }
+		// }
+		// }
+		return this.toGrow;
 	}
 
 	public void start(final IParseGraph graph, final RuntimeRule goalRule, final Input3 input) {

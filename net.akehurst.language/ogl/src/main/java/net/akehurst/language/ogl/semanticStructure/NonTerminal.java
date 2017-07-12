@@ -19,10 +19,11 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import net.akehurst.language.core.analyser.INonTerminal;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.RuleNotFoundException;
 
-public class NonTerminal extends TangibleItem {
+public class NonTerminal extends TangibleItem implements INonTerminal {
 
 	public NonTerminal(final String referencedRuleName) {// , final Rule owner, final List<Integer> index) {
 		this.referencedRuleName = referencedRuleName;
@@ -31,7 +32,9 @@ public class NonTerminal extends TangibleItem {
 
 	String referencedRuleName;
 	Rule referencedRule;
+	INodeType nodeType;
 
+	@Override
 	public Rule getReferencedRule() throws RuleNotFoundException {
 		if (null == this.referencedRule) {
 			this.referencedRule = this.getOwningRule().getGrammar().findAllRule(this.referencedRuleName);
@@ -47,8 +50,6 @@ public class NonTerminal extends TangibleItem {
 			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
-
-	INodeType nodeType;
 
 	@Override
 	public INodeType getNodeType() throws RuleNotFoundException {
