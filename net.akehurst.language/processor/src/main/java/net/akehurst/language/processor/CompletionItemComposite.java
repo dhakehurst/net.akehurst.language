@@ -1,5 +1,6 @@
 package net.akehurst.language.processor;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -13,8 +14,51 @@ public class CompletionItemComposite implements ICompletionItem {
 
 	private final List<ICompletionItem> content;
 
-	List<ICompletionItem> getContent() {
-		return this.content;
+	public List<ICompletionItem> getContent() {
+		final List<ICompletionItem> base = this.content;
+		return new AbstractList<ICompletionItem>() {
+
+			@Override
+			public ICompletionItem get(final int index) {
+				return base.get(index);
+			}
+
+			@Override
+			public int size() {
+				return base.size();
+			}
+
+			@Override
+			public boolean add(final ICompletionItem e) {
+				if (e.getText().isEmpty()) {
+					return false;
+				} else {
+					if (e instanceof CompletionItemComposite) {
+						final CompletionItemComposite cp = (CompletionItemComposite) e;
+						return super.addAll(cp.getContent());
+					} else {
+						return super.add(e);
+					}
+				}
+			}
+
+			@Override
+			public void add(final int index, final ICompletionItem e) {
+				if (e.getText().isEmpty()) {
+					// do not add
+				} else {
+					if (e instanceof CompletionItemComposite) {
+						final CompletionItemComposite cp = (CompletionItemComposite) e;
+						// FIXME !
+						super.addAll(cp.getContent());
+					} else {
+						base.add(index, e);
+					}
+
+				}
+			}
+
+		};
 	}
 
 	@Override

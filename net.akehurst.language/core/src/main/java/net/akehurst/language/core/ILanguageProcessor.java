@@ -37,11 +37,16 @@ public interface ILanguageProcessor {
 	 * returns list of names of expected rules
 	 *
 	 * @param reader
+	 *            text to parse
 	 * @param goalRuleName
+	 *            name of a rule in the grammar that is the goal rule
 	 * @param position
+	 *            position in the text (from reader) at which to provide completions
+	 * @param desiredDepth
+	 *            depth of nested rules to search when constructing possible completions
 	 * @return
 	 * @throws ParseFailedException
 	 * @throws ParseTreeException
 	 */
-	List<ICompletionItem> expectedAt(Reader reader, String goalRuleName, int position) throws ParseFailedException, ParseTreeException;
+	List<ICompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth) throws ParseFailedException, ParseTreeException;
 }

@@ -101,7 +101,7 @@ public class NonTerminal extends TangibleItem implements INonTerminal {
 	public boolean equals(final Object arg) {
 		if (arg instanceof NonTerminal) {
 			final NonTerminal other = (NonTerminal) arg;
-			return Objects.equals(this.referencedRuleName, other.referencedRuleName) && Objects.equals(this.index, other.index)
+			return Objects.equals(this.referencedRuleName, other.referencedRuleName) && Objects.equals(this.getIndex(), other.getIndex())
 					&& Objects.equals(this.getOwningRule(), other.getOwningRule());
 		} else {
 			return false;

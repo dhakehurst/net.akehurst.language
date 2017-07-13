@@ -15,6 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
+import net.akehurst.language.core.analyser.INonTerminal;
+
 public interface Visitor<T, E extends Throwable> {
 
 	T visit(ChoiceSimple target, Object... arg) throws E;
@@ -25,7 +27,7 @@ public interface Visitor<T, E extends Throwable> {
 
 	T visit(Multi target, Object... arg) throws E;
 
-	T visit(NonTerminal target, Object... arg) throws E;
+	T visit(INonTerminal target, Object... arg) throws E;
 
 	T visit(SeparatedList target, Object... arg) throws E;
 

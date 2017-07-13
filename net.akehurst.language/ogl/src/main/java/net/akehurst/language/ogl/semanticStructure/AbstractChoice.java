@@ -15,14 +15,48 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-abstract
-public class AbstractChoice extends RuleItem {
+import net.akehurst.language.core.analyser.IRuleItem;
 
-	
-	List<Concatenation> alternative;
+abstract public class AbstractChoice extends RuleItem {
+
+	public AbstractChoice(final Concatenation... alternative) {
+		this.alternative = Arrays.asList(alternative);
+	}
+
+	private final List<Concatenation> alternative;
+	private List<Integer> index;
+
 	public List<Concatenation> getAlternative() {
 		return this.alternative;
+	}
+
+	@Override
+	public List<Integer> getIndex() {
+		return this.index;
+	}
+
+	@Override
+	public IRuleItem getSubItem(final int i) {
+		if (i < this.getAlternative().size()) {
+			return this.getAlternative().get(i);
+		} else {
+			return null;
+		}
+	}
+
+	@Override
+	public void setOwningRule(final Rule value, final List<Integer> index) {
+		this.owningRule = value;
+		this.index = index;
+		int i = 0;
+		for (final Concatenation c : this.getAlternative()) {
+			final ArrayList<Integer> nextIndex = new ArrayList<>(index);
+			nextIndex.add(i++);
+			c.setOwningRule(value, nextIndex);
+		}
 	}
 }

@@ -5,9 +5,12 @@ import java.util.Objects;
 import net.akehurst.language.core.analyser.IGrammar;
 import net.akehurst.language.core.analyser.INonTerminal;
 import net.akehurst.language.core.analyser.IRule;
+import net.akehurst.language.core.analyser.IRuleItem;
 import net.akehurst.language.core.parser.RuleNotFoundException;
+import net.akehurst.language.ogl.semanticStructure.Visitable;
+import net.akehurst.language.ogl.semanticStructure.Visitor;
 
-public class NonTerminalRuleReference implements INonTerminal {
+public class NonTerminalRuleReference implements INonTerminal, Visitable {
 
 	public NonTerminalRuleReference(final IGrammar grammar, final String ruleName) {
 		this.grammar = grammar;
@@ -17,6 +20,12 @@ public class NonTerminalRuleReference implements INonTerminal {
 	private final IGrammar grammar;
 
 	private final String ruleName;
+
+	@Override
+	public IRuleItem getSubItem(final int i) {
+		// Terminals and NonTerminals do not have sub items
+		return null;
+	}
 
 	@Override
 	public IRule getOwningRule() {
@@ -34,6 +43,13 @@ public class NonTerminalRuleReference implements INonTerminal {
 		return this.ruleName;
 	}
 
+	// --- Visitable ---
+	@Override
+	public <T, E extends Throwable> T accept(final Visitor<T, E> visitor, final Object... arg) throws E {
+		return visitor.visit(this, arg);
+	}
+
+	// --- Object ---
 	@Override
 	public int hashCode() {
 		return this.ruleName.hashCode();

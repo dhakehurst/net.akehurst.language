@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import net.akehurst.language.core.analyser.IRuleItem;
+
 public class Group extends SimpleItem {
 
 	public Group(final AbstractChoice choice) {
@@ -41,6 +43,15 @@ public class Group extends SimpleItem {
 	@Override
 	public List<Integer> getIndex() {
 		return this.index;
+	}
+
+	@Override
+	public IRuleItem getSubItem(final int i) {
+		if (0 == i) {
+			return this.getChoice();
+		} else {
+			return null;
+		}
 	}
 
 	@Override

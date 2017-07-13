@@ -202,6 +202,9 @@ public class ScannerLessParser3 implements IParser {
 
 			}
 
+			// TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
+			// must reject the next expected
+
 			final Set<RuntimeRule> expected = new HashSet<>();
 			for (final IGraphNode ep : matches) {
 				final IGraphNode gn = ep;

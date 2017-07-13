@@ -17,7 +17,9 @@ package net.akehurst.language.processor;
 
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.akehurst.language.core.ICompletionItem;
 import net.akehurst.language.core.ILanguageProcessor;
@@ -90,14 +92,14 @@ public class LanguageProcessor implements ILanguageProcessor {
 	}
 
 	@Override
-	public List<ICompletionItem> expectedAt(final Reader reader, final String goalRuleName, final int position)
+	public List<ICompletionItem> expectedAt(final Reader reader, final String goalRuleName, final int position, final int desiredDepth)
 			throws ParseFailedException, ParseTreeException {
 		final List<IRuleItem> parserExpected = this.getParser().expectedAt(goalRuleName, reader, position);
-		final List<ICompletionItem> expected = new ArrayList<>();
+		final Set<ICompletionItem> expected = new LinkedHashSet<>();
 		for (final IRuleItem item : parserExpected) {
-			final List<ICompletionItem> exp = this.getCompletionProvider().provideFor(item);
+			final List<ICompletionItem> exp = this.getCompletionProvider().provideFor(item, desiredDepth);
 			expected.addAll(exp);
 		}
-		return expected;
+		return new ArrayList<>(expected);
 	}
 }

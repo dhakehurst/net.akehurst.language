@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import net.akehurst.language.core.analyser.IRuleItem;
+
 public class Concatenation extends RuleItem {
 
 	public Concatenation(final ConcatenationItem... item) {
@@ -36,6 +38,15 @@ public class Concatenation extends RuleItem {
 	@Override
 	public List<Integer> getIndex() {
 		return this.index;
+	}
+
+	@Override
+	public IRuleItem getSubItem(final int i) {
+		if (i < this.getItem().size()) {
+			return this.getItem().get(i);
+		} else {
+			return null;
+		}
 	}
 
 	@Override

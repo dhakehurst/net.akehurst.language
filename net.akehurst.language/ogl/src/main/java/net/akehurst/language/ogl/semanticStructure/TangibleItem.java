@@ -17,19 +17,26 @@ package net.akehurst.language.ogl.semanticStructure;
 
 import java.util.List;
 
+import net.akehurst.language.core.analyser.IRuleItem;
 import net.akehurst.language.core.analyser.ITangibleItem;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.RuleNotFoundException;
 
 public abstract class TangibleItem extends SimpleItem implements ITangibleItem {
 
-	public abstract INodeType getNodeType() throws RuleNotFoundException;
+	private List<Integer> index;
 
-	List<Integer> index;
+	public abstract INodeType getNodeType() throws RuleNotFoundException;
 
 	@Override
 	public List<Integer> getIndex() {
 		return this.index;
+	}
+
+	@Override
+	public IRuleItem getSubItem(final int i) {
+		// Terminals and NonTerminals do not have sub items
+		return null;
 	}
 
 	@Override

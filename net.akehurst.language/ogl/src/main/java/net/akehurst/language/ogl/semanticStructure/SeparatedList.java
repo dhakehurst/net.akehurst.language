@@ -20,19 +20,38 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import net.akehurst.language.core.analyser.IRuleItem;
+
 public class SeparatedList extends ConcatenationItem {
 
 	public SeparatedList(final int min, final int max, final TerminalLiteral separator, final TangibleItem item) {
 		this.min = min;
+		this.max = max;
 		this.separator = separator;
 		this.item = item;
 	}
 
-	List<Integer> index;
+	private List<Integer> index;
+	private final int min;
+	private final int max;
+	private final TerminalLiteral separator;
+	private final TangibleItem item;
 
 	@Override
 	public List<Integer> getIndex() {
 		return this.index;
+	}
+
+	@Override
+	public IRuleItem getSubItem(final int i) {
+		if (0 == i) {
+			return this.getItem();
+		}
+		if (1 == i) {
+			return this.getSeparator();
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -47,25 +66,17 @@ public class SeparatedList extends ConcatenationItem {
 		this.getSeparator().setOwningRule(value, nextIndex1);
 	}
 
-	int min;
-
 	public int getMin() {
 		return this.min;
 	}
-
-	int max;
 
 	public int getMax() {
 		return this.max;
 	}
 
-	TerminalLiteral separator;
-
 	public TerminalLiteral getSeparator() {
 		return this.separator;
 	}
-
-	TangibleItem item;
 
 	public TangibleItem getItem() {
 		return this.item;

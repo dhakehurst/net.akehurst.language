@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import net.akehurst.language.core.analyser.IRuleItem;
+
 public class Multi extends ConcatenationItem {
 
 	public Multi(final int min, final int max, final SimpleItem item) {
@@ -34,6 +36,15 @@ public class Multi extends ConcatenationItem {
 	@Override
 	public List<Integer> getIndex() {
 		return this.index;
+	}
+
+	@Override
+	public IRuleItem getSubItem(final int i) {
+		if (0 == i) {
+			return this.getItem();
+		} else {
+			return null;
+		}
 	}
 
 	@Override

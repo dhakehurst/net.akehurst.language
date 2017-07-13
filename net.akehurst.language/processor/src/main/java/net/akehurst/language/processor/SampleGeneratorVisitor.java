@@ -1,158 +1,257 @@
 package net.akehurst.language.processor;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
 import net.akehurst.language.core.ICompletionItem;
-import net.akehurst.language.core.analyser.IRule;
+import net.akehurst.language.core.analyser.INonTerminal;
+import net.akehurst.language.core.analyser.IRuleItem;
 import net.akehurst.language.ogl.semanticStructure.ChoicePriority;
 import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
 import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
 import net.akehurst.language.ogl.semanticStructure.Group;
 import net.akehurst.language.ogl.semanticStructure.Multi;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.SeparatedList;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.ogl.semanticStructure.Visitable;
 import net.akehurst.language.ogl.semanticStructure.Visitor;
 
-public class SampleGeneratorVisitor implements Visitor<List<ICompletionItem>, Throwable> {
+public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Throwable> {
 
-	@Override
-	public List<ICompletionItem> visit(final ChoiceSimple target, final Object... arg) throws Throwable {
-		final List<ICompletionItem> result = new ArrayList<>();
-		for (final Concatenation item : target.getAlternative()) {
-			final List<ICompletionItem> options = item.accept(this, arg);
-			for (final ICompletionItem option : options) {
-				final CompletionItemComposite composite = new CompletionItemComposite();
+	public SampleGeneratorVisitor(final int desiredDepth) {
+		this.desiredDepth = desiredDepth;
+		this.cache = new HashMap<>();
+	}
 
-				composite.getContent().add(option);
+	private final int desiredDepth;
+	private final Map<IRuleItem, Set<ICompletionItem>> cache;
 
-				result.add(composite);
-			}
+	int getArg(final Object[] arg) {
+		if (arg[0] instanceof Integer) {
+			final Integer cur = (Integer) arg[0];
+			return cur;
+		} else {
+			throw new RuntimeException("visitor argument must be an Integer indicating current depth");
 		}
-		return result;
+	}
+
+	boolean reachedDepth(final Object[] arg) {
+		final int cur = this.getArg(arg);
+		return cur >= this.desiredDepth;
 	}
 
 	@Override
-	public List<ICompletionItem> visit(final ChoicePriority target, final Object... arg) throws Throwable {
-		final List<ICompletionItem> result = new ArrayList<>();
-		for (final Concatenation item : target.getAlternative()) {
-			final List<ICompletionItem> options = item.accept(this, arg);
-			for (final ICompletionItem option : options) {
-				final CompletionItemComposite composite = new CompletionItemComposite();
-
-				composite.getContent().add(option);
-
-				result.add(composite);
-			}
-		}
-		return result;
-	}
-
-	@Override
-	public List<ICompletionItem> visit(final Concatenation target, final Object... arg) throws Throwable {
-		List<CompletionItemComposite> result = new ArrayList<>();
-
-		for (final ConcatenationItem item : target.getItem()) {
-			final List<ICompletionItem> options = item.accept(this, arg);
-			if (result.isEmpty()) {
-				for (final ICompletionItem ci : options) {
+	public Set<ICompletionItem> visit(final ChoiceSimple target, final Object... arg) throws Throwable {
+		Set<ICompletionItem> result = this.cache.get(target);
+		if (null == result) {
+			result = new LinkedHashSet<>();
+			for (final Concatenation item : target.getAlternative()) {
+				final Set<ICompletionItem> options = item.accept(this, arg);
+				for (final ICompletionItem option : options) {
 					final CompletionItemComposite composite = new CompletionItemComposite();
-					composite.getContent().add(ci);
+					composite.getContent().add(option);
+
 					result.add(composite);
 				}
-			} else {
-				final List<CompletionItemComposite> result2 = new ArrayList<>();
-				for (final CompletionItemComposite cp : result) {
-					if (options.isEmpty()) {
-						result2.addAll(result);
-					} else {
-						for (final ICompletionItem ci : options) {
+			}
+			this.cache.put(target, result);
+		}
+		return result;
+	}
+
+	@Override
+	public Set<ICompletionItem> visit(final ChoicePriority target, final Object... arg) throws Throwable {
+		Set<ICompletionItem> result = this.cache.get(target);
+		if (null == result) {
+			result = new LinkedHashSet<>();
+			for (final Concatenation item : target.getAlternative()) {
+				final Set<ICompletionItem> options = item.accept(this, arg);
+				for (final ICompletionItem option : options) {
+					final CompletionItemComposite composite = new CompletionItemComposite();
+
+					composite.getContent().add(option);
+
+					result.add(composite);
+				}
+			}
+			this.cache.put(target, result);
+		}
+		return result;
+	}
+
+	@Override
+	public Set<ICompletionItem> visit(final Concatenation target, final Object... arg) throws Throwable {
+		Set<CompletionItemComposite> result = (Set<CompletionItemComposite>) (Object) this.cache.get(target);
+		if (null == result) {
+			result = new LinkedHashSet<>();
+
+			for (final ConcatenationItem item : target.getItem()) {
+				final Set<ICompletionItem> options = item.accept(this, arg);
+				if (result.isEmpty()) {
+					for (final ICompletionItem ci : options) {
+						final CompletionItemComposite composite = new CompletionItemComposite();
+						composite.getContent().add(ci);
+						result.add(composite);
+					}
+				} else {
+					final Set<CompletionItemComposite> result2 = new LinkedHashSet<>();
+					for (final CompletionItemComposite cp : result) {
+						if (options.isEmpty()) {
+							result2.addAll(result);
+						} else {
+							for (final ICompletionItem ci : options) {
+								final CompletionItemComposite composite = new CompletionItemComposite();
+								composite.getContent().addAll(cp.getContent());
+								composite.getContent().add(ci);
+								result2.add(composite);
+							}
+						}
+					}
+					result = result2;
+				}
+			}
+
+			this.cache.put(target, (Set<ICompletionItem>) (Object) result);
+		}
+		return (Set<ICompletionItem>) (Object) result;
+
+	}
+
+	@Override
+	public Set<ICompletionItem> visit(final INonTerminal target, final Object... arg) throws Throwable {
+		Set<ICompletionItem> result = this.cache.get(target);
+		if (null == result) {
+
+			// if (arg[0] instanceof Set<?>) {
+			// final Set<IRule> rules = (Set<IRule>) arg[0];
+			// if (rules.contains(target.getReferencedRule())) {
+			// // already visited this rule, don't do it again
+			// result = Collections.emptySet();
+			// } else {
+			// final Set<IRule> visited = new LinkedHashSet<>();
+			// visited.addAll(rules);
+			// visited.add(target.getReferencedRule());
+			// result = ((Visitable) target.getReferencedRule().getRhs()).accept(this, visited);
+			// }
+			// } else {
+			// throw new RuntimeException("visitor argument must be a Set of IRule");
+			// }
+			final int cur = this.getArg(arg);
+			final int next = cur + 1;
+			result = ((Visitable) target.getReferencedRule().getRhs()).accept(this, next);
+			this.cache.put(target, result);
+		}
+		return result;
+
+	}
+
+	@Override
+	public Set<ICompletionItem> visit(final Multi target, final Object... arg) throws Throwable {
+		Set<ICompletionItem> result = this.cache.get(target);
+		if (null == result) {
+			result = new LinkedHashSet<>();
+			if (0 == target.getMin()) {
+				// option for nothing
+				result.add(new CompletionItemComposite());
+			}
+			if (!this.reachedDepth(arg)) {
+				if (-1 == target.getMax() || 0 < target.getMax()) {
+					// if max > 0 (weird if not) add min or 1 if min==0
+					final Set<ICompletionItem> options = target.getItem().accept(this, arg);
+					for (final ICompletionItem option : options) {
+						final CompletionItemComposite composite = new CompletionItemComposite();
+						for (int i = 0; i < Math.max(1, target.getMin()); ++i) {
+							composite.getContent().add(option);
+						}
+						result.add(composite);
+					}
+
+				}
+			}
+			this.cache.put(target, result);
+		}
+		return result;
+	}
+
+	@Override
+	public Set<ICompletionItem> visit(final SeparatedList target, final Object... arg) throws Throwable {
+		Set<ICompletionItem> result = this.cache.get(target);
+		if (null == result) {
+			result = new LinkedHashSet<>();
+			if (0 == target.getMin()) {
+				// option for nothing
+				result.add(new CompletionItemComposite());
+			}
+			if (-1 == target.getMax() || 0 < target.getMax()) {
+				if (!this.reachedDepth(arg)) {
+					// if max > 0 (weird if not) add min or 2 if min==0
+					final Set<ICompletionItem> options = target.getItem().accept(this, arg);
+					final Set<ICompletionItem> sep = target.getSeparator().accept(this, arg);
+					// add option for 1 item
+					for (final ICompletionItem option : options) {
+						final CompletionItemComposite composite = new CompletionItemComposite();
+						for (int i = 0; i < Math.max(1, target.getMin()); ++i) {
+							composite.getContent().add(option);
+							if (i < Math.max(1, target.getMin()) - 1) {
+								composite.getContent().addAll(sep);
+							}
+						}
+						result.add(composite);
+					}
+					// add option for 2 items
+					if (-1 == target.getMax() || 1 < target.getMax()) {
+						for (final ICompletionItem option : options) {
 							final CompletionItemComposite composite = new CompletionItemComposite();
-							composite.getContent().addAll(cp.getContent());
-							composite.getContent().add(ci);
-							result2.add(composite);
+							for (int i = 0; i < Math.max(0, target.getMin()); ++i) {
+								composite.getContent().add(option);
+								if (i < Math.max(0, target.getMin()) - 1) {
+									composite.getContent().addAll(sep);
+								}
+							}
+							result.add(composite);
 						}
 					}
 				}
-				result = result2;
 			}
-		}
-		return (List<ICompletionItem>) (Object) result;
-	}
-
-	@Override
-	public List<ICompletionItem> visit(final Multi target, final Object... arg) throws Throwable {
-		final List<ICompletionItem> result = new ArrayList<>();
-		final List<ICompletionItem> options = target.getItem().accept(this, arg);
-		for (final ICompletionItem option : options) {
-			final CompletionItemComposite composite = new CompletionItemComposite();
-			for (int i = 0; i < target.getMin(); ++i) {
-				composite.getContent().add(option);
-			}
-			result.add(composite);
+			this.cache.put(target, result);
 		}
 		return result;
 	}
 
 	@Override
-	public List<ICompletionItem> visit(final NonTerminal target, final Object... arg) throws Throwable {
-		if (arg[0] instanceof List<?>) {
-			final List<IRule> rules = (List<IRule>) arg[0];
-			if (rules.contains(target.getReferencedRule())) {
-				// already visited this rule, don't do it again
-				return Collections.emptyList();
-			} else {
-				final List<IRule> visited = new ArrayList<>();
-				visited.addAll(rules);
-				visited.add(target.getReferencedRule());
-				return target.getReferencedRule().getRhs().accept(this, visited);
-			}
-		} else {
-			throw new RuntimeException("visitor argument must be a list of IRule");
+	public Set<ICompletionItem> visit(final Group target, final Object... arg) throws Throwable {
+		Set<ICompletionItem> result = this.cache.get(target);
+		if (null == result) {
+			result = target.getChoice().accept(this, arg);
+			this.cache.put(target, result);
 		}
-
+		return result;
 	}
 
 	@Override
-	public List<ICompletionItem> visit(final SeparatedList target, final Object... arg) throws Throwable {
-		final List<ICompletionItem> result = new ArrayList<>();
-		if (0 == target.getMin()) {
-			return Collections.emptyList();
-		} else {
-			final List<ICompletionItem> options = target.getItem().accept(this, arg);
-			final List<ICompletionItem> sep = target.getSeparator().accept(this, arg);
-			for (final ICompletionItem option : options) {
-				final CompletionItemComposite composite = new CompletionItemComposite();
-				for (int i = 0; i < target.getMin(); ++i) {
-					composite.getContent().add(option);
-					if (i < target.getMin() - 1) {
-						composite.getContent().addAll(sep);
-					}
-				}
-				result.add(composite);
-			}
-			return result;
-		}
+	public Set<ICompletionItem> visit(final TerminalPattern target, final Object... arg) throws Throwable {
+		Set<ICompletionItem> result = this.cache.get(target);
+		// if (null == result) {
+		result = new LinkedHashSet<>();
+		result.add(new CompletionItemPattern(target.getOwningRule().getName(), target.getPattern()));
+		// this.cache.put(target, result);
+		// }
+		return result;
 	}
 
 	@Override
-	public List<ICompletionItem> visit(final Group target, final Object... arg) throws Throwable {
-		return target.getChoice().accept(this, arg);
-	}
-
-	@Override
-	public List<ICompletionItem> visit(final TerminalPattern target, final Object... arg) throws Throwable {
-		return Arrays.asList(new CompletionItemPattern(target.getOwningRule().getName(), target.getPattern()));
-	}
-
-	@Override
-	public List<ICompletionItem> visit(final TerminalLiteral target, final Object... arg) throws Throwable {
-		return Arrays.asList(new CompletionItemText(target.getValue()));
+	public Set<ICompletionItem> visit(final TerminalLiteral target, final Object... arg) throws Throwable {
+		Set<ICompletionItem> result = this.cache.get(target);
+		// if (null == result) {
+		result = new LinkedHashSet<>();
+		result.add(new CompletionItemText(target.getValue()));
+		// this.cache.put(target, result);
+		// }
+		return result;
 	}
 
 }

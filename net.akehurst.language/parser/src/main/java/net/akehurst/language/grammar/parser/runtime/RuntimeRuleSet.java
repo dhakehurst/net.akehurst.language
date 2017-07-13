@@ -329,20 +329,22 @@ public class RuntimeRuleSet {
 	public IRuleItem getOriginalItem(final RuntimeRule rr, final IGrammar grammar) throws RuleNotFoundException {
 		final String name = rr.getName();
 		if (name.startsWith("$")) {
-			// decode it (see Converter)
+			// decode it (see Converter) and RuleItem.setOwningRule
 			final String[] split = name.split("[.]");
 			final String ruleName = split[0].substring(1);
 			final IRuleItem rhs = grammar.findAllRule(ruleName).getRhs();
 			final String type = split[1];
-			final int[] index = new int[split.length-2];
-			for(int i = 2; i > split.length; ++i) {
+			final int[] index = new int[split.length - 3];
+			for (int i = 3; i < split.length; ++i) {
 				final int ix = Integer.parseInt(split[i]);
-				index[i-2] = ix;
+				index[i - 3] = ix;
+			}
+			IRuleItem item = rhs;
+			for (final int i : index) {
+				item = item.getSubItem(i);
 			}
 
-			??
-
-			return null;
+			return item;
 		} else {
 			// find grammar rule
 			return new NonTerminalRuleReference(grammar, name);
