@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import net.akehurst.language.core.analyser.IRuleItem;
+import net.akehurst.language.core.grammar.IRuleItem;
 
 abstract public class AbstractChoice extends RuleItem {
 

@@ -2,11 +2,11 @@ package net.akehurst.language.grammar.parser;
 
 import java.util.Objects;
 
-import net.akehurst.language.core.analyser.IGrammar;
-import net.akehurst.language.core.analyser.INonTerminal;
-import net.akehurst.language.core.analyser.IRule;
-import net.akehurst.language.core.analyser.IRuleItem;
-import net.akehurst.language.core.parser.RuleNotFoundException;
+import net.akehurst.language.core.grammar.IGrammar;
+import net.akehurst.language.core.grammar.INonTerminal;
+import net.akehurst.language.core.grammar.IRule;
+import net.akehurst.language.core.grammar.IRuleItem;
+import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.ogl.semanticStructure.Visitable;
 import net.akehurst.language.ogl.semanticStructure.Visitor;
 

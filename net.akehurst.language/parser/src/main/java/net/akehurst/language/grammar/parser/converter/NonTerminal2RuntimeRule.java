@@ -41,7 +41,7 @@ public class NonTerminal2RuntimeRule extends AbstractConcatinationItem2RuntimeRu
 
 		try {
 			right = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getReferencedRule());
-		} catch (final net.akehurst.language.core.parser.RuleNotFoundException e) {
+		} catch (final net.akehurst.language.core.grammar.RuleNotFoundException e) {
 			throw new TransformException(e.getMessage(), e);
 		}
 		// right = converter.getFactory().createRuntimeRule(left.getReferencedRule(), RuntimeRuleKind.NON_TERMINAL);

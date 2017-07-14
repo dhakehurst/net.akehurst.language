@@ -85,20 +85,22 @@ public class ParseGraph implements IParseGraph {
 	}
 
 	public static final class GrowingNodeIndex {
-		public GrowingNodeIndex(final int ruleNumber, final int startPosition, final int nextItemIndex, final int stackHash) {
+		public GrowingNodeIndex(final int ruleNumber, final int startPosition, final int length, final int nextItemIndex, final int stackHash) {
 			this.ruleNumber = ruleNumber;
 			this.startPosition = startPosition;
+			this.length = length;
 			this.nextItemIndex = nextItemIndex;
 			this.stackHash = stackHash;
-			this.hashCode_cache = Objects.hash(ruleNumber, startPosition, nextItemIndex, stackHash);
+			this.hashCode_cache = Objects.hash(ruleNumber, startPosition, length, nextItemIndex, stackHash);
 		}
 
-		int ruleNumber;
-		int startPosition;
-		int nextItemIndex;
-		int stackHash;
+		private final int ruleNumber;
+		private final int startPosition;
+		private final int length;
+		private final int nextItemIndex;
+		private final int stackHash;
 
-		int hashCode_cache;
+		private final int hashCode_cache;
 
 		@Override
 		public int hashCode() {
@@ -111,14 +113,15 @@ public class ParseGraph implements IParseGraph {
 				return false;
 			}
 			final GrowingNodeIndex other = (GrowingNodeIndex) arg;
-			return this.ruleNumber == other.ruleNumber && this.startPosition == other.startPosition && this.nextItemIndex == other.nextItemIndex
-					&& this.stackHash == other.stackHash;
+			return this.ruleNumber == other.ruleNumber && this.startPosition == other.startPosition && this.length == other.length
+					&& this.nextItemIndex == other.nextItemIndex && this.stackHash == other.stackHash;
 		}
 
 		@Override
 		public String toString() {
-			return "(".concat(Integer.toString(this.ruleNumber)).concat(",").concat(Integer.toString(this.startPosition)).concat(",")
-					.concat(Integer.toString(this.nextItemIndex)).concat(",").concat(Integer.toString(this.stackHash)).concat(")");
+			return "(".concat(Integer.toString(this.ruleNumber)).concat(",").concat(Integer.toString(this.startPosition)).concat(",").concat(",")
+					.concat(Integer.toString(this.length)).concat(Integer.toString(this.nextItemIndex)).concat(",").concat(Integer.toString(this.stackHash))
+					.concat(")");
 		}
 	}
 
@@ -151,10 +154,11 @@ public class ParseGraph implements IParseGraph {
 		// TODO: merge with already growing
 		final int runtimeRuleNumber = value.getRuntimeRule().getRuleNumber();
 		final int startPos = value.getStartPosition();
+		final int length = value.getMatchedTextLength();
 		final int nextItemIndex = value.getNextItemIndex();
 		// int previousRRN = value.getPrevious().isEmpty() ? -1 : value.getPrevious().get(0).node.getRuntimeRule().getRuleNumber();
 		final int stackHash = value.getStackHash();
-		final GrowingNodeIndex index = new GrowingNodeIndex(runtimeRuleNumber, startPos, nextItemIndex, stackHash); // previousRRN);
+		final GrowingNodeIndex index = new GrowingNodeIndex(runtimeRuleNumber, startPos, length, nextItemIndex, stackHash); // previousRRN);
 		// TODO: try comparing the stack not just its hash! maybe the hash is not unique
 		final IGraphNode existing = this.growable.get(index);
 		if (null == existing) {

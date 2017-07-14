@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import net.akehurst.language.core.analyser.IRuleItem;
+import net.akehurst.language.core.grammar.IRuleItem;
 
 public class Concatenation extends RuleItem {
 

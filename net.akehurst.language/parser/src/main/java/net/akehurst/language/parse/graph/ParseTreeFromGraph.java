@@ -1,23 +1,21 @@
 package net.akehurst.language.parse.graph;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
 import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
-import net.akehurst.language.grammar.parse.tree.Branch;
+import net.akehurst.language.grammar.parser.ToStringVisitor;
 
 public class ParseTreeFromGraph implements IParseTree {
 
-	public ParseTreeFromGraph(IGraphNode gr) {
-		this.root = (IBranch)gr;
+	public ParseTreeFromGraph(final IGraphNode gr) {
+		this.root = (IBranch) gr;
 	}
 
 	@Override
-	public <T, A, E extends Throwable> T accept(IParseTreeVisitor<T, A, E> visitor, A arg) throws E {
+	public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
 		return visitor.visit(this, arg);
 	}
 
@@ -28,16 +26,43 @@ public class ParseTreeFromGraph implements IParseTree {
 		return this.root;
 	}
 
+	// @Override
+	// public boolean getIsComplete() {
+	// // TODO Auto-generated method stub
+	// return false;
+	// }
+	//
+	// @Override
+	// public boolean getCanGrowWidth() {
+	// // TODO Auto-generated method stub
+	// return false;
+	// }
+
+	// --- Object ---
+	static ToStringVisitor v = new ToStringVisitor();
+	String toString_cache;
+
 	@Override
-	public boolean getIsComplete() {
-		// TODO Auto-generated method stub
-		return false;
+	public String toString() {
+		if (null == this.toString_cache) {
+			this.toString_cache = this.accept(ParseTreeFromGraph.v, "");
+		}
+		return this.toString_cache;
 	}
 
 	@Override
-	public boolean getCanGrowWidth() {
-		// TODO Auto-generated method stub
-		return false;
+	public int hashCode() {
+		return this.getRoot().hashCode();
+	}
+
+	@Override
+	public boolean equals(final Object arg) {
+		if (arg instanceof IParseTree) {
+			final IParseTree other = (IParseTree) arg;
+			return Objects.equals(this.getRoot(), other.getRoot());
+		} else {
+			return false;
+		}
 	}
 
 }

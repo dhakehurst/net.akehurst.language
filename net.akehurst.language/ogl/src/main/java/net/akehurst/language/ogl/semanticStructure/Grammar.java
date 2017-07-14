@@ -20,11 +20,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import net.akehurst.language.core.analyser.IGrammar;
-import net.akehurst.language.core.analyser.ITerminal;
+import net.akehurst.language.core.grammar.IGrammar;
+import net.akehurst.language.core.grammar.ITerminal;
+import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.lexicalAnalyser.ITokenType;
 import net.akehurst.language.core.parser.INodeType;
-import net.akehurst.language.core.parser.RuleNotFoundException;
 
 public class Grammar implements IGrammar {
 

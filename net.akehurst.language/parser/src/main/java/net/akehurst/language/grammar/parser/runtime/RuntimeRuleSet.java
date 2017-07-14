@@ -24,9 +24,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import net.akehurst.language.core.analyser.IGrammar;
-import net.akehurst.language.core.analyser.IRuleItem;
-import net.akehurst.language.core.parser.RuleNotFoundException;
+import net.akehurst.language.core.grammar.IGrammar;
+import net.akehurst.language.core.grammar.IRuleItem;
+import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.grammar.parser.NonTerminalRuleReference;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 

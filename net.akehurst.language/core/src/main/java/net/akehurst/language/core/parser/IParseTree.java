@@ -19,7 +19,7 @@ public interface IParseTree extends IParseTreeVisitable {
 
 	INode getRoot();
 
-	boolean getIsComplete();
-
-	boolean getCanGrowWidth();
+	// boolean getIsComplete();
+	//
+	// boolean getCanGrowWidth();
 }

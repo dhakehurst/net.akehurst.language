@@ -17,10 +17,10 @@ package net.akehurst.language.ogl.semanticStructure;
 
 import java.util.List;
 
-import net.akehurst.language.core.analyser.IRuleItem;
-import net.akehurst.language.core.analyser.ITangibleItem;
+import net.akehurst.language.core.grammar.IRuleItem;
+import net.akehurst.language.core.grammar.ITangibleItem;
+import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.INodeType;
-import net.akehurst.language.core.parser.RuleNotFoundException;
 
 public abstract class TangibleItem extends SimpleItem implements ITangibleItem {
 

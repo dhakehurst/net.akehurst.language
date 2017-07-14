@@ -15,10 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
-
 public abstract class ConcatenationItem extends RuleItem {
 
-	public ConcatenationItem() {
-	}
+	public ConcatenationItem() {}
 
 }

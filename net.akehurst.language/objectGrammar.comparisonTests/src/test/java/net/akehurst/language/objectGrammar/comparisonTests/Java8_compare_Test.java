@@ -28,12 +28,12 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import antlr4.Java8Parser;
-import net.akehurst.language.core.ILanguageProcessor;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.parser.RuleNotFoundException;
+import net.akehurst.language.core.processor.ILanguageProcessor;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;
@@ -94,7 +94,7 @@ public class Java8_compare_Test {
 			try {
 				// String grammarText = new String(Files.readAllBytes(Paths.get("src/test/grammar/Java8.og")));
 				final FileReader reader = new FileReader("src/test/grammar/Java8.og");
-				final Grammar javaGrammar = Java8_compare_Test.getOGLProcessor().process(reader, Grammar.class);
+				final Grammar javaGrammar = Java8_compare_Test.getOGLProcessor().process(reader, "grammarDefinition", Grammar.class);
 				Java8_compare_Test.javaProcessor = new LanguageProcessor(javaGrammar, null);
 				Java8_compare_Test.javaProcessor.getParser().build();
 			} catch (final IOException e) {

@@ -7,3 +7,14 @@ dependencies {
 	testCompile 'junit:junit:+'
 	
 }
+
+sourceSets {
+	main {
+		java {
+			resources {
+				srcDir "$projectDir/src/main/resources"
+				srcDir "$projectDir/src/main/ogl"
+			}
+		}
+	}
+}

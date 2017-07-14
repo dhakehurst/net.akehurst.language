@@ -7,9 +7,9 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.ICompletionItem;
-import net.akehurst.language.core.analyser.IRule;
-import net.akehurst.language.core.analyser.ITerminal;
+import net.akehurst.language.core.grammar.IRule;
+import net.akehurst.language.core.grammar.ITerminal;
+import net.akehurst.language.core.parser.ICompletionItem;
 import net.akehurst.language.ogl.grammar.OGLGrammar;
 import net.akehurst.language.ogl.semanticStructure.Visitable;
 
@@ -90,7 +90,7 @@ public class test_SampleGeneratorVisitor {
 		final IRule t = grammar.findAllRule("group");
 		final Set<ICompletionItem> items = ((Visitable) t.getRhs()).accept(visitor, 0);
 		final List<ICompletionItem> list = new ArrayList<>(items);
-		Assert.assertEquals(5, items.size());
+		Assert.assertEquals(57, items.size());
 		Assert.assertEquals("()", list.get(0).getText());
 	}
 

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import net.akehurst.language.core.ICompletionItem;
+import net.akehurst.language.core.parser.ICompletionItem;
 
 public class CompletionItemComposite implements ICompletionItem {
 	public CompletionItemComposite() {

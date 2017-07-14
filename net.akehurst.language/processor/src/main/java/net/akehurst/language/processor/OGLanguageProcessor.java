@@ -23,8 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.akehurst.language.core.analyser.IGrammar;
 import net.akehurst.language.core.analyser.IGrammarLoader;
+import net.akehurst.language.core.grammar.IGrammar;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.ogl.grammar.OGLGrammar;
 import net.akehurst.language.ogl.semanticAnalyser.SemanicAnalyser;

@@ -6,8 +6,8 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.analyser.IRuleItem;
-import net.akehurst.language.core.analyser.ITangibleItem;
+import net.akehurst.language.core.grammar.IRuleItem;
+import net.akehurst.language.core.grammar.ITangibleItem;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
@@ -76,7 +76,8 @@ public class test_Parser extends AbstractParser_Test {
 		final IParser parser = new ScannerLessParser3(this.runtimeRules, g);
 
 		final List<IRuleItem> list = parser.expectedAt(goal, new StringReader(text), position);
-		Assert.assertTrue(list.size() == 4);
+		Assert.assertEquals(3, list.size());
+		Assert.fail("this currently fails because we don't handle expectedAt from the middle of a token, yet");
 		Assert.assertEquals("namespace", ((ITangibleItem) list.get(0)).getName());
 	}
 
@@ -108,8 +109,8 @@ public class test_Parser extends AbstractParser_Test {
 		final IParser parser = new ScannerLessParser3(this.runtimeRules, g);
 
 		final List<IRuleItem> list = parser.expectedAt(goal, new StringReader(text), position);
-		Assert.assertTrue(list.size() == 5);
-		Assert.assertEquals(";", ((ITangibleItem) list.get(0)).getName());
+		Assert.assertEquals(5, list.size());
+		Assert.assertEquals("::", ((ITangibleItem) list.get(0)).getName());
 	}
 
 	@Test

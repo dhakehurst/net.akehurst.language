@@ -26,55 +26,42 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 		this(System.lineSeparator(), "  ");
 	}
 
-	public ToStringVisitor(String lineSeparator, String indentIncrement) {
+	public ToStringVisitor(final String lineSeparator, final String indentIncrement) {
 		this.lineSeparator = lineSeparator;
 		this.indentIncrement = indentIncrement;
 	}
 
-	String lineSeparator;
-	String indentIncrement;
+	private final String lineSeparator;
+	private final String indentIncrement;
 
 	@Override
-	public String visit(IParseTree target, String indent) throws RuntimeException {
+	public String visit(final IParseTree target, final String indent) throws RuntimeException {
 		String s = indent;
-		//AbstractParseTree t = (AbstractParseTree) target;
-		IParseTree t = target;
-//		s += "{" + (target.getIsComplete() ? "*" : "+") + (target.getCanGrowWidth() ? "?" : "") + target.getRoot().getName() + " " + t.identifier + getStackRootsAsString(target) + "}";
-		 s += target.getRoot().accept(this, indent);
-		return s;
-	}
-
-//	String getStackRootsAsString(IParseTree target) {
-//		AbstractParseTree st = ((AbstractParseTree) target).getStackedTree();
-//		if (null == st) {
-//			return "";
-//		} else {
-//			String s = " " + "[" + (st.getIsComplete() ? "*" : "+") + (st.getCanGrow() ? "?" : "") + st.getRoot().getName() + " " + st.identifier + "]";
-//			s += getStackRootsAsString(st);
-//			return s;
-//		}
-//	}
-
-	@Override
-	public String visit(ILeaf target, String indent) throws RuntimeException {
-		String s = indent + target.getName() + " : \"" + target.getMatchedText().replace("\n", new String(Character.toChars(0x23CE))) + "\"";
+		final IParseTree t = target;
+		s += target.getRoot().accept(this, indent);
 		return s;
 	}
 
 	@Override
-	public String visit(IBranch target, String indent) throws RuntimeException {
+	public String visit(final ILeaf target, final String indent) throws RuntimeException {
+		final String s = indent + target.getName() + " : \"" + target.getMatchedText().replace("\n", new String(Character.toChars(0x23CE))) + "\"";
+		return s;
+	}
+
+	@Override
+	public String visit(final IBranch target, final String indent) throws RuntimeException {
 		String s = indent;
-		s += target.getName() + " : [";
+		s += target.getName() + " {";
 		if (0 < target.getChildren().size()) {
 			s += this.lineSeparator;
-			s += target.getChildren().get(0).accept(this, indent + indentIncrement);
+			s += target.getChildren().get(0).accept(this, indent + this.indentIncrement);
 			for (int i = 1; i < target.getChildren().size(); ++i) {
 				s += ", " + this.lineSeparator;
-				s += target.getChildren().get(i).accept(this, indent + indentIncrement);
+				s += target.getChildren().get(i).accept(this, indent + this.indentIncrement);
 			}
 			s += this.lineSeparator + indent;
 		}
-		s += "]";
+		s += "}";
 		return s;
 	}
 

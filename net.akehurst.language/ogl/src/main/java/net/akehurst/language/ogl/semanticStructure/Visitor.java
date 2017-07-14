@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
-import net.akehurst.language.core.analyser.INonTerminal;
+import net.akehurst.language.core.grammar.INonTerminal;
 
 public interface Visitor<T, E extends Throwable> {
 

@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.core.parser;
+package net.akehurst.language.core.grammar;
 
+public interface ITerminal extends ITangibleItem {
+	boolean isPattern();
 
-public class RuleNotFoundException extends Exception {
-
-	public RuleNotFoundException(String message) {
-		super(message);
-	}
-
+	String getValue();
 }

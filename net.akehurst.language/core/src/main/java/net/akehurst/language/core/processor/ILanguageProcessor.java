@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.core;
+package net.akehurst.language.core.processor;
 
 import java.io.Reader;
 import java.util.List;
 
-import net.akehurst.language.core.analyser.IGrammar;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.core.grammar.IGrammar;
+import net.akehurst.language.core.parser.ICompletionItem;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;

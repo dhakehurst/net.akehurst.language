@@ -3,8 +3,8 @@ package net.akehurst.language.grammar.parser.converter;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.analyser.IRuleItem;
-import net.akehurst.language.core.parser.RuleNotFoundException;
+import net.akehurst.language.core.grammar.IRuleItem;
+import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;

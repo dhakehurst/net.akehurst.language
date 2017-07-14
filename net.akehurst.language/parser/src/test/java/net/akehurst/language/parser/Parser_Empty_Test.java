@@ -29,135 +29,117 @@ import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
 public class Parser_Empty_Test extends AbstractParser_Test {
-	
+
 	Grammar empty() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("S").choice();
 		return b.get();
 	}
-	
+
 	@Test
 	public void empty_S_empty() {
 		// grammar, goal, input
 		try {
-			Grammar g = empty();
-			String goal = "S";
-			String text = "";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.empty();
+			final String goal = "S";
+			final String text = "";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ParseTreeBuilder b = this.builder(g, text, goal);
-			IBranch expected = 
-					b.branch("S",
-						b.emptyLeaf("S")
-					);
+
+			final ParseTreeBuilder b = this.builder(g, text, goal);
+			final IBranch expected = b.branch("S", b.emptyLeaf("S"));
 			Assert.assertEquals(expected, tree.getRoot());
-			
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void empty_S_a() {
 		// grammar, goal, input
 		try {
-			Grammar g = empty();
-			String goal = "S";
-			String text = "a";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.empty();
+			final String goal = "S";
+			final String text = "a";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.fail("This parse should fail");
 
-			
-		} catch (ParseFailedException e) {
-			
+		} catch (final ParseFailedException e) {
+
 		}
 	}
-	
+
 	Grammar multi0m1() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("S").multi(0,-1,new TerminalLiteral("a"));
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("S").multi(0, -1, new TerminalLiteral("a"));
 		return b.get();
 	}
-	
+
 	@Test
 	public void multi0_S_empty() {
 		// grammar, goal, input
 		try {
-			Grammar g = multi0m1();
-			String goal = "S";
-			String text = "";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.multi0m1();
+			final String goal = "S";
+			final String text = "";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ParseTreeBuilder b = this.builder(g, text, goal);
-			IBranch expected = 
-					b.branch("S",
-						b.emptyLeaf("S")
-					);
+
+			final ParseTreeBuilder b = this.builder(g, text, goal);
+			final IBranch expected = b.branch("S", b.emptyLeaf("S"));
 			Assert.assertEquals(expected, tree.getRoot());
-			
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void multi0_S_a() {
 		// grammar, goal, input
 		try {
-			Grammar g = multi0m1();
-			String goal = "S";
-			String text = "a";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.multi0m1();
+			final String goal = "S";
+			final String text = "a";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-			
-			ParseTreeBuilder b = this.builder(g, text, goal);
-			IBranch expected = 
-					b.branch("S",
-						b.leaf("a")
-					);
+
+			final ParseTreeBuilder b = this.builder(g, text, goal);
+			final IBranch expected = b.branch("S", b.leaf("a"));
 			Assert.assertEquals(expected, tree.getRoot());
-			
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
 
-
 	Grammar aeas() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("S").concatenation(new NonTerminal("ae"), new NonTerminal("as"));
-		b.rule("as").multi(0,-1,new TerminalLiteral("a"));
+		b.rule("as").multi(0, -1, new TerminalLiteral("a"));
 		b.rule("ae").multi(0, 1, new TerminalLiteral("a"));
 		return b.get();
 	}
-	
+
 	@Test
-	public void aas_S_empty() {
+	public void aas_S_empty() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			Grammar g = aeas();
-			String goal = "S";
-			String text = "a";
-			
-			IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
-			
-			ParseTreeBuilder b = this.builder(g, text, goal);
-			IBranch expected = 
-					b.branch("S",
-						b.branch("ae", b.leaf("a")),
-						b.branch("as", b.emptyLeaf("as"))
-					);
-			Assert.assertEquals(expected, tree.getRoot());
-			
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+
+		final Grammar g = this.aeas();
+		final String goal = "S";
+		final String text = "a";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		final IBranch expected = b.branch("S", b.branch("ae", b.leaf("a")), b.branch("as", b.emptyLeaf("as")));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 }

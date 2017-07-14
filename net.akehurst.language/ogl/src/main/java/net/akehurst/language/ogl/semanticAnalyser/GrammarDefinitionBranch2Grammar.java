@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import net.akehurst.language.core.analyser.IGrammar;
+import net.akehurst.language.core.grammar.IGrammar;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
@@ -77,7 +77,7 @@ public class GrammarDefinitionBranch2Grammar implements IBinaryRule<INode, Gramm
 		final IBranch grammarBranch = (IBranch) ((IBranch) left).getChild(1);
 		final IBranch extendsBranch = (IBranch) grammarBranch.getChild(2);
 		final IBranch rulesBranch = (IBranch) grammarBranch.getChild(4);
-		final List<INode> ruleBranches = rulesBranch.getNonSkipChildren();
+		final List<IBranch> ruleBranches = rulesBranch.getBranchNonSkipChildren();
 
 		if (0 == extendsBranch.getMatchedTextLength()) {
 			// no extended grammar

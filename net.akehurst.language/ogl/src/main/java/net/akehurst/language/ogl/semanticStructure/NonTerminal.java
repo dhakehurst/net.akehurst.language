@@ -19,9 +19,9 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import net.akehurst.language.core.analyser.INonTerminal;
+import net.akehurst.language.core.grammar.INonTerminal;
+import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.INodeType;
-import net.akehurst.language.core.parser.RuleNotFoundException;
 
 public class NonTerminal extends TangibleItem implements INonTerminal {
 

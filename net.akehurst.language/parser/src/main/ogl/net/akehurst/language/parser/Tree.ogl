@@ -1,0 +1,15 @@
+namespace net::akehurst::language::parser;
+
+grammar Tree {
+	skip WHITESPACE : "\s+" ;
+
+	tree : node ;
+	nodes : node+ ;
+	node : branch | leaf | empty ;
+	branch : NAME '{'  nodes '}' ;
+	leaf : "'(?:\\?.)*?'" ;
+	empty : 'empty' ;
+	
+	NAME : "[a-zA-Z_][a-zA-Z_0-9]*" ;  //same as IDENTIFIER from OGL.ogl
+
+}

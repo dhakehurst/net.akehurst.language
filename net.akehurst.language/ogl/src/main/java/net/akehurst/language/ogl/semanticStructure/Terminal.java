@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.analyser.ITerminal;
+import net.akehurst.language.core.grammar.ITerminal;
 
 public abstract class Terminal extends TangibleItem implements ITerminal {
 

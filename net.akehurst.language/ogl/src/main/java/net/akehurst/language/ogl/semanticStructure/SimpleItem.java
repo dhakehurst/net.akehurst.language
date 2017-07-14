@@ -15,12 +15,10 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
-
 public abstract class SimpleItem extends ConcatenationItem {
 
-	public SimpleItem() {
-	}
+	public SimpleItem() {}
 
 	abstract public String getName();
-	
+
 }

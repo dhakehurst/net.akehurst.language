@@ -27,12 +27,12 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import antlr4.Java8Parser;
-import net.akehurst.language.core.ILanguageProcessor;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.parser.RuleNotFoundException;
+import net.akehurst.language.core.processor.ILanguageProcessor;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;
@@ -42,27 +42,27 @@ public class Java8_Test2 {
 
 	@Parameters(name = "{index}: {0}")
 	public static Collection<Object[]> getFiles() {
-		ArrayList<Object[]> params = new ArrayList<>();
+		final ArrayList<Object[]> params = new ArrayList<>();
 		try {
-			PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**/*.java");
+			final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**/*.java");
 
 			Files.walkFileTree(Paths.get("src/test/resources/javac"), new SimpleFileVisitor<Path>() {
 				@Override
-				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+				public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
 					if (attrs.isRegularFile() && matcher.matches(file)) {
 						params.add(new Object[] { file });
 					}
 					return FileVisitResult.CONTINUE;
 				}
 			});
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
 		return params;
 	}
 
-	public Java8_Test2(Path file) {
+	public Java8_Test2(final Path file) {
 		this.file = file;
 	}
 
@@ -71,52 +71,52 @@ public class Java8_Test2 {
 	static OGLanguageProcessor processor;
 
 	static {
-		getOGLProcessor();
+		Java8_Test2.getOGLProcessor();
 	}
 
 	static OGLanguageProcessor getOGLProcessor() {
-		if (null == processor) {
-			processor = new OGLanguageProcessor();
-			processor.getParser().build();
+		if (null == Java8_Test2.processor) {
+			Java8_Test2.processor = new OGLanguageProcessor();
+			Java8_Test2.processor.getParser().build();
 		}
-		return processor;
+		return Java8_Test2.processor;
 	}
 
 	static ILanguageProcessor javaProcessor;
 
 	static {
-		getJavaProcessor();
+		Java8_Test2.getJavaProcessor();
 	}
 
 	static ILanguageProcessor getJavaProcessor() {
-		if (null == javaProcessor) {
+		if (null == Java8_Test2.javaProcessor) {
 			try {
-				FileReader reader = new FileReader(Paths.get("src/test/grammar/Java8.og").toFile());
-				Grammar javaGrammar = getOGLProcessor().process(reader, Grammar.class);
-				javaProcessor = new LanguageProcessor(javaGrammar, null);
-				javaProcessor.getParser().build();
-			} catch (IOException e) {
+				final FileReader reader = new FileReader(Paths.get("src/test/grammar/Java8.og").toFile());
+				final Grammar javaGrammar = Java8_Test2.getOGLProcessor().process(reader, "grammarDefinition", Grammar.class);
+				Java8_Test2.javaProcessor = new LanguageProcessor(javaGrammar, null);
+				Java8_Test2.javaProcessor.getParser().build();
+			} catch (final IOException e) {
 				e.printStackTrace();
 				Assert.fail(e.getMessage());
-			} catch (ParseFailedException e) {
+			} catch (final ParseFailedException e) {
 				e.printStackTrace();
 				Assert.fail(e.getMessage());
-			} catch (UnableToAnalyseExeception e) {
+			} catch (final UnableToAnalyseExeception e) {
 				e.printStackTrace();
 				Assert.fail(e.getMessage());
 			}
 
 		}
-		return javaProcessor;
+		return Java8_Test2.javaProcessor;
 	}
 
 	@Before
 	public void setUp() {
 		try {
-			byte[] bytes = Files.readAllBytes(file);
-			og_input = new String(bytes);
-			antlr_input = new ANTLRInputStream(new String(bytes));
-		} catch (IOException e) {
+			final byte[] bytes = Files.readAllBytes(this.file);
+			Java8_Test2.og_input = new String(bytes);
+			Java8_Test2.antlr_input = new ANTLRInputStream(new String(bytes));
+		} catch (final IOException e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -124,30 +124,30 @@ public class Java8_Test2 {
 
 	static String og_input;
 
-	static IParseTree parseWithOG(Path file) {
+	static IParseTree parseWithOG(final Path file) {
 		try {
-			IParseTree tree = getJavaProcessor().getParser().parse("compilationUnit", new StringReader(og_input));
+			final IParseTree tree = Java8_Test2.getJavaProcessor().getParser().parse("compilationUnit", new StringReader(Java8_Test2.og_input));
 			return tree;
 		} catch (ParseFailedException | ParseTreeException | RuleNotFoundException e) {
-			System.out.println("Failed to parse: "+file);
+			System.out.println("Failed to parse: " + file);
 			System.out.println(e.getMessage());
-//			System.out.println("Longest Match: "+e.getLongestMatch().getRoot().getMatchedText());
-			//Assert.fail(e.getMessage());
+			// System.out.println("Longest Match: "+e.getLongestMatch().getRoot().getMatchedText());
+			// Assert.fail(e.getMessage());
 		}
 		return null;
 	}
 
 	static CharStream antlr_input;
 
-	static Java8Parser.CompilationUnitContext parseWithAntlr4(Path file) {
+	static Java8Parser.CompilationUnitContext parseWithAntlr4(final Path file) {
 
-		Lexer lexer = new antlr4.Java8Lexer(antlr_input);
-		CommonTokenStream tokens = new CommonTokenStream(lexer);
-		Java8Parser p = new Java8Parser(tokens);
+		final Lexer lexer = new antlr4.Java8Lexer(Java8_Test2.antlr_input);
+		final CommonTokenStream tokens = new CommonTokenStream(lexer);
+		final Java8Parser p = new Java8Parser(tokens);
 		p.setErrorHandler(new BailErrorStrategy());
 		try {
 			return p.compilationUnit();
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			return null;
 		}
 	}
@@ -155,13 +155,13 @@ public class Java8_Test2 {
 	@Test
 	public void og_compilationUnit() {
 
-		IParseTree tree = parseWithOG(this.file);
+		final IParseTree tree = Java8_Test2.parseWithOG(this.file);
 		Assert.assertNotNull("Failed to Parse", tree);
 	}
 
 	@Test
 	public void antlr4_compilationUnit() {
-		Java8Parser.CompilationUnitContext tree = parseWithAntlr4(this.file);
+		final Java8Parser.CompilationUnitContext tree = Java8_Test2.parseWithAntlr4(this.file);
 		Assert.assertNotNull("Failed to Parse", tree);
 	}
 

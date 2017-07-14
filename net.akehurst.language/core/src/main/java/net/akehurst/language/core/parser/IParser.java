@@ -19,7 +19,8 @@ import java.io.Reader;
 import java.util.List;
 import java.util.Set;
 
-import net.akehurst.language.core.analyser.IRuleItem;
+import net.akehurst.language.core.grammar.IRuleItem;
+import net.akehurst.language.core.grammar.RuleNotFoundException;
 
 public interface IParser {
 

@@ -22,27 +22,27 @@ public class SkipRule extends Rule {
 	public SkipRule(Grammar grammar, String name) {
 		super(grammar, name);
 	}
-	
+
 	@Override
 	public INodeType getNodeType() {
 		return new SkipNodeType(this);
 	}
-	
-	//--- Object ---
+
+	// --- Object ---
 	@Override
 	public String toString() {
-		return "skip "+this.getName()+" : "+this.getRhs();
+		return "skip " + this.getName() + " : " + this.getRhs();
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.toString().hashCode();
 	}
-	
+
 	@Override
 	public boolean equals(Object arg) {
 		if (arg instanceof SkipRule) {
-			SkipRule other = (SkipRule)arg;
+			SkipRule other = (SkipRule) arg;
 			return this.toString().equals(other.toString());
 		} else {
 			return false;

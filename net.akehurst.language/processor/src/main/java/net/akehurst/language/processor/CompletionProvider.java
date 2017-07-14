@@ -6,9 +6,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import net.akehurst.language.core.ICompletionItem;
-import net.akehurst.language.core.analyser.IRuleItem;
-import net.akehurst.language.core.analyser.ITerminal;
+import net.akehurst.language.core.grammar.IRuleItem;
+import net.akehurst.language.core.grammar.ITerminal;
+import net.akehurst.language.core.parser.ICompletionItem;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 import net.akehurst.language.ogl.semanticStructure.Visitable;
 

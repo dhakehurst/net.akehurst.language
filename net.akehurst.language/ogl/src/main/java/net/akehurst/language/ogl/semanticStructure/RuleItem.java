@@ -18,7 +18,7 @@ package net.akehurst.language.ogl.semanticStructure;
 import java.util.List;
 import java.util.Set;
 
-import net.akehurst.language.core.analyser.IRuleItem;
+import net.akehurst.language.core.grammar.IRuleItem;
 
 public abstract class RuleItem implements Visitable, IRuleItem {
 

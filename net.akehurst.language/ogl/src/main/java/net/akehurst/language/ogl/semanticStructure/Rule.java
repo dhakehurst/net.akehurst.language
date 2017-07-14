@@ -19,9 +19,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.akehurst.language.core.analyser.IRule;
+import net.akehurst.language.core.grammar.IRule;
+import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.INodeType;
-import net.akehurst.language.core.parser.RuleNotFoundException;
 
 public class Rule implements IRule {
 

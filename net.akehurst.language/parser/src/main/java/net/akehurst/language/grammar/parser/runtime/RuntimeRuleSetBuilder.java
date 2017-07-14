@@ -17,7 +17,7 @@ package net.akehurst.language.grammar.parser.runtime;
 
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.analyser.ITerminal;
+import net.akehurst.language.core.grammar.ITerminal;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.grammar.parse.tree.Branch;
 import net.akehurst.language.grammar.parse.tree.Factory;

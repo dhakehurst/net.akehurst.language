@@ -5,9 +5,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import net.akehurst.language.core.ICompletionItem;
-import net.akehurst.language.core.analyser.INonTerminal;
-import net.akehurst.language.core.analyser.IRuleItem;
+import net.akehurst.language.core.grammar.INonTerminal;
+import net.akehurst.language.core.grammar.IRuleItem;
+import net.akehurst.language.core.parser.ICompletionItem;
 import net.akehurst.language.ogl.semanticStructure.ChoicePriority;
 import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
