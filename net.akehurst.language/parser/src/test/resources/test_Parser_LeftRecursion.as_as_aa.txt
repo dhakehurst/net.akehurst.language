@@ -1,0 +1,20 @@
+grammar Test {
+  as : as$group1  | a ;
+  as$group1 : as a ; 
+  a : 'a' ; 
+}
+
+input 'aa'
+
+season 0
+start  0:as -
+
+season 1
+width  0:'a' --> 0:as -
+
+season 2
+height  0:a{'a'} --> 0:as -
+
+season 3
+height  0:as{a{'a'}} --> 0:as -
+graft   0:as{a{'a'}}

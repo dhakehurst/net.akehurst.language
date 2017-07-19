@@ -24,23 +24,29 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class Leaf extends Node implements ILeaf {
 
-	Leaf(final IInput input, final int start, final int end, final RuntimeRule terminalRule) {
+	Leaf(final String text, final int start, final int end, final RuntimeRule terminalRule) {
 		super(terminalRule);
-		this.input = input;
+		// this.input = input;
+		this.text = text;
 		this.start = start;
 		this.end = end;
 		this.terminalRule = terminalRule;
 	}
 
-	IInput input;
+	// IInput input;
+	//
+	// IInput getInput() {
+	// return this.input;
+	// }
 
-	IInput getInput() {
-		return this.input;
+	private final String text;
+	private final int start;
+	private final int end;
+	private final RuntimeRule terminalRule;
+
+	public RuntimeRule getTerminalRule() {
+		return this.terminalRule;
 	}
-
-	int start;
-	int end;
-	RuntimeRule terminalRule;
 
 	@Override
 	public boolean getIsEmptyLeaf() {
@@ -54,12 +60,12 @@ public class Leaf extends Node implements ILeaf {
 
 	@Override
 	public String getName() {
-		return this.terminalRule.getName();
+		return this.getTerminalRule().getName();
 	}
 
 	@Override
 	public boolean isPattern() {
-		return this.terminalRule.getPatternFlags() != Pattern.LITERAL;
+		return this.getTerminalRule().getPatternFlags() != Pattern.LITERAL;
 	}
 
 	@Override
@@ -89,7 +95,8 @@ public class Leaf extends Node implements ILeaf {
 
 	@Override
 	public String getMatchedText() {
-		return this.input.get(this.start, this.end).toString();
+		return this.text;
+		// return this.input.get(this.start, this.end).toString();
 	}
 
 	// public Leaf deepClone() {

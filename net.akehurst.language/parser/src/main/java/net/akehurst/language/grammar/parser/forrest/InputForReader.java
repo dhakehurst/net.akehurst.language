@@ -15,8 +15,10 @@
  */
 package net.akehurst.language.grammar.parser.forrest;
 
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,48 +29,37 @@ import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 
-public class Input3 implements IInput {
+public class InputForReader implements IInput {
 
-	public Input3(final RuntimeRuleSetBuilder ffactory, final CharSequence text) {
+	public InputForReader(final RuntimeRuleSetBuilder ffactory, final Reader reader) {
 		this.ffactory = ffactory;
 		this.NO_LEAF = this.ffactory.createLeaf(null, -1, -1, null);
-		this.text = text;
+		this.reader = reader;
 		this.leaf_cache = new HashMap<>();
 		// this.bud_cache = new HashMap<>();
+		this.alreadyRead = new StringBuilder();
 	}
 
 	private final RuntimeRuleSetBuilder ffactory;
-	private final CharSequence text;
+	private final Reader reader;
+	private final StringBuilder alreadyRead;
+
+	private CharSequence getTextTo(final int pos) {
+		// TODO:
+		if (pos > this.alreadyRead.length()) {
+			final Scanner s = new Scanner(this.reader);
+			// s.match()
+			return "";
+		} else {
+			return this.alreadyRead.subSequence(0, pos);
+		}
+	}
 
 	@Override
 	public boolean getIsEnd(final int pos) {
-		return pos >= this.text.length();
+		// TODO:
+		return true;// pos >= this.text.length();
 	}
-
-	// @Override
-	// public CharSequence get(final int start, final int end) {
-	// return this.text.subSequence(start, end);
-	// }
-
-	// public int getLength() {
-	// return this.text.length();
-	// }
-
-	// Map<IntPair, ParseTreeBud2> bud_cache;
-	// public ParseTreeBud2 createBud(RuntimeRule terminalRule, int pos) {
-	// int terminalTypeNumber = terminalRule.getRuleNumber();
-	// IntPair key = new IntPair(terminalTypeNumber, pos);
-	// ParseTreeBud2 bud = this.bud_cache.get(key);
-	// if (null==bud) {
-	// Leaf l = this.fetchOrCreateBud(terminalRule, pos);
-	// if (NO_LEAF!=l) {
-	// bud = new ParseTreeBud2(l);
-	// this.bud_cache.put(key, bud);
-	// return bud;
-	// }
-	// }
-	// return bud;
-	// }
 
 	final Leaf NO_LEAF;
 
@@ -105,6 +96,7 @@ public class Input3 implements IInput {
 
 	@Override
 	public Leaf fetchOrCreateBud(final RuntimeRule terminalRule, final int pos) {
+		// TODO:
 		final int terminalTypeNumber = terminalRule.getRuleNumber();
 		final IntPair key = new IntPair(terminalTypeNumber, pos);
 		final Leaf l = this.leaf_cache.get(key);
@@ -112,8 +104,8 @@ public class Input3 implements IInput {
 			if (terminalRule.getIsEmptyRule()) {
 				return new EmptyLeaf(pos, terminalRule);
 			}
-			final Matcher m = Pattern.compile(terminalRule.getTerminalPatternText(), terminalRule.getPatternFlags()).matcher(this.text);
-			m.region(pos, this.text.length());
+			final Matcher m = Pattern.compile(terminalRule.getTerminalPatternText(), terminalRule.getPatternFlags()).matcher(this.alreadyRead);
+			m.region(pos, 0);
 			if (m.lookingAt()) {
 				final String matchedText = m.group();
 				final int start = m.start();

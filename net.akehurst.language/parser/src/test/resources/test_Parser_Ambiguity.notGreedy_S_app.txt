@@ -1,0 +1,35 @@
+grammar Test {
+  S        : postfix '++' ; 
+  postfix  : expr multiPPs ; 
+  multiPPs : '++'* ; 
+  expr     : 'a' ; 
+}
+
+input 'aa'
+
+season  | head | action(on)  | start,len,nextItem: path 
+========|======|=============|==================
+  0       (1)     start         0,0,0:S -
+
+  1       (1)    width(1)       0,1,C:'a' --> 0,0,0:S -
+  
+  2       (1)    height(1)      0,1,C:expr{'a'} --> 0,0,0:S -
+  
+  3       (1)    height(1)      0,1,1:postfix{expr{'a'}} --> 0,0,0:S -
+  
+  4       (1)    width(1)       1,0,C:empty --> 0,1,1:postfix{expr{'a'}} --> 0,0,0:S -
+  4       (2)    width(1)       1,2,C:'++' --> 0,1,1:postfix{expr{'a'}} --> 0,0,0:S -
+  
+  5       (1)    height(1)      1,0,C:multiPPs{empty} --> 0,1,1:postfix{expr{'a'}} --> 0,0,0:S -
+  5       (2)    height(2)      1,2,1:multiPPs{'++'} --> 0,1,1:postfix{expr{'a'}} --> 0,0,0:S -
+  
+  6       (1)    graft(1)       0,1,C:postfix{expr{'a'}} --> 0,0,0:S -
+  6       (2)    graft(2)       0,3,C:postfix{expr{'a'}} --> 0,0,0:S -
+  
+  7       (1)    graft(1)       0,0,1:S{postfix{expr{'a'}},-
+  7       (2)    graft(2)       0,3,1:S{postfix{expr{'a'}},-
+  
+  8       (1)    ?(1)       0,0,1:S{postfix{expr{'a'}},-
+  8       (2)    ?(2)       0,3,1:S{postfix{expr{'a'}},-
+  
+  

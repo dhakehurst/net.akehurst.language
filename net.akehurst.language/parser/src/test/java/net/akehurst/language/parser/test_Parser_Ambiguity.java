@@ -21,6 +21,7 @@ import org.junit.Test;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
+import net.akehurst.language.grammar.parse.tree.ParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -29,7 +30,7 @@ import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
-public class Parser_Ambiguity_Test extends AbstractParser_Test {
+public class test_Parser_Ambiguity extends AbstractParser_Test {
 
 	Grammar am() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
@@ -118,9 +119,7 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
-			b.define("S { empty }");
-			final IParseTree expected = b.build();
-			// final IBranch expected = b.branch("S", b.emptyLeaf("S"));
+			final IParseTree expected = new ParseTree(b.branch("S", b.emptyLeaf("S")));
 			Assert.assertEquals(expected, tree);
 
 		} catch (final ParseFailedException e) {
@@ -140,8 +139,8 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
-			b.define("S { 'a' }");
-			final IParseTree expected = b.build();
+			// b.define("S { 'a' }");
+			final IParseTree expected = new ParseTree(b.branch("S", b.leaf("a")));
 			// final IBranch expected = b.branch("S", b.leaf("a"));
 			Assert.assertEquals(expected, tree);
 
@@ -171,23 +170,48 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void x_S_aa() {
+	public void x_S_a() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.x();
-			final String goal = "S";
-			final String text = "aa";
+		final Grammar g = this.x();
+		final String goal = "S";
+		final String text = "a";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final IBranch expected = b.branch("S", b.branch("aaa", b.branch("a2", b.leaf("a"), b.leaf("a"))));
-			Assert.assertEquals(expected, tree.getRoot());
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		final IParseTree expected = new ParseTree(b.branch("S", b.branch("aaa", b.branch("a1", b.leaf("a")))));
+		Assert.assertEquals(expected, tree);
+	}
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+	@Test
+	public void x_S_aa() throws ParseFailedException {
+		// grammar, goal, input
+		final Grammar g = this.x();
+		final String goal = "S";
+		final String text = "aa";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		final IParseTree expected = new ParseTree(b.branch("S", b.branch("aaa", b.branch("a2", b.leaf("a"), b.leaf("a")))));
+		Assert.assertEquals(expected, tree);
+	}
+
+	@Test
+	public void x_S_aaa() throws ParseFailedException {
+		// grammar, goal, input
+		final Grammar g = this.x();
+		final String goal = "S";
+		final String text = "aaa";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		final IParseTree expected = new ParseTree(b.branch("S", b.branch("aaa", b.branch("a3", b.leaf("a"), b.leaf("a"), b.leaf("a")))));
+		Assert.assertEquals(expected, tree);
 	}
 
 	@Test
@@ -420,26 +444,24 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void ambiguity_block2() {
+	public void ambiguity_block2() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.caseBlock();
-			final String goal = "block";
-			final String text = "{ case 1 : }";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.caseBlock();
+		final String goal = "block";
+		final String text = "{ case 1 : }";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final IBranch expected = b.branch("block", b.leaf("{"), b.branch("WS", b.leaf("\\s+", " ")), b.branch("group1", b.emptyLeaf("group1")),
-					b.branch("group2", b.branch("label", b.leaf("case"), b.branch("WS", b.leaf("\\s+", " ")),
-							b.branch("int", b.leaf("[0-9]+", "1"), b.branch("WS", b.leaf("\\s+", " "))), b.leaf(":"), b.branch("WS", b.leaf("\\s+", " ")))),
-					b.leaf("}"));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		final IBranch expected = b.branch("block", b.leaf("{"), b.branch("WS", b.leaf("\\s+", " ")), b.branch("group1", b.emptyLeaf("group1")),
+				b.branch("group2",
+						b.branch("label", b.leaf("case"), b.branch("WS", b.leaf("\\s+", " ")),
+								b.branch("int", b.leaf("[0-9]+", "1"), b.branch("WS", b.leaf("\\s+", " "))), b.leaf(":"), b.branch("WS", b.leaf("\\s+", " ")))),
+				b.leaf("}"));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	Grammar varDeclBlock() {
@@ -485,11 +507,14 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final IBranch expected = b.branch("block", b.leaf("{"), b.branch("WS", b.leaf("\\s+", " ")),
-					b.branch("decls", b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))),
-							b.branch("name", b.leaf("[a-zA-Z0-9]+", "i")), b.leaf(";"), b.branch("WS", b.leaf("\\s+", " ")))),
-					b.leaf("}"));
-			Assert.assertEquals(expected, tree.getRoot());
+			final IParseTree expected = new ParseTree(
+					b.branch(
+							"block", b.leaf("{"), b.branch("WS", b.leaf("\\s+", " ")), b
+									.branch("decls",
+											b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))),
+													b.branch("name", b.leaf("[a-zA-Z0-9]+", "i")), b.leaf(";"), b.branch("WS", b.leaf("\\s+", " ")))),
+							b.leaf("}")));
+			Assert.assertEquals(expected, tree);
 
 		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -497,40 +522,89 @@ public class Parser_Ambiguity_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void varDeclBlock_block_8() {
+	public void varDeclBlock_block_2() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.varDeclBlock();
-			final String goal = "block";
-			final String text = "{ int i1; int i2; int i3; int i4; int i5; int i6; int i7; int i8; }";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.varDeclBlock();
+		final String goal = "block";
+		final String text = "{int i1;int i2;}";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final IBranch expected = b.branch("block", b.leaf("{"), b.branch("WS", b.leaf("\\s+", " ")),
-					b.branch("decls",
-							b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))),
-									b.branch("name", b.leaf("[a-zA-Z0-9]+", "i1")), b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-							b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))),
-									b.branch("name", b.leaf("[a-zA-Z0-9]+", "i2")), b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-							b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))),
-									b.branch("name", b.leaf("[a-zA-Z0-9]+", "i3")), b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-							b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))),
-									b.branch("name", b.leaf("[a-zA-Z0-9]+", "i4")), b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-							b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))),
-									b.branch("name", b.leaf("[a-zA-Z0-9]+", "i5")), b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-							b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))),
-									b.branch("name", b.leaf("[a-zA-Z0-9]+", "i6")), b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-							b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))),
-									b.branch("name", b.leaf("[a-zA-Z0-9]+", "i7")), b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-							b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))),
-									b.branch("name", b.leaf("[a-zA-Z0-9]+", "i8")), b.leaf(";"), b.branch("WS", b.leaf("\\s+", " ")))),
-					b.leaf("}"));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("block {");
+		b.define("  '{'");
+		b.define("  decls {");
+		b.define("    decl {");
+		b.define("      type { 'int' WS { '\\s+':' '} }");
+		b.define("      name { '[a-zA-Z0-9]+':'i1' }");
+		b.define("      ';'");
+		b.define("    }");
+		b.define("    decl {");
+		b.define("      type { 'int' WS { '\\s+':' '} }");
+		b.define("      name { '[a-zA-Z0-9]+':'i2' }");
+		b.define("      ';'");
+		b.define("    }");
+		b.define("  }");
+		b.define("  '}'");
+		b.define("}");
+		final IParseTree expected = b.build();
+		Assert.assertEquals(expected, tree);
+
+	}
+
+	@Test
+	public void varDeclBlock_block_8() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.varDeclBlock();
+		final String goal = "block";
+		final String text = "{ int i1; int i2; int i3; int i4; int i5; int i6; int i7; int i8; }";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		final IBranch expected = b.branch("block", b.leaf("{"), b.branch("WS", b.leaf("\\s+", " ")),
+				b.branch("decls",
+						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i1")),
+								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
+						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i2")),
+								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
+						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i3")),
+								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
+						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i4")),
+								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
+						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i5")),
+								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
+						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i6")),
+								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
+						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i7")),
+								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
+						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i8")),
+								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " ")))),
+				b.leaf("}"));
+		Assert.assertEquals(expected, tree.getRoot());
+
+	}
+
+	// abstraction of weird postfix rules from Java8 grammar
+	Grammar notGreedy() {
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("S").concatenation(new NonTerminal("postfix"), new TerminalLiteral("++"));
+		b.rule("postfix").concatenation(new NonTerminal("expr"), new NonTerminal("multiPPs"));
+		b.rule("multiPPs").multi(0, -1, new TerminalLiteral("++"));
+		b.rule("expr").choice(new TerminalLiteral("a"));
+		return b.get();
+	}
+
+	@Test
+	public void notGreedy_S_app() throws ParseFailedException {
+		final Grammar g = this.notGreedy();
+		final String goal = "S";
+		final String text = "a++";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 	}
 }

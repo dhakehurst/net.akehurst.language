@@ -15,13 +15,10 @@
  */
 package net.akehurst.language.processor;
 
-import java.io.StringReader;
-
 import org.junit.Assert;
 import org.junit.Before;
 
 import net.akehurst.language.core.grammar.RuleNotFoundException;
-import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
@@ -31,29 +28,28 @@ import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 
-abstract
-public class AbstractParser_Test {
-	
+abstract public class AbstractParser_Test {
+
 	protected RuntimeRuleSetBuilder parseTreeFactory;
-	
+
 	@Before
 	public void before() {
 		this.parseTreeFactory = new RuntimeRuleSetBuilder();
 	}
-	
-	ParseTreeBuilder builder(Grammar grammar, String text, String goal) {
-		return new ParseTreeBuilder(this.parseTreeFactory, grammar, goal, text,0);
+
+	ParseTreeBuilder builder(final Grammar grammar, final String text, final String goal) {
+		return new ParseTreeBuilder(this.parseTreeFactory, grammar, goal, text, 0);
 	}
-	
-	protected IParseTree process(Grammar grammar, String text, String goalName) throws ParseFailedException {
+
+	protected IParseTree process(final Grammar grammar, final String text, final String goalName) throws ParseFailedException {
 		try {
-			IParser parser = new ScannerLessParser3(this.parseTreeFactory, grammar);
-			IParseTree tree = parser.parse(goalName, new StringReader(text));
+			final IParser parser = new ScannerLessParser3(this.parseTreeFactory, grammar);
+			final IParseTree tree = parser.parse(goalName, text);
 			return tree;
-		} catch (RuleNotFoundException e) {
+		} catch (final RuleNotFoundException e) {
 			Assert.fail(e.getMessage());
 			return null;
-		} catch (ParseTreeException e) {
+		} catch (final ParseTreeException e) {
 			Assert.fail(e.getMessage());
 			return null;
 		}

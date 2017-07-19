@@ -28,7 +28,7 @@ import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
-public class Parser_Multi_Test extends AbstractParser_Test {
+public class test_Parser_Multi extends AbstractParser_Test {
 
 	Grammar ab01() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
@@ -88,24 +88,21 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void as0n_as_empty() {
+	public void as0n_as_empty() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.as0n();
-			final String goal = "as";
-			final String text = "";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.as0n();
+		final String goal = "as";
+		final String text = "";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("as", b.emptyLeaf("as"));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		;
+		final IBranch expected = b.branch("as", b.emptyLeaf("as"));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
@@ -215,24 +212,21 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void as13_as_aaa() {
+	public void as13_as_aaa() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.as13();
-			final String goal = "as";
-			final String text = "aaa";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.as13();
+		final String goal = "as";
+		final String text = "aaa";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+
+		final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
@@ -402,7 +396,7 @@ public class Parser_Multi_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void nested_top_() {
+	public void nested_top_aa() {
 		// grammar, goal, input
 		try {
 			final Grammar g = this.nested();

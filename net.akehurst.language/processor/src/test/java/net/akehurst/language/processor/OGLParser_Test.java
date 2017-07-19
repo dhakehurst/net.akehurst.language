@@ -263,77 +263,64 @@ public class OGLParser_Test {
 	}
 
 	@Test
-	public void nonTerminalOnly_1() {
-		try {
-			final IGrammar g = this.nonTerminalOnly();
-			final String goal = "grammarDefinition";
-			String text = "namespace test;" + System.lineSeparator();
-			text += "grammar A {" + System.lineSeparator();
-			text += "a = b ;";
-			text += "}";
+	public void nonTerminalOnly_1() throws ParseFailedException {
 
-			final IParseTree tree = this.process(g, text, goal);
+		final IGrammar g = this.nonTerminalOnly();
+		final String goal = "grammarDefinition";
+		String text = "namespace test;" + System.lineSeparator();
+		text += "grammar A {" + System.lineSeparator();
+		text += "a = b ;";
+		text += "}";
 
-			Assert.assertNotNull(tree);
+		final IParseTree tree = this.process(g, text, goal);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		Assert.assertNotNull(tree);
+
 	}
 
 	@Test
-	public void a() {
-		try {
-			final OGLanguageProcessor proc = new OGLanguageProcessor();
-			final IGrammar g = proc.getGrammar();
+	public void a() throws ParseFailedException {
 
-			String text = "namespace test;" + System.lineSeparator();
-			text += "grammar A {" + System.lineSeparator();
-			text += " skip SP : ' ' ;" + System.lineSeparator();
-			text += " a : 'a' ;" + System.lineSeparator();
-			text += "}";
+		final OGLanguageProcessor proc = new OGLanguageProcessor();
+		final IGrammar g = proc.getGrammar();
 
-			final IParseTree tree = this.process(g, text, "grammarDefinition");
+		String text = "namespace test;" + System.lineSeparator();
+		text += "grammar A {" + System.lineSeparator();
+		text += " skip SP : ' ' ;" + System.lineSeparator();
+		text += " a : 'a' ;" + System.lineSeparator();
+		text += "}";
 
-			Assert.assertNotNull(tree);
+		final IParseTree tree = this.process(g, text, "grammarDefinition");
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		Assert.assertNotNull(tree);
+
 	}
 
 	@Test
-	public void a2() {
-		try {
-			final OGLanguageProcessor proc = new OGLanguageProcessor();
-			final IGrammar g = proc.getGrammar();
+	public void a2() throws ParseFailedException {
+		final OGLanguageProcessor proc = new OGLanguageProcessor();
+		final IGrammar g = proc.getGrammar();
 
-			final String text = "namespace test; grammar A { skip SP : ' ' ; a : 'a' ; }";
+		final String text = "namespace test; grammar A { skip SP : ' ' ; a : 'a' ; }";
 
-			final IParseTree tree = this.process(g, text, "grammarDefinition");
+		final IParseTree tree = this.process(g, text, "grammarDefinition");
 
-			Assert.assertNotNull(tree);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
 	}
 
 	@Test
-	public void separatedList() {
-		try {
-			final OGLanguageProcessor proc = new OGLanguageProcessor();
-			final IGrammar g = proc.getGrammar();
+	public void separatedList() throws ParseFailedException {
 
-			final String text = "['a' / ',']+";
+		final OGLanguageProcessor proc = new OGLanguageProcessor();
+		final IGrammar g = proc.getGrammar();
 
-			final IParseTree tree = this.process(g, text, "separatedList");
+		final String text = "['a' / ',']+";
 
-			Assert.assertNotNull(tree);
+		final IParseTree tree = this.process(g, text, "separatedList");
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		Assert.assertNotNull(tree);
+
 	}
 
 	@Test

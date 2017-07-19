@@ -18,9 +18,9 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
+import net.akehurst.language.grammar.parse.tree.ParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -28,9 +28,12 @@ import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
-public class Special_Test extends AbstractParser_Test {
-	/*
-	 * S : 'a' S B B | 'a' ; B : 'b' ? ;
+public class test_Special extends AbstractParser_Test {
+	/**
+	 * <code>
+	 * S : 'a' S B B | 'a' ;
+	 * B : 'b' ? ;
+	 * </code>
 	 */
 	Grammar S() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
@@ -54,10 +57,10 @@ public class Special_Test extends AbstractParser_Test {
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("S",
-					b.branch("S$group1", b.leaf("a", "a"), b.branch("S", b.leaf("a", "a")), b.branch("B", b.leaf("b", "b")), b.branch("B", b.emptyLeaf("B"))));
-			Assert.assertEquals(expected, tree.getRoot());
+
+			final IParseTree expected = new ParseTree(b.branch("S",
+					b.branch("S$group1", b.leaf("a", "a"), b.branch("S", b.leaf("a", "a")), b.branch("B", b.leaf("b", "b")), b.branch("B", b.emptyLeaf("B")))));
+			Assert.assertEquals(expected, tree);
 
 		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());

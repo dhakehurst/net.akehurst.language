@@ -4,15 +4,19 @@ import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class Factory {
-	
+
 	public Branch createBranch(final RuntimeRule r, final INode[] children) {
-		Branch b = new Branch(r, children);
+		final Branch b = new Branch(r, children);
 		return b;
 	}
-	
-	public Leaf createLeaf(IInput input, int start, int end, RuntimeRule terminalRule) {
-		Leaf l = new Leaf(input, start, end, terminalRule);
+
+	public Leaf createLeaf(final String text, final int start, final int end, final RuntimeRule terminalRule) {
+		final Leaf l = new Leaf(text, start, end, terminalRule);
 		return l;
 	}
-	
+
+	public Leaf createEmptyLeaf(final int pos, final RuntimeRule terminalRule) {
+		return new EmptyLeaf(pos, terminalRule);
+	}
+
 }

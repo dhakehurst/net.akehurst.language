@@ -21,7 +21,6 @@ import net.akehurst.language.core.grammar.ITerminal;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.grammar.parse.tree.Branch;
 import net.akehurst.language.grammar.parse.tree.Factory;
-import net.akehurst.language.grammar.parse.tree.IInput;
 import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
@@ -95,8 +94,12 @@ public class RuntimeRuleSetBuilder {
 		return this.parseTreeFactory.createBranch(r, children);
 	}
 
-	public Leaf createLeaf(final IInput input, final int start, final int end, final RuntimeRule terminalRule) {
-		return this.parseTreeFactory.createLeaf(input, start, end, terminalRule);
+	public Leaf createLeaf(final String text, final int start, final int end, final RuntimeRule terminalRule) {
+		return this.parseTreeFactory.createLeaf(text, start, end, terminalRule);
+	}
+
+	public Leaf createEmptyLeaf(final int pos, final RuntimeRule terminalRule) {
+		return this.parseTreeFactory.createEmptyLeaf(pos, terminalRule);
 	}
 
 	public RuntimeRuleItem createRuntimeRuleItem(final RuntimeRuleItemKind kind) {

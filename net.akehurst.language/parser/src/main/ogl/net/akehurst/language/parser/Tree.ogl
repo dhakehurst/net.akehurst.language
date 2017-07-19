@@ -7,7 +7,9 @@ grammar Tree {
 	nodes : node+ ;
 	node : branch | leaf | empty ;
 	branch : NAME '{'  nodes '}' ;
-	leaf : "'(?:\\?.)*?'" ;
+	leaf : literal | pattern ;
+	pattern : literal ':' literal ;
+	literal : "'(?:\\?.)*?'" ;
 	empty : 'empty' ;
 	
 	NAME : "[a-zA-Z_][a-zA-Z_0-9]*" ;  //same as IDENTIFIER from OGL.ogl

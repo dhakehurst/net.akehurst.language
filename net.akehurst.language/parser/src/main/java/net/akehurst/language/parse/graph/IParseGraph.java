@@ -2,9 +2,11 @@ package net.akehurst.language.parse.graph;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
+import net.akehurst.language.parse.graph.IGraphNode.PreviousInfo;
 
 public interface IParseGraph {
 
@@ -16,15 +18,17 @@ public interface IParseGraph {
 
 	// void removeGrowable(IGraphNode node);
 
-	IGraphNode createLeaf(Leaf leaf, RuntimeRule terminalRule, int startPosition, int matchedLength);
+	// IGraphNode createLeaf(Leaf leaf, RuntimeRule terminalRule, int startPosition, int matchedLength);
+
+	void createStart(RuntimeRule goalRule);
 
 	IGraphNode findOrCreateLeaf(Leaf leaf, RuntimeRule terminalRule, int startPosition, int matchedLength);
 
-	IGraphNode createBranch(RuntimeRule rr, int priority, int startPosition, int length, int nextItemIndex, int height);
+	IGraphNode createBranch(RuntimeRule rr, int priority, int startPosition, int length, int nextItemIndex, int height, Set<PreviousInfo> previous);
 
 	IGraphNode findCompleteNode(int ruleNumber, int start, int length);
 
-	IGraphNode findOrCreateBranch(RuntimeRule rr, int priority, int startPosition, int machedTextLength, int nextItemIndex, int height);
+	// IGraphNode findOrCreateBranch(RuntimeRule rr, int priority, int startPosition, int machedTextLength, int nextItemIndex, int height);
 
 	/**
 	 * Use to grow the height of a tree. Creates a new node. Add the child. Then add the stack of the child to the new node.

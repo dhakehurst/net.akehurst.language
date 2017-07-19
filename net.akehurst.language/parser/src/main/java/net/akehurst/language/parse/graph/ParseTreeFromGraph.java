@@ -2,7 +2,6 @@ package net.akehurst.language.parse.graph;
 
 import java.util.Objects;
 
-import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
@@ -11,7 +10,7 @@ import net.akehurst.language.grammar.parser.ToStringVisitor;
 public class ParseTreeFromGraph implements IParseTree {
 
 	public ParseTreeFromGraph(final IGraphNode gr) {
-		this.root = (IBranch) gr;
+		this.root = (INode) gr;
 	}
 
 	@Override
@@ -19,7 +18,7 @@ public class ParseTreeFromGraph implements IParseTree {
 		return visitor.visit(this, arg);
 	}
 
-	IBranch root;
+	INode root;
 
 	@Override
 	public INode getRoot() {

@@ -214,6 +214,21 @@ public class OGL_Java_Test {
 		Assert.assertNotNull(tree);
 	}
 
+	@Test
+	public void Java8_partial_7_postIncrementExpression() {
+		final String text = "i++";
+		// final IParseTree tree = this.parse("src/test/resources/Java8_partial_7.og", "postIncrementExpression", text);
+		final IParseTree tree = this.parse("src/test/resources/Java8_all.og", "postIncrementExpression", text);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void Java8_partial_8_expressionStatement() {
+		final String text = "i++";
+		final IParseTree tree = this.parse("src/test/resources/Java8_partial_8.og", "statementExpression", text);
+		Assert.assertNotNull(tree);
+	}
+
 	// public void java7_formalParameters()
 
 	@Test

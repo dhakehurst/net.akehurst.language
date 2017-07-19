@@ -18,7 +18,6 @@ package net.akehurst.language.grammar.parser.forrest;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.StringReader;
 import java.util.stream.Collectors;
 
 import net.akehurst.language.core.analyser.ISemanticAnalyser;
@@ -81,7 +80,7 @@ public class ParseTreeBuilder {
 					.get();
 		}
 		final RuntimeRule terminalRule = this.runtimeBuilder.getRuntimeRuleSet().getForTerminal(terminal.getValue());
-		final ILeaf l = this.runtimeBuilder.createLeaf(this.input, start, end, terminalRule);
+		final ILeaf l = this.runtimeBuilder.createLeaf(text, start, end, terminalRule);
 		return l;
 	}
 
@@ -89,7 +88,7 @@ public class ParseTreeBuilder {
 		final int start = this.textLength + this.offset;
 		final RuntimeRule ruleThatIsEmpty = this.runtimeBuilder.getRuntimeRuleSet().getRuntimeRule(ruleNameThatIsEmpty);
 		final RuntimeRule terminalRule = this.runtimeBuilder.getRuntimeRuleSet().getEmptyRule(ruleThatIsEmpty);
-		return this.runtimeBuilder.createLeaf(this.input, start, start, terminalRule);
+		return this.runtimeBuilder.createEmptyLeaf(start, terminalRule);
 	}
 
 	public IBranch branch(final String ruleName, final INode... children) {
@@ -129,7 +128,7 @@ public class ParseTreeBuilder {
 		try {
 			final String treeStr = this.sb.toString();
 			final IParser treeParser = new ScannerLessParser3(new RuntimeRuleSetBuilder(), this.getTreeGrammar());
-			final IParseTree treeTree = treeParser.parse("tree", new StringReader(treeStr));
+			final IParseTree treeTree = treeParser.parse("tree", treeStr);
 			final IParseTreeVisitor<Object, String, Throwable> v = new IParseTreeVisitor<Object, String, Throwable>() {
 
 				@Override
@@ -164,6 +163,14 @@ public class ParseTreeBuilder {
 							return ParseTreeBuilder.this.branch(target.getBranchChild(0).getChild(0).getMatchedText(),
 									(INode[]) target.getBranchChild(2).accept(this, target.getBranchChild(0).getChild(0).getMatchedText()));
 						case "leaf":
+							return target.getBranchChild(0).accept(this, arg);
+						case "pattern":
+							return ParseTreeBuilder.this.leaf(
+									target.getBranchChild(0).getChild(0).getMatchedText().substring(1,
+											target.getBranchChild(0).getChild(0).getMatchedText().length() - 1),
+									target.getBranchChild(2).getChild(0).getMatchedText().substring(1,
+											target.getBranchChild(2).getChild(0).getMatchedText().length() - 1));
+						case "literal":
 							return ParseTreeBuilder.this
 									.leaf(target.getChild(0).getMatchedText().substring(1, target.getChild(0).getMatchedText().length() - 1));
 						case "empty":

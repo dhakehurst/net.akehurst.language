@@ -114,7 +114,7 @@ public class Java8_Tests {
 	static IParseTree parse(final String goalName, final String input) {
 		try {
 			final IParser parser = Java8_Tests.getJavaProcessor().getParser();
-			final IParseTree tree = parser.parse(goalName, new StringReader(input));
+			final IParseTree tree = parser.parse(goalName, input);
 			return tree;
 		} catch (final ParseFailedException e) {
 			return null;// e.getLongestMatch();
@@ -443,9 +443,45 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void typeArguments() {
+	public void typeArguments1() {
 
 		final String input = "<E>";
+		IParseTree tree = null;
+		try {
+			tree = Java8_Tests.parse("typeArguments", input);
+		} catch (final Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void typeArguments2() {
+
+		final String input = "<E,F>";
+		IParseTree tree = null;
+		try {
+			tree = Java8_Tests.parse("typeArguments", input);
+		} catch (final Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void typeArguments3() {
+
+		final String input = "<E,F,G>";
 		IParseTree tree = null;
 		try {
 			tree = Java8_Tests.parse("typeArguments", input);
@@ -856,6 +892,150 @@ public class Java8_Tests {
 	}
 
 	@Test
+	public void preIncrementExpression() {
+		final String input = "++i";
+
+		final IParseTree tree = Java8_Tests.parse("preIncrementExpression", input);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void postfixExpression() {
+		final String input = "i";
+
+		final IParseTree tree = Java8_Tests.parse("postfixExpression", input);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void postfixExpressionpp() {
+		final String input = "i++";
+
+		final IParseTree tree = Java8_Tests.parse("postfixExpression", input);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void postIncrementExpression() {
+		final String input = "i++ ++";
+
+		final IParseTree tree = Java8_Tests.parse("postIncrementExpression", input);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void primary_literal() {
+		final String input = "1";
+
+		final IParseTree tree = Java8_Tests.parse("primary", input);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void primary_arrayClass() {
+		final String input = "MyClass[].class";
+
+		final IParseTree tree = Java8_Tests.parse("primary", input);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void primary_voidClass() {
+		final String input = "void.class";
+
+		final IParseTree tree = Java8_Tests.parse("primary", input);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void primary_this() {
+		final String input = "this";
+
+		final IParseTree tree = Java8_Tests.parse("primary", input);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void primary_typeNameThis() {
+		final String input = "MyClass.this";
+
+		final IParseTree tree = Java8_Tests.parse("primary", input);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void primary_parenth_expression() {
+		final String input = "(1 + 1)";
+
+		final IParseTree tree = Java8_Tests.parse("primary", input);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void primary_classInstanceCreationExpression() {
+		final String input = "new MyClass()";
+
+		final IParseTree tree = Java8_Tests.parse("primary", input);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void primary_fieldAccess() {
+		final String input = "super.field";
+
+		final IParseTree tree = Java8_Tests.parse("primary", input);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
 	public void expression() {
 		final String input = "i++";
 
@@ -1011,6 +1191,32 @@ public class Java8_Tests {
 
 	@Test
 	public void HexFloatLiteral() {
+		final String input = "0Xfffffffffffffbcp-59D";
+
+		final IParseTree tree = Java8_Tests.parse("HexadecimalFloatingPointLiteral", input);
+
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void unaryExpression_HexFloatLiteral() {
+		final String input = "+0Xfffffffffffffbcp-59D";
+
+		final IParseTree tree = Java8_Tests.parse("unaryExpression", input);
+
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void HexFloatLiteral_in_check_call() {
 		final String input = "check(+0Xfffffffffffffbcp-59D, Double.parseDouble(\"+0Xfffffffffffffbcp-59D\"));";
 
 		final IParseTree tree = Java8_Tests.parse("blockStatement", input);

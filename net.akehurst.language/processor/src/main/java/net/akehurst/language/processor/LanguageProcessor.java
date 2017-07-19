@@ -74,6 +74,22 @@ public class LanguageProcessor implements ILanguageProcessor {
 	}
 
 	@Override
+	public <T> T process(final String text, final String goalRuleName, final Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
+		try {
+
+			final IParseTree tree = this.getParser().parse(goalRuleName, text);
+			if (null == this.getSemanticAnalyser()) {
+				throw new UnableToAnalyseExeception("No SemanticAnalyser supplied", null);
+			}
+			final T t = this.getSemanticAnalyser().analyse(targetType, tree);
+
+			return t;
+		} catch (final RuleNotFoundException | ParseTreeException e) {
+			throw new ParseFailedException(e.getMessage(), null);
+		}
+	}
+
+	@Override
 	public <T> T process(final Reader reader, final String goalRuleName, final Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
 		try {
 
@@ -84,11 +100,21 @@ public class LanguageProcessor implements ILanguageProcessor {
 			final T t = this.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
-		} catch (final RuleNotFoundException e) {
-			throw new ParseFailedException(e.getMessage(), null);
-		} catch (final ParseTreeException e) {
+		} catch (final RuleNotFoundException | ParseTreeException e) {
 			throw new ParseFailedException(e.getMessage(), null);
 		}
+	}
+
+	@Override
+	public List<ICompletionItem> expectedAt(final String text, final String goalRuleName, final int position, final int desiredDepth)
+			throws ParseFailedException, ParseTreeException {
+		final List<IRuleItem> parserExpected = this.getParser().expectedAt(goalRuleName, text, position);
+		final Set<ICompletionItem> expected = new LinkedHashSet<>();
+		for (final IRuleItem item : parserExpected) {
+			final List<ICompletionItem> exp = this.getCompletionProvider().provideFor(item, desiredDepth);
+			expected.addAll(exp);
+		}
+		return new ArrayList<>(expected);
 	}
 
 	@Override

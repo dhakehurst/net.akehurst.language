@@ -2,6 +2,7 @@ package net.akehurst.language.parse.graph;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.INode;
@@ -35,7 +36,7 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode, ILea
 	}
 
 	@Override
-	public IGraphNode duplicateWithOtherStack(final int priority, final List<PreviousInfo> previous) {
+	public IGraphNode duplicateWithOtherStack(final int priority, final Set<PreviousInfo> previous) {
 		throw new RuntimeException("Internal Error: Should never happen");
 	}
 

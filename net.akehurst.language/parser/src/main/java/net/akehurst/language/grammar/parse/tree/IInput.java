@@ -1,7 +1,13 @@
 package net.akehurst.language.grammar.parse.tree;
 
+import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
+
 public interface IInput {
 
-	CharSequence get(int start, int end);
+	Leaf fetchOrCreateBud(RuntimeRule rr, int nextInputPosition);
+
+	boolean getIsEnd(int pos);
+
+	// CharSequence get(int start, int end);
 
 }

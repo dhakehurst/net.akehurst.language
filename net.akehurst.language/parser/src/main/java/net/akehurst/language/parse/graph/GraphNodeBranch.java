@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import net.akehurst.language.core.parser.IBranch;
@@ -43,14 +44,20 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 		if (nextChild.getRuntimeRule().getIsEmptyRule()) {
 			pri = nextChild.getPriority();
 		}
-		final GraphNodeBranch duplicate = new GraphNodeBranch(this.graph, this.runtimeRule, pri, this.startPosition, newLength, newNextItemIndex, this.height);
-		duplicate.children = new ArrayList<>(this.children);
-		duplicate.children.add((INode) nextChild);
+		// final GraphNodeBranch duplicate = new GraphNodeBranch(this.graph, this.runtimeRule, pri, this.startPosition, newLength, newNextItemIndex,
+		// this.height);
+		final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.runtimeRule, pri, this.startPosition, newLength, newNextItemIndex,
+				this.height, this.getPrevious());
+		duplicate.children = new ArrayList<>(this.getChildren());
+		duplicate.getChildren().add((INode) nextChild);
+		nextChild.getPossibleParent().add(duplicate);
 
-		for (final PreviousInfo info : this.getPossibleParent()) {
-			duplicate.addPrevious(info.node, info.atPosition);
-		}
-
+		// for (final PreviousInfo info : this.getPrevious()) {
+		// duplicate.addPrevious(info.node, info.atPosition);
+		// }
+		//
+		// this.graph.tryAddGrowable(duplicate);
+		/// nextChild.addHead(duplicate);
 		this.graph.tryAddGrowable(duplicate);
 
 		if (duplicate.getIsComplete()) {
@@ -64,15 +71,21 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	public IGraphNode duplicateWithNextSkipChild(final IGraphNode nextChild) {
 		final int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
 		final int newNextItemIndex = this.getNextItemIndex();
-		final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength,
-				newNextItemIndex, this.height);
-		duplicate.children = new ArrayList<>(this.children);
-		duplicate.children.add((INode) nextChild);
-
-		for (final PreviousInfo info : this.getPossibleParent()) {
-			duplicate.addPrevious(info.node, info.atPosition);
+		int pri = this.priority;
+		if (nextChild.getRuntimeRule().getIsEmptyRule()) {
+			pri = nextChild.getPriority();
 		}
+		final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.runtimeRule, pri, this.startPosition, newLength, newNextItemIndex,
+				this.height, this.getPrevious());
+		duplicate.children = new ArrayList<>(this.getChildren());
+		duplicate.getChildren().add((INode) nextChild);
+		nextChild.getPossibleParent().add(duplicate);
 
+		// for (final PreviousInfo info : this.getPossibleParent()) {
+		// duplicate.addPrevious(info.node, info.atPosition);
+		// }
+
+		// nextChild.addHead(duplicate);
 		this.graph.tryAddGrowable(duplicate);
 
 		if (duplicate.getIsComplete()) {
@@ -83,14 +96,15 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	}
 
 	@Override
-	public IGraphNode duplicateWithOtherStack(final int priority, final List<PreviousInfo> previous) {
+	public IGraphNode duplicateWithOtherStack(final int priority, final Set<PreviousInfo> previous) {
 		final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.getRuntimeRule(), priority, this.getStartPosition(),
-				this.getMatchedTextLength(), this.getNextItemIndex(), this.getHeight());
-		duplicate.children = new ArrayList<>(this.children);
+				this.getMatchedTextLength(), this.getNextItemIndex(), this.getHeight(), previous);
+		duplicate.children = new ArrayList<>(this.getChildren());
 
-		for (final PreviousInfo info : previous) {
-			duplicate.addPrevious(info.node, info.atPosition);
-		}
+		// for (final PreviousInfo info : previous) {
+		// duplicate.addPrevious(info.node, info.atPosition);
+		// }
+		// nextChild.setHead(duplicate);
 		this.graph.tryAddGrowable(duplicate);
 
 		if (duplicate.getIsComplete()) {
@@ -173,11 +187,11 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 
 	@Override
 	public boolean getCanGraftBack() {
-		if (this.getPossibleParent().isEmpty()) {
+		if (this.getPrevious().isEmpty()) {
 			return this.getIsComplete();
 		}
 		boolean b = false;
-		for (final PreviousInfo info : this.getPossibleParent()) {
+		for (final PreviousInfo info : this.getPrevious()) {
 			b = b || info.node.getExpectsItemAt(this.getRuntimeRule(), info.atPosition);
 		}
 		return b && this.getIsComplete() && this.getIsStacked();
@@ -290,13 +304,22 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 				}
 			}
 			case MULTI: {
-				return Arrays.asList(this.getRuntimeRule().getRhsItem(0));
+				if (0 == this.nextItemIndex && 0 == this.getRuntimeRule().getRhs().getMultiMin()) {
+					return Arrays.asList(this.getRuntimeRule().getRhsItem(0), this.getRuntimeRule().getRuntimeRuleSet().getEmptyRule(this.getRuntimeRule()));
+				} else {
+					return Arrays.asList(this.getRuntimeRule().getRhsItem(0));
+				}
 			}
 			case SEPARATED_LIST: {
 				if (this.nextItemIndex % 2 == 1) {
 					return Arrays.asList(this.getRuntimeRule().getSeparator());
 				} else {
-					return Arrays.asList(this.getRuntimeRule().getRhsItem(0));
+					if (0 == this.nextItemIndex && 0 == this.getRuntimeRule().getRhs().getMultiMin()) {
+						return Arrays.asList(this.getRuntimeRule().getRhsItem(0),
+								this.getRuntimeRule().getRuntimeRuleSet().getEmptyRule(this.getRuntimeRule()));
+					} else {
+						return Arrays.asList(this.getRuntimeRule().getRhsItem(0));
+					}
 				}
 			}
 			default:
@@ -523,12 +546,12 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	@Override
 	public String toString() {
 		String prev = "";
-		if (this.getPossibleParent().isEmpty()) {
+		if (this.getPrevious().isEmpty()) {
 			// nothing
-		} else if (this.getPossibleParent().size() == 1) {
-			prev = " -> " + this.getPossibleParent().get(0);
+		} else if (this.getPrevious().size() == 1) {
+			prev = " -> " + this.getPrevious().iterator().next();
 		} else {
-			prev = " ->* " + this.getPossibleParent().get(0);
+			prev = " ->* " + this.getPrevious().iterator().next();
 		}
 		return this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + "," + this.getStartPosition() + ","
 				+ this.getMatchedTextLength() + "," + this.getNextItemIndex() + ")" + prev;

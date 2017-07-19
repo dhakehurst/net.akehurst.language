@@ -1,5 +1,7 @@
 package net.akehurst.language.parse.graph;
 
+import java.util.Collections;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -22,8 +24,8 @@ public class Test_ParseGraph {
 		final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
 		final RuntimeRule terminalRule = rules.createRuntimeRule(new TerminalLiteral("a"));
 
-		final IParseGraph graph = new ParseGraph(terminalRule, 1);
 		final Input3 input = new Input3(rules, "a");
+		final IParseGraph graph = new ParseGraph(terminalRule, input);
 
 		final int startPosition = 0;
 		final int matchedLength = 1;
@@ -40,8 +42,8 @@ public class Test_ParseGraph {
 
 		final RuntimeRule terminalRule = rules.createRuntimeRule(new TerminalLiteral("a"));
 
-		final IParseGraph graph = new ParseGraph(terminalRule, 1);
 		final Input3 input = new Input3(rules, "a");
+		final IParseGraph graph = new ParseGraph(terminalRule, input);
 
 		final int startPosition = 0;
 		final int matchedLength = 1;
@@ -68,14 +70,14 @@ public class Test_ParseGraph {
 			final RuntimeRule terminalRule = rules.getRuntimeRule(g.findAllTerminal("a"));
 			final RuntimeRule rule = rules.getRuntimeRule(g.findAllRule("a"));
 
-			final IParseGraph graph = new ParseGraph(rule, 1);
 			final Input3 input = new Input3(rules, "a");
+			final IParseGraph graph = new ParseGraph(rule, input);
 
 			final int startPosition = 0;
 			final int length = 1;
 			final int nextItemIndex = 1;
 			final int height = 1;
-			final IGraphNode n = graph.createBranch(rule, 0, startPosition, length, nextItemIndex, height);
+			final IGraphNode n = graph.createBranch(rule, 0, startPosition, length, nextItemIndex, height, Collections.EMPTY_SET);
 
 			Assert.assertNotNull(n);
 		} catch (final Exception e) {
@@ -97,14 +99,14 @@ public class Test_ParseGraph {
 			final RuntimeRule terminalRule = rules.getRuntimeRule(g.findAllTerminal("a"));
 			final RuntimeRule rule = rules.getRuntimeRule(g.findAllRule("a"));
 
-			final IParseGraph graph = new ParseGraph(rule, 1);
 			final Input3 input = new Input3(rules, "a");
+			final IParseGraph graph = new ParseGraph(rule, input);
 
 			final int startPosition = 0;
 			final int length = 1;
 			final int nextItemIndex = 1;
 			final int height = 1;
-			final IGraphNode n = graph.createBranch(rule, 0, startPosition, length, nextItemIndex, height);
+			final IGraphNode n = graph.createBranch(rule, 0, startPosition, length, nextItemIndex, height, Collections.EMPTY_SET);
 			final Leaf l = input.fetchOrCreateBud(terminalRule, 0);
 			final IGraphNode n2 = graph.findOrCreateLeaf(l, terminalRule, startPosition, l.getMatchedTextLength());
 
@@ -131,15 +133,15 @@ public class Test_ParseGraph {
 		c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
 
 		final RuntimeRule goalRule = rules.getRuntimeRule(g.findAllRule("S"));
-		final IParseGraph graph = new ParseGraph(goalRule, 1);
 		final Input3 input = new Input3(rules, "aaa");
+		final IParseGraph graph = new ParseGraph(goalRule, input);
 
 		final RuntimeRule terminal_a = rules.getRuntimeRule(g.findAllTerminal("a"));
 		final RuntimeRule rule_S = rules.getRuntimeRule(g.findAllRule("S"));
 		final RuntimeRule rule_S_group = rules.getRuntimeRule(g.findAllRule("S$group"));
 
 		// start
-		final IGraphNode node_start = graph.createBranch(goalRule, 0, 0, 0, 0, 0);
+		final IGraphNode node_start = graph.createBranch(goalRule, 0, 0, 0, 0, 0, Collections.EMPTY_SET);
 
 		// grow width
 		graph.getGrowable().clear();
@@ -147,7 +149,7 @@ public class Test_ParseGraph {
 		final IGraphNode node_a = graph.findOrCreateLeaf(leaf_a, terminal_a, 0, leaf_a.getMatchedTextLength());
 		node_start.pushToStackOf(node_a, 0);
 
-		Assert.assertTrue(false);
+		Assert.fail("Incomplete test");
 
 	}
 
@@ -163,8 +165,8 @@ public class Test_ParseGraph {
 			c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
 
 			final RuntimeRule goalRule = rules.getRuntimeRule(g.findAllRule("S"));
-			final IParseGraph graph = new ParseGraph(goalRule, 1);
 			final Input3 input = new Input3(rules, "b");
+			final IParseGraph graph = new ParseGraph(goalRule, input);
 
 			final RuntimeRule terminal_b = rules.getRuntimeRule(g.findAllTerminal("b"));
 			final RuntimeRule rule_B = rules.getRuntimeRule(g.findAllRule("B"));
@@ -173,7 +175,7 @@ public class Test_ParseGraph {
 			// e.g. parse empty B followed by 'b' B (see special test)
 
 			// start
-			final IGraphNode node_start = graph.createBranch(goalRule, 0, 0, 0, 0, 0);
+			final IGraphNode node_start = graph.createBranch(goalRule, 0, 0, 0, 0, 0, Collections.EMPTY_SET);
 
 			// grow width
 			graph.getGrowable().clear();
@@ -203,7 +205,7 @@ public class Test_ParseGraph {
 			graph.getGrowable().clear();
 			final IGraphNode node_start_2 = node_start_1.duplicateWithNextChild(node_B);
 
-			Assert.assertTrue(false);
+			Assert.fail("Incomplete test");
 
 		} catch (final Exception e) {
 			Assert.fail(e.getMessage());

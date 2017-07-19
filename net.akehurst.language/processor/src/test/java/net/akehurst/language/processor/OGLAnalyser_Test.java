@@ -36,7 +36,7 @@ public class OGLAnalyser_Test {
 			final OGLanguageProcessor proc = new OGLanguageProcessor();
 
 			// List<IToken> tokens = proc.getLexicalAnaliser().lex(grammar);
-			final IParseTree tree = proc.getParser().parse("grammarDefinition", new StringReader(grammarText));
+			final IParseTree tree = proc.getParser().parse("grammarDefinition", grammarText);
 			final T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;

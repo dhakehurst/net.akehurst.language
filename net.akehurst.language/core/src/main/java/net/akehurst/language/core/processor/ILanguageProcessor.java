@@ -32,12 +32,14 @@ public interface ILanguageProcessor {
 
 	// INodeType getDefaultGoal();
 
+	<T> T process(String text, String goalRuleName, Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception;
+
 	<T> T process(Reader reader, String goalRuleName, Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception;
 
 	/**
 	 * returns list of names of expected rules
 	 *
-	 * @param reader
+	 * @param text
 	 *            text to parse
 	 * @param goalRuleName
 	 *            name of a rule in the grammar that is the goal rule
@@ -49,5 +51,7 @@ public interface ILanguageProcessor {
 	 * @throws ParseFailedException
 	 * @throws ParseTreeException
 	 */
+	List<ICompletionItem> expectedAt(String text, String goalRuleName, int position, int desiredDepth) throws ParseFailedException, ParseTreeException;
+
 	List<ICompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth) throws ParseFailedException, ParseTreeException;
 }

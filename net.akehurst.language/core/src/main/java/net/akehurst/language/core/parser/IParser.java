@@ -31,8 +31,11 @@ public interface IParser {
 
 	Set<INodeType> getNodeTypes();
 
+	IParseTree parse(String goalRuleName, CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
+
 	IParseTree parse(String goalRuleName, Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
-	// IParseTree parse(INodeType goal, CharSequence text) throws ParseFailedException, ParseTreeException;
+
+	List<IRuleItem> expectedAt(String goalRuleName, CharSequence inputText, int position) throws ParseFailedException, ParseTreeException;
 
 	List<IRuleItem> expectedAt(String goalRuleName, Reader reader, int position) throws ParseFailedException, ParseTreeException;
 }

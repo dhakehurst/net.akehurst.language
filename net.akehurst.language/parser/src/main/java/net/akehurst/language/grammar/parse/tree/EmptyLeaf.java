@@ -15,14 +15,15 @@
  */
 package net.akehurst.language.grammar.parse.tree;
 
+import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class EmptyLeaf extends Leaf {
 
-	public EmptyLeaf(final IInput input, final int pos, final RuntimeRule terminalRule) {
-		super(input, pos, pos, terminalRule);
+	public EmptyLeaf(final int pos, final RuntimeRule terminalRule) {
+		super("", pos, pos, terminalRule);
 	}
 
 	@Override
@@ -32,7 +33,7 @@ public class EmptyLeaf extends Leaf {
 
 	@Override
 	public String getName() {
-		return this.terminalRule.getName();
+		return this.getTerminalRule().getName();
 	}
 
 	@Override
@@ -64,8 +65,9 @@ public class EmptyLeaf extends Leaf {
 
 	@Override
 	public boolean equals(final Object arg) {
-		if (arg instanceof EmptyLeaf) {
-			return true;
+		if (arg instanceof ILeaf) {
+			final ILeaf other = (ILeaf) arg;
+			return other.getIsEmptyLeaf();
 		} else {
 			return false;
 		}

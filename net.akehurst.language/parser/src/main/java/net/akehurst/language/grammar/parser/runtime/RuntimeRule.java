@@ -131,6 +131,7 @@ public class RuntimeRule {
 		if (RuntimeRuleKind.TERMINAL == this.getKind()) {
 			return result;
 		}
+
 		final RuntimeRule[] items = this.getRhs().getItemAt(n);
 		for (final RuntimeRule item : items) {
 			if (RuntimeRuleKind.NON_TERMINAL == item.getKind()) {
@@ -312,13 +313,13 @@ public class RuntimeRule {
 				case CONCATENATION:
 				break;
 				case MULTI: {
-					if (0 == this.getRhs().getMultiMin()) {
+					if (0 == n && 0 == this.getRhs().getMultiMin()) {
 						result.add(this.runtimeRuleSet.getEmptyRule(this));
 					}
 				}
 				break;
 				case SEPARATED_LIST: {
-					if (0 == this.getRhs().getMultiMin()) {
+					if (0 == n && 0 == this.getRhs().getMultiMin()) {
 						result.add(this.runtimeRuleSet.getEmptyRule(this));
 					}
 				}
