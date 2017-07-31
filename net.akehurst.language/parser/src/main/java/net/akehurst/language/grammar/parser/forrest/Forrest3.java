@@ -137,7 +137,9 @@ public final class Forrest3 {
 			if (gn.getIsSkip()) {
 				this.tryGraftBackSkipNode(gn);
 			} else {
-
+				// TODO: need to find a way to do either height or graft..not both
+				// problem is deciding which
+				// boolean grownHeight = false;
 				if (gn.getIsComplete()) {
 					this.growHeight(gn);
 				}
@@ -147,6 +149,8 @@ public final class Forrest3 {
 					this.tryGraftBack(gn);
 				}
 
+				// maybe only shift if not done either of above!
+				// tomitas original does that!
 				// shift
 				boolean grownWidth = false;
 				if (gn.getCanGrowWidth()) {
@@ -170,13 +174,6 @@ public final class Forrest3 {
 			}
 		}
 	}
-
-	// public void growWidthSkipOrNormal(IGraphNode gn) throws RuleNotFoundException, ParseTreeException {
-	// ArrayList<IGraphNode> newBranches = this.growWidthWithSkipRules(gn);
-	// if (newBranches.isEmpty()) {
-	// newBranches = this.growWidth(gn);
-	// }
-	// }
 
 	boolean growWidth(final IGraphNode gn) throws RuleNotFoundException, ParseTreeException {
 		boolean modified = false;
@@ -310,7 +307,7 @@ public final class Forrest3 {
 				info.node.duplicateWithNextChild(gn);
 			break;
 			case SEPARATED_LIST:
-				// TODO: should be ok because we need a separator beteen each item
+				// TODO: should be ok because we need a separator between each item
 				info.node.duplicateWithNextChild(gn);
 			break;
 			default:
@@ -319,8 +316,8 @@ public final class Forrest3 {
 		}
 	}
 
-	public void growHeight(final IGraphNode gn) throws RuleNotFoundException, ParseTreeException {
-		final ArrayList<IGraphNode> result = new ArrayList<>();
+	public boolean growHeight(final IGraphNode gn) throws RuleNotFoundException, ParseTreeException {
+		boolean result = false;
 		// TODO: should have already done this test?
 		if (gn.getIsComplete()) {
 
@@ -343,8 +340,10 @@ public final class Forrest3 {
 					}
 					if (null == alreadyGrown) {
 						this.growHeightByType(gn, info);
+						result = true; // TODO: this should depend on if the growHeight does something
 					} else {
 						alreadyGrown.reuseWithOtherStack(gn.getPrevious());
+						result = true; // TODO: this should depend on if the reuseWithOtherStack does something
 					}
 				}
 			}
@@ -353,6 +352,7 @@ public final class Forrest3 {
 			for (final IGraphNode p : gn.getPossibleParent()) {
 				if (this.hasHeightPotential(p.getRuntimeRule(), gn)) {
 					p.reuseWithOtherStack(gn.getPrevious());
+					result = true; // TODO: this should depend on if the reuseWithOtherStack does something
 				}
 			}
 			// }
@@ -360,7 +360,7 @@ public final class Forrest3 {
 		} else {
 			// result.add(this);
 		}
-
+		return result;
 	}
 
 	void growHeightByType(final IGraphNode gn, final SuperRuleInfo info) {

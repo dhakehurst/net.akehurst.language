@@ -48,7 +48,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 
 	Grammar asSP() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("SP").concatination(new TerminalLiteral(" "));
+		b.skip("SP").concatenation(new TerminalLiteral(" "));
 		b.rule("as").separatedList(1, -1, new TerminalLiteral(","), new NonTerminal("a"));
 		b.rule("a").concatenation(new TerminalLiteral("a"));
 

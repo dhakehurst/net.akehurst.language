@@ -33,7 +33,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 	Grammar as() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("WS").concatination(new TerminalPattern("\\s+"));
+		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
 
 		b.rule("as").multi(1, -1, new NonTerminal("a"));
 		b.rule("a").concatenation(new TerminalLiteral("a"));
@@ -192,7 +192,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 	Grammar asDot() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("WS").concatination(new TerminalPattern("\\s+"));
+		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
 
 		b.rule("as").multi(1, -1, new NonTerminal("a_dot"));
 		b.rule("a_dot").concatenation(new NonTerminal("a"), new TerminalLiteral("."));
@@ -269,7 +269,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 	Grammar S() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("WS").concatination(new TerminalPattern("\\s+"));
+		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
 
 		b.rule("S").concatenation(new TerminalLiteral("a"));
 		return b.get();

@@ -82,7 +82,7 @@ public class GrammarBuilder {
 
 		Rule rule;
 
-		public void concatination(final TangibleItem... sequence) {
+		public void concatenation(final TangibleItem... sequence) {
 			this.rule.setRhs(new ChoiceSimple(new Concatenation(sequence)));
 		}
 

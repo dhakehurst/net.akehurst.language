@@ -45,7 +45,7 @@ abstract public class AbstractParser_Test {
 	protected IParseTree process(final Grammar grammar, final String text, final String goalName) throws ParseFailedException {
 		try {
 			final IParser parser = new ScannerLessParser3(this.runtimeRules, grammar);
-			final IParseTree tree = parser.parse(goalName, text);
+			final IParseTree tree = parser.parseAny(goalName, text);
 			return tree;
 		} catch (final RuleNotFoundException e) {
 			Assert.fail(e.getMessage());

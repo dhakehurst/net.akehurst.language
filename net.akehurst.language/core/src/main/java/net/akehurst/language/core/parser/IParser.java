@@ -29,11 +29,40 @@ public interface IParser {
 	 */
 	void build();
 
+	/**
+	 * not sure this is useful any more ! what is it used for?
+	 *
+	 * @return
+	 */
 	Set<INodeType> getNodeTypes();
 
-	IParseTree parse(String goalRuleName, CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
+	/**
+	 * parse the inputText starting with the given grammar rule and return any single possible parse Tree.
+	 *
+	 * @param goalRuleName
+	 * @param inputText
+	 * @return
+	 * @throws ParseFailedException
+	 * @throws ParseTreeException
+	 * @throws RuleNotFoundException
+	 */
+	IParseTree parseAny(String goalRuleName, CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
 
-	IParseTree parse(String goalRuleName, Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
+	IParseTree parseAny(String goalRuleName, Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
+
+	/**
+	 * parse the inputText starting with the given grammar rule and return all possible parse Trees.
+	 *
+	 * @param goalRuleName
+	 * @param inputText
+	 * @return
+	 * @throws ParseFailedException
+	 * @throws ParseTreeException
+	 * @throws RuleNotFoundException
+	 */
+	IParseTree parseAll(String goalRuleName, CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
+
+	IParseTree parseAll(String goalRuleName, Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
 
 	List<IRuleItem> expectedAt(String goalRuleName, CharSequence inputText, int position) throws ParseFailedException, ParseTreeException;
 

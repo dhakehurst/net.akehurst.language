@@ -22,6 +22,7 @@ public interface IGraphNode extends IParseTreeVisitable {
 
 	int getMatchedTextLength();
 
+	// TODO: not sure this is useful any where
 	int getHeight();
 
 	boolean getIsLeaf();

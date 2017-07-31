@@ -58,7 +58,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	
 	Grammar a_b_c() {
 		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("SPACE").concatination(new TerminalLiteral(" "));
+		b.skip("SPACE").concatenation(new TerminalLiteral(" "));
 		b.rule("abc").concatenation(new NonTerminal("a"), new NonTerminal("b"), new NonTerminal("c"));
 		b.rule("a").concatenation(new TerminalLiteral("a"));
 		b.rule("b").concatenation(new TerminalLiteral("b"));

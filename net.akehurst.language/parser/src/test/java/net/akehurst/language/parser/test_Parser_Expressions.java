@@ -188,7 +188,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 	Grammar expression_if_then_else() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("S").concatenation(new NonTerminal("e"));
-		b.skip("WS").concatination(new TerminalPattern("\\s+"));
+		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
 		b.rule("e").priorityChoice(new NonTerminal("variable"), new NonTerminal("multiply"), new NonTerminal("plus"), new NonTerminal("ifthenelse"),
 				new NonTerminal("ifthen"));
 		b.rule("ifthen").concatenation(new TerminalLiteral("if"), new NonTerminal("e"), new TerminalLiteral("then"), new NonTerminal("e"));
@@ -304,7 +304,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 	Grammar statement_if_then_else() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("S").concatenation(new NonTerminal("statements"));
-		b.skip("WS").concatination(new TerminalPattern("\\s+"));
+		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
 		b.rule("statements").multi(1, -1, new NonTerminal("statement"));
 		b.rule("statement").choice(new TerminalLiteral("return"), new NonTerminal("ifthenelse"), new NonTerminal("ifthen"));
 		b.rule("e").priorityChoice(new NonTerminal("variable"), new NonTerminal("multiply"), new NonTerminal("plus"));
@@ -332,7 +332,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 
 	Grammar javaPrimary() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("WS").concatination(new TerminalPattern("\\s+"));
+		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
 		b.rule("block").concatenation(new TerminalLiteral("{"), new NonTerminal("blockStatements"), new TerminalLiteral("}"));
 		b.rule("blockStatements").multi(0, -1, new NonTerminal("blockStatement"));
 		b.rule("blockStatement").choice(new NonTerminal("block"), new NonTerminal("emptyStatement"), new NonTerminal("expressionStatement"));

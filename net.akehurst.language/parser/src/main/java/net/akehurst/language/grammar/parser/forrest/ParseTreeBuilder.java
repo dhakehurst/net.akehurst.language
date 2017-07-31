@@ -113,7 +113,7 @@ public class ParseTreeBuilder {
 				final IParser grammarParser = new ScannerLessParser3(new RuntimeRuleSetBuilder(), ogl);
 				final InputStream input = ClassLoader.getSystemClassLoader().getResourceAsStream("net/akehurst/language/parser/Tree.ogl");
 				final Reader reader = new InputStreamReader(input);
-				final IParseTree grammarTree = grammarParser.parse("grammarDefinition", reader);
+				final IParseTree grammarTree = grammarParser.parseAny("grammarDefinition", reader);
 				final ISemanticAnalyser sa = new SemanicAnalyser();
 				this.treeGrammar = sa.analyse(IGrammar.class, grammarTree);
 
@@ -128,7 +128,7 @@ public class ParseTreeBuilder {
 		try {
 			final String treeStr = this.sb.toString();
 			final IParser treeParser = new ScannerLessParser3(new RuntimeRuleSetBuilder(), this.getTreeGrammar());
-			final IParseTree treeTree = treeParser.parse("tree", treeStr);
+			final IParseTree treeTree = treeParser.parseAny("tree", treeStr);
 			final IParseTreeVisitor<Object, String, Throwable> v = new IParseTreeVisitor<Object, String, Throwable>() {
 
 				@Override

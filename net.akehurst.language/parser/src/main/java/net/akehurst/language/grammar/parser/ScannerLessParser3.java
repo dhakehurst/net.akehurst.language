@@ -53,24 +53,18 @@ public class ScannerLessParser3 implements IParser {
 	// Grammar pseudoGrammar;
 	private RuntimeRuleSet runtimeRuleSet;
 
-	IGrammar getGrammar() {
+	private IGrammar getGrammar() {
 		return this.grammar;
 	}
 
-	RuntimeRuleSet getRuntimeRuleSet() {
+	private RuntimeRuleSet getRuntimeRuleSet() {
 		if (null == this.runtimeRuleSet) {
 			this.build();
 		}
 		return this.runtimeRuleSet;
 	}
 
-	@Override
-	public void build() {
-		this.init();
-		this.runtimeRuleSet.build();
-	}
-
-	void init() {
+	private void init() {
 		try {
 			this.runtimeRuleSet = this.converter.transformLeft2Right(Grammar2RuntimeRuleSet.class, (Grammar) this.grammar);
 		} catch (final Exception e) {
@@ -79,27 +73,14 @@ public class ScannerLessParser3 implements IParser {
 		}
 	}
 
-	@Override
-	public Set<INodeType> getNodeTypes() {
-		return this.getGrammar().findAllNodeType();
-	}
-
-	// @Override
-	// public IParseTree parse(String goalRuleName, CharSequence text) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
-	// INodeType goal = this.getGrammar().findRule(goalRuleName).getNodeType();
-	// Reader r = new CharArrayReader(text.)
-	// return this.parse(goal, StringReader);
-	// }
-
-	@Override
-	public IParseTree parse(final String goalRuleName, final CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	private IParseTree parse(final String goalRuleName, final CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
 		final IInput input = new Input3(this.runtimeBuilder, inputText);
 		final IParseTree tree = this.parse2(goalRuleName, input);
 		return tree;
 	}
 
-	@Override
-	public IParseTree parse(final String goalRuleName, final Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	private IParseTree parse(final String goalRuleName, final Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		// TODO: find a way to parse straight from the input, without reading it all
 		final BufferedReader br = new BufferedReader(inputText);
 		final String text = br.lines().collect(Collectors.joining(System.lineSeparator()));
 
@@ -123,7 +104,7 @@ public class ScannerLessParser3 implements IParser {
 		}
 	}
 
-	void setParentForChildren(final IBranch node) {
+	private void setParentForChildren(final IBranch node) {
 		final IBranch parent = node;
 		for (final INode child : parent.getChildren()) {
 			child.setParent(parent);
@@ -158,24 +139,7 @@ public class ScannerLessParser3 implements IParser {
 		return match;
 	}
 
-	@Override
-	public List<IRuleItem> expectedAt(final String goalRuleName, final CharSequence inputText, final int position)
-			throws ParseFailedException, ParseTreeException {
-		final CharSequence text = inputText.subSequence(0, Math.min(position, inputText.length()));
-		final Input3 input = new Input3(this.runtimeBuilder, text);
-		return this.expectedAt1(goalRuleName, input, position);
-	}
-
-	@Override
-	public List<IRuleItem> expectedAt(final String goalRuleName, final Reader inputReader, final int position) throws ParseFailedException, ParseTreeException {
-		final BufferedReader br = new BufferedReader(inputReader);
-		String text = br.lines().collect(Collectors.joining(System.lineSeparator()));
-		text = text.substring(0, Math.min(position, text.length()));
-		final Input3 input = new Input3(this.runtimeBuilder, text);
-		return this.expectedAt1(goalRuleName, input, position);
-	}
-
-	public List<IRuleItem> expectedAt1(final String goalRuleName, final IInput input, final int position) throws ParseFailedException, ParseTreeException {
+	private List<IRuleItem> expectedAt1(final String goalRuleName, final IInput input, final int position) throws ParseFailedException, ParseTreeException {
 		try {
 			final INodeType goal = ((Grammar) this.getGrammar()).findRule(goalRuleName).getNodeType();
 			if (null == this.runtimeRuleSet) {
@@ -246,5 +210,56 @@ public class ScannerLessParser3 implements IParser {
 			// Should never happen!
 			throw new RuntimeException("Should never happen", e);
 		}
+	}
+
+	// --- IParser ---
+	@Override
+	public void build() {
+		this.init();
+		this.runtimeRuleSet.build();
+	}
+
+	@Override
+	public Set<INodeType> getNodeTypes() {
+		return this.getGrammar().findAllNodeType();
+	}
+
+	@Override
+	public IParseTree parseAny(final String goalRuleName, final CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		return this.parse(goalRuleName, inputText);
+	}
+
+	@Override
+	public IParseTree parseAny(final String goalRuleName, final Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		return this.parse(goalRuleName, inputText);
+	}
+
+	@Override
+	public IParseTree parseAll(final String goalRuleName, final CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IParseTree parseAll(final String goalRuleName, final Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<IRuleItem> expectedAt(final String goalRuleName, final CharSequence inputText, final int position)
+			throws ParseFailedException, ParseTreeException {
+		final CharSequence text = inputText.subSequence(0, Math.min(position, inputText.length()));
+		final Input3 input = new Input3(this.runtimeBuilder, text);
+		return this.expectedAt1(goalRuleName, input, position);
+	}
+
+	@Override
+	public List<IRuleItem> expectedAt(final String goalRuleName, final Reader inputReader, final int position) throws ParseFailedException, ParseTreeException {
+		final BufferedReader br = new BufferedReader(inputReader);
+		String text = br.lines().collect(Collectors.joining(System.lineSeparator()));
+		text = text.substring(0, Math.min(position, text.length()));
+		final Input3 input = new Input3(this.runtimeBuilder, text);
+		return this.expectedAt1(goalRuleName, input, position);
 	}
 }

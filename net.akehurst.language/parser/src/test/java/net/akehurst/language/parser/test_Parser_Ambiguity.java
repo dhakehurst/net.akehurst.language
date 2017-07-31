@@ -77,7 +77,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 
 	Grammar tg() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("WS").concatination(new TerminalPattern("\\s+"));
+		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
 		b.rule("fps").choice(new NonTerminal("fps.choice1"), new NonTerminal("fps.choice2"));
 		b.rule("fps.choice1").concatenation(new NonTerminal("fp"), new NonTerminal("fps.choice1.group.multi"));
 		b.rule("fps.choice1.group.multi").multi(0, -1, new NonTerminal("fps.choice1.group"));
@@ -96,7 +96,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 
 	Grammar caseBlock() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("WS").concatination(new TerminalPattern("\\s+"));
+		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
 		b.rule("block").concatenation(new TerminalLiteral("{"), new NonTerminal("group1"), new NonTerminal("group2"), new TerminalLiteral("}"));
 		b.rule("group1").multi(0, -1, new NonTerminal("labelBlock"));
 		b.rule("group2").multi(0, -1, new NonTerminal("label"));
@@ -366,9 +366,9 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final IBranch expected = b.branch("label", b.leaf("case"), b.branch("WS", b.leaf("\\s+", " ")),
-					b.branch("int", b.leaf("[0-9]+", "1"), b.branch("WS", b.leaf("\\s+", " "))), b.leaf(":"));
-			Assert.assertEquals(expected, tree.getRoot());
+			final IParseTree expected = new ParseTree(b.branch("label", b.leaf("case"), b.branch("WS", b.leaf("\\s+", " ")),
+					b.branch("int", b.leaf("[0-9]+", "1"), b.branch("WS", b.leaf("\\s+", " "))), b.leaf(":")));
+			Assert.assertEquals(expected, tree);
 
 		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -466,7 +466,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 
 	Grammar varDeclBlock() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("WS").concatination(new TerminalPattern("\\s+"));
+		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
 		b.rule("block").concatenation(new TerminalLiteral("{"), new NonTerminal("decls"), new TerminalLiteral("}"));
 		b.rule("decls").multi(0, -1, new NonTerminal("decl"));
 		b.rule("decl").concatenation(new NonTerminal("type"), new NonTerminal("name"), new TerminalLiteral(";"));

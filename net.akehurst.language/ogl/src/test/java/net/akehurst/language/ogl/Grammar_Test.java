@@ -65,7 +65,7 @@ public class Grammar_Test {
 	public void test() {
 
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "TestG");
-		b.skip("SKIP").concatination(new TerminalPattern("\\s+"));
+		b.skip("SKIP").concatenation(new TerminalPattern("\\s+"));
 		b.rule("port").concatenation(new TerminalLiteral("port"));
 		final Grammar g = b.get();
 

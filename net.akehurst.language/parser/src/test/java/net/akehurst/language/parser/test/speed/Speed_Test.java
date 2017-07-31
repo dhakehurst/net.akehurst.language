@@ -167,7 +167,7 @@ public class Speed_Test extends AbstractParser_Test {
 		b.rule("param").concatenation(new NonTerminal("type"), new NonTerminal("id"));
 		b.rule("type").choice(new TerminalLiteral("int"));
 		b.rule("id").choice(new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*"));
-		b.skip("WS").concatination(new TerminalPattern("\\s+"));
+		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
 		return b.get();
 	}
 

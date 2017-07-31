@@ -24,15 +24,37 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 		this.height = height;
 	}
 
-	int priority;
-	List<INode> children;
-	int nextItemIndex;
-	int height;
+	private final int priority;
+	private final List<INode> children;
+	private final int nextItemIndex;
+	private final int height;
 
 	@Override
 	public IGraphNode duplicateWithNextChild(final IGraphNode nextChild) {
 		final int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
-		final int newNextItemIndex = this.getNextItemIndex() + 1;
+		int newNextItemIndex = 0;
+		switch (this.getRuntimeRule().getRhs().getKind()) {
+			case CHOICE:
+				newNextItemIndex = -1;
+			break;
+			case CONCATENATION:
+				newNextItemIndex = this.getRuntimeRule().getRhs().getItems().length == this.getNextItemIndex() + 1 ? -1 : this.getNextItemIndex() + 1;
+			break;
+			case EMPTY:
+				newNextItemIndex = -1;
+			break;
+			case MULTI:
+				newNextItemIndex = this.getNextItemIndex() + 1;
+			break;
+			case PRIORITY_CHOICE:
+				newNextItemIndex = -1;
+			break;
+			case SEPARATED_LIST:
+				newNextItemIndex = this.getNextItemIndex() + 1;
+			break;
+			default:
+				throw new RuntimeException("Internal Error: Unknown RuleKind " + this.runtimeRule.getRhs().getKind());
+		}
 
 		// if duplicate will be complete && if its id already exists
 		// if (parents are the same) return already existing
@@ -48,7 +70,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 		// this.height);
 		final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.runtimeRule, pri, this.startPosition, newLength, newNextItemIndex,
 				this.height, this.getPrevious());
-		duplicate.children = new ArrayList<>(this.getChildren());
+		duplicate.getChildren().addAll(this.getChildren());
 		duplicate.getChildren().add((INode) nextChild);
 		nextChild.getPossibleParent().add(duplicate);
 
@@ -77,7 +99,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 		}
 		final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.runtimeRule, pri, this.startPosition, newLength, newNextItemIndex,
 				this.height, this.getPrevious());
-		duplicate.children = new ArrayList<>(this.getChildren());
+		duplicate.getChildren().addAll(this.getChildren());
 		duplicate.getChildren().add((INode) nextChild);
 		nextChild.getPossibleParent().add(duplicate);
 
@@ -99,7 +121,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	public IGraphNode duplicateWithOtherStack(final int priority, final Set<PreviousInfo> previous) {
 		final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.getRuntimeRule(), priority, this.getStartPosition(),
 				this.getMatchedTextLength(), this.getNextItemIndex(), this.getHeight(), previous);
-		duplicate.children = new ArrayList<>(this.getChildren());
+		duplicate.getChildren().addAll(this.getChildren());
 
 		// for (final PreviousInfo info : previous) {
 		// duplicate.addPrevious(info.node, info.atPosition);
@@ -155,10 +177,12 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 			break;
 			case CHOICE:
 				// a choice can only have one child
-				return this.nextItemIndex == 1;
+				// TODO: should never be 1, should always be -1 if we create nodes correctly
+				return this.nextItemIndex == 1 || this.nextItemIndex == -1;
 			case PRIORITY_CHOICE:
 				// a choice can only have one child
-				return this.nextItemIndex == 1;
+				// TODO: should never be 1, should always be -1 if we create nodes correctly
+				return this.nextItemIndex == 1 || this.nextItemIndex == -1;
 			case CONCATENATION: {
 				return this.getRuntimeRule().getRhs().getItems().length <= this.nextItemIndex || this.nextItemIndex == -1; // the -1 is used when creating dummy
 																															// // test here!
@@ -216,7 +240,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 				return this.nextItemIndex == 0;
 			}
 			case CONCATENATION: {
-				if (this.nextItemIndex < this.getRuntimeRule().getRhs().getItems().length) {
+				if (this.nextItemIndex != -1 && this.nextItemIndex < this.getRuntimeRule().getRhs().getItems().length) {
 					return true;
 				} else {
 					return false; // !reachedEnd;
@@ -300,7 +324,11 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 				if (this.nextItemIndex >= this.getRuntimeRule().getRhs().getItems().length) {
 					throw new RuntimeException("Internal Error: No NextExpectedItem");
 				} else {
-					return Arrays.asList(this.getRuntimeRule().getRhsItem(this.nextItemIndex));
+					if (-1 == this.nextItemIndex) {
+						return Collections.emptyList();
+					} else {
+						return Arrays.asList(this.getRuntimeRule().getRhsItem(this.nextItemIndex));
+					}
 				}
 			}
 			case MULTI: {

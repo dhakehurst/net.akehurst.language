@@ -68,29 +68,26 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void abc_abc_a() {
+	public void abc_abc_a() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.abc();
-			final String goal = "abc";
-			final String text = "a";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.abc();
+		final String goal = "abc";
+		final String text = "a";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			// b.define("abc {");
-			// b.define(" a {");
-			// b.define(" 'a'");
-			// b.define(" }");
-			// b.define("}");
-			final IParseTree expected = new ParseTree(b.branch("abc", b.branch("a", b.leaf("a"))));
-			// final IBranch expected = b.branch("abc", b.branch("a", b.leaf("a", "a")));
-			Assert.assertEquals(expected, tree);
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		// b.define("abc {");
+		// b.define(" a {");
+		// b.define(" 'a'");
+		// b.define(" }");
+		// b.define("}");
+		final IParseTree expected = new ParseTree(b.branch("abc", b.branch("a", b.leaf("a"))));
+		// final IBranch expected = b.branch("abc", b.branch("a", b.leaf("a", "a")));
+		Assert.assertEquals(expected, tree);
+
 	}
 
 	@Test

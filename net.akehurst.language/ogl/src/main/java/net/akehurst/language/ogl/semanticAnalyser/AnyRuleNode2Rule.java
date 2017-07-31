@@ -31,7 +31,8 @@ public class AnyRuleNode2Rule extends AbstractSemanticAnalysisRule<Rule> {
 
 	@Override
 	public Rule constructLeft2Right(final IBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
-		final INode rule = left.getChild(1);
+		// final INode rule = left.getChild(1);
+		final INode rule = left.getChild(0);
 		final Rule right = transformer.transformLeft2Right(NormalRuleNode2Rule.class, rule);
 		return right;
 	}

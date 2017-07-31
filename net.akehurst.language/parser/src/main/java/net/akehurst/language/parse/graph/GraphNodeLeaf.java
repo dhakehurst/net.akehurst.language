@@ -77,7 +77,14 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode, ILea
 
 	@Override
 	public boolean getCanGraftBack() {
-		return this.getIsComplete() && this.getIsStacked();
+		if (this.getPrevious().isEmpty()) {
+			return this.getIsComplete();
+		}
+		boolean b = false;
+		for (final PreviousInfo info : this.getPrevious()) {
+			b = b || info.node.getExpectsItemAt(this.getRuntimeRule(), info.atPosition);
+		}
+		return b && this.getIsComplete() && this.getIsStacked();
 	}
 
 	@Override

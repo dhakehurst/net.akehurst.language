@@ -270,8 +270,33 @@ public class ParseGraph implements IParseGraph {
 
 	@Override
 	public IGraphNode createWithFirstChild(final RuntimeRule runtimeRule, final int priority, final IGraphNode firstChild) {
-		final IGraphNode gn = new GraphNodeBranch(this, runtimeRule, priority, firstChild.getStartPosition(), firstChild.getMatchedTextLength(), 1,
-				firstChild.getHeight() + 1);
+		final int startPosition = firstChild.getStartPosition();
+		final int textLength = firstChild.getMatchedTextLength();
+		int nextItemIndex = 0;
+		switch (runtimeRule.getRhs().getKind()) {
+			case CHOICE:
+				nextItemIndex = -1;
+			break;
+			case CONCATENATION:
+				nextItemIndex = 1 == runtimeRule.getRhs().getItems().length ? -1 : 1;
+			break;
+			case EMPTY:
+				nextItemIndex = -1;
+			break;
+			case MULTI:
+				nextItemIndex = firstChild.getRuntimeRule().getIsEmptyRule() ? -1 : 1;
+			break;
+			case PRIORITY_CHOICE:
+				nextItemIndex = -1;
+			break;
+			case SEPARATED_LIST:
+				nextItemIndex = firstChild.getRuntimeRule().getIsEmptyRule() ? -1 : 1;
+			break;
+			default:
+				throw new RuntimeException("Internal Error: Unknown RuleKind " + runtimeRule.getRhs().getKind());
+		}
+		final int height = firstChild.getHeight() + 1;
+		final IGraphNode gn = new GraphNodeBranch(this, runtimeRule, priority, startPosition, textLength, nextItemIndex, height);
 		gn.getChildren().add((INode) firstChild);
 		firstChild.getPossibleParent().add(gn);
 		for (final PreviousInfo info : firstChild.getPrevious()) {
@@ -289,8 +314,34 @@ public class ParseGraph implements IParseGraph {
 
 	@Override
 	public IGraphNode createWithFirstChildAndStack(final RuntimeRule runtimeRule, final int priority, final IGraphNode firstChild, final IGraphNode stack) {
-		final IGraphNode gn = new GraphNodeBranch(this, runtimeRule, priority, firstChild.getStartPosition(), firstChild.getMatchedTextLength(), 1,
-				firstChild.getHeight() + 1);
+		final int startPosition = firstChild.getStartPosition();
+		final int textLength = firstChild.getMatchedTextLength();
+		int nextItemIndex = 0;
+		switch (runtimeRule.getRhs().getKind()) {
+			case CHOICE:
+				nextItemIndex = -1;
+			break;
+			case CONCATENATION:
+				nextItemIndex = 1;
+			break;
+			case EMPTY:
+				nextItemIndex = -1;
+			break;
+			case MULTI:
+				nextItemIndex = firstChild.getRuntimeRule().getIsEmptyRule() ? -1 : 1;
+			break;
+			case PRIORITY_CHOICE:
+				nextItemIndex = -1;
+			break;
+			case SEPARATED_LIST:
+				nextItemIndex = firstChild.getRuntimeRule().getIsEmptyRule() ? -1 : 1;
+			break;
+			default:
+				throw new RuntimeException("Internal Error: Unknown RuleKind " + runtimeRule.getRhs().getKind());
+		}
+		final int height = firstChild.getHeight() + 1;
+		final IGraphNode gn = new GraphNodeBranch(this, runtimeRule, priority, startPosition, textLength, nextItemIndex, height);
+
 		gn.getChildren().add((INode) firstChild);
 		firstChild.getPossibleParent().add(gn);
 		for (final PreviousInfo info : firstChild.getPrevious()) {

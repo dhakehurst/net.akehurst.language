@@ -27,6 +27,7 @@ import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class test_Special extends AbstractParser_Test {
 	/**
@@ -46,25 +47,94 @@ public class test_Special extends AbstractParser_Test {
 	}
 
 	@Test
-	public void S_S_aab() {
+	public void S_S_aab() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.S();
-			final String goal = "S";
-			final String text = "aab";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.S();
+		final String goal = "S";
+		final String text = "aab";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-			final IParseTree expected = new ParseTree(b.branch("S",
-					b.branch("S$group1", b.leaf("a", "a"), b.branch("S", b.leaf("a", "a")), b.branch("B", b.leaf("b", "b")), b.branch("B", b.emptyLeaf("B")))));
-			Assert.assertEquals(expected, tree);
+		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final IParseTree expected = new ParseTree(b.branch("S",
+				b.branch("S$group1", b.leaf("a", "a"), b.branch("S", b.leaf("a", "a")), b.branch("B", b.leaf("b", "b")), b.branch("B", b.emptyLeaf("B")))));
+		Assert.assertEquals(expected, tree);
+
+	}
+
+	/**
+	 * <code>
+	 * S : S S | 'b' ;
+	 * </code>
+	 */
+	Grammar S2() {
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("S").choice(new NonTerminal("S1"), new TerminalLiteral("a"));
+		b.rule("S1").concatenation(new NonTerminal("S"), new NonTerminal("S"));
+		return b.get();
+	}
+
+	@Test
+	public void S2_S_aaa() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.S2();
+		final String goal = "S";
+		final String text = "aaa";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S {");
+		b.define("  S1 {");
+		b.define("    S {'a'}");
+		b.define("    S {'a'}");
+		b.define("  }");
+		b.define("}");
+		final IParseTree expected = b.build();
+		Assert.assertEquals(expected, tree);
+
+	}
+
+	/**
+	 * <code>
+	 * S : S S S | S S | 'a' ;
+	 * </code>
+	 */
+	Grammar S3() {
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"), new TerminalLiteral("a"));
+		b.rule("S1").concatenation(new NonTerminal("S"), new NonTerminal("S"), new NonTerminal("S"));
+		b.rule("S2").concatenation(new NonTerminal("S"), new NonTerminal("S"));
+		return b.get();
+	}
+
+	@Test
+	public void S3_S_aaa() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.S3();
+		final String goal = "S";
+		final String text = "aaa";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S {");
+		b.define("  S1 {");
+		b.define("    S {'a'}");
+		b.define("    S {'a'}");
+		b.define("    S {'a'}");
+		b.define("  }");
+		b.define("}");
+		final IParseTree expected = b.build();
+		Assert.assertEquals(expected, tree);
+
 	}
 
 	Grammar parametersG() {
@@ -135,6 +205,59 @@ public class test_Special extends AbstractParser_Test {
 		// b.branch("Id", b.leaf("a")), b.branch("typeArgs", b.emptyLeaf("typeArgs")))))))),
 		// b.branch("fpList1", b.emptyLeaf("fpList1")));
 		Assert.assertEquals(expected, tree);
+	}
+
+	// S = NP VP | S PP ;
+	// NP = n | det n | NP PP ;
+	// PP = p NP ;
+	// VP = v NP ;
+	// n = 'I' | 'man' | 'telescope' | 'park' ;
+	// v = 'saw' | ;
+	// p = 'in' | 'with' ;
+	// det = 'a' | 'the' ;
+	Grammar tomita() {
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
+		b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"));
+		b.rule("S1").concatenation(new NonTerminal("NP"), new NonTerminal("VP"));
+		b.rule("S2").concatenation(new NonTerminal("S"), new NonTerminal("PP"));
+		b.rule("NP").choice(new NonTerminal("n"), new NonTerminal("NP2"), new NonTerminal("NP3"));
+		b.rule("NP2").concatenation(new NonTerminal("det"), new NonTerminal("n"));
+		b.rule("NP3").concatenation(new NonTerminal("NP"), new NonTerminal("PP"));
+		b.rule("PP").concatenation(new NonTerminal("p"), new NonTerminal("NP"));
+		b.rule("VP").concatenation(new NonTerminal("v"), new NonTerminal("NP"));
+		b.rule("n").choice(new TerminalLiteral("I"), new TerminalLiteral("man"), new TerminalLiteral("telescope"), new TerminalLiteral("park"));
+		b.rule("v").choice(new TerminalLiteral("saw"));
+		b.rule("p").choice(new TerminalLiteral("in"), new TerminalLiteral("with"));
+		b.rule("det").choice(new TerminalLiteral("a"), new TerminalLiteral("the"));
+		return b.get();
+	}
+
+	@Test
+	public void tomita_S_sentence() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.tomita();
+		final String goal = "S";
+		final String text = "I saw a man in the park with a telescope";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S {");
+		b.define("");
+		b.define("}");
+		final IParseTree expected = b.build();
+		Assert.assertEquals(expected, tree);
 
 	}
+
+	// S = Ab | A2c
+	// A2 = A2a | a
+	// A = aA | Aa | a
+
+	// S = T
+	// T = Ab | TTT
+	// A = T bAAA | TTb | <empty>
 }

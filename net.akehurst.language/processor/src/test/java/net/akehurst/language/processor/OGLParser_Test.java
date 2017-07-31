@@ -66,8 +66,8 @@ public class OGLParser_Test {
 
 	Grammar ns1() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
-		b.skip("WHITESPACE").concatination(new TerminalPattern("\\s+"));
-		b.skip("COMMENT").concatination(new TerminalPattern("(?s)/\\*.*?\\*/"));
+		b.skip("WHITESPACE").concatenation(new TerminalPattern("\\s+"));
+		b.skip("COMMENT").concatenation(new TerminalPattern("(?s)/\\*.*?\\*/"));
 
 		b.rule("grammarDefinition").concatenation(new NonTerminal("namespace"));
 		b.rule("namespace").concatenation(new TerminalLiteral("namespace"), new NonTerminal("IDENTIFIER"), new TerminalLiteral(";"));
@@ -100,8 +100,8 @@ public class OGLParser_Test {
 
 	Grammar g1() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
-		b.skip("WHITESPACE").concatination(new TerminalPattern("\\s+"));
-		b.skip("COMMENT").concatination(new TerminalPattern("(?s)/\\*.*?\\*/"));
+		b.skip("WHITESPACE").concatenation(new TerminalPattern("\\s+"));
+		b.skip("COMMENT").concatenation(new TerminalPattern("(?s)/\\*.*?\\*/"));
 
 		b.rule("grammarDefinition").concatenation(new NonTerminal("namespace"), new NonTerminal("grammar"));
 		b.rule("namespace").concatenation(new TerminalLiteral("namespace"), new NonTerminal("IDENTIFIER"), new TerminalLiteral(";"));
@@ -151,7 +151,7 @@ public class OGLParser_Test {
 
 	Grammar qualifiedName() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
-		b.skip("WHITESPACE").concatination(new TerminalPattern("\\s+"));
+		b.skip("WHITESPACE").concatenation(new TerminalPattern("\\s+"));
 
 		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER"));
 
@@ -210,8 +210,8 @@ public class OGLParser_Test {
 
 	Grammar noRules() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
-		b.skip("WHITESPACE").concatination(new TerminalPattern("\\s+"));
-		b.skip("COMMENT").concatination(new TerminalPattern("(?s)/\\*.*?\\*/"));
+		b.skip("WHITESPACE").concatenation(new TerminalPattern("\\s+"));
+		b.skip("COMMENT").concatenation(new TerminalPattern("(?s)/\\*.*?\\*/"));
 
 		b.rule("grammarDefinition").concatenation(new NonTerminal("namespace"), new NonTerminal("grammar"));
 		b.rule("namespace").concatenation(new TerminalLiteral("namespace"), new NonTerminal("qualifiedName"), new TerminalLiteral(";"));
@@ -244,8 +244,8 @@ public class OGLParser_Test {
 
 	Grammar nonTerminalOnly() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
-		b.skip("WHITESPACE").concatination(new TerminalPattern("\\s+"));
-		b.skip("COMMENT").concatination(new TerminalPattern("(?s)/\\*.*?\\*/"));
+		b.skip("WHITESPACE").concatenation(new TerminalPattern("\\s+"));
+		b.skip("COMMENT").concatenation(new TerminalPattern("(?s)/\\*.*?\\*/"));
 
 		b.rule("grammarDefinition").concatenation(new NonTerminal("namespace"), new NonTerminal("grammar"));
 		b.rule("namespace").concatenation(new TerminalLiteral("namespace"), new NonTerminal("qualifiedName"), new TerminalLiteral(";"));
