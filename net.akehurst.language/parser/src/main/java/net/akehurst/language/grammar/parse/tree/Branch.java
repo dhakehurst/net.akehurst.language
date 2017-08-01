@@ -63,6 +63,11 @@ public class Branch extends Node implements IBranch {
 		return this.start;
 	}
 
+	@Override
+	public int getEndPosition() {
+		// TODO Auto-generated method stub
+		return this.start + this.length;
+	}
 	// @Override
 	// public int getEnd() {
 	// return this.start + this.length;

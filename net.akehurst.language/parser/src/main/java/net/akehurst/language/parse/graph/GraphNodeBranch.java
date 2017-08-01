@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import net.akehurst.language.core.parser.IBranch;
@@ -15,126 +14,129 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 
 public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IBranch {
 
-	public GraphNodeBranch(final ParseGraph graph, final RuntimeRule rr, final int priority, final int startPosition, final int textLength,
-			final int nextItemIndex, final int height) {
-		super(graph, rr, startPosition, textLength);
+	public GraphNodeBranch(final ParseGraph graph, final RuntimeRule rr, final int priority, final int startPosition, final int height) {
+		super(graph, rr, startPosition);
 		this.priority = priority;
-		this.nextItemIndex = nextItemIndex;
-		this.children = new ArrayList<>();
+		this.nextItemIndex = 0;
+		this.growingChildren = new ArrayList<>();
+		this.childrenOption = new ArrayList<>();
 		this.height = height;
 	}
 
 	private final int priority;
-	private final List<INode> children;
-	private final int nextItemIndex;
+	private List<IGraphNode> growingChildren;
+	private final List<ChildrenOption> childrenOption;
+	private int nextItemIndex;
 	private final int height;
+	protected int finalMatchedTextLength;
+	protected int growingMatchedTextLength;
 
-	@Override
-	public IGraphNode duplicateWithNextChild(final IGraphNode nextChild) {
-		final int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
-		int newNextItemIndex = 0;
-		switch (this.getRuntimeRule().getRhs().getKind()) {
-			case CHOICE:
-				newNextItemIndex = -1;
-			break;
-			case CONCATENATION:
-				newNextItemIndex = this.getRuntimeRule().getRhs().getItems().length == this.getNextItemIndex() + 1 ? -1 : this.getNextItemIndex() + 1;
-			break;
-			case EMPTY:
-				newNextItemIndex = -1;
-			break;
-			case MULTI:
-				newNextItemIndex = this.getNextItemIndex() + 1;
-			break;
-			case PRIORITY_CHOICE:
-				newNextItemIndex = -1;
-			break;
-			case SEPARATED_LIST:
-				newNextItemIndex = this.getNextItemIndex() + 1;
-			break;
-			default:
-				throw new RuntimeException("Internal Error: Unknown RuleKind " + this.runtimeRule.getRhs().getKind());
-		}
-
-		// if duplicate will be complete && if its id already exists
-		// if (parents are the same) return already existing
-		final IGraphNode gn = this.graph.findCompleteNode(this.runtimeRule.getRuleNumber(), this.startPosition, newLength);
-
-		// GraphNodeBranch duplicate = (GraphNodeBranch)this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength,
-		// newNextItemIndex, this.height);
-		int pri = this.priority;
-		if (nextChild.getRuntimeRule().getIsEmptyRule()) {
-			pri = nextChild.getPriority();
-		}
-		// final GraphNodeBranch duplicate = new GraphNodeBranch(this.graph, this.runtimeRule, pri, this.startPosition, newLength, newNextItemIndex,
-		// this.height);
-		final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.runtimeRule, pri, this.startPosition, newLength, newNextItemIndex,
-				this.height, this.getPrevious());
-		duplicate.getChildren().addAll(this.getChildren());
-		duplicate.getChildren().add((INode) nextChild);
-		nextChild.getPossibleParent().add(duplicate);
-
-		// for (final PreviousInfo info : this.getPrevious()) {
-		// duplicate.addPrevious(info.node, info.atPosition);
-		// }
-		//
-		// this.graph.tryAddGrowable(duplicate);
-		/// nextChild.addHead(duplicate);
-		this.graph.tryAddGrowable(duplicate);
-
-		if (duplicate.getIsComplete()) {
-			this.graph.registerCompleteNode(duplicate);
-		}
-
-		return duplicate;
-	}
-
-	@Override
-	public IGraphNode duplicateWithNextSkipChild(final IGraphNode nextChild) {
-		final int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
-		final int newNextItemIndex = this.getNextItemIndex();
-		int pri = this.priority;
-		if (nextChild.getRuntimeRule().getIsEmptyRule()) {
-			pri = nextChild.getPriority();
-		}
-		final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.runtimeRule, pri, this.startPosition, newLength, newNextItemIndex,
-				this.height, this.getPrevious());
-		duplicate.getChildren().addAll(this.getChildren());
-		duplicate.getChildren().add((INode) nextChild);
-		nextChild.getPossibleParent().add(duplicate);
-
-		// for (final PreviousInfo info : this.getPossibleParent()) {
-		// duplicate.addPrevious(info.node, info.atPosition);
-		// }
-
-		// nextChild.addHead(duplicate);
-		this.graph.tryAddGrowable(duplicate);
-
-		if (duplicate.getIsComplete()) {
-			this.graph.registerCompleteNode(duplicate);
-		}
-
-		return duplicate;
-	}
-
-	@Override
-	public IGraphNode duplicateWithOtherStack(final int priority, final Set<PreviousInfo> previous) {
-		final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.createBranch(this.getRuntimeRule(), priority, this.getStartPosition(),
-				this.getMatchedTextLength(), this.getNextItemIndex(), this.getHeight(), previous);
-		duplicate.getChildren().addAll(this.getChildren());
-
-		// for (final PreviousInfo info : previous) {
-		// duplicate.addPrevious(info.node, info.atPosition);
-		// }
-		// nextChild.setHead(duplicate);
-		this.graph.tryAddGrowable(duplicate);
-
-		if (duplicate.getIsComplete()) {
-			this.graph.registerCompleteNode(duplicate);
-		}
-
-		return duplicate;
-	}
+	// @Override
+	// public IGraphNode duplicateWithNextChild(final IGraphNode nextChild) {
+	// final int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
+	// int newNextItemIndex = 0;
+	// switch (this.getRuntimeRule().getRhs().getKind()) {
+	// case CHOICE:
+	// newNextItemIndex = -1;
+	// break;
+	// case CONCATENATION:
+	// newNextItemIndex = this.getRuntimeRule().getRhs().getItems().length == this.getNextItemIndex() + 1 ? -1 : this.getNextItemIndex() + 1;
+	// break;
+	// case EMPTY:
+	// newNextItemIndex = -1;
+	// break;
+	// case MULTI:
+	// newNextItemIndex = this.getNextItemIndex() + 1;
+	// break;
+	// case PRIORITY_CHOICE:
+	// newNextItemIndex = -1;
+	// break;
+	// case SEPARATED_LIST:
+	// newNextItemIndex = this.getNextItemIndex() + 1;
+	// break;
+	// default:
+	// throw new RuntimeException("Internal Error: Unknown RuleKind " + this.runtimeRule.getRhs().getKind());
+	// }
+	//
+	// // if duplicate will be complete && if its id already exists
+	// // if (parents are the same) return already existing
+	// final IGraphNode gn = this.graph.findNode(this.runtimeRule.getRuleNumber(), this.startPosition);
+	//
+	// // GraphNodeBranch duplicate = (GraphNodeBranch)this.graph.createBranch(this.runtimeRule, this.priority, this.startPosition, newLength,
+	// // newNextItemIndex, this.height);
+	// int pri = this.priority;
+	// if (nextChild.getRuntimeRule().getIsEmptyRule()) {
+	// pri = nextChild.getPriority();
+	// }
+	// // final GraphNodeBranch duplicate = new GraphNodeBranch(this.graph, this.runtimeRule, pri, this.startPosition, newLength, newNextItemIndex,
+	// // this.height);
+	// final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.findOrCreateBranch(this.runtimeRule, pri, this.startPosition, newLength,
+	// newNextItemIndex, this.height);
+	// duplicate.getChildren().addAll(this.getChildren());
+	// duplicate.getChildren().add((INode) nextChild);
+	// nextChild.getPossibleParent().add(duplicate);
+	//
+	// for (final PreviousInfo info : this.getPrevious()) {
+	// duplicate.addPrevious(info.node, info.atPosition);
+	// }
+	// //
+	// // this.graph.tryAddGrowable(duplicate);
+	// /// nextChild.addHead(duplicate);
+	// this.graph.tryAddGrowable(duplicate);
+	//
+	// if (duplicate.getIsComplete()) {
+	// this.graph.registerCompleteNode(duplicate);
+	// }
+	//
+	// return duplicate;
+	// }
+	//
+	// @Override
+	// public IGraphNode duplicateWithNextSkipChild(final IGraphNode nextChild) {
+	// final int newLength = this.getMatchedTextLength() + nextChild.getMatchedTextLength();
+	// final int newNextItemIndex = this.getNextItemIndex();
+	// int pri = this.priority;
+	// if (nextChild.getRuntimeRule().getIsEmptyRule()) {
+	// pri = nextChild.getPriority();
+	// }
+	// final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.findOrCreateBranch(this.runtimeRule, pri, this.startPosition, newLength,
+	// newNextItemIndex, this.height);
+	// duplicate.getChildren().addAll(this.getChildren());
+	// duplicate.getChildren().add((INode) nextChild);
+	// nextChild.getPossibleParent().add(duplicate);
+	//
+	// for (final PreviousInfo info : this.getPrevious()) {
+	// duplicate.addPrevious(info.node, info.atPosition);
+	// }
+	//
+	// // nextChild.addHead(duplicate);
+	// this.graph.tryAddGrowable(duplicate);
+	//
+	// if (duplicate.getIsComplete()) {
+	// this.graph.registerCompleteNode(duplicate);
+	// }
+	//
+	// return duplicate;
+	// }
+	//
+	// @Override
+	// public IGraphNode duplicateWithOtherStack(final int priority, final Set<PreviousInfo> previous) {
+	// final GraphNodeBranch duplicate = (GraphNodeBranch) this.graph.findOrCreateBranch(this.getRuntimeRule(), priority, this.getStartPosition(),
+	// this.getMatchedTextLength(), this.getNextItemIndex(), this.getHeight());
+	// duplicate.getChildren().addAll(this.getChildren());
+	//
+	// for (final PreviousInfo info : previous) {
+	// duplicate.addPrevious(info.node, info.atPosition);
+	// }
+	// // nextChild.setHead(duplicate);
+	// this.graph.tryAddGrowable(duplicate);
+	//
+	// if (duplicate.getIsComplete()) {
+	// this.graph.registerCompleteNode(duplicate);
+	// }
+	//
+	// return duplicate;
+	// }
 
 	@Override
 	public int getNextItemIndex() {
@@ -247,7 +249,8 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 				}
 			}
 			case MULTI: {
-				if (!this.getChildren().isEmpty() && this.getChildAt(0).getRuntimeRule().getIsEmptyRule()) {
+				// not sure we need the test for isEmpty, because if it is empty it should be complete or NOT!???
+				if (!this.growingChildren.isEmpty() && this.growingChildren.get(0).getRuntimeRule().getIsEmptyRule()) {
 					return false;
 				}
 				final int size = this.nextItemIndex;
@@ -255,7 +258,7 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 				return -1 == max || size < max;
 			}
 			case SEPARATED_LIST: {
-				if (!this.getChildren().isEmpty() && this.getChildAt(0).getRuntimeRule().getIsEmptyRule()) {
+				if (!this.growingChildren.isEmpty() && this.growingChildren.get(0).getRuntimeRule().getIsEmptyRule()) {
 					return false;
 				}
 				return true;
@@ -487,12 +490,62 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 	}
 
 	@Override
+	public int getNextInputPosition() {
+		return this.startPosition + this.growingMatchedTextLength;
+	}
+
+	public List<IGraphNode> getGrowingChildren() {
+		return this.growingChildren;
+	}
+
+	@Override
+	public void addNextGrowingChild(final IGraphNode nextChild, final int nextItemIndex) {
+		this.growingChildren.add(nextChild);
+		this.nextItemIndex = nextItemIndex;
+		this.growingMatchedTextLength += nextChild.getMatchedTextLength();
+		if (this.getIsComplete()) {
+			this.addChildrenOption(this.growingChildren, this.growingMatchedTextLength);
+			this.growingChildren = new ArrayList<>();
+		}
+	}
+
+	private void addChildrenOption(final List<IGraphNode> children, final int length) {
+		if (this.getChildrenOption().isEmpty()) {
+			final ChildrenOption opt = new ChildrenOption();
+			opt.matchedLength = length;
+			opt.nodes = children;
+			this.getChildrenOption().add(opt);
+			this.finalMatchedTextLength = length;
+		} else {
+
+			// sort out priorities!
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	@Override
+	public List<ChildrenOption> getChildrenOption() {
+		return this.childrenOption;
+	}
+
+	// --- IBranch ---
+	@Override
+	public int getMatchedTextLength() {
+		return this.finalMatchedTextLength;
+	}
+
+	@Override
 	public List<INode> getChildren() {
-		return this.children;
+		if (this.getChildrenOption().isEmpty()) {
+			return Collections.emptyList();
+		} else {
+			final ChildrenOption opt = this.getChildrenOption().get(0);
+			return (List<INode>) (List<?>) opt.nodes;
+		}
 	}
 
 	public IGraphNode getChildAt(final int index) {
-		return (IGraphNode) this.children.get(index);
+		return (IGraphNode) this.getChildren().get(index);
 	}
 
 	@Override
@@ -571,24 +624,24 @@ public class GraphNodeBranch extends AbstractGraphNode implements IGraphNode, IB
 		return visitor.visit(this, arg);
 	}
 
-	// @Override
-	// public String toString() {
-	// String prev = "";
-	// if (this.getPrevious().isEmpty()) {
-	// // nothing
-	// } else if (this.getPrevious().size() == 1) {
-	// prev = " --> " + this.getPrevious().iterator().next();
-	// } else {
-	// prev = " -*> " + this.getPrevious().iterator().next();
-	// }
-	// String r = "";
-	// r += this.getStartPosition() + ",";
-	// r += this.getMatchedTextLength() + ",";
-	// r += -1 == this.getNextItemIndex() ? "C" : this.getNextItemIndex();
-	// r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
-	// r += prev;
-	// return r;
-	// // return this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + "," + this.getStartPosition() + ","
-	// // + this.getMatchedTextLength() + "," + this.getNextItemIndex() + ")" + prev;
-	// }
+	@Override
+	public String toString() {
+		String prev = "";
+		if (this.getPrevious().isEmpty()) {
+			// nothing
+		} else if (this.getPrevious().size() == 1) {
+			prev = " --> " + this.getPrevious().iterator().next();
+		} else {
+			prev = " -*> " + this.getPrevious().iterator().next();
+		}
+		String r = "";
+		r += this.getStartPosition() + ",";
+		r += (this.growingChildren.isEmpty() ? this.getMatchedTextLength() : this.growingMatchedTextLength) + ",";
+		r += -1 == this.getNextItemIndex() ? "C" : this.getNextItemIndex();
+		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
+		r += prev;
+		return r;
+		// return this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + "," + this.getStartPosition() + ","
+		// + this.getMatchedTextLength() + "," + this.getNextItemIndex() + ")" + prev;
+	}
 }

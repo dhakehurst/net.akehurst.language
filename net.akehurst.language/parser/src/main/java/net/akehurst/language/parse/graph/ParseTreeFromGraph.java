@@ -9,7 +9,7 @@ import net.akehurst.language.grammar.parser.ToStringVisitor;
 
 public class ParseTreeFromGraph implements IParseTree {
 
-	public ParseTreeFromGraph(final IGraphNode gr) {
+	public ParseTreeFromGraph(final ICompleteNode gr) {
 		this.root = (INode) gr;
 	}
 

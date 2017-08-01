@@ -109,23 +109,20 @@ public class Parser_Choice_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void abc_abc_c() {
+	public void abc_abc_c() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.abc();
-			final String goal = "abc";
-			final String text = "c";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.abc();
+		final String goal = "abc";
+		final String text = "c";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final IBranch expected = b.branch("abc", b.branch("c", b.leaf("c", "c")));
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-			Assert.assertEquals(expected, tree.getRoot());
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		final IBranch expected = b.branch("abc", b.branch("c", b.leaf("c", "c")));
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 }

@@ -2,10 +2,8 @@ package net.akehurst.language.parse.graph;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import net.akehurst.language.core.parser.ILeaf;
-import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
@@ -14,35 +12,58 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode, ILea
 
 	// public GraphNodeLeaf(ParseGraph graph, RuntimeRule runtimeRule, int startPosition, int machedTextLength) {
 	public GraphNodeLeaf(final ParseGraph graph, final Leaf leaf) {
-		super(graph, leaf.getRuntimeRule(), leaf.getStartPosition(), leaf.getMatchedTextLength());
+		super(graph, leaf.getRuntimeRule(), leaf.getStartPosition());
 		this.leaf = leaf;
+		this.finalMatchedTextLength = leaf.getMatchedTextLength();
 	}
 
-	Leaf leaf;
+	private final Leaf leaf;
+	private final int finalMatchedTextLength;
 
 	@Override
 	public boolean isPattern() {
 		return this.leaf.isPattern();
 	}
 
-	@Override
-	public IGraphNode duplicateWithNextChild(final IGraphNode nextChild) {
-		throw new RuntimeException("Internal Error: Should never happen");
-	}
-
-	@Override
-	public IGraphNode duplicateWithNextSkipChild(final IGraphNode nextChild) {
-		throw new RuntimeException("Internal Error: Should never happen");
-	}
-
-	@Override
-	public IGraphNode duplicateWithOtherStack(final int priority, final Set<PreviousInfo> previous) {
-		throw new RuntimeException("Internal Error: Should never happen");
-	}
+	// @Override
+	// public IGraphNode duplicateWithNextChild(final IGraphNode nextChild) {
+	// throw new RuntimeException("Internal Error: Should never happen");
+	// }
+	//
+	// @Override
+	// public IGraphNode duplicateWithNextSkipChild(final IGraphNode nextChild) {
+	// throw new RuntimeException("Internal Error: Should never happen");
+	// }
+	//
+	// @Override
+	// public IGraphNode duplicateWithOtherStack(final int priority, final Set<PreviousInfo> previous) {
+	// throw new RuntimeException("Internal Error: Should never happen");
+	// }
 
 	@Override
 	public boolean getIsLeaf() {
 		return true;
+	}
+
+	@Override
+	public int getGrowingEndPosition() {
+		// TODO not sure this is right result!
+		return this.leaf.getEndPosition();
+	}
+
+	@Override
+	public int getEndPosition() {
+		return this.leaf.getEndPosition();
+	}
+
+	@Override
+	public int getMatchedTextLength() {
+		return this.finalMatchedTextLength;
+	}
+
+	@Override
+	public int getNextInputPosition() {
+		return this.startPosition + this.finalMatchedTextLength;
 	}
 
 	@Override
@@ -128,7 +149,13 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode, ILea
 	}
 
 	@Override
-	public List<INode> getChildren() {
+	public void addNextGrowingChild(final IGraphNode nextChild, final int nextItemIndex) {
+		// do nothing, should never be called
+		throw new RuntimeException("Internal Error: Should never happen");
+	}
+
+	@Override
+	public List<ChildrenOption> getChildrenOption() {
 		return Collections.emptyList();
 	}
 
@@ -147,5 +174,24 @@ public class GraphNodeLeaf extends AbstractGraphNode implements IGraphNode, ILea
 	// return "'" + this.getRuntimeRule().getTerminalPatternText() + "'" + "(" + this.getRuntimeRule().getRuleNumber() + "," + this.getStartPosition() + ","
 	// + this.getMatchedTextLength() + ")" + (this.getPrevious().isEmpty() ? "" : " -> " + this.getPrevious().get(0));
 	// }
+
+	@Override
+	public String toString() {
+		String prev = "";
+		if (this.getPrevious().isEmpty()) {
+			// nothing
+		} else if (this.getPrevious().size() == 1) {
+			prev = " --> " + this.getPrevious().iterator().next();
+		} else {
+			prev = " -*> " + this.getPrevious().iterator().next();
+		}
+		String r = "";
+		r += this.getStartPosition() + ",";
+		r += this.getMatchedTextLength() + ",";
+		r += "C";
+		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
+		r += prev;
+		return r;
+	}
 
 }

@@ -1,7 +1,5 @@
 package net.akehurst.language.parse.graph;
 
-import java.util.Collections;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -77,7 +75,7 @@ public class Test_ParseGraph {
 			final int length = 1;
 			final int nextItemIndex = 1;
 			final int height = 1;
-			final IGraphNode n = graph.createBranch(rule, 0, startPosition, length, nextItemIndex, height, Collections.EMPTY_SET);
+			final IGraphNode n = graph.findOrCreateBranch(rule, 0, startPosition, height);
 
 			Assert.assertNotNull(n);
 		} catch (final Exception e) {
@@ -106,15 +104,15 @@ public class Test_ParseGraph {
 			final int length = 1;
 			final int nextItemIndex = 1;
 			final int height = 1;
-			final IGraphNode n = graph.createBranch(rule, 0, startPosition, length, nextItemIndex, height, Collections.EMPTY_SET);
+			final IGraphNode n = graph.findOrCreateBranch(rule, 0, startPosition, height);
 			final Leaf l = input.fetchOrCreateBud(terminalRule, 0);
 			final IGraphNode n2 = graph.findOrCreateLeaf(l, terminalRule, startPosition, l.getMatchedTextLength());
 
-			final IGraphNode n3 = n.duplicateWithNextChild(n2);
+			graph.growNextChild(n, n2, 0);
 
-			Assert.assertNotNull(n3);
-			Assert.assertTrue(n3 != n);
-			Assert.assertTrue(n3.getChildren().size() == 1);
+			Assert.assertNotNull(n);
+			Assert.assertTrue(n == n);
+			Assert.assertTrue(n.getChildren().size() == 1);
 		} catch (final Exception e) {
 			Assert.fail(e.getMessage());
 		}
@@ -141,7 +139,7 @@ public class Test_ParseGraph {
 		final RuntimeRule rule_S_group = rules.getRuntimeRule(g.findAllRule("S$group"));
 
 		// start
-		final IGraphNode node_start = graph.createBranch(goalRule, 0, 0, 0, 0, 0, Collections.EMPTY_SET);
+		final IGraphNode node_start = graph.findOrCreateBranch(goalRule, 0, 0, 0);
 
 		// grow width
 		graph.getGrowable().clear();
@@ -175,7 +173,7 @@ public class Test_ParseGraph {
 			// e.g. parse empty B followed by 'b' B (see special test)
 
 			// start
-			final IGraphNode node_start = graph.createBranch(goalRule, 0, 0, 0, 0, 0, Collections.EMPTY_SET);
+			final IGraphNode node_start = graph.findOrCreateBranch(goalRule, 0, 0, 0);
 
 			// grow width
 			graph.getGrowable().clear();
@@ -185,11 +183,12 @@ public class Test_ParseGraph {
 
 			// grow height
 			graph.getGrowable().clear();
-			final IGraphNode node_B_empty = graph.createWithFirstChild(rule_B, 0, node_empty);
-
+			graph.createWithFirstChild(rule_B, 0, node_empty);
+			final IGraphNode node_B_empty = graph.findNode(rule_B.getRuleNumber(), 0);
 			// graft back
 			graph.getGrowable().clear();
-			final IGraphNode node_start_1 = node_start.duplicateWithNextChild(node_B_empty);
+			graph.growNextChild(node_start, node_B_empty, 0);
+			final IGraphNode node_start_1 = graph.findNode(goalRule.getRuleNumber(), 0);
 
 			// grow width
 			graph.getGrowable().clear();
@@ -199,11 +198,12 @@ public class Test_ParseGraph {
 
 			// grow height
 			graph.getGrowable().clear();
-			final IGraphNode node_B = graph.createWithFirstChild(rule_B, 0, node_b);
-
+			graph.createWithFirstChild(rule_B, 0, node_b);
+			final IGraphNode node_B = graph.findNode(rule_B.getRuleNumber(), 1);
 			// graft back
 			graph.getGrowable().clear();
-			final IGraphNode node_start_2 = node_start_1.duplicateWithNextChild(node_B);
+			graph.growNextChild(node_start_1, node_B, 1);
+			final IGraphNode node_start_2 = graph.findNode(rule_B.getRuleNumber(), 2);
 
 			Assert.fail("Incomplete test");
 

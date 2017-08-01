@@ -142,6 +142,7 @@ public class ScannerLessParser3 implements IParser {
 				newForrest.grow();
 				seasons++;
 				for (final IGraphNode gn : newForrest.getLastGrown()) {
+					// may need to change this to finalInputPos!
 					if (input.getIsEnd(gn.getNextInputPosition())) {
 						matches.add(gn);
 					}

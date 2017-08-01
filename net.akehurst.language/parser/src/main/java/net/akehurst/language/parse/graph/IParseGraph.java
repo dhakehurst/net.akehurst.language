@@ -10,11 +10,11 @@ import net.akehurst.language.parse.graph.IGraphNode.PreviousInfo;
 
 public interface IParseGraph {
 
-	List<IGraphNode> getGoals();
+	List<ICompleteNode> getGoals();
 
-	Collection<IGraphNode> getGrowable();
+	Collection<IGrowingNode> getGrowable();
 
-	Collection<IGraphNode> getCompleteNodes();
+	Collection<ICompleteNode> getCompleteNodes();
 
 	// void removeGrowable(IGraphNode node);
 
@@ -22,13 +22,15 @@ public interface IParseGraph {
 
 	void createStart(RuntimeRule goalRule);
 
-	IGraphNode findOrCreateLeaf(Leaf leaf, RuntimeRule terminalRule, int startPosition, int matchedLength);
+	ICompleteNode findOrCreateLeaf(Leaf leaf);
 
-	IGraphNode createBranch(RuntimeRule rr, int priority, int startPosition, int length, int nextItemIndex, int height, Set<PreviousInfo> previous);
+	ICompleteNode findOrCreateBranch(RuntimeRule rr, int priority, int startPosition, int endPosition, int height);
 
-	IGraphNode findCompleteNode(int ruleNumber, int start, int length);
+	ICompleteNode findNode(int ruleNumber, int start, int length);
 
 	// IGraphNode findOrCreateBranch(RuntimeRule rr, int priority, int startPosition, int machedTextLength, int nextItemIndex, int height);
+
+	void reuseWithOtherStack(IGraphNode node, Set<PreviousInfo> previous);
 
 	/**
 	 * Use to grow the height of a tree. Creates a new node. Add the child. Then add the stack of the child to the new node.
@@ -40,9 +42,20 @@ public interface IParseGraph {
 	 * @param firstChild
 	 * @return
 	 */
-	IGraphNode createWithFirstChild(RuntimeRule runtimeRule, int priority, IGraphNode firstChild);
+	void createWithFirstChild(RuntimeRule runtimeRule, int priority, ICompleteNode firstChild);
 
-	IGraphNode createWithFirstChildAndStack(RuntimeRule runtimeRule, int priority, IGraphNode firstChild, IGraphNode stack);
+	// void createWithFirstChildAndStack(RuntimeRule runtimeRule, int priority, IGraphNode firstChild, IGraphNode stack);
+
+	/**
+	 * adds the next child to the parent
+	 *
+	 * @param parent
+	 * @param nextChild
+	 * @return
+	 */
+	void growNextChild(IGrowingNode parent, ICompleteNode nextChild, int position);
+
+	void growNextSkipChild(IGrowingNode parent, ICompleteNode skipChild);
 
 	// IGraphNode fetchGrowing(int ruleNumber, int start, int nextItemIndex);
 	//

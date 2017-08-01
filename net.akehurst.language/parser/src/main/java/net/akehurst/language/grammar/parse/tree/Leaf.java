@@ -73,6 +73,10 @@ public class Leaf extends Node implements ILeaf {
 		return this.start;
 	}
 
+	@Override
+	public int getEndPosition() {
+		return this.end;
+	}
 	// @Override
 	// public int getEnd() {
 	// return this.end;

@@ -11,11 +11,10 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 abstract public class AbstractGraphNode implements IGraphNode {
 
-	public AbstractGraphNode(final ParseGraph graph, final RuntimeRule runtimeRule, final int startPosition, final int matchedTextLength) {
+	public AbstractGraphNode(final ParseGraph graph, final RuntimeRule runtimeRule, final int startPosition) {
 		this.graph = graph;
 		this.runtimeRule = runtimeRule;
 		this.startPosition = startPosition;
-		this.matchedTextLength = matchedTextLength;
 		this.previous = new HashSet<>();
 		this.possibleParent = new HashSet<>();
 		this.next = new HashSet<>();
@@ -26,7 +25,7 @@ abstract public class AbstractGraphNode implements IGraphNode {
 	protected ParseGraph graph;
 	protected RuntimeRule runtimeRule;
 	protected int startPosition;
-	protected int matchedTextLength;
+
 	private final Set<PreviousInfo> previous;
 	private final Set<IGraphNode> next;
 	private final Set<IGraphNode> possibleParent;
@@ -51,16 +50,6 @@ abstract public class AbstractGraphNode implements IGraphNode {
 	@Override
 	public int getStartPosition() {
 		return this.startPosition;
-	}
-
-	@Override
-	public int getMatchedTextLength() {
-		return this.matchedTextLength;
-	}
-
-	@Override
-	public int getNextInputPosition() {
-		return this.startPosition + this.matchedTextLength;
 	}
 
 	// @Override
@@ -119,13 +108,6 @@ abstract public class AbstractGraphNode implements IGraphNode {
 		// next.getPrevious().clear(); // FIXME: maybe good, maybe not!
 		next.addPrevious(this, atPosition);
 		this.graph.tryAddGrowable(next);
-	}
-
-	@Override
-	public IGraphNode reuseWithOtherStack(final Set<PreviousInfo> previous) {
-		this.getPrevious().addAll(previous);
-		this.graph.tryAddGrowable(this);
-		return this;
 	}
 
 	@Override
@@ -212,24 +194,24 @@ abstract public class AbstractGraphNode implements IGraphNode {
 		}
 	}
 
-	@Override
-	public String toString() {
-		String prev = "";
-		if (this.getPrevious().isEmpty()) {
-			// nothing
-		} else if (this.getPrevious().size() == 1) {
-			prev = " --> " + this.getPrevious().iterator().next();
-		} else {
-			prev = " -*> " + this.getPrevious().iterator().next();
-		}
-		String r = "";
-		r += this.getStartPosition() + ",";
-		r += this.getMatchedTextLength() + ",";
-		r += -1 == this.getNextItemIndex() ? "C" : this.getNextItemIndex();
-		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
-		r += prev;
-		return r;
-		// return this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + "," + this.getStartPosition() + ","
-		// + this.getMatchedTextLength() + "," + this.getNextItemIndex() + ")" + prev;
-	}
+	// @Override
+	// public String toString() {
+	// String prev = "";
+	// if (this.getPrevious().isEmpty()) {
+	// // nothing
+	// } else if (this.getPrevious().size() == 1) {
+	// prev = " --> " + this.getPrevious().iterator().next();
+	// } else {
+	// prev = " -*> " + this.getPrevious().iterator().next();
+	// }
+	// String r = "";
+	// r += this.getStartPosition() + ",";
+	// r += this.getGrowingMatchedTextLength() + ",";
+	// r += -1 == this.getNextItemIndex() ? "C" : this.getNextItemIndex();
+	// r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
+	// r += prev;
+	// return r;
+	// // return this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + "," + this.getStartPosition() + ","
+	// // + this.getMatchedTextLength() + "," + this.getNextItemIndex() + ")" + prev;
+	// }
 }

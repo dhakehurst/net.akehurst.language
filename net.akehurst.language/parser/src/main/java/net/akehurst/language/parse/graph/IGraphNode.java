@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTreeVisitable;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
@@ -16,11 +15,15 @@ public interface IGraphNode extends IParseTreeVisitable {
 
 	int getStartPosition();
 
+	int getEndPosition();
+
 	int getNextItemIndex();
 
 	int getNextInputPosition();
 
 	int getMatchedTextLength();
+
+	int getGrowingEndPosition();
 
 	// TODO: not sure this is useful any where
 	int getHeight();
@@ -65,7 +68,12 @@ public interface IGraphNode extends IParseTreeVisitable {
 
 	Set<IGraphNode> getPossibleParent();
 
-	List<INode> getChildren();
+	static class ChildrenOption {
+		public int matchedLength;
+		public List<IGraphNode> nodes;
+	}
+
+	List<ChildrenOption> getChildrenOption();
 
 	/**
 	 * push this node onto the stack of next, where next would fit into this 'atPosition'
@@ -91,6 +99,8 @@ public interface IGraphNode extends IParseTreeVisitable {
 	void addNext(IGraphNode value);
 
 	// int[] getStackHash();
+
+	void addNextGrowingChild(IGraphNode nextChild, int nextItemIndex);
 
 	/**
 	 * return list of things that are stacked previous to this one
@@ -139,12 +149,12 @@ public interface IGraphNode extends IParseTreeVisitable {
 	//
 	// IGraphNode replace(IGraphNode newNode);
 
-	IGraphNode duplicateWithNextChild(IGraphNode nextChild);
-
-	IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild);
-
-	IGraphNode duplicateWithOtherStack(int priority, Set<PreviousInfo> previous);
-
-	IGraphNode reuseWithOtherStack(Set<PreviousInfo> previous);
+	// IGraphNode duplicateWithNextChild(IGraphNode nextChild);
+	//
+	// IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild);
+	//
+	// IGraphNode duplicateWithOtherStack(int priority, Set<PreviousInfo> previous);
+	//
+	// IGraphNode reuseWithOtherStack(Set<PreviousInfo> previous);
 
 }
