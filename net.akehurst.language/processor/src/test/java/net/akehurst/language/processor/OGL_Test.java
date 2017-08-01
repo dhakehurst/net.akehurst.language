@@ -30,101 +30,83 @@ public class OGL_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void ogl_grammarDefinition_1_normalRule() {
+	public void ogl_grammarDefinition_1_normalRule() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.ogl();
-			final String goal = "grammarDefinition";
-			final String text = "namespace test; grammar G { a : 'a' ;}";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.ogl();
+		final String goal = "grammarDefinition";
+		final String text = "namespace test; grammar G { a : 'a' ;}";
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
 	}
 
 	@Test
-	public void ogl_grammarDefinition_2_normalRule() {
+	public void ogl_grammarDefinition_2_normalRule() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.ogl();
-			final String goal = "grammarDefinition";
-			final String text = "namespace test; grammar G { a : 'a'; b:'b'; }";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.ogl();
+		final String goal = "grammarDefinition";
+		final String text = "namespace test; grammar G { a : 'a'; b:'b'; }";
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
 	}
 
 	@Test
-	public void ogl_grammarDefinition_3_normalRule() {
+	public void ogl_grammarDefinition_3_normalRule() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.ogl();
-			final String goal = "grammarDefinition";
-			final String text = "namespace test; grammar G { a : 'a'; b:'b'; c:'c'; }";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.ogl();
+		final String goal = "grammarDefinition";
+		final String text = "namespace test; grammar G { a : 'a'; b:'b'; c:'c'; }";
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
 	}
 
 	@Test
-	public void ogl_grammarDefinition_choice() {
+	public void ogl_grammarDefinition_choice() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.ogl();
-			final String goal = "grammarDefinition";
-			final String text = "namespace test; grammar G { abc:a|b|c; a : 'a'; b:'b'; c:'c'; }";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.ogl();
+		final String goal = "grammarDefinition";
+		final String text = "namespace test; grammar G { abc:a|b|c; a : 'a'; b:'b'; c:'c'; }";
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
 	}
 
 	@Test
-	public void ogl_grammarDefinition_normalRule_minimumWS() {
+	public void ogl_grammarDefinition_normalRule_minimumWS() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.ogl();
-			final String goal = "grammarDefinition";
-			final String text = "namespace test; grammar G {sp:' ';}";
-			// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.ogl();
+		final String goal = "grammarDefinition";
+		final String text = "namespace test; grammar G {sp:' ';}";
+		// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
 	}
 
 	@Test
-	public void ogl_grammarDefinition_normalRule_lotsWS() {
+	public void ogl_grammarDefinition_normalRule_lotsWS() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.ogl();
-			final String goal = "grammarDefinition";
-			final String text = " namespace test ;  grammar G  {  sp  :   ' '  ;  } ";
-			// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.ogl();
+		final String goal = "grammarDefinition";
+		final String text = " namespace test ;  grammar G  {  sp  :   ' '  ;  } ";
+		// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
 	}
 
 }

@@ -73,22 +73,6 @@ public class ScannerLessParser3 implements IParser {
 		}
 	}
 
-	private IParseTree parse(final String goalRuleName, final CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
-		final IInput input = new Input3(this.runtimeBuilder, inputText);
-		final IParseTree tree = this.parse2(goalRuleName, input);
-		return tree;
-	}
-
-	private IParseTree parse(final String goalRuleName, final Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
-		// TODO: find a way to parse straight from the input, without reading it all
-		final BufferedReader br = new BufferedReader(inputText);
-		final String text = br.lines().collect(Collectors.joining(System.lineSeparator()));
-
-		final Input3 input = new Input3(this.runtimeBuilder, text);
-		final IParseTree tree = this.parse2(goalRuleName, input);
-		return tree;
-	}
-
 	private IParseTree parse2(final String goalRuleName, final IInput input) throws ParseFailedException, ParseTreeException {
 		try {
 			final INodeType goal = ((Grammar) this.getGrammar()).findRule(goalRuleName).getNodeType();
@@ -225,25 +209,21 @@ public class ScannerLessParser3 implements IParser {
 	}
 
 	@Override
-	public IParseTree parseAny(final String goalRuleName, final CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
-		return this.parse(goalRuleName, inputText);
+	public IParseTree parse(final String goalRuleName, final CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		final IInput input = new Input3(this.runtimeBuilder, inputText);
+		final IParseTree tree = this.parse2(goalRuleName, input);
+		return tree;
 	}
 
 	@Override
-	public IParseTree parseAny(final String goalRuleName, final Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
-		return this.parse(goalRuleName, inputText);
-	}
+	public IParseTree parse(final String goalRuleName, final Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		// TODO: find a way to parse straight from the input, without reading it all
+		final BufferedReader br = new BufferedReader(inputText);
+		final String text = br.lines().collect(Collectors.joining(System.lineSeparator()));
 
-	@Override
-	public IParseTree parseAll(final String goalRuleName, final CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public IParseTree parseAll(final String goalRuleName, final Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
-		// TODO Auto-generated method stub
-		return null;
+		final Input3 input = new Input3(this.runtimeBuilder, text);
+		final IParseTree tree = this.parse2(goalRuleName, input);
+		return tree;
 	}
 
 	@Override

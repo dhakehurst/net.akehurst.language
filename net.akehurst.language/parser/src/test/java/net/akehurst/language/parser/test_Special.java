@@ -67,7 +67,7 @@ public class test_Special extends AbstractParser_Test {
 
 	/**
 	 * <code>
-	 * S : S S | 'b' ;
+	 * S : S S | 'a' ;
 	 * </code>
 	 */
 	Grammar S2() {
@@ -91,7 +91,12 @@ public class test_Special extends AbstractParser_Test {
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
 		b.define("  S1 {");
-		b.define("    S {'a'}");
+		b.define("    S {");
+		b.define("      S1 {");
+		b.define("        S {'a'}");
+		b.define("        S {'a'}");
+		b.define("      }");
+		b.define("    }");
 		b.define("    S {'a'}");
 		b.define("  }");
 		b.define("}");

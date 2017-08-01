@@ -218,11 +218,18 @@ abstract public class AbstractGraphNode implements IGraphNode {
 		if (this.getPrevious().isEmpty()) {
 			// nothing
 		} else if (this.getPrevious().size() == 1) {
-			prev = " -> " + this.getPrevious().iterator().next();
+			prev = " --> " + this.getPrevious().iterator().next();
 		} else {
-			prev = " ->* " + this.getPrevious().iterator().next();
+			prev = " -*> " + this.getPrevious().iterator().next();
 		}
-		return this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + "," + this.getStartPosition() + ","
-				+ this.getMatchedTextLength() + "," + this.getNextItemIndex() + ")" + prev;
+		String r = "";
+		r += this.getStartPosition() + ",";
+		r += this.getMatchedTextLength() + ",";
+		r += -1 == this.getNextItemIndex() ? "C" : this.getNextItemIndex();
+		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
+		r += prev;
+		return r;
+		// return this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + "," + this.getStartPosition() + ","
+		// + this.getMatchedTextLength() + "," + this.getNextItemIndex() + ")" + prev;
 	}
 }

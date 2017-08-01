@@ -129,7 +129,7 @@ public interface IGraphNode extends IParseTreeVisitable {
 
 		@Override
 		public String toString() {
-			return "(".concat(Integer.toString(this.atPosition)).concat(",").concat(this.node.toString()).concat(")");
+			return "(".concat(Integer.toString(this.atPosition)).concat("-").concat(this.node.toString()).concat(")");
 		}
 	}
 

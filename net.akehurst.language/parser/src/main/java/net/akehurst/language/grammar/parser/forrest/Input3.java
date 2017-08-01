@@ -105,6 +105,10 @@ public class Input3 implements IInput {
 
 	@Override
 	public Leaf fetchOrCreateBud(final RuntimeRule terminalRule, final int pos) {
+		if (pos > this.text.length()) {
+			// TODO: should we need to do this?
+			return null;
+		}
 		final int terminalTypeNumber = terminalRule.getRuleNumber();
 		final IntPair key = new IntPair(terminalTypeNumber, pos);
 		final Leaf l = this.leaf_cache.get(key);

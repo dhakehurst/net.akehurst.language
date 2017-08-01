@@ -342,19 +342,24 @@ public final class Forrest3 {
 						this.growHeightByType(gn, info);
 						result = true; // TODO: this should depend on if the growHeight does something
 					} else {
-						alreadyGrown.reuseWithOtherStack(gn.getPrevious());
-						result = true; // TODO: this should depend on if the reuseWithOtherStack does something
+						// TODO: I think this is wrong...what grammar/test is it used for?
+						if (alreadyGrown.getPrevious().isEmpty()) {
+							alreadyGrown.reuseWithOtherStack(gn.getPrevious());
+							result = true; // TODO: this should depend on if the reuseWithOtherStack does something
+						} else {
+							result = false;
+						}
 					}
 				}
 			}
 			// } else {
 			// already parsed to one or more parents, reuse them
-			for (final IGraphNode p : gn.getPossibleParent()) {
-				if (this.hasHeightPotential(p.getRuntimeRule(), gn)) {
-					p.reuseWithOtherStack(gn.getPrevious());
-					result = true; // TODO: this should depend on if the reuseWithOtherStack does something
-				}
-			}
+			// for (final IGraphNode p : gn.getPossibleParent()) {
+			// if (this.hasHeightPotential(p.getRuntimeRule(), gn)) {
+			// p.reuseWithOtherStack(gn.getPrevious());
+			// result = true; // TODO: this should depend on if the reuseWithOtherStack does something
+			// }
+			// }
 			// }
 			// }
 		} else {

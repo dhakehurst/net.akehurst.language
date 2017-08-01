@@ -181,7 +181,7 @@ public class ParseGraph implements IParseGraph {
 		// final int stackHash[] = value.getStackHash();
 		final GrowingNodeIndex index = new GrowingNodeIndex(runtimeRuleNumber, startPos, length, nextItemIndex, !value.getPrevious().isEmpty());// ,
 																																				// stackHash);
-																																				// //
+																																				// // //
 																																				// previousRRN);
 		// TODO: try comparing the stack not just its hash! maybe the hash is not unique
 		final IGraphNode existing = this.growable.get(index);
@@ -262,9 +262,9 @@ public class ParseGraph implements IParseGraph {
 			gn.addPrevious(info.node, info.atPosition);
 		}
 
-		if (gn.getIsComplete()) {
-			this.registerCompleteNode(gn);
-		}
+		// if (gn.getIsComplete()) {
+		// this.registerCompleteNode(gn);
+		// }
 		return gn;
 	}
 
