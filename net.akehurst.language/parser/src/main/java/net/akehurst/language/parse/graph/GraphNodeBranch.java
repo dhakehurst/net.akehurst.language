@@ -210,7 +210,7 @@ public class GraphNodeBranch implements ICompleteNode, IBranch {
 	public String toString() {
 		String r = "";
 		r += this.getStartPosition() + ",";
-		r += this.getEndPosition() + ",";
+		r += this.getEndPosition();
 		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
 		return r;
 	}

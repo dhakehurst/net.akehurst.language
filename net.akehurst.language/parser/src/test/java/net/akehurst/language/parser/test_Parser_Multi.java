@@ -21,6 +21,7 @@ import org.junit.Test;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
+import net.akehurst.language.grammar.parse.tree.ParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -99,116 +100,100 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		;
+
 		final IBranch expected = b.branch("as", b.emptyLeaf("as"));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
 
 	@Test
-	public void as0nbs0n_asbs_empty() {
+	public void as0nbs0n_asbs_empty() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.as0nbs0n();
-			final String goal = "asbs";
-			final String text = "";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.as0nbs0n();
+		final String goal = "asbs";
+		final String text = "";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("asbs", b.branch("as", b.emptyLeaf("as")), b.branch("bs", b.emptyLeaf("bs")));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+
+		final IBranch expected = b.branch("asbs", b.branch("as", b.emptyLeaf("as")), b.branch("bs", b.emptyLeaf("bs")));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
-	public void as0nbs0n_asbs_b() {
+	public void as0nbs0n_asbs_b() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.as0nbs0n();
-			final String goal = "asbs";
-			final String text = "b";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.as0nbs0n();
+		final String goal = "asbs";
+		final String text = "b";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("asbs", b.branch("as", b.emptyLeaf("as")), b.branch("bs", b.branch("b", b.leaf("b"))));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		;
+		final IBranch expected = b.branch("asbs", b.branch("as", b.emptyLeaf("as")), b.branch("bs", b.branch("b", b.leaf("b"))));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
-	public void as0nbs0n_asbs_bb() {
+	public void as0nbs0n_asbs_bb() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.as0nbs0n();
-			final String goal = "asbs";
-			final String text = "bb";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.as0nbs0n();
+		final String goal = "asbs";
+		final String text = "bb";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("asbs", b.branch("as", b.emptyLeaf("as")),
-					b.branch("bs", b.branch("b", b.leaf("b")), b.branch("b", b.leaf("b"))));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		;
+		final IBranch expected = b.branch("asbs", b.branch("as", b.emptyLeaf("as")), b.branch("bs", b.branch("b", b.leaf("b")), b.branch("b", b.leaf("b"))));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
-	public void as13_as_a() {
+	public void as13_as_a() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.as13();
-			final String goal = "as";
-			final String text = "a";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.as13();
+		final String goal = "as";
+		final String text = "a";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		;
+		final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
-	public void as13_as_aa() {
+	public void as13_as_aa() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.as13();
-			final String goal = "as";
-			final String text = "aa";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.as13();
+		final String goal = "as";
+		final String text = "aa";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		;
+		final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
@@ -230,87 +215,75 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	}
 
 	@Test
-	public void ab01_ab01_a() {
+	public void ab01_ab01_a() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.ab01();
-			final String goal = "ab01";
-			final String text = "a";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.ab01();
+		final String goal = "ab01";
+		final String text = "a";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("ab01", b.branch("a", b.leaf("a", "a")), b.branch("b01", b.emptyLeaf("b01")));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		;
+		final IBranch expected = b.branch("ab01", b.branch("a", b.leaf("a", "a")), b.branch("b01", b.emptyLeaf("b01")));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
-	public void ab01_2_ab01_a() {
+	public void ab01_2_ab01_a() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.ab01_2();
-			final String goal = "ab01";
-			final String text = "a";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.ab01_2();
+		final String goal = "ab01";
+		final String text = "a";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("ab01", b.branch("a", b.leaf("a", "a")));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		;
+		final IBranch expected = b.branch("ab01", b.branch("a", b.leaf("a", "a")));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
-	public void ab01_2_ab01_ab() {
+	public void ab01_2_ab01_ab() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.ab01_2();
-			final String goal = "ab01";
-			final String text = "ab";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.ab01_2();
+		final String goal = "ab01";
+		final String text = "ab";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("ab01", b.branch("ab01$group1", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b"))));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+
+		final IParseTree expected = new ParseTree(b.branch("ab01", b.branch("ab01$group1", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b")))));
+		Assert.assertEquals(expected, tree);
+
 	}
 
 	@Test
-	public void ab01_ab01_ab() {
+	public void ab01_ab01_ab() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.ab01();
-			final String goal = "ab01";
-			final String text = "ab";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.ab01();
+		final String goal = "ab01";
+		final String text = "ab";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("ab01", b.branch("a", b.leaf("a", "a")), b.branch("b01", b.branch("b", b.leaf("b", "b"))));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+
+		final IBranch expected = b.branch("ab01", b.branch("a", b.leaf("a", "a")), b.branch("b01", b.branch("b", b.leaf("b", "b"))));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
@@ -331,60 +304,57 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	}
 
 	@Test
-	public void abs1m1_abs_ababababababab() {
+	public void abs1m1_abs_ababababababab() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.abs1m1();
-			final String goal = "abs";
-			final String text = "ababababababababababababababababababababababababababababababababababababababababababababababababab";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.abs1m1();
+		final String goal = "abs";
+		final String text = "ababababababababababababababababababababababababababababababababababababababababababababababababab";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("abs", b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+		final IBranch expected = b.branch("abs", b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
 
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
-					b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
-					b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))));
-			Assert.assertEquals(expected, tree.getRoot());
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
+				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	Grammar nested() {
@@ -396,21 +366,20 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	}
 
 	@Test
-	public void nested_top_aa() {
+	public void nested_top_aa() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.nested();
-			final String goal = "top";
-			final String text = "aa";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.nested();
+		final String goal = "top";
+		final String text = "aa";
 
-			// TODO: check structure
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			// this should occur
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		final IParseTree expected = new ParseTree(b.branch("top", b.branch("level1", b.leaf("a")), b.branch("level1", b.leaf("a"))));
+		Assert.assertEquals(expected, tree);
+
 	}
 
 }

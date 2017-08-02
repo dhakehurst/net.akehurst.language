@@ -74,24 +74,21 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void as0n_as_empty() {
+	public void as0n_as_empty() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.as0n();
-			final String goal = "as";
-			final String text = "";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.as0n();
+		final String goal = "as";
+		final String text = "";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("as", b.emptyLeaf("as"));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+
+		final IBranch expected = b.branch("as", b.emptyLeaf("as"));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
@@ -116,66 +113,57 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void as1_as_aa() {
+	public void as1_as_aa() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.as1();
-			final String goal = "as";
-			final String text = "a,a";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.as1();
+		final String goal = "as";
+		final String text = "a,a";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("as", b.leaf("a", "a"), b.leaf(",", ","), b.leaf("a", "a"));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+
+		final IBranch expected = b.branch("as", b.leaf("a", "a"), b.leaf(",", ","), b.leaf("a", "a"));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
-	public void as1_as_aaa() {
+	public void as1_as_aaa() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.as1();
-			final String goal = "as";
-			final String text = "a,a,a";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.as1();
+		final String goal = "as";
+		final String text = "a,a,a";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("as", b.leaf("a", "a"), b.leaf(",", ","), b.leaf("a", "a"), b.leaf(",", ","), b.leaf("a", "a"));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+
+		final IBranch expected = b.branch("as", b.leaf("a", "a"), b.leaf(",", ","), b.leaf("a", "a"), b.leaf(",", ","), b.leaf("a", "a"));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
-	public void as2_as_a() {
+	public void as2_as_a() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.as2();
-			final String goal = "as";
-			final String text = "a";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.as2();
+		final String goal = "as";
+		final String text = "a";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
-			Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+
+		final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
@@ -282,5 +270,62 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 				b.branch("SP", b.leaf(" ", " ")), b.branch("a", b.leaf("a", "a"), b.branch("SP", b.leaf(" ", " ")))));
 		Assert.assertEquals(expected, tree);
 
+	}
+
+	Grammar as03() {
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("as").separatedList(0, 3, new TerminalLiteral(","), new NonTerminal("a"));
+		b.rule("a").concatenation(new TerminalLiteral("a"));
+
+		return b.get();
+	}
+
+	@Test
+	public void as03_as_empty() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.as0n();
+		final String goal = "as";
+		final String text = "";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+
+		final IBranch expected = b.branch("as", b.emptyLeaf("as"));
+		Assert.assertEquals(expected, tree.getRoot());
+
+	}
+
+	@Test
+	public void as03_as_a() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.as03();
+		final String goal = "as";
+		final String text = "a";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+
+		final IBranch expected = b.branch("as", b.branch("a", b.leaf("a")));
+		Assert.assertEquals(expected, tree.getRoot());
+
+	}
+
+	@Test(expected = ParseFailedException.class)
+	public void as03_as_a4() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.as03();
+		final String goal = "as";
+		final String text = "a,a,a,a";
+
+		final IParseTree tree = this.process(g, text, goal);
+
+		Assert.fail("this should fail");
 	}
 }

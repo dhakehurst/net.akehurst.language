@@ -177,9 +177,16 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-
-		final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
-		Assert.assertEquals(expected, tree.getRoot());
+		b.define("S {");
+		b.define("  E {");
+		b.define("    E1 {");
+		b.define("      E { E2 { 'a' } }");
+		b.define("      '+a'");
+		b.define("    }");
+		b.define("  }");
+		b.define("}");
+		final IParseTree expected = b.build();
+		Assert.assertEquals(expected, tree);
 
 	}
 
@@ -325,9 +332,9 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-
-		final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
-		Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree expected = null;
+		// final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
+		Assert.assertEquals(expected, tree);
 
 	}
 

@@ -125,7 +125,7 @@ public class test_Parser extends AbstractParser_Test {
 		final IParser parser = new ScannerLessParser3(this.runtimeRules, g);
 
 		final List<IRuleItem> list = parser.expectedAt(goal, new StringReader(text), position);
-		Assert.assertTrue(list.size() == 4);
+		Assert.assertEquals(4, list.size());
 		Assert.assertEquals("IDENTIFIER", ((ITangibleItem) list.get(0)).getName());
 	}
 }

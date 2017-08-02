@@ -45,6 +45,8 @@ public interface IGrowingNode {
 		public PreviousInfo(final IGrowingNode node, final int atPosition) {
 			this.node = node;
 			this.atPosition = atPosition;
+			// a skip node can have a previous at -1
+			// assert atPosition >= 0;
 			this.hashCode_cache = Objects.hash(node, atPosition);
 		}
 

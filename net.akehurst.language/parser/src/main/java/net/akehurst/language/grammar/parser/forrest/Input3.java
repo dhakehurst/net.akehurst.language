@@ -112,10 +112,20 @@ public class Input3 implements IInput {
 		final int terminalTypeNumber = terminalRule.getRuleNumber();
 		final IntPair key = new IntPair(terminalTypeNumber, pos);
 		final Leaf l = this.leaf_cache.get(key);
-		if (null == l) {
-			if (terminalRule.getIsEmptyRule()) {
-				return new EmptyLeaf(pos, terminalRule);
+		if (terminalRule.getIsEmptyRule()) {
+			if (null == l) {
+				// first time we tried to get this empty token from this possion, OK.
+				final Leaf le = new EmptyLeaf(pos, terminalRule);
+				this.leaf_cache.put(key, le);
+				return le;
+			} else {
+				// tried to get it again, fail
+				return null;
 			}
+		}
+
+		if (null == l) {
+
 			final Matcher m = Pattern.compile(terminalRule.getTerminalPatternText(), terminalRule.getPatternFlags()).matcher(this.text);
 			m.region(pos, this.text.length());
 			if (m.lookingAt()) {
@@ -126,6 +136,7 @@ public class Input3 implements IInput {
 				this.leaf_cache.put(key, leaf);
 				return leaf;
 			} else {
+				// TODO: why cache the null?
 				this.leaf_cache.put(key, null);
 				return null;
 			}

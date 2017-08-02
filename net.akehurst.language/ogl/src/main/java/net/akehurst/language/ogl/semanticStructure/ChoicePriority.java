@@ -16,6 +16,7 @@
 package net.akehurst.language.ogl.semanticStructure;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class ChoicePriority extends AbstractChoice {
@@ -91,7 +92,7 @@ public class ChoicePriority extends AbstractChoice {
 	public boolean equals(final Object arg) {
 		if (arg instanceof ChoicePriority) {
 			final ChoicePriority other = (ChoicePriority) arg;
-			return this.getOwningRule().equals(other.getOwningRule()) && this.getIndex().equals(other.getIndex());
+			return Objects.equals(this.getOwningRule(), other.getOwningRule()) && Objects.equals(this.getIndex(), other.getIndex());
 		} else {
 			return false;
 		}

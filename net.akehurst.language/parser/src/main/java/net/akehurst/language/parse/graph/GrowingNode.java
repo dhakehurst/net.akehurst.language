@@ -115,7 +115,7 @@ public class GrowingNode implements IGrowingNode {
 
 	@Override
 	public boolean getCanGrowWidth() {
-		if (this.getHasCompleteChildren() || this.getIsLeaf()) {
+		if (this.getIsLeaf()) {
 			return false;
 		}
 		switch (this.getRuntimeRule().getRhs().getKind()) {
@@ -142,13 +142,16 @@ public class GrowingNode implements IGrowingNode {
 				}
 				final int size = this.nextItemIndex;
 				final int max = this.getRuntimeRule().getRhs().getMultiMax();
-				return -1 == max || size < max;
+				return -1 != size && (-1 == max || size < max);
 			}
 			case SEPARATED_LIST: {
 				if (!this.getGrowingChildren().isEmpty() && this.getGrowingChildren().get(0).getRuntimeRule().getIsEmptyRule()) {
 					return false;
 				}
-				return true;
+				final int size = this.nextItemIndex;
+				final int max = this.getRuntimeRule().getRhs().getMultiMax();
+				final int x = size / 2;
+				return -1 != size && (-1 == max || x < max);
 			}
 			default:
 				throw new RuntimeException("Internal Error: rule kind not recognised");
@@ -158,7 +161,7 @@ public class GrowingNode implements IGrowingNode {
 	@Override
 	public boolean getCanGraftBack() {
 		if (this.getPrevious().isEmpty()) {
-			return this.getHasCompleteChildren();
+			return false;
 		}
 		boolean b = false;
 		for (final PreviousInfo info : this.getPrevious()) {
