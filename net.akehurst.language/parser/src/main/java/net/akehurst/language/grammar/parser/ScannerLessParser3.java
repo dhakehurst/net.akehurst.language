@@ -29,7 +29,8 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.parse.graph.IGraphNode;
+import net.akehurst.language.parse.graph.ICompleteNode;
+import net.akehurst.language.parse.graph.IGrowingNode;
 import net.akehurst.language.parse.graph.IParseGraph;
 import net.akehurst.language.parse.graph.ParseGraph;
 import net.akehurst.language.parse.graph.ParseTreeFromGraph;
@@ -76,7 +77,7 @@ public class ScannerLessParser3 implements IParser {
 	private IParseTree parse2(final String goalRuleName, final IInput input) throws ParseFailedException, ParseTreeException {
 		try {
 			final INodeType goal = ((Grammar) this.getGrammar()).findRule(goalRuleName).getNodeType();
-			final IGraphNode gr = this.parse3(goal, input);
+			final ICompleteNode gr = this.parse3(goal, input);
 			final IParseTree tree = new ParseTreeFromGraph(gr);
 			// set the parent property of each child, these are not set during parsing
 			// TODO: don't know if we need this, probably not
@@ -98,16 +99,16 @@ public class ScannerLessParser3 implements IParser {
 		}
 	}
 
-	private IGraphNode parse3(final INodeType goal, final IInput input) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
+	private ICompleteNode parse3(final INodeType goal, final IInput input) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
 
 		final int goalRuleNumber = this.getRuntimeRuleSet().getRuleNumber(goal.getIdentity().asPrimitive());
 		final RuntimeRule goalRR = this.getRuntimeRuleSet().getRuntimeRule(goalRuleNumber);
-		final IGraphNode node = this.doParse3(goalRR, input);
+		final ICompleteNode node = this.doParse3(goalRR, input);
 		// GraphNodeRoot gr = new GraphNodeRoot(goalRR, node.getChildren());
 		return node;
 	}
 
-	private IGraphNode doParse3(final RuntimeRule goalRule, final IInput input) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
+	private ICompleteNode doParse3(final RuntimeRule goalRule, final IInput input) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
 		// TODO: handle reader directly without converting to string
 		final IParseGraph graph = new ParseGraph(goalRule, input);
 		final Forrest3 newForrest = new Forrest3(graph, this.getRuntimeRuleSet(), input, goalRule);
@@ -119,7 +120,7 @@ public class ScannerLessParser3 implements IParser {
 			seasons++;
 		} while (newForrest.getCanGrow());
 
-		final IGraphNode match = newForrest.getLongestMatch();
+		final ICompleteNode match = newForrest.getLongestMatch();
 		return match;
 	}
 
@@ -137,11 +138,11 @@ public class ScannerLessParser3 implements IParser {
 			newForrest.start(graph, goalRule, input);
 			int seasons = 1;
 			// final int length = text.length();
-			final List<IGraphNode> matches = new ArrayList<>();
+			final List<IGrowingNode> matches = new ArrayList<>();
 			do {
 				newForrest.grow();
 				seasons++;
-				for (final IGraphNode gn : newForrest.getLastGrown()) {
+				for (final IGrowingNode gn : newForrest.getLastGrown()) {
 					// may need to change this to finalInputPos!
 					if (input.getIsEnd(gn.getNextInputPosition())) {
 						matches.add(gn);
@@ -157,8 +158,8 @@ public class ScannerLessParser3 implements IParser {
 			// must reject the next expected
 
 			final Set<RuntimeRule> expected = new HashSet<>();
-			for (final IGraphNode ep : matches) {
-				final IGraphNode gn = ep;
+			for (final IGrowingNode ep : matches) {
+				final IGrowingNode gn = ep;
 				boolean done = false;
 				// while (!done) {
 				if (gn.getCanGrowWidth()) {

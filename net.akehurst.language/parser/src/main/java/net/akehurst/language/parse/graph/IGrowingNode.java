@@ -2,11 +2,24 @@ package net.akehurst.language.parse.graph;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public interface IGrowingNode {
 	RuntimeRule getRuntimeRule();
+
+	int getRuntimeRuleNumber();
+
+	int getStartPosition();
+
+	int getEndPosition();
+
+	int getNextItemIndex();
+
+	int getPriority();
+
+	int getMatchedTextLength();
 
 	boolean getIsSkip();
 
@@ -23,8 +36,6 @@ public interface IGrowingNode {
 	boolean getCanGrowWidthWithSkip();
 
 	boolean hasNextExpectedItem();
-
-	ICompleteNode asComplete();
 
 	boolean getExpectsItemAt(RuntimeRule runtimeRule, int atPosition);
 
@@ -62,12 +73,14 @@ public interface IGrowingNode {
 		}
 	}
 
-	List<PreviousInfo> getPrevious();
+	Set<PreviousInfo> getPrevious();
+
+	void addPrevious(IGrowingNode previousNode, int atPosition);
 
 	List<RuntimeRule> getNextExpectedItem();
 
 	boolean getIsLeaf();
 
-	int getNextItemIndex();
+	List<ICompleteNode> getGrowingChildren();
 
 }

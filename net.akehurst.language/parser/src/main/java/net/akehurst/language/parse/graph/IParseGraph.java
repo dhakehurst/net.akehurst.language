@@ -24,9 +24,11 @@ public interface IParseGraph {
 
 	ICompleteNode findOrCreateLeaf(Leaf leaf);
 
-	ICompleteNode findOrCreateBranch(RuntimeRule rr, int priority, int startPosition, int endPosition, int height);
+	// ICompleteNode findOrCreateBranch(RuntimeRule rr, int priority, int startPosition, int endPosition);
 
 	ICompleteNode findNode(int ruleNumber, int start, int length);
+
+	ICompleteNode complete(IGrowingNode growing);
 
 	// IGraphNode findOrCreateBranch(RuntimeRule rr, int priority, int startPosition, int machedTextLength, int nextItemIndex, int height);
 
@@ -42,7 +44,7 @@ public interface IParseGraph {
 	 * @param firstChild
 	 * @return
 	 */
-	void createWithFirstChild(RuntimeRule runtimeRule, int priority, ICompleteNode firstChild);
+	void createWithFirstChild(RuntimeRule runtimeRule, int priority, ICompleteNode firstChild, Set<IGrowingNode.PreviousInfo> previous);
 
 	// void createWithFirstChildAndStack(RuntimeRule runtimeRule, int priority, IGraphNode firstChild, IGraphNode stack);
 
@@ -56,6 +58,8 @@ public interface IParseGraph {
 	void growNextChild(IGrowingNode parent, ICompleteNode nextChild, int position);
 
 	void growNextSkipChild(IGrowingNode parent, ICompleteNode skipChild);
+
+	void pushToStackOf(ICompleteNode leafNode, IGrowingNode stack);
 
 	// IGraphNode fetchGrowing(int ruleNumber, int start, int nextItemIndex);
 	//

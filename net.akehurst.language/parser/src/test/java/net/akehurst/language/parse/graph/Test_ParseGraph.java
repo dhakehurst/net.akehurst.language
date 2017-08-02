@@ -25,10 +25,8 @@ public class Test_ParseGraph {
 		final Input3 input = new Input3(rules, "a");
 		final IParseGraph graph = new ParseGraph(terminalRule, input);
 
-		final int startPosition = 0;
-		final int matchedLength = 1;
 		final Leaf l = input.fetchOrCreateBud(terminalRule, 0);
-		final IGraphNode n = graph.findOrCreateLeaf(l, terminalRule, startPosition, matchedLength);
+		final ICompleteNode n = graph.findOrCreateLeaf(l);
 
 		Assert.assertNotNull(n);
 		Assert.assertEquals(terminalRule, n.getRuntimeRule());
@@ -43,12 +41,10 @@ public class Test_ParseGraph {
 		final Input3 input = new Input3(rules, "a");
 		final IParseGraph graph = new ParseGraph(terminalRule, input);
 
-		final int startPosition = 0;
-		final int matchedLength = 1;
 		final Leaf l = input.fetchOrCreateBud(terminalRule, 0);
-		final IGraphNode n1 = graph.findOrCreateLeaf(l, terminalRule, startPosition, matchedLength);
+		final ICompleteNode n1 = graph.findOrCreateLeaf(l);
 
-		final IGraphNode n2 = graph.findOrCreateLeaf(l, terminalRule, startPosition, matchedLength);
+		final ICompleteNode n2 = graph.findOrCreateLeaf(l);
 
 		Assert.assertNotNull(n1);
 		Assert.assertNotNull(n2);
@@ -72,10 +68,8 @@ public class Test_ParseGraph {
 			final IParseGraph graph = new ParseGraph(rule, input);
 
 			final int startPosition = 0;
-			final int length = 1;
-			final int nextItemIndex = 1;
 			final int height = 1;
-			final IGraphNode n = graph.findOrCreateBranch(rule, 0, startPosition, height);
+			final ICompleteNode n = graph.findOrCreateBranch(rule, 0, startPosition, 1, height);
 
 			Assert.assertNotNull(n);
 		} catch (final Exception e) {
@@ -104,9 +98,9 @@ public class Test_ParseGraph {
 			final int length = 1;
 			final int nextItemIndex = 1;
 			final int height = 1;
-			final IGraphNode n = graph.findOrCreateBranch(rule, 0, startPosition, height);
+			final ICompleteNode n = graph.findOrCreate
 			final Leaf l = input.fetchOrCreateBud(terminalRule, 0);
-			final IGraphNode n2 = graph.findOrCreateLeaf(l, terminalRule, startPosition, l.getMatchedTextLength());
+			final ICompleteNode n2 = graph.findOrCreateLeaf(l, terminalRule, startPosition, l.getMatchedTextLength());
 
 			graph.growNextChild(n, n2, 0);
 
@@ -139,12 +133,12 @@ public class Test_ParseGraph {
 		final RuntimeRule rule_S_group = rules.getRuntimeRule(g.findAllRule("S$group"));
 
 		// start
-		final IGraphNode node_start = graph.findOrCreateBranch(goalRule, 0, 0, 0);
+		final ICompleteNode node_start = graph.findOrCreateBranch(goalRule, 0, 0, 0, 0);
 
 		// grow width
 		graph.getGrowable().clear();
 		final Leaf leaf_a = input.fetchOrCreateBud(terminal_a, 0);
-		final IGraphNode node_a = graph.findOrCreateLeaf(leaf_a, terminal_a, 0, leaf_a.getMatchedTextLength());
+		final ICompleteNode node_a = graph.findOrCreateLeaf(leaf_a);
 		node_start.pushToStackOf(node_a, 0);
 
 		Assert.fail("Incomplete test");
@@ -173,12 +167,12 @@ public class Test_ParseGraph {
 			// e.g. parse empty B followed by 'b' B (see special test)
 
 			// start
-			final IGraphNode node_start = graph.findOrCreateBranch(goalRule, 0, 0, 0);
+			final ICompleteNode node_start = graph.findOrCreateBranch(goalRule, 0, 0, 0);
 
 			// grow width
 			graph.getGrowable().clear();
 			final Leaf leaf_empty = input.fetchOrCreateBud(rule_B_empty, 0);
-			final IGraphNode node_empty = graph.findOrCreateLeaf(leaf_empty, rule_B_empty, 0, leaf_empty.getMatchedTextLength());
+			final ICompleteNode node_empty = graph.findOrCreateLeaf(leaf_empty, rule_B_empty, 0, leaf_empty.getMatchedTextLength());
 			node_start.pushToStackOf(node_empty, 0);
 
 			// grow height

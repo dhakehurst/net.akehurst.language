@@ -53,7 +53,7 @@ public final class Forrest3 {
 					lt = gt;
 				}
 			}
-			if (!this.input.getIsEnd(lt.getMatchedTextLength())) {
+			if (!this.input.getIsEnd(lt.getEndPosition() + 1)) {
 				throw new ParseFailedException("Goal does not match full text", this.extractLongestMatchFromStart());
 			} else {
 				return lt;
@@ -185,7 +185,7 @@ public final class Forrest3 {
 					// //
 					// } else {
 					// what if bud exists and already has stacked nodes?
-					modified = this.pushStackNewRoot(gn, bud);
+					modified = this.pushStackNewRoot(bud, gn);
 
 					// }
 				}
@@ -215,7 +215,7 @@ public final class Forrest3 {
 					// // final IGraphNode nn = this.pushStackNewRoot(gn, pt);
 					// result.add(pt);
 					// } else {
-					modified = this.pushStackNewRoot(gn, bud);
+					modified = this.pushStackNewRoot(bud, gn);
 					// }
 
 				}
@@ -250,12 +250,13 @@ public final class Forrest3 {
 	private void tryGraftInto(final IGrowingNode gn, final IGrowingNode.PreviousInfo info) throws RuleNotFoundException {
 
 		if (gn.getIsSkip()) {
-			this.graph.growNextSkipChild(info.node, gn.asComplete());
+			final ICompleteNode complete = this.graph.complete(gn);
+			this.graph.growNextSkipChild(info.node, complete);
 			// info.node.duplicateWithNextSkipChild(gn);
 			// this.graftInto(gn, info);
 		} else if (info.node.getExpectsItemAt(gn.getRuntimeRule(), info.atPosition)) {
-
-			this.graftInto(gn.asComplete(), info);
+			final ICompleteNode complete = this.graph.complete(gn);
+			this.graftInto(complete, info);
 
 		} else {
 			// drop
@@ -329,24 +330,24 @@ public final class Forrest3 {
 				// }
 				if (this.hasHeightPotential(info.getRuntimeRule(), gn)) {
 					// check if already grown into this parent
-					IGraphNode alreadyGrown = null;
-					for (final IGraphNode pp : gn.getPossibleParent()) {
-						if (info.getRuntimeRule().getRuleNumber() == pp.getRuntimeRule().getRuleNumber()) {
-							alreadyGrown = pp;
-							break;
-						}
-					}
+					final IGraphNode alreadyGrown = null;
+					// for (final IGraphNode pp : gn.getPossibleParent()) {
+					// if (info.getRuntimeRule().getRuleNumber() == pp.getRuntimeRule().getRuleNumber()) {
+					// alreadyGrown = pp;
+					// break;
+					// }
+					// }
 					if (null == alreadyGrown) {
 						this.growHeightByType(gn, info);
 						result = true; // TODO: this should depend on if the growHeight does something
 					} else {
 						// TODO: I think this is wrong...what grammar/test is it used for?
-						if (alreadyGrown.getPrevious().isEmpty()) {
-							this.graph.reuseWithOtherStack(alreadyGrown, gn.getPrevious());
-							result = true; // TODO: this should depend on if the reuseWithOtherStack does something
-						} else {
-							result = false;
-						}
+						// if (alreadyGrown.getPrevious().isEmpty()) {
+						// this.graph.reuseWithOtherStack(alreadyGrown, gn.getPrevious());
+						// result = true; // TODO: this should depend on if the reuseWithOtherStack does something
+						// } else {
+						// result = false;
+						// }
 					}
 				}
 			}
@@ -483,9 +484,8 @@ public final class Forrest3 {
 			// }
 			// }
 			// } else {
-
-			this.graph.createWithFirstChild(info.getRuntimeRule(), priority, gn.asComplete());
-
+			final ICompleteNode complete = this.graph.complete(gn);
+			this.graph.createWithFirstChild(info.getRuntimeRule(), priority, complete, gn.getPrevious());
 			// }
 		} else {
 			// return null;
@@ -549,28 +549,30 @@ public final class Forrest3 {
 		}
 	}
 
-	protected boolean pushStackNewRoot(final IGrowingNode stack, final ICompleteNode newRoot) {
+	protected boolean pushStackNewRoot(final ICompleteNode leafNode, final IGrowingNode stack) {
 		// ParseTreeBud2 bud = this.ffactory.fetchOrCreateBud(leaf);
 		// if (this.getHasPotential(bud, Arrays.asList(new IGraphNode.PreviousInfo(gn,gn.getNextItemIndex())), gn.getNextItemIndex())) {
 		boolean modified = false;
 
-		for (final ICompleteNode ns : newRoot.getPossibleParent()) {
-			// TODO: this test could be more restrictive using the position
-
-			if (this.hasStackedPotential(ns, stack)) {
-				stack.pushToStackOf(ns, stack.getNextItemIndex());
-				modified = true;
-			} else {
-				// do nothing
-			}
-		}
+		// for (final ICompleteNode ns : leafNode.getPossibleParent()) {
+		// // TODO: this test could be more restrictive using the position
+		//
+		// if (this.hasStackedPotential(ns, stack)) {
+		// this.graph.pushToStackOf(leafNode, stack);
+		// // stack.pushToStackOf(ns, stack.getNextItemIndex());
+		// modified = true;
+		// } else {
+		// // do nothing
+		// }
+		// }
 
 		if (modified) {
 			// do nothing we have pushed
 		} else {
 			// no existing parent was suitable, use newRoot
-			if (this.hasStackedPotential(newRoot, stack)) {
-				stack.pushToStackOf(newRoot, stack.getNextItemIndex());
+			if (this.hasStackedPotential(leafNode, stack)) {
+				this.graph.pushToStackOf(leafNode, stack);
+				// stack.pushToStackOf(newRoot, stack.getNextItemIndex());
 				modified = true;
 			}
 		}

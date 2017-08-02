@@ -42,7 +42,7 @@ public class Input3 implements IInput {
 
 	@Override
 	public boolean getIsEnd(final int pos) {
-		return pos >= this.text.length();
+		return pos > this.text.length();
 	}
 
 	// @Override

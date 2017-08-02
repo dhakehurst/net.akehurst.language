@@ -103,12 +103,12 @@ abstract public class AbstractGraphNode implements IGraphNode {
 		// }
 	}
 
-	@Override
-	public void pushToStackOf(final IGraphNode next, final int atPosition) {
-		// next.getPrevious().clear(); // FIXME: maybe good, maybe not!
-		next.addPrevious(this, atPosition);
-		this.graph.tryAddGrowable(next);
-	}
+	// @Override
+	// public void pushToStackOf(final IGraphNode next, final int atPosition) {
+	// // next.getPrevious().clear(); // FIXME: maybe good, maybe not!
+	// next.addPrevious(this, atPosition);
+	// this.graph.tryAddGrowable(next);
+	// }
 
 	@Override
 	public Set<IGraphNode> getAlreadyGrownInto() {

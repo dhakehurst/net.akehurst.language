@@ -7,6 +7,8 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public interface ICompleteNode extends IParseTreeVisitable {
 
+	RuntimeRule getRuntimeRule();
+
 	int getRuntimeRuleNumber();
 
 	int getStartPosition();
@@ -15,15 +17,13 @@ public interface ICompleteNode extends IParseTreeVisitable {
 
 	int getMatchedTextLength();
 
+	boolean getIsSkip();
+
 	static class ChildrenOption {
 		public int matchedLength;
 		public List<ICompleteNode> nodes;
 	}
 
-	List<ChildrenOption> getChildrenOption();
-
-	boolean getIsSkip();
-
-	RuntimeRule getRuntimeRule();
+	List<ICompleteNode.ChildrenOption> getChildrenOption();
 
 }
