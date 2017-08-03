@@ -19,6 +19,12 @@ public interface IParseTree extends IParseTreeVisitable {
 
 	INode getRoot();
 
+	/**
+	 *
+	 * @return String composed from the leaf nodes, should equal the original text this tree parsed
+	 */
+	String asString();
+
 	// boolean getIsComplete();
 	//
 	// boolean getCanGrowWidth();

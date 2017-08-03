@@ -104,8 +104,37 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final IBranch expected = b.branch("S", b.branch("S_a", b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))), b.leaf("a")));
-		Assert.assertEquals(expected, tree.getRoot());
+		final IParseTree expected = new ParseTree(
+				b.branch("S", b.branch("S_a", b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))), b.leaf("a"))));
+		Assert.assertEquals(expected, tree);
+	}
+
+	Grammar Sas2() {
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("S").choice(new NonTerminal("S_a"), new NonTerminal("an"));
+		b.rule("S_a").concatenation(new NonTerminal("S"), new NonTerminal("an"));
+		b.rule("an").choice(new TerminalLiteral("a"));
+		return b.get();
+	}
+
+	@Test
+	public void Sas2_S_a10() throws ParseFailedException {
+		// grammar, goal, input
+		final Grammar g = this.Sas2();
+		final String goal = "S";
+		String text = "";
+		for (int i = 0; i < 10; ++i) {
+			text += "a";
+		}
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+
+		final IParseTree expected = new ParseTree(
+				b.branch("S", b.branch("S_a", b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))), b.leaf("a"))));
+		Assert.assertEquals(expected, tree);
 	}
 
 	// Some of these test grammars are based on those listed in [https://github.com/PhilippeSigaud/Pegged/wiki/Left-Recursion]
@@ -467,7 +496,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		String text = "";
 		// TODO: make this 300 (30)
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 100; i++) {
 			text += "b";
 		}
 

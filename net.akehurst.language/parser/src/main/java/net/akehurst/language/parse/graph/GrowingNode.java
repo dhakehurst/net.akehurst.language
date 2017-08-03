@@ -333,23 +333,36 @@ public class GrowingNode implements IGrowingNode {
 		return this.children;
 	}
 
-	// --- Object ---
-	@Override
-	public String toString() {
-		String prev = "";
+	private String previousToString(final Set<GrowingNode> visited) {
+		visited.add(this);
+		String s = "";
 		if (this.getPrevious().isEmpty()) {
-			// nothing
-		} else if (this.getPrevious().size() == 1) {
-			prev = " --> " + this.getPrevious().iterator().next();
+			//
 		} else {
-			prev = " -*> " + this.getPrevious().iterator().next();
+			final GrowingNode prev = (GrowingNode) this.getPrevious().iterator().next().node;
+			if (visited.contains(prev)) {
+				s = "...";
+			} else if (this.getPrevious().size() == 1) {
+				s = " --> " + prev.previousToString(visited);
+			} else {
+				s = " -*> " + prev.previousToString(visited);
+			}
 		}
 		String r = "";
 		r += this.getStartPosition() + ",";
 		r += this.getEndPosition() + ",";
 		r += -1 == this.getNextItemIndex() ? "C" : this.getNextItemIndex();
 		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
-		r += prev;
+		r += s;
 		return r;
+	}
+
+	// --- Object ---
+	@Override
+	public String toString() {
+		final HashSet<GrowingNode> visited = new HashSet<>();
+		final String s = this.previousToString(visited);
+
+		return s;
 	}
 }

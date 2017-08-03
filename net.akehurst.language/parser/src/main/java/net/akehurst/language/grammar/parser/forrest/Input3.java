@@ -41,45 +41,26 @@ public class Input3 implements IInput {
 	private final CharSequence text;
 
 	@Override
-	public boolean getIsEnd(final int pos) {
-		return pos > this.text.length();
+	public boolean getIsStart(final int pos) {
+		// TODO what if we want t0 parse part?, e.g. sub grammar
+		return 0 == pos;
 	}
 
-	// @Override
-	// public CharSequence get(final int start, final int end) {
-	// return this.text.subSequence(start, end);
-	// }
-
-	// public int getLength() {
-	// return this.text.length();
-	// }
-
-	// Map<IntPair, ParseTreeBud2> bud_cache;
-	// public ParseTreeBud2 createBud(RuntimeRule terminalRule, int pos) {
-	// int terminalTypeNumber = terminalRule.getRuleNumber();
-	// IntPair key = new IntPair(terminalTypeNumber, pos);
-	// ParseTreeBud2 bud = this.bud_cache.get(key);
-	// if (null==bud) {
-	// Leaf l = this.fetchOrCreateBud(terminalRule, pos);
-	// if (NO_LEAF!=l) {
-	// bud = new ParseTreeBud2(l);
-	// this.bud_cache.put(key, bud);
-	// return bud;
-	// }
-	// }
-	// return bud;
-	// }
+	@Override
+	public boolean getIsEnd(final int pos) {
+		return pos >= this.text.length();
+	}
 
 	final Leaf NO_LEAF;
 
-	class IntPair {
+	static class IntPair {
 		public IntPair(final int nodeType, final int position) {
 			this.nodeType = nodeType;
 			this.position = position;
 		}
 
-		int nodeType;
-		int position;
+		private final int nodeType;
+		private final int position;
 
 		@Override
 		public int hashCode() {
@@ -115,12 +96,13 @@ public class Input3 implements IInput {
 		if (terminalRule.getIsEmptyRule()) {
 			if (null == l) {
 				// first time we tried to get this empty token from this possion, OK.
+				// FIXME: this is incorrect..need to be able to do this
 				final Leaf le = new EmptyLeaf(pos, terminalRule);
 				this.leaf_cache.put(key, le);
 				return le;
 			} else {
 				// tried to get it again, fail
-				return null;
+				return l;
 			}
 		}
 

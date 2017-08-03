@@ -20,6 +20,7 @@ import java.util.Objects;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
+import net.akehurst.language.grammar.parser.ParseTreeToString;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 
 public class ParseTree implements IParseTree {
@@ -35,6 +36,14 @@ public class ParseTree implements IParseTree {
 		return this.root;
 	}
 
+	@Override
+	public String asString() {
+		final ParseTreeToString visitor = new ParseTreeToString();
+		final String s = this.accept(visitor, "");
+		return s;
+	}
+
+	// --- IParseTreeVisitable ---
 	@Override
 	public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
 		return visitor.visit(this, arg);

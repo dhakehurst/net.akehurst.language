@@ -56,6 +56,12 @@ public class InputForReader implements IInput {
 	}
 
 	@Override
+	public boolean getIsStart(final int pos) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
 	public boolean getIsEnd(final int pos) {
 		// TODO:
 		return true;// pos >= this.text.length();

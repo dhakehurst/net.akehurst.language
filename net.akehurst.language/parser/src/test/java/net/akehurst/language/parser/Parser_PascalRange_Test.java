@@ -31,14 +31,11 @@ import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class Parser_PascalRange_Test extends AbstractParser_Test {
 	/*
-	 * expr : range | real ;
-	 * range: integer '..' integer ;
-	 * integer : "[0-9]+" ;
-	 * real : "([0-9]+[.][0-9]*)|([.][0-9]+)" ;
-	 * 
+	 * expr : range | real ; range: integer '..' integer ; integer : "[0-9]+" ; real : "([0-9]+[.][0-9]*)|([.][0-9]+)" ;
+	 *
 	 */
 	Grammar pascal() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("expr").choice(new NonTerminal("range"), new NonTerminal("real"));
 		b.rule("range").concatenation(new NonTerminal("integer"), new TerminalLiteral(".."), new NonTerminal("integer"));
 		b.rule("integer").concatenation(new TerminalPattern("[0-9]+"));
@@ -46,88 +43,63 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 
 		return b.get();
 	}
-	
+
 	/**
-	 * @param 
+	 * @param
+	 * @throws ParseFailedException
 	 */
 	@Test
-	public void pascal_expr_p5() {
+	public void pascal_expr_p5() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			Grammar g = pascal();
-			String goal = "expr";
-			String text = ".5";
-			
-			IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);;
-			IBranch expected = 
-				b.branch("expr",
-					b.branch("real",
-						b.leaf("([0-9]+[.][0-9]*)|([.][0-9]+)", ".5")
-					)
-				);
-			Assert.assertEquals(expected, tree.getRoot());
+		final Grammar g = this.pascal();
+		final String goal = "expr";
+		final String text = ".5";
 
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		;
+		final IBranch expected = b.branch("expr", b.branch("real", b.leaf("([0-9]+[.][0-9]*)|([.][0-9]+)", ".5")));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
-	
-	@Test
-	public void pascal_expr_1p() {
-		// grammar, goal, input
-		try {
-			Grammar g = pascal();
-			String goal = "expr";
-			String text = "1.";
-			
-			IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);;
-			IBranch expected = 
-				b.branch("expr",
-					b.branch("real",
-						b.leaf("([0-9]+[.][0-9]*)|([.][0-9]+)", "1.")
-					)
-				);
-			Assert.assertEquals(expected, tree.getRoot());
-			
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+	@Test
+	public void pascal_expr_1p() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.pascal();
+		final String goal = "expr";
+		final String text = "1.";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		;
+		final IBranch expected = b.branch("expr", b.branch("real", b.leaf("([0-9]+[.][0-9]*)|([.][0-9]+)", "1.")));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
-	
-	@Test
-	public void pascal_expr_1to5() {
-		// grammar, goal, input
-		try {
-			Grammar g = pascal();
-			String goal = "expr";
-			String text = "1..5";
-			
-			IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);;
-			IBranch expected = 
-				b.branch("expr",
-					b.branch("range",
-						b.branch("integer",
-							b.leaf("[0-9]+", "1")
-						),
-						b.leaf("..", ".."),
-						b.branch("integer",
-							b.leaf("[0-9]+", "5")
-						)
-					)
-				);
-			Assert.assertEquals(expected, tree.getRoot());
-			
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+	@Test
+	public void pascal_expr_1to5() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.pascal();
+		final String goal = "expr";
+		final String text = "1..5";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		;
+		final IBranch expected = b.branch("expr",
+				b.branch("range", b.branch("integer", b.leaf("[0-9]+", "1")), b.leaf("..", ".."), b.branch("integer", b.leaf("[0-9]+", "5"))));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 }

@@ -361,7 +361,6 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("top").multi(1, -1, new NonTerminal("level1"));
 		b.rule("level1").multi(0, 1, new TerminalLiteral("a"));
-
 		return b.get();
 	}
 

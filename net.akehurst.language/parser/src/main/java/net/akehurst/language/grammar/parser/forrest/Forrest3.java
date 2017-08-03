@@ -118,7 +118,7 @@ public final class Forrest3 {
 	}
 
 	public void growTreeWidthAndHeight(final IGrowingNode gn) throws RuleNotFoundException, ParseTreeException {
-
+		// gn.toString();
 		final boolean didSkipNode = this.growWidthWithSkipRules(gn);
 		if (didSkipNode) {
 			return;
@@ -158,7 +158,7 @@ public final class Forrest3 {
 					// clear the stacked nodes (previous) of gn
 					// they are no longer needed, unless gn reused
 					// at which point it will get a new stack (previous)
-					gn.getPrevious().clear();
+					this.graph.pop(gn);
 				}
 			}
 		}

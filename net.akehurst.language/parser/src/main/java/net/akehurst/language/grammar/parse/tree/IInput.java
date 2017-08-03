@@ -6,6 +6,8 @@ public interface IInput {
 
 	Leaf fetchOrCreateBud(RuntimeRule rr, int nextInputPosition);
 
+	boolean getIsStart(int pos);
+
 	boolean getIsEnd(int pos);
 
 	// CharSequence get(int start, int end);

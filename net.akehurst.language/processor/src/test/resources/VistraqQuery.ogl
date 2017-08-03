@@ -1,0 +1,33 @@
+namespace de::itemis::vistraq::traceability::computational::language;
+ 
+grammar Query {
+    skip SKIP : "\s+" ;
+	query : querySource returnDefinition? ;
+
+	querySource : pathQuery | queryReference ;
+
+	queryReference : 'FROM' NAME ;
+
+    pathQuery : 'MATCH' artefactSelector;
+	artefactSelector : artefactTypeReference ('AS' NAME)? linkSelector? whereClause?;
+	linkSelector : 'NOT'? 'LINKED' 'VIA' multiplicity? linkTypeReference ('TO'|'FROM') artefactSelector ;
+	multiplicity : POSITIVE_INT '..' POSITIVE_INT ;
+	whereClause : 'WHERE' ;
+
+	//returnDefinition : 'RETURN' [columnDefinition / ',']+ orderBy?;
+	returnDefinition : 'RETURN' columnDefinition  orderBy?;
+	columnDefinition : aggregateFunctionName? expression 'AS' NAME ;
+	expression : root | propertyCall ;
+	root : NAME;
+	propertyCall : expression '.' NAME ;
+	
+	orderBy : 'ORDER' 'BY' [columnOrder / ',']+ ;
+	columnOrder : NAME ('ASCENDING' | 'DESCENDING')? ;
+	
+	artefactTypeReference : '*' | NAME ;
+	linkTypeReference : '*' | NAME ;
+	aggregateFunctionName : NAME ;
+	NAME : "[a-zA-Z_][a-zA-Z0-9_]*" ;
+	POSITIVE_INT : "[0-9]+" ;
+
+}

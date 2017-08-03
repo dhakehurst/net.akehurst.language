@@ -61,6 +61,8 @@ public interface IParseGraph {
 
 	void pushToStackOf(ICompleteNode leafNode, IGrowingNode stack);
 
+	void pop(IGrowingNode gn);
+
 	// IGraphNode fetchGrowing(int ruleNumber, int start, int nextItemIndex);
 	//
 	// IGraphNode fetchNode(int ruleNumber, int start, int length);

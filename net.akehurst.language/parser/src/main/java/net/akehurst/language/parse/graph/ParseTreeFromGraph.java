@@ -5,6 +5,7 @@ import java.util.Objects;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
+import net.akehurst.language.grammar.parser.ParseTreeToString;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 
 public class ParseTreeFromGraph implements IParseTree {
@@ -25,17 +26,12 @@ public class ParseTreeFromGraph implements IParseTree {
 		return this.root;
 	}
 
-	// @Override
-	// public boolean getIsComplete() {
-	// // TODO Auto-generated method stub
-	// return false;
-	// }
-	//
-	// @Override
-	// public boolean getCanGrowWidth() {
-	// // TODO Auto-generated method stub
-	// return false;
-	// }
+	@Override
+	public String asString() {
+		final ParseTreeToString visitor = new ParseTreeToString();
+		final String s = this.accept(visitor, "");
+		return s;
+	}
 
 	// --- Object ---
 	static ToStringVisitor v = new ToStringVisitor();
