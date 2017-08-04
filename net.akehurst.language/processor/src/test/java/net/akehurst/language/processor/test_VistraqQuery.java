@@ -50,12 +50,13 @@ public class test_VistraqQuery {
 		col.add(new Object[] { new Data("artefactSelector", "Requirement LINKED VIA * TO *") });
 		col.add(new Object[] { new Data("artefactSelector", "* LINKED VIA * TO *") });
 		col.add(new Object[] { new Data("returnDefinition", "RETURN r AS Req") });
+		col.add(new Object[] { new Data("columnDefinition", "r AS Req") });
 		col.add(new Object[] { new Data("query", "MATCH *") });
 		col.add(new Object[] { new Data("query", "MATCH * AS n") });
 		col.add(new Object[] { new Data("query", "MATCH Requirement AS r") });
 		col.add(new Object[] { new Data("query", "MATCH Requirement AS r RETURN r AS Req") });
 		col.add(new Object[] { new Data("query", "MATCH Requirement AS r RETURN r.identity AS Id") });
-		col.add(new Object[] { new Data("query", "MATCH Requirement AS r RETURN r.identity AS Id, r.type.name AS Type") });
+		col.add(new Object[] { new Data("query", "MATCH Requirement AS r RETURN r.identity AS Id r.type.name AS Type") });
 		col.add(new Object[] { new Data("query", "MATCH * LINKED VIA * TO *") });
 		col.add(new Object[] { new Data("query", "MATCH * AS r LINKED VIA * TO * AS t") });
 		col.add(new Object[] { new Data("query", "MATCH Requirement LINKED VIA * TO *") });

@@ -125,6 +125,7 @@ public final class Forrest3 {
 		} else {
 			if (gn.getIsSkip()) {
 				this.tryGraftBackSkipNode(gn);
+				this.graph.pop(gn);
 			} else {
 				// TODO: need to find a way to do either height or graft..not both
 				// problem is deciding which

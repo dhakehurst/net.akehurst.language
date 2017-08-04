@@ -381,4 +381,44 @@ public class test_Parser_Multi extends AbstractParser_Test {
 
 	}
 
+	// S = F? G 'a' A;
+	// F = A ;
+	// G = H | J ;
+	// H = A ;
+	// J = G '.' A ;
+	// A = 'a' ;
+	Grammar x() {
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("S").concatenation(new NonTerminal("Fm"), new NonTerminal("G"), new TerminalLiteral("a"), new NonTerminal("A"));
+		b.rule("Fm").multi(0, 1, new NonTerminal("F"));
+		b.rule("F").choice(new NonTerminal("A"));
+		b.rule("G").choice(new NonTerminal("H"), new NonTerminal("J"));
+		b.rule("A").choice(new TerminalLiteral("a"));
+		b.rule("H").choice(new NonTerminal("A"));
+		b.rule("J").concatenation(new NonTerminal("G"), new TerminalLiteral("."), new NonTerminal("A"));
+		return b.get();
+	}
+
+	@Test
+	public void x_S_aaa() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.x();
+		final String goal = "S";
+		final String text = "aaa";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S{");
+		b.define("  Fm { empty }");
+		b.define("  G { 'a' }");
+		b.define("  'b'");
+		b.define("}");
+		final IParseTree expected = b.build();
+		Assert.assertEquals(expected, tree);
+
+	}
+
 }

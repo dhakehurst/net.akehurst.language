@@ -94,19 +94,6 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		return b.get();
 	}
 
-	Grammar caseBlock() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
-		b.rule("block").concatenation(new TerminalLiteral("{"), new NonTerminal("group1"), new NonTerminal("group2"), new TerminalLiteral("}"));
-		b.rule("group1").multi(0, -1, new NonTerminal("labelBlock"));
-		b.rule("group2").multi(0, -1, new NonTerminal("label"));
-		b.rule("labelBlock").concatenation(new NonTerminal("labels"), new TerminalLiteral("{"), new TerminalLiteral("}"));
-		b.rule("labels").multi(0, -1, new NonTerminal("label"));
-		b.rule("label").concatenation(new TerminalLiteral("case"), new NonTerminal("int"), new TerminalLiteral(":"));
-		b.rule("int").choice(new TerminalPattern("[0-9]+"));
-		return b.get();
-	}
-
 	@Test
 	public void am_S_empty() throws ParseFailedException {
 		// grammar, goal, input
@@ -307,6 +294,19 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 						b.branch("fps.choice1.group.multi", b.emptyLeaf("fps.choice1.group.multi"))));
 		Assert.assertEquals(expected, tree.getRoot());
 
+	}
+
+	Grammar caseBlock() {
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
+		b.rule("block").concatenation(new TerminalLiteral("{"), new NonTerminal("group1"), new NonTerminal("group2"), new TerminalLiteral("}"));
+		b.rule("group1").multi(0, -1, new NonTerminal("labelBlock"));
+		b.rule("group2").multi(0, -1, new NonTerminal("label"));
+		b.rule("labelBlock").concatenation(new NonTerminal("labels"), new TerminalLiteral("{"), new TerminalLiteral("}"));
+		b.rule("labels").multi(0, -1, new NonTerminal("label"));
+		b.rule("label").concatenation(new TerminalLiteral("case"), new NonTerminal("int"), new TerminalLiteral(":"));
+		b.rule("int").choice(new TerminalPattern("[0-9]+"));
+		return b.get();
 	}
 
 	@Test

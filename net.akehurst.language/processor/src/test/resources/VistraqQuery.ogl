@@ -15,7 +15,7 @@ grammar Query {
 	whereClause : 'WHERE' ;
 
 	//returnDefinition : 'RETURN' [columnDefinition / ',']+ orderBy?;
-	returnDefinition : 'RETURN' columnDefinition  orderBy?;
+	returnDefinition : 'RETURN' columnDefinition+  orderBy?;
 	columnDefinition : aggregateFunctionName? expression 'AS' NAME ;
 	expression : root | propertyCall ;
 	root : NAME;
