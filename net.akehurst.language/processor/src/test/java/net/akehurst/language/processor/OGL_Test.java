@@ -109,4 +109,18 @@ public class OGL_Test extends AbstractParser_Test {
 
 	}
 
+	@Test
+	public void ogl_terminal_escaped() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.ogl();
+		final String goal = "terminal";
+		final String text = "'\\''";
+		// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+	}
+
 }

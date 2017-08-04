@@ -59,9 +59,14 @@ public interface IParseGraph {
 
 	void growNextSkipChild(IGrowingNode parent, ICompleteNode skipChild);
 
-	void pushToStackOf(ICompleteNode leafNode, IGrowingNode stack);
+	void pushToStackOf(ICompleteNode leafNode, IGrowingNode stack, Set<IGrowingNode.PreviousInfo> previous);
 
-	void pop(IGrowingNode gn);
+	/**
+	 *
+	 * @param gn
+	 * @return previous of gn after giving gn a new Set of previous (clear)
+	 */
+	Set<IGrowingNode.PreviousInfo> pop(IGrowingNode gn);
 
 	// IGraphNode fetchGrowing(int ruleNumber, int start, int nextItemIndex);
 	//

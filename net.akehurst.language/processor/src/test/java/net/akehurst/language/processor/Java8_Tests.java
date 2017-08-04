@@ -1189,4 +1189,112 @@ public class Java8_Tests {
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
+
+	@Test
+	public void compilationUnit() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		final String input = "package p1; public class A { public static char c = 'A'; }";
+		final IParseTree tree = Java8_Tests.parse("compilationUnit", input);
+
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void classDeclaration() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		final String input = "public class A { public static char c = 'A'; }";
+		final IParseTree tree = Java8_Tests.parse("classDeclaration", input);
+
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void classDeclaration2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		final String input = "public class A { }";
+		final IParseTree tree = Java8_Tests.parse("classDeclaration", input);
+
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void classBody2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		final String input = "{ public static char c = 'A'; }";
+		final IParseTree tree = Java8_Tests.parse("classBody", input);
+
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void fieldDeclaration() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		final String input = "public static char c = 'A';";
+		final IParseTree tree = Java8_Tests.parse("fieldDeclaration", input);
+
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void variableDeclarator() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		final String input = "c = 'A'";
+		final IParseTree tree = Java8_Tests.parse("variableDeclarator", input);
+
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void CharacterLiteral() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		final String input = "'A'";
+		final IParseTree tree = Java8_Tests.parse("CharacterLiteral", input);
+
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void SingleCharacter() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		final String input = "A";
+		final IParseTree tree = Java8_Tests.parse("SingleCharacter", input);
+
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void variableDeclaratorId() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+		final String input = "c";
+		final IParseTree tree = Java8_Tests.parse("variableDeclaratorId", input);
+
+		Assert.assertNotNull(tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
 }

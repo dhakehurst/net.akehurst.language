@@ -30,44 +30,40 @@ import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class Parser_Patterns_Test extends AbstractParser_Test {
-	
+
 	Grammar as() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("as").concatenation(new NonTerminal("a"));
 		b.rule("a").concatenation(new TerminalPattern("[a]+"));
 		return b.get();
 	}
-	
+
 	Grammar asxas() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("as").concatenation(new NonTerminal("a"), new TerminalLiteral(":"), new NonTerminal("a"));
 		b.rule("a").concatenation(new TerminalPattern("[a]+"));
 		return b.get();
 	}
-	
+
 	@Test
 	public void as_as_a() {
 		// grammar, goal, input
 		try {
-			Grammar g = as();
-			String goal = "as";
-			String text = "a";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.as();
+			final String goal = "as";
+			final String text = "a";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);;
-			IBranch expected = 
-				b.branch("as",
-						b.branch("a",
-							b.leaf("[a]+", "a")
-						)
-			
-				);
+			final ParseTreeBuilder b = this.builder(g, text, goal);
+			;
+			final IBranch expected = b.branch("as", b.branch("a", b.leaf("[a]+", "a"))
+
+			);
 			Assert.assertEquals(expected, tree.getRoot());
 
-
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -76,48 +72,40 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 	public void as_as_aa() {
 		// grammar, goal, input
 		try {
-			Grammar g = as();
-			String goal = "as";
-			String text = "aa";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.as();
+			final String goal = "as";
+			final String text = "aa";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);;
-			IBranch expected = 
-				b.branch("as",
-						b.branch("a",
-							b.leaf("[a]+", "aa")
-						)
-				);
+			final ParseTreeBuilder b = this.builder(g, text, goal);
+			;
+			final IBranch expected = b.branch("as", b.branch("a", b.leaf("[a]+", "aa")));
 			Assert.assertEquals(expected, tree.getRoot());
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void as_as_aaa() {
 		// grammar, goal, input
 		try {
-			Grammar g = as();
-			String goal = "as";
-			String text = "aaa";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.as();
+			final String goal = "as";
+			final String text = "aaa";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);;
-			IBranch expected = 
-				b.branch("as",
-						b.branch("a",
-							b.leaf("[a]+", "aaa")
-						)
-				);
+			final ParseTreeBuilder b = this.builder(g, text, goal);
+			;
+			final IBranch expected = b.branch("as", b.branch("a", b.leaf("[a]+", "aaa")));
 			Assert.assertEquals(expected, tree.getRoot());
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -126,14 +114,14 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 	public void asxas_as_a() {
 		// grammar, goal, input
 		try {
-			Grammar g = asxas();
-			String goal = "as";
-			String text = "a";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.asxas();
+			final String goal = "as";
+			final String text = "a";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.fail("This parse should fail");
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			//
 		}
 	}
@@ -142,131 +130,115 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 	public void asxas_as_aa() {
 		// grammar, goal, input
 		try {
-			Grammar g = asxas();
-			String goal = "as";
-			String text = "aa";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.asxas();
+			final String goal = "as";
+			final String text = "aa";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.fail("This parse should fail");
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			//
 		}
 	}
-	
+
 	@Test
 	public void asxas_as_axa() {
 		// grammar, goal, input
 		try {
-			Grammar g = asxas();
-			String goal = "as";
-			String text = "a:a";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.asxas();
+			final String goal = "as";
+			final String text = "a:a";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);;
-			IBranch expected = 
-				b.branch("as",
-						b.branch("a",
-							b.leaf("[a]+", "a")
-						),
-						b.leaf(":", ":"),
-						b.branch("a",
-								b.leaf("[a]+", "a")
-							)					
-				);
+			final ParseTreeBuilder b = this.builder(g, text, goal);
+			;
+			final IBranch expected = b.branch("as", b.branch("a", b.leaf("[a]+", "a")), b.leaf(":", ":"), b.branch("a", b.leaf("[a]+", "a")));
 			Assert.assertEquals(expected, tree.getRoot());
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void asxas_as_aaxa() {
 		// grammar, goal, input
 		try {
-			Grammar g = asxas();
-			String goal = "as";
-			String text = "aa:a";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.asxas();
+			final String goal = "as";
+			final String text = "aa:a";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);;
-			IBranch expected = 
-				b.branch("as",
-						b.branch("a",
-							b.leaf("[a]+", "aa")
-						),
-						b.leaf(":", ":"),
-						b.branch("a",
-								b.leaf("[a]+", "a")
-							)					
-				);
+			final ParseTreeBuilder b = this.builder(g, text, goal);
+			;
+			final IBranch expected = b.branch("as", b.branch("a", b.leaf("[a]+", "aa")), b.leaf(":", ":"), b.branch("a", b.leaf("[a]+", "a")));
 			Assert.assertEquals(expected, tree.getRoot());
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
-	public void asxas_as_axaa() {
+	public void asxas_as_axaa() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			Grammar g = asxas();
-			String goal = "as";
-			String text = "a:aa";
-			
-			IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);;
-			IBranch expected = 
-				b.branch("as",
-						b.branch("a",
-							b.leaf("[a]+", "a")
-						),
-						b.leaf(":", ":"),
-						b.branch("a",
-								b.leaf("[a]+", "aa")
-							)					
-				);
-			Assert.assertEquals(expected, tree.getRoot());
+		final Grammar g = this.asxas();
+		final String goal = "as";
+		final String text = "a:aa";
 
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		;
+		final IBranch expected = b.branch("as", b.branch("a", b.leaf("[a]+", "a")), b.leaf(":", ":"), b.branch("a", b.leaf("[a]+", "aa")));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
-	
+
 	@Test
-	public void asxas_as_aaaxaaa() {
+	public void asxas_as_aaaxaaa() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			Grammar g = asxas();
-			String goal = "as";
-			String text = "aaa:aaa";
-			
-			IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);;
-			IBranch expected = 
-				b.branch("as",
-						b.branch("a",
-							b.leaf("[a]+", "aaa")
-						),
-						b.leaf(":", ":"),
-						b.branch("a",
-								b.leaf("[a]+", "aaa")
-							)					
-				);
-			Assert.assertEquals(expected, tree.getRoot());
+		final Grammar g = this.asxas();
+		final String goal = "as";
+		final String text = "aaa:aaa";
 
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		;
+		final IBranch expected = b.branch("as", b.branch("a", b.leaf("[a]+", "aaa")), b.leaf(":", ":"), b.branch("a", b.leaf("[a]+", "aaa")));
+		Assert.assertEquals(expected, tree.getRoot());
+
+	}
+
+	Grammar chars() {
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("S").concatenation(new TerminalLiteral("'"), new TerminalPattern("[^'\\\\]"), new TerminalLiteral("'"));
+		return b.get();
+	}
+
+	@Test
+	public void chars_S_x() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.chars();
+		final String goal = "S";
+		final String text = "'x'";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		// Assert.assertEquals(expected, tree.getRoot());
+
 	}
 }

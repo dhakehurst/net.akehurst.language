@@ -17,6 +17,8 @@ public interface ICompleteNode extends IParseTreeVisitable {
 
 	int getMatchedTextLength();
 
+	boolean getIsEmptyLeaf();
+
 	boolean getIsSkip();
 
 	static class ChildrenOption {

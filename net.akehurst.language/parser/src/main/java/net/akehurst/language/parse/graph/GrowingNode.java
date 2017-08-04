@@ -21,6 +21,7 @@ public class GrowingNode implements IGrowingNode {
 		this.priority = priority;
 		this.children = children;
 		this.previous = new HashSet<>();
+		this.next = new HashSet<>();
 	}
 
 	private final RuntimeRule runtimeRule;
@@ -29,7 +30,8 @@ public class GrowingNode implements IGrowingNode {
 	private final int nextItemIndex;
 	private final int priority;
 	private final List<ICompleteNode> children;
-	Set<PreviousInfo> previous;
+	private Set<PreviousInfo> previous;
+	private final Set<IGrowingNode> next;
 
 	@Override
 	public RuntimeRule getRuntimeRule() {
@@ -159,15 +161,15 @@ public class GrowingNode implements IGrowingNode {
 	}
 
 	@Override
-	public boolean getCanGraftBack() {
-		if (this.getPrevious().isEmpty()) {
+	public boolean getCanGraftBack(final Set<IGrowingNode.PreviousInfo> previous) {
+		if (previous.isEmpty()) {
 			return false;
 		}
 		boolean b = false;
-		for (final PreviousInfo info : this.getPrevious()) {
+		for (final PreviousInfo info : previous) {
 			b = b || info.node.getExpectsItemAt(this.getRuntimeRule(), info.atPosition);
 		}
-		return b && this.getHasCompleteChildren() && this.getIsStacked();
+		return b && this.getHasCompleteChildren();// && this.getIsStacked();
 	}
 
 	@Override
@@ -250,10 +252,10 @@ public class GrowingNode implements IGrowingNode {
 		return this.getRuntimeRule().couldHaveChild(runtimeRule, atPosition);
 	}
 
-	@Override
-	public boolean getIsStacked() {
-		return !this.getPrevious().isEmpty();
-	}
+	// @Override
+	// public boolean getIsStacked() {
+	// return !this.getPrevious().isEmpty();
+	// }
 
 	@Override
 	public Set<PreviousInfo> getPrevious() {
@@ -261,10 +263,30 @@ public class GrowingNode implements IGrowingNode {
 	}
 
 	@Override
+	public void newPrevious() {
+		this.previous = new HashSet<>();
+	}
+
+	@Override
 	public void addPrevious(final IGrowingNode previousNode, final int atPosition) {
 		final PreviousInfo info = new PreviousInfo(previousNode, atPosition);
 		this.previous.add(info);
-		// previousNode.addNext(this);
+		previousNode.addNext(this);
+	}
+
+	@Override
+	public Set<IGrowingNode> getNext() {
+		return this.next;
+	}
+
+	@Override
+	public void addNext(final IGrowingNode value) {
+		this.next.add(value);
+	}
+
+	@Override
+	public void removeNext(final IGrowingNode value) {
+		this.next.remove(value);
 	}
 
 	@Override
@@ -345,7 +367,8 @@ public class GrowingNode implements IGrowingNode {
 			} else if (this.getPrevious().size() == 1) {
 				s = " --> " + prev.previousToString(visited);
 			} else {
-				s = " -*> " + prev.previousToString(visited);
+				final int sz = this.getPrevious().size();
+				s = " -" + sz + "> " + prev.previousToString(visited);
 			}
 		}
 		String r = "";

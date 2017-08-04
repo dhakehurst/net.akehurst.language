@@ -45,7 +45,7 @@ public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<Terminal
 		final INode child = left.getChildren().get(0);
 		final ILeaf leaf = (ILeaf) child;
 		final String text = leaf.getMatchedText();
-		final String literal = text.substring(1, text.length() - 1);
+		final String literal = text.substring(1, text.length() - 1).replaceAll("\\\\", "");
 		final TerminalLiteral right = new TerminalLiteral(literal);
 		return right;
 	}
@@ -61,6 +61,7 @@ public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<Terminal
 	}
 
 	@Override
-	public void updateRight2Left(final IBranch left, final TerminalLiteral right, final ITransformer arg2) {}
+	public void updateRight2Left(final IBranch left, final TerminalLiteral right, final ITransformer arg2) {
+	}
 
 }

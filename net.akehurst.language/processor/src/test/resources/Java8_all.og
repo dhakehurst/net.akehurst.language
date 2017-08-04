@@ -1624,8 +1624,8 @@ BooleanLiteral
 // §3.10.4 Character Literals
 
 CharacterLiteral
-	:	'\x27' SingleCharacter '\x27'
-	|	'\x27' EscapeSequence '\x27'
+	:	'\'' SingleCharacter '\''
+	|	'\'' EscapeSequence '\''
 	;
 
 

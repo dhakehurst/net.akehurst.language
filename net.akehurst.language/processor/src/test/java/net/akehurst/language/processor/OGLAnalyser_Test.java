@@ -88,4 +88,27 @@ public class OGLAnalyser_Test {
 		}
 	}
 
+	@Test
+	public void singleQuote_singleQuote_q() {
+		// grammar, goal, input, target
+		try {
+			String grammarText = "namespace test;" + System.lineSeparator();
+			grammarText += "grammar A {" + System.lineSeparator();
+			grammarText += " singleQuote : '\\'' ;" + System.lineSeparator();
+			grammarText += "}";
+
+			final Grammar grammar = this.process(grammarText, Grammar.class);
+			Assert.assertNotNull(grammar);
+
+			final LanguageProcessor proc = new LanguageProcessor(grammar, null);
+
+			final IParseTree tree = proc.getParser().parse("singleQuote", "'");
+			Assert.assertNotNull(tree);
+
+		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | RuleNotFoundException e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+	}
+
 }

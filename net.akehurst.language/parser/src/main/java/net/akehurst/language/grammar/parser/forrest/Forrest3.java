@@ -119,24 +119,26 @@ public final class Forrest3 {
 
 	public void growTreeWidthAndHeight(final IGrowingNode gn) throws RuleNotFoundException, ParseTreeException {
 		// gn.toString();
-		final boolean didSkipNode = this.growWidthWithSkipRules(gn);
+
+		final Set<IGrowingNode.PreviousInfo> previous = this.graph.pop(gn);
+		final boolean didSkipNode = this.growWidthWithSkipRules(gn, previous);
 		if (didSkipNode) {
 			return;
 		} else {
 			if (gn.getIsSkip()) {
-				this.tryGraftBackSkipNode(gn);
-				this.graph.pop(gn);
+				this.tryGraftBackSkipNode(gn, previous);
+				// this.graph.pop(gn);
 			} else {
 				// TODO: need to find a way to do either height or graft..not both
 				// problem is deciding which
 				// boolean grownHeight = false;
 				if (gn.getHasCompleteChildren()) {
-					this.growHeight(gn);
+					this.growHeight(gn, previous);
 				}
 
 				// reduce
-				if (gn.getCanGraftBack()) {
-					this.tryGraftBack(gn);
+				if (gn.getCanGraftBack(previous)) { // if hascompleteChildren && isStacked && prevInfo is valid
+					this.tryGraftBack(gn, previous);
 				}
 
 				// maybe only shift if not done either of above!
@@ -149,23 +151,23 @@ public final class Forrest3 {
 						// don't grow width
 						// this never happens!
 					} else {
-						grownWidth = this.growWidth(gn);
+						grownWidth = this.growWidth(gn, previous);
 					}
 				}
 
-				if (grownWidth) {
-					// keep previous, it will be needed
-				} else {
-					// clear the stacked nodes (previous) of gn
-					// they are no longer needed, unless gn reused
-					// at which point it will get a new stack (previous)
-					this.graph.pop(gn);
-				}
+				// if (grownWidth) {
+				// // keep previous, it will be needed
+				// } else {
+				// // clear the stacked nodes (previous) of gn
+				// // they are no longer needed, unless gn reused
+				// // at which point it will get a new stack (previous)
+				// // this.graph.pop(gn);
+				// }
 			}
 		}
 	}
 
-	boolean growWidth(final IGrowingNode gn) throws RuleNotFoundException, ParseTreeException {
+	boolean growWidth(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws RuleNotFoundException, ParseTreeException {
 		boolean modified = false;
 		if (gn.getCanGrowWidth()) { // don't grow width if its complete...cant graft back
 			// List<RuntimeRule> nextExpectedRule = gn.getNextExpectedItem();
@@ -186,7 +188,7 @@ public final class Forrest3 {
 					// //
 					// } else {
 					// what if bud exists and already has stacked nodes?
-					modified = this.pushStackNewRoot(bud, gn);
+					modified = this.pushStackNewRoot(bud, gn, previous);
 
 					// }
 				}
@@ -200,7 +202,7 @@ public final class Forrest3 {
 		return modified;
 	}
 
-	protected boolean growWidthWithSkipRules(final IGrowingNode gn) throws RuleNotFoundException {
+	protected boolean growWidthWithSkipRules(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws RuleNotFoundException {
 		boolean modified = false;
 		if (gn.getCanGrowWidthWithSkip()) { // don't grow width if its complete...cant graft back
 			final RuntimeRule[] expectedNextTerminal = this.runtimeRuleSet.getPossibleFirstSkipTerminals();
@@ -216,7 +218,7 @@ public final class Forrest3 {
 					// // final IGraphNode nn = this.pushStackNewRoot(gn, pt);
 					// result.add(pt);
 					// } else {
-					modified = this.pushStackNewRoot(bud, gn);
+					modified = this.pushStackNewRoot(bud, gn, previous);
 					// }
 
 				}
@@ -229,9 +231,9 @@ public final class Forrest3 {
 		return modified;
 	}
 
-	protected void tryGraftBack(final IGrowingNode gn) throws RuleNotFoundException {
+	protected void tryGraftBack(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws RuleNotFoundException {
 
-		for (final IGrowingNode.PreviousInfo info : gn.getPrevious()) {
+		for (final IGrowingNode.PreviousInfo info : previous) {
 			if (info.node.hasNextExpectedItem()) {
 				this.tryGraftInto(gn, info);
 			} else {
@@ -241,8 +243,8 @@ public final class Forrest3 {
 
 	}
 
-	protected void tryGraftBackSkipNode(final IGrowingNode gn) throws RuleNotFoundException {
-		for (final IGrowingNode.PreviousInfo info : gn.getPrevious()) {
+	protected void tryGraftBackSkipNode(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws RuleNotFoundException {
+		for (final IGrowingNode.PreviousInfo info : previous) {
 			this.tryGraftInto(gn, info);
 		}
 
@@ -316,7 +318,7 @@ public final class Forrest3 {
 		}
 	}
 
-	public boolean growHeight(final IGrowingNode gn) throws RuleNotFoundException, ParseTreeException {
+	public boolean growHeight(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws RuleNotFoundException, ParseTreeException {
 		boolean result = false;
 		// TODO: should have already done this test?
 		if (gn.getHasCompleteChildren()) {
@@ -329,7 +331,7 @@ public final class Forrest3 {
 				// // TODO: do we need to make this growable?
 				// result.add(gn);
 				// }
-				if (this.hasHeightPotential(info.getRuntimeRule(), gn)) {
+				if (this.hasHeightPotential(info.getRuntimeRule(), gn, previous)) {
 					// check if already grown into this parent
 					final IGraphNode alreadyGrown = null;
 					// for (final IGraphNode pp : gn.getPossibleParent()) {
@@ -339,7 +341,7 @@ public final class Forrest3 {
 					// }
 					// }
 					if (null == alreadyGrown) {
-						this.growHeightByType(gn, info);
+						this.growHeightByType(gn, info, previous);
 						result = true; // TODO: this should depend on if the growHeight does something
 					} else {
 						// TODO: I think this is wrong...what grammar/test is it used for?
@@ -368,22 +370,22 @@ public final class Forrest3 {
 		return result;
 	}
 
-	void growHeightByType(final IGrowingNode gn, final SuperRuleInfo info) {
+	void growHeightByType(final IGrowingNode gn, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
 		switch (info.getRuntimeRule().getRhs().getKind()) {
 			case CHOICE:
-				this.growHeightChoice(gn, info);
+				this.growHeightChoice(gn, info, previous);
 				return;
 			case PRIORITY_CHOICE:
-				this.growHeightPriorityChoice(gn, info);
+				this.growHeightPriorityChoice(gn, info, previous);
 				return;
 			case CONCATENATION:
-				this.growHeightConcatenation(gn, info);
+				this.growHeightConcatenation(gn, info, previous);
 				return;
 			case MULTI:
-				this.growHeightMulti(gn, info);
+				this.growHeightMulti(gn, info, previous);
 				return;
 			case SEPARATED_LIST:
-				this.growHeightSeparatedList(gn, info);
+				this.growHeightSeparatedList(gn, info, previous);
 				return;
 			case EMPTY:
 				throw new RuntimeException(
@@ -394,55 +396,55 @@ public final class Forrest3 {
 		throw new RuntimeException("Internal Error: RuleItem kind not handled.");
 	}
 
-	void growHeightChoice(final IGrowingNode gn, final SuperRuleInfo info) {
+	void growHeightChoice(final IGrowingNode gn, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
 
 		final RuntimeRule[] rrs = info.getRuntimeRule().getRhs().getItems(gn.getRuntimeRule().getRuleNumber());
 		for (final RuntimeRule rr : rrs) {
-			this.growHeightTree(gn, info);
+			this.growHeightTree(gn, info, previous);
 		}
 	}
 
-	void growHeightPriorityChoice(final IGrowingNode gn, final SuperRuleInfo info) {
+	void growHeightPriorityChoice(final IGrowingNode gn, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
 		final RuntimeRule[] rrs = info.getRuntimeRule().getRhs().getItems(gn.getRuntimeRule().getRuleNumber());
 		for (final RuntimeRule rr : rrs) {
-			this.growHeightTree(gn, info);
+			this.growHeightTree(gn, info, previous);
 		}
 	}
 
-	void growHeightConcatenation(final IGrowingNode gn, final SuperRuleInfo info) {
+	void growHeightConcatenation(final IGrowingNode gn, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
 		if (0 == info.getRuntimeRule().getRhs().getItems().length) {
 			// return new ArrayList<>();
 		}
 		if (info.getRuntimeRule().getRhsItem(0).getRuleNumber() == gn.getRuntimeRule().getRuleNumber()) {
-			this.growHeightTree(gn, info);
+			this.growHeightTree(gn, info, previous);
 		} else {
 			// return new ArrayList<>();
 		}
 	}
 
-	void growHeightMulti(final IGrowingNode gn, final SuperRuleInfo info) {
+	void growHeightMulti(final IGrowingNode gn, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
 		if (info.getRuntimeRule().getRhsItem(0).getRuleNumber() == gn.getRuntimeRule().getRuleNumber()
 				|| 0 == info.getRuntimeRule().getRhs().getMultiMin() && gn.getIsLeaf()) {
-			this.growHeightTree(gn, info);
+			this.growHeightTree(gn, info, previous);
 		} else {
 			// return new ArrayList<>();
 		}
 	}
 
-	void growHeightSeparatedList(final IGrowingNode gn, final SuperRuleInfo info) {
+	void growHeightSeparatedList(final IGrowingNode gn, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
 		if (info.getRuntimeRule().getRhsItem(0).getRuleNumber() == gn.getRuntimeRule().getRuleNumber()
 				|| 0 == info.getRuntimeRule().getRhs().getMultiMin() && gn.getIsLeaf()) {
-			this.growHeightTree(gn, info);
+			this.growHeightTree(gn, info, previous);
 		} else {
 			// return new ArrayList<>();
 		}
 	}
 
-	void growHeightTree(final IGrowingNode gn, final SuperRuleInfo info) {
+	void growHeightTree(final IGrowingNode gn, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
 		final int priority = info.getRuntimeRule().getRhsIndexOf(gn.getRuntimeRule());
 
 		// should have already done this test
-		if (this.hasHeightPotential(info.getRuntimeRule(), gn)) {
+		if (this.hasHeightPotential(info.getRuntimeRule(), gn, previous)) {
 
 			// if (info.getRuntimeRule().getRhs().getKind() == RuntimeRuleItemKind.PRIORITY_CHOICE) {
 			// final IGraphNode existing = this.graph.findNode(info.getRuntimeRule().getRuleNumber(), gn.getStartPosition());
@@ -486,7 +488,7 @@ public final class Forrest3 {
 			// }
 			// } else {
 			final ICompleteNode complete = this.graph.complete(gn);
-			this.graph.createWithFirstChild(info.getRuntimeRule(), priority, complete, gn.getPrevious());
+			this.graph.createWithFirstChild(info.getRuntimeRule(), priority, complete, previous);
 			// }
 		} else {
 			// return null;
@@ -494,21 +496,12 @@ public final class Forrest3 {
 
 	}
 
-	// int getHeight(IGraphNode n) {
-	// int i = 0;
-	// while (!n.getChildren().isEmpty()) {
-	// i++;
-	// n = n.getChildren().get(0);
-	// }
-	// return i;
-	// }
-
-	boolean hasHeightPotential(final RuntimeRule newParentRule, final IGrowingNode child) {
+	boolean hasHeightPotential(final RuntimeRule newParentRule, final IGrowingNode child, final Set<IGrowingNode.PreviousInfo> previous) {
 		if (newParentRule.couldHaveChild(child.getRuntimeRule(), 0)) {
 			if (this.runtimeRuleSet.getAllSkipTerminals().contains(child.getRuntimeRule())) {
 				return true;
-			} else if (child.getIsStacked()) {
-				for (final IGrowingNode.PreviousInfo prev : child.getPrevious()) {
+			} else if (!previous.isEmpty()) {
+				for (final IGrowingNode.PreviousInfo prev : previous) {
 					if (prev.node.hasNextExpectedItem()) {
 						final List<RuntimeRule> nextExpectedForStacked = prev.node.getNextExpectedItem();
 						// if (nextExpectedForStacked.getRuleNumber() == newParentRule.getRuleNumber()) {
@@ -550,7 +543,7 @@ public final class Forrest3 {
 		}
 	}
 
-	protected boolean pushStackNewRoot(final ICompleteNode leafNode, final IGrowingNode stack) {
+	protected boolean pushStackNewRoot(final ICompleteNode leafNode, final IGrowingNode stack, final Set<IGrowingNode.PreviousInfo> previous) {
 		// ParseTreeBud2 bud = this.ffactory.fetchOrCreateBud(leaf);
 		// if (this.getHasPotential(bud, Arrays.asList(new IGraphNode.PreviousInfo(gn,gn.getNextItemIndex())), gn.getNextItemIndex())) {
 		boolean modified = false;
@@ -572,7 +565,7 @@ public final class Forrest3 {
 		} else {
 			// no existing parent was suitable, use newRoot
 			if (this.hasStackedPotential(leafNode, stack)) {
-				this.graph.pushToStackOf(leafNode, stack);
+				this.graph.pushToStackOf(leafNode, stack, previous);
 				// stack.pushToStackOf(newRoot, stack.getNextItemIndex());
 				modified = true;
 			}

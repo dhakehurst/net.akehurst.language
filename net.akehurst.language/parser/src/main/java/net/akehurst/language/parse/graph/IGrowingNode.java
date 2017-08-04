@@ -27,7 +27,7 @@ public interface IGrowingNode {
 
 	boolean getCanGrowWidth();
 
-	boolean getCanGraftBack();
+	boolean getCanGraftBack(Set<IGrowingNode.PreviousInfo> previous);
 
 	List<RuntimeRule> getNextExpectedTerminals();
 
@@ -39,7 +39,7 @@ public interface IGrowingNode {
 
 	boolean getExpectsItemAt(RuntimeRule runtimeRule, int atPosition);
 
-	boolean getIsStacked();
+	// boolean getIsStacked();
 
 	public static final class PreviousInfo {
 		public PreviousInfo(final IGrowingNode node, final int atPosition) {
@@ -77,7 +77,15 @@ public interface IGrowingNode {
 
 	Set<PreviousInfo> getPrevious();
 
+	void newPrevious();
+
 	void addPrevious(IGrowingNode previousNode, int atPosition);
+
+	Set<IGrowingNode> getNext();
+
+	void addNext(IGrowingNode value);
+
+	void removeNext(IGrowingNode value);
 
 	List<RuntimeRule> getNextExpectedItem();
 
