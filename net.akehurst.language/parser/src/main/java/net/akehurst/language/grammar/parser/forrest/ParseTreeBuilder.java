@@ -18,11 +18,13 @@ package net.akehurst.language.grammar.parser.forrest;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import net.akehurst.language.core.analyser.ISemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.IGrammar;
+import net.akehurst.language.core.grammar.ITerminal;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
@@ -76,8 +78,13 @@ public class ParseTreeBuilder {
 		if (terminalPattern.isEmpty()) {
 			terminal = new TerminalEmpty();
 		} else {
-			terminal = (Terminal) this.grammar.getAllTerminal().stream().filter(t -> ((Terminal) t).getPattern().pattern().equals(terminalPattern)).findFirst()
-					.get();
+			final Optional<ITerminal> op = this.grammar.getAllTerminal().stream().filter(t -> ((Terminal) t).getPattern().pattern().equals(terminalPattern))
+					.findFirst();
+			if (op.isPresent()) {
+				terminal = (Terminal) op.get();
+			} else {
+				throw new RuntimeException("No such terminal \"" + terminalPattern + "\"");
+			}
 		}
 		final RuntimeRule terminalRule = this.runtimeBuilder.getRuntimeRuleSet().getForTerminal(terminal.getValue());
 		final ILeaf l = this.runtimeBuilder.createLeaf(text, start, end, terminalRule);

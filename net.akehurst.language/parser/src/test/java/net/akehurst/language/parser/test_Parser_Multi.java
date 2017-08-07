@@ -413,8 +413,9 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S{");
 		b.define("  Fm { empty }");
-		b.define("  G { 'a' }");
-		b.define("  'b'");
+		b.define("  G { H { A { 'a' } } }");
+		b.define("  'a'");
+		b.define("  A {'a'}");
 		b.define("}");
 		final IParseTree expected = b.build();
 		Assert.assertEquals(expected, tree);

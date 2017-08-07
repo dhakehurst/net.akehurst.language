@@ -21,12 +21,12 @@ import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
-import net.akehurst.transform.binary.AbstractTransformer;
+import net.akehurst.transform.binary.BinaryTransformer;
 import net.akehurst.transform.binary.IBinaryRule;
 import net.akehurst.transform.binary.RuleNotFoundException;
 import net.akehurst.transform.binary.TransformException;
 
-public class SemanicAnalyser extends AbstractTransformer implements ISemanticAnalyser {
+public class SemanicAnalyser extends BinaryTransformer implements ISemanticAnalyser {
 
 	public SemanicAnalyser() {
 		this.grammarLoader = this.grammarLoader;

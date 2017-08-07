@@ -201,7 +201,7 @@ public class RuntimeRule {
 					case PRIORITY_CHOICE:
 						return 0 == atPosition && Arrays.asList(this.getRhs().getItems()).contains(possibleChild);
 					case CONCATENATION:
-						return atPosition >= this.getRhs().getItems().length ? false
+						return -1 == atPosition || atPosition >= this.getRhs().getItems().length ? false
 								: this.getRhsItem(atPosition).getRuleNumber() == possibleChild.getRuleNumber();
 					case MULTI:
 						return this.getRhsItem(0).getRuleNumber() == possibleChild.getRuleNumber() || this.getRhs().getMultiMin() == 0 && atPosition == 0

@@ -30,66 +30,58 @@ import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class Parser_PriorityChoice_Test extends AbstractParser_Test {
-	
+
 	Grammar abc() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("abc").priorityChoice(new NonTerminal("a"), new NonTerminal("b"), new NonTerminal("c"));
 		b.rule("a").concatenation(new TerminalLiteral("a"));
 		b.rule("b").concatenation(new TerminalLiteral("b"));
 		b.rule("c").concatenation(new TerminalLiteral("c"));
 		return b.get();
 	}
-	
+
 	Grammar aempty() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("a").priorityChoice();
 		return b.get();
 	}
-	
+
 	@Test
 	public void aempty_a_empty() {
 		// grammar, goal, input
 		try {
-			Grammar g = aempty();
-			String goal = "a";
-			String text = "";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.aempty();
+			final String goal = "a";
+			final String text = "";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);
-			IBranch expected = 
-					b.branch("a",
-						b.emptyLeaf("a")
-					);
+			final ParseTreeBuilder b = this.builder(g, text, goal);
+			final IBranch expected = b.branch("a", b.emptyLeaf("a"));
 			Assert.assertEquals(expected, tree.getRoot());
-			
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void abc_abc_a() {
 		// grammar, goal, input
 		try {
-			Grammar g = abc();
-			String goal = "abc";
-			String text = "a";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.abc();
+			final String goal = "abc";
+			final String text = "a";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);
-			IBranch expected = 
-				b.branch("abc",
-					b.branch("a",
-						b.leaf("a", "a")
-					)
-				);
+			final ParseTreeBuilder b = this.builder(g, text, goal);
+			final IBranch expected = b.branch("abc", b.branch("a", b.leaf("a", "a")));
 			Assert.assertEquals(expected, tree.getRoot());
 
-		} catch (ParseFailedException e) {
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -98,24 +90,19 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
 	public void abc_abc_b() {
 		// grammar, goal, input
 		try {
-			Grammar g = abc();
-			String goal = "abc";
-			String text = "b";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.abc();
+			final String goal = "abc";
+			final String text = "b";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);
-			IBranch expected = 
-				b.branch("abc",
-					b.branch("b",
-						b.leaf("b", "b")
-					)
-				);
-			
+			final ParseTreeBuilder b = this.builder(g, text, goal);
+			final IBranch expected = b.branch("abc", b.branch("b", b.leaf("b", "b")));
+
 			Assert.assertEquals(expected, tree.getRoot());
-			
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -124,64 +111,75 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
 	public void abc_abc_c() {
 		// grammar, goal, input
 		try {
-			Grammar g = abc();
-			String goal = "abc";
-			String text = "c";
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.abc();
+			final String goal = "abc";
+			final String text = "c";
+
+			final IParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);
-			IBranch expected = 
-				b.branch("abc",
-					b.branch("c",
-						b.leaf("c", "c")
-					)
-				);
-			
+			final ParseTreeBuilder b = this.builder(g, text, goal);
+			final IBranch expected = b.branch("abc", b.branch("c", b.leaf("c", "c")));
+
 			Assert.assertEquals(expected, tree.getRoot());
-			
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
-	Grammar kwOrId() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+
+	Grammar kwOrId1() {
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("S").priorityChoice(new NonTerminal("type"));
 		b.rule("type").priorityChoice(new NonTerminal("id"), new NonTerminal("kw"));
 		b.rule("kw").concatenation(new TerminalLiteral("int"));
 		b.rule("id").concatenation(new TerminalPattern("[a-z]+"));
 		return b.get();
 	}
-	
-	@Test
-	public void kwOrId_S_int() {
-		// grammar, goal, input
-		try {
-			Grammar g = kwOrId();
-			String goal = "S";
-			String text = "int";
-			
-			IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
 
-			ParseTreeBuilder b = this.builder(g, text, goal);
-			IBranch expected = 
-				b.branch("S",
-					b.branch("type",
-						b.branch("id",
-							b.leaf("[a-z]+","int")
-						)
-					)
-				);
-			
-			Assert.assertEquals(expected, tree.getRoot());
-			
-		} catch (ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+	@Test
+	public void kwOrId_S_int() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.kwOrId1();
+		final String goal = "S";
+		final String text = "int";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		final IBranch expected = b.branch("S", b.branch("type", b.branch("id", b.leaf("[a-z]+", "int"))));
+
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
-	
-//	more tests needed!!!!
+
+	Grammar kwOrId2() {
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("S").priorityChoice(new NonTerminal("type"));
+		b.rule("type").priorityChoice(new NonTerminal("kw"), new NonTerminal("id"));
+		b.rule("kw").concatenation(new TerminalLiteral("int"));
+		b.rule("id").concatenation(new TerminalPattern("[a-z]+"));
+		return b.get();
+	}
+
+	@Test
+	public void kwOrId_S_id() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.kwOrId2();
+		final String goal = "S";
+		final String text = "int";
+
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		final IBranch expected = b.branch("S", b.branch("type", b.branch("kw", b.leaf("int"))));
+
+		Assert.assertEquals(expected, tree.getRoot());
+
+	}
+	// more tests needed!!!!
 }

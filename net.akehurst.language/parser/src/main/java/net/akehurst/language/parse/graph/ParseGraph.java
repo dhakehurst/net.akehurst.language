@@ -301,6 +301,10 @@ public class ParseGraph implements IParseGraph {
 				opt.matchedLength = growing.getMatchedTextLength();
 				opt.nodes = growing.getGrowingChildren();
 				cn.getChildrenOption().add(opt);
+
+				// TODO: don't add duplicate children
+				// somewhere resolve priorities!
+
 			}
 			this.checkForGoal(cn);
 			return cn;

@@ -800,6 +800,48 @@ public class Java8_Tests {
 	}
 
 	@Test
+	public void T6257443_5_1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+
+		String input = "";
+		input += "{";
+		input += "    if (state.equals(\"-no\")) {";
+		input += "       URL u = find(file);";
+		input += "       if (u != null) throw new Error(\"file \" + file + \" found unexpectedly\");";
+		input += "    }";
+		input += "}";
+
+		final IParseTree tree = Java8_Tests.parse("block", input);
+		Assert.assertNotNull("null==tree", tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void T6257443_5_2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+
+		String input = "";
+		input += "{";
+		input += "    if (args.length != 2)";
+		input += "       throw new Error(\"wrong number of args\");";
+		input += "    String state = args[0];";
+		input += "    String file = args[1];";
+		input += "    if (state.equals(\"-no\")) {";
+		input += "       URL u = find(file);";
+		input += "       if (u != null) throw new Error(\"file \" + file + \" found unexpectedly\");";
+		input += "    }";
+		input += "}";
+
+		final IParseTree tree = Java8_Tests.parse("block", input);
+		Assert.assertNotNull("null==tree", tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
 	public void T6257443_6() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
 
 		String input = "";

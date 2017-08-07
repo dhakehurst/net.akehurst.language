@@ -231,17 +231,25 @@ public class GrowingNode implements IGrowingNode {
 			case PRIORITY_CHOICE:
 				return this.nextItemIndex == 0;
 			case CONCATENATION: {
-				if (this.nextItemIndex >= this.getRuntimeRule().getRhs().getItems().length) {
+				if (-1 == this.nextItemIndex || this.nextItemIndex >= this.getRuntimeRule().getRhs().getItems().length) {
 					return false;
 				} else {
 					return true;
 				}
 			}
 			case MULTI: {
-				return true;
+				if (-1 == this.nextItemIndex) {
+					return false;
+				} else {
+					return true;
+				}
 			}
 			case SEPARATED_LIST:
-				return true;
+				if (-1 == this.nextItemIndex) {
+					return false;
+				} else {
+					return true;
+				}
 			default:
 				throw new RuntimeException("Internal Error: rule kind not recognised");
 		}

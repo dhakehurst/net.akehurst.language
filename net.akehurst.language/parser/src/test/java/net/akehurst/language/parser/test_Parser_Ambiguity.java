@@ -263,15 +263,15 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IBranch expected = b.branch("fps",
+		final IParseTree expected = new ParseTree(b.branch("fps",
 				b.branch("fps.choice1",
 						b.branch("fp",
 								b.branch("t",
 										b.branch("gt", b.branch("name", b.leaf("[a-zA-Z]+", "V")), b.leaf("("), b.branch("name", b.leaf("[a-zA-Z]+", "E")),
 												b.leaf(")"), b.branch("WS", b.leaf("\\s+", " ")))),
 								b.branch("name", b.leaf("[a-zA-Z]+", "v"))),
-						b.branch("fps.choice1.group.multi", b.emptyLeaf("fps.choice1.group.multi"))));
-		Assert.assertEquals(expected, tree.getRoot());
+						b.branch("fps.choice1.group.multi", b.emptyLeaf("fps.choice1.group.multi")))));
+		Assert.assertEquals(expected, tree);
 
 	}
 

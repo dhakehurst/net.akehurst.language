@@ -21,6 +21,7 @@ import org.junit.Test;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
+import net.akehurst.language.grammar.parse.tree.ParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -257,10 +258,11 @@ public class SkipRule_Test extends AbstractParser_Test {
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final IBranch expected = b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", "."), b.branch("WS", b.leaf("\\s+", " "))));
 
-			Assert.assertEquals(expected, tree.getRoot());
+			final IParseTree expected = new ParseTree(
+					b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", "."), b.branch("WS", b.leaf("\\s+", " ")))));
+
+			Assert.assertEquals(expected, tree);
 
 		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());

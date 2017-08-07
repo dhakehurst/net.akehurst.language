@@ -28,10 +28,10 @@ import net.akehurst.language.ogl.semanticStructure.Group;
 import net.akehurst.language.ogl.semanticStructure.Multi;
 import net.akehurst.language.ogl.semanticStructure.RuleItem;
 import net.akehurst.language.ogl.semanticStructure.SeparatedList;
-import net.akehurst.transform.binary.AbstractTransformer;
+import net.akehurst.transform.binary.BinaryTransformer;
 import net.akehurst.transform.binary.IBinaryRule;
 
-public class Converter extends AbstractTransformer {
+public class Converter extends BinaryTransformer {
 
 	public Converter(final RuntimeRuleSetBuilder builder) {
 		this.builder = builder;

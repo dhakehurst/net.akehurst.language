@@ -256,12 +256,23 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final IBranch expected = b.branch("S",
-				b.branch("e",
-						b.branch("ifthen", b.leaf("if"), b.branch("WS", b.leaf("\\s+", " ")),
-								b.branch("e", b.branch("variable", b.leaf("a"), b.branch("WS", b.leaf("\\s+", " ")))), b.leaf("then"),
-								b.branch("WS", b.leaf("\\s+", " ")), b.branch("e", b.branch("variable", b.leaf("a"))))));
-		Assert.assertEquals(expected, tree.getRoot());
+		// final IParseTree expected = new ParseTree(b.branch("S",
+		// b.branch("e",
+		// b.branch("ifthen", b.leaf("if"), b.branch("WS", b.leaf("\\s+", " ")),
+		// b.branch("e", b.branch("variable", b.leaf("a"), b.branch("WS", b.leaf("\\s+", " ")))), b.leaf("then"),
+		// b.branch("WS", b.leaf("\\s+", " ")), b.branch("e", b.branch("variable", b.leaf("a")))))));
+		b.define("S {");
+		b.define("  e {");
+		b.define("    ifthen {");
+		b.define("      'if' WS { '\\s+':' '}");
+		b.define("      e { variable { 'a' } WS {'\\s+':' '} }");
+		b.define("      'then'  WS { '\\s+':' '}");
+		b.define("      e { variable { 'a' } }");
+		b.define("    }");
+		b.define("  }");
+		b.define("}");
+		final IParseTree expected = b.build();
+		Assert.assertEquals(expected, tree);
 
 	}
 
@@ -280,14 +291,14 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 		b.define("  e {");
 		b.define("    ifthenelse {");
 		b.define("      'if' WS { '\\s+':' '}");
-		b.define("      e { variable { 'a' WS {'\\s+':' '} } }");
+		b.define("      e { variable { 'a' } WS {'\\s+':' '} }");
 		b.define("      'then'  WS { '\\s+':' '}");
-		b.define("      e { variable { 'a' WS {'\\s+':' '} } }");
+		b.define("      e { variable { 'a' } WS {'\\s+':' '} }");
 		b.define("      'else'  WS { '\\s+':' '}");
 		b.define("      e {");
 		b.define("        ifthen {");
 		b.define("          'if' WS { '\\s+':' '}");
-		b.define("          e { variable { 'a' WS {'\\s+':' '} } }");
+		b.define("          e { variable { 'a' } WS {'\\s+':' '} }");
 		b.define("          'then'  WS { '\\s+':' '}");
 		b.define("          e { variable { 'a' } }");
 		b.define("        }");
@@ -434,17 +445,22 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		b.define("  postIncrementExpression {");
+		b.define("blockStatement {");
+		b.define("expressionStatement {");
+		b.define("  expression {");
 		b.define("    postfixExpression {");
 		b.define("      postfixExpression_group1 {");
 		b.define("        expressionName {");
 		b.define("          Identifier { '[a-zA-Z_][a-zA-Z0-9_]*' : 'i' }");
 		b.define("        }");
 		b.define("      }");
-		b.define("      postfixExpression_group2 { empty }");
+		b.define("      postfixExpression_group2 { '++' }");
 		b.define("    }");
-		b.define("    '++'");
+		b.define("    ");
 		b.define("  }");
+		b.define("  ';'");
+		b.define("}");
+		b.define("}");
 
 		final IParseTree expected = b.build();
 		Assert.assertEquals(expected, tree);

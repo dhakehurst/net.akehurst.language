@@ -30,7 +30,7 @@ subprojects {
 
 
 	group 'net.akehurst.language'
-	version '1.0.alpha.1'
+	version '1.0.alpha.2'
 
 	sourceCompatibility = '1.8'
 	targetCompatibility = '1.8'
