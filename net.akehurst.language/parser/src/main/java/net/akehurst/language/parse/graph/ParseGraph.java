@@ -471,7 +471,6 @@ public class ParseGraph implements IParseGraph {
 		}
 		final Set<IGrowingNode.PreviousInfo> previous = gn.getPrevious();
 		gn.newPrevious();
-		this.removeGrowingHead(gn); // TODO: think this is not needed!
 		return previous;
 	}
 
