@@ -13,7 +13,7 @@ public interface IGrowingNode {
 
 	int getStartPosition();
 
-	int getEndPosition();
+	int getNextInputPosition();
 
 	int getNextItemIndex();
 
@@ -30,8 +30,6 @@ public interface IGrowingNode {
 	boolean getCanGraftBack(Set<IGrowingNode.PreviousInfo> previous);
 
 	List<RuntimeRule> getNextExpectedTerminals();
-
-	int getNextInputPosition();
 
 	boolean getCanGrowWidthWithSkip();
 

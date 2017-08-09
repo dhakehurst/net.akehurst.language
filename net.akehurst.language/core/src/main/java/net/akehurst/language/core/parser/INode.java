@@ -27,7 +27,7 @@ public interface INode extends IParseTreeVisitable {
 
 	int getStartPosition();
 
-	int getEndPosition();
+	int getNextInputPosition();
 
 	// int getEnd();
 	int getMatchedTextLength();

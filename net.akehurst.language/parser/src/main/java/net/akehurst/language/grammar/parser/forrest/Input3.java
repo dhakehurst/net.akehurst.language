@@ -113,8 +113,8 @@ public class Input3 implements IInput {
 			if (m.lookingAt()) {
 				final String matchedText = m.group();
 				final int start = m.start();
-				final int end = m.end();
-				final Leaf leaf = this.ffactory.createLeaf(matchedText, start, end, terminalRule);
+				final int nextInputPosition = m.end();
+				final Leaf leaf = this.ffactory.createLeaf(matchedText, start, nextInputPosition, terminalRule);
 				this.leaf_cache.put(key, leaf);
 				return leaf;
 			} else {

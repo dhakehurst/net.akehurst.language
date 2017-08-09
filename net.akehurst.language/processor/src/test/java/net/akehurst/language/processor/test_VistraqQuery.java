@@ -56,6 +56,9 @@ public class test_VistraqQuery {
 		col.add(new Object[] { new Data("query", "MATCH Requirement AS r") });
 		col.add(new Object[] { new Data("query", "MATCH Requirement AS r RETURN r AS Req") });
 		col.add(new Object[] { new Data("query", "MATCH Requirement AS r RETURN r.identity AS Id") });
+		col.add(new Object[] { new Data("expression", "r.type.name") });
+		col.add(new Object[] { new Data("columnDefinition", "r.type.name AS Type") });
+		col.add(new Object[] { new Data("returnDefinition", "RETURN r.type.name AS Type") });
 		col.add(new Object[] { new Data("query", "MATCH Requirement AS r RETURN r.identity AS Id r.type.name AS Type") });
 		col.add(new Object[] { new Data("query", "MATCH * LINKED VIA * TO *") });
 		col.add(new Object[] { new Data("query", "MATCH * AS r LINKED VIA * TO * AS t") });
@@ -71,6 +74,7 @@ public class test_VistraqQuery {
 		col.add(new Object[] { new Data("query", "MATCH * NOT LINKED VIA * FROM *") });
 		col.add(new Object[] { new Data("query", "FROM query1") });
 		col.add(new Object[] { new Data("query", "FROM query1 RETURN r AS Req") });
+		col.add(new Object[] { new Data("query", "FROM qs1.query1 RETURN r AS Req") });
 		return col;
 	}
 

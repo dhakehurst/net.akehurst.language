@@ -35,16 +35,16 @@ public class ParseGraph implements IParseGraph {
 	private final List<ICompleteNode> goals;
 
 	public static final class NodeIndex {
-		public NodeIndex(final int ruleNumber, final int startPosition, final int endPosition) {
+		public NodeIndex(final int ruleNumber, final int startPosition, final int nextInputPosition) {
 			this.ruleNumber = ruleNumber;
 			this.startPosition = startPosition;
-			this.endPosition = endPosition;
-			this.hashCode_cache = Objects.hash(ruleNumber, startPosition, endPosition);
+			this.nextInputPosition = nextInputPosition;
+			this.hashCode_cache = Objects.hash(ruleNumber, startPosition, nextInputPosition);
 		}
 
 		int ruleNumber;
 		int startPosition;
-		int endPosition;
+		int nextInputPosition;
 
 		int hashCode_cache;
 
@@ -59,40 +59,31 @@ public class ParseGraph implements IParseGraph {
 				return false;
 			}
 			final NodeIndex other = (NodeIndex) arg;
-			return this.ruleNumber == other.ruleNumber && this.startPosition == other.startPosition && this.endPosition == other.endPosition;
+			return this.ruleNumber == other.ruleNumber && this.startPosition == other.startPosition && this.nextInputPosition == other.nextInputPosition;
 		}
 
 		@Override
 		public String toString() {
 			return "(".concat(Integer.toString(this.ruleNumber)).concat(",").concat(Integer.toString(this.startPosition)).concat(",")
-					.concat(Integer.toString(this.endPosition)).concat(")");
+					.concat(Integer.toString(this.nextInputPosition)).concat(")");
 		}
 	}
 
 	private final Map<NodeIndex, ICompleteNode> nodes;
 
 	public static final class GrowingNodeIndex {
-		public GrowingNodeIndex(final int ruleNumber, final int startPosition, final int endPosition, final int nextItemIndex) {// , final boolean hasStack) {//
-																																// ,
-																																// final
-			// int[]
-			// stack) {
+		public GrowingNodeIndex(final int ruleNumber, final int startPosition, final int nextInputPosition, final int nextItemIndex) {
 			this.ruleNumber = ruleNumber;
 			this.startPosition = startPosition;
-			this.endPosition = endPosition;
+			this.nextInputPosition = nextInputPosition;
 			this.nextItemIndex = nextItemIndex;
-			// this.hasStack = hasStack;
-			// this.stackHash = stack;
-			this.hashCode_cache = Objects.hash(ruleNumber, startPosition, endPosition, nextItemIndex);// , hasStack);// , Arrays.hashCode(stack));
+			this.hashCode_cache = Objects.hash(ruleNumber, startPosition, nextInputPosition, nextItemIndex);
 		}
 
 		private final int ruleNumber;
 		private final int startPosition;
-		private final int endPosition;
+		private final int nextInputPosition;
 		private final int nextItemIndex;
-		// private final boolean hasStack;
-		// private final int[] stackHash;
-
 		private final int hashCode_cache;
 
 		@Override
@@ -106,8 +97,8 @@ public class ParseGraph implements IParseGraph {
 				return false;
 			}
 			final GrowingNodeIndex other = (GrowingNodeIndex) arg;
-			return this.ruleNumber == other.ruleNumber && this.startPosition == other.startPosition && this.endPosition == other.endPosition
-					&& this.nextItemIndex == other.nextItemIndex;// && this.hasStack == other.hasStack;// && Arrays.equals(this.stackHash, other.stackHash);
+			return this.ruleNumber == other.ruleNumber && this.startPosition == other.startPosition && this.nextInputPosition == other.nextInputPosition
+					&& this.nextItemIndex == other.nextItemIndex;
 		}
 
 		@Override
@@ -118,7 +109,7 @@ public class ParseGraph implements IParseGraph {
 			b.append(',');
 			b.append(this.startPosition);
 			b.append(',');
-			b.append(this.endPosition);
+			b.append(this.nextInputPosition);
 			b.append(',');
 			b.append(this.nextItemIndex);
 			// b.append(',');
@@ -146,8 +137,8 @@ public class ParseGraph implements IParseGraph {
 	}
 
 	@Override
-	public ICompleteNode findNode(final int ruleNumber, final int start, final int endPosition) {
-		final NodeIndex id = new NodeIndex(ruleNumber, start, endPosition);// , l.getEnd(), -1);
+	public ICompleteNode findNode(final int ruleNumber, final int start, final int nextInputPosition) {
+		final NodeIndex id = new NodeIndex(ruleNumber, start, nextInputPosition);// , l.getEnd(), -1);
 		final ICompleteNode gn = this.nodes.get(id);
 		return gn;
 	}
@@ -178,13 +169,13 @@ public class ParseGraph implements IParseGraph {
 		this.addGrowing(stack, previous);
 		final int ruleNumber = leafNode.getRuntimeRuleNumber();
 		final int startPosition = leafNode.getStartPosition();
-		final int endPosition = leafNode.getEndPosition();
+		final int nextInputPosition = leafNode.getNextInputPosition();
 		final int nextItemIndex = -1;
-		final GrowingNodeIndex gnindex = new GrowingNodeIndex(ruleNumber, startPosition, endPosition, nextItemIndex);
+		final GrowingNodeIndex gnindex = new GrowingNodeIndex(ruleNumber, startPosition, nextInputPosition, nextItemIndex);
 		final IGrowingNode existing = this.growing.get(gnindex);
 		if (null == existing) {
 			final RuntimeRule runtimeRule = leafNode.getRuntimeRule();
-			final IGrowingNode nn = new GrowingNode(runtimeRule, startPosition, endPosition, nextItemIndex, 0, Collections.EMPTY_LIST);
+			final IGrowingNode nn = new GrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, 0, Collections.EMPTY_LIST);
 			nn.addPrevious(stack, stack.getNextItemIndex());
 			// this.growing.put(gnindex, nn);
 			this.addGrowingHead(gnindex, nn);
@@ -196,13 +187,13 @@ public class ParseGraph implements IParseGraph {
 		}
 	}
 
-	private IGrowingNode findOrCreateGrowingNode(final RuntimeRule runtimeRule, final int startPosition, final int endPosition, final int nextItemIndex,
+	private IGrowingNode findOrCreateGrowingNode(final RuntimeRule runtimeRule, final int startPosition, final int nextInputPosition, final int nextItemIndex,
 			final int priority, final List<ICompleteNode> children, final Set<IGrowingNode.PreviousInfo> previous) {
 		final int ruleNumber = runtimeRule.getRuleNumber();
-		final GrowingNodeIndex gnindex = new GrowingNodeIndex(ruleNumber, startPosition, endPosition, nextItemIndex);
+		final GrowingNodeIndex gnindex = new GrowingNodeIndex(ruleNumber, startPosition, nextInputPosition, nextItemIndex);
 		final IGrowingNode existing = this.growing.get(gnindex);
 		if (null == existing) {
-			final IGrowingNode nn = new GrowingNode(runtimeRule, startPosition, endPosition, nextItemIndex, priority, children);
+			final IGrowingNode nn = new GrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children);
 			for (final IGrowingNode.PreviousInfo info : previous) {
 				nn.addPrevious(info.node, info.atPosition);
 			}
@@ -224,9 +215,9 @@ public class ParseGraph implements IParseGraph {
 	private void addGrowing(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) {
 		final int ruleNumber = gn.getRuntimeRuleNumber();
 		final int startPosition = gn.getStartPosition();
-		final int endPosition = gn.getEndPosition();
+		final int nextInputPosition = gn.getNextInputPosition();
 		final int nextItemIndex = gn.getNextItemIndex();
-		final GrowingNodeIndex gnindex = new GrowingNodeIndex(ruleNumber, startPosition, endPosition, nextItemIndex);
+		final GrowingNodeIndex gnindex = new GrowingNodeIndex(ruleNumber, startPosition, nextInputPosition, nextItemIndex);
 		final IGrowingNode existing = this.growing.get(gnindex);
 		if (null == existing) {
 			for (final IGrowingNode.PreviousInfo info : previous) {
@@ -244,9 +235,9 @@ public class ParseGraph implements IParseGraph {
 	private void removeGrowing(final IGrowingNode gn) {
 		final int ruleNumber = gn.getRuntimeRuleNumber();
 		final int startPosition = gn.getStartPosition();
-		final int endPosition = gn.getEndPosition();
+		final int nextInputPosition = gn.getNextInputPosition();
 		final int nextItemIndex = gn.getNextItemIndex();
-		final GrowingNodeIndex gnindex = new GrowingNodeIndex(ruleNumber, startPosition, endPosition, nextItemIndex);
+		final GrowingNodeIndex gnindex = new GrowingNodeIndex(ruleNumber, startPosition, nextInputPosition, nextItemIndex);
 		this.growing.remove(gnindex);
 	}
 
@@ -269,15 +260,15 @@ public class ParseGraph implements IParseGraph {
 	private void removeGrowingHead(final IGrowingNode gn) {
 		final int ruleNumber = gn.getRuntimeRuleNumber();
 		final int startPosition = gn.getStartPosition();
-		final int endPosition = gn.getEndPosition();
+		final int nextInputPosition = gn.getNextInputPosition();
 		final int nextItemIndex = gn.getNextItemIndex();
-		final GrowingNodeIndex gnindex = new GrowingNodeIndex(ruleNumber, startPosition, endPosition, nextItemIndex);
+		final GrowingNodeIndex gnindex = new GrowingNodeIndex(ruleNumber, startPosition, nextInputPosition, nextItemIndex);
 		this.growingHead.remove(gnindex);
 	}
 
 	private boolean getIsGoal(final ICompleteNode gn) {
 		final boolean isStart = this.input.getIsStart(gn.getStartPosition());
-		final boolean isEnd = this.input.getIsEnd(gn.getEndPosition());
+		final boolean isEnd = this.input.getIsEnd(gn.getNextInputPosition());
 		final boolean isGoalRule = this.goalRule.getRuleNumber() == gn.getRuntimeRule().getRuleNumber();
 		return isStart && isEnd && isGoalRule;
 	}
@@ -288,10 +279,10 @@ public class ParseGraph implements IParseGraph {
 			final RuntimeRule runtimeRule = growing.getRuntimeRule();
 			final int priority = growing.getPriority();
 			final int startPosition = growing.getStartPosition();
-			final int endPosition = growing.getEndPosition();
-			ICompleteNode cn = this.findNode(runtimeRule.getRuleNumber(), startPosition, endPosition);
+			final int nextInputPosition = growing.getNextInputPosition();
+			ICompleteNode cn = this.findNode(runtimeRule.getRuleNumber(), startPosition, nextInputPosition);
 			if (null == cn) {
-				cn = this.createBranchNoChildren(runtimeRule, priority, startPosition, endPosition);
+				cn = this.createBranchNoChildren(runtimeRule, priority, startPosition, nextInputPosition);
 			} else {
 			}
 			if (growing.getIsLeaf()) {
@@ -324,7 +315,7 @@ public class ParseGraph implements IParseGraph {
 	// @Override
 	private ICompleteNode createLeaf(final Leaf leaf) {
 		final ICompleteNode gn = new GraphNodeLeaf(this, leaf);
-		final NodeIndex nindex = new NodeIndex(leaf.getRuntimeRuleNumber(), leaf.getStartPosition(), leaf.getEndPosition());
+		final NodeIndex nindex = new NodeIndex(leaf.getRuntimeRuleNumber(), leaf.getStartPosition(), leaf.getNextInputPosition());
 		// this.registerCompleteNode(gn);
 		this.leaves.put(nindex, gn);
 		this.nodes.put(nindex, gn);
@@ -332,16 +323,16 @@ public class ParseGraph implements IParseGraph {
 		return gn;
 	}
 
-	private ICompleteNode createBranchNoChildren(final RuntimeRule runtimeRule, final int priority, final int startPosition, final int endPosition) {
-		final ICompleteNode gn = new GraphNodeBranch(this, runtimeRule, priority, startPosition, endPosition);
-		final NodeIndex nindex = new NodeIndex(runtimeRule.getRuleNumber(), startPosition, endPosition);
+	private ICompleteNode createBranchNoChildren(final RuntimeRule runtimeRule, final int priority, final int startPosition, final int nextInputPosition) {
+		final ICompleteNode gn = new GraphNodeBranch(this, runtimeRule, priority, startPosition, nextInputPosition);
+		final NodeIndex nindex = new NodeIndex(runtimeRule.getRuleNumber(), startPosition, nextInputPosition);
 		this.nodes.put(nindex, gn);
 		return gn;
 	}
 
 	@Override
 	public ICompleteNode findOrCreateLeaf(final Leaf leaf) {
-		final NodeIndex nindex = new NodeIndex(leaf.getRuntimeRuleNumber(), leaf.getStartPosition(), leaf.getEndPosition());
+		final NodeIndex nindex = new NodeIndex(leaf.getRuntimeRuleNumber(), leaf.getStartPosition(), leaf.getNextInputPosition());
 		ICompleteNode existingLeaf = this.leaves.get(nindex);
 		if (null == existingLeaf) {
 			existingLeaf = this.createLeaf(leaf);
@@ -353,7 +344,7 @@ public class ParseGraph implements IParseGraph {
 	public void createWithFirstChild(final RuntimeRule runtimeRule, final int priority, final ICompleteNode firstChild,
 			final Set<IGrowingNode.PreviousInfo> previous) {
 		final int startPosition = firstChild.getStartPosition();
-		final int endPosition = firstChild.getEndPosition();
+		final int nextInputPosition = firstChild.getNextInputPosition();
 		int nextItemIndex = 0;
 		switch (runtimeRule.getRhs().getKind()) {
 			case CHOICE:
@@ -380,7 +371,7 @@ public class ParseGraph implements IParseGraph {
 		final List<ICompleteNode> children = new ArrayList<>();
 		children.add(firstChild);
 
-		final IGrowingNode gn = this.findOrCreateGrowingNode(runtimeRule, startPosition, endPosition, nextItemIndex, priority, children, previous);
+		final IGrowingNode gn = this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children, previous);
 
 	}
 
@@ -429,13 +420,13 @@ public class ParseGraph implements IParseGraph {
 		final RuntimeRule runtimeRule = parent.getRuntimeRule();
 		final int priority = parent.getPriority();
 		final int startPosition = parent.getStartPosition();
-		final int endPosition = nextChild.getEndPosition();
+		final int nextInputPosition = nextChild.getNextInputPosition();
 		final int nextItemIndex = newNextItemIndex;
 		final List<ICompleteNode> children = new ArrayList<>(parent.getGrowingChildren());
 		children.add(nextChild);
 
 		final Set<IGrowingNode.PreviousInfo> previous = parent.getPrevious();
-		final IGrowingNode newParent = this.findOrCreateGrowingNode(runtimeRule, startPosition, endPosition, nextItemIndex, priority, children, previous);
+		final IGrowingNode newParent = this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children, previous);
 
 		// maybe?
 		if (parent.getNext().isEmpty()) {
@@ -449,12 +440,12 @@ public class ParseGraph implements IParseGraph {
 		final RuntimeRule runtimeRule = parent.getRuntimeRule();
 		final int priority = parent.getPriority();
 		final int startPosition = parent.getStartPosition();
-		final int endPosition = nextChild.getEndPosition();
+		final int nextInputPosition = nextChild.getNextInputPosition();
 		final int nextItemIndex = parent.getNextItemIndex();
 		final List<ICompleteNode> children = new ArrayList<>(parent.getGrowingChildren());
 		children.add(nextChild);
 		final Set<IGrowingNode.PreviousInfo> previous = parent.getPrevious();
-		final IGrowingNode newParent = this.findOrCreateGrowingNode(runtimeRule, startPosition, endPosition, nextItemIndex, priority, children, previous);
+		final IGrowingNode newParent = this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children, previous);
 
 		if (parent.getNext().isEmpty()) {
 			this.removeGrowing(parent);

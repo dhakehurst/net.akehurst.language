@@ -84,7 +84,7 @@ public class Java8_Tests {
 		return null;
 	}
 
-	String toString(final Path file) {
+	static String toString(final Path file) {
 		try {
 			final byte[] bytes = Files.readAllBytes(file);
 			final String str = new String(bytes);
@@ -108,49 +108,6 @@ public class Java8_Tests {
 		final IParseTree tree = parser.parse(goalName, input);
 		return tree;
 
-	}
-
-	@Test
-	public void emptyCompilationUnit() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
-
-		final String input = "";
-		final IParseTree tree = Java8_Tests.parse(input);
-		Assert.assertNotNull(tree);
-
-		final ParseTreeToString x = new ParseTreeToString();
-		final String output = x.visit(tree, null);
-		Assert.assertEquals(input, output);
-	}
-
-	@Test
-	public void ifReturn() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
-
-		String input = "class Test {";
-		input += "void test() {";
-		for (int i = 0; i < 1; ++i) {
-			input += "  if(" + i + ") return " + i + ";";
-		}
-		input += "}";
-		input += "}";
-		final IParseTree tree = Java8_Tests.parse(input);
-		Assert.assertNotNull(tree);
-
-		final ParseTreeToString x = new ParseTreeToString();
-		final String output = x.visit(tree, null);
-		Assert.assertEquals(input, output);
-	}
-
-	@Test
-	public void ifThenStatement_1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
-
-		final String input = "if(i==1) return 1;";
-
-		final IParseTree tree = Java8_Tests.parse("ifThenStatement", input);
-		Assert.assertNotNull(tree);
-
-		final ParseTreeToString x = new ParseTreeToString();
-		final String output = x.visit(tree, null);
-		Assert.assertEquals(input, output);
 	}
 
 	@Test
@@ -695,6 +652,58 @@ public class Java8_Tests {
 	}
 
 	@Test
+	public void StringLiteral1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+
+		final String input = "\"wrong number of args\"";
+
+		final IParseTree tree = Java8_Tests.parse("StringLiteral", input);
+		Assert.assertNotNull("null==tree", tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void String_expression() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+
+		final String input = "\"file \" + file + \" found unexpectedly\"";
+
+		final IParseTree tree = Java8_Tests.parse("expression", input);
+		Assert.assertNotNull("null==tree", tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void throwStatement() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+
+		final String input = "throw new Error(\"file \" + file + \" found unexpectedly\");";
+
+		final IParseTree tree = Java8_Tests.parse("throwStatement", input);
+		Assert.assertNotNull("null==tree", tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
+	public void ifThenStatement() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+
+		final String input = "if (u != \"file \") throw new Error(\"file \" + file + \" found unexpectedly\");";
+
+		final IParseTree tree = Java8_Tests.parse("ifThenStatement", input);
+		Assert.assertNotNull("null==tree", tree);
+
+		final ParseTreeToString x = new ParseTreeToString();
+		final String output = x.visit(tree, null);
+		Assert.assertEquals(input, output);
+	}
+
+	@Test
 	public void T6257443_1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
 
 		String input = "";
@@ -804,9 +813,8 @@ public class Java8_Tests {
 
 		String input = "";
 		input += "{";
-		input += "    if (state.equals(\"-no\")) {";
-		input += "       URL u = find(file);";
-		input += "       if (u != null) throw new Error(\"file \" + file + \" found unexpectedly\");";
+		input += "    if (s.equals(\"-no\")) {";
+		input += "       throw new E(\"fie \" + 1 + \"\");";
 		input += "    }";
 		input += "}";
 

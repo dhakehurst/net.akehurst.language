@@ -111,4 +111,43 @@ public class OGLAnalyser_Test {
 		}
 	}
 
+	@Test
+	public void StringCharacter_StringCharacter_a() throws ParseFailedException, ParseTreeException, RuleNotFoundException, UnableToAnalyseExeception {
+		// grammar, goal, input, target
+
+		String grammarText = "namespace test;" + System.lineSeparator();
+		grammarText += "grammar A {" + System.lineSeparator();
+		grammarText += " StringCharacter : \"[^\\x22\\\\]\" ;" + System.lineSeparator();
+		grammarText += "}";
+
+		final Grammar grammar = this.process(grammarText, Grammar.class);
+		Assert.assertNotNull(grammar);
+
+		final LanguageProcessor proc = new LanguageProcessor(grammar, null);
+
+		final IParseTree tree = proc.getParser().parse("StringCharacter", "a");
+		Assert.assertNotNull(tree);
+
+	}
+
+	@Test
+	public void StringLiteral_StringLiteral_1() throws ParseFailedException, UnableToAnalyseExeception, ParseTreeException, RuleNotFoundException {
+		// grammar, goal, input, target
+
+		String grammarText = "namespace test;" + System.lineSeparator();
+		grammarText += "grammar A {" + System.lineSeparator();
+		grammarText += " StringLiteral : '\"' StringCharacters? '\"' ;" + System.lineSeparator();
+		grammarText += " StringCharacters : StringCharacter+ ;" + System.lineSeparator();
+		grammarText += " StringCharacter : \"[^\\x22\\\\]\" ;" + System.lineSeparator();
+		grammarText += "}";
+
+		final Grammar grammar = this.process(grammarText, Grammar.class);
+		Assert.assertNotNull(grammar);
+
+		final LanguageProcessor proc = new LanguageProcessor(grammar, null);
+
+		final IParseTree tree = proc.getParser().parse("StringLiteral", "\"abc\"");
+		Assert.assertNotNull(tree);
+
+	}
 }

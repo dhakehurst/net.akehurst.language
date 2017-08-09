@@ -569,4 +569,159 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final IParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
+
+	// S = pd? td? ;
+	// pd = pm? 'p' ;
+	// pm = an ;
+	// td = cd ;
+	// cd = cm? 'c' ;
+	// cm = an ;
+	// an = 'a' ;
+	Grammar xxx() {
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.skip("WS").choice(new TerminalPattern("\\s+"));
+		b.rule("S").concatenation(new NonTerminal("packageDeclaration_m"), new NonTerminal("importDeclaration_m"), new NonTerminal("typeDeclaration_m"));
+		b.rule("packageDeclaration_m").multi(0, 1, new NonTerminal("packageDeclaration"));
+		b.rule("packageDeclaration").concatenation(new NonTerminal("packageModifier_m"), new TerminalLiteral("package"));
+		b.rule("importDeclaration_m").multi(0, -1, new NonTerminal("importDeclaration"));
+		b.rule("importDeclaration").concatenation(new TerminalLiteral("import"), new TerminalLiteral(";"));
+		b.rule("packageModifier_m").multi(0, -1, new NonTerminal("packageModifier"));
+		b.rule("packageModifier").choice(new NonTerminal("annotation"));
+		b.rule("typeDeclaration_m").multi(0, -1, new NonTerminal("typeDeclaration"));
+		b.rule("typeDeclaration").choice(new NonTerminal("classDeclaration"), new NonTerminal("interfaceDeclaration"));
+		b.rule("classDeclaration").concatenation(new NonTerminal("classModifier_m"), new TerminalLiteral("class"));
+		b.rule("classModifier_m").multi(0, -1, new NonTerminal("classModifier"));
+		b.rule("classModifier").choice(new NonTerminal("annotation"));
+		b.rule("interfaceDeclaration").concatenation(new NonTerminal("interfaceModifier_m"), new TerminalLiteral("interface"));
+		b.rule("interfaceModifier_m").multi(0, -1, new NonTerminal("interfaceModifier"));
+		b.rule("interfaceModifier").choice(new NonTerminal("annotation"));
+		b.rule("annotation").choice(new NonTerminal("normalAnnotation"), new NonTerminal("markerAnnotation"), new NonTerminal("singleElementAnnotation"));
+		b.rule("normalAnnotation").concatenation(new TerminalLiteral("@"), new NonTerminal("Identifier"), new TerminalLiteral("("),
+				new NonTerminal("elementValuePairList_m"), new TerminalLiteral(")"));
+		b.rule("markerAnnotation").concatenation(new TerminalLiteral("@"), new NonTerminal("Identifier"));
+		b.rule("singleElementAnnotation").concatenation(new TerminalLiteral("@"), new NonTerminal("Identifier"), new TerminalLiteral("("),
+				new TerminalLiteral("value"), new TerminalLiteral(")"));
+		b.rule("elementValuePairList_m").multi(0, 1, new NonTerminal("elementValuePairList"));
+		b.rule("elementValuePairList").choice(new NonTerminal("elementValuePair"));
+		b.rule("elementValuePair").concatenation(new TerminalLiteral("element"), new TerminalLiteral("="), new TerminalLiteral("value"));
+		b.rule("Identifier").choice(new TerminalPattern("[a-zA-Z][a-zA-z0-9]*"));
+		return b.get();
+	}
+
+	@Test
+	public void xxx_S_apac() throws ParseFailedException {
+		final Grammar g = this.xxx();
+		final String goal = "S";
+		final String text = "@An package @An class";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void xxx_S_apac2() throws ParseFailedException {
+		final Grammar g = this.xxx();
+		final String goal = "S";
+		final String text = "@An() package @An class";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void xxx_S_apac3() throws ParseFailedException {
+		final Grammar g = this.xxx();
+		final String goal = "S";
+		final String text = "@An() package @An() class";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void xxx_S_p() throws ParseFailedException {
+		final Grammar g = this.xxx();
+		final String goal = "S";
+		final String text = "package";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void xxx_S_ap() throws ParseFailedException {
+		final Grammar g = this.xxx();
+		final String goal = "S";
+		final String text = "@An package";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void xxx_S_ap2() throws ParseFailedException {
+		final Grammar g = this.xxx();
+		final String goal = "S";
+		final String text = "@An() package";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void xxx_S_apc() throws ParseFailedException {
+		final Grammar g = this.xxx();
+		final String goal = "S";
+		final String text = "@An package class";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void xxx_S_apc2() throws ParseFailedException {
+		final Grammar g = this.xxx();
+		final String goal = "S";
+		final String text = "@An() package class";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void xxx_S_ac() throws ParseFailedException {
+		final Grammar g = this.xxx();
+		final String goal = "S";
+		final String text = "@An class";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void xxx_S_ac2() throws ParseFailedException {
+		final Grammar g = this.xxx();
+		final String goal = "S";
+		final String text = "@An() class";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void xxx_S_c() throws ParseFailedException {
+		final Grammar g = this.xxx();
+		final String goal = "S";
+		final String text = "class";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void xxx_S_ai() throws ParseFailedException {
+		final Grammar g = this.xxx();
+		final String goal = "S";
+		final String text = "@An interface";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void xxx_S_ai2() throws ParseFailedException {
+		final Grammar g = this.xxx();
+		final String goal = "S";
+		final String text = "@An() interface";
+		final IParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
 }

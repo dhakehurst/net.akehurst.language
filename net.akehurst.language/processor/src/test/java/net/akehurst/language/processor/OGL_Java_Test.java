@@ -223,12 +223,35 @@ public class OGL_Java_Test {
 	}
 
 	@Test
-	public void Java8_partial_8_expressionStatement() {
+	public void Java8_partial_8_block() {
 		final String text = "i++";
 		final IParseTree tree = this.parse("src/test/resources/Java8_partial_8.og", "statementExpression", text);
 		Assert.assertNotNull(tree);
 	}
 
+	@Test
+	public void Java8_partial_9_block() {
+		String input = "";
+		input += "{";
+		input += "    if (s.equals(\"-no\")) {";
+		input += "       throw new E(\"fie \" + 1 + \"\");";
+		input += "    }";
+		input += "}";
+		final IParseTree tree = this.parse("src/test/resources/Java8_partial_9.og", "block", input);
+		Assert.assertNotNull(tree);
+	}
+
+	@Test
+	public void Java8_partial_9_block2() {
+		String input = "";
+		input += "{";
+		input += "    if (s.f(1)) {";
+		input += "       throw new E(\"f\" + 1 + \"g\");";
+		input += "    }";
+		input += "}";
+		final IParseTree tree = this.parse("src/test/resources/Java8_partial_9.og", "block", input);
+		Assert.assertNotNull(tree);
+	}
 	// public void java7_formalParameters()
 
 	@Test
@@ -295,4 +318,5 @@ public class OGL_Java_Test {
 			Assert.fail(e.getMessage());
 		}
 	}
+
 }

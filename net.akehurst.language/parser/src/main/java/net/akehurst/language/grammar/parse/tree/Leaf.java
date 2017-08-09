@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.grammar.parse.tree;
 
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import net.akehurst.language.core.parser.ILeaf;
@@ -24,12 +25,12 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class Leaf extends Node implements ILeaf {
 
-	Leaf(final String text, final int start, final int end, final RuntimeRule terminalRule) {
+	Leaf(final String text, final int start, final int nextInputPosition, final RuntimeRule terminalRule) {
 		super(terminalRule);
 		// this.input = input;
 		this.text = text;
 		this.start = start;
-		this.end = end;
+		this.nextInputPosition = nextInputPosition;
 		this.terminalRule = terminalRule;
 	}
 
@@ -41,7 +42,7 @@ public class Leaf extends Node implements ILeaf {
 
 	private final String text;
 	private final int start;
-	private final int end;
+	private final int nextInputPosition;
 	private final RuntimeRule terminalRule;
 
 	public RuntimeRule getTerminalRule() {
@@ -74,8 +75,8 @@ public class Leaf extends Node implements ILeaf {
 	}
 
 	@Override
-	public int getEndPosition() {
-		return this.end;
+	public int getNextInputPosition() {
+		return this.nextInputPosition;
 	}
 	// @Override
 	// public int getEnd() {
@@ -84,7 +85,7 @@ public class Leaf extends Node implements ILeaf {
 
 	@Override
 	public int getMatchedTextLength() {
-		return this.end - this.start;
+		return this.nextInputPosition - this.start;
 	}
 
 	// @Override
@@ -118,7 +119,7 @@ public class Leaf extends Node implements ILeaf {
 
 	@Override
 	public int hashCode() {
-		return this.start ^ this.end;
+		return Objects.hash(this.getRuntimeRuleNumber(), this.start, this.nextInputPosition);
 	}
 
 	@Override
@@ -127,7 +128,7 @@ public class Leaf extends Node implements ILeaf {
 			return false;
 		}
 		final ILeaf other = (ILeaf) arg;
-		if (this.getStartPosition() != other.getStartPosition() || this.getMatchedTextLength() != other.getMatchedTextLength()) {
+		if (this.getStartPosition() != other.getStartPosition() || this.getNextInputPosition() != other.getNextInputPosition()) {
 			return false;
 		}
 		return this.getRuntimeRuleNumber() == other.getRuntimeRuleNumber();

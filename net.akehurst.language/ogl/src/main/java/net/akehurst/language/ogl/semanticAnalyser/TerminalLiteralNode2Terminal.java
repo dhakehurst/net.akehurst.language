@@ -45,8 +45,9 @@ public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<Terminal
 		final INode child = left.getChildren().get(0);
 		final ILeaf leaf = (ILeaf) child;
 		final String text = leaf.getMatchedText();
-		final String literal = text.substring(1, text.length() - 1).replaceAll("\\\\", "");
-		final TerminalLiteral right = new TerminalLiteral(literal);
+		final String literal = text.substring(1, text.length() - 1);
+		final String unescapedLiteral = TerminalLiteralNode2Terminal.unescapeJava(literal);
+		final TerminalLiteral right = new TerminalLiteral(unescapedLiteral);
 		return right;
 	}
 
@@ -64,4 +65,84 @@ public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<Terminal
 	public void updateRight2Left(final IBranch left, final TerminalLiteral right, final ITransformer arg2) {
 	}
 
+	/**
+	 * Adapted from io.vertx.core.impl.StringEscapeUtils which is itself adapted from Apache Commons code
+	 */
+	private static String unescapeJava(final String str) {
+		final StringBuilder out = new StringBuilder(str.length());
+		if (str == null) {
+			return null;
+		}
+		final int sz = str.length();
+		final StringBuilder unicode = new StringBuilder();
+		boolean hadSlash = false;
+		boolean inUnicode = false;
+		for (int i = 0; i < sz; i++) {
+			final char ch = str.charAt(i);
+			if (inUnicode) {
+				// if in unicode, then we're reading unicode
+				// values in somehow
+				unicode.append(ch);
+				if (unicode.length() == 4) {
+					// unicode now contains the four hex digits
+					// which represents our unicode character
+					final int value = Integer.parseInt(unicode.toString(), 16);
+					out.append((char) value);
+					unicode.setLength(0);
+					inUnicode = false;
+					hadSlash = false;
+				}
+				continue;
+			}
+			if (hadSlash) {
+				// handle an escaped value
+				hadSlash = false;
+				switch (ch) {
+					case '\\':
+						out.append('\\');
+					break;
+					case '\'':
+						out.append('\'');
+					break;
+					case '\"':
+						out.append('"');
+					break;
+					case 'r':
+						out.append('\r');
+					break;
+					case 'f':
+						out.append('\f');
+					break;
+					case 't':
+						out.append('\t');
+					break;
+					case 'n':
+						out.append('\n');
+					break;
+					case 'b':
+						out.append('\b');
+					break;
+					case 'u': {
+						// uh-oh, we're in unicode country....
+						inUnicode = true;
+						break;
+					}
+					default:
+						out.append(ch);
+					break;
+				}
+				continue;
+			} else if (ch == '\\') {
+				hadSlash = true;
+				continue;
+			}
+			out.append(ch);
+		}
+		if (hadSlash) {
+			// then we're in the weird case of a \ at the end of the
+			// string, let's output it anyway.
+			out.append('\\');
+		}
+		return out.toString();
+	}
 }

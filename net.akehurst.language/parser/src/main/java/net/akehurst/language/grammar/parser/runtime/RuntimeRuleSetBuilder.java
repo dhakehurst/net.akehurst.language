@@ -29,18 +29,11 @@ public class RuntimeRuleSetBuilder {
 
 	public RuntimeRuleSetBuilder() {
 		this.parseTreeFactory = new Factory();
-		// this.emptyRule = createRuntimeRule(new TerminalEmpty());
-		// this.emptyRule.setIsSkipRule(false);
-		// this.emptyRule.setIsEmptyRule(true);
 	}
 
-	Factory parseTreeFactory;
-	RuntimeRuleSet runtimeRuleSet;
-
-	// RuntimeRule emptyRule;
-	// public RuntimeRule getEmptyRule(RuntimeRule ruleThatIsEmpty) {
-	// return this.emptyRule;
-	// }
+	private final Factory parseTreeFactory;
+	private RuntimeRuleSet runtimeRuleSet;
+	private int nextRuleNumber;
 
 	public RuntimeRule getRuntimeRule(final ITerminal terminal) {
 		return this.runtimeRuleSet.getForTerminal(terminal.getValue());
@@ -49,8 +42,6 @@ public class RuntimeRuleSetBuilder {
 	public RuntimeRule getRuntimeRule(final Rule rule) {
 		return this.runtimeRuleSet.getRuntimeRule(rule);
 	}
-
-	int nextRuleNumber;
 
 	public RuntimeRule createRuntimeRule(final Rule grammarRule) {
 		final RuntimeRule rr = new RuntimeRule(this.runtimeRuleSet, grammarRule.getName(), this.nextRuleNumber, RuntimeRuleKind.NON_TERMINAL, Pattern.LITERAL);
@@ -94,8 +85,8 @@ public class RuntimeRuleSetBuilder {
 		return this.parseTreeFactory.createBranch(r, children);
 	}
 
-	public Leaf createLeaf(final String text, final int start, final int end, final RuntimeRule terminalRule) {
-		return this.parseTreeFactory.createLeaf(text, start, end, terminalRule);
+	public Leaf createLeaf(final String text, final int start, final int nextInputPosition, final RuntimeRule terminalRule) {
+		return this.parseTreeFactory.createLeaf(text, start, nextInputPosition, terminalRule);
 	}
 
 	public Leaf createEmptyLeaf(final int pos, final RuntimeRule terminalRule) {
