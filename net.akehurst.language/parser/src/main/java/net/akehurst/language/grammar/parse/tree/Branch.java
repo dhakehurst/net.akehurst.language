@@ -64,7 +64,7 @@ public class Branch extends Node implements IBranch {
 	}
 
 	@Override
-	public int getEndPosition() {
+	public int getNextInputPosition() {
 		// TODO Auto-generated method stub
 		return this.start + this.length;
 	}
@@ -182,12 +182,28 @@ public class Branch extends Node implements IBranch {
 		final List<IBranch> res = this.getNonSkipChildren().stream().filter(IBranch.class::isInstance).map(IBranch.class::cast).collect(Collectors.toList());
 		return res;
 	}
-	// @Override
-	// public Branch deepClone() {
-	// INode[] clonedChildren = Arrays.copyOf(this.children, this.children.length);
-	// IBranch clone = this.factory.createBranch(this.getRuntimeRule(), clonedChildren);
-	// return (Branch)clone;
-	// }
+
+	@Override
+	public String getNonSkipMatchedText() {
+		String str = "";
+		for (final INode n : this.getNonSkipChildren()) {
+			str += n.getNonSkipMatchedText();
+		}
+		return str;
+	}
+
+	@Override
+	public List<IBranch> findBranches(final String name) {
+		final List<IBranch> result = new ArrayList<>();
+		if (Objects.equals(this.getName(), name)) {
+			result.add(this);
+		} else {
+			for (final INode child : this.getChildren()) {
+				result.addAll(child.findBranches(name));
+			}
+		}
+		return result;
+	}
 
 	// --- Object ---
 	static ToStringVisitor v = new ToStringVisitor();

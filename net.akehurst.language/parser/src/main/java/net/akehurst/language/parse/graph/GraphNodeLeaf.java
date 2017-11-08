@@ -38,13 +38,18 @@ public class GraphNodeLeaf implements ICompleteNode, ILeaf {
 	}
 
 	@Override
-	public int getEndPosition() {
-		return this.leaf.getEndPosition();
+	public int getNextInputPosition() {
+		return this.leaf.getNextInputPosition();
 	}
 
 	@Override
 	public boolean getIsSkip() {
 		return this.getRuntimeRule().getIsSkipRule();
+	}
+
+	@Override
+	public boolean getIsLeaf() {
+		return true;
 	}
 
 	@Override
@@ -101,6 +106,28 @@ public class GraphNodeLeaf implements ICompleteNode, ILeaf {
 		this.parent = value;
 	}
 
+	@Override
+	public String getNonSkipMatchedText() {
+		return this.getIsSkip() ? "" : this.getMatchedText();
+	}
+
+	@Override
+	public List<IBranch> findBranches(final String name) {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public String toStringTree() {
+		String r = "";
+		r += this.getStartPosition() + ",";
+		r += this.getNextInputPosition() + ",";
+		r += "C";
+		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
+		r += "'" + this.getMatchedText() + "'";
+
+		return r;
+	}
+
 	// --- IParseTreeVisitable ---
 	@Override
 	public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
@@ -112,7 +139,7 @@ public class GraphNodeLeaf implements ICompleteNode, ILeaf {
 	public String toString() {
 		String r = "";
 		r += this.getStartPosition() + ",";
-		r += this.getMatchedTextLength() + ",";
+		r += this.getNextInputPosition() + ",";
 		r += "C";
 		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
 		return r;

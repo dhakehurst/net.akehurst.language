@@ -62,13 +62,18 @@ public class Converter extends BinaryTransformer {
 		this.registerRule(Terminal2RuntimeRule.class);
 	}
 
-	RuntimeRuleSetBuilder builder;
+	private final RuntimeRuleSetBuilder builder;
+	private final List<RuntimeRule> virtualRule_cache;
 
 	public RuntimeRuleSetBuilder getFactory() {
 		return this.builder;
 	}
 
-	String createIndexString(final RuleItem item) {
+	public List<RuntimeRule> getVirtualRules() {
+		return this.virtualRule_cache;
+	}
+
+	private String createIndexString(final RuleItem item) {
 		String str = "";
 		for (final Integer i : item.getIndex()) {
 			str += i + ".";
@@ -76,8 +81,6 @@ public class Converter extends BinaryTransformer {
 		str = str.substring(0, str.length() - 1);
 		return str;
 	}
-
-	List<RuntimeRule> virtualRule_cache;
 
 	RuntimeRule createVirtualRule(final Group group) {
 		final Grammar grammar = group.getOwningRule().getGrammar();
@@ -90,7 +93,7 @@ public class Converter extends BinaryTransformer {
 
 	RuntimeRule createVirtualRule(final Concatenation concatenation) {
 		final Grammar grammar = concatenation.getOwningRule().getGrammar();
-		final String name = "$" + concatenation.getOwningRule().getName() + ".concatenation." + this.createIndexString(concatenation);// (multiNum++);
+		final String name = "$" + concatenation.getOwningRule().getName() + ".concatenation." + this.createIndexString(concatenation);
 		// final String name = "$group." + concatenation.getOwningRule().getName() + "$";
 		final RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(concatenation));
 		final RuntimeRule rr = this.getFactory().createRuntimeRule(r);
@@ -98,35 +101,28 @@ public class Converter extends BinaryTransformer {
 		return rr;
 	}
 
-	int multiNum;
-
 	RuntimeRule createVirtualRule(final Multi multi) {
 		final Grammar grammar = multi.getOwningRule().getGrammar();
-		final String name = "$" + multi.getOwningRule().getName() + ".multi." + this.createIndexString(multi);// (multiNum++);
+		final String name = "$" + multi.getOwningRule().getName() + ".multi." + this.createIndexString(multi);
 		final RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(new Concatenation(multi)));
 		final RuntimeRule rr = this.getFactory().createRuntimeRule(r);
 		this.virtualRule_cache.add(rr);
-
 		if (0 == multi.getMin()) {
 			final RuntimeRule ruleThatIsEmpty = rr;
-			final RuntimeRule rhs = this.createEmptyRuleFor(ruleThatIsEmpty);
+			this.createEmptyRuleFor(ruleThatIsEmpty);
 		}
-
 		return rr;
 	}
 
-	int sepListNum;
-
 	RuntimeRule createVirtualRule(final SeparatedList sepList) {
 		final Grammar grammar = sepList.getOwningRule().getGrammar();
-		// TODO: fix like others
-		final String name = "$sepListG." + sepList.getOwningRule().getName() + this.sepListNum++;
+		final String name = "$" + sepList.getOwningRule().getName() + ".sepList." + this.createIndexString(sepList);
 		final RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(new Concatenation(sepList)));
 		final RuntimeRule rr = this.getFactory().createRuntimeRule(r);
 		this.virtualRule_cache.add(rr);
 		if (0 == sepList.getMin()) {
 			final RuntimeRule ruleThatIsEmpty = rr;
-			final RuntimeRule rhs = this.createEmptyRuleFor(ruleThatIsEmpty);
+			this.createEmptyRuleFor(ruleThatIsEmpty);
 		}
 		return rr;
 	}

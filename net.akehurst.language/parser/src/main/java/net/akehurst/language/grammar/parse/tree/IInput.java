@@ -10,6 +10,8 @@ public interface IInput {
 
 	boolean getIsEnd(int pos);
 
+	CharSequence getText();
+
 	// CharSequence get(int start, int end);
 
 }

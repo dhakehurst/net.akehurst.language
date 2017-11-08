@@ -62,7 +62,7 @@ public class Grammar2RuntimeRuleSet implements IBinaryRule<Grammar, RuntimeRuleS
 		final List<RuntimeRule> rr = new ArrayList<>();
 		rr.addAll(runtimeRules);
 		rr.addAll(runtimeRules2);
-		rr.addAll(converter.virtualRule_cache);
+		rr.addAll(converter.getVirtualRules());
 
 		right.setRuntimeRules(rr);
 

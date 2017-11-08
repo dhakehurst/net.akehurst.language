@@ -17,7 +17,6 @@ package net.akehurst.language.ogl.grammar;
 
 import java.util.List;
 
-import net.akehurst.language.ogl.semanticStructure.Concatenation;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
@@ -29,15 +28,15 @@ import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 /**
  * <code>
  * namespace net::akehurst::language::ogl::grammar;
- * 
+ *
  * grammar OGL {
- * 
+ *
  *   grammarDefinition : namespace grammar ;
  *   namespace : 'namespace' qualifiedName ';' ;
  *   grammar : 'grammar' IDENTIFIER extends? '{' rules '}' ;
  *   extends : 'extends' [qualifiedName / ',']+ ;
  *   rules : anyRule+ ;
- *   anyRule : normalRule | skipRule ; 
+ *   anyRule : normalRule | skipRule ;
  *   normalRule : IDENTIFIER ':' choice ';' ;
  *   skipRule : 'skip' IDENTIFIER ':' choice ';' ;
  *   choice : simpleChoice < priorityChoice ;
@@ -52,21 +51,21 @@ import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
  *   separatedList : '[' simpleItem '/' terminal ']' multiplicity ;
  *   nonTerminal : IDENTIFIER ;
  *   terminal : LITERAL | PATTERN ;
- *   LITERAL : "'(?:\\\\?.)*?'" ;
- *   PATTERN : "\"(?:\\\\?.)*?\"" ;
+ *   LITERAL : "'(?:\\?.)*?'" ;
+ *   PATTERN : "\"(?:\\?.)*?\"" ;
  *   qualifiedName : (IDENTIFIER / '::')+ ;
  *   IDENTIFIER : "[a-zA-Z_][a-zA-Z_0-9]*";
- *   
+ *
  * }
  * </code>
- * 
+ *
  * @author akehurst
  *
  */
 public class OGLGrammar extends Grammar {
 
 	static List<Rule> createRules() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
 		b.skip("WHITESPACE").concatenation(new TerminalPattern("\\s+"));
 		b.skip("MULTI_LINE_COMMENT").concatenation(new TerminalPattern("/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/"));
 		b.skip("SINGLE_LINE_COMMENT").concatenation(new TerminalPattern("//.*?$"));
@@ -106,7 +105,7 @@ public class OGLGrammar extends Grammar {
 
 	public OGLGrammar() {
 		super(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
-		this.setRule(createRules());
+		this.setRule(OGLGrammar.createRules());
 	}
 
 }

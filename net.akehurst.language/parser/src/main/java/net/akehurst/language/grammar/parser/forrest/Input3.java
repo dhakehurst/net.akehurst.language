@@ -41,6 +41,11 @@ public class Input3 implements IInput {
 	private final CharSequence text;
 
 	@Override
+	public CharSequence getText() {
+		return this.text;
+	}
+
+	@Override
 	public boolean getIsStart(final int pos) {
 		// TODO what if we want t0 parse part?, e.g. sub grammar
 		return 0 == pos;

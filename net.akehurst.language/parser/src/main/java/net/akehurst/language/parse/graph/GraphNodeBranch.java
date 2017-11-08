@@ -3,6 +3,7 @@ package net.akehurst.language.parse.graph;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -10,22 +11,23 @@ import java.util.stream.Collectors;
 import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
+import net.akehurst.language.grammar.parser.ParseTreeToSingleLineTreeString;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class GraphNodeBranch implements ICompleteNode, IBranch {
 
-	public GraphNodeBranch(final ParseGraph graph, final RuntimeRule runtimeRule, final int priority, final int startPosition, final int endPosition) {
+	public GraphNodeBranch(final ParseGraph graph, final RuntimeRule runtimeRule, final int priority, final int startPosition, final int nextInputPosition) {
 		this.runtimeRule = runtimeRule;
 		this.priority = priority;
 		this.startPosition = startPosition;
-		this.endPosition = endPosition;
+		this.nextInputPosition = nextInputPosition;
 		this.childrenOption = new ArrayList<>();
 	}
 
 	private final RuntimeRule runtimeRule;
 	private final int priority;
 	private final int startPosition;
-	private final int endPosition;
+	private final int nextInputPosition;
 	private final List<ICompleteNode.ChildrenOption> childrenOption;
 	private IBranch parent;
 
@@ -47,13 +49,18 @@ public class GraphNodeBranch implements ICompleteNode, IBranch {
 	}
 
 	@Override
-	public int getEndPosition() {
-		return this.endPosition;
+	public int getNextInputPosition() {
+		return this.nextInputPosition;
 	}
 
 	@Override
 	public int getMatchedTextLength() {
-		return this.getEndPosition() - this.getStartPosition();
+		return this.getNextInputPosition() - this.getStartPosition();
+	}
+
+	@Override
+	public boolean getIsLeaf() {
+		return false;
 	}
 
 	@Override
@@ -199,6 +206,44 @@ public class GraphNodeBranch implements ICompleteNode, IBranch {
 		return count;
 	}
 
+	@Override
+	public String getNonSkipMatchedText() {
+		String str = "";
+		for (final INode n : this.getNonSkipChildren()) {
+			str += n.getNonSkipMatchedText();
+		}
+		return str;
+	}
+
+	@Override
+	public List<IBranch> findBranches(final String name) {
+		final List<IBranch> result = new ArrayList<>();
+		if (Objects.equals(this.getName(), name)) {
+			result.add(this);
+		} else {
+			for (final INode child : this.getChildren()) {
+				result.addAll(child.findBranches(name));
+			}
+		}
+		return result;
+	}
+
+	@Override
+	public String toStringTree() {
+		String r = "";
+		r += this.getStartPosition() + ",";
+		r += this.getNextInputPosition();
+		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
+
+		r += "{";
+		for (final INode c : this.getChildren()) {
+			c.accept(new ParseTreeToSingleLineTreeString(), null);
+		}
+		r += "}";
+
+		return r;
+	}
+
 	// --- IParseTreeVisitable ---
 	@Override
 	public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
@@ -210,7 +255,7 @@ public class GraphNodeBranch implements ICompleteNode, IBranch {
 	public String toString() {
 		String r = "";
 		r += this.getStartPosition() + ",";
-		r += this.getEndPosition();
+		r += this.getNextInputPosition();
 		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
 		return r;
 	}

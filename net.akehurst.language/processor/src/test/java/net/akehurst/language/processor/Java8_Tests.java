@@ -17,7 +17,7 @@ import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
-import net.akehurst.language.grammar.parser.ParseTreeToString;
+import net.akehurst.language.grammar.parser.ParseTreeToInputText;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 
 public class Java8_Tests {
@@ -118,7 +118,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("ifThenStatement", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -131,7 +131,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("ifThenElseStatement", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -144,7 +144,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("ifThenElseStatement", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -157,7 +157,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("statement", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -170,7 +170,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("statement", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -183,7 +183,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("ifThenElseStatement", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -196,7 +196,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("ifThenElseStatement", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -212,7 +212,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("tryStatement", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -228,7 +228,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("tryStatement", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -250,7 +250,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -275,7 +275,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -292,7 +292,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -308,7 +308,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -323,7 +323,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -338,7 +338,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -353,7 +353,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -368,7 +368,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -383,7 +383,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -398,7 +398,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -413,7 +413,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -427,7 +427,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -442,7 +442,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 
@@ -454,7 +454,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -465,7 +465,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -476,7 +476,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -487,7 +487,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -498,7 +498,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -509,7 +509,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -520,7 +520,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -533,7 +533,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -550,7 +550,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 
@@ -567,7 +567,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -585,7 +585,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -608,7 +608,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -620,7 +620,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("StringLiteral", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -632,7 +632,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("localVariableDeclarationStatement", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -646,7 +646,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -659,7 +659,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("StringLiteral", input);
 		Assert.assertNotNull("null==tree", tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -672,7 +672,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("expression", input);
 		Assert.assertNotNull("null==tree", tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -685,7 +685,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("throwStatement", input);
 		Assert.assertNotNull("null==tree", tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -698,7 +698,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("ifThenStatement", input);
 		Assert.assertNotNull("null==tree", tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -715,7 +715,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -734,7 +734,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -755,7 +755,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -780,7 +780,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -803,7 +803,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("block", input);
 		Assert.assertNotNull("null==tree", tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -821,7 +821,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("block", input);
 		Assert.assertNotNull("null==tree", tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -844,7 +844,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("block", input);
 		Assert.assertNotNull("null==tree", tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -870,7 +870,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -898,7 +898,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -910,7 +910,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("preIncrementExpression", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -922,7 +922,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("postfixExpression", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -934,7 +934,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("postfixExpression", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -946,7 +946,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("postIncrementExpression", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -958,7 +958,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -970,7 +970,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -982,7 +982,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -994,7 +994,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1006,7 +1006,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1018,7 +1018,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1030,7 +1030,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1042,7 +1042,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1054,7 +1054,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("expression", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1066,7 +1066,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("blockStatement", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1078,7 +1078,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("blockStatements", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1090,7 +1090,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("switchLabel", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1102,7 +1102,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("switchBlockStatementGroup", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1114,7 +1114,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("switchBlock", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1130,7 +1130,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("switchStatement", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1148,7 +1148,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse("switchStatement", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1182,7 +1182,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1196,7 +1196,7 @@ public class Java8_Tests {
 		final IParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1209,7 +1209,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1222,7 +1222,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1235,7 +1235,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1247,7 +1247,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1259,7 +1259,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1271,7 +1271,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1283,7 +1283,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1295,7 +1295,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1307,7 +1307,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1319,7 +1319,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1331,7 +1331,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -1343,7 +1343,7 @@ public class Java8_Tests {
 
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}

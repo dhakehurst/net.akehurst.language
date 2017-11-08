@@ -15,11 +15,9 @@ public interface IGraphNode extends IParseTreeVisitable {
 
 	int getStartPosition();
 
-	int getEndPosition();
+	int getNextInputPosition();
 
 	int getNextItemIndex();
-
-	int getNextInputPosition();
 
 	int getMatchedTextLength();
 

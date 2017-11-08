@@ -13,9 +13,11 @@ public interface ICompleteNode extends IParseTreeVisitable {
 
 	int getStartPosition();
 
-	int getEndPosition();
+	int getNextInputPosition();
 
 	int getMatchedTextLength();
+
+	boolean getIsLeaf();
 
 	boolean getIsEmptyLeaf();
 
@@ -24,8 +26,15 @@ public interface ICompleteNode extends IParseTreeVisitable {
 	static class ChildrenOption {
 		public int matchedLength;
 		public List<ICompleteNode> nodes;
+
+		@Override
+		public String toString() {
+			return this.nodes.toString();
+		}
 	}
 
 	List<ICompleteNode.ChildrenOption> getChildrenOption();
+
+	String toStringTree();
 
 }

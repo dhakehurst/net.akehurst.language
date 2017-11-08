@@ -10,8 +10,11 @@ grammar Query {
 	queryReference : 'FROM' STORED_QUERY_ID ;
 
     pathQuery : 'MATCH' artefactSelector;
-	artefactSelector : artefactTypeReference ('AS' NAME)? linkSelector? whereClause?;
+	artefactSelector : artefactTypeReference ('AS' NAME)? linkSelectorExpression? whereClause?;
+	linkSelectorExpression : linkSelector | linkSelectorGroup ;
+	linkSelectorGroup : '(' linkSelector operator linkSelector ')' ;
 	linkSelector : 'NOT'? 'LINKED' 'VIA' multiplicity? linkTypeReference ('TO'|'FROM') artefactSelector ;
+	operator : 'AND' | 'OR' | 'XOR' ;
 	multiplicity : POSITIVE_INT '..' POSITIVE_INT ;
 	whereClause : 'WHERE' ;
 

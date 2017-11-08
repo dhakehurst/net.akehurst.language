@@ -30,7 +30,7 @@ subprojects {
 
 
 	group 'net.akehurst.language'
-	version '1.0.alpha.2'
+	version '1.0.0-SNAPSHOT'
 
 	sourceCompatibility = '1.8'
 	targetCompatibility = '1.8'
@@ -40,10 +40,26 @@ subprojects {
 	}
 
 	publishing {
+		repositories {
+			maven {
+				name 'itemis'
+				url "https://projects.itemis.de/nexus/content/repositories/akehurst/"
+			}
+		}
+
+	    publications {
+	        noSource(MavenPublication) {
+	        	    groupId "${group}"
+	         	artifactId "${project.name}"
+				version "${version}"
+	            from components.java
+	        }
+	    }
+	
 	    publications {
 	        mavenJava(MavenPublication) {
-	        	groupId "${group}"
-	        	artifactId "${project.name}"
+	          	groupId "${group}"
+	        	    artifactId "${project.name}"
 				version "${version}"
 	        
 	            from components.java
@@ -56,8 +72,8 @@ subprojects {
 
 	repositories {
 		mavenCentral()
-    	mavenLocal()
-    	jcenter()
+        mavenLocal()
+    	    jcenter()
 	}
 
 	dependencies {

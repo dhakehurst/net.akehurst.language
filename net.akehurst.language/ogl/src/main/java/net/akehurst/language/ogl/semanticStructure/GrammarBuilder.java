@@ -86,8 +86,12 @@ public class GrammarBuilder {
 			this.rule.setRhs(new ChoiceSimple(new Concatenation(sequence)));
 		}
 
-		public void choice(final Concatenation... alternative) {
-			this.rule.setRhs(new ChoiceSimple(alternative));
+		public void choice(final ConcatenationItem... alternative) {
+			final Concatenation[] alternativeConcats = new Concatenation[alternative.length];
+			for (int i = 0; i < alternative.length; ++i) {
+				alternativeConcats[i] = new Concatenation(alternative[i]);
+			}
+			this.rule.setRhs(new ChoiceSimple(alternativeConcats));
 		}
 
 		public void multi(final int min, final int max, final TangibleItem item) {

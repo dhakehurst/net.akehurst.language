@@ -15,6 +15,8 @@
  */
 package net.akehurst.language.core.parser;
 
+import java.util.List;
+
 public interface INode extends IParseTreeVisitable {
 
 	IBranch getParent();
@@ -41,5 +43,14 @@ public interface INode extends IParseTreeVisitable {
 
 	int getNumberOfLines();
 
-	// ILeaf getFirstLeaf();
+	String getNonSkipMatchedText();
+
+	/**
+	 * find all branches with the given name that are descendants of this node. Will not include branches with the given name that are descendants of a found
+	 * branch.
+	 *
+	 * @param name
+	 * @return
+	 */
+	List<IBranch> findBranches(String name);
 }

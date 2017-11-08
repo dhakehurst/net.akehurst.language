@@ -72,6 +72,7 @@ public class test_VistraqQuery {
 		col.add(new Object[] { new Data("query", "MATCH * AS n RETURN COUNT n AS count") });
 		col.add(new Object[] { new Data("query", "MATCH * NOT LINKED VIA * TO *") });
 		col.add(new Object[] { new Data("query", "MATCH * NOT LINKED VIA * FROM *") });
+		col.add(new Object[] { new Data("query", "MATCH * ( LINKED VIA * TO * AND LINKED VIA * TO *  )") });
 		col.add(new Object[] { new Data("query", "FROM query1") });
 		col.add(new Object[] { new Data("query", "FROM query1 RETURN r AS Req") });
 		col.add(new Object[] { new Data("query", "FROM qs1.query1 RETURN r AS Req") });

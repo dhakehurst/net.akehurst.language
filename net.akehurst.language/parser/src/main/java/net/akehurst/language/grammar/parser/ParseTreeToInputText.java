@@ -6,7 +6,7 @@ import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 
-public class ParseTreeToString implements IParseTreeVisitor<String, String, RuntimeException> {
+public class ParseTreeToInputText implements IParseTreeVisitor<String, String, RuntimeException> {
 
 	@Override
 	public String visit(IParseTree target, String arg) throws RuntimeException {

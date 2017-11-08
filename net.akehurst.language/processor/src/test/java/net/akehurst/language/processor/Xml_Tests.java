@@ -15,7 +15,7 @@ import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
-import net.akehurst.language.grammar.parser.ParseTreeToString;
+import net.akehurst.language.grammar.parser.ParseTreeToInputText;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 
 public class Xml_Tests {
@@ -93,7 +93,7 @@ public class Xml_Tests {
 		final IParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -105,7 +105,7 @@ public class Xml_Tests {
 		final IParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -117,7 +117,7 @@ public class Xml_Tests {
 		final IParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -129,7 +129,7 @@ public class Xml_Tests {
 		final IParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
@@ -141,7 +141,7 @@ public class Xml_Tests {
 		final IParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
-		final ParseTreeToString x = new ParseTreeToString();
+		final ParseTreeToInputText x = new ParseTreeToInputText();
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}

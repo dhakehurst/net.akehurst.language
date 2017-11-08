@@ -12,6 +12,7 @@ import java.util.Set;
 
 import net.akehurst.language.grammar.parse.tree.IInput;
 import net.akehurst.language.grammar.parse.tree.Leaf;
+import net.akehurst.language.grammar.parser.log.Log;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
 import net.akehurst.language.parse.graph.IGraphNode.PreviousInfo;
@@ -136,6 +137,15 @@ public class ParseGraph implements IParseGraph {
 		return this.nodes.values();
 	}
 
+	public ICompleteNode getCompleteNode(final IGrowingNode gn) {
+		final RuntimeRule runtimeRule = gn.getRuntimeRule();
+		final int priority = gn.getPriority();
+		final int startPosition = gn.getStartPosition();
+		final int nextInputPosition = gn.getNextInputPosition();
+		final ICompleteNode cn = this.findNode(runtimeRule.getRuleNumber(), startPosition, nextInputPosition);
+		return cn;
+	}
+
 	@Override
 	public ICompleteNode findNode(final int ruleNumber, final int start, final int nextInputPosition) {
 		final NodeIndex id = new NodeIndex(ruleNumber, start, nextInputPosition);// , l.getEnd(), -1);
@@ -192,6 +202,8 @@ public class ParseGraph implements IParseGraph {
 		final int ruleNumber = runtimeRule.getRuleNumber();
 		final GrowingNodeIndex gnindex = new GrowingNodeIndex(ruleNumber, startPosition, nextInputPosition, nextItemIndex);
 		final IGrowingNode existing = this.growing.get(gnindex);
+
+		IGrowingNode result = null;
 		if (null == existing) {
 			final IGrowingNode nn = new GrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children);
 			for (final IGrowingNode.PreviousInfo info : previous) {
@@ -202,14 +214,15 @@ public class ParseGraph implements IParseGraph {
 			if (nn.getHasCompleteChildren()) {
 				this.complete(nn);
 			}
-			return nn;
+			result = nn;
 		} else {
 			for (final IGrowingNode.PreviousInfo info : previous) {
 				existing.addPrevious(info.node, info.atPosition);
 			}
 			this.addGrowingHead(gnindex, existing);
-			return existing;
+			result = existing;
 		}
+		return result;
 	}
 
 	private void addGrowing(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) {
@@ -274,29 +287,32 @@ public class ParseGraph implements IParseGraph {
 	}
 
 	@Override
-	public ICompleteNode complete(final IGrowingNode growing) {
-		if (growing.getHasCompleteChildren()) {
-			final RuntimeRule runtimeRule = growing.getRuntimeRule();
-			final int priority = growing.getPriority();
-			final int startPosition = growing.getStartPosition();
-			final int nextInputPosition = growing.getNextInputPosition();
+	public ICompleteNode complete(final IGrowingNode gn) {
+		if (gn.getHasCompleteChildren()) {
+			final RuntimeRule runtimeRule = gn.getRuntimeRule();
+			final int priority = gn.getPriority();
+			final int startPosition = gn.getStartPosition();
+			final int nextInputPosition = gn.getNextInputPosition();
 			ICompleteNode cn = this.findNode(runtimeRule.getRuleNumber(), startPosition, nextInputPosition);
 			if (null == cn) {
 				cn = this.createBranchNoChildren(runtimeRule, priority, startPosition, nextInputPosition);
-			} else {
-			}
-			if (growing.getIsLeaf()) {
-				// dont try and add children...can't for a leaf
-			} else {
-				final ICompleteNode.ChildrenOption opt = new ICompleteNode.ChildrenOption();
-				opt.matchedLength = growing.getMatchedTextLength();
-				opt.nodes = growing.getGrowingChildren();
-				cn.getChildrenOption().add(opt);
+				if (gn.getIsLeaf()) {
+					// dont try and add children...can't for a leaf
+				} else {
+					final ICompleteNode.ChildrenOption opt = new ICompleteNode.ChildrenOption();
+					opt.matchedLength = gn.getMatchedTextLength();
+					opt.nodes = gn.getGrowingChildren();
+					cn.getChildrenOption().add(opt);
 
-				// TODO: don't add duplicate children
-				// somewhere resolve priorities!
+					// TODO: don't add duplicate children
+					// somewhere resolve priorities!
 
+				}
+			} else {
+				int i = 0;
+				i++;
 			}
+
 			this.checkForGoal(cn);
 			return cn;
 		} else {
@@ -307,9 +323,7 @@ public class ParseGraph implements IParseGraph {
 	@Override
 	public void createStart(final RuntimeRule goalRule) {
 		final IGrowingNode gn = this.findOrCreateGrowingNode(goalRule, 0, 0, 0, 0, Collections.EMPTY_LIST, Collections.EMPTY_SET);// this.createBranch(goalRule,
-																																	// 0, 0, 0, 0);
-		// gn.addHead(gn);
-		// this.tryAddGrowable(gn);
+		Log.traceln("%10s %3s %s", "create", "", gn.toStringTree(true, true));
 	}
 
 	// @Override
@@ -333,11 +347,12 @@ public class ParseGraph implements IParseGraph {
 	@Override
 	public ICompleteNode findOrCreateLeaf(final Leaf leaf) {
 		final NodeIndex nindex = new NodeIndex(leaf.getRuntimeRuleNumber(), leaf.getStartPosition(), leaf.getNextInputPosition());
-		ICompleteNode existingLeaf = this.leaves.get(nindex);
-		if (null == existingLeaf) {
-			existingLeaf = this.createLeaf(leaf);
+		ICompleteNode gn = this.leaves.get(nindex);
+		if (null == gn) {
+			gn = this.createLeaf(leaf);
 		}
-		return existingLeaf;
+
+		return gn;
 	}
 
 	@Override
@@ -372,6 +387,7 @@ public class ParseGraph implements IParseGraph {
 		children.add(firstChild);
 
 		final IGrowingNode gn = this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children, previous);
+		Log.traceln("%10s %3s %s", "height", "", gn.toStringTree(true, true));
 
 	}
 
@@ -426,7 +442,8 @@ public class ParseGraph implements IParseGraph {
 		children.add(nextChild);
 
 		final Set<IGrowingNode.PreviousInfo> previous = parent.getPrevious();
-		final IGrowingNode newParent = this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children, previous);
+		final IGrowingNode gn = this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children, previous);
+		Log.traceln("%10s %3s %s", "graft", "", gn.toStringTree(true, true));
 
 		// maybe?
 		if (parent.getNext().isEmpty()) {
@@ -445,7 +462,8 @@ public class ParseGraph implements IParseGraph {
 		final List<ICompleteNode> children = new ArrayList<>(parent.getGrowingChildren());
 		children.add(nextChild);
 		final Set<IGrowingNode.PreviousInfo> previous = parent.getPrevious();
-		final IGrowingNode newParent = this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children, previous);
+		final IGrowingNode gn = this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children, previous);
+		Log.traceln("%10s %3s %s", "graft-skip", "", gn.toStringTree(true, true));
 
 		if (parent.getNext().isEmpty()) {
 			this.removeGrowing(parent);
@@ -455,8 +473,8 @@ public class ParseGraph implements IParseGraph {
 
 	@Override
 	public void pushToStackOf(final ICompleteNode leafNode, final IGrowingNode stack, final Set<IGrowingNode.PreviousInfo> previous) {
-		final IGrowingNode growing = this.findOrCreateGrowingLeaf(leafNode, stack, previous);
-
+		final IGrowingNode gn = this.findOrCreateGrowingLeaf(leafNode, stack, previous);
+		Log.traceln("%10s %3s %s ==> %s", "width", "", leafNode, stack.toStringTree(true, true));
 	}
 
 	@Override

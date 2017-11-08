@@ -91,4 +91,8 @@ public interface IGrowingNode {
 
 	List<ICompleteNode> getGrowingChildren();
 
+	String toStringTree(boolean withChildren, boolean withPrevious);
+
+	String toStringId();
+
 }

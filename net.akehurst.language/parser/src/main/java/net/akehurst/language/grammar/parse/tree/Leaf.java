@@ -15,9 +15,12 @@
  */
 package net.akehurst.language.grammar.parse.tree;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+import net.akehurst.language.core.parser.IBranch;
 import net.akehurst.language.core.parser.ILeaf;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
@@ -104,10 +107,15 @@ public class Leaf extends Node implements ILeaf {
 		// return this.input.get(this.start, this.end).toString();
 	}
 
-	// public Leaf deepClone() {
-	// Leaf clone = new Leaf(this.input, this.start, this.end, this.terminalRule);
-	// return clone;
-	// }
+	@Override
+	public String getNonSkipMatchedText() {
+		return this.getIsSkip() ? "" : this.getMatchedText();
+	}
+
+	@Override
+	public List<IBranch> findBranches(final String name) {
+		return Collections.emptyList();
+	}
 
 	// --- Object ---
 	static ToStringVisitor v = new ToStringVisitor();

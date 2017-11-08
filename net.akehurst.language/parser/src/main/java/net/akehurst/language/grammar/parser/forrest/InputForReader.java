@@ -56,6 +56,12 @@ public class InputForReader implements IInput {
 	}
 
 	@Override
+	public CharSequence getText() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
 	public boolean getIsStart(final int pos) {
 		// TODO Auto-generated method stub
 		return false;

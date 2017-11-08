@@ -16,6 +16,8 @@ public interface IParseGraph {
 
 	Collection<ICompleteNode> getCompleteNodes();
 
+	ICompleteNode getCompleteNode(IGrowingNode gn);
+
 	// void removeGrowable(IGraphNode node);
 
 	// IGraphNode createLeaf(Leaf leaf, RuntimeRule terminalRule, int startPosition, int matchedLength);

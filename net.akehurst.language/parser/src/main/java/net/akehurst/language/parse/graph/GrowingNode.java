@@ -5,33 +5,37 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
+import net.akehurst.language.grammar.parser.ParseTreeToSingleLineTreeString;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 
 public class GrowingNode implements IGrowingNode {
 
-	public GrowingNode(final RuntimeRule runtimeRule, final int startPosition, final int endPosition, final int nextItemIndex, final int priority,
+	public GrowingNode(final RuntimeRule runtimeRule, final int startPosition, final int nextInputPosition, final int nextItemIndex, final int priority,
 			final List<ICompleteNode> children) {
 		this.runtimeRule = runtimeRule;
 		this.startPosition = startPosition;
-		this.endPosition = endPosition;
+		this.nextInputPosition = nextInputPosition;
 		this.nextItemIndex = nextItemIndex;
 		this.priority = priority;
 		this.children = children;
 		this.previous = new HashSet<>();
 		this.next = new HashSet<>();
+		this.hashCode_cache = Objects.hash(runtimeRule, startPosition, nextInputPosition, nextItemIndex);
 	}
 
 	private final RuntimeRule runtimeRule;
 	private final int startPosition;
-	private final int endPosition;
+	private final int nextInputPosition;
 	private final int nextItemIndex;
 	private final int priority;
 	private final List<ICompleteNode> children;
 	private Set<PreviousInfo> previous;
 	private final Set<IGrowingNode> next;
+	private final int hashCode_cache;
 
 	@Override
 	public RuntimeRule getRuntimeRule() {
@@ -49,8 +53,8 @@ public class GrowingNode implements IGrowingNode {
 	}
 
 	@Override
-	public int getEndPosition() {
-		return this.endPosition;
+	public int getNextInputPosition() {
+		return this.nextInputPosition;
 	}
 
 	@Override
@@ -65,7 +69,7 @@ public class GrowingNode implements IGrowingNode {
 
 	@Override
 	public int getMatchedTextLength() {
-		return this.endPosition - this.startPosition;
+		return this.nextInputPosition - this.startPosition;
 	}
 
 	@Override
@@ -209,11 +213,6 @@ public class GrowingNode implements IGrowingNode {
 			}
 		}
 		return l;
-	}
-
-	@Override
-	public int getNextInputPosition() {
-		return this.endPosition;
 	}
 
 	@Override
@@ -363,7 +362,39 @@ public class GrowingNode implements IGrowingNode {
 		return this.children;
 	}
 
-	private String previousToString(final Set<GrowingNode> visited) {
+	@Override
+	public String toStringTree(final boolean withChildren, final boolean withPrevious) {
+		String r = "";
+		r += this.getStartPosition() + ",";
+		r += this.getNextInputPosition() + ",";
+		r += -1 == this.getNextItemIndex() ? "C" : this.getNextItemIndex();
+		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
+
+		if (withChildren) {
+			if (this.getIsLeaf()) {
+				// no children
+			} else {
+				r += "{";
+				for (final ICompleteNode c : this.getGrowingChildren()) {
+					r += c.accept(new ParseTreeToSingleLineTreeString(), null);
+				}
+				if (this.getHasCompleteChildren()) {
+					r += "}";
+				} else {
+					r += "...";
+				}
+			}
+		}
+
+		if (withPrevious) {
+			final HashSet<GrowingNode> visited = new HashSet<>();
+			r += this.toStringPrevious(visited);
+		}
+
+		return r;
+	}
+
+	private String toStringPrevious(final Set<GrowingNode> visited) {
 		visited.add(this);
 		String s = "";
 		if (this.getPrevious().isEmpty()) {
@@ -371,29 +402,44 @@ public class GrowingNode implements IGrowingNode {
 		} else {
 			final GrowingNode prev = (GrowingNode) this.getPrevious().iterator().next().node;
 			if (visited.contains(prev)) {
-				s = "...";
+				s = "--> ...";
 			} else if (this.getPrevious().size() == 1) {
-				s = " --> " + prev.previousToString(visited);
+				s = " --> " + prev.toStringTree(false, false) + prev.toStringPrevious(visited);
 			} else {
 				final int sz = this.getPrevious().size();
-				s = " -" + sz + "> " + prev.previousToString(visited);
+				s = " -" + sz + "> " + prev.toStringTree(false, false) + prev.toStringPrevious(visited);
 			}
+
 		}
+		return s;
+	}
+
+	@Override
+	public String toStringId() {
 		String r = "";
 		r += this.getStartPosition() + ",";
-		r += this.getEndPosition() + ",";
+		r += this.getNextInputPosition() + ",";
 		r += -1 == this.getNextItemIndex() ? "C" : this.getNextItemIndex();
 		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
-		r += s;
 		return r;
 	}
 
 	// --- Object ---
 	@Override
-	public String toString() {
-		final HashSet<GrowingNode> visited = new HashSet<>();
-		final String s = this.previousToString(visited);
+	public int hashCode() {
+		return this.hashCode_cache;
+	}
 
-		return s;
+	@Override
+	public boolean equals(final Object obj) {
+		// assume obj is also a GrowingNode, should never be compared otherwise
+		final GrowingNode other = (GrowingNode) obj;
+		return this.getRuntimeRuleNumber() == other.getRuntimeRuleNumber() && this.getStartPosition() == other.getStartPosition()
+				&& this.getNextInputPosition() == other.getNextInputPosition() && this.getNextItemIndex() == other.getNextItemIndex();
+	}
+
+	@Override
+	public String toString() {
+		return this.toStringTree(false, true);
 	}
 }

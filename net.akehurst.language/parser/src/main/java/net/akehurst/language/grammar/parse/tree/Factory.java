@@ -10,8 +10,8 @@ public class Factory {
 		return b;
 	}
 
-	public Leaf createLeaf(final String text, final int start, final int end, final RuntimeRule terminalRule) {
-		final Leaf l = new Leaf(text, start, end, terminalRule);
+	public Leaf createLeaf(final String text, final int start, final int nextInputPosition, final RuntimeRule terminalRule) {
+		final Leaf l = new Leaf(text, start, nextInputPosition, terminalRule);
 		return l;
 	}
 

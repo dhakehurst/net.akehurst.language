@@ -5,7 +5,7 @@ import java.util.Objects;
 import net.akehurst.language.core.parser.INode;
 import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParseTreeVisitor;
-import net.akehurst.language.grammar.parser.ParseTreeToString;
+import net.akehurst.language.grammar.parser.ParseTreeToInputText;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 
 public class ParseTreeFromGraph implements IParseTree {
@@ -28,7 +28,7 @@ public class ParseTreeFromGraph implements IParseTree {
 
 	@Override
 	public String asString() {
-		final ParseTreeToString visitor = new ParseTreeToString();
+		final ParseTreeToInputText visitor = new ParseTreeToInputText();
 		final String s = this.accept(visitor, "");
 		return s;
 	}

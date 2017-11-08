@@ -262,8 +262,12 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
-		b.define("  E{");
-		b.define("    'a'");
+		b.define("  E {");
+		b.define("    E1 {");
+		b.define("      Bm { empty }");
+		b.define("      E{ 'a' }");
+		b.define("      '+a'");
+		b.define("    }");
 		b.define("  }");
 		b.define("}");
 		final IParseTree expected = b.build();
@@ -282,8 +286,12 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
-		b.define("  E{");
-		b.define("    'a'");
+		b.define("  E {");
+		b.define("    E1 {");
+		b.define("      Bm { 'b' }");
+		b.define("      E{ 'a' }");
+		b.define("      '+a'");
+		b.define("    }");
 		b.define("  }");
 		b.define("}");
 		final IParseTree expected = b.build();

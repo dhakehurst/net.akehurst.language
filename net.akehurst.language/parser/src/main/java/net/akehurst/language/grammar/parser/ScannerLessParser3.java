@@ -23,6 +23,7 @@ import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.converter.Grammar2RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.forrest.Forrest3;
 import net.akehurst.language.grammar.parser.forrest.Input3;
+import net.akehurst.language.grammar.parser.log.Log;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet;
@@ -112,11 +113,22 @@ public class ScannerLessParser3 implements IParser {
 		// TODO: handle reader directly without converting to string
 		final IParseGraph graph = new ParseGraph(goalRule, input);
 		final Forrest3 newForrest = new Forrest3(graph, this.getRuntimeRuleSet(), input, goalRule);
+
+		System.out.println(this.grammar);
+		System.out.println();
+		System.out.println("input '" + input.getText() + "'");
+
+		int seasons = 0;
+		Log.trace("%s", seasons);
+
 		newForrest.start(graph, goalRule, input);
-		int seasons = 1;
+		Log.traceln("");
+		seasons++;
 
 		do {
+			Log.trace("%s", seasons);
 			newForrest.grow();
+			Log.traceln("");
 			seasons++;
 		} while (newForrest.getCanGrow());
 
