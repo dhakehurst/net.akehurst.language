@@ -2,8 +2,10 @@ package net.akehurst.language.parse.graph;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -21,14 +23,14 @@ public class GraphNodeBranch implements ICompleteNode, IBranch {
 		this.priority = priority;
 		this.startPosition = startPosition;
 		this.nextInputPosition = nextInputPosition;
-		this.childrenOption = new ArrayList<>();
+		this.childrenOption = new HashSet<>();
 	}
 
 	private final RuntimeRule runtimeRule;
 	private final int priority;
 	private final int startPosition;
 	private final int nextInputPosition;
-	private final List<ICompleteNode.ChildrenOption> childrenOption;
+	private final Set<ICompleteNode.ChildrenOption> childrenOption;
 	private IBranch parent;
 
 	// --- ICompleteNode ---
@@ -74,7 +76,7 @@ public class GraphNodeBranch implements ICompleteNode, IBranch {
 	}
 
 	@Override
-	public List<ICompleteNode.ChildrenOption> getChildrenOption() {
+	public Set<ICompleteNode.ChildrenOption> getChildrenOption() {
 		return this.childrenOption;
 	}
 
@@ -97,7 +99,7 @@ public class GraphNodeBranch implements ICompleteNode, IBranch {
 		if (this.getChildrenOption().isEmpty()) {
 			return Collections.emptyList();
 		} else {
-			final ICompleteNode.ChildrenOption opt = this.getChildrenOption().get(0);
+			final ICompleteNode.ChildrenOption opt = this.getChildrenOption().iterator().next();
 			return (List<INode>) (List<?>) opt.nodes;
 		}
 	}

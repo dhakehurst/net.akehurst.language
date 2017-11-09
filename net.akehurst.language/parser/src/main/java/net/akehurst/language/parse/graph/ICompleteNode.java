@@ -1,6 +1,8 @@
 package net.akehurst.language.parse.graph;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import net.akehurst.language.core.parser.IParseTreeVisitable;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
@@ -31,9 +33,24 @@ public interface ICompleteNode extends IParseTreeVisitable {
 		public String toString() {
 			return this.nodes.toString();
 		}
+
+		@Override
+		public int hashCode() {
+			return this.nodes.hashCode();
+		}
+
+		@Override
+		public boolean equals(final Object obj) {
+			if (obj instanceof ChildrenOption) {
+				final ChildrenOption other = (ChildrenOption) obj;
+				return Objects.equals(this.nodes, other.nodes);
+			} else {
+				return false;
+			}
+		}
 	}
 
-	List<ICompleteNode.ChildrenOption> getChildrenOption();
+	Set<ICompleteNode.ChildrenOption> getChildrenOption();
 
 	String toStringTree();
 

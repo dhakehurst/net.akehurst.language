@@ -137,6 +137,7 @@ public class ParseGraph implements IParseGraph {
 		return this.nodes.values();
 	}
 
+	@Override
 	public ICompleteNode getCompleteNode(final IGrowingNode gn) {
 		final RuntimeRule runtimeRule = gn.getRuntimeRule();
 		final int priority = gn.getPriority();
@@ -303,12 +304,21 @@ public class ParseGraph implements IParseGraph {
 					opt.matchedLength = gn.getMatchedTextLength();
 					opt.nodes = gn.getGrowingChildren();
 					cn.getChildrenOption().add(opt);
+				}
+			} else {
+				if (gn.getIsLeaf()) {
+					// dont try and add children...can't for a leaf
+				} else {
+					final ICompleteNode.ChildrenOption opt = new ICompleteNode.ChildrenOption();
+					opt.matchedLength = gn.getMatchedTextLength();
+					opt.nodes = gn.getGrowingChildren();
 
 					// TODO: don't add duplicate children
 					// somewhere resolve priorities!
 
+					cn.getChildrenOption().add(opt);
 				}
-			} else {
+
 				int i = 0;
 				i++;
 			}

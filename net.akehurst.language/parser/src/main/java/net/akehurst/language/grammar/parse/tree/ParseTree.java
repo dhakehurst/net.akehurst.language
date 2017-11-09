@@ -25,11 +25,11 @@ import net.akehurst.language.grammar.parser.ToStringVisitor;
 
 public class ParseTree implements IParseTree {
 
+	private final INode root;
+
 	public ParseTree(final INode root) {
 		this.root = root;
 	}
-
-	private final INode root;
 
 	@Override
 	public INode getRoot() {

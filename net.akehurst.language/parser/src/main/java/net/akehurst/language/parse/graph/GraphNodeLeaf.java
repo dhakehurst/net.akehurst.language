@@ -2,6 +2,7 @@ package net.akehurst.language.parse.graph;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,8 +59,8 @@ public class GraphNodeLeaf implements ICompleteNode, ILeaf {
 	}
 
 	@Override
-	public List<ChildrenOption> getChildrenOption() {
-		return Collections.emptyList();
+	public Set<ChildrenOption> getChildrenOption() {
+		return Collections.emptySet();
 	}
 
 	@Override

@@ -176,9 +176,14 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IBranch expected = b.branch("S", b.branch("type", b.branch("kw", b.leaf("int"))));
+		b.define("S {");
+		b.define("  type {");
+		b.define("    kw { 'int' }");
+		b.define("  }");
+		b.define("}");
+		final IParseTree expected = b.build();
 
-		Assert.assertEquals(expected, tree.getRoot());
+		Assert.assertEquals(expected, tree);
 
 	}
 	// more tests needed!!!!
