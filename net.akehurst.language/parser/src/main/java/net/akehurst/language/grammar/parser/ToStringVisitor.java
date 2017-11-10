@@ -15,10 +15,11 @@
  */
 package net.akehurst.language.grammar.parser;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.ILeaf;
-import net.akehurst.language.core.parser.IParseTree;
-import net.akehurst.language.core.parser.IParseTreeVisitor;
+import net.akehurst.language.core.sppf.ILeaf;
+import net.akehurst.language.core.sppf.IParseTreeVisitor;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppf.ISharedPackedParseForest;
 
 public class ToStringVisitor implements IParseTreeVisitor<String, String, RuntimeException> {
 
@@ -35,10 +36,10 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 	private final String indentIncrement;
 
 	@Override
-	public String visit(final IParseTree target, final String indent) throws RuntimeException {
+	public String visit(final ISharedPackedParseForest target, final String indent) throws RuntimeException {
 		String s = indent;
-		final IParseTree t = target;
-		s += target.getRoot().accept(this, indent);
+		final ISPPFNode root = target.getRoots().iterator().next();
+		s += root.accept(this, indent);
 		return s;
 	}
 
@@ -49,7 +50,7 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 	}
 
 	@Override
-	public String visit(final IBranch target, final String indent) throws RuntimeException {
+	public String visit(final ISPPFBranch target, final String indent) throws RuntimeException {
 		String s = indent;
 		s += target.getName() + " {";
 		if (0 < target.getChildren().size()) {

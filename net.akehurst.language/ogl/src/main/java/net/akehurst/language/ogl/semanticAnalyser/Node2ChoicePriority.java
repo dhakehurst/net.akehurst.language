@@ -18,8 +18,8 @@ package net.akehurst.language.ogl.semanticAnalyser;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.INode;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ISPPFNode;
 import net.akehurst.language.ogl.semanticStructure.ChoicePriority;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
 import net.akehurst.transform.binary.IBinaryRule;
@@ -41,25 +41,25 @@ public class Node2ChoicePriority extends AbstractNode2Choice<ChoicePriority> {
 	}
 
 	@Override
-	public boolean isAMatch(final IBranch left, final ChoicePriority right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final ISPPFBranch left, final ChoicePriority right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public ChoicePriority constructLeft2Right(final IBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public ChoicePriority constructLeft2Right(final ISPPFBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
-		final List<? extends INode> allLeft = left.getNonSkipChildren();
+		final List<? extends ISPPFNode> allLeft = left.getNonSkipChildren();
 		List<? extends Concatenation> allRight;
 
-		final List<INode> concatenationNodes = new ArrayList<>();
-		for (final INode n : allLeft) {
+		final List<ISPPFNode> concatenationNodes = new ArrayList<>();
+		for (final ISPPFNode n : allLeft) {
 			if ("concatenation".equals(n.getName())) {
 				concatenationNodes.add(n);
 			}
 		}
 
-		allRight = transformer.transformAllLeft2Right((Class<IBinaryRule<INode, Concatenation>>) (Class<?>) Node2Concatenation.class, concatenationNodes);
+		allRight = transformer.transformAllLeft2Right((Class<IBinaryRule<ISPPFNode, Concatenation>>) (Class<?>) Node2Concatenation.class, concatenationNodes);
 
 		final ChoicePriority right = new ChoicePriority(allRight.toArray(new Concatenation[0]));
 		return right;
@@ -67,20 +67,20 @@ public class Node2ChoicePriority extends AbstractNode2Choice<ChoicePriority> {
 	}
 
 	@Override
-	public IBranch constructRight2Left(final ChoicePriority right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public ISPPFBranch constructRight2Left(final ChoicePriority right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final IBranch left, final ChoicePriority right, final ITransformer transformer)
+	public void updateLeft2Right(final ISPPFBranch left, final ChoicePriority right, final ITransformer transformer)
 			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final IBranch left, final ChoicePriority right, final ITransformer transformer)
+	public void updateRight2Left(final ISPPFBranch left, final ChoicePriority right, final ITransformer transformer)
 			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 

@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.core.analyser;
 
-import net.akehurst.language.core.parser.IParseTree;
+import net.akehurst.language.core.sppf.ISharedPackedParseForest;
 
 public interface ISemanticAnalyser {
 
@@ -25,5 +25,5 @@ public interface ISemanticAnalyser {
 
 	void clear();
 
-	<T> T analyse(Class<T> targetType, IParseTree tree) throws UnableToAnalyseExeception;
+	<T> T analyse(Class<T> targetType, ISharedPackedParseForest forest) throws UnableToAnalyseExeception;
 }

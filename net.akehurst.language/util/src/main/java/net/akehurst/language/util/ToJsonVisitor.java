@@ -23,17 +23,18 @@ import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.ILeaf;
-import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.core.parser.IParseTree;
-import net.akehurst.language.core.parser.IParseTreeVisitor;
+import net.akehurst.language.core.sppf.ILeaf;
+import net.akehurst.language.core.sppf.IParseTreeVisitor;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppf.ISharedPackedParseForest;
 
 public class ToJsonVisitor implements IParseTreeVisitor<JsonObject, JsonBuilderFactory, RuntimeException> {
 
 	@Override
-	public JsonObject visit(final IParseTree target, final JsonBuilderFactory arg) throws RuntimeException {
-		return target.getRoot().accept(this, arg);
+	public JsonObject visit(final ISharedPackedParseForest target, final JsonBuilderFactory arg) throws RuntimeException {
+		final ISPPFNode root = target.getRoots().iterator().next();
+		return root.accept(this, arg);
 	}
 
 	// TODO: reverse the 'isPattern' into something like 'canBeUsedAsClassifier' or 'isValidClassifier'
@@ -62,7 +63,7 @@ public class ToJsonVisitor implements IParseTreeVisitor<JsonObject, JsonBuilderF
 	}
 
 	@Override
-	public JsonObject visit(final IBranch target, final JsonBuilderFactory arg) throws RuntimeException {
+	public JsonObject visit(final ISPPFBranch target, final JsonBuilderFactory arg) throws RuntimeException {
 		final JsonObjectBuilder builder = arg.createObjectBuilder();
 		builder.add("name", target.getName());
 		builder.add("start", target.getStartPosition());
@@ -78,7 +79,7 @@ public class ToJsonVisitor implements IParseTreeVisitor<JsonObject, JsonBuilderF
 
 		builder.add("isPattern", isPattern);
 		final JsonArrayBuilder ab = arg.createArrayBuilder();
-		for (final INode n : target.getChildren()) {
+		for (final ISPPFNode n : target.getChildren()) {
 			final JsonObject nobj = n.accept(this, arg);
 			ab.add(nobj);
 		}

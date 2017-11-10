@@ -1,4 +1,4 @@
-package net.akehurst.language.grammar.parse.tree;
+package net.akehurst.language.parser.sppf;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 

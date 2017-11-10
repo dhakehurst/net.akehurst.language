@@ -18,10 +18,9 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.grammar.parse.tree.ParseTree;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.IParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -29,6 +28,7 @@ import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.parser.sppf.SharedPackedParseForest;
 
 public class SkipRule_Test extends AbstractParser_Test {
 
@@ -54,7 +54,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
+			final ISPPFBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
 
 			Assert.assertEquals(expected, tree.getRoot());
 
@@ -76,7 +76,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")), b.branch("a", b.leaf("a", "a")));
+			final ISPPFBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")), b.branch("a", b.leaf("a", "a")));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -97,7 +97,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")));
+			final ISPPFBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -118,7 +118,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
+			final ISPPFBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
 					b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("a", b.leaf("a", "a")));
 			Assert.assertEquals(expected, tree.getRoot());
 
@@ -140,7 +140,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")), b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
+			final ISPPFBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")), b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
 					b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("a", b.leaf("a", "a")));
 			Assert.assertEquals(expected, tree.getRoot());
 		} catch (final ParseFailedException e) {
@@ -161,7 +161,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
+			final ISPPFBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
 					b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))));
 			Assert.assertEquals(expected, tree.getRoot());
 		} catch (final ParseFailedException e) {
@@ -182,7 +182,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")), b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
+			final ISPPFBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")), b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
 					b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))));
 			Assert.assertEquals(expected, tree.getRoot());
 
@@ -214,7 +214,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", ".")));
+			final ISPPFBranch expected = b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", ".")));
 
 			Assert.assertEquals(expected, tree.getRoot());
 
@@ -236,7 +236,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", ".")),
+			final ISPPFBranch expected = b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", ".")),
 					b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", ".")), b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", ".")));
 
 			Assert.assertEquals(expected, tree.getRoot());
@@ -259,7 +259,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 
-			final IParseTree expected = new ParseTree(
+			final IParseTree expected = new SharedPackedParseForest(
 					b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", "."), b.branch("WS", b.leaf("\\s+", " ")))));
 
 			Assert.assertEquals(expected, tree);
@@ -290,7 +290,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("S", b.leaf("a"));
+			final ISPPFBranch expected = b.branch("S", b.leaf("a"));
 
 			Assert.assertEquals(expected, tree.getRoot());
 
@@ -312,7 +312,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("S", b.branch("WS", b.leaf("\\s+", " ")), b.leaf("a"));
+			final ISPPFBranch expected = b.branch("S", b.branch("WS", b.leaf("\\s+", " ")), b.leaf("a"));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -333,7 +333,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final IBranch expected = b.branch("S", b.leaf("a"), b.branch("WS", b.leaf("\\s+", " ")));
+		final ISPPFBranch expected = b.branch("S", b.leaf("a"), b.branch("WS", b.leaf("\\s+", " ")));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -351,7 +351,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")), b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))));
+			final ISPPFBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")), b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {

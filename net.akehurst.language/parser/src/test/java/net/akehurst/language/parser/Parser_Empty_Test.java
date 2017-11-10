@@ -18,16 +18,16 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.grammar.parse.tree.ParseTree;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.IParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.parser.sppf.SharedPackedParseForest;
 
 public class Parser_Empty_Test extends AbstractParser_Test {
 
@@ -49,7 +49,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final IBranch expected = b.branch("S", b.emptyLeaf("S"));
+			final ISPPFBranch expected = b.branch("S", b.emptyLeaf("S"));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -91,7 +91,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final IBranch expected = b.branch("S", b.emptyLeaf("S"));
+			final ISPPFBranch expected = b.branch("S", b.emptyLeaf("S"));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -111,7 +111,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final IBranch expected = b.branch("S", b.leaf("a"));
+			final ISPPFBranch expected = b.branch("S", b.leaf("a"));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -139,7 +139,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new ParseTree(b.branch("S", b.branch("ae", b.leaf("a")), b.branch("as", b.emptyLeaf("as"))));
+		final IParseTree expected = new SharedPackedParseForest(b.branch("S", b.branch("ae", b.leaf("a")), b.branch("as", b.emptyLeaf("as"))));
 		Assert.assertEquals(expected, tree);
 
 	}

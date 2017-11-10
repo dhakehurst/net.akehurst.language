@@ -18,16 +18,17 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.grammar.parse.tree.ParseTree;
+import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ISharedPackedParseForest;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.parser.sppf.SharedPackedParseForest;
 
 public class Parser_Concatination_Test extends AbstractParser_Test {
 
@@ -95,11 +96,11 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			final String goal = "a";
 			final String text = "";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final IBranch expected = b.branch("a", b.emptyLeaf("a"));
+			final ISPPFBranch expected = b.branch("a", b.emptyLeaf("a"));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -115,11 +116,11 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			final String goal = "a";
 			final String text = "a";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final IBranch expected = b.branch("a", b.leaf("a", "a"));
+			final ISPPFBranch expected = b.branch("a", b.leaf("a", "a"));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -135,7 +136,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			final String goal = "a";
 			final String text = "b";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 
 			Assert.fail("This parse should fail");
 
@@ -152,12 +153,12 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			final String goal = "abc";
 			final String text = "abc";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("abc", b.leaf("abc", "abc"));
+			final ISPPFBranch expected = b.branch("abc", b.leaf("abc", "abc"));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -173,12 +174,12 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			final String goal = "a";
 			final String text = "a";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("a", b.leaf("a", "a"));
+			final ISPPFBranch expected = b.branch("a", b.leaf("a", "a"));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -194,7 +195,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			final String goal = "a";
 			final String text = "b";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 			Assert.fail("This parse should fail");
 
 		} catch (final ParseFailedException e) {
@@ -210,12 +211,12 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			final String goal = "b";
 			final String text = "b";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("b", b.leaf("b", "b"));
+			final ISPPFBranch expected = b.branch("b", b.leaf("b", "b"));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -231,12 +232,12 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			final String goal = "ab";
 			final String text = "ab";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("ab", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b")));
+			final ISPPFBranch expected = b.branch("ab", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b")));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -252,7 +253,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			final String goal = "ab";
 			final String text = "aa";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 			Assert.fail("This parse should fail");
 
 		} catch (final ParseFailedException e) {
@@ -268,7 +269,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			final String goal = "ab";
 			final String text = "b";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 			Assert.fail("This parse should fail");
 
 		} catch (final ParseFailedException e) {
@@ -284,12 +285,12 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 		final String goal = "abc";
 		final String text = "abc";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseForest tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		;
-		final IBranch expected = b.branch("abc", b.branch("ab", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b"))),
+		final ISPPFBranch expected = b.branch("abc", b.branch("ab", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b"))),
 				b.branch("c", b.leaf("c", "c")));
 		Assert.assertEquals(expected, tree.getRoot());
 
@@ -303,12 +304,12 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			final String goal = "abc";
 			final String text = "abc";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("abc", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b")), b.branch("c", b.leaf("c", "c")));
+			final ISPPFBranch expected = b.branch("abc", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b")), b.branch("c", b.leaf("c", "c")));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -324,12 +325,12 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 		final String goal = "abc";
 		final String text = "a b c";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseForest tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		;
-		final IParseTree expected = new ParseTree(b.branch("abc", b.branch("a", b.leaf("a", "a"), b.branch("SPACE", b.leaf(" ", " "))),
+		final IParseTree expected = new SharedPackedParseForest(b.branch("abc", b.branch("a", b.leaf("a", "a"), b.branch("SPACE", b.leaf(" ", " "))),
 				b.branch("b", b.leaf("b", "b"), b.branch("SPACE", b.leaf(" ", " "))), b.branch("c", b.leaf("c", "c"))));
 		Assert.assertEquals(expected, tree);
 
@@ -343,7 +344,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			final String goal = "abc";
 			final String text = "acb";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 			Assert.fail("This parse should fail");
 
 		} catch (final ParseFailedException e) {
@@ -359,14 +360,14 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 		final String text = "abcd";
 		try {
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 			Assert.fail("This parse should fail");
 
 		} catch (final ParseFailedException e) {
 			final IParseTree tree = e.getLongestMatch();
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("abc", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b")), b.branch("c", b.leaf("c", "c")));
+			final ISPPFBranch expected = b.branch("abc", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b")), b.branch("c", b.leaf("c", "c")));
 			Assert.assertEquals(expected, tree.getRoot());
 		}
 	}
@@ -379,12 +380,12 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 			final String goal = "abc";
 			final String text = "abc";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseForest tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("abc", b.branch("a", b.leaf("a", "a")),
+			final ISPPFBranch expected = b.branch("abc", b.branch("a", b.leaf("a", "a")),
 					b.branch("bc", b.branch("b", b.leaf("b", "b")), b.branch("c", b.leaf("c", "c"))));
 			Assert.assertEquals(expected, tree.getRoot());
 

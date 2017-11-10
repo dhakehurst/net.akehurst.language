@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.core.parser;
+package net.akehurst.language.core.sppf;
 
 import java.util.List;
 
-public interface IBranch extends INode, IParseTreeVisitable {
+public interface IBranch_old extends ISPPFBranch {
 
 	/**
 	 * returns true if there are 0 non skip children or if the only child node is an EmptyLeaf
@@ -30,9 +30,9 @@ public interface IBranch extends INode, IParseTreeVisitable {
 	 *
 	 * @return the children of this branch.
 	 */
-	List<INode> getChildren();
+	List<ISPPFNode> getChildren();
 
-	List<INode> getNonSkipChildren();
+	List<ISPPFNode> getNonSkipChildren();
 
 	/**
 	 * this returns the i'th non skip child of this Branch
@@ -41,7 +41,7 @@ public interface IBranch extends INode, IParseTreeVisitable {
 	 *            index of required child
 	 * @return i'th non skip child.
 	 */
-	INode getChild(int i);
+	ISPPFNode getChild(int i);
 
 	/**
 	 * Convenience method. returns the i'th non skip child of this Branch but assumes the child is also a Branch and casts the result.
@@ -49,12 +49,12 @@ public interface IBranch extends INode, IParseTreeVisitable {
 	 * @param i
 	 * @return
 	 */
-	IBranch getBranchChild(int i);
+	ISPPFBranch getBranchChild(int i);
 
 	/**
 	 * Filters out any children that are skip nodes or not branches
 	 *
 	 * @return all children that are branches and non skip
 	 */
-	List<IBranch> getBranchNonSkipChildren();
+	List<ISPPFBranch> getBranchNonSkipChildren();
 }

@@ -18,12 +18,12 @@ package net.akehurst.language.grammar.parser.runtime;
 import java.util.regex.Pattern;
 
 import net.akehurst.language.core.grammar.ITerminal;
-import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.grammar.parse.tree.Branch;
-import net.akehurst.language.grammar.parse.tree.Factory;
-import net.akehurst.language.grammar.parse.tree.Leaf;
+import net.akehurst.language.core.sppf.ISPPFNode;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.parser.sppf.Branch;
+import net.akehurst.language.parser.sppf.Factory;
+import net.akehurst.language.parser.sppf.Leaf;
 
 public class RuntimeRuleSetBuilder {
 
@@ -81,7 +81,7 @@ public class RuntimeRuleSetBuilder {
 		}
 	}
 
-	public Branch createBranch(final RuntimeRule r, final INode[] children) {
+	public Branch createBranch(final RuntimeRule r, final ISPPFNode[] children) {
 		return this.parseTreeFactory.createBranch(r, children);
 	}
 

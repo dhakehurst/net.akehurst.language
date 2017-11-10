@@ -30,14 +30,14 @@ import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.IGrammar;
 import net.akehurst.language.core.grammar.ITerminal;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.ILeaf;
-import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.grammar.parse.tree.ParseTree;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ILeaf;
+import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppf.ISharedPackedParseForest;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
@@ -47,6 +47,7 @@ import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalEmpty;
+import net.akehurst.language.parser.sppf.SharedPackedParseForest;
 
 public class ParseTreeBuilder {
 
@@ -109,22 +110,22 @@ public class ParseTreeBuilder {
 		return this.runtimeBuilder.createEmptyLeaf(start, terminalRule);
 	}
 
-	public IBranch branch(final String ruleName, final INode... children) {
+	public ISPPFBranch branch(final String ruleName, final ISPPFNode... children) {
 		try {
 			final Rule rule = this.grammar.findRule(ruleName);
 			final RuntimeRule rr = this.runtimeBuilder.getRuntimeRuleSet().getRuntimeRule(rule);
-			final IBranch b = this.runtimeBuilder.createBranch(rr, children);
+			final ISPPFBranch b = this.runtimeBuilder.createBranch(rr, children);
 			return b;
 		} catch (final RuleNotFoundException e) {
 			throw new RuntimeException("Error", e);
 		}
 	}
 
-	public IBranch branch(final String ruleName, final List<INode> children) {
+	public ISPPFBranch branch(final String ruleName, final List<ISPPFNode> children) {
 		try {
 			final Rule rule = this.grammar.findRule(ruleName);
 			final RuntimeRule rr = this.runtimeBuilder.getRuntimeRuleSet().getRuntimeRule(rule);
-			final IBranch b = this.runtimeBuilder.createBranch(rr, children.toArray(new INode[children.size()]));
+			final ISPPFBranch b = this.runtimeBuilder.createBranch(rr, children.toArray(new ISPPFNode[children.size()]));
 			return b;
 		} catch (final RuleNotFoundException e) {
 			throw new RuntimeException("Error", e);
@@ -142,7 +143,7 @@ public class ParseTreeBuilder {
 				final IParser grammarParser = new ScannerLessParser3(new RuntimeRuleSetBuilder(), ogl);
 				final InputStream input = ClassLoader.getSystemClassLoader().getResourceAsStream("net/akehurst/language/parser/Tree.ogl");
 				final Reader reader = new InputStreamReader(input);
-				final IParseTree grammarTree = grammarParser.parse("grammarDefinition", reader);
+				final ISharedPackedParseForest grammarTree = grammarParser.parse("grammarDefinition", reader);
 				final ISemanticAnalyser sa = new SemanicAnalyser();
 				this.treeGrammar = sa.analyse(IGrammar.class, grammarTree);
 
@@ -153,7 +154,7 @@ public class ParseTreeBuilder {
 		return this.treeGrammar;
 	}
 
-	class SimpleScaner {
+	private static class SimpleScaner {
 		private final CharSequence input;
 		private int nextPosition;
 
@@ -195,7 +196,7 @@ public class ParseTreeBuilder {
 		final SimpleScaner scanner = new SimpleScaner(treeString);
 		{
 			final Stack<String> nodeNamesStack = new Stack<>();
-			final Stack<List<INode>> childrenStack = new Stack<>();
+			final Stack<List<ISPPFNode>> childrenStack = new Stack<>();
 
 			// add rootList
 			childrenStack.push(new ArrayList<>());
@@ -243,11 +244,11 @@ public class ParseTreeBuilder {
 					final String lastNodeName = nodeNamesStack.pop();
 					if (ParseTreeBuilder.EMPTY.matcher(lastNodeName).matches()) {
 						final String ruleNameThatIsEmpty = nodeNamesStack.pop();
-						final INode node = this.emptyLeaf(ruleNameThatIsEmpty);
+						final ISPPFNode node = this.emptyLeaf(ruleNameThatIsEmpty);
 						childrenStack.peek().add(node);
 					} else {
-						final List<INode> children = childrenStack.pop();
-						final INode node = this.branch(lastNodeName, children);
+						final List<ISPPFNode> children = childrenStack.pop();
+						final ISPPFNode node = this.branch(lastNodeName, children);
 						childrenStack.peek().add(node);
 					}
 				} else {
@@ -256,86 +257,26 @@ public class ParseTreeBuilder {
 
 			}
 
-			tree = new ParseTree(childrenStack.pop().get(0));
+			tree = new SharedPackedParseForest(childrenStack.pop().get(0));
 		}
 		return tree;
 	}
 
+	/**
+	 * builds the defined parse tree, and resets the builder.
+	 *
+	 * @return
+	 */
 	public IParseTree build() {
 		try {
 			final String treeStr = this.sb.toString();
 			final IParseTree treeTree = this.parse(treeStr);
+			this.sb = new StringBuilder();
 			return treeTree;
-			// final IParseTreeVisitor<Object, String, Throwable> v = new IParseTreeVisitor<Object, String, Throwable>() {
-			//
-			// @Override
-			// public Object visit(final IParseTree target, final String arg) throws Throwable {
-			// return target.getRoot().accept(this, arg);
-			// }
-			//
-			// @Override
-			// public Object visit(final ILeaf target, final String arg) throws Throwable {
-			// // TODO Auto-generated method stub
-			// return null;
-			// }
-			//
-			// @Override
-			// public Object visit(final IBranch target, final String arg) throws Throwable {
-			// final String name = target.getName();
-			// switch (name) {
-			// case "tree":
-			// return new ParseTree((INode) target.getChild(0).accept(this, arg));
-			// case "nodes":
-			// return target.getBranchNonSkipChildren().stream().map((b) -> {
-			// try {
-			// return b.accept(this, arg);
-			// } catch (final Throwable e) {
-			// e.printStackTrace();
-			// return null;
-			// }
-			// }).collect(Collectors.toList()).toArray(new INode[0]);
-			// case "node":
-			// return target.getBranchChild(0).accept(this, arg);
-			// case "branch":
-			// return ParseTreeBuilder.this.branch(target.getBranchChild(0).getChild(0).getMatchedText(),
-			// (INode[]) target.getBranchChild(2).accept(this, target.getBranchChild(0).getChild(0).getMatchedText()));
-			// case "leaf":
-			// return target.getBranchChild(0).accept(this, arg);
-			// case "pattern":
-			// return ParseTreeBuilder.this.leaf(
-			// target.getBranchChild(0).getChild(0).getMatchedText().substring(1,
-			// target.getBranchChild(0).getChild(0).getMatchedText().length() - 1),
-			// target.getBranchChild(2).getChild(0).getMatchedText().substring(1,
-			// target.getBranchChild(2).getChild(0).getMatchedText().length() - 1));
-			// case "literal":
-			// return ParseTreeBuilder.this
-			// .leaf(target.getChild(0).getMatchedText().substring(1, target.getChild(0).getMatchedText().length() - 1));
-			// case "empty":
-			// return ParseTreeBuilder.this.emptyLeaf(arg);
-			// case "NAME":
-			// default:
-			// throw new RuntimeException("Error, unhandled branch");
-			// }
-			// }
-			//
-			// };
-			// final IParseTree result = (IParseTree) v.visit(treeTree, null);
-			// return result;
 		} catch (final Throwable e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
-
-	// public IParseTree tree(IBranch root) {
-	// try {
-	// Rule rule = this.grammar.findRule(root.getName());
-	// RuntimeRule rr = this.factory.getRuntimeRuleSet().getRuntimeRule(rule);
-	// IParseTree t = new ParseTreeBranch(this.factory, input, (Branch)root, null, rr, Integer.MAX_VALUE);
-	// return t;
-	// } catch (RuleNotFoundException e) {
-	// throw new RuntimeException("Error", e);
-	// }
-	// }
 
 }

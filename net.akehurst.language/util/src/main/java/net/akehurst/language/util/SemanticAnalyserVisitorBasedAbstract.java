@@ -10,17 +10,18 @@ import net.akehurst.holser.reflect.BetterMethodFinder;
 import net.akehurst.language.core.analyser.IGrammarLoader;
 import net.akehurst.language.core.analyser.ISemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.ILeaf;
-import net.akehurst.language.core.parser.IParseTree;
-import net.akehurst.language.core.parser.IParseTreeVisitor;
+import net.akehurst.language.core.sppf.ILeaf;
+import net.akehurst.language.core.sppf.IParseTreeVisitor;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppf.ISharedPackedParseForest;
 
 public abstract class SemanticAnalyserVisitorBasedAbstract implements ISemanticAnalyser, IParseTreeVisitor<Object, Object, UnableToAnalyseExeception> {
 
 	static Class<?>[] parameterTypes = BranchHandler.class.getMethods()[0].getParameterTypes();
 
 	static public interface BranchHandler<T> {
-		T handle(IBranch target, List<IBranch> children, Object arg) throws UnableToAnalyseExeception;
+		T handle(ISPPFBranch target, List<ISPPFBranch> children, Object arg) throws UnableToAnalyseExeception;
 	}
 
 	public SemanticAnalyserVisitorBasedAbstract() {
@@ -56,14 +57,14 @@ public abstract class SemanticAnalyserVisitorBasedAbstract implements ISemanticA
 		return handler;
 	}
 
-	protected <T> T analyse(final IBranch branch, final Object arg) throws UnableToAnalyseExeception {
+	protected <T> T analyse(final ISPPFBranch branch, final Object arg) throws UnableToAnalyseExeception {
 		return null == branch ? null : (T) branch.accept(this, arg);
 	}
 
 	// --- ISemanticAnalyser ---
 	@Override
-	public <T> T analyse(final Class<T> targetType, final IParseTree tree) throws UnableToAnalyseExeception {
-		return (T) this.visit(tree, null);
+	public <T> T analyse(final Class<T> targetType, final ISharedPackedParseForest forest) throws UnableToAnalyseExeception {
+		return (T) this.visit(forest, null);
 	}
 
 	@Override
@@ -84,8 +85,9 @@ public abstract class SemanticAnalyserVisitorBasedAbstract implements ISemanticA
 
 	// --- IParseTreeVisitor ---
 	@Override
-	public Object visit(final IParseTree target, final Object arg) throws UnableToAnalyseExeception {
-		return target.getRoot().accept(this, arg);
+	public Object visit(final ISharedPackedParseForest target, final Object arg) throws UnableToAnalyseExeception {
+		final ISPPFNode root = target.getRoots().iterator().next();
+		return root.accept(this, arg);
 	}
 
 	@Override
@@ -94,14 +96,14 @@ public abstract class SemanticAnalyserVisitorBasedAbstract implements ISemanticA
 	}
 
 	@Override
-	public Object visit(final IBranch target, final Object arg) throws UnableToAnalyseExeception {
+	public Object visit(final ISPPFBranch target, final Object arg) throws UnableToAnalyseExeception {
 		final String branchName = target.getName();
 		final BranchHandler<?> handler = this.getBranchHandler(branchName);
 		if (null == handler) {
 			throw new UnableToAnalyseExeception("Branch not handled in analyser " + branchName, null);
 		} else {
-			final List<IBranch> branchChildren = target.getBranchNonSkipChildren();// .stream().map(it -> it.getIsEmpty() ? null :
-																					// it).collect(Collectors.toList());
+			final List<ISPPFBranch> branchChildren = target.getBranchNonSkipChildren();// .stream().map(it -> it.getIsEmpty() ? null :
+																						// it).collect(Collectors.toList());
 			return handler.handle(target, branchChildren, arg);
 		}
 

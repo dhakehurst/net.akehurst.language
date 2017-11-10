@@ -20,11 +20,11 @@ import org.junit.runners.Parameterized.Parameters;
 
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
+import net.akehurst.language.core.sppf.IParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 
 @RunWith(Parameterized.class)

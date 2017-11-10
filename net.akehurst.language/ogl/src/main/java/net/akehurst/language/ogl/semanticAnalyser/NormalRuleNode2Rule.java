@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.INode;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ISPPFNode;
 import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.Rule;
@@ -25,10 +25,10 @@ import net.akehurst.transform.binary.ITransformer;
 import net.akehurst.transform.binary.RuleNotFoundException;
 import net.akehurst.transform.binary.TransformException;
 
-public class NormalRuleNode2Rule implements IBinaryRule<INode, Rule> {
+public class NormalRuleNode2Rule implements IBinaryRule<ISPPFNode, Rule> {
 
 	@Override
-	public boolean isValidForLeft2Right(final INode left) {
+	public boolean isValidForLeft2Right(final ISPPFNode left) {
 		return "normalRule".equals(left.getName());
 	}
 
@@ -39,35 +39,35 @@ public class NormalRuleNode2Rule implements IBinaryRule<INode, Rule> {
 	}
 
 	@Override
-	public boolean isAMatch(final INode left, final Rule right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final ISPPFNode left, final Rule right, final ITransformer transformer) throws RuleNotFoundException {
 		return true;
 	}
 
 	@Override
-	public Rule constructLeft2Right(final INode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
-		final INode grammarNode = left.getParent().getParent().getParent().getParent();
+	public Rule constructLeft2Right(final ISPPFNode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+		final ISPPFNode grammarNode = left.getParent().getParent().getParent().getParent();
 		final Grammar grammar = transformer.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, grammarNode);
-		final String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, ((IBranch) left).getChild(0));
+		final String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, ((ISPPFBranch) left).getChild(0));
 		final Rule right = new Rule(grammar, name);
 		return right;
 	}
 
 	@Override
-	public INode constructRight2Left(final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public ISPPFNode constructRight2Left(final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final INode left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
-		final INode rhsNode = ((IBranch) left).getChild(2);
-		final INode item = ((IBranch) rhsNode).getChild(0);
-		final AbstractChoice ruleItem = transformer.transformLeft2Right((Class<IBinaryRule<INode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class, item);
+	public void updateLeft2Right(final ISPPFNode left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+		final ISPPFNode rhsNode = ((ISPPFBranch) left).getChild(2);
+		final ISPPFNode item = ((ISPPFBranch) rhsNode).getChild(0);
+		final AbstractChoice ruleItem = transformer.transformLeft2Right((Class<IBinaryRule<ISPPFNode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class, item);
 		right.setRhs(ruleItem);
 	}
 
 	@Override
-	public void updateRight2Left(final INode left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final ISPPFNode left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

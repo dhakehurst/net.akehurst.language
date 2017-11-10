@@ -13,27 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.grammar.parse.tree;
+package net.akehurst.language.parser.sppf;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
-import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.core.parser.IParseTree;
-import net.akehurst.language.core.parser.IParseTreeVisitor;
+import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppf.IParseTreeVisitor;
+import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppf.ISharedPackedParseForest;
 import net.akehurst.language.grammar.parser.ParseTreeToInputText;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 
-public class ParseTree implements IParseTree {
+public class SharedPackedParseForest implements ISharedPackedParseForest, IParseTree {
 
-	private final INode root;
+	private final Set<ISPPFNode> roots;
 
-	public ParseTree(final INode root) {
-		this.root = root;
+	public SharedPackedParseForest(final Set<ISPPFNode> roots) {
+		this.roots = roots;
 	}
 
+	public SharedPackedParseForest(final ISPPFNode... roots) {
+		this.roots = new HashSet<>();
+		for (final ISPPFNode root : roots) {
+			this.roots.add(root);
+		}
+	}
+
+	// --- IParseTree ---
 	@Override
-	public INode getRoot() {
-		return this.root;
+	public ISPPFNode getRoot() {
+		return (ISPPFNode) this.roots.iterator().next();
 	}
 
 	@Override
@@ -41,6 +53,27 @@ public class ParseTree implements IParseTree {
 		final ParseTreeToInputText visitor = new ParseTreeToInputText();
 		final String s = this.accept(visitor, "");
 		return s;
+	}
+
+	// --- ISharedPackedParseForest ---
+	@Override
+	public Set<ISPPFNode> getRoots() {
+		final Set<ISPPFNode> set = new HashSet<>();
+		set.add(this.getRoot());
+		return set;
+	}
+
+	@Override
+	public boolean contains(final ISharedPackedParseForest other) {
+		boolean result = true; // if other is empty then the result is true
+		for (final ISPPFNode otherRoot : other.getRoots()) {
+			boolean matchedOtherRoot = false;
+			for (final ISPPFNode root : this.getRoots()) {
+				matchedOtherRoot |= root.contains(otherRoot);
+			}
+			result &= matchedOtherRoot;
+		}
+		return result;
 	}
 
 	// --- IParseTreeVisitable ---

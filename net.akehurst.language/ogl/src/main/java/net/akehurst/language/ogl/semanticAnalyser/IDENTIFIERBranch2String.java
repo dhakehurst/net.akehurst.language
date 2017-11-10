@@ -15,47 +15,47 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.ILeaf;
-import net.akehurst.language.core.parser.INode;
+import net.akehurst.language.core.sppf.ILeaf;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ISPPFNode;
 import net.akehurst.transform.binary.IBinaryRule;
 import net.akehurst.transform.binary.ITransformer;
 import net.akehurst.transform.binary.RuleNotFoundException;
 
-public class IDENTIFIERBranch2String implements IBinaryRule<INode, String> {
+public class IDENTIFIERBranch2String implements IBinaryRule<ISPPFNode, String> {
 
 	@Override
-	public boolean isAMatch(final INode left, final String right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final ISPPFNode left, final String right, final ITransformer transformer) throws RuleNotFoundException {
 		return true;
 	}
 
 	@Override
-	public void updateLeft2Right(final INode arg0, final String arg1, final ITransformer arg2) {
+	public void updateLeft2Right(final ISPPFNode arg0, final String arg1, final ITransformer arg2) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final INode arg0, final String arg1, final ITransformer arg2) {
+	public void updateRight2Left(final ISPPFNode arg0, final String arg1, final ITransformer arg2) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public String constructLeft2Right(final INode left, final ITransformer transformer) {
-		final ILeaf leaf = (ILeaf) ((IBranch) left).getChildren().get(0);
+	public String constructLeft2Right(final ISPPFNode left, final ITransformer transformer) {
+		final ILeaf leaf = (ILeaf) ((ISPPFBranch) left).getChildren().get(0);
 		final String right = leaf.getMatchedText();
 		return right;
 	}
 
 	@Override
-	public IBranch constructRight2Left(final String arg0, final ITransformer arg1) {
+	public ISPPFBranch constructRight2Left(final String arg0, final ITransformer arg1) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean isValidForLeft2Right(final INode left) {
+	public boolean isValidForLeft2Right(final ISPPFNode left) {
 		return left.getName().equals("IDENTIFIER");
 	}
 

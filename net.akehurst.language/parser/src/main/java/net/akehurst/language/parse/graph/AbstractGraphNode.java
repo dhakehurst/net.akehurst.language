@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.parser.IBranch;
+import net.akehurst.language.core.sppf.ISPPFBranch;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 abstract public class AbstractGraphNode implements IGraphNode {
@@ -30,7 +30,7 @@ abstract public class AbstractGraphNode implements IGraphNode {
 	private final Set<IGraphNode> next;
 	private final Set<IGraphNode> possibleParent;
 
-	IBranch parent;
+	ISPPFBranch parent;
 	// int stackHash;
 	// int[] stack;
 
@@ -155,11 +155,11 @@ abstract public class AbstractGraphNode implements IGraphNode {
 		return res;
 	}
 
-	public IBranch getParent() {
+	public ISPPFBranch getParent() {
 		return this.parent;
 	}
 
-	public void setParent(final IBranch value) {
+	public void setParent(final ISPPFBranch value) {
 		this.parent = value;
 	}
 

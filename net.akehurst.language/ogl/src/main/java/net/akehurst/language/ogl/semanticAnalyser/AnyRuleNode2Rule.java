@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.INode;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ISPPFNode;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.transform.binary.ITransformer;
 import net.akehurst.transform.binary.RuleNotFoundException;
@@ -30,27 +30,27 @@ public class AnyRuleNode2Rule extends AbstractSemanticAnalysisRule<Rule> {
 	}
 
 	@Override
-	public Rule constructLeft2Right(final IBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public Rule constructLeft2Right(final ISPPFBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// final INode rule = left.getChild(1);
-		final INode rule = left.getChild(0);
+		final ISPPFNode rule = left.getChild(0);
 		final Rule right = transformer.transformLeft2Right(NormalRuleNode2Rule.class, rule);
 		return right;
 	}
 
 	@Override
-	public IBranch constructRight2Left(final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public ISPPFBranch constructRight2Left(final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final IBranch left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateLeft2Right(final ISPPFBranch left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final IBranch left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final ISPPFBranch left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

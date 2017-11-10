@@ -1,27 +1,28 @@
 package net.akehurst.language.grammar.parser;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.ILeaf;
-import net.akehurst.language.core.parser.INode;
-import net.akehurst.language.core.parser.IParseTree;
-import net.akehurst.language.core.parser.IParseTreeVisitor;
+import net.akehurst.language.core.sppf.ILeaf;
+import net.akehurst.language.core.sppf.IParseTreeVisitor;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppf.ISharedPackedParseForest;
 
 public class ParseTreeToInputText implements IParseTreeVisitor<String, String, RuntimeException> {
 
 	@Override
-	public String visit(IParseTree target, String arg) throws RuntimeException {
-		return target.getRoot().accept(this, arg);
+	public String visit(final ISharedPackedParseForest target, final String arg) throws RuntimeException {
+		final ISPPFNode root = target.getRoots().iterator().next();
+		return root.accept(this, arg);
 	}
 
 	@Override
-	public String visit(ILeaf target, String arg) throws RuntimeException {
+	public String visit(final ILeaf target, final String arg) throws RuntimeException {
 		return target.getMatchedText();
 	}
 
 	@Override
-	public String visit(IBranch target, String arg) throws RuntimeException {
+	public String visit(final ISPPFBranch target, final String arg) throws RuntimeException {
 		String result = "";
-		for(INode n: target.getChildren()) {
+		for (final ISPPFNode n : target.getChildren()) {
 			result += n.accept(this, arg);
 		}
 		return result;

@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.INode;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ISPPFNode;
 import net.akehurst.language.ogl.semanticStructure.Multi;
 import net.akehurst.language.ogl.semanticStructure.SimpleItem;
 import net.akehurst.transform.binary.IBinaryRule;
@@ -38,22 +38,22 @@ public class Node2Multi extends AbstractNode2ConcatenationItem<Multi> {
 	}
 
 	@Override
-	public boolean isAMatch(final IBranch left, final Multi right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final ISPPFBranch left, final Multi right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Multi constructLeft2Right(final IBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public Multi constructLeft2Right(final ISPPFBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
-		final INode itemNode = left.getChild(0);
-		final INode multiplicityNode = left.getChild(1);
+		final ISPPFNode itemNode = left.getChild(0);
+		final ISPPFNode multiplicityNode = left.getChild(1);
 
-		final SimpleItem item = transformer.transformLeft2Right((Class<IBinaryRule<INode, SimpleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
+		final SimpleItem item = transformer.transformLeft2Right((Class<IBinaryRule<ISPPFNode, SimpleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
 
 		// TODO: this should really be done with transform rules!
 		Multi right = null;
-		final String multiplicityString = ((IBranch) multiplicityNode).getChild(0).getName();
+		final String multiplicityString = ((ISPPFBranch) multiplicityNode).getChild(0).getName();
 		if ("*".equals(multiplicityString)) {
 			final int min = 0;
 			final int max = -1;
@@ -72,19 +72,19 @@ public class Node2Multi extends AbstractNode2ConcatenationItem<Multi> {
 	}
 
 	@Override
-	public IBranch constructRight2Left(final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public ISPPFBranch constructRight2Left(final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final IBranch left, final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateLeft2Right(final ISPPFBranch left, final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final IBranch left, final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final ISPPFBranch left, final Multi right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

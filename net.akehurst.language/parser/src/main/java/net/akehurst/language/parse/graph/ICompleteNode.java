@@ -21,7 +21,7 @@ public interface ICompleteNode extends IParseTreeVisitable {
 
 	boolean getIsLeaf();
 
-	boolean getIsEmptyLeaf();
+	boolean isEmptyLeaf();
 
 	boolean getIsSkip();
 

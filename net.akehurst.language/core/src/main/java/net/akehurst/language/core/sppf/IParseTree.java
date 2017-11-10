@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.core.parser;
+package net.akehurst.language.core.sppf;
 
-/**
- * 
- * @author akehurst
- *
- * @param <T> result type of visit methods
- * @param <A> parameter type for visit methods
- * @param <E> exception type for visit methods
- */
-public interface IParseTreeVisitor<T, A extends Object, E extends Throwable> {
+import net.akehurst.language.core.parser.IParseTreeVisitable;
 
-	T visit(IParseTree target, A arg) throws E;
-	T visit(ILeaf target, A arg) throws E;
-	T visit(IBranch target, A arg) throws E;
-	
+public interface IParseTree extends IParseTreeVisitable, ISharedPackedParseForest {
+
+	ISPPFNode getRoot();
+
+	/**
+	 *
+	 * @return String composed from the leaf nodes, should equal the original text this tree parsed
+	 */
+	String asString();
+
+	// boolean getIsComplete();
+	//
+	// boolean getCanGrowWidth();
 }

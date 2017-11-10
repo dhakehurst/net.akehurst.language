@@ -16,9 +16,9 @@ import org.junit.runners.Parameterized.Parameters;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.IGrammar;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.core.sppf.IParseTree;
 
 @RunWith(Parameterized.class)
 public class test_VistraqQuery {

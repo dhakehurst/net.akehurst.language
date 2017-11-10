@@ -18,8 +18,8 @@ package net.akehurst.language.parser.test.speed;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
+import net.akehurst.language.core.sppf.IParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;

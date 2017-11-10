@@ -17,17 +17,17 @@ package net.akehurst.language.ogl.semanticAnalyser;
 
 import java.util.Objects;
 
-import net.akehurst.language.core.parser.IBranch;
+import net.akehurst.language.core.sppf.ISPPFBranch;
 import net.akehurst.transform.binary.IBinaryRule;
 import net.akehurst.transform.binary.ITransformer;
 import net.akehurst.transform.binary.RuleNotFoundException;
 
-abstract public class AbstractSemanticAnalysisRule<R> implements IBinaryRule<IBranch, R> {
+abstract public class AbstractSemanticAnalysisRule<R> implements IBinaryRule<ISPPFBranch, R> {
 
 	abstract public String getNodeName();
 
 	@Override
-	public boolean isValidForLeft2Right(final IBranch left) {
+	public boolean isValidForLeft2Right(final ISPPFBranch left) {
 		return this.getNodeName().equals(left.getName());
 	}
 
@@ -37,7 +37,7 @@ abstract public class AbstractSemanticAnalysisRule<R> implements IBinaryRule<IBr
 	}
 
 	@Override
-	public boolean isAMatch(final IBranch left, final R right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final ISPPFBranch left, final R right, final ITransformer transformer) throws RuleNotFoundException {
 		return Objects.equals(left.getName(), this.getNodeName());
 	}
 }

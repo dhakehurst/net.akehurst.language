@@ -18,9 +18,9 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.IParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -54,7 +54,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final IBranch expected = b.branch("S", b.branch("e", b.branch("variable", b.leaf("a"))));
+			final ISPPFBranch expected = b.branch("S", b.branch("e", b.branch("variable", b.leaf("a"))));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -75,7 +75,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("S", b.branch("e",
+			final ISPPFBranch expected = b.branch("S", b.branch("e",
 					b.branch("plus", b.branch("e", b.branch("variable", b.leaf("a"))), b.leaf("+"), b.branch("e", b.branch("variable", b.leaf("a"))))));
 			Assert.assertEquals(expected, tree.getRoot());
 
@@ -97,7 +97,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("S", b.branch("e",
+			final ISPPFBranch expected = b.branch("S", b.branch("e",
 					b.branch("multiply", b.branch("e", b.branch("variable", b.leaf("a"))), b.leaf("*"), b.branch("e", b.branch("variable", b.leaf("a"))))));
 			Assert.assertEquals(expected, tree.getRoot());
 
@@ -214,7 +214,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final IBranch expected = b.branch("S", b.branch("e", b.branch("variable", b.leaf("a"))));
+			final ISPPFBranch expected = b.branch("S", b.branch("e", b.branch("variable", b.leaf("a"))));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -234,7 +234,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IBranch expected = b.branch("S",
+		final ISPPFBranch expected = b.branch("S",
 				b.branch("e",
 						b.branch("ifthenelse", b.leaf("if"), b.branch("WS", b.leaf("\\s+", " ")),
 								b.branch("e", b.branch("variable", b.leaf("a"), b.branch("WS", b.leaf("\\s+", " ")))), b.leaf("then"),

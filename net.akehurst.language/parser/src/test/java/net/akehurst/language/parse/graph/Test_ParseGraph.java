@@ -3,7 +3,6 @@ package net.akehurst.language.parse.graph;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.converter.Grammar2RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.forrest.Input3;
@@ -14,6 +13,7 @@ import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.parser.sppf.Leaf;
 
 public class Test_ParseGraph {
 

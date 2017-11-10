@@ -7,11 +7,10 @@ import java.util.List;
 import java.util.Set;
 
 import net.akehurst.language.core.grammar.RuleNotFoundException;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.grammar.parse.tree.IInput;
-import net.akehurst.language.grammar.parse.tree.Leaf;
+import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppf.ISPPFNode;
 import net.akehurst.language.grammar.parser.log.Log;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
@@ -21,7 +20,9 @@ import net.akehurst.language.parse.graph.ICompleteNode;
 import net.akehurst.language.parse.graph.IGraphNode;
 import net.akehurst.language.parse.graph.IGrowingNode;
 import net.akehurst.language.parse.graph.IParseGraph;
-import net.akehurst.language.parse.graph.ParseTreeFromGraph;
+import net.akehurst.language.parser.sppf.IInput;
+import net.akehurst.language.parser.sppf.Leaf;
+import net.akehurst.language.parser.sppf.SharedPackedParseForest;
 
 public final class Forrest3 {
 
@@ -74,7 +75,7 @@ public final class Forrest3 {
 				longest = n;
 			}
 		}
-		return new ParseTreeFromGraph(longest);
+		return new SharedPackedParseForest((ISPPFNode) longest);
 	}
 
 	private IParseTree extractLongestMatchFromStart() {
@@ -92,7 +93,7 @@ public final class Forrest3 {
 		if (null == longest) {
 			return this.extractLongestMatch();
 		} else {
-			return new ParseTreeFromGraph(longest);
+			return new SharedPackedParseForest((ISPPFNode) longest);
 		}
 	}
 

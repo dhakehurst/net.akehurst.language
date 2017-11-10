@@ -21,11 +21,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.akehurst.language.core.parser.INodeType;
-import net.akehurst.language.grammar.parse.tree.EmptyLeaf;
-import net.akehurst.language.grammar.parse.tree.IInput;
-import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
+import net.akehurst.language.parser.sppf.EmptyLeaf;
+import net.akehurst.language.parser.sppf.IInput;
+import net.akehurst.language.parser.sppf.Leaf;
 
 public class Input3 implements IInput {
 

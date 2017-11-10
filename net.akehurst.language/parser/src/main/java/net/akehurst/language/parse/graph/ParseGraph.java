@@ -10,12 +10,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import net.akehurst.language.grammar.parse.tree.IInput;
-import net.akehurst.language.grammar.parse.tree.Leaf;
 import net.akehurst.language.grammar.parser.log.Log;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
 import net.akehurst.language.parse.graph.IGraphNode.PreviousInfo;
+import net.akehurst.language.parser.sppf.IInput;
+import net.akehurst.language.parser.sppf.Leaf;
 
 public class ParseGraph implements IParseGraph {
 
@@ -382,13 +382,13 @@ public class ParseGraph implements IParseGraph {
 				nextItemIndex = -1;
 			break;
 			case MULTI:
-				nextItemIndex = firstChild.getIsEmptyLeaf() ? -1 : 1 == runtimeRule.getRhs().getMultiMax() ? -1 : 1;
+				nextItemIndex = firstChild.isEmptyLeaf() ? -1 : 1 == runtimeRule.getRhs().getMultiMax() ? -1 : 1;
 			break;
 			case PRIORITY_CHOICE:
 				nextItemIndex = -1;
 			break;
 			case SEPARATED_LIST:
-				nextItemIndex = firstChild.getIsEmptyLeaf() ? -1 : 1 == runtimeRule.getRhs().getMultiMax() ? -1 : 1;
+				nextItemIndex = firstChild.isEmptyLeaf() ? -1 : 1 == runtimeRule.getRhs().getMultiMax() ? -1 : 1;
 			break;
 			default:
 				throw new RuntimeException("Internal Error: Unknown RuleKind " + runtimeRule.getRhs().getKind());

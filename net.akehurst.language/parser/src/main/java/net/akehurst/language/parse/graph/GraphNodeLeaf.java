@@ -1,27 +1,28 @@
 package net.akehurst.language.parse.graph;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.ILeaf;
-import net.akehurst.language.core.parser.IParseTreeVisitor;
-import net.akehurst.language.grammar.parse.tree.Leaf;
+import net.akehurst.language.core.sppf.ILeaf;
+import net.akehurst.language.core.sppf.IParseTreeVisitor;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppf.ISPPFNodeIdentity;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
+import net.akehurst.language.parser.sppf.Leaf;
 
 public class GraphNodeLeaf implements ICompleteNode, ILeaf {
+
+	private final Leaf leaf;
+	private final int finalMatchedTextLength;
+	private ISPPFBranch parent;
 
 	public GraphNodeLeaf(final ParseGraph graph, final Leaf leaf) {
 		this.leaf = leaf;
 		this.finalMatchedTextLength = leaf.getMatchedTextLength();
 	}
-
-	private final Leaf leaf;
-	private final int finalMatchedTextLength;
-	private IBranch parent;
 
 	@Override
 	public RuntimeRule getRuntimeRule() {
@@ -54,8 +55,8 @@ public class GraphNodeLeaf implements ICompleteNode, ILeaf {
 	}
 
 	@Override
-	public boolean getIsEmptyLeaf() {
-		return this.leaf.getIsEmptyLeaf();
+	public boolean isEmptyLeaf() {
+		return this.leaf.isEmptyLeaf();
 	}
 
 	@Override
@@ -98,12 +99,12 @@ public class GraphNodeLeaf implements ICompleteNode, ILeaf {
 	}
 
 	@Override
-	public IBranch getParent() {
+	public ISPPFBranch getParent() {
 		return this.parent;
 	}
 
 	@Override
-	public void setParent(final IBranch value) {
+	public void setParent(final ISPPFBranch value) {
 		this.parent = value;
 	}
 
@@ -113,9 +114,50 @@ public class GraphNodeLeaf implements ICompleteNode, ILeaf {
 	}
 
 	@Override
-	public List<IBranch> findBranches(final String name) {
-		return Collections.emptyList();
+	public ISPPFNodeIdentity getIdentity() {
+		// TODO Auto-generated method stub
+		return null;
 	}
+
+	@Override
+	public boolean isSkip() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean isLeaf() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean isBranch() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public ILeaf asLeaf() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ISPPFBranch asBranch() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean contains(final ISPPFNode other) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	// @Override
+	// public List<ISPPFBranch> findBranches(final String name) {
+	// return Collections.emptyList();
+	// }
 
 	@Override
 	public String toStringTree() {

@@ -27,11 +27,11 @@ import net.akehurst.language.core.grammar.IGrammar;
 import net.akehurst.language.core.grammar.IRuleItem;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.ICompletionItem;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
+import net.akehurst.language.core.sppf.ISharedPackedParseForest;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 
@@ -77,11 +77,11 @@ public class LanguageProcessor implements ILanguageProcessor {
 	public <T> T process(final String text, final String goalRuleName, final Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
 		try {
 
-			final IParseTree tree = this.getParser().parse(goalRuleName, text);
+			final ISharedPackedParseForest forest = this.getParser().parse(goalRuleName, text);
 			if (null == this.getSemanticAnalyser()) {
 				throw new UnableToAnalyseExeception("No SemanticAnalyser supplied", null);
 			}
-			final T t = this.getSemanticAnalyser().analyse(targetType, tree);
+			final T t = this.getSemanticAnalyser().analyse(targetType, forest);
 
 			return t;
 		} catch (final RuleNotFoundException | ParseTreeException e) {
@@ -93,11 +93,11 @@ public class LanguageProcessor implements ILanguageProcessor {
 	public <T> T process(final Reader reader, final String goalRuleName, final Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
 		try {
 
-			final IParseTree tree = this.getParser().parse(goalRuleName, reader);
+			final ISharedPackedParseForest forest = this.getParser().parse(goalRuleName, reader);
 			if (null == this.getSemanticAnalyser()) {
 				throw new UnableToAnalyseExeception("No SemanticAnalyser supplied", null);
 			}
-			final T t = this.getSemanticAnalyser().analyse(targetType, tree);
+			final T t = this.getSemanticAnalyser().analyse(targetType, forest);
 
 			return t;
 		} catch (final RuleNotFoundException | ParseTreeException e) {

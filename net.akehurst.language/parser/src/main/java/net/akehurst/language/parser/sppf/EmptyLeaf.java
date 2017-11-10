@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.grammar.parse.tree;
+package net.akehurst.language.parser.sppf;
 
-import net.akehurst.language.core.parser.ILeaf;
-import net.akehurst.language.core.parser.IParseTreeVisitor;
-import net.akehurst.language.grammar.parser.ToStringVisitor;
+import net.akehurst.language.core.sppf.IParseTreeVisitor;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class EmptyLeaf extends Leaf {
@@ -26,14 +24,10 @@ public class EmptyLeaf extends Leaf {
 		super("", pos, pos, terminalRule);
 	}
 
+	// --- Leaf ---
 	@Override
-	public boolean getIsEmptyLeaf() {
+	public boolean isEmptyLeaf() {
 		return true;
-	}
-
-	@Override
-	public String getName() {
-		return this.getTerminalRule().getName();
 	}
 
 	@Override
@@ -47,34 +41,14 @@ public class EmptyLeaf extends Leaf {
 	}
 
 	@Override
+	public int getNumberOfLines() {
+		return 0;
+	}
+
+	// --- IParseTreeVisitable ---
+	@Override
 	public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
 		return visitor.visit(this, arg);
 	}
 
-	// --- Object ---
-	@Override
-	public String toString() {
-		final ToStringVisitor v = new ToStringVisitor();
-		return this.accept(v, "");
-	}
-
-	@Override
-	public int hashCode() {
-		return this.toString().hashCode();
-	}
-
-	@Override
-	public boolean equals(final Object arg) {
-		if (arg instanceof ILeaf) {
-			final ILeaf other = (ILeaf) arg;
-			return other.getIsEmptyLeaf();
-		} else {
-			return false;
-		}
-	}
-
-	@Override
-	public int getNumberOfLines() {
-		return 0;
-	}
 }

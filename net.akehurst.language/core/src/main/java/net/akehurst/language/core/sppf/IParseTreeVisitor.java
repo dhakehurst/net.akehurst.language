@@ -13,15 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.core.parser;
+package net.akehurst.language.core.sppf;
 
-public interface ILeaf extends INode, IParseTreeVisitable {
+/**
+ *
+ * @author akehurst
+ *
+ * @param <T>
+ *            result type of visit methods
+ * @param <A>
+ *            parameter type for visit methods
+ * @param <E>
+ *            exception type for visit methods
+ */
+public interface IParseTreeVisitor<T, A extends Object, E extends Throwable> {
 
-	@Override
-	String getMatchedText();
+	T visit(ISharedPackedParseForest target, A arg) throws E;
 
-	boolean isPattern();
+	T visit(ILeaf target, A arg) throws E;
 
-	// @Override
-	// ILeaf deepClone();
+	T visit(ISPPFBranch target, A arg) throws E;
+
 }

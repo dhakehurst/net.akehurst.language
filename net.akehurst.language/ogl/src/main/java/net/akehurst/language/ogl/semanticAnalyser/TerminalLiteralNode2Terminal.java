@@ -15,9 +15,9 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.ILeaf;
-import net.akehurst.language.core.parser.INode;
+import net.akehurst.language.core.sppf.ILeaf;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ISPPFNode;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.transform.binary.ITransformer;
 import net.akehurst.transform.binary.RuleNotFoundException;
@@ -35,14 +35,14 @@ public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<Terminal
 	}
 
 	@Override
-	public boolean isAMatch(final IBranch left, final TerminalLiteral right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final ISPPFBranch left, final TerminalLiteral right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public TerminalLiteral constructLeft2Right(final IBranch left, final ITransformer transformer) {
-		final INode child = left.getChildren().get(0);
+	public TerminalLiteral constructLeft2Right(final ISPPFBranch left, final ITransformer transformer) {
+		final ISPPFNode child = left.getChildren().get(0);
 		final ILeaf leaf = (ILeaf) child;
 		final String text = leaf.getMatchedText();
 		final String literal = text.substring(1, text.length() - 1);
@@ -52,17 +52,17 @@ public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<Terminal
 	}
 
 	@Override
-	public IBranch constructRight2Left(final TerminalLiteral left, final ITransformer right) {
+	public ISPPFBranch constructRight2Left(final TerminalLiteral left, final ITransformer right) {
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final IBranch left, final TerminalLiteral right, final ITransformer arg2) {
+	public void updateLeft2Right(final ISPPFBranch left, final TerminalLiteral right, final ITransformer arg2) {
 
 	}
 
 	@Override
-	public void updateRight2Left(final IBranch left, final TerminalLiteral right, final ITransformer arg2) {
+	public void updateRight2Left(final ISPPFBranch left, final TerminalLiteral right, final ITransformer arg2) {
 	}
 
 	/**

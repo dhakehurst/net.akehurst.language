@@ -15,6 +15,8 @@
  */
 package net.akehurst.language.core.parser;
 
+import net.akehurst.language.core.sppf.IParseTreeVisitor;
+
 public interface IParseTreeVisitable {
 
 	<T, A extends Object, E extends Throwable> T accept(IParseTreeVisitor<T,A,E> visitor, A arg) throws E;

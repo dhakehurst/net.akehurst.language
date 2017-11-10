@@ -18,8 +18,8 @@ package net.akehurst.language.ogl.semanticAnalyser;
 import net.akehurst.language.core.analyser.IGrammarLoader;
 import net.akehurst.language.core.analyser.ISemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.parser.IBranch;
-import net.akehurst.language.core.parser.IParseTree;
+import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppf.ISharedPackedParseForest;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.transform.binary.BinaryTransformer;
 import net.akehurst.transform.binary.IBinaryRule;
@@ -28,8 +28,9 @@ import net.akehurst.transform.binary.TransformException;
 
 public class SemanicAnalyser extends BinaryTransformer implements ISemanticAnalyser {
 
+	private IGrammarLoader grammarLoader;
+
 	public SemanicAnalyser() {
-		this.grammarLoader = this.grammarLoader;
 		super.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractNode2Choice.class);
 		super.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractNode2ConcatenationItem.class);
 		super.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractNode2TangibleItem.class);
@@ -55,9 +56,10 @@ public class SemanicAnalyser extends BinaryTransformer implements ISemanticAnaly
 		super.registerRule(TerminalPatternNode2Terminal.class);
 	}
 
-	Grammar analyse(final IParseTree parseTree) throws UnableToAnalyseExeception {
+	Grammar analyse(final ISharedPackedParseForest parseTree) throws UnableToAnalyseExeception {
 		try {
-			final Grammar grammar = this.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, (IBranch) parseTree.getRoot());
+			final ISPPFBranch root = (ISPPFBranch) parseTree.getRoots().iterator().next();
+			final Grammar grammar = this.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, root);
 			return grammar;
 		} catch (final RuleNotFoundException | TransformException e) {
 			throw new UnableToAnalyseExeception("Cannot Analyse ParseTree", e);
@@ -66,12 +68,9 @@ public class SemanicAnalyser extends BinaryTransformer implements ISemanticAnaly
 	}
 
 	@Override
-	public <T> T analyse(final Class<T> targetType, final IParseTree tree) throws UnableToAnalyseExeception {
-		// this.transformLeft2Right(Relation.class, (IBranch)tree.getRoot());
-		return (T) this.analyse(tree);
+	public <T> T analyse(final Class<T> targetType, final ISharedPackedParseForest forest) throws UnableToAnalyseExeception {
+		return (T) this.analyse(forest);
 	}
-
-	IGrammarLoader grammarLoader;
 
 	@Override
 	public IGrammarLoader getGrammarLoader() {

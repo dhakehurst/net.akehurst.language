@@ -18,9 +18,8 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.grammar.parse.tree.ParseTree;
+import net.akehurst.language.core.sppf.IParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -28,6 +27,7 @@ import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.parser.sppf.SharedPackedParseForest;
 
 public class test_Special extends AbstractParser_Test {
 	/**
@@ -59,7 +59,7 @@ public class test_Special extends AbstractParser_Test {
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final IParseTree expected = new ParseTree(b.branch("S",
+		final IParseTree expected = new SharedPackedParseForest(b.branch("S",
 				b.branch("S$group1", b.leaf("a", "a"), b.branch("S", b.leaf("a", "a")), b.branch("B", b.leaf("b", "b")), b.branch("B", b.emptyLeaf("B")))));
 		Assert.assertEquals(expected, tree);
 
@@ -86,7 +86,6 @@ public class test_Special extends AbstractParser_Test {
 		final String text = "aaa";
 
 		final IParseTree tree = this.process(g, text, goal);
-		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
@@ -100,8 +99,23 @@ public class test_Special extends AbstractParser_Test {
 		b.define("    S {'a'}");
 		b.define("  }");
 		b.define("}");
-		final IParseTree expected = b.build();
-		Assert.assertEquals(expected, tree);
+		final IParseTree expected1 = b.build();
+		b.define("S {");
+		b.define("  S1 {");
+		b.define("    S {'a'}");
+		b.define("    S {");
+		b.define("      S1 {");
+		b.define("        S {'a'}");
+		b.define("        S {'a'}");
+		b.define("      }");
+		b.define("    }");
+		b.define("  }");
+		b.define("}");
+		final IParseTree expected2 = b.build();
+
+		Assert.assertNotNull("Parse failed", tree);
+		Assert.assertTrue(tree.contains(expected1));
+		Assert.assertTrue(tree.contains(expected2));
 
 	}
 
