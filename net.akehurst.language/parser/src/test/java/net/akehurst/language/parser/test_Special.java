@@ -27,7 +27,7 @@ import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
-import net.akehurst.language.parser.sppf.SharedPackedParseForest;
+import net.akehurst.language.parser.sppf.SharedPackedParseTree;
 
 public class test_Special extends AbstractParser_Test {
 	/**
@@ -59,7 +59,7 @@ public class test_Special extends AbstractParser_Test {
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final IParseTree expected = new SharedPackedParseForest(b.branch("S",
+		final IParseTree expected = new SharedPackedParseTree(b.branch("S",
 				b.branch("S$group1", b.leaf("a", "a"), b.branch("S", b.leaf("a", "a")), b.branch("B", b.leaf("b", "b")), b.branch("B", b.emptyLeaf("B")))));
 		Assert.assertEquals(expected, tree);
 

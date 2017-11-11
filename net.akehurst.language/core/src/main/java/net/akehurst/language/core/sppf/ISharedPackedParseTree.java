@@ -1,6 +1,6 @@
 package net.akehurst.language.core.sppf;
 
-import java.util.Set;
+import net.akehurst.language.core.parser.IParseTreeVisitable;
 
 /**
  * A Shared Packed Parse Forest is a collection of parse trees which share INodes when possible. There is a set of Root Nodes (though this commonly contains one
@@ -9,9 +9,9 @@ import java.util.Set;
  *
  * An IParseTree is a special case (sub type) of an ISharedPackedParseForest that contains only one tree.
  */
-public interface ISharedPackedParseForest {
+public interface ISharedPackedParseTree extends IParseTreeVisitable {
 
-	Set<ISPPFNode> getRoots();
+	ISPPFNode getRoot();
 
 	/**
 	 * Determines if there is an equivalent tree in this forest for every tree in the other forest.
@@ -19,6 +19,7 @@ public interface ISharedPackedParseForest {
 	 * @param other
 	 * @return
 	 */
-	boolean contains(ISharedPackedParseForest other);
+	boolean contains(ISharedPackedParseTree other);
 
+	String asString();
 }

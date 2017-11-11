@@ -27,7 +27,7 @@ import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.parser.sppf.SharedPackedParseForest;
+import net.akehurst.language.parser.sppf.SharedPackedParseTree;
 
 public class test_Parser_Multi extends AbstractParser_Test {
 
@@ -263,7 +263,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final IParseTree expected = new SharedPackedParseForest(b.branch("ab01", b.branch("ab01$group1", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b")))));
+		final IParseTree expected = new SharedPackedParseTree(b.branch("ab01", b.branch("ab01$group1", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b")))));
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -376,7 +376,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new SharedPackedParseForest(b.branch("top", b.branch("level1", b.leaf("a")), b.branch("level1", b.leaf("a"))));
+		final IParseTree expected = new SharedPackedParseTree(b.branch("top", b.branch("level1", b.leaf("a")), b.branch("level1", b.leaf("a"))));
 		Assert.assertEquals(expected, tree);
 
 	}

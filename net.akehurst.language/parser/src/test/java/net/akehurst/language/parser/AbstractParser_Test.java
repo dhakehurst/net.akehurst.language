@@ -22,7 +22,7 @@ import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppf.ISharedPackedParseForest;
+import net.akehurst.language.core.sppf.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
@@ -42,10 +42,10 @@ abstract public class AbstractParser_Test {
 		return new ParseTreeBuilder(this.runtimeRules, grammar, goal, text, 0);
 	}
 
-	protected ISharedPackedParseForest process(final Grammar grammar, final String text, final String goalName) throws ParseFailedException {
+	protected ISharedPackedParseTree process(final Grammar grammar, final String text, final String goalName) throws ParseFailedException {
 		try {
 			final IParser parser = new ScannerLessParser3(this.runtimeRules, grammar);
-			final ISharedPackedParseForest tree = parser.parse(goalName, text);
+			final ISharedPackedParseTree tree = parser.parse(goalName, text);
 			return tree;
 		} catch (final RuleNotFoundException e) {
 			Assert.fail(e.getMessage());

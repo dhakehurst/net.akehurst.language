@@ -4,13 +4,13 @@ import net.akehurst.language.core.sppf.ILeaf;
 import net.akehurst.language.core.sppf.IParseTreeVisitor;
 import net.akehurst.language.core.sppf.ISPPFBranch;
 import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISharedPackedParseForest;
+import net.akehurst.language.core.sppf.ISharedPackedParseTree;
 
 public class ParseTreeToInputText implements IParseTreeVisitor<String, String, RuntimeException> {
 
 	@Override
-	public String visit(final ISharedPackedParseForest target, final String arg) throws RuntimeException {
-		final ISPPFNode root = target.getRoots().iterator().next();
+	public String visit(final ISharedPackedParseTree target, final String arg) throws RuntimeException {
+		final ISPPFNode root = target.getRoot();
 		return root.accept(this, arg);
 	}
 

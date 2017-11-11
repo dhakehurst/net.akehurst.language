@@ -14,7 +14,7 @@ import net.akehurst.language.core.sppf.ILeaf;
 import net.akehurst.language.core.sppf.IParseTreeVisitor;
 import net.akehurst.language.core.sppf.ISPPFBranch;
 import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISharedPackedParseForest;
+import net.akehurst.language.core.sppf.ISharedPackedParseTree;
 
 public abstract class SemanticAnalyserVisitorBasedAbstract implements ISemanticAnalyser, IParseTreeVisitor<Object, Object, UnableToAnalyseExeception> {
 
@@ -63,7 +63,7 @@ public abstract class SemanticAnalyserVisitorBasedAbstract implements ISemanticA
 
 	// --- ISemanticAnalyser ---
 	@Override
-	public <T> T analyse(final Class<T> targetType, final ISharedPackedParseForest forest) throws UnableToAnalyseExeception {
+	public <T> T analyse(final Class<T> targetType, final ISharedPackedParseTree forest) throws UnableToAnalyseExeception {
 		return (T) this.visit(forest, null);
 	}
 
@@ -85,8 +85,8 @@ public abstract class SemanticAnalyserVisitorBasedAbstract implements ISemanticA
 
 	// --- IParseTreeVisitor ---
 	@Override
-	public Object visit(final ISharedPackedParseForest target, final Object arg) throws UnableToAnalyseExeception {
-		final ISPPFNode root = target.getRoots().iterator().next();
+	public Object visit(final ISharedPackedParseTree target, final Object arg) throws UnableToAnalyseExeception {
+		final ISPPFNode root = target.getRoot();
 		return root.accept(this, arg);
 	}
 

@@ -27,7 +27,7 @@ import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.parser.sppf.SharedPackedParseForest;
+import net.akehurst.language.parser.sppf.SharedPackedParseTree;
 
 public class Parser_SeparatedList_Test extends AbstractParser_Test {
 
@@ -265,7 +265,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new SharedPackedParseForest(b.branch("as", b.branch("a", b.leaf("a", "a"), b.branch("SP", b.leaf(" ", " "))), b.leaf(",", ","),
+		final IParseTree expected = new SharedPackedParseTree(b.branch("as", b.branch("a", b.leaf("a", "a"), b.branch("SP", b.leaf(" ", " "))), b.leaf(",", ","),
 				b.branch("SP", b.leaf(" ", " ")), b.branch("a", b.leaf("a", "a"), b.branch("SP", b.leaf(" ", " "))), b.leaf(",", ","),
 				b.branch("SP", b.leaf(" ", " ")), b.branch("a", b.leaf("a", "a"), b.branch("SP", b.leaf(" ", " ")))));
 		Assert.assertEquals(expected, tree);

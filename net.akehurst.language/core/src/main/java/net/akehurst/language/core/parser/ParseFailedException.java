@@ -15,18 +15,18 @@
  */
 package net.akehurst.language.core.parser;
 
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppf.ISharedPackedParseTree;
 
 public class ParseFailedException extends Exception {
-	public ParseFailedException(String message, IParseTree longestMatch) {
-		super(message+" ("+(null==longestMatch?0:longestMatch.getRoot().getNumberOfLines()+longestMatch.getRoot().getStartPosition())+")");
+	ISharedPackedParseTree longestMatch;
+
+	public ParseFailedException(final String message, final ISharedPackedParseTree longestMatch) {
+		super(message + " (" + (null == longestMatch ? 0 : longestMatch.getRoot().getNumberOfLines() + longestMatch.getRoot().getStartPosition()) + ")");
 		this.longestMatch = longestMatch;
 	}
-	
-	IParseTree longestMatch;
-	public IParseTree getLongestMatch() {
-		return longestMatch;
+
+	public ISharedPackedParseTree getLongestMatch() {
+		return this.longestMatch;
 	}
-	
-	
+
 }

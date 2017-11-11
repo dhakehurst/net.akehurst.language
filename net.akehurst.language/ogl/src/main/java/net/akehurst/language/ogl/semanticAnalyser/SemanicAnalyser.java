@@ -19,7 +19,7 @@ import net.akehurst.language.core.analyser.IGrammarLoader;
 import net.akehurst.language.core.analyser.ISemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISharedPackedParseForest;
+import net.akehurst.language.core.sppf.ISharedPackedParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.transform.binary.BinaryTransformer;
 import net.akehurst.transform.binary.IBinaryRule;
@@ -56,9 +56,9 @@ public class SemanicAnalyser extends BinaryTransformer implements ISemanticAnaly
 		super.registerRule(TerminalPatternNode2Terminal.class);
 	}
 
-	Grammar analyse(final ISharedPackedParseForest parseTree) throws UnableToAnalyseExeception {
+	Grammar analyse(final ISharedPackedParseTree parseTree) throws UnableToAnalyseExeception {
 		try {
-			final ISPPFBranch root = (ISPPFBranch) parseTree.getRoots().iterator().next();
+			final ISPPFBranch root = (ISPPFBranch) parseTree.getRoot();
 			final Grammar grammar = this.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, root);
 			return grammar;
 		} catch (final RuleNotFoundException | TransformException e) {
@@ -68,7 +68,7 @@ public class SemanicAnalyser extends BinaryTransformer implements ISemanticAnaly
 	}
 
 	@Override
-	public <T> T analyse(final Class<T> targetType, final ISharedPackedParseForest forest) throws UnableToAnalyseExeception {
+	public <T> T analyse(final Class<T> targetType, final ISharedPackedParseTree forest) throws UnableToAnalyseExeception {
 		return (T) this.analyse(forest);
 	}
 

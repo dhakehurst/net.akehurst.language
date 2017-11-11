@@ -21,7 +21,7 @@ import java.util.Set;
 
 import net.akehurst.language.core.grammar.IRuleItem;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
-import net.akehurst.language.core.sppf.ISharedPackedParseForest;
+import net.akehurst.language.core.sppf.ISharedPackedParseTree;
 
 public interface IParser {
 
@@ -47,9 +47,9 @@ public interface IParser {
 	 * @throws ParseTreeException
 	 * @throws RuleNotFoundException
 	 */
-	ISharedPackedParseForest parse(String goalRuleName, CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
+	ISharedPackedParseTree parse(String goalRuleName, CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
 
-	ISharedPackedParseForest parse(String goalRuleName, Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
+	ISharedPackedParseTree parse(String goalRuleName, Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
 
 	List<IRuleItem> expectedAt(String goalRuleName, CharSequence inputText, int position) throws ParseFailedException, ParseTreeException;
 

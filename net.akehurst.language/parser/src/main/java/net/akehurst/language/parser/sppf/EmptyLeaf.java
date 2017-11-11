@@ -51,4 +51,8 @@ public class EmptyLeaf extends Leaf {
 		return visitor.visit(this, arg);
 	}
 
+	@Override
+	public String toString() {
+		return "$empty." + this.getRuntimeRule().getName();
+	}
 }

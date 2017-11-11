@@ -33,11 +33,10 @@ import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppf.ISPPFBranch;
 import net.akehurst.language.core.sppf.ILeaf;
+import net.akehurst.language.core.sppf.ISPPFBranch;
 import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.IParseTree;
-import net.akehurst.language.core.sppf.ISharedPackedParseForest;
+import net.akehurst.language.core.sppf.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
@@ -47,36 +46,42 @@ import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalEmpty;
-import net.akehurst.language.parser.sppf.SharedPackedParseForest;
+import net.akehurst.language.parser.sppf.SharedPackedParseTree;
 
 public class ParseTreeBuilder {
 
 	private static Pattern WS = Pattern.compile("(\\s)+");
-	private static Pattern EMPTY = Pattern.compile("$empty");
+	private static Pattern EMPTY = Pattern.compile("[$]empty");
 	private static Pattern NAME = Pattern.compile("[a-zA-Z_][a-zA-Z_0-9]*");
 	private static Pattern LITERAL = Pattern.compile("'(?:\\\\?.)*?'");
 	private static Pattern COLON = Pattern.compile("[:]");
 	private static Pattern CHILDREN_START = Pattern.compile("[{]");
 	private static Pattern CHILDREN_END = Pattern.compile("[}]");
 
+	private final RuntimeRuleSetBuilder runtimeBuilder;
+	private final Grammar grammar;
+	private final Input3 input;
+	// private final String textAccumulator;
+	private int textLength;
+	private final int offset;
+	private final StringBuilder sb;
+	private IGrammar treeGrammar;
+
 	public ParseTreeBuilder(final RuntimeRuleSetBuilder runtimeRules, final Grammar grammar, final String goal, final CharSequence text, final int offset) {
 		this.runtimeBuilder = runtimeRules;
 		this.input = new Input3(runtimeRules, text);
 		this.grammar = grammar;
-		this.textAccumulator = "";
+		// this.textAccumulator = "";
 		this.textLength = 0;
 		this.offset = offset;
 		this.sb = new StringBuilder();
 	}
 
-	RuntimeRuleSetBuilder runtimeBuilder;
-	Grammar grammar;
-	Input3 input;
-	String textAccumulator;
-	int textLength;
-	int offset;
-	StringBuilder sb;
-	private IGrammar treeGrammar;
+	private void reset() {
+		// this.textAccumulator = "";
+		this.textLength = 0;
+		this.sb.delete(0, this.sb.length());
+	}
 
 	public ILeaf leaf(final String text) {
 		return this.leaf(text, text);
@@ -143,7 +148,7 @@ public class ParseTreeBuilder {
 				final IParser grammarParser = new ScannerLessParser3(new RuntimeRuleSetBuilder(), ogl);
 				final InputStream input = ClassLoader.getSystemClassLoader().getResourceAsStream("net/akehurst/language/parser/Tree.ogl");
 				final Reader reader = new InputStreamReader(input);
-				final ISharedPackedParseForest grammarTree = grammarParser.parse("grammarDefinition", reader);
+				final ISharedPackedParseTree grammarTree = grammarParser.parse("grammarDefinition", reader);
 				final ISemanticAnalyser sa = new SemanicAnalyser();
 				this.treeGrammar = sa.analyse(IGrammar.class, grammarTree);
 
@@ -189,9 +194,9 @@ public class ParseTreeBuilder {
 		}
 	}
 
-	private IParseTree parse(final String treeString) {
+	private ISharedPackedParseTree parse(final String treeString) {
 
-		IParseTree tree = null;
+		ISharedPackedParseTree tree = null;
 
 		final SimpleScaner scanner = new SimpleScaner(treeString);
 		{
@@ -238,26 +243,25 @@ public class ParseTreeBuilder {
 					}
 				} else if (scanner.hasNext(ParseTreeBuilder.EMPTY)) {
 					final String empty = scanner.next(ParseTreeBuilder.EMPTY);
-					nodeNamesStack.push(empty);
+					final String ruleNameThatIsEmpty = nodeNamesStack.peek();
+					final ISPPFNode emptyNode = this.emptyLeaf(ruleNameThatIsEmpty);
+					childrenStack.peek().add(emptyNode);
+
 				} else if (scanner.hasNext(ParseTreeBuilder.CHILDREN_END)) {
 					scanner.next(ParseTreeBuilder.CHILDREN_END);
 					final String lastNodeName = nodeNamesStack.pop();
-					if (ParseTreeBuilder.EMPTY.matcher(lastNodeName).matches()) {
-						final String ruleNameThatIsEmpty = nodeNamesStack.pop();
-						final ISPPFNode node = this.emptyLeaf(ruleNameThatIsEmpty);
-						childrenStack.peek().add(node);
-					} else {
-						final List<ISPPFNode> children = childrenStack.pop();
-						final ISPPFNode node = this.branch(lastNodeName, children);
-						childrenStack.peek().add(node);
-					}
+
+					final List<ISPPFNode> children = childrenStack.pop();
+					final ISPPFNode node = this.branch(lastNodeName, children);
+					childrenStack.peek().add(node);
+
 				} else {
 					throw new RuntimeException("Tree String invalid at position " + scanner.getPosition());
 				}
 
 			}
 
-			tree = new SharedPackedParseForest(childrenStack.pop().get(0));
+			tree = new SharedPackedParseTree(childrenStack.pop().get(0));
 		}
 		return tree;
 	}
@@ -267,11 +271,11 @@ public class ParseTreeBuilder {
 	 *
 	 * @return
 	 */
-	public IParseTree build() {
+	public ISharedPackedParseTree build() {
 		try {
 			final String treeStr = this.sb.toString();
-			final IParseTree treeTree = this.parse(treeStr);
-			this.sb = new StringBuilder();
+			final ISharedPackedParseTree treeTree = this.parse(treeStr);
+			this.reset();
 			return treeTree;
 		} catch (final Throwable e) {
 			e.printStackTrace();

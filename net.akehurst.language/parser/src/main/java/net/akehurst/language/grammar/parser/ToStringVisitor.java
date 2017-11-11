@@ -19,7 +19,7 @@ import net.akehurst.language.core.sppf.ILeaf;
 import net.akehurst.language.core.sppf.IParseTreeVisitor;
 import net.akehurst.language.core.sppf.ISPPFBranch;
 import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISharedPackedParseForest;
+import net.akehurst.language.core.sppf.ISharedPackedParseTree;
 
 public class ToStringVisitor implements IParseTreeVisitor<String, String, RuntimeException> {
 
@@ -36,9 +36,9 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 	private final String indentIncrement;
 
 	@Override
-	public String visit(final ISharedPackedParseForest target, final String indent) throws RuntimeException {
+	public String visit(final ISharedPackedParseTree target, final String indent) throws RuntimeException {
 		String s = indent;
-		final ISPPFNode root = target.getRoots().iterator().next();
+		final ISPPFNode root = target.getRoot();
 		s += root.accept(this, indent);
 		return s;
 	}

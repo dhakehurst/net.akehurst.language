@@ -25,7 +25,7 @@ import java.util.Map;
 
 import net.akehurst.language.core.analyser.IGrammarLoader;
 import net.akehurst.language.core.grammar.IGrammar;
-import net.akehurst.language.core.sppf.ISharedPackedParseForest;
+import net.akehurst.language.core.sppf.ISharedPackedParseTree;
 import net.akehurst.language.ogl.grammar.OGLGrammar;
 import net.akehurst.language.ogl.semanticAnalyser.SemanicAnalyser;
 
@@ -68,7 +68,7 @@ public class OGLanguageProcessor extends LanguageProcessor {
 				// If we use the same Processor/Analyser..then we get errors because parseTree nodes are already maped to the wrong things
 				// from analysing a previous grammar.
 				final OGLanguageProcessor proc = new OGLanguageProcessor(); // OGLanguageProcessor.this
-				final ISharedPackedParseForest forest = proc.getParser().parse("grammarDefinition", reader);
+				final ISharedPackedParseTree forest = proc.getParser().parse("grammarDefinition", reader);
 				final IGrammar grammar = proc.getSemanticAnalyser().analyse(IGrammar.class, forest);
 				return grammar;
 			} catch (final Exception e) {

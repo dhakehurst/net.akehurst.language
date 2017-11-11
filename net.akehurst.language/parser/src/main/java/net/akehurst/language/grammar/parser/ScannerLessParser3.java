@@ -17,9 +17,7 @@ import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.sppf.ISPPFBranch;
 import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.IParseTree;
-import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISharedPackedParseForest;
+import net.akehurst.language.core.sppf.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.converter.Grammar2RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.forrest.Forrest3;
@@ -36,7 +34,7 @@ import net.akehurst.language.parse.graph.IGrowingNode;
 import net.akehurst.language.parse.graph.IParseGraph;
 import net.akehurst.language.parse.graph.ParseGraph;
 import net.akehurst.language.parser.sppf.IInput;
-import net.akehurst.language.parser.sppf.SharedPackedParseForest;
+import net.akehurst.language.parser.sppf.SharedPackedParseTree;
 
 public class ScannerLessParser3 implements IParser {
 
@@ -77,11 +75,11 @@ public class ScannerLessParser3 implements IParser {
 		}
 	}
 
-	private ISharedPackedParseForest parse2(final String goalRuleName, final IInput input) throws ParseFailedException, ParseTreeException {
+	private ISharedPackedParseTree parse2(final String goalRuleName, final IInput input) throws ParseFailedException, ParseTreeException {
 		try {
 			final INodeType goal = ((Grammar) this.getGrammar()).findRule(goalRuleName).getNodeType();
 			final ICompleteNode gr = this.parse3(goal, input);
-			final IParseTree tree = new SharedPackedParseForest((ISPPFNode) gr);
+			final ISharedPackedParseTree tree = new SharedPackedParseTree((ISPPFNode) gr);
 			// set the parent property of each child, these are not set during parsing
 			// TODO: don't know if we need this, probably not
 			this.setParentForChildren((ISPPFBranch) tree.getRoot());
@@ -225,22 +223,22 @@ public class ScannerLessParser3 implements IParser {
 	}
 
 	@Override
-	public ISharedPackedParseForest parse(final String goalRuleName, final CharSequence inputText)
+	public ISharedPackedParseTree parse(final String goalRuleName, final CharSequence inputText)
 			throws ParseFailedException, ParseTreeException, RuleNotFoundException {
 		final IInput input = new Input3(this.runtimeBuilder, inputText);
-		final ISharedPackedParseForest f = this.parse2(goalRuleName, input);
+		final ISharedPackedParseTree f = this.parse2(goalRuleName, input);
 		return f;
 	}
 
 	@Override
-	public ISharedPackedParseForest parse(final String goalRuleName, final Reader inputText)
+	public ISharedPackedParseTree parse(final String goalRuleName, final Reader inputText)
 			throws ParseFailedException, ParseTreeException, RuleNotFoundException {
 		// TODO: find a way to parse straight from the input, without reading it all
 		final BufferedReader br = new BufferedReader(inputText);
 		final String text = br.lines().collect(Collectors.joining(System.lineSeparator()));
 
 		final Input3 input = new Input3(this.runtimeBuilder, text);
-		final ISharedPackedParseForest f = this.parse2(goalRuleName, input);
+		final ISharedPackedParseTree f = this.parse2(goalRuleName, input);
 		return f;
 	}
 

@@ -15,39 +15,23 @@
  */
 package net.akehurst.language.parser.sppf;
 
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
-import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.IParseTree;
 import net.akehurst.language.core.sppf.IParseTreeVisitor;
 import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISharedPackedParseForest;
+import net.akehurst.language.core.sppf.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ParseTreeToInputText;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 
-public class SharedPackedParseForest implements ISharedPackedParseForest, IParseTree {
+public class SharedPackedParseTree implements ISharedPackedParseTree {
 
-	private final Set<ISPPFNode> roots;
+	private final ISPPFNode root;
 
-	public SharedPackedParseForest(final Set<ISPPFNode> roots) {
-		this.roots = roots;
-	}
-
-	public SharedPackedParseForest(final ISPPFNode... roots) {
-		this.roots = new HashSet<>();
-		for (final ISPPFNode root : roots) {
-			this.roots.add(root);
-		}
+	public SharedPackedParseTree(final ISPPFNode root) {
+		this.root = root;
 	}
 
 	// --- IParseTree ---
-	@Override
-	public ISPPFNode getRoot() {
-		return (ISPPFNode) this.roots.iterator().next();
-	}
-
 	@Override
 	public String asString() {
 		final ParseTreeToInputText visitor = new ParseTreeToInputText();
@@ -57,22 +41,14 @@ public class SharedPackedParseForest implements ISharedPackedParseForest, IParse
 
 	// --- ISharedPackedParseForest ---
 	@Override
-	public Set<ISPPFNode> getRoots() {
-		final Set<ISPPFNode> set = new HashSet<>();
-		set.add(this.getRoot());
-		return set;
+	public ISPPFNode getRoot() {
+
+		return this.root;
 	}
 
 	@Override
-	public boolean contains(final ISharedPackedParseForest other) {
-		boolean result = true; // if other is empty then the result is true
-		for (final ISPPFNode otherRoot : other.getRoots()) {
-			boolean matchedOtherRoot = false;
-			for (final ISPPFNode root : this.getRoots()) {
-				matchedOtherRoot |= root.contains(otherRoot);
-			}
-			result &= matchedOtherRoot;
-		}
+	public boolean contains(final ISharedPackedParseTree other) {
+		final boolean result = this.getRoot().contains(other.getRoot());
 		return result;
 	}
 
@@ -101,8 +77,8 @@ public class SharedPackedParseForest implements ISharedPackedParseForest, IParse
 
 	@Override
 	public boolean equals(final Object arg) {
-		if (arg instanceof IParseTree) {
-			final IParseTree other = (IParseTree) arg;
+		if (arg instanceof ISharedPackedParseTree) {
+			final ISharedPackedParseTree other = (ISharedPackedParseTree) arg;
 			return Objects.equals(this.getRoot(), other.getRoot());
 		} else {
 			return false;

@@ -21,7 +21,7 @@ import org.junit.Test;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.sppf.IParseTree;
 import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISharedPackedParseForest;
+import net.akehurst.language.core.sppf.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -57,7 +57,7 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 		final String goal = "expr";
 		final String text = ".5";
 
-		final ISharedPackedParseForest forest = this.process(g, text, goal);
+		final ISharedPackedParseTree forest = this.process(g, text, goal);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("expr {");
@@ -79,7 +79,7 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 		final String goal = "expr";
 		final String text = "1.";
 
-		final ISharedPackedParseForest tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -97,7 +97,7 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 		final String goal = "expr";
 		final String text = "1..5";
 
-		final ISharedPackedParseForest tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);

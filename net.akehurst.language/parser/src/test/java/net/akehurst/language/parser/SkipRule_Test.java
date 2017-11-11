@@ -28,7 +28,7 @@ import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
-import net.akehurst.language.parser.sppf.SharedPackedParseForest;
+import net.akehurst.language.parser.sppf.SharedPackedParseTree;
 
 public class SkipRule_Test extends AbstractParser_Test {
 
@@ -259,7 +259,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 
-			final IParseTree expected = new SharedPackedParseForest(
+			final IParseTree expected = new SharedPackedParseTree(
 					b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", "."), b.branch("WS", b.leaf("\\s+", " ")))));
 
 			Assert.assertEquals(expected, tree);

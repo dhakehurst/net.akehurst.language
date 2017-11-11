@@ -20,14 +20,13 @@ import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppf.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.parser.sppf.SharedPackedParseForest;
 
 public class Parser_Empty_Test extends AbstractParser_Test {
 
@@ -45,7 +44,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 			final String goal = "S";
 			final String text = "";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -65,7 +64,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 			final String goal = "S";
 			final String text = "a";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.fail("This parse should fail");
 
 		} catch (final ParseFailedException e) {
@@ -87,7 +86,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 			final String goal = "S";
 			final String text = "";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -107,7 +106,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 			final String goal = "S";
 			final String text = "a";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -122,8 +121,8 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 	Grammar aeas() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("S").concatenation(new NonTerminal("ae"), new NonTerminal("as"));
-		b.rule("as").multi(0, -1, new TerminalLiteral("a"));
 		b.rule("ae").multi(0, 1, new TerminalLiteral("a"));
+		b.rule("as").multi(0, -1, new TerminalLiteral("a"));
 		return b.get();
 	}
 
@@ -135,12 +134,24 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "a";
 
-		final IParseTree tree = this.process(g, text, goal);
-		Assert.assertNotNull(tree);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new SharedPackedParseForest(b.branch("S", b.branch("ae", b.leaf("a")), b.branch("as", b.emptyLeaf("as"))));
-		Assert.assertEquals(expected, tree);
+		b.define("S {");
+		b.define("  ae { 'a' }");
+		b.define("  as { $empty }");
+		b.define("}");
+		final ISharedPackedParseTree expected1 = b.build();
+
+		b.define("S {");
+		b.define("  ae { $empty }");
+		b.define("  as { 'a' }");
+		b.define("}");
+		final ISharedPackedParseTree expected2 = b.build();
+
+		Assert.assertNotNull(tree);
+		Assert.assertTrue(tree.contains(expected1));
+		Assert.assertTrue(tree.contains(expected2));
 
 	}
 }

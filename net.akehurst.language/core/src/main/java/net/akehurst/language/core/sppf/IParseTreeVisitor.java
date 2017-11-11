@@ -28,7 +28,7 @@ package net.akehurst.language.core.sppf;
  */
 public interface IParseTreeVisitor<T, A extends Object, E extends Throwable> {
 
-	T visit(ISharedPackedParseForest target, A arg) throws E;
+	T visit(ISharedPackedParseTree target, A arg) throws E;
 
 	T visit(ILeaf target, A arg) throws E;
 
