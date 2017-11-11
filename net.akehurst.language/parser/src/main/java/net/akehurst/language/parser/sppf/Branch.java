@@ -17,6 +17,7 @@ package net.akehurst.language.parser.sppf;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -33,17 +34,18 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 public class Branch extends Node implements ISPPFBranch {
 
 	private final ISPPFNodeIdentity identity;
-	private final ISPPFNode[] children;
+	private final Set<List<ISPPFNode>> childrenAlternatives;
 	private int length;
 	private List<ISPPFNode> nonSkipChildren_cache;
 
 	public Branch(final RuntimeRule runtimeRule, final ISPPFNode[] children) {
 		super(runtimeRule, children.length == 0 ? -1 : children[0].getStartPosition());
-		this.children = children;
+		this.childrenAlternatives = new HashSet<>();
+		this.childrenAlternatives.add(Arrays.asList(children));
 		this.length = 0;
 		// this.isEmpty = true;
 		// this.firstLeaf = this.children.length==0 ? null : children[0].getFirstLeaf();
-		for (final ISPPFNode n : this.children) {
+		for (final ISPPFNode n : children) {
 			// this.isEmpty &= n.getIsEmpty();
 			this.length += n.getMatchedTextLength();
 		}
@@ -54,12 +56,12 @@ public class Branch extends Node implements ISPPFBranch {
 	// --- ISPPFBranch ---
 	@Override
 	public Set<List<ISPPFNode>> getChildrenAlternatives() {
-		return null;
+		return this.childrenAlternatives;
 	}
 
 	@Override
 	public List<ISPPFNode> getChildren() {
-		return Arrays.asList(this.children);
+		return this.childrenAlternatives.iterator().next();
 	}
 
 	@Override
@@ -169,7 +171,48 @@ public class Branch extends Node implements ISPPFBranch {
 
 	@Override
 	public boolean contains(final ISPPFNode other) {
-		return this.equals(other);
+		if (other instanceof ISPPFBranch) {
+			final ISPPFBranch otherBranch = (ISPPFBranch) other;
+
+			if (this.getIdentity().equals(other.getIdentity())) {
+				// for each alternative list of other children, check there is a matching list
+				// of children in this alternative children
+				boolean allOthersAreContained = true; // if no other children alternatives contain is a match
+				for (final List<ISPPFNode> otherChildren : otherBranch.getChildrenAlternatives()) {
+					// for each of this alternative children, find one that 'contains' otherChildren
+					boolean foundContainMatch = false;
+					for (final List<ISPPFNode> thisChildren : this.getChildrenAlternatives()) {
+						if (thisChildren.size() == otherChildren.size()) {
+							// for each pair of nodes, one from each of otherChildren thisChildren
+							// check thisChildrenNode contains otherChildrenNode
+							for (int i = 0; i > thisChildren.size(); ++i) {
+								final ISPPFNode thisChildrenNode = thisChildren.get(i);
+								final ISPPFNode otherChildrenNode = otherChildren.get(i);
+								foundContainMatch &= thisChildrenNode.contains(otherChildrenNode);
+							}
+							if (foundContainMatch) {
+								break;
+							} else {
+								// if thisChildren alternative doesn't contain, try the next one
+								continue;
+							}
+						} else {
+							// if sizes don't match check next in set of this alternative children
+							continue;
+						}
+					}
+					allOthersAreContained &= foundContainMatch;
+				}
+				return allOthersAreContained;
+			} else {
+				// if identities don't match
+				return false;
+			}
+
+		} else {
+			// if other is not a branch
+			return false;
+		}
 	}
 
 	// --- IParseTreeVisitable ---

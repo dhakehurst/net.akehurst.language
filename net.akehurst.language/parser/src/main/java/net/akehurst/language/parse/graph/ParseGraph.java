@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import net.akehurst.language.core.sppf.ISPPFNode;
 import net.akehurst.language.grammar.parser.log.Log;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
@@ -300,23 +301,20 @@ public class ParseGraph implements IParseGraph {
 				if (gn.getIsLeaf()) {
 					// dont try and add children...can't for a leaf
 				} else {
-					final ICompleteNode.ChildrenOption opt = new ICompleteNode.ChildrenOption();
-					opt.matchedLength = gn.getMatchedTextLength();
-					opt.nodes = gn.getGrowingChildren();
-					cn.getChildrenOption().add(opt);
+					cn.getChildrenAlternatives().add((List<ISPPFNode>) (List<?>) gn.getGrowingChildren());
 				}
 			} else {
 				if (gn.getIsLeaf()) {
 					// dont try and add children...can't for a leaf
 				} else {
-					final ICompleteNode.ChildrenOption opt = new ICompleteNode.ChildrenOption();
-					opt.matchedLength = gn.getMatchedTextLength();
-					opt.nodes = gn.getGrowingChildren();
+					// final ICompleteNode.ChildrenOption opt = new ICompleteNode.ChildrenOption();
+					// opt.matchedLength = gn.getMatchedTextLength();
+					// opt.nodes = gn.getGrowingChildren();
 
 					// TODO: don't add duplicate children
 					// somewhere resolve priorities!
 
-					cn.getChildrenOption().add(opt);
+					cn.getChildrenAlternatives().add((List<ISPPFNode>) (List<?>) gn.getGrowingChildren());
 				}
 
 				int i = 0;

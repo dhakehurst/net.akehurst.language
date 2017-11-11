@@ -1,6 +1,8 @@
 package net.akehurst.language.parse.graph;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -10,6 +12,7 @@ import net.akehurst.language.core.sppf.IParseTreeVisitor;
 import net.akehurst.language.core.sppf.ISPPFBranch;
 import net.akehurst.language.core.sppf.ISPPFNode;
 import net.akehurst.language.core.sppf.ISPPFNodeIdentity;
+import net.akehurst.language.core.sppf.SPPFNodeIdentity;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.sppf.Leaf;
 
@@ -60,7 +63,7 @@ public class GraphNodeLeaf implements ICompleteNode, ILeaf {
 	}
 
 	@Override
-	public Set<ChildrenOption> getChildrenOption() {
+	public Set<List<ISPPFNode>> getChildrenAlternatives() {
 		return Collections.emptySet();
 	}
 
@@ -116,7 +119,7 @@ public class GraphNodeLeaf implements ICompleteNode, ILeaf {
 	@Override
 	public ISPPFNodeIdentity getIdentity() {
 		// TODO Auto-generated method stub
-		return null;
+		return new SPPFNodeIdentity(this.getRuntimeRuleNumber(), this.getStartPosition(), this.getMatchedTextLength());
 	}
 
 	@Override
@@ -151,8 +154,12 @@ public class GraphNodeLeaf implements ICompleteNode, ILeaf {
 
 	@Override
 	public boolean contains(final ISPPFNode other) {
-		// TODO Auto-generated method stub
-		return false;
+		if (other instanceof ILeaf) {
+			final ILeaf otherLeaf = (ILeaf) other;
+			return Objects.equals(this.getIdentity(), otherLeaf.getIdentity());
+		} else {
+			return false;
+		}
 	}
 	// @Override
 	// public List<ISPPFBranch> findBranches(final String name) {

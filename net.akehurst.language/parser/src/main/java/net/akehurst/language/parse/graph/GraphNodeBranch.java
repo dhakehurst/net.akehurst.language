@@ -24,7 +24,7 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 	private final int priority;
 	private final int startPosition;
 	private final int nextInputPosition;
-	private final Set<ICompleteNode.ChildrenOption> childrenOption;
+	private final Set<List<ISPPFNode>> childrenAlternatives;
 	private ISPPFBranch parent;
 
 	public GraphNodeBranch(final ParseGraph graph, final RuntimeRule runtimeRule, final int priority, final int startPosition, final int nextInputPosition) {
@@ -32,7 +32,7 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 		this.priority = priority;
 		this.startPosition = startPosition;
 		this.nextInputPosition = nextInputPosition;
-		this.childrenOption = new HashSet<>();
+		this.childrenAlternatives = new HashSet<>();
 	}
 
 	// --- ICompleteNode ---
@@ -77,11 +77,6 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 		return false;
 	}
 
-	@Override
-	public Set<ICompleteNode.ChildrenOption> getChildrenOption() {
-		return this.childrenOption;
-	}
-
 	// --- IBranch ---
 	// @Override
 	// public boolean getIsEmpty() {
@@ -98,11 +93,10 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 
 	@Override
 	public List<ISPPFNode> getChildren() {
-		if (this.getChildrenOption().isEmpty()) {
+		if (this.getChildrenAlternatives().isEmpty()) {
 			return Collections.emptyList();
 		} else {
-			final ICompleteNode.ChildrenOption opt = this.getChildrenOption().iterator().next();
-			return (List<ISPPFNode>) (List<?>) opt.nodes;
+			return this.getChildrenAlternatives().iterator().next();
 		}
 	}
 
@@ -228,8 +222,7 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 
 	@Override
 	public Set<List<ISPPFNode>> getChildrenAlternatives() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.childrenAlternatives;
 	}
 
 	@Override
@@ -265,21 +258,47 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 	@Override
 	public boolean contains(final ISPPFNode other) {
 		if (other instanceof ISPPFBranch) {
-			final ISPPFBranch otherBranch = (ISPPFBranch)other;
+			final ISPPFBranch otherBranch = (ISPPFBranch) other;
 
-		final boolean r = this.getIdentity().equals(other.getIdentity());
-		for(final List<ISPPFNode> otherChildrenOpt:otherBranch.getChildrenAlternatives()) {
-			for(final List<ISPPFNode> thisChildrenOpt:this.getChildrenAlternatives()) {
-				thisChildrenOpt.size() == otherChildrenOpt.size();
-				for(final ISPPFNode otherNode: otherChildrenOpt) {
-					for(final ISPPFNode thisNode: thisChildrenOpt) {
-						thisNode.contains(otherNode);
+			if (this.getIdentity().equals(other.getIdentity())) {
+				// for each alternative list of other children, check there is a matching list
+				// of children in this alternative children
+				boolean allOthersAreContained = true; // if no other children alternatives contain is a match
+				for (final List<ISPPFNode> otherChildren : otherBranch.getChildrenAlternatives()) {
+					// for each of this alternative children, find one that 'contains' otherChildren
+					boolean foundContainMatch = false;
+					for (final List<ISPPFNode> thisChildren : this.getChildrenAlternatives()) {
+						if (thisChildren.size() == otherChildren.size()) {
+							// for each pair of nodes, one from each of otherChildren thisChildren
+							// check thisChildrenNode contains otherChildrenNode
+							boolean thisMatch = true;
+							for (int i = 0; i < thisChildren.size(); ++i) {
+								final ISPPFNode thisChildrenNode = thisChildren.get(i);
+								final ISPPFNode otherChildrenNode = otherChildren.get(i);
+								thisMatch &= thisChildrenNode.contains(otherChildrenNode);
+							}
+							if (thisMatch) {
+								foundContainMatch = true;
+								break;
+							} else {
+								// if thisChildren alternative doesn't contain, try the next one
+								continue;
+							}
+						} else {
+							// if sizes don't match check next in set of this alternative children
+							continue;
+						}
 					}
+					allOthersAreContained &= foundContainMatch;
 				}
+				return allOthersAreContained;
+			} else {
+				// if identities don't match
+				return false;
 			}
-		}
-		return r;
+
 		} else {
+			// if other is not a branch
 			return false;
 		}
 	}
