@@ -15,9 +15,9 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
-import net.akehurst.language.core.parser.INodeIdentity;
+import net.akehurst.language.core.parser.INodeTypeIdentity;
 
-public class NodeIdentity implements INodeIdentity {
+public class NodeIdentity implements INodeTypeIdentity {
 
 	public NodeIdentity(String value) {
 		this.primitive = value;

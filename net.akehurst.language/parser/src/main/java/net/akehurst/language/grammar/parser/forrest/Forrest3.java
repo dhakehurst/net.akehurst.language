@@ -9,8 +9,8 @@ import java.util.Set;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.log.Log;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
@@ -75,7 +75,7 @@ public final class Forrest3 {
 				longest = n;
 			}
 		}
-		return new SharedPackedParseTree((ISPPFNode) longest);
+		return new SharedPackedParseTree((ISPNode) longest);
 	}
 
 	private ISharedPackedParseTree extractLongestMatchFromStart() {
@@ -93,7 +93,7 @@ public final class Forrest3 {
 		if (null == longest) {
 			return this.extractLongestMatch();
 		} else {
-			return new SharedPackedParseTree((ISPPFNode) longest);
+			return new SharedPackedParseTree((ISPNode) longest);
 		}
 	}
 
@@ -395,52 +395,56 @@ public final class Forrest3 {
 		throw new RuntimeException("Internal Error: RuleItem kind not handled.");
 	}
 
-	void growHeightChoice(final ICompleteNode gn, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
+	void growHeightChoice(final ICompleteNode complete, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
 
-		final RuntimeRule[] rrs = info.getRuntimeRule().getRhs().getItems(gn.getRuntimeRule().getRuleNumber());
+		final RuntimeRule[] rrs = info.getRuntimeRule().getRhs().getItems(complete.getRuntimeRule().getRuleNumber());
 		for (final RuntimeRule rr : rrs) {
-			this.growHeightTree(gn, info, previous);
+			this.growHeightTree(complete, info, previous, 0);
 		}
 	}
 
-	void growHeightPriorityChoice(final ICompleteNode gn, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
-		final RuntimeRule[] rrs = info.getRuntimeRule().getRhs().getItems(gn.getRuntimeRule().getRuleNumber());
+	void growHeightPriorityChoice(final ICompleteNode complete, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
+		final RuntimeRule[] rrs = info.getRuntimeRule().getRhs().getItems(complete.getRuntimeRule().getRuleNumber());
+		final int priority = info.getRuntimeRule().getRhsIndexOf(complete.getRuntimeRule());
 		for (final RuntimeRule rr : rrs) {
-			this.growHeightTree(gn, info, previous);
+			this.growHeightTree(complete, info, previous, priority);
 		}
 	}
 
-	void growHeightConcatenation(final ICompleteNode gn, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
+	void growHeightConcatenation(final ICompleteNode complete, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
 		if (0 == info.getRuntimeRule().getRhs().getItems().length) {
 			// return new ArrayList<>();
 		}
-		if (info.getRuntimeRule().getRhsItem(0).getRuleNumber() == gn.getRuntimeRule().getRuleNumber()) {
-			this.growHeightTree(gn, info, previous);
+		if (info.getRuntimeRule().getRhsItem(0).getRuleNumber() == complete.getRuntimeRule().getRuleNumber()) {
+			this.growHeightTree(complete, info, previous, 0);
 		} else {
 			// return new ArrayList<>();
 		}
 	}
 
-	void growHeightMulti(final ICompleteNode gn, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
-		if (info.getRuntimeRule().getRhsItem(0).getRuleNumber() == gn.getRuntimeRule().getRuleNumber()
-				|| 0 == info.getRuntimeRule().getRhs().getMultiMin() && gn.getIsLeaf()) {
-			this.growHeightTree(gn, info, previous);
+	void growHeightMulti(final ICompleteNode complete, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
+		if (info.getRuntimeRule().getRhsItem(0).getRuleNumber() == complete.getRuntimeRule().getRuleNumber()
+				|| 0 == info.getRuntimeRule().getRhs().getMultiMin() && complete.isLeaf()) {
+			this.growHeightTree(complete, info, previous, 0);
 		} else {
 			// return new ArrayList<>();
 		}
 	}
 
-	void growHeightSeparatedList(final ICompleteNode gn, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
-		if (info.getRuntimeRule().getRhsItem(0).getRuleNumber() == gn.getRuntimeRule().getRuleNumber()
-				|| 0 == info.getRuntimeRule().getRhs().getMultiMin() && gn.getIsLeaf()) {
-			this.growHeightTree(gn, info, previous);
+	void growHeightSeparatedList(final ICompleteNode complete, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
+		if (info.getRuntimeRule().getRhsItem(0).getRuleNumber() == complete.getRuntimeRule().getRuleNumber()
+				|| 0 == info.getRuntimeRule().getRhs().getMultiMin() && complete.isLeaf()) {
+			this.growHeightTree(complete, info, previous, 0);
 		} else {
 			// return new ArrayList<>();
 		}
 	}
 
-	void growHeightTree(final ICompleteNode complete, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous) {
-		final int priority = info.getRuntimeRule().getRhsIndexOf(complete.getRuntimeRule());
+	void growHeightTree(final ICompleteNode complete, final SuperRuleInfo info, final Set<IGrowingNode.PreviousInfo> previous, final int priority) {
+
+		//
+		// final IGraphNode existing = this.graph.findNode(info.getRuntimeRule().getRuleNumber(), gn.getStartPosition());
+		// final int existingPriority = existing.getPriority();// .getChildren().get(0).getPriority();
 
 		// if (this.hasHeightPotential(info.getRuntimeRule(), gn, previous)) {
 
@@ -573,7 +577,7 @@ public final class Forrest3 {
 	}
 
 	boolean hasStackedPotential(final ICompleteNode node, final IGrowingNode stack) {
-		if (node.getIsSkip()) {
+		if (node.isSkip()) {
 			return true;
 		} else {
 			// if node is nextexpected item on stack, or could grow into nextexpected item

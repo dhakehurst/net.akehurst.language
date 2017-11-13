@@ -1,14 +1,14 @@
-package net.akehurst.language.core.sppf;
+package net.akehurst.language.core.sppt;
 
 import net.akehurst.language.core.parser.IParseTreeVisitable;
 
-public interface ISPPFNode extends IParseTreeVisitable {
+public interface ISPNode extends IParseTreeVisitable {
 
 	/**
 	 *
 	 * @return the identity of this node
 	 */
-	ISPPFNodeIdentity getIdentity();
+	ISPNodeIdentity getIdentity();
 
 	/**
 	 *
@@ -85,22 +85,22 @@ public interface ISPPFNode extends IParseTreeVisitable {
 	 *
 	 * @return this node cast to an ILeaf (or null if the node is not a leaf)
 	 */
-	ILeaf asLeaf();
+	ISPLeaf asLeaf();
 
 	/**
 	 *
 	 * @return this node cast to an ISPPFBranch (or null if the node is not a branch)
 	 */
-	ISPPFBranch asBranch();
+	ISPBranch asBranch();
 
 	/**
 	 * A parent might be null if the construction of the node has not set it (it is not required)
 	 *
 	 * @return the parent branch of this node.
 	 */
-	ISPPFBranch getParent();
+	ISPBranch getParent();
 
-	void setParent(final ISPPFBranch value);
+	void setParent(final ISPBranch value);
 
 	/**
 	 * <ul>
@@ -110,6 +110,6 @@ public interface ISPPFNode extends IParseTreeVisitable {
 	 * @param other
 	 * @return true if this node 'contains' the other node
 	 */
-	boolean contains(ISPPFNode other);
+	boolean contains(ISPNode other);
 
 }

@@ -23,24 +23,24 @@ import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
-import net.akehurst.language.core.sppf.ILeaf;
-import net.akehurst.language.core.sppf.IParseTreeVisitor;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.ISPLeaf;
+import net.akehurst.language.core.sppt.IParseTreeVisitor;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 
 public class ToJsonVisitor implements IParseTreeVisitor<JsonObject, JsonBuilderFactory, RuntimeException> {
 
 	@Override
 	public JsonObject visit(final ISharedPackedParseTree target, final JsonBuilderFactory arg) throws RuntimeException {
-		final ISPPFNode root = target.getRoot();
+		final ISPNode root = target.getRoot();
 		return root.accept(this, arg);
 	}
 
 	// TODO: reverse the 'isPattern' into something like 'canBeUsedAsClassifier' or 'isValidClassifier'
 
 	@Override
-	public JsonObject visit(final ILeaf target, final JsonBuilderFactory arg) throws RuntimeException {
+	public JsonObject visit(final ISPLeaf target, final JsonBuilderFactory arg) throws RuntimeException {
 		final JsonObjectBuilder builder = arg.createObjectBuilder();
 		final String name = target.getName();
 		boolean isPattern = false;
@@ -63,7 +63,7 @@ public class ToJsonVisitor implements IParseTreeVisitor<JsonObject, JsonBuilderF
 	}
 
 	@Override
-	public JsonObject visit(final ISPPFBranch target, final JsonBuilderFactory arg) throws RuntimeException {
+	public JsonObject visit(final ISPBranch target, final JsonBuilderFactory arg) throws RuntimeException {
 		final JsonObjectBuilder builder = arg.createObjectBuilder();
 		builder.add("name", target.getName());
 		builder.add("start", target.getStartPosition());
@@ -79,7 +79,7 @@ public class ToJsonVisitor implements IParseTreeVisitor<JsonObject, JsonBuilderF
 
 		builder.add("isPattern", isPattern);
 		final JsonArrayBuilder ab = arg.createArrayBuilder();
-		for (final ISPPFNode n : target.getChildren()) {
+		for (final ISPNode n : target.getChildren()) {
 			final JsonObject nobj = n.accept(this, arg);
 			ab.add(nobj);
 		}

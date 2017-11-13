@@ -13,10 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.core.parser;
+package net.akehurst.language.core.sppt;
 
-public interface INodeIdentity {
+import java.util.List;
 
-	String asPrimitive();
+import net.akehurst.language.core.parser.IParseTreeVisitable;
 
+public interface INode_old extends ISPNode, IParseTreeVisitable {
+
+	ISPBranch getParent();
+
+	void setParent(ISPBranch value);
+
+	int getNextInputPosition();
+
+	boolean isEmptyLeaf();
+
+	// boolean getIsEmpty();
+	boolean getIsSkip();
+
+	int getNumberOfLines();
+
+	/**
+	 * find all branches with the given name that are descendants of this node. Will not include branches with the given name that are descendants of a found
+	 * branch.
+	 *
+	 * @param name
+	 * @return
+	 */
+	List<ISPBranch> findBranches(String name);
 }

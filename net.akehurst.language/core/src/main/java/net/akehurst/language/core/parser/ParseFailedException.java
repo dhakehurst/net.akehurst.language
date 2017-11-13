@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.core.parser;
 
-import net.akehurst.language.core.sppf.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 
 public class ParseFailedException extends Exception {
 	ISharedPackedParseTree longestMatch;

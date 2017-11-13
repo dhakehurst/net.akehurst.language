@@ -19,8 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -37,39 +36,36 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void empty_S_empty() {
+	public void empty_S_empty() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.empty();
-			final String goal = "S";
-			final String text = "";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.empty();
+		final String goal = "S";
+		final String text = "";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final ISPPFBranch expected = b.branch("S", b.emptyLeaf("S"));
-			Assert.assertEquals(expected, tree.getRoot());
+		final ISharedPackedParseTree actual = this.process(g, text, goal);
+		Assert.assertNotNull(actual);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S {");
+		b.define("  $empty");
+		b.define("}");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+
+		Assert.assertEquals(expected, actual);
 	}
 
-	@Test
-	public void empty_S_a() {
+	@Test(expected = ParseFailedException.class)
+	public void empty_S_a() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.empty();
-			final String goal = "S";
-			final String text = "a";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
-			Assert.fail("This parse should fail");
+		final Grammar g = this.empty();
+		final String goal = "S";
+		final String text = "a";
 
-		} catch (final ParseFailedException e) {
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		Assert.fail("This parse should fail");
 
-		}
 	}
 
 	Grammar multi0m1() {
@@ -79,43 +75,45 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 	}
 
 	@Test
-	public void multi0_S_empty() {
+	public void multi0_S_empty() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.multi0m1();
-			final String goal = "S";
-			final String text = "";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.multi0m1();
+		final String goal = "S";
+		final String text = "";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final ISPPFBranch expected = b.branch("S", b.emptyLeaf("S"));
-			Assert.assertEquals(expected, tree.getRoot());
+		final ISharedPackedParseTree actual = this.process(g, text, goal);
+		Assert.assertNotNull(actual);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S {");
+		b.define("  $empty");
+		b.define("}");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+
+		Assert.assertEquals(expected, actual);
+
 	}
 
 	@Test
-	public void multi0_S_a() {
+	public void multi0_S_a() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.multi0m1();
-			final String goal = "S";
-			final String text = "a";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.multi0m1();
+		final String goal = "S";
+		final String text = "a";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final ISPPFBranch expected = b.branch("S", b.leaf("a"));
-			Assert.assertEquals(expected, tree.getRoot());
+		final ISharedPackedParseTree actual = this.process(g, text, goal);
+		Assert.assertNotNull(actual);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S {");
+		b.define("  'a'");
+		b.define("}");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+
+		Assert.assertEquals(expected, actual);
+
 	}
 
 	Grammar aeas() {
@@ -134,24 +132,23 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "a";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree actual = this.process(g, text, goal);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
 		b.define("  ae { 'a' }");
 		b.define("  as { $empty }");
 		b.define("}");
-		final ISharedPackedParseTree expected1 = b.build();
+		b.buildAndAdd();
 
 		b.define("S {");
 		b.define("  ae { $empty }");
 		b.define("  as { 'a' }");
 		b.define("}");
-		final ISharedPackedParseTree expected2 = b.build();
+		final ISharedPackedParseTree expected = b.buildAndAdd();
 
-		Assert.assertNotNull(tree);
-		Assert.assertTrue(tree.contains(expected1));
-		Assert.assertTrue(tree.contains(expected2));
+		Assert.assertNotNull(actual);
+		Assert.assertEquals(expected, actual);
 
 	}
 }

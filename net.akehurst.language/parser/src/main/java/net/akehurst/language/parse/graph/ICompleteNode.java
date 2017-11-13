@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import net.akehurst.language.core.parser.IParseTreeVisitable;
-import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppt.ISPNode;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public interface ICompleteNode extends IParseTreeVisitable {
@@ -17,13 +17,15 @@ public interface ICompleteNode extends IParseTreeVisitable {
 
 	int getNextInputPosition();
 
+	int getPriority();
+
 	int getMatchedTextLength();
 
-	boolean getIsLeaf();
+	boolean isLeaf();
 
 	boolean isEmptyLeaf();
 
-	boolean getIsSkip();
+	boolean isSkip();
 
 	// static class ChildrenOption {
 	// public int matchedLength;
@@ -54,6 +56,6 @@ public interface ICompleteNode extends IParseTreeVisitable {
 
 	String toStringTree();
 
-	Set<List<ISPPFNode>> getChildrenAlternatives();
+	Set<List<ISPNode>> getChildrenAlternatives();
 
 }

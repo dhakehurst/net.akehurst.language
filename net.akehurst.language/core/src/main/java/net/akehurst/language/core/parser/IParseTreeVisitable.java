@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.core.parser;
 
-import net.akehurst.language.core.sppf.IParseTreeVisitor;
+import net.akehurst.language.core.sppt.IParseTreeVisitor;
 
 public interface IParseTreeVisitable {
 

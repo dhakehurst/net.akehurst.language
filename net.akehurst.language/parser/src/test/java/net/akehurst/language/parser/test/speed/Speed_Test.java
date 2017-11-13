@@ -19,7 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
@@ -56,7 +56,7 @@ public class Speed_Test extends AbstractParser_Test {
 			final String goal = "abcds";
 			final String text = "abcd";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 		} catch (final ParseFailedException e) {
@@ -72,7 +72,7 @@ public class Speed_Test extends AbstractParser_Test {
 			final String goal = "abcds";
 			final String text = "abcdabcd";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 		} catch (final ParseFailedException e) {
@@ -88,7 +88,7 @@ public class Speed_Test extends AbstractParser_Test {
 			final String goal = "abcds";
 			final String text = "ababcdcdababcdcd";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 		} catch (final ParseFailedException e) {
@@ -104,7 +104,7 @@ public class Speed_Test extends AbstractParser_Test {
 			final String goal = "abcds";
 			final String text = "abababcdcdcdabababcdcdcdabababcdcdcd";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 		} catch (final ParseFailedException e) {
@@ -120,7 +120,7 @@ public class Speed_Test extends AbstractParser_Test {
 			final String goal = "abcds";
 			final String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 		} catch (final ParseFailedException e) {
@@ -136,7 +136,7 @@ public class Speed_Test extends AbstractParser_Test {
 			final String goal = "abcds";
 			final String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 		} catch (final ParseFailedException e) {
@@ -152,7 +152,7 @@ public class Speed_Test extends AbstractParser_Test {
 			final String goal = "abcds";
 			final String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 		} catch (final ParseFailedException e) {
@@ -179,7 +179,7 @@ public class Speed_Test extends AbstractParser_Test {
 			final String goal = "params";
 			final String text = "(int a)";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 		} catch (final ParseFailedException e) {
@@ -195,7 +195,7 @@ public class Speed_Test extends AbstractParser_Test {
 			final String goal = "params";
 			final String text = "(int a,int b)";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 		} catch (final ParseFailedException e) {
@@ -211,7 +211,7 @@ public class Speed_Test extends AbstractParser_Test {
 		final String goal = "params";
 		final String text = "(int a, int b, int c)";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}

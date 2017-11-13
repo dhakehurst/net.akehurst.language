@@ -19,8 +19,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -102,11 +102,11 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new SharedPackedParseTree(b.branch("S", b.emptyLeaf("S")));
+		final ISharedPackedParseTree expected = new SharedPackedParseTree(b.branch("S", b.emptyLeaf("S")));
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -119,12 +119,12 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "a";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		// b.define("S { 'a' }");
-		final IParseTree expected = new SharedPackedParseTree(b.branch("S", b.leaf("a")));
+		final ISharedPackedParseTree expected = new SharedPackedParseTree(b.branch("S", b.leaf("a")));
 		// final IBranch expected = b.branch("S", b.leaf("a"));
 		Assert.assertEquals(expected, tree);
 
@@ -138,11 +138,11 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "aa";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final ISPPFBranch expected = b.branch("S", b.leaf("a"), b.leaf("a"));
+		final ISPBranch expected = b.branch("S", b.leaf("a"), b.leaf("a"));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -154,12 +154,20 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "a";
 
-		final IParseTree tree = this.process(g, text, goal);
-		Assert.assertNotNull(tree);
+		final ISharedPackedParseTree actual = this.process(g, text, goal);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new SharedPackedParseTree(b.branch("S", b.branch("aaa", b.branch("a1", b.leaf("a")))));
-		Assert.assertEquals(expected, tree);
+		b.define("S{ aaa { a1{'a'} } }");
+		b.buildAndAdd();
+
+		b.define("S{ aaa { a2{'a'} } }");
+		b.buildAndAdd();
+
+		b.define("S{ aaa { a3{'a'} } }");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+
+		Assert.assertNotNull(actual);
+		Assert.assertEquals(expected, actual);
 	}
 
 	@Test
@@ -169,12 +177,18 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "aa";
 
-		final IParseTree tree = this.process(g, text, goal);
-		Assert.assertNotNull(tree);
+		final ISharedPackedParseTree actual = this.process(g, text, goal);
+		Assert.assertNotNull(actual);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new SharedPackedParseTree(b.branch("S", b.branch("aaa", b.branch("a2", b.leaf("a"), b.leaf("a")))));
-		Assert.assertEquals(expected, tree);
+		b.define("S{ aaa { a2{'a' 'a'} } }");
+		b.buildAndAdd();
+
+		b.define("S{ aaa { a3{'a' 'a'} } }");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+
+		Assert.assertNotNull(actual);
+		Assert.assertEquals(expected, actual);
 	}
 
 	@Test
@@ -184,12 +198,15 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "aaa";
 
-		final IParseTree tree = this.process(g, text, goal);
-		Assert.assertNotNull(tree);
+		final ISharedPackedParseTree actual = this.process(g, text, goal);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new SharedPackedParseTree(b.branch("S", b.branch("aaa", b.branch("a3", b.leaf("a"), b.leaf("a"), b.leaf("a")))));
-		Assert.assertEquals(expected, tree);
+		b.define("S{ aaa { a3{'a' 'a' 'a'} } }");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+
+		Assert.assertNotNull(actual);
+		Assert.assertEquals(expected, actual);
+
 	}
 
 	@Test
@@ -200,11 +217,12 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "fp";
 		final String text = "V v";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final ISPPFBranch expected = b.branch("fp", b.branch("t", b.branch("bt", b.branch("name", b.leaf("[a-zA-Z]+", "V"), b.branch("WS", b.leaf("\\s+", " "))))),
+		final ISPBranch expected = b.branch("fp",
+				b.branch("t", b.branch("bt", b.branch("name", b.leaf("[a-zA-Z]+", "V"), b.branch("WS", b.leaf("\\s+", " "))))),
 				b.branch("name", b.leaf("[a-zA-Z]+", "v")));
 		Assert.assertEquals(expected, tree.getRoot());
 
@@ -218,11 +236,11 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "fp";
 		final String text = "V(E) v";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final ISPPFBranch expected = b.branch("fp", b.branch("t", b.branch("gt", b.branch("name", b.leaf("[a-zA-Z]+", "V")), b.leaf("("),
+		final ISPBranch expected = b.branch("fp", b.branch("t", b.branch("gt", b.branch("name", b.leaf("[a-zA-Z]+", "V")), b.leaf("("),
 				b.branch("name", b.leaf("[a-zA-Z]+", "E")), b.leaf(")"), b.branch("WS", b.leaf("\\s+", " ")))), b.branch("name", b.leaf("[a-zA-Z]+", "v")));
 		Assert.assertEquals(expected, tree.getRoot());
 
@@ -236,11 +254,11 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "fps.choice1";
 		final String text = "V(E) v";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final ISPPFBranch expected = b.branch("fps.choice1",
+		final ISPBranch expected = b.branch("fps.choice1",
 				b.branch("fp",
 						b.branch("t",
 								b.branch("gt", b.branch("name", b.leaf("[a-zA-Z]+", "V")), b.leaf("("), b.branch("name", b.leaf("[a-zA-Z]+", "E")), b.leaf(")"),
@@ -259,11 +277,11 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "fps";
 		final String text = "V(E) v";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new SharedPackedParseTree(b.branch("fps",
+		final ISharedPackedParseTree expected = new SharedPackedParseTree(b.branch("fps",
 				b.branch("fps.choice1",
 						b.branch("fp",
 								b.branch("t",
@@ -283,11 +301,11 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "fps";
 		final String text = "V A.this";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final ISPPFBranch expected = b.branch("fps",
+		final ISPBranch expected = b.branch("fps",
 				b.branch("fps.choice2",
 						b.branch("rp", b.branch("name", b.leaf("[a-zA-Z]+", "V"), b.branch("WS", b.leaf("\\s+", " "))),
 								b.branch("rp.multi", b.branch("rp.multi.group", b.branch("name", b.leaf("[a-zA-Z]+", "A")), b.leaf("."))), b.leaf("this")),
@@ -317,11 +335,11 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "int";
 		final String text = "1";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final ISPPFBranch expected = b.branch("int", b.leaf("[0-9]+", "1"));
+		final ISPBranch expected = b.branch("int", b.leaf("[0-9]+", "1"));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -334,11 +352,11 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "label";
 		final String text = "case 1 :";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new SharedPackedParseTree(b.branch("label", b.leaf("case"), b.branch("WS", b.leaf("\\s+", " ")),
+		final ISharedPackedParseTree expected = new SharedPackedParseTree(b.branch("label", b.leaf("case"), b.branch("WS", b.leaf("\\s+", " ")),
 				b.branch("int", b.leaf("[0-9]+", "1"), b.branch("WS", b.leaf("\\s+", " "))), b.leaf(":")));
 		Assert.assertEquals(expected, tree);
 
@@ -352,12 +370,12 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "labels";
 		final String text = "case 1 :";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new SharedPackedParseTree(b.branch("labels", b.branch("label", b.leaf("case"), b.branch("WS", b.leaf("\\s+", " ")),
-				b.branch("int", b.leaf("[0-9]+", "1"), b.branch("WS", b.leaf("\\s+", " "))), b.leaf(":"))));
+		final ISharedPackedParseTree expected = new SharedPackedParseTree(b.branch("labels", b.branch("label", b.leaf("case"),
+				b.branch("WS", b.leaf("\\s+", " ")), b.branch("int", b.leaf("[0-9]+", "1"), b.branch("WS", b.leaf("\\s+", " "))), b.leaf(":"))));
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -370,11 +388,11 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "labelBlock";
 		final String text = "case 1 : { }";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final ISPPFBranch expected = b.branch("labelBlock",
+		final ISPBranch expected = b.branch("labelBlock",
 				b.branch("labels",
 						b.branch("label", b.leaf("case"), b.branch("WS", b.leaf("\\s+", " ")),
 								b.branch("int", b.leaf("[0-9]+", "1"), b.branch("WS", b.leaf("\\s+", " "))), b.leaf(":"), b.branch("WS", b.leaf("\\s+", " ")))),
@@ -391,11 +409,11 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "block";
 		final String text = "{ case 1 : { } }";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final ISPPFBranch expected = b.branch("block", b.leaf("{"), b.branch("WS", b.leaf("\\s+", " ")),
+		final ISPBranch expected = b.branch("block", b.leaf("{"), b.branch("WS", b.leaf("\\s+", " ")),
 				b.branch("group1",
 						b.branch("labelBlock", b.branch("labels", b.branch("label", b.leaf("case"), b.branch("WS", b.leaf("\\s+", " ")),
 								b.branch("int", b.leaf("[0-9]+", "1"), b.branch("WS", b.leaf("\\s+", " "))), b.leaf(":"), b.branch("WS", b.leaf("\\s+", " ")))),
@@ -413,15 +431,15 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "block";
 		final String text = "{ case 1 : }";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new SharedPackedParseTree(b.branch("block", b.leaf("{"), b.branch("WS", b.leaf("\\s+", " ")), b.branch("group1", b.emptyLeaf("group1")),
-				b.branch("group2",
-						b.branch("label", b.leaf("case"), b.branch("WS", b.leaf("\\s+", " ")),
+		final ISharedPackedParseTree expected = new SharedPackedParseTree(
+				b.branch("block", b.leaf("{"), b.branch("WS", b.leaf("\\s+", " ")), b.branch("group1", b.emptyLeaf("group1")),
+						b.branch("group2", b.branch("label", b.leaf("case"), b.branch("WS", b.leaf("\\s+", " ")),
 								b.branch("int", b.leaf("[0-9]+", "1"), b.branch("WS", b.leaf("\\s+", " "))), b.leaf(":"), b.branch("WS", b.leaf("\\s+", " ")))),
-				b.leaf("}")));
+						b.leaf("}")));
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -438,49 +456,52 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 	}
 
 	@Test
-	public void varDeclBlock_block_empty() {
+	public void varDeclBlock_block_empty() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.varDeclBlock();
-			final String goal = "block";
-			final String text = "{}";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.varDeclBlock();
+		final String goal = "block";
+		final String text = "{}";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final ISPPFBranch expected = b.branch("block", b.leaf("{"), b.branch("decls", b.emptyLeaf("decls")), b.leaf("}"));
-			Assert.assertEquals(expected, tree.getRoot());
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		final ISPBranch expected = b.branch("block", b.leaf("{"), b.branch("decls", b.emptyLeaf("decls")), b.leaf("}"));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test
-	public void varDeclBlock_block_1() {
+	public void varDeclBlock_block_1() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.varDeclBlock();
-			final String goal = "block";
-			final String text = "{ int i; }";
 
-			final IParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.varDeclBlock();
+		final String goal = "block";
+		final String text = "{ int i; }";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final IParseTree expected = new SharedPackedParseTree(
-					b.branch(
-							"block", b.leaf("{"), b.branch("WS", b.leaf("\\s+", " ")), b
-									.branch("decls",
-											b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))),
-													b.branch("name", b.leaf("[a-zA-Z0-9]+", "i")), b.leaf(";"), b.branch("WS", b.leaf("\\s+", " ")))),
-							b.leaf("}")));
-			Assert.assertEquals(expected, tree);
+		final ISharedPackedParseTree actual = this.process(g, text, goal);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("block {");
+		b.define("  '{'");
+		b.define("  WS { '\\s+' : ' ' }");
+		b.define("  decls {");
+		b.define("    decl {");
+		b.define("      type { 'int' WS { '\\s+' : ' ' } }");
+		b.define("      name { '[a-zA-Z0-9]+' : 'i' }");
+		b.define("      ';'");
+		b.define("      WS { '\\s+' : ' ' }");
+		b.define("    }");
+		b.define("  }");
+		b.define("  '}'");
+		b.define("}");
+
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+
+		Assert.assertNotNull(actual);
+		Assert.assertEquals(expected, actual);
+
 	}
 
 	@Test
@@ -491,8 +512,8 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "block";
 		final String text = "{int i1;int i2;}";
 
-		final IParseTree tree = this.process(g, text, goal);
-		Assert.assertNotNull(tree);
+		final ISharedPackedParseTree actual = this.process(g, text, goal);
+		Assert.assertNotNull(actual);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("block {");
@@ -511,8 +532,10 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		b.define("  }");
 		b.define("  '}'");
 		b.define("}");
-		final IParseTree expected = b.build();
-		Assert.assertEquals(expected, tree);
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+
+		Assert.assertNotNull(actual);
+		Assert.assertEquals(expected, actual);
 
 	}
 
@@ -524,30 +547,69 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final String goal = "block";
 		final String text = "{ int i1; int i2; int i3; int i4; int i5; int i6; int i7; int i8; }";
 
-		final IParseTree tree = this.process(g, text, goal);
-		Assert.assertNotNull(tree);
+		final ISharedPackedParseTree actual = this.process(g, text, goal);
+		Assert.assertNotNull(actual);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final ISPPFBranch expected = b.branch("block", b.leaf("{"), b.branch("WS", b.leaf("\\s+", " ")),
-				b.branch("decls",
-						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i1")),
-								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i2")),
-								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i3")),
-								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i4")),
-								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i5")),
-								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i6")),
-								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i7")),
-								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " "))),
-						b.branch("decl", b.branch("type", b.leaf("int"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("name", b.leaf("[a-zA-Z0-9]+", "i8")),
-								b.leaf(";"), b.branch("WS", b.leaf("\\s+", " ")))),
-				b.leaf("}"));
-		Assert.assertEquals(expected, tree.getRoot());
+		b.define("block {");
+		b.define("  '{'");
+		b.define("  WS { '\\s+':' '}");
+		b.define("  decls {");
+		b.define("    decl {");
+		b.define("      type { 'int' WS { '\\s+':' '} }");
+		b.define("      name { '[a-zA-Z0-9]+':'i1' }");
+		b.define("      ';'");
+		b.define("      WS { '\\s+' : ' ' }");
+		b.define("    }");
+		b.define("    decl {");
+		b.define("      type { 'int' WS { '\\s+':' '} }");
+		b.define("      name { '[a-zA-Z0-9]+':'i2' }");
+		b.define("      ';'");
+		b.define("      WS { '\\s+' : ' ' }");
+		b.define("    }");
+		b.define("    decl {");
+		b.define("      type { 'int' WS { '\\s+':' '} }");
+		b.define("      name { '[a-zA-Z0-9]+':'i2' }");
+		b.define("      ';'");
+		b.define("      WS { '\\s+' : ' ' }");
+		b.define("    }");
+		b.define("    decl {");
+		b.define("      type { 'int' WS { '\\s+':' '} }");
+		b.define("      name { '[a-zA-Z0-9]+':'i2' }");
+		b.define("      ';'");
+		b.define("      WS { '\\s+' : ' ' }");
+		b.define("    }");
+		b.define("    decl {");
+		b.define("      type { 'int' WS { '\\s+':' '} }");
+		b.define("      name { '[a-zA-Z0-9]+':'i1' }");
+		b.define("      ';'");
+		b.define("      WS { '\\s+' : ' ' }");
+		b.define("    }");
+		b.define("    decl {");
+		b.define("      type { 'int' WS { '\\s+':' '} }");
+		b.define("      name { '[a-zA-Z0-9]+':'i2' }");
+		b.define("      ';'");
+		b.define("      WS { '\\s+' : ' ' }");
+		b.define("    }");
+		b.define("    decl {");
+		b.define("      type { 'int' WS { '\\s+':' '} }");
+		b.define("      name { '[a-zA-Z0-9]+':'i2' }");
+		b.define("      ';'");
+		b.define("      WS { '\\s+' : ' ' }");
+		b.define("    }");
+		b.define("    decl {");
+		b.define("      type { 'int' WS { '\\s+':' '} }");
+		b.define("      name { '[a-zA-Z0-9]+':'i2' }");
+		b.define("      ';'");
+		b.define("      WS { '\\s+' : ' ' }");
+		b.define("    }");
+		b.define("  }");
+		b.define("  '}'");
+		b.define("}");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+
+		Assert.assertNotNull(actual);
+		Assert.assertEquals(expected, actual);
 
 	}
 
@@ -566,7 +628,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.notGreedy();
 		final String goal = "S";
 		final String text = "a++";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 
@@ -613,7 +675,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.xxx();
 		final String goal = "S";
 		final String text = "@An package @An class";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 
@@ -622,7 +684,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.xxx();
 		final String goal = "S";
 		final String text = "@An() package @An class";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 
@@ -631,7 +693,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.xxx();
 		final String goal = "S";
 		final String text = "@An() package @An() class";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 
@@ -640,7 +702,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.xxx();
 		final String goal = "S";
 		final String text = "package";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 
@@ -649,7 +711,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.xxx();
 		final String goal = "S";
 		final String text = "@An package";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 
@@ -658,7 +720,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.xxx();
 		final String goal = "S";
 		final String text = "@An() package";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 
@@ -667,7 +729,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.xxx();
 		final String goal = "S";
 		final String text = "@An package class";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 
@@ -676,7 +738,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.xxx();
 		final String goal = "S";
 		final String text = "@An() package class";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 
@@ -685,7 +747,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.xxx();
 		final String goal = "S";
 		final String text = "@An class";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 
@@ -694,7 +756,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.xxx();
 		final String goal = "S";
 		final String text = "@An() class";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 
@@ -703,7 +765,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.xxx();
 		final String goal = "S";
 		final String text = "class";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 
@@ -712,7 +774,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.xxx();
 		final String goal = "S";
 		final String text = "@An interface";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 
@@ -721,7 +783,7 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final Grammar g = this.xxx();
 		final String goal = "S";
 		final String text = "@An() interface";
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
 }

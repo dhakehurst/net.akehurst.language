@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
-import net.akehurst.language.core.parser.INodeIdentity;
+import net.akehurst.language.core.parser.INodeTypeIdentity;
 import net.akehurst.language.core.parser.INodeType;
 
 public class RuleNodeType implements INodeType {
@@ -24,10 +24,10 @@ public class RuleNodeType implements INodeType {
 		this.identity = new NodeIdentity(rule.getName());
 	}
 
-	INodeIdentity identity;
+	INodeTypeIdentity identity;
 
 	@Override
-	public INodeIdentity getIdentity() {
+	public INodeTypeIdentity getIdentity() {
 		return this.identity;
 	}
 

@@ -119,7 +119,17 @@ public class Multi extends ConcatenationItem {
 	// --- Object ---
 	@Override
 	public String toString() {
-		return this.getItem() + (0 == this.min ? -1 == this.max ? "*" : "?" : "+");
+		String m = "";
+		if (0 == this.min && -1 == this.max) {
+			m = "*";
+		} else if (0 == this.min && 1 == this.max) {
+			m = "?";
+		} else if (1 == this.min && -1 == this.max) {
+			m = "*";
+		} else {
+			m = "[" + this.min + "," + this.max + "]";
+		}
+		return this.getItem() + m;
 	}
 
 	@Override

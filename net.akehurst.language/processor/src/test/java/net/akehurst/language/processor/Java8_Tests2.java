@@ -24,7 +24,7 @@ import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 
 @RunWith(Parameterized.class)
@@ -103,17 +103,17 @@ public class Java8_Tests2 {
 		return null;
 	}
 
-	static IParseTree parse(final String input) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	static ISharedPackedParseTree parse(final String input) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
 
-		final IParseTree tree = Java8_Tests2.getJavaProcessor().getParser().parse("compilationUnit", new StringReader(input));
+		final ISharedPackedParseTree tree = Java8_Tests2.getJavaProcessor().getParser().parse("compilationUnit", new StringReader(input));
 		return tree;
 
 	}
 
-	static IParseTree parse(final String goalName, final String input) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	static ISharedPackedParseTree parse(final String goalName, final String input) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
 
 		final IParser parser = Java8_Tests2.getJavaProcessor().getParser();
-		final IParseTree tree = parser.parse(goalName, input);
+		final ISharedPackedParseTree tree = parser.parse(goalName, input);
 		return tree;
 
 	}
@@ -203,7 +203,7 @@ public class Java8_Tests2 {
 
 		final String queryStr = this.data.queryStr;
 		final String grammarRule = this.data.grammarRule;
-		final IParseTree tree = Java8_Tests2.parse(grammarRule, queryStr);
+		final ISharedPackedParseTree tree = Java8_Tests2.parse(grammarRule, queryStr);
 		Assert.assertNotNull(tree);
 		final String resultStr = Java8_Tests2.clean(tree.asString());
 		Assert.assertEquals(queryStr, resultStr);

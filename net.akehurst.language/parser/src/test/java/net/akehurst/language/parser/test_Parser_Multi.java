@@ -19,8 +19,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -96,12 +96,12 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "as";
 		final String text = "";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final ISPPFBranch expected = b.branch("as", b.emptyLeaf("as"));
+		final ISPBranch expected = b.branch("as", b.emptyLeaf("as"));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -114,12 +114,12 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "asbs";
 		final String text = "";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final ISPPFBranch expected = b.branch("asbs", b.branch("as", b.emptyLeaf("as")), b.branch("bs", b.emptyLeaf("bs")));
+		final ISPBranch expected = b.branch("asbs", b.branch("as", b.emptyLeaf("as")), b.branch("bs", b.emptyLeaf("bs")));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -132,12 +132,12 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "asbs";
 		final String text = "b";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		;
-		final ISPPFBranch expected = b.branch("asbs", b.branch("as", b.emptyLeaf("as")), b.branch("bs", b.branch("b", b.leaf("b"))));
+		final ISPBranch expected = b.branch("asbs", b.branch("as", b.emptyLeaf("as")), b.branch("bs", b.branch("b", b.leaf("b"))));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -150,12 +150,12 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "asbs";
 		final String text = "bb";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		;
-		final ISPPFBranch expected = b.branch("asbs", b.branch("as", b.emptyLeaf("as")), b.branch("bs", b.branch("b", b.leaf("b")), b.branch("b", b.leaf("b"))));
+		final ISPBranch expected = b.branch("asbs", b.branch("as", b.emptyLeaf("as")), b.branch("bs", b.branch("b", b.leaf("b")), b.branch("b", b.leaf("b"))));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -168,12 +168,12 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "as";
 		final String text = "a";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		;
-		final ISPPFBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
+		final ISPBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -186,12 +186,12 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "as";
 		final String text = "aa";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		;
-		final ISPPFBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")));
+		final ISPBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -204,12 +204,12 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "as";
 		final String text = "aaa";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final ISPPFBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")));
+		final ISPBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -222,12 +222,12 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "ab01";
 		final String text = "a";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		;
-		final ISPPFBranch expected = b.branch("ab01", b.branch("a", b.leaf("a", "a")), b.branch("b01", b.emptyLeaf("b01")));
+		final ISPBranch expected = b.branch("ab01", b.branch("a", b.leaf("a", "a")), b.branch("b01", b.emptyLeaf("b01")));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -240,12 +240,12 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "ab01";
 		final String text = "a";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		;
-		final ISPPFBranch expected = b.branch("ab01", b.branch("a", b.leaf("a", "a")));
+		final ISPBranch expected = b.branch("ab01", b.branch("a", b.leaf("a", "a")));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -258,12 +258,13 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "ab01";
 		final String text = "ab";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final IParseTree expected = new SharedPackedParseTree(b.branch("ab01", b.branch("ab01$group1", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b")))));
+		final ISharedPackedParseTree expected = new SharedPackedParseTree(
+				b.branch("ab01", b.branch("ab01$group1", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b")))));
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -276,12 +277,12 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "ab01";
 		final String text = "ab";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final ISPPFBranch expected = b.branch("ab01", b.branch("a", b.leaf("a", "a")), b.branch("b01", b.branch("b", b.leaf("b", "b"))));
+		final ISPBranch expected = b.branch("ab01", b.branch("a", b.leaf("a", "a")), b.branch("b01", b.branch("b", b.leaf("b", "b"))));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -294,7 +295,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 			final String goal = "ab01";
 			final String text = "aa";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 
 			Assert.fail("This parse should fail");
 
@@ -311,12 +312,12 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "abs";
 		final String text = "ababababababababababababababababababababababababababababababababababababababababababababababababab";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final ISPPFBranch expected = b.branch("abs", b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
+		final ISPBranch expected = b.branch("abs", b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
 				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
 				b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))),
 				b.branch("ab", b.branch("a", b.leaf("a"))), b.branch("ab", b.branch("b", b.leaf("b"))), b.branch("ab", b.branch("a", b.leaf("a"))),
@@ -372,11 +373,11 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "top";
 		final String text = "aa";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new SharedPackedParseTree(b.branch("top", b.branch("level1", b.leaf("a")), b.branch("level1", b.leaf("a"))));
+		final ISharedPackedParseTree expected = new SharedPackedParseTree(b.branch("top", b.branch("level1", b.leaf("a")), b.branch("level1", b.leaf("a"))));
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -407,17 +408,17 @@ public class test_Parser_Multi extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "aaa";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S{");
-		b.define("  Fm { empty }");
+		b.define("  Fm { $empty }");
 		b.define("  G { H { A { 'a' } } }");
 		b.define("  'a'");
 		b.define("  A {'a'}");
 		b.define("}");
-		final IParseTree expected = b.build();
+		final ISharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 
 	}

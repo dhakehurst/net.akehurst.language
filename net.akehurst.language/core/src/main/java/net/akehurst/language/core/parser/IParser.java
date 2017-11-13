@@ -21,7 +21,7 @@ import java.util.Set;
 
 import net.akehurst.language.core.grammar.IRuleItem;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
-import net.akehurst.language.core.sppf.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 
 public interface IParser {
 

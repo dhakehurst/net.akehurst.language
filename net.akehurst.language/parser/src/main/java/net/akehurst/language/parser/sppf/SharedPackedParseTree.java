@@ -15,19 +15,17 @@
  */
 package net.akehurst.language.parser.sppf;
 
-import java.util.Objects;
-
-import net.akehurst.language.core.sppf.IParseTreeVisitor;
-import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.IParseTreeVisitor;
+import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ParseTreeToInputText;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 
 public class SharedPackedParseTree implements ISharedPackedParseTree {
 
-	private final ISPPFNode root;
+	private final ISPNode root;
 
-	public SharedPackedParseTree(final ISPPFNode root) {
+	public SharedPackedParseTree(final ISPNode root) {
 		this.root = root;
 	}
 
@@ -41,7 +39,7 @@ public class SharedPackedParseTree implements ISharedPackedParseTree {
 
 	// --- ISharedPackedParseForest ---
 	@Override
-	public ISPPFNode getRoot() {
+	public ISPNode getRoot() {
 
 		return this.root;
 	}
@@ -79,7 +77,9 @@ public class SharedPackedParseTree implements ISharedPackedParseTree {
 	public boolean equals(final Object arg) {
 		if (arg instanceof ISharedPackedParseTree) {
 			final ISharedPackedParseTree other = (ISharedPackedParseTree) arg;
-			return Objects.equals(this.getRoot(), other.getRoot());
+			// return Objects.equals(this.getRoot(), other.getRoot());
+			// TODO: not the fastest way to do this, but will do for now
+			return this.contains(other) && other.contains(this);
 		} else {
 			return false;
 		}

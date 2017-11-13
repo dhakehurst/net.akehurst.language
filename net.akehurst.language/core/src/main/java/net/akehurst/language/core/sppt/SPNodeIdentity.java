@@ -1,4 +1,4 @@
-package net.akehurst.language.core.sppf;
+package net.akehurst.language.core.sppt;
 
 import java.util.Objects;
 
@@ -15,14 +15,14 @@ import java.util.Objects;
  * avoid duplication) but supports the alternative lists of children.
  *
  */
-public class SPPFNodeIdentity implements ISPPFNodeIdentity {
+public class SPNodeIdentity implements ISPNodeIdentity {
 
 	private final int ruleNumber;
 	private final int startPosition;
 	private final int matchedLength;
 	private final int hashCode_cache;
 
-	public SPPFNodeIdentity(final int ruleNumber, final int startPosition, final int matchedLength) {
+	public SPNodeIdentity(final int ruleNumber, final int startPosition, final int matchedLength) {
 		this.ruleNumber = ruleNumber;
 		this.startPosition = startPosition;
 		this.matchedLength = matchedLength;
@@ -53,8 +53,8 @@ public class SPPFNodeIdentity implements ISPPFNodeIdentity {
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj instanceof ISPPFNodeIdentity) {
-			final ISPPFNodeIdentity other = (ISPPFNodeIdentity) obj;
+		if (obj instanceof ISPNodeIdentity) {
+			final ISPNodeIdentity other = (ISPNodeIdentity) obj;
 			return this.getRuntimeRuleNumber() == other.getRuntimeRuleNumber() && this.getStartPosition() == other.getStartPosition()
 					&& this.getMatchedTextLength() == other.getMatchedTextLength();
 		} else {

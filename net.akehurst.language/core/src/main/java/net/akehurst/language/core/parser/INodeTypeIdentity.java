@@ -13,33 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.core.sppf;
+package net.akehurst.language.core.parser;
 
-import java.util.List;
+public interface INodeTypeIdentity {
 
-import net.akehurst.language.core.parser.IParseTreeVisitable;
+	String asPrimitive();
 
-public interface INode_old extends ISPPFNode, IParseTreeVisitable {
-
-	ISPPFBranch getParent();
-
-	void setParent(ISPPFBranch value);
-
-	int getNextInputPosition();
-
-	boolean isEmptyLeaf();
-
-	// boolean getIsEmpty();
-	boolean getIsSkip();
-
-	int getNumberOfLines();
-
-	/**
-	 * find all branches with the given name that are descendants of this node. Will not include branches with the given name that are descendants of a found
-	 * branch.
-	 *
-	 * @param name
-	 * @return
-	 */
-	List<ISPPFBranch> findBranches(String name);
 }

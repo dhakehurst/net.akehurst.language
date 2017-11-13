@@ -1,22 +1,22 @@
-package net.akehurst.language.core.sppf;
+package net.akehurst.language.core.sppt;
 
 import java.util.List;
 import java.util.Set;
 
-public interface ISPPFBranch extends ISPPFNode {
+public interface ISPBranch extends ISPNode {
 
-	Set<List<ISPPFNode>> getChildrenAlternatives();
+	Set<List<ISPNode>> getChildrenAlternatives();
 
 	// --- convienience methods
 	/**
 	 * @return the one of the children alternatives of this branch.
 	 */
-	List<ISPPFNode> getChildren();
+	List<ISPNode> getChildren();
 
 	/**
 	 * @return the one of the children alternatives of this branch with all skip nodes removed.
 	 */
-	List<ISPPFNode> getNonSkipChildren();
+	List<ISPNode> getNonSkipChildren();
 
 	/**
 	 * this returns the i'th element from getNonSkipChildren
@@ -25,7 +25,7 @@ public interface ISPPFBranch extends ISPPFNode {
 	 *            index of required child
 	 * @return i'th non skip child.
 	 */
-	ISPPFNode getChild(int index);
+	ISPNode getChild(int index);
 
 	/**
 	 * Convenience method. returns the i'th non skip child of this Branch but assumes the child is also a Branch and casts the result.
@@ -33,12 +33,12 @@ public interface ISPPFBranch extends ISPPFNode {
 	 * @param i
 	 * @return
 	 */
-	ISPPFBranch getBranchChild(int index);
+	ISPBranch getBranchChild(int index);
 
 	/**
 	 * Filters out any children that are skip nodes or not branches
 	 *
 	 * @return all children that are branches and non skip
 	 */
-	List<ISPPFBranch> getBranchNonSkipChildren();
+	List<ISPBranch> getBranchNonSkipChildren();
 }

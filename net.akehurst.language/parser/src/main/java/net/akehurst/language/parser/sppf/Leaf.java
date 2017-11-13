@@ -18,16 +18,16 @@ package net.akehurst.language.parser.sppf;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.sppf.ILeaf;
-import net.akehurst.language.core.sppf.IParseTreeVisitor;
-import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISPPFNodeIdentity;
-import net.akehurst.language.core.sppf.SPPFNodeIdentity;
+import net.akehurst.language.core.sppt.ISPLeaf;
+import net.akehurst.language.core.sppt.IParseTreeVisitor;
+import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.ISPNodeIdentity;
+import net.akehurst.language.core.sppt.SPNodeIdentity;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
-public class Leaf extends Node implements ILeaf {
+public class Leaf extends Node implements ISPLeaf {
 
-	private final ISPPFNodeIdentity identity;
+	private final ISPNodeIdentity identity;
 	private final String text;
 	private final int nextInputPosition;
 	private final RuntimeRule terminalRule;
@@ -39,7 +39,7 @@ public class Leaf extends Node implements ILeaf {
 		this.terminalRule = terminalRule;
 		// TODO: fix factory passing 'null' as runtimeRule
 		this.identity = null == this.terminalRule ? null
-				: new SPPFNodeIdentity(this.terminalRule.getRuleNumber(), this.getStartPosition(), this.nextInputPosition - this.getStartPosition());
+				: new SPNodeIdentity(this.terminalRule.getRuleNumber(), this.getStartPosition(), this.nextInputPosition - this.getStartPosition());
 	}
 
 	public int getNextInputPosition() {
@@ -54,7 +54,7 @@ public class Leaf extends Node implements ILeaf {
 
 	// --- ISPPFNode ---
 	@Override
-	public ISPPFNodeIdentity getIdentity() {
+	public ISPNodeIdentity getIdentity() {
 		return this.identity;
 	}
 
@@ -93,7 +93,7 @@ public class Leaf extends Node implements ILeaf {
 	}
 
 	@Override
-	public boolean contains(final ISPPFNode other) {
+	public boolean contains(final ISPNode other) {
 		return this.equals(other);
 	}
 
@@ -124,8 +124,8 @@ public class Leaf extends Node implements ILeaf {
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj instanceof ILeaf) {
-			final ILeaf other = (ILeaf) obj;
+		if (obj instanceof ISPLeaf) {
+			final ISPLeaf other = (ISPLeaf) obj;
 			return Objects.equals(this.getIdentity(), other.getIdentity());
 		} else {
 			return false;

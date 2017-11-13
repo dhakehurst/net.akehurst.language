@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISPNode;
 import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.transform.binary.IBinaryRule;
@@ -32,35 +32,35 @@ public class Node2ConcatenationItem extends AbstractSemanticAnalysisRule<Concate
 	}
 
 	@Override
-	public boolean isAMatch(final ISPPFBranch left, final ConcatenationItem right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final ISPBranch left, final ConcatenationItem right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public ConcatenationItem constructLeft2Right(final ISPPFBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
-		final ISPPFNode itemNode = left.getChild(0);
+	public ConcatenationItem constructLeft2Right(final ISPBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+		final ISPNode itemNode = left.getChild(0);
 
 		final ConcatenationItem right = transformer
-				.transformLeft2Right((Class<IBinaryRule<ISPPFNode, TangibleItem>>) (Class<?>) AbstractNode2ConcatenationItem.class, itemNode);
+				.transformLeft2Right((Class<IBinaryRule<ISPNode, TangibleItem>>) (Class<?>) AbstractNode2ConcatenationItem.class, itemNode);
 		return right;
 	}
 
 	@Override
-	public ISPPFBranch constructRight2Left(final ConcatenationItem right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public ISPBranch constructRight2Left(final ConcatenationItem right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final ISPPFBranch left, final ConcatenationItem right, final ITransformer transformer)
+	public void updateLeft2Right(final ISPBranch left, final ConcatenationItem right, final ITransformer transformer)
 			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final ISPPFBranch left, final ConcatenationItem right, final ITransformer transformer)
+	public void updateRight2Left(final ISPBranch left, final ConcatenationItem right, final ITransformer transformer)
 			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 

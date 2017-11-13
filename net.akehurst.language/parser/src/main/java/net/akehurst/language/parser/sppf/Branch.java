@@ -23,52 +23,52 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import net.akehurst.language.core.sppf.IParseTreeVisitor;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISPPFNodeIdentity;
-import net.akehurst.language.core.sppf.SPPFNodeIdentity;
+import net.akehurst.language.core.sppt.IParseTreeVisitor;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.ISPNodeIdentity;
+import net.akehurst.language.core.sppt.SPNodeIdentity;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
-public class Branch extends Node implements ISPPFBranch {
+public class Branch extends Node implements ISPBranch {
 
-	private final ISPPFNodeIdentity identity;
-	private final Set<List<ISPPFNode>> childrenAlternatives;
+	private final ISPNodeIdentity identity;
+	private final Set<List<ISPNode>> childrenAlternatives;
 	private int length;
-	private List<ISPPFNode> nonSkipChildren_cache;
+	private List<ISPNode> nonSkipChildren_cache;
 
-	public Branch(final RuntimeRule runtimeRule, final ISPPFNode[] children) {
+	public Branch(final RuntimeRule runtimeRule, final ISPNode[] children) {
 		super(runtimeRule, children.length == 0 ? -1 : children[0].getStartPosition());
 		this.childrenAlternatives = new HashSet<>();
 		this.childrenAlternatives.add(Arrays.asList(children));
 		this.length = 0;
 		// this.isEmpty = true;
 		// this.firstLeaf = this.children.length==0 ? null : children[0].getFirstLeaf();
-		for (final ISPPFNode n : children) {
+		for (final ISPNode n : children) {
 			// this.isEmpty &= n.getIsEmpty();
 			this.length += n.getMatchedTextLength();
 		}
-		this.identity = new SPPFNodeIdentity(runtimeRule.getRuleNumber(), this.getStartPosition(), this.length);
+		this.identity = new SPNodeIdentity(runtimeRule.getRuleNumber(), this.getStartPosition(), this.length);
 
 	}
 
 	// --- ISPPFBranch ---
 	@Override
-	public Set<List<ISPPFNode>> getChildrenAlternatives() {
+	public Set<List<ISPNode>> getChildrenAlternatives() {
 		return this.childrenAlternatives;
 	}
 
 	@Override
-	public List<ISPPFNode> getChildren() {
+	public List<ISPNode> getChildren() {
 		return this.childrenAlternatives.iterator().next();
 	}
 
 	@Override
-	public List<ISPPFNode> getNonSkipChildren() {
+	public List<ISPNode> getNonSkipChildren() {
 		if (null == this.nonSkipChildren_cache) {
 			this.nonSkipChildren_cache = new ArrayList<>();
-			for (final ISPPFNode n : this.getChildren()) {
+			for (final ISPNode n : this.getChildren()) {
 				if (n.isSkip()) {
 
 				} else {
@@ -80,12 +80,12 @@ public class Branch extends Node implements ISPPFBranch {
 	}
 
 	@Override
-	public ISPPFNode getChild(final int index) {
-		final List<ISPPFNode> children = this.getChildren();
+	public ISPNode getChild(final int index) {
+		final List<ISPNode> children = this.getChildren();
 
 		// get first non skip child
 		int child = 0;
-		ISPPFNode n = children.get(child);
+		ISPNode n = children.get(child);
 		while (n.isSkip() && child < children.size() - 1) {
 			++child;
 			n = children.get(child);
@@ -113,21 +113,21 @@ public class Branch extends Node implements ISPPFBranch {
 	}
 
 	@Override
-	public ISPPFBranch getBranchChild(final int i) {
-		final ISPPFNode n = this.getChild(i);
-		return (ISPPFBranch) n;
+	public ISPBranch getBranchChild(final int i) {
+		final ISPNode n = this.getChild(i);
+		return (ISPBranch) n;
 	}
 
 	@Override
-	public List<ISPPFBranch> getBranchNonSkipChildren() {
-		final List<ISPPFBranch> res = this.getNonSkipChildren().stream().filter(ISPPFBranch.class::isInstance).map(ISPPFBranch.class::cast)
+	public List<ISPBranch> getBranchNonSkipChildren() {
+		final List<ISPBranch> res = this.getNonSkipChildren().stream().filter(ISPBranch.class::isInstance).map(ISPBranch.class::cast)
 				.collect(Collectors.toList());
 		return res;
 	}
 
 	// --- ISPPFNode ---
 	@Override
-	public ISPPFNodeIdentity getIdentity() {
+	public ISPNodeIdentity getIdentity() {
 		return this.identity;
 	}
 
@@ -139,7 +139,7 @@ public class Branch extends Node implements ISPPFBranch {
 	@Override
 	public String getMatchedText() {
 		String str = "";
-		for (final ISPPFNode n : this.getChildren()) {
+		for (final ISPNode n : this.getChildren()) {
 			str += n.getMatchedText();
 		}
 		return str;
@@ -148,7 +148,7 @@ public class Branch extends Node implements ISPPFBranch {
 	@Override
 	public String getNonSkipMatchedText() {
 		String str = "";
-		for (final ISPPFNode n : this.getNonSkipChildren()) {
+		for (final ISPNode n : this.getNonSkipChildren()) {
 			str += n.getNonSkipMatchedText();
 		}
 		return str;
@@ -170,27 +170,29 @@ public class Branch extends Node implements ISPPFBranch {
 	}
 
 	@Override
-	public boolean contains(final ISPPFNode other) {
-		if (other instanceof ISPPFBranch) {
-			final ISPPFBranch otherBranch = (ISPPFBranch) other;
+	public boolean contains(final ISPNode other) {
+		if (other instanceof ISPBranch) {
+			final ISPBranch otherBranch = (ISPBranch) other;
 
 			if (this.getIdentity().equals(other.getIdentity())) {
 				// for each alternative list of other children, check there is a matching list
 				// of children in this alternative children
 				boolean allOthersAreContained = true; // if no other children alternatives contain is a match
-				for (final List<ISPPFNode> otherChildren : otherBranch.getChildrenAlternatives()) {
+				for (final List<ISPNode> otherChildren : otherBranch.getChildrenAlternatives()) {
 					// for each of this alternative children, find one that 'contains' otherChildren
 					boolean foundContainMatch = false;
-					for (final List<ISPPFNode> thisChildren : this.getChildrenAlternatives()) {
+					for (final List<ISPNode> thisChildren : this.getChildrenAlternatives()) {
 						if (thisChildren.size() == otherChildren.size()) {
 							// for each pair of nodes, one from each of otherChildren thisChildren
 							// check thisChildrenNode contains otherChildrenNode
-							for (int i = 0; i > thisChildren.size(); ++i) {
-								final ISPPFNode thisChildrenNode = thisChildren.get(i);
-								final ISPPFNode otherChildrenNode = otherChildren.get(i);
-								foundContainMatch &= thisChildrenNode.contains(otherChildrenNode);
+							boolean thisMatch = true;
+							for (int i = 0; i < thisChildren.size(); ++i) {
+								final ISPNode thisChildrenNode = thisChildren.get(i);
+								final ISPNode otherChildrenNode = otherChildren.get(i);
+								thisMatch &= thisChildrenNode.contains(otherChildrenNode);
 							}
-							if (foundContainMatch) {
+							if (thisMatch) {
+								foundContainMatch = true;
 								break;
 							} else {
 								// if thisChildren alternative doesn't contain, try the next one
@@ -266,10 +268,10 @@ public class Branch extends Node implements ISPPFBranch {
 
 	@Override
 	public boolean equals(final Object arg) {
-		if (!(arg instanceof ISPPFBranch)) {
+		if (!(arg instanceof ISPBranch)) {
 			return false;
 		}
-		final ISPPFBranch other = (ISPPFBranch) arg;
+		final ISPBranch other = (ISPBranch) arg;
 		if (!Objects.equals(this.getIdentity(), other.getIdentity())) {
 			return false;
 		}

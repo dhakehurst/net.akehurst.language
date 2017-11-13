@@ -19,8 +19,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -46,12 +46,12 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "a";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final ISPPFBranch expected = b.branch("S", b.leaf("a", "a"));
+		final ISPBranch expected = b.branch("S", b.leaf("a", "a"));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -64,11 +64,11 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "aa";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = new SharedPackedParseTree(b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))));
+		final ISharedPackedParseTree expected = new SharedPackedParseTree(b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))));
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -80,12 +80,12 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "aaa";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final ISPPFBranch expected = b.branch("S", b.branch("S_a", b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))), b.leaf("a")));
+		final ISPBranch expected = b.branch("S", b.branch("S_a", b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))), b.leaf("a")));
 		Assert.assertEquals(expected, tree.getRoot());
 	}
 
@@ -99,12 +99,12 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 			text += "a";
 		}
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final IParseTree expected = new SharedPackedParseTree(
+		final ISharedPackedParseTree expected = new SharedPackedParseTree(
 				b.branch("S", b.branch("S_a", b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))), b.leaf("a"))));
 		Assert.assertEquals(expected, tree);
 	}
@@ -127,12 +127,12 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 			text += "a";
 		}
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final IParseTree expected = new SharedPackedParseTree(
+		final ISharedPackedParseTree expected = new SharedPackedParseTree(
 				b.branch("S", b.branch("S_a", b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))), b.leaf("a"))));
 		Assert.assertEquals(expected, tree);
 	}
@@ -155,7 +155,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "a";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -164,7 +164,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		b.define("    E2 { 'a' }");
 		b.define("  }");
 		b.define("}");
-		final IParseTree expected = b.build();
+		final ISharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -177,7 +177,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "a+a";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -189,7 +189,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		b.define("    }");
 		b.define("  }");
 		b.define("}");
-		final IParseTree expected = b.build();
+		final ISharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -202,19 +202,24 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "a+a+a";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
 		b.define("  E {");
 		b.define("    E1 {");
-		b.define("      E { E2 { 'a' } }");
+		b.define("      E {");
+		b.define("        E1 {");
+		b.define("          E { E2 { 'a' } }");
+		b.define("          '+a'");
+		b.define("        }");
+		b.define("      }");
 		b.define("      '+a'");
 		b.define("    }");
 		b.define("  }");
 		b.define("}");
-		final IParseTree expected = b.build();
+		final ISharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -237,7 +242,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "a";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -246,7 +251,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		b.define("    'a'");
 		b.define("  }");
 		b.define("}");
-		final IParseTree expected = b.build();
+		final ISharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 	}
 
@@ -257,20 +262,20 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "a+a";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
 		b.define("  E {");
 		b.define("    E1 {");
-		b.define("      Bm { empty }");
+		b.define("      Bm { $empty }");
 		b.define("      E{ 'a' }");
 		b.define("      '+a'");
 		b.define("    }");
 		b.define("  }");
 		b.define("}");
-		final IParseTree expected = b.build();
+		final ISharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 	}
 
@@ -281,7 +286,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "ba+a";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -294,7 +299,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		b.define("    }");
 		b.define("  }");
 		b.define("}");
-		final IParseTree expected = b.build();
+		final ISharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 	}
 
@@ -365,11 +370,11 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "nlm-n+(aaa)n";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final IParseTree expected = null;
+		final ISharedPackedParseTree expected = null;
 		// final IBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
 		Assert.assertEquals(expected, tree);
 
@@ -438,7 +443,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "b";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -447,7 +452,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		b.define("    'b'");
 		b.define("  }");
 		b.define("}");
-		final IParseTree expected = b.build();
+		final ISharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -460,7 +465,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "bb";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -469,7 +474,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		b.define("    'b'");
 		b.define("  }");
 		b.define("}");
-		final IParseTree expected = b.build();
+		final ISharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -482,7 +487,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		final String text = "bbb";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -491,7 +496,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		b.define("    'b'");
 		b.define("  }");
 		b.define("}");
-		final IParseTree expected = b.build();
+		final ISharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -508,7 +513,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 			text += "b";
 		}
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		// final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -517,7 +522,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		// b.define(" 'b'");
 		// b.define(" }");
 		// b.define("}");
-		// final IParseTree expected = b.build();
+		// final ISharedPackedParseTree expected = b.build();
 		// Assert.assertEquals(expected, tree);
 
 	}

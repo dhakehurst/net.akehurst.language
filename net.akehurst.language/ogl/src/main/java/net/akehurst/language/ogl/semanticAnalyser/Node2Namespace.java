@@ -15,47 +15,47 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppt.ISPBranch;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.transform.binary.IBinaryRule;
 import net.akehurst.transform.binary.ITransformer;
 import net.akehurst.transform.binary.RuleNotFoundException;
 import net.akehurst.transform.binary.TransformException;
 
-public class Node2Namespace implements IBinaryRule<ISPPFBranch, Namespace> {
+public class Node2Namespace implements IBinaryRule<ISPBranch, Namespace> {
 
 	@Override
-	public boolean isAMatch(final ISPPFBranch left, final Namespace right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final ISPBranch left, final Namespace right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public void updateLeft2Right(final ISPPFBranch arg0, final Namespace arg1, final ITransformer arg2) throws RuleNotFoundException, TransformException {
+	public void updateLeft2Right(final ISPBranch arg0, final Namespace arg1, final ITransformer arg2) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final ISPPFBranch arg0, final Namespace arg1, final ITransformer arg2) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final ISPBranch arg0, final Namespace arg1, final ITransformer arg2) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public Namespace constructLeft2Right(final ISPPFBranch left, final ITransformer arg1) throws RuleNotFoundException, TransformException {
+	public Namespace constructLeft2Right(final ISPBranch left, final ITransformer arg1) throws RuleNotFoundException, TransformException {
 		final String qualifiedName = left.getChild(1).getMatchedText().trim();
 		return new Namespace(qualifiedName);
 	}
 
 	@Override
-	public ISPPFBranch constructRight2Left(final Namespace arg0, final ITransformer arg1) throws RuleNotFoundException, TransformException {
+	public ISPBranch constructRight2Left(final Namespace arg0, final ITransformer arg1) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean isValidForLeft2Right(final ISPPFBranch left) {
+	public boolean isValidForLeft2Right(final ISPBranch left) {
 		// TODO Auto-generated method stub
 		return "namespace".equals(left.getChild(0).getName());
 	}

@@ -1,11 +1,11 @@
 package net.akehurst.language.parser.sppf;
 
-import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppt.ISPNode;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class Factory {
 
-	public Branch createBranch(final RuntimeRule r, final ISPPFNode[] children) {
+	public Branch createBranch(final RuntimeRule r, final ISPNode[] children) {
 		final Branch b = new Branch(r, children);
 		return b;
 	}

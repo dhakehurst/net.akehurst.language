@@ -19,7 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
@@ -28,9 +28,9 @@ import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.parser.AbstractParser_Test;
 
 public class Memory_Test extends AbstractParser_Test {
-	
+
 	Grammar as_rr() {
-		GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("as").choice(new NonTerminal("as$group1"), new NonTerminal("a"));
 		b.rule("as$group1").concatenation(new NonTerminal("a"), new NonTerminal("as"));
 		b.rule("a").concatenation(new TerminalLiteral("a"));
@@ -41,18 +41,16 @@ public class Memory_Test extends AbstractParser_Test {
 	public void rr_as_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() {
 		// grammar, goal, input
 		try {
-			Grammar g = as_rr();
-			String goal = "as";
-			String text = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-			
-			
-			IParseTree tree = this.process(g, text, goal);
+			final Grammar g = this.as_rr();
+			final String goal = "as";
+			final String text = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
-		
-		} catch (ParseFailedException e) {
+
+		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
-	
 
 }

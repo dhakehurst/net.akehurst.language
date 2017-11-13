@@ -1,6 +1,6 @@
-package net.akehurst.language.core.sppf;
+package net.akehurst.language.core.sppt;
 
-public interface ISPPFNodeIdentity {
+public interface ISPNodeIdentity {
 
 	public int getRuntimeRuleNumber();
 

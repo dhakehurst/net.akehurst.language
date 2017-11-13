@@ -31,7 +31,7 @@ import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
-import net.akehurst.language.core.sppf.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 

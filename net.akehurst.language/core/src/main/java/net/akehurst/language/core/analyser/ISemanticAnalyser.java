@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.core.analyser;
 
-import net.akehurst.language.core.sppf.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 
 public interface ISemanticAnalyser {
 

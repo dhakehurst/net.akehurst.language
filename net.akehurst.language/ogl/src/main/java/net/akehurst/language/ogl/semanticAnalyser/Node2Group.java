@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISPNode;
 import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
 import net.akehurst.language.ogl.semanticStructure.Group;
 import net.akehurst.transform.binary.IBinaryRule;
@@ -38,36 +38,36 @@ public class Node2Group extends AbstractNode2TangibleItem<Group> {
 	}
 
 	@Override
-	public boolean isAMatch(final ISPPFBranch left, final Group right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final ISPBranch left, final Group right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Group constructLeft2Right(final ISPPFBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public Group constructLeft2Right(final ISPBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
-		final ISPPFNode choiceNode = left.getChild(1);
-		final AbstractChoice choice = transformer.transformLeft2Right((Class<IBinaryRule<ISPPFNode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class,
-				((ISPPFBranch) choiceNode).getChild(0));
+		final ISPNode choiceNode = left.getChild(1);
+		final AbstractChoice choice = transformer.transformLeft2Right((Class<IBinaryRule<ISPNode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class,
+				((ISPBranch) choiceNode).getChild(0));
 		final Group right = new Group(choice);
 		return right;
 
 	}
 
 	@Override
-	public ISPPFBranch constructRight2Left(final Group right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public ISPBranch constructRight2Left(final Group right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final ISPPFBranch left, final Group right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateLeft2Right(final ISPBranch left, final Group right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final ISPPFBranch left, final Group right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final ISPBranch left, final Group right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

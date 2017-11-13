@@ -1,9 +1,9 @@
-package net.akehurst.language.core.sppf;
+package net.akehurst.language.core.sppt;
 
 /**
  * A leaf node has no children.
  */
-public interface ILeaf extends ISPPFNode {
+public interface ISPLeaf extends ISPNode {
 
 	/**
 	 * Indicates if the leaf was constructed by matching a regular expression pattern or not.

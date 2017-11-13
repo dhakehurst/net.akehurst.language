@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.core.sppf;
+package net.akehurst.language.core.sppt;
 
 /**
  *
@@ -30,8 +30,8 @@ public interface IParseTreeVisitor<T, A extends Object, E extends Throwable> {
 
 	T visit(ISharedPackedParseTree target, A arg) throws E;
 
-	T visit(ILeaf target, A arg) throws E;
+	T visit(ISPLeaf target, A arg) throws E;
 
-	T visit(ISPPFBranch target, A arg) throws E;
+	T visit(ISPBranch target, A arg) throws E;
 
 }

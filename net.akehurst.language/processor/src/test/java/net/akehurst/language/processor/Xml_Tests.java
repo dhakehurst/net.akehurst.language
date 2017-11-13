@@ -14,7 +14,7 @@ import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ParseTreeToInputText;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 
@@ -73,10 +73,10 @@ public class Xml_Tests {
 		return null;
 	}
 
-	static IParseTree parse(final String goalName, final String input) {
+	static ISharedPackedParseTree parse(final String goalName, final String input) {
 		try {
 			final IParser parser = Xml_Tests.getXmlProcessor().getParser();
-			final IParseTree tree = parser.parse(goalName, new StringReader(input));
+			final ISharedPackedParseTree tree = parser.parse(goalName, new StringReader(input));
 			return tree;
 		} catch (final ParseFailedException e) {
 			return null;// e.getLongestMatch();
@@ -90,7 +90,7 @@ public class Xml_Tests {
 	public void emptyFile() {
 
 		final String input = "";
-		final IParseTree tree = Xml_Tests.parse("file", input);
+		final ISharedPackedParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -102,7 +102,7 @@ public class Xml_Tests {
 	public void emptyElement() {
 
 		final String input = "<xxx />";
-		final IParseTree tree = Xml_Tests.parse("file", input);
+		final ISharedPackedParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -114,7 +114,7 @@ public class Xml_Tests {
 	public void emptyElementAttribute1() {
 
 		final String input = "<xxx aa='1' />";
-		final IParseTree tree = Xml_Tests.parse("file", input);
+		final ISharedPackedParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -126,7 +126,7 @@ public class Xml_Tests {
 	public void emptyElementAttribute2() {
 
 		final String input = "<xxx aa='1' bb='2' />";
-		final IParseTree tree = Xml_Tests.parse("file", input);
+		final ISharedPackedParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -138,7 +138,7 @@ public class Xml_Tests {
 	public void element() {
 
 		final String input = "<xxx> </xxx>";
-		final IParseTree tree = Xml_Tests.parse("file", input);
+		final ISharedPackedParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();

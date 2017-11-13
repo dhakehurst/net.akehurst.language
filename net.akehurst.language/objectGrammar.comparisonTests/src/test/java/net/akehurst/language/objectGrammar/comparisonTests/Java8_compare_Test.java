@@ -30,10 +30,10 @@ import org.junit.runners.Parameterized.Parameters;
 import antlr4.Java8Parser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;
@@ -126,9 +126,10 @@ public class Java8_compare_Test {
 
 	static String og_input;
 
-	static IParseTree parseWithOG(final Path file) {
+	static ISharedPackedParseTree parseWithOG(final Path file) {
 		try {
-			final IParseTree tree = Java8_compare_Test.getJavaProcessor().getParser().parse("compliationUnit", new StringReader(Java8_compare_Test.og_input));
+			final ISharedPackedParseTree tree = Java8_compare_Test.getJavaProcessor().getParser().parse("compliationUnit",
+					new StringReader(Java8_compare_Test.og_input));
 			return tree;
 		} catch (final ParseFailedException e) {
 			return null;// e.getLongestMatch();
@@ -155,7 +156,7 @@ public class Java8_compare_Test {
 	public void compare() {
 
 		final Instant s1 = Instant.now();
-		final IParseTree tree1 = Java8_compare_Test.parseWithOG(this.file);
+		final ISharedPackedParseTree tree1 = Java8_compare_Test.parseWithOG(this.file);
 		final Instant e1 = Instant.now();
 
 		final Instant s2 = Instant.now();

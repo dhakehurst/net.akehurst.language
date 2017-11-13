@@ -1,4 +1,4 @@
-package net.akehurst.language.core.sppf;
+package net.akehurst.language.core.sppt;
 
 import net.akehurst.language.core.parser.IParseTreeVisitable;
 
@@ -11,7 +11,7 @@ import net.akehurst.language.core.parser.IParseTreeVisitable;
  */
 public interface ISharedPackedParseTree extends IParseTreeVisitable {
 
-	ISPPFNode getRoot();
+	ISPNode getRoot();
 
 	/**
 	 * Determines if there is an equivalent tree in this forest for every tree in the other forest.

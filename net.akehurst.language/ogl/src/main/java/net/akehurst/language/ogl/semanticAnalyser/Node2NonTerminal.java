@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import net.akehurst.language.core.sppf.ISPPFBranch;
+import net.akehurst.language.core.sppt.ISPBranch;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.transform.binary.ITransformer;
 import net.akehurst.transform.binary.RuleNotFoundException;
@@ -35,13 +35,13 @@ public class Node2NonTerminal extends AbstractNode2TangibleItem<NonTerminal> {
 	}
 
 	@Override
-	public boolean isAMatch(final ISPPFBranch left, final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final ISPBranch left, final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public NonTerminal constructLeft2Right(final ISPPFBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public NonTerminal constructLeft2Right(final ISPBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
 		// final INode ruleOwner = left.getParent();
 
@@ -54,18 +54,18 @@ public class Node2NonTerminal extends AbstractNode2TangibleItem<NonTerminal> {
 	}
 
 	@Override
-	public ISPPFBranch constructRight2Left(final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public ISPBranch constructRight2Left(final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final ISPPFBranch left, final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateLeft2Right(final ISPBranch left, final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
 	}
 
 	@Override
-	public void updateRight2Left(final ISPPFBranch left, final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final ISPBranch left, final NonTerminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

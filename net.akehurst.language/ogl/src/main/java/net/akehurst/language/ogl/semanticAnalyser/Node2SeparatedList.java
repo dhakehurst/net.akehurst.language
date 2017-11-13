@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISPNode;
 import net.akehurst.language.ogl.semanticStructure.SeparatedList;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
@@ -39,26 +39,26 @@ public class Node2SeparatedList extends AbstractNode2ConcatenationItem<Separated
 	}
 
 	@Override
-	public boolean isAMatch(final ISPPFBranch left, final SeparatedList right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final ISPBranch left, final SeparatedList right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public SeparatedList constructLeft2Right(final ISPPFBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public SeparatedList constructLeft2Right(final ISPBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
-		final ISPPFNode itemNode = left.getChild(1);
+		final ISPNode itemNode = left.getChild(1);
 
-		final TangibleItem item = transformer.transformLeft2Right((Class<IBinaryRule<ISPPFNode, TangibleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
+		final TangibleItem item = transformer.transformLeft2Right((Class<IBinaryRule<ISPNode, TangibleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
 
-		final ISPPFNode separatorNode = left.getChild(3);
+		final ISPNode separatorNode = left.getChild(3);
 
-		final TerminalLiteral separator = transformer.transformLeft2Right((Class<IBinaryRule<ISPPFNode, TerminalLiteral>>) (Class<?>) AbstractNode2Terminal.class,
+		final TerminalLiteral separator = transformer.transformLeft2Right((Class<IBinaryRule<ISPNode, TerminalLiteral>>) (Class<?>) AbstractNode2Terminal.class,
 				separatorNode);
 
-		final ISPPFNode multiplicityNode = left.getChild(5);
+		final ISPNode multiplicityNode = left.getChild(5);
 		// TODO: this should really be done with transform rules!
-		final String multiplicityString = ((ISPPFBranch) multiplicityNode).getChild(0).getName();
+		final String multiplicityString = ((ISPBranch) multiplicityNode).getChild(0).getName();
 		int min = -1;
 		int max = -1;
 		if ("*".equals(multiplicityString)) {
@@ -78,20 +78,20 @@ public class Node2SeparatedList extends AbstractNode2ConcatenationItem<Separated
 	}
 
 	@Override
-	public ISPPFBranch constructRight2Left(final SeparatedList right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public ISPBranch constructRight2Left(final SeparatedList right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final ISPPFBranch left, final SeparatedList right, final ITransformer transformer)
+	public void updateLeft2Right(final ISPBranch left, final SeparatedList right, final ITransformer transformer)
 			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final ISPPFBranch left, final SeparatedList right, final ITransformer transformer)
+	public void updateRight2Left(final ISPBranch left, final SeparatedList right, final ITransformer transformer)
 			throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 

@@ -19,9 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppf.IParseTree;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
@@ -57,17 +55,16 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 		final String goal = "expr";
 		final String text = ".5";
 
-		final ISharedPackedParseTree forest = this.process(g, text, goal);
+		final ISharedPackedParseTree actual = this.process(g, text, goal);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("expr {");
 		b.define("  real { '([0-9]+[.][0-9]*)|([.][0-9]+)' : '.5' }");
 		b.define("}");
-		final IParseTree expected = b.build();
-		// final ISPPFBranch expected = b.branch("expr", b.branch("real", b.leaf("([0-9]+[.][0-9]*)|([.][0-9]+)", ".5")));
+		final ISharedPackedParseTree expected = b.buildAndAdd();
 
-		Assert.assertNotNull(forest);
-		Assert.assertEquals(expected, forest);
+		Assert.assertNotNull(actual);
+		Assert.assertEquals(expected, actual);
 
 	}
 
@@ -79,13 +76,16 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 		final String goal = "expr";
 		final String text = "1.";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
-		Assert.assertNotNull(tree);
+		final ISharedPackedParseTree actual = this.process(g, text, goal);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		;
-		final ISPPFBranch expected = b.branch("expr", b.branch("real", b.leaf("([0-9]+[.][0-9]*)|([.][0-9]+)", "1.")));
-		Assert.assertEquals(expected, tree.getRoot());
+		b.define("expr {");
+		b.define("  real { '([0-9]+[.][0-9]*)|([.][0-9]+)' : '1.' }");
+		b.define("}");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+
+		Assert.assertNotNull(actual);
+		Assert.assertEquals(expected, actual);
 
 	}
 
@@ -97,14 +97,20 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 		final String goal = "expr";
 		final String text = "1..5";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
-		Assert.assertNotNull(tree);
+		final ISharedPackedParseTree actual = this.process(g, text, goal);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		;
-		final ISPPFBranch expected = b.branch("expr",
-				b.branch("range", b.branch("integer", b.leaf("[0-9]+", "1")), b.leaf("..", ".."), b.branch("integer", b.leaf("[0-9]+", "5"))));
-		Assert.assertEquals(expected, tree.getRoot());
+		b.define("expr {");
+		b.define("  range {");
+		b.define("    integer { '[0-9]+' : '1' }");
+		b.define("    '..'");
+		b.define("    integer { '[0-9]+' : '5' }");
+		b.define("  }");
+		b.define("}");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+
+		Assert.assertNotNull(actual);
+		Assert.assertEquals(expected, actual);
 
 	}
 }

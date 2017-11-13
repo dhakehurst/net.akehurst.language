@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppt.ISPNode;
 import net.akehurst.language.grammar.parser.log.Log;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
@@ -301,7 +301,7 @@ public class ParseGraph implements IParseGraph {
 				if (gn.getIsLeaf()) {
 					// dont try and add children...can't for a leaf
 				} else {
-					cn.getChildrenAlternatives().add((List<ISPPFNode>) (List<?>) gn.getGrowingChildren());
+					cn.getChildrenAlternatives().add((List<ISPNode>) (List<?>) gn.getGrowingChildren());
 				}
 			} else {
 				if (gn.getIsLeaf()) {
@@ -313,12 +313,20 @@ public class ParseGraph implements IParseGraph {
 
 					// TODO: don't add duplicate children
 					// somewhere resolve priorities!
-
-					cn.getChildrenAlternatives().add((List<ISPPFNode>) (List<?>) gn.getGrowingChildren());
+					final int existingPriority = cn.getPriority();
+					final int newPriority = gn.getPriority();
+					if (existingPriority == newPriority) {
+						// TODO: record/log ambiguity!
+						cn.getChildrenAlternatives().add((List<ISPNode>) (List<?>) gn.getGrowingChildren());
+					} else if (existingPriority < newPriority) {
+						// do nothing, drop new one
+						final int i = 0;
+					} else if (newPriority < existingPriority) {
+						// replace existing with new
+						cn.getChildrenAlternatives().clear();
+						cn.getChildrenAlternatives().add((List<ISPNode>) (List<?>) gn.getGrowingChildren());
+					}
 				}
-
-				int i = 0;
-				i++;
 			}
 
 			this.checkForGoal(cn);

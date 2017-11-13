@@ -10,18 +10,18 @@ import net.akehurst.holser.reflect.BetterMethodFinder;
 import net.akehurst.language.core.analyser.IGrammarLoader;
 import net.akehurst.language.core.analyser.ISemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.sppf.ILeaf;
-import net.akehurst.language.core.sppf.IParseTreeVisitor;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.ISPLeaf;
+import net.akehurst.language.core.sppt.IParseTreeVisitor;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 
 public abstract class SemanticAnalyserVisitorBasedAbstract implements ISemanticAnalyser, IParseTreeVisitor<Object, Object, UnableToAnalyseExeception> {
 
 	static Class<?>[] parameterTypes = BranchHandler.class.getMethods()[0].getParameterTypes();
 
 	static public interface BranchHandler<T> {
-		T handle(ISPPFBranch target, List<ISPPFBranch> children, Object arg) throws UnableToAnalyseExeception;
+		T handle(ISPBranch target, List<ISPBranch> children, Object arg) throws UnableToAnalyseExeception;
 	}
 
 	public SemanticAnalyserVisitorBasedAbstract() {
@@ -57,7 +57,7 @@ public abstract class SemanticAnalyserVisitorBasedAbstract implements ISemanticA
 		return handler;
 	}
 
-	protected <T> T analyse(final ISPPFBranch branch, final Object arg) throws UnableToAnalyseExeception {
+	protected <T> T analyse(final ISPBranch branch, final Object arg) throws UnableToAnalyseExeception {
 		return null == branch ? null : (T) branch.accept(this, arg);
 	}
 
@@ -86,23 +86,23 @@ public abstract class SemanticAnalyserVisitorBasedAbstract implements ISemanticA
 	// --- IParseTreeVisitor ---
 	@Override
 	public Object visit(final ISharedPackedParseTree target, final Object arg) throws UnableToAnalyseExeception {
-		final ISPPFNode root = target.getRoot();
+		final ISPNode root = target.getRoot();
 		return root.accept(this, arg);
 	}
 
 	@Override
-	public Object visit(final ILeaf target, final Object arg) throws UnableToAnalyseExeception {
+	public Object visit(final ISPLeaf target, final Object arg) throws UnableToAnalyseExeception {
 		return target.getMatchedText();
 	}
 
 	@Override
-	public Object visit(final ISPPFBranch target, final Object arg) throws UnableToAnalyseExeception {
+	public Object visit(final ISPBranch target, final Object arg) throws UnableToAnalyseExeception {
 		final String branchName = target.getName();
 		final BranchHandler<?> handler = this.getBranchHandler(branchName);
 		if (null == handler) {
 			throw new UnableToAnalyseExeception("Branch not handled in analyser " + branchName, null);
 		} else {
-			final List<ISPPFBranch> branchChildren = target.getBranchNonSkipChildren();// .stream().map(it -> it.getIsEmpty() ? null :
+			final List<ISPBranch> branchChildren = target.getBranchNonSkipChildren();// .stream().map(it -> it.getIsEmpty() ? null :
 																						// it).collect(Collectors.toList());
 			return handler.handle(target, branchChildren, arg);
 		}

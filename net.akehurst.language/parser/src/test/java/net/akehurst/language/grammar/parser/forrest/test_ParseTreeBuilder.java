@@ -3,7 +3,7 @@ package net.akehurst.language.grammar.parser.forrest;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.sppf.ILeaf;
+import net.akehurst.language.core.sppt.ISPLeaf;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.converter.Grammar2RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
@@ -27,7 +27,7 @@ public class test_ParseTreeBuilder {
 			c.transformLeft2Right(Grammar2RuntimeRuleSet.class, grammar);
 
 			final ParseTreeBuilder b = new ParseTreeBuilder(runtimeRules, grammar, "a", text, 0);
-			final ILeaf l = b.leaf("a");
+			final ISPLeaf l = b.leaf("a");
 
 			Assert.assertEquals(0, l.getStartPosition());
 			// Assert.assertEquals(1, l.getEnd());

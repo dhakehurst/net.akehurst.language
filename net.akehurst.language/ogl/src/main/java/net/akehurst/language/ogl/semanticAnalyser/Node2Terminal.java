@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISPNode;
 import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.transform.binary.IBinaryRule;
 import net.akehurst.transform.binary.ITransformer;
@@ -37,32 +37,32 @@ public class Node2Terminal extends AbstractNode2TangibleItem<Terminal> {
 	}
 
 	@Override
-	public boolean isAMatch(final ISPPFBranch left, final Terminal right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final ISPBranch left, final Terminal right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Terminal constructLeft2Right(final ISPPFBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
-		final ISPPFNode terminalNode = left.getChild(0);
-		final Terminal right = transformer.transformLeft2Right((Class<IBinaryRule<ISPPFNode, Terminal>>) (Class<?>) AbstractNode2Terminal.class, terminalNode);
+	public Terminal constructLeft2Right(final ISPBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+		final ISPNode terminalNode = left.getChild(0);
+		final Terminal right = transformer.transformLeft2Right((Class<IBinaryRule<ISPNode, Terminal>>) (Class<?>) AbstractNode2Terminal.class, terminalNode);
 		return right;
 	}
 
 	@Override
-	public ISPPFBranch constructRight2Left(final Terminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public ISPBranch constructRight2Left(final Terminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final ISPPFBranch left, final Terminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateLeft2Right(final ISPBranch left, final Terminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void updateRight2Left(final ISPPFBranch left, final Terminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final ISPBranch left, final Terminal right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

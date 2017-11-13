@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.core.sppf;
+package net.akehurst.language.core.sppt;
 
 import java.util.List;
 
-public interface IBranch_old extends ISPPFBranch {
+public interface IBranch_old extends ISPBranch {
 
 	/**
 	 * returns true if there are 0 non skip children or if the only child node is an EmptyLeaf
@@ -30,9 +30,9 @@ public interface IBranch_old extends ISPPFBranch {
 	 *
 	 * @return the children of this branch.
 	 */
-	List<ISPPFNode> getChildren();
+	List<ISPNode> getChildren();
 
-	List<ISPPFNode> getNonSkipChildren();
+	List<ISPNode> getNonSkipChildren();
 
 	/**
 	 * this returns the i'th non skip child of this Branch
@@ -41,7 +41,7 @@ public interface IBranch_old extends ISPPFBranch {
 	 *            index of required child
 	 * @return i'th non skip child.
 	 */
-	ISPPFNode getChild(int i);
+	ISPNode getChild(int i);
 
 	/**
 	 * Convenience method. returns the i'th non skip child of this Branch but assumes the child is also a Branch and casts the result.
@@ -49,12 +49,12 @@ public interface IBranch_old extends ISPPFBranch {
 	 * @param i
 	 * @return
 	 */
-	ISPPFBranch getBranchChild(int i);
+	ISPBranch getBranchChild(int i);
 
 	/**
 	 * Filters out any children that are skip nodes or not branches
 	 *
 	 * @return all children that are branches and non skip
 	 */
-	List<ISPPFBranch> getBranchNonSkipChildren();
+	List<ISPBranch> getBranchNonSkipChildren();
 }

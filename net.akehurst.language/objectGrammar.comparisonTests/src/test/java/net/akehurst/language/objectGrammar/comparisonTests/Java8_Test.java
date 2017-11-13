@@ -21,10 +21,10 @@ import org.junit.Test;
 import antlr4.Java8Parser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;
@@ -74,12 +74,12 @@ public class Java8_Test {
 		return Java8_Test.javaProcessor;
 	}
 
-	static IParseTree parseWithOG(final Path file) {
+	static ISharedPackedParseTree parseWithOG(final Path file) {
 		try {
 			final byte[] bytes = Files.readAllBytes(file);
 			final FileReader reader = new FileReader(file.toFile());
 
-			final IParseTree tree = Java8_Test.getJavaProcessor().getParser().parse("compilationUnit", reader);
+			final ISharedPackedParseTree tree = Java8_Test.getJavaProcessor().getParser().parse("compilationUnit", reader);
 
 			return tree;
 		} catch (ParseFailedException | ParseTreeException | IOException | RuleNotFoundException e) {
@@ -108,21 +108,21 @@ public class Java8_Test {
 	public void og_compilationUnit() {
 
 		final Path file = Paths.get("src/test/resources/File1.java");
-		final IParseTree tree = Java8_Test.parseWithOG(file);
+		final ISharedPackedParseTree tree = Java8_Test.parseWithOG(file);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
 	public void og_longName() {
 		final Path file = Paths.get("src/test/resources/javac/limits/LongName.java");
-		final IParseTree tree = Java8_Test.parseWithOG(file);
+		final ISharedPackedParseTree tree = Java8_Test.parseWithOG(file);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
 	public void og_numArgs1() {
 		final Path file = Paths.get("src/test/resources/javac/limits/NumArgs1.java");
-		final IParseTree tree = Java8_Test.parseWithOG(file);
+		final ISharedPackedParseTree tree = Java8_Test.parseWithOG(file);
 		Assert.assertNotNull(tree);
 	}
 

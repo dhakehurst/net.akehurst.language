@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import net.akehurst.language.core.grammar.IGrammar;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISPPFNode;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISPNode;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.Rule;
@@ -30,10 +30,10 @@ import net.akehurst.transform.binary.ITransformer;
 import net.akehurst.transform.binary.RuleNotFoundException;
 import net.akehurst.transform.binary.TransformException;
 
-public class GrammarDefinitionBranch2Grammar implements IBinaryRule<ISPPFNode, Grammar> {
+public class GrammarDefinitionBranch2Grammar implements IBinaryRule<ISPNode, Grammar> {
 
 	@Override
-	public boolean isValidForLeft2Right(final ISPPFNode left) {
+	public boolean isValidForLeft2Right(final ISPNode left) {
 		return left.getName().equals("grammarDefinition");
 	}
 
@@ -44,17 +44,17 @@ public class GrammarDefinitionBranch2Grammar implements IBinaryRule<ISPPFNode, G
 	}
 
 	@Override
-	public boolean isAMatch(final ISPPFNode left, final Grammar right, final ITransformer transformer) throws RuleNotFoundException {
+	public boolean isAMatch(final ISPNode left, final Grammar right, final ITransformer transformer) throws RuleNotFoundException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public Grammar constructLeft2Right(final ISPPFNode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public Grammar constructLeft2Right(final ISPNode left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
-		final ISPPFBranch namespaceBranch = (ISPPFBranch) ((ISPPFBranch) left).getChild(0);
-		final ISPPFBranch grammarBranch = (ISPPFBranch) ((ISPPFBranch) left).getChild(1);
-		final ISPPFBranch grammarNameBranch = (ISPPFBranch) grammarBranch.getChild(1);
+		final ISPBranch namespaceBranch = (ISPBranch) ((ISPBranch) left).getChild(0);
+		final ISPBranch grammarBranch = (ISPBranch) ((ISPBranch) left).getChild(1);
+		final ISPBranch grammarNameBranch = (ISPBranch) grammarBranch.getChild(1);
 
 		final Namespace namespace = transformer.transformLeft2Right(Node2Namespace.class, namespaceBranch);
 		final String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, grammarNameBranch);
@@ -66,27 +66,27 @@ public class GrammarDefinitionBranch2Grammar implements IBinaryRule<ISPPFNode, G
 	}
 
 	@Override
-	public ISPPFBranch constructRight2Left(final Grammar arg0, final ITransformer arg1) throws RuleNotFoundException, TransformException {
+	public ISPBranch constructRight2Left(final Grammar arg0, final ITransformer arg1) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub, handle extends !!
 		return null;
 	}
 
 	@Override
-	public void updateLeft2Right(final ISPPFNode left, final Grammar right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+	public void updateLeft2Right(final ISPNode left, final Grammar right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
 
-		final ISPPFBranch grammarBranch = (ISPPFBranch) ((ISPPFBranch) left).getChild(1);
-		final ISPPFBranch extendsBranch = (ISPPFBranch) grammarBranch.getChild(2);
-		final ISPPFBranch rulesBranch = (ISPPFBranch) grammarBranch.getChild(4);
-		final List<ISPPFBranch> ruleBranches = rulesBranch.getBranchNonSkipChildren();
+		final ISPBranch grammarBranch = (ISPBranch) ((ISPBranch) left).getChild(1);
+		final ISPBranch extendsBranch = (ISPBranch) grammarBranch.getChild(2);
+		final ISPBranch rulesBranch = (ISPBranch) grammarBranch.getChild(4);
+		final List<ISPBranch> ruleBranches = rulesBranch.getBranchNonSkipChildren();
 
 		if (0 == extendsBranch.getMatchedTextLength()) {
 			// no extended grammar
 		} else {
-			final ISPPFBranch extendsListBranch = (ISPPFBranch) ((ISPPFBranch) extendsBranch.getChild(0)).getChild(1);
+			final ISPBranch extendsListBranch = (ISPBranch) ((ISPBranch) extendsBranch.getChild(0)).getChild(1);
 			final List<String> extendsList = new ArrayList<>();
-			for (final ISPPFNode n : extendsListBranch.getNonSkipChildren()) {
+			for (final ISPNode n : extendsListBranch.getNonSkipChildren()) {
 				if ("qualifiedName".equals(n.getName())) {
-					final ISPPFBranch b = (ISPPFBranch) n;
+					final ISPBranch b = (ISPBranch) n;
 					String qualifiedName = n.getMatchedText().trim();
 					if (1 == b.getNonSkipChildren().size()) {
 						qualifiedName = right.getNamespace().getQualifiedName() + "::" + qualifiedName;
@@ -106,7 +106,7 @@ public class GrammarDefinitionBranch2Grammar implements IBinaryRule<ISPPFNode, G
 	}
 
 	@Override
-	public void updateRight2Left(final ISPPFNode arg0, final Grammar arg1, final ITransformer arg2) throws RuleNotFoundException, TransformException {
+	public void updateRight2Left(final ISPNode arg0, final Grammar arg1, final ITransformer arg2) throws RuleNotFoundException, TransformException {
 		// TODO Auto-generated method stub
 
 	}

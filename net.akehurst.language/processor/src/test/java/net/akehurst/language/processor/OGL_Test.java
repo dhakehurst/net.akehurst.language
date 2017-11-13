@@ -19,7 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.ogl.grammar.OGLGrammar;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 
@@ -37,7 +37,7 @@ public class OGL_Test extends AbstractParser_Test {
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G { a : 'a' ;}";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}
@@ -50,7 +50,7 @@ public class OGL_Test extends AbstractParser_Test {
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G { a : 'a'; b:'b'; }";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}
@@ -63,7 +63,7 @@ public class OGL_Test extends AbstractParser_Test {
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G { a : 'a'; b:'b'; c:'c'; }";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}
@@ -76,7 +76,7 @@ public class OGL_Test extends AbstractParser_Test {
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G { abc:a|b|c; a : 'a'; b:'b'; c:'c'; }";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}
@@ -90,7 +90,7 @@ public class OGL_Test extends AbstractParser_Test {
 		final String text = "namespace test; grammar G {sp:' ';}";
 		// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}
@@ -104,7 +104,7 @@ public class OGL_Test extends AbstractParser_Test {
 		final String text = " namespace test ;  grammar G  {  sp  :   ' '  ;  } ";
 		// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}
@@ -118,7 +118,7 @@ public class OGL_Test extends AbstractParser_Test {
 		final String text = "'\\''";
 		// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}

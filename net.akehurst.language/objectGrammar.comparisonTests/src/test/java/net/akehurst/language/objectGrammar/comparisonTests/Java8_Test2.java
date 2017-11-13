@@ -29,10 +29,10 @@ import org.junit.runners.Parameterized.Parameters;
 import antlr4.Java8Parser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
-import net.akehurst.language.core.parser.IParseTree;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;
@@ -124,9 +124,9 @@ public class Java8_Test2 {
 
 	static String og_input;
 
-	static IParseTree parseWithOG(final Path file) {
+	static ISharedPackedParseTree parseWithOG(final Path file) {
 		try {
-			final IParseTree tree = Java8_Test2.getJavaProcessor().getParser().parse("compilationUnit", new StringReader(Java8_Test2.og_input));
+			final ISharedPackedParseTree tree = Java8_Test2.getJavaProcessor().getParser().parse("compilationUnit", new StringReader(Java8_Test2.og_input));
 			return tree;
 		} catch (ParseFailedException | ParseTreeException | RuleNotFoundException e) {
 			System.out.println("Failed to parse: " + file);
@@ -155,7 +155,7 @@ public class Java8_Test2 {
 	@Test
 	public void og_compilationUnit() {
 
-		final IParseTree tree = Java8_Test2.parseWithOG(this.file);
+		final ISharedPackedParseTree tree = Java8_Test2.parseWithOG(this.file);
 		Assert.assertNotNull("Failed to Parse", tree);
 	}
 

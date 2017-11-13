@@ -7,24 +7,26 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.sppf.ILeaf;
-import net.akehurst.language.core.sppf.IParseTreeVisitor;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISPPFNodeIdentity;
-import net.akehurst.language.core.sppf.SPPFNodeIdentity;
+import net.akehurst.language.core.sppt.IParseTreeVisitor;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISPLeaf;
+import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.ISPNodeIdentity;
+import net.akehurst.language.core.sppt.SPNodeIdentity;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.sppf.Leaf;
 
-public class GraphNodeLeaf implements ICompleteNode, ILeaf {
+public class GraphNodeLeaf implements ICompleteNode, ISPLeaf {
 
 	private final Leaf leaf;
 	private final int finalMatchedTextLength;
-	private ISPPFBranch parent;
+
+	private ISPBranch parent;
 
 	public GraphNodeLeaf(final ParseGraph graph, final Leaf leaf) {
 		this.leaf = leaf;
 		this.finalMatchedTextLength = leaf.getMatchedTextLength();
+
 	}
 
 	@Override
@@ -48,13 +50,8 @@ public class GraphNodeLeaf implements ICompleteNode, ILeaf {
 	}
 
 	@Override
-	public boolean getIsSkip() {
-		return this.getRuntimeRule().getIsSkipRule();
-	}
-
-	@Override
-	public boolean getIsLeaf() {
-		return true;
+	public int getPriority() {
+		return 0; // should never be called!;
 	}
 
 	@Override
@@ -63,7 +60,7 @@ public class GraphNodeLeaf implements ICompleteNode, ILeaf {
 	}
 
 	@Override
-	public Set<List<ISPPFNode>> getChildrenAlternatives() {
+	public Set<List<ISPNode>> getChildrenAlternatives() {
 		return Collections.emptySet();
 	}
 
@@ -102,60 +99,55 @@ public class GraphNodeLeaf implements ICompleteNode, ILeaf {
 	}
 
 	@Override
-	public ISPPFBranch getParent() {
+	public ISPBranch getParent() {
 		return this.parent;
 	}
 
 	@Override
-	public void setParent(final ISPPFBranch value) {
+	public void setParent(final ISPBranch value) {
 		this.parent = value;
 	}
 
 	@Override
 	public String getNonSkipMatchedText() {
-		return this.getIsSkip() ? "" : this.getMatchedText();
+		return this.isSkip() ? "" : this.getMatchedText();
 	}
 
 	@Override
-	public ISPPFNodeIdentity getIdentity() {
+	public ISPNodeIdentity getIdentity() {
 		// TODO Auto-generated method stub
-		return new SPPFNodeIdentity(this.getRuntimeRuleNumber(), this.getStartPosition(), this.getMatchedTextLength());
+		return new SPNodeIdentity(this.getRuntimeRuleNumber(), this.getStartPosition(), this.getMatchedTextLength());
 	}
 
 	@Override
 	public boolean isSkip() {
-		// TODO Auto-generated method stub
-		return false;
+		return this.getRuntimeRule().getIsSkipRule();
 	}
 
 	@Override
 	public boolean isLeaf() {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean isBranch() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public ILeaf asLeaf() {
-		// TODO Auto-generated method stub
+	public ISPLeaf asLeaf() {
+		return this;
+	}
+
+	@Override
+	public ISPBranch asBranch() {
 		return null;
 	}
 
 	@Override
-	public ISPPFBranch asBranch() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean contains(final ISPPFNode other) {
-		if (other instanceof ILeaf) {
-			final ILeaf otherLeaf = (ILeaf) other;
+	public boolean contains(final ISPNode other) {
+		if (other instanceof ISPLeaf) {
+			final ISPLeaf otherLeaf = (ISPLeaf) other;
 			return Objects.equals(this.getIdentity(), otherLeaf.getIdentity());
 		} else {
 			return false;

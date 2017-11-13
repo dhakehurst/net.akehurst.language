@@ -26,8 +26,8 @@ import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
@@ -50,10 +50,10 @@ public class OGLParser_Test {
 		return new ParseTreeBuilder(this.parseTreeFactory, grammar, goal, text, 0);
 	}
 
-	IParseTree process(final IGrammar grammar, final String text, final String goalName) throws ParseFailedException {
+	ISharedPackedParseTree process(final IGrammar grammar, final String text, final String goalName) throws ParseFailedException {
 		try {
 			final IParser parser = new ScannerLessParser3(this.parseTreeFactory, grammar);
-			final IParseTree tree = parser.parse(goalName, new StringReader(text));
+			final ISharedPackedParseTree tree = parser.parse(goalName, new StringReader(text));
 			return tree;
 		} catch (final RuleNotFoundException e) {
 			Assert.fail(e.getMessage());
@@ -84,12 +84,12 @@ public class OGLParser_Test {
 			final String goal = "grammarDefinition";
 			final String text = "namespace test;" + System.lineSeparator();
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
-			final ISPPFBranch expected = b.branch("grammarDefinition", b.branch("namespace", b.leaf("namespace"), b.branch("WHITESPACE", b.leaf("\\s+", " ")),
+			final ISPBranch expected = b.branch("grammarDefinition", b.branch("namespace", b.leaf("namespace"), b.branch("WHITESPACE", b.leaf("\\s+", " ")),
 					b.branch("IDENTIFIER", b.leaf("[a-zA-Z_][a-zA-Z_0-9]*", "test")), b.leaf(";", ";")));
 			Assert.assertEquals(expected, tree.getRoot());
 
@@ -120,7 +120,7 @@ public class OGLParser_Test {
 			text += "grammar A {" + System.lineSeparator();
 			text += "}";
 
-			final IParseTree tree = this.process(g, text, "grammarDefinition");
+			final ISharedPackedParseTree tree = this.process(g, text, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
 
@@ -140,7 +140,7 @@ public class OGLParser_Test {
 			text += " a :  ;" + System.lineSeparator();
 			text += "}";
 
-			final IParseTree tree = this.process(g, text, "grammarDefinition");
+			final ISharedPackedParseTree tree = this.process(g, text, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
 
@@ -167,7 +167,7 @@ public class OGLParser_Test {
 			final String goal = "qualifiedName";
 			final String text = "a";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 
 			Assert.assertNotNull(tree);
 
@@ -183,7 +183,7 @@ public class OGLParser_Test {
 			final String goal = "qualifiedName";
 			final String text = "a::b";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 
 			Assert.assertNotNull(tree);
 
@@ -199,7 +199,7 @@ public class OGLParser_Test {
 			final String goal = "qualifiedName";
 			final String text = "a::b::c::d";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 
 			Assert.assertNotNull(tree);
 
@@ -233,7 +233,7 @@ public class OGLParser_Test {
 			text += "grammar A {" + System.lineSeparator();
 			text += "}";
 
-			final IParseTree tree = this.process(g, text, goal);
+			final ISharedPackedParseTree tree = this.process(g, text, goal);
 
 			Assert.assertNotNull(tree);
 
@@ -272,7 +272,7 @@ public class OGLParser_Test {
 		text += "a = b ;";
 		text += "}";
 
-		final IParseTree tree = this.process(g, text, goal);
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
 
 		Assert.assertNotNull(tree);
 
@@ -290,7 +290,7 @@ public class OGLParser_Test {
 		text += " a : 'a' ;" + System.lineSeparator();
 		text += "}";
 
-		final IParseTree tree = this.process(g, text, "grammarDefinition");
+		final ISharedPackedParseTree tree = this.process(g, text, "grammarDefinition");
 
 		Assert.assertNotNull(tree);
 
@@ -303,7 +303,7 @@ public class OGLParser_Test {
 
 		final String text = "namespace test; grammar A { skip SP : ' ' ; a : 'a' ; }";
 
-		final IParseTree tree = this.process(g, text, "grammarDefinition");
+		final ISharedPackedParseTree tree = this.process(g, text, "grammarDefinition");
 
 		Assert.assertNotNull(tree);
 
@@ -317,7 +317,7 @@ public class OGLParser_Test {
 
 		final String text = "['a' / ',']+";
 
-		final IParseTree tree = this.process(g, text, "separatedList");
+		final ISharedPackedParseTree tree = this.process(g, text, "separatedList");
 
 		Assert.assertNotNull(tree);
 
@@ -331,7 +331,7 @@ public class OGLParser_Test {
 
 			final String text = "sepList:['a'/',']+;";
 
-			final IParseTree tree = this.process(g, text, "normalRule");
+			final ISharedPackedParseTree tree = this.process(g, text, "normalRule");
 
 			Assert.assertNotNull(tree);
 
@@ -348,7 +348,7 @@ public class OGLParser_Test {
 
 			final String text = "sepList : ['a' / ',']+;";
 
-			final IParseTree tree = this.process(g, text, "normalRule");
+			final ISharedPackedParseTree tree = this.process(g, text, "normalRule");
 
 			Assert.assertNotNull(tree);
 
@@ -365,7 +365,7 @@ public class OGLParser_Test {
 
 			final String text = "sepList:['a'/',']+;";
 
-			final IParseTree tree = this.process(g, text, "rules");
+			final ISharedPackedParseTree tree = this.process(g, text, "rules");
 
 			Assert.assertNotNull(tree);
 
@@ -382,7 +382,7 @@ public class OGLParser_Test {
 
 			final String text = "sepList : ['a' / ',']+;";
 
-			final IParseTree tree = this.process(g, text, "rules");
+			final ISharedPackedParseTree tree = this.process(g, text, "rules");
 
 			Assert.assertNotNull(tree);
 			Assert.assertEquals(text.length(), tree.getRoot().getMatchedTextLength());
@@ -400,7 +400,7 @@ public class OGLParser_Test {
 
 			final String text = "grammarA{sepList:['a'/',']+;}";
 
-			final IParseTree tree = this.process(g, text, "grammar");
+			final ISharedPackedParseTree tree = this.process(g, text, "grammar");
 
 			Assert.assertNotNull(tree);
 			Assert.assertEquals(text.length(), tree.getRoot().getMatchedTextLength());
@@ -418,7 +418,7 @@ public class OGLParser_Test {
 
 			final String text = "grammar A { sepList : ['a' / ',']+; }";
 
-			final IParseTree tree = this.process(g, text, "grammar");
+			final ISharedPackedParseTree tree = this.process(g, text, "grammar");
 
 			Assert.assertNotNull(tree);
 
@@ -435,7 +435,7 @@ public class OGLParser_Test {
 
 			final String text = "namespace test; grammar A { sepList : ['a' / ',']+; }";
 
-			final IParseTree tree = this.process(g, text, "grammarDefinition");
+			final ISharedPackedParseTree tree = this.process(g, text, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
 
@@ -452,7 +452,7 @@ public class OGLParser_Test {
 
 			final String text = "namespace test; grammar A { sepList : ['a' / ',']*; }";
 
-			final IParseTree tree = this.process(g, text, "grammarDefinition");
+			final ISharedPackedParseTree tree = this.process(g, text, "grammarDefinition");
 
 			Assert.assertNotNull(tree);
 
@@ -470,7 +470,7 @@ public class OGLParser_Test {
 
 			final String text = "/* this is a comment */";
 
-			final IParseTree tree = this.process(g, text, "MULTI_LINE_COMMENT");
+			final ISharedPackedParseTree tree = this.process(g, text, "MULTI_LINE_COMMENT");
 
 			Assert.assertNotNull(tree);
 
@@ -488,7 +488,7 @@ public class OGLParser_Test {
 
 			final String text = "// this is a comment" + System.lineSeparator();
 
-			final IParseTree tree = this.process(g, text, "SINGLE_LINE_COMMENT");
+			final ISharedPackedParseTree tree = this.process(g, text, "SINGLE_LINE_COMMENT");
 
 			Assert.assertNotNull(tree);
 
@@ -504,7 +504,7 @@ public class OGLParser_Test {
 			final IGrammar g = proc.getGrammar();
 			final String text = "classType:'.'annotation*;";
 
-			final IParseTree tree = this.process(g, text, "normalRule");
+			final ISharedPackedParseTree tree = this.process(g, text, "normalRule");
 
 		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -518,7 +518,7 @@ public class OGLParser_Test {
 			final IGrammar g = proc.getGrammar();
 			final String text = "classType :	annotation* Identifier typeArguments? |	classOrInterfaceType '.' annotation* Identifier typeArguments?;";
 
-			final IParseTree tree = this.process(g, text, "normalRule");
+			final ISharedPackedParseTree tree = this.process(g, text, "normalRule");
 
 		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -532,7 +532,7 @@ public class OGLParser_Test {
 			final IGrammar g = proc.getGrammar();
 			final String text = "type : primitiveType | referenceType ;";
 
-			final IParseTree tree = this.process(g, text, "normalRule");
+			final ISharedPackedParseTree tree = this.process(g, text, "normalRule");
 
 		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());
@@ -546,7 +546,7 @@ public class OGLParser_Test {
 			final IGrammar g = proc.getGrammar();
 			final String text = "type : primitiveType < referenceType ;";
 
-			final IParseTree tree = this.process(g, text, "normalRule");
+			final ISharedPackedParseTree tree = this.process(g, text, "normalRule");
 
 		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());

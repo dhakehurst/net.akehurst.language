@@ -26,7 +26,7 @@ import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 
 public class OGLAnalyser_Test {
@@ -36,7 +36,7 @@ public class OGLAnalyser_Test {
 			final OGLanguageProcessor proc = new OGLanguageProcessor();
 
 			// List<IToken> tokens = proc.getLexicalAnaliser().lex(grammar);
-			final IParseTree tree = proc.getParser().parse("grammarDefinition", grammarText);
+			final ISharedPackedParseTree tree = proc.getParser().parse("grammarDefinition", grammarText);
 			final T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
@@ -55,7 +55,7 @@ public class OGLAnalyser_Test {
 			final InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(grammarFile);
 			final InputStreamReader reader = new InputStreamReader(is);
 
-			final IParseTree tree = proc.getParser().parse("grammarDefinition", reader);
+			final ISharedPackedParseTree tree = proc.getParser().parse("grammarDefinition", reader);
 			final T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
@@ -79,7 +79,7 @@ public class OGLAnalyser_Test {
 
 			final LanguageProcessor proc = new LanguageProcessor(grammar, null);
 
-			final IParseTree tree = proc.getParser().parse("a", new StringReader("a"));
+			final ISharedPackedParseTree tree = proc.getParser().parse("a", new StringReader("a"));
 			Assert.assertNotNull(tree);
 
 		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | RuleNotFoundException e) {
@@ -102,7 +102,7 @@ public class OGLAnalyser_Test {
 
 			final LanguageProcessor proc = new LanguageProcessor(grammar, null);
 
-			final IParseTree tree = proc.getParser().parse("singleQuote", "'");
+			final ISharedPackedParseTree tree = proc.getParser().parse("singleQuote", "'");
 			Assert.assertNotNull(tree);
 
 		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | RuleNotFoundException e) {
@@ -125,7 +125,7 @@ public class OGLAnalyser_Test {
 
 		final LanguageProcessor proc = new LanguageProcessor(grammar, null);
 
-		final IParseTree tree = proc.getParser().parse("StringCharacter", "a");
+		final ISharedPackedParseTree tree = proc.getParser().parse("StringCharacter", "a");
 		Assert.assertNotNull(tree);
 
 	}
@@ -146,7 +146,7 @@ public class OGLAnalyser_Test {
 
 		final LanguageProcessor proc = new LanguageProcessor(grammar, null);
 
-		final IParseTree tree = proc.getParser().parse("StringLiteral", "\"abc\"");
+		final ISharedPackedParseTree tree = proc.getParser().parse("StringLiteral", "\"abc\"");
 		Assert.assertNotNull(tree);
 
 	}

@@ -15,11 +15,11 @@
  */
 package net.akehurst.language.grammar.parser;
 
-import net.akehurst.language.core.sppf.ILeaf;
-import net.akehurst.language.core.sppf.IParseTreeVisitor;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.ISPLeaf;
+import net.akehurst.language.core.sppt.IParseTreeVisitor;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 
 public class ToStringVisitor implements IParseTreeVisitor<String, String, RuntimeException> {
 
@@ -38,21 +38,23 @@ public class ToStringVisitor implements IParseTreeVisitor<String, String, Runtim
 	@Override
 	public String visit(final ISharedPackedParseTree target, final String indent) throws RuntimeException {
 		String s = indent;
-		final ISPPFNode root = target.getRoot();
+		final ISPNode root = target.getRoot();
 		s += root.accept(this, indent);
 		return s;
 	}
 
 	@Override
-	public String visit(final ILeaf target, final String indent) throws RuntimeException {
+	public String visit(final ISPLeaf target, final String indent) throws RuntimeException {
 		final String s = indent + target.getName() + " : \"" + target.getMatchedText().replace("\n", new String(Character.toChars(0x23CE))) + "\"";
 		return s;
 	}
 
 	@Override
-	public String visit(final ISPPFBranch target, final String indent) throws RuntimeException {
+	public String visit(final ISPBranch target, final String indent) throws RuntimeException {
 		String s = indent;
-		s += target.getName() + " {";
+		s += target.getName();
+		s += target.getChildrenAlternatives().size() > 1 ? "*" : "";
+		s += " {";
 		if (0 < target.getChildren().size()) {
 			s += this.lineSeparator;
 			s += target.getChildren().get(0).accept(this, indent + this.indentIncrement);

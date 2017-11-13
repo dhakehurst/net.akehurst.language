@@ -25,7 +25,7 @@ import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 
 public class test_OGL_Dot {
@@ -35,7 +35,7 @@ public class test_OGL_Dot {
 			final OGLanguageProcessor proc = new OGLanguageProcessor();
 
 			// List<IToken> tokens = proc.getLexicalAnaliser().lex(grammar);
-			final IParseTree tree = proc.getParser().parse("grammarDefinition", grammarText);
+			final ISharedPackedParseTree tree = proc.getParser().parse("grammarDefinition", grammarText);
 			final T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
@@ -54,7 +54,7 @@ public class test_OGL_Dot {
 			final InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(grammarFile);
 			final InputStreamReader reader = new InputStreamReader(is);
 
-			final IParseTree tree = proc.getParser().parse("grammarDefinition", reader);
+			final ISharedPackedParseTree tree = proc.getParser().parse("grammarDefinition", reader);
 			final T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
@@ -64,13 +64,13 @@ public class test_OGL_Dot {
 		}
 	}
 
-	IParseTree processDot(final String ruleName, final String text) {
+	ISharedPackedParseTree processDot(final String ruleName, final String text) {
 		try {
 			final String grammarFile = "Dot.ogl";
 			final Grammar grammar = this.processFile(grammarFile, Grammar.class);
 			Assert.assertNotNull(grammar);
 			final LanguageProcessor proc = new LanguageProcessor(grammar, null);
-			final IParseTree tree = proc.getParser().parse(ruleName, text);
+			final ISharedPackedParseTree tree = proc.getParser().parse(ruleName, text);
 			return tree;
 		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | RuleNotFoundException e) {
 			e.printStackTrace();
@@ -82,7 +82,7 @@ public class test_OGL_Dot {
 	@Test
 	public void test() {
 
-		final IParseTree tree = this.processDot("graph", "graph { }");
+		final ISharedPackedParseTree tree = this.processDot("graph", "graph { }");
 		Assert.assertNotNull(tree);
 
 	}
@@ -90,7 +90,7 @@ public class test_OGL_Dot {
 	@Test
 	public void test2() {
 
-		final IParseTree tree = this.processDot("graph", "sTriCt GRapH { }");
+		final ISharedPackedParseTree tree = this.processDot("graph", "sTriCt GRapH { }");
 		Assert.assertNotNull(tree);
 
 	}

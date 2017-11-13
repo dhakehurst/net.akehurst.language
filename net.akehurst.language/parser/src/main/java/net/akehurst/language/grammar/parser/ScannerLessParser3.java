@@ -15,9 +15,9 @@ import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.converter.Grammar2RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.forrest.Forrest3;
@@ -79,10 +79,10 @@ public class ScannerLessParser3 implements IParser {
 		try {
 			final INodeType goal = ((Grammar) this.getGrammar()).findRule(goalRuleName).getNodeType();
 			final ICompleteNode gr = this.parse3(goal, input);
-			final ISharedPackedParseTree tree = new SharedPackedParseTree((ISPPFNode) gr);
+			final ISharedPackedParseTree tree = new SharedPackedParseTree((ISPNode) gr);
 			// set the parent property of each child, these are not set during parsing
 			// TODO: don't know if we need this, probably not
-			this.setParentForChildren((ISPPFBranch) tree.getRoot());
+			this.setParentForChildren((ISPBranch) tree.getRoot());
 			return tree;
 		} catch (final RuleNotFoundException e) {
 			// Should never happen!
@@ -90,12 +90,12 @@ public class ScannerLessParser3 implements IParser {
 		}
 	}
 
-	private void setParentForChildren(final ISPPFBranch node) {
-		final ISPPFBranch parent = node;
-		for (final ISPPFNode child : parent.getChildren()) {
+	private void setParentForChildren(final ISPBranch node) {
+		final ISPBranch parent = node;
+		for (final ISPNode child : parent.getChildren()) {
 			child.setParent(parent);
-			if (child instanceof ISPPFBranch) {
-				this.setParentForChildren((ISPPFBranch) child);
+			if (child instanceof ISPBranch) {
+				this.setParentForChildren((ISPBranch) child);
 			}
 		}
 	}
@@ -114,9 +114,9 @@ public class ScannerLessParser3 implements IParser {
 		final IParseGraph graph = new ParseGraph(goalRule, input);
 		final Forrest3 newForrest = new Forrest3(graph, this.getRuntimeRuleSet(), input, goalRule);
 
-		System.out.println(this.grammar);
-		System.out.println();
-		System.out.println("input '" + input.getText() + "'");
+		Log.traceln("%s", this.grammar);
+		Log.traceln("");
+		Log.traceln("input '" + input.getText() + "'");
 
 		int seasons = 0;
 		Log.trace("%s", seasons);

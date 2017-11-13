@@ -18,7 +18,7 @@ import net.akehurst.language.core.grammar.IGrammar;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppf.IParseTree;
+import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 
 @RunWith(Parameterized.class)
 public class test_VistraqQuery {
@@ -110,7 +110,7 @@ public class test_VistraqQuery {
 
 		final String queryStr = this.data.queryStr;
 		final String grammarRule = this.data.grammarRule;
-		final IParseTree tree = this.processor.getParser().parse(grammarRule, queryStr);
+		final ISharedPackedParseTree tree = this.processor.getParser().parse(grammarRule, queryStr);
 		Assert.assertNotNull(tree);
 		final String resultStr = this.clean(tree.asString());
 		Assert.assertEquals(queryStr, resultStr);

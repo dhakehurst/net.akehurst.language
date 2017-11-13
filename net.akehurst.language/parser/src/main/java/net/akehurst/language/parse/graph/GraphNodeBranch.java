@@ -9,23 +9,23 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import net.akehurst.language.core.sppf.ILeaf;
-import net.akehurst.language.core.sppf.IParseTreeVisitor;
-import net.akehurst.language.core.sppf.ISPPFBranch;
-import net.akehurst.language.core.sppf.ISPPFNode;
-import net.akehurst.language.core.sppf.ISPPFNodeIdentity;
-import net.akehurst.language.core.sppf.SPPFNodeIdentity;
+import net.akehurst.language.core.sppt.IParseTreeVisitor;
+import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISPLeaf;
+import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.ISPNodeIdentity;
+import net.akehurst.language.core.sppt.SPNodeIdentity;
 import net.akehurst.language.grammar.parser.ParseTreeToSingleLineTreeString;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
-public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
+public class GraphNodeBranch implements ICompleteNode, ISPBranch {
 
 	private final RuntimeRule runtimeRule;
 	private final int priority;
 	private final int startPosition;
 	private final int nextInputPosition;
-	private final Set<List<ISPPFNode>> childrenAlternatives;
-	private ISPPFBranch parent;
+	private final Set<List<ISPNode>> childrenAlternatives;
+	private ISPBranch parent;
 
 	public GraphNodeBranch(final ParseGraph graph, final RuntimeRule runtimeRule, final int priority, final int startPosition, final int nextInputPosition) {
 		this.runtimeRule = runtimeRule;
@@ -58,18 +58,13 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 	}
 
 	@Override
+	public int getPriority() {
+		return this.priority;
+	}
+
+	@Override
 	public int getMatchedTextLength() {
 		return this.getNextInputPosition() - this.getStartPosition();
-	}
-
-	@Override
-	public boolean getIsLeaf() {
-		return false;
-	}
-
-	@Override
-	public boolean getIsSkip() {
-		return this.getRuntimeRule().getIsSkipRule();
 	}
 
 	@Override
@@ -92,7 +87,7 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 	// }
 
 	@Override
-	public List<ISPPFNode> getChildren() {
+	public List<ISPNode> getChildren() {
 		if (this.getChildrenAlternatives().isEmpty()) {
 			return Collections.emptyList();
 		} else {
@@ -105,12 +100,12 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 	}
 
 	@Override
-	public ISPPFNode getChild(final int index) {
-		final List<ISPPFNode> children = this.getChildren();
+	public ISPNode getChild(final int index) {
+		final List<ISPNode> children = this.getChildren();
 
 		// get first non skip child
 		int child = 0;
-		ISPPFNode n = children.get(child);
+		ISPNode n = children.get(child);
 		while (n.isSkip() && child < children.size() - 1) {
 			++child;
 			n = children.get(child);
@@ -138,26 +133,26 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 	}
 
 	@Override
-	public ISPPFBranch getBranchChild(final int i) {
-		final ISPPFNode n = this.getChild(i);
-		return (ISPPFBranch) n;
+	public ISPBranch getBranchChild(final int i) {
+		final ISPNode n = this.getChild(i);
+		return (ISPBranch) n;
 	}
 
 	@Override
-	public List<ISPPFBranch> getBranchNonSkipChildren() {
-		final List<ISPPFBranch> res = this.getNonSkipChildren().stream().filter(ISPPFBranch.class::isInstance).map(ISPPFBranch.class::cast)
+	public List<ISPBranch> getBranchNonSkipChildren() {
+		final List<ISPBranch> res = this.getNonSkipChildren().stream().filter(ISPBranch.class::isInstance).map(ISPBranch.class::cast)
 				.collect(Collectors.toList());
 		return res;
 	}
 
-	List<ISPPFNode> nonSkipChildren_cache;
+	List<ISPNode> nonSkipChildren_cache;
 
 	// --- IBranch ---
 	@Override
-	public List<ISPPFNode> getNonSkipChildren() {
+	public List<ISPNode> getNonSkipChildren() {
 		if (null == this.nonSkipChildren_cache) {
 			this.nonSkipChildren_cache = new ArrayList<>();
-			for (final ISPPFNode n : this.getChildren()) {
+			for (final ISPNode n : this.getChildren()) {
 				if (n.isSkip()) {
 
 				} else {
@@ -170,18 +165,18 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 
 	// --- INode ---
 	@Override
-	public ISPPFNodeIdentity getIdentity() {
+	public ISPNodeIdentity getIdentity() {
 		// TODO cache this
-		return new SPPFNodeIdentity(this.getRuntimeRuleNumber(), this.getStartPosition(), this.getMatchedTextLength());
+		return new SPNodeIdentity(this.getRuntimeRuleNumber(), this.getStartPosition(), this.getMatchedTextLength());
 	}
 
 	@Override
-	public ISPPFBranch getParent() {
+	public ISPBranch getParent() {
 		return this.parent;
 	}
 
 	@Override
-	public void setParent(final ISPPFBranch value) {
+	public void setParent(final ISPBranch value) {
 		this.parent = value;
 	}
 
@@ -193,7 +188,7 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 	@Override
 	public String getMatchedText() {
 		String str = "";
-		for (final ISPPFNode n : this.getChildren()) {
+		for (final ISPNode n : this.getChildren()) {
 			str += n.getMatchedText();
 		}
 		return str;
@@ -214,67 +209,62 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 	@Override
 	public String getNonSkipMatchedText() {
 		String str = "";
-		for (final ISPPFNode n : this.getNonSkipChildren()) {
+		for (final ISPNode n : this.getNonSkipChildren()) {
 			str += n.getNonSkipMatchedText();
 		}
 		return str;
 	}
 
 	@Override
-	public Set<List<ISPPFNode>> getChildrenAlternatives() {
+	public Set<List<ISPNode>> getChildrenAlternatives() {
 		return this.childrenAlternatives;
 	}
 
 	@Override
 	public boolean isSkip() {
-		// TODO Auto-generated method stub
-		return false;
+		return this.getRuntimeRule().getIsSkipRule();
 	}
 
 	@Override
 	public boolean isLeaf() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean isBranch() {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
-	public ILeaf asLeaf() {
-		// TODO Auto-generated method stub
+	public ISPLeaf asLeaf() {
 		return null;
 	}
 
 	@Override
-	public ISPPFBranch asBranch() {
-		// TODO Auto-generated method stub
-		return null;
+	public ISPBranch asBranch() {
+		return this;
 	}
 
 	@Override
-	public boolean contains(final ISPPFNode other) {
-		if (other instanceof ISPPFBranch) {
-			final ISPPFBranch otherBranch = (ISPPFBranch) other;
+	public boolean contains(final ISPNode other) {
+		if (other instanceof ISPBranch) {
+			final ISPBranch otherBranch = (ISPBranch) other;
 
 			if (this.getIdentity().equals(other.getIdentity())) {
 				// for each alternative list of other children, check there is a matching list
 				// of children in this alternative children
 				boolean allOthersAreContained = true; // if no other children alternatives contain is a match
-				for (final List<ISPPFNode> otherChildren : otherBranch.getChildrenAlternatives()) {
+				for (final List<ISPNode> otherChildren : otherBranch.getChildrenAlternatives()) {
 					// for each of this alternative children, find one that 'contains' otherChildren
 					boolean foundContainMatch = false;
-					for (final List<ISPPFNode> thisChildren : this.getChildrenAlternatives()) {
+					for (final List<ISPNode> thisChildren : this.getChildrenAlternatives()) {
 						if (thisChildren.size() == otherChildren.size()) {
 							// for each pair of nodes, one from each of otherChildren thisChildren
 							// check thisChildrenNode contains otherChildrenNode
 							boolean thisMatch = true;
 							for (int i = 0; i < thisChildren.size(); ++i) {
-								final ISPPFNode thisChildrenNode = thisChildren.get(i);
-								final ISPPFNode otherChildrenNode = otherChildren.get(i);
+								final ISPNode thisChildrenNode = thisChildren.get(i);
+								final ISPNode otherChildrenNode = otherChildren.get(i);
 								thisMatch &= thisChildrenNode.contains(otherChildrenNode);
 							}
 							if (thisMatch) {
@@ -324,7 +314,7 @@ public class GraphNodeBranch implements ICompleteNode, ISPPFBranch {
 		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
 
 		r += "{";
-		for (final ISPPFNode c : this.getChildren()) {
+		for (final ISPNode c : this.getChildren()) {
 			c.accept(new ParseTreeToSingleLineTreeString(), null);
 		}
 		r += "}";
