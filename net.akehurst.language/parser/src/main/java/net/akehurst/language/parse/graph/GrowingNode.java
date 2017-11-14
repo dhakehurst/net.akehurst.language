@@ -10,6 +10,7 @@ import java.util.Set;
 
 import net.akehurst.language.grammar.parser.ParseTreeToSingleLineTreeString;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
+import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 
 public class GrowingNode implements IGrowingNode {
@@ -143,7 +144,8 @@ public class GrowingNode implements IGrowingNode {
 			}
 			case MULTI: {
 				// not sure we need the test for isEmpty, because if it is empty it should be complete or NOT!???
-				if (!this.getGrowingChildren().isEmpty() && this.getGrowingChildren().get(0).getRuntimeRule().getIsEmptyRule()) {
+				// if (!this.getGrowingChildren().isEmpty() && this.getGrowingChildren().get(0).getRuntimeRule().getIsEmptyRule()) {
+				if (this.isEmptyRuleMatch()) {
 					return false;
 				}
 				final int size = this.nextItemIndex;
@@ -164,14 +166,24 @@ public class GrowingNode implements IGrowingNode {
 		}
 	}
 
+	private boolean isEmptyRuleMatch() {
+		return this.getHasCompleteChildren() && this.getStartPosition() == this.getNextInputPosition();
+	}
+
 	@Override
 	public boolean getCanGraftBack(final Set<IGrowingNode.PreviousInfo> previous) {
+		// TODO: should return false if this is emptyRule and previous' children is not empty
 		if (previous.isEmpty()) {
 			return false;
 		}
 		boolean b = false;
 		for (final PreviousInfo info : previous) {
-			b = b || info.node.getExpectsItemAt(this.getRuntimeRule(), info.atPosition);
+			final boolean x = this.isEmptyRuleMatch()
+					&& (info.node.getRuntimeRule().getRhs().getKind() == RuntimeRuleItemKind.MULTI
+							|| info.node.getRuntimeRule().getRhs().getKind() == RuntimeRuleItemKind.SEPARATED_LIST)
+					&& !info.node.getGrowingChildren().isEmpty();
+
+			b |= info.node.getExpectsItemAt(this.getRuntimeRule(), info.atPosition) && !x;
 		}
 		return b && this.getHasCompleteChildren();// && this.getIsStacked();
 	}

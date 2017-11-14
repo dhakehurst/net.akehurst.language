@@ -38,8 +38,8 @@ public class test_Special extends AbstractParser_Test {
 	Grammar S() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		// b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"));
-		b.rule("S$group1").concatenation(new TerminalLiteral("a"), new NonTerminal("S"), new NonTerminal("B"), new NonTerminal("B"));
-		b.rule("S").choice(new NonTerminal("S$group1"), new TerminalLiteral("a"));
+		b.rule("S_group1").concatenation(new TerminalLiteral("a"), new NonTerminal("S"), new NonTerminal("B"), new NonTerminal("B"));
+		b.rule("S").choice(new NonTerminal("S_group1"), new TerminalLiteral("a"));
 		// b.rule("B").choice(new NonTerminal("B1"), new NonTerminal("B2"));
 		b.rule("B").multi(0, 1, new TerminalLiteral("b"));
 		return b.get();
@@ -58,7 +58,7 @@ public class test_Special extends AbstractParser_Test {
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
-		b.define("  S$group1 {");
+		b.define("  S_group1 {");
 		b.define("    'a'");
 		b.define("    S { 'a' }");
 		b.define("    B { 'b' }");
@@ -68,7 +68,7 @@ public class test_Special extends AbstractParser_Test {
 		b.buildAndAdd();
 
 		b.define("S {");
-		b.define("  S$group1 {");
+		b.define("  S_group1 {");
 		b.define("    'a'");
 		b.define("    S { 'a' }");
 		b.define("    B { $empty }");
@@ -166,7 +166,36 @@ public class test_Special extends AbstractParser_Test {
 		b.define("    S {'a'}");
 		b.define("  }");
 		b.define("}");
+		b.buildAndAdd();
+
+		b.define("S {");
+		b.define("  S2 {");
+		b.define("    S {'a'}");
+		b.define("    S {");
+		b.define("      S2 {");
+		b.define("        S {'a'}");
+		b.define("        S {'a'}");
+		b.define("      }");
+		b.define("    }");
+		b.define("  }");
+		b.define("}");
+		b.buildAndAdd();
+
+		b.define("S {");
+		b.define("  S2 {");
+		b.define("    S {");
+		b.define("      S2 {");
+		b.define("        S {'a'}");
+		b.define("        S {'a'}");
+		b.define("      }");
+		b.define("    }");
+		b.define("    S {'a'}");
+		b.define("  }");
+		b.define("}");
+
 		final ISharedPackedParseTree expected = b.buildAndAdd();
+
+		Assert.assertTrue(tree.contains(expected));
 		Assert.assertEquals(expected, tree);
 
 	}

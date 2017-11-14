@@ -85,25 +85,22 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 	}
 
 	@Test
-	public void emp_S_ama() {
+	public void emp_S_ama() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.expression_plus_multiply();
-			final String goal = "S";
-			final String text = "a*a";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
-			Assert.assertNotNull(tree);
+		final Grammar g = this.expression_plus_multiply();
+		final String goal = "S";
+		final String text = "a*a";
 
-			final ParseTreeBuilder b = this.builder(g, text, goal);
-			;
-			final ISPBranch expected = b.branch("S", b.branch("e",
-					b.branch("multiply", b.branch("e", b.branch("variable", b.leaf("a"))), b.leaf("*"), b.branch("e", b.branch("variable", b.leaf("a"))))));
-			Assert.assertEquals(expected, tree.getRoot());
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
 
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		}
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		;
+		final ISPBranch expected = b.branch("S", b.branch("e",
+				b.branch("multiply", b.branch("e", b.branch("variable", b.leaf("a"))), b.leaf("*"), b.branch("e", b.branch("variable", b.leaf("a"))))));
+		Assert.assertEquals(expected, tree.getRoot());
+
 	}
 
 	@Test

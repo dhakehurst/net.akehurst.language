@@ -21,6 +21,15 @@ import java.util.Set;
 
 public class RuntimeRule {
 
+	private final RuntimeRuleSet runtimeRuleSet;
+	private final String name;
+	private final int ruleNumber;
+	private final RuntimeRuleKind kind;
+	private final int patternFlags;
+	private boolean isSkipRule;
+	private RuntimeRuleItem rhs;
+	private String toString_cache;
+
 	RuntimeRule(final RuntimeRuleSet runtimeRuleSet, final String name, final int ruleNumber, final RuntimeRuleKind kind, final int patternFlags) {
 		this.runtimeRuleSet = runtimeRuleSet;
 		this.name = name;
@@ -29,31 +38,21 @@ public class RuntimeRule {
 		this.patternFlags = patternFlags;
 	}
 
-	RuntimeRuleSet runtimeRuleSet;
-
 	public RuntimeRuleSet getRuntimeRuleSet() {
 		return this.runtimeRuleSet;
 	}
-
-	String name;
 
 	public String getName() {
 		return this.name;
 	}
 
-	int ruleNumber;
-
 	public int getRuleNumber() {
 		return this.ruleNumber;
 	}
 
-	RuntimeRuleKind kind;
-
 	public RuntimeRuleKind getKind() {
 		return this.kind;
 	}
-
-	int patternFlags;
 
 	public int getPatternFlags() {
 		return this.patternFlags;
@@ -65,8 +64,6 @@ public class RuntimeRule {
 		return null != this.getRhs() && this.getRhs().getKind() == RuntimeRuleItemKind.EMPTY;
 	}
 
-	boolean isSkipRule;
-
 	public boolean getIsSkipRule() {
 		return this.isSkipRule;
 	}
@@ -74,8 +71,6 @@ public class RuntimeRule {
 	public void setIsSkipRule(final boolean value) {
 		this.isSkipRule = value;
 	}
-
-	RuntimeRuleItem rhs;
 
 	public void setRhs(final RuntimeRuleItem value) {
 		this.rhs = value;
@@ -339,8 +334,6 @@ public class RuntimeRule {
 	public String getTerminalPatternText() {
 		return this.getName();
 	}
-
-	String toString_cache;
 
 	@Override
 	public String toString() {
