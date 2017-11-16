@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.processor;
 
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -65,157 +66,151 @@ public class OGL_Java_Test {
 		}
 	}
 
-	ISharedPackedParseTree parse(final String grammarFile, final String goal, final String text) {
-		try {
-			final OGLanguageProcessor proc = new OGLanguageProcessor();
-			final FileReader reader = new FileReader(Paths.get(grammarFile).toFile());
-			final Grammar grammar = proc.process(reader, "grammarDefinition", Grammar.class);
+	ISharedPackedParseTree parse(final String grammarFile, final String goal, final String text)
+			throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 
-			final ISharedPackedParseTree tree = this.process(grammar, new StringReader(text), goal);
+		final OGLanguageProcessor proc = new OGLanguageProcessor();
+		final FileReader reader = new FileReader(Paths.get(grammarFile).toFile());
+		final Grammar grammar = proc.process(reader, "grammarDefinition", Grammar.class);
 
-			return tree;
-		} catch (final ParseFailedException e) {
-			Assert.fail(e.getMessage());
-		} catch (final IOException e) {
-			Assert.fail(e.getMessage());
-		} catch (final UnableToAnalyseExeception e) {
-			Assert.fail(e.getMessage());
-		}
-		return null;
+		final ISharedPackedParseTree tree = this.process(grammar, new StringReader(text), goal);
+
+		return tree;
+
 	}
 
 	@Test
-	public void java1_empty() {
+	public void java1_empty() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", "");
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java1_comment() {
+	public void java1_comment() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", "/* comment */");
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java1_package() {
+	public void java1_package() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", "package");
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java1_comment_package() {
+	public void java1_comment_package() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "/* comment */  package";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java1_package_comment() {
+	public void java1_package_comment() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "package  /* comment */";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java1.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java2_empty() {
+	public void java2_empty() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java2_comment() {
+	public void java2_comment() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "/* comment */";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java2_comment_package() {
+	public void java2_comment_package() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "/* comment */  package";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java2_package_comment() {
+	public void java2_package_comment() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "package  /* comment */";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java2_import() {
+	public void java2_import() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "import";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java2_type() {
+	public void java2_type() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "type";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java2.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java3_empty() {
+	public void java3_empty() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java3_comment() {
+	public void java3_comment() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "/* comment */";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java3_package() {
+	public void java3_package() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "package";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java3_comment_package() {
+	public void java3_comment_package() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "/* comment */  package";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java3_package_comment() {
+	public void java3_package_comment() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "package  /* comment */";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java3.og", "compilationUnit", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java4_type_int() {
+	public void java4_type_int() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "int";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java4.og", "type", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java4_type_Integer() {
+	public void java4_type_Integer() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "Integer";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java4.og", "type", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void java6_switchBlock() {
+	public void java6_switchBlock() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "{ case 1 : 2; }";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java6.og", "switchBlock", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void Java8_partial_7_postIncrementExpression() {
+	public void Java8_partial_7_postIncrementExpression() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "i++";
 		// final ISharedPackedParseTree tree = this.parse("src/test/resources/Java8_partial_7.og", "postIncrementExpression", text);
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java8_all.og", "postIncrementExpression", text);
@@ -223,14 +218,14 @@ public class OGL_Java_Test {
 	}
 
 	@Test
-	public void Java8_partial_8_block() {
+	public void Java8_partial_8_block() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		final String text = "i++";
 		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java8_partial_8.og", "statementExpression", text);
 		Assert.assertNotNull(tree);
 	}
 
 	@Test
-	public void Java8_partial_9_block() {
+	public void Java8_partial_9_block() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		String input = "";
 		input += "{";
 		input += "    if (s.equals(\"-no\")) {";
@@ -242,7 +237,7 @@ public class OGL_Java_Test {
 	}
 
 	@Test
-	public void Java8_partial_9_block2() {
+	public void Java8_partial_9_block2() throws FileNotFoundException, ParseFailedException, UnableToAnalyseExeception {
 		String input = "";
 		input += "{";
 		input += "    if (s.f(1)) {";
@@ -255,14 +250,12 @@ public class OGL_Java_Test {
 	// public void java7_formalParameters()
 
 	@Test
-	public void java5_4980495_static_Test() {
-		try {
-			final String text = new String(Files.readAllBytes(Paths.get("src/test/resources/Test.txt")));
-			final ISharedPackedParseTree tree = this.parse("src/test/resources/Java5.og", "compilationUnit", text);
-			Assert.assertNotNull(tree);
-		} catch (final Exception e) {
-			Assert.fail(e.getMessage());
-		}
+	public void java5_4980495_static_Test() throws ParseFailedException, UnableToAnalyseExeception, IOException {
+
+		final String text = new String(Files.readAllBytes(Paths.get("src/test/resources/Test.txt")));
+		final ISharedPackedParseTree tree = this.parse("src/test/resources/Java5.og", "compilationUnit", text);
+		Assert.assertNotNull(tree);
+
 	}
 
 	@Test

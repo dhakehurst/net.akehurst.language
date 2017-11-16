@@ -112,7 +112,9 @@ public final class Forrest3 {
 		this.toGrow = new ArrayList<>(this.graph.getGrowable());
 		this.graph.getGrowable().clear();
 		for (final IGrowingNode gn : this.toGrow) {
-			Log.traceln("    %s", gn.toStringTree(true, false));
+			if (Log.on) {
+				Log.traceln("    %s", gn.toStringTree(true, false));
+			}
 			this.growTreeWidthAndHeight(gn);
 
 		}
@@ -251,7 +253,8 @@ public final class Forrest3 {
 	private void tryGraftInto(final IGrowingNode gn, final IGrowingNode.PreviousInfo info) throws RuleNotFoundException {
 
 		if (gn.getIsSkip()) {
-			final ICompleteNode complete = this.graph.complete(gn);
+			// TODO: why is this code so different to that in the next option?
+			final ICompleteNode complete = this.graph.getCompleteNode(gn);
 			this.graph.growNextSkipChild(info.node, complete);
 			// info.node.duplicateWithNextSkipChild(gn);
 			// this.graftInto(gn, info);
@@ -265,49 +268,49 @@ public final class Forrest3 {
 
 	}
 
-	private void graftInto(final ICompleteNode gn, final IGrowingNode.PreviousInfo info) {
+	private void graftInto(final ICompleteNode complete, final IGrowingNode.PreviousInfo info) {
 		// if parent can have an unbounded number of children, then we can potentially have
 		// an infinite number of 'empty' nodes added to it.
 		// So check we are not adding the same child as the previous one.
 		switch (info.node.getRuntimeRule().getRhs().getKind()) {
 			case CHOICE:
-				this.graph.growNextChild(info.node, gn, info.atPosition);
+				this.graph.growNextChild(info.node, complete, info.atPosition);
 			// info.node.duplicateWithNextChild(gn);
 			break;
 			case CONCATENATION:
-				this.graph.growNextChild(info.node, gn, info.atPosition);
+				this.graph.growNextChild(info.node, complete, info.atPosition);
 			// info.node.duplicateWithNextChild(gn);
 			break;
 			case EMPTY:
-				this.graph.growNextChild(info.node, gn, info.atPosition);
+				this.graph.growNextChild(info.node, complete, info.atPosition);
 			// info.node.duplicateWithNextChild(gn);
 			break;
 			case MULTI:
 				if (-1 == info.node.getRuntimeRule().getRhs().getMultiMax()) {
 					if (0 == info.atPosition) {// info.node.getChildren().isEmpty()) {
-						this.graph.growNextChild(info.node, gn, info.atPosition);
+						this.graph.growNextChild(info.node, complete, info.atPosition);
 						// info.node.duplicateWithNextChild(gn);
 					} else {
 						// final IGraphNode previousChild = (IGraphNode) info.node.getGrowingChildren().get(info.atPosition - 1);
 						// if (previousChild.getStartPosition() == gn.getStartPosition()) {
 						// // trying to add something at same position....don't add it, just drop?
 						// } else {
-						this.graph.growNextChild(info.node, gn, info.atPosition);
+						this.graph.growNextChild(info.node, complete, info.atPosition);
 						// info.node.duplicateWithNextChild(gn);
 						// }
 					}
 				} else {
-					this.graph.growNextChild(info.node, gn, info.atPosition);
+					this.graph.growNextChild(info.node, complete, info.atPosition);
 					// info.node.duplicateWithNextChild(gn);
 				}
 			break;
 			case PRIORITY_CHOICE:
-				this.graph.growNextChild(info.node, gn, info.atPosition);
+				this.graph.growNextChild(info.node, complete, info.atPosition);
 			// info.node.duplicateWithNextChild(gn);
 			break;
 			case SEPARATED_LIST:
 				// TODO: should be ok because we need a separator between each item
-				this.graph.growNextChild(info.node, gn, info.atPosition);
+				this.graph.growNextChild(info.node, complete, info.atPosition);
 			// info.node.duplicateWithNextChild(gn);
 			break;
 			default:

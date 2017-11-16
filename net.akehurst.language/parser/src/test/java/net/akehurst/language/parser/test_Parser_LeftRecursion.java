@@ -470,9 +470,17 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
-		b.define("  S1 {");
-		b.define("    'b'");
+		b.define("S2 {");
+		b.define("  S {");
+		b.define("    S1 { 'b' }");
 		b.define("  }");
+		b.define("  S {");
+		b.define("    S1 { 'b' }");
+		b.define("  }");
+		b.define("  A {");
+		b.define("    A2 { $empty }");
+		b.define("  }");
+		b.define("}");
 		b.define("}");
 		final ISharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
@@ -502,7 +510,161 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 	}
 
 	@Test
-	public void SA_S_b300() throws ParseFailedException {
+	public void SA_S_bbbb() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.SA();
+		final String goal = "S";
+		final String text = "bbbb";
+
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S {");
+		b.define("  S1 {");
+		b.define("    'b'");
+		b.define("  }");
+		b.define("}");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+		Assert.assertEquals(expected, tree);
+
+	}
+
+	@Test
+	public void SA_S_bbbbb() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.SA();
+		final String goal = "S";
+		final String text = "bbbbb";
+
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S {");
+		b.define("  S1 {");
+		b.define("    'b'");
+		b.define("  }");
+		b.define("}");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+		Assert.assertEquals(expected, tree);
+
+	}
+
+	@Test
+	public void SA_S_bbbbbb() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.SA();
+		final String goal = "S";
+		final String text = "bbbbbb";
+
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S {");
+		b.define("  S1 {");
+		b.define("    'b'");
+		b.define("  }");
+		b.define("}");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+		Assert.assertEquals(expected, tree);
+
+	}
+
+	@Test
+	public void SA_S_bbbbbbb() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.SA();
+		final String goal = "S";
+		final String text = "bbbbbbb";
+
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S {");
+		b.define("  S1 {");
+		b.define("    'b'");
+		b.define("  }");
+		b.define("}");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+		Assert.assertEquals(expected, tree);
+
+	}
+
+	@Test
+	public void SA_S_bbbbbbbb() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.SA();
+		final String goal = "S";
+		final String text = "bbbbbbbb";
+
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S {");
+		b.define("  S1 {");
+		b.define("    'b'");
+		b.define("  }");
+		b.define("}");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+		Assert.assertEquals(expected, tree);
+
+	}
+
+	@Test
+	public void SA_S_bbbbbbbbb() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.SA();
+		final String goal = "S";
+		final String text = "bbbbbbbbb";
+
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S {");
+		b.define("  S1 {");
+		b.define("    'b'");
+		b.define("  }");
+		b.define("}");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+		Assert.assertEquals(expected, tree);
+
+	}
+
+	@Test
+	public void SA_S_bbbbbbbbbb() throws ParseFailedException {
+		// grammar, goal, input
+
+		final Grammar g = this.SA();
+		final String goal = "S";
+		final String text = "bbbbbbbbbb";
+
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+
+		final ParseTreeBuilder b = this.builder(g, text, goal);
+		b.define("S {");
+		b.define("  S1 {");
+		b.define("    'b'");
+		b.define("  }");
+		b.define("}");
+		final ISharedPackedParseTree expected = b.buildAndAdd();
+		Assert.assertEquals(expected, tree);
+
+	}
+
+	@Test
+	public void SA_S_b50() throws ParseFailedException {
 		// grammar, goal, input
 
 		final Grammar g = this.SA();

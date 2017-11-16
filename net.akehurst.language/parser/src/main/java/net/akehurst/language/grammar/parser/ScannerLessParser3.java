@@ -114,21 +114,30 @@ public class ScannerLessParser3 implements IParser {
 		final IParseGraph graph = new ParseGraph(goalRule, input);
 		final Forrest3 newForrest = new Forrest3(graph, this.getRuntimeRuleSet(), input, goalRule);
 
-		Log.traceln("%s", this.grammar);
-		Log.traceln("");
-		Log.traceln("input '" + input.getText() + "'");
-
+		if (Log.on) {
+			Log.traceln("%s", this.grammar);
+			Log.traceln("");
+			Log.traceln("input '" + input.getText() + "'");
+		}
 		int seasons = 0;
-		Log.trace("%s", seasons);
+		if (Log.on) {
+			Log.trace("%s", seasons);
+		}
 
 		newForrest.start(graph, goalRule, input);
-		Log.traceln("");
+		if (Log.on) {
+			Log.traceln("");
+		}
 		seasons++;
 
 		do {
-			Log.trace("%s", seasons);
+			if (Log.on) {
+				Log.trace("%s", seasons);
+			}
 			newForrest.grow();
-			Log.traceln("");
+			if (Log.on) {
+				Log.traceln("");
+			}
 			seasons++;
 		} while (newForrest.getCanGrow());
 

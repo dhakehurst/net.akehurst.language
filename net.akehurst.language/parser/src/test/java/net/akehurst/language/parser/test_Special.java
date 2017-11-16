@@ -309,8 +309,36 @@ public class test_Special extends AbstractParser_Test {
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
-		b.define("");
+		b.define("n { 'I' } ");
+		b.define("v { 'saw' }");
+		b.define("det { 'a' }");
+		b.define("n { 'man' } ");
+		b.define("p { 'in' }");
+		b.define("det { 'the' }");
+		b.define("n { 'park' } ");
+		b.define("p { 'with' }");
+		b.define("  NP {");
+		b.define("    NP2 {");
+		b.define("      det { 'a' }");
+		b.define("      n { 'telescope' } ");
+		b.define("    }");
+		b.define("  }");
 		b.define("}");
+		b.buildAndAdd();
+
+		b.define("S {");
+		b.define("n { 'I' } ");
+		b.define("v { 'saw' }");
+		b.define("det { 'a' }");
+		b.define("n { 'man' } ");
+		b.define("p { 'in' }");
+		b.define("det { 'the' }");
+		b.define("n { 'park' } ");
+		b.define("p { 'with' }");
+		b.define("det { 'a' }");
+		b.define("n { 'telescope' } ");
+		b.define("}");
+
 		final ISharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 

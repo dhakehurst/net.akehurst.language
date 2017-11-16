@@ -210,8 +210,8 @@ public class ParseGraph implements IParseGraph {
 			final IGrowingNode nn = new GrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children);
 			for (final IGrowingNode.PreviousInfo info : previous) {
 				nn.addPrevious(info.node, info.atPosition);
+				// this.addGrowing(info.node);
 			}
-			// this.growing.put(gnindex, nn);
 			this.addGrowingHead(gnindex, nn);
 			if (nn.getHasCompleteChildren()) {
 				this.complete(nn);
@@ -220,11 +220,29 @@ public class ParseGraph implements IParseGraph {
 		} else {
 			for (final IGrowingNode.PreviousInfo info : previous) {
 				existing.addPrevious(info.node, info.atPosition);
+				// this.addGrowing(info.node);
 			}
 			this.addGrowingHead(gnindex, existing);
 			result = existing;
 		}
 		return result;
+	}
+
+	private void addGrowing(final IGrowingNode gn) {
+		final int ruleNumber = gn.getRuntimeRuleNumber();
+		final int startPosition = gn.getStartPosition();
+		final int nextInputPosition = gn.getNextInputPosition();
+		final int nextItemIndex = gn.getNextItemIndex();
+		final GrowingNodeIndex gnindex = new GrowingNodeIndex(ruleNumber, startPosition, nextInputPosition, nextItemIndex);
+		final IGrowingNode existing = this.growing.get(gnindex);
+		if (null == existing) {
+			this.growing.put(gnindex, gn);
+		} else {
+			// merge
+			for (final IGrowingNode.PreviousInfo info : gn.getPrevious()) {
+				existing.addPrevious(info.node, info.atPosition);
+			}
+		}
 	}
 
 	private void addGrowing(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) {
@@ -339,7 +357,9 @@ public class ParseGraph implements IParseGraph {
 	@Override
 	public void createStart(final RuntimeRule goalRule) {
 		final IGrowingNode gn = this.findOrCreateGrowingNode(goalRule, 0, 0, 0, 0, Collections.EMPTY_LIST, Collections.EMPTY_SET);// this.createBranch(goalRule,
-		Log.traceln("%10s %3s %s", "create", "", gn.toStringTree(true, true));
+		if (Log.on) {
+			Log.traceln("%10s %3s %s", "create", "", gn.toStringTree(true, true));
+		}
 	}
 
 	// @Override
@@ -403,8 +423,9 @@ public class ParseGraph implements IParseGraph {
 		children.add(firstChild);
 
 		final IGrowingNode gn = this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children, previous);
-		Log.traceln("%10s %3s %s", "height", "", gn.toStringTree(true, true));
-
+		if (Log.on) {
+			Log.traceln("%10s %3s %s", "height", "", gn.toStringTree(true, true));
+		}
 	}
 
 	@Override
@@ -459,7 +480,9 @@ public class ParseGraph implements IParseGraph {
 
 		final Set<IGrowingNode.PreviousInfo> previous = parent.getPrevious();
 		final IGrowingNode gn = this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children, previous);
-		Log.traceln("%10s %3s %s", "graft", "", gn.toStringTree(true, true));
+		if (Log.on) {
+			Log.traceln("%10s %3s %s", "graft", "", gn.toStringTree(true, true));
+		}
 
 		// maybe?
 		if (parent.getNext().isEmpty()) {
@@ -478,8 +501,13 @@ public class ParseGraph implements IParseGraph {
 		final List<ICompleteNode> children = new ArrayList<>(parent.getGrowingChildren());
 		children.add(nextChild);
 		final Set<IGrowingNode.PreviousInfo> previous = parent.getPrevious();
+		for (final IGrowingNode.PreviousInfo pi : previous) {
+			pi.node.removeNext(parent);
+		}
 		final IGrowingNode gn = this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children, previous);
-		Log.traceln("%10s %3s %s", "graft-skip", "", gn.toStringTree(true, true));
+		if (Log.on) {
+			Log.traceln("%10s %3s %s", "graft-skip", "", gn.toStringTree(true, true));
+		}
 
 		if (parent.getNext().isEmpty()) {
 			this.removeGrowing(parent);
@@ -490,13 +518,16 @@ public class ParseGraph implements IParseGraph {
 	@Override
 	public void pushToStackOf(final ICompleteNode leafNode, final IGrowingNode stack, final Set<IGrowingNode.PreviousInfo> previous) {
 		final IGrowingNode gn = this.findOrCreateGrowingLeaf(leafNode, stack, previous);
-		Log.traceln("%10s %3s %s ==> %s", "width", "", leafNode, stack.toStringTree(true, true));
+		if (Log.on) {
+			Log.traceln("%10s %3s %s ==> %s", "width", "", leafNode, stack.toStringTree(true, true));
+		}
 	}
 
 	@Override
 	public Set<IGrowingNode.PreviousInfo> pop(final IGrowingNode gn) {
 		for (final IGrowingNode.PreviousInfo pi : gn.getPrevious()) {
 			pi.node.removeNext(gn);
+			// this.removeGrowing(pi.node);
 		}
 		final Set<IGrowingNode.PreviousInfo> previous = gn.getPrevious();
 		gn.newPrevious();
