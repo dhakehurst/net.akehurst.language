@@ -1,9 +1,9 @@
 apply plugin: 'antlr'
 
 dependencies {
-	antlr 'org.antlr:antlr4:4.5'
+	antlr 'org.antlr:antlr4:4.7'
 
 	compile project(':net.akehurst.language.processor')
 	
-	compile 'org.antlr:antlr4-runtime:4.5'
+	compile 'org.antlr:antlr4-runtime:4.7'
 }
