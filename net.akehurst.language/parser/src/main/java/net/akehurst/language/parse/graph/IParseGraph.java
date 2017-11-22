@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Set;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
-import net.akehurst.language.parse.graph.IGraphNode.PreviousInfo;
 import net.akehurst.language.parser.sppf.Leaf;
 
 public interface IParseGraph {
@@ -18,23 +17,13 @@ public interface IParseGraph {
 
 	ICompleteNode getCompleteNode(IGrowingNode gn);
 
-	// void removeGrowable(IGraphNode node);
-
-	// IGraphNode createLeaf(Leaf leaf, RuntimeRule terminalRule, int startPosition, int matchedLength);
-
 	void createStart(RuntimeRule goalRule);
 
 	ICompleteNode findOrCreateLeaf(Leaf leaf);
 
-	// ICompleteNode findOrCreateBranch(RuntimeRule rr, int priority, int startPosition, int endPosition);
-
 	ICompleteNode findNode(int ruleNumber, int start, int length);
 
 	ICompleteNode complete(IGrowingNode growing);
-
-	// IGraphNode findOrCreateBranch(RuntimeRule rr, int priority, int startPosition, int machedTextLength, int nextItemIndex, int height);
-
-	void reuseWithOtherStack(IGraphNode node, Set<PreviousInfo> previous);
 
 	/**
 	 * Use to grow the height of a tree. Creates a new node. Add the child. Then add the stack of the child to the new node.
@@ -47,8 +36,6 @@ public interface IParseGraph {
 	 * @return
 	 */
 	void createWithFirstChild(RuntimeRule runtimeRule, int priority, ICompleteNode firstChild, Set<IGrowingNode.PreviousInfo> previous);
-
-	// void createWithFirstChildAndStack(RuntimeRule runtimeRule, int priority, IGraphNode firstChild, IGraphNode stack);
 
 	/**
 	 * adds the next child to the parent
@@ -69,6 +56,13 @@ public interface IParseGraph {
 	 * @return previous of gn after giving gn a new Set of previous (clear)
 	 */
 	Set<IGrowingNode.PreviousInfo> pop(IGrowingNode gn);
+
+	/**
+	 * add a node to be a head of the stack, should only be called with nodes that were in a 'previous' set, but nothing happened to them
+	 *
+	 * @param node
+	 */
+	void makeHead(IGrowingNode node);
 
 	// IGraphNode fetchGrowing(int ruleNumber, int start, int nextItemIndex);
 	//

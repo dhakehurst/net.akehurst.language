@@ -62,6 +62,12 @@ public interface ISPNode extends IParseTreeVisitable {
 	 */
 	boolean isEmptyLeaf();
 
+	// /**
+	// *
+	// * @return true if this node isEmptyLeaf or all its children return true for containsOnlyEmptyLeafs
+	// */
+	// boolean containsOnlyEmptyLeafs();
+
 	/**
 	 *
 	 * @return true if this node is a Leaf

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import net.akehurst.language.core.sppt.FixedList;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public interface IGrowingNode {
@@ -21,7 +22,9 @@ public interface IGrowingNode {
 
 	int getMatchedTextLength();
 
-	boolean getIsSkip();
+	boolean isEmptyRuleMatch();
+
+	boolean isSkip();
 
 	boolean getHasCompleteChildren();
 
@@ -87,9 +90,11 @@ public interface IGrowingNode {
 
 	List<RuntimeRule> getNextExpectedItem();
 
-	boolean getIsLeaf();
+	boolean isLeaf();
 
-	List<ICompleteNode> getGrowingChildren();
+	boolean isEmptyLeaf();
+
+	FixedList<ICompleteNode> getGrowingChildren();
 
 	String toStringTree(boolean withChildren, boolean withPrevious);
 

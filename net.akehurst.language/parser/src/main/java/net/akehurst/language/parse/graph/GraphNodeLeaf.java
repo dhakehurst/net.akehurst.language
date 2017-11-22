@@ -1,12 +1,12 @@
 package net.akehurst.language.parse.graph;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.akehurst.language.core.sppt.FixedList;
 import net.akehurst.language.core.sppt.IParseTreeVisitor;
 import net.akehurst.language.core.sppt.ISPBranch;
 import net.akehurst.language.core.sppt.ISPLeaf;
@@ -60,7 +60,12 @@ public class GraphNodeLeaf implements ICompleteNode, ISPLeaf {
 	}
 
 	@Override
-	public Set<List<ISPNode>> getChildrenAlternatives() {
+	public boolean isEmptyRuleMatch() {
+		return this.isEmptyLeaf();
+	}
+
+	@Override
+	public Set<FixedList<ISPNode>> getChildrenAlternatives() {
 		return Collections.emptySet();
 	}
 

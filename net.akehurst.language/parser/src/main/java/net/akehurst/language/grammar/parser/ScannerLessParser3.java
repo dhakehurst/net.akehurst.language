@@ -117,7 +117,7 @@ public class ScannerLessParser3 implements IParser {
 		if (Log.on) {
 			Log.traceln("%s", this.grammar);
 			Log.traceln("");
-			Log.traceln("input '" + input.getText() + "'");
+			Log.traceln("input '%s'", input.getText());
 		}
 		int seasons = 0;
 		if (Log.on) {
@@ -142,6 +142,11 @@ public class ScannerLessParser3 implements IParser {
 		} while (newForrest.getCanGrow());
 
 		final ICompleteNode match = newForrest.getLongestMatch();
+		if (Log.on) {
+			for (final ICompleteNode cn : graph.getGoals()) {
+				Log.traceln("%s", cn.toStringTree());
+			}
+		}
 		return match;
 	}
 

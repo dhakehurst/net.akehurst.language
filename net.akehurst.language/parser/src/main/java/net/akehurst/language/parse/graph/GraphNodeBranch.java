@@ -1,7 +1,6 @@
 package net.akehurst.language.parse.graph;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -9,6 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import net.akehurst.language.core.sppt.FixedList;
 import net.akehurst.language.core.sppt.IParseTreeVisitor;
 import net.akehurst.language.core.sppt.ISPBranch;
 import net.akehurst.language.core.sppt.ISPLeaf;
@@ -24,7 +24,7 @@ public class GraphNodeBranch implements ICompleteNode, ISPBranch {
 	private final int priority;
 	private final int startPosition;
 	private final int nextInputPosition;
-	private final Set<List<ISPNode>> childrenAlternatives;
+	private final Set<FixedList<ISPNode>> childrenAlternatives;
 	private ISPBranch parent;
 
 	public GraphNodeBranch(final ParseGraph graph, final RuntimeRule runtimeRule, final int priority, final int startPosition, final int nextInputPosition) {
@@ -87,9 +87,9 @@ public class GraphNodeBranch implements ICompleteNode, ISPBranch {
 	// }
 
 	@Override
-	public List<ISPNode> getChildren() {
+	public FixedList<ISPNode> getChildren() {
 		if (this.getChildrenAlternatives().isEmpty()) {
-			return Collections.emptyList();
+			return FixedList.EMPTY;
 		} else {
 			return this.getChildrenAlternatives().iterator().next();
 		}
@@ -101,7 +101,7 @@ public class GraphNodeBranch implements ICompleteNode, ISPBranch {
 
 	@Override
 	public ISPNode getChild(final int index) {
-		final List<ISPNode> children = this.getChildren();
+		final FixedList<ISPNode> children = this.getChildren();
 
 		// get first non skip child
 		int child = 0;
@@ -216,8 +216,15 @@ public class GraphNodeBranch implements ICompleteNode, ISPBranch {
 	}
 
 	@Override
-	public Set<List<ISPNode>> getChildrenAlternatives() {
+	public Set<FixedList<ISPNode>> getChildrenAlternatives() {
 		return this.childrenAlternatives;
+	}
+
+	@Override
+	public boolean isEmptyRuleMatch() {
+		// children must be complete or we would not have created the node
+		// therefore must match empty if start and next-input positions are the same
+		return this.getStartPosition() == this.getNextInputPosition();
 	}
 
 	@Override
@@ -254,10 +261,10 @@ public class GraphNodeBranch implements ICompleteNode, ISPBranch {
 				// for each alternative list of other children, check there is a matching list
 				// of children in this alternative children
 				boolean allOthersAreContained = true; // if no other children alternatives contain is a match
-				for (final List<ISPNode> otherChildren : otherBranch.getChildrenAlternatives()) {
+				for (final FixedList<ISPNode> otherChildren : otherBranch.getChildrenAlternatives()) {
 					// for each of this alternative children, find one that 'contains' otherChildren
 					boolean foundContainMatch = false;
-					for (final List<ISPNode> thisChildren : this.getChildrenAlternatives()) {
+					for (final FixedList<ISPNode> thisChildren : this.getChildrenAlternatives()) {
 						if (thisChildren.size() == otherChildren.size()) {
 							// for each pair of nodes, one from each of otherChildren thisChildren
 							// check thisChildrenNode contains otherChildrenNode
@@ -315,7 +322,7 @@ public class GraphNodeBranch implements ICompleteNode, ISPBranch {
 
 		r += "{";
 		for (final ISPNode c : this.getChildren()) {
-			c.accept(new ParseTreeToSingleLineTreeString(), null);
+			r += c.accept(new ParseTreeToSingleLineTreeString(), null);
 		}
 		r += "}";
 

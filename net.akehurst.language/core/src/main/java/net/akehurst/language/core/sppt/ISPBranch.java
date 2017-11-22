@@ -5,13 +5,13 @@ import java.util.Set;
 
 public interface ISPBranch extends ISPNode {
 
-	Set<List<ISPNode>> getChildrenAlternatives();
+	Set<FixedList<ISPNode>> getChildrenAlternatives();
 
 	// --- convienience methods
 	/**
 	 * @return the one of the children alternatives of this branch.
 	 */
-	List<ISPNode> getChildren();
+	FixedList<ISPNode> getChildren();
 
 	/**
 	 * @return the one of the children alternatives of this branch with all skip nodes removed.

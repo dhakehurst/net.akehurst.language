@@ -16,13 +16,13 @@
 package net.akehurst.language.parser.sppf;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import net.akehurst.language.core.sppt.FixedList;
 import net.akehurst.language.core.sppt.IParseTreeVisitor;
 import net.akehurst.language.core.sppt.ISPBranch;
 import net.akehurst.language.core.sppt.ISPNode;
@@ -34,14 +34,14 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 public class Branch extends Node implements ISPBranch {
 
 	private final ISPNodeIdentity identity;
-	private final Set<List<ISPNode>> childrenAlternatives;
+	private final Set<FixedList<ISPNode>> childrenAlternatives;
 	private int length;
 	private List<ISPNode> nonSkipChildren_cache;
 
 	public Branch(final RuntimeRule runtimeRule, final ISPNode[] children) {
 		super(runtimeRule, children.length == 0 ? -1 : children[0].getStartPosition());
 		this.childrenAlternatives = new HashSet<>();
-		this.childrenAlternatives.add(Arrays.asList(children));
+		this.childrenAlternatives.add(new FixedList(children));
 		this.length = 0;
 		// this.isEmpty = true;
 		// this.firstLeaf = this.children.length==0 ? null : children[0].getFirstLeaf();
@@ -55,12 +55,12 @@ public class Branch extends Node implements ISPBranch {
 
 	// --- ISPPFBranch ---
 	@Override
-	public Set<List<ISPNode>> getChildrenAlternatives() {
+	public Set<FixedList<ISPNode>> getChildrenAlternatives() {
 		return this.childrenAlternatives;
 	}
 
 	@Override
-	public List<ISPNode> getChildren() {
+	public FixedList<ISPNode> getChildren() {
 		return this.childrenAlternatives.iterator().next();
 	}
 
@@ -81,7 +81,7 @@ public class Branch extends Node implements ISPBranch {
 
 	@Override
 	public ISPNode getChild(final int index) {
-		final List<ISPNode> children = this.getChildren();
+		final FixedList<ISPNode> children = this.getChildren();
 
 		// get first non skip child
 		int child = 0;
@@ -164,6 +164,12 @@ public class Branch extends Node implements ISPBranch {
 		return false;
 	}
 
+	// @Override
+	// public boolean containsOnlyEmptyLeafs() {
+	// // TODO Auto-generated method stub
+	// return false;
+	// }
+
 	@Override
 	public boolean isBranch() {
 		return true;
@@ -178,10 +184,10 @@ public class Branch extends Node implements ISPBranch {
 				// for each alternative list of other children, check there is a matching list
 				// of children in this alternative children
 				boolean allOthersAreContained = true; // if no other children alternatives contain is a match
-				for (final List<ISPNode> otherChildren : otherBranch.getChildrenAlternatives()) {
+				for (final FixedList<ISPNode> otherChildren : otherBranch.getChildrenAlternatives()) {
 					// for each of this alternative children, find one that 'contains' otherChildren
 					boolean foundContainMatch = false;
-					for (final List<ISPNode> thisChildren : this.getChildrenAlternatives()) {
+					for (final FixedList<ISPNode> thisChildren : this.getChildrenAlternatives()) {
 						if (thisChildren.size() == otherChildren.size()) {
 							// for each pair of nodes, one from each of otherChildren thisChildren
 							// check thisChildrenNode contains otherChildrenNode

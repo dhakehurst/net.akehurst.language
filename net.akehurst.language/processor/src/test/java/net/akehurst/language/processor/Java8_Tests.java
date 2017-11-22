@@ -1347,4 +1347,17 @@ public class Java8_Tests {
 		final String output = x.visit(tree, null);
 		Assert.assertEquals(input, output);
 	}
+
+	@Test
+	public void test1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+
+		final String queryStr = "@An() class An {  }";
+		final String grammarRule = "compilationUnit";
+		// Log.on = true;
+		final ISharedPackedParseTree tree = Java8_Tests.parse(grammarRule, queryStr);
+		Assert.assertNotNull(tree);
+		// final String resultStr = Java8_Tests2.clean(tree.asString());
+		// Assert.assertEquals(queryStr, resultStr);
+
+	}
 }

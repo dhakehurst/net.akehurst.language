@@ -2,7 +2,6 @@ package net.akehurst.language.processor;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -103,12 +102,12 @@ public class Java8_Tests2 {
 		return null;
 	}
 
-	static ISharedPackedParseTree parse(final String input) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
-
-		final ISharedPackedParseTree tree = Java8_Tests2.getJavaProcessor().getParser().parse("compilationUnit", new StringReader(input));
-		return tree;
-
-	}
+	// static ISharedPackedParseTree parse(final String input) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	//
+	// final ISharedPackedParseTree tree = Java8_Tests2.getJavaProcessor().getParser().parse("compilationUnit", new StringReader(input));
+	// return tree;
+	//
+	// }
 
 	static ISharedPackedParseTree parse(final String goalName, final String input) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
 
@@ -170,6 +169,7 @@ public class Java8_Tests2 {
 		col.add(new Object[] { new Data("", "typeDeclaration", "@An interface An {  }") });
 		col.add(new Object[] { new Data("", "compilationUnit", "@An interface An {  }") });
 		col.add(new Object[] { new Data("", "annotation", "@An()") });
+		col.add(new Object[] { new Data("", "typeDeclaration", "interface An {  }") });
 		col.add(new Object[] { new Data("", "typeDeclaration", "@An() interface An {  }") });
 		col.add(new Object[] { new Data("", "compilationUnit", "@An() interface An {  }") });
 		col.add(new Object[] { new Data("", "compilationUnit", "@An() class An {  }") });
@@ -210,4 +210,15 @@ public class Java8_Tests2 {
 
 	}
 
+	@Test
+	public void test1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+
+		final String queryStr = "@An() class An {  }";
+		final String grammarRule = "compilationUnit";
+		final ISharedPackedParseTree tree = Java8_Tests2.parse(grammarRule, queryStr);
+		Assert.assertNotNull(tree);
+		final String resultStr = Java8_Tests2.clean(tree.asString());
+		Assert.assertEquals(queryStr, resultStr);
+
+	}
 }

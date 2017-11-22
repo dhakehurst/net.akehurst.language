@@ -671,7 +671,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final String goal = "S";
 		String text = "";
 		// TODO: make this 300 (30)
-		for (int i = 0; i < 50; i++) {
+		for (int i = 0; i < 20; i++) {
 			text += "b";
 		}
 

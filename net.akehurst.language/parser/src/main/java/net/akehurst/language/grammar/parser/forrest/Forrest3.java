@@ -125,11 +125,12 @@ public final class Forrest3 {
 		// gn.toString();
 
 		final Set<IGrowingNode.PreviousInfo> previous = this.graph.pop(gn);
+
 		final boolean didSkipNode = this.growWidthWithSkipRules(gn, previous);
 		if (didSkipNode) {
 			return;
 		} else {
-			if (gn.getIsSkip()) {
+			if (gn.isSkip()) {
 				this.tryGraftBackSkipNode(gn, previous);
 				// this.graph.pop(gn);
 			} else {
@@ -137,32 +138,28 @@ public final class Forrest3 {
 				// problem is deciding which
 				final boolean grownHeight = this.growHeight(gn, previous);
 
+				boolean graftBack = false;
 				// reduce
 				if (gn.getCanGraftBack(previous)) { // if hascompleteChildren && isStacked && prevInfo is valid
-					this.tryGraftBack(gn, previous);
+					graftBack = this.tryGraftBack(gn, previous);
 				}
 
 				// maybe only shift if not done either of above!
 				// tomitas original does that!
 				// shift
-				boolean grownWidth = false;
+				final boolean grownWidth = this.growWidth(gn, previous);
 
-				// final int i = 1;
-				// if (gn.getHasCompleteChildren() && !gn.getCanGrowWidth()) {
-				// // don't grow width
-				// // this never happens!
-				// } else {
-				grownWidth = this.growWidth(gn, previous);
+				// if (!grownWidth && !grownHeight && !graftBack) {
+				// // if not done anything with the previous nodes, make them heads
+				// for (final IGrowingNode.PreviousInfo info : previous) {
+				// this.graph.makeHead(info.node);
 				// }
-
-				// if (grownWidth) {
-				// // keep previous, it will be needed
-				// } else {
-				// // clear the stacked nodes (previous) of gn
-				// // they are no longer needed, unless gn reused
-				// // at which point it will get a new stack (previous)
-				// // this.graph.pop(gn);
 				// }
+				if (!grownHeight && !graftBack && !grownWidth) {
+					if (Log.on) {
+						Log.traceln("drop %s", gn);
+					}
+				}
 			}
 		}
 	}
@@ -170,34 +167,15 @@ public final class Forrest3 {
 	boolean growWidth(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws RuleNotFoundException, ParseTreeException {
 		boolean modified = false;
 		if (gn.getCanGrowWidth()) { // don't grow width if its complete...cant graft back
-			// List<RuntimeRule> nextExpectedRule = gn.getNextExpectedItem();
-			// for(RuntimeRule err: nextExpectedRule) {
 			final List<RuntimeRule> expectedNextTerminal = gn.getNextExpectedTerminals();
 			final Set<RuntimeRule> setNextExpected = new HashSet<>(expectedNextTerminal);
 			for (final RuntimeRule rr : setNextExpected) {
 				final Leaf l = this.input.fetchOrCreateBud(rr, gn.getNextInputPosition());
 				if (null != l) {
 					final ICompleteNode bud = this.graph.findOrCreateLeaf(l);
-					// if (bud.getRuntimeRule().getIsEmptyRule()) {
-					// final RuntimeRule ruleThatIsEmpty = bud.getRuntimeRule().getRuleThatIsEmpty();
-					// final IGraphNode pt = this.graph.createWithFirstChildAndStack(ruleThatIsEmpty, bud.getPriority(), bud, gn);
-					// // // if (this.getIsGoal(pt)) {
-					// // // this.goals.add(pt);
-					// // // }
-					// // final IGraphNode nn = this.pushStackNewRoot(gn, pt);
-					// //
-					// } else {
-					// what if bud exists and already has stacked nodes?
 					modified = this.pushStackNewRoot(bud, gn, previous);
-
-					// }
 				}
 			}
-			// }
-			// doing this causes non termination of parser
-			// ParseTreeBud empty = new ParseTreeEmptyBud(this.input, this.getRoot().getEnd());
-			// buds.add(empty);
-
 		}
 		return modified;
 	}
@@ -231,16 +209,18 @@ public final class Forrest3 {
 		return modified;
 	}
 
-	protected void tryGraftBack(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws RuleNotFoundException {
-
+	protected boolean tryGraftBack(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws RuleNotFoundException {
+		boolean result = false;
+		// TODO: perhaps should return list of those who are not grafted!
 		for (final IGrowingNode.PreviousInfo info : previous) {
 			if (info.node.hasNextExpectedItem()) {
-				this.tryGraftInto(gn, info);
+				result |= this.tryGraftInto(gn, info);
 			} else {
 				// can't push back
+				result |= false;
 			}
 		}
-
+		return result;
 	}
 
 	protected void tryGraftBackSkipNode(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws RuleNotFoundException {
@@ -250,22 +230,24 @@ public final class Forrest3 {
 
 	}
 
-	private void tryGraftInto(final IGrowingNode gn, final IGrowingNode.PreviousInfo info) throws RuleNotFoundException {
-
-		if (gn.getIsSkip()) {
+	private boolean tryGraftInto(final IGrowingNode gn, final IGrowingNode.PreviousInfo info) throws RuleNotFoundException {
+		boolean result = false;
+		if (gn.isSkip()) {
 			// TODO: why is this code so different to that in the next option?
 			final ICompleteNode complete = this.graph.getCompleteNode(gn);
 			this.graph.growNextSkipChild(info.node, complete);
 			// info.node.duplicateWithNextSkipChild(gn);
 			// this.graftInto(gn, info);
+			result |= true;
 		} else if (info.node.getExpectsItemAt(gn.getRuntimeRule(), info.atPosition)) {
 			final ICompleteNode complete = this.graph.getCompleteNode(gn);
 			this.graftInto(complete, info);
-
+			result |= true;
 		} else {
 			// drop
+			result |= false;
 		}
-
+		return result;
 	}
 
 	private void graftInto(final ICompleteNode complete, final IGrowingNode.PreviousInfo info) {
@@ -324,50 +306,22 @@ public final class Forrest3 {
 		// TODO: should have already done this test?
 		final ICompleteNode complete = this.graph.getCompleteNode(gn);
 		if (gn.getHasCompleteChildren()) {
-
-			// if (gn.getPossibleParent().isEmpty()) {
-			// no existing parents, create new one
 			final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
 			for (final SuperRuleInfo info : infos) {
-				// if (gn.getRuntimeRule().getRuleNumber() == info.getRuntimeRule().getRuleNumber()) {
-				// // TODO: do we need to make this growable?
-				// result.add(gn);
-				// }
 				if (this.hasHeightPotential(info.getRuntimeRule(), gn, previous)) {
 					// check if already grown into this parent
 					final IGraphNode alreadyGrown = null;
-					// for (final IGraphNode pp : gn.getPossibleParent()) {
-					// if (info.getRuntimeRule().getRuleNumber() == pp.getRuntimeRule().getRuleNumber()) {
-					// alreadyGrown = pp;
-					// break;
-					// }
-					// }
+
 					if (null == alreadyGrown) {
 						this.growHeightByType(complete, info, previous);
-						result = true; // TODO: this should depend on if the growHeight does something
+						result |= true; // TODO: this should depend on if the growHeight does something
 					} else {
-						// TODO: I think this is wrong...what grammar/test is it used for?
-						// if (alreadyGrown.getPrevious().isEmpty()) {
-						// this.graph.reuseWithOtherStack(alreadyGrown, gn.getPrevious());
-						// result = true; // TODO: this should depend on if the reuseWithOtherStack does something
-						// } else {
-						// result = false;
-						// }
 					}
 				}
 			}
-			// } else {
-			// already parsed to one or more parents, reuse them
-			// for (final IGraphNode p : gn.getPossibleParent()) {
-			// if (this.hasHeightPotential(p.getRuntimeRule(), gn)) {
-			// p.reuseWithOtherStack(gn.getPrevious());
-			// result = true; // TODO: this should depend on if the reuseWithOtherStack does something
-			// }
-			// }
-			// }
-			// }
+
 		} else {
-			// result.add(this);
+			// do nothing
 		}
 		return result;
 	}

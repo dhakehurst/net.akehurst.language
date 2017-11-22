@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 
 import net.akehurst.language.core.grammar.ITerminal;
 import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.sppt.FixedList;
 import net.akehurst.language.core.sppt.ISPBranch;
 import net.akehurst.language.core.sppt.ISPLeaf;
 import net.akehurst.language.core.sppt.ISPNode;
@@ -165,7 +166,8 @@ public class ParseTreeBuilder {
 				this.cacheNode(n);
 				existing = n;
 			} else {
-				existing.getChildrenAlternatives().add(n.getChildren());
+				final FixedList<ISPNode> newChildren = n.getChildren(); // no need to clone as list is fixed!
+				existing.getChildrenAlternatives().add(newChildren);
 			}
 
 			return existing;

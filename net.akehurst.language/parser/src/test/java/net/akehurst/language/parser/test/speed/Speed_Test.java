@@ -112,6 +112,7 @@ public class Speed_Test extends AbstractParser_Test {
 		}
 	}
 
+	// TODO: make these longer
 	@Test
 	public void abcds_abcds_abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd() {
 		// grammar, goal, input

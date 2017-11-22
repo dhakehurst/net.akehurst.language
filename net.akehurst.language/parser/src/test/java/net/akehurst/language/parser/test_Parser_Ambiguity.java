@@ -786,4 +786,67 @@ public class test_Parser_Ambiguity extends AbstractParser_Test {
 		final ISharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 	}
+
+	// S = pd? td? ;
+	// pd = pm? 'p' ;
+	// pm = an ;
+	// td = cd ;
+	// cd = cm? 'c' ;
+	// cm = an ;
+	// an = 'a' ;
+	Grammar xxx2() {
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.skip("WS").choice(new TerminalPattern("\\s+"));
+		b.rule("S").concatenation(new NonTerminal("packageDeclaration_m"), new NonTerminal("importDeclaration_m"), new NonTerminal("typeDeclaration_m"));
+		b.rule("packageDeclaration_m").multi(0, 1, new NonTerminal("packageDeclaration"));
+		b.rule("packageDeclaration").concatenation(new NonTerminal("packageModifier_m"), new TerminalLiteral("package"));
+		b.rule("importDeclaration_m").multi(0, -1, new NonTerminal("importDeclaration"));
+		b.rule("importDeclaration").concatenation(new TerminalLiteral("import"), new TerminalLiteral(";"));
+		b.rule("packageModifier_m").multi(0, -1, new NonTerminal("packageModifier"));
+		b.rule("packageModifier").choice(new NonTerminal("annotation"));
+		b.rule("typeDeclaration_m").multi(0, -1, new NonTerminal("typeDeclaration"));
+		b.rule("typeDeclaration").choice(new NonTerminal("classDeclaration"), new NonTerminal("interfaceDeclaration"));
+		b.rule("classDeclaration").choice(new NonTerminal("normalClassDeclaration"), new NonTerminal("enumDeclaration"));
+		b.rule("normalClassDeclaration").concatenation(new NonTerminal("classModifier_m"), new TerminalLiteral("class"), new NonTerminal("Identifier"),
+				new NonTerminal("typeParameters_m"), new NonTerminal("superclass_m"), new NonTerminal("superinterfaces_m"), new NonTerminal("classBody"));
+		b.rule("classModifier_m").multi(0, -1, new NonTerminal("classModifier"));
+		b.rule("classModifier").choice(new NonTerminal("annotation"));
+		b.rule("interfaceDeclaration").concatenation(new NonTerminal("interfaceModifier_m"), new TerminalLiteral("interface"), new NonTerminal("Identifier"));
+		b.rule("interfaceModifier_m").multi(0, -1, new NonTerminal("interfaceModifier"));
+		b.rule("interfaceModifier").choice(new NonTerminal("annotation"));
+		b.rule("annotation").choice(new NonTerminal("normalAnnotation"), new NonTerminal("markerAnnotation"), new NonTerminal("singleElementAnnotation"));
+		b.rule("normalAnnotation").concatenation(new TerminalLiteral("@"), new NonTerminal("Identifier"), new TerminalLiteral("("),
+				new NonTerminal("elementValuePairList_m"), new TerminalLiteral(")"));
+		b.rule("markerAnnotation").concatenation(new TerminalLiteral("@"), new NonTerminal("Identifier"));
+		b.rule("singleElementAnnotation").concatenation(new TerminalLiteral("@"), new NonTerminal("Identifier"), new TerminalLiteral("("),
+				new TerminalLiteral("value"), new TerminalLiteral(")"));
+		b.rule("elementValuePairList_m").multi(0, 1, new NonTerminal("elementValuePairList"));
+		b.rule("elementValuePairList").choice(new NonTerminal("elementValuePair"));
+		b.rule("elementValuePair").concatenation(new TerminalLiteral("element"), new TerminalLiteral("="), new TerminalLiteral("value"));
+		b.rule("Identifier").choice(new TerminalPattern("[a-zA-Z][a-zA-z0-9]*"));
+		b.rule("typeParameters_m").multi(0, -1, new NonTerminal("typeParameters"));
+		b.rule("typeParameters").concatenation(new TerminalLiteral("<"), new TerminalLiteral(">"));
+		b.rule("superclass_m").multi(0, -1, new NonTerminal("superclass"));
+		b.rule("superclass").concatenation(new TerminalLiteral("extends"), new NonTerminal("Identifier"));
+		b.rule("superinterfaces_m").multi(0, -1, new NonTerminal("superinterfaces"));
+		b.rule("superinterfaces").concatenation(new TerminalLiteral("implements"), new NonTerminal("interfaceTypeList"));
+		b.rule("interfaceTypeList").separatedList(0, -1, new TerminalLiteral(","), new NonTerminal("Identifier"));
+		b.rule("classBody").concatenation(new TerminalLiteral("{"), new NonTerminal("classBodyDeclaration_m"), new TerminalLiteral("}"));
+		b.rule("classBodyDeclaration_m").multi(0, -1, new NonTerminal("classBodyDeclaration"));
+		b.rule("classBodyDeclaration").concatenation(new TerminalLiteral("body"));
+		b.rule("enumDeclaration").concatenation(new NonTerminal("classModifier_m"), new TerminalLiteral("enum"), new NonTerminal("Identifier"),
+				new NonTerminal("superinterfaces_m"), new NonTerminal("enumBody"));
+		b.rule("enumBody").concatenation(new TerminalLiteral("{"), new TerminalLiteral("}"));
+
+		return b.get();
+	}
+
+	@Test
+	public void xxx2_S_ac() throws ParseFailedException {
+		final Grammar g = this.xxx2();
+		final String goal = "S";
+		final String text = "@An() class An { }";
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		Assert.assertNotNull(tree);
+	}
 }

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import net.akehurst.language.core.sppt.FixedList;
 import net.akehurst.language.grammar.parser.ParseTreeToSingleLineTreeString;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
@@ -16,7 +17,7 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 public class GrowingNode implements IGrowingNode {
 
 	public GrowingNode(final RuntimeRule runtimeRule, final int startPosition, final int nextInputPosition, final int nextItemIndex, final int priority,
-			final List<ICompleteNode> children) {
+			final FixedList<ICompleteNode> children) {
 		this.runtimeRule = runtimeRule;
 		this.startPosition = startPosition;
 		this.nextInputPosition = nextInputPosition;
@@ -33,7 +34,7 @@ public class GrowingNode implements IGrowingNode {
 	private final int nextInputPosition;
 	private final int nextItemIndex;
 	private final int priority;
-	private final List<ICompleteNode> children;
+	private final FixedList<ICompleteNode> children;
 	private Set<PreviousInfo> previous;
 	private final Set<IGrowingNode> next;
 	private final int hashCode_cache;
@@ -74,7 +75,7 @@ public class GrowingNode implements IGrowingNode {
 	}
 
 	@Override
-	public boolean getIsSkip() {
+	public boolean isSkip() {
 		return this.getRuntimeRule().getIsSkipRule();
 	}
 
@@ -122,7 +123,7 @@ public class GrowingNode implements IGrowingNode {
 
 	@Override
 	public boolean getCanGrowWidth() {
-		if (this.getIsLeaf()) {
+		if (this.isLeaf()) {
 			return false;
 		}
 		switch (this.getRuntimeRule().getRhs().getKind()) {
@@ -166,7 +167,8 @@ public class GrowingNode implements IGrowingNode {
 		}
 	}
 
-	private boolean isEmptyRuleMatch() {
+	@Override
+	public boolean isEmptyRuleMatch() {
 		return this.getHasCompleteChildren() && this.getStartPosition() == this.getNextInputPosition();
 	}
 
@@ -365,12 +367,17 @@ public class GrowingNode implements IGrowingNode {
 	}
 
 	@Override
-	public boolean getIsLeaf() {
+	public boolean isEmptyLeaf() {
+		return this.getRuntimeRule().getIsEmptyRule();
+	}
+
+	@Override
+	public boolean isLeaf() {
 		return this.getRuntimeRule().getIsEmptyRule() || this.getRuntimeRule().getKind() == RuntimeRuleKind.TERMINAL;
 	}
 
 	@Override
-	public List<ICompleteNode> getGrowingChildren() {
+	public FixedList<ICompleteNode> getGrowingChildren() {
 		return this.children;
 	}
 
@@ -383,7 +390,7 @@ public class GrowingNode implements IGrowingNode {
 		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
 
 		if (withChildren) {
-			if (this.getIsLeaf()) {
+			if (this.isLeaf()) {
 				// no children
 			} else {
 				r += "{";

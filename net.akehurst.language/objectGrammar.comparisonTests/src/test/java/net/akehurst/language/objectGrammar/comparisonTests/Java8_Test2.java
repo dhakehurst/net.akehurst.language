@@ -1,3 +1,18 @@
+/**
+ * Copyright (C) 2015 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package net.akehurst.language.objectGrammar.comparisonTests;
 
 import java.io.FileReader;
@@ -62,12 +77,6 @@ public class Java8_Test2 {
 		return params;
 	}
 
-	public Java8_Test2(final Path file) {
-		this.file = file;
-	}
-
-	Path file;
-
 	static OGLanguageProcessor processor;
 
 	static {
@@ -110,18 +119,6 @@ public class Java8_Test2 {
 		return Java8_Test2.javaProcessor;
 	}
 
-	@Before
-	public void setUp() {
-		try {
-			final byte[] bytes = Files.readAllBytes(this.file);
-			Java8_Test2.og_input = new String(bytes);
-			Java8_Test2.antlr_input = new ANTLRInputStream(new String(bytes));
-		} catch (final IOException e) {
-			e.printStackTrace();
-			Assert.fail(e.getMessage());
-		}
-	}
-
 	static String og_input;
 
 	static ISharedPackedParseTree parseWithOG(final Path file) {
@@ -152,8 +149,26 @@ public class Java8_Test2 {
 		}
 	}
 
+	final Path file;
+
+	public Java8_Test2(final Path file) {
+		this.file = file;
+	}
+
+	@Before
+	public void setUp() {
+		try {
+			final byte[] bytes = Files.readAllBytes(this.file);
+			Java8_Test2.og_input = new String(bytes);
+			Java8_Test2.antlr_input = new ANTLRInputStream(new String(bytes));
+		} catch (final IOException e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+	}
+
 	@Test
-	public void og_compilationUnit() {
+	public void test_og_compilationUnit() {
 
 		final ISharedPackedParseTree tree = Java8_Test2.parseWithOG(this.file);
 		Assert.assertNotNull("Failed to Parse", tree);
