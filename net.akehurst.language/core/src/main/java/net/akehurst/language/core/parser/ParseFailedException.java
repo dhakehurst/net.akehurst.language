@@ -15,14 +15,26 @@
  */
 package net.akehurst.language.core.parser;
 
+import java.util.Map;
+
 import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 
 public class ParseFailedException extends Exception {
-	ISharedPackedParseTree longestMatch;
 
-	public ParseFailedException(final String message, final ISharedPackedParseTree longestMatch) {
-		super(message + " (" + (null == longestMatch ? 0 : longestMatch.getRoot().getNumberOfLines() + longestMatch.getRoot().getStartPosition()) + ")");
+	private final ISharedPackedParseTree longestMatch;
+
+	private final Map<String, Integer> location;
+
+	public ParseFailedException(final String message, final ISharedPackedParseTree longestMatch, final Map<String, Integer> location) {
+		super(message);
 		this.longestMatch = longestMatch;
+		this.location = location;
+	}
+
+	@Override
+	public String getMessage() {
+		final int line = this.getLongestMatch().getRoot().getNumberOfLines();
+		return super.getMessage() + "(possibly at line: " + this.location + ")";
 	}
 
 	public ISharedPackedParseTree getLongestMatch() {

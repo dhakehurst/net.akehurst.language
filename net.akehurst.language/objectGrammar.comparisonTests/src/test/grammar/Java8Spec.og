@@ -1412,36 +1412,11 @@ IntegerLiteral
 	|	BinaryIntegerLiteral
 	;
 
+DecimalIntegerLiteral   : "(0|[1-9]([0-9_]*[0-9])?)" ;
+HexIntegerLiteral       : "0[xX][0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?[lL]?";
+OctalIntegerLiteral     : "0_*[0-7]([0-7_]*[0-7])?[lL]?" ;
+BinaryIntegerLiteral    : "0[bB][01]([01_]*[01])?[lL]?" ;
 
-DecimalIntegerLiteral
-	:	DecimalNumeral IntegerTypeSuffix?
-	;
-
-
-HexIntegerLiteral
-	:	HexNumeral IntegerTypeSuffix?
-	;
-
-
-OctalIntegerLiteral
-	:	OctalNumeral IntegerTypeSuffix?
-	;
-
-
-BinaryIntegerLiteral
-	:	BinaryNumeral IntegerTypeSuffix?
-	;
-
-
-IntegerTypeSuffix
-	:	"[lL]"
-	;
-
-
-DecimalNumeral
-	:	'0'
-	|	NonZeroDigit (Digits? | Underscores Digits)
-	;
 
 
 Digits
@@ -1629,26 +1604,12 @@ CharacterLiteral
 	;
 
 
-SingleCharacter
-	:	"[^'\\]"
-	;
+SingleCharacter : "[^'\\]" ;
 
 // §3.10.5 String Literals
 
-StringLiteral
-	:	'"' StringCharacters? '"'
-	;
-
-
-StringCharacters
-	:	StringCharacter+
-	;
-
-
-StringCharacter
-	:	"[^\x22\\]"
-	|	EscapeSequence
-	;
+StringLiteral :	'"' StringCharacters? '"';
+StringCharacters : "(?:\\?.)+?" ;
 
 // §3.10.6 Escape Sequences for Character and String Literals
 

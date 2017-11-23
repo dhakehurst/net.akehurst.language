@@ -27,7 +27,7 @@ public class GraphNodeBranch implements ICompleteNode, ISPBranch {
 	private final Set<FixedList<ISPNode>> childrenAlternatives;
 	private ISPBranch parent;
 
-	public GraphNodeBranch(final ParseGraph graph, final RuntimeRule runtimeRule, final int priority, final int startPosition, final int nextInputPosition) {
+	public GraphNodeBranch(final IParseGraph graph, final RuntimeRule runtimeRule, final int priority, final int startPosition, final int nextInputPosition) {
 		this.runtimeRule = runtimeRule;
 		this.priority = priority;
 		this.startPosition = startPosition;

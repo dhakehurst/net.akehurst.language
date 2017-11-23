@@ -154,6 +154,9 @@ public class Java8_Tests2 {
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> data() {
 		final List<Object[]> col = new ArrayList<>();
+
+		col.add(new Object[] { new Data("", "DecimalIntegerLiteral", "12") });
+		col.add(new Object[] { new Data("", "IntegerLiteral", "12345") });
 		col.add(new Object[] { new Data("", "compilationUnit", "") });
 		col.add(new Object[] { new Data("", "ifThenStatement", "if(i==1) return 1;") });
 		col.add(new Object[] { new Data("", "annotation", "@AnAnnotation") });

@@ -21,7 +21,7 @@ import net.akehurst.language.parser.sppf.Leaf;
 public class ParseGraph implements IParseGraph {
 
 	// TODO: remove, this is for test
-	static boolean with = false;
+	static boolean with = true;
 
 	public ParseGraph(final RuntimeRule goalRule, final IInput input) {
 		this.goalRule = goalRule;

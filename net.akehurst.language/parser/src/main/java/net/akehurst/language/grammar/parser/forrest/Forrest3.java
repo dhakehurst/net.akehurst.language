@@ -2,13 +2,16 @@ package net.akehurst.language.grammar.parser.forrest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
+import net.akehurst.language.core.sppt.FixedList;
 import net.akehurst.language.core.sppt.ISPNode;
 import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.log.Log;
@@ -16,6 +19,7 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet.SuperRuleInfo;
+import net.akehurst.language.parse.graph.GraphNodeBranch;
 import net.akehurst.language.parse.graph.ICompleteNode;
 import net.akehurst.language.parse.graph.IGraphNode;
 import net.akehurst.language.parse.graph.IGrowingNode;
@@ -56,13 +60,53 @@ public final class Forrest3 {
 				}
 			}
 			if (!this.input.getIsEnd(lt.getNextInputPosition() + 1)) {
-				throw new ParseFailedException("Goal does not match full text", this.extractLongestMatchFromStart());
+				final ISharedPackedParseTree last = this.extractLastGrown();
+				final Map<String, Integer> location = this.getLineAndColumn(this.input, ((ICompleteNode) last.getRoot()).getNextInputPosition());
+				throw new ParseFailedException("Goal does not match full text", last, location);
 			} else {
 				return lt;
 			}
 		} else {
-			throw new ParseFailedException("Could not match goal", this.extractLongestMatchFromStart());
+			final ISharedPackedParseTree last = this.extractLastGrown();
+			final Map<String, Integer> location = this.getLineAndColumn(this.input, ((ICompleteNode) last.getRoot()).getNextInputPosition());
+			throw new ParseFailedException("Could not match goal", last, location);
 		}
+	}
+
+	Map<String, Integer> getLineAndColumn(final IInput input, final int position) {
+		final Map<String, Integer> result = new HashMap<>();
+		int line = 1;
+		int column = 1;
+
+		for (int count = 0; count < position; ++count) {
+			if (input.getText().charAt(count) == '\n') {
+				++line;
+				column = 1;
+			} else {
+				++column;
+			}
+		}
+
+		result.put("line", line);
+		result.put("column", column);
+		return result;
+	}
+
+	private ISharedPackedParseTree extractLastGrown() {
+		if (this.getLastGrown().isEmpty()) {
+			return null;
+		}
+		IGrowingNode longest = null;
+		for (final IGrowingNode n : this.getLastGrown()) {
+			if (null == longest || n.getMatchedTextLength() > longest.getMatchedTextLength()) {
+				longest = n;
+			}
+		}
+		// TODO: gorwing node is not really complete
+		final ICompleteNode complete = new GraphNodeBranch(this.graph, longest.getRuntimeRule(), longest.getPriority(), longest.getStartPosition(),
+				longest.getNextInputPosition());
+		complete.getChildrenAlternatives().add((FixedList<ISPNode>) (FixedList<?>) longest.getGrowingChildren());
+		return new SharedPackedParseTree((ISPNode) complete);
 	}
 
 	private ISharedPackedParseTree extractLongestMatch() {

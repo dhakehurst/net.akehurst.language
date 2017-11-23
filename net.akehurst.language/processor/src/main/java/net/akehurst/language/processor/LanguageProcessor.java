@@ -17,6 +17,7 @@ package net.akehurst.language.processor;
 
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -85,7 +86,7 @@ public class LanguageProcessor implements ILanguageProcessor {
 
 			return t;
 		} catch (final RuleNotFoundException | ParseTreeException e) {
-			throw new ParseFailedException(e.getMessage(), null);
+			throw new ParseFailedException(e.getMessage(), null, new HashMap<>());
 		}
 	}
 
@@ -101,7 +102,7 @@ public class LanguageProcessor implements ILanguageProcessor {
 
 			return t;
 		} catch (final RuleNotFoundException | ParseTreeException e) {
-			throw new ParseFailedException(e.getMessage(), null);
+			throw new ParseFailedException(e.getMessage(), null, new HashMap<>());
 		}
 	}
 
