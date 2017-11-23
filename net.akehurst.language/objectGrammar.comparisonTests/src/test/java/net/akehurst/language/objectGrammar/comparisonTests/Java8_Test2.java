@@ -284,6 +284,8 @@ public class Java8_Test2 {
 
 		final int i = 0;
 		final int i2 = 1_9;
+		final double d = 1.;
+		final double d2 = .1;
 
 	}
 }

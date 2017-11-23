@@ -184,6 +184,11 @@ public class Java8_Tests2 {
 		col.add(new Object[] { new Data("", "compilationUnit", "@An(@An(name=\"test\",name2=\"test2\")) @interface An { An[] value(); }") });
 		col.add(new Object[] { new Data("", "compilationUnit", "package x; @CAT(@CAT2(name=\"test\",name2=\"test2\")) @interface CAT { CAT2[] value(); }") });
 		col.add(new Object[] { new Data("", "compilationUnit", "package x; @interface CAT { CAT2[] value(); }") });
+		col.add(new Object[] { new Data("", "block", "{ (a)=(b)=1; }") });
+		col.add(new Object[] { new Data("", "block", "{ (a) = (b) = 1; }") });
+		col.add(new Object[] { new Data("", "block", "{ ls.add(\"Smalltalk rules!\"); }") });
+		col.add(new Object[] { new Data("", "block", "{ this.j = i; this.b = true; this.c = c; ConstructorAccess.this.i = i; }") });
+
 		col.add(new Object[] { new Data("'many ifthen'", "compilationUnit", () -> {
 			String input = "class Test {";
 			input += "void test() {";
@@ -203,25 +208,18 @@ public class Java8_Tests2 {
 
 	@Test
 	public void test() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
-
-		final String queryStr = this.data.queryStr;
-		final String grammarRule = this.data.grammarRule;
-		final ISharedPackedParseTree tree = Java8_Tests2.parse(grammarRule, queryStr);
-		Assert.assertNotNull(tree);
-		final String resultStr = Java8_Tests2.clean(tree.asString());
-		Assert.assertEquals(queryStr, resultStr);
-
+		try {
+			final String queryStr = this.data.queryStr;
+			final String grammarRule = this.data.grammarRule;
+			final ISharedPackedParseTree tree = Java8_Tests2.parse(grammarRule, queryStr);
+			Assert.assertNotNull(tree);
+			final String resultStr = Java8_Tests2.clean(tree.asString());
+			Assert.assertEquals(queryStr, resultStr);
+		} catch (final ParseFailedException ex) {
+			System.out.println(ex.getMessage());
+			System.out.println(ex.getLongestMatch());
+			throw ex;
+		}
 	}
 
-	@Test
-	public void test1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
-
-		final String queryStr = "@An() class An {  }";
-		final String grammarRule = "compilationUnit";
-		final ISharedPackedParseTree tree = Java8_Tests2.parse(grammarRule, queryStr);
-		Assert.assertNotNull(tree);
-		final String resultStr = Java8_Tests2.clean(tree.asString());
-		Assert.assertEquals(queryStr, resultStr);
-
-	}
 }
