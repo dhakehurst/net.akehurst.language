@@ -24,35 +24,28 @@ import net.akehurst.transform.binary.TransformException;
 
 public class AnyRuleNode2Rule extends AbstractSemanticAnalysisRule<Rule> {
 
-	@Override
-	public String getNodeName() {
-		return "anyRule";
-	}
+    @Override
+    public String getNodeName() {
+        return "anyRule";
+    }
 
-	@Override
-	public Rule constructLeft2Right(final ISPBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
-		// final INode rule = left.getChild(1);
-		final ISPNode rule = left.getChild(0);
-		final Rule right = transformer.transformLeft2Right(NormalRuleNode2Rule.class, rule);
-		return right;
-	}
+    @Override
+    public Rule constructLeft2Right(final ISPBranch left, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+        // final INode rule = left.getChild(1);
+        final ISPNode rule = left.getChild(0);
+        final Rule right = transformer.transformLeft2Right(NormalRuleNode2Rule.class, rule);
+        return right;
+    }
 
-	@Override
-	public ISPBranch constructRight2Left(final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public ISPBranch constructRight2Left(final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
+        return null;
+    }
 
-	@Override
-	public void updateLeft2Right(final ISPBranch left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
-		// TODO Auto-generated method stub
+    @Override
+    public void updateLeft2Right(final ISPBranch left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {}
 
-	}
-
-	@Override
-	public void updateRight2Left(final ISPBranch left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {
-		// TODO Auto-generated method stub
-
-	}
+    @Override
+    public void updateRight2Left(final ISPBranch left, final Rule right, final ITransformer transformer) throws RuleNotFoundException, TransformException {}
 
 }

@@ -11,7 +11,9 @@ public interface IParseGraph {
 
 	List<ICompleteNode> getGoals();
 
-	Collection<IGrowingNode> getGrowable();
+	Collection<IGrowingNode> getGrowing();
+
+	Collection<IGrowingNode> getGrowingHead();
 
 	Collection<ICompleteNode> getCompleteNodes();
 
@@ -19,6 +21,13 @@ public interface IParseGraph {
 
 	void createStart(RuntimeRule goalRule);
 
+	/**
+	 * Used to grow the width, i.e. to consume more input (in parser speak this is know as a shift). The next leaf is consumed from an IInput and provided as
+	 * input here so that the graph can return an already exiting graph node if one exists.
+	 *
+	 * @param leaf
+	 * @return
+	 */
 	ICompleteNode findOrCreateLeaf(Leaf leaf);
 
 	ICompleteNode findNode(int ruleNumber, int start, int length);

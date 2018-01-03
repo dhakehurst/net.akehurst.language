@@ -331,20 +331,17 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 
 	}
 
-	@Test
-	public void abc_abc_acb() {
+	@Test(expected = ParseFailedException.class)
+	public void abc_abc_acb() throws ParseFailedException {
 		// grammar, goal, input
-		try {
-			final Grammar g = this.a_b__c();
-			final String goal = "abc";
-			final String text = "acb";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
-			Assert.fail("This parse should fail");
+		final Grammar g = this.a_b__c();
+		final String goal = "abc";
+		final String text = "acb";
 
-		} catch (final ParseFailedException e) {
-			//
-		}
+		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		Assert.fail("This parse should fail");
+
 	}
 
 	@Test

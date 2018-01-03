@@ -11,15 +11,23 @@ import net.akehurst.language.core.parser.IParseTreeVisitable;
  */
 public interface ISharedPackedParseTree extends IParseTreeVisitable {
 
-	ISPNode getRoot();
+    ISPNode getRoot();
 
-	/**
-	 * Determines if there is an equivalent tree in this forest for every tree in the other forest.
-	 *
-	 * @param other
-	 * @return
-	 */
-	boolean contains(ISharedPackedParseTree other);
+    /**
+     * Determines if there is an equivalent tree in this forest for every tree in the other forest.
+     *
+     * @param other
+     * @return
+     */
+    boolean contains(ISharedPackedParseTree other);
 
-	String asString();
+    /**
+     * @return the original input text
+     */
+    String asString();
+
+    /**
+     * @return a set containing a string representation for each contained parse tree
+     */
+    String toStringAll();
 }

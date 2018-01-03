@@ -15,57 +15,91 @@
  */
 package net.akehurst.language.grammar.parser;
 
-import net.akehurst.language.core.sppt.ISPLeaf;
+import java.util.HashSet;
+import java.util.Set;
+
+import net.akehurst.language.core.sppt.FixedList;
 import net.akehurst.language.core.sppt.IParseTreeVisitor;
 import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.ISPLeaf;
 import net.akehurst.language.core.sppt.ISPNode;
 import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 
-public class ToStringVisitor implements IParseTreeVisitor<String, String, RuntimeException> {
+public class ToStringVisitor implements IParseTreeVisitor<Set<String>, String, RuntimeException> {
 
-	public ToStringVisitor() {
-		this(System.lineSeparator(), "  ");
-	}
+    public ToStringVisitor() {
+        this(System.lineSeparator(), "  ");
+    }
 
-	public ToStringVisitor(final String lineSeparator, final String indentIncrement) {
-		this.lineSeparator = lineSeparator;
-		this.indentIncrement = indentIncrement;
-	}
+    public ToStringVisitor(final String lineSeparator, final String indentIncrement) {
+        this.lineSeparator = lineSeparator;
+        this.indentIncrement = indentIncrement;
+    }
 
-	private final String lineSeparator;
-	private final String indentIncrement;
+    private final String lineSeparator;
+    private final String indentIncrement;
 
-	@Override
-	public String visit(final ISharedPackedParseTree target, final String indent) throws RuntimeException {
-		String s = indent;
-		final ISPNode root = target.getRoot();
-		s += root.accept(this, indent);
-		return s;
-	}
+    @Override
+    public Set<String> visit(final ISharedPackedParseTree target, final String indent) throws RuntimeException {
+        // String s = indent;
+        final ISPNode root = target.getRoot();
+        final Set<String> r = root.accept(this, indent);
+        return r;
+    }
 
-	@Override
-	public String visit(final ISPLeaf target, final String indent) throws RuntimeException {
-		final String s = indent + target.getName() + " : \"" + target.getMatchedText().replace("\n", new String(Character.toChars(0x23CE))) + "\"";
-		return s;
-	}
+    @Override
+    public Set<String> visit(final ISPLeaf target, final String indent) throws RuntimeException {
+        final String s = indent + target.getName() + " : \"" + target.getMatchedText().replace("\n", new String(Character.toChars(0x23CE))) + "\"";
+        final Set<String> r = new HashSet<>();
+        r.add(s);
+        return r;
+    }
 
-	@Override
-	public String visit(final ISPBranch target, final String indent) throws RuntimeException {
-		String s = indent;
-		s += target.getName();
-		s += target.getChildrenAlternatives().size() > 1 ? "*" : "";
-		s += " {";
-		if (0 < target.getChildren().size()) {
-			s += this.lineSeparator;
-			s += target.getChildren().get(0).accept(this, indent + this.indentIncrement);
-			for (int i = 1; i < target.getChildren().size(); ++i) {
-				s += ", " + this.lineSeparator;
-				s += target.getChildren().get(i).accept(this, indent + this.indentIncrement);
-			}
-			s += this.lineSeparator + indent;
-		}
-		s += "}";
-		return s;
-	}
+    @Override
+    public Set<String> visit(final ISPBranch target, final String indent) throws RuntimeException {
+        final Set<String> r = new HashSet<>();
+
+        for (final FixedList<ISPNode> children : target.getChildrenAlternatives()) {
+            String s = indent;
+            s += target.getName();
+            s += target.getChildrenAlternatives().size() > 1 ? "*" : "";
+            s += " {";
+            if (children.isEmpty()) {
+                s += "}";
+                r.add(s);
+            } else {
+                s += this.lineSeparator;
+
+                Set<String> currentSet = new HashSet<>();
+                currentSet.add(s);
+                for (int i = 0; i < children.size(); ++i) {
+                    currentSet = this.visitChild(currentSet, children, i, indent);
+                }
+
+                for (final String sc : currentSet) {
+                    String sc1 = sc;
+                    sc1 += indent;
+                    sc1 += "}";
+                    r.add(sc1);
+                }
+            }
+        }
+        return r;
+    }
+
+    private Set<String> visitChild(final Set<String> currentSet, final FixedList<ISPNode> children, final int index, final String indent) {
+        final Set<String> r = new HashSet<>();
+        final Set<String> ssc = children.get(index).accept(this, indent + this.indentIncrement);
+
+        for (final String current : currentSet) {
+            for (final String sc : ssc) {
+                final StringBuilder b = new StringBuilder(current);
+                b.append(sc);
+                b.append(this.lineSeparator);
+                r.add(b.toString());
+            }
+        }
+        return r;
+    }
 
 }

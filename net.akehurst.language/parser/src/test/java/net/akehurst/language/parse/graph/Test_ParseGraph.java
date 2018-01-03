@@ -1,6 +1,10 @@
 package net.akehurst.language.parse.graph;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import net.akehurst.language.grammar.parser.converter.Converter;
@@ -13,9 +17,30 @@ import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.parse.graph.IGrowingNode.PreviousInfo;
 import net.akehurst.language.parser.sppf.Leaf;
+import net.akehurst.transform.binary.RuleNotFoundException;
+import net.akehurst.transform.binary.TransformException;
 
 public class Test_ParseGraph {
+
+	@Before
+	public void setup() {
+
+	}
+
+	@Test
+	public void createStart() {
+		final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
+		final RuntimeRule terminalRule = rules.createRuntimeRule(new TerminalLiteral("a"));
+
+		final Input3 input = new Input3(rules, "a");
+		final IParseGraph graph = new ParseGraph(terminalRule, input);
+
+		graph.createStart(terminalRule);
+		Assert.assertNotNull(graph.getGrowingHead().iterator().next());
+		Assert.assertEquals(terminalRule, graph.getGrowingHead().iterator().next().getRuntimeRule());
+	}
 
 	@Test
 	public void createLeaf_doesNotExist() {
@@ -52,65 +77,35 @@ public class Test_ParseGraph {
 	}
 
 	@Test
-	public void createBranch() {
-		try {
-			final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
-			final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-			b.rule("a").concatenation(new TerminalLiteral("a"));
-			final Grammar g = b.get();
-			final Converter c = new Converter(rules);
-			c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
+	public void createWithFirstChild() throws RuleNotFoundException, TransformException, net.akehurst.language.core.grammar.RuleNotFoundException {
 
-			final RuntimeRule terminalRule = rules.getRuntimeRule(g.findAllTerminal("a"));
-			final RuntimeRule rule = rules.getRuntimeRule(g.findAllRule("a"));
+		final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
+		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+		b.rule("A").concatenation(new TerminalLiteral("a"));
+		final Grammar g = b.get();
+		final Converter c = new Converter(rules);
+		c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
 
-			final Input3 input = new Input3(rules, "a");
-			final IParseGraph graph = new ParseGraph(rule, input);
+		final RuntimeRule terminalRule = rules.getRuntimeRule(g.findAllTerminal("a"));
+		final RuntimeRule rule = rules.getRuntimeRule(g.findAllRule("A"));
 
-			final int startPosition = 0;
-			final int height = 1;
-			final ICompleteNode n = graph.findOrCreateBranch(rule, 0, startPosition, 1, height);
+		final Input3 input = new Input3(rules, "a");
+		final IParseGraph graph = new ParseGraph(rule, input);
 
-			Assert.assertNotNull(n);
-		} catch (final Exception e) {
-			Assert.fail(e.getMessage());
-		}
-	}
+		// grow leaf
+		final Leaf l = input.fetchOrCreateBud(terminalRule, 0);
+		final ICompleteNode ln = graph.findOrCreateLeaf(l);
 
-	@Test
-	public void addChild_resultDoesNotExist() {
+		final RuntimeRule runtimeRule = rule;
+		final int priority = 0;
+		final ICompleteNode firstChild = ln;
+		final Set<PreviousInfo> previous = Collections.emptySet();
+		graph.createWithFirstChild(runtimeRule, priority, firstChild, previous);
 
-		try {
-			final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
-			final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-			b.rule("a").concatenation(new TerminalLiteral("a"));
-			final Grammar g = b.get();
-			final Converter c = new Converter(rules);
-			c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
-
-			final RuntimeRule terminalRule = rules.getRuntimeRule(g.findAllTerminal("a"));
-			final RuntimeRule rule = rules.getRuntimeRule(g.findAllRule("a"));
-
-			final Input3 input = new Input3(rules, "a");
-			final IParseGraph graph = new ParseGraph(rule, input);
-
-			final int startPosition = 0;
-			final int length = 1;
-			final int nextItemIndex = 1;
-			final int height = 1;
-			final ICompleteNode n = graph.findOrCreate
-			final Leaf l = input.fetchOrCreateBud(terminalRule, 0);
-			final ICompleteNode n2 = graph.findOrCreateLeaf(l, terminalRule, startPosition, l.getMatchedTextLength());
-
-			graph.growNextChild(n, n2, 0);
-
-			Assert.assertNotNull(n);
-			Assert.assertTrue(n == n);
-			Assert.assertTrue(n.getChildren().size() == 1);
-		} catch (final Exception e) {
-			Assert.fail(e.getMessage());
-		}
-
+		Assert.assertEquals(1, graph.getGrowingHead().size());
+		Assert.assertEquals(rule, graph.getGrowingHead().iterator().next().getRuntimeRule());
+		Assert.assertEquals(1, graph.getGrowingHead().iterator().next().getGrowingChildren().size());
+		// TODO: more checks
 	}
 
 	@Test
@@ -167,28 +162,20 @@ public class Test_ParseGraph {
 			// e.g. parse empty B followed by 'b' B (see special test)
 
 			// start
-			final ICompleteNode node_start = graph.findOrCreateBranch(goalRule, 0, 0, 0);
+			graph.createStart(goalRule);
 
 			// grow width
-			graph.getGrowable().clear();
-			final Leaf leaf_empty = input.fetchOrCreateBud(rule_B_empty, 0);
-			final ICompleteNode node_empty = graph.findOrCreateLeaf(leaf_empty, rule_B_empty, 0, leaf_empty.getMatchedTextLength());
-			node_start.pushToStackOf(node_empty, 0);
+			final IGrowingNode gn = graph.getGrowingHead().iterator().next();
+			final Leaf leaf = input.fetchOrCreateBud(terminal_b, 0);
+			final ICompleteNode leafNode = graph.findOrCreateLeaf(leaf);
+			final IGrowingNode stack = gn;
+			final Set<PreviousInfo> previous = Collections.emptySet();
+			graph.pushToStackOf(leafNode, stack, previous);
 
 			// grow height
-			graph.getGrowable().clear();
-			graph.createWithFirstChild(rule_B, 0, node_empty);
-			final IGraphNode node_B_empty = graph.findNode(rule_B.getRuleNumber(), 0);
 			// graft back
-			graph.getGrowable().clear();
-			graph.growNextChild(node_start, node_B_empty, 0);
-			final IGraphNode node_start_1 = graph.findNode(goalRule.getRuleNumber(), 0);
 
 			// grow width
-			graph.getGrowable().clear();
-			final Leaf leaf_b = input.fetchOrCreateBud(terminal_b, 0);
-			final IGraphNode node_b = graph.findOrCreateLeaf(leaf_b, terminal_b, 0, leaf_b.getMatchedTextLength());
-			node_start_1.pushToStackOf(node_b, 1);
 
 			// grow height
 			graph.getGrowable().clear();

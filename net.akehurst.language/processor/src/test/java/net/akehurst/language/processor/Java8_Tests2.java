@@ -184,6 +184,8 @@ public class Java8_Tests2 {
 		col.add(new Object[] { new Data("", "compilationUnit", "@An(@An(name=\"test\",name2=\"test2\")) @interface An { An[] value(); }") });
 		col.add(new Object[] { new Data("", "compilationUnit", "package x; @CAT(@CAT2(name=\"test\",name2=\"test2\")) @interface CAT { CAT2[] value(); }") });
 		col.add(new Object[] { new Data("", "compilationUnit", "package x; @interface CAT { CAT2[] value(); }") });
+		col.add(new Object[] {
+				new Data("", "compilationUnit", "public class ConstructorAccess { class Inner { private Inner() { if (x.i != 42 || x.c != 'x') { } } } }") });
 		col.add(new Object[] { new Data("", "block", "{ (a)=(b)=1; }") });
 		col.add(new Object[] { new Data("", "block", "{ (a) = (b) = 1; }") });
 		col.add(new Object[] { new Data("", "block", "{ ls.add(\"Smalltalk rules!\"); }") });

@@ -2,7 +2,7 @@ package net.akehurst.language.grammar.parser.log;
 
 public class Log {
 
-	public static boolean on = false;
+	public static boolean on = true;
 
 	public static void trace(final String text, final Object... args) {
 		final String s = String.format(text, args);

@@ -15,6 +15,8 @@
  */
 package net.akehurst.language.parser.sppf;
 
+import java.util.Set;
+
 import net.akehurst.language.core.sppt.IParseTreeVisitor;
 import net.akehurst.language.core.sppt.ISPNode;
 import net.akehurst.language.core.sppt.ISharedPackedParseTree;
@@ -23,65 +25,75 @@ import net.akehurst.language.grammar.parser.ToStringVisitor;
 
 public class SharedPackedParseTree implements ISharedPackedParseTree {
 
-	private final ISPNode root;
+    private final ISPNode root;
 
-	public SharedPackedParseTree(final ISPNode root) {
-		this.root = root;
-	}
+    public SharedPackedParseTree(final ISPNode root) {
+        this.root = root;
+    }
 
-	// --- IParseTree ---
-	@Override
-	public String asString() {
-		final ParseTreeToInputText visitor = new ParseTreeToInputText();
-		final String s = this.accept(visitor, "");
-		return s;
-	}
+    // --- IParseTree ---
+    @Override
+    public String asString() {
+        final ParseTreeToInputText visitor = new ParseTreeToInputText();
+        final String s = this.accept(visitor, "");
+        return s;
+    }
 
-	// --- ISharedPackedParseForest ---
-	@Override
-	public ISPNode getRoot() {
+    // --- ISharedPackedParseForest ---
+    @Override
+    public ISPNode getRoot() {
+        return this.root;
+    }
 
-		return this.root;
-	}
+    @Override
+    public boolean contains(final ISharedPackedParseTree other) {
+        final boolean result = this.getRoot().contains(other.getRoot());
+        return result;
+    }
 
-	@Override
-	public boolean contains(final ISharedPackedParseTree other) {
-		final boolean result = this.getRoot().contains(other.getRoot());
-		return result;
-	}
+    @Override
+    public String toStringAll() {
+        final ToStringVisitor v = new ToStringVisitor();
+        final Set<String> all = this.accept(v, "");
+        final StringBuilder b = new StringBuilder();
+        final int total = all.size();
+        int cur = 0;
+        for (final String pt : all) {
+            cur++;
+            b.append("Tree " + cur + " of " + total + System.lineSeparator());
+            b.append(pt);
+            b.append(System.lineSeparator());
+        }
+        return b.toString();
+    }
 
-	// --- IParseTreeVisitable ---
-	@Override
-	public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
-		return visitor.visit(this, arg);
-	}
+    // --- IParseTreeVisitable ---
+    @Override
+    public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
+        return visitor.visit(this, arg);
+    }
 
-	// --- Object ---
-	static ToStringVisitor v = new ToStringVisitor();
-	String toString_cache;
+    // --- Object ---
+    @Override
+    public String toString() {
+        final ToStringVisitor v = new ToStringVisitor();
+        return this.accept(v, "").iterator().next();
+    }
 
-	@Override
-	public String toString() {
-		if (null == this.toString_cache) {
-			this.toString_cache = this.accept(Branch.v, "");
-		}
-		return this.toString_cache;
-	}
+    @Override
+    public int hashCode() {
+        return this.getRoot().hashCode();
+    }
 
-	@Override
-	public int hashCode() {
-		return this.getRoot().hashCode();
-	}
-
-	@Override
-	public boolean equals(final Object arg) {
-		if (arg instanceof ISharedPackedParseTree) {
-			final ISharedPackedParseTree other = (ISharedPackedParseTree) arg;
-			// return Objects.equals(this.getRoot(), other.getRoot());
-			// TODO: not the fastest way to do this, but will do for now
-			return this.contains(other) && other.contains(this);
-		} else {
-			return false;
-		}
-	}
+    @Override
+    public boolean equals(final Object arg) {
+        if (arg instanceof ISharedPackedParseTree) {
+            final ISharedPackedParseTree other = (ISharedPackedParseTree) arg;
+            // return Objects.equals(this.getRoot(), other.getRoot());
+            // TODO: not the fastest way to do this, but will do for now
+            return this.contains(other) && other.contains(this);
+        } else {
+            return false;
+        }
+    }
 }
