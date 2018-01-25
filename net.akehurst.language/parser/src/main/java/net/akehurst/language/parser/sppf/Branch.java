@@ -41,7 +41,7 @@ public class Branch extends Node implements ISPBranch {
     public Branch(final RuntimeRule runtimeRule, final ISPNode[] children) {
         super(runtimeRule, children.length == 0 ? -1 : children[0].getStartPosition());
         this.childrenAlternatives = new HashSet<>();
-        this.childrenAlternatives.add(new FixedList(children));
+        this.childrenAlternatives.add(new FixedList<>(children));
         this.length = 0;
         // this.isEmpty = true;
         // this.firstLeaf = this.children.length==0 ? null : children[0].getFirstLeaf();

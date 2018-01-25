@@ -30,170 +30,170 @@ import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class Parser_PriorityChoice_Test extends AbstractParser_Test {
 
-	Grammar abc() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("abc").priorityChoice(new NonTerminal("a"), new NonTerminal("b"), new NonTerminal("c"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
-		b.rule("b").concatenation(new TerminalLiteral("b"));
-		b.rule("c").concatenation(new TerminalLiteral("c"));
-		return b.get();
-	}
+    Grammar abc() {
+        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+        b.rule("abc").priorityChoice(new NonTerminal("a"), new NonTerminal("b"), new NonTerminal("c"));
+        b.rule("a").concatenation(new TerminalLiteral("a"));
+        b.rule("b").concatenation(new TerminalLiteral("b"));
+        b.rule("c").concatenation(new TerminalLiteral("c"));
+        return b.get();
+    }
 
-	Grammar aempty() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("a").priorityChoice();
-		return b.get();
-	}
+    Grammar aempty() {
+        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+        b.rule("a").priorityChoice();
+        return b.get();
+    }
 
-	@Test
-	public void aempty_a_empty() throws ParseFailedException {
-		// grammar, goal, input
+    @Test
+    public void aempty_a_empty() throws ParseFailedException {
+        // grammar, goal, input
 
-		final Grammar g = this.aempty();
-		final String goal = "a";
-		final String text = "";
+        final Grammar g = this.aempty();
+        final String goal = "a";
+        final String text = "";
 
-		final ISharedPackedParseTree actual = this.process(g, text, goal);
+        final ISharedPackedParseTree actual = this.process(g, text, goal);
 
-		final ParseTreeBuilder b = this.builder(g, text, goal);
-		b.define("a {");
-		b.define("  $empty");
-		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+        final ParseTreeBuilder b = this.builder(g, text, goal);
+        b.define("a {");
+        b.define("  $empty");
+        b.define("}");
+        final ISharedPackedParseTree expected = b.buildAndAdd();
 
-		Assert.assertNotNull(actual);
-		Assert.assertEquals(expected, actual);
-	}
+        Assert.assertNotNull(actual);
+        Assert.assertEquals(expected, actual);
+    }
 
-	@Test
-	public void abc_abc_a() throws ParseFailedException {
-		// grammar, goal, input
+    @Test
+    public void abc_abc_a() throws ParseFailedException {
+        // grammar, goal, input
 
-		final Grammar g = this.abc();
-		final String goal = "abc";
-		final String text = "a";
+        final Grammar g = this.abc();
+        final String goal = "abc";
+        final String text = "a";
 
-		final ISharedPackedParseTree actual = this.process(g, text, goal);
+        final ISharedPackedParseTree actual = this.process(g, text, goal);
 
-		final ParseTreeBuilder b = this.builder(g, text, goal);
-		b.define("abc {");
-		b.define("  a {");
-		b.define("    'a'");
-		b.define("  }");
-		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+        final ParseTreeBuilder b = this.builder(g, text, goal);
+        b.define("abc {");
+        b.define("  a {");
+        b.define("    'a'");
+        b.define("  }");
+        b.define("}");
+        final ISharedPackedParseTree expected = b.buildAndAdd();
 
-		Assert.assertNotNull(actual);
-		Assert.assertEquals(expected, actual);
+        Assert.assertNotNull(actual);
+        Assert.assertEquals(expected, actual);
 
-	}
+    }
 
-	@Test
-	public void abc_abc_b() throws ParseFailedException {
-		// grammar, goal, input
+    @Test
+    public void abc_abc_b() throws ParseFailedException {
+        // grammar, goal, input
 
-		final Grammar g = this.abc();
-		final String goal = "abc";
-		final String text = "b";
+        final Grammar g = this.abc();
+        final String goal = "abc";
+        final String text = "b";
 
-		final ISharedPackedParseTree actual = this.process(g, text, goal);
+        final ISharedPackedParseTree actual = this.process(g, text, goal);
 
-		final ParseTreeBuilder b = this.builder(g, text, goal);
-		b.define("abc {");
-		b.define("  b {");
-		b.define("    'b'");
-		b.define("  }");
-		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+        final ParseTreeBuilder b = this.builder(g, text, goal);
+        b.define("abc {");
+        b.define("  b {");
+        b.define("    'b'");
+        b.define("  }");
+        b.define("}");
+        final ISharedPackedParseTree expected = b.buildAndAdd();
 
-		Assert.assertNotNull(actual);
-		Assert.assertEquals(expected, actual);
-	}
+        Assert.assertNotNull(actual);
+        Assert.assertEquals(expected, actual);
+    }
 
-	@Test
-	public void abc_abc_c() throws ParseFailedException {
-		// grammar, goal, input
+    @Test
+    public void abc_abc_c() throws ParseFailedException {
+        // grammar, goal, input
 
-		final Grammar g = this.abc();
-		final String goal = "abc";
-		final String text = "c";
+        final Grammar g = this.abc();
+        final String goal = "abc";
+        final String text = "c";
 
-		final ISharedPackedParseTree actual = this.process(g, text, goal);
+        final ISharedPackedParseTree actual = this.process(g, text, goal);
 
-		final ParseTreeBuilder b = this.builder(g, text, goal);
-		b.define("abc {");
-		b.define("  c {");
-		b.define("    'c'");
-		b.define("  }");
-		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+        final ParseTreeBuilder b = this.builder(g, text, goal);
+        b.define("abc {");
+        b.define("  c {");
+        b.define("    'c'");
+        b.define("  }");
+        b.define("}");
+        final ISharedPackedParseTree expected = b.buildAndAdd();
 
-		Assert.assertNotNull(actual);
-		Assert.assertEquals(expected, actual);
-	}
+        Assert.assertNotNull(actual);
+        Assert.assertEquals(expected, actual);
+    }
 
-	Grammar kwOrId1() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("S").choice(new NonTerminal("type"));
-		b.rule("type").priorityChoice(new NonTerminal("id"), new NonTerminal("kw"));
-		b.rule("kw").concatenation(new TerminalLiteral("int"));
-		b.rule("id").concatenation(new TerminalPattern("[a-z]+"));
-		return b.get();
-	}
+    Grammar kwOrId1() {
+        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+        b.rule("S").choice(new NonTerminal("type"));
+        b.rule("type").priorityChoice(new NonTerminal("id"), new NonTerminal("kw"));
+        b.rule("kw").concatenation(new TerminalLiteral("int"));
+        b.rule("id").concatenation(new TerminalPattern("[a-z]+"));
+        return b.get();
+    }
 
-	@Test
-	public void kwOrId_S_int() throws ParseFailedException {
-		// grammar, goal, input
+    @Test
+    public void kwOrId_S_id() throws ParseFailedException {
+        // grammar, goal, input
 
-		final Grammar g = this.kwOrId1();
-		final String goal = "S";
-		final String text = "int";
+        final Grammar g = this.kwOrId1();
+        final String goal = "S";
+        final String text = "int";
 
-		final ISharedPackedParseTree actual = this.process(g, text, goal);
+        final ISharedPackedParseTree actual = this.process(g, text, goal);
 
-		final ParseTreeBuilder b = this.builder(g, text, goal);
-		b.define("S {");
-		b.define("  type {");
-		b.define("    id { '[a-z]+' : 'int' }");
-		b.define("  }");
-		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+        final ParseTreeBuilder b = this.builder(g, text, goal);
+        b.define("S {");
+        b.define("  type {");
+        b.define("    id { '[a-z]+' : 'int' }");
+        b.define("  }");
+        b.define("}");
+        final ISharedPackedParseTree expected = b.buildAndAdd();
 
-		Assert.assertNotNull(actual);
-		Assert.assertEquals(expected, actual);
+        Assert.assertNotNull(actual);
+        Assert.assertEquals(expected, actual);
 
-	}
+    }
 
-	Grammar kwOrId2() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("S").choice(new NonTerminal("type"));
-		b.rule("type").priorityChoice(new NonTerminal("kw"), new NonTerminal("id"));
-		b.rule("kw").concatenation(new TerminalLiteral("int"));
-		b.rule("id").concatenation(new TerminalPattern("[a-z]+"));
-		return b.get();
-	}
+    Grammar kwOrId2() {
+        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+        b.rule("S").choice(new NonTerminal("type"));
+        b.rule("type").priorityChoice(new NonTerminal("kw"), new NonTerminal("id"));
+        b.rule("kw").concatenation(new TerminalLiteral("int"));
+        b.rule("id").concatenation(new TerminalPattern("[a-z]+"));
+        return b.get();
+    }
 
-	@Test
-	public void kwOrId_S_id() throws ParseFailedException {
-		// grammar, goal, input
+    @Test
+    public void kwOrId_S_int() throws ParseFailedException {
+        // grammar, goal, input
 
-		final Grammar g = this.kwOrId2();
-		final String goal = "S";
-		final String text = "int";
+        final Grammar g = this.kwOrId2();
+        final String goal = "S";
+        final String text = "int";
 
-		final ISharedPackedParseTree actual = this.process(g, text, goal);
+        final ISharedPackedParseTree actual = this.process(g, text, goal);
 
-		final ParseTreeBuilder b = this.builder(g, text, goal);
-		b.define("S {");
-		b.define("  type {");
-		b.define("    kw { 'int' }");
-		b.define("  }");
-		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+        final ParseTreeBuilder b = this.builder(g, text, goal);
+        b.define("S {");
+        b.define("  type {");
+        b.define("    kw { 'int' }");
+        b.define("  }");
+        b.define("}");
+        final ISharedPackedParseTree expected = b.buildAndAdd();
 
-		Assert.assertNotNull(actual);
-		Assert.assertEquals(expected, actual);
+        Assert.assertNotNull(actual);
+        Assert.assertEquals(expected, actual);
 
-	}
-	// more tests needed!!!!
+    }
+    // more tests needed!!!!
 }
