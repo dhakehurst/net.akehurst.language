@@ -6,7 +6,7 @@ import net.akehurst.language.core.grammar.IGrammar;
 import net.akehurst.language.core.grammar.INonTerminal;
 import net.akehurst.language.core.grammar.IRule;
 import net.akehurst.language.core.grammar.IRuleItem;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.ogl.semanticStructure.Visitable;
 import net.akehurst.language.ogl.semanticStructure.Visitor;
 
@@ -34,7 +34,7 @@ public class NonTerminalRuleReference implements INonTerminal, Visitable {
 	}
 
 	@Override
-	public IRule getReferencedRule() throws RuleNotFoundException {
+	public IRule getReferencedRule() throws GrammarRuleNotFoundException {
 		return this.grammar.findAllRule(this.ruleName);
 	}
 

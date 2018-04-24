@@ -25,7 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.akehurst.language.core.grammar.ITerminal;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.sppt.FixedList;
 import net.akehurst.language.core.sppt.ISPBranch;
 import net.akehurst.language.core.sppt.ISPLeaf;
@@ -150,7 +150,7 @@ public class ParseTreeBuilder {
 			final RuntimeRule rr = this.runtimeBuilder.getRuntimeRuleSet().getRuntimeRule(rule);
 			final ISPBranch b = this.runtimeBuilder.createBranch(rr, children);
 			return b;
-		} catch (final RuleNotFoundException e) {
+		} catch (final GrammarRuleNotFoundException e) {
 			throw new RuntimeException("Error", e);
 		}
 	}
@@ -171,7 +171,7 @@ public class ParseTreeBuilder {
 			}
 
 			return existing;
-		} catch (final RuleNotFoundException e) {
+		} catch (final GrammarRuleNotFoundException e) {
 			throw new RuntimeException("Error", e);
 		}
 	}

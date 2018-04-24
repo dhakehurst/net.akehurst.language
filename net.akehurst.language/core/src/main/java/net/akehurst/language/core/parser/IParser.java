@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 import net.akehurst.language.core.grammar.IRuleItem;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 
 public interface IParser {
@@ -45,11 +45,11 @@ public interface IParser {
 	 * @return
 	 * @throws ParseFailedException
 	 * @throws ParseTreeException
-	 * @throws RuleNotFoundException
+	 * @throws GrammarRuleNotFoundException
 	 */
-	ISharedPackedParseTree parse(String goalRuleName, CharSequence inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
+	ISharedPackedParseTree parse(String goalRuleName, CharSequence inputText) throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException;
 
-	ISharedPackedParseTree parse(String goalRuleName, Reader inputText) throws ParseFailedException, ParseTreeException, RuleNotFoundException;
+	ISharedPackedParseTree parse(String goalRuleName, Reader inputText) throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException;
 
 	List<IRuleItem> expectedAt(String goalRuleName, CharSequence inputText, int position) throws ParseFailedException, ParseTreeException;
 

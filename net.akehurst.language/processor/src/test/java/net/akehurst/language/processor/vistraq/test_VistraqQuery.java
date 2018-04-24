@@ -14,8 +14,8 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.grammar.IGrammar;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.sppt.ISharedPackedParseTree;
@@ -113,7 +113,7 @@ public class test_VistraqQuery {
     }
 
     @Test
-    public void test() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+    public void test() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
         final String queryStr = this.data.queryStr;
         final String grammarRule = this.data.grammarRule;

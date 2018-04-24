@@ -28,8 +28,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.grammar.IGrammar;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
@@ -57,7 +57,7 @@ public class OGL_Java_Test {
 			final IParser parser = new ScannerLessParser3(this.parseTreeFactory, grammar);
 			final ISharedPackedParseTree tree = parser.parse(goalName, reader);
 			return tree;
-		} catch (final RuleNotFoundException e) {
+		} catch (final GrammarRuleNotFoundException e) {
 			Assert.fail(e.getMessage());
 			return null;
 		} catch (final ParseTreeException e) {

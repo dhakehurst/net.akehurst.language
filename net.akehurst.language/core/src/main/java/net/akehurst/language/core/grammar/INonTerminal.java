@@ -17,6 +17,6 @@ package net.akehurst.language.core.grammar;
 
 public interface INonTerminal extends ITangibleItem {
 
-	IRule getReferencedRule() throws RuleNotFoundException;
+	IRule getReferencedRule() throws GrammarRuleNotFoundException;
 
 }

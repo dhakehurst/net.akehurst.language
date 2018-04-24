@@ -22,7 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.sppt.ISharedPackedParseTree;
@@ -39,7 +39,7 @@ public class test_OGL_Dot {
 			final T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
-		} catch (final RuleNotFoundException e) {
+		} catch (final GrammarRuleNotFoundException e) {
 			Assert.fail(e.getMessage());
 			return null;
 		} catch (final ParseTreeException e) {
@@ -58,7 +58,7 @@ public class test_OGL_Dot {
 			final T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
-		} catch (final RuleNotFoundException | ParseTreeException e) {
+		} catch (final GrammarRuleNotFoundException | ParseTreeException e) {
 			Assert.fail(e.getMessage());
 			return null;
 		}
@@ -72,7 +72,7 @@ public class test_OGL_Dot {
 			final LanguageProcessor proc = new LanguageProcessor(grammar, null);
 			final ISharedPackedParseTree tree = proc.getParser().parse(ruleName, text);
 			return tree;
-		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | RuleNotFoundException e) {
+		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | GrammarRuleNotFoundException e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 			return null;

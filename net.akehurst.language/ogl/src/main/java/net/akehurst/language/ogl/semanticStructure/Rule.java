@@ -20,7 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import net.akehurst.language.core.grammar.IRule;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.parser.INodeType;
 
 public class Rule implements IRule {
@@ -54,7 +54,7 @@ public class Rule implements IRule {
 		this.rhs.setOwningRule(this, nextIndex0);
 	}
 
-	public Set<Terminal> findAllSubTerminal() throws RuleNotFoundException {
+	public Set<Terminal> findAllSubTerminal() throws GrammarRuleNotFoundException {
 		final Set<Terminal> result = new HashSet<>();
 		result.addAll(this.getRhs().findAllTerminal());
 		for (final Rule r : this.findAllSubRule()) {
@@ -63,7 +63,7 @@ public class Rule implements IRule {
 		return result;
 	}
 
-	public Set<NonTerminal> findAllSubNonTerminal() throws RuleNotFoundException {
+	public Set<NonTerminal> findAllSubNonTerminal() throws GrammarRuleNotFoundException {
 		final Set<NonTerminal> result = this.getRhs().findAllNonTerminal();
 		Set<NonTerminal> oldResult = new HashSet<>();
 		while (!oldResult.containsAll(result)) {
@@ -78,7 +78,7 @@ public class Rule implements IRule {
 		return result;
 	}
 
-	public Set<Rule> findAllSubRule() throws RuleNotFoundException {
+	public Set<Rule> findAllSubRule() throws GrammarRuleNotFoundException {
 		final Set<Rule> result = new HashSet<>();
 		for (final NonTerminal nt : this.findAllSubNonTerminal()) {
 			result.add(nt.getReferencedRule());

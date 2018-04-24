@@ -24,9 +24,9 @@ import java.util.Set;
 
 import net.akehurst.language.core.analyser.ISemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.grammar.IGrammar;
 import net.akehurst.language.core.grammar.IRuleItem;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
 import net.akehurst.language.core.parser.ICompletionItem;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
@@ -85,7 +85,7 @@ public class LanguageProcessor implements ILanguageProcessor {
 			final T t = this.getSemanticAnalyser().analyse(targetType, forest);
 
 			return t;
-		} catch (final RuleNotFoundException | ParseTreeException e) {
+		} catch (final GrammarRuleNotFoundException | ParseTreeException e) {
 			throw new ParseFailedException(e.getMessage(), null, new HashMap<>());
 		}
 	}
@@ -101,7 +101,7 @@ public class LanguageProcessor implements ILanguageProcessor {
 			final T t = this.getSemanticAnalyser().analyse(targetType, forest);
 
 			return t;
-		} catch (final RuleNotFoundException | ParseTreeException e) {
+		} catch (final GrammarRuleNotFoundException | ParseTreeException e) {
 			throw new ParseFailedException(e.getMessage(), null, new HashMap<>());
 		}
 	}

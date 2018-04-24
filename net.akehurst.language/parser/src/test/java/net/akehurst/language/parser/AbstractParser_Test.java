@@ -18,7 +18,7 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Before;
 
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
@@ -47,7 +47,7 @@ abstract public class AbstractParser_Test {
 			final IParser parser = new ScannerLessParser3(this.runtimeRules, grammar);
 			final ISharedPackedParseTree tree = parser.parse(goalName, text);
 			return tree;
-		} catch (final RuleNotFoundException e) {
+		} catch (final GrammarRuleNotFoundException e) {
 			Assert.fail(e.getMessage());
 			return null;
 		} catch (final ParseTreeException e) {

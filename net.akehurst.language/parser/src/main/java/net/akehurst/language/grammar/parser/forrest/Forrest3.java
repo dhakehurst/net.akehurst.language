@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.sppt.FixedList;
@@ -157,7 +157,7 @@ public final class Forrest3 {
 
     }
 
-    public void grow() throws RuleNotFoundException, ParseTreeException {
+    public void grow() throws GrammarRuleNotFoundException, ParseTreeException {
 
         this.toGrow = new ArrayList<>(this.graph.getGrowingHead());
         this.graph.getGrowingHead().clear();
@@ -171,7 +171,7 @@ public final class Forrest3 {
 
     }
 
-    public void growTreeWidthAndHeight(final IGrowingNode gn) throws RuleNotFoundException, ParseTreeException {
+    public void growTreeWidthAndHeight(final IGrowingNode gn) throws GrammarRuleNotFoundException, ParseTreeException {
         // gn.toString();
 
         final Set<IGrowingNode.PreviousInfo> previous = this.graph.pop(gn);
@@ -184,7 +184,7 @@ public final class Forrest3 {
                 this.tryGraftBackSkipNode(gn, previous);
                 // this.graph.pop(gn);
             } else {
-                // TODO: need to find a way to do either height or graft..not both
+                // TODO: need to find a way to do either height or graft..not both, maybe!
                 // problem is deciding which
                 final boolean grownHeight = this.growHeight(gn, previous);
 
@@ -216,7 +216,7 @@ public final class Forrest3 {
         }
     }
 
-    boolean growWidth(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws RuleNotFoundException, ParseTreeException {
+    boolean growWidth(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
         boolean modified = false;
         if (gn.getCanGrowWidth()) { // don't grow width if its complete...cant graft back
             final List<RuntimeRule> expectedNextTerminal = gn.getNextExpectedTerminals();
@@ -232,7 +232,7 @@ public final class Forrest3 {
         return modified;
     }
 
-    protected boolean growWidthWithSkipRules(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws RuleNotFoundException {
+    protected boolean growWidthWithSkipRules(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException {
         boolean modified = false;
         if (gn.getCanGrowWidthWithSkip()) { // don't grow width if its complete...cant graft back
             final RuntimeRule[] expectedNextTerminal = this.runtimeRuleSet.getPossibleFirstSkipTerminals();
@@ -247,7 +247,7 @@ public final class Forrest3 {
         return modified;
     }
 
-    protected boolean tryGraftBack(final IGrowingNode gn, final IGrowingNode.PreviousInfo info) throws RuleNotFoundException {
+    protected boolean tryGraftBack(final IGrowingNode gn, final IGrowingNode.PreviousInfo info) throws GrammarRuleNotFoundException {
         boolean result = false;
         // TODO: perhaps should return list of those who are not grafted!
         // for (final IGrowingNode.PreviousInfo info : previous) {
@@ -261,14 +261,14 @@ public final class Forrest3 {
         return result;
     }
 
-    protected void tryGraftBackSkipNode(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws RuleNotFoundException {
+    protected void tryGraftBackSkipNode(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException {
         for (final IGrowingNode.PreviousInfo info : previous) {
             this.tryGraftInto(gn, info);
         }
 
     }
 
-    private boolean tryGraftInto(final IGrowingNode gn, final IGrowingNode.PreviousInfo info) throws RuleNotFoundException {
+    private boolean tryGraftInto(final IGrowingNode gn, final IGrowingNode.PreviousInfo info) throws GrammarRuleNotFoundException {
         boolean result = false;
         if (gn.isSkip()) {
             // TODO: why is this code so different to that in the next option?
@@ -339,7 +339,7 @@ public final class Forrest3 {
         }
     }
 
-    public boolean growHeight(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws RuleNotFoundException, ParseTreeException {
+    public boolean growHeight(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
         boolean result = false;
         // TODO: should have already done this test?
         if (gn.getHasCompleteChildren()) {

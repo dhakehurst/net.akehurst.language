@@ -23,7 +23,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.sppt.ISharedPackedParseTree;
@@ -40,7 +40,7 @@ public class OGLAnalyser_Test {
 			final T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
-		} catch (final RuleNotFoundException e) {
+		} catch (final GrammarRuleNotFoundException e) {
 			Assert.fail(e.getMessage());
 			return null;
 		} catch (final ParseTreeException e) {
@@ -59,7 +59,7 @@ public class OGLAnalyser_Test {
 			final T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
-		} catch (final RuleNotFoundException | ParseTreeException e) {
+		} catch (final GrammarRuleNotFoundException | ParseTreeException e) {
 			Assert.fail(e.getMessage());
 			return null;
 		}
@@ -82,7 +82,7 @@ public class OGLAnalyser_Test {
 			final ISharedPackedParseTree tree = proc.getParser().parse("a", new StringReader("a"));
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | RuleNotFoundException e) {
+		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | GrammarRuleNotFoundException e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
@@ -105,14 +105,14 @@ public class OGLAnalyser_Test {
 			final ISharedPackedParseTree tree = proc.getParser().parse("singleQuote", "'");
 			Assert.assertNotNull(tree);
 
-		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | RuleNotFoundException e) {
+		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | GrammarRuleNotFoundException e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
 	}
 
 	@Test
-	public void StringCharacter_StringCharacter_a() throws ParseFailedException, ParseTreeException, RuleNotFoundException, UnableToAnalyseExeception {
+	public void StringCharacter_StringCharacter_a() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException, UnableToAnalyseExeception {
 		// grammar, goal, input, target
 
 		String grammarText = "namespace test;" + System.lineSeparator();
@@ -131,7 +131,7 @@ public class OGLAnalyser_Test {
 	}
 
 	@Test
-	public void StringLiteral_StringLiteral_1() throws ParseFailedException, UnableToAnalyseExeception, ParseTreeException, RuleNotFoundException {
+	public void StringLiteral_StringLiteral_1() throws ParseFailedException, UnableToAnalyseExeception, ParseTreeException, GrammarRuleNotFoundException {
 		// grammar, goal, input, target
 
 		String grammarText = "namespace test;" + System.lineSeparator();

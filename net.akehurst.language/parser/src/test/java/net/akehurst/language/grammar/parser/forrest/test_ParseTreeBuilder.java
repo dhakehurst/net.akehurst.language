@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import net.akehurst.language.core.sppt.ISPLeaf;
 import net.akehurst.language.grammar.parser.converter.Converter;
-import net.akehurst.language.grammar.parser.converter.Grammar2RuntimeRuleSet;
+import net.akehurst.language.grammar.parser.converter.rules.Grammar2RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import net.akehurst.language.core.grammar.IGrammar;
 import net.akehurst.language.core.grammar.IRuleItem;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.parser.INodeType;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
@@ -19,7 +19,7 @@ import net.akehurst.language.core.sppt.ISPBranch;
 import net.akehurst.language.core.sppt.ISPNode;
 import net.akehurst.language.core.sppt.ISharedPackedParseTree;
 import net.akehurst.language.grammar.parser.converter.Converter;
-import net.akehurst.language.grammar.parser.converter.Grammar2RuntimeRuleSet;
+import net.akehurst.language.grammar.parser.converter.rules.Grammar2RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.forrest.Forrest3;
 import net.akehurst.language.grammar.parser.forrest.Input3;
 import net.akehurst.language.grammar.parser.log.Log;
@@ -84,7 +84,7 @@ public class ScannerLessParser3 implements IParser {
             // TODO: don't know if we need this, probably not
             this.setParentForChildren((ISPBranch) tree.getRoot());
             return tree;
-        } catch (final RuleNotFoundException e) {
+        } catch (final GrammarRuleNotFoundException e) {
             // Should never happen!
             throw new RuntimeException("Should never happen", e);
         }
@@ -100,7 +100,7 @@ public class ScannerLessParser3 implements IParser {
         }
     }
 
-    private ICompleteNode parse3(final INodeType goal, final IInput input) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
+    private ICompleteNode parse3(final INodeType goal, final IInput input) throws ParseFailedException, GrammarRuleNotFoundException, ParseTreeException {
 
         final int goalRuleNumber = this.getRuntimeRuleSet().getRuleNumber(goal.getIdentity().asPrimitive());
         final RuntimeRule goalRR = this.getRuntimeRuleSet().getRuntimeRule(goalRuleNumber);
@@ -109,7 +109,7 @@ public class ScannerLessParser3 implements IParser {
         return node;
     }
 
-    private ICompleteNode doParse3(final RuntimeRule goalRule, final IInput input) throws ParseFailedException, RuleNotFoundException, ParseTreeException {
+    private ICompleteNode doParse3(final RuntimeRule goalRule, final IInput input) throws ParseFailedException, GrammarRuleNotFoundException, ParseTreeException {
         // TODO: handle reader directly without converting to string
         final IParseGraph graph = new ParseGraph(goalRule, input);
         final Forrest3 newForrest = new Forrest3(graph, this.getRuntimeRuleSet(), input, goalRule);
@@ -218,7 +218,7 @@ public class ScannerLessParser3 implements IParser {
                 // rules.add(new NonTerminalRuleReference(this.getGrammar(), rr.getName()));
             }
             return ruleItems;
-        } catch (final RuleNotFoundException e) {
+        } catch (final GrammarRuleNotFoundException e) {
             // Should never happen!
             throw new RuntimeException("Should never happen", e);
         }
@@ -238,7 +238,7 @@ public class ScannerLessParser3 implements IParser {
 
     @Override
     public ISharedPackedParseTree parse(final String goalRuleName, final CharSequence inputText)
-            throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+            throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
         final IInput input = new Input3(this.runtimeBuilder, inputText);
         final ISharedPackedParseTree f = this.parse2(goalRuleName, input);
         return f;
@@ -246,7 +246,7 @@ public class ScannerLessParser3 implements IParser {
 
     @Override
     public ISharedPackedParseTree parse(final String goalRuleName, final Reader inputText)
-            throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+            throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
         // TODO: find a way to parse straight from the input, without reading it all
         final BufferedReader br = new BufferedReader(inputText);
         final String text = br.lines().collect(Collectors.joining(System.lineSeparator()));

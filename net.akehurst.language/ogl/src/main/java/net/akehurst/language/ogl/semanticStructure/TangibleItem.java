@@ -19,14 +19,14 @@ import java.util.List;
 
 import net.akehurst.language.core.grammar.IRuleItem;
 import net.akehurst.language.core.grammar.ITangibleItem;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.parser.INodeType;
 
 public abstract class TangibleItem extends SimpleItem implements ITangibleItem {
 
 	private List<Integer> index;
 
-	public abstract INodeType getNodeType() throws RuleNotFoundException;
+	public abstract INodeType getNodeType() throws GrammarRuleNotFoundException;
 
 	@Override
 	public List<Integer> getIndex() {

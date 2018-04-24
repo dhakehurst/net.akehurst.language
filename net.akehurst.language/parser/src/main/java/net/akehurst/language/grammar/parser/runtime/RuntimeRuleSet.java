@@ -26,7 +26,7 @@ import java.util.Set;
 
 import net.akehurst.language.core.grammar.IGrammar;
 import net.akehurst.language.core.grammar.IRuleItem;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.grammar.parser.NonTerminalRuleReference;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 
@@ -344,7 +344,7 @@ public class RuntimeRuleSet {
         this.terminalMap.put(terminal, runtimeRule);
     }
 
-    public IRuleItem getOriginalItem(final RuntimeRule rr, final IGrammar grammar) throws RuleNotFoundException {
+    public IRuleItem getOriginalItem(final RuntimeRule rr, final IGrammar grammar) throws GrammarRuleNotFoundException {
         final String name = rr.getName();
         if (name.startsWith("$")) {
             // decode it (see Converter) and RuleItem.setOwningRule

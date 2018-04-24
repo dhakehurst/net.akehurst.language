@@ -22,7 +22,7 @@ import java.util.Set;
 
 import net.akehurst.language.core.grammar.IGrammar;
 import net.akehurst.language.core.grammar.ITerminal;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.lexicalAnalyser.ITokenType;
 import net.akehurst.language.core.parser.INodeType;
 
@@ -77,21 +77,21 @@ public class Grammar implements IGrammar {
 		return allRules;
 	}
 
-	public Rule findAllRule(final String ruleName) throws RuleNotFoundException {
+	public Rule findAllRule(final String ruleName) throws GrammarRuleNotFoundException {
 		try {
 			return this.findRule(ruleName);
-		} catch (final RuleNotFoundException e) {
+		} catch (final GrammarRuleNotFoundException e) {
 		}
 		for (final Grammar pg : this.getExtends()) {
 			try {
 				return pg.findRule(ruleName);
-			} catch (final RuleNotFoundException e) {
+			} catch (final GrammarRuleNotFoundException e) {
 			}
 		}
-		throw new RuleNotFoundException(ruleName + " in Grammar(" + this.getName() + ").findAllRule");
+		throw new GrammarRuleNotFoundException(ruleName + " in Grammar(" + this.getName() + ").findAllRule");
 	}
 
-	public Rule findRule(final String ruleName) throws RuleNotFoundException {
+	public Rule findRule(final String ruleName) throws GrammarRuleNotFoundException {
 		final ArrayList<Rule> rules = new ArrayList<>();
 		for (final Rule r : this.getRule()) {
 			if (r.getName().equals(ruleName)) {
@@ -99,11 +99,11 @@ public class Grammar implements IGrammar {
 			}
 		}
 		if (rules.isEmpty()) {
-			throw new RuleNotFoundException(ruleName + " in Grammar(" + this.getName() + ").findRule");
+			throw new GrammarRuleNotFoundException(ruleName + " in Grammar(" + this.getName() + ").findRule");
 		} else if (rules.size() == 1) {
 			return rules.get(0);
 		} else {
-			throw new RuleNotFoundException(ruleName + "too many rules in Grammar(" + this.getName() + ").findRule with name " + ruleName);
+			throw new GrammarRuleNotFoundException(ruleName + "too many rules in Grammar(" + this.getName() + ").findRule with name " + ruleName);
 		}
 	}
 
@@ -182,7 +182,7 @@ public class Grammar implements IGrammar {
 		for (final ITerminal t : this.getAllTerminal()) {
 			try {
 				res.add(((Terminal) t).getNodeType());
-			} catch (final RuleNotFoundException e) {
+			} catch (final GrammarRuleNotFoundException e) {
 				e.printStackTrace();
 			}
 		}
@@ -194,13 +194,13 @@ public class Grammar implements IGrammar {
 		return res;
 	}
 
-	public INodeType findNodeType(final String ruleName) throws RuleNotFoundException {
+	public INodeType findNodeType(final String ruleName) throws GrammarRuleNotFoundException {
 		for (final Rule r : this.getAllRule()) {
 			if (r.getName().equals(ruleName)) {
 				return new RuleNodeType(r);
 			}
 		}
-		throw new RuleNotFoundException(ruleName);
+		throw new GrammarRuleNotFoundException(ruleName);
 	}
 
 	// --- Object ---

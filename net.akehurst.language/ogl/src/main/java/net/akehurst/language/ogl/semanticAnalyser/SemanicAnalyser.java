@@ -20,65 +20,86 @@ import net.akehurst.language.core.analyser.ISemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.sppt.ISPBranch;
 import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.ogl.semanticAnalyser.rules.AbstractNode2Choice;
+import net.akehurst.language.ogl.semanticAnalyser.rules.AbstractNode2ConcatenationItem;
+import net.akehurst.language.ogl.semanticAnalyser.rules.AbstractNode2TangibleItem;
+import net.akehurst.language.ogl.semanticAnalyser.rules.AbstractNode2Terminal;
+import net.akehurst.language.ogl.semanticAnalyser.rules.AbstractRhsNode2RuleItem;
+import net.akehurst.language.ogl.semanticAnalyser.rules.AnyRuleNode2Rule;
+import net.akehurst.language.ogl.semanticAnalyser.rules.GrammarDefinitionBranch2Grammar;
+import net.akehurst.language.ogl.semanticAnalyser.rules.IDENTIFIERBranch2String;
+import net.akehurst.language.ogl.semanticAnalyser.rules.Node2ChoicePriority;
+import net.akehurst.language.ogl.semanticAnalyser.rules.Node2ChoiceSimple;
+import net.akehurst.language.ogl.semanticAnalyser.rules.Node2Concatenation;
+import net.akehurst.language.ogl.semanticAnalyser.rules.Node2ConcatenationItem;
+import net.akehurst.language.ogl.semanticAnalyser.rules.Node2Group;
+import net.akehurst.language.ogl.semanticAnalyser.rules.Node2Multi;
+import net.akehurst.language.ogl.semanticAnalyser.rules.Node2Namespace;
+import net.akehurst.language.ogl.semanticAnalyser.rules.Node2NonTerminal;
+import net.akehurst.language.ogl.semanticAnalyser.rules.Node2SeparatedList;
+import net.akehurst.language.ogl.semanticAnalyser.rules.Node2SimpleItem;
+import net.akehurst.language.ogl.semanticAnalyser.rules.Node2Terminal;
+import net.akehurst.language.ogl.semanticAnalyser.rules.NormalRuleNode2Rule;
+import net.akehurst.language.ogl.semanticAnalyser.rules.SkipRuleNode2SkipRule;
+import net.akehurst.language.ogl.semanticAnalyser.rules.TerminalLiteralNode2Terminal;
+import net.akehurst.language.ogl.semanticAnalyser.rules.TerminalPatternNode2Terminal;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
-import net.akehurst.transform.binary.BinaryTransformer;
-import net.akehurst.transform.binary.IBinaryRule;
-import net.akehurst.transform.binary.RuleNotFoundException;
-import net.akehurst.transform.binary.TransformException;
+import net.akehurst.transform.binary.api.BinaryRule;
+import net.akehurst.transform.binary.basic.BinaryTransformerBasic;
 
-public class SemanicAnalyser extends BinaryTransformer implements ISemanticAnalyser {
+public class SemanicAnalyser extends BinaryTransformerBasic implements ISemanticAnalyser {
 
-	private IGrammarLoader grammarLoader;
+    private IGrammarLoader grammarLoader;
 
-	public SemanicAnalyser() {
-		super.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractNode2Choice.class);
-		super.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractNode2ConcatenationItem.class);
-		super.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractNode2TangibleItem.class);
-		super.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractNode2Terminal.class);
-		super.registerRule((Class<? extends IBinaryRule<?, ?>>) (Class<?>) AbstractRhsNode2RuleItem.class);
-		super.registerRule(AnyRuleNode2Rule.class);
-		super.registerRule(GrammarDefinitionBranch2Grammar.class);
-		super.registerRule(IDENTIFIERBranch2String.class);
-		super.registerRule(Node2ChoicePriority.class);
-		super.registerRule(Node2ChoiceSimple.class);
-		super.registerRule(Node2Concatenation.class);
-		super.registerRule(Node2ConcatenationItem.class);
-		super.registerRule(Node2Group.class);
-		super.registerRule(Node2Multi.class);
-		super.registerRule(Node2Namespace.class);
-		super.registerRule(Node2NonTerminal.class);
-		super.registerRule(Node2SeparatedList.class);
-		super.registerRule(Node2SimpleItem.class);
-		super.registerRule(Node2Terminal.class);
-		super.registerRule(NormalRuleNode2Rule.class);
-		super.registerRule(SkipRuleNode2SkipRule.class);
-		super.registerRule(TerminalLiteralNode2Terminal.class);
-		super.registerRule(TerminalPatternNode2Terminal.class);
-	}
+    public SemanicAnalyser() {
+        super.registerRule((Class<? extends BinaryRule<?, ?>>) (Class<?>) AbstractNode2Choice.class);
+        super.registerRule((Class<? extends BinaryRule<?, ?>>) (Class<?>) AbstractNode2ConcatenationItem.class);
+        super.registerRule((Class<? extends BinaryRule<?, ?>>) (Class<?>) AbstractNode2TangibleItem.class);
+        super.registerRule((Class<? extends BinaryRule<?, ?>>) (Class<?>) AbstractNode2Terminal.class);
+        super.registerRule((Class<? extends BinaryRule<?, ?>>) (Class<?>) AbstractRhsNode2RuleItem.class);
+        super.registerRule(AnyRuleNode2Rule.class);
+        super.registerRule(GrammarDefinitionBranch2Grammar.class);
+        super.registerRule(IDENTIFIERBranch2String.class);
+        super.registerRule(Node2ChoicePriority.class);
+        super.registerRule(Node2ChoiceSimple.class);
+        super.registerRule(Node2Concatenation.class);
+        super.registerRule(Node2ConcatenationItem.class);
+        super.registerRule(Node2Group.class);
+        super.registerRule(Node2Multi.class);
+        super.registerRule(Node2Namespace.class);
+        super.registerRule(Node2NonTerminal.class);
+        super.registerRule(Node2SeparatedList.class);
+        super.registerRule(Node2SimpleItem.class);
+        super.registerRule(Node2Terminal.class);
+        super.registerRule(NormalRuleNode2Rule.class);
+        super.registerRule(SkipRuleNode2SkipRule.class);
+        super.registerRule(TerminalLiteralNode2Terminal.class);
+        super.registerRule(TerminalPatternNode2Terminal.class);
+    }
 
-	Grammar analyse(final ISharedPackedParseTree parseTree) throws UnableToAnalyseExeception {
-		try {
-			final ISPBranch root = (ISPBranch) parseTree.getRoot();
-			final Grammar grammar = this.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, root);
-			return grammar;
-		} catch (final RuleNotFoundException | TransformException e) {
-			throw new UnableToAnalyseExeception("Cannot Analyse ParseTree", e);
-		}
+    Grammar analyse(final ISharedPackedParseTree parseTree) throws UnableToAnalyseExeception {
+        try {
+            final ISPBranch root = (ISPBranch) parseTree.getRoot();
+            final Grammar grammar = this.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, root);
+            return grammar;
+        } catch (final Exception e) {
+            throw new UnableToAnalyseExeception("Cannot Analyse ParseTree", e);
+        }
 
-	}
+    }
 
-	@Override
-	public <T> T analyse(final Class<T> targetType, final ISharedPackedParseTree forest) throws UnableToAnalyseExeception {
-		return (T) this.analyse(forest);
-	}
+    @Override
+    public <T> T analyse(final Class<T> targetType, final ISharedPackedParseTree forest) throws UnableToAnalyseExeception {
+        return (T) this.analyse(forest);
+    }
 
-	@Override
-	public IGrammarLoader getGrammarLoader() {
-		return this.grammarLoader;
-	}
+    @Override
+    public IGrammarLoader getGrammarLoader() {
+        return this.grammarLoader;
+    }
 
-	@Override
-	public void setGrammarLoader(final IGrammarLoader value) {
-		this.grammarLoader = value;
-	}
+    @Override
+    public void setGrammarLoader(final IGrammarLoader value) {
+        this.grammarLoader = value;
+    }
 }

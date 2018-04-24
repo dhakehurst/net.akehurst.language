@@ -27,7 +27,7 @@ public interface IGrammar {
 
 	Set<ITerminal> getAllTerminal();
 
-	IRule findAllRule(String name) throws RuleNotFoundException;
+	IRule findAllRule(String name) throws GrammarRuleNotFoundException;
 
 	ITerminal findAllTerminal(final String terminalPattern);
 }

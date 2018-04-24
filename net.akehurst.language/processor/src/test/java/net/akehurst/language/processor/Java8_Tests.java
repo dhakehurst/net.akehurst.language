@@ -11,7 +11,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
@@ -95,14 +95,14 @@ public class Java8_Tests {
 		return null;
 	}
 
-	static ISharedPackedParseTree parse(final String input) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	static ISharedPackedParseTree parse(final String input) throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final ISharedPackedParseTree tree = Java8_Tests.getJavaProcessor().getParser().parse("compilationUnit", new StringReader(input));
 		return tree;
 
 	}
 
-	static ISharedPackedParseTree parse(final String goalName, final String input) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	static ISharedPackedParseTree parse(final String goalName, final String input) throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final IParser parser = Java8_Tests.getJavaProcessor().getParser();
 		final ISharedPackedParseTree tree = parser.parse(goalName, input);
@@ -111,7 +111,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void ifThenStatement_2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void ifThenStatement_2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "if(i==1) {return 1;}";
 
@@ -124,7 +124,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void ifThenElseStatement_1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void ifThenElseStatement_1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "if(i==1) return 1; else return 2;";
 
@@ -137,7 +137,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void ifThenElseStatement_2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void ifThenElseStatement_2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "if(i==1) {return 1;} else {return 2;}";
 
@@ -150,7 +150,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void statement_ifThenElseStatement_1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void statement_ifThenElseStatement_1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "if(i==1) return 1; else return 2;";
 
@@ -163,7 +163,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void statement_ifThenElseStatement_2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void statement_ifThenElseStatement_2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "if(i==1) {return 1;} else {return 2;}";
 
@@ -176,7 +176,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void ifThenElseIf_1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void ifThenElseIf_1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "if(i==1) return 1; else if (false) return 2;";
 
@@ -189,7 +189,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void ifThenElseIf_2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void ifThenElseIf_2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "if(i==1) {return 1;} else if (false) {return 2;}";
 
@@ -202,7 +202,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void trycatch0() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void trycatch0() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "try {";
 		input += "      if(i==1) return 1;";
@@ -218,7 +218,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void tryfinally0() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void tryfinally0() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "try {";
 		input += "      if(i==1) return 1;";
@@ -234,7 +234,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void tryfinally1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void tryfinally1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "class Test {";
 		input += "  void test() {";
@@ -256,7 +256,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void tryfinally2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void tryfinally2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "class Test {";
 		input += "  void test() {";
@@ -281,7 +281,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void multipleFields() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void multipleFields() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "class Test {";
 		input += "  Integer i1;";
@@ -298,7 +298,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void manyFields() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void manyFields() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "class Test {";
 		for (int i = 0; i < 8; ++i) {
@@ -314,7 +314,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void formalParameter() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void formalParameter() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "Visitor<E> v";
 		ISharedPackedParseTree tree = null;
@@ -329,7 +329,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void formalParameters1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void formalParameters1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "Visitor v";
 		ISharedPackedParseTree tree = null;
@@ -344,7 +344,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void formalParameters2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void formalParameters2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "Visitor v, Type p2";
 		ISharedPackedParseTree tree = null;
@@ -359,7 +359,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void formalParameters() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void formalParameters() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "Visitor<E> v";
 		ISharedPackedParseTree tree = null;
@@ -374,7 +374,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void typeArguments1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void typeArguments1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "<E>";
 		ISharedPackedParseTree tree = null;
@@ -389,7 +389,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void typeArguments2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void typeArguments2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "<E,F>";
 		ISharedPackedParseTree tree = null;
@@ -404,7 +404,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void typeArguments3() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void typeArguments3() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "<E,F,G>";
 		ISharedPackedParseTree tree = null;
@@ -419,7 +419,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void ISO8859encoding() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void ISO8859encoding() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		String input = "";
 		input += "class T6302184 {";
 		input += "  int ������ = 1;";
@@ -433,7 +433,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void classBody() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void classBody() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "{ int i1; int i2; int i3; int i4; int i5; int i6; int i7; int i8; }";
 		ISharedPackedParseTree tree = null;
@@ -449,7 +449,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void methodDeclaration1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void methodDeclaration1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "void f();";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
@@ -460,7 +460,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void methodDeclaration2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void methodDeclaration2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public void f();";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
@@ -471,7 +471,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void methodDeclaration3() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void methodDeclaration3() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public void f(Visitor v);";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
@@ -482,7 +482,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void methodDeclaration4() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void methodDeclaration4() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public abstract void f(Visitor v);";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
@@ -493,7 +493,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void methodDeclaration5() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void methodDeclaration5() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public abstract <T> void f(Visitor v);";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
@@ -504,7 +504,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void methodDeclaration6() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void methodDeclaration6() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public abstract <T> void f(Visitor<T> v);";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
@@ -515,7 +515,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void methodDeclaration7() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void methodDeclaration7() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "void f(Visitor<T> v);";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
@@ -526,7 +526,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void methodDeclaration8() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void methodDeclaration8() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "public abstract <E extends Throwable> void accept(Visitor<E> v);";
 
@@ -539,7 +539,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void multipleMethods() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void multipleMethods() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "class Test {";
 		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
@@ -557,7 +557,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void abstractGeneric() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void abstractGeneric() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "class Test {";
 		input += "  /** Visit this tree with a given visitor.";
@@ -573,7 +573,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void genericVisitorMethod() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void genericVisitorMethod() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "class Test {";
 		input += "  /** A generic visitor class for trees.";
@@ -591,7 +591,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void tree() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void tree() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "class Test {";
 		input += "  /** Visit this tree with a given visitor.";
@@ -614,7 +614,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void stringLiteral() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void stringLiteral() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		String input = "";
 		input += "\"xxxx\"";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("StringLiteral", input);
@@ -626,7 +626,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void localStringVariableDeclarationStatement() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void localStringVariableDeclarationStatement() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		String input = "";
 		input += "String s = \"xxxx\";";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("localVariableDeclarationStatement", input);
@@ -638,7 +638,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void stringMemberInitialised() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void stringMemberInitialised() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		String input = "";
 		input += "public class Test {";
 		input += "  String s = \"xxxx\";";
@@ -652,7 +652,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void StringLiteral1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void StringLiteral1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "\"wrong number of args\"";
 
@@ -665,7 +665,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void String_expression() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void String_expression() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "\"file \" + file + \" found unexpectedly\"";
 
@@ -678,7 +678,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void throwStatement() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void throwStatement() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "throw new Error(\"file \" + file + \" found unexpectedly\");";
 
@@ -691,7 +691,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void ifThenStatement() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void ifThenStatement() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "if (u != \"file \") throw new Error(\"file \" + file + \" found unexpectedly\");";
 
@@ -704,7 +704,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void T6257443_1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void T6257443_1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "";
 		input += "import java.net.URL;";
@@ -721,7 +721,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void T6257443_2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void T6257443_2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "";
 		input += "import java.net.URL;";
@@ -740,7 +740,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void T6257443_3() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void T6257443_3() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "";
 		input += "import java.net.URL;";
@@ -761,7 +761,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void T6257443_4() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void T6257443_4() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "";
 		input += "import java.net.URL;";
@@ -786,7 +786,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void T6257443_5() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void T6257443_5() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "";
 		input += "{";
@@ -809,7 +809,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void T6257443_5_1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void T6257443_5_1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "";
 		input += "{";
@@ -827,7 +827,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void T6257443_5_2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void T6257443_5_2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "";
 		input += "{";
@@ -850,7 +850,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void T6257443_6() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void T6257443_6() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "";
 		input += "import java.net.URL;";
@@ -876,7 +876,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void T6257443() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void T6257443() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		String input = "";
 		input += "import java.net.URL;";
@@ -904,7 +904,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void preIncrementExpression() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void preIncrementExpression() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "++i";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("preIncrementExpression", input);
@@ -916,7 +916,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void postfixExpression() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void postfixExpression() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "i";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("postfixExpression", input);
@@ -928,7 +928,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void postfixExpressionpp() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void postfixExpressionpp() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "i++";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("postfixExpression", input);
@@ -940,7 +940,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void postIncrementExpression() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void postIncrementExpression() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "i++ ++";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("postIncrementExpression", input);
@@ -952,7 +952,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void primary_literal() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void primary_literal() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "1";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
@@ -964,7 +964,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void primary_arrayClass() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void primary_arrayClass() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "MyClass[].class";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
@@ -976,7 +976,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void primary_voidClass() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void primary_voidClass() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "void.class";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
@@ -988,7 +988,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void primary_this() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void primary_this() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "this";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
@@ -1000,7 +1000,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void primary_typeNameThis() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void primary_typeNameThis() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "MyClass.this";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
@@ -1012,7 +1012,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void primary_parenth_expression() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void primary_parenth_expression() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "(1 + 1)";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
@@ -1024,7 +1024,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void primary_classInstanceCreationExpression() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void primary_classInstanceCreationExpression() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "new MyClass()";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
@@ -1036,7 +1036,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void primary_fieldAccess() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void primary_fieldAccess() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "super.field";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
@@ -1048,7 +1048,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void expression() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void expression() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "i++";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("expression", input);
@@ -1060,7 +1060,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void blockStatement() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void blockStatement() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "i++;";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("blockStatement", input);
@@ -1072,7 +1072,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void blockStatements() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void blockStatements() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "i++;";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("blockStatements", input);
@@ -1084,7 +1084,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void switchLabel() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void switchLabel() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		String input = "";
 		input += "  case 1:";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("switchLabel", input);
@@ -1096,7 +1096,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void switchBlockStatementGroup() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void switchBlockStatementGroup() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "case 1 : i++;";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("switchBlockStatementGroup", input);
@@ -1108,7 +1108,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void switchBlock() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void switchBlock() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "{case 1:i++;}";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("switchBlock", input);
@@ -1120,7 +1120,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void switchStatement1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void switchStatement1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		String input = "";
 		input += "switch (i) {";
 		input += "  case 1: ";
@@ -1136,7 +1136,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void switchStatement() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void switchStatement() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		String input = "";
 		input += "switch (i) {";
 		input += "  case 1:";
@@ -1154,7 +1154,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void T6304921() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void T6304921() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		String input = "";
 		input += "import java.util.ArrayList;";
 		input += "import java.util.List;";
@@ -1188,7 +1188,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void singleLineComment() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void singleLineComment() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		String input = "";
 		input += "//single line comment" + System.lineSeparator();
 		input += "class Test {";
@@ -1202,7 +1202,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void HexFloatLiteral() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void HexFloatLiteral() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "0Xfffffffffffffbcp-59D";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("HexadecimalFloatingPointLiteral", input);
@@ -1215,7 +1215,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void unaryExpression_HexFloatLiteral() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void unaryExpression_HexFloatLiteral() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "+0Xfffffffffffffbcp-59D";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("unaryExpression", input);
@@ -1228,7 +1228,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void HexFloatLiteral_in_check_call() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void HexFloatLiteral_in_check_call() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "check(+0Xfffffffffffffbcp-59D, Double.parseDouble(\"+0Xfffffffffffffbcp-59D\"));";
 
 		final ISharedPackedParseTree tree = Java8_Tests.parse("blockStatement", input);
@@ -1241,7 +1241,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void compilationUnit() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void compilationUnit() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "package p1; public class A { public static char c = 'A'; }";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("compilationUnit", input);
 
@@ -1253,7 +1253,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void classDeclaration() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void classDeclaration() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public class A { public static char c = 'A'; }";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("classDeclaration", input);
 
@@ -1265,7 +1265,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void classDeclaration2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void classDeclaration2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public class A { }";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("classDeclaration", input);
 
@@ -1277,7 +1277,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void classBody2() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void classBody2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "{ public static char c = 'A'; }";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("classBody", input);
 
@@ -1289,7 +1289,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void fieldDeclaration() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void fieldDeclaration() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public static char c = 'A';";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("fieldDeclaration", input);
 
@@ -1301,7 +1301,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void variableDeclarator() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void variableDeclarator() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "c = 'A'";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("variableDeclarator", input);
 
@@ -1313,7 +1313,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void CharacterLiteral() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void CharacterLiteral() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "'A'";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("CharacterLiteral", input);
 
@@ -1325,7 +1325,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void SingleCharacter() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void SingleCharacter() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "A";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("SingleCharacter", input);
 
@@ -1337,7 +1337,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void variableDeclaratorId() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void variableDeclaratorId() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "c";
 		final ISharedPackedParseTree tree = Java8_Tests.parse("variableDeclaratorId", input);
 
@@ -1349,7 +1349,7 @@ public class Java8_Tests {
 	}
 
 	@Test
-	public void test1() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void test1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String queryStr = "@An() class An {  }";
 		final String grammarRule = "compilationUnit";

@@ -3,7 +3,7 @@ dependencies {
 
 	compile project(':net.akehurst.language.core')
 	compile project(':net.akehurst.language.util')
-	compile 'net.akehurst.transform:net.akehurst.transform.binary:2.1.0'
+	compile 'net.akehurst.transform:binary:2.2.0'
 
 	testCompile 'junit:junit:+'
 	

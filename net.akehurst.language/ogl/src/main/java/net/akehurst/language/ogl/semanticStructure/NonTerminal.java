@@ -20,7 +20,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import net.akehurst.language.core.grammar.INonTerminal;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.parser.INodeType;
 
 public class NonTerminal extends TangibleItem implements INonTerminal {
@@ -35,7 +35,7 @@ public class NonTerminal extends TangibleItem implements INonTerminal {
 	INodeType nodeType;
 
 	@Override
-	public Rule getReferencedRule() throws RuleNotFoundException {
+	public Rule getReferencedRule() throws GrammarRuleNotFoundException {
 		if (null == this.referencedRule) {
 			this.referencedRule = this.getOwningRule().getGrammar().findAllRule(this.referencedRuleName);
 		}
@@ -46,13 +46,13 @@ public class NonTerminal extends TangibleItem implements INonTerminal {
 	public String getName() {
 		try {
 			return this.getNodeType().getIdentity().asPrimitive();
-		} catch (final RuleNotFoundException e) {
+		} catch (final GrammarRuleNotFoundException e) {
 			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
 
 	@Override
-	public INodeType getNodeType() throws RuleNotFoundException {
+	public INodeType getNodeType() throws GrammarRuleNotFoundException {
 		return new RuleNodeType(this.getReferencedRule());
 	}
 

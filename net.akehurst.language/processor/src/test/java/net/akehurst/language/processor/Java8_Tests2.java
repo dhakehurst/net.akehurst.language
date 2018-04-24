@@ -18,7 +18,7 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.grammar.RuleNotFoundException;
+import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.parser.IParser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
@@ -109,7 +109,7 @@ public class Java8_Tests2 {
 	//
 	// }
 
-	static ISharedPackedParseTree parse(final String goalName, final String input) throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	static ISharedPackedParseTree parse(final String goalName, final String input) throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final IParser parser = Java8_Tests2.getJavaProcessor().getParser();
 		final ISharedPackedParseTree tree = parser.parse(goalName, input);
@@ -209,7 +209,7 @@ public class Java8_Tests2 {
 	public Data data;
 
 	@Test
-	public void test() throws ParseFailedException, ParseTreeException, RuleNotFoundException {
+	public void test() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		try {
 			final String queryStr = this.data.queryStr;
 			final String grammarRule = this.data.grammarRule;
