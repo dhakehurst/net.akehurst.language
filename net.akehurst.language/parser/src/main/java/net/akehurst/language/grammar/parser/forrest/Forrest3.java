@@ -437,6 +437,7 @@ public final class Forrest3 {
                                     }
                                 }
                             }
+                            // TODO: need to use nextInputPosition here, rather than nextItemIndex, which is always 0!!
                             final int nextItemIndex = prev.node.getNextItemIndex();
                             hp2 = this.runtimeRuleSet.doHeight(newParentRule, prev.node.getRuntimeRule(), nextItemIndex);
                         } else {
