@@ -339,19 +339,21 @@ public final class Forrest3 {
         }
     }
 
-    public boolean growHeight(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
+    // 1
+    private boolean growHeight1(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
         boolean result = false;
-        // TODO: should have already done this test?
+
         if (gn.getHasCompleteChildren()) {
-            final ICompleteNode complete = this.graph.getCompleteNode(gn);
+
             // TODO: include position
-            final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
+            final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule(), 0);
             for (final SuperRuleInfo info : infos) {
-                if (this.hasHeightPotential(info.getRuntimeRule(), gn, previous)) {
+                if (this.hasHeightPotential(info.getRuntimeRule(), gn.getRuntimeRule(), previous)) {
                     // check if already grown into this parent ?
                     final IGraphNode alreadyGrown = null;
 
                     if (null == alreadyGrown) {
+                        final ICompleteNode complete = this.graph.getCompleteNode(gn);
                         this.growHeightByType(complete, info, previous);
                         result |= true; // TODO: this should depend on if the growHeight does something
                     } else {
@@ -359,6 +361,160 @@ public final class Forrest3 {
                 }
             }
 
+        } else {
+            // do nothing
+        }
+        return result;
+    }
+
+    // 1b
+    private boolean growHeight1b(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
+        boolean result = false;
+
+        if (gn.getHasCompleteChildren()) {
+
+            // TODO: include position
+            final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule(), 0);
+            for (final SuperRuleInfo info : infos) {
+                boolean hp;
+                final RuntimeRule newParentRule = info.getRuntimeRule();
+                final RuntimeRule childRule = gn.getRuntimeRule();
+                hp = this.hasHeightPotential(newParentRule, childRule, previous);
+                if (hp) {
+                    // check if already grown into this parent ?
+                    final IGraphNode alreadyGrown = null;
+
+                    if (null == alreadyGrown) {
+                        final ICompleteNode complete = this.graph.getCompleteNode(gn);
+                        this.growHeightByType(complete, info, previous);
+                        result |= true; // TODO: this should depend on if the growHeight does something
+                    } else {
+                    }
+                }
+            }
+
+        } else {
+            // do nothing
+        }
+        return result;
+    }
+
+    // 1 expanded
+    public boolean growHeight(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
+        boolean result = false;
+
+        if (gn.getHasCompleteChildren()) {
+            final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule(), 0);
+            for (final SuperRuleInfo info : infos) {
+                boolean hp1 = false;
+                boolean hp2 = false;
+                final RuntimeRule newParentRule = info.getRuntimeRule();
+                final RuntimeRule childRule = gn.getRuntimeRule();
+
+                if (this.runtimeRuleSet.isSkipTerminal(childRule)) {
+                    hp1 = true;
+                    hp2 = true;
+                } else if (!previous.isEmpty()) {
+                    for (final IGrowingNode.PreviousInfo prev : previous) {
+                        if (prev.node.hasNextExpectedItem()) {
+                            final List<RuntimeRule> nextExpectedForStacked = prev.node.getNextExpectedItem();
+                            if (nextExpectedForStacked.contains(newParentRule)) {
+                                hp1 = true;
+                            } else {
+                                for (final RuntimeRule rr : nextExpectedForStacked) {
+                                    if (rr.getKind() == RuntimeRuleKind.NON_TERMINAL) {
+                                        final List<RuntimeRule> possibles = Arrays.asList(this.runtimeRuleSet.getPossibleFirstSubRule(rr));
+                                        if (possibles.contains(newParentRule)) {
+                                            hp1 = true;
+                                            break;
+                                        }
+                                    } else {
+                                        final List<RuntimeRule> possibles = Arrays.asList(this.runtimeRuleSet.getPossibleFirstTerminals(rr));
+                                        if (possibles.contains(newParentRule)) {
+                                            hp1 = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            final int nextItemIndex = prev.node.getNextItemIndex();
+                            hp2 = this.runtimeRuleSet.doHeight(newParentRule, prev.node.getRuntimeRule(), nextItemIndex);
+                        } else {
+
+                        }
+                    }
+                } else {
+                    hp1 = false;
+                    hp2 = false;
+                }
+
+                if (hp1 != hp2) {
+                    System.out.println("different!!");
+                }
+
+                if (hp1) {
+                    // check if already grown into this parent ?
+                    final IGraphNode alreadyGrown = null;
+
+                    if (null == alreadyGrown) {
+                        final ICompleteNode complete = this.graph.getCompleteNode(gn);
+                        this.growHeightByType(complete, info, previous);
+                        result |= true; // TODO: this should depend on if the growHeight does something
+                    } else {
+                    }
+                }
+            }
+
+        } else {
+            // do nothing
+        }
+        return result;
+    }
+
+    // 2
+    public boolean growHeight2(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
+        boolean result = false;
+
+        if (gn.getHasCompleteChildren()) {
+            for (final IGrowingNode.PreviousInfo prev : previous) {
+                final int nextItemIndex = prev.node.getNextItemIndex();
+                final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule(), 0);
+                for (final SuperRuleInfo info : infos) {
+                    if (this.hasHeightPotential2(info.getRuntimeRule(), gn.getRuntimeRule(), prev)) {
+                        final ICompleteNode complete = this.graph.getCompleteNode(gn);
+                        this.growHeightByType(complete, info, previous);
+                        result |= true; // TODO: this should depend on if the growHeight does something
+                    }
+                }
+            }
+        } else {
+            // do nothing
+        }
+        return result;
+    }
+
+    // 3
+    private boolean growHeight3(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
+        boolean result = false;
+        if (gn.getHasCompleteChildren()) {
+            for (final IGrowingNode.PreviousInfo prev : previous) {
+                final int nextItemIndex = prev.node.getNextItemIndex();
+                final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule(), 0);
+                for (final SuperRuleInfo info : infos) {
+                    boolean doIt = false;
+
+                    if (this.runtimeRuleSet.isSkipTerminal(gn.getRuntimeRule())) {
+                        doIt = true;
+                    } else {
+                        doIt = this.runtimeRuleSet.doHeight(info.getRuntimeRule(), prev.node.getRuntimeRule(), nextItemIndex);
+                    }
+                    if (doIt) {
+                        final ICompleteNode complete = this.graph.getCompleteNode(gn);
+                        this.growHeightByType(complete, info, previous);
+                        result |= true; // TODO: this should depend on if the growHeight does something
+                    }
+                }
+            }
         } else {
             // do nothing
         }
@@ -440,10 +596,10 @@ public final class Forrest3 {
         this.graph.createWithFirstChild(info.getRuntimeRule(), priority, complete, previous);
     }
 
-    boolean hasHeightPotential(final RuntimeRule newParentRule, final IGrowingNode child, final Set<IGrowingNode.PreviousInfo> previous) {
+    boolean hasHeightPotential(final RuntimeRule newParentRule, final RuntimeRule childRule, final Set<IGrowingNode.PreviousInfo> previous) {
         // if (newParentRule.couldHaveChild(child.getRuntimeRule(), 0)) {
         // if (this.runtimeRuleSet.getAllSkipTerminals().contains(child.getRuntimeRule())) {
-        if (this.runtimeRuleSet.isSkipTerminal(child.getRuntimeRule())) {
+        if (this.runtimeRuleSet.isSkipTerminal(childRule)) {
             return true;
         } else if (!previous.isEmpty()) {
             for (final IGrowingNode.PreviousInfo prev : previous) {
@@ -481,6 +637,48 @@ public final class Forrest3 {
         // } else {
         // return false;
         // }
+    }
+
+    boolean hasHeightPotential2(final RuntimeRule newParentRule, final RuntimeRule childRule, final IGrowingNode.PreviousInfo prev) {
+        // if (newParentRule.couldHaveChild(child.getRuntimeRule(), 0)) {
+        // if (this.runtimeRuleSet.getAllSkipTerminals().contains(child.getRuntimeRule())) {
+        boolean hp;
+        if (this.runtimeRuleSet.isSkipTerminal(childRule)) {
+            hp = true;
+        } else {
+            if (prev.node.hasNextExpectedItem()) {
+                final List<RuntimeRule> nextExpectedForStacked = prev.node.getNextExpectedItem();
+                // if (nextExpectedForStacked.getRuleNumber() == newParentRule.getRuleNumber()) {
+                if (nextExpectedForStacked.contains(newParentRule)) {
+                    hp = true;
+                } else {
+                    for (final RuntimeRule rr : nextExpectedForStacked) {
+                        if (rr.getKind() == RuntimeRuleKind.NON_TERMINAL) {
+                            final List<RuntimeRule> possibles = Arrays.asList(this.runtimeRuleSet.getPossibleFirstSubRule(rr));
+                            if (possibles.contains(newParentRule)) {
+                                hp = true;
+                                break;
+                            }
+                        } else {
+                            final List<RuntimeRule> possibles = Arrays.asList(this.runtimeRuleSet.getPossibleFirstTerminals(rr));
+                            if (possibles.contains(newParentRule)) {
+                                hp = true;
+                                break;
+                            }
+                        }
+                    }
+                    hp = false;
+                }
+            } else {
+                hp = false;
+            }
+            // SuperRuleInfo[] infos = runtimeRuleSet.getPossibleSuperRuleInfo(child.getRuntimeRule());
+            // return this.hasStackedPotential(newParentRule, child.getPrevious().get(0).node.getRuntimeRule());
+        }
+        // } else {
+        // return false;
+        // }
+        return hp;
     }
 
     protected boolean pushStackNewRoot(final ICompleteNode leafNode, final IGrowingNode stack, final Set<IGrowingNode.PreviousInfo> previous) {
