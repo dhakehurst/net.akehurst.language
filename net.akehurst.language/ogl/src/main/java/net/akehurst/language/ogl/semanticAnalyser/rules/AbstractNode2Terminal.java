@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.ogl.semanticStructure.Terminal;
+import net.akehurst.language.ogl.semanticStructure.TerminalAbstract;
 
-abstract public class AbstractNode2Terminal<R extends Terminal> extends AbstractNode2TangibleItem<R> {
+abstract public class AbstractNode2Terminal<R extends TerminalAbstract> extends AbstractNode2TangibleItem<R> {
 
 }

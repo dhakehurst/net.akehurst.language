@@ -15,9 +15,9 @@
  */
 package net.akehurst.language.grammar.parser.converter.rules;
 
-import net.akehurst.language.ogl.semanticStructure.SimpleItem;
+import net.akehurst.language.ogl.semanticStructure.SimpleItemAbstract;
 
 abstract
-public class AbstractSimpleItem2RuntimeRule<R extends SimpleItem> extends AbstractConcatinationItem2RuntimeRule<R> {
+public class AbstractSimpleItem2RuntimeRule<R extends SimpleItemAbstract> extends AbstractConcatinationItem2RuntimeRule<R> {
 
 }

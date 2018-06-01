@@ -15,13 +15,13 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTLeaf;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTLeaf;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.ogl.semanticStructure.TerminalPatternDefault;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class TerminalPatternNode2Terminal extends AbstractNode2Terminal<TerminalPattern> {
+public class TerminalPatternNode2Terminal extends AbstractNode2Terminal<TerminalPatternDefault> {
 
     @Override
     public String getNodeName() {
@@ -29,40 +29,40 @@ public class TerminalPatternNode2Terminal extends AbstractNode2Terminal<Terminal
     }
 
     @Override
-    public boolean isValidForRight2Left(final TerminalPattern right) {
+    public boolean isValidForRight2Left(final TerminalPatternDefault right) {
         return true;
     }
 
     @Override
-    public boolean isAMatch(final SPPTBranch left, final TerminalPattern right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final TerminalPatternDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public TerminalPattern constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
+    public TerminalPatternDefault constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
         final SPPTNode child = left.getChildren().get(0);
         final SPPTLeaf leaf = (SPPTLeaf) child;
         final String text = leaf.getMatchedText();
         final String pattern = text.substring(1, text.length() - 1);
-        final TerminalPattern right = new TerminalPattern(pattern);
+        final TerminalPatternDefault right = new TerminalPatternDefault(pattern);
         return right;
     }
 
     @Override
-    public SPPTBranch constructRight2Left(final TerminalPattern arg0, final BinaryTransformer arg1) {
+    public SPPTBranch constructRight2Left(final TerminalPatternDefault arg0, final BinaryTransformer arg1) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final SPPTBranch left, final TerminalPattern right, final BinaryTransformer arg2) {
+    public void updateLeft2Right(final SPPTBranch left, final TerminalPatternDefault right, final BinaryTransformer arg2) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateRight2Left(final SPPTBranch left, final TerminalPattern right, final BinaryTransformer arg2) {
+    public void updateRight2Left(final SPPTBranch left, final TerminalPatternDefault right, final BinaryTransformer arg2) {
         // TODO Auto-generated method stub
 
     }

@@ -20,7 +20,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
-import net.akehurst.language.core.sppt.FixedList;
+import net.akehurst.language.api.sppt.FixedList;
 
 /**
  *

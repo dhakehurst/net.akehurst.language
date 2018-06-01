@@ -2,9 +2,9 @@ package net.akehurst.language.parse.graph;
 
 import java.util.Set;
 
-import net.akehurst.language.core.sppt.FixedList;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitable;
+import net.akehurst.language.api.sppt.FixedList;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitable;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public interface ICompleteNode extends SharedPackedParseTreeVisitable {

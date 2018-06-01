@@ -15,9 +15,9 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTLeaf;
-import net.akehurst.language.core.sppt.SPPTNode;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTLeaf;
+import net.akehurst.language.api.sppt.SPPTNode;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 

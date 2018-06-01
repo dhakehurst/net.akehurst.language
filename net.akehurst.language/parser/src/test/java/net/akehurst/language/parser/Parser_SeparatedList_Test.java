@@ -18,57 +18,57 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
 import net.akehurst.language.parser.sppf.SharedPackedParseTreeSimple;
 
 public class Parser_SeparatedList_Test extends AbstractParser_Test {
 
-	GrammarStructure as1() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").separatedList(1, -1, new TerminalLiteral(","), new TerminalLiteral("a"));
+	GrammarDefault as1() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").separatedList(1, -1, new TerminalLiteralDefault(","), new TerminalLiteralDefault("a"));
 
 		return b.get();
 	}
 
-	GrammarStructure as2() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").separatedList(1, -1, new TerminalLiteral(","), new NonTerminal("a"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault as2() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").separatedList(1, -1, new TerminalLiteralDefault(","), new NonTerminalDefault("a"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 
 		return b.get();
 	}
 
-	GrammarStructure asSP() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("SP").concatenation(new TerminalLiteral(" "));
-		b.rule("as").separatedList(1, -1, new TerminalLiteral(","), new NonTerminal("a"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault asSP() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.skip("SP").concatenation(new TerminalLiteralDefault(" "));
+		b.rule("as").separatedList(1, -1, new TerminalLiteralDefault(","), new NonTerminalDefault("a"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 
 		return b.get();
 	}
 
-	GrammarStructure asb() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("asb").concatenation(new NonTerminal("as"), new NonTerminal("b"));
-		b.rule("as").separatedList(1, -1, new TerminalLiteral(","), new NonTerminal("b"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
-		b.rule("b").concatenation(new TerminalLiteral("b"));
+	GrammarDefault asb() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("asb").concatenation(new NonTerminalDefault("as"), new NonTerminalDefault("b"));
+		b.rule("as").separatedList(1, -1, new TerminalLiteralDefault(","), new NonTerminalDefault("b"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
+		b.rule("b").concatenation(new TerminalLiteralDefault("b"));
 
 		return b.get();
 	}
 
-	GrammarStructure as0n() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").separatedList(0, -1, new TerminalLiteral(","), new NonTerminal("a"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault as0n() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").separatedList(0, -1, new TerminalLiteralDefault(","), new NonTerminalDefault("a"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 
 		return b.get();
 	}
@@ -77,7 +77,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	public void as0n_as_empty() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as0n();
+		final GrammarDefault g = this.as0n();
 		final String goal = "as";
 		final String text = "";
 
@@ -95,7 +95,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	public void as1_as_a() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.as1();
+			final GrammarDefault g = this.as1();
 			final String goal = "as";
 			final String text = "a";
 
@@ -116,7 +116,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	public void as1_as_aa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as1();
+		final GrammarDefault g = this.as1();
 		final String goal = "as";
 		final String text = "a,a";
 
@@ -134,7 +134,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	public void as1_as_aaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as1();
+		final GrammarDefault g = this.as1();
 		final String goal = "as";
 		final String text = "a,a,a";
 
@@ -152,7 +152,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	public void as2_as_a() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as2();
+		final GrammarDefault g = this.as2();
 		final String goal = "as";
 		final String text = "a";
 
@@ -170,7 +170,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	public void as2_as_aa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.as2();
+			final GrammarDefault g = this.as2();
 			final String goal = "as";
 			final String text = "a,a";
 
@@ -191,7 +191,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	public void as2_as_aaa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.as2();
+			final GrammarDefault g = this.as2();
 			final String goal = "as";
 			final String text = "a,a,a";
 
@@ -213,7 +213,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	public void asSP_as_aaa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.asSP();
+			final GrammarDefault g = this.asSP();
 			final String goal = "as";
 			final String text = "a, a, a";
 
@@ -235,7 +235,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	public void asSP_as_aaaa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.asSP();
+			final GrammarDefault g = this.asSP();
 			final String goal = "as";
 			final String text = "a, a, a, a";
 
@@ -257,7 +257,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	public void asSP_as_aaa2() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.asSP();
+		final GrammarDefault g = this.asSP();
 		final String goal = "as";
 		final String text = "a , a , a ";
 
@@ -272,10 +272,10 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 
 	}
 
-	GrammarStructure as03() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").separatedList(0, 3, new TerminalLiteral(","), new NonTerminal("a"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault as03() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").separatedList(0, 3, new TerminalLiteralDefault(","), new NonTerminalDefault("a"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 
 		return b.get();
 	}
@@ -284,7 +284,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	public void as03_as_empty() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as0n();
+		final GrammarDefault g = this.as0n();
 		final String goal = "as";
 		final String text = "";
 
@@ -302,7 +302,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	public void as03_as_a() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as03();
+		final GrammarDefault g = this.as03();
 		final String goal = "as";
 		final String text = "a";
 
@@ -320,7 +320,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 	public void as03_as_a4() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as03();
+		final GrammarDefault g = this.as03();
 		final String goal = "as";
 		final String text = "a,a,a,a";
 

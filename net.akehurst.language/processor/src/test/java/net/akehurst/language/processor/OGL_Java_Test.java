@@ -27,17 +27,17 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.grammar.Grammar;
-import net.akehurst.language.core.parser.Parser;
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.api.grammar.Grammar;
+import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.parser.ParseTreeException;
+import net.akehurst.language.api.parser.Parser;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
 
 public class OGL_Java_Test {
 
@@ -48,7 +48,7 @@ public class OGL_Java_Test {
 		this.parseTreeFactory = new RuntimeRuleSetBuilder();
 	}
 
-	ParseTreeBuilder builder(final GrammarStructure grammar, final String text, final String goal) {
+	ParseTreeBuilder builder(final GrammarDefault grammar, final String text, final String goal) {
 		return new ParseTreeBuilder(this.parseTreeFactory, grammar, goal, text, 0);
 	}
 
@@ -71,7 +71,7 @@ public class OGL_Java_Test {
 
 		final OGLanguageProcessor proc = new OGLanguageProcessor();
 		final FileReader reader = new FileReader(Paths.get(grammarFile).toFile());
-		final GrammarStructure grammar = proc.process(reader, "grammarDefinition", GrammarStructure.class);
+		final GrammarDefault grammar = proc.process(reader, "grammarDefinition", GrammarDefault.class);
 
 		final SharedPackedParseTree tree = this.process(grammar, new StringReader(text), goal);
 

@@ -18,10 +18,10 @@ package net.akehurst.language.parser.sppf;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.sppt.SPPTLeaf;
-import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.core.sppt.SPNodeIdentity;
+import net.akehurst.language.api.sppt.SPNodeIdentity;
+import net.akehurst.language.api.sppt.SPPTLeaf;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class Leaf extends Node implements SPPTLeaf {

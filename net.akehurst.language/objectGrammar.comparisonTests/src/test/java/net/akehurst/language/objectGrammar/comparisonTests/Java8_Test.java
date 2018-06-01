@@ -18,12 +18,12 @@ import org.antlr.v4.runtime.Lexer;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.processor.ILanguageProcessor;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.parser.ParseTreeException;
+import net.akehurst.language.api.processor.ILanguageProcessor;
+import net.akehurst.language.api.sppt.ISharedPackedParseTree;
 import net.akehurst.language.ogl.semanticStructure.Grammar;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;

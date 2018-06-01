@@ -15,12 +15,12 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.Rule;
-import net.akehurst.language.ogl.semanticStructure.SkipRule;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.ogl.semanticStructure.ChoiceAbstract;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.RuleDefault;
+import net.akehurst.language.ogl.semanticStructure.SkipRuleDefault;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
@@ -32,22 +32,22 @@ public class SkipRuleNode2SkipRule extends NormalRuleNode2Rule {
     }
 
     @Override
-    public SkipRule constructLeft2Right(final SPPTNode left, final BinaryTransformer transformer) {
+    public SkipRuleDefault constructLeft2Right(final SPPTNode left, final BinaryTransformer transformer) {
 
         final SPPTNode grammarNode = left.getParent().getParent().getParent().getParent();
-        final GrammarStructure grammar = transformer.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, grammarNode);
+        final GrammarDefault grammar = transformer.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, grammarNode);
         final String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, ((SPPTBranch) left).getChild(1));
-        final SkipRule right = new SkipRule(grammar, name);
+        final SkipRuleDefault right = new SkipRuleDefault(grammar, name);
         return right;
 
     }
 
     @Override
-    public void updateLeft2Right(final SPPTNode left, final Rule right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SPPTNode left, final RuleDefault right, final BinaryTransformer transformer) {
 
         final SPPTNode rhsNode = ((SPPTBranch) left).getChild(3);
         final SPPTNode item = ((SPPTBranch) rhsNode).getChild(0);
-        final AbstractChoice ruleItem = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class,
+        final ChoiceAbstract ruleItem = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, ChoiceAbstract>>) (Class<?>) AbstractNode2Choice.class,
                 item);
         right.setRhs(ruleItem);
 

@@ -17,23 +17,23 @@ package net.akehurst.language.grammar.parser.converter.rules;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
-import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
-import net.akehurst.language.ogl.semanticStructure.Concatenation;
-import net.akehurst.language.ogl.semanticStructure.Multi;
-import net.akehurst.language.ogl.semanticStructure.RuleItem;
-import net.akehurst.language.ogl.semanticStructure.SeparatedList;
+import net.akehurst.language.ogl.semanticStructure.ChoiceSimpleDefault;
+import net.akehurst.language.ogl.semanticStructure.ConcatenationDefault;
+import net.akehurst.language.ogl.semanticStructure.MultiDefault;
+import net.akehurst.language.ogl.semanticStructure.RuleItemAbstract;
+import net.akehurst.language.ogl.semanticStructure.SeparatedListDefault;
 import net.akehurst.transform.binary.api.BinaryRule;
 
-abstract public class AbstractRuleItem2RuntimeRuleItem<L extends RuleItem> implements BinaryRule<L, RuntimeRuleItem> {
+abstract public class AbstractRuleItem2RuntimeRuleItem<L extends RuleItemAbstract> implements BinaryRule<L, RuntimeRuleItem> {
 
-    RuntimeRuleItemKind getRuleItemKind(final RuleItem item) {
-        if (item instanceof ChoiceSimple) {
+    RuntimeRuleItemKind getRuleItemKind(final RuleItemAbstract item) {
+        if (item instanceof ChoiceSimpleDefault) {
             return RuntimeRuleItemKind.CHOICE;
-        } else if (item instanceof Concatenation) {
+        } else if (item instanceof ConcatenationDefault) {
             return RuntimeRuleItemKind.CONCATENATION;
-        } else if (item instanceof Multi) {
+        } else if (item instanceof MultiDefault) {
             return RuntimeRuleItemKind.MULTI;
-        } else if (item instanceof SeparatedList) {
+        } else if (item instanceof SeparatedListDefault) {
             return RuntimeRuleItemKind.SEPARATED_LIST;
         } else {
             throw new RuntimeException("Internal Error, type of RuleItem not recognised");

@@ -10,13 +10,13 @@ import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.parser.Parser;
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.processor.ILanguageProcessor;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.parser.Parser;
+import net.akehurst.language.api.processor.LanguageProcessor;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ParseTreeToInputText;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
 
 public class Xml_Tests {
 
@@ -34,18 +34,18 @@ public class Xml_Tests {
 		return Xml_Tests.processor;
 	}
 
-	static ILanguageProcessor xmlProcessor;
+	static LanguageProcessor xmlProcessor;
 
 	static {
 		Xml_Tests.xmlProcessor = Xml_Tests.getXmlProcessor();
 	}
 
-	static ILanguageProcessor getXmlProcessor() {
+	static LanguageProcessor getXmlProcessor() {
 		if (null == Xml_Tests.xmlProcessor) {
 			try {
 				final FileReader reader = new FileReader(Paths.get("src/test/resources/Xml.og").toFile());
-				final GrammarStructure grammar = Xml_Tests.getOGLProcessor().process(reader, "grammarDefinition", GrammarStructure.class);
-				final LanguageProcessor proc = new LanguageProcessor(grammar, null);
+				final GrammarDefault grammar = Xml_Tests.getOGLProcessor().process(reader, "grammarDefinition", GrammarDefault.class);
+				final LanguageProcessorDefault proc = new LanguageProcessorDefault(grammar, null);
 				proc.getParser().build();
 				Xml_Tests.xmlProcessor = proc;
 			} catch (final IOException e) {

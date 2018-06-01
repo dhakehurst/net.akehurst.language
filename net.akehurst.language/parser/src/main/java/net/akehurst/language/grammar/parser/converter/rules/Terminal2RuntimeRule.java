@@ -15,9 +15,9 @@
  */
 package net.akehurst.language.grammar.parser.converter.rules;
 
+import net.akehurst.language.api.grammar.Terminal;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
-import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
 public class Terminal2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<Terminal> {

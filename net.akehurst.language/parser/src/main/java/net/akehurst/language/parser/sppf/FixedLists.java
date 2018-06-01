@@ -1,6 +1,6 @@
 package net.akehurst.language.parser.sppf;
 
-import net.akehurst.language.core.sppt.FixedList;
+import net.akehurst.language.api.sppt.FixedList;
 
 public class FixedLists {
 

@@ -18,26 +18,26 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalPatternDefault;
 import net.akehurst.language.parser.sppf.SharedPackedParseTreeSimple;
 
 public class SkipRule_Test extends AbstractParser_Test {
 
-	GrammarStructure as() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
+	GrammarDefault as() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.skip("WS").concatenation(new TerminalPatternDefault("\\s+"));
 
-		b.rule("as").multi(1, -1, new NonTerminal("a"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+		b.rule("as").multi(1, -1, new NonTerminalDefault("a"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
@@ -45,7 +45,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_a() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.as();
+			final GrammarDefault g = this.as();
 			final String goal = "as";
 			final String text = "a";
 
@@ -67,7 +67,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_WSa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.as();
+			final GrammarDefault g = this.as();
 			final String goal = "as";
 			final String text = " a";
 
@@ -88,7 +88,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_aaa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.as();
+			final GrammarDefault g = this.as();
 			final String goal = "as";
 			final String text = "aaa";
 
@@ -109,7 +109,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_aWSaWSa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.as();
+			final GrammarDefault g = this.as();
 			final String goal = "as";
 			final String text = "a a a";
 
@@ -131,7 +131,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_WSaWSaWSa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.as();
+			final GrammarDefault g = this.as();
 			final String goal = "as";
 			final String text = " a a a";
 
@@ -153,7 +153,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_aWSaWSaWS() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.as();
+			final GrammarDefault g = this.as();
 			final String goal = "as";
 			final String text = "a a a ";
 
@@ -174,7 +174,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_WSaWSaWSaWS() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.as();
+			final GrammarDefault g = this.as();
 			final String goal = "as";
 			final String text = " a a a ";
 
@@ -193,13 +193,13 @@ public class SkipRule_Test extends AbstractParser_Test {
 		}
 	}
 
-	GrammarStructure asDot() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
+	GrammarDefault asDot() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.skip("WS").concatenation(new TerminalPatternDefault("\\s+"));
 
-		b.rule("as").multi(1, -1, new NonTerminal("a_dot"));
-		b.rule("a_dot").concatenation(new NonTerminal("a"), new TerminalLiteral("."));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+		b.rule("as").multi(1, -1, new NonTerminalDefault("a_dot"));
+		b.rule("a_dot").concatenation(new NonTerminalDefault("a"), new TerminalLiteralDefault("."));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
@@ -207,7 +207,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void asDot_as_a() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.asDot();
+			final GrammarDefault g = this.asDot();
 			final String goal = "as";
 			final String text = "a.";
 
@@ -229,7 +229,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void asDot_as_aaa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.asDot();
+			final GrammarDefault g = this.asDot();
 			final String goal = "as";
 			final String text = "a.a.a.";
 
@@ -252,7 +252,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void asDot_as_aWS() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.asDot();
+			final GrammarDefault g = this.asDot();
 			final String goal = "as";
 			final String text = "a. ";
 
@@ -271,11 +271,11 @@ public class SkipRule_Test extends AbstractParser_Test {
 		}
 	}
 
-	GrammarStructure S() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
+	GrammarDefault S() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.skip("WS").concatenation(new TerminalPatternDefault("\\s+"));
 
-		b.rule("S").concatenation(new TerminalLiteral("a"));
+		b.rule("S").concatenation(new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
@@ -283,7 +283,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void S_S_a() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.S();
+			final GrammarDefault g = this.S();
 			final String goal = "S";
 			final String text = "a";
 
@@ -305,7 +305,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void S_S_WSa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.S();
+			final GrammarDefault g = this.S();
 			final String goal = "S";
 			final String text = " a";
 
@@ -326,7 +326,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void S_S_aWS() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.S();
+		final GrammarDefault g = this.S();
 		final String goal = "S";
 		final String text = "a ";
 
@@ -344,7 +344,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void S_S_WSaWS() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.as();
+			final GrammarDefault g = this.as();
 			final String goal = "as";
 			final String text = " a ";
 

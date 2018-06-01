@@ -15,14 +15,14 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.ogl.semanticStructure.Multi;
-import net.akehurst.language.ogl.semanticStructure.SimpleItem;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.ogl.semanticStructure.MultiDefault;
+import net.akehurst.language.ogl.semanticStructure.SimpleItemAbstract;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class Node2Multi extends AbstractNode2ConcatenationItem<Multi> {
+public class Node2Multi extends AbstractNode2ConcatenationItem<MultiDefault> {
 
     @Override
     public String getNodeName() {
@@ -30,59 +30,59 @@ public class Node2Multi extends AbstractNode2ConcatenationItem<Multi> {
     }
 
     @Override
-    public boolean isValidForRight2Left(final Multi right) {
+    public boolean isValidForRight2Left(final MultiDefault right) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public boolean isAMatch(final SPPTBranch left, final Multi right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final MultiDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public Multi constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
+    public MultiDefault constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
 
         final SPPTNode itemNode = left.getChild(0);
         final SPPTNode multiplicityNode = left.getChild(1);
 
-        final SimpleItem item = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, SimpleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
+        final SimpleItemAbstract item = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, SimpleItemAbstract>>) (Class<?>) Node2SimpleItem.class, itemNode);
 
         // TODO: this should really be done with transform rules!
-        Multi right = null;
+        MultiDefault right = null;
         final String multiplicityString = ((SPPTBranch) multiplicityNode).getChild(0).getName();
         if ("*".equals(multiplicityString)) {
             final int min = 0;
             final int max = -1;
-            right = new Multi(min, max, item);
+            right = new MultiDefault(min, max, item);
         } else if ("+".equals(multiplicityString)) {
             final int min = 1;
             final int max = -1;
-            right = new Multi(min, max, item);
+            right = new MultiDefault(min, max, item);
         } else if ("?".equals(multiplicityString)) {
             final int min = 0;
             final int max = 1;
-            right = new Multi(min, max, item);
+            right = new MultiDefault(min, max, item);
         }
         return right;
 
     }
 
     @Override
-    public SPPTBranch constructRight2Left(final Multi right, final BinaryTransformer transformer) {
+    public SPPTBranch constructRight2Left(final MultiDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final SPPTBranch left, final Multi right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SPPTBranch left, final MultiDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateRight2Left(final SPPTBranch left, final Multi right, final BinaryTransformer transformer) {
+    public void updateRight2Left(final SPPTBranch left, final MultiDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }

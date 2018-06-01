@@ -1,6 +1,6 @@
 package net.akehurst.language.parser.sppf;
 
-import net.akehurst.language.core.sppt.SPPTNode;
+import net.akehurst.language.api.sppt.SPPTNode;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class Factory {

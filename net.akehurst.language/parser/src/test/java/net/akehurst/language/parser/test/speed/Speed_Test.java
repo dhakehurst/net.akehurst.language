@@ -18,33 +18,33 @@ package net.akehurst.language.parser.test.speed;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalPatternDefault;
 import net.akehurst.language.parser.AbstractParser_Test;
 
 public class Speed_Test extends AbstractParser_Test {
 
-	GrammarStructure abcds() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("abcds").choice(new NonTerminal("abcd"), new NonTerminal("abcds.group1"));
-		b.rule("abcds.group1").concatenation(new NonTerminal("abcd"), new NonTerminal("abcds"));
-		b.rule("abcd").concatenation(new NonTerminal("abs"), new NonTerminal("cds"));
-		b.rule("abs").choice(new NonTerminal("ab"), new NonTerminal("abs.group1"));
-		b.rule("abs.group1").concatenation(new NonTerminal("ab"), new NonTerminal("abs"));
-		b.rule("cds").choice(new NonTerminal("cd"), new NonTerminal("cds.group1"));
-		b.rule("cds.group1").concatenation(new NonTerminal("cd"), new NonTerminal("cds"));
-		b.rule("ab").concatenation(new NonTerminal("a"), new NonTerminal("b"));
-		b.rule("cd").concatenation(new NonTerminal("c"), new NonTerminal("d"));
-		b.rule("a").choice(new TerminalLiteral("a"));
-		b.rule("b").choice(new TerminalLiteral("b"));
-		b.rule("c").choice(new TerminalLiteral("c"));
-		b.rule("d").choice(new TerminalLiteral("d"));
+	GrammarDefault abcds() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("abcds").choice(new NonTerminalDefault("abcd"), new NonTerminalDefault("abcds.group1"));
+		b.rule("abcds.group1").concatenation(new NonTerminalDefault("abcd"), new NonTerminalDefault("abcds"));
+		b.rule("abcd").concatenation(new NonTerminalDefault("abs"), new NonTerminalDefault("cds"));
+		b.rule("abs").choice(new NonTerminalDefault("ab"), new NonTerminalDefault("abs.group1"));
+		b.rule("abs.group1").concatenation(new NonTerminalDefault("ab"), new NonTerminalDefault("abs"));
+		b.rule("cds").choice(new NonTerminalDefault("cd"), new NonTerminalDefault("cds.group1"));
+		b.rule("cds.group1").concatenation(new NonTerminalDefault("cd"), new NonTerminalDefault("cds"));
+		b.rule("ab").concatenation(new NonTerminalDefault("a"), new NonTerminalDefault("b"));
+		b.rule("cd").concatenation(new NonTerminalDefault("c"), new NonTerminalDefault("d"));
+		b.rule("a").choice(new TerminalLiteralDefault("a"));
+		b.rule("b").choice(new TerminalLiteralDefault("b"));
+		b.rule("c").choice(new TerminalLiteralDefault("c"));
+		b.rule("d").choice(new TerminalLiteralDefault("d"));
 		return b.get();
 	}
 
@@ -52,7 +52,7 @@ public class Speed_Test extends AbstractParser_Test {
 	public void abcds_abcds_abcd() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.abcds();
+			final GrammarDefault g = this.abcds();
 			final String goal = "abcds";
 			final String text = "abcd";
 
@@ -68,7 +68,7 @@ public class Speed_Test extends AbstractParser_Test {
 	public void abcds_abcds_abcdabcd() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.abcds();
+			final GrammarDefault g = this.abcds();
 			final String goal = "abcds";
 			final String text = "abcdabcd";
 
@@ -84,7 +84,7 @@ public class Speed_Test extends AbstractParser_Test {
 	public void abcds_abcds_ababcdcdababcdcd() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.abcds();
+			final GrammarDefault g = this.abcds();
 			final String goal = "abcds";
 			final String text = "ababcdcdababcdcd";
 
@@ -100,7 +100,7 @@ public class Speed_Test extends AbstractParser_Test {
 	public void abcds_abcds_abababcdcdcdabababcdcdcdabababcdcdcd() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.abcds();
+			final GrammarDefault g = this.abcds();
 			final String goal = "abcds";
 			final String text = "abababcdcdcdabababcdcdcdabababcdcdcd";
 
@@ -117,7 +117,7 @@ public class Speed_Test extends AbstractParser_Test {
 	public void abcds_abcds_abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.abcds();
+			final GrammarDefault g = this.abcds();
 			final String goal = "abcds";
 			final String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
 
@@ -133,7 +133,7 @@ public class Speed_Test extends AbstractParser_Test {
 	public void abcds_abcds_abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.abcds();
+			final GrammarDefault g = this.abcds();
 			final String goal = "abcds";
 			final String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
 
@@ -149,7 +149,7 @@ public class Speed_Test extends AbstractParser_Test {
 	public void abcds_abcds_2_x_abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.abcds();
+			final GrammarDefault g = this.abcds();
 			final String goal = "abcds";
 			final String text = "abababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcdabababcdcdcd";
 
@@ -161,14 +161,14 @@ public class Speed_Test extends AbstractParser_Test {
 		}
 	}
 
-	GrammarStructure params() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("params").concatenation(new TerminalLiteral("("), new NonTerminal("paramList"), new TerminalLiteral(")"));
-		b.rule("paramList").separatedList(0, -1, new TerminalLiteral(","), new NonTerminal("param"));
-		b.rule("param").concatenation(new NonTerminal("type"), new NonTerminal("id"));
-		b.rule("type").choice(new TerminalLiteral("int"));
-		b.rule("id").choice(new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*"));
-		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
+	GrammarDefault params() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("params").concatenation(new TerminalLiteralDefault("("), new NonTerminalDefault("paramList"), new TerminalLiteralDefault(")"));
+		b.rule("paramList").separatedList(0, -1, new TerminalLiteralDefault(","), new NonTerminalDefault("param"));
+		b.rule("param").concatenation(new NonTerminalDefault("type"), new NonTerminalDefault("id"));
+		b.rule("type").choice(new TerminalLiteralDefault("int"));
+		b.rule("id").choice(new TerminalPatternDefault("[a-zA-Z_][a-zA-Z_0-9]*"));
+		b.skip("WS").concatenation(new TerminalPatternDefault("\\s+"));
 		return b.get();
 	}
 
@@ -176,7 +176,7 @@ public class Speed_Test extends AbstractParser_Test {
 	public void params_1() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.params();
+			final GrammarDefault g = this.params();
 			final String goal = "params";
 			final String text = "(int a)";
 
@@ -192,7 +192,7 @@ public class Speed_Test extends AbstractParser_Test {
 	public void params_2() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.params();
+			final GrammarDefault g = this.params();
 			final String goal = "params";
 			final String text = "(int a,int b)";
 
@@ -208,7 +208,7 @@ public class Speed_Test extends AbstractParser_Test {
 	public void params_3() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.params();
+		final GrammarDefault g = this.params();
 		final String goal = "params";
 		final String text = "(int a, int b, int c)";
 

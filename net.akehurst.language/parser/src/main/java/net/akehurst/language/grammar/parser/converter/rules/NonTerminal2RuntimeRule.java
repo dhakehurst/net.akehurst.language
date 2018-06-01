@@ -17,31 +17,31 @@ package net.akehurst.language.grammar.parser.converter.rules;
 
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 import net.akehurst.transform.binary.api.TransformException;
 
-public class NonTerminal2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<NonTerminal> {
+public class NonTerminal2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<NonTerminalDefault> {
 
     @Override
-    public boolean isValidForLeft2Right(final NonTerminal arg0) {
+    public boolean isValidForLeft2Right(final NonTerminalDefault arg0) {
         return true;
     }
 
     @Override
-    public boolean isAMatch(final NonTerminal left, final RuntimeRule right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final NonTerminalDefault left, final RuntimeRule right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public RuntimeRule constructLeft2Right(final NonTerminal left, final BinaryTransformer transformer) {
+    public RuntimeRule constructLeft2Right(final NonTerminalDefault left, final BinaryTransformer transformer) {
         final Converter converter = (Converter) transformer;
         RuntimeRule right = null;
 
         try {
             right = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getReferencedRule());
-        } catch (final net.akehurst.language.core.grammar.GrammarRuleNotFoundException e) {
+        } catch (final net.akehurst.language.api.grammar.GrammarRuleNotFoundException e) {
             throw new TransformException(e.getMessage(), e);
         }
         // right = converter.getFactory().createRuntimeRule(left.getReferencedRule(), RuntimeRuleKind.NON_TERMINAL);
@@ -50,19 +50,19 @@ public class NonTerminal2RuntimeRule extends AbstractConcatinationItem2RuntimeRu
     }
 
     @Override
-    public void updateLeft2Right(final NonTerminal arg0, final RuntimeRule arg1, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final NonTerminalDefault arg0, final RuntimeRule arg1, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateRight2Left(final NonTerminal arg0, final RuntimeRule arg1, final BinaryTransformer transformer) {
+    public void updateRight2Left(final NonTerminalDefault arg0, final RuntimeRule arg1, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public NonTerminal constructRight2Left(final RuntimeRule arg0, final BinaryTransformer transformer) {
+    public NonTerminalDefault constructRight2Left(final RuntimeRule arg0, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }

@@ -22,24 +22,24 @@ import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
-import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
+import net.akehurst.language.ogl.semanticStructure.ChoiceSimpleDefault;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class ChoiceSimpleEmpty2RuntimeRuleItem extends AbstractChoice2RuntimeRuleItem<ChoiceSimple> {
+public class ChoiceSimpleEmpty2RuntimeRuleItem extends AbstractChoice2RuntimeRuleItem<ChoiceSimpleDefault> {
 
     @Override
-    public boolean isValidForLeft2Right(final ChoiceSimple left) {
+    public boolean isValidForLeft2Right(final ChoiceSimpleDefault left) {
         return 0 == left.getAlternative().size();
     }
 
     @Override
-    public boolean isAMatch(final ChoiceSimple left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final ChoiceSimpleDefault left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public RuntimeRuleItem constructLeft2Right(final ChoiceSimple left, final BinaryTransformer transformer) {
+    public RuntimeRuleItem constructLeft2Right(final ChoiceSimpleDefault left, final BinaryTransformer transformer) {
         final Converter converter = (Converter) transformer;
         final int maxRuleRumber = converter.getFactory().getRuntimeRuleSet().getTotalRuleNumber();
         final RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION);
@@ -47,7 +47,7 @@ public class ChoiceSimpleEmpty2RuntimeRuleItem extends AbstractChoice2RuntimeRul
     }
 
     @Override
-    public void updateLeft2Right(final ChoiceSimple left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final ChoiceSimpleDefault left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
 
         final RuntimeRule ruleThatIsEmpty = transformer.transformLeft2Right(Rule2RuntimeRule.class, left.getOwningRule());
         final Converter converter = (Converter) transformer;
@@ -60,13 +60,13 @@ public class ChoiceSimpleEmpty2RuntimeRuleItem extends AbstractChoice2RuntimeRul
     }
 
     @Override
-    public void updateRight2Left(final ChoiceSimple arg0, final RuntimeRuleItem arg1, final BinaryTransformer transformer) {
+    public void updateRight2Left(final ChoiceSimpleDefault arg0, final RuntimeRuleItem arg1, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public ChoiceSimple constructRight2Left(final RuntimeRuleItem arg0, final BinaryTransformer transformer) {
+    public ChoiceSimpleDefault constructRight2Left(final RuntimeRuleItem arg0, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }

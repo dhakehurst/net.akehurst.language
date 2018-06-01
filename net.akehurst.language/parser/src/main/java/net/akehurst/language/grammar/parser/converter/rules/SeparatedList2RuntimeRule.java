@@ -18,31 +18,31 @@ package net.akehurst.language.grammar.parser.converter.rules;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
-import net.akehurst.language.ogl.semanticStructure.SeparatedList;
+import net.akehurst.language.ogl.semanticStructure.SeparatedListDefault;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class SeparatedList2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<SeparatedList> {
+public class SeparatedList2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<SeparatedListDefault> {
 
     @Override
-    public boolean isValidForLeft2Right(final SeparatedList arg0) {
+    public boolean isValidForLeft2Right(final SeparatedListDefault arg0) {
         return true;
     }
 
     @Override
-    public boolean isAMatch(final SeparatedList left, final RuntimeRule right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SeparatedListDefault left, final RuntimeRule right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public RuntimeRule constructLeft2Right(final SeparatedList left, final BinaryTransformer transformer) {
+    public RuntimeRule constructLeft2Right(final SeparatedListDefault left, final BinaryTransformer transformer) {
         final Converter converter = (Converter) transformer;
         final RuntimeRule right = converter.createVirtualRule(left);
         return right;
     }
 
     @Override
-    public void updateLeft2Right(final SeparatedList left, final RuntimeRule right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SeparatedListDefault left, final RuntimeRule right, final BinaryTransformer transformer) {
 
         final RuntimeRuleItem ruleItem = transformer.transformLeft2Right(SeparatedList2RuntimeRuleItem.class, left);
         right.setRhs(ruleItem);
@@ -50,13 +50,13 @@ public class SeparatedList2RuntimeRule extends AbstractConcatinationItem2Runtime
     }
 
     @Override
-    public void updateRight2Left(final SeparatedList arg0, final RuntimeRule arg1, final BinaryTransformer transformer) {
+    public void updateRight2Left(final SeparatedListDefault arg0, final RuntimeRule arg1, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public SeparatedList constructRight2Left(final RuntimeRule arg0, final BinaryTransformer transformer) {
+    public SeparatedListDefault constructRight2Left(final RuntimeRule arg0, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }

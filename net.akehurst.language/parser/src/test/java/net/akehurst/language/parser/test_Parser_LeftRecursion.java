@@ -18,23 +18,23 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
 import net.akehurst.language.parser.sppf.SharedPackedParseTreeSimple;
 
 public class test_Parser_LeftRecursion extends AbstractParser_Test {
 
-    GrammarStructure Sas() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("S_a"), new TerminalLiteral("a"));
-        b.rule("S_a").concatenation(new NonTerminal("S"), new TerminalLiteral("a"));
+    GrammarDefault Sas() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("S_a"), new TerminalLiteralDefault("a"));
+        b.rule("S_a").concatenation(new NonTerminalDefault("S"), new TerminalLiteralDefault("a"));
         return b.get();
     }
 
@@ -42,7 +42,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void Sas_S_a() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.Sas();
+        final GrammarDefault g = this.Sas();
         final String goal = "S";
         final String text = "a";
 
@@ -60,7 +60,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void SasS_aa() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.Sas();
+        final GrammarDefault g = this.Sas();
         final String goal = "S";
         final String text = "aa";
 
@@ -76,7 +76,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     @Test
     public void Sas_S_aaa() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.Sas();
+        final GrammarDefault g = this.Sas();
         final String goal = "S";
         final String text = "aaa";
 
@@ -92,7 +92,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     @Test
     public void Sas_S_a10() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.Sas();
+        final GrammarDefault g = this.Sas();
         final String goal = "S";
         String text = "";
         for (int i = 0; i < 10; ++i) {
@@ -109,18 +109,18 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
         Assert.assertEquals(expected, tree);
     }
 
-    GrammarStructure Sas2() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("S_a"), new NonTerminal("an"));
-        b.rule("S_a").concatenation(new NonTerminal("S"), new NonTerminal("an"));
-        b.rule("an").choice(new TerminalLiteral("a"));
+    GrammarDefault Sas2() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("S_a"), new NonTerminalDefault("an"));
+        b.rule("S_a").concatenation(new NonTerminalDefault("S"), new NonTerminalDefault("an"));
+        b.rule("an").choice(new TerminalLiteralDefault("a"));
         return b.get();
     }
 
     @Test
     public void Sas2_S_a10() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.Sas2();
+        final GrammarDefault g = this.Sas2();
         final String goal = "S";
         String text = "";
         for (int i = 0; i < 10; ++i) {
@@ -138,12 +138,12 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     }
 
     // Some of these test grammars are based on those listed in [https://github.com/PhilippeSigaud/Pegged/wiki/Left-Recursion]
-    GrammarStructure direct() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("E"));
-        b.rule("E").choice(new NonTerminal("E1"), new NonTerminal("E2"));
-        b.rule("E1").concatenation(new NonTerminal("E"), new TerminalLiteral("+a"));
-        b.rule("E2").concatenation(new TerminalLiteral("a"));
+    GrammarDefault direct() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("E"));
+        b.rule("E").choice(new NonTerminalDefault("E1"), new NonTerminalDefault("E2"));
+        b.rule("E1").concatenation(new NonTerminalDefault("E"), new TerminalLiteralDefault("+a"));
+        b.rule("E2").concatenation(new TerminalLiteralDefault("a"));
         return b.get();
     }
 
@@ -151,7 +151,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void direct_S_a() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.direct();
+        final GrammarDefault g = this.direct();
         final String goal = "S";
         final String text = "a";
 
@@ -173,7 +173,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void direct_S_apa() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.direct();
+        final GrammarDefault g = this.direct();
         final String goal = "S";
         final String text = "a+a";
 
@@ -198,7 +198,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void direct_S_apapa() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.direct();
+        final GrammarDefault g = this.direct();
         final String goal = "S";
         final String text = "a+a+a";
 
@@ -226,19 +226,19 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 
     // E = Bm E '+a' | 'a' ;
     // Bm = 'b'?
-    GrammarStructure hidden1() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("E"));
-        b.rule("E").choice(new NonTerminal("E1"), new TerminalLiteral("a"));
-        b.rule("E1").concatenation(new NonTerminal("Bm"), new NonTerminal("E"), new TerminalLiteral("+a"));
-        b.rule("Bm").multi(0, 1, new TerminalLiteral("b"));
+    GrammarDefault hidden1() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("E"));
+        b.rule("E").choice(new NonTerminalDefault("E1"), new TerminalLiteralDefault("a"));
+        b.rule("E1").concatenation(new NonTerminalDefault("Bm"), new NonTerminalDefault("E"), new TerminalLiteralDefault("+a"));
+        b.rule("Bm").multi(0, 1, new TerminalLiteralDefault("b"));
         return b.get();
     }
 
     @Test
     public void hidden1_S_a() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.hidden1();
+        final GrammarDefault g = this.hidden1();
         final String goal = "S";
         final String text = "a";
 
@@ -258,7 +258,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     @Test
     public void hidden1_S_apa() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.hidden1();
+        final GrammarDefault g = this.hidden1();
         final String goal = "S";
         final String text = "a+a";
 
@@ -282,7 +282,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     @Test
     public void hidden1_S_bapa() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.hidden1();
+        final GrammarDefault g = this.hidden1();
         final String goal = "S";
         final String text = "ba+a";
 
@@ -305,33 +305,33 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 
     // E = B E '+a' | 'a' ;
     // B = 'b' 'c' | 'd'* ;
-    GrammarStructure hidden2() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("E"));
-        b.rule("E").choice(new NonTerminal("E1"), new NonTerminal("E2"));
-        b.rule("E1").concatenation(new NonTerminal("B"), new NonTerminal("E"), new TerminalLiteral("+a"));
-        b.rule("E2").concatenation(new TerminalLiteral("a"));
-        b.rule("B").choice(new NonTerminal("B1"), new NonTerminal("B2"));
-        b.rule("B1").concatenation(new TerminalLiteral("b"), new TerminalLiteral("c"));
-        b.rule("B2").multi(0, -1, new TerminalLiteral("d"));
+    GrammarDefault hidden2() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("E"));
+        b.rule("E").choice(new NonTerminalDefault("E1"), new NonTerminalDefault("E2"));
+        b.rule("E1").concatenation(new NonTerminalDefault("B"), new NonTerminalDefault("E"), new TerminalLiteralDefault("+a"));
+        b.rule("E2").concatenation(new TerminalLiteralDefault("a"));
+        b.rule("B").choice(new NonTerminalDefault("B1"), new NonTerminalDefault("B2"));
+        b.rule("B1").concatenation(new TerminalLiteralDefault("b"), new TerminalLiteralDefault("c"));
+        b.rule("B2").multi(0, -1, new TerminalLiteralDefault("d"));
         return b.get();
     }
 
     // E = F '+a' | 'a' ;
     // F = 'g' 'h' | J ;
     // J = 'k' | E 'l' ;
-    GrammarStructure indirect() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("E"));
-        b.rule("E").choice(new NonTerminal("E1"), new NonTerminal("E2"));
-        b.rule("E1").concatenation(new NonTerminal("F"), new TerminalLiteral("+a"));
-        b.rule("E2").concatenation(new TerminalLiteral("a"));
-        b.rule("F").choice(new NonTerminal("F1"), new NonTerminal("F2"));
-        b.rule("F1").concatenation(new TerminalLiteral("g"), new TerminalLiteral("h"));
-        b.rule("F2").concatenation(new NonTerminal("J"));
-        b.rule("J").choice(new NonTerminal("J1"), new NonTerminal("J2"));
-        b.rule("J1").concatenation(new TerminalLiteral("k"));
-        b.rule("J2").concatenation(new NonTerminal("K"), new TerminalLiteral("l"));
+    GrammarDefault indirect() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("E"));
+        b.rule("E").choice(new NonTerminalDefault("E1"), new NonTerminalDefault("E2"));
+        b.rule("E1").concatenation(new NonTerminalDefault("F"), new TerminalLiteralDefault("+a"));
+        b.rule("E2").concatenation(new TerminalLiteralDefault("a"));
+        b.rule("F").choice(new NonTerminalDefault("F1"), new NonTerminalDefault("F2"));
+        b.rule("F1").concatenation(new TerminalLiteralDefault("g"), new TerminalLiteralDefault("h"));
+        b.rule("F2").concatenation(new NonTerminalDefault("J"));
+        b.rule("J").choice(new NonTerminalDefault("J1"), new NonTerminalDefault("J2"));
+        b.rule("J1").concatenation(new TerminalLiteralDefault("k"));
+        b.rule("J2").concatenation(new NonTerminalDefault("K"), new TerminalLiteralDefault("l"));
         return b.get();
     }
 
@@ -342,23 +342,23 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     // I = '(' A+ ')'
     // A = 'a'
 
-    GrammarStructure interlocking() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("E"));
-        b.rule("E").choice(new NonTerminal("E1"), new NonTerminal("E2"));
-        b.rule("E1").concatenation(new NonTerminal("F"), new TerminalLiteral("n"));
-        b.rule("E2").concatenation(new TerminalLiteral("n"));
-        b.rule("F").choice(new NonTerminal("F1"), new NonTerminal("F2"));
-        b.rule("F1").concatenation(new NonTerminal("E"), new TerminalLiteral("+"), new NonTerminal("Is"));
-        b.rule("F2").concatenation(new NonTerminal("G"), new TerminalLiteral("-"));
-        b.rule("Is").multi(0, -1, new NonTerminal("I"));
-        b.rule("G").choice(new NonTerminal("G1"), new NonTerminal("G2"));
-        b.rule("G1").concatenation(new NonTerminal("H"), new TerminalLiteral("m"));
-        b.rule("G2").concatenation(new NonTerminal("E"));
-        b.rule("H").concatenation(new NonTerminal("G"), new TerminalLiteral("l"));
-        b.rule("I").concatenation(new TerminalLiteral("("), new NonTerminal("As"), new TerminalLiteral(")"));
-        b.rule("As").multi(1, -1, new NonTerminal("A"));
-        b.rule("A").choice(new TerminalLiteral("a"));
+    GrammarDefault interlocking() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("E"));
+        b.rule("E").choice(new NonTerminalDefault("E1"), new NonTerminalDefault("E2"));
+        b.rule("E1").concatenation(new NonTerminalDefault("F"), new TerminalLiteralDefault("n"));
+        b.rule("E2").concatenation(new TerminalLiteralDefault("n"));
+        b.rule("F").choice(new NonTerminalDefault("F1"), new NonTerminalDefault("F2"));
+        b.rule("F1").concatenation(new NonTerminalDefault("E"), new TerminalLiteralDefault("+"), new NonTerminalDefault("Is"));
+        b.rule("F2").concatenation(new NonTerminalDefault("G"), new TerminalLiteralDefault("-"));
+        b.rule("Is").multi(0, -1, new NonTerminalDefault("I"));
+        b.rule("G").choice(new NonTerminalDefault("G1"), new NonTerminalDefault("G2"));
+        b.rule("G1").concatenation(new NonTerminalDefault("H"), new TerminalLiteralDefault("m"));
+        b.rule("G2").concatenation(new NonTerminalDefault("E"));
+        b.rule("H").concatenation(new NonTerminalDefault("G"), new TerminalLiteralDefault("l"));
+        b.rule("I").concatenation(new TerminalLiteralDefault("("), new NonTerminalDefault("As"), new TerminalLiteralDefault(")"));
+        b.rule("As").multi(1, -1, new NonTerminalDefault("A"));
+        b.rule("A").choice(new TerminalLiteralDefault("a"));
         return b.get();
     }
 
@@ -366,7 +366,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void interlocking_S_() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.interlocking();
+        final GrammarDefault g = this.interlocking();
         final String goal = "S";
         final String text = "nlm-n+(aaa)n";
 
@@ -383,30 +383,30 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     // S = X
     // X = P '.x' / 'x'
     // P = P '(n)' / X
-    GrammarStructure interlocking2() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("E"));
-        b.rule("E").choice(new NonTerminal("E1"), new NonTerminal("E2"));
-        b.rule("E1").concatenation(new NonTerminal("F"), new TerminalLiteral("n"));
-        b.rule("E2").concatenation(new TerminalLiteral("n"));
-        b.rule("F").choice(new NonTerminal("F1"), new NonTerminal("F2"));
-        b.rule("F1").concatenation(new NonTerminal("E"), new TerminalLiteral("+"), new NonTerminal("Is"));
-        b.rule("F2").concatenation(new NonTerminal("G"), new TerminalLiteral("-"));
-        b.rule("Is").multi(0, -1, new NonTerminal("I"));
-        b.rule("G").choice(new NonTerminal("G1"), new NonTerminal("G2"));
-        b.rule("G1").concatenation(new NonTerminal("H"), new TerminalLiteral("m"));
-        b.rule("G2").concatenation(new NonTerminal("E"));
-        b.rule("H").concatenation(new NonTerminal("G"), new TerminalLiteral("l"));
-        b.rule("I").concatenation(new TerminalLiteral("("), new NonTerminal("As"), new TerminalLiteral(")"));
-        b.rule("As").multi(1, -1, new NonTerminal("A"));
-        b.rule("A").choice(new TerminalLiteral("a"));
+    GrammarDefault interlocking2() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("E"));
+        b.rule("E").choice(new NonTerminalDefault("E1"), new NonTerminalDefault("E2"));
+        b.rule("E1").concatenation(new NonTerminalDefault("F"), new TerminalLiteralDefault("n"));
+        b.rule("E2").concatenation(new TerminalLiteralDefault("n"));
+        b.rule("F").choice(new NonTerminalDefault("F1"), new NonTerminalDefault("F2"));
+        b.rule("F1").concatenation(new NonTerminalDefault("E"), new TerminalLiteralDefault("+"), new NonTerminalDefault("Is"));
+        b.rule("F2").concatenation(new NonTerminalDefault("G"), new TerminalLiteralDefault("-"));
+        b.rule("Is").multi(0, -1, new NonTerminalDefault("I"));
+        b.rule("G").choice(new NonTerminalDefault("G1"), new NonTerminalDefault("G2"));
+        b.rule("G1").concatenation(new NonTerminalDefault("H"), new TerminalLiteralDefault("m"));
+        b.rule("G2").concatenation(new NonTerminalDefault("E"));
+        b.rule("H").concatenation(new NonTerminalDefault("G"), new TerminalLiteralDefault("l"));
+        b.rule("I").concatenation(new TerminalLiteralDefault("("), new NonTerminalDefault("As"), new TerminalLiteralDefault(")"));
+        b.rule("As").multi(1, -1, new NonTerminalDefault("A"));
+        b.rule("A").choice(new TerminalLiteralDefault("a"));
         return b.get();
     }
 
     // S = b | S S | SSS
-    GrammarStructure SSSSS() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"), new NonTerminal("S3"));
+    GrammarDefault SSSSS() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("S1"), new NonTerminalDefault("S2"), new NonTerminalDefault("S3"));
         // TODO:
         return b.get();
     }
@@ -414,22 +414,22 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     // S = C a | d
     // B = <empty> | a
     // C = b | BCb | b b
-    GrammarStructure SBC() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"));
+    GrammarDefault SBC() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("S1"), new NonTerminalDefault("S2"));
         // TODO:
         return b.get();
     }
 
     // S = b | SSA
     // A = S | <empty>
-    GrammarStructure SA() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"));
-        b.rule("S1").choice(new TerminalLiteral("b"));
-        b.rule("S2").concatenation(new NonTerminal("S"), new NonTerminal("S"), new NonTerminal("A"));
-        b.rule("A").choice(new NonTerminal("A1"), new NonTerminal("A2"));
-        b.rule("A1").concatenation(new NonTerminal("S"));
+    GrammarDefault SA() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("S1"), new NonTerminalDefault("S2"));
+        b.rule("S1").choice(new TerminalLiteralDefault("b"));
+        b.rule("S2").concatenation(new NonTerminalDefault("S"), new NonTerminalDefault("S"), new NonTerminalDefault("A"));
+        b.rule("A").choice(new NonTerminalDefault("A1"), new NonTerminalDefault("A2"));
+        b.rule("A1").concatenation(new NonTerminalDefault("S"));
         b.rule("A2").choice();
         // TODO:
         return b.get();
@@ -439,7 +439,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void SA_S_b1() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.SA();
+        final GrammarDefault g = this.SA();
         final String goal = "S";
         final String text = "b";
 
@@ -461,7 +461,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void SA_S_b2() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.SA();
+        final GrammarDefault g = this.SA();
         final String goal = "S";
         final String text = "bb";
 
@@ -485,7 +485,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void SA_S_b3() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.SA();
+        final GrammarDefault g = this.SA();
         final String goal = "S";
         final String text = "bbb";
 
@@ -537,7 +537,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void SA_S_b4() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.SA();
+        final GrammarDefault g = this.SA();
         final String goal = "S";
         final String text = "bbbb";
 
@@ -559,7 +559,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void SA_S_b5() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.SA();
+        final GrammarDefault g = this.SA();
         final String goal = "S";
         final String text = "bbbbb";
 
@@ -581,7 +581,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void SA_S_b6() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.SA();
+        final GrammarDefault g = this.SA();
         final String goal = "S";
         final String text = "bbbbbb";
 
@@ -603,7 +603,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void SA_S_b7() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.SA();
+        final GrammarDefault g = this.SA();
         final String goal = "S";
         final String text = "bbbbbbb";
 
@@ -625,7 +625,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void SA_S_bbbbbbbb() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.SA();
+        final GrammarDefault g = this.SA();
         final String goal = "S";
         final String text = "bbbbbbbb";
 
@@ -647,7 +647,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void SA_S_bbbbbbbbb() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.SA();
+        final GrammarDefault g = this.SA();
         final String goal = "S";
         final String text = "bbbbbbbbb";
 
@@ -669,7 +669,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void SA_S_bbbbbbbbbb() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.SA();
+        final GrammarDefault g = this.SA();
         final String goal = "S";
         final String text = "bbbbbbbbbb";
 
@@ -691,7 +691,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     public void SA_S_b20() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.SA();
+        final GrammarDefault g = this.SA();
         final String goal = "S";
         String text = "";
         // TODO: make this 300 (30)

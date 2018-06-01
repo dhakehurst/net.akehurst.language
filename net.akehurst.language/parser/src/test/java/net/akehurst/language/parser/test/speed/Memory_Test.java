@@ -18,22 +18,22 @@ package net.akehurst.language.parser.test.speed;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
 import net.akehurst.language.parser.AbstractParser_Test;
 
 public class Memory_Test extends AbstractParser_Test {
 
-	GrammarStructure as_rr() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").choice(new NonTerminal("as$group1"), new NonTerminal("a"));
-		b.rule("as$group1").concatenation(new NonTerminal("a"), new NonTerminal("as"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault as_rr() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").choice(new NonTerminalDefault("as$group1"), new NonTerminalDefault("a"));
+		b.rule("as$group1").concatenation(new NonTerminalDefault("a"), new NonTerminalDefault("as"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
@@ -41,7 +41,7 @@ public class Memory_Test extends AbstractParser_Test {
 	public void rr_as_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.as_rr();
+			final GrammarDefault g = this.as_rr();
 			final String goal = "as";
 			final String text = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 

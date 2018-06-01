@@ -15,15 +15,15 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.ogl.semanticStructure.SeparatedList;
-import net.akehurst.language.ogl.semanticStructure.TangibleItem;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.ogl.semanticStructure.SeparatedListDefault;
+import net.akehurst.language.ogl.semanticStructure.TangibleItemAbstract;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class Node2SeparatedList extends AbstractNode2ConcatenationItem<SeparatedList> {
+public class Node2SeparatedList extends AbstractNode2ConcatenationItem<SeparatedListDefault> {
 
     @Override
     public String getNodeName() {
@@ -31,27 +31,27 @@ public class Node2SeparatedList extends AbstractNode2ConcatenationItem<Separated
     }
 
     @Override
-    public boolean isValidForRight2Left(final SeparatedList right) {
+    public boolean isValidForRight2Left(final SeparatedListDefault right) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public boolean isAMatch(final SPPTBranch left, final SeparatedList right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final SeparatedListDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public SeparatedList constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
+    public SeparatedListDefault constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
 
         final SPPTNode itemNode = left.getChild(1);
 
-        final TangibleItem item = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, TangibleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
+        final TangibleItemAbstract item = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, TangibleItemAbstract>>) (Class<?>) Node2SimpleItem.class, itemNode);
 
         final SPPTNode separatorNode = left.getChild(3);
 
-        final TerminalLiteral separator = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, TerminalLiteral>>) (Class<?>) AbstractNode2Terminal.class,
+        final TerminalLiteralDefault separator = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, TerminalLiteralDefault>>) (Class<?>) AbstractNode2Terminal.class,
                 separatorNode);
 
         final SPPTNode multiplicityNode = left.getChild(5);
@@ -70,25 +70,25 @@ public class Node2SeparatedList extends AbstractNode2ConcatenationItem<Separated
             max = 1;
         }
 
-        final SeparatedList right = new SeparatedList(min, max, separator, item);
+        final SeparatedListDefault right = new SeparatedListDefault(min, max, separator, item);
         return right;
 
     }
 
     @Override
-    public SPPTBranch constructRight2Left(final SeparatedList right, final BinaryTransformer transformer) {
+    public SPPTBranch constructRight2Left(final SeparatedListDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final SPPTBranch left, final SeparatedList right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SPPTBranch left, final SeparatedListDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateRight2Left(final SPPTBranch left, final SeparatedList right, final BinaryTransformer transformer) {
+    public void updateRight2Left(final SPPTBranch left, final SeparatedListDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }

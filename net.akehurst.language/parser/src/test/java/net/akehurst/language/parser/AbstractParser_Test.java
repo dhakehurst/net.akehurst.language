@@ -18,15 +18,15 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Before;
 
-import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.parser.Parser;
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.parser.ParseTreeException;
+import net.akehurst.language.api.parser.Parser;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
 
 abstract public class AbstractParser_Test {
 
@@ -37,12 +37,12 @@ abstract public class AbstractParser_Test {
 		this.runtimeRules = new RuntimeRuleSetBuilder();
 	}
 
-	ParseTreeBuilder builder(final GrammarStructure grammar, final String text, final String goal) {
+	ParseTreeBuilder builder(final GrammarDefault grammar, final String text, final String goal) {
 
 		return new ParseTreeBuilder(this.runtimeRules, grammar, goal, text, 0);
 	}
 
-	protected SharedPackedParseTree process(final GrammarStructure grammar, final String text, final String goalName) throws ParseFailedException {
+	protected SharedPackedParseTree process(final GrammarDefault grammar, final String text, final String goalName) throws ParseFailedException {
 		try {
 			final Parser parser = new ScannerLessParser3(this.runtimeRules, grammar);
 			final SharedPackedParseTree tree = parser.parse(goalName, text);

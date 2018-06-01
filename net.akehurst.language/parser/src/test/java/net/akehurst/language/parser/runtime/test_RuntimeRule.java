@@ -8,10 +8,10 @@ import net.akehurst.language.grammar.parser.converter.rules.Grammar2RuntimeRuleS
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
 
 public class test_RuntimeRule {
 
@@ -20,13 +20,13 @@ public class test_RuntimeRule {
 
 		final RuntimeRuleSetBuilder runtimeRules = new RuntimeRuleSetBuilder();
 
-		final GrammarBuilder gb = new GrammarBuilder(new Namespace("test"), "Test");
-		gb.rule("a").concatenation(new TerminalLiteral("a"));
-		final GrammarStructure grammar = gb.get();
+		final GrammarBuilderDefault gb = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		gb.rule("a").concatenation(new TerminalLiteralDefault("a"));
+		final GrammarDefault grammar = gb.get();
 		final Converter c = new Converter(runtimeRules);
 		c.transformLeft2Right(Grammar2RuntimeRuleSet.class, grammar);
 
-		final RuntimeRule rr = runtimeRules.getRuntimeRule(new TerminalLiteral("a"));
+		final RuntimeRule rr = runtimeRules.getRuntimeRule(new TerminalLiteralDefault("a"));
 
 		Assert.assertEquals(false, rr.couldHaveChild(rr, 0));
 		Assert.assertEquals(1, rr.findTerminalAt(0).size());
@@ -51,15 +51,15 @@ public class test_RuntimeRule {
 
 		final RuntimeRuleSetBuilder runtimeRules = new RuntimeRuleSetBuilder();
 
-		final GrammarBuilder gb = new GrammarBuilder(new Namespace("test"), "Test");
-		gb.rule("S").concatenation(new TerminalLiteral("a"), new TerminalLiteral("b"), new TerminalLiteral("c"));
-		final GrammarStructure grammar = gb.get();
+		final GrammarBuilderDefault gb = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		gb.rule("S").concatenation(new TerminalLiteralDefault("a"), new TerminalLiteralDefault("b"), new TerminalLiteralDefault("c"));
+		final GrammarDefault grammar = gb.get();
 		final Converter c = new Converter(runtimeRules);
 		c.transformLeft2Right(Grammar2RuntimeRuleSet.class, grammar);
 
-		final RuntimeRule term_a = runtimeRules.getRuntimeRule(new TerminalLiteral("a"));
-		final RuntimeRule term_b = runtimeRules.getRuntimeRule(new TerminalLiteral("b"));
-		final RuntimeRule term_c = runtimeRules.getRuntimeRule(new TerminalLiteral("c"));
+		final RuntimeRule term_a = runtimeRules.getRuntimeRule(new TerminalLiteralDefault("a"));
+		final RuntimeRule term_b = runtimeRules.getRuntimeRule(new TerminalLiteralDefault("b"));
+		final RuntimeRule term_c = runtimeRules.getRuntimeRule(new TerminalLiteralDefault("c"));
 		final RuntimeRule rr = runtimeRules.getRuntimeRule(grammar.findRule("S"));
 
 		Assert.assertEquals(false, rr.couldHaveChild(rr, 0));
@@ -94,15 +94,15 @@ public class test_RuntimeRule {
 
 		final RuntimeRuleSetBuilder runtimeRules = new RuntimeRuleSetBuilder();
 
-		final GrammarBuilder gb = new GrammarBuilder(new Namespace("test"), "Test");
-		gb.rule("S").choice(new TerminalLiteral("a"), new TerminalLiteral("b"), new TerminalLiteral("c"));
-		final GrammarStructure grammar = gb.get();
+		final GrammarBuilderDefault gb = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		gb.rule("S").choice(new TerminalLiteralDefault("a"), new TerminalLiteralDefault("b"), new TerminalLiteralDefault("c"));
+		final GrammarDefault grammar = gb.get();
 		final Converter c = new Converter(runtimeRules);
 		c.transformLeft2Right(Grammar2RuntimeRuleSet.class, grammar);
 
-		final RuntimeRule term_a = runtimeRules.getRuntimeRule(new TerminalLiteral("a"));
-		final RuntimeRule term_b = runtimeRules.getRuntimeRule(new TerminalLiteral("b"));
-		final RuntimeRule term_c = runtimeRules.getRuntimeRule(new TerminalLiteral("c"));
+		final RuntimeRule term_a = runtimeRules.getRuntimeRule(new TerminalLiteralDefault("a"));
+		final RuntimeRule term_b = runtimeRules.getRuntimeRule(new TerminalLiteralDefault("b"));
+		final RuntimeRule term_c = runtimeRules.getRuntimeRule(new TerminalLiteralDefault("c"));
 		final RuntimeRule rr = runtimeRules.getRuntimeRule(grammar.findRule("S"));
 
 		Assert.assertEquals(false, rr.couldHaveChild(rr, 0));
@@ -139,13 +139,13 @@ public class test_RuntimeRule {
 
 		final RuntimeRuleSetBuilder runtimeRules = new RuntimeRuleSetBuilder();
 
-		final GrammarBuilder gb = new GrammarBuilder(new Namespace("test"), "Test");
-		gb.rule("S").multi(0, -1, new TerminalLiteral("a"));
-		final GrammarStructure grammar = gb.get();
+		final GrammarBuilderDefault gb = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		gb.rule("S").multi(0, -1, new TerminalLiteralDefault("a"));
+		final GrammarDefault grammar = gb.get();
 		final Converter c = new Converter(runtimeRules);
 		c.transformLeft2Right(Grammar2RuntimeRuleSet.class, grammar);
 
-		final RuntimeRule term_a = runtimeRules.getRuntimeRule(new TerminalLiteral("a"));
+		final RuntimeRule term_a = runtimeRules.getRuntimeRule(new TerminalLiteralDefault("a"));
 		final RuntimeRule rr = runtimeRules.getRuntimeRule(grammar.findAllRule("S"));
 		final RuntimeRule empty = runtimeRules.getRuntimeRuleSet().getEmptyRule(rr);
 
@@ -179,13 +179,13 @@ public class test_RuntimeRule {
 
 		final RuntimeRuleSetBuilder runtimeRules = new RuntimeRuleSetBuilder();
 
-		final GrammarBuilder gb = new GrammarBuilder(new Namespace("test"), "Test");
-		gb.rule("S").multi(1, -1, new TerminalLiteral("a"));
-		final GrammarStructure grammar = gb.get();
+		final GrammarBuilderDefault gb = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		gb.rule("S").multi(1, -1, new TerminalLiteralDefault("a"));
+		final GrammarDefault grammar = gb.get();
 		final Converter c = new Converter(runtimeRules);
 		c.transformLeft2Right(Grammar2RuntimeRuleSet.class, grammar);
 
-		final RuntimeRule term_a = runtimeRules.getRuntimeRule(new TerminalLiteral("a"));
+		final RuntimeRule term_a = runtimeRules.getRuntimeRule(new TerminalLiteralDefault("a"));
 		final RuntimeRule rr = runtimeRules.getRuntimeRule(grammar.findAllRule("S"));
 		final RuntimeRule empty = runtimeRules.getRuntimeRuleSet().getEmptyRule(rr);
 

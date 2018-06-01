@@ -17,9 +17,9 @@ package net.akehurst.language.parser.sppf;
 
 import java.util.Set;
 
-import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor;
 import net.akehurst.language.grammar.parser.ParseTreeToInputText;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 

@@ -19,37 +19,37 @@ import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
-import net.akehurst.language.ogl.semanticStructure.Multi;
-import net.akehurst.language.ogl.semanticStructure.SimpleItem;
+import net.akehurst.language.ogl.semanticStructure.MultiDefault;
+import net.akehurst.language.ogl.semanticStructure.SimpleItemAbstract;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class Multi2RuntimeRuleItem implements BinaryRule<Multi, RuntimeRuleItem> {
+public class Multi2RuntimeRuleItem implements BinaryRule<MultiDefault, RuntimeRuleItem> {
 
     @Override
-    public boolean isValidForLeft2Right(final Multi left) {
+    public boolean isValidForLeft2Right(final MultiDefault left) {
         return true;
     }
 
     @Override
-    public boolean isAMatch(final Multi left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final MultiDefault left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public RuntimeRuleItem constructLeft2Right(final Multi left, final BinaryTransformer transformer) {
+    public RuntimeRuleItem constructLeft2Right(final MultiDefault left, final BinaryTransformer transformer) {
         final Converter converter = (Converter) transformer;
         final RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.MULTI);
         return right;
     }
 
     @Override
-    public void updateLeft2Right(final Multi left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
-        final SimpleItem ti = left.getItem();
+    public void updateLeft2Right(final MultiDefault left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
+        final SimpleItemAbstract ti = left.getItem();
 
         final RuntimeRule rr = transformer
-                .transformLeft2Right((Class<? extends BinaryRule<SimpleItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, ti);
+                .transformLeft2Right((Class<? extends BinaryRule<SimpleItemAbstract, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, ti);
         final RuntimeRule[] items = new RuntimeRule[] { rr };
 
         right.setItems(items);
@@ -59,13 +59,13 @@ public class Multi2RuntimeRuleItem implements BinaryRule<Multi, RuntimeRuleItem>
     }
 
     @Override
-    public void updateRight2Left(final Multi arg0, final RuntimeRuleItem arg1, final BinaryTransformer transformer) {
+    public void updateRight2Left(final MultiDefault arg0, final RuntimeRuleItem arg1, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public Multi constructRight2Left(final RuntimeRuleItem arg0, final BinaryTransformer transformer) {
+    public MultiDefault constructRight2Left(final RuntimeRuleItem arg0, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }

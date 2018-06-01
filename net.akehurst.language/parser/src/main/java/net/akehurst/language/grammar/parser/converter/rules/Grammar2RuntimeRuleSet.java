@@ -19,29 +19,30 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import net.akehurst.language.api.grammar.Rule;
+import net.akehurst.language.api.grammar.Terminal;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.Rule;
-import net.akehurst.language.ogl.semanticStructure.Terminal;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalAbstract;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class Grammar2RuntimeRuleSet implements BinaryRule<GrammarStructure, RuntimeRuleSet> {
+public class Grammar2RuntimeRuleSet implements BinaryRule<GrammarDefault, RuntimeRuleSet> {
 
     @Override
-    public boolean isValidForLeft2Right(final GrammarStructure arg0) {
+    public boolean isValidForLeft2Right(final GrammarDefault arg0) {
         return true;
     }
 
     @Override
-    public boolean isAMatch(final GrammarStructure left, final RuntimeRuleSet right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final GrammarDefault left, final RuntimeRuleSet right, final BinaryTransformer transformer) {
         return true;
     }
 
     @Override
-    public RuntimeRuleSet constructLeft2Right(final GrammarStructure left, final BinaryTransformer transformer) {
+    public RuntimeRuleSet constructLeft2Right(final GrammarDefault left, final BinaryTransformer transformer) {
         final Converter converter = (Converter) transformer;
         final int totalRuleNumber = left.getAllRule().size() + left.getAllTerminal().size() + 1000;
         final RuntimeRuleSet right = converter.getFactory().createRuntimeRuleSet(totalRuleNumber);
@@ -49,10 +50,10 @@ public class Grammar2RuntimeRuleSet implements BinaryRule<GrammarStructure, Runt
     }
 
     @Override
-    public void updateLeft2Right(final GrammarStructure left, final RuntimeRuleSet right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final GrammarDefault left, final RuntimeRuleSet right, final BinaryTransformer transformer) {
         final Converter converter = (Converter) transformer;
         final List<Rule> rules = left.getAllRule();
-        final List<Terminal> terminals = Arrays.asList(left.getAllTerminal().toArray(new Terminal[0]));
+        final List<Terminal> terminals = Arrays.asList(left.getAllTerminal().toArray(new TerminalAbstract[0]));
 
         final List<? extends RuntimeRule> runtimeRules = transformer.transformAllLeft2Right(Rule2RuntimeRule.class, rules);
         final List<? extends RuntimeRule> runtimeRules2 = transformer.transformAllLeft2Right(Terminal2RuntimeRule.class, terminals);
@@ -67,13 +68,13 @@ public class Grammar2RuntimeRuleSet implements BinaryRule<GrammarStructure, Runt
     }
 
     @Override
-    public void updateRight2Left(final GrammarStructure arg0, final RuntimeRuleSet arg1, final BinaryTransformer transformer) {
+    public void updateRight2Left(final GrammarDefault arg0, final RuntimeRuleSet arg1, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public GrammarStructure constructRight2Left(final RuntimeRuleSet arg0, final BinaryTransformer transformer) {
+    public GrammarDefault constructRight2Left(final RuntimeRuleSet arg0, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }

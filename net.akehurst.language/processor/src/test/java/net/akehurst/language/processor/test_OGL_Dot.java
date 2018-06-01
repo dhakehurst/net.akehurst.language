@@ -21,12 +21,12 @@ import java.io.InputStreamReader;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
+import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.parser.ParseTreeException;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
 
 public class test_OGL_Dot {
 
@@ -67,9 +67,9 @@ public class test_OGL_Dot {
 	SharedPackedParseTree processDot(final String ruleName, final String text) {
 		try {
 			final String grammarFile = "Dot.ogl";
-			final GrammarStructure grammar = this.processFile(grammarFile, GrammarStructure.class);
+			final GrammarDefault grammar = this.processFile(grammarFile, GrammarDefault.class);
 			Assert.assertNotNull(grammar);
-			final LanguageProcessor proc = new LanguageProcessor(grammar, null);
+			final LanguageProcessorDefault proc = new LanguageProcessorDefault(grammar, null);
 			final SharedPackedParseTree tree = proc.getParser().parse(ruleName, text);
 			return tree;
 		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | GrammarRuleNotFoundException e) {

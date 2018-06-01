@@ -3,14 +3,14 @@ package net.akehurst.language.grammar.parser.forrest;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.sppt.SPPTLeaf;
+import net.akehurst.language.api.sppt.SPPTLeaf;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.converter.rules.Grammar2RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
 
 public class test_ParseTreeBuilder {
 
@@ -20,9 +20,9 @@ public class test_ParseTreeBuilder {
 			final String text = "a";
 			final RuntimeRuleSetBuilder runtimeRules = new RuntimeRuleSetBuilder();
 
-			final GrammarBuilder gb = new GrammarBuilder(new Namespace("test"), "Test");
-			gb.rule("a").concatenation(new TerminalLiteral("a"));
-			final GrammarStructure grammar = gb.get();
+			final GrammarBuilderDefault gb = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+			gb.rule("a").concatenation(new TerminalLiteralDefault("a"));
+			final GrammarDefault grammar = gb.get();
 			final Converter c = new Converter(runtimeRules);
 			c.transformLeft2Right(Grammar2RuntimeRuleSet.class, grammar);
 

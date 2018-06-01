@@ -16,13 +16,13 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
-import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.grammar.Grammar;
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
-import net.akehurst.language.processor.LanguageProcessor;
+import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.api.grammar.Grammar;
+import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.parser.ParseTreeException;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.processor.LanguageProcessorDefault;
 import net.akehurst.language.processor.OGLanguageProcessor;
 
 @RunWith(Parameterized.class)
@@ -58,7 +58,7 @@ public class test_QueryParserInValid {
     @Parameter
     public Data data;
 
-    private LanguageProcessor processor;
+    private LanguageProcessorDefault processor;
 
     private String toString(final SharedPackedParseTree tree) {
         String res = tree.asString().replaceAll(System.lineSeparator(), " ");
@@ -72,7 +72,7 @@ public class test_QueryParserInValid {
             final OGLanguageProcessor oglProc = new OGLanguageProcessor();
             final InputStreamReader reader = new InputStreamReader(test_QueryParserInValid.class.getResourceAsStream("/vistraq/Query.ogl"));
             final Grammar grammar = oglProc.process(reader, "grammarDefinition", Grammar.class);
-            this.processor = new LanguageProcessor(grammar, null);
+            this.processor = new LanguageProcessorDefault(grammar, null);
         } catch (final ParseFailedException e) {
             Assert.fail("Parsing query grammar failed " + e.getLongestMatch());
         } catch (final UnableToAnalyseExeception e) {

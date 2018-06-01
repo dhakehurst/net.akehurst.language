@@ -12,11 +12,11 @@ import net.akehurst.language.grammar.parser.converter.rules.Grammar2RuntimeRuleS
 import net.akehurst.language.grammar.parser.forrest.Input3;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
 import net.akehurst.language.parse.graph.IGrowingNode.PreviousInfo;
 import net.akehurst.language.parser.sppf.Leaf;
 
@@ -30,7 +30,7 @@ public class Test_ParseGraph {
     @Test
     public void createStart() {
         final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
-        final RuntimeRule terminalRule = rules.createRuntimeRule(new TerminalLiteral("a"));
+        final RuntimeRule terminalRule = rules.createRuntimeRule(new TerminalLiteralDefault("a"));
 
         final Input3 input = new Input3(rules, "a");
         final IParseGraph graph = new ParseGraph(terminalRule, input);
@@ -43,7 +43,7 @@ public class Test_ParseGraph {
     @Test
     public void createLeaf_doesNotExist() {
         final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
-        final RuntimeRule terminalRule = rules.createRuntimeRule(new TerminalLiteral("a"));
+        final RuntimeRule terminalRule = rules.createRuntimeRule(new TerminalLiteralDefault("a"));
 
         final Input3 input = new Input3(rules, "a");
         final IParseGraph graph = new ParseGraph(terminalRule, input);
@@ -59,7 +59,7 @@ public class Test_ParseGraph {
     public void createLeaf_alreadyExists() {
         final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
 
-        final RuntimeRule terminalRule = rules.createRuntimeRule(new TerminalLiteral("a"));
+        final RuntimeRule terminalRule = rules.createRuntimeRule(new TerminalLiteralDefault("a"));
 
         final Input3 input = new Input3(rules, "a");
         final IParseGraph graph = new ParseGraph(terminalRule, input);
@@ -78,9 +78,9 @@ public class Test_ParseGraph {
     public void createWithFirstChild() {
 
         final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("A").concatenation(new TerminalLiteral("a"));
-        final GrammarStructure g = b.get();
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("A").concatenation(new TerminalLiteralDefault("a"));
+        final GrammarDefault g = b.get();
         final Converter c = new Converter(rules);
         c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
 
@@ -110,10 +110,10 @@ public class Test_ParseGraph {
     public void left_recursion() throws Exception {
 
         final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new TerminalLiteral("a"), new NonTerminal("S$group"));
-        b.rule("S$group").concatenation(new NonTerminal("S"), new TerminalLiteral("a"));
-        final GrammarStructure g = b.get();
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new TerminalLiteralDefault("a"), new NonTerminalDefault("S$group"));
+        b.rule("S$group").concatenation(new NonTerminalDefault("S"), new TerminalLiteralDefault("a"));
+        final GrammarDefault g = b.get();
         final Converter c = new Converter(rules);
         c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
 
@@ -145,10 +145,10 @@ public class Test_ParseGraph {
     public void empty_issues() {
         try {
             final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
-            final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-            b.rule("S").concatenation(new NonTerminal("B"), new NonTerminal("B"));
-            b.rule("B").multi(0, 1, new TerminalLiteral("b"));
-            final GrammarStructure g = b.get();
+            final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+            b.rule("S").concatenation(new NonTerminalDefault("B"), new NonTerminalDefault("B"));
+            b.rule("B").multi(0, 1, new TerminalLiteralDefault("b"));
+            final GrammarDefault g = b.get();
             final Converter c = new Converter(rules);
             c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
 

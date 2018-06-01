@@ -2,7 +2,7 @@ package net.akehurst.language.parser.sppf;
 
 import java.util.Objects;
 
-import net.akehurst.language.core.sppt.SPNodeIdentity;
+import net.akehurst.language.api.sppt.SPNodeIdentity;
 
 public class SPPTNodeIdentitySimple implements SPNodeIdentity {
 

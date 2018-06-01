@@ -19,17 +19,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import net.akehurst.language.core.grammar.Grammar;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTNode;
+import net.akehurst.language.api.grammar.Grammar;
+import net.akehurst.language.api.grammar.Rule;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTNode;
 import net.akehurst.language.ogl.semanticAnalyser.OglSemanicAnalyserRuleBased;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.Rule;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.RuleDefault;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class GrammarDefinitionBranch2Grammar implements BinaryRule<SPPTNode, GrammarStructure> {
+public class GrammarDefinitionBranch2Grammar implements BinaryRule<SPPTNode, GrammarDefault> {
 
     @Override
     public boolean isValidForLeft2Right(final SPPTNode left) {
@@ -37,41 +38,41 @@ public class GrammarDefinitionBranch2Grammar implements BinaryRule<SPPTNode, Gra
     }
 
     @Override
-    public boolean isValidForRight2Left(final GrammarStructure right) {
+    public boolean isValidForRight2Left(final GrammarDefault right) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public boolean isAMatch(final SPPTNode left, final GrammarStructure right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTNode left, final GrammarDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public GrammarStructure constructLeft2Right(final SPPTNode left, final BinaryTransformer transformer) {
+    public GrammarDefault constructLeft2Right(final SPPTNode left, final BinaryTransformer transformer) {
 
         final SPPTBranch namespaceBranch = (SPPTBranch) ((SPPTBranch) left).getChild(0);
         final SPPTBranch grammarBranch = (SPPTBranch) ((SPPTBranch) left).getChild(1);
         final SPPTBranch grammarNameBranch = (SPPTBranch) grammarBranch.getChild(1);
 
-        final Namespace namespace = transformer.transformLeft2Right(Node2Namespace.class, namespaceBranch);
+        final NamespaceDefault namespace = transformer.transformLeft2Right(Node2Namespace.class, namespaceBranch);
         final String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, grammarNameBranch);
 
-        final GrammarStructure right = new GrammarStructure(namespace, name);
+        final GrammarDefault right = new GrammarDefault(namespace, name);
 
         return right;
 
     }
 
     @Override
-    public SPPTBranch constructRight2Left(final GrammarStructure arg0, final BinaryTransformer arg1) {
+    public SPPTBranch constructRight2Left(final GrammarDefault arg0, final BinaryTransformer arg1) {
         // TODO Auto-generated method stub, handle extends !!
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final SPPTNode left, final GrammarStructure right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SPPTNode left, final GrammarDefault right, final BinaryTransformer transformer) {
 
         final SPPTBranch grammarBranch = (SPPTBranch) ((SPPTBranch) left).getChild(1);
         final SPPTBranch extendsBranch = (SPPTBranch) grammarBranch.getChild(2);
@@ -95,17 +96,17 @@ public class GrammarDefinitionBranch2Grammar implements BinaryRule<SPPTNode, Gra
             }
 
             final List<Grammar> extendedGrammars = ((OglSemanicAnalyserRuleBased) transformer).getGrammarLoader().resolve(extendsList.toArray(new String[0]));
-            final List<GrammarStructure> grammars = extendedGrammars.stream().map((e) -> (GrammarStructure) e).collect(Collectors.toList());
+            final List<GrammarDefault> grammars = extendedGrammars.stream().map((e) -> (GrammarDefault) e).collect(Collectors.toList());
             right.setExtends(grammars);
         }
 
-        final List<? extends Rule> rules = transformer.transformAllLeft2Right(AnyRuleNode2Rule.class, ruleBranches);
+        final List<? extends RuleDefault> rules = transformer.transformAllLeft2Right(AnyRuleNode2Rule.class, ruleBranches);
         right.setRule((List<Rule>) rules);
 
     }
 
     @Override
-    public void updateRight2Left(final SPPTNode arg0, final GrammarStructure arg1, final BinaryTransformer arg2) {
+    public void updateRight2Left(final SPPTNode arg0, final GrammarDefault arg1, final BinaryTransformer arg2) {
         // TODO Auto-generated method stub
 
     }

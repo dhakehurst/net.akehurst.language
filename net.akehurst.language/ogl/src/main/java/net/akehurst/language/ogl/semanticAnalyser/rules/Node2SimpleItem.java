@@ -15,13 +15,13 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.ogl.semanticStructure.SimpleItem;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.ogl.semanticStructure.SimpleItemAbstract;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class Node2SimpleItem extends AbstractNode2ConcatenationItem<SimpleItem> {
+public class Node2SimpleItem extends AbstractNode2ConcatenationItem<SimpleItemAbstract> {
 
     @Override
     public String getNodeName() {
@@ -29,35 +29,35 @@ public class Node2SimpleItem extends AbstractNode2ConcatenationItem<SimpleItem> 
     }
 
     @Override
-    public boolean isAMatch(final SPPTBranch left, final SimpleItem right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final SimpleItemAbstract right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public SimpleItem constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
+    public SimpleItemAbstract constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
 
         final SPPTNode itemNode = left.getChild(0);
 
-        final SimpleItem right = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, SimpleItem>>) (Class<?>) AbstractNode2TangibleItem.class, itemNode);
+        final SimpleItemAbstract right = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, SimpleItemAbstract>>) (Class<?>) AbstractNode2TangibleItem.class, itemNode);
         return right;
 
     }
 
     @Override
-    public SPPTBranch constructRight2Left(final SimpleItem right, final BinaryTransformer transformer) {
+    public SPPTBranch constructRight2Left(final SimpleItemAbstract right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final SPPTBranch left, final SimpleItem right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SPPTBranch left, final SimpleItemAbstract right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateRight2Left(final SPPTBranch left, final SimpleItem right, final BinaryTransformer transformer) {
+    public void updateRight2Left(final SPPTBranch left, final SimpleItemAbstract right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }

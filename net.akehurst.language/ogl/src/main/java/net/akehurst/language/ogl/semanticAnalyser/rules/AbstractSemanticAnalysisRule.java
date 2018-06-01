@@ -17,7 +17,7 @@ package net.akehurst.language.ogl.semanticAnalyser.rules;
 
 import java.util.Objects;
 
-import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTBranch;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 

@@ -3,7 +3,7 @@ package net.akehurst.language.processor;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.parser.CompletionItem;
+import net.akehurst.language.api.processor.CompletionItem;
 
 public class CompletionItemPattern implements CompletionItem {
 

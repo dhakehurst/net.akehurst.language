@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.ogl.semanticStructure.SimpleItem;
+import net.akehurst.language.ogl.semanticStructure.SimpleItemAbstract;
 
-abstract public class AbstractNode2TangibleItem<R extends SimpleItem> extends AbstractNode2ConcatenationItem<R> {
+abstract public class AbstractNode2TangibleItem<R extends SimpleItemAbstract> extends AbstractNode2ConcatenationItem<R> {
 
 }

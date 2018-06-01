@@ -22,42 +22,42 @@ import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
-import net.akehurst.language.ogl.semanticStructure.ChoicePriority;
-import net.akehurst.language.ogl.semanticStructure.Concatenation;
-import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
-import net.akehurst.language.ogl.semanticStructure.SimpleItem;
+import net.akehurst.language.ogl.semanticStructure.ChoicePriorityDefault;
+import net.akehurst.language.ogl.semanticStructure.ConcatenationDefault;
+import net.akehurst.language.ogl.semanticStructure.ConcatenationItemAbstract;
+import net.akehurst.language.ogl.semanticStructure.SimpleItemAbstract;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class ChoicePrioritySingleConcatenation2RuntimeRuleItem extends AbstractChoice2RuntimeRuleItem<ChoicePriority> {
+public class ChoicePrioritySingleConcatenation2RuntimeRuleItem extends AbstractChoice2RuntimeRuleItem<ChoicePriorityDefault> {
 
     @Override
-    public boolean isValidForLeft2Right(final ChoicePriority left) {
+    public boolean isValidForLeft2Right(final ChoicePriorityDefault left) {
         return 1 == left.getAlternative().size()
-                && (left.getAlternative().get(0).getItem().get(0) instanceof SimpleItem || 1 < left.getAlternative().get(0).getItem().size());
+                && (left.getAlternative().get(0).getItem().get(0) instanceof SimpleItemAbstract || 1 < left.getAlternative().get(0).getItem().size());
     }
 
     @Override
-    public boolean isAMatch(final ChoicePriority left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final ChoicePriorityDefault left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public RuntimeRuleItem constructLeft2Right(final ChoicePriority left, final BinaryTransformer transformer) {
+    public RuntimeRuleItem constructLeft2Right(final ChoicePriorityDefault left, final BinaryTransformer transformer) {
         final Converter converter = (Converter) transformer;
         final RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION);
         return right;
     }
 
     @Override
-    public void updateLeft2Right(final ChoicePriority left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final ChoicePriorityDefault left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
 
         List<RuntimeRule> rrAlternatives = new ArrayList<>();
         // we know there is only one alternative from isValid
-        final Concatenation concat = left.getAlternative().get(0);
+        final ConcatenationDefault concat = left.getAlternative().get(0);
         rrAlternatives = (List<RuntimeRule>) transformer.transformAllLeft2Right(
-                (Class<? extends BinaryRule<ConcatenationItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, concat.getItem());
+                (Class<? extends BinaryRule<ConcatenationItemAbstract, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, concat.getItem());
 
         final RuntimeRule[] items = rrAlternatives.toArray(new RuntimeRule[rrAlternatives.size()]);
         right.setItems(items);
@@ -65,13 +65,13 @@ public class ChoicePrioritySingleConcatenation2RuntimeRuleItem extends AbstractC
     }
 
     @Override
-    public void updateRight2Left(final ChoicePriority arg0, final RuntimeRuleItem arg1, final BinaryTransformer transformer) {
+    public void updateRight2Left(final ChoicePriorityDefault arg0, final RuntimeRuleItem arg1, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public ChoicePriority constructRight2Left(final RuntimeRuleItem arg0, final BinaryTransformer transformer) {
+    public ChoicePriorityDefault constructRight2Left(final RuntimeRuleItem arg0, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }

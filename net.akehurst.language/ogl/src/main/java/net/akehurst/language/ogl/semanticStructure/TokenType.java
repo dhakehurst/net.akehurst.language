@@ -17,7 +17,7 @@ package net.akehurst.language.ogl.semanticStructure;
 
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.lexicalAnalyser.ITokenType;
+import net.akehurst.language.api.lexicalAnalyser.ITokenType;
 
 public class TokenType implements ITokenType {
 	public TokenType(String identity, String pattern, boolean isRegex) {

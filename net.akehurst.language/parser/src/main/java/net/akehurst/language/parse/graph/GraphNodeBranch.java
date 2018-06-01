@@ -8,12 +8,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import net.akehurst.language.core.sppt.FixedList;
-import net.akehurst.language.core.sppt.SPNodeIdentity;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTLeaf;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
+import net.akehurst.language.api.sppt.FixedList;
+import net.akehurst.language.api.sppt.SPNodeIdentity;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTLeaf;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor;
 import net.akehurst.language.grammar.parser.ParseTreeToSingleLineTreeString;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.sppf.FixedLists;

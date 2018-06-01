@@ -22,12 +22,12 @@ import java.io.StringReader;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
+import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.parser.ParseTreeException;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
 
 public class OGLAnalyser_Test {
 
@@ -74,10 +74,10 @@ public class OGLAnalyser_Test {
 			grammarText += " a : 'a' ;" + System.lineSeparator();
 			grammarText += "}";
 
-			final GrammarStructure grammar = this.process(grammarText, GrammarStructure.class);
+			final GrammarDefault grammar = this.process(grammarText, GrammarDefault.class);
 			Assert.assertNotNull(grammar);
 
-			final LanguageProcessor proc = new LanguageProcessor(grammar, null);
+			final LanguageProcessorDefault proc = new LanguageProcessorDefault(grammar, null);
 
 			final SharedPackedParseTree tree = proc.getParser().parse("a", new StringReader("a"));
 			Assert.assertNotNull(tree);
@@ -97,10 +97,10 @@ public class OGLAnalyser_Test {
 			grammarText += " singleQuote : '\\'' ;" + System.lineSeparator();
 			grammarText += "}";
 
-			final GrammarStructure grammar = this.process(grammarText, GrammarStructure.class);
+			final GrammarDefault grammar = this.process(grammarText, GrammarDefault.class);
 			Assert.assertNotNull(grammar);
 
-			final LanguageProcessor proc = new LanguageProcessor(grammar, null);
+			final LanguageProcessorDefault proc = new LanguageProcessorDefault(grammar, null);
 
 			final SharedPackedParseTree tree = proc.getParser().parse("singleQuote", "'");
 			Assert.assertNotNull(tree);
@@ -120,10 +120,10 @@ public class OGLAnalyser_Test {
 		grammarText += " StringCharacter : \"[^\\x22\\\\]\" ;" + System.lineSeparator();
 		grammarText += "}";
 
-		final GrammarStructure grammar = this.process(grammarText, GrammarStructure.class);
+		final GrammarDefault grammar = this.process(grammarText, GrammarDefault.class);
 		Assert.assertNotNull(grammar);
 
-		final LanguageProcessor proc = new LanguageProcessor(grammar, null);
+		final LanguageProcessorDefault proc = new LanguageProcessorDefault(grammar, null);
 
 		final SharedPackedParseTree tree = proc.getParser().parse("StringCharacter", "a");
 		Assert.assertNotNull(tree);
@@ -141,10 +141,10 @@ public class OGLAnalyser_Test {
 		grammarText += " StringCharacter : \"[^\\x22\\\\]\" ;" + System.lineSeparator();
 		grammarText += "}";
 
-		final GrammarStructure grammar = this.process(grammarText, GrammarStructure.class);
+		final GrammarDefault grammar = this.process(grammarText, GrammarDefault.class);
 		Assert.assertNotNull(grammar);
 
-		final LanguageProcessor proc = new LanguageProcessor(grammar, null);
+		final LanguageProcessorDefault proc = new LanguageProcessorDefault(grammar, null);
 
 		final SharedPackedParseTree tree = proc.getParser().parse("StringLiteral", "\"abc\"");
 		Assert.assertNotNull(tree);

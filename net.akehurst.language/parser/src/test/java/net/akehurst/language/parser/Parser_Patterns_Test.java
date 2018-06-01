@@ -18,30 +18,30 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalPatternDefault;
 
 public class Parser_Patterns_Test extends AbstractParser_Test {
 
-	GrammarStructure as() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").concatenation(new NonTerminal("a"));
-		b.rule("a").concatenation(new TerminalPattern("[a]+"));
+	GrammarDefault as() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").concatenation(new NonTerminalDefault("a"));
+		b.rule("a").concatenation(new TerminalPatternDefault("[a]+"));
 		return b.get();
 	}
 
-	GrammarStructure asxas() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").concatenation(new NonTerminal("a"), new TerminalLiteral(":"), new NonTerminal("a"));
-		b.rule("a").concatenation(new TerminalPattern("[a]+"));
+	GrammarDefault asxas() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").concatenation(new NonTerminalDefault("a"), new TerminalLiteralDefault(":"), new NonTerminalDefault("a"));
+		b.rule("a").concatenation(new TerminalPatternDefault("[a]+"));
 		return b.get();
 	}
 
@@ -49,7 +49,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 	public void as_as_a() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as();
+		final GrammarDefault g = this.as();
 		final String goal = "as";
 		final String text = "a";
 
@@ -72,7 +72,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 	public void as_as_aa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as();
+		final GrammarDefault g = this.as();
 		final String goal = "as";
 		final String text = "aa";
 
@@ -95,7 +95,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 	public void as_as_aaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as();
+		final GrammarDefault g = this.as();
 		final String goal = "as";
 		final String text = "aaa";
 
@@ -118,7 +118,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 	public void asxas_as_a() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.asxas();
+		final GrammarDefault g = this.asxas();
 		final String goal = "as";
 		final String text = "a";
 
@@ -131,7 +131,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 	public void asxas_as_aa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.asxas();
+		final GrammarDefault g = this.asxas();
 		final String goal = "as";
 		final String text = "aa";
 
@@ -144,7 +144,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 	public void asxas_as_axa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.asxas();
+			final GrammarDefault g = this.asxas();
 			final String goal = "as";
 			final String text = "a:a";
 
@@ -165,7 +165,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 	public void asxas_as_aaxa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.asxas();
+			final GrammarDefault g = this.asxas();
 			final String goal = "as";
 			final String text = "aa:a";
 
@@ -186,7 +186,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 	public void asxas_as_axaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.asxas();
+		final GrammarDefault g = this.asxas();
 		final String goal = "as";
 		final String text = "a:aa";
 
@@ -204,7 +204,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 	public void asxas_as_aaaxaaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.asxas();
+		final GrammarDefault g = this.asxas();
 		final String goal = "as";
 		final String text = "aaa:aaa";
 
@@ -218,9 +218,9 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 
 	}
 
-	GrammarStructure chars() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("S").concatenation(new TerminalLiteral("'"), new TerminalPattern("[^'\\\\]"), new TerminalLiteral("'"));
+	GrammarDefault chars() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("S").concatenation(new TerminalLiteralDefault("'"), new TerminalPatternDefault("[^'\\\\]"), new TerminalLiteralDefault("'"));
 		return b.get();
 	}
 
@@ -228,7 +228,7 @@ public class Parser_Patterns_Test extends AbstractParser_Test {
 	public void chars_S_x() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.chars();
+		final GrammarDefault g = this.chars();
 		final String goal = "S";
 		final String text = "'x'";
 

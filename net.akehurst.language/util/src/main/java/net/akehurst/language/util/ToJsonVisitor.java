@@ -23,11 +23,11 @@ import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
-import net.akehurst.language.core.sppt.SPPTLeaf;
-import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTLeaf;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor;
 
 public class ToJsonVisitor implements SharedPackedParseTreeVisitor<JsonObject, JsonBuilderFactory, RuntimeException> {
 

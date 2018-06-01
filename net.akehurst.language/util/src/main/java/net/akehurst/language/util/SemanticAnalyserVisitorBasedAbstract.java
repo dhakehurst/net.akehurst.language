@@ -7,14 +7,14 @@ import java.util.List;
 import java.util.Map;
 
 import net.akehurst.holser.reflect.BetterMethodFinder;
-import net.akehurst.language.core.analyser.GrammarLoader;
-import net.akehurst.language.core.analyser.SemanticAnalyser;
-import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.sppt.SPPTLeaf;
-import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.analyser.GrammarLoader;
+import net.akehurst.language.api.analyser.SemanticAnalyser;
+import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTLeaf;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor;
 
 public abstract class SemanticAnalyserVisitorBasedAbstract implements SemanticAnalyser, SharedPackedParseTreeVisitor<Object, Object, UnableToAnalyseExeception> {
 

@@ -19,41 +19,41 @@ import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
-import net.akehurst.language.ogl.semanticStructure.SeparatedList;
-import net.akehurst.language.ogl.semanticStructure.TangibleItem;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.SeparatedListDefault;
+import net.akehurst.language.ogl.semanticStructure.TangibleItemAbstract;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class SeparatedList2RuntimeRuleItem implements BinaryRule<SeparatedList, RuntimeRuleItem> {
+public class SeparatedList2RuntimeRuleItem implements BinaryRule<SeparatedListDefault, RuntimeRuleItem> {
 
     @Override
-    public boolean isValidForLeft2Right(final SeparatedList left) {
+    public boolean isValidForLeft2Right(final SeparatedListDefault left) {
         return true;
     }
 
     @Override
-    public boolean isAMatch(final SeparatedList left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SeparatedListDefault left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public RuntimeRuleItem constructLeft2Right(final SeparatedList left, final BinaryTransformer transformer) {
+    public RuntimeRuleItem constructLeft2Right(final SeparatedListDefault left, final BinaryTransformer transformer) {
         final Converter converter = (Converter) transformer;
         final RuntimeRuleItem right = converter.getFactory().createRuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST);
         return right;
     }
 
     @Override
-    public void updateLeft2Right(final SeparatedList left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
-        final TangibleItem ti = left.getItem();
-        final TerminalLiteral sep = left.getSeparator();
+    public void updateLeft2Right(final SeparatedListDefault left, final RuntimeRuleItem right, final BinaryTransformer transformer) {
+        final TangibleItemAbstract ti = left.getItem();
+        final TerminalLiteralDefault sep = left.getSeparator();
 
         final RuntimeRule rr = transformer
-                .transformLeft2Right((Class<? extends BinaryRule<TangibleItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, ti);
+                .transformLeft2Right((Class<? extends BinaryRule<TangibleItemAbstract, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, ti);
         final RuntimeRule rrsep = transformer
-                .transformLeft2Right((Class<? extends BinaryRule<TangibleItem, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, sep);
+                .transformLeft2Right((Class<? extends BinaryRule<TangibleItemAbstract, RuntimeRule>>) (Class<?>) AbstractConcatinationItem2RuntimeRule.class, sep);
         final RuntimeRule[] items = new RuntimeRule[] { rr, rrsep };
 
         right.setItems(items);
@@ -63,13 +63,13 @@ public class SeparatedList2RuntimeRuleItem implements BinaryRule<SeparatedList, 
     }
 
     @Override
-    public void updateRight2Left(final SeparatedList arg0, final RuntimeRuleItem arg1, final BinaryTransformer transformer) {
+    public void updateRight2Left(final SeparatedListDefault arg0, final RuntimeRuleItem arg1, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public SeparatedList constructRight2Left(final RuntimeRuleItem arg0, final BinaryTransformer transformer) {
+    public SeparatedListDefault constructRight2Left(final RuntimeRuleItem arg0, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }

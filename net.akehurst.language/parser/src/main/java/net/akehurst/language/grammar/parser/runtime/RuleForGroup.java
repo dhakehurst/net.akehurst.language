@@ -1,21 +1,21 @@
 package net.akehurst.language.grammar.parser.runtime;
 
-import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.Rule;
+import net.akehurst.language.api.grammar.Grammar;
+import net.akehurst.language.ogl.semanticStructure.ChoiceAbstract;
+import net.akehurst.language.ogl.semanticStructure.RuleDefault;
 
-public class RuleForGroup extends Rule {
+public class RuleForGroup extends RuleDefault {
 
-	public RuleForGroup(final GrammarStructure grammar, final String name, final AbstractChoice choice) {
-		super(grammar, name);
-		this.choice = choice;
-	}
+    public RuleForGroup(final Grammar grammar, final String name, final ChoiceAbstract choice) {
+        super(grammar, name);
+        this.choice = choice;
+    }
 
-	private final AbstractChoice choice;
+    private final ChoiceAbstract choice;
 
-	@Override
-	public AbstractChoice getRhs() {
-		return this.choice;
-	}
+    @Override
+    public ChoiceAbstract getRhs() {
+        return this.choice;
+    }
 
 }

@@ -15,14 +15,14 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
-import net.akehurst.language.ogl.semanticStructure.Group;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.ogl.semanticStructure.ChoiceAbstract;
+import net.akehurst.language.ogl.semanticStructure.GroupDefault;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class Node2Group extends AbstractNode2TangibleItem<Group> {
+public class Node2Group extends AbstractNode2TangibleItem<GroupDefault> {
 
     @Override
     public String getNodeName() {
@@ -30,42 +30,42 @@ public class Node2Group extends AbstractNode2TangibleItem<Group> {
     }
 
     @Override
-    public boolean isValidForRight2Left(final Group right) {
+    public boolean isValidForRight2Left(final GroupDefault right) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public boolean isAMatch(final SPPTBranch left, final Group right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final GroupDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public Group constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
+    public GroupDefault constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
 
         final SPPTNode choiceNode = left.getChild(1);
-        final AbstractChoice choice = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class,
+        final ChoiceAbstract choice = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, ChoiceAbstract>>) (Class<?>) AbstractNode2Choice.class,
                 ((SPPTBranch) choiceNode).getChild(0));
-        final Group right = new Group(choice);
+        final GroupDefault right = new GroupDefault(choice);
         return right;
 
     }
 
     @Override
-    public SPPTBranch constructRight2Left(final Group right, final BinaryTransformer transformer) {
+    public SPPTBranch constructRight2Left(final GroupDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final SPPTBranch left, final Group right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SPPTBranch left, final GroupDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateRight2Left(final SPPTBranch left, final Group right, final BinaryTransformer transformer) {
+    public void updateRight2Left(final SPPTBranch left, final GroupDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }

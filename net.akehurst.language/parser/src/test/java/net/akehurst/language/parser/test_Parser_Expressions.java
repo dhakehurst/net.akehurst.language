@@ -18,26 +18,26 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalPatternDefault;
 
 public class test_Parser_Expressions extends AbstractParser_Test {
 
-    GrammarStructure expression_plus_multiply() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").concatenation(new NonTerminal("e"));
-        b.rule("e").priorityChoice(new NonTerminal("variable"), new NonTerminal("multiply"), new NonTerminal("plus"));
-        b.rule("plus").concatenation(new NonTerminal("e"), new TerminalLiteral("+"), new NonTerminal("e"));
-        b.rule("multiply").concatenation(new NonTerminal("e"), new TerminalLiteral("*"), new NonTerminal("e"));
-        b.rule("variable").concatenation(new TerminalLiteral("a"));
+    GrammarDefault expression_plus_multiply() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").concatenation(new NonTerminalDefault("e"));
+        b.rule("e").priorityChoice(new NonTerminalDefault("variable"), new NonTerminalDefault("multiply"), new NonTerminalDefault("plus"));
+        b.rule("plus").concatenation(new NonTerminalDefault("e"), new TerminalLiteralDefault("+"), new NonTerminalDefault("e"));
+        b.rule("multiply").concatenation(new NonTerminalDefault("e"), new TerminalLiteralDefault("*"), new NonTerminalDefault("e"));
+        b.rule("variable").concatenation(new TerminalLiteralDefault("a"));
 
         return b.get();
     }
@@ -46,7 +46,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
     public void emp_S_a() {
         // grammar, goal, input
         try {
-            final GrammarStructure g = this.expression_plus_multiply();
+            final GrammarDefault g = this.expression_plus_multiply();
             final String goal = "S";
             final String text = "a";
 
@@ -66,7 +66,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
     public void emp_S_apa() {
         // grammar, goal, input
         try {
-            final GrammarStructure g = this.expression_plus_multiply();
+            final GrammarDefault g = this.expression_plus_multiply();
             final String goal = "S";
             final String text = "a+a";
 
@@ -88,7 +88,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
     public void emp_S_ama() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.expression_plus_multiply();
+        final GrammarDefault g = this.expression_plus_multiply();
         final String goal = "S";
         final String text = "a*a";
 
@@ -107,7 +107,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
     public void emp_S_apama() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.expression_plus_multiply();
+        final GrammarDefault g = this.expression_plus_multiply();
         final String goal = "S";
         final String text = "a+a*a";
 
@@ -140,7 +140,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
     public void emp_S_amapa() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.expression_plus_multiply();
+        final GrammarDefault g = this.expression_plus_multiply();
         final String goal = "S";
         final String text = "a*a+a";
 
@@ -169,18 +169,18 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 
     }
 
-    GrammarStructure expression_if_then_else() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").concatenation(new NonTerminal("e"));
-        b.skip("WS").concatenation(new TerminalPattern("\\s+"));
-        b.rule("e").priorityChoice(new NonTerminal("variable"), new NonTerminal("multiply"), new NonTerminal("plus"), new NonTerminal("ifthenelse"),
-                new NonTerminal("ifthen"));
-        b.rule("ifthen").concatenation(new TerminalLiteral("if"), new NonTerminal("e"), new TerminalLiteral("then"), new NonTerminal("e"));
-        b.rule("ifthenelse").concatenation(new TerminalLiteral("if"), new NonTerminal("e"), new TerminalLiteral("then"), new NonTerminal("e"),
-                new TerminalLiteral("else"), new NonTerminal("e"));
-        b.rule("plus").concatenation(new NonTerminal("e"), new TerminalLiteral("+"), new NonTerminal("e"));
-        b.rule("multiply").concatenation(new NonTerminal("e"), new TerminalLiteral("*"), new NonTerminal("e"));
-        b.rule("variable").concatenation(new TerminalLiteral("a"));
+    GrammarDefault expression_if_then_else() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").concatenation(new NonTerminalDefault("e"));
+        b.skip("WS").concatenation(new TerminalPatternDefault("\\s+"));
+        b.rule("e").priorityChoice(new NonTerminalDefault("variable"), new NonTerminalDefault("multiply"), new NonTerminalDefault("plus"), new NonTerminalDefault("ifthenelse"),
+                new NonTerminalDefault("ifthen"));
+        b.rule("ifthen").concatenation(new TerminalLiteralDefault("if"), new NonTerminalDefault("e"), new TerminalLiteralDefault("then"), new NonTerminalDefault("e"));
+        b.rule("ifthenelse").concatenation(new TerminalLiteralDefault("if"), new NonTerminalDefault("e"), new TerminalLiteralDefault("then"), new NonTerminalDefault("e"),
+                new TerminalLiteralDefault("else"), new NonTerminalDefault("e"));
+        b.rule("plus").concatenation(new NonTerminalDefault("e"), new TerminalLiteralDefault("+"), new NonTerminalDefault("e"));
+        b.rule("multiply").concatenation(new NonTerminalDefault("e"), new TerminalLiteralDefault("*"), new NonTerminalDefault("e"));
+        b.rule("variable").concatenation(new TerminalLiteralDefault("a"));
 
         return b.get();
     }
@@ -189,7 +189,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
     public void eite_S_a() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.expression_if_then_else();
+        final GrammarDefault g = this.expression_if_then_else();
         final String goal = "S";
         final String text = "a";
 
@@ -207,7 +207,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
     public void eite_S_ifathenaelsea() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.expression_if_then_else();
+        final GrammarDefault g = this.expression_if_then_else();
         final String goal = "S";
         final String text = "if a then a else a";
 
@@ -228,7 +228,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
     @Test
     public void eite_S_ifathena() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.expression_if_then_else();
+        final GrammarDefault g = this.expression_if_then_else();
         final String goal = "S";
         final String text = "if a then a";
 
@@ -260,7 +260,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
     @Test
     public void eite_S_ifAthenAelseifAthenA() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.expression_if_then_else();
+        final GrammarDefault g = this.expression_if_then_else();
         final String goal = "S";
         final String text = "if a then a else if a then a";
 
@@ -293,26 +293,26 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 
     }
 
-    GrammarStructure statement_if_then_else() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").concatenation(new NonTerminal("statements"));
-        b.skip("WS").concatenation(new TerminalPattern("\\s+"));
-        b.rule("statements").multi(1, -1, new NonTerminal("statement"));
-        b.rule("statement").choice(new TerminalLiteral("return"), new NonTerminal("ifthenelse"), new NonTerminal("ifthen"));
-        b.rule("e").priorityChoice(new NonTerminal("variable"), new NonTerminal("multiply"), new NonTerminal("plus"));
-        b.rule("ifthen").concatenation(new TerminalLiteral("if"), new NonTerminal("e"), new TerminalLiteral("then"), new NonTerminal("statements"));
-        b.rule("ifthenelse").concatenation(new TerminalLiteral("if"), new NonTerminal("e"), new TerminalLiteral("then"), new NonTerminal("statements"),
-                new TerminalLiteral("else"), new NonTerminal("statements"));
-        b.rule("plus").concatenation(new NonTerminal("e"), new TerminalLiteral("+"), new NonTerminal("e"));
-        b.rule("multiply").concatenation(new NonTerminal("e"), new TerminalLiteral("*"), new NonTerminal("e"));
-        b.rule("variable").concatenation(new TerminalLiteral("a"));
+    GrammarDefault statement_if_then_else() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").concatenation(new NonTerminalDefault("statements"));
+        b.skip("WS").concatenation(new TerminalPatternDefault("\\s+"));
+        b.rule("statements").multi(1, -1, new NonTerminalDefault("statement"));
+        b.rule("statement").choice(new TerminalLiteralDefault("return"), new NonTerminalDefault("ifthenelse"), new NonTerminalDefault("ifthen"));
+        b.rule("e").priorityChoice(new NonTerminalDefault("variable"), new NonTerminalDefault("multiply"), new NonTerminalDefault("plus"));
+        b.rule("ifthen").concatenation(new TerminalLiteralDefault("if"), new NonTerminalDefault("e"), new TerminalLiteralDefault("then"), new NonTerminalDefault("statements"));
+        b.rule("ifthenelse").concatenation(new TerminalLiteralDefault("if"), new NonTerminalDefault("e"), new TerminalLiteralDefault("then"), new NonTerminalDefault("statements"),
+                new TerminalLiteralDefault("else"), new NonTerminalDefault("statements"));
+        b.rule("plus").concatenation(new NonTerminalDefault("e"), new TerminalLiteralDefault("+"), new NonTerminalDefault("e"));
+        b.rule("multiply").concatenation(new NonTerminalDefault("e"), new TerminalLiteralDefault("*"), new NonTerminalDefault("e"));
+        b.rule("variable").concatenation(new TerminalLiteralDefault("a"));
 
         return b.get();
     }
 
     public void t() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.expression_if_then_else();
+        final GrammarDefault g = this.expression_if_then_else();
         final String goal = "S";
         // final String text = "if(i==1) return 1; else if (false) return 2;";
         final String text = "if(i==1) return 1; else if (false) return 2;";
@@ -322,47 +322,47 @@ public class test_Parser_Expressions extends AbstractParser_Test {
 
     }
 
-    GrammarStructure javaPrimary() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.skip("WS").concatenation(new TerminalPattern("\\s+"));
-        b.rule("block").concatenation(new TerminalLiteral("{"), new NonTerminal("blockStatements"), new TerminalLiteral("}"));
-        b.rule("blockStatements").multi(0, -1, new NonTerminal("blockStatement"));
-        b.rule("blockStatement").choice(new NonTerminal("block"), new NonTerminal("emptyStatement"), new NonTerminal("expressionStatement"));
-        b.rule("emptyStatement").choice(new TerminalLiteral(";"));
-        b.rule("expressionStatement").concatenation(new NonTerminal("expression"), new TerminalLiteral(";"));
-        b.rule("statement").choice(new NonTerminal("block"), new NonTerminal("block"));
-        b.rule("postIncrementExpression").concatenation(new NonTerminal("postfixExpression"), new TerminalLiteral("++"));
-        b.rule("postfixExpression").concatenation(new NonTerminal("postfixExpression_group1"), new NonTerminal("postfixExpression_group2"));
-        b.rule("postfixExpression_group1").choice(new NonTerminal("primary"), new NonTerminal("expressionName"));
-        b.rule("postfixExpression_group2").multi(0, -1, new TerminalLiteral("++"));
-        b.rule("primary").choice(new NonTerminal("literal"), new NonTerminal("typeNameClass"), new NonTerminal("unannPrimitiveTypeClass"),
-                new NonTerminal("voidClass"), new TerminalLiteral("this"), new NonTerminal("typeNameThis"), new NonTerminal("parenthExpr"));
-        b.rule("voidClass").concatenation(new TerminalLiteral("void"), new TerminalLiteral("."), new TerminalLiteral("class"));
-        b.rule("typeNameClass").concatenation(new NonTerminal("typeName"), new NonTerminal("multiBracketPairs"), new TerminalLiteral("."),
-                new TerminalLiteral("class"));
-        b.rule("unannPrimitiveTypeClass").concatenation(new NonTerminal("unannPrimitiveType"), new NonTerminal("multiBracketPairs"), new TerminalLiteral("."),
-                new TerminalLiteral("class"));
-        b.rule("multiBracketPairs").multi(0, -1, new NonTerminal("bracketPair"));
-        b.rule("bracketPair").concatenation(new TerminalLiteral("["), new TerminalLiteral("]"));
-        b.rule("typeNameThis").concatenation(new NonTerminal("typeName"), new TerminalLiteral("."), new TerminalLiteral("this"));
-        b.rule("parenthExpr").concatenation(new TerminalLiteral("("), new NonTerminal("expression"), new TerminalLiteral(")"));
+    GrammarDefault javaPrimary() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.skip("WS").concatenation(new TerminalPatternDefault("\\s+"));
+        b.rule("block").concatenation(new TerminalLiteralDefault("{"), new NonTerminalDefault("blockStatements"), new TerminalLiteralDefault("}"));
+        b.rule("blockStatements").multi(0, -1, new NonTerminalDefault("blockStatement"));
+        b.rule("blockStatement").choice(new NonTerminalDefault("block"), new NonTerminalDefault("emptyStatement"), new NonTerminalDefault("expressionStatement"));
+        b.rule("emptyStatement").choice(new TerminalLiteralDefault(";"));
+        b.rule("expressionStatement").concatenation(new NonTerminalDefault("expression"), new TerminalLiteralDefault(";"));
+        b.rule("statement").choice(new NonTerminalDefault("block"), new NonTerminalDefault("block"));
+        b.rule("postIncrementExpression").concatenation(new NonTerminalDefault("postfixExpression"), new TerminalLiteralDefault("++"));
+        b.rule("postfixExpression").concatenation(new NonTerminalDefault("postfixExpression_group1"), new NonTerminalDefault("postfixExpression_group2"));
+        b.rule("postfixExpression_group1").choice(new NonTerminalDefault("primary"), new NonTerminalDefault("expressionName"));
+        b.rule("postfixExpression_group2").multi(0, -1, new TerminalLiteralDefault("++"));
+        b.rule("primary").choice(new NonTerminalDefault("literal"), new NonTerminalDefault("typeNameClass"), new NonTerminalDefault("unannPrimitiveTypeClass"),
+                new NonTerminalDefault("voidClass"), new TerminalLiteralDefault("this"), new NonTerminalDefault("typeNameThis"), new NonTerminalDefault("parenthExpr"));
+        b.rule("voidClass").concatenation(new TerminalLiteralDefault("void"), new TerminalLiteralDefault("."), new TerminalLiteralDefault("class"));
+        b.rule("typeNameClass").concatenation(new NonTerminalDefault("typeName"), new NonTerminalDefault("multiBracketPairs"), new TerminalLiteralDefault("."),
+                new TerminalLiteralDefault("class"));
+        b.rule("unannPrimitiveTypeClass").concatenation(new NonTerminalDefault("unannPrimitiveType"), new NonTerminalDefault("multiBracketPairs"), new TerminalLiteralDefault("."),
+                new TerminalLiteralDefault("class"));
+        b.rule("multiBracketPairs").multi(0, -1, new NonTerminalDefault("bracketPair"));
+        b.rule("bracketPair").concatenation(new TerminalLiteralDefault("["), new TerminalLiteralDefault("]"));
+        b.rule("typeNameThis").concatenation(new NonTerminalDefault("typeName"), new TerminalLiteralDefault("."), new TerminalLiteralDefault("this"));
+        b.rule("parenthExpr").concatenation(new TerminalLiteralDefault("("), new NonTerminalDefault("expression"), new TerminalLiteralDefault(")"));
 
-        b.rule("expression").choice(new NonTerminal("postfixExpression"));
+        b.rule("expression").choice(new NonTerminalDefault("postfixExpression"));
 
-        b.rule("expressionName").priorityChoice(new NonTerminal("Identifier"), new NonTerminal("ambiguousName"));
-        b.rule("ambiguousName").choice(new NonTerminal("Identifier"), new NonTerminal("ambiguousName_choice2"));
-        b.rule("ambiguousName_choice2").concatenation(new NonTerminal("ambiguousName"), new TerminalLiteral("."), new NonTerminal("Identifier"));
-        b.rule("Identifier").choice(new TerminalPattern("[a-zA-Z_][a-zA-Z0-9_]*"));
-        b.rule("literal").choice(new TerminalLiteral("1"));
-        b.rule("typeName").choice(new NonTerminal("Identifier"));
-        b.rule("unannPrimitiveType").choice(new TerminalLiteral("int"), new TerminalLiteral("float"), new TerminalLiteral("boolean"));
+        b.rule("expressionName").priorityChoice(new NonTerminalDefault("Identifier"), new NonTerminalDefault("ambiguousName"));
+        b.rule("ambiguousName").choice(new NonTerminalDefault("Identifier"), new NonTerminalDefault("ambiguousName_choice2"));
+        b.rule("ambiguousName_choice2").concatenation(new NonTerminalDefault("ambiguousName"), new TerminalLiteralDefault("."), new NonTerminalDefault("Identifier"));
+        b.rule("Identifier").choice(new TerminalPatternDefault("[a-zA-Z_][a-zA-Z0-9_]*"));
+        b.rule("literal").choice(new TerminalLiteralDefault("1"));
+        b.rule("typeName").choice(new NonTerminalDefault("Identifier"));
+        b.rule("unannPrimitiveType").choice(new TerminalLiteralDefault("int"), new TerminalLiteralDefault("float"), new TerminalLiteralDefault("boolean"));
         return b.get();
     }
 
     @Test
     public void postIncrementExpression() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.javaPrimary();
+        final GrammarDefault g = this.javaPrimary();
         final String goal = "postIncrementExpression";
         final String text = "i++";
 
@@ -390,7 +390,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
     @Test
     public void primary_arrayClass() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.javaPrimary();
+        final GrammarDefault g = this.javaPrimary();
         final String goal = "primary";
         final String text = "MyClass[].class";
 
@@ -419,7 +419,7 @@ public class test_Parser_Expressions extends AbstractParser_Test {
     @Test
     public void blockStatement() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.javaPrimary();
+        final GrammarDefault g = this.javaPrimary();
         final String goal = "blockStatement";
         final String text = "i++;";
 

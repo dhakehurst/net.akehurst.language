@@ -1,10 +1,10 @@
 package net.akehurst.language.grammar.parser;
 
-import net.akehurst.language.core.sppt.SPPTLeaf;
-import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTLeaf;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor;
 
 public class ParseTreeToSingleLineTreeString implements SharedPackedParseTreeVisitor<String, String, RuntimeException> {
 

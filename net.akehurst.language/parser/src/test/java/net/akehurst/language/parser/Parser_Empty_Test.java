@@ -18,19 +18,19 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
 
 public class Parser_Empty_Test extends AbstractParser_Test {
 
-	GrammarStructure empty() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+	GrammarDefault empty() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
 		b.rule("S").choice();
 		return b.get();
 	}
@@ -39,7 +39,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 	public void empty_S_empty() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.empty();
+		final GrammarDefault g = this.empty();
 		final String goal = "S";
 		final String text = "";
 
@@ -59,7 +59,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 	public void empty_S_a() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.empty();
+		final GrammarDefault g = this.empty();
 		final String goal = "S";
 		final String text = "a";
 
@@ -68,9 +68,9 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 
 	}
 
-	GrammarStructure multi0m1() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("S").multi(0, -1, new TerminalLiteral("a"));
+	GrammarDefault multi0m1() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("S").multi(0, -1, new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
@@ -78,7 +78,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 	public void multi0_S_empty() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.multi0m1();
+		final GrammarDefault g = this.multi0m1();
 		final String goal = "S";
 		final String text = "";
 
@@ -99,7 +99,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 	public void multi0_S_a() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.multi0m1();
+		final GrammarDefault g = this.multi0m1();
 		final String goal = "S";
 		final String text = "a";
 
@@ -116,11 +116,11 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 
 	}
 
-	GrammarStructure aeas() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("S").concatenation(new NonTerminal("ae"), new NonTerminal("as"));
-		b.rule("ae").multi(0, 1, new TerminalLiteral("a"));
-		b.rule("as").multi(0, -1, new TerminalLiteral("a"));
+	GrammarDefault aeas() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("S").concatenation(new NonTerminalDefault("ae"), new NonTerminalDefault("as"));
+		b.rule("ae").multi(0, 1, new TerminalLiteralDefault("a"));
+		b.rule("as").multi(0, -1, new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
@@ -128,7 +128,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 	public void aas_S_empty() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.aeas();
+		final GrammarDefault g = this.aeas();
 		final String goal = "S";
 		final String text = "a";
 

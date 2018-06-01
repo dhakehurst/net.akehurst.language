@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.parser.sppf;
 
-import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
+import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class EmptyLeaf extends Leaf {

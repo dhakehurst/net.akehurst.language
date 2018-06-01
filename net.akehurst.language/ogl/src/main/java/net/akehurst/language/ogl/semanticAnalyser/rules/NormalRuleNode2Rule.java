@@ -15,15 +15,15 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.Rule;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.ogl.semanticStructure.ChoiceAbstract;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.RuleDefault;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class NormalRuleNode2Rule implements BinaryRule<SPPTNode, Rule> {
+public class NormalRuleNode2Rule implements BinaryRule<SPPTNode, RuleDefault> {
 
     @Override
     public boolean isValidForLeft2Right(final SPPTNode left) {
@@ -31,42 +31,42 @@ public class NormalRuleNode2Rule implements BinaryRule<SPPTNode, Rule> {
     }
 
     @Override
-    public boolean isValidForRight2Left(final Rule right) {
+    public boolean isValidForRight2Left(final RuleDefault right) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public boolean isAMatch(final SPPTNode left, final Rule right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTNode left, final RuleDefault right, final BinaryTransformer transformer) {
         return true;
     }
 
     @Override
-    public Rule constructLeft2Right(final SPPTNode left, final BinaryTransformer transformer) {
+    public RuleDefault constructLeft2Right(final SPPTNode left, final BinaryTransformer transformer) {
         final SPPTNode grammarNode = left.getParent().getParent().getParent().getParent();
-        final GrammarStructure grammar = transformer.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, grammarNode);
+        final GrammarDefault grammar = transformer.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, grammarNode);
         final String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, ((SPPTBranch) left).getChild(0));
-        final Rule right = new Rule(grammar, name);
+        final RuleDefault right = new RuleDefault(grammar, name);
         return right;
     }
 
     @Override
-    public SPPTNode constructRight2Left(final Rule right, final BinaryTransformer transformer) {
+    public SPPTNode constructRight2Left(final RuleDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final SPPTNode left, final Rule right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SPPTNode left, final RuleDefault right, final BinaryTransformer transformer) {
         final SPPTNode rhsNode = ((SPPTBranch) left).getChild(2);
         final SPPTNode item = ((SPPTBranch) rhsNode).getChild(0);
-        final AbstractChoice ruleItem = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, AbstractChoice>>) (Class<?>) AbstractNode2Choice.class,
+        final ChoiceAbstract ruleItem = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, ChoiceAbstract>>) (Class<?>) AbstractNode2Choice.class,
                 item);
         right.setRhs(ruleItem);
     }
 
     @Override
-    public void updateRight2Left(final SPPTNode left, final Rule right, final BinaryTransformer transformer) {
+    public void updateRight2Left(final SPPTNode left, final RuleDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }

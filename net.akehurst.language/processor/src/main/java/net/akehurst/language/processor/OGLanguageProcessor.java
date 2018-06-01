@@ -23,13 +23,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.akehurst.language.core.analyser.GrammarLoader;
-import net.akehurst.language.core.grammar.Grammar;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.analyser.GrammarLoader;
+import net.akehurst.language.api.grammar.Grammar;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.ogl.grammar.OGLGrammar;
 import net.akehurst.language.ogl.semanticAnalyser.OglSemanicAnalyserRuleBased;
 
-public class OGLanguageProcessor extends LanguageProcessor {
+public class OGLanguageProcessor extends LanguageProcessorDefault {
 
 	public OGLanguageProcessor() {
 		super(new OGLGrammar(), new OglSemanicAnalyserRuleBased());

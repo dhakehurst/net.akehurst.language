@@ -18,15 +18,15 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalPatternDefault;
 
 public class test_Special extends AbstractParser_Test {
     /**
@@ -35,13 +35,13 @@ public class test_Special extends AbstractParser_Test {
      * B : 'b' ? ;
      * </code>
      */
-    GrammarStructure S() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+    GrammarDefault S() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
         // b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"));
-        b.rule("S_group1").concatenation(new TerminalLiteral("a"), new NonTerminal("S"), new NonTerminal("B"), new NonTerminal("B"));
-        b.rule("S").choice(new NonTerminal("S_group1"), new TerminalLiteral("a"));
+        b.rule("S_group1").concatenation(new TerminalLiteralDefault("a"), new NonTerminalDefault("S"), new NonTerminalDefault("B"), new NonTerminalDefault("B"));
+        b.rule("S").choice(new NonTerminalDefault("S_group1"), new TerminalLiteralDefault("a"));
         // b.rule("B").choice(new NonTerminal("B1"), new NonTerminal("B2"));
-        b.rule("B").multi(0, 1, new TerminalLiteral("b"));
+        b.rule("B").multi(0, 1, new TerminalLiteralDefault("b"));
         return b.get();
     }
 
@@ -49,7 +49,7 @@ public class test_Special extends AbstractParser_Test {
     public void S_S_aab() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.S();
+        final GrammarDefault g = this.S();
         final String goal = "S";
         final String text = "aab";
 
@@ -86,10 +86,10 @@ public class test_Special extends AbstractParser_Test {
      * S : S S | 'a' ;
      * </code>
      */
-    GrammarStructure S2() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("S1"), new TerminalLiteral("a"));
-        b.rule("S1").concatenation(new NonTerminal("S"), new NonTerminal("S"));
+    GrammarDefault S2() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("S1"), new TerminalLiteralDefault("a"));
+        b.rule("S1").concatenation(new NonTerminalDefault("S"), new NonTerminalDefault("S"));
         return b.get();
     }
 
@@ -97,7 +97,7 @@ public class test_Special extends AbstractParser_Test {
     public void S2_S_aaa() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.S2();
+        final GrammarDefault g = this.S2();
         final String goal = "S";
         final String text = "aaa";
 
@@ -139,11 +139,11 @@ public class test_Special extends AbstractParser_Test {
      * S : S S S | S S | 'a' ;
      * </code>
      */
-    GrammarStructure S3() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"), new TerminalLiteral("a"));
-        b.rule("S1").concatenation(new NonTerminal("S"), new NonTerminal("S"), new NonTerminal("S"));
-        b.rule("S2").concatenation(new NonTerminal("S"), new NonTerminal("S"));
+    GrammarDefault S3() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("S1"), new NonTerminalDefault("S2"), new TerminalLiteralDefault("a"));
+        b.rule("S1").concatenation(new NonTerminalDefault("S"), new NonTerminalDefault("S"), new NonTerminalDefault("S"));
+        b.rule("S2").concatenation(new NonTerminalDefault("S"), new NonTerminalDefault("S"));
         return b.get();
     }
 
@@ -151,7 +151,7 @@ public class test_Special extends AbstractParser_Test {
     public void S3_S_aaa() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.S3();
+        final GrammarDefault g = this.S3();
         final String goal = "S";
         final String text = "aaa";
 
@@ -200,29 +200,29 @@ public class test_Special extends AbstractParser_Test {
 
     }
 
-    GrammarStructure parametersG() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+    GrammarDefault parametersG() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
 
-        b.rule("S").priorityChoice(new NonTerminal("fpfps"), new NonTerminal("rpfps"));
-        b.rule("fpfps").concatenation(new NonTerminal("fp"), new NonTerminal("fpList1"));
-        b.rule("rpfps").concatenation(new NonTerminal("rp"), new NonTerminal("fpList2"));
-        b.rule("fpList1").multi(0, -1, new NonTerminal("cmrFp1"));
-        b.rule("cmrFp1").concatenation(new TerminalLiteral(","), new NonTerminal("fp"));
-        b.rule("fpList2").multi(0, -1, new NonTerminal("cmrFp2"));
-        b.rule("cmrFp2").concatenation(new TerminalLiteral(","), new NonTerminal("fp"));
-        b.rule("fp").concatenation(new NonTerminal("vms"), new NonTerminal("unannType"));
-        b.rule("rp").concatenation(new NonTerminal("anns"), new NonTerminal("unannType"), new TerminalLiteral("this"));
-        b.rule("unannType").choice(new NonTerminal("unannReferenceType"));
-        b.rule("unannReferenceType").choice(new NonTerminal("unannClassOrInterfaceType"));
-        b.rule("unannClassOrInterfaceType").choice(new NonTerminal("unannClassType_lfno_unannClassOrInterfaceType"));
-        b.rule("unannClassType_lfno_unannClassOrInterfaceType").concatenation(new NonTerminal("Id"), new NonTerminal("typeArgs"));
-        b.rule("vms").multi(0, -1, new NonTerminal("vm"));
-        b.rule("vm").choice(new TerminalLiteral("final"), new NonTerminal("ann"));
-        b.rule("anns").multi(0, -1, new NonTerminal("ann"));
-        b.rule("ann").choice(new TerminalLiteral("@"), new NonTerminal("Id"));
-        b.rule("typeArgs").multi(0, 1, new NonTerminal("typeArgList"));
-        b.rule("typeArgList").concatenation(new TerminalLiteral("<"), new TerminalLiteral(">"));
-        b.rule("Id").choice(new TerminalLiteral("a"));
+        b.rule("S").priorityChoice(new NonTerminalDefault("fpfps"), new NonTerminalDefault("rpfps"));
+        b.rule("fpfps").concatenation(new NonTerminalDefault("fp"), new NonTerminalDefault("fpList1"));
+        b.rule("rpfps").concatenation(new NonTerminalDefault("rp"), new NonTerminalDefault("fpList2"));
+        b.rule("fpList1").multi(0, -1, new NonTerminalDefault("cmrFp1"));
+        b.rule("cmrFp1").concatenation(new TerminalLiteralDefault(","), new NonTerminalDefault("fp"));
+        b.rule("fpList2").multi(0, -1, new NonTerminalDefault("cmrFp2"));
+        b.rule("cmrFp2").concatenation(new TerminalLiteralDefault(","), new NonTerminalDefault("fp"));
+        b.rule("fp").concatenation(new NonTerminalDefault("vms"), new NonTerminalDefault("unannType"));
+        b.rule("rp").concatenation(new NonTerminalDefault("anns"), new NonTerminalDefault("unannType"), new TerminalLiteralDefault("this"));
+        b.rule("unannType").choice(new NonTerminalDefault("unannReferenceType"));
+        b.rule("unannReferenceType").choice(new NonTerminalDefault("unannClassOrInterfaceType"));
+        b.rule("unannClassOrInterfaceType").choice(new NonTerminalDefault("unannClassType_lfno_unannClassOrInterfaceType"));
+        b.rule("unannClassType_lfno_unannClassOrInterfaceType").concatenation(new NonTerminalDefault("Id"), new NonTerminalDefault("typeArgs"));
+        b.rule("vms").multi(0, -1, new NonTerminalDefault("vm"));
+        b.rule("vm").choice(new TerminalLiteralDefault("final"), new NonTerminalDefault("ann"));
+        b.rule("anns").multi(0, -1, new NonTerminalDefault("ann"));
+        b.rule("ann").choice(new TerminalLiteralDefault("@"), new NonTerminalDefault("Id"));
+        b.rule("typeArgs").multi(0, 1, new NonTerminalDefault("typeArgList"));
+        b.rule("typeArgList").concatenation(new TerminalLiteralDefault("<"), new TerminalLiteralDefault(">"));
+        b.rule("Id").choice(new TerminalLiteralDefault("a"));
 
         return b.get();
     }
@@ -233,7 +233,7 @@ public class test_Special extends AbstractParser_Test {
         // the fp and rp nodes duplicate the parsing, we only want to do it once
         // grammar, goal, input
 
-        final GrammarStructure g = this.parametersG();
+        final GrammarDefault g = this.parametersG();
         final String goal = "S";
         final String text = "a";
 
@@ -278,29 +278,29 @@ public class test_Special extends AbstractParser_Test {
     // v = 'saw' | ;
     // p = 'in' | 'with' ;
     // det = 'a' | 'the' ;
-    GrammarStructure tomita() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.skip("WS").concatenation(new TerminalPattern("\\s+"));
-        b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"));
-        b.rule("S1").concatenation(new NonTerminal("NP"), new NonTerminal("VP"));
-        b.rule("S2").concatenation(new NonTerminal("S"), new NonTerminal("PP"));
-        b.rule("NP").choice(new NonTerminal("NP1"), new NonTerminal("NP2"), new NonTerminal("NP3"));
-        b.rule("NP1").choice(new NonTerminal("n"));
-        b.rule("NP2").concatenation(new NonTerminal("det"), new NonTerminal("n"));
-        b.rule("NP3").concatenation(new NonTerminal("NP"), new NonTerminal("PP"));
-        b.rule("PP").concatenation(new NonTerminal("p"), new NonTerminal("NP"));
-        b.rule("VP").concatenation(new NonTerminal("v"), new NonTerminal("NP"));
-        b.rule("n").choice(new TerminalLiteral("I"), new TerminalLiteral("man"), new TerminalLiteral("telescope"), new TerminalLiteral("park"));
-        b.rule("v").choice(new TerminalLiteral("saw"));
-        b.rule("p").choice(new TerminalLiteral("in"), new TerminalLiteral("with"));
-        b.rule("det").choice(new TerminalLiteral("a"), new TerminalLiteral("the"));
+    GrammarDefault tomita() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.skip("WS").concatenation(new TerminalPatternDefault("\\s+"));
+        b.rule("S").choice(new NonTerminalDefault("S1"), new NonTerminalDefault("S2"));
+        b.rule("S1").concatenation(new NonTerminalDefault("NP"), new NonTerminalDefault("VP"));
+        b.rule("S2").concatenation(new NonTerminalDefault("S"), new NonTerminalDefault("PP"));
+        b.rule("NP").choice(new NonTerminalDefault("NP1"), new NonTerminalDefault("NP2"), new NonTerminalDefault("NP3"));
+        b.rule("NP1").choice(new NonTerminalDefault("n"));
+        b.rule("NP2").concatenation(new NonTerminalDefault("det"), new NonTerminalDefault("n"));
+        b.rule("NP3").concatenation(new NonTerminalDefault("NP"), new NonTerminalDefault("PP"));
+        b.rule("PP").concatenation(new NonTerminalDefault("p"), new NonTerminalDefault("NP"));
+        b.rule("VP").concatenation(new NonTerminalDefault("v"), new NonTerminalDefault("NP"));
+        b.rule("n").choice(new TerminalLiteralDefault("I"), new TerminalLiteralDefault("man"), new TerminalLiteralDefault("telescope"), new TerminalLiteralDefault("park"));
+        b.rule("v").choice(new TerminalLiteralDefault("saw"));
+        b.rule("p").choice(new TerminalLiteralDefault("in"), new TerminalLiteralDefault("with"));
+        b.rule("det").choice(new TerminalLiteralDefault("a"), new TerminalLiteralDefault("the"));
         return b.get();
     }
 
     @Test
     public void tomita_S_1() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.tomita();
+        final GrammarDefault g = this.tomita();
         final String goal = "S";
         final String text = "I saw a man";
 
@@ -329,7 +329,7 @@ public class test_Special extends AbstractParser_Test {
     @Test
     public void tomita_S_2() throws ParseFailedException {
         // grammar, goal, input
-        final GrammarStructure g = this.tomita();
+        final GrammarDefault g = this.tomita();
         final String goal = "S";
         final String text = "I saw a man in the park";
 
@@ -401,7 +401,7 @@ public class test_Special extends AbstractParser_Test {
     public void tomita_S_sentence() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.tomita();
+        final GrammarDefault g = this.tomita();
         final String goal = "S";
         final String text = "I saw a man in the park with a telescope";
 

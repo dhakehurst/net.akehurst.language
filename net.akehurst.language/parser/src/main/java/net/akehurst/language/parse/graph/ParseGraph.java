@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import net.akehurst.language.core.sppt.FixedList;
-import net.akehurst.language.core.sppt.SPPTNode;
+import net.akehurst.language.api.sppt.FixedList;
+import net.akehurst.language.api.sppt.SPPTNode;
 import net.akehurst.language.grammar.parser.log.Log;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;

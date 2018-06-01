@@ -15,11 +15,11 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class Node2NonTerminal extends AbstractNode2TangibleItem<NonTerminal> {
+public class Node2NonTerminal extends AbstractNode2TangibleItem<NonTerminalDefault> {
 
     @Override
     public String getNodeName() {
@@ -27,43 +27,43 @@ public class Node2NonTerminal extends AbstractNode2TangibleItem<NonTerminal> {
     }
 
     @Override
-    public boolean isValidForRight2Left(final NonTerminal right) {
+    public boolean isValidForRight2Left(final NonTerminalDefault right) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public boolean isAMatch(final SPPTBranch left, final NonTerminal right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final NonTerminalDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public NonTerminal constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
+    public NonTerminalDefault constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
 
         // final INode ruleOwner = left.getParent();
 
         final String referencedRuleName = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, left.getChild(0));
         // final Rule owner = transformer.transformLeft2Right(NormalRuleNode2Rule.class, left);
         // final List<Integer> index = new ArrayList<>();
-        final NonTerminal right = new NonTerminal(referencedRuleName);// , owner, index);
+        final NonTerminalDefault right = new NonTerminalDefault(referencedRuleName);// , owner, index);
         return right;
 
     }
 
     @Override
-    public SPPTBranch constructRight2Left(final NonTerminal right, final BinaryTransformer transformer) {
+    public SPPTBranch constructRight2Left(final NonTerminalDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final SPPTBranch left, final NonTerminal right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SPPTBranch left, final NonTerminalDefault right, final BinaryTransformer transformer) {
 
     }
 
     @Override
-    public void updateRight2Left(final SPPTBranch left, final NonTerminal right, final BinaryTransformer transformer) {
+    public void updateRight2Left(final SPPTBranch left, final NonTerminalDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }

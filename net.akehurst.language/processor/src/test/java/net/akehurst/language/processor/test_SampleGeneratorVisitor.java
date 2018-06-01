@@ -7,11 +7,11 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.grammar.IRule;
-import net.akehurst.language.core.grammar.ITerminal;
-import net.akehurst.language.core.parser.CompletionItem;
+import net.akehurst.language.api.grammar.Rule;
+import net.akehurst.language.api.grammar.Terminal;
+import net.akehurst.language.api.processor.CompletionItem;
 import net.akehurst.language.ogl.grammar.OGLGrammar;
-import net.akehurst.language.ogl.semanticStructure.Visitable;
+import net.akehurst.language.ogl.semanticStructure.GramarVisitable;
 
 public class test_SampleGeneratorVisitor {
 
@@ -21,8 +21,8 @@ public class test_SampleGeneratorVisitor {
 
 		final SampleGeneratorVisitor visitor = new SampleGeneratorVisitor(5);
 
-		final ITerminal t = grammar.findAllTerminal("grammar");
-		final Set<CompletionItem> items = ((Visitable) t).accept(visitor, 0);
+		final Terminal t = grammar.findAllTerminal("grammar");
+		final Set<CompletionItem> items = ((GramarVisitable) t).accept(visitor, 0);
 		final List<CompletionItem> list = new ArrayList<>(items);
 		Assert.assertEquals(1, items.size());
 		Assert.assertEquals("grammar", list.get(0).getText());
@@ -34,8 +34,8 @@ public class test_SampleGeneratorVisitor {
 
 		final SampleGeneratorVisitor visitor = new SampleGeneratorVisitor(5);
 
-		final ITerminal t = grammar.findAllTerminal("'(?:\\\\?.)*?'");
-		final Set<CompletionItem> items = ((Visitable) t).accept(visitor, 0);
+		final Terminal t = grammar.findAllTerminal("'(?:\\\\?.)*?'");
+		final Set<CompletionItem> items = ((GramarVisitable) t).accept(visitor, 0);
 		final List<CompletionItem> list = new ArrayList<>(items);
 		Assert.assertEquals(1, items.size());
 		Assert.assertEquals("LITERAL", list.get(0).getText());
@@ -47,8 +47,8 @@ public class test_SampleGeneratorVisitor {
 
 		final SampleGeneratorVisitor visitor = new SampleGeneratorVisitor(5);
 
-		final IRule t = grammar.findAllRule("multiplicity");
-		final Set<CompletionItem> items = ((Visitable) t.getRhs()).accept(visitor, 0);
+		final Rule t = grammar.findAllRule("multiplicity");
+		final Set<CompletionItem> items = ((GramarVisitable) t.getRhs()).accept(visitor, 0);
 		final List<CompletionItem> list = new ArrayList<>(items);
 		Assert.assertEquals(3, items.size());
 		Assert.assertEquals("*", list.get(0).getText());
@@ -60,8 +60,8 @@ public class test_SampleGeneratorVisitor {
 
 		final SampleGeneratorVisitor visitor = new SampleGeneratorVisitor(5);
 
-		final IRule t = grammar.findAllRule("terminal");
-		final Set<CompletionItem> items = ((Visitable) t.getRhs()).accept(visitor, 0);
+		final Rule t = grammar.findAllRule("terminal");
+		final Set<CompletionItem> items = ((GramarVisitable) t.getRhs()).accept(visitor, 0);
 		final List<CompletionItem> list = new ArrayList<>(items);
 		Assert.assertEquals(2, items.size());
 		Assert.assertEquals("LITERAL", list.get(0).getText());
@@ -73,8 +73,8 @@ public class test_SampleGeneratorVisitor {
 
 		final SampleGeneratorVisitor visitor = new SampleGeneratorVisitor(10);
 
-		final IRule t = grammar.findAllRule("qualifiedName");
-		final Set<CompletionItem> items = ((Visitable) t.getRhs()).accept(visitor, 0);
+		final Rule t = grammar.findAllRule("qualifiedName");
+		final Set<CompletionItem> items = ((GramarVisitable) t.getRhs()).accept(visitor, 0);
 		final List<CompletionItem> list = new ArrayList<>(items);
 		Assert.assertEquals(2, items.size());
 		Assert.assertEquals("IDENTIFIER", list.get(0).getText());
@@ -87,8 +87,8 @@ public class test_SampleGeneratorVisitor {
 
 		final SampleGeneratorVisitor visitor = new SampleGeneratorVisitor(10);
 
-		final IRule t = grammar.findAllRule("group");
-		final Set<CompletionItem> items = ((Visitable) t.getRhs()).accept(visitor, 0);
+		final Rule t = grammar.findAllRule("group");
+		final Set<CompletionItem> items = ((GramarVisitable) t.getRhs()).accept(visitor, 0);
 		final List<CompletionItem> list = new ArrayList<>(items);
 		Assert.assertEquals(57, items.size());
 		Assert.assertEquals("()", list.get(0).getText());
@@ -100,8 +100,8 @@ public class test_SampleGeneratorVisitor {
 
 		final SampleGeneratorVisitor visitor = new SampleGeneratorVisitor(5);
 
-		final IRule t = grammar.findAllRule("separatedList");
-		final Set<CompletionItem> items = ((Visitable) t.getRhs()).accept(visitor, 0);
+		final Rule t = grammar.findAllRule("separatedList");
+		final Set<CompletionItem> items = ((GramarVisitable) t.getRhs()).accept(visitor, 0);
 		final List<CompletionItem> list = new ArrayList<>(items);
 		Assert.assertEquals(12, items.size());
 		Assert.assertEquals("[LITERAL/LITERAL]*", list.get(0).getText());

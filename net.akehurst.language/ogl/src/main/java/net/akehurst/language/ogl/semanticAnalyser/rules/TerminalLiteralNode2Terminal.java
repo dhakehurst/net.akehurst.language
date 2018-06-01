@@ -15,13 +15,13 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTLeaf;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTLeaf;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<TerminalLiteral> {
+public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<TerminalLiteralDefault> {
 
     @Override
     public String getNodeName() {
@@ -29,39 +29,39 @@ public class TerminalLiteralNode2Terminal extends AbstractNode2Terminal<Terminal
     }
 
     @Override
-    public boolean isValidForRight2Left(final TerminalLiteral right) {
+    public boolean isValidForRight2Left(final TerminalLiteralDefault right) {
         return true;
     }
 
     @Override
-    public boolean isAMatch(final SPPTBranch left, final TerminalLiteral right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final TerminalLiteralDefault right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public TerminalLiteral constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
+    public TerminalLiteralDefault constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
         final SPPTNode child = left.getChildren().get(0);
         final SPPTLeaf leaf = (SPPTLeaf) child;
         final String text = leaf.getMatchedText();
         final String literal = text.substring(1, text.length() - 1);
         final String unescapedLiteral = TerminalLiteralNode2Terminal.unescapeJava(literal);
-        final TerminalLiteral right = new TerminalLiteral(unescapedLiteral);
+        final TerminalLiteralDefault right = new TerminalLiteralDefault(unescapedLiteral);
         return right;
     }
 
     @Override
-    public SPPTBranch constructRight2Left(final TerminalLiteral left, final BinaryTransformer right) {
+    public SPPTBranch constructRight2Left(final TerminalLiteralDefault left, final BinaryTransformer right) {
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final SPPTBranch left, final TerminalLiteral right, final BinaryTransformer arg2) {
+    public void updateLeft2Right(final SPPTBranch left, final TerminalLiteralDefault right, final BinaryTransformer arg2) {
 
     }
 
     @Override
-    public void updateRight2Left(final SPPTBranch left, final TerminalLiteral right, final BinaryTransformer arg2) {}
+    public void updateRight2Left(final SPPTBranch left, final TerminalLiteralDefault right, final BinaryTransformer arg2) {}
 
     /**
      * Adapted from io.vertx.core.impl.StringEscapeUtils which is itself adapted from Apache Commons code

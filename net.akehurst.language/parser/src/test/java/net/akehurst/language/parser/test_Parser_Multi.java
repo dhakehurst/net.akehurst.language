@@ -18,72 +18,72 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
 import net.akehurst.language.parser.sppf.SharedPackedParseTreeSimple;
 
 public class test_Parser_Multi extends AbstractParser_Test {
 
-	GrammarStructure ab01() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("ab01").concatenation(new NonTerminal("a"), new NonTerminal("b01"));
-		b.rule("b01").multi(0, 1, new NonTerminal("b"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
-		b.rule("b").concatenation(new TerminalLiteral("b"));
+	GrammarDefault ab01() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("ab01").concatenation(new NonTerminalDefault("a"), new NonTerminalDefault("b01"));
+		b.rule("b01").multi(0, 1, new NonTerminalDefault("b"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
+		b.rule("b").concatenation(new TerminalLiteralDefault("b"));
 
 		return b.get();
 	}
 
-	GrammarStructure ab01_2() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("ab01$group1").concatenation(new NonTerminal("a"), new NonTerminal("b"));
-		b.rule("ab01").choice(new NonTerminal("ab01$group1"), new NonTerminal("a"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
-		b.rule("b").concatenation(new TerminalLiteral("b"));
+	GrammarDefault ab01_2() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("ab01$group1").concatenation(new NonTerminalDefault("a"), new NonTerminalDefault("b"));
+		b.rule("ab01").choice(new NonTerminalDefault("ab01$group1"), new NonTerminalDefault("a"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
+		b.rule("b").concatenation(new TerminalLiteralDefault("b"));
 
 		return b.get();
 	}
 
-	GrammarStructure as13() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").multi(1, 3, new NonTerminal("a"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault as13() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").multi(1, 3, new NonTerminalDefault("a"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 
 		return b.get();
 	}
 
-	GrammarStructure as0n() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").multi(0, -1, new NonTerminal("a"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault as0n() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").multi(0, -1, new NonTerminalDefault("a"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 
 		return b.get();
 	}
 
-	GrammarStructure as0nbs0n() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("asbs").concatenation(new NonTerminal("as"), new NonTerminal("bs"));
-		b.rule("as").multi(0, -1, new NonTerminal("a"));
-		b.rule("bs").multi(0, -1, new NonTerminal("b"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
-		b.rule("b").concatenation(new TerminalLiteral("b"));
+	GrammarDefault as0nbs0n() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("asbs").concatenation(new NonTerminalDefault("as"), new NonTerminalDefault("bs"));
+		b.rule("as").multi(0, -1, new NonTerminalDefault("a"));
+		b.rule("bs").multi(0, -1, new NonTerminalDefault("b"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
+		b.rule("b").concatenation(new TerminalLiteralDefault("b"));
 
 		return b.get();
 	}
 
-	GrammarStructure abs1m1() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("abs").multi(1, -1, new NonTerminal("ab"));
-		b.rule("ab").choice(new NonTerminal("a"), new NonTerminal("b"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
-		b.rule("b").concatenation(new TerminalLiteral("b"));
+	GrammarDefault abs1m1() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("abs").multi(1, -1, new NonTerminalDefault("ab"));
+		b.rule("ab").choice(new NonTerminalDefault("a"), new NonTerminalDefault("b"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
+		b.rule("b").concatenation(new TerminalLiteralDefault("b"));
 
 		return b.get();
 	}
@@ -92,7 +92,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void as0n_as_empty() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as0n();
+		final GrammarDefault g = this.as0n();
 		final String goal = "as";
 		final String text = "";
 
@@ -110,7 +110,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void as0nbs0n_asbs_empty() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as0nbs0n();
+		final GrammarDefault g = this.as0nbs0n();
 		final String goal = "asbs";
 		final String text = "";
 
@@ -128,7 +128,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void as0nbs0n_asbs_b() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as0nbs0n();
+		final GrammarDefault g = this.as0nbs0n();
 		final String goal = "asbs";
 		final String text = "b";
 
@@ -146,7 +146,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void as0nbs0n_asbs_bb() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as0nbs0n();
+		final GrammarDefault g = this.as0nbs0n();
 		final String goal = "asbs";
 		final String text = "bb";
 
@@ -164,7 +164,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void as13_as_a() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as13();
+		final GrammarDefault g = this.as13();
 		final String goal = "as";
 		final String text = "a";
 
@@ -182,7 +182,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void as13_as_aa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as13();
+		final GrammarDefault g = this.as13();
 		final String goal = "as";
 		final String text = "aa";
 
@@ -200,7 +200,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void as13_as_aaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as13();
+		final GrammarDefault g = this.as13();
 		final String goal = "as";
 		final String text = "aaa";
 
@@ -218,7 +218,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void ab01_ab01_a() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.ab01();
+		final GrammarDefault g = this.ab01();
 		final String goal = "ab01";
 		final String text = "a";
 
@@ -236,7 +236,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void ab01_2_ab01_a() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.ab01_2();
+		final GrammarDefault g = this.ab01_2();
 		final String goal = "ab01";
 		final String text = "a";
 
@@ -254,7 +254,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void ab01_2_ab01_ab() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.ab01_2();
+		final GrammarDefault g = this.ab01_2();
 		final String goal = "ab01";
 		final String text = "ab";
 
@@ -273,7 +273,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void ab01_ab01_ab() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.ab01();
+		final GrammarDefault g = this.ab01();
 		final String goal = "ab01";
 		final String text = "ab";
 
@@ -291,7 +291,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void ab01_ab01_aa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.ab01();
+			final GrammarDefault g = this.ab01();
 			final String goal = "ab01";
 			final String text = "aa";
 
@@ -308,7 +308,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void abs1m1_abs_ababababababab() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.abs1m1();
+		final GrammarDefault g = this.abs1m1();
 		final String goal = "abs";
 		final String text = "ababababababababababababababababababababababababababababababababababababababababababababababababab";
 
@@ -358,10 +358,10 @@ public class test_Parser_Multi extends AbstractParser_Test {
 
 	}
 
-	GrammarStructure nested() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("top").multi(1, -1, new NonTerminal("level1"));
-		b.rule("level1").multi(0, 1, new TerminalLiteral("a"));
+	GrammarDefault nested() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("top").multi(1, -1, new NonTerminalDefault("level1"));
+		b.rule("level1").multi(0, 1, new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
@@ -369,7 +369,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void nested_top_aa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.nested();
+		final GrammarDefault g = this.nested();
 		final String goal = "top";
 		final String text = "aa";
 
@@ -388,15 +388,15 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	// H = A ;
 	// J = G '.' A ;
 	// A = 'a' ;
-	GrammarStructure x() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("S").concatenation(new NonTerminal("Fm"), new NonTerminal("G"), new TerminalLiteral("a"), new NonTerminal("A"));
-		b.rule("Fm").multi(0, 1, new NonTerminal("F"));
-		b.rule("F").choice(new NonTerminal("A"));
-		b.rule("G").choice(new NonTerminal("H"), new NonTerminal("J"));
-		b.rule("A").choice(new TerminalLiteral("a"));
-		b.rule("H").choice(new NonTerminal("A"));
-		b.rule("J").concatenation(new NonTerminal("G"), new TerminalLiteral("."), new NonTerminal("A"));
+	GrammarDefault x() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("S").concatenation(new NonTerminalDefault("Fm"), new NonTerminalDefault("G"), new TerminalLiteralDefault("a"), new NonTerminalDefault("A"));
+		b.rule("Fm").multi(0, 1, new NonTerminalDefault("F"));
+		b.rule("F").choice(new NonTerminalDefault("A"));
+		b.rule("G").choice(new NonTerminalDefault("H"), new NonTerminalDefault("J"));
+		b.rule("A").choice(new TerminalLiteralDefault("a"));
+		b.rule("H").choice(new NonTerminalDefault("A"));
+		b.rule("J").concatenation(new NonTerminalDefault("G"), new TerminalLiteralDefault("."), new NonTerminalDefault("A"));
 		return b.get();
 	}
 
@@ -404,7 +404,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 	public void x_S_aaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.x();
+		final GrammarDefault g = this.x();
 		final String goal = "S";
 		final String text = "aaa";
 

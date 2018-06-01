@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import net.akehurst.language.core.sppt.FixedList;
+import net.akehurst.language.api.sppt.FixedList;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public interface IGrowingNode {

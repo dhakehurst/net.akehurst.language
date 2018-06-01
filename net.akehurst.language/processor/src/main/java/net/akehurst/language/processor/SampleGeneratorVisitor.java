@@ -5,22 +5,22 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import net.akehurst.language.core.grammar.INonTerminal;
-import net.akehurst.language.core.grammar.IRuleItem;
-import net.akehurst.language.core.parser.CompletionItem;
-import net.akehurst.language.ogl.semanticStructure.ChoicePriority;
-import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
-import net.akehurst.language.ogl.semanticStructure.Concatenation;
-import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
-import net.akehurst.language.ogl.semanticStructure.Group;
-import net.akehurst.language.ogl.semanticStructure.Multi;
-import net.akehurst.language.ogl.semanticStructure.SeparatedList;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
-import net.akehurst.language.ogl.semanticStructure.Visitable;
-import net.akehurst.language.ogl.semanticStructure.Visitor;
+import net.akehurst.language.api.grammar.NonTerminal;
+import net.akehurst.language.api.grammar.RuleItem;
+import net.akehurst.language.api.processor.CompletionItem;
+import net.akehurst.language.ogl.semanticStructure.ChoicePriorityDefault;
+import net.akehurst.language.ogl.semanticStructure.ChoiceSimpleDefault;
+import net.akehurst.language.ogl.semanticStructure.ConcatenationDefault;
+import net.akehurst.language.ogl.semanticStructure.ConcatenationItemAbstract;
+import net.akehurst.language.ogl.semanticStructure.GroupDefault;
+import net.akehurst.language.ogl.semanticStructure.MultiDefault;
+import net.akehurst.language.ogl.semanticStructure.SeparatedListDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalPatternDefault;
+import net.akehurst.language.ogl.semanticStructure.GramarVisitable;
+import net.akehurst.language.ogl.semanticStructure.GrammarVisitor;
 
-public class SampleGeneratorVisitor implements Visitor<Set<CompletionItem>, Throwable> {
+public class SampleGeneratorVisitor implements GrammarVisitor<Set<CompletionItem>, Throwable> {
 
 	public SampleGeneratorVisitor(final int desiredDepth) {
 		this.desiredDepth = desiredDepth;
@@ -28,7 +28,7 @@ public class SampleGeneratorVisitor implements Visitor<Set<CompletionItem>, Thro
 	}
 
 	private final int desiredDepth;
-	private final Map<IRuleItem, Set<CompletionItem>> cache;
+	private final Map<RuleItem, Set<CompletionItem>> cache;
 
 	int getArg(final Object[] arg) {
 		if (arg[0] instanceof Integer) {
@@ -45,11 +45,11 @@ public class SampleGeneratorVisitor implements Visitor<Set<CompletionItem>, Thro
 	}
 
 	@Override
-	public Set<CompletionItem> visit(final ChoiceSimple target, final Object... arg) throws Throwable {
+	public Set<CompletionItem> visit(final ChoiceSimpleDefault target, final Object... arg) throws Throwable {
 		Set<CompletionItem> result = this.cache.get(target);
 		if (null == result) {
 			result = new LinkedHashSet<>();
-			for (final Concatenation item : target.getAlternative()) {
+			for (final ConcatenationDefault item : target.getAlternative()) {
 				final Set<CompletionItem> options = item.accept(this, arg);
 				for (final CompletionItem option : options) {
 					final CompletionItemComposite composite = new CompletionItemComposite();
@@ -64,11 +64,11 @@ public class SampleGeneratorVisitor implements Visitor<Set<CompletionItem>, Thro
 	}
 
 	@Override
-	public Set<CompletionItem> visit(final ChoicePriority target, final Object... arg) throws Throwable {
+	public Set<CompletionItem> visit(final ChoicePriorityDefault target, final Object... arg) throws Throwable {
 		Set<CompletionItem> result = this.cache.get(target);
 		if (null == result) {
 			result = new LinkedHashSet<>();
-			for (final Concatenation item : target.getAlternative()) {
+			for (final ConcatenationDefault item : target.getAlternative()) {
 				final Set<CompletionItem> options = item.accept(this, arg);
 				for (final CompletionItem option : options) {
 					final CompletionItemComposite composite = new CompletionItemComposite();
@@ -84,12 +84,12 @@ public class SampleGeneratorVisitor implements Visitor<Set<CompletionItem>, Thro
 	}
 
 	@Override
-	public Set<CompletionItem> visit(final Concatenation target, final Object... arg) throws Throwable {
+	public Set<CompletionItem> visit(final ConcatenationDefault target, final Object... arg) throws Throwable {
 		Set<CompletionItemComposite> result = (Set<CompletionItemComposite>) (Object) this.cache.get(target);
 		if (null == result) {
 			result = new LinkedHashSet<>();
 
-			for (final ConcatenationItem item : target.getItem()) {
+			for (final ConcatenationItemAbstract item : target.getItem()) {
 				final Set<CompletionItem> options = item.accept(this, arg);
 				if (result.isEmpty()) {
 					for (final CompletionItem ci : options) {
@@ -122,7 +122,7 @@ public class SampleGeneratorVisitor implements Visitor<Set<CompletionItem>, Thro
 	}
 
 	@Override
-	public Set<CompletionItem> visit(final INonTerminal target, final Object... arg) throws Throwable {
+	public Set<CompletionItem> visit(final NonTerminal target, final Object... arg) throws Throwable {
 		Set<CompletionItem> result = this.cache.get(target);
 		if (null == result) {
 
@@ -142,7 +142,7 @@ public class SampleGeneratorVisitor implements Visitor<Set<CompletionItem>, Thro
 			// }
 			final int cur = this.getArg(arg);
 			final int next = cur + 1;
-			result = ((Visitable) target.getReferencedRule().getRhs()).accept(this, next);
+			result = ((GramarVisitable) target.getReferencedRule().getRhs()).accept(this, next);
 			this.cache.put(target, result);
 		}
 		return result;
@@ -150,7 +150,7 @@ public class SampleGeneratorVisitor implements Visitor<Set<CompletionItem>, Thro
 	}
 
 	@Override
-	public Set<CompletionItem> visit(final Multi target, final Object... arg) throws Throwable {
+	public Set<CompletionItem> visit(final MultiDefault target, final Object... arg) throws Throwable {
 		Set<CompletionItem> result = this.cache.get(target);
 		if (null == result) {
 			result = new LinkedHashSet<>();
@@ -178,7 +178,7 @@ public class SampleGeneratorVisitor implements Visitor<Set<CompletionItem>, Thro
 	}
 
 	@Override
-	public Set<CompletionItem> visit(final SeparatedList target, final Object... arg) throws Throwable {
+	public Set<CompletionItem> visit(final SeparatedListDefault target, final Object... arg) throws Throwable {
 		Set<CompletionItem> result = this.cache.get(target);
 		if (null == result) {
 			result = new LinkedHashSet<>();
@@ -223,7 +223,7 @@ public class SampleGeneratorVisitor implements Visitor<Set<CompletionItem>, Thro
 	}
 
 	@Override
-	public Set<CompletionItem> visit(final Group target, final Object... arg) throws Throwable {
+	public Set<CompletionItem> visit(final GroupDefault target, final Object... arg) throws Throwable {
 		Set<CompletionItem> result = this.cache.get(target);
 		if (null == result) {
 			result = target.getChoice().accept(this, arg);
@@ -233,7 +233,7 @@ public class SampleGeneratorVisitor implements Visitor<Set<CompletionItem>, Thro
 	}
 
 	@Override
-	public Set<CompletionItem> visit(final TerminalPattern target, final Object... arg) throws Throwable {
+	public Set<CompletionItem> visit(final TerminalPatternDefault target, final Object... arg) throws Throwable {
 		Set<CompletionItem> result = this.cache.get(target);
 		// if (null == result) {
 		result = new LinkedHashSet<>();
@@ -244,7 +244,7 @@ public class SampleGeneratorVisitor implements Visitor<Set<CompletionItem>, Thro
 	}
 
 	@Override
-	public Set<CompletionItem> visit(final TerminalLiteral target, final Object... arg) throws Throwable {
+	public Set<CompletionItem> visit(final TerminalLiteralDefault target, final Object... arg) throws Throwable {
 		Set<CompletionItem> result = this.cache.get(target);
 		// if (null == result) {
 		result = new LinkedHashSet<>();

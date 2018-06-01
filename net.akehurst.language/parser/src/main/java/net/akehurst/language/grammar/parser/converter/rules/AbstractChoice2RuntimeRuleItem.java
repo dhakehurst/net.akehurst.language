@@ -16,9 +16,9 @@
 package net.akehurst.language.grammar.parser.converter.rules;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
-import net.akehurst.language.ogl.semanticStructure.AbstractChoice;
+import net.akehurst.language.ogl.semanticStructure.ChoiceAbstract;
 import net.akehurst.transform.binary.api.BinaryRule;
 
-abstract public class AbstractChoice2RuntimeRuleItem<L extends AbstractChoice> implements BinaryRule<L, RuntimeRuleItem> {
+abstract public class AbstractChoice2RuntimeRuleItem<L extends ChoiceAbstract> implements BinaryRule<L, RuntimeRuleItem> {
 
 }

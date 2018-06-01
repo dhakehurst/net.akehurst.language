@@ -10,15 +10,15 @@ import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.parser.Parser;
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.processor.ILanguageProcessor;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.parser.ParseTreeException;
+import net.akehurst.language.api.parser.Parser;
+import net.akehurst.language.api.processor.LanguageProcessor;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ParseTreeToInputText;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
 
 public class Java8_Tests {
 
@@ -36,18 +36,18 @@ public class Java8_Tests {
 		return Java8_Tests.processor;
 	}
 
-	static ILanguageProcessor javaProcessor;
+	static LanguageProcessor javaProcessor;
 
 	static {
 		Java8_Tests.getJavaProcessor();
 	}
 
-	static ILanguageProcessor getJavaProcessor() {
+	static LanguageProcessor getJavaProcessor() {
 		if (null == Java8_Tests.javaProcessor) {
 			try {
 				final FileReader reader = new FileReader(Paths.get("src/test/resources/Java8_all.og").toFile());
-				final GrammarStructure javaGrammar = Java8_Tests.getOGLProcessor().process(reader, "grammarDefinition", GrammarStructure.class);
-				Java8_Tests.javaProcessor = new LanguageProcessor(javaGrammar, null);
+				final GrammarDefault javaGrammar = Java8_Tests.getOGLProcessor().process(reader, "grammarDefinition", GrammarDefault.class);
+				Java8_Tests.javaProcessor = new LanguageProcessorDefault(javaGrammar, null);
 				Java8_Tests.javaProcessor.getParser().build();
 			} catch (final IOException e) {
 				e.printStackTrace();
@@ -64,11 +64,11 @@ public class Java8_Tests {
 		return Java8_Tests.javaProcessor;
 	}
 
-	static ILanguageProcessor getJavaProcessor(final String goalName) {
+	static LanguageProcessor getJavaProcessor(final String goalName) {
 		try {
 			final FileReader reader = new FileReader(Paths.get("src/test/resources/Java8_all.og").toFile());
-			final GrammarStructure javaGrammar = Java8_Tests.getOGLProcessor().process(reader, "grammarDefinition", GrammarStructure.class);
-			final LanguageProcessor jp = new LanguageProcessor(javaGrammar, null);
+			final GrammarDefault javaGrammar = Java8_Tests.getOGLProcessor().process(reader, "grammarDefinition", GrammarDefault.class);
+			final LanguageProcessorDefault jp = new LanguageProcessorDefault(javaGrammar, null);
 			jp.getParser().build();
 			return jp;
 		} catch (final IOException e) {

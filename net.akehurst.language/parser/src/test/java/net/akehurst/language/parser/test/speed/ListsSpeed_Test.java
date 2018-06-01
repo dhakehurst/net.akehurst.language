@@ -18,68 +18,68 @@ package net.akehurst.language.parser.test.speed;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
 import net.akehurst.language.parser.AbstractParser_Test;
 
 public class ListsSpeed_Test extends AbstractParser_Test {
 
-	GrammarStructure as_rr() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").choice(new NonTerminal("as$group1"), new NonTerminal("a"));
-		b.rule("as$group1").concatenation(new NonTerminal("a"), new NonTerminal("as"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault as_rr() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").choice(new NonTerminalDefault("as$group1"), new NonTerminalDefault("a"));
+		b.rule("as$group1").concatenation(new NonTerminalDefault("a"), new NonTerminalDefault("as"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
-	GrammarStructure as_lr() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").choice(new NonTerminal("as$group1"), new NonTerminal("a"));
-		b.rule("as$group1").concatenation(new NonTerminal("as"), new NonTerminal("a"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault as_lr() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").choice(new NonTerminalDefault("as$group1"), new NonTerminalDefault("a"));
+		b.rule("as$group1").concatenation(new NonTerminalDefault("as"), new NonTerminalDefault("a"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
-	GrammarStructure as_multi() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").multi(1, -1, new NonTerminal("a"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault as_multi() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").multi(1, -1, new NonTerminalDefault("a"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
-	GrammarStructure as2_rr() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").choice(new NonTerminal("as$group1"), new NonTerminal("a"));
-		b.rule("as$group1").concatenation(new NonTerminal("a"), new TerminalLiteral(","), new NonTerminal("as"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault as2_rr() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").choice(new NonTerminalDefault("as$group1"), new NonTerminalDefault("a"));
+		b.rule("as$group1").concatenation(new NonTerminalDefault("a"), new TerminalLiteralDefault(","), new NonTerminalDefault("as"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
-	GrammarStructure as2_lr() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").choice(new NonTerminal("as$group1"), new NonTerminal("a"));
-		b.rule("as$group1").concatenation(new NonTerminal("as"), new TerminalLiteral(","), new NonTerminal("a"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault as2_lr() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").choice(new NonTerminalDefault("as$group1"), new NonTerminalDefault("a"));
+		b.rule("as$group1").concatenation(new NonTerminalDefault("as"), new TerminalLiteralDefault(","), new NonTerminalDefault("a"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
-	GrammarStructure as2_multi() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").multi(1, -1, new NonTerminal("as$group1"));
-		b.rule("as$group1").concatenation(new NonTerminal("a"), new TerminalLiteral(","));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault as2_multi() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").multi(1, -1, new NonTerminalDefault("as$group1"));
+		b.rule("as$group1").concatenation(new NonTerminalDefault("a"), new TerminalLiteralDefault(","));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
-	GrammarStructure as2_sl() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("as").separatedList(1, -1, new TerminalLiteral(","), new TerminalLiteral("a"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault as2_sl() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("as").separatedList(1, -1, new TerminalLiteralDefault(","), new TerminalLiteralDefault("a"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
@@ -87,7 +87,7 @@ public class ListsSpeed_Test extends AbstractParser_Test {
 	public void rr_as_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as_rr();
+		final GrammarDefault g = this.as_rr();
 		final String goal = "as";
 		final String text = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
@@ -100,7 +100,7 @@ public class ListsSpeed_Test extends AbstractParser_Test {
 	public void lr_as_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as_lr();
+		final GrammarDefault g = this.as_lr();
 		final String goal = "as";
 		final String text = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
@@ -113,7 +113,7 @@ public class ListsSpeed_Test extends AbstractParser_Test {
 	public void multi_as_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as_multi();
+		final GrammarDefault g = this.as_multi();
 		final String goal = "as";
 		final String text = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
@@ -126,7 +126,7 @@ public class ListsSpeed_Test extends AbstractParser_Test {
 	public void rr_as2_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as2_rr();
+		final GrammarDefault g = this.as2_rr();
 		final String goal = "as";
 		final String text = "a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a";
 
@@ -139,7 +139,7 @@ public class ListsSpeed_Test extends AbstractParser_Test {
 	public void lr_as2_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as2_lr();
+		final GrammarDefault g = this.as2_lr();
 		final String goal = "as";
 		final String text = "a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a";
 
@@ -152,7 +152,7 @@ public class ListsSpeed_Test extends AbstractParser_Test {
 	public void multi_as2_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as2_multi();
+		final GrammarDefault g = this.as2_multi();
 		final String goal = "as";
 		final String text = "a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,";
 
@@ -165,7 +165,7 @@ public class ListsSpeed_Test extends AbstractParser_Test {
 	public void sl_as2_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.as2_sl();
+		final GrammarDefault g = this.as2_sl();
 		final String goal = "as";
 		final String text = "a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a";
 

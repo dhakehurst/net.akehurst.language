@@ -18,31 +18,31 @@ package net.akehurst.language.grammar.parser.converter.rules;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
-import net.akehurst.language.ogl.semanticStructure.Multi;
+import net.akehurst.language.ogl.semanticStructure.MultiDefault;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class Multi2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<Multi> {
+public class Multi2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<MultiDefault> {
 
     @Override
-    public boolean isValidForLeft2Right(final Multi arg0) {
+    public boolean isValidForLeft2Right(final MultiDefault arg0) {
         return true;
     }
 
     @Override
-    public boolean isAMatch(final Multi left, final RuntimeRule right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final MultiDefault left, final RuntimeRule right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public RuntimeRule constructLeft2Right(final Multi left, final BinaryTransformer transformer) {
+    public RuntimeRule constructLeft2Right(final MultiDefault left, final BinaryTransformer transformer) {
         final Converter converter = (Converter) transformer;
         final RuntimeRule right = converter.createVirtualRule(left);
         return right;
     }
 
     @Override
-    public void updateLeft2Right(final Multi left, final RuntimeRule right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final MultiDefault left, final RuntimeRule right, final BinaryTransformer transformer) {
 
         final RuntimeRuleItem ruleItem = transformer.transformLeft2Right(Multi2RuntimeRuleItem.class, left);
         right.setRhs(ruleItem);
@@ -50,13 +50,13 @@ public class Multi2RuntimeRule extends AbstractConcatinationItem2RuntimeRule<Mul
     }
 
     @Override
-    public void updateRight2Left(final Multi arg0, final RuntimeRule arg1, final BinaryTransformer transformer) {
+    public void updateRight2Left(final MultiDefault arg0, final RuntimeRule arg1, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public Multi constructRight2Left(final RuntimeRule arg0, final BinaryTransformer transformer) {
+    public MultiDefault constructRight2Left(final RuntimeRule arg0, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }

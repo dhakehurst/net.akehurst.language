@@ -18,72 +18,72 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
 import net.akehurst.language.parser.sppf.SharedPackedParseTreeSimple;
 
 public class Parser_Concatination_Test extends AbstractParser_Test {
 
-	GrammarStructure aempty() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+	GrammarDefault aempty() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
 		b.rule("a").choice();
 		return b.get();
 	}
 
-	GrammarStructure a() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("a").concatenation(new TerminalLiteral("a"));
+	GrammarDefault a() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
 		return b.get();
 	}
 
-	GrammarStructure abc() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("abc").concatenation(new TerminalLiteral("abc"));
+	GrammarDefault abc() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("abc").concatenation(new TerminalLiteralDefault("abc"));
 		return b.get();
 	}
 
-	GrammarStructure a_b() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("ab").concatenation(new NonTerminal("a"), new NonTerminal("b"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
-		b.rule("b").concatenation(new TerminalLiteral("b"));
+	GrammarDefault a_b() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("ab").concatenation(new NonTerminalDefault("a"), new NonTerminalDefault("b"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
+		b.rule("b").concatenation(new TerminalLiteralDefault("b"));
 		return b.get();
 	}
 
-	GrammarStructure a_b_c() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.skip("SPACE").concatenation(new TerminalLiteral(" "));
-		b.rule("abc").concatenation(new NonTerminal("a"), new NonTerminal("b"), new NonTerminal("c"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
-		b.rule("b").concatenation(new TerminalLiteral("b"));
-		b.rule("c").concatenation(new TerminalLiteral("c"));
+	GrammarDefault a_b_c() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.skip("SPACE").concatenation(new TerminalLiteralDefault(" "));
+		b.rule("abc").concatenation(new NonTerminalDefault("a"), new NonTerminalDefault("b"), new NonTerminalDefault("c"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
+		b.rule("b").concatenation(new TerminalLiteralDefault("b"));
+		b.rule("c").concatenation(new TerminalLiteralDefault("c"));
 		return b.get();
 	}
 
-	GrammarStructure a_b__c() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("abc").concatenation(new NonTerminal("ab"), new NonTerminal("c"));
-		b.rule("ab").concatenation(new NonTerminal("a"), new NonTerminal("b"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
-		b.rule("b").concatenation(new TerminalLiteral("b"));
-		b.rule("c").concatenation(new TerminalLiteral("c"));
+	GrammarDefault a_b__c() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("abc").concatenation(new NonTerminalDefault("ab"), new NonTerminalDefault("c"));
+		b.rule("ab").concatenation(new NonTerminalDefault("a"), new NonTerminalDefault("b"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
+		b.rule("b").concatenation(new TerminalLiteralDefault("b"));
+		b.rule("c").concatenation(new TerminalLiteralDefault("c"));
 		return b.get();
 	}
 
-	GrammarStructure a__b_c() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-		b.rule("abc").concatenation(new NonTerminal("a"), new NonTerminal("bc"));
-		b.rule("bc").concatenation(new NonTerminal("b"), new NonTerminal("c"));
-		b.rule("a").concatenation(new TerminalLiteral("a"));
-		b.rule("b").concatenation(new TerminalLiteral("b"));
-		b.rule("c").concatenation(new TerminalLiteral("c"));
+	GrammarDefault a__b_c() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+		b.rule("abc").concatenation(new NonTerminalDefault("a"), new NonTerminalDefault("bc"));
+		b.rule("bc").concatenation(new NonTerminalDefault("b"), new NonTerminalDefault("c"));
+		b.rule("a").concatenation(new TerminalLiteralDefault("a"));
+		b.rule("b").concatenation(new TerminalLiteralDefault("b"));
+		b.rule("c").concatenation(new TerminalLiteralDefault("c"));
 		return b.get();
 	}
 
@@ -91,7 +91,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void aempty_a_empty() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.aempty();
+			final GrammarDefault g = this.aempty();
 			final String goal = "a";
 			final String text = "";
 
@@ -110,7 +110,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	@Test
 	public void a_a_a() throws ParseFailedException {
 		// grammar, goal, input
-		final GrammarStructure g = this.a();
+		final GrammarDefault g = this.a();
 		final String goal = "a";
 		final String text = "a";
 
@@ -131,7 +131,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void a_a_b() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.a();
+		final GrammarDefault g = this.a();
 		final String goal = "a";
 		final String text = "b";
 
@@ -144,7 +144,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void abc1_abc_abc() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.abc();
+		final GrammarDefault g = this.abc();
 		final String goal = "abc";
 		final String text = "abc";
 
@@ -165,7 +165,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void ab_a_a() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.a_b();
+			final GrammarDefault g = this.a_b();
 			final String goal = "a";
 			final String text = "a";
 
@@ -186,7 +186,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void ab_a_b() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.a_b();
+			final GrammarDefault g = this.a_b();
 			final String goal = "a";
 			final String text = "b";
 
@@ -202,7 +202,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void ab_b_b() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.a_b();
+			final GrammarDefault g = this.a_b();
 			final String goal = "b";
 			final String text = "b";
 
@@ -223,7 +223,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void ab_ab_ab() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.a_b();
+			final GrammarDefault g = this.a_b();
 			final String goal = "ab";
 			final String text = "ab";
 
@@ -244,7 +244,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void ab_ab_aa() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.a_b();
+			final GrammarDefault g = this.a_b();
 			final String goal = "ab";
 			final String text = "aa";
 
@@ -260,7 +260,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void ab_ab_b() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.a_b();
+			final GrammarDefault g = this.a_b();
 			final String goal = "ab";
 			final String text = "b";
 
@@ -276,7 +276,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void abc_abc_abc() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.a_b__c();
+		final GrammarDefault g = this.a_b__c();
 		final String goal = "abc";
 		final String text = "abc";
 
@@ -295,7 +295,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void abc2_abc_abc() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.a_b_c();
+			final GrammarDefault g = this.a_b_c();
 			final String goal = "abc";
 			final String text = "abc";
 
@@ -316,7 +316,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void abc2_abc_aSPbSPc() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.a_b_c();
+		final GrammarDefault g = this.a_b_c();
 		final String goal = "abc";
 		final String text = "a b c";
 
@@ -335,7 +335,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void abc_abc_acb() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.a_b__c();
+		final GrammarDefault g = this.a_b__c();
 		final String goal = "abc";
 		final String text = "acb";
 
@@ -347,7 +347,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	@Test
 	public void abc_abc_abcd() {
 		// grammar, goal, input
-		final GrammarStructure g = this.a_b_c();
+		final GrammarDefault g = this.a_b_c();
 		final String goal = "abc";
 		final String text = "abcd";
 		try {
@@ -368,7 +368,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 	public void abc4_abc_abc() {
 		// grammar, goal, input
 		try {
-			final GrammarStructure g = this.a__b_c();
+			final GrammarDefault g = this.a__b_c();
 			final String goal = "abc";
 			final String text = "abc";
 

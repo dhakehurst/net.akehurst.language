@@ -15,11 +15,11 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser;
 
-import net.akehurst.language.core.analyser.GrammarLoader;
-import net.akehurst.language.core.analyser.SemanticAnalyser;
-import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.analyser.GrammarLoader;
+import net.akehurst.language.api.analyser.SemanticAnalyser;
+import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.ogl.semanticAnalyser.rules.AbstractNode2Choice;
 import net.akehurst.language.ogl.semanticAnalyser.rules.AbstractNode2ConcatenationItem;
 import net.akehurst.language.ogl.semanticAnalyser.rules.AbstractNode2TangibleItem;
@@ -43,7 +43,7 @@ import net.akehurst.language.ogl.semanticAnalyser.rules.NormalRuleNode2Rule;
 import net.akehurst.language.ogl.semanticAnalyser.rules.SkipRuleNode2SkipRule;
 import net.akehurst.language.ogl.semanticAnalyser.rules.TerminalLiteralNode2Terminal;
 import net.akehurst.language.ogl.semanticAnalyser.rules.TerminalPatternNode2Terminal;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.basic.BinaryTransformerBasic;
 
@@ -77,10 +77,10 @@ public class OglSemanicAnalyserRuleBased extends BinaryTransformerBasic implemen
         super.registerRule(TerminalPatternNode2Terminal.class);
     }
 
-    GrammarStructure analyse(final SharedPackedParseTree parseTree) throws UnableToAnalyseExeception {
+    GrammarDefault analyse(final SharedPackedParseTree parseTree) throws UnableToAnalyseExeception {
         try {
             final SPPTBranch root = (SPPTBranch) parseTree.getRoot();
-            final GrammarStructure grammar = this.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, root);
+            final GrammarDefault grammar = this.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, root);
             return grammar;
         } catch (final Exception e) {
             throw new UnableToAnalyseExeception("Cannot Analyse ParseTree", e);

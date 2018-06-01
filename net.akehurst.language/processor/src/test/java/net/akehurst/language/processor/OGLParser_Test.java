@@ -21,22 +21,22 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.grammar.Grammar;
-import net.akehurst.language.core.parser.Parser;
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.grammar.Grammar;
+import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.parser.ParseTreeException;
+import net.akehurst.language.api.parser.Parser;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalPatternDefault;
 
 public class OGLParser_Test {
 	RuntimeRuleSetBuilder parseTreeFactory;
@@ -46,7 +46,7 @@ public class OGLParser_Test {
 		this.parseTreeFactory = new RuntimeRuleSetBuilder();
 	}
 
-	ParseTreeBuilder builder(final GrammarStructure grammar, final String text, final String goal) {
+	ParseTreeBuilder builder(final GrammarDefault grammar, final String text, final String goal) {
 		return new ParseTreeBuilder(this.parseTreeFactory, grammar, goal, text, 0);
 	}
 
@@ -64,15 +64,15 @@ public class OGLParser_Test {
 		}
 	}
 
-	GrammarStructure ns1() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
-		b.skip("WHITESPACE").concatenation(new TerminalPattern("\\s+"));
-		b.skip("COMMENT").concatenation(new TerminalPattern("(?s)/\\*.*?\\*/"));
+	GrammarDefault ns1() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("net::akehurst::language::ogl::grammar"), "OGL");
+		b.skip("WHITESPACE").concatenation(new TerminalPatternDefault("\\s+"));
+		b.skip("COMMENT").concatenation(new TerminalPatternDefault("(?s)/\\*.*?\\*/"));
 
-		b.rule("grammarDefinition").concatenation(new NonTerminal("namespace"));
-		b.rule("namespace").concatenation(new TerminalLiteral("namespace"), new NonTerminal("IDENTIFIER"), new TerminalLiteral(";"));
+		b.rule("grammarDefinition").concatenation(new NonTerminalDefault("namespace"));
+		b.rule("namespace").concatenation(new TerminalLiteralDefault("namespace"), new NonTerminalDefault("IDENTIFIER"), new TerminalLiteralDefault(";"));
 
-		b.rule("IDENTIFIER").concatenation(new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*"));
+		b.rule("IDENTIFIER").concatenation(new TerminalPatternDefault("[a-zA-Z_][a-zA-Z_0-9]*"));
 
 		return b.get();
 	}
@@ -80,7 +80,7 @@ public class OGLParser_Test {
 	@Test
 	public void ns1_namespace_test() {
 		try {
-			final GrammarStructure g = this.ns1();
+			final GrammarDefault g = this.ns1();
 			final String goal = "grammarDefinition";
 			final String text = "namespace test;" + System.lineSeparator();
 
@@ -98,16 +98,16 @@ public class OGLParser_Test {
 		}
 	}
 
-	GrammarStructure g1() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
-		b.skip("WHITESPACE").concatenation(new TerminalPattern("\\s+"));
-		b.skip("COMMENT").concatenation(new TerminalPattern("(?s)/\\*.*?\\*/"));
+	GrammarDefault g1() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("net::akehurst::language::ogl::grammar"), "OGL");
+		b.skip("WHITESPACE").concatenation(new TerminalPatternDefault("\\s+"));
+		b.skip("COMMENT").concatenation(new TerminalPatternDefault("(?s)/\\*.*?\\*/"));
 
-		b.rule("grammarDefinition").concatenation(new NonTerminal("namespace"), new NonTerminal("grammar"));
-		b.rule("namespace").concatenation(new TerminalLiteral("namespace"), new NonTerminal("IDENTIFIER"), new TerminalLiteral(";"));
-		b.rule("grammar").concatenation(new TerminalLiteral("grammar"), new NonTerminal("IDENTIFIER"), new TerminalLiteral("{"), new TerminalLiteral("}"));
+		b.rule("grammarDefinition").concatenation(new NonTerminalDefault("namespace"), new NonTerminalDefault("grammar"));
+		b.rule("namespace").concatenation(new TerminalLiteralDefault("namespace"), new NonTerminalDefault("IDENTIFIER"), new TerminalLiteralDefault(";"));
+		b.rule("grammar").concatenation(new TerminalLiteralDefault("grammar"), new NonTerminalDefault("IDENTIFIER"), new TerminalLiteralDefault("{"), new TerminalLiteralDefault("}"));
 
-		b.rule("IDENTIFIER").concatenation(new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*"));
+		b.rule("IDENTIFIER").concatenation(new TerminalPatternDefault("[a-zA-Z_][a-zA-Z_0-9]*"));
 
 		return b.get();
 	}
@@ -149,13 +149,13 @@ public class OGLParser_Test {
 		}
 	}
 
-	GrammarStructure qualifiedName() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
-		b.skip("WHITESPACE").concatenation(new TerminalPattern("\\s+"));
+	GrammarDefault qualifiedName() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("net::akehurst::language::ogl::grammar"), "OGL");
+		b.skip("WHITESPACE").concatenation(new TerminalPatternDefault("\\s+"));
 
-		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER"));
+		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteralDefault("::"), new NonTerminalDefault("IDENTIFIER"));
 
-		b.rule("IDENTIFIER").concatenation(new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*"));
+		b.rule("IDENTIFIER").concatenation(new TerminalPatternDefault("[a-zA-Z_][a-zA-Z_0-9]*"));
 
 		return b.get();
 	}
@@ -163,7 +163,7 @@ public class OGLParser_Test {
 	@Test
 	public void qualifiedName_a() {
 		try {
-			final GrammarStructure g = this.qualifiedName();
+			final GrammarDefault g = this.qualifiedName();
 			final String goal = "qualifiedName";
 			final String text = "a";
 
@@ -179,7 +179,7 @@ public class OGLParser_Test {
 	@Test
 	public void qualifiedName__a_b() {
 		try {
-			final GrammarStructure g = this.qualifiedName();
+			final GrammarDefault g = this.qualifiedName();
 			final String goal = "qualifiedName";
 			final String text = "a::b";
 
@@ -195,7 +195,7 @@ public class OGLParser_Test {
 	@Test
 	public void qualifiedName__a_b_c_d() {
 		try {
-			final GrammarStructure g = this.qualifiedName();
+			final GrammarDefault g = this.qualifiedName();
 			final String goal = "qualifiedName";
 			final String text = "a::b::c::d";
 
@@ -208,18 +208,18 @@ public class OGLParser_Test {
 		}
 	}
 
-	GrammarStructure noRules() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
-		b.skip("WHITESPACE").concatenation(new TerminalPattern("\\s+"));
-		b.skip("COMMENT").concatenation(new TerminalPattern("(?s)/\\*.*?\\*/"));
+	GrammarDefault noRules() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("net::akehurst::language::ogl::grammar"), "OGL");
+		b.skip("WHITESPACE").concatenation(new TerminalPatternDefault("\\s+"));
+		b.skip("COMMENT").concatenation(new TerminalPatternDefault("(?s)/\\*.*?\\*/"));
 
-		b.rule("grammarDefinition").concatenation(new NonTerminal("namespace"), new NonTerminal("grammar"));
-		b.rule("namespace").concatenation(new TerminalLiteral("namespace"), new NonTerminal("qualifiedName"), new TerminalLiteral(";"));
-		b.rule("grammar").concatenation(new TerminalLiteral("grammar"), new NonTerminal("IDENTIFIER"), new TerminalLiteral("{"), new TerminalLiteral("}"));
+		b.rule("grammarDefinition").concatenation(new NonTerminalDefault("namespace"), new NonTerminalDefault("grammar"));
+		b.rule("namespace").concatenation(new TerminalLiteralDefault("namespace"), new NonTerminalDefault("qualifiedName"), new TerminalLiteralDefault(";"));
+		b.rule("grammar").concatenation(new TerminalLiteralDefault("grammar"), new NonTerminalDefault("IDENTIFIER"), new TerminalLiteralDefault("{"), new TerminalLiteralDefault("}"));
 
-		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER"));
+		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteralDefault("::"), new NonTerminalDefault("IDENTIFIER"));
 
-		b.rule("IDENTIFIER").concatenation(new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*"));
+		b.rule("IDENTIFIER").concatenation(new TerminalPatternDefault("[a-zA-Z_][a-zA-Z_0-9]*"));
 
 		return b.get();
 	}
@@ -227,7 +227,7 @@ public class OGLParser_Test {
 	@Test
 	public void noRules_1() {
 		try {
-			final GrammarStructure g = this.noRules();
+			final GrammarDefault g = this.noRules();
 			final String goal = "grammarDefinition";
 			String text = "namespace test::ns::nss;" + System.lineSeparator();
 			text += "grammar A {" + System.lineSeparator();
@@ -242,22 +242,22 @@ public class OGLParser_Test {
 		}
 	}
 
-	GrammarStructure nonTerminalOnly() {
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");
-		b.skip("WHITESPACE").concatenation(new TerminalPattern("\\s+"));
-		b.skip("COMMENT").concatenation(new TerminalPattern("(?s)/\\*.*?\\*/"));
+	GrammarDefault nonTerminalOnly() {
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("net::akehurst::language::ogl::grammar"), "OGL");
+		b.skip("WHITESPACE").concatenation(new TerminalPatternDefault("\\s+"));
+		b.skip("COMMENT").concatenation(new TerminalPatternDefault("(?s)/\\*.*?\\*/"));
 
-		b.rule("grammarDefinition").concatenation(new NonTerminal("namespace"), new NonTerminal("grammar"));
-		b.rule("namespace").concatenation(new TerminalLiteral("namespace"), new NonTerminal("qualifiedName"), new TerminalLiteral(";"));
-		b.rule("grammar").concatenation(new TerminalLiteral("grammar"), new NonTerminal("IDENTIFIER"), new TerminalLiteral("{"), new NonTerminal("rules"),
-				new TerminalLiteral("}"));
-		b.rule("rules").multi(1, -1, new NonTerminal("rule"));
-		b.rule("rule").concatenation(new NonTerminal("IDENTIFIER"), new TerminalLiteral("="), new NonTerminal("nonTerminal"), new TerminalLiteral(";"));
-		b.rule("nonTerminal").choice(new NonTerminal("IDENTIFIER"));
+		b.rule("grammarDefinition").concatenation(new NonTerminalDefault("namespace"), new NonTerminalDefault("grammar"));
+		b.rule("namespace").concatenation(new TerminalLiteralDefault("namespace"), new NonTerminalDefault("qualifiedName"), new TerminalLiteralDefault(";"));
+		b.rule("grammar").concatenation(new TerminalLiteralDefault("grammar"), new NonTerminalDefault("IDENTIFIER"), new TerminalLiteralDefault("{"), new NonTerminalDefault("rules"),
+				new TerminalLiteralDefault("}"));
+		b.rule("rules").multi(1, -1, new NonTerminalDefault("rule"));
+		b.rule("rule").concatenation(new NonTerminalDefault("IDENTIFIER"), new TerminalLiteralDefault("="), new NonTerminalDefault("nonTerminal"), new TerminalLiteralDefault(";"));
+		b.rule("nonTerminal").choice(new NonTerminalDefault("IDENTIFIER"));
 
-		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteral("::"), new NonTerminal("IDENTIFIER"));
+		b.rule("qualifiedName").separatedList(1, -1, new TerminalLiteralDefault("::"), new NonTerminalDefault("IDENTIFIER"));
 
-		b.rule("IDENTIFIER").concatenation(new TerminalPattern("[a-zA-Z_][a-zA-Z_0-9]*"));
+		b.rule("IDENTIFIER").concatenation(new TerminalPatternDefault("[a-zA-Z_][a-zA-Z_0-9]*"));
 
 		return b.get();
 	}

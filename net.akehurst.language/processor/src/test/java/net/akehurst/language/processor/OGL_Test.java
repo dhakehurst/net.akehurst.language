@@ -18,14 +18,14 @@ package net.akehurst.language.processor;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.ogl.grammar.OGLGrammar;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
 
 public class OGL_Test extends AbstractParser_Test {
 
-	GrammarStructure ogl() {
+	GrammarDefault ogl() {
 		return new OGLGrammar();
 	}
 
@@ -33,7 +33,7 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_grammarDefinition_1_normalRule() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.ogl();
+		final GrammarDefault g = this.ogl();
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G { a : 'a' ;}";
 
@@ -46,7 +46,7 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_grammarDefinition_2_normalRule() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.ogl();
+		final GrammarDefault g = this.ogl();
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G { a : 'a'; b:'b'; }";
 
@@ -59,7 +59,7 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_grammarDefinition_3_normalRule() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.ogl();
+		final GrammarDefault g = this.ogl();
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G { a : 'a'; b:'b'; c:'c'; }";
 
@@ -72,7 +72,7 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_grammarDefinition_choice() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.ogl();
+		final GrammarDefault g = this.ogl();
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G { abc:a|b|c; a : 'a'; b:'b'; c:'c'; }";
 
@@ -85,7 +85,7 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_grammarDefinition_normalRule_minimumWS() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.ogl();
+		final GrammarDefault g = this.ogl();
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G {sp:' ';}";
 		// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
@@ -99,7 +99,7 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_grammarDefinition_normalRule_lotsWS() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.ogl();
+		final GrammarDefault g = this.ogl();
 		final String goal = "grammarDefinition";
 		final String text = " namespace test ;  grammar G  {  sp  :   ' '  ;  } ";
 		// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
@@ -113,7 +113,7 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_terminal_escaped() throws ParseFailedException {
 		// grammar, goal, input
 
-		final GrammarStructure g = this.ogl();
+		final GrammarDefault g = this.ogl();
 		final String goal = "terminal";
 		final String text = "'\\''";
 		// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";

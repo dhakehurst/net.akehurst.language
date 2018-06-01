@@ -22,11 +22,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import net.akehurst.language.core.sppt.FixedList;
-import net.akehurst.language.core.sppt.SPNodeIdentity;
-import net.akehurst.language.core.sppt.SPPTBranch;
-import net.akehurst.language.core.sppt.SPPTNode;
-import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
+import net.akehurst.language.api.sppt.FixedList;
+import net.akehurst.language.api.sppt.SPNodeIdentity;
+import net.akehurst.language.api.sppt.SPPTBranch;
+import net.akehurst.language.api.sppt.SPPTNode;
+import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 

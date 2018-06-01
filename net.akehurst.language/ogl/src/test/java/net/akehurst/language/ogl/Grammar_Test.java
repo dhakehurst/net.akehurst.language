@@ -20,13 +20,13 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.core.grammar.INodeType;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.api.grammar.NodeType;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalPatternDefault;
 
 public class Grammar_Test {
 
@@ -40,23 +40,23 @@ public class Grammar_Test {
 		// whitespace = "\\s+";
 		// }
 
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "HelloWorld");
-		b.rule("root").concatenation(new NonTerminal("hello"), new NonTerminal("world"));
-		b.rule("hello").concatenation(new TerminalLiteral("hello"));
-		b.rule("world").concatenation(new TerminalLiteral("world!"));
-		final GrammarStructure g = b.get();
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "HelloWorld");
+		b.rule("root").concatenation(new NonTerminalDefault("hello"), new NonTerminalDefault("world"));
+		b.rule("hello").concatenation(new TerminalLiteralDefault("hello"));
+		b.rule("world").concatenation(new TerminalLiteralDefault("world!"));
+		final GrammarDefault g = b.get();
 	}
 
 	@Test
 	public void findAllNodeType() {
 
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "HelloWorld");
-		b.rule("root").concatenation(new NonTerminal("hello"), new NonTerminal("world"));
-		b.rule("hello").concatenation(new TerminalLiteral("hello"));
-		b.rule("world").concatenation(new TerminalLiteral("world!"));
-		final GrammarStructure g = b.get();
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "HelloWorld");
+		b.rule("root").concatenation(new NonTerminalDefault("hello"), new NonTerminalDefault("world"));
+		b.rule("hello").concatenation(new TerminalLiteralDefault("hello"));
+		b.rule("world").concatenation(new TerminalLiteralDefault("world!"));
+		final GrammarDefault g = b.get();
 
-		final Set<INodeType> types = g.findAllNodeType();
+		final Set<NodeType> types = g.findAllNodeType();
 
 		Assert.assertEquals(5, types.size());
 	}
@@ -64,12 +64,12 @@ public class Grammar_Test {
 	@Test
 	public void test() {
 
-		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "TestG");
-		b.skip("SKIP").concatenation(new TerminalPattern("\\s+"));
-		b.rule("port").concatenation(new TerminalLiteral("port"));
-		final GrammarStructure g = b.get();
+		final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "TestG");
+		b.skip("SKIP").concatenation(new TerminalPatternDefault("\\s+"));
+		b.rule("port").concatenation(new TerminalLiteralDefault("port"));
+		final GrammarDefault g = b.get();
 
-		final Set<INodeType> types = g.findAllNodeType();
+		final Set<NodeType> types = g.findAllNodeType();
 
 		Assert.assertEquals(4, types.size());
 	}

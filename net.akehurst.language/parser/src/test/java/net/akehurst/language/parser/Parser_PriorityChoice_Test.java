@@ -18,29 +18,29 @@ package net.akehurst.language.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.parser.ParseFailedException;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
-import net.akehurst.language.ogl.semanticStructure.Namespace;
-import net.akehurst.language.ogl.semanticStructure.NonTerminal;
-import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
-import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
+import net.akehurst.language.ogl.semanticStructure.TerminalPatternDefault;
 
 public class Parser_PriorityChoice_Test extends AbstractParser_Test {
 
-    GrammarStructure abc() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("abc").priorityChoice(new NonTerminal("a"), new NonTerminal("b"), new NonTerminal("c"));
-        b.rule("a").concatenation(new TerminalLiteral("a"));
-        b.rule("b").concatenation(new TerminalLiteral("b"));
-        b.rule("c").concatenation(new TerminalLiteral("c"));
+    GrammarDefault abc() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("abc").priorityChoice(new NonTerminalDefault("a"), new NonTerminalDefault("b"), new NonTerminalDefault("c"));
+        b.rule("a").concatenation(new TerminalLiteralDefault("a"));
+        b.rule("b").concatenation(new TerminalLiteralDefault("b"));
+        b.rule("c").concatenation(new TerminalLiteralDefault("c"));
         return b.get();
     }
 
-    GrammarStructure aempty() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
+    GrammarDefault aempty() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
         b.rule("a").priorityChoice();
         return b.get();
     }
@@ -49,7 +49,7 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
     public void aempty_a_empty() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.aempty();
+        final GrammarDefault g = this.aempty();
         final String goal = "a";
         final String text = "";
 
@@ -69,7 +69,7 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
     public void abc_abc_a() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.abc();
+        final GrammarDefault g = this.abc();
         final String goal = "abc";
         final String text = "a";
 
@@ -92,7 +92,7 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
     public void abc_abc_b() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.abc();
+        final GrammarDefault g = this.abc();
         final String goal = "abc";
         final String text = "b";
 
@@ -114,7 +114,7 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
     public void abc_abc_c() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.abc();
+        final GrammarDefault g = this.abc();
         final String goal = "abc";
         final String text = "c";
 
@@ -132,12 +132,12 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
         Assert.assertEquals(expected, actual);
     }
 
-    GrammarStructure kwOrId1() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("type"));
-        b.rule("type").priorityChoice(new NonTerminal("id"), new NonTerminal("kw"));
-        b.rule("kw").concatenation(new TerminalLiteral("int"));
-        b.rule("id").concatenation(new TerminalPattern("[a-z]+"));
+    GrammarDefault kwOrId1() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("type"));
+        b.rule("type").priorityChoice(new NonTerminalDefault("id"), new NonTerminalDefault("kw"));
+        b.rule("kw").concatenation(new TerminalLiteralDefault("int"));
+        b.rule("id").concatenation(new TerminalPatternDefault("[a-z]+"));
         return b.get();
     }
 
@@ -145,7 +145,7 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
     public void kwOrId_S_id() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.kwOrId1();
+        final GrammarDefault g = this.kwOrId1();
         final String goal = "S";
         final String text = "int";
 
@@ -164,12 +164,12 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
 
     }
 
-    GrammarStructure kwOrId2() {
-        final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
-        b.rule("S").choice(new NonTerminal("type"));
-        b.rule("type").priorityChoice(new NonTerminal("kw"), new NonTerminal("id"));
-        b.rule("kw").concatenation(new TerminalLiteral("int"));
-        b.rule("id").concatenation(new TerminalPattern("[a-z]+"));
+    GrammarDefault kwOrId2() {
+        final GrammarBuilderDefault b = new GrammarBuilderDefault(new NamespaceDefault("test"), "Test");
+        b.rule("S").choice(new NonTerminalDefault("type"));
+        b.rule("type").priorityChoice(new NonTerminalDefault("kw"), new NonTerminalDefault("id"));
+        b.rule("kw").concatenation(new TerminalLiteralDefault("int"));
+        b.rule("id").concatenation(new TerminalPatternDefault("[a-z]+"));
         return b.get();
     }
 
@@ -177,7 +177,7 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
     public void kwOrId_S_int() throws ParseFailedException {
         // grammar, goal, input
 
-        final GrammarStructure g = this.kwOrId2();
+        final GrammarDefault g = this.kwOrId2();
         final String goal = "S";
         final String text = "int";
 

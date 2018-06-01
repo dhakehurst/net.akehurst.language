@@ -22,7 +22,7 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.grammar.INodeType;
+import net.akehurst.language.api.grammar.NodeType;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.parser.sppf.EmptyLeaf;
@@ -136,9 +136,9 @@ public class InputForReader implements IInput {
     }
 
     int nextI;
-    Map<INodeType, Integer> map;
+    Map<NodeType, Integer> map;
 
-    private int getNodeType(final INodeType nodeType) {
+    private int getNodeType(final NodeType nodeType) {
         Integer i = this.map.get(nodeType);
         if (null == i) {
             i = this.nextI++;

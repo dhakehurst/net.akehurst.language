@@ -24,11 +24,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import net.akehurst.language.core.grammar.Grammar;
-import net.akehurst.language.core.grammar.IRuleItem;
-import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
+import net.akehurst.language.api.grammar.Grammar;
+import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
+import net.akehurst.language.api.grammar.Rule;
+import net.akehurst.language.api.grammar.RuleItem;
 import net.akehurst.language.grammar.parser.NonTerminalRuleReference;
-import net.akehurst.language.ogl.semanticStructure.Rule;
 
 public class RuntimeRuleSet {
 
@@ -344,20 +344,20 @@ public class RuntimeRuleSet {
         this.terminalMap.put(terminal, runtimeRule);
     }
 
-    public IRuleItem getOriginalItem(final RuntimeRule rr, final Grammar grammar) throws GrammarRuleNotFoundException {
+    public RuleItem getOriginalItem(final RuntimeRule rr, final Grammar grammar) throws GrammarRuleNotFoundException {
         final String name = rr.getName();
         if (name.startsWith("$")) {
             // decode it (see Converter) and RuleItem.setOwningRule
             final String[] split = name.split("[.]");
             final String ruleName = split[0].substring(1);
-            final IRuleItem rhs = grammar.findAllRule(ruleName).getRhs();
+            final RuleItem rhs = grammar.findAllRule(ruleName).getRhs();
             final String type = split[1];
             final int[] index = new int[split.length - 3];
             for (int i = 3; i < split.length; ++i) {
                 final int ix = Integer.parseInt(split[i]);
                 index[i - 3] = ix;
             }
-            IRuleItem item = rhs;
+            RuleItem item = rhs;
             for (final int i : index) {
                 item = item.getSubItem(i);
             }
