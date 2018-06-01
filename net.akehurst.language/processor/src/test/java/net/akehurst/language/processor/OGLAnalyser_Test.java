@@ -26,8 +26,8 @@ import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 
 public class OGLAnalyser_Test {
 
@@ -36,7 +36,7 @@ public class OGLAnalyser_Test {
 			final OGLanguageProcessor proc = new OGLanguageProcessor();
 
 			// List<IToken> tokens = proc.getLexicalAnaliser().lex(grammar);
-			final ISharedPackedParseTree tree = proc.getParser().parse("grammarDefinition", grammarText);
+			final SharedPackedParseTree tree = proc.getParser().parse("grammarDefinition", grammarText);
 			final T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
@@ -55,7 +55,7 @@ public class OGLAnalyser_Test {
 			final InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(grammarFile);
 			final InputStreamReader reader = new InputStreamReader(is);
 
-			final ISharedPackedParseTree tree = proc.getParser().parse("grammarDefinition", reader);
+			final SharedPackedParseTree tree = proc.getParser().parse("grammarDefinition", reader);
 			final T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
@@ -74,12 +74,12 @@ public class OGLAnalyser_Test {
 			grammarText += " a : 'a' ;" + System.lineSeparator();
 			grammarText += "}";
 
-			final Grammar grammar = this.process(grammarText, Grammar.class);
+			final GrammarStructure grammar = this.process(grammarText, GrammarStructure.class);
 			Assert.assertNotNull(grammar);
 
 			final LanguageProcessor proc = new LanguageProcessor(grammar, null);
 
-			final ISharedPackedParseTree tree = proc.getParser().parse("a", new StringReader("a"));
+			final SharedPackedParseTree tree = proc.getParser().parse("a", new StringReader("a"));
 			Assert.assertNotNull(tree);
 
 		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | GrammarRuleNotFoundException e) {
@@ -97,12 +97,12 @@ public class OGLAnalyser_Test {
 			grammarText += " singleQuote : '\\'' ;" + System.lineSeparator();
 			grammarText += "}";
 
-			final Grammar grammar = this.process(grammarText, Grammar.class);
+			final GrammarStructure grammar = this.process(grammarText, GrammarStructure.class);
 			Assert.assertNotNull(grammar);
 
 			final LanguageProcessor proc = new LanguageProcessor(grammar, null);
 
-			final ISharedPackedParseTree tree = proc.getParser().parse("singleQuote", "'");
+			final SharedPackedParseTree tree = proc.getParser().parse("singleQuote", "'");
 			Assert.assertNotNull(tree);
 
 		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | GrammarRuleNotFoundException e) {
@@ -120,12 +120,12 @@ public class OGLAnalyser_Test {
 		grammarText += " StringCharacter : \"[^\\x22\\\\]\" ;" + System.lineSeparator();
 		grammarText += "}";
 
-		final Grammar grammar = this.process(grammarText, Grammar.class);
+		final GrammarStructure grammar = this.process(grammarText, GrammarStructure.class);
 		Assert.assertNotNull(grammar);
 
 		final LanguageProcessor proc = new LanguageProcessor(grammar, null);
 
-		final ISharedPackedParseTree tree = proc.getParser().parse("StringCharacter", "a");
+		final SharedPackedParseTree tree = proc.getParser().parse("StringCharacter", "a");
 		Assert.assertNotNull(tree);
 
 	}
@@ -141,12 +141,12 @@ public class OGLAnalyser_Test {
 		grammarText += " StringCharacter : \"[^\\x22\\\\]\" ;" + System.lineSeparator();
 		grammarText += "}";
 
-		final Grammar grammar = this.process(grammarText, Grammar.class);
+		final GrammarStructure grammar = this.process(grammarText, GrammarStructure.class);
 		Assert.assertNotNull(grammar);
 
 		final LanguageProcessor proc = new LanguageProcessor(grammar, null);
 
-		final ISharedPackedParseTree tree = proc.getParser().parse("StringLiteral", "\"abc\"");
+		final SharedPackedParseTree tree = proc.getParser().parse("StringLiteral", "\"abc\"");
 		Assert.assertNotNull(tree);
 
 	}

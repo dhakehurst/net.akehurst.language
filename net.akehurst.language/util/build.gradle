@@ -15,11 +15,11 @@
  */
 dependencies {
 
-	compile project(':net.akehurst.language.core')
- 	compile 'net.akehurst.miscellaneous:net.akehurst.holser.reflect:1.0.0'
+	implementation project(':net.akehurst.language.api')
+ 	implementation 'net.akehurst.miscellaneous:net.akehurst.holser.reflect:1.0.0'
 
-	compile "javax.json:javax.json-api:1.1"
+	implementation "javax.json:javax.json-api:1.1"
 
-	testCompile 'junit:junit:+'
+	testImplementation "junit:junit:${version_junit}"
 	
 }

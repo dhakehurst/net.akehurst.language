@@ -23,33 +23,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.akehurst.language.core.analyser.IGrammarLoader;
-import net.akehurst.language.core.grammar.IGrammar;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.analyser.GrammarLoader;
+import net.akehurst.language.core.grammar.Grammar;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.ogl.grammar.OGLGrammar;
-import net.akehurst.language.ogl.semanticAnalyser.SemanicAnalyser;
+import net.akehurst.language.ogl.semanticAnalyser.OglSemanicAnalyserRuleBased;
 
 public class OGLanguageProcessor extends LanguageProcessor {
 
 	public OGLanguageProcessor() {
-		super(new OGLGrammar(), new SemanicAnalyser());
+		super(new OGLGrammar(), new OglSemanicAnalyserRuleBased());
 		this.getSemanticAnalyser().setGrammarLoader(new Loader());
 	}
 
-	class Loader implements IGrammarLoader {
+	class Loader implements GrammarLoader {
 
 		public Loader() {
 			this.resolved = new HashMap<>();
 		}
 
-		Map<String, IGrammar> resolved;
+		Map<String, Grammar> resolved;
 
 		@Override
-		public List<IGrammar> resolve(final String... qualifiedGrammarNames) {
-			final List<IGrammar> grammars = new ArrayList<>();
+		public List<Grammar> resolve(final String... qualifiedGrammarNames) {
+			final List<Grammar> grammars = new ArrayList<>();
 
 			for (final String qualifiedGrammarName : qualifiedGrammarNames) {
-				IGrammar grammar = this.resolved.get(qualifiedGrammarName);
+				Grammar grammar = this.resolved.get(qualifiedGrammarName);
 				if (null == grammar) {
 					grammar = this.resolve(qualifiedGrammarName);
 					this.resolved.put(qualifiedGrammarName, grammar);
@@ -60,7 +60,7 @@ public class OGLanguageProcessor extends LanguageProcessor {
 			return grammars;
 		}
 
-		private IGrammar resolve(final String qualifiedGrammarName) {
+		private Grammar resolve(final String qualifiedGrammarName) {
 			try {
 				final String resourcePath = qualifiedGrammarName.replaceAll("::", "/") + ".ogl";
 				final InputStream input = ClassLoader.getSystemClassLoader().getResourceAsStream(resourcePath);
@@ -68,8 +68,8 @@ public class OGLanguageProcessor extends LanguageProcessor {
 				// If we use the same Processor/Analyser..then we get errors because parseTree nodes are already maped to the wrong things
 				// from analysing a previous grammar.
 				final OGLanguageProcessor proc = new OGLanguageProcessor(); // OGLanguageProcessor.this
-				final ISharedPackedParseTree forest = proc.getParser().parse("grammarDefinition", reader);
-				final IGrammar grammar = proc.getSemanticAnalyser().analyse(IGrammar.class, forest);
+				final SharedPackedParseTree forest = proc.getParser().parse("grammarDefinition", reader);
+				final Grammar grammar = proc.getSemanticAnalyser().analyse(Grammar.class, forest);
 				return grammar;
 			} catch (final Exception e) {
 				throw new RuntimeException("Unable to resolve grammar " + qualifiedGrammarName, e);

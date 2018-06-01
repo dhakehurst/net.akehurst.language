@@ -8,12 +8,12 @@ import org.junit.Test;
 
 import net.akehurst.language.core.grammar.IRuleItem;
 import net.akehurst.language.core.grammar.ITangibleItem;
-import net.akehurst.language.core.parser.IParser;
+import net.akehurst.language.core.parser.Parser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.ogl.grammar.OGLGrammar;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
@@ -22,7 +22,7 @@ import net.akehurst.language.parser.AbstractParser_Test;
 
 public class test_Parser extends AbstractParser_Test {
 
-	Grammar abc() {
+	GrammarStructure abc() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("multi").multi(0, -1, new NonTerminal("abc"));
 		b.rule("abc").choice(new NonTerminal("a"), new NonTerminal("b"), new NonTerminal("c"));
@@ -36,11 +36,11 @@ public class test_Parser extends AbstractParser_Test {
 	public void abc_multi_a_1() throws ParseFailedException, ParseTreeException {
 		// grammar, goal, input
 
-		final Grammar g = this.abc();
+		final GrammarStructure g = this.abc();
 		final String goal = "multi";
 		final String text = "a";
 		final int position = 1;
-		final IParser parser = new ScannerLessParser3(this.runtimeRules, g);
+		final Parser parser = new ScannerLessParser3(this.runtimeRules, g);
 
 		final List<IRuleItem> list = parser.expectedAt(goal, new StringReader(text), position);
 		Assert.assertTrue(list.size() == 1);
@@ -57,7 +57,7 @@ public class test_Parser extends AbstractParser_Test {
 		final String text = "";
 		final int position = 0;
 
-		final IParser parser = new ScannerLessParser3(this.runtimeRules, g);
+		final Parser parser = new ScannerLessParser3(this.runtimeRules, g);
 
 		final List<IRuleItem> list = parser.expectedAt(goal, new StringReader(text), position);
 		Assert.assertTrue(list.size() == 4);
@@ -73,7 +73,7 @@ public class test_Parser extends AbstractParser_Test {
 		final String text = "namespace";
 		final int position = 2;
 
-		final IParser parser = new ScannerLessParser3(this.runtimeRules, g);
+		final Parser parser = new ScannerLessParser3(this.runtimeRules, g);
 
 		final List<IRuleItem> list = parser.expectedAt(goal, new StringReader(text), position);
 		Assert.assertEquals(3, list.size());
@@ -90,7 +90,7 @@ public class test_Parser extends AbstractParser_Test {
 		final String text = "namespace";
 		final int position = 9;
 
-		final IParser parser = new ScannerLessParser3(this.runtimeRules, g);
+		final Parser parser = new ScannerLessParser3(this.runtimeRules, g);
 
 		final List<IRuleItem> list = parser.expectedAt(goal, new StringReader(text), position);
 		Assert.assertTrue(list.size() == 4);
@@ -106,7 +106,7 @@ public class test_Parser extends AbstractParser_Test {
 		final String text = "namespace a";
 		final int position = 11;
 
-		final IParser parser = new ScannerLessParser3(this.runtimeRules, g);
+		final Parser parser = new ScannerLessParser3(this.runtimeRules, g);
 
 		final List<IRuleItem> list = parser.expectedAt(goal, new StringReader(text), position);
 		Assert.assertEquals(5, list.size());
@@ -122,7 +122,7 @@ public class test_Parser extends AbstractParser_Test {
 		final String text = "namespace a::";
 		final int position = 13;
 
-		final IParser parser = new ScannerLessParser3(this.runtimeRules, g);
+		final Parser parser = new ScannerLessParser3(this.runtimeRules, g);
 
 		final List<IRuleItem> list = parser.expectedAt(goal, new StringReader(text), position);
 		Assert.assertEquals(4, list.size());

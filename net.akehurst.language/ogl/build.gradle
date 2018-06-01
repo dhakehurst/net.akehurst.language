@@ -1,11 +1,11 @@
 
 dependencies {
 
-	compile project(':net.akehurst.language.core')
-	compile project(':net.akehurst.language.util')
-	compile 'net.akehurst.transform:binary:2.2.0'
+	implementation project(':net.akehurst.language.api')
+	implementation project(':net.akehurst.language.util')
+	implementation "net.akehurst.transform:binary:${version_transform}"
 
-	testCompile 'junit:junit:+'
+	testImplementation "junit:junit:${version_junit}"
 	
 }
 

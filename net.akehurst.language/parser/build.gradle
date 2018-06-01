@@ -1,10 +1,9 @@
 
 dependencies {
 
-	compile project(':net.akehurst.language.ogl')
-	//compile project(':net.akehurst.language.graphStructuredStack')
+	implementation project(':net.akehurst.language.ogl')
 
-	testCompile 'junit:junit:+'
+	testImplementation "junit:junit:${version_junit}"
 	
 }
 

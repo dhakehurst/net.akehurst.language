@@ -7,21 +7,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.akehurst.language.core.sppt.FixedList;
-import net.akehurst.language.core.sppt.IParseTreeVisitor;
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPLeaf;
-import net.akehurst.language.core.sppt.ISPNode;
-import net.akehurst.language.core.sppt.ISPNodeIdentity;
+import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTLeaf;
+import net.akehurst.language.core.sppt.SPPTNode;
 import net.akehurst.language.core.sppt.SPNodeIdentity;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.parser.sppf.Leaf;
+import net.akehurst.language.parser.sppf.SPPTNodeIdentitySimple;
 
-public class GraphNodeLeaf implements ICompleteNode, ISPLeaf {
+public class GraphNodeLeaf implements ICompleteNode, SPPTLeaf {
 
 	private final Leaf leaf;
 	private final int finalMatchedTextLength;
 
-	private ISPBranch parent;
+	private SPPTBranch parent;
 
 	public GraphNodeLeaf(final ParseGraph graph, final Leaf leaf) {
 		this.leaf = leaf;
@@ -65,7 +65,7 @@ public class GraphNodeLeaf implements ICompleteNode, ISPLeaf {
 	}
 
 	@Override
-	public Set<FixedList<ISPNode>> getChildrenAlternatives() {
+	public Set<FixedList<SPPTNode>> getChildrenAlternatives() {
 		return Collections.emptySet();
 	}
 
@@ -104,12 +104,12 @@ public class GraphNodeLeaf implements ICompleteNode, ISPLeaf {
 	}
 
 	@Override
-	public ISPBranch getParent() {
+	public SPPTBranch getParent() {
 		return this.parent;
 	}
 
 	@Override
-	public void setParent(final ISPBranch value) {
+	public void setParent(final SPPTBranch value) {
 		this.parent = value;
 	}
 
@@ -119,9 +119,9 @@ public class GraphNodeLeaf implements ICompleteNode, ISPLeaf {
 	}
 
 	@Override
-	public ISPNodeIdentity getIdentity() {
+	public SPNodeIdentity getIdentity() {
 		// TODO Auto-generated method stub
-		return new SPNodeIdentity(this.getRuntimeRuleNumber(), this.getStartPosition(), this.getMatchedTextLength());
+		return new SPPTNodeIdentitySimple(this.getRuntimeRuleNumber(), this.getStartPosition(), this.getMatchedTextLength());
 	}
 
 	@Override
@@ -140,19 +140,19 @@ public class GraphNodeLeaf implements ICompleteNode, ISPLeaf {
 	}
 
 	@Override
-	public ISPLeaf asLeaf() {
+	public SPPTLeaf asLeaf() {
 		return this;
 	}
 
 	@Override
-	public ISPBranch asBranch() {
+	public SPPTBranch asBranch() {
 		return null;
 	}
 
 	@Override
-	public boolean contains(final ISPNode other) {
-		if (other instanceof ISPLeaf) {
-			final ISPLeaf otherLeaf = (ISPLeaf) other;
+	public boolean contains(final SPPTNode other) {
+		if (other instanceof SPPTLeaf) {
+			final SPPTLeaf otherLeaf = (SPPTLeaf) other;
 			return Objects.equals(this.getIdentity(), otherLeaf.getIdentity());
 		} else {
 			return false;
@@ -177,7 +177,7 @@ public class GraphNodeLeaf implements ICompleteNode, ISPLeaf {
 
 	// --- IParseTreeVisitable ---
 	@Override
-	public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
+	public <T, A, E extends Throwable> T accept(final SharedPackedParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
 		return visitor.visit(this, arg);
 	}
 

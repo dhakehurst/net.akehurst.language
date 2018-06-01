@@ -7,28 +7,28 @@ import java.util.List;
 import java.util.Map;
 
 import net.akehurst.holser.reflect.BetterMethodFinder;
-import net.akehurst.language.core.analyser.IGrammarLoader;
-import net.akehurst.language.core.analyser.ISemanticAnalyser;
+import net.akehurst.language.core.analyser.GrammarLoader;
+import net.akehurst.language.core.analyser.SemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.sppt.ISPLeaf;
-import net.akehurst.language.core.sppt.IParseTreeVisitor;
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPNode;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SPPTLeaf;
+import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTNode;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 
-public abstract class SemanticAnalyserVisitorBasedAbstract implements ISemanticAnalyser, IParseTreeVisitor<Object, Object, UnableToAnalyseExeception> {
+public abstract class SemanticAnalyserVisitorBasedAbstract implements SemanticAnalyser, SharedPackedParseTreeVisitor<Object, Object, UnableToAnalyseExeception> {
 
 	static Class<?>[] parameterTypes = BranchHandler.class.getMethods()[0].getParameterTypes();
 
 	static public interface BranchHandler<T> {
-		T handle(ISPBranch target, List<ISPBranch> children, Object arg) throws UnableToAnalyseExeception;
+		T handle(SPPTBranch target, List<SPPTBranch> children, Object arg) throws UnableToAnalyseExeception;
 	}
 
 	public SemanticAnalyserVisitorBasedAbstract() {
 		this.branchHandlers = new HashMap<>();
 	}
 
-	private IGrammarLoader grammarLoader;
+	private GrammarLoader grammarLoader;
 	private final Map<String, BranchHandler> branchHandlers;
 
 	protected void register(final String branchName, final BranchHandler handler) {
@@ -57,23 +57,23 @@ public abstract class SemanticAnalyserVisitorBasedAbstract implements ISemanticA
 		return handler;
 	}
 
-	protected <T> T analyse(final ISPBranch branch, final Object arg) throws UnableToAnalyseExeception {
+	protected <T> T analyse(final SPPTBranch branch, final Object arg) throws UnableToAnalyseExeception {
 		return null == branch ? null : (T) branch.accept(this, arg);
 	}
 
 	// --- ISemanticAnalyser ---
 	@Override
-	public <T> T analyse(final Class<T> targetType, final ISharedPackedParseTree forest) throws UnableToAnalyseExeception {
+	public <T> T analyse(final Class<T> targetType, final SharedPackedParseTree forest) throws UnableToAnalyseExeception {
 		return (T) this.visit(forest, null);
 	}
 
 	@Override
-	public IGrammarLoader getGrammarLoader() {
+	public GrammarLoader getGrammarLoader() {
 		return this.grammarLoader;
 	}
 
 	@Override
-	public void setGrammarLoader(final IGrammarLoader value) {
+	public void setGrammarLoader(final GrammarLoader value) {
 		this.grammarLoader = value;
 	}
 
@@ -85,24 +85,24 @@ public abstract class SemanticAnalyserVisitorBasedAbstract implements ISemanticA
 
 	// --- IParseTreeVisitor ---
 	@Override
-	public Object visit(final ISharedPackedParseTree target, final Object arg) throws UnableToAnalyseExeception {
-		final ISPNode root = target.getRoot();
+	public Object visit(final SharedPackedParseTree target, final Object arg) throws UnableToAnalyseExeception {
+		final SPPTNode root = target.getRoot();
 		return root.accept(this, arg);
 	}
 
 	@Override
-	public Object visit(final ISPLeaf target, final Object arg) throws UnableToAnalyseExeception {
+	public Object visit(final SPPTLeaf target, final Object arg) throws UnableToAnalyseExeception {
 		return target.getMatchedText();
 	}
 
 	@Override
-	public Object visit(final ISPBranch target, final Object arg) throws UnableToAnalyseExeception {
+	public Object visit(final SPPTBranch target, final Object arg) throws UnableToAnalyseExeception {
 		final String branchName = target.getName();
 		final BranchHandler<?> handler = this.getBranchHandler(branchName);
 		if (null == handler) {
 			throw new UnableToAnalyseExeception("Branch not handled in analyser " + branchName, null);
 		} else {
-			final List<ISPBranch> branchChildren = target.getBranchNonSkipChildren();// .stream().map(it -> it.getIsEmpty() ? null :
+			final List<SPPTBranch> branchChildren = target.getBranchNonSkipChildren();// .stream().map(it -> it.getIsEmpty() ? null :
 																						// it).collect(Collectors.toList());
 			return handler.handle(target, branchChildren, arg);
 		}

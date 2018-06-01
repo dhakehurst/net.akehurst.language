@@ -8,16 +8,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import net.akehurst.language.core.grammar.IGrammar;
+import net.akehurst.language.core.grammar.Grammar;
 import net.akehurst.language.core.grammar.IRuleItem;
 import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.parser.INodeType;
-import net.akehurst.language.core.parser.IParser;
+import net.akehurst.language.core.grammar.INodeType;
+import net.akehurst.language.core.parser.Parser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPNode;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTNode;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.converter.rules.Grammar2RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.forrest.Forrest3;
@@ -27,23 +27,23 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.parse.graph.ICompleteNode;
 import net.akehurst.language.parse.graph.IGrowingNode;
 import net.akehurst.language.parse.graph.IParseGraph;
 import net.akehurst.language.parse.graph.ParseGraph;
 import net.akehurst.language.parser.sppf.IInput;
-import net.akehurst.language.parser.sppf.SharedPackedParseTree;
+import net.akehurst.language.parser.sppf.SharedPackedParseTreeSimple;
 
-public class ScannerLessParser3 implements IParser {
+public class ScannerLessParser3 implements Parser {
 
     public final static String START_SYMBOL = "\u0000";
     public final static TerminalLiteral START_SYMBOL_TERMINAL = new TerminalLiteral(ScannerLessParser3.START_SYMBOL);
     public final static String FINISH_SYMBOL = "\u0001";
     public final static TerminalLiteral FINISH_SYMBOL_TERMINAL = new TerminalLiteral(ScannerLessParser3.FINISH_SYMBOL);
 
-    public ScannerLessParser3(final RuntimeRuleSetBuilder runtimeFactory, final IGrammar grammar) {
+    public ScannerLessParser3(final RuntimeRuleSetBuilder runtimeFactory, final Grammar grammar) {
         this.grammar = grammar;
         this.runtimeBuilder = runtimeFactory;
         this.converter = new Converter(this.runtimeBuilder);
@@ -51,11 +51,11 @@ public class ScannerLessParser3 implements IParser {
 
     private final Converter converter;
     private final RuntimeRuleSetBuilder runtimeBuilder;
-    private final IGrammar grammar;
+    private final Grammar grammar;
     // Grammar pseudoGrammar;
     private RuntimeRuleSet runtimeRuleSet;
 
-    private IGrammar getGrammar() {
+    private Grammar getGrammar() {
         return this.grammar;
     }
 
@@ -68,21 +68,21 @@ public class ScannerLessParser3 implements IParser {
 
     private void init() {
         try {
-            this.runtimeRuleSet = this.converter.transformLeft2Right(Grammar2RuntimeRuleSet.class, (Grammar) this.grammar);
+            this.runtimeRuleSet = this.converter.transformLeft2Right(Grammar2RuntimeRuleSet.class, (GrammarStructure) this.grammar);
         } catch (final Exception e) {
             e.printStackTrace();
 
         }
     }
 
-    private ISharedPackedParseTree parse2(final String goalRuleName, final IInput input) throws ParseFailedException, ParseTreeException {
+    private SharedPackedParseTree parse2(final String goalRuleName, final IInput input) throws ParseFailedException, ParseTreeException {
         try {
-            final INodeType goal = ((Grammar) this.getGrammar()).findRule(goalRuleName).getNodeType();
+            final INodeType goal = ((GrammarStructure) this.getGrammar()).findRule(goalRuleName).getNodeType();
             final ICompleteNode gr = this.parse3(goal, input);
-            final ISharedPackedParseTree tree = new SharedPackedParseTree((ISPNode) gr);
+            final SharedPackedParseTree tree = new SharedPackedParseTreeSimple((SPPTNode) gr);
             // set the parent property of each child, these are not set during parsing
             // TODO: don't know if we need this, probably not
-            this.setParentForChildren((ISPBranch) tree.getRoot());
+            this.setParentForChildren((SPPTBranch) tree.getRoot());
             return tree;
         } catch (final GrammarRuleNotFoundException e) {
             // Should never happen!
@@ -90,12 +90,12 @@ public class ScannerLessParser3 implements IParser {
         }
     }
 
-    private void setParentForChildren(final ISPBranch node) {
-        final ISPBranch parent = node;
-        for (final ISPNode child : parent.getChildren()) {
+    private void setParentForChildren(final SPPTBranch node) {
+        final SPPTBranch parent = node;
+        for (final SPPTNode child : parent.getChildren()) {
             child.setParent(parent);
-            if (child instanceof ISPBranch) {
-                this.setParentForChildren((ISPBranch) child);
+            if (child instanceof SPPTBranch) {
+                this.setParentForChildren((SPPTBranch) child);
             }
         }
     }
@@ -152,7 +152,7 @@ public class ScannerLessParser3 implements IParser {
 
     private List<IRuleItem> expectedAt1(final String goalRuleName, final IInput input, final int position) throws ParseFailedException, ParseTreeException {
         try {
-            final INodeType goal = ((Grammar) this.getGrammar()).findRule(goalRuleName).getNodeType();
+            final INodeType goal = ((GrammarStructure) this.getGrammar()).findRule(goalRuleName).getNodeType();
             if (null == this.runtimeRuleSet) {
                 this.build();
             }
@@ -237,22 +237,22 @@ public class ScannerLessParser3 implements IParser {
     }
 
     @Override
-    public ISharedPackedParseTree parse(final String goalRuleName, final CharSequence inputText)
+    public SharedPackedParseTree parse(final String goalRuleName, final CharSequence inputText)
             throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
         final IInput input = new Input3(this.runtimeBuilder, inputText);
-        final ISharedPackedParseTree f = this.parse2(goalRuleName, input);
+        final SharedPackedParseTree f = this.parse2(goalRuleName, input);
         return f;
     }
 
     @Override
-    public ISharedPackedParseTree parse(final String goalRuleName, final Reader inputText)
+    public SharedPackedParseTree parse(final String goalRuleName, final Reader inputText)
             throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
         // TODO: find a way to parse straight from the input, without reading it all
         final BufferedReader br = new BufferedReader(inputText);
         final String text = br.lines().collect(Collectors.joining(System.lineSeparator()));
 
         final Input3 input = new Input3(this.runtimeBuilder, text);
-        final ISharedPackedParseTree f = this.parse2(goalRuleName, input);
+        final SharedPackedParseTree f = this.parse2(goalRuleName, input);
         return f;
     }
 

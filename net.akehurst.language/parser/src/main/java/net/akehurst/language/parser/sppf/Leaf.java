@@ -18,16 +18,15 @@ package net.akehurst.language.parser.sppf;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.sppt.ISPLeaf;
-import net.akehurst.language.core.sppt.IParseTreeVisitor;
-import net.akehurst.language.core.sppt.ISPNode;
-import net.akehurst.language.core.sppt.ISPNodeIdentity;
+import net.akehurst.language.core.sppt.SPPTLeaf;
+import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
+import net.akehurst.language.core.sppt.SPPTNode;
 import net.akehurst.language.core.sppt.SPNodeIdentity;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
-public class Leaf extends Node implements ISPLeaf {
+public class Leaf extends Node implements SPPTLeaf {
 
-	private final ISPNodeIdentity identity;
+	private final SPNodeIdentity identity;
 	private final String text;
 	private final int nextInputPosition;
 	private final RuntimeRule terminalRule;
@@ -39,7 +38,7 @@ public class Leaf extends Node implements ISPLeaf {
 		this.terminalRule = terminalRule;
 		// TODO: fix factory passing 'null' as runtimeRule
 		this.identity = null == this.terminalRule ? null
-				: new SPNodeIdentity(this.terminalRule.getRuleNumber(), this.getStartPosition(), this.nextInputPosition - this.getStartPosition());
+				: new SPPTNodeIdentitySimple(this.terminalRule.getRuleNumber(), this.getStartPosition(), this.nextInputPosition - this.getStartPosition());
 	}
 
 	public int getNextInputPosition() {
@@ -54,7 +53,7 @@ public class Leaf extends Node implements ISPLeaf {
 
 	// --- ISPPFNode ---
 	@Override
-	public ISPNodeIdentity getIdentity() {
+	public SPNodeIdentity getIdentity() {
 		return this.identity;
 	}
 
@@ -93,7 +92,7 @@ public class Leaf extends Node implements ISPLeaf {
 	}
 
 	@Override
-	public boolean contains(final ISPNode other) {
+	public boolean contains(final SPPTNode other) {
 		return this.equals(other);
 	}
 
@@ -106,7 +105,7 @@ public class Leaf extends Node implements ISPLeaf {
 
 	// --- IParseTreeVisitable ---
 	@Override
-	public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
+	public <T, A, E extends Throwable> T accept(final SharedPackedParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
 		return visitor.visit(this, arg);
 	}
 
@@ -124,8 +123,8 @@ public class Leaf extends Node implements ISPLeaf {
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj instanceof ISPLeaf) {
-			final ISPLeaf other = (ISPLeaf) obj;
+		if (obj instanceof SPPTLeaf) {
+			final SPPTLeaf other = (SPPTLeaf) obj;
 			return Objects.equals(this.getIdentity(), other.getIdentity());
 		} else {
 			return false;

@@ -5,21 +5,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import net.akehurst.language.core.parser.ICompletionItem;
+import net.akehurst.language.core.parser.CompletionItem;
 
-public class CompletionItemComposite implements ICompletionItem {
+public class CompletionItemComposite implements CompletionItem {
 	public CompletionItemComposite() {
 		this.content = new ArrayList<>();
 	}
 
-	private final List<ICompletionItem> content;
+	private final List<CompletionItem> content;
 
-	public List<ICompletionItem> getContent() {
-		final List<ICompletionItem> base = this.content;
-		return new AbstractList<ICompletionItem>() {
+	public List<CompletionItem> getContent() {
+		final List<CompletionItem> base = this.content;
+		return new AbstractList<CompletionItem>() {
 
 			@Override
-			public ICompletionItem get(final int index) {
+			public CompletionItem get(final int index) {
 				return base.get(index);
 			}
 
@@ -29,7 +29,7 @@ public class CompletionItemComposite implements ICompletionItem {
 			}
 
 			@Override
-			public boolean add(final ICompletionItem e) {
+			public boolean add(final CompletionItem e) {
 				if (e.getText().isEmpty()) {
 					return false;
 				} else {
@@ -43,7 +43,7 @@ public class CompletionItemComposite implements ICompletionItem {
 			}
 
 			@Override
-			public void add(final int index, final ICompletionItem e) {
+			public void add(final int index, final CompletionItem e) {
 				if (e.getText().isEmpty()) {
 					// do not add
 				} else {
@@ -64,7 +64,7 @@ public class CompletionItemComposite implements ICompletionItem {
 	@Override
 	public String getText() {
 		final StringBuilder b = new StringBuilder();
-		for (final ICompletionItem item : this.getContent()) {
+		for (final CompletionItem item : this.getContent()) {
 			b.append(item.getText());
 		}
 		return b.toString();
@@ -88,7 +88,7 @@ public class CompletionItemComposite implements ICompletionItem {
 	@Override
 	public String toString() {
 		final StringBuilder b = new StringBuilder();
-		for (final ICompletionItem item : this.getContent()) {
+		for (final CompletionItem item : this.getContent()) {
 			b.append(item.toString());
 		}
 		return b.toString();

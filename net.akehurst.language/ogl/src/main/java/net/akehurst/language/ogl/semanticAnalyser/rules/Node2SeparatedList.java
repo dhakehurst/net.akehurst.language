@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTNode;
 import net.akehurst.language.ogl.semanticStructure.SeparatedList;
 import net.akehurst.language.ogl.semanticStructure.TangibleItem;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
@@ -37,26 +37,26 @@ public class Node2SeparatedList extends AbstractNode2ConcatenationItem<Separated
     }
 
     @Override
-    public boolean isAMatch(final ISPBranch left, final SeparatedList right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final SeparatedList right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public SeparatedList constructLeft2Right(final ISPBranch left, final BinaryTransformer transformer) {
+    public SeparatedList constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
 
-        final ISPNode itemNode = left.getChild(1);
+        final SPPTNode itemNode = left.getChild(1);
 
-        final TangibleItem item = transformer.transformLeft2Right((Class<BinaryRule<ISPNode, TangibleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
+        final TangibleItem item = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, TangibleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
 
-        final ISPNode separatorNode = left.getChild(3);
+        final SPPTNode separatorNode = left.getChild(3);
 
-        final TerminalLiteral separator = transformer.transformLeft2Right((Class<BinaryRule<ISPNode, TerminalLiteral>>) (Class<?>) AbstractNode2Terminal.class,
+        final TerminalLiteral separator = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, TerminalLiteral>>) (Class<?>) AbstractNode2Terminal.class,
                 separatorNode);
 
-        final ISPNode multiplicityNode = left.getChild(5);
+        final SPPTNode multiplicityNode = left.getChild(5);
         // TODO: this should really be done with transform rules!
-        final String multiplicityString = ((ISPBranch) multiplicityNode).getChild(0).getName();
+        final String multiplicityString = ((SPPTBranch) multiplicityNode).getChild(0).getName();
         int min = -1;
         int max = -1;
         if ("*".equals(multiplicityString)) {
@@ -76,19 +76,19 @@ public class Node2SeparatedList extends AbstractNode2ConcatenationItem<Separated
     }
 
     @Override
-    public ISPBranch constructRight2Left(final SeparatedList right, final BinaryTransformer transformer) {
+    public SPPTBranch constructRight2Left(final SeparatedList right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final ISPBranch left, final SeparatedList right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SPPTBranch left, final SeparatedList right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateRight2Left(final ISPBranch left, final SeparatedList right, final BinaryTransformer transformer) {
+    public void updateRight2Left(final SPPTBranch left, final SeparatedList right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }

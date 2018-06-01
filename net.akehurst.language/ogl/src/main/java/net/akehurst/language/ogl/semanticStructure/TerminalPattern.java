@@ -17,7 +17,7 @@ package net.akehurst.language.ogl.semanticStructure;
 
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.parser.INodeType;
+import net.akehurst.language.core.grammar.INodeType;
 
 public class TerminalPattern extends Terminal {
 

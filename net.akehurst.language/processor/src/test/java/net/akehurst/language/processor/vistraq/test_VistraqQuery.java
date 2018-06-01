@@ -15,10 +15,10 @@ import org.junit.runners.Parameterized.Parameters;
 
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.grammar.IGrammar;
+import net.akehurst.language.core.grammar.Grammar;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;
 
@@ -102,7 +102,7 @@ public class test_VistraqQuery {
         try {
             final OGLanguageProcessor oglProc = new OGLanguageProcessor();
             final InputStreamReader reader = new InputStreamReader(test_VistraqQuery.class.getResourceAsStream("/vistraq/Query.ogl"));
-            final IGrammar grammar = oglProc.process(reader, "grammarDefinition", IGrammar.class);
+            final Grammar grammar = oglProc.process(reader, "grammarDefinition", Grammar.class);
 
             this.processor = new LanguageProcessor(grammar, null);
         } catch (final ParseFailedException e) {
@@ -117,7 +117,7 @@ public class test_VistraqQuery {
 
         final String queryStr = this.data.queryStr;
         final String grammarRule = this.data.grammarRule;
-        final ISharedPackedParseTree tree = this.processor.getParser().parse(grammarRule, queryStr);
+        final SharedPackedParseTree tree = this.processor.getParser().parse(grammarRule, queryStr);
         Assert.assertNotNull(tree);
         final String resultStr = this.clean(tree.asString());
         Assert.assertEquals(queryStr, resultStr);

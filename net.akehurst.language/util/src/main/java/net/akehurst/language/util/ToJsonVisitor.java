@@ -23,24 +23,24 @@ import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
-import net.akehurst.language.core.sppt.ISPLeaf;
-import net.akehurst.language.core.sppt.IParseTreeVisitor;
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPNode;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SPPTLeaf;
+import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTNode;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 
-public class ToJsonVisitor implements IParseTreeVisitor<JsonObject, JsonBuilderFactory, RuntimeException> {
+public class ToJsonVisitor implements SharedPackedParseTreeVisitor<JsonObject, JsonBuilderFactory, RuntimeException> {
 
 	@Override
-	public JsonObject visit(final ISharedPackedParseTree target, final JsonBuilderFactory arg) throws RuntimeException {
-		final ISPNode root = target.getRoot();
+	public JsonObject visit(final SharedPackedParseTree target, final JsonBuilderFactory arg) throws RuntimeException {
+		final SPPTNode root = target.getRoot();
 		return root.accept(this, arg);
 	}
 
 	// TODO: reverse the 'isPattern' into something like 'canBeUsedAsClassifier' or 'isValidClassifier'
 
 	@Override
-	public JsonObject visit(final ISPLeaf target, final JsonBuilderFactory arg) throws RuntimeException {
+	public JsonObject visit(final SPPTLeaf target, final JsonBuilderFactory arg) throws RuntimeException {
 		final JsonObjectBuilder builder = arg.createObjectBuilder();
 		final String name = target.getName();
 		boolean isPattern = false;
@@ -63,7 +63,7 @@ public class ToJsonVisitor implements IParseTreeVisitor<JsonObject, JsonBuilderF
 	}
 
 	@Override
-	public JsonObject visit(final ISPBranch target, final JsonBuilderFactory arg) throws RuntimeException {
+	public JsonObject visit(final SPPTBranch target, final JsonBuilderFactory arg) throws RuntimeException {
 		final JsonObjectBuilder builder = arg.createObjectBuilder();
 		builder.add("name", target.getName());
 		builder.add("start", target.getStartPosition());
@@ -79,7 +79,7 @@ public class ToJsonVisitor implements IParseTreeVisitor<JsonObject, JsonBuilderF
 
 		builder.add("isPattern", isPattern);
 		final JsonArrayBuilder ab = arg.createArrayBuilder();
-		for (final ISPNode n : target.getChildren()) {
+		for (final SPPTNode n : target.getChildren()) {
 			final JsonObject nobj = n.accept(this, arg);
 			ab.add(nobj);
 		}

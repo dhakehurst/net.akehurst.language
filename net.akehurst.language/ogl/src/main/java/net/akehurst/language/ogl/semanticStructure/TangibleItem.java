@@ -20,7 +20,7 @@ import java.util.List;
 import net.akehurst.language.core.grammar.IRuleItem;
 import net.akehurst.language.core.grammar.ITangibleItem;
 import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.parser.INodeType;
+import net.akehurst.language.core.grammar.INodeType;
 
 public abstract class TangibleItem extends SimpleItem implements ITangibleItem {
 

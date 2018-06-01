@@ -18,8 +18,8 @@ package net.akehurst.language.ogl.semanticAnalyser.rules;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTNode;
 import net.akehurst.language.ogl.semanticStructure.ChoicePriority;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
 import net.akehurst.transform.binary.api.BinaryRule;
@@ -39,25 +39,25 @@ public class Node2ChoicePriority extends AbstractNode2Choice<ChoicePriority> {
     }
 
     @Override
-    public boolean isAMatch(final ISPBranch left, final ChoicePriority right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final ChoicePriority right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public ChoicePriority constructLeft2Right(final ISPBranch left, final BinaryTransformer transformer) {
+    public ChoicePriority constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
 
-        final List<? extends ISPNode> allLeft = left.getNonSkipChildren();
+        final List<? extends SPPTNode> allLeft = left.getNonSkipChildren();
         List<? extends Concatenation> allRight;
 
-        final List<ISPNode> concatenationNodes = new ArrayList<>();
-        for (final ISPNode n : allLeft) {
+        final List<SPPTNode> concatenationNodes = new ArrayList<>();
+        for (final SPPTNode n : allLeft) {
             if ("concatenation".equals(n.getName())) {
                 concatenationNodes.add(n);
             }
         }
 
-        allRight = transformer.transformAllLeft2Right((Class<BinaryRule<ISPNode, Concatenation>>) (Class<?>) Node2Concatenation.class, concatenationNodes);
+        allRight = transformer.transformAllLeft2Right((Class<BinaryRule<SPPTNode, Concatenation>>) (Class<?>) Node2Concatenation.class, concatenationNodes);
 
         final ChoicePriority right = new ChoicePriority(allRight.toArray(new Concatenation[0]));
         return right;
@@ -65,19 +65,19 @@ public class Node2ChoicePriority extends AbstractNode2Choice<ChoicePriority> {
     }
 
     @Override
-    public ISPBranch constructRight2Left(final ChoicePriority right, final BinaryTransformer transformer) {
+    public SPPTBranch constructRight2Left(final ChoicePriority right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final ISPBranch left, final ChoicePriority right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SPPTBranch left, final ChoicePriority right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateRight2Left(final ISPBranch left, final ChoicePriority right, final BinaryTransformer transformer) {
+    public void updateRight2Left(final SPPTBranch left, final ChoicePriority right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }

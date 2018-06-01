@@ -17,7 +17,7 @@ package net.akehurst.language.ogl.grammar;
 
 import java.util.List;
 
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
@@ -62,7 +62,7 @@ import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
  * @author akehurst
  *
  */
-public class OGLGrammar extends Grammar {
+public class OGLGrammar extends GrammarStructure {
 
 	static List<Rule> createRules() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("net::akehurst::language::ogl::grammar"), "OGL");

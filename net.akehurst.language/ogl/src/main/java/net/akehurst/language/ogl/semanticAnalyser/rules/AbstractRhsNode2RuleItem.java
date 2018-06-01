@@ -15,10 +15,10 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.SPPTNode;
 import net.akehurst.language.ogl.semanticStructure.RuleItem;
 import net.akehurst.transform.binary.api.BinaryRule;
 
-abstract public class AbstractRhsNode2RuleItem<R extends RuleItem> implements BinaryRule<ISPNode, R> {
+abstract public class AbstractRhsNode2RuleItem<R extends RuleItem> implements BinaryRule<SPPTNode, R> {
 
 }

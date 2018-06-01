@@ -15,40 +15,40 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
-import net.akehurst.language.core.parser.INodeTypeIdentity;
-import net.akehurst.language.core.parser.INodeType;
+import net.akehurst.language.core.grammar.INodeType;
+import net.akehurst.language.core.grammar.NodeTypeIdentity;
 
 public class RuleNodeType implements INodeType {
 
-	public RuleNodeType(Rule rule) {
-		this.identity = new NodeIdentity(rule.getName());
-	}
+    private final NodeTypeIdentity identity;
 
-	INodeTypeIdentity identity;
+    public RuleNodeType(final Rule rule) {
+        this.identity = new NodeIdentitySimple(rule.getName());
+    }
 
-	@Override
-	public INodeTypeIdentity getIdentity() {
-		return this.identity;
-	}
+    @Override
+    public NodeTypeIdentity getIdentity() {
+        return this.identity;
+    }
 
-	// --- Object ---
-	@Override
-	public String toString() {
-		return this.getIdentity().asPrimitive();
-	}
+    // --- Object ---
+    @Override
+    public String toString() {
+        return this.getIdentity().asPrimitive();
+    }
 
-	@Override
-	public int hashCode() {
-		return this.getIdentity().hashCode();
-	}
+    @Override
+    public int hashCode() {
+        return this.getIdentity().hashCode();
+    }
 
-	@Override
-	public boolean equals(Object arg) {
-		if (arg instanceof RuleNodeType) {
-			RuleNodeType other = (RuleNodeType) arg;
-			return this.getIdentity().equals(other.getIdentity());
-		} else {
-			return false;
-		}
-	}
+    @Override
+    public boolean equals(final Object arg) {
+        if (arg instanceof RuleNodeType) {
+            final RuleNodeType other = (RuleNodeType) arg;
+            return this.getIdentity().equals(other.getIdentity());
+        } else {
+            return false;
+        }
+    }
 }

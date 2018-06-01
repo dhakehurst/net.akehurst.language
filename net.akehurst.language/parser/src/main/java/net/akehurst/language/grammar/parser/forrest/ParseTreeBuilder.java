@@ -27,18 +27,18 @@ import java.util.regex.Pattern;
 import net.akehurst.language.core.grammar.ITerminal;
 import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.sppt.FixedList;
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPLeaf;
-import net.akehurst.language.core.sppt.ISPNode;
-import net.akehurst.language.core.sppt.ISPNodeIdentity;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTLeaf;
+import net.akehurst.language.core.sppt.SPPTNode;
+import net.akehurst.language.core.sppt.SPNodeIdentity;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalEmpty;
-import net.akehurst.language.parser.sppf.SharedPackedParseTree;
+import net.akehurst.language.parser.sppf.SharedPackedParseTreeSimple;
 
 public class ParseTreeBuilder {
 
@@ -51,16 +51,16 @@ public class ParseTreeBuilder {
 	private static Pattern CHILDREN_END = Pattern.compile("[}]");
 
 	private final RuntimeRuleSetBuilder runtimeBuilder;
-	private final Grammar grammar;
+	private final GrammarStructure grammar;
 	private final Input3 input;
 	// private final String textAccumulator;
 	private int textLength;
 	private final int offset;
 	private final StringBuilder sb;
-	private ISharedPackedParseTree currentTree;
-	private final Map<ISPNodeIdentity, ISPNode> node_cache;
+	private SharedPackedParseTree currentTree;
+	private final Map<SPNodeIdentity, SPPTNode> node_cache;
 
-	public ParseTreeBuilder(final RuntimeRuleSetBuilder runtimeRules, final Grammar grammar, final String goal, final CharSequence text, final int offset) {
+	public ParseTreeBuilder(final RuntimeRuleSetBuilder runtimeRules, final GrammarStructure grammar, final String goal, final CharSequence text, final int offset) {
 		this.runtimeBuilder = runtimeRules;
 		this.input = new Input3(runtimeRules, text);
 		this.grammar = grammar;
@@ -78,29 +78,29 @@ public class ParseTreeBuilder {
 		this.sb.delete(0, this.sb.length());
 	}
 
-	private void cacheNode(final ISPNode node) {
+	private void cacheNode(final SPPTNode node) {
 		this.node_cache.put(node.getIdentity(), node);
 	}
 
-	private ISPNode findNode(final ISPNodeIdentity id) {
+	private SPPTNode findNode(final SPNodeIdentity id) {
 		return this.node_cache.get(id);
 	}
 
-	private ISPLeaf findLeaf(final ISPNodeIdentity id) {
-		final ISPNode n = this.findNode(id);
-		return (ISPLeaf) n;
+	private SPPTLeaf findLeaf(final SPNodeIdentity id) {
+		final SPPTNode n = this.findNode(id);
+		return (SPPTLeaf) n;
 	}
 
-	private ISPBranch findBranch(final ISPNodeIdentity id) {
-		final ISPNode n = this.findNode(id);
-		return (ISPBranch) n;
+	private SPPTBranch findBranch(final SPNodeIdentity id) {
+		final SPPTNode n = this.findNode(id);
+		return (SPPTBranch) n;
 	}
 
-	public ISPLeaf leaf(final String text) {
+	public SPPTLeaf leaf(final String text) {
 		return this.leaf(text, text);
 	}
 
-	public ISPLeaf leaf(final String terminalPattern, final String text) {
+	public SPPTLeaf leaf(final String terminalPattern, final String text) {
 		final int start = this.textLength + this.offset;
 		this.textLength += text.length();
 		final int end = this.textLength + this.offset;
@@ -117,9 +117,9 @@ public class ParseTreeBuilder {
 			}
 		}
 		final RuntimeRule terminalRule = this.runtimeBuilder.getRuntimeRuleSet().getForTerminal(terminal.getValue());
-		final ISPLeaf n = this.runtimeBuilder.createLeaf(text, start, end, terminalRule);
+		final SPPTLeaf n = this.runtimeBuilder.createLeaf(text, start, end, terminalRule);
 
-		ISPLeaf existing = this.findLeaf(n.getIdentity());
+		SPPTLeaf existing = this.findLeaf(n.getIdentity());
 		if (null == existing) {
 			this.cacheNode(n);
 			existing = n;
@@ -128,13 +128,13 @@ public class ParseTreeBuilder {
 		return existing;
 	}
 
-	public ISPLeaf emptyLeaf(final String ruleNameThatIsEmpty) {
+	public SPPTLeaf emptyLeaf(final String ruleNameThatIsEmpty) {
 		final int start = this.textLength + this.offset;
 		final RuntimeRule ruleThatIsEmpty = this.runtimeBuilder.getRuntimeRuleSet().getRuntimeRule(ruleNameThatIsEmpty);
 		final RuntimeRule terminalRule = this.runtimeBuilder.getRuntimeRuleSet().getEmptyRule(ruleThatIsEmpty);
-		final ISPLeaf n = this.runtimeBuilder.createEmptyLeaf(start, terminalRule);
+		final SPPTLeaf n = this.runtimeBuilder.createEmptyLeaf(start, terminalRule);
 
-		ISPLeaf existing = this.findLeaf(n.getIdentity());
+		SPPTLeaf existing = this.findLeaf(n.getIdentity());
 		if (null == existing) {
 			this.cacheNode(n);
 			existing = n;
@@ -144,29 +144,29 @@ public class ParseTreeBuilder {
 	}
 
 	@Deprecated
-	public ISPBranch branch(final String ruleName, final ISPNode... children) {
+	public SPPTBranch branch(final String ruleName, final SPPTNode... children) {
 		try {
 			final Rule rule = this.grammar.findRule(ruleName);
 			final RuntimeRule rr = this.runtimeBuilder.getRuntimeRuleSet().getRuntimeRule(rule);
-			final ISPBranch b = this.runtimeBuilder.createBranch(rr, children);
+			final SPPTBranch b = this.runtimeBuilder.createBranch(rr, children);
 			return b;
 		} catch (final GrammarRuleNotFoundException e) {
 			throw new RuntimeException("Error", e);
 		}
 	}
 
-	public ISPBranch branch(final String ruleName, final List<ISPNode> children) {
+	public SPPTBranch branch(final String ruleName, final List<SPPTNode> children) {
 		try {
 			final Rule rule = this.grammar.findRule(ruleName);
 			final RuntimeRule rr = this.runtimeBuilder.getRuntimeRuleSet().getRuntimeRule(rule);
-			final ISPBranch n = this.runtimeBuilder.createBranch(rr, children.toArray(new ISPNode[children.size()]));
+			final SPPTBranch n = this.runtimeBuilder.createBranch(rr, children.toArray(new SPPTNode[children.size()]));
 
-			ISPBranch existing = this.findBranch(n.getIdentity());
+			SPPTBranch existing = this.findBranch(n.getIdentity());
 			if (null == existing) {
 				this.cacheNode(n);
 				existing = n;
 			} else {
-				final FixedList<ISPNode> newChildren = n.getChildren(); // no need to clone as list is fixed!
+				final FixedList<SPPTNode> newChildren = n.getChildren(); // no need to clone as list is fixed!
 				existing.getChildrenAlternatives().add(newChildren);
 			}
 
@@ -233,14 +233,14 @@ public class ParseTreeBuilder {
 		}
 	}
 
-	private ISharedPackedParseTree parse(final String treeString) {
+	private SharedPackedParseTree parse(final String treeString) {
 
-		ISharedPackedParseTree tree = null;
+		SharedPackedParseTree tree = null;
 
 		final SimpleScanner scanner = new SimpleScanner(treeString);
 		{
 			final Stack<String> nodeNamesStack = new Stack<>();
-			final Stack<List<ISPNode>> childrenStack = new Stack<>();
+			final Stack<List<SPPTNode>> childrenStack = new Stack<>();
 
 			// add rootList
 			childrenStack.push(new ArrayList<>());
@@ -273,25 +273,25 @@ public class ParseTreeBuilder {
 
 						final String newText = scanner.next(ParseTreeBuilder.LITERAL);
 						final String newText2 = newText.substring(1, newText.length() - 1);
-						final ISPLeaf leaf = this.leaf(pattern, newText2);
+						final SPPTLeaf leaf = this.leaf(pattern, newText2);
 						childrenStack.peek().add(leaf);
 					} else {
 
-						final ISPLeaf leaf = this.leaf(text);
+						final SPPTLeaf leaf = this.leaf(text);
 						childrenStack.peek().add(leaf);
 					}
 				} else if (scanner.hasNext(ParseTreeBuilder.EMPTY)) {
 					final String empty = scanner.next(ParseTreeBuilder.EMPTY);
 					final String ruleNameThatIsEmpty = nodeNamesStack.peek();
-					final ISPNode emptyNode = this.emptyLeaf(ruleNameThatIsEmpty);
+					final SPPTNode emptyNode = this.emptyLeaf(ruleNameThatIsEmpty);
 					childrenStack.peek().add(emptyNode);
 
 				} else if (scanner.hasNext(ParseTreeBuilder.CHILDREN_END)) {
 					scanner.next(ParseTreeBuilder.CHILDREN_END);
 					final String lastNodeName = nodeNamesStack.pop();
 
-					final List<ISPNode> children = childrenStack.pop();
-					final ISPNode node = this.branch(lastNodeName, children);
+					final List<SPPTNode> children = childrenStack.pop();
+					final SPPTNode node = this.branch(lastNodeName, children);
 					childrenStack.peek().add(node);
 
 				} else {
@@ -300,7 +300,7 @@ public class ParseTreeBuilder {
 
 			}
 
-			tree = new SharedPackedParseTree(childrenStack.pop().get(0));
+			tree = new SharedPackedParseTreeSimple(childrenStack.pop().get(0));
 		}
 		return tree;
 	}
@@ -310,10 +310,10 @@ public class ParseTreeBuilder {
 	 *
 	 * @return current Shared Packed Parse Tree
 	 */
-	public ISharedPackedParseTree buildAndAdd() {
+	public SharedPackedParseTree buildAndAdd() {
 		try {
 			final String treeStr = this.sb.toString();
-			final ISharedPackedParseTree treeTree = this.parse(treeStr);
+			final SharedPackedParseTree treeTree = this.parse(treeStr);
 			this.reset();
 			return treeTree;
 		} catch (final Throwable e) {

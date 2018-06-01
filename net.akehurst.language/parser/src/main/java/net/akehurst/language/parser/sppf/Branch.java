@@ -23,52 +23,51 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import net.akehurst.language.core.sppt.FixedList;
-import net.akehurst.language.core.sppt.IParseTreeVisitor;
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPNode;
-import net.akehurst.language.core.sppt.ISPNodeIdentity;
 import net.akehurst.language.core.sppt.SPNodeIdentity;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTNode;
+import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
-public class Branch extends Node implements ISPBranch {
+public class Branch extends Node implements SPPTBranch {
 
-    private final ISPNodeIdentity identity;
-    private final Set<FixedList<ISPNode>> childrenAlternatives;
+    private final SPNodeIdentity identity;
+    private final Set<FixedList<SPPTNode>> childrenAlternatives;
     private int length;
-    private List<ISPNode> nonSkipChildren_cache;
+    private List<SPPTNode> nonSkipChildren_cache;
 
-    public Branch(final RuntimeRule runtimeRule, final ISPNode[] children) {
+    public Branch(final RuntimeRule runtimeRule, final SPPTNode[] children) {
         super(runtimeRule, children.length == 0 ? -1 : children[0].getStartPosition());
         this.childrenAlternatives = new HashSet<>();
-        this.childrenAlternatives.add(new FixedList<>(children));
+        this.childrenAlternatives.add(FixedLists.of(children));
         this.length = 0;
         // this.isEmpty = true;
         // this.firstLeaf = this.children.length==0 ? null : children[0].getFirstLeaf();
-        for (final ISPNode n : children) {
+        for (final SPPTNode n : children) {
             // this.isEmpty &= n.getIsEmpty();
             this.length += n.getMatchedTextLength();
         }
-        this.identity = new SPNodeIdentity(runtimeRule.getRuleNumber(), this.getStartPosition(), this.length);
+        this.identity = new SPPTNodeIdentitySimple(runtimeRule.getRuleNumber(), this.getStartPosition(), this.length);
 
     }
 
     // --- ISPPFBranch ---
     @Override
-    public Set<FixedList<ISPNode>> getChildrenAlternatives() {
+    public Set<FixedList<SPPTNode>> getChildrenAlternatives() {
         return this.childrenAlternatives;
     }
 
     @Override
-    public FixedList<ISPNode> getChildren() {
+    public FixedList<SPPTNode> getChildren() {
         return this.childrenAlternatives.iterator().next();
     }
 
     @Override
-    public List<ISPNode> getNonSkipChildren() {
+    public List<SPPTNode> getNonSkipChildren() {
         if (null == this.nonSkipChildren_cache) {
             this.nonSkipChildren_cache = new ArrayList<>();
-            for (final ISPNode n : this.getChildren()) {
+            for (final SPPTNode n : this.getChildren()) {
                 if (n.isSkip()) {
 
                 } else {
@@ -80,12 +79,12 @@ public class Branch extends Node implements ISPBranch {
     }
 
     @Override
-    public ISPNode getChild(final int index) {
-        final FixedList<ISPNode> children = this.getChildren();
+    public SPPTNode getChild(final int index) {
+        final FixedList<SPPTNode> children = this.getChildren();
 
         // get first non skip child
         int child = 0;
-        ISPNode n = children.get(child);
+        SPPTNode n = children.get(child);
         while (n.isSkip() && child < children.size() - 1) {
             ++child;
             n = children.get(child);
@@ -113,21 +112,21 @@ public class Branch extends Node implements ISPBranch {
     }
 
     @Override
-    public ISPBranch getBranchChild(final int i) {
-        final ISPNode n = this.getChild(i);
-        return (ISPBranch) n;
+    public SPPTBranch getBranchChild(final int i) {
+        final SPPTNode n = this.getChild(i);
+        return (SPPTBranch) n;
     }
 
     @Override
-    public List<ISPBranch> getBranchNonSkipChildren() {
-        final List<ISPBranch> res = this.getNonSkipChildren().stream().filter(ISPBranch.class::isInstance).map(ISPBranch.class::cast)
+    public List<SPPTBranch> getBranchNonSkipChildren() {
+        final List<SPPTBranch> res = this.getNonSkipChildren().stream().filter(SPPTBranch.class::isInstance).map(SPPTBranch.class::cast)
                 .collect(Collectors.toList());
         return res;
     }
 
     // --- ISPPFNode ---
     @Override
-    public ISPNodeIdentity getIdentity() {
+    public SPNodeIdentity getIdentity() {
         return this.identity;
     }
 
@@ -139,7 +138,7 @@ public class Branch extends Node implements ISPBranch {
     @Override
     public String getMatchedText() {
         String str = "";
-        for (final ISPNode n : this.getChildren()) {
+        for (final SPPTNode n : this.getChildren()) {
             str += n.getMatchedText();
         }
         return str;
@@ -148,7 +147,7 @@ public class Branch extends Node implements ISPBranch {
     @Override
     public String getNonSkipMatchedText() {
         String str = "";
-        for (final ISPNode n : this.getNonSkipChildren()) {
+        for (final SPPTNode n : this.getNonSkipChildren()) {
             str += n.getNonSkipMatchedText();
         }
         return str;
@@ -176,25 +175,25 @@ public class Branch extends Node implements ISPBranch {
     }
 
     @Override
-    public boolean contains(final ISPNode other) {
-        if (other instanceof ISPBranch) {
-            final ISPBranch otherBranch = (ISPBranch) other;
+    public boolean contains(final SPPTNode other) {
+        if (other instanceof SPPTBranch) {
+            final SPPTBranch otherBranch = (SPPTBranch) other;
 
             if (this.getIdentity().equals(other.getIdentity())) {
                 // for each alternative list of other children, check there is a matching list
                 // of children in this alternative children
                 boolean allOthersAreContained = true; // if no other children alternatives contain is a match
-                for (final FixedList<ISPNode> otherChildren : otherBranch.getChildrenAlternatives()) {
+                for (final FixedList<SPPTNode> otherChildren : otherBranch.getChildrenAlternatives()) {
                     // for each of this alternative children, find one that 'contains' otherChildren
                     boolean foundContainMatch = false;
-                    for (final FixedList<ISPNode> thisChildren : this.getChildrenAlternatives()) {
+                    for (final FixedList<SPPTNode> thisChildren : this.getChildrenAlternatives()) {
                         if (thisChildren.size() == otherChildren.size()) {
                             // for each pair of nodes, one from each of otherChildren thisChildren
                             // check thisChildrenNode contains otherChildrenNode
                             boolean thisMatch = true;
                             for (int i = 0; i < thisChildren.size(); ++i) {
-                                final ISPNode thisChildrenNode = thisChildren.get(i);
-                                final ISPNode otherChildrenNode = otherChildren.get(i);
+                                final SPPTNode thisChildrenNode = thisChildren.get(i);
+                                final SPPTNode otherChildrenNode = otherChildren.get(i);
                                 thisMatch &= thisChildrenNode.contains(otherChildrenNode);
                             }
                             if (thisMatch) {
@@ -225,7 +224,7 @@ public class Branch extends Node implements ISPBranch {
 
     // --- IParseTreeVisitable ---
     @Override
-    public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
+    public <T, A, E extends Throwable> T accept(final SharedPackedParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
         return visitor.visit(this, arg);
     }
 
@@ -259,7 +258,7 @@ public class Branch extends Node implements ISPBranch {
     @Override
     public String toString() {
         final ToStringVisitor v = new ToStringVisitor();
-        return this.accept(v, "").iterator().next();
+        return this.accept(v, new ToStringVisitor.Indent("")).iterator().next();
     }
 
     @Override
@@ -269,10 +268,10 @@ public class Branch extends Node implements ISPBranch {
 
     @Override
     public boolean equals(final Object arg) {
-        if (!(arg instanceof ISPBranch)) {
+        if (!(arg instanceof SPPTBranch)) {
             return false;
         }
-        final ISPBranch other = (ISPBranch) arg;
+        final SPPTBranch other = (SPPTBranch) arg;
         if (!Objects.equals(this.getIdentity(), other.getIdentity())) {
             return false;
         }

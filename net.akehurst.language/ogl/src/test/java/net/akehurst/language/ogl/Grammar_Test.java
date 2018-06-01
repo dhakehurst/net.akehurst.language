@@ -20,8 +20,8 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.akehurst.language.core.parser.INodeType;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
+import net.akehurst.language.core.grammar.INodeType;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
@@ -44,7 +44,7 @@ public class Grammar_Test {
 		b.rule("root").concatenation(new NonTerminal("hello"), new NonTerminal("world"));
 		b.rule("hello").concatenation(new TerminalLiteral("hello"));
 		b.rule("world").concatenation(new TerminalLiteral("world!"));
-		final Grammar g = b.get();
+		final GrammarStructure g = b.get();
 	}
 
 	@Test
@@ -54,7 +54,7 @@ public class Grammar_Test {
 		b.rule("root").concatenation(new NonTerminal("hello"), new NonTerminal("world"));
 		b.rule("hello").concatenation(new TerminalLiteral("hello"));
 		b.rule("world").concatenation(new TerminalLiteral("world!"));
-		final Grammar g = b.get();
+		final GrammarStructure g = b.get();
 
 		final Set<INodeType> types = g.findAllNodeType();
 
@@ -67,7 +67,7 @@ public class Grammar_Test {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "TestG");
 		b.skip("SKIP").concatenation(new TerminalPattern("\\s+"));
 		b.rule("port").concatenation(new TerminalLiteral("port"));
-		final Grammar g = b.get();
+		final GrammarStructure g = b.get();
 
 		final Set<INodeType> types = g.findAllNodeType();
 

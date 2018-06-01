@@ -12,7 +12,7 @@ import net.akehurst.language.grammar.parser.converter.rules.Grammar2RuntimeRuleS
 import net.akehurst.language.grammar.parser.forrest.Input3;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
@@ -80,7 +80,7 @@ public class Test_ParseGraph {
         final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
         final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
         b.rule("A").concatenation(new TerminalLiteral("a"));
-        final Grammar g = b.get();
+        final GrammarStructure g = b.get();
         final Converter c = new Converter(rules);
         c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
 
@@ -113,7 +113,7 @@ public class Test_ParseGraph {
         final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
         b.rule("S").choice(new TerminalLiteral("a"), new NonTerminal("S$group"));
         b.rule("S$group").concatenation(new NonTerminal("S"), new TerminalLiteral("a"));
-        final Grammar g = b.get();
+        final GrammarStructure g = b.get();
         final Converter c = new Converter(rules);
         c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
 
@@ -148,7 +148,7 @@ public class Test_ParseGraph {
             final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
             b.rule("S").concatenation(new NonTerminal("B"), new NonTerminal("B"));
             b.rule("B").multi(0, 1, new TerminalLiteral("b"));
-            final Grammar g = b.get();
+            final GrammarStructure g = b.get();
             final Converter c = new Converter(rules);
             c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
 
@@ -179,13 +179,13 @@ public class Test_ParseGraph {
             // grow width
 
             // grow height
-            graph.getGrowable().clear();
-            graph.createWithFirstChild(rule_B, 0, node_b);
-            final IGraphNode node_B = graph.findNode(rule_B.getRuleNumber(), 1);
+            // graph.getGrowable().clear();
+            // graph.createWithFirstChild(rule_B, 0, node_b);
+            // final IGraphNode node_B = graph.findNode(rule_B.getRuleNumber(), 1);
             // graft back
-            graph.getGrowable().clear();
-            graph.growNextChild(node_start_1, node_B, 1);
-            final IGraphNode node_start_2 = graph.findNode(rule_B.getRuleNumber(), 2);
+            // graph.getGrowable().clear();
+            // graph.growNextChild(node_start_1, node_B, 1);
+            // final IGraphNode node_start_2 = graph.findNode(rule_B.getRuleNumber(), 2);
 
             Assert.fail("Incomplete test");
 

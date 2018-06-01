@@ -19,12 +19,12 @@ import org.junit.runners.Parameterized.Parameters;
 
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.parser.IParser;
+import net.akehurst.language.core.parser.Parser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 
 @RunWith(Parameterized.class)
 public class Java8_Tests2 {
@@ -53,7 +53,7 @@ public class Java8_Tests2 {
 		if (null == Java8_Tests2.javaProcessor) {
 			try {
 				final FileReader reader = new FileReader(Paths.get("src/test/resources/Java8_all.og").toFile());
-				final Grammar javaGrammar = Java8_Tests2.getOGLProcessor().process(reader, "grammarDefinition", Grammar.class);
+				final GrammarStructure javaGrammar = Java8_Tests2.getOGLProcessor().process(reader, "grammarDefinition", GrammarStructure.class);
 				Java8_Tests2.javaProcessor = new LanguageProcessor(javaGrammar, null);
 				Java8_Tests2.javaProcessor.getParser().build();
 			} catch (final IOException e) {
@@ -74,7 +74,7 @@ public class Java8_Tests2 {
 	static ILanguageProcessor getJavaProcessor(final String goalName) {
 		try {
 			final FileReader reader = new FileReader(Paths.get("src/test/resources/Java8_all.og").toFile());
-			final Grammar javaGrammar = Java8_Tests2.getOGLProcessor().process(reader, "grammarDefinition", Grammar.class);
+			final GrammarStructure javaGrammar = Java8_Tests2.getOGLProcessor().process(reader, "grammarDefinition", GrammarStructure.class);
 			final LanguageProcessor jp = new LanguageProcessor(javaGrammar, null);
 			jp.getParser().build();
 			return jp;
@@ -109,10 +109,10 @@ public class Java8_Tests2 {
 	//
 	// }
 
-	static ISharedPackedParseTree parse(final String goalName, final String input) throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
+	static SharedPackedParseTree parse(final String goalName, final String input) throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
-		final IParser parser = Java8_Tests2.getJavaProcessor().getParser();
-		final ISharedPackedParseTree tree = parser.parse(goalName, input);
+		final Parser parser = Java8_Tests2.getJavaProcessor().getParser();
+		final SharedPackedParseTree tree = parser.parse(goalName, input);
 		return tree;
 
 	}
@@ -213,7 +213,7 @@ public class Java8_Tests2 {
 		try {
 			final String queryStr = this.data.queryStr;
 			final String grammarRule = this.data.grammarRule;
-			final ISharedPackedParseTree tree = Java8_Tests2.parse(grammarRule, queryStr);
+			final SharedPackedParseTree tree = Java8_Tests2.parse(grammarRule, queryStr);
 			Assert.assertNotNull(tree);
 			final String resultStr = Java8_Tests2.clean(tree.asString());
 			Assert.assertEquals(queryStr, resultStr);

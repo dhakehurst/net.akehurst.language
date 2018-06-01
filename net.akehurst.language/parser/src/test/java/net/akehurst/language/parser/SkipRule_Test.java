@@ -19,20 +19,20 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
-import net.akehurst.language.parser.sppf.SharedPackedParseTree;
+import net.akehurst.language.parser.sppf.SharedPackedParseTreeSimple;
 
 public class SkipRule_Test extends AbstractParser_Test {
 
-	Grammar as() {
+	GrammarStructure as() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
 
@@ -45,16 +45,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_a() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.as();
+			final GrammarStructure g = this.as();
 			final String goal = "as";
 			final String text = "a";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final ISPBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
+			final SPPTBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
 
 			Assert.assertEquals(expected, tree.getRoot());
 
@@ -67,16 +67,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_WSa() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.as();
+			final GrammarStructure g = this.as();
 			final String goal = "as";
 			final String text = " a";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final ISPBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")), b.branch("a", b.leaf("a", "a")));
+			final SPPTBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")), b.branch("a", b.leaf("a", "a")));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -88,16 +88,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_aaa() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.as();
+			final GrammarStructure g = this.as();
 			final String goal = "as";
 			final String text = "aaa";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final ISPBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")));
+			final SPPTBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")), b.branch("a", b.leaf("a", "a")));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -109,16 +109,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_aWSaWSa() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.as();
+			final GrammarStructure g = this.as();
 			final String goal = "as";
 			final String text = "a a a";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final ISPBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
+			final SPPTBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
 					b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("a", b.leaf("a", "a")));
 			Assert.assertEquals(expected, tree.getRoot());
 
@@ -131,16 +131,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_WSaWSaWSa() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.as();
+			final GrammarStructure g = this.as();
 			final String goal = "as";
 			final String text = " a a a";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final ISPBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")),
+			final SPPTBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")),
 					b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
 					b.branch("a", b.leaf("a", "a")));
 			Assert.assertEquals(expected, tree.getRoot());
@@ -153,16 +153,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_aWSaWSaWS() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.as();
+			final GrammarStructure g = this.as();
 			final String goal = "as";
 			final String text = "a a a ";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final ISPBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
+			final SPPTBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
 					b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))));
 			Assert.assertEquals(expected, tree.getRoot());
 		} catch (final ParseFailedException e) {
@@ -174,16 +174,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void as_as_WSaWSaWSaWS() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.as();
+			final GrammarStructure g = this.as();
 			final String goal = "as";
 			final String text = " a a a ";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final ISPBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")),
+			final SPPTBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")),
 					b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))), b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))),
 					b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))));
 			Assert.assertEquals(expected, tree.getRoot());
@@ -193,7 +193,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 		}
 	}
 
-	Grammar asDot() {
+	GrammarStructure asDot() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
 
@@ -207,16 +207,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void asDot_as_a() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.asDot();
+			final GrammarStructure g = this.asDot();
 			final String goal = "as";
 			final String text = "a.";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final ISPBranch expected = b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", ".")));
+			final SPPTBranch expected = b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", ".")));
 
 			Assert.assertEquals(expected, tree.getRoot());
 
@@ -229,16 +229,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void asDot_as_aaa() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.asDot();
+			final GrammarStructure g = this.asDot();
 			final String goal = "as";
 			final String text = "a.a.a.";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final ISPBranch expected = b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", ".")),
+			final SPPTBranch expected = b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", ".")),
 					b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", ".")), b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", ".")));
 
 			Assert.assertEquals(expected, tree.getRoot());
@@ -252,16 +252,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void asDot_as_aWS() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.asDot();
+			final GrammarStructure g = this.asDot();
 			final String goal = "as";
 			final String text = "a. ";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 
-			final ISharedPackedParseTree expected = new SharedPackedParseTree(
+			final SharedPackedParseTree expected = new SharedPackedParseTreeSimple(
 					b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", "."), b.branch("WS", b.leaf("\\s+", " ")))));
 
 			Assert.assertEquals(expected, tree);
@@ -271,7 +271,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 		}
 	}
 
-	Grammar S() {
+	GrammarStructure S() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.skip("WS").concatenation(new TerminalPattern("\\s+"));
 
@@ -283,16 +283,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void S_S_a() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.S();
+			final GrammarStructure g = this.S();
 			final String goal = "S";
 			final String text = "a";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final ISPBranch expected = b.branch("S", b.leaf("a"));
+			final SPPTBranch expected = b.branch("S", b.leaf("a"));
 
 			Assert.assertEquals(expected, tree.getRoot());
 
@@ -305,16 +305,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void S_S_WSa() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.S();
+			final GrammarStructure g = this.S();
 			final String goal = "S";
 			final String text = " a";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final ISPBranch expected = b.branch("S", b.branch("WS", b.leaf("\\s+", " ")), b.leaf("a"));
+			final SPPTBranch expected = b.branch("S", b.branch("WS", b.leaf("\\s+", " ")), b.leaf("a"));
 			Assert.assertEquals(expected, tree.getRoot());
 
 		} catch (final ParseFailedException e) {
@@ -326,16 +326,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void S_S_aWS() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.S();
+		final GrammarStructure g = this.S();
 		final String goal = "S";
 		final String text = "a ";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
-		final ISPBranch expected = b.branch("S", b.leaf("a"), b.branch("WS", b.leaf("\\s+", " ")));
+		final SPPTBranch expected = b.branch("S", b.leaf("a"), b.branch("WS", b.leaf("\\s+", " ")));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -344,16 +344,16 @@ public class SkipRule_Test extends AbstractParser_Test {
 	public void S_S_WSaWS() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.as();
+			final GrammarStructure g = this.as();
 			final String goal = "as";
 			final String text = " a ";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 			;
-			final ISPBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")),
+			final SPPTBranch expected = b.branch("as", b.branch("WS", b.leaf("\\s+", " ")),
 					b.branch("a", b.leaf("a", "a"), b.branch("WS", b.leaf("\\s+", " "))));
 			Assert.assertEquals(expected, tree.getRoot());
 

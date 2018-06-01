@@ -15,48 +15,48 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
-import net.akehurst.language.core.parser.INodeTypeIdentity;
-import net.akehurst.language.core.parser.INodeType;
+import net.akehurst.language.core.grammar.INodeType;
+import net.akehurst.language.core.grammar.NodeTypeIdentity;
 
 public class LeafNodeType implements INodeType {
 
-	public LeafNodeType() {
-		this.identity = new NodeIdentity("''");
-	}
+    private final NodeTypeIdentity identity;
 
-	public LeafNodeType(TerminalLiteral terminal) {
-		this.identity = new NodeIdentity("'" + terminal.getValue() + "'");
-	}
+    public LeafNodeType() {
+        this.identity = new NodeIdentitySimple("''");
+    }
 
-	public LeafNodeType(TerminalPattern terminal) {
-		this.identity = new NodeIdentity("\"" + terminal.getValue() + "\"");
-	}
+    public LeafNodeType(final TerminalLiteral terminal) {
+        this.identity = new NodeIdentitySimple("'" + terminal.getValue() + "'");
+    }
 
-	INodeTypeIdentity identity;
+    public LeafNodeType(final TerminalPattern terminal) {
+        this.identity = new NodeIdentitySimple("\"" + terminal.getValue() + "\"");
+    }
 
-	@Override
-	public INodeTypeIdentity getIdentity() {
-		return this.identity;
-	}
+    @Override
+    public NodeTypeIdentity getIdentity() {
+        return this.identity;
+    }
 
-	// --- Object ---
-	@Override
-	public String toString() {
-		return this.getIdentity().asPrimitive();
-	}
+    // --- Object ---
+    @Override
+    public String toString() {
+        return this.getIdentity().asPrimitive();
+    }
 
-	@Override
-	public int hashCode() {
-		return this.getIdentity().hashCode();
-	}
+    @Override
+    public int hashCode() {
+        return this.getIdentity().hashCode();
+    }
 
-	@Override
-	public boolean equals(Object arg) {
-		if (arg instanceof LeafNodeType) {
-			LeafNodeType other = (LeafNodeType) arg;
-			return this.getIdentity().equals(other.getIdentity());
-		} else {
-			return false;
-		}
-	}
+    @Override
+    public boolean equals(final Object arg) {
+        if (arg instanceof LeafNodeType) {
+            final LeafNodeType other = (LeafNodeType) arg;
+            return this.getIdentity().equals(other.getIdentity());
+        } else {
+            return false;
+        }
+    }
 }

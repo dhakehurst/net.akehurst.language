@@ -18,12 +18,12 @@ package net.akehurst.language.ogl.semanticStructure;
 public class GrammarBuilder {
 
 	public GrammarBuilder(final Namespace namespace, final String name) {
-		this.grammar = new Grammar(namespace, name);
+		this.grammar = new GrammarStructure(namespace, name);
 	}
 
-	Grammar grammar;
+	GrammarStructure grammar;
 
-	public Grammar get() {
+	public GrammarStructure get() {
 		return this.grammar;
 	}
 
@@ -33,7 +33,7 @@ public class GrammarBuilder {
 
 	public class RuleBuilder {
 
-		public RuleBuilder(final String name, final Grammar grammar) {
+		public RuleBuilder(final String name, final GrammarStructure grammar) {
 			this.rule = new Rule(grammar, name);
 			grammar.getRule().add(this.rule);
 		}
@@ -75,7 +75,7 @@ public class GrammarBuilder {
 
 	public class SkipRuleBuilder {
 
-		public SkipRuleBuilder(final String name, final Grammar grammar) {
+		public SkipRuleBuilder(final String name, final GrammarStructure grammar) {
 			this.rule = new SkipRule(grammar, name);
 			grammar.getRule().add(this.rule);
 		}

@@ -19,9 +19,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
@@ -33,7 +33,7 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 	 * expr : range | real ; range: integer '..' integer ; integer : "[0-9]+" ; real : "([0-9]+[.][0-9]*)|([.][0-9]+)" ;
 	 *
 	 */
-	Grammar pascal() {
+	GrammarStructure pascal() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("expr").choice(new NonTerminal("range"), new NonTerminal("real"));
 		b.rule("range").concatenation(new NonTerminal("integer"), new TerminalLiteral(".."), new NonTerminal("integer"));
@@ -51,17 +51,17 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 	public void pascal_expr_p5() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.pascal();
+		final GrammarStructure g = this.pascal();
 		final String goal = "expr";
 		final String text = ".5";
 
-		final ISharedPackedParseTree actual = this.process(g, text, goal);
+		final SharedPackedParseTree actual = this.process(g, text, goal);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("expr {");
 		b.define("  real { '([0-9]+[.][0-9]*)|([.][0-9]+)' : '.5' }");
 		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+		final SharedPackedParseTree expected = b.buildAndAdd();
 
 		Assert.assertNotNull(actual);
 		Assert.assertEquals(expected, actual);
@@ -72,17 +72,17 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 	public void pascal_expr_1p() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.pascal();
+		final GrammarStructure g = this.pascal();
 		final String goal = "expr";
 		final String text = "1.";
 
-		final ISharedPackedParseTree actual = this.process(g, text, goal);
+		final SharedPackedParseTree actual = this.process(g, text, goal);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("expr {");
 		b.define("  real { '([0-9]+[.][0-9]*)|([.][0-9]+)' : '1.' }");
 		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+		final SharedPackedParseTree expected = b.buildAndAdd();
 
 		Assert.assertNotNull(actual);
 		Assert.assertEquals(expected, actual);
@@ -93,11 +93,11 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 	public void pascal_expr_1to5() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.pascal();
+		final GrammarStructure g = this.pascal();
 		final String goal = "expr";
 		final String text = "1..5";
 
-		final ISharedPackedParseTree actual = this.process(g, text, goal);
+		final SharedPackedParseTree actual = this.process(g, text, goal);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("expr {");
@@ -107,7 +107,7 @@ public class Parser_PascalRange_Test extends AbstractParser_Test {
 		b.define("    integer { '[0-9]+' : '5' }");
 		b.define("  }");
 		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+		final SharedPackedParseTree expected = b.buildAndAdd();
 
 		Assert.assertNotNull(actual);
 		Assert.assertEquals(expected, actual);

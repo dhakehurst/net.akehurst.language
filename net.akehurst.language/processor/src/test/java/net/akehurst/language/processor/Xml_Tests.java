@@ -11,12 +11,12 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.core.parser.IParser;
+import net.akehurst.language.core.parser.Parser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ParseTreeToInputText;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 
 public class Xml_Tests {
 
@@ -44,7 +44,7 @@ public class Xml_Tests {
 		if (null == Xml_Tests.xmlProcessor) {
 			try {
 				final FileReader reader = new FileReader(Paths.get("src/test/resources/Xml.og").toFile());
-				final Grammar grammar = Xml_Tests.getOGLProcessor().process(reader, "grammarDefinition", Grammar.class);
+				final GrammarStructure grammar = Xml_Tests.getOGLProcessor().process(reader, "grammarDefinition", GrammarStructure.class);
 				final LanguageProcessor proc = new LanguageProcessor(grammar, null);
 				proc.getParser().build();
 				Xml_Tests.xmlProcessor = proc;
@@ -73,10 +73,10 @@ public class Xml_Tests {
 		return null;
 	}
 
-	static ISharedPackedParseTree parse(final String goalName, final String input) {
+	static SharedPackedParseTree parse(final String goalName, final String input) {
 		try {
-			final IParser parser = Xml_Tests.getXmlProcessor().getParser();
-			final ISharedPackedParseTree tree = parser.parse(goalName, new StringReader(input));
+			final Parser parser = Xml_Tests.getXmlProcessor().getParser();
+			final SharedPackedParseTree tree = parser.parse(goalName, new StringReader(input));
 			return tree;
 		} catch (final ParseFailedException e) {
 			return null;// e.getLongestMatch();
@@ -90,7 +90,7 @@ public class Xml_Tests {
 	public void emptyFile() {
 
 		final String input = "";
-		final ISharedPackedParseTree tree = Xml_Tests.parse("file", input);
+		final SharedPackedParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -102,7 +102,7 @@ public class Xml_Tests {
 	public void emptyElement() {
 
 		final String input = "<xxx />";
-		final ISharedPackedParseTree tree = Xml_Tests.parse("file", input);
+		final SharedPackedParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -114,7 +114,7 @@ public class Xml_Tests {
 	public void emptyElementAttribute1() {
 
 		final String input = "<xxx aa='1' />";
-		final ISharedPackedParseTree tree = Xml_Tests.parse("file", input);
+		final SharedPackedParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -126,7 +126,7 @@ public class Xml_Tests {
 	public void emptyElementAttribute2() {
 
 		final String input = "<xxx aa='1' bb='2' />";
-		final ISharedPackedParseTree tree = Xml_Tests.parse("file", input);
+		final SharedPackedParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -138,7 +138,7 @@ public class Xml_Tests {
 	public void element() {
 
 		final String input = "<xxx> </xxx>";
-		final ISharedPackedParseTree tree = Xml_Tests.parse("file", input);
+		final SharedPackedParseTree tree = Xml_Tests.parse("file", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();

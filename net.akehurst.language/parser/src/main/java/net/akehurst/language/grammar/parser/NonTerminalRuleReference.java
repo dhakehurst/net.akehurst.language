@@ -2,7 +2,7 @@ package net.akehurst.language.grammar.parser;
 
 import java.util.Objects;
 
-import net.akehurst.language.core.grammar.IGrammar;
+import net.akehurst.language.core.grammar.Grammar;
 import net.akehurst.language.core.grammar.INonTerminal;
 import net.akehurst.language.core.grammar.IRule;
 import net.akehurst.language.core.grammar.IRuleItem;
@@ -12,12 +12,12 @@ import net.akehurst.language.ogl.semanticStructure.Visitor;
 
 public class NonTerminalRuleReference implements INonTerminal, Visitable {
 
-	public NonTerminalRuleReference(final IGrammar grammar, final String ruleName) {
+	public NonTerminalRuleReference(final Grammar grammar, final String ruleName) {
 		this.grammar = grammar;
 		this.ruleName = ruleName;
 	}
 
-	private final IGrammar grammar;
+	private final Grammar grammar;
 
 	private final String ruleName;
 

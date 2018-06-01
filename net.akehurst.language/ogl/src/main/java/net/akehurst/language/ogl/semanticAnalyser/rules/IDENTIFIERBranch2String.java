@@ -15,46 +15,46 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPLeaf;
-import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTLeaf;
+import net.akehurst.language.core.sppt.SPPTNode;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class IDENTIFIERBranch2String implements BinaryRule<ISPNode, String> {
+public class IDENTIFIERBranch2String implements BinaryRule<SPPTNode, String> {
 
     @Override
-    public boolean isAMatch(final ISPNode left, final String right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTNode left, final String right, final BinaryTransformer transformer) {
         return true;
     }
 
     @Override
-    public void updateLeft2Right(final ISPNode arg0, final String arg1, final BinaryTransformer arg2) {
+    public void updateLeft2Right(final SPPTNode arg0, final String arg1, final BinaryTransformer arg2) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateRight2Left(final ISPNode arg0, final String arg1, final BinaryTransformer arg2) {
+    public void updateRight2Left(final SPPTNode arg0, final String arg1, final BinaryTransformer arg2) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public String constructLeft2Right(final ISPNode left, final BinaryTransformer transformer) {
-        final ISPLeaf leaf = (ISPLeaf) ((ISPBranch) left).getChildren().get(0);
+    public String constructLeft2Right(final SPPTNode left, final BinaryTransformer transformer) {
+        final SPPTLeaf leaf = (SPPTLeaf) ((SPPTBranch) left).getChildren().get(0);
         final String right = leaf.getMatchedText();
         return right;
     }
 
     @Override
-    public ISPBranch constructRight2Left(final String arg0, final BinaryTransformer arg1) {
+    public SPPTBranch constructRight2Left(final String arg0, final BinaryTransformer arg1) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public boolean isValidForLeft2Right(final ISPNode left) {
+    public boolean isValidForLeft2Right(final SPPTNode left) {
         return left.getName().equals("IDENTIFIER");
     }
 

@@ -18,7 +18,7 @@ package net.akehurst.language.grammar.parser.runtime;
 import java.util.regex.Pattern;
 
 import net.akehurst.language.core.grammar.ITerminal;
-import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.SPPTNode;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 import net.akehurst.language.parser.sppf.Branch;
@@ -81,7 +81,7 @@ public class RuntimeRuleSetBuilder {
 		}
 	}
 
-	public Branch createBranch(final RuntimeRule r, final ISPNode[] children) {
+	public Branch createBranch(final RuntimeRule r, final SPPTNode[] children) {
 		return this.parseTreeFactory.createBranch(r, children);
 	}
 

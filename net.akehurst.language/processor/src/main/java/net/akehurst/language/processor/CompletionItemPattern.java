@@ -3,9 +3,9 @@ package net.akehurst.language.processor;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.parser.ICompletionItem;
+import net.akehurst.language.core.parser.CompletionItem;
 
-public class CompletionItemPattern implements ICompletionItem {
+public class CompletionItemPattern implements CompletionItem {
 
 	public CompletionItemPattern(final String name, final Pattern pattern) {
 		this.name = name;

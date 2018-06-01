@@ -31,7 +31,7 @@ subprojects {
 
 
 	group 'net.akehurst.language'
-	version '1.0.0-SNAPSHOT'
+	version '1.2.0-SNAPSHOT'
 
 	sourceCompatibility = '1.8'
 	targetCompatibility = '1.8'
@@ -42,8 +42,9 @@ subprojects {
         jcenter()
     }
 
-    dependencies {
-        testCompile 'junit:junit:4.12'
+    ext {
+        version_junit = '4.12'
+        version_transform = '2.2.0'
     }
      
     checkstyle {
@@ -62,15 +63,15 @@ subprojects {
 	publishing {
 		repositories {
 			maven {
-				name 'itemis'
+				name 'itemis-akehurst'
 				url "https://projects.itemis.de/nexus/content/repositories/akehurst/"
 			}
 		}
 
 	    publications {
 	        noSource(MavenPublication) {
-	        	    groupId "${group}"
-	         	artifactId "${project.name}"
+	        	groupId "${group}"
+	         	artifactId "${project.name}".replace("${group}.", "")
 				version "${version}"
 	            from components.java
 	        }
@@ -79,7 +80,7 @@ subprojects {
 	    publications {
 	        mavenJava(MavenPublication) {
 	          	groupId "${group}"
-	        	    artifactId "${project.name}"
+	        	    artifactId "${project.name}".replace("${group}.", "")
 				version "${version}"
 	        
 	            from components.java
@@ -102,6 +103,10 @@ subprojects {
 			vcsUrl = 'https://github.com/dhakehurst/net.akehurst.application.framework.git'
 			version {
 				name = "${project.version}"
+				gpg {
+                    sign = true
+                    passphrase = project.hasProperty('passphrase') ? project.property('passphrase') : System.getenv('BINTRAY_PASSPHRASE')
+                }
 			}
 		}
 	}

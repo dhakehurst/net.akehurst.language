@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import net.akehurst.language.core.parser.IParseTreeVisitable;
+import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitable;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
-public interface IGraphNode extends IParseTreeVisitable {
+public interface IGraphNode extends SharedPackedParseTreeVisitable {
 
 	RuntimeRule getRuntimeRule();
 

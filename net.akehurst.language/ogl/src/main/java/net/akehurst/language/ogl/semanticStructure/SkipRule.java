@@ -15,11 +15,11 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
-import net.akehurst.language.core.parser.INodeType;
+import net.akehurst.language.core.grammar.INodeType;
 
 public class SkipRule extends Rule {
 
-	public SkipRule(Grammar grammar, String name) {
+	public SkipRule(GrammarStructure grammar, String name) {
 		super(grammar, name);
 	}
 

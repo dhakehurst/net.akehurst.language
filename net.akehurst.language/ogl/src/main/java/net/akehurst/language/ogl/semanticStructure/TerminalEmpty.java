@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.ogl.semanticStructure;
 
-import net.akehurst.language.core.parser.INodeType;
+import net.akehurst.language.core.grammar.INodeType;
 
 // DataType
 public class TerminalEmpty extends TerminalLiteral {

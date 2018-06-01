@@ -21,7 +21,7 @@ import java.util.Set;
 
 import net.akehurst.language.core.grammar.INonTerminal;
 import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.parser.INodeType;
+import net.akehurst.language.core.grammar.INodeType;
 
 public class NonTerminal extends TangibleItem implements INonTerminal {
 

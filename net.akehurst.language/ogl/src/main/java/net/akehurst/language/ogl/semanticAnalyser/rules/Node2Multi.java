@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTNode;
 import net.akehurst.language.ogl.semanticStructure.Multi;
 import net.akehurst.language.ogl.semanticStructure.SimpleItem;
 import net.akehurst.transform.binary.api.BinaryRule;
@@ -36,22 +36,22 @@ public class Node2Multi extends AbstractNode2ConcatenationItem<Multi> {
     }
 
     @Override
-    public boolean isAMatch(final ISPBranch left, final Multi right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final Multi right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public Multi constructLeft2Right(final ISPBranch left, final BinaryTransformer transformer) {
+    public Multi constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
 
-        final ISPNode itemNode = left.getChild(0);
-        final ISPNode multiplicityNode = left.getChild(1);
+        final SPPTNode itemNode = left.getChild(0);
+        final SPPTNode multiplicityNode = left.getChild(1);
 
-        final SimpleItem item = transformer.transformLeft2Right((Class<BinaryRule<ISPNode, SimpleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
+        final SimpleItem item = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, SimpleItem>>) (Class<?>) Node2SimpleItem.class, itemNode);
 
         // TODO: this should really be done with transform rules!
         Multi right = null;
-        final String multiplicityString = ((ISPBranch) multiplicityNode).getChild(0).getName();
+        final String multiplicityString = ((SPPTBranch) multiplicityNode).getChild(0).getName();
         if ("*".equals(multiplicityString)) {
             final int min = 0;
             final int max = -1;
@@ -70,19 +70,19 @@ public class Node2Multi extends AbstractNode2ConcatenationItem<Multi> {
     }
 
     @Override
-    public ISPBranch constructRight2Left(final Multi right, final BinaryTransformer transformer) {
+    public SPPTBranch constructRight2Left(final Multi right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final ISPBranch left, final Multi right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SPPTBranch left, final Multi right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateRight2Left(final ISPBranch left, final Multi right, final BinaryTransformer transformer) {
+    public void updateRight2Left(final SPPTBranch left, final Multi right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }

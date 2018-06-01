@@ -13,8 +13,8 @@ import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.sppt.FixedList;
-import net.akehurst.language.core.sppt.ISPNode;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SPPTNode;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.log.Log;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
@@ -27,7 +27,7 @@ import net.akehurst.language.parse.graph.IGrowingNode;
 import net.akehurst.language.parse.graph.IParseGraph;
 import net.akehurst.language.parser.sppf.IInput;
 import net.akehurst.language.parser.sppf.Leaf;
-import net.akehurst.language.parser.sppf.SharedPackedParseTree;
+import net.akehurst.language.parser.sppf.SharedPackedParseTreeSimple;
 
 public final class Forrest3 {
 
@@ -61,14 +61,14 @@ public final class Forrest3 {
                 }
             }
             if (!this.input.getIsEnd(lt.getNextInputPosition() + 1)) {
-                final ISharedPackedParseTree last = this.extractLastGrown();
+                final SharedPackedParseTree last = this.extractLastGrown();
                 final Map<String, Integer> location = this.getLineAndColumn(this.input, ((ICompleteNode) last.getRoot()).getNextInputPosition());
                 throw new ParseFailedException("Goal does not match full text", last, location);
             } else {
                 return lt;
             }
         } else {
-            final ISharedPackedParseTree last = this.extractLastGrown();
+            final SharedPackedParseTree last = this.extractLastGrown();
             final Map<String, Integer> location = this.getLineAndColumn(this.input, ((ICompleteNode) last.getRoot()).getNextInputPosition());
             throw new ParseFailedException("Could not match goal", last, location);
         }
@@ -93,7 +93,7 @@ public final class Forrest3 {
         return result;
     }
 
-    private ISharedPackedParseTree extractLastGrown() {
+    private SharedPackedParseTree extractLastGrown() {
         if (this.getLastGrown().isEmpty()) {
             return null;
         }
@@ -106,11 +106,11 @@ public final class Forrest3 {
         // TODO: gorwing node is not really complete
         final ICompleteNode complete = new GraphNodeBranch(this.graph, longest.getRuntimeRule(), longest.getPriority(), longest.getStartPosition(),
                 longest.getNextInputPosition());
-        complete.getChildrenAlternatives().add((FixedList<ISPNode>) (FixedList<?>) longest.getGrowingChildren());
-        return new SharedPackedParseTree((ISPNode) complete);
+        complete.getChildrenAlternatives().add((FixedList<SPPTNode>) (FixedList<?>) longest.getGrowingChildren());
+        return new SharedPackedParseTreeSimple((SPPTNode) complete);
     }
 
-    private ISharedPackedParseTree extractLongestMatch() {
+    private SharedPackedParseTree extractLongestMatch() {
         if (this.graph.getCompleteNodes().isEmpty()) {
             return null;
         }
@@ -120,10 +120,10 @@ public final class Forrest3 {
                 longest = n;
             }
         }
-        return new SharedPackedParseTree((ISPNode) longest);
+        return new SharedPackedParseTreeSimple((SPPTNode) longest);
     }
 
-    private ISharedPackedParseTree extractLongestMatchFromStart() {
+    private SharedPackedParseTree extractLongestMatchFromStart() {
         if (this.graph.getCompleteNodes().isEmpty()) {
             return null;
         }
@@ -138,7 +138,7 @@ public final class Forrest3 {
         if (null == longest) {
             return this.extractLongestMatch();
         } else {
-            return new SharedPackedParseTree((ISPNode) longest);
+            return new SharedPackedParseTreeSimple((SPPTNode) longest);
         }
     }
 

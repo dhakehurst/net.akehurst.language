@@ -18,17 +18,17 @@ package net.akehurst.language.parser.sppf;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.akehurst.language.core.sppt.ISPLeaf;
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPNode;
-import net.akehurst.language.core.sppt.ISPNodeIdentity;
+import net.akehurst.language.core.sppt.SPPTLeaf;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTNode;
+import net.akehurst.language.core.sppt.SPNodeIdentity;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
-abstract public class Node implements ISPNode {
+abstract public class Node implements SPPTNode {
 
 	private final RuntimeRule runtimeRule;
 	private final int startPosition;
-	private ISPBranch parent;
+	private SPPTBranch parent;
 
 	public Node(final RuntimeRule runtimeRule, final int startPosition) {
 		this.runtimeRule = runtimeRule;
@@ -42,7 +42,7 @@ abstract public class Node implements ISPNode {
 	// --- ISPPFNode ---
 
 	@Override
-	public abstract ISPNodeIdentity getIdentity();
+	public abstract SPNodeIdentity getIdentity();
 
 	@Override
 	public String getName() {
@@ -95,30 +95,30 @@ abstract public class Node implements ISPNode {
 	}
 
 	@Override
-	public ISPLeaf asLeaf() {
-		if (this instanceof ISPLeaf) {
-			return (ISPLeaf) this;
+	public SPPTLeaf asLeaf() {
+		if (this instanceof SPPTLeaf) {
+			return (SPPTLeaf) this;
 		} else {
 			return null;
 		}
 	}
 
 	@Override
-	public ISPBranch asBranch() {
-		if (this instanceof ISPBranch) {
-			return (ISPBranch) this;
+	public SPPTBranch asBranch() {
+		if (this instanceof SPPTBranch) {
+			return (SPPTBranch) this;
 		} else {
 			return null;
 		}
 	}
 
 	@Override
-	public ISPBranch getParent() {
+	public SPPTBranch getParent() {
 		return this.parent;
 	}
 
 	@Override
-	public void setParent(final ISPBranch value) {
+	public void setParent(final SPPTBranch value) {
 		this.parent = value;
 	}
 

@@ -1,8 +1,9 @@
 
 dependencies {
 
-	compile project(':net.akehurst.language.parser')
-	testCompile 'junit:junit:+'
+	implementation project(':net.akehurst.language.parser')
+    
+	testImplementation "junit:junit:${version_junit}"
 	
 }
 

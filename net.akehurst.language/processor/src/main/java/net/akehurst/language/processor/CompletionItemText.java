@@ -2,9 +2,9 @@ package net.akehurst.language.processor;
 
 import java.util.Objects;
 
-import net.akehurst.language.core.parser.ICompletionItem;
+import net.akehurst.language.core.parser.CompletionItem;
 
-public class CompletionItemText implements ICompletionItem {
+public class CompletionItemText implements CompletionItem {
 	public CompletionItemText(final String text) {
 		this.text = text;
 	}

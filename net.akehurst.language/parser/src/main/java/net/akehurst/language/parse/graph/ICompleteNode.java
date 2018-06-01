@@ -2,12 +2,12 @@ package net.akehurst.language.parse.graph;
 
 import java.util.Set;
 
-import net.akehurst.language.core.parser.IParseTreeVisitable;
 import net.akehurst.language.core.sppt.FixedList;
-import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.SPPTNode;
+import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitable;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
-public interface ICompleteNode extends IParseTreeVisitable {
+public interface ICompleteNode extends SharedPackedParseTreeVisitable {
 
 	RuntimeRule getRuntimeRule();
 
@@ -58,6 +58,6 @@ public interface ICompleteNode extends IParseTreeVisitable {
 
 	String toStringTree();
 
-	Set<FixedList<ISPNode>> getChildrenAlternatives();
+	Set<FixedList<SPPTNode>> getChildrenAlternatives();
 
 }

@@ -25,8 +25,8 @@ import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 
 public class test_OGL_Dot {
 
@@ -35,7 +35,7 @@ public class test_OGL_Dot {
 			final OGLanguageProcessor proc = new OGLanguageProcessor();
 
 			// List<IToken> tokens = proc.getLexicalAnaliser().lex(grammar);
-			final ISharedPackedParseTree tree = proc.getParser().parse("grammarDefinition", grammarText);
+			final SharedPackedParseTree tree = proc.getParser().parse("grammarDefinition", grammarText);
 			final T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
@@ -54,7 +54,7 @@ public class test_OGL_Dot {
 			final InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(grammarFile);
 			final InputStreamReader reader = new InputStreamReader(is);
 
-			final ISharedPackedParseTree tree = proc.getParser().parse("grammarDefinition", reader);
+			final SharedPackedParseTree tree = proc.getParser().parse("grammarDefinition", reader);
 			final T t = proc.getSemanticAnalyser().analyse(targetType, tree);
 
 			return t;
@@ -64,13 +64,13 @@ public class test_OGL_Dot {
 		}
 	}
 
-	ISharedPackedParseTree processDot(final String ruleName, final String text) {
+	SharedPackedParseTree processDot(final String ruleName, final String text) {
 		try {
 			final String grammarFile = "Dot.ogl";
-			final Grammar grammar = this.processFile(grammarFile, Grammar.class);
+			final GrammarStructure grammar = this.processFile(grammarFile, GrammarStructure.class);
 			Assert.assertNotNull(grammar);
 			final LanguageProcessor proc = new LanguageProcessor(grammar, null);
-			final ISharedPackedParseTree tree = proc.getParser().parse(ruleName, text);
+			final SharedPackedParseTree tree = proc.getParser().parse(ruleName, text);
 			return tree;
 		} catch (ParseFailedException | UnableToAnalyseExeception | ParseTreeException | GrammarRuleNotFoundException e) {
 			e.printStackTrace();
@@ -82,7 +82,7 @@ public class test_OGL_Dot {
 	@Test
 	public void test() {
 
-		final ISharedPackedParseTree tree = this.processDot("graph", "graph { }");
+		final SharedPackedParseTree tree = this.processDot("graph", "graph { }");
 		Assert.assertNotNull(tree);
 
 	}
@@ -90,7 +90,7 @@ public class test_OGL_Dot {
 	@Test
 	public void test2() {
 
-		final ISharedPackedParseTree tree = this.processDot("graph", "sTriCt GRapH { }");
+		final SharedPackedParseTree tree = this.processDot("graph", "sTriCt GRapH { }");
 		Assert.assertNotNull(tree);
 
 	}

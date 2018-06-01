@@ -22,23 +22,23 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import net.akehurst.language.core.analyser.ISemanticAnalyser;
+import net.akehurst.language.core.analyser.SemanticAnalyser;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.grammar.IGrammar;
+import net.akehurst.language.core.grammar.Grammar;
 import net.akehurst.language.core.grammar.IRuleItem;
-import net.akehurst.language.core.parser.ICompletionItem;
-import net.akehurst.language.core.parser.IParser;
+import net.akehurst.language.core.parser.CompletionItem;
+import net.akehurst.language.core.parser.Parser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ScannerLessParser3;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 
 public class LanguageProcessor implements ILanguageProcessor {
 
-	public LanguageProcessor(final IGrammar grammar, final ISemanticAnalyser semanticAnalyser) {
+	public LanguageProcessor(final Grammar grammar, final SemanticAnalyser semanticAnalyser) {
 		this.grammar = grammar;
 		// this.defaultGoalName = defaultGoalName;
 		// this.lexicalAnalyser = new LexicalAnalyser(grammar.findTokenTypes());
@@ -48,22 +48,22 @@ public class LanguageProcessor implements ILanguageProcessor {
 	}
 
 	private final RuntimeRuleSetBuilder parseTreeFactory;
-	private final IGrammar grammar;
-	private final IParser parser;
-	private final ISemanticAnalyser semanticAnalyser;
+	private final Grammar grammar;
+	private final Parser parser;
+	private final SemanticAnalyser semanticAnalyser;
 	private CompletionProvider completionProvider;
 
 	@Override
-	public IGrammar getGrammar() {
+	public Grammar getGrammar() {
 		return this.grammar;
 	}
 
 	@Override
-	public IParser getParser() {
+	public Parser getParser() {
 		return this.parser;
 	}
 
-	public ISemanticAnalyser getSemanticAnalyser() {
+	public SemanticAnalyser getSemanticAnalyser() {
 		return this.semanticAnalyser;
 	}
 
@@ -78,7 +78,7 @@ public class LanguageProcessor implements ILanguageProcessor {
 	public <T> T process(final String text, final String goalRuleName, final Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
 		try {
 
-			final ISharedPackedParseTree forest = this.getParser().parse(goalRuleName, text);
+			final SharedPackedParseTree forest = this.getParser().parse(goalRuleName, text);
 			if (null == this.getSemanticAnalyser()) {
 				throw new UnableToAnalyseExeception("No SemanticAnalyser supplied", null);
 			}
@@ -94,7 +94,7 @@ public class LanguageProcessor implements ILanguageProcessor {
 	public <T> T process(final Reader reader, final String goalRuleName, final Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
 		try {
 
-			final ISharedPackedParseTree forest = this.getParser().parse(goalRuleName, reader);
+			final SharedPackedParseTree forest = this.getParser().parse(goalRuleName, reader);
 			if (null == this.getSemanticAnalyser()) {
 				throw new UnableToAnalyseExeception("No SemanticAnalyser supplied", null);
 			}
@@ -107,24 +107,24 @@ public class LanguageProcessor implements ILanguageProcessor {
 	}
 
 	@Override
-	public List<ICompletionItem> expectedAt(final String text, final String goalRuleName, final int position, final int desiredDepth)
+	public List<CompletionItem> expectedAt(final String text, final String goalRuleName, final int position, final int desiredDepth)
 			throws ParseFailedException, ParseTreeException {
 		final List<IRuleItem> parserExpected = this.getParser().expectedAt(goalRuleName, text, position);
-		final Set<ICompletionItem> expected = new LinkedHashSet<>();
+		final Set<CompletionItem> expected = new LinkedHashSet<>();
 		for (final IRuleItem item : parserExpected) {
-			final List<ICompletionItem> exp = this.getCompletionProvider().provideFor(item, desiredDepth);
+			final List<CompletionItem> exp = this.getCompletionProvider().provideFor(item, desiredDepth);
 			expected.addAll(exp);
 		}
 		return new ArrayList<>(expected);
 	}
 
 	@Override
-	public List<ICompletionItem> expectedAt(final Reader reader, final String goalRuleName, final int position, final int desiredDepth)
+	public List<CompletionItem> expectedAt(final Reader reader, final String goalRuleName, final int position, final int desiredDepth)
 			throws ParseFailedException, ParseTreeException {
 		final List<IRuleItem> parserExpected = this.getParser().expectedAt(goalRuleName, reader, position);
-		final Set<ICompletionItem> expected = new LinkedHashSet<>();
+		final Set<CompletionItem> expected = new LinkedHashSet<>();
 		for (final IRuleItem item : parserExpected) {
-			final List<ICompletionItem> exp = this.getCompletionProvider().provideFor(item, desiredDepth);
+			final List<CompletionItem> exp = this.getCompletionProvider().provideFor(item, desiredDepth);
 			expected.addAll(exp);
 		}
 		return new ArrayList<>(expected);

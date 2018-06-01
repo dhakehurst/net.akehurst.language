@@ -28,7 +28,7 @@ import org.junit.Test;
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 
 public class OGL_ParseJava_Test {
 	RuntimeRuleSetBuilder parseTreeFactory;
@@ -47,7 +47,7 @@ public class OGL_ParseJava_Test {
 		try {
 			final OGLanguageProcessor proc = new OGLanguageProcessor();
 			final FileReader reader = new FileReader(grammarFile);
-			final Grammar grammar = proc.process(reader, "grammarDefinition", Grammar.class);
+			final GrammarStructure grammar = proc.process(reader, "grammarDefinition", GrammarStructure.class);
 
 		} catch (final ParseFailedException e) {
 			Assert.fail(e.getMessage());

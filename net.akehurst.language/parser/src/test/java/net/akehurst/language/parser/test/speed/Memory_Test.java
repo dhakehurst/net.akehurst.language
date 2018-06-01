@@ -19,8 +19,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
@@ -29,7 +29,7 @@ import net.akehurst.language.parser.AbstractParser_Test;
 
 public class Memory_Test extends AbstractParser_Test {
 
-	Grammar as_rr() {
+	GrammarStructure as_rr() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("as").choice(new NonTerminal("as$group1"), new NonTerminal("a"));
 		b.rule("as$group1").concatenation(new NonTerminal("a"), new NonTerminal("as"));
@@ -41,11 +41,11 @@ public class Memory_Test extends AbstractParser_Test {
 	public void rr_as_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa() {
 		// grammar, goal, input
 		try {
-			final Grammar g = this.as_rr();
+			final GrammarStructure g = this.as_rr();
 			final String goal = "as";
 			final String text = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
-			final ISharedPackedParseTree tree = this.process(g, text, goal);
+			final SharedPackedParseTree tree = this.process(g, text, goal);
 			Assert.assertNotNull(tree);
 
 		} catch (final ParseFailedException e) {

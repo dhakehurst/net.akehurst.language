@@ -17,8 +17,8 @@ package net.akehurst.language.ogl.semanticAnalyser.rules;
 
 import java.util.List;
 
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTNode;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
 import net.akehurst.language.ogl.semanticStructure.ConcatenationItem;
 import net.akehurst.transform.binary.api.BinaryRule;
@@ -38,18 +38,18 @@ public class Node2Concatenation extends AbstractSemanticAnalysisRule<Concatenati
     }
 
     @Override
-    public boolean isAMatch(final ISPBranch left, final Concatenation right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final Concatenation right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public Concatenation constructLeft2Right(final ISPBranch left, final BinaryTransformer transformer) {
+    public Concatenation constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
 
-        final List<? extends ISPNode> allLeft = left.getNonSkipChildren();
+        final List<? extends SPPTNode> allLeft = left.getNonSkipChildren();
         List<? extends ConcatenationItem> allRight;
 
-        allRight = transformer.transformAllLeft2Right((Class<BinaryRule<ISPNode, ConcatenationItem>>) (Class<?>) Node2ConcatenationItem.class, allLeft);
+        allRight = transformer.transformAllLeft2Right((Class<BinaryRule<SPPTNode, ConcatenationItem>>) (Class<?>) Node2ConcatenationItem.class, allLeft);
 
         final Concatenation right = new Concatenation(allRight.toArray(new ConcatenationItem[allRight.size()]));
         return right;
@@ -57,19 +57,19 @@ public class Node2Concatenation extends AbstractSemanticAnalysisRule<Concatenati
     }
 
     @Override
-    public ISPBranch constructRight2Left(final Concatenation right, final BinaryTransformer transformer) {
+    public SPPTBranch constructRight2Left(final Concatenation right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final ISPBranch left, final Concatenation right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SPPTBranch left, final Concatenation right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateRight2Left(final ISPBranch left, final Concatenation right, final BinaryTransformer transformer) {
+    public void updateRight2Left(final SPPTBranch left, final Concatenation right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }

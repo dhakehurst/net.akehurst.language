@@ -7,7 +7,7 @@ import java.util.Set;
 
 import net.akehurst.language.core.grammar.INonTerminal;
 import net.akehurst.language.core.grammar.IRuleItem;
-import net.akehurst.language.core.parser.ICompletionItem;
+import net.akehurst.language.core.parser.CompletionItem;
 import net.akehurst.language.ogl.semanticStructure.ChoicePriority;
 import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
@@ -20,7 +20,7 @@ import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 import net.akehurst.language.ogl.semanticStructure.Visitable;
 import net.akehurst.language.ogl.semanticStructure.Visitor;
 
-public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Throwable> {
+public class SampleGeneratorVisitor implements Visitor<Set<CompletionItem>, Throwable> {
 
 	public SampleGeneratorVisitor(final int desiredDepth) {
 		this.desiredDepth = desiredDepth;
@@ -28,7 +28,7 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 	}
 
 	private final int desiredDepth;
-	private final Map<IRuleItem, Set<ICompletionItem>> cache;
+	private final Map<IRuleItem, Set<CompletionItem>> cache;
 
 	int getArg(final Object[] arg) {
 		if (arg[0] instanceof Integer) {
@@ -45,13 +45,13 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 	}
 
 	@Override
-	public Set<ICompletionItem> visit(final ChoiceSimple target, final Object... arg) throws Throwable {
-		Set<ICompletionItem> result = this.cache.get(target);
+	public Set<CompletionItem> visit(final ChoiceSimple target, final Object... arg) throws Throwable {
+		Set<CompletionItem> result = this.cache.get(target);
 		if (null == result) {
 			result = new LinkedHashSet<>();
 			for (final Concatenation item : target.getAlternative()) {
-				final Set<ICompletionItem> options = item.accept(this, arg);
-				for (final ICompletionItem option : options) {
+				final Set<CompletionItem> options = item.accept(this, arg);
+				for (final CompletionItem option : options) {
 					final CompletionItemComposite composite = new CompletionItemComposite();
 					composite.getContent().add(option);
 
@@ -64,13 +64,13 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 	}
 
 	@Override
-	public Set<ICompletionItem> visit(final ChoicePriority target, final Object... arg) throws Throwable {
-		Set<ICompletionItem> result = this.cache.get(target);
+	public Set<CompletionItem> visit(final ChoicePriority target, final Object... arg) throws Throwable {
+		Set<CompletionItem> result = this.cache.get(target);
 		if (null == result) {
 			result = new LinkedHashSet<>();
 			for (final Concatenation item : target.getAlternative()) {
-				final Set<ICompletionItem> options = item.accept(this, arg);
-				for (final ICompletionItem option : options) {
+				final Set<CompletionItem> options = item.accept(this, arg);
+				for (final CompletionItem option : options) {
 					final CompletionItemComposite composite = new CompletionItemComposite();
 
 					composite.getContent().add(option);
@@ -84,15 +84,15 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 	}
 
 	@Override
-	public Set<ICompletionItem> visit(final Concatenation target, final Object... arg) throws Throwable {
+	public Set<CompletionItem> visit(final Concatenation target, final Object... arg) throws Throwable {
 		Set<CompletionItemComposite> result = (Set<CompletionItemComposite>) (Object) this.cache.get(target);
 		if (null == result) {
 			result = new LinkedHashSet<>();
 
 			for (final ConcatenationItem item : target.getItem()) {
-				final Set<ICompletionItem> options = item.accept(this, arg);
+				final Set<CompletionItem> options = item.accept(this, arg);
 				if (result.isEmpty()) {
-					for (final ICompletionItem ci : options) {
+					for (final CompletionItem ci : options) {
 						final CompletionItemComposite composite = new CompletionItemComposite();
 						composite.getContent().add(ci);
 						result.add(composite);
@@ -103,7 +103,7 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 						if (options.isEmpty()) {
 							result2.addAll(result);
 						} else {
-							for (final ICompletionItem ci : options) {
+							for (final CompletionItem ci : options) {
 								final CompletionItemComposite composite = new CompletionItemComposite();
 								composite.getContent().addAll(cp.getContent());
 								composite.getContent().add(ci);
@@ -115,15 +115,15 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 				}
 			}
 
-			this.cache.put(target, (Set<ICompletionItem>) (Object) result);
+			this.cache.put(target, (Set<CompletionItem>) (Object) result);
 		}
-		return (Set<ICompletionItem>) (Object) result;
+		return (Set<CompletionItem>) (Object) result;
 
 	}
 
 	@Override
-	public Set<ICompletionItem> visit(final INonTerminal target, final Object... arg) throws Throwable {
-		Set<ICompletionItem> result = this.cache.get(target);
+	public Set<CompletionItem> visit(final INonTerminal target, final Object... arg) throws Throwable {
+		Set<CompletionItem> result = this.cache.get(target);
 		if (null == result) {
 
 			// if (arg[0] instanceof Set<?>) {
@@ -150,8 +150,8 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 	}
 
 	@Override
-	public Set<ICompletionItem> visit(final Multi target, final Object... arg) throws Throwable {
-		Set<ICompletionItem> result = this.cache.get(target);
+	public Set<CompletionItem> visit(final Multi target, final Object... arg) throws Throwable {
+		Set<CompletionItem> result = this.cache.get(target);
 		if (null == result) {
 			result = new LinkedHashSet<>();
 			if (0 == target.getMin()) {
@@ -161,8 +161,8 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 			if (!this.reachedDepth(arg)) {
 				if (-1 == target.getMax() || 0 < target.getMax()) {
 					// if max > 0 (weird if not) add min or 1 if min==0
-					final Set<ICompletionItem> options = target.getItem().accept(this, arg);
-					for (final ICompletionItem option : options) {
+					final Set<CompletionItem> options = target.getItem().accept(this, arg);
+					for (final CompletionItem option : options) {
 						final CompletionItemComposite composite = new CompletionItemComposite();
 						for (int i = 0; i < Math.max(1, target.getMin()); ++i) {
 							composite.getContent().add(option);
@@ -178,8 +178,8 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 	}
 
 	@Override
-	public Set<ICompletionItem> visit(final SeparatedList target, final Object... arg) throws Throwable {
-		Set<ICompletionItem> result = this.cache.get(target);
+	public Set<CompletionItem> visit(final SeparatedList target, final Object... arg) throws Throwable {
+		Set<CompletionItem> result = this.cache.get(target);
 		if (null == result) {
 			result = new LinkedHashSet<>();
 			if (0 == target.getMin()) {
@@ -189,10 +189,10 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 			if (-1 == target.getMax() || 0 < target.getMax()) {
 				if (!this.reachedDepth(arg)) {
 					// if max > 0 (weird if not) add min or 2 if min==0
-					final Set<ICompletionItem> options = target.getItem().accept(this, arg);
-					final Set<ICompletionItem> sep = target.getSeparator().accept(this, arg);
+					final Set<CompletionItem> options = target.getItem().accept(this, arg);
+					final Set<CompletionItem> sep = target.getSeparator().accept(this, arg);
 					// add option for 1 item
-					for (final ICompletionItem option : options) {
+					for (final CompletionItem option : options) {
 						final CompletionItemComposite composite = new CompletionItemComposite();
 						for (int i = 0; i < Math.max(1, target.getMin()); ++i) {
 							composite.getContent().add(option);
@@ -204,7 +204,7 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 					}
 					// add option for 2 items
 					if (-1 == target.getMax() || 1 < target.getMax()) {
-						for (final ICompletionItem option : options) {
+						for (final CompletionItem option : options) {
 							final CompletionItemComposite composite = new CompletionItemComposite();
 							for (int i = 0; i < Math.max(0, target.getMin()); ++i) {
 								composite.getContent().add(option);
@@ -223,8 +223,8 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 	}
 
 	@Override
-	public Set<ICompletionItem> visit(final Group target, final Object... arg) throws Throwable {
-		Set<ICompletionItem> result = this.cache.get(target);
+	public Set<CompletionItem> visit(final Group target, final Object... arg) throws Throwable {
+		Set<CompletionItem> result = this.cache.get(target);
 		if (null == result) {
 			result = target.getChoice().accept(this, arg);
 			this.cache.put(target, result);
@@ -233,8 +233,8 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 	}
 
 	@Override
-	public Set<ICompletionItem> visit(final TerminalPattern target, final Object... arg) throws Throwable {
-		Set<ICompletionItem> result = this.cache.get(target);
+	public Set<CompletionItem> visit(final TerminalPattern target, final Object... arg) throws Throwable {
+		Set<CompletionItem> result = this.cache.get(target);
 		// if (null == result) {
 		result = new LinkedHashSet<>();
 		result.add(new CompletionItemPattern(target.getOwningRule().getName(), target.getPattern()));
@@ -244,8 +244,8 @@ public class SampleGeneratorVisitor implements Visitor<Set<ICompletionItem>, Thr
 	}
 
 	@Override
-	public Set<ICompletionItem> visit(final TerminalLiteral target, final Object... arg) throws Throwable {
-		Set<ICompletionItem> result = this.cache.get(target);
+	public Set<CompletionItem> visit(final TerminalLiteral target, final Object... arg) throws Throwable {
+		Set<CompletionItem> result = this.cache.get(target);
 		// if (null == result) {
 		result = new LinkedHashSet<>();
 		result.add(new CompletionItemText(target.getValue()));

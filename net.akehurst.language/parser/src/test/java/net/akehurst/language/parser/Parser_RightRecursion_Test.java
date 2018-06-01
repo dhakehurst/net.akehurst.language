@@ -19,10 +19,10 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
@@ -30,7 +30,7 @@ import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
 public class Parser_RightRecursion_Test extends AbstractParser_Test {
 
-	Grammar as() {
+	GrammarStructure as() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("as").choice(new NonTerminal("as$group1"), new NonTerminal("a"));
 		b.rule("as$group1").concatenation(new NonTerminal("a"), new NonTerminal("as"));
@@ -42,16 +42,16 @@ public class Parser_RightRecursion_Test extends AbstractParser_Test {
 	public void as_as_a() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.as();
+		final GrammarStructure g = this.as();
 		final String goal = "as";
 		final String text = "a";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		;
-		final ISPBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
+		final SPPTBranch expected = b.branch("as", b.branch("a", b.leaf("a", "a")));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -60,16 +60,16 @@ public class Parser_RightRecursion_Test extends AbstractParser_Test {
 	public void as_as_aa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.as();
+		final GrammarStructure g = this.as();
 		final String goal = "as";
 		final String text = "aa";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		;
-		final ISPBranch expected = b.branch("as", b.branch("as$group1", b.branch("a", b.leaf("a", "a")), b.branch("as", b.branch("a", b.leaf("a", "a")))));
+		final SPPTBranch expected = b.branch("as", b.branch("as$group1", b.branch("a", b.leaf("a", "a")), b.branch("as", b.branch("a", b.leaf("a", "a")))));
 		Assert.assertEquals(expected, tree.getRoot());
 
 	}
@@ -78,16 +78,16 @@ public class Parser_RightRecursion_Test extends AbstractParser_Test {
 	public void as_as_aaa() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.as();
+		final GrammarStructure g = this.as();
 		final String goal = "as";
 		final String text = "aaa";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		;
-		final ISPBranch expected = b.branch("as", b.branch("as$group1", b.branch("a", b.leaf("a", "a")),
+		final SPPTBranch expected = b.branch("as", b.branch("as$group1", b.branch("a", b.leaf("a", "a")),
 				b.branch("as", b.branch("as$group1", b.branch("a", b.leaf("a", "a")), b.branch("as", b.branch("a", b.leaf("a", "a")))))));
 		Assert.assertEquals(expected, tree.getRoot());
 
@@ -95,7 +95,7 @@ public class Parser_RightRecursion_Test extends AbstractParser_Test {
 
 	// E = 'a' | E '+a' Bm ;
 	// Bm = 'b'?
-	Grammar hidden1() {
+	GrammarStructure hidden1() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("S").choice(new NonTerminal("E"));
 		b.rule("E").choice(new TerminalLiteral("a"), new NonTerminal("E2"));
@@ -107,11 +107,11 @@ public class Parser_RightRecursion_Test extends AbstractParser_Test {
 	@Test
 	public void hidden1_S_a() throws ParseFailedException {
 		// grammar, goal, input
-		final Grammar g = this.hidden1();
+		final GrammarStructure g = this.hidden1();
 		final String goal = "S";
 		final String text = "a";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -120,18 +120,18 @@ public class Parser_RightRecursion_Test extends AbstractParser_Test {
 		b.define("    'a'");
 		b.define("  }");
 		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+		final SharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 	}
 
 	@Test
 	public void hidden1_S_apa() throws ParseFailedException {
 		// grammar, goal, input
-		final Grammar g = this.hidden1();
+		final GrammarStructure g = this.hidden1();
 		final String goal = "S";
 		final String text = "a+a";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -144,18 +144,18 @@ public class Parser_RightRecursion_Test extends AbstractParser_Test {
 		b.define("    }");
 		b.define("  }");
 		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+		final SharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 	}
 
 	@Test
 	public void hidden1_S_apapa() throws ParseFailedException {
 		// grammar, goal, input
-		final Grammar g = this.hidden1();
+		final GrammarStructure g = this.hidden1();
 		final String goal = "S";
 		final String text = "a+a+a";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -174,18 +174,18 @@ public class Parser_RightRecursion_Test extends AbstractParser_Test {
 		b.define("    }");
 		b.define("  }");
 		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+		final SharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 	}
 
 	@Test
 	public void hidden1_S_bapa() throws ParseFailedException {
 		// grammar, goal, input
-		final Grammar g = this.hidden1();
+		final GrammarStructure g = this.hidden1();
 		final String goal = "S";
 		final String text = "a+ab";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -198,7 +198,7 @@ public class Parser_RightRecursion_Test extends AbstractParser_Test {
 		b.define("    }");
 		b.define("  }");
 		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+		final SharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 	}
 
@@ -206,7 +206,7 @@ public class Parser_RightRecursion_Test extends AbstractParser_Test {
 	// Fm = F? ;
 	// F = '+' E ;
 	// Bm = 'b'?
-	Grammar trailingEmpty() {
+	GrammarStructure trailingEmpty() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("S").choice(new NonTerminal("E"));
 		b.rule("E").concatenation(new TerminalLiteral("a"), new NonTerminal("Fm"), new NonTerminal("Bm"));
@@ -219,11 +219,11 @@ public class Parser_RightRecursion_Test extends AbstractParser_Test {
 	@Test
 	public void trailingEmpty_S_a() throws ParseFailedException {
 		// grammar, goal, input
-		final Grammar g = this.trailingEmpty();
+		final GrammarStructure g = this.trailingEmpty();
 		final String goal = "S";
 		final String text = "a";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -234,18 +234,18 @@ public class Parser_RightRecursion_Test extends AbstractParser_Test {
 		b.define("    Bm { $empty }");
 		b.define("  }");
 		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+		final SharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 	}
 
 	@Test
 	public void trailingEmpty_S_apa() throws ParseFailedException {
 		// grammar, goal, input
-		final Grammar g = this.trailingEmpty();
+		final GrammarStructure g = this.trailingEmpty();
 		final String goal = "S";
 		final String text = "a+a";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -261,7 +261,7 @@ public class Parser_RightRecursion_Test extends AbstractParser_Test {
 		b.define("    Bm { $empty }");
 		b.define("  }");
 		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+		final SharedPackedParseTree expected = b.buildAndAdd();
 		Assert.assertEquals(expected, tree);
 	}
 }

@@ -19,13 +19,13 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.ogl.grammar.OGLGrammar;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 
 public class OGL_Test extends AbstractParser_Test {
 
-	Grammar ogl() {
+	GrammarStructure ogl() {
 		return new OGLGrammar();
 	}
 
@@ -33,11 +33,11 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_grammarDefinition_1_normalRule() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.ogl();
+		final GrammarStructure g = this.ogl();
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G { a : 'a' ;}";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}
@@ -46,11 +46,11 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_grammarDefinition_2_normalRule() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.ogl();
+		final GrammarStructure g = this.ogl();
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G { a : 'a'; b:'b'; }";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}
@@ -59,11 +59,11 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_grammarDefinition_3_normalRule() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.ogl();
+		final GrammarStructure g = this.ogl();
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G { a : 'a'; b:'b'; c:'c'; }";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}
@@ -72,11 +72,11 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_grammarDefinition_choice() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.ogl();
+		final GrammarStructure g = this.ogl();
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G { abc:a|b|c; a : 'a'; b:'b'; c:'c'; }";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}
@@ -85,12 +85,12 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_grammarDefinition_normalRule_minimumWS() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.ogl();
+		final GrammarStructure g = this.ogl();
 		final String goal = "grammarDefinition";
 		final String text = "namespace test; grammar G {sp:' ';}";
 		// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}
@@ -99,12 +99,12 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_grammarDefinition_normalRule_lotsWS() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.ogl();
+		final GrammarStructure g = this.ogl();
 		final String goal = "grammarDefinition";
 		final String text = " namespace test ;  grammar G  {  sp  :   ' '  ;  } ";
 		// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}
@@ -113,12 +113,12 @@ public class OGL_Test extends AbstractParser_Test {
 	public void ogl_terminal_escaped() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.ogl();
+		final GrammarStructure g = this.ogl();
 		final String goal = "terminal";
 		final String text = "'\\''";
 		// String text = "namespace test; grammar A { SP ?= ' ' ; a := 'a' ; }";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
 	}

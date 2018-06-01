@@ -19,9 +19,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
@@ -29,7 +29,7 @@ import net.akehurst.language.ogl.semanticStructure.TerminalLiteral;
 
 public class Parser_Empty_Test extends AbstractParser_Test {
 
-	Grammar empty() {
+	GrammarStructure empty() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("S").choice();
 		return b.get();
@@ -39,18 +39,18 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 	public void empty_S_empty() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.empty();
+		final GrammarStructure g = this.empty();
 		final String goal = "S";
 		final String text = "";
 
-		final ISharedPackedParseTree actual = this.process(g, text, goal);
+		final SharedPackedParseTree actual = this.process(g, text, goal);
 		Assert.assertNotNull(actual);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
 		b.define("  $empty");
 		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+		final SharedPackedParseTree expected = b.buildAndAdd();
 
 		Assert.assertEquals(expected, actual);
 	}
@@ -59,16 +59,16 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 	public void empty_S_a() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.empty();
+		final GrammarStructure g = this.empty();
 		final String goal = "S";
 		final String text = "a";
 
-		final ISharedPackedParseTree tree = this.process(g, text, goal);
+		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.fail("This parse should fail");
 
 	}
 
-	Grammar multi0m1() {
+	GrammarStructure multi0m1() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("S").multi(0, -1, new TerminalLiteral("a"));
 		return b.get();
@@ -78,18 +78,18 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 	public void multi0_S_empty() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.multi0m1();
+		final GrammarStructure g = this.multi0m1();
 		final String goal = "S";
 		final String text = "";
 
-		final ISharedPackedParseTree actual = this.process(g, text, goal);
+		final SharedPackedParseTree actual = this.process(g, text, goal);
 		Assert.assertNotNull(actual);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
 		b.define("  $empty");
 		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+		final SharedPackedParseTree expected = b.buildAndAdd();
 
 		Assert.assertEquals(expected, actual);
 
@@ -99,24 +99,24 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 	public void multi0_S_a() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.multi0m1();
+		final GrammarStructure g = this.multi0m1();
 		final String goal = "S";
 		final String text = "a";
 
-		final ISharedPackedParseTree actual = this.process(g, text, goal);
+		final SharedPackedParseTree actual = this.process(g, text, goal);
 		Assert.assertNotNull(actual);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
 		b.define("  'a'");
 		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+		final SharedPackedParseTree expected = b.buildAndAdd();
 
 		Assert.assertEquals(expected, actual);
 
 	}
 
-	Grammar aeas() {
+	GrammarStructure aeas() {
 		final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 		b.rule("S").concatenation(new NonTerminal("ae"), new NonTerminal("as"));
 		b.rule("ae").multi(0, 1, new TerminalLiteral("a"));
@@ -128,11 +128,11 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 	public void aas_S_empty() throws ParseFailedException {
 		// grammar, goal, input
 
-		final Grammar g = this.aeas();
+		final GrammarStructure g = this.aeas();
 		final String goal = "S";
 		final String text = "a";
 
-		final ISharedPackedParseTree actual = this.process(g, text, goal);
+		final SharedPackedParseTree actual = this.process(g, text, goal);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		b.define("S {");
@@ -145,7 +145,7 @@ public class Parser_Empty_Test extends AbstractParser_Test {
 		b.define("  ae { $empty }");
 		b.define("  as { 'a' }");
 		b.define("}");
-		final ISharedPackedParseTree expected = b.buildAndAdd();
+		final SharedPackedParseTree expected = b.buildAndAdd();
 
 		Assert.assertNotNull(actual);
 		Assert.assertEquals(expected, actual);

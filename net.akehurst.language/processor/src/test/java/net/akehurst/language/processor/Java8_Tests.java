@@ -12,13 +12,13 @@ import org.junit.Test;
 
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.parser.IParser;
+import net.akehurst.language.core.parser.Parser;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
 import net.akehurst.language.core.processor.ILanguageProcessor;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.ParseTreeToInputText;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 
 public class Java8_Tests {
 
@@ -46,7 +46,7 @@ public class Java8_Tests {
 		if (null == Java8_Tests.javaProcessor) {
 			try {
 				final FileReader reader = new FileReader(Paths.get("src/test/resources/Java8_all.og").toFile());
-				final Grammar javaGrammar = Java8_Tests.getOGLProcessor().process(reader, "grammarDefinition", Grammar.class);
+				final GrammarStructure javaGrammar = Java8_Tests.getOGLProcessor().process(reader, "grammarDefinition", GrammarStructure.class);
 				Java8_Tests.javaProcessor = new LanguageProcessor(javaGrammar, null);
 				Java8_Tests.javaProcessor.getParser().build();
 			} catch (final IOException e) {
@@ -67,7 +67,7 @@ public class Java8_Tests {
 	static ILanguageProcessor getJavaProcessor(final String goalName) {
 		try {
 			final FileReader reader = new FileReader(Paths.get("src/test/resources/Java8_all.og").toFile());
-			final Grammar javaGrammar = Java8_Tests.getOGLProcessor().process(reader, "grammarDefinition", Grammar.class);
+			final GrammarStructure javaGrammar = Java8_Tests.getOGLProcessor().process(reader, "grammarDefinition", GrammarStructure.class);
 			final LanguageProcessor jp = new LanguageProcessor(javaGrammar, null);
 			jp.getParser().build();
 			return jp;
@@ -95,17 +95,17 @@ public class Java8_Tests {
 		return null;
 	}
 
-	static ISharedPackedParseTree parse(final String input) throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
+	static SharedPackedParseTree parse(final String input) throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
-		final ISharedPackedParseTree tree = Java8_Tests.getJavaProcessor().getParser().parse("compilationUnit", new StringReader(input));
+		final SharedPackedParseTree tree = Java8_Tests.getJavaProcessor().getParser().parse("compilationUnit", new StringReader(input));
 		return tree;
 
 	}
 
-	static ISharedPackedParseTree parse(final String goalName, final String input) throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
+	static SharedPackedParseTree parse(final String goalName, final String input) throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
-		final IParser parser = Java8_Tests.getJavaProcessor().getParser();
-		final ISharedPackedParseTree tree = parser.parse(goalName, input);
+		final Parser parser = Java8_Tests.getJavaProcessor().getParser();
+		final SharedPackedParseTree tree = parser.parse(goalName, input);
 		return tree;
 
 	}
@@ -115,7 +115,7 @@ public class Java8_Tests {
 
 		final String input = "if(i==1) {return 1;}";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("ifThenStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("ifThenStatement", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -128,7 +128,7 @@ public class Java8_Tests {
 
 		final String input = "if(i==1) return 1; else return 2;";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("ifThenElseStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("ifThenElseStatement", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -141,7 +141,7 @@ public class Java8_Tests {
 
 		final String input = "if(i==1) {return 1;} else {return 2;}";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("ifThenElseStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("ifThenElseStatement", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -154,7 +154,7 @@ public class Java8_Tests {
 
 		final String input = "if(i==1) return 1; else return 2;";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("statement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("statement", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -167,7 +167,7 @@ public class Java8_Tests {
 
 		final String input = "if(i==1) {return 1;} else {return 2;}";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("statement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("statement", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -180,7 +180,7 @@ public class Java8_Tests {
 
 		final String input = "if(i==1) return 1; else if (false) return 2;";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("ifThenElseStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("ifThenElseStatement", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -193,7 +193,7 @@ public class Java8_Tests {
 
 		final String input = "if(i==1) {return 1;} else if (false) {return 2;}";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("ifThenElseStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("ifThenElseStatement", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -209,7 +209,7 @@ public class Java8_Tests {
 		input += "    } catch(E e) {";
 		input += "       if(i==1) return 1;";
 		input += "    }";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("tryStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("tryStatement", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -225,7 +225,7 @@ public class Java8_Tests {
 		input += "    } finally {";
 		input += "       if(i==1) return 1;";
 		input += "    }";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("tryStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("tryStatement", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -247,7 +247,7 @@ public class Java8_Tests {
 		input += "    }";
 		input += "  }";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -272,7 +272,7 @@ public class Java8_Tests {
 		input += "    }";
 		input += "  }";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -289,7 +289,7 @@ public class Java8_Tests {
 		input += "  Integer i3;";
 		input += "  Integer i4;";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -305,7 +305,7 @@ public class Java8_Tests {
 			input += "  Integer i" + i + ";";
 		}
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -317,7 +317,7 @@ public class Java8_Tests {
 	public void formalParameter() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "Visitor<E> v";
-		ISharedPackedParseTree tree = null;
+		SharedPackedParseTree tree = null;
 
 		tree = Java8_Tests.parse("formalParameter", input);
 
@@ -332,7 +332,7 @@ public class Java8_Tests {
 	public void formalParameters1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "Visitor v";
-		ISharedPackedParseTree tree = null;
+		SharedPackedParseTree tree = null;
 
 		tree = Java8_Tests.parse("formalParameters", input);
 
@@ -347,7 +347,7 @@ public class Java8_Tests {
 	public void formalParameters2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "Visitor v, Type p2";
-		ISharedPackedParseTree tree = null;
+		SharedPackedParseTree tree = null;
 
 		tree = Java8_Tests.parse("formalParameters", input);
 
@@ -362,7 +362,7 @@ public class Java8_Tests {
 	public void formalParameters() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "Visitor<E> v";
-		ISharedPackedParseTree tree = null;
+		SharedPackedParseTree tree = null;
 
 		tree = Java8_Tests.parse("formalParameters", input);
 
@@ -377,7 +377,7 @@ public class Java8_Tests {
 	public void typeArguments1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "<E>";
-		ISharedPackedParseTree tree = null;
+		SharedPackedParseTree tree = null;
 
 		tree = Java8_Tests.parse("typeArguments", input);
 
@@ -392,7 +392,7 @@ public class Java8_Tests {
 	public void typeArguments2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "<E,F>";
-		ISharedPackedParseTree tree = null;
+		SharedPackedParseTree tree = null;
 
 		tree = Java8_Tests.parse("typeArguments", input);
 
@@ -407,7 +407,7 @@ public class Java8_Tests {
 	public void typeArguments3() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "<E,F,G>";
-		ISharedPackedParseTree tree = null;
+		SharedPackedParseTree tree = null;
 
 		tree = Java8_Tests.parse("typeArguments", input);
 
@@ -424,7 +424,7 @@ public class Java8_Tests {
 		input += "class T6302184 {";
 		input += "  int ������ = 1;";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -436,7 +436,7 @@ public class Java8_Tests {
 	public void classBody() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
 		final String input = "{ int i1; int i2; int i3; int i4; int i5; int i6; int i7; int i8; }";
-		ISharedPackedParseTree tree = null;
+		SharedPackedParseTree tree = null;
 
 		tree = Java8_Tests.parse("classBody", input);
 
@@ -451,7 +451,7 @@ public class Java8_Tests {
 	@Test
 	public void methodDeclaration1() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "void f();";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -462,7 +462,7 @@ public class Java8_Tests {
 	@Test
 	public void methodDeclaration2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public void f();";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -473,7 +473,7 @@ public class Java8_Tests {
 	@Test
 	public void methodDeclaration3() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public void f(Visitor v);";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -484,7 +484,7 @@ public class Java8_Tests {
 	@Test
 	public void methodDeclaration4() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public abstract void f(Visitor v);";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -495,7 +495,7 @@ public class Java8_Tests {
 	@Test
 	public void methodDeclaration5() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public abstract <T> void f(Visitor v);";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -506,7 +506,7 @@ public class Java8_Tests {
 	@Test
 	public void methodDeclaration6() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public abstract <T> void f(Visitor<T> v);";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -517,7 +517,7 @@ public class Java8_Tests {
 	@Test
 	public void methodDeclaration7() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "void f(Visitor<T> v);";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -530,7 +530,7 @@ public class Java8_Tests {
 
 		final String input = "public abstract <E extends Throwable> void accept(Visitor<E> v);";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("methodDeclaration", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -547,7 +547,7 @@ public class Java8_Tests {
 		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
 		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v);";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -564,7 +564,7 @@ public class Java8_Tests {
 		input += "  */";
 		input += "  public abstract <E extends Throwable> void accept(Visitor<E> v) throws E;";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -582,7 +582,7 @@ public class Java8_Tests {
 		input += "      public void visitTree(Tree that)                   throws E { assert false; }";
 		input += "  }";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -604,7 +604,7 @@ public class Java8_Tests {
 		input += "      public void visitTree(Tree that)                   throws E { assert false; }";
 		input += "  }";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 
 		Assert.assertNotNull(tree);
 
@@ -617,7 +617,7 @@ public class Java8_Tests {
 	public void stringLiteral() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		String input = "";
 		input += "\"xxxx\"";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("StringLiteral", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("StringLiteral", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -629,7 +629,7 @@ public class Java8_Tests {
 	public void localStringVariableDeclarationStatement() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		String input = "";
 		input += "String s = \"xxxx\";";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("localVariableDeclarationStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("localVariableDeclarationStatement", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -643,7 +643,7 @@ public class Java8_Tests {
 		input += "public class Test {";
 		input += "  String s = \"xxxx\";";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -656,7 +656,7 @@ public class Java8_Tests {
 
 		final String input = "\"wrong number of args\"";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("StringLiteral", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("StringLiteral", input);
 		Assert.assertNotNull("null==tree", tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -669,7 +669,7 @@ public class Java8_Tests {
 
 		final String input = "\"file \" + file + \" found unexpectedly\"";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("expression", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("expression", input);
 		Assert.assertNotNull("null==tree", tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -682,7 +682,7 @@ public class Java8_Tests {
 
 		final String input = "throw new Error(\"file \" + file + \" found unexpectedly\");";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("throwStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("throwStatement", input);
 		Assert.assertNotNull("null==tree", tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -695,7 +695,7 @@ public class Java8_Tests {
 
 		final String input = "if (u != \"file \") throw new Error(\"file \" + file + \" found unexpectedly\");";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("ifThenStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("ifThenStatement", input);
 		Assert.assertNotNull("null==tree", tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -712,7 +712,7 @@ public class Java8_Tests {
 		input += "  public static void main(String[] args) {";
 		input += "  }";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -731,7 +731,7 @@ public class Java8_Tests {
 		input += "       throw new Error(\"wrong number of args\");";
 		input += "  }";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -752,7 +752,7 @@ public class Java8_Tests {
 		input += "    String file = args[1];";
 		input += "  }";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -777,7 +777,7 @@ public class Java8_Tests {
 		input += "    }";
 		input += "  }";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -800,7 +800,7 @@ public class Java8_Tests {
 		input += "    }";
 		input += "}";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("block", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("block", input);
 		Assert.assertNotNull("null==tree", tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -818,7 +818,7 @@ public class Java8_Tests {
 		input += "    }";
 		input += "}";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("block", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("block", input);
 		Assert.assertNotNull("null==tree", tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -841,7 +841,7 @@ public class Java8_Tests {
 		input += "    }";
 		input += "}";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("block", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("block", input);
 		Assert.assertNotNull("null==tree", tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -867,7 +867,7 @@ public class Java8_Tests {
 		input += "    }";
 		input += "  }";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -895,7 +895,7 @@ public class Java8_Tests {
 		input += "    } else throw new Error(\"bad args\");";
 		input += "  }";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -907,7 +907,7 @@ public class Java8_Tests {
 	public void preIncrementExpression() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "++i";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("preIncrementExpression", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("preIncrementExpression", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -919,7 +919,7 @@ public class Java8_Tests {
 	public void postfixExpression() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "i";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("postfixExpression", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("postfixExpression", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -931,7 +931,7 @@ public class Java8_Tests {
 	public void postfixExpressionpp() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "i++";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("postfixExpression", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("postfixExpression", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -943,7 +943,7 @@ public class Java8_Tests {
 	public void postIncrementExpression() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "i++ ++";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("postIncrementExpression", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("postIncrementExpression", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -955,7 +955,7 @@ public class Java8_Tests {
 	public void primary_literal() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "1";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -967,7 +967,7 @@ public class Java8_Tests {
 	public void primary_arrayClass() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "MyClass[].class";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -979,7 +979,7 @@ public class Java8_Tests {
 	public void primary_voidClass() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "void.class";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -991,7 +991,7 @@ public class Java8_Tests {
 	public void primary_this() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "this";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1003,7 +1003,7 @@ public class Java8_Tests {
 	public void primary_typeNameThis() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "MyClass.this";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1015,7 +1015,7 @@ public class Java8_Tests {
 	public void primary_parenth_expression() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "(1 + 1)";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1027,7 +1027,7 @@ public class Java8_Tests {
 	public void primary_classInstanceCreationExpression() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "new MyClass()";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1039,7 +1039,7 @@ public class Java8_Tests {
 	public void primary_fieldAccess() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "super.field";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("primary", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("primary", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1051,7 +1051,7 @@ public class Java8_Tests {
 	public void expression() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "i++";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("expression", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("expression", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1063,7 +1063,7 @@ public class Java8_Tests {
 	public void blockStatement() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "i++;";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("blockStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("blockStatement", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1075,7 +1075,7 @@ public class Java8_Tests {
 	public void blockStatements() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "i++;";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("blockStatements", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("blockStatements", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1087,7 +1087,7 @@ public class Java8_Tests {
 	public void switchLabel() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		String input = "";
 		input += "  case 1:";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("switchLabel", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("switchLabel", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1099,7 +1099,7 @@ public class Java8_Tests {
 	public void switchBlockStatementGroup() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "case 1 : i++;";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("switchBlockStatementGroup", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("switchBlockStatementGroup", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1111,7 +1111,7 @@ public class Java8_Tests {
 	public void switchBlock() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "{case 1:i++;}";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("switchBlock", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("switchBlock", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1127,7 +1127,7 @@ public class Java8_Tests {
 		input += "  default:";
 		input += "}";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("switchStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("switchStatement", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1145,7 +1145,7 @@ public class Java8_Tests {
 		input += "  default:";
 		input += "}";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("switchStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("switchStatement", input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1179,7 +1179,7 @@ public class Java8_Tests {
 		input += "      return 123 + true; // bad binary expression" + System.lineSeparator();
 		input += "    }";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1193,7 +1193,7 @@ public class Java8_Tests {
 		input += "//single line comment" + System.lineSeparator();
 		input += "class Test {";
 		input += "}";
-		final ISharedPackedParseTree tree = Java8_Tests.parse(input);
+		final SharedPackedParseTree tree = Java8_Tests.parse(input);
 		Assert.assertNotNull(tree);
 
 		final ParseTreeToInputText x = new ParseTreeToInputText();
@@ -1205,7 +1205,7 @@ public class Java8_Tests {
 	public void HexFloatLiteral() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "0Xfffffffffffffbcp-59D";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("HexadecimalFloatingPointLiteral", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("HexadecimalFloatingPointLiteral", input);
 
 		Assert.assertNotNull(tree);
 
@@ -1218,7 +1218,7 @@ public class Java8_Tests {
 	public void unaryExpression_HexFloatLiteral() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "+0Xfffffffffffffbcp-59D";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("unaryExpression", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("unaryExpression", input);
 
 		Assert.assertNotNull(tree);
 
@@ -1231,7 +1231,7 @@ public class Java8_Tests {
 	public void HexFloatLiteral_in_check_call() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "check(+0Xfffffffffffffbcp-59D, Double.parseDouble(\"+0Xfffffffffffffbcp-59D\"));";
 
-		final ISharedPackedParseTree tree = Java8_Tests.parse("blockStatement", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("blockStatement", input);
 
 		Assert.assertNotNull(tree);
 
@@ -1243,7 +1243,7 @@ public class Java8_Tests {
 	@Test
 	public void compilationUnit() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "package p1; public class A { public static char c = 'A'; }";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("compilationUnit", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("compilationUnit", input);
 
 		Assert.assertNotNull(tree);
 
@@ -1255,7 +1255,7 @@ public class Java8_Tests {
 	@Test
 	public void classDeclaration() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public class A { public static char c = 'A'; }";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("classDeclaration", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("classDeclaration", input);
 
 		Assert.assertNotNull(tree);
 
@@ -1267,7 +1267,7 @@ public class Java8_Tests {
 	@Test
 	public void classDeclaration2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public class A { }";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("classDeclaration", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("classDeclaration", input);
 
 		Assert.assertNotNull(tree);
 
@@ -1279,7 +1279,7 @@ public class Java8_Tests {
 	@Test
 	public void classBody2() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "{ public static char c = 'A'; }";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("classBody", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("classBody", input);
 
 		Assert.assertNotNull(tree);
 
@@ -1291,7 +1291,7 @@ public class Java8_Tests {
 	@Test
 	public void fieldDeclaration() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "public static char c = 'A';";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("fieldDeclaration", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("fieldDeclaration", input);
 
 		Assert.assertNotNull(tree);
 
@@ -1303,7 +1303,7 @@ public class Java8_Tests {
 	@Test
 	public void variableDeclarator() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "c = 'A'";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("variableDeclarator", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("variableDeclarator", input);
 
 		Assert.assertNotNull(tree);
 
@@ -1315,7 +1315,7 @@ public class Java8_Tests {
 	@Test
 	public void CharacterLiteral() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "'A'";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("CharacterLiteral", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("CharacterLiteral", input);
 
 		Assert.assertNotNull(tree);
 
@@ -1327,7 +1327,7 @@ public class Java8_Tests {
 	@Test
 	public void SingleCharacter() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "A";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("SingleCharacter", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("SingleCharacter", input);
 
 		Assert.assertNotNull(tree);
 
@@ -1339,7 +1339,7 @@ public class Java8_Tests {
 	@Test
 	public void variableDeclaratorId() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 		final String input = "c";
-		final ISharedPackedParseTree tree = Java8_Tests.parse("variableDeclaratorId", input);
+		final SharedPackedParseTree tree = Java8_Tests.parse("variableDeclaratorId", input);
 
 		Assert.assertNotNull(tree);
 
@@ -1354,7 +1354,7 @@ public class Java8_Tests {
 		final String queryStr = "@An() class An {  }";
 		final String grammarRule = "compilationUnit";
 		// Log.on = true;
-		final ISharedPackedParseTree tree = Java8_Tests.parse(grammarRule, queryStr);
+		final SharedPackedParseTree tree = Java8_Tests.parse(grammarRule, queryStr);
 		Assert.assertNotNull(tree);
 		// final String resultStr = Java8_Tests2.clean(tree.asString());
 		// Assert.assertEquals(queryStr, resultStr);

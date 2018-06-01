@@ -19,13 +19,30 @@ import java.util.HashSet;
 import java.util.Set;
 
 import net.akehurst.language.core.sppt.FixedList;
-import net.akehurst.language.core.sppt.IParseTreeVisitor;
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPLeaf;
-import net.akehurst.language.core.sppt.ISPNode;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTLeaf;
+import net.akehurst.language.core.sppt.SPPTNode;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
+import net.akehurst.language.grammar.parser.ToStringVisitor.Indent;
 
-public class ToStringVisitor implements IParseTreeVisitor<Set<String>, String, RuntimeException> {
+public class ToStringVisitor implements SharedPackedParseTreeVisitor<Set<String>, Indent, RuntimeException> {
+
+    public static class Indent {
+        public String text;
+        public boolean onlyChild;
+
+        public Indent(final String text) {
+            this.text = text;
+            this.onlyChild = false;
+        }
+
+        public Indent next(final String increment, final boolean onlyChild) {
+            final Indent next = new Indent(this.text + increment);
+            next.onlyChild = onlyChild;
+            return next;
+        }
+    }
 
     public ToStringVisitor() {
         this(System.lineSeparator(), "  ");
@@ -40,33 +57,43 @@ public class ToStringVisitor implements IParseTreeVisitor<Set<String>, String, R
     private final String indentIncrement;
 
     @Override
-    public Set<String> visit(final ISharedPackedParseTree target, final String indent) throws RuntimeException {
+    public Set<String> visit(final SharedPackedParseTree target, final Indent indent) throws RuntimeException {
         // String s = indent;
-        final ISPNode root = target.getRoot();
+        final SPPTNode root = target.getRoot();
         final Set<String> r = root.accept(this, indent);
         return r;
     }
 
     @Override
-    public Set<String> visit(final ISPLeaf target, final String indent) throws RuntimeException {
-        final String s = indent + target.getName() + " : \"" + target.getMatchedText().replace("\n", new String(Character.toChars(0x23CE))) + "\"";
+    public Set<String> visit(final SPPTLeaf target, final Indent indent) throws RuntimeException {
+        final String s = (indent.onlyChild ? " " : indent.text) + target.getName() + " : \""
+                + target.getMatchedText().replace("\n", new String(Character.toChars(0x23CE))) + "\"";
         final Set<String> r = new HashSet<>();
         r.add(s);
         return r;
     }
 
     @Override
-    public Set<String> visit(final ISPBranch target, final String indent) throws RuntimeException {
+    public Set<String> visit(final SPPTBranch target, final Indent indent) throws RuntimeException {
         final Set<String> r = new HashSet<>();
 
-        for (final FixedList<ISPNode> children : target.getChildrenAlternatives()) {
-            String s = indent;
+        for (final FixedList<SPPTNode> children : target.getChildrenAlternatives()) {
+            String s = indent.onlyChild ? " " : indent.text;
             s += target.getName();
             s += target.getChildrenAlternatives().size() > 1 ? "*" : "";
             s += " {";
             if (children.isEmpty()) {
                 s += "}";
                 r.add(s);
+            } else if (children.size() == 1) {
+                Set<String> currentSet = new HashSet<>();
+                currentSet.add(s);
+                currentSet = this.visitOnlyChild(currentSet, children, indent);
+                for (final String sc : currentSet) {
+                    String sc1 = sc;
+                    sc1 += "}";
+                    r.add(sc1);
+                }
             } else {
                 s += this.lineSeparator;
 
@@ -78,7 +105,7 @@ public class ToStringVisitor implements IParseTreeVisitor<Set<String>, String, R
 
                 for (final String sc : currentSet) {
                     String sc1 = sc;
-                    sc1 += indent;
+                    sc1 += indent.text;
                     sc1 += "}";
                     r.add(sc1);
                 }
@@ -87,9 +114,24 @@ public class ToStringVisitor implements IParseTreeVisitor<Set<String>, String, R
         return r;
     }
 
-    private Set<String> visitChild(final Set<String> currentSet, final FixedList<ISPNode> children, final int index, final String indent) {
+    private Set<String> visitOnlyChild(final Set<String> currentSet, final FixedList<SPPTNode> children, final Indent indent) {
         final Set<String> r = new HashSet<>();
-        final Set<String> ssc = children.get(index).accept(this, indent + this.indentIncrement);
+        final Set<String> ssc = children.get(0).accept(this, indent.next(this.indentIncrement, true));
+
+        for (final String current : currentSet) {
+            for (final String sc : ssc) {
+                final StringBuilder b = new StringBuilder(current);
+                b.append(sc);
+                b.append(" ");
+                r.add(b.toString());
+            }
+        }
+        return r;
+    }
+
+    private Set<String> visitChild(final Set<String> currentSet, final FixedList<SPPTNode> children, final int index, final Indent indent) {
+        final Set<String> r = new HashSet<>();
+        final Set<String> ssc = children.get(index).accept(this, indent.next(this.indentIncrement, false));
 
         for (final String current : currentSet) {
             for (final String sc : ssc) {

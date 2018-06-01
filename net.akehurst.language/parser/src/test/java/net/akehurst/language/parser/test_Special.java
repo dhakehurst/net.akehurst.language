@@ -19,9 +19,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
@@ -35,7 +35,7 @@ public class test_Special extends AbstractParser_Test {
      * B : 'b' ? ;
      * </code>
      */
-    Grammar S() {
+    GrammarStructure S() {
         final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
         // b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"));
         b.rule("S_group1").concatenation(new TerminalLiteral("a"), new NonTerminal("S"), new NonTerminal("B"), new NonTerminal("B"));
@@ -49,11 +49,11 @@ public class test_Special extends AbstractParser_Test {
     public void S_S_aab() throws ParseFailedException {
         // grammar, goal, input
 
-        final Grammar g = this.S();
+        final GrammarStructure g = this.S();
         final String goal = "S";
         final String text = "aab";
 
-        final ISharedPackedParseTree tree = this.process(g, text, goal);
+        final SharedPackedParseTree tree = this.process(g, text, goal);
         Assert.assertNotNull(tree);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -75,7 +75,7 @@ public class test_Special extends AbstractParser_Test {
         b.define("    B { 'b' }");
         b.define("  }");
         b.define("}");
-        final ISharedPackedParseTree expected = b.buildAndAdd();
+        final SharedPackedParseTree expected = b.buildAndAdd();
 
         Assert.assertEquals(expected, tree);
 
@@ -86,7 +86,7 @@ public class test_Special extends AbstractParser_Test {
      * S : S S | 'a' ;
      * </code>
      */
-    Grammar S2() {
+    GrammarStructure S2() {
         final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
         b.rule("S").choice(new NonTerminal("S1"), new TerminalLiteral("a"));
         b.rule("S1").concatenation(new NonTerminal("S"), new NonTerminal("S"));
@@ -97,11 +97,11 @@ public class test_Special extends AbstractParser_Test {
     public void S2_S_aaa() throws ParseFailedException {
         // grammar, goal, input
 
-        final Grammar g = this.S2();
+        final GrammarStructure g = this.S2();
         final String goal = "S";
         final String text = "aaa";
 
-        final ISharedPackedParseTree actual = this.process(g, text, goal);
+        final SharedPackedParseTree actual = this.process(g, text, goal);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
         b.define("S {");
@@ -127,7 +127,7 @@ public class test_Special extends AbstractParser_Test {
         b.define("    }");
         b.define("  }");
         b.define("}");
-        final ISharedPackedParseTree expected = b.buildAndAdd();
+        final SharedPackedParseTree expected = b.buildAndAdd();
 
         Assert.assertNotNull("Parse failed", actual);
         Assert.assertEquals(expected, actual);
@@ -139,7 +139,7 @@ public class test_Special extends AbstractParser_Test {
      * S : S S S | S S | 'a' ;
      * </code>
      */
-    Grammar S3() {
+    GrammarStructure S3() {
         final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
         b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"), new TerminalLiteral("a"));
         b.rule("S1").concatenation(new NonTerminal("S"), new NonTerminal("S"), new NonTerminal("S"));
@@ -151,11 +151,11 @@ public class test_Special extends AbstractParser_Test {
     public void S3_S_aaa() throws ParseFailedException {
         // grammar, goal, input
 
-        final Grammar g = this.S3();
+        final GrammarStructure g = this.S3();
         final String goal = "S";
         final String text = "aaa";
 
-        final ISharedPackedParseTree tree = this.process(g, text, goal);
+        final SharedPackedParseTree tree = this.process(g, text, goal);
         Assert.assertNotNull(tree);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -193,14 +193,14 @@ public class test_Special extends AbstractParser_Test {
         b.define("  }");
         b.define("}");
 
-        final ISharedPackedParseTree expected = b.buildAndAdd();
+        final SharedPackedParseTree expected = b.buildAndAdd();
 
         Assert.assertTrue(tree.contains(expected));
         Assert.assertEquals(expected, tree);
 
     }
 
-    Grammar parametersG() {
+    GrammarStructure parametersG() {
         final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
 
         b.rule("S").priorityChoice(new NonTerminal("fpfps"), new NonTerminal("rpfps"));
@@ -233,11 +233,11 @@ public class test_Special extends AbstractParser_Test {
         // the fp and rp nodes duplicate the parsing, we only want to do it once
         // grammar, goal, input
 
-        final Grammar g = this.parametersG();
+        final GrammarStructure g = this.parametersG();
         final String goal = "S";
         final String text = "a";
 
-        final ISharedPackedParseTree tree = this.process(g, text, goal);
+        final SharedPackedParseTree tree = this.process(g, text, goal);
         Assert.assertNotNull(tree);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -259,7 +259,7 @@ public class test_Special extends AbstractParser_Test {
         b.define("  fpList1 { $empty }");
         b.define("}");
         b.define("}");
-        final ISharedPackedParseTree expected = b.buildAndAdd();
+        final SharedPackedParseTree expected = b.buildAndAdd();
         // final IBranch expected = b.branch("S",
         // b.branch("fpfps",
         // b.branch("fp", b.branch("vms", b.emptyLeaf("vms")), b.branch("unannType",
@@ -278,7 +278,7 @@ public class test_Special extends AbstractParser_Test {
     // v = 'saw' | ;
     // p = 'in' | 'with' ;
     // det = 'a' | 'the' ;
-    Grammar tomita() {
+    GrammarStructure tomita() {
         final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
         b.skip("WS").concatenation(new TerminalPattern("\\s+"));
         b.rule("S").choice(new NonTerminal("S1"), new NonTerminal("S2"));
@@ -300,11 +300,11 @@ public class test_Special extends AbstractParser_Test {
     @Test
     public void tomita_S_1() throws ParseFailedException {
         // grammar, goal, input
-        final Grammar g = this.tomita();
+        final GrammarStructure g = this.tomita();
         final String goal = "S";
         final String text = "I saw a man";
 
-        final ISharedPackedParseTree tree = this.process(g, text, goal);
+        final SharedPackedParseTree tree = this.process(g, text, goal);
         Assert.assertNotNull(tree);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -322,18 +322,18 @@ public class test_Special extends AbstractParser_Test {
         b.define("      }");
         b.define("    }");
         b.define("  }");
-        final ISharedPackedParseTree expected = b.buildAndAdd();
+        final SharedPackedParseTree expected = b.buildAndAdd();
         Assert.assertEquals(expected.toString(), tree.toString());
     }
 
     @Test
     public void tomita_S_2() throws ParseFailedException {
         // grammar, goal, input
-        final Grammar g = this.tomita();
+        final GrammarStructure g = this.tomita();
         final String goal = "S";
         final String text = "I saw a man in the park";
 
-        final ISharedPackedParseTree tree = this.process(g, text, goal);
+        final SharedPackedParseTree tree = this.process(g, text, goal);
         Assert.assertNotNull(tree);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -393,7 +393,7 @@ public class test_Special extends AbstractParser_Test {
         b.define("    }");
         b.define("  }");
         b.define("}");
-        final ISharedPackedParseTree expected = b.buildAndAdd();
+        final SharedPackedParseTree expected = b.buildAndAdd();
         Assert.assertEquals(expected.toStringAll(), tree.toStringAll());
     }
 
@@ -401,11 +401,11 @@ public class test_Special extends AbstractParser_Test {
     public void tomita_S_sentence() throws ParseFailedException {
         // grammar, goal, input
 
-        final Grammar g = this.tomita();
+        final GrammarStructure g = this.tomita();
         final String goal = "S";
         final String text = "I saw a man in the park with a telescope";
 
-        final ISharedPackedParseTree tree = this.process(g, text, goal);
+        final SharedPackedParseTree tree = this.process(g, text, goal);
         Assert.assertNotNull(tree);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
@@ -451,7 +451,7 @@ public class test_Special extends AbstractParser_Test {
         b.define("  n { 'telescope' } ");
         b.define("}");
 
-        final ISharedPackedParseTree expected = b.buildAndAdd();
+        final SharedPackedParseTree expected = b.buildAndAdd();
         Assert.assertEquals(expected.toStringAll(), tree.toStringAll());
 
     }

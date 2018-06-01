@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.parser.sppf;
 
-import net.akehurst.language.core.sppt.IParseTreeVisitor;
+import net.akehurst.language.core.sppt.SharedPackedParseTreeVisitor;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public class EmptyLeaf extends Leaf {
@@ -47,7 +47,7 @@ public class EmptyLeaf extends Leaf {
 
 	// --- IParseTreeVisitable ---
 	@Override
-	public <T, A, E extends Throwable> T accept(final IParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
+	public <T, A, E extends Throwable> T accept(final SharedPackedParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
 		return visitor.visit(this, arg);
 	}
 

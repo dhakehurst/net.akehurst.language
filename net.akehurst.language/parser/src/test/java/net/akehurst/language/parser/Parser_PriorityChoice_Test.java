@@ -19,9 +19,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.core.parser.ParseFailedException;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilder;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.language.ogl.semanticStructure.NonTerminal;
@@ -30,7 +30,7 @@ import net.akehurst.language.ogl.semanticStructure.TerminalPattern;
 
 public class Parser_PriorityChoice_Test extends AbstractParser_Test {
 
-    Grammar abc() {
+    GrammarStructure abc() {
         final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
         b.rule("abc").priorityChoice(new NonTerminal("a"), new NonTerminal("b"), new NonTerminal("c"));
         b.rule("a").concatenation(new TerminalLiteral("a"));
@@ -39,7 +39,7 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
         return b.get();
     }
 
-    Grammar aempty() {
+    GrammarStructure aempty() {
         final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
         b.rule("a").priorityChoice();
         return b.get();
@@ -49,17 +49,17 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
     public void aempty_a_empty() throws ParseFailedException {
         // grammar, goal, input
 
-        final Grammar g = this.aempty();
+        final GrammarStructure g = this.aempty();
         final String goal = "a";
         final String text = "";
 
-        final ISharedPackedParseTree actual = this.process(g, text, goal);
+        final SharedPackedParseTree actual = this.process(g, text, goal);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
         b.define("a {");
         b.define("  $empty");
         b.define("}");
-        final ISharedPackedParseTree expected = b.buildAndAdd();
+        final SharedPackedParseTree expected = b.buildAndAdd();
 
         Assert.assertNotNull(actual);
         Assert.assertEquals(expected, actual);
@@ -69,11 +69,11 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
     public void abc_abc_a() throws ParseFailedException {
         // grammar, goal, input
 
-        final Grammar g = this.abc();
+        final GrammarStructure g = this.abc();
         final String goal = "abc";
         final String text = "a";
 
-        final ISharedPackedParseTree actual = this.process(g, text, goal);
+        final SharedPackedParseTree actual = this.process(g, text, goal);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
         b.define("abc {");
@@ -81,7 +81,7 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
         b.define("    'a'");
         b.define("  }");
         b.define("}");
-        final ISharedPackedParseTree expected = b.buildAndAdd();
+        final SharedPackedParseTree expected = b.buildAndAdd();
 
         Assert.assertNotNull(actual);
         Assert.assertEquals(expected, actual);
@@ -92,11 +92,11 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
     public void abc_abc_b() throws ParseFailedException {
         // grammar, goal, input
 
-        final Grammar g = this.abc();
+        final GrammarStructure g = this.abc();
         final String goal = "abc";
         final String text = "b";
 
-        final ISharedPackedParseTree actual = this.process(g, text, goal);
+        final SharedPackedParseTree actual = this.process(g, text, goal);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
         b.define("abc {");
@@ -104,7 +104,7 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
         b.define("    'b'");
         b.define("  }");
         b.define("}");
-        final ISharedPackedParseTree expected = b.buildAndAdd();
+        final SharedPackedParseTree expected = b.buildAndAdd();
 
         Assert.assertNotNull(actual);
         Assert.assertEquals(expected, actual);
@@ -114,11 +114,11 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
     public void abc_abc_c() throws ParseFailedException {
         // grammar, goal, input
 
-        final Grammar g = this.abc();
+        final GrammarStructure g = this.abc();
         final String goal = "abc";
         final String text = "c";
 
-        final ISharedPackedParseTree actual = this.process(g, text, goal);
+        final SharedPackedParseTree actual = this.process(g, text, goal);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
         b.define("abc {");
@@ -126,13 +126,13 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
         b.define("    'c'");
         b.define("  }");
         b.define("}");
-        final ISharedPackedParseTree expected = b.buildAndAdd();
+        final SharedPackedParseTree expected = b.buildAndAdd();
 
         Assert.assertNotNull(actual);
         Assert.assertEquals(expected, actual);
     }
 
-    Grammar kwOrId1() {
+    GrammarStructure kwOrId1() {
         final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
         b.rule("S").choice(new NonTerminal("type"));
         b.rule("type").priorityChoice(new NonTerminal("id"), new NonTerminal("kw"));
@@ -145,11 +145,11 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
     public void kwOrId_S_id() throws ParseFailedException {
         // grammar, goal, input
 
-        final Grammar g = this.kwOrId1();
+        final GrammarStructure g = this.kwOrId1();
         final String goal = "S";
         final String text = "int";
 
-        final ISharedPackedParseTree actual = this.process(g, text, goal);
+        final SharedPackedParseTree actual = this.process(g, text, goal);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
         b.define("S {");
@@ -157,14 +157,14 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
         b.define("    id { '[a-z]+' : 'int' }");
         b.define("  }");
         b.define("}");
-        final ISharedPackedParseTree expected = b.buildAndAdd();
+        final SharedPackedParseTree expected = b.buildAndAdd();
 
         Assert.assertNotNull(actual);
         Assert.assertEquals(expected, actual);
 
     }
 
-    Grammar kwOrId2() {
+    GrammarStructure kwOrId2() {
         final GrammarBuilder b = new GrammarBuilder(new Namespace("test"), "Test");
         b.rule("S").choice(new NonTerminal("type"));
         b.rule("type").priorityChoice(new NonTerminal("kw"), new NonTerminal("id"));
@@ -177,11 +177,11 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
     public void kwOrId_S_int() throws ParseFailedException {
         // grammar, goal, input
 
-        final Grammar g = this.kwOrId2();
+        final GrammarStructure g = this.kwOrId2();
         final String goal = "S";
         final String text = "int";
 
-        final ISharedPackedParseTree actual = this.process(g, text, goal);
+        final SharedPackedParseTree actual = this.process(g, text, goal);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
         b.define("S {");
@@ -189,7 +189,7 @@ public class Parser_PriorityChoice_Test extends AbstractParser_Test {
         b.define("    kw { 'int' }");
         b.define("  }");
         b.define("}");
-        final ISharedPackedParseTree expected = b.buildAndAdd();
+        final SharedPackedParseTree expected = b.buildAndAdd();
 
         Assert.assertNotNull(actual);
         Assert.assertEquals(expected, actual);

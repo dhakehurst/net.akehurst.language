@@ -46,7 +46,7 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.ChoiceSimple;
 import net.akehurst.language.ogl.semanticStructure.Concatenation;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
+import net.akehurst.language.ogl.semanticStructure.GrammarStructure;
 import net.akehurst.language.ogl.semanticStructure.Group;
 import net.akehurst.language.ogl.semanticStructure.Multi;
 import net.akehurst.language.ogl.semanticStructure.RuleItem;
@@ -106,7 +106,7 @@ public class Converter extends BinaryTransformerBasic {
     }
 
     public RuntimeRule createVirtualRule(final Group group) {
-        final Grammar grammar = group.getOwningRule().getGrammar();
+        final GrammarStructure grammar = group.getOwningRule().getGrammar();
         final String name = "$" + group.getOwningRule().getName() + ".group." + this.createIndexString(group);
         final RuleForGroup r = new RuleForGroup(grammar, name, group.getChoice());
         final RuntimeRule rr = this.getFactory().createRuntimeRule(r);
@@ -115,7 +115,7 @@ public class Converter extends BinaryTransformerBasic {
     }
 
     public RuntimeRule createVirtualRule(final Concatenation concatenation) {
-        final Grammar grammar = concatenation.getOwningRule().getGrammar();
+        final GrammarStructure grammar = concatenation.getOwningRule().getGrammar();
         final String name = "$" + concatenation.getOwningRule().getName() + ".concatenation." + this.createIndexString(concatenation);
         // final String name = "$group." + concatenation.getOwningRule().getName() + "$";
         final RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(concatenation));
@@ -125,7 +125,7 @@ public class Converter extends BinaryTransformerBasic {
     }
 
     public RuntimeRule createVirtualRule(final Multi multi) {
-        final Grammar grammar = multi.getOwningRule().getGrammar();
+        final GrammarStructure grammar = multi.getOwningRule().getGrammar();
         final String name = "$" + multi.getOwningRule().getName() + ".multi." + this.createIndexString(multi);
         final RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(new Concatenation(multi)));
         final RuntimeRule rr = this.getFactory().createRuntimeRule(r);
@@ -138,7 +138,7 @@ public class Converter extends BinaryTransformerBasic {
     }
 
     public RuntimeRule createVirtualRule(final SeparatedList sepList) {
-        final Grammar grammar = sepList.getOwningRule().getGrammar();
+        final GrammarStructure grammar = sepList.getOwningRule().getGrammar();
         final String name = "$" + sepList.getOwningRule().getName() + ".sepList." + this.createIndexString(sepList);
         final RuleForGroup r = new RuleForGroup(grammar, name, new ChoiceSimple(new Concatenation(sepList)));
         final RuntimeRule rr = this.getFactory().createRuntimeRule(r);

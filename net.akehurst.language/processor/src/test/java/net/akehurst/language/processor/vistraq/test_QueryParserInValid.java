@@ -18,10 +18,10 @@ import org.junit.runners.Parameterized.Parameters;
 
 import net.akehurst.language.core.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.grammar.IGrammar;
+import net.akehurst.language.core.grammar.Grammar;
 import net.akehurst.language.core.parser.ParseFailedException;
 import net.akehurst.language.core.parser.ParseTreeException;
-import net.akehurst.language.core.sppt.ISharedPackedParseTree;
+import net.akehurst.language.core.sppt.SharedPackedParseTree;
 import net.akehurst.language.processor.LanguageProcessor;
 import net.akehurst.language.processor.OGLanguageProcessor;
 
@@ -60,7 +60,7 @@ public class test_QueryParserInValid {
 
     private LanguageProcessor processor;
 
-    private String toString(final ISharedPackedParseTree tree) {
+    private String toString(final SharedPackedParseTree tree) {
         String res = tree.asString().replaceAll(System.lineSeparator(), " ");
         res = res.trim();
         return res;
@@ -71,7 +71,7 @@ public class test_QueryParserInValid {
         try {
             final OGLanguageProcessor oglProc = new OGLanguageProcessor();
             final InputStreamReader reader = new InputStreamReader(test_QueryParserInValid.class.getResourceAsStream("/vistraq/Query.ogl"));
-            final IGrammar grammar = oglProc.process(reader, "grammarDefinition", IGrammar.class);
+            final Grammar grammar = oglProc.process(reader, "grammarDefinition", Grammar.class);
             this.processor = new LanguageProcessor(grammar, null);
         } catch (final ParseFailedException e) {
             Assert.fail("Parsing query grammar failed " + e.getLongestMatch());
@@ -84,7 +84,7 @@ public class test_QueryParserInValid {
     public void test() throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
 
         final String queryStr = this.data.queryStr;
-        final ISharedPackedParseTree result = this.processor.getParser().parse("query", queryStr);
+        final SharedPackedParseTree result = this.processor.getParser().parse("query", queryStr);
         Assert.assertNotNull(result);
         final String resultStr = this.toString(result);
         Assert.assertEquals(queryStr, resultStr);

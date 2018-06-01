@@ -17,16 +17,16 @@ package net.akehurst.language.ogl.semanticAnalyser.rules;
 
 import java.util.Objects;
 
-import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.SPPTBranch;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-abstract public class AbstractSemanticAnalysisRule<R> implements BinaryRule<ISPBranch, R> {
+abstract public class AbstractSemanticAnalysisRule<R> implements BinaryRule<SPPTBranch, R> {
 
     abstract public String getNodeName();
 
     @Override
-    public boolean isValidForLeft2Right(final ISPBranch left) {
+    public boolean isValidForLeft2Right(final SPPTBranch left) {
         return this.getNodeName().equals(left.getName());
     }
 
@@ -36,7 +36,7 @@ abstract public class AbstractSemanticAnalysisRule<R> implements BinaryRule<ISPB
     }
 
     @Override
-    public boolean isAMatch(final ISPBranch left, final R right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final R right, final BinaryTransformer transformer) {
         return Objects.equals(left.getName(), this.getNodeName());
     }
 }

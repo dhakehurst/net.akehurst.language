@@ -21,20 +21,20 @@ import java.util.Set;
 
 import net.akehurst.language.core.grammar.IRule;
 import net.akehurst.language.core.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.core.parser.INodeType;
+import net.akehurst.language.core.grammar.INodeType;
 
 public class Rule implements IRule {
 
-	public Rule(final Grammar grammar, final String name) {
+	public Rule(final GrammarStructure grammar, final String name) {
 		this.grammar = grammar;
 		this.name = name;
 	}
 
-	private final Grammar grammar;
+	private final GrammarStructure grammar;
 	private final String name;
 	private AbstractChoice rhs;
 
-	public Grammar getGrammar() {
+	public GrammarStructure getGrammar() {
 		return this.grammar;
 	}
 

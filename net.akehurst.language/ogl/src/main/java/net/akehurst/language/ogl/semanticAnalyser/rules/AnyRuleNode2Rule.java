@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTNode;
 import net.akehurst.language.ogl.semanticStructure.Rule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
@@ -28,22 +28,22 @@ public class AnyRuleNode2Rule extends AbstractSemanticAnalysisRule<Rule> {
     }
 
     @Override
-    public Rule constructLeft2Right(final ISPBranch left, final BinaryTransformer transformer) {
+    public Rule constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
         // final INode rule = left.getChild(1);
-        final ISPNode rule = left.getChild(0);
+        final SPPTNode rule = left.getChild(0);
         final Rule right = transformer.transformLeft2Right(NormalRuleNode2Rule.class, rule);
         return right;
     }
 
     @Override
-    public ISPBranch constructRight2Left(final Rule right, final BinaryTransformer transformer) {
+    public SPPTBranch constructRight2Left(final Rule right, final BinaryTransformer transformer) {
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final ISPBranch left, final Rule right, final BinaryTransformer transformer) {}
+    public void updateLeft2Right(final SPPTBranch left, final Rule right, final BinaryTransformer transformer) {}
 
     @Override
-    public void updateRight2Left(final ISPBranch left, final Rule right, final BinaryTransformer transformer) {}
+    public void updateRight2Left(final SPPTBranch left, final Rule right, final BinaryTransformer transformer) {}
 
 }

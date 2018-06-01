@@ -15,44 +15,44 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.ISPBranch;
+import net.akehurst.language.core.sppt.SPPTBranch;
 import net.akehurst.language.ogl.semanticStructure.Namespace;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
-public class Node2Namespace implements BinaryRule<ISPBranch, Namespace> {
+public class Node2Namespace implements BinaryRule<SPPTBranch, Namespace> {
 
     @Override
-    public boolean isAMatch(final ISPBranch left, final Namespace right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final Namespace right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public void updateLeft2Right(final ISPBranch arg0, final Namespace arg1, final BinaryTransformer arg2) {
+    public void updateLeft2Right(final SPPTBranch arg0, final Namespace arg1, final BinaryTransformer arg2) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateRight2Left(final ISPBranch arg0, final Namespace arg1, final BinaryTransformer arg2) {
+    public void updateRight2Left(final SPPTBranch arg0, final Namespace arg1, final BinaryTransformer arg2) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public Namespace constructLeft2Right(final ISPBranch left, final BinaryTransformer arg1) {
+    public Namespace constructLeft2Right(final SPPTBranch left, final BinaryTransformer arg1) {
         final String qualifiedName = left.getChild(1).getMatchedText().trim();
         return new Namespace(qualifiedName);
     }
 
     @Override
-    public ISPBranch constructRight2Left(final Namespace arg0, final BinaryTransformer arg1) {
+    public SPPTBranch constructRight2Left(final Namespace arg0, final BinaryTransformer arg1) {
         return null;
     }
 
     @Override
-    public boolean isValidForLeft2Right(final ISPBranch left) {
+    public boolean isValidForLeft2Right(final SPPTBranch left) {
         // TODO Auto-generated method stub
         return "namespace".equals(left.getChild(0).getName());
     }

@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.ogl.semanticAnalyser.rules;
 
-import net.akehurst.language.core.sppt.ISPBranch;
-import net.akehurst.language.core.sppt.ISPNode;
+import net.akehurst.language.core.sppt.SPPTBranch;
+import net.akehurst.language.core.sppt.SPPTNode;
 import net.akehurst.language.ogl.semanticStructure.Terminal;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
@@ -35,32 +35,32 @@ public class Node2Terminal extends AbstractNode2TangibleItem<Terminal> {
     }
 
     @Override
-    public boolean isAMatch(final ISPBranch left, final Terminal right, final BinaryTransformer transformer) {
+    public boolean isAMatch(final SPPTBranch left, final Terminal right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public Terminal constructLeft2Right(final ISPBranch left, final BinaryTransformer transformer) {
-        final ISPNode terminalNode = left.getChild(0);
-        final Terminal right = transformer.transformLeft2Right((Class<BinaryRule<ISPNode, Terminal>>) (Class<?>) AbstractNode2Terminal.class, terminalNode);
+    public Terminal constructLeft2Right(final SPPTBranch left, final BinaryTransformer transformer) {
+        final SPPTNode terminalNode = left.getChild(0);
+        final Terminal right = transformer.transformLeft2Right((Class<BinaryRule<SPPTNode, Terminal>>) (Class<?>) AbstractNode2Terminal.class, terminalNode);
         return right;
     }
 
     @Override
-    public ISPBranch constructRight2Left(final Terminal right, final BinaryTransformer transformer) {
+    public SPPTBranch constructRight2Left(final Terminal right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void updateLeft2Right(final ISPBranch left, final Terminal right, final BinaryTransformer transformer) {
+    public void updateLeft2Right(final SPPTBranch left, final Terminal right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void updateRight2Left(final ISPBranch left, final Terminal right, final BinaryTransformer transformer) {
+    public void updateRight2Left(final SPPTBranch left, final Terminal right, final BinaryTransformer transformer) {
         // TODO Auto-generated method stub
 
     }
