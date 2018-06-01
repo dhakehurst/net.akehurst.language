@@ -22,8 +22,8 @@ import net.akehurst.language.api.parser.ParseFailedException;
 import net.akehurst.language.api.sppt.SPPTBranch;
 import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.forrest.ParseTreeBuilder;
-import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault;
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
 import net.akehurst.language.ogl.semanticStructure.NamespaceDefault;
 import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault;
 import net.akehurst.language.ogl.semanticStructure.TerminalLiteralDefault;
@@ -131,10 +131,18 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
         Assert.assertNotNull(tree);
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
+        b.define("S {");
+        b.define("  S_a {");
+        b.define("    S {");
+        b.define("      S { 'a' } ");
+        b.define("      'a'");
+        b.define("    }");
+        b.define("    'a'");
+        b.define("  }");
+        b.define("}");
+        final SharedPackedParseTree expected = b.buildAndAdd();
 
-        final SharedPackedParseTree expected = new SharedPackedParseTreeSimple(
-                b.branch("S", b.branch("S_a", b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))), b.leaf("a"))));
-        Assert.assertEquals(expected, tree);
+        Assert.assertEquals(expected.toStringAll(), tree.toStringAll());
     }
 
     // Some of these test grammars are based on those listed in [https://github.com/PhilippeSigaud/Pegged/wiki/Left-Recursion]

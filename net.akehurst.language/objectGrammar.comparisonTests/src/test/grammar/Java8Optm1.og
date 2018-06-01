@@ -58,7 +58,7 @@ Total lexer+parser time 30844ms.
  
 namespace test;
  
-grammar Java8OptmAntlr {
+grammar Java8Optm1 {
 
 // Keywords
 
@@ -127,7 +127,7 @@ BOOL_LITERAL:     	"true|false" ;
 
 CHAR_LITERAL:       '\'' ("[^'\\\r\n]" | EscapeSequence) '\'';
 
-STRING_LITERAL:     "\"(?:\\?.)*?\"";
+STRING_LITERAL:     "\"(?:\\?.)*?\"" ;
 
 NULL_LITERAL:       'null';
 

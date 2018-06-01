@@ -19,13 +19,13 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.api.grammar.Grammar;
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.api.parser.ParseFailedException;
 import net.akehurst.language.api.parser.ParseTreeException;
-import net.akehurst.language.api.processor.ILanguageProcessor;
-import net.akehurst.language.api.sppt.ISharedPackedParseTree;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
-import net.akehurst.language.processor.LanguageProcessor;
+import net.akehurst.language.api.processor.LanguageProcessor;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.processor.LanguageProcessorDefault;
 import net.akehurst.language.processor.OGLanguageProcessor;
 
 public class Java8_Test {
@@ -44,19 +44,19 @@ public class Java8_Test {
         return Java8_Test.processor;
     }
 
-    static ILanguageProcessor javaProcessor;
+    static LanguageProcessor javaProcessor;
 
     static {
         Java8_Test.getJavaProcessor();
     }
 
-    static ILanguageProcessor getJavaProcessor() {
+    static LanguageProcessor getJavaProcessor() {
         if (null == Java8_Test.javaProcessor) {
             try {
                 // String grammarText = new String(Files.readAllBytes(Paths.get("src/test/grammar/Java8.og")));
                 final FileReader reader = new FileReader("src/test/grammar/Java8.og");
                 final Grammar javaGrammar = Java8_Test.getOGLProcessor().process(reader, "grammarDefinition", Grammar.class);
-                Java8_Test.javaProcessor = new LanguageProcessor(javaGrammar, null);
+                Java8_Test.javaProcessor = new LanguageProcessorDefault(javaGrammar, null);
                 Java8_Test.javaProcessor.getParser().build();
             } catch (final IOException e) {
                 e.printStackTrace();
@@ -73,12 +73,12 @@ public class Java8_Test {
         return Java8_Test.javaProcessor;
     }
 
-    static ISharedPackedParseTree parseWithOG(final Path file) {
+    static SharedPackedParseTree parseWithOG(final Path file) {
         try {
             final byte[] bytes = Files.readAllBytes(file);
             final FileReader reader = new FileReader(file.toFile());
 
-            final ISharedPackedParseTree tree = Java8_Test.getJavaProcessor().getParser().parse("compilationUnit", reader);
+            final SharedPackedParseTree tree = Java8_Test.getJavaProcessor().getParser().parse("compilationUnit", reader);
 
             return tree;
         } catch (ParseFailedException | ParseTreeException | IOException | GrammarRuleNotFoundException e) {
@@ -107,21 +107,21 @@ public class Java8_Test {
     public void og_compilationUnit() {
 
         final Path file = Paths.get("src/test/resources/File1.java");
-        final ISharedPackedParseTree tree = Java8_Test.parseWithOG(file);
+        final SharedPackedParseTree tree = Java8_Test.parseWithOG(file);
         Assert.assertNotNull(tree);
     }
 
     @Test
     public void og_longName() {
         final Path file = Paths.get("src/test/resources/javac/limits/LongName.java");
-        final ISharedPackedParseTree tree = Java8_Test.parseWithOG(file);
+        final SharedPackedParseTree tree = Java8_Test.parseWithOG(file);
         Assert.assertNotNull(tree);
     }
 
     @Test
     public void og_numArgs1() {
         final Path file = Paths.get("src/test/resources/javac/limits/NumArgs1.java");
-        final ISharedPackedParseTree tree = Java8_Test.parseWithOG(file);
+        final SharedPackedParseTree tree = Java8_Test.parseWithOG(file);
         Assert.assertNotNull(tree);
     }
 

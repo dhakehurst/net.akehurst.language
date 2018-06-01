@@ -42,13 +42,13 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.api.grammar.Grammar;
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.api.parser.ParseFailedException;
 import net.akehurst.language.api.parser.ParseTreeException;
-import net.akehurst.language.api.processor.ILanguageProcessor;
-import net.akehurst.language.api.sppt.ISharedPackedParseTree;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
-import net.akehurst.language.processor.LanguageProcessor;
+import net.akehurst.language.api.processor.LanguageProcessor;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.processor.LanguageProcessorDefault;
 import net.akehurst.language.processor.OGLanguageProcessor;
 
 @RunWith(Parameterized.class)
@@ -79,9 +79,9 @@ public class Java8_Test2 {
     static CharStream antlr_input;
     static String og_input;
     static OGLanguageProcessor processor;
-    static ILanguageProcessor oglSpecJava8Processor;
-    static ILanguageProcessor oglOptmAntlrJava8Processor;
-    static ILanguageProcessor oglOptm1Java8Processor;
+    static LanguageProcessor oglSpecJava8Processor;
+    static LanguageProcessor oglOptmAntlrJava8Processor;
+    static LanguageProcessor oglOptm1Java8Processor;
 
     static {
         Java8_Test2.getOGLProcessor();
@@ -98,12 +98,12 @@ public class Java8_Test2 {
         return Java8_Test2.processor;
     }
 
-    static ILanguageProcessor getOglSpecJava8Processor() {
+    static LanguageProcessor getOglSpecJava8Processor() {
         if (null == Java8_Test2.oglSpecJava8Processor) {
             try {
                 final FileReader reader = new FileReader(Paths.get("src/test/grammar/Java8Spec.og").toFile());
                 final Grammar javaGrammar = Java8_Test2.getOGLProcessor().process(reader, "grammarDefinition", Grammar.class);
-                Java8_Test2.oglSpecJava8Processor = new LanguageProcessor(javaGrammar, null);
+                Java8_Test2.oglSpecJava8Processor = new LanguageProcessorDefault(javaGrammar, null);
                 Java8_Test2.oglSpecJava8Processor.getParser().build();
             } catch (final IOException e) {
                 e.printStackTrace();
@@ -120,12 +120,12 @@ public class Java8_Test2 {
         return Java8_Test2.oglSpecJava8Processor;
     }
 
-    static ILanguageProcessor getOglOptmAntlr8JavaProcessor() {
+    static LanguageProcessor getOglOptmAntlr8JavaProcessor() {
         if (null == Java8_Test2.oglOptmAntlrJava8Processor) {
             try {
                 final FileReader reader = new FileReader(Paths.get("src/test/grammar/Java8OptmAntlr.og").toFile());
                 final Grammar javaGrammar = Java8_Test2.getOGLProcessor().process(reader, "grammarDefinition", Grammar.class);
-                Java8_Test2.oglOptmAntlrJava8Processor = new LanguageProcessor(javaGrammar, null);
+                Java8_Test2.oglOptmAntlrJava8Processor = new LanguageProcessorDefault(javaGrammar, null);
                 Java8_Test2.oglOptmAntlrJava8Processor.getParser().build();
             } catch (final IOException e) {
                 e.printStackTrace();
@@ -142,12 +142,12 @@ public class Java8_Test2 {
         return Java8_Test2.oglOptmAntlrJava8Processor;
     }
 
-    static ILanguageProcessor getOglOptm1Java8Processor() {
+    static LanguageProcessor getOglOptm1Java8Processor() {
         if (null == Java8_Test2.oglOptm1Java8Processor) {
             try {
                 final FileReader reader = new FileReader(Paths.get("src/test/grammar/Java8Optm1.og").toFile());
                 final Grammar javaGrammar = Java8_Test2.getOGLProcessor().process(reader, "grammarDefinition", Grammar.class);
-                Java8_Test2.oglOptm1Java8Processor = new LanguageProcessor(javaGrammar, null);
+                Java8_Test2.oglOptm1Java8Processor = new LanguageProcessorDefault(javaGrammar, null);
                 Java8_Test2.oglOptm1Java8Processor.getParser().build();
             } catch (final IOException e) {
                 e.printStackTrace();
@@ -164,9 +164,9 @@ public class Java8_Test2 {
         return Java8_Test2.oglOptm1Java8Processor;
     }
 
-    static ISharedPackedParseTree parseWithOglJava8Spec(final Path file) {
+    static SharedPackedParseTree parseWithOglJava8Spec(final Path file) {
         try {
-            final ISharedPackedParseTree tree = Java8_Test2.getOglSpecJava8Processor().getParser().parse("compilationUnit",
+            final SharedPackedParseTree tree = Java8_Test2.getOglSpecJava8Processor().getParser().parse("compilationUnit",
                     new StringReader(Java8_Test2.og_input));
             return tree;
         } catch (ParseFailedException | ParseTreeException | GrammarRuleNotFoundException e) {
@@ -178,9 +178,9 @@ public class Java8_Test2 {
         return null;
     }
 
-    static ISharedPackedParseTree parseWithOglJava8OptmAntlr(final Path file) {
+    static SharedPackedParseTree parseWithOglJava8OptmAntlr(final Path file) {
         try {
-            final ISharedPackedParseTree tree = Java8_Test2.getOglOptmAntlr8JavaProcessor().getParser().parse("compilationUnit",
+            final SharedPackedParseTree tree = Java8_Test2.getOglOptmAntlr8JavaProcessor().getParser().parse("compilationUnit",
                     new StringReader(Java8_Test2.og_input));
             return tree;
         } catch (ParseFailedException | ParseTreeException | GrammarRuleNotFoundException e) {
@@ -192,9 +192,9 @@ public class Java8_Test2 {
         return null;
     }
 
-    static ISharedPackedParseTree parseWithOglJava8Optm1(final Path file) {
+    static SharedPackedParseTree parseWithOglJava8Optm1(final Path file) {
         try {
-            final ISharedPackedParseTree tree = Java8_Test2.getOglOptm1Java8Processor().getParser().parse("compilationUnit",
+            final SharedPackedParseTree tree = Java8_Test2.getOglOptm1Java8Processor().getParser().parse("compilationUnit",
                     new StringReader(Java8_Test2.og_input));
             return tree;
         } catch (ParseFailedException | ParseTreeException | GrammarRuleNotFoundException e) {
@@ -252,19 +252,19 @@ public class Java8_Test2 {
 
     @Test
     public void ogl_spec_compilationUnit() {
-        final ISharedPackedParseTree tree = Java8_Test2.parseWithOglJava8Spec(this.file);
+        final SharedPackedParseTree tree = Java8_Test2.parseWithOglJava8Spec(this.file);
         Assert.assertNotNull("Failed to Parse", tree);
     }
 
     @Test
     public void ogl_optmAntlr_compilationUnit() {
-        final ISharedPackedParseTree tree = Java8_Test2.parseWithOglJava8OptmAntlr(this.file);
+        final SharedPackedParseTree tree = Java8_Test2.parseWithOglJava8OptmAntlr(this.file);
         Assert.assertNotNull("Failed to Parse", tree);
     }
 
     @Test
     public void ogl_optm1_compilationUnit() {
-        final ISharedPackedParseTree tree = Java8_Test2.parseWithOglJava8Optm1(this.file);
+        final SharedPackedParseTree tree = Java8_Test2.parseWithOglJava8Optm1(this.file);
         Assert.assertNotNull("Failed to Parse", tree);
     }
 

@@ -1,12 +1,14 @@
 package net.akehurst.language.grammar.parser;
 
 import java.util.Objects;
+import java.util.Set;
 
 import net.akehurst.language.api.grammar.Grammar;
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.api.grammar.NonTerminal;
 import net.akehurst.language.api.grammar.Rule;
 import net.akehurst.language.api.grammar.RuleItem;
+import net.akehurst.language.api.grammar.Terminal;
 import net.akehurst.language.ogl.semanticStructure.GramarVisitable;
 import net.akehurst.language.ogl.semanticStructure.GrammarVisitor;
 
@@ -41,6 +43,18 @@ public class NonTerminalRuleReference implements NonTerminal, GramarVisitable {
     @Override
     public String getName() {
         return this.ruleName;
+    }
+
+    @Override
+    public Set<Terminal> findAllTerminal() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Set<NonTerminal> findAllNonTerminal() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     // --- Visitable ---

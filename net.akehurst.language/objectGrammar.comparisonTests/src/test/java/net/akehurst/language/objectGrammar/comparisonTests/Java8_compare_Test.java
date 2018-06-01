@@ -31,10 +31,9 @@ import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.api.parser.ParseFailedException;
 import net.akehurst.language.api.parser.ParseTreeException;
-import net.akehurst.language.api.processor.ILanguageProcessor;
-import net.akehurst.language.api.sppt.ISharedPackedParseTree;
-import net.akehurst.language.ogl.semanticStructure.Grammar;
-import net.akehurst.language.processor.LanguageProcessor;
+import net.akehurst.language.api.processor.LanguageProcessor;
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.processor.LanguageProcessorDefault;
 import net.akehurst.language.processor.OGLanguageProcessor;
 
 @RunWith(Parameterized.class)
@@ -82,19 +81,20 @@ public class Java8_compare_Test {
         return Java8_compare_Test.processor;
     }
 
-    static ILanguageProcessor javaProcessor;
+    static LanguageProcessor javaProcessor;
 
     static {
         Java8_compare_Test.getJavaProcessor();
     }
 
-    static ILanguageProcessor getJavaProcessor() {
+    static LanguageProcessor getJavaProcessor() {
         if (null == Java8_compare_Test.javaProcessor) {
             try {
                 // String grammarText = new String(Files.readAllBytes(Paths.get("src/test/grammar/Java8.og")));
-                final FileReader reader = new FileReader("src/test/grammar/Java8.og");
-                final Grammar javaGrammar = Java8_compare_Test.getOGLProcessor().process(reader, "grammarDefinition", Grammar.class);
-                Java8_compare_Test.javaProcessor = new LanguageProcessor(javaGrammar, null);
+                final FileReader reader = new FileReader("src/test/grammar/Java8Optm1.og");
+                final net.akehurst.language.api.grammar.Grammar javaGrammar = Java8_compare_Test.getOGLProcessor().process(reader, "grammarDefinition",
+                        net.akehurst.language.api.grammar.Grammar.class);
+                Java8_compare_Test.javaProcessor = new LanguageProcessorDefault(javaGrammar, null);
                 Java8_compare_Test.javaProcessor.getParser().build();
             } catch (final IOException e) {
                 e.printStackTrace();
@@ -125,9 +125,9 @@ public class Java8_compare_Test {
 
     static String og_input;
 
-    static ISharedPackedParseTree parseWithOG(final Path file) {
+    static SharedPackedParseTree parseWithOG(final Path file) {
         try {
-            final ISharedPackedParseTree tree = Java8_compare_Test.getJavaProcessor().getParser().parse("compliationUnit",
+            final SharedPackedParseTree tree = Java8_compare_Test.getJavaProcessor().getParser().parse("compilationUnit",
                     new StringReader(Java8_compare_Test.og_input));
             return tree;
         } catch (final ParseFailedException e) {
@@ -154,21 +154,21 @@ public class Java8_compare_Test {
     @Test
     public void compare() {
 
-        final Instant s1 = Instant.now();
-        final ISharedPackedParseTree tree1 = Java8_compare_Test.parseWithOG(this.file);
-        final Instant e1 = Instant.now();
+        final Instant sOg = Instant.now();
+        final SharedPackedParseTree tree1 = Java8_compare_Test.parseWithOG(this.file);
+        final Instant eOg = Instant.now();
 
-        final Instant s2 = Instant.now();
+        final Instant sAntlr = Instant.now();
         final Object tree2 = Java8_compare_Test.parseWithAntlr4(this.file);
-        final Instant e2 = Instant.now();
+        final Instant eAntlr = Instant.now();
 
-        final Duration d1 = Duration.between(s1, e1);
-        final Duration d2 = Duration.between(s2, e2);
-        final boolean ogFaster = d1.compareTo(d2) < 0;
+        final Duration dOg = Duration.between(sOg, eOg);
+        final Duration dAntlr = Duration.between(sAntlr, eAntlr);
+        final boolean ogFaster = dOg.compareTo(dAntlr) < 0;
 
-        final boolean totalInSignificant = Duration.ofMillis(200).compareTo(d1) > 0;
+        final boolean totalInSignificant = Duration.ofMillis(200).compareTo(dOg) > 0;
 
-        Assert.assertTrue("Slower", totalInSignificant || ogFaster);
+        Assert.assertTrue(String.format("Slower (antlr=%s, og=%s)", dAntlr, dOg), totalInSignificant || ogFaster);
 
         Assert.assertNotNull("Failed to parse", tree1);
         Assert.assertNotNull(tree2);
