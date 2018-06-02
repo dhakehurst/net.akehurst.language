@@ -202,7 +202,7 @@ public class GrowingNode implements IGrowingNode {
         final List<RuntimeRule> nextItem = this.getNextExpectedItem();
         final ArrayList<RuntimeRule> l = new ArrayList<>();
         for (final RuntimeRule r : nextItem) {
-            l.addAll(Arrays.asList(this.getRuntimeRule().getRuntimeRuleSet().getPossibleFirstTerminals(r)));
+            l.addAll(this.getRuntimeRule().getRuntimeRuleSet().getPossibleFirstTerminals(r));
         }
         // add a possible empty rule
         if (0 == this.getNextItemIndex()) {

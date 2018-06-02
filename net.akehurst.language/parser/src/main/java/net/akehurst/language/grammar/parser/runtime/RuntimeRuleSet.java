@@ -45,14 +45,16 @@ public class RuntimeRuleSet {
     private ArrayList<String> nodeTypes;
     private Map<String, Integer> ruleNumbers;
     private RuntimeRule[][] possibleSubRule;
-    private RuntimeRule[][] possibleFirstRule;
+    private Set<RuntimeRule>[] possibleFirstRule;
     private RuntimeRule[][] possibleSuperRule;
-    private SuperRuleInfo[][][] possibleSuperRuleInfo;
+    private SuperRuleInfo[][] possibleSuperRuleInfo;
     private RuntimeRule[][] possibleSubTerminal;
-    private RuntimeRule[][] possibleFirstTerminals;
+    private Set<RuntimeRule>[] possibleFirstTerminals;
     private RuntimeRule[] possibleFirstSkipTerminals;
     private Map<String, RuntimeRule> terminalMap;
     private int[][][] doHeight;
+    private Set<RuntimeRule>[][] nextExpectedItem;
+    private int[][] nextRuleItemIndex;
     private String toString_cache;
 
     /*
@@ -80,18 +82,19 @@ public class RuntimeRuleSet {
     public void setRuntimeRules(final List<? extends RuntimeRule> value) {
         final int numberOfRules = value.size();
         this.possibleSubTerminal = new RuntimeRule[numberOfRules][];
-        this.possibleFirstTerminals = new RuntimeRule[numberOfRules][];
+        this.possibleFirstTerminals = new Set[numberOfRules];
         this.possibleSubRule = new RuntimeRule[numberOfRules][];
-        this.possibleFirstRule = new RuntimeRule[numberOfRules][];
+        this.possibleFirstRule = new Set[numberOfRules];
         this.possibleSuperRule = new RuntimeRule[numberOfRules][];
-        this.possibleSuperRuleInfo = new SuperRuleInfo[numberOfRules][this.maxNextItemIndex][];
+        this.possibleSuperRuleInfo = new SuperRuleInfo[numberOfRules][];
         this.runtimeRules = new RuntimeRule[numberOfRules];
         this.nodeTypes = new ArrayList<>(Arrays.asList(new String[numberOfRules]));
         this.ruleNumbers = new HashMap<>();
         this.terminalMap = new HashMap<>();
         this.emptyRulesFor = new RuntimeRule[numberOfRules];
         this.isSkipTerminal = new int[numberOfRules];
-        this.doHeight = new int[numberOfRules][numberOfRules][this.maxNextItemIndex];
+        this.nextExpectedItem = new Set[numberOfRules][2];
+        this.doHeight = new int[numberOfRules][numberOfRules][1];
 
         for (final RuntimeRule rrule : value) {
             if (null == rrule) {
@@ -184,11 +187,11 @@ public class RuntimeRuleSet {
         return result;
     }
 
-    public RuntimeRule[] getPossibleFirstSubRule(final RuntimeRule runtimeRule) {
-        RuntimeRule[] result = this.possibleFirstRule[runtimeRule.getRuleNumber()];
+    public Set<RuntimeRule> getPossibleFirstSubRule(final RuntimeRule runtimeRule) {
+        Set<RuntimeRule> result = this.possibleFirstRule[runtimeRule.getRuleNumber()];
         if (null == result) {
             final Set<RuntimeRule> rr = runtimeRule.findSubRulesAt(0);
-            result = rr.toArray(new RuntimeRule[rr.size()]);
+            result = rr;// .toArray(new RuntimeRule[rr.size()]);
             this.possibleFirstRule[runtimeRule.getRuleNumber()] = result;
         }
         return result;
@@ -203,11 +206,15 @@ public class RuntimeRuleSet {
         return result;
     }
 
-    public SuperRuleInfo[] getPossibleSuperRuleInfo(final RuntimeRule runtimeRule, final int atPosition) {
-        SuperRuleInfo[] result = this.possibleSuperRuleInfo[runtimeRule.getRuleNumber()][atPosition];
+    /**
+     * For the given runtimeRule, find all other rules that could have it as a first child
+     *
+     */
+    public SuperRuleInfo[] getPossibleSuperRuleInfo(final RuntimeRule runtimeRule) {
+        SuperRuleInfo[] result = this.possibleSuperRuleInfo[runtimeRule.getRuleNumber()];
         if (null == result) {
-            result = this.findAllSuperRuleInfo(runtimeRule, atPosition);
-            this.possibleSuperRuleInfo[runtimeRule.getRuleNumber()][atPosition] = result;
+            result = this.findAllSuperRuleInfo(runtimeRule);
+            this.possibleSuperRuleInfo[runtimeRule.getRuleNumber()] = result;
         }
         return result;
     }
@@ -227,8 +234,8 @@ public class RuntimeRuleSet {
         return result;
     }
 
-    public RuntimeRule[] getPossibleFirstTerminals(final RuntimeRule runtimeRule) {
-        RuntimeRule[] result = this.possibleFirstTerminals[runtimeRule.getRuleNumber()];
+    public Set<RuntimeRule> getPossibleFirstTerminals(final RuntimeRule runtimeRule) {
+        Set<RuntimeRule> result = this.possibleFirstTerminals[runtimeRule.getRuleNumber()];
         if (null == result) {
             final Set<RuntimeRule> rr = runtimeRule.findTerminalAt(0);
             for (final RuntimeRule r : this.getPossibleFirstSubRule(runtimeRule)) {
@@ -236,7 +243,7 @@ public class RuntimeRuleSet {
             }
             // Set<RuntimeRule> skipTerminal = this.getAllSkipTerminals();
             // rr.addAll( skipTerminal );
-            result = rr.toArray(new RuntimeRule[rr.size()]);
+            result = rr;
             this.possibleFirstTerminals[runtimeRule.getRuleNumber()] = result;
         }
         return result;
@@ -259,9 +266,7 @@ public class RuntimeRuleSet {
             this.getPossibleSubRule(runtimeRule);
             this.getPossibleFirstSubRule(runtimeRule);
             this.getPossibleSuperRule(runtimeRule);
-            for (int i = 0; i < this.maxNextItemIndex; ++i) {
-                this.getPossibleSuperRuleInfo(runtimeRule, i);
-            }
+            this.getPossibleSuperRuleInfo(runtimeRule);
             this.isSkipTerminal(runtimeRule);
         }
     }
@@ -306,7 +311,7 @@ public class RuntimeRuleSet {
         }
     }
 
-    SuperRuleInfo[] findAllSuperRuleInfo(final RuntimeRule runtimeRule, final int atPosition) {
+    private SuperRuleInfo[] findAllSuperRuleInfo(final RuntimeRule runtimeRule) {
         final Set<SuperRuleInfo> result = new HashSet<>();
         for (final RuntimeRule r : this.runtimeRules) {
             if (RuntimeRuleKind.TERMINAL == r.getKind()) {
@@ -320,9 +325,9 @@ public class RuntimeRuleSet {
                 // final int index = rhs.indexOf(runtimeRule);
                 // result.add(new SuperRuleInfo(r, index));
                 // }
-                if (r.couldHaveChild(runtimeRule, atPosition)) {
+                if (r.couldHaveChild(runtimeRule, 0)) {
                     // if (r.getRhs().getItems()[0].getRuleNumber() == runtimeRule.getRuleNumber()) {
-                    result.add(new SuperRuleInfo(r, atPosition));
+                    result.add(new SuperRuleInfo(r, 0));
                 }
             }
         }
@@ -388,27 +393,46 @@ public class RuntimeRuleSet {
         return this.toString_cache;
     }
 
+    /**
+     *
+     * return the set of SuperRuleInfo for which childRule can grow (at some point) into ancesstorRule at position ancesstorItemIndex
+     */
+    public Set<SuperRuleInfo> growsInto(final RuntimeRule childRule, final RuntimeRule ancesstorRule, final int ancesstorItemIndex) {
+        final Set<SuperRuleInfo> result = new HashSet<>();
+        final SuperRuleInfo[] infos = this.getPossibleSuperRuleInfo(childRule);
+        for (final SuperRuleInfo info : infos) {
+            final RuntimeRule newParentRule = info.getRuntimeRule();
+            final boolean canGrowInto = this.doHeight(newParentRule, ancesstorRule, ancesstorItemIndex);
+            if (canGrowInto) {
+                result.add(info);
+            }
+        }
+        return result;
+    }
+
     public boolean doHeight(final RuntimeRule parentRule, final RuntimeRule prevRule, final int nextItemIndex) {
-        int value = this.doHeight[parentRule.getRuleNumber()][prevRule.getRuleNumber()][nextItemIndex];
+
+        int value = 0;// this.doHeight[parentRule.getRuleNumber()][prevRule.getRuleNumber()][nextItemIndex];
         if (0 == value) {
-            // not set
+            // // not set
             boolean res = false;
             if (-1 == nextItemIndex) {
                 res = false;
             } else {
-                final List<RuntimeRule> nextExpectedForStacked = this.getNextExpectedItem(prevRule, nextItemIndex);
+                final Set<RuntimeRule> nextExpectedForStacked = this.getNextExpectedItem(prevRule, nextItemIndex);
                 if (nextExpectedForStacked.contains(parentRule)) {
                     res = true;
                 } else {
                     for (final RuntimeRule rr : nextExpectedForStacked) {
                         if (rr.getKind() == RuntimeRuleKind.NON_TERMINAL) {
-                            final List<RuntimeRule> possibles = Arrays.asList(this.getPossibleFirstSubRule(rr));
+                            // todo..can we reduce the possibles!
+                            final Set<RuntimeRule> possibles = this.getPossibleFirstSubRule(rr);
                             if (possibles.contains(parentRule)) {
                                 res = true;
                                 break;
                             }
                         } else {
-                            final List<RuntimeRule> possibles = Arrays.asList(this.getPossibleFirstTerminals(rr));
+                            final Set<RuntimeRule> possibles = this.getPossibleFirstTerminals(rr);
                             if (possibles.contains(parentRule)) {
                                 res = true;
                                 break;
@@ -418,63 +442,221 @@ public class RuntimeRuleSet {
                 }
             }
             value = res ? 1 : -1;
-            this.doHeight[parentRule.getRuleNumber()][prevRule.getRuleNumber()][nextItemIndex] = value;
+            // this.doHeight[parentRule.getRuleNumber()][prevRule.getRuleNumber()][0] = value;
         }
         return value == 1; // -1 for false
         // TODO: make sure rule numbers start above 0
     }
 
-    private List<RuntimeRule> getNextExpectedItem(final RuntimeRule rr, final int nextItemIndex) {
+    private int[] getNextRuleItemIndex(final RuntimeRule rr, final int nextItemIndex) {
+        final int[] result = this.nextRuleItemIndex[rr.getRuleNumber()];
+        if (null == result) {
+
+            switch (rr.getRhs().getKind()) {
+                case EMPTY:
+                    result = new int[] {};
+                case CHOICE: {
+                    if (nextItemIndex == 0) {
+                        result = new int[rr.getRhs().getItems().length];
+                        for (int i = 0; i > result.length; ++i) {
+                            result[i] = i;
+                        }
+                    } else {
+                        result = new int[] {};
+                    }
+                }
+                case PRIORITY_CHOICE: {
+                    if (nextItemIndex == 0) {
+                        result = new int[rr.getRhs().getItems().length];
+                        for (int i = 0; i > result.length; ++i) {
+                            result[i] = i;
+                        }
+                    } else {
+                        result = new int[] {};
+                    }
+                    // throw new RuntimeException("Internal Error: item is priority choice");
+                }
+                case CONCATENATION: {
+                    if (nextItemIndex >= rr.getRhs().getItems().length) {
+                        throw new RuntimeException("Internal Error: No NextExpectedItem");
+                    } else {
+                        if (-1 == nextItemIndex) {
+                            result = new int[] {};
+                        } else {
+                            result = new int[] { nextItemIndex };
+                        }
+                    }
+                }
+                case MULTI: {
+                    if (0 == nextItemIndex && 0 == rr.getRhs().getMultiMin()) {
+                        result = Arrays.asList(rr.getRhsItem(0), rr.getRuntimeRuleSet().getEmptyRule(rr));
+                    } else {
+                        result = new int[] { 0 };
+                    }
+                }
+                case SEPARATED_LIST: {
+                    if (nextItemIndex % 2 == 1) {
+                        result = new int[] { 1 };
+                    } else {
+                        if (0 == nextItemIndex && 0 == rr.getRhs().getMultiMin()) {
+                            result = Arrays.asList(rr.getRhsItem(0), rr.getRuntimeRuleSet().getEmptyRule(rr));
+                        } else {
+                            result = new int[] { 0 };
+                        }
+                    }
+                }
+                default:
+                    throw new RuntimeException("Internal Error: rule kind not recognised");
+            }
+            this.nextRuleItemIndex[rr.getRuleNumber()] = result;
+        }
+        return result;
+    }
+
+    private Set<RuntimeRule> getNextExpectedItem(final RuntimeRule rr, final int nextItemIndex) {
+        int index = -1;
         switch (rr.getRhs().getKind()) {
-            case EMPTY:
-                return Collections.emptyList();
+            case EMPTY: {
+                index = 0;
+            }
+            break;
             case CHOICE: {
                 if (nextItemIndex == 0) {
-                    return Arrays.asList(rr.getRhs().getItems());
+                    index = 0;
                 } else {
-                    return Collections.emptyList();
+                    index = 1;
                 }
-                // throw new RuntimeException("Internal Error: item is choice");
             }
+            break;
             case PRIORITY_CHOICE: {
                 if (nextItemIndex == 0) {
-                    return Arrays.asList(rr.getRhs().getItems());
+                    index = 0;
                 } else {
-                    return Collections.emptyList();
+                    index = 1;
                 }
                 // throw new RuntimeException("Internal Error: item is priority choice");
             }
+            break;
             case CONCATENATION: {
                 if (nextItemIndex >= rr.getRhs().getItems().length) {
                     throw new RuntimeException("Internal Error: No NextExpectedItem");
                 } else {
                     if (-1 == nextItemIndex) {
-                        return Collections.emptyList();
+                        index = 0;
                     } else {
-                        return Arrays.asList(rr.getRhsItem(nextItemIndex));
+                        index = 1;
                     }
                 }
             }
+            break;
             case MULTI: {
                 if (0 == nextItemIndex && 0 == rr.getRhs().getMultiMin()) {
-                    return Arrays.asList(rr.getRhsItem(0), rr.getRuntimeRuleSet().getEmptyRule(rr));
+                    index = 0;
                 } else {
-                    return Arrays.asList(rr.getRhsItem(0));
+                    index = 1;
                 }
             }
+            break;
             case SEPARATED_LIST: {
                 if (nextItemIndex % 2 == 1) {
-                    return Arrays.asList(rr.getSeparator());
+                    index = 0;
                 } else {
                     if (0 == nextItemIndex && 0 == rr.getRhs().getMultiMin()) {
-                        return Arrays.asList(rr.getRhsItem(0), rr.getRuntimeRuleSet().getEmptyRule(rr));
+                        index = 1;
                     } else {
-                        return Arrays.asList(rr.getRhsItem(0));
+                        // TODO: is it worth caching this result at the cost of index = 2!
+                        final Set<RuntimeRule> res = new HashSet<>();
+                        res.add(rr.getRhsItem(0));
+                        return res;
                     }
                 }
             }
+            break;
             default:
                 throw new RuntimeException("Internal Error: rule kind not recognised");
         }
+
+        Set<RuntimeRule> result = this.nextExpectedItem[rr.getRuleNumber()][index];
+        if (null == result) {
+            switch (rr.getRhs().getKind()) {
+                case EMPTY: {
+                    result = Collections.emptySet();
+                    this.nextExpectedItem[rr.getRuleNumber()][0] = result;
+                }
+                break;
+                case CHOICE: {
+                    if (nextItemIndex == 0) {
+                        result = new HashSet<>(Arrays.asList(rr.getRhs().getItems()));
+                        this.nextExpectedItem[rr.getRuleNumber()][0] = result;
+                    } else {
+                        result = Collections.emptySet();
+                        this.nextExpectedItem[rr.getRuleNumber()][1] = result;
+                    }
+                    // throw new RuntimeException("Internal Error: item is choice");
+                }
+                break;
+                case PRIORITY_CHOICE: {
+                    if (nextItemIndex == 0) {
+                        result = new HashSet<>(Arrays.asList(rr.getRhs().getItems()));
+                        this.nextExpectedItem[rr.getRuleNumber()][0] = result;
+                    } else {
+                        result = Collections.emptySet();
+                        this.nextExpectedItem[rr.getRuleNumber()][1] = result;
+                    }
+                    // throw new RuntimeException("Internal Error: item is priority choice");
+                }
+                break;
+                case CONCATENATION: {
+                    if (nextItemIndex >= rr.getRhs().getItems().length) {
+                        throw new RuntimeException("Internal Error: No NextExpectedItem");
+                    } else {
+                        if (-1 == nextItemIndex) {
+                            result = Collections.emptySet();
+                            this.nextExpectedItem[rr.getRuleNumber()][0] = result;
+                        } else {
+                            result = new HashSet<>();
+                            result.add(rr.getRhsItem(nextItemIndex));
+                            // can't cache this, it depends on nextItemIndex directly
+                            // this.nextExpectedItem[rr.getRuleNumber()][1] = result;
+                        }
+                    }
+                }
+                break;
+                case MULTI: {
+                    if (0 == nextItemIndex && 0 == rr.getRhs().getMultiMin()) {
+                        result = new HashSet<>();
+                        result.add(rr.getRhsItem(0));
+                        result.add(rr.getRuntimeRuleSet().getEmptyRule(rr));
+                        this.nextExpectedItem[rr.getRuleNumber()][0] = result;
+                    } else {
+                        result = new HashSet<>();
+                        result.add(rr.getRhsItem(0));
+                        this.nextExpectedItem[rr.getRuleNumber()][1] = result;
+                    }
+                }
+                break;
+                case SEPARATED_LIST: {
+                    if (nextItemIndex % 2 == 1) {
+                        result = new HashSet<>();
+                        result.add(rr.getSeparator());
+                        this.nextExpectedItem[rr.getRuleNumber()][0] = result;
+                    } else {
+                        if (0 == nextItemIndex && 0 == rr.getRhs().getMultiMin()) {
+                            result = new HashSet<>();
+                            result.add(rr.getRhsItem(0));
+                            result.add(rr.getRuntimeRuleSet().getEmptyRule(rr));
+                            this.nextExpectedItem[rr.getRuleNumber()][1] = result;
+                        } else {
+                            throw new RuntimeException("Internal Error: should not be here");
+                        }
+                    }
+                }
+                break;
+                default:
+                    throw new RuntimeException("Internal Error: rule kind not recognised");
+            }
+        }
+        return result;
     }
+
 }

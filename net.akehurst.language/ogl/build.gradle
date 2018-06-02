@@ -2,7 +2,7 @@
 dependencies {
 
 	implementation project(':net.akehurst.language.api')
-	implementation project(':net.akehurst.language.util')
+//	implementation project(':net.akehurst.language.util')
 	implementation "net.akehurst.transform:binary:${version_transform}"
 
 	testImplementation "junit:junit:${version_junit}"

@@ -346,7 +346,7 @@ public final class Forrest3 {
         if (gn.getHasCompleteChildren()) {
 
             // TODO: include position
-            final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule(), 0);
+            final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
             for (final SuperRuleInfo info : infos) {
                 if (this.hasHeightPotential(info.getRuntimeRule(), gn.getRuntimeRule(), previous)) {
                     // check if already grown into this parent ?
@@ -374,7 +374,7 @@ public final class Forrest3 {
         if (gn.getHasCompleteChildren()) {
 
             // TODO: include position
-            final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule(), 0);
+            final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
             for (final SuperRuleInfo info : infos) {
                 boolean hp;
                 final RuntimeRule newParentRule = info.getRuntimeRule();
@@ -399,61 +399,61 @@ public final class Forrest3 {
         return result;
     }
 
-    // 1 expanded
-    public boolean growHeight(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
+    // 1 c
+    public boolean growHeight1c(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
         boolean result = false;
 
         if (gn.getHasCompleteChildren()) {
-            final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule(), 0);
+            final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
             for (final SuperRuleInfo info : infos) {
-                boolean hp1 = false;
+                // boolean hp1 = false;
                 boolean hp2 = false;
                 final RuntimeRule newParentRule = info.getRuntimeRule();
                 final RuntimeRule childRule = gn.getRuntimeRule();
 
                 if (this.runtimeRuleSet.isSkipTerminal(childRule)) {
-                    hp1 = true;
+                    // hp1 = true;
                     hp2 = true;
                 } else if (!previous.isEmpty()) {
                     for (final IGrowingNode.PreviousInfo prev : previous) {
                         if (prev.node.hasNextExpectedItem()) {
-                            final List<RuntimeRule> nextExpectedForStacked = prev.node.getNextExpectedItem();
-                            if (nextExpectedForStacked.contains(newParentRule)) {
-                                hp1 = true;
-                            } else {
-                                for (final RuntimeRule rr : nextExpectedForStacked) {
-                                    if (rr.getKind() == RuntimeRuleKind.NON_TERMINAL) {
-                                        final List<RuntimeRule> possibles = Arrays.asList(this.runtimeRuleSet.getPossibleFirstSubRule(rr));
-                                        if (possibles.contains(newParentRule)) {
-                                            hp1 = true;
-                                            break;
-                                        }
-                                    } else {
-                                        final List<RuntimeRule> possibles = Arrays.asList(this.runtimeRuleSet.getPossibleFirstTerminals(rr));
-                                        if (possibles.contains(newParentRule)) {
-                                            hp1 = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
+                            // final List<RuntimeRule> nextExpectedForStacked = prev.node.getNextExpectedItem();
+                            // if (nextExpectedForStacked.contains(newParentRule)) {
+                            // hp1 = true;
+                            // } else {
+                            // for (final RuntimeRule rr : nextExpectedForStacked) {
+                            // if (rr.getKind() == RuntimeRuleKind.NON_TERMINAL) {
+                            // final List<RuntimeRule> possibles = Arrays.asList(this.runtimeRuleSet.getPossibleFirstSubRule(rr));
+                            // if (possibles.contains(newParentRule)) {
+                            // hp1 = true;
+                            // break;
+                            // }
+                            // } else {
+                            // final List<RuntimeRule> possibles = Arrays.asList(this.runtimeRuleSet.getPossibleFirstTerminals(rr));
+                            // if (possibles.contains(newParentRule)) {
+                            // hp1 = true;
+                            // break;
+                            // }
+                            // }
+                            // }
+                            // }
                             // TODO: need to use nextInputPosition here, rather than nextItemIndex, which is always 0!!
                             final int nextItemIndex = prev.node.getNextItemIndex();
-                            hp2 = this.runtimeRuleSet.doHeight(newParentRule, prev.node.getRuntimeRule(), nextItemIndex);
+                            hp2 |= this.runtimeRuleSet.doHeight(newParentRule, prev.node.getRuntimeRule(), nextItemIndex);
                         } else {
 
                         }
                     }
                 } else {
-                    hp1 = false;
+                    // hp1 = false;
                     hp2 = false;
                 }
 
-                if (hp1 != hp2) {
-                    System.out.println("different!!");
-                }
+                // if (hp1 != hp2) {
+                // System.out.println("different!!");
+                // }
 
-                if (hp1) {
+                if (hp2) {
                     // check if already grown into this parent ?
                     final IGraphNode alreadyGrown = null;
 
@@ -472,6 +472,122 @@ public final class Forrest3 {
         return result;
     }
 
+    public boolean growHeight1d(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
+        boolean result = false;
+        if (gn.getHasCompleteChildren()) {
+            final RuntimeRule childRule = gn.getRuntimeRule();
+            // what can gn growHeight directly into
+            final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
+            for (final SuperRuleInfo info : infos) {
+                boolean hp2 = false;
+                if (this.runtimeRuleSet.isSkipTerminal(childRule)) {
+                    hp2 = true;
+                } else if (!previous.isEmpty()) {
+                    for (final IGrowingNode.PreviousInfo prev : previous) {
+                        if (prev.node.hasNextExpectedItem()) {
+                            // TODO: need to use nextRuleItemIndex! here, rather than nextItemIndex.
+                            final int nextItemIndex = prev.node.getNextItemIndex();
+                            final RuntimeRule newParentRule = info.getRuntimeRule();
+                            hp2 |= this.runtimeRuleSet.doHeight(newParentRule, prev.node.getRuntimeRule(), nextItemIndex);
+                        } else {
+
+                        }
+                    }
+                } else {
+                    hp2 = false;
+                }
+                if (hp2) {
+                    final ICompleteNode complete = this.graph.getCompleteNode(gn);
+                    this.growHeightByType(complete, info, previous);
+                    result |= true; // TODO: this should depend on if the growHeight does something
+                }
+            }
+        } else {
+            // do nothing
+        }
+        return result;
+    }
+
+    public boolean growHeight1e(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
+        boolean result = false;
+        if (gn.getHasCompleteChildren()) {
+            final RuntimeRule childRule = gn.getRuntimeRule();
+            if (this.runtimeRuleSet.isSkipTerminal(childRule)) {
+                final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(childRule);
+                for (final SuperRuleInfo info : infos) {
+                    final ICompleteNode complete = this.graph.getCompleteNode(gn);
+                    this.growHeightByType(complete, info, previous);
+                    result |= true; // TODO: this should depend on if the growHeight does something
+                }
+            } else {
+                if (!previous.isEmpty()) {
+                    final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(childRule);
+                    for (final SuperRuleInfo info : infos) {
+                        boolean hp2 = false;
+                        for (final IGrowingNode.PreviousInfo prev : previous) {
+                            if (prev.node.hasNextExpectedItem()) {
+                                // TODO: need to use nextRuleItemIndex! here, rather than nextItemIndex.
+                                final int nextItemIndex = prev.node.getNextItemIndex();
+                                final RuntimeRule newParentRule = info.getRuntimeRule();
+                                hp2 |= this.runtimeRuleSet.doHeight(newParentRule, prev.node.getRuntimeRule(), nextItemIndex);
+                            } else {
+
+                            }
+                        }
+
+                        if (hp2) {
+                            final ICompleteNode complete = this.graph.getCompleteNode(gn);
+                            this.growHeightByType(complete, info, previous);
+                            result |= true; // TODO: this should depend on if the growHeight does something
+                        }
+                    }
+                } else {
+                    // do nothing
+                }
+            }
+        } else {
+            // do nothing
+        }
+        return result;
+    }
+
+    public boolean growHeight(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
+        boolean result = false;
+        if (gn.getHasCompleteChildren()) {
+            final RuntimeRule childRule = gn.getRuntimeRule();
+            if (this.runtimeRuleSet.isSkipTerminal(childRule)) {
+                final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
+                for (final SuperRuleInfo info : infos) {
+                    final ICompleteNode complete = this.graph.getCompleteNode(gn);
+                    this.growHeightByType(complete, info, previous);
+                    result |= true; // TODO: this should depend on if the growHeight does something
+                }
+            } else {
+                if (previous.isEmpty()) {
+                    // do nothing
+                } else {
+                    for (final IGrowingNode.PreviousInfo prev : previous) {
+                        if (prev.node.hasNextExpectedItem()) {
+                            final int prevItemIndex = prev.node.getNextItemIndex();
+                            final RuntimeRule prevRule = prev.node.getRuntimeRule();
+                            final Set<SuperRuleInfo> infos = this.runtimeRuleSet.growsInto(childRule, prevRule, prevItemIndex);
+                            for (final SuperRuleInfo info : infos) {
+                                final ICompleteNode complete = this.graph.getCompleteNode(gn);
+                                this.growHeightByType(complete, info, previous);
+                                result |= true; // TODO: this should depend on if the growHeight does something
+                            }
+                        } else {
+                            // do nothing
+                        }
+                    }
+                }
+            }
+        } else {
+            // do nothing
+        }
+        return result;
+    }
+
     // 2
     public boolean growHeight2(final IGrowingNode gn, final Set<IGrowingNode.PreviousInfo> previous) throws GrammarRuleNotFoundException, ParseTreeException {
         boolean result = false;
@@ -479,7 +595,7 @@ public final class Forrest3 {
         if (gn.getHasCompleteChildren()) {
             for (final IGrowingNode.PreviousInfo prev : previous) {
                 final int nextItemIndex = prev.node.getNextItemIndex();
-                final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule(), 0);
+                final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
                 for (final SuperRuleInfo info : infos) {
                     if (this.hasHeightPotential2(info.getRuntimeRule(), gn.getRuntimeRule(), prev)) {
                         final ICompleteNode complete = this.graph.getCompleteNode(gn);
@@ -500,7 +616,7 @@ public final class Forrest3 {
         if (gn.getHasCompleteChildren()) {
             for (final IGrowingNode.PreviousInfo prev : previous) {
                 final int nextItemIndex = prev.node.getNextItemIndex();
-                final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule(), 0);
+                final SuperRuleInfo[] infos = this.runtimeRuleSet.getPossibleSuperRuleInfo(gn.getRuntimeRule());
                 for (final SuperRuleInfo info : infos) {
                     boolean doIt = false;
 
@@ -612,12 +728,12 @@ public final class Forrest3 {
                     } else {
                         for (final RuntimeRule rr : nextExpectedForStacked) {
                             if (rr.getKind() == RuntimeRuleKind.NON_TERMINAL) {
-                                final List<RuntimeRule> possibles = Arrays.asList(this.runtimeRuleSet.getPossibleFirstSubRule(rr));
+                                final Set<RuntimeRule> possibles = this.runtimeRuleSet.getPossibleFirstSubRule(rr);
                                 if (possibles.contains(newParentRule)) {
                                     return true;
                                 }
                             } else {
-                                final List<RuntimeRule> possibles = Arrays.asList(this.runtimeRuleSet.getPossibleFirstTerminals(rr));
+                                final Set<RuntimeRule> possibles = this.runtimeRuleSet.getPossibleFirstTerminals(rr);
                                 if (possibles.contains(newParentRule)) {
                                     return true;
                                 }
@@ -655,13 +771,13 @@ public final class Forrest3 {
                 } else {
                     for (final RuntimeRule rr : nextExpectedForStacked) {
                         if (rr.getKind() == RuntimeRuleKind.NON_TERMINAL) {
-                            final List<RuntimeRule> possibles = Arrays.asList(this.runtimeRuleSet.getPossibleFirstSubRule(rr));
+                            final Set<RuntimeRule> possibles = this.runtimeRuleSet.getPossibleFirstSubRule(rr);
                             if (possibles.contains(newParentRule)) {
                                 hp = true;
                                 break;
                             }
                         } else {
-                            final List<RuntimeRule> possibles = Arrays.asList(this.runtimeRuleSet.getPossibleFirstTerminals(rr));
+                            final Set<RuntimeRule> possibles = this.runtimeRuleSet.getPossibleFirstTerminals(rr);
                             if (possibles.contains(newParentRule)) {
                                 hp = true;
                                 break;

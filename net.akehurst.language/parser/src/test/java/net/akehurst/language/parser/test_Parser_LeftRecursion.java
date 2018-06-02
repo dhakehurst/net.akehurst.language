@@ -630,7 +630,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     }
 
     @Test
-    public void SA_S_bbbbbbbb() throws ParseFailedException {
+    public void SA_S_b8() throws ParseFailedException {
         // grammar, goal, input
 
         final GrammarDefault g = this.SA();
@@ -652,7 +652,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     }
 
     @Test
-    public void SA_S_bbbbbbbbb() throws ParseFailedException {
+    public void SA_S_b9() throws ParseFailedException {
         // grammar, goal, input
 
         final GrammarDefault g = this.SA();
@@ -674,7 +674,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
     }
 
     @Test
-    public void SA_S_bbbbbbbbbb() throws ParseFailedException {
+    public void SA_S_b10() throws ParseFailedException {
         // grammar, goal, input
 
         final GrammarDefault g = this.SA();
@@ -703,7 +703,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
         final String goal = "S";
         String text = "";
         // TODO: make this 300 (30)
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 16; i++) {
             text += "b";
         }
 
