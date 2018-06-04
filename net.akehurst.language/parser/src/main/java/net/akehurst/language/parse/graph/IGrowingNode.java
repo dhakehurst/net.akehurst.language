@@ -8,96 +8,100 @@ import net.akehurst.language.api.sppt.FixedList;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public interface IGrowingNode {
-    RuntimeRule getRuntimeRule();
+	RuntimeRule getRuntimeRule();
 
-    int getRuntimeRuleNumber();
+	int getRuntimeRuleNumber();
 
-    int getStartPosition();
+	int getStartPosition();
 
-    int getNextInputPosition();
+	int getNextInputPosition();
 
-    int getNextItemIndex();
+	int getNextItemIndex();
 
-    int getPriority();
+	int getPriority();
 
-    int getMatchedTextLength();
+	int getMatchedTextLength();
 
-    boolean isEmptyRuleMatch();
+	int getIncrementedNextItemIndex();
 
-    boolean isSkip();
+	boolean isEmptyRuleMatch();
 
-    boolean getHasCompleteChildren();
+	boolean isSkip();
 
-    boolean getCanGrowWidth();
+	boolean getHasCompleteChildren();
 
-    boolean getCanGraftBack(IGrowingNode.PreviousInfo previous);
+	int getNumNonSkipChildren();
 
-    List<RuntimeRule> getNextExpectedTerminals();
+	boolean getCanGrowWidth();
 
-    boolean getCanGrowWidthWithSkip();
+	boolean getCanGraftBack(IGrowingNode.PreviousInfo previous);
 
-    boolean hasNextExpectedItem();
+	List<RuntimeRule> getNextExpectedTerminals();
 
-    boolean getExpectsItemAt(RuntimeRule runtimeRule, int atPosition);
+	boolean getCanGrowWidthWithSkip();
 
-    // boolean getIsStacked();
+	boolean hasNextExpectedItem();
 
-    public static final class PreviousInfo {
-        public PreviousInfo(final IGrowingNode node, final int atPosition) {
-            this.node = node;
-            this.atPosition = atPosition;
-            // a skip node can have a previous at -1
-            // assert atPosition >= 0;
-            this.hashCode_cache = Objects.hash(node, atPosition);
-        }
+	boolean getExpectsItemAt(RuntimeRule runtimeRule, int atPosition);
 
-        public IGrowingNode node;
-        public int atPosition;
+	// boolean getIsStacked();
 
-        int hashCode_cache;
+	public static final class PreviousInfo {
+		public PreviousInfo(final IGrowingNode node, final int atPosition) {
+			this.node = node;
+			this.atPosition = atPosition;
+			// a skip node can have a previous at -1
+			// assert atPosition >= 0;
+			this.hashCode_cache = Objects.hash(node, atPosition);
+		}
 
-        @Override
-        public int hashCode() {
-            return this.hashCode_cache;
-        }
+		public IGrowingNode node;
+		public int atPosition;
 
-        @Override
-        public boolean equals(final Object arg) {
-            if (!(arg instanceof PreviousInfo)) {
-                return false;
-            }
-            final PreviousInfo other = (PreviousInfo) arg;
-            return this.atPosition == other.atPosition && this.node == other.node;
-        }
+		int hashCode_cache;
 
-        @Override
-        public String toString() {
-            return "(".concat(Integer.toString(this.atPosition)).concat("|").concat(this.node.toString()).concat(")");
-        }
-    }
+		@Override
+		public int hashCode() {
+			return this.hashCode_cache;
+		}
 
-    Set<PreviousInfo> getPrevious();
+		@Override
+		public boolean equals(final Object arg) {
+			if (!(arg instanceof PreviousInfo)) {
+				return false;
+			}
+			final PreviousInfo other = (PreviousInfo) arg;
+			return this.atPosition == other.atPosition && this.node == other.node;
+		}
 
-    void newPrevious();
+		@Override
+		public String toString() {
+			return "(".concat(Integer.toString(this.atPosition)).concat("|").concat(this.node.toString()).concat(")");
+		}
+	}
 
-    void addPrevious(IGrowingNode previousNode, int atPosition);
+	Set<PreviousInfo> getPrevious();
 
-    Set<IGrowingNode> getNext();
+	void newPrevious();
 
-    void addNext(IGrowingNode value);
+	void addPrevious(IGrowingNode previousNode, int atPosition);
 
-    void removeNext(IGrowingNode value);
+	Set<IGrowingNode> getNext();
 
-    List<RuntimeRule> getNextExpectedItem();
+	void addNext(IGrowingNode value);
 
-    boolean isLeaf();
+	void removeNext(IGrowingNode value);
 
-    boolean isEmptyLeaf();
+	Set<RuntimeRule> getNextExpectedItems();
 
-    FixedList<ICompleteNode> getGrowingChildren();
+	boolean isLeaf();
 
-    String toStringTree(boolean withChildren, boolean withPrevious);
+	boolean isEmptyLeaf();
 
-    String toStringId();
+	FixedList<ICompleteNode> getGrowingChildren();
+
+	String toStringTree(boolean withChildren, boolean withPrevious);
+
+	String toStringId();
 
 }

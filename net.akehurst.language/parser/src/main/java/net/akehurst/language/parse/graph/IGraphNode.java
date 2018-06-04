@@ -9,150 +9,150 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
 public interface IGraphNode extends SharedPackedParseTreeVisitable {
 
-	RuntimeRule getRuntimeRule();
+    RuntimeRule getRuntimeRule();
 
-	int getPriority();
+    int getPriority();
 
-	int getStartPosition();
+    int getStartPosition();
 
-	int getNextInputPosition();
+    int getNextInputPosition();
 
-	int getNextItemIndex();
+    // int getNextItemIndex__();
 
-	int getMatchedTextLength();
+    int getMatchedTextLength();
 
-	int getGrowingEndPosition();
+    int getGrowingEndPosition();
 
-	// TODO: not sure this is useful any where
-	int getHeight();
+    // TODO: not sure this is useful any where
+    int getHeight();
 
-	boolean getIsLeaf();
+    boolean getIsLeaf();
 
-	/**
-	 * isStacked then true else canGrowWidth
-	 *
-	 * @return
-	 */
-	boolean getCanGrow();
+    /**
+     * isStacked then true else canGrowWidth
+     *
+     * @return
+     */
+    boolean getCanGrow();
 
-	boolean getIsSkip();
+    boolean getIsSkip();
 
-	boolean getIsComplete();
+    boolean getIsComplete();
 
-	/**
-	 * isComplete && isStacked
-	 *
-	 * @return
-	 */
-	boolean getCanGraftBack();
+    /**
+     * isComplete && isStacked
+     *
+     * @return
+     */
+    boolean getCanGraftBack();
 
-	boolean getCanGrowWidth();
+    boolean getCanGrowWidth();
 
-	boolean getCanGrowWidthWithSkip();
+    boolean getCanGrowWidthWithSkip();
 
-	boolean getIsStacked();
+    boolean getIsStacked();
 
-	boolean hasNextExpectedItem();
+    boolean hasNextExpectedItem();
 
-	List<RuntimeRule> getNextExpectedItem();
+    List<RuntimeRule> getNextExpectedItem();
 
-	List<RuntimeRule> getNextExpectedTerminals();
+    List<RuntimeRule> getNextExpectedTerminals();
 
-	RuntimeRule getExpectedItemAt(int atPosition);
+    RuntimeRule getExpectedItemAt(int atPosition);
 
-	boolean getExpectsItemAt(RuntimeRule item, int atPosition);
+    boolean getExpectsItemAt(RuntimeRule item, int atPosition);
 
-	Set<IGraphNode> getAlreadyGrownInto();
+    Set<IGraphNode> getAlreadyGrownInto();
 
-	Set<IGraphNode> getPossibleParent();
+    Set<IGraphNode> getPossibleParent();
 
-	static class ChildrenOption {
-		public int matchedLength;
-		public List<IGraphNode> nodes;
-	}
+    static class ChildrenOption {
+        public int matchedLength;
+        public List<IGraphNode> nodes;
+    }
 
-	List<ChildrenOption> getChildrenOption();
+    List<ChildrenOption> getChildrenOption();
 
-	/**
-	 * push this node onto the stack of next, where next would fit into this 'atPosition'
-	 *
-	 * @param next
-	 */
-	void pushToStackOf(IGraphNode next, int atPosition);
+    /**
+     * push this node onto the stack of next, where next would fit into this 'atPosition'
+     *
+     * @param next
+     */
+    void pushToStackOf(IGraphNode next, int atPosition);
 
-	/**
-	 * follow getNext and getPossibleParent for find the current heads
-	 *
-	 * @return
-	 */
-	Set<IGraphNode> getHeads(Set<IGraphNode> visited);
+    /**
+     * follow getNext and getPossibleParent for find the current heads
+     *
+     * @return
+     */
+    Set<IGraphNode> getHeads(Set<IGraphNode> visited);
 
-	/**
-	 * reverse of getPrevious
-	 *
-	 * @return
-	 */
-	Set<IGraphNode> getNext();
+    /**
+     * reverse of getPrevious
+     *
+     * @return
+     */
+    Set<IGraphNode> getNext();
 
-	void addNext(IGraphNode value);
+    void addNext(IGraphNode value);
 
-	// int[] getStackHash();
+    // int[] getStackHash();
 
-	void addNextGrowingChild(IGraphNode nextChild, int nextItemIndex);
+    void addNextGrowingChild(IGraphNode nextChild, int nextItemIndex);
 
-	/**
-	 * return list of things that are stacked previous to this one
-	 *
-	 * @return
-	 */
-	Set<PreviousInfo> getPrevious();
+    /**
+     * return list of things that are stacked previous to this one
+     *
+     * @return
+     */
+    Set<PreviousInfo> getPrevious();
 
-	void addPrevious(IGraphNode prev, int atPosition);
+    void addPrevious(IGraphNode prev, int atPosition);
 
-	public static final class PreviousInfo {
-		public PreviousInfo(final IGraphNode node, final int atPosition) {
-			this.node = node;
-			this.atPosition = atPosition;
-			this.hashCode_cache = Objects.hash(node, atPosition);
-		}
+    public static final class PreviousInfo {
+        public PreviousInfo(final IGraphNode node, final int atPosition) {
+            this.node = node;
+            this.atPosition = atPosition;
+            this.hashCode_cache = Objects.hash(node, atPosition);
+        }
 
-		public IGraphNode node;
-		public int atPosition;
+        public IGraphNode node;
+        public int atPosition;
 
-		int hashCode_cache;
+        int hashCode_cache;
 
-		@Override
-		public int hashCode() {
-			return this.hashCode_cache;
-		}
+        @Override
+        public int hashCode() {
+            return this.hashCode_cache;
+        }
 
-		@Override
-		public boolean equals(final Object arg) {
-			if (!(arg instanceof PreviousInfo)) {
-				return false;
-			}
-			final PreviousInfo other = (PreviousInfo) arg;
-			return this.atPosition == other.atPosition && this.node == other.node;
-		}
+        @Override
+        public boolean equals(final Object arg) {
+            if (!(arg instanceof PreviousInfo)) {
+                return false;
+            }
+            final PreviousInfo other = (PreviousInfo) arg;
+            return this.atPosition == other.atPosition && this.node == other.node;
+        }
 
-		@Override
-		public String toString() {
-			return "(".concat(Integer.toString(this.atPosition)).concat("-").concat(this.node.toString()).concat(")");
-		}
-	}
+        @Override
+        public String toString() {
+            return "(".concat(Integer.toString(this.atPosition)).concat("-").concat(this.node.toString()).concat(")");
+        }
+    }
 
-	// IGraphNode addNextChild(IGraphNode gn);
-	//
-	// IGraphNode addSkipChild(IGraphNode gn);
-	//
-	// IGraphNode replace(IGraphNode newNode);
+    // IGraphNode addNextChild(IGraphNode gn);
+    //
+    // IGraphNode addSkipChild(IGraphNode gn);
+    //
+    // IGraphNode replace(IGraphNode newNode);
 
-	// IGraphNode duplicateWithNextChild(IGraphNode nextChild);
-	//
-	// IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild);
-	//
-	// IGraphNode duplicateWithOtherStack(int priority, Set<PreviousInfo> previous);
-	//
-	// IGraphNode reuseWithOtherStack(Set<PreviousInfo> previous);
+    // IGraphNode duplicateWithNextChild(IGraphNode nextChild);
+    //
+    // IGraphNode duplicateWithNextSkipChild(IGraphNode nextChild);
+    //
+    // IGraphNode duplicateWithOtherStack(int priority, Set<PreviousInfo> previous);
+    //
+    // IGraphNode reuseWithOtherStack(Set<PreviousInfo> previous);
 
 }

@@ -1,8 +1,6 @@
 package net.akehurst.language.parse.graph;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -16,455 +14,473 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
 
 public class GrowingNode implements IGrowingNode {
 
-    private final RuntimeRule runtimeRule;
-    private final int startPosition;
-    private final int nextInputPosition;
-    private final int nextItemIndex;
-    private final int priority;
-    private final FixedList<ICompleteNode> children;
-    private Set<PreviousInfo> previous;
-    private final Set<IGrowingNode> next;
-    private final boolean hasCompleteChildren_cache;
-    private final int hashCode_cache;
+	private final RuntimeRule runtimeRule;
+	private final int startPosition;
+	private final int nextInputPosition;
+	private final int nextItemIndex;
+	private final int priority;
+	private final FixedList<ICompleteNode> children;
+	private final int numNonSkipChildren;
+	private Set<PreviousInfo> previous;
+	private final Set<IGrowingNode> next;
+	private final boolean hasCompleteChildren_cache;
+	private final int hashCode_cache;
 
-    public GrowingNode(final RuntimeRule runtimeRule, final int startPosition, final int nextInputPosition, final int nextItemIndex, final int priority,
-            final FixedList<ICompleteNode> children) {
-        this.runtimeRule = runtimeRule;
-        this.startPosition = startPosition;
-        this.nextInputPosition = nextInputPosition;
-        this.nextItemIndex = nextItemIndex;
-        this.priority = priority;
-        this.children = children;
-        this.previous = new HashSet<>();
-        this.next = new HashSet<>();
-        this.hasCompleteChildren_cache = this.calcHasCompleteChildren();
-        this.hashCode_cache = Objects.hash(runtimeRule, startPosition, nextInputPosition, nextItemIndex);
-    }
+	public GrowingNode(final RuntimeRule runtimeRule, final int startPosition, final int nextInputPosition, final int nextItemIndex, final int priority,
+			final FixedList<ICompleteNode> children, final int numNonSkipChildren) {
+		this.runtimeRule = runtimeRule;
+		this.startPosition = startPosition;
+		this.nextInputPosition = nextInputPosition;
+		this.nextItemIndex = nextItemIndex;
+		this.priority = priority;
+		this.children = children;
+		this.numNonSkipChildren = numNonSkipChildren;
+		this.previous = new HashSet<>();
+		this.next = new HashSet<>();
+		this.hasCompleteChildren_cache = this.calcHasCompleteChildren();
+		this.hashCode_cache = Objects.hash(runtimeRule, startPosition, nextInputPosition, nextItemIndex);
+	}
 
-    @Override
-    public RuntimeRule getRuntimeRule() {
-        return this.runtimeRule;
-    }
+	@Override
+	public RuntimeRule getRuntimeRule() {
+		return this.runtimeRule;
+	}
 
-    @Override
-    public int getRuntimeRuleNumber() {
-        return this.runtimeRule.getRuleNumber();
-    }
+	@Override
+	public int getRuntimeRuleNumber() {
+		return this.runtimeRule.getRuleNumber();
+	}
 
-    @Override
-    public int getStartPosition() {
-        return this.startPosition;
-    }
+	@Override
+	public int getStartPosition() {
+		return this.startPosition;
+	}
 
-    @Override
-    public int getNextInputPosition() {
-        return this.nextInputPosition;
-    }
+	@Override
+	public int getNextInputPosition() {
+		return this.nextInputPosition;
+	}
 
-    @Override
-    public int getNextItemIndex() {
-        return this.nextItemIndex;
-    }
+	@Override
+	public int getNextItemIndex() {
+		return this.nextItemIndex;
+	}
 
-    @Override
-    public int getPriority() {
-        return this.priority;
-    }
+	@Override
+	public int getPriority() {
+		return this.priority;
+	}
 
-    @Override
-    public int getMatchedTextLength() {
-        return this.nextInputPosition - this.startPosition;
-    }
+	@Override
+	public int getMatchedTextLength() {
+		return this.nextInputPosition - this.startPosition;
+	}
 
-    @Override
-    public boolean isSkip() {
-        return this.getRuntimeRule().getIsSkipRule();
-    }
+	@Override
+	public boolean isSkip() {
+		return this.getRuntimeRule().getIsSkipRule();
+	}
 
-    @Override
-    public boolean getHasCompleteChildren() {
-        return this.hasCompleteChildren_cache;
-    }
+	@Override
+	public boolean getHasCompleteChildren() {
+		return this.hasCompleteChildren_cache;
+	}
 
-    private boolean calcHasCompleteChildren() {
-        // TODO: could pre-calc this I think
-        if (RuntimeRuleKind.TERMINAL == this.getRuntimeRule().getKind()) {
-            return true;
-        } else {
-            switch (this.getRuntimeRule().getRhs().getKind()) {
-                case EMPTY:
-                    return true;
-                case CHOICE:
-                    // a choice can only have one child
-                    // TODO: should never be 1, should always be -1 if we create nodes correctly
-                    return this.nextItemIndex == 1 || this.nextItemIndex == -1;
-                case PRIORITY_CHOICE:
-                    // a choice can only have one child
-                    // TODO: should never be 1, should always be -1 if we create nodes correctly
-                    return this.nextItemIndex == 1 || this.nextItemIndex == -1;
-                case CONCATENATION: {
-                    return this.getRuntimeRule().getRhs().getItems().length <= this.nextItemIndex || this.nextItemIndex == -1; // the -1 is used when creating
-                                                                                                                               // dummy
-                                                                                                                               // // test here!
-                }
-                case MULTI: {
-                    boolean res = false;
-                    if (0 == this.getRuntimeRule().getRhs().getMultiMin() && this.nextItemIndex == 1) {
-                        // complete if we have an empty node as child
-                        res = this.getGrowingChildren().isEmpty() ? false : this.getGrowingChildren().get(0).getRuntimeRule().getIsEmptyRule();
-                    }
-                    final int size = this.nextItemIndex;
-                    return res || size > 0 && size >= this.getRuntimeRule().getRhs().getMultiMin() || this.nextItemIndex == -1; // the -1 is used when creating
-                                                                                                                                // dummy branch...should
-                    // really need the test here!
-                }
-                case SEPARATED_LIST: {
-                    final int size = this.nextItemIndex;
-                    return size % 2 == 1 || this.nextItemIndex == -1; // the -1 is used when creating dummy branch...should really need the test here!
-                }
-                default:
-                    throw new RuntimeException("Internal Error: rule kind not recognised");
-            }
-        }
-    }
+	@Override
+	public int getNumNonSkipChildren() {
+		return this.numNonSkipChildren;
+	}
 
-    @Override
-    public boolean getCanGrowWidth() {
-        if (this.isLeaf()) {
-            return false;
-        }
-        switch (this.getRuntimeRule().getRhs().getKind()) {
-            case EMPTY: {
-                return false;
-            }
-            case CHOICE: {
-                return this.nextItemIndex == 0;
-            }
-            case PRIORITY_CHOICE: {
-                return this.nextItemIndex == 0;
-            }
-            case CONCATENATION: {
-                if (this.nextItemIndex != -1 && this.nextItemIndex < this.getRuntimeRule().getRhs().getItems().length) {
-                    return true;
-                } else {
-                    return false; // !reachedEnd;
-                }
-            }
-            case MULTI: {
-                // not sure we need the test for isEmpty, because if it is empty it should be complete or NOT!???
-                // if (!this.getGrowingChildren().isEmpty() && this.getGrowingChildren().get(0).getRuntimeRule().getIsEmptyRule()) {
-                if (this.isEmptyRuleMatch()) {
-                    return false;
-                }
-                final int size = this.nextItemIndex;
-                final int max = this.getRuntimeRule().getRhs().getMultiMax();
-                return -1 != size && (-1 == max || size < max);
-            }
-            case SEPARATED_LIST: {
-                if (!this.getGrowingChildren().isEmpty() && this.getGrowingChildren().get(0).getRuntimeRule().getIsEmptyRule()) {
-                    return false;
-                }
-                final int size = this.nextItemIndex;
-                final int max = this.getRuntimeRule().getRhs().getMultiMax();
-                final int x = size / 2;
-                return -1 != size && (-1 == max || x < max);
-            }
-            default:
-                throw new RuntimeException("Internal Error: rule kind not recognised");
-        }
-    }
+	private boolean calcHasCompleteChildren() {
+		// TODO: could pre-calc this I think
+		if (RuntimeRuleKind.TERMINAL == this.getRuntimeRule().getKind()) {
+			return true;
+		} else {
+			switch (this.getRuntimeRule().getRhs().getKind()) {
+				case EMPTY:
+					return true;
+				case CHOICE:
+					// a choice can only have one child
+					// TODO: should never be 1, should always be -1 if we create nodes correctly
+					return this.getNextItemIndex() == 1 || this.getNextItemIndex() == -1;
+				case PRIORITY_CHOICE:
+					// a choice can only have one child
+					// TODO: should never be 1, should always be -1 if we create nodes correctly
+					return this.getNextItemIndex() == 1 || this.getNextItemIndex() == -1;
+				case CONCATENATION: {
+					return this.getRuntimeRule().getRhs().getItems().length <= this.getNextItemIndex() || this.getNextItemIndex() == -1; // the -1 is used when
+																																			// creating
+																																			// dummy
+																																			// // test here!
+				}
+				case MULTI: {
+					boolean res = false;
+					if (0 == this.getRuntimeRule().getRhs().getMultiMin() && this.getNumNonSkipChildren() == 1) {
+						// complete if we have an empty node as child
+						res = this.getGrowingChildren().isEmpty() ? false : this.getGrowingChildren().get(0).getRuntimeRule().getIsEmptyRule();
+					}
+					final int size = this.getNumNonSkipChildren();//this.getNextItemIndex();
+					return res || size > 0 && size >= this.getRuntimeRule().getRhs().getMultiMin() || this.getNextItemIndex() == -1; // the -1 is used when
+																																		// creating
+																																		// dummy branch...should
+																																		// really need the test here!
+				}
+				case SEPARATED_LIST: {
+					final int size = this.getNextItemIndex();
+					return size % 2 == 1 || this.getNextItemIndex() == -1; // the -1 is used when creating dummy branch...should really need the test here!
+				}
+				default:
+					throw new RuntimeException("Internal Error: rule kind not recognised");
+			}
+		}
+	}
 
-    @Override
-    public boolean isEmptyRuleMatch() {
-        return this.getHasCompleteChildren() && this.getStartPosition() == this.getNextInputPosition();
-    }
+	@Override
+	public int getIncrementedNextItemIndex() {
+		final int newNextItemIndex = this.getRuntimeRule().incrementNextItemIndex(this.getNextItemIndex());
+		return newNextItemIndex;
+	}
 
-    @Override
-    public boolean getCanGraftBack(final IGrowingNode.PreviousInfo info) {
-        // TODO: should return false if this is emptyRule and previous' children is not empty
-        // if (this.previous.isEmpty() || !this.getHasCompleteChildren()) {
-        if (!this.getHasCompleteChildren()) {
-            return false;
-        }
-        boolean b = false;
-        // for (final PreviousInfo info : previous) {
-        final boolean x = this.isEmptyRuleMatch() && (info.node.getRuntimeRule().getRhs().getKind() == RuntimeRuleItemKind.MULTI
-                || info.node.getRuntimeRule().getRhs().getKind() == RuntimeRuleItemKind.SEPARATED_LIST) && !info.node.getGrowingChildren().isEmpty();
+	@Override
+	public boolean getCanGrowWidth() {
+		if (this.isLeaf()) {
+			return false;
+		}
+		switch (this.getRuntimeRule().getRhs().getKind()) {
+			case EMPTY: {
+				return false;
+			}
+			case CHOICE: {
+				return this.getNextItemIndex() == 0;
+			}
+			case PRIORITY_CHOICE: {
+				return this.getNextItemIndex() == 0;
+			}
+			case CONCATENATION: {
+				if (this.getNextItemIndex() != -1 && this.getNextItemIndex() < this.getRuntimeRule().getRhs().getItems().length) {
+					return true;
+				} else {
+					return false; // !reachedEnd;
+				}
+			}
+			case MULTI: {
+				// not sure we need the test for isEmpty, because if it is empty it should be complete or NOT!???
+				// if (!this.getGrowingChildren().isEmpty() && this.getGrowingChildren().get(0).getRuntimeRule().getIsEmptyRule()) {
+				if (this.isEmptyRuleMatch()) {
+					return false;
+				}
+				final int size = this.getNextItemIndex();
+				final int max = this.getRuntimeRule().getRhs().getMultiMax();
+				return -1 != size && (-1 == max || size < max);
+			}
+			case SEPARATED_LIST: {
+				if (!this.getGrowingChildren().isEmpty() && this.getGrowingChildren().get(0).getRuntimeRule().getIsEmptyRule()) {
+					return false;
+				}
+				final int size = this.getNextItemIndex();
+				final int max = this.getRuntimeRule().getRhs().getMultiMax();
+				final int x = size / 2;
+				return -1 != size && (-1 == max || x < max);
+			}
+			default:
+				throw new RuntimeException("Internal Error: rule kind not recognised");
+		}
+	}
 
-        b |= info.node.getExpectsItemAt(this.getRuntimeRule(), info.atPosition) && !x;
-        // }
-        return b;// && this.getHasCompleteChildren();// && this.getIsStacked();
-    }
+	@Override
+	public boolean isEmptyRuleMatch() {
+		return this.getHasCompleteChildren() && this.getStartPosition() == this.getNextInputPosition();
+	}
 
-    @Override
-    public List<RuntimeRule> getNextExpectedTerminals() {
-        // TODO: cache this
-        final List<RuntimeRule> nextItem = this.getNextExpectedItem();
-        final ArrayList<RuntimeRule> l = new ArrayList<>();
-        for (final RuntimeRule r : nextItem) {
-            l.addAll(this.getRuntimeRule().getRuntimeRuleSet().getPossibleFirstTerminals(r));
-        }
-        // add a possible empty rule
-        if (0 == this.getNextItemIndex()) {
-            switch (this.getRuntimeRule().getRhs().getKind()) {
-                case EMPTY:
-                break;
+	@Override
+	public boolean getCanGraftBack(final IGrowingNode.PreviousInfo info) {
+		// TODO: should return false if this is emptyRule and previous' children is not empty
+		// if (this.previous.isEmpty() || !this.getHasCompleteChildren()) {
+		if (!this.getHasCompleteChildren()) {
+			return false;
+		}
+		boolean b = false;
+		// for (final PreviousInfo info : previous) {
+		final boolean x = this.isEmptyRuleMatch() && (info.node.getRuntimeRule().getRhs().getKind() == RuntimeRuleItemKind.MULTI
+				|| info.node.getRuntimeRule().getRhs().getKind() == RuntimeRuleItemKind.SEPARATED_LIST) && !info.node.getGrowingChildren().isEmpty();
 
-                case CHOICE:
-                break;
-                case PRIORITY_CHOICE:
-                break;
-                case CONCATENATION:
-                break;
-                case MULTI: {
-                    if (this.getRuntimeRule().getRhs().getMultiMin() == 0) {
-                        l.add(this.getRuntimeRule().getRuntimeRuleSet().getEmptyRule(this.getRuntimeRule()));
-                    }
-                }
-                break;
-                case SEPARATED_LIST: {
-                    if (this.getRuntimeRule().getRhs().getMultiMin() == 0) {
-                        l.add(this.getRuntimeRule().getRuntimeRuleSet().getEmptyRule(this.getRuntimeRule()));
-                    }
-                }
-                break;
-                default:
-                break;
-            }
-        }
-        return l;
-    }
+		b |= info.node.getExpectsItemAt(this.getRuntimeRule(), info.atPosition) && !x;
+		// }
+		return b;// && this.getHasCompleteChildren();// && this.getIsStacked();
+	}
 
-    @Override
-    public boolean getCanGrowWidthWithSkip() {
-        return !this.getRuntimeRule().getIsEmptyRule() && this.getRuntimeRule().getKind() == RuntimeRuleKind.NON_TERMINAL;
-    }
+	@Override
+	public List<RuntimeRule> getNextExpectedTerminals() {
+		// TODO: cache this
+		final Set<RuntimeRule> nextItem = this.getNextExpectedItems();
+		final ArrayList<RuntimeRule> l = new ArrayList<>();
+		for (final RuntimeRule r : nextItem) {
+			l.addAll(this.getRuntimeRule().getRuntimeRuleSet().getPossibleFirstTerminals(r));
+		}
+		// add a possible empty rule
+		if (0 == this.getNextItemIndex()) {
+			switch (this.getRuntimeRule().getRhs().getKind()) {
+				case EMPTY:
+				break;
 
-    @Override
-    public boolean hasNextExpectedItem() {
-        switch (this.getRuntimeRule().getRhs().getKind()) {
-            case EMPTY:
-                return false;
-            case CHOICE:
-                return this.nextItemIndex == 0;
-            case PRIORITY_CHOICE:
-                return this.nextItemIndex == 0;
-            case CONCATENATION: {
-                if (-1 == this.nextItemIndex || this.nextItemIndex >= this.getRuntimeRule().getRhs().getItems().length) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-            case MULTI: {
-                if (-1 == this.nextItemIndex) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-            case SEPARATED_LIST:
-                if (-1 == this.nextItemIndex) {
-                    return false;
-                } else {
-                    return true;
-                }
-            default:
-                throw new RuntimeException("Internal Error: rule kind not recognised");
-        }
-    }
+				case CHOICE:
+				break;
+				case PRIORITY_CHOICE:
+				break;
+				case CONCATENATION:
+				break;
+				case MULTI: {
+					//					if (this.getRuntimeRule().getRhs().getMultiMin() == 0) {
+					//						l.add(this.getRuntimeRule().getRuntimeRuleSet().getEmptyRule(this.getRuntimeRule()));
+					//					}
+				}
+				break;
+				case SEPARATED_LIST: {
+					if (this.getRuntimeRule().getRhs().getMultiMin() == 0) {
+						l.add(this.getRuntimeRule().getRuntimeRuleSet().getEmptyRule(this.getRuntimeRule()));
+					}
+				}
+				break;
+				default:
+				break;
+			}
+		}
+		return l;
+	}
 
-    @Override
-    public boolean getExpectsItemAt(final RuntimeRule runtimeRule, final int atPosition) {
-        return this.getRuntimeRule().couldHaveChild(runtimeRule, atPosition);
-    }
+	@Override
+	public boolean getCanGrowWidthWithSkip() {
+		return !this.getRuntimeRule().getIsEmptyRule() && this.getRuntimeRule().getKind() == RuntimeRuleKind.NON_TERMINAL;
+	}
 
-    // @Override
-    // public boolean getIsStacked() {
-    // return !this.getPrevious().isEmpty();
-    // }
+	@Override
+	public boolean hasNextExpectedItem() {
+		switch (this.getRuntimeRule().getRhs().getKind()) {
+			case EMPTY:
+				return false;
+			case CHOICE:
+				return this.getNextItemIndex() == 0;
+			case PRIORITY_CHOICE:
+				return this.getNextItemIndex() == 0;
+			case CONCATENATION: {
+				if (-1 == this.getNextItemIndex() || this.getNextItemIndex() >= this.getRuntimeRule().getRhs().getItems().length) {
+					return false;
+				} else {
+					return true;
+				}
+			}
+			case MULTI: {
+				if (-1 == this.getNextItemIndex()) {
+					return false;
+				} else {
+					return true;
+				}
+			}
+			case SEPARATED_LIST:
+				if (-1 == this.getNextItemIndex()) {
+					return false;
+				} else {
+					return true;
+				}
+			default:
+				throw new RuntimeException("Internal Error: rule kind not recognised");
+		}
+	}
 
-    @Override
-    public Set<PreviousInfo> getPrevious() {
-        return this.previous;
-    }
+	@Override
+	public boolean getExpectsItemAt(final RuntimeRule runtimeRule, final int atPosition) {
+		return this.getRuntimeRule().couldHaveChild(runtimeRule, atPosition);
+	}
 
-    @Override
-    public void newPrevious() {
-        this.previous = new HashSet<>();
-    }
+	// @Override
+	// public boolean getIsStacked() {
+	// return !this.getPrevious().isEmpty();
+	// }
 
-    @Override
-    public void addPrevious(final IGrowingNode previousNode, final int atPosition) {
-        final PreviousInfo info = new PreviousInfo(previousNode, atPosition);
-        this.previous.add(info);
-        previousNode.addNext(this);
-    }
+	@Override
+	public Set<PreviousInfo> getPrevious() {
+		return this.previous;
+	}
 
-    @Override
-    public Set<IGrowingNode> getNext() {
-        return this.next;
-    }
+	@Override
+	public void newPrevious() {
+		this.previous = new HashSet<>();
+	}
 
-    @Override
-    public void addNext(final IGrowingNode value) {
-        this.next.add(value);
-    }
+	@Override
+	public void addPrevious(final IGrowingNode previousNode, final int atPosition) {
+		final PreviousInfo info = new PreviousInfo(previousNode, atPosition);
+		this.previous.add(info);
+		previousNode.addNext(this);
+	}
 
-    @Override
-    public void removeNext(final IGrowingNode value) {
-        this.next.remove(value);
-    }
+	@Override
+	public Set<IGrowingNode> getNext() {
+		return this.next;
+	}
 
-    @Override
-    public List<RuntimeRule> getNextExpectedItem() {
-        switch (this.getRuntimeRule().getRhs().getKind()) {
-            case EMPTY:
-                return Collections.emptyList();
-            case CHOICE: {
-                if (this.nextItemIndex == 0) {
-                    return Arrays.asList(this.getRuntimeRule().getRhs().getItems());
-                } else {
-                    return Collections.emptyList();
-                }
-                // throw new RuntimeException("Internal Error: item is choice");
-            }
-            case PRIORITY_CHOICE: {
-                if (this.nextItemIndex == 0) {
-                    return Arrays.asList(this.getRuntimeRule().getRhs().getItems());
-                } else {
-                    return Collections.emptyList();
-                }
-                // throw new RuntimeException("Internal Error: item is priority choice");
-            }
-            case CONCATENATION: {
-                if (this.nextItemIndex >= this.getRuntimeRule().getRhs().getItems().length) {
-                    throw new RuntimeException("Internal Error: No NextExpectedItem");
-                } else {
-                    if (-1 == this.nextItemIndex) {
-                        return Collections.emptyList();
-                    } else {
-                        return Arrays.asList(this.getRuntimeRule().getRhsItem(this.nextItemIndex));
-                    }
-                }
-            }
-            case MULTI: {
-                if (0 == this.nextItemIndex && 0 == this.getRuntimeRule().getRhs().getMultiMin()) {
-                    return Arrays.asList(this.getRuntimeRule().getRhsItem(0), this.getRuntimeRule().getRuntimeRuleSet().getEmptyRule(this.getRuntimeRule()));
-                } else {
-                    return Arrays.asList(this.getRuntimeRule().getRhsItem(0));
-                }
-            }
-            case SEPARATED_LIST: {
-                if (this.nextItemIndex % 2 == 1) {
-                    return Arrays.asList(this.getRuntimeRule().getSeparator());
-                } else {
-                    if (0 == this.nextItemIndex && 0 == this.getRuntimeRule().getRhs().getMultiMin()) {
-                        return Arrays.asList(this.getRuntimeRule().getRhsItem(0),
-                                this.getRuntimeRule().getRuntimeRuleSet().getEmptyRule(this.getRuntimeRule()));
-                    } else {
-                        return Arrays.asList(this.getRuntimeRule().getRhsItem(0));
-                    }
-                }
-            }
-            default:
-                throw new RuntimeException("Internal Error: rule kind not recognised");
-        }
-    }
+	@Override
+	public void addNext(final IGrowingNode value) {
+		this.next.add(value);
+	}
 
-    @Override
-    public boolean isEmptyLeaf() {
-        return this.getRuntimeRule().getIsEmptyRule();
-    }
+	@Override
+	public void removeNext(final IGrowingNode value) {
+		this.next.remove(value);
+	}
 
-    @Override
-    public boolean isLeaf() {
-        return this.getRuntimeRule().getIsEmptyRule() || this.getRuntimeRule().getKind() == RuntimeRuleKind.TERMINAL;
-    }
+	@Override
+	public Set<RuntimeRule> getNextExpectedItems() {
+		return this.getRuntimeRule().getNextExpectedItems(this.getNextItemIndex(), this.getNumNonSkipChildren());
 
-    @Override
-    public FixedList<ICompleteNode> getGrowingChildren() {
-        return this.children;
-    }
+		//        switch (this.getRuntimeRule().getRhs().getKind()) {
+		//            case EMPTY:
+		//                return Collections.emptyList();
+		//            case CHOICE: {
+		//                if (this.getNextItemIndex() == 0) {
+		//                    return Arrays.asList(this.getRuntimeRule().getRhs().getItems());
+		//                } else {
+		//                    return Collections.emptyList();
+		//                }
+		//                // throw new RuntimeException("Internal Error: item is choice");
+		//            }
+		//            case PRIORITY_CHOICE: {
+		//                if (this.getNextItemIndex() == 0) {
+		//                    return Arrays.asList(this.getRuntimeRule().getRhs().getItems());
+		//                } else {
+		//                    return Collections.emptyList();
+		//                }
+		//                // throw new RuntimeException("Internal Error: item is priority choice");
+		//            }
+		//            case CONCATENATION: {
+		//                if (this.getNextItemIndex() >= this.getRuntimeRule().getRhs().getItems().length) {
+		//                    throw new RuntimeException("Internal Error: No NextExpectedItem");
+		//                } else {
+		//                    if (-1 == this.getNextItemIndex()) {
+		//                        return Collections.emptyList();
+		//                    } else {
+		//                        return Arrays.asList(this.getRuntimeRule().getRhsItem(this.getNextItemIndex()));
+		//                    }
+		//                }
+		//            }
+		//            case MULTI: {
+		//                if (0 == this.getNextItemIndex() && 0 == this.getRuntimeRule().getRhs().getMultiMin()) {
+		//                    return Arrays.asList(this.getRuntimeRule().getRhsItem(0), this.getRuntimeRule().getRuntimeRuleSet().getEmptyRule(this.getRuntimeRule()));
+		//                } else {
+		//                    return Arrays.asList(this.getRuntimeRule().getRhsItem(0));
+		//                }
+		//            }
+		//            case SEPARATED_LIST: {
+		//                if (this.getNextItemIndex() % 2 == 1) {
+		//                    return Arrays.asList(this.getRuntimeRule().getSeparator());
+		//                } else {
+		//                    if (0 == this.getNextItemIndex() && 0 == this.getRuntimeRule().getRhs().getMultiMin()) {
+		//                        return Arrays.asList(this.getRuntimeRule().getRhsItem(0),
+		//                                this.getRuntimeRule().getRuntimeRuleSet().getEmptyRule(this.getRuntimeRule()));
+		//                    } else {
+		//                        return Arrays.asList(this.getRuntimeRule().getRhsItem(0));
+		//                    }
+		//                }
+		//            }
+		//            default:
+		//                throw new RuntimeException("Internal Error: rule kind not recognised");
+		//        }
 
-    @Override
-    public String toStringTree(final boolean withChildren, final boolean withPrevious) {
-        String r = "";
-        r += this.getStartPosition() + ",";
-        r += this.getNextInputPosition() + ",";
-        r += -1 == this.getNextItemIndex() ? "C" : this.getNextItemIndex();
-        r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
+	}
 
-        if (withChildren) {
-            if (this.isLeaf()) {
-                // no children
-            } else {
-                r += "{";
-                for (final ICompleteNode c : this.getGrowingChildren()) {
-                    r += c.accept(new ParseTreeToSingleLineTreeString(), null);
-                }
-                if (this.getHasCompleteChildren()) {
-                    r += "}";
-                } else {
-                    r += "...";
-                }
-            }
-        }
+	@Override
+	public boolean isEmptyLeaf() {
+		return this.getRuntimeRule().getIsEmptyRule();
+	}
 
-        if (withPrevious) {
-            final HashSet<GrowingNode> visited = new HashSet<>();
-            r += this.toStringPrevious(visited);
-        }
+	@Override
+	public boolean isLeaf() {
+		return this.getRuntimeRule().getIsEmptyRule() || this.getRuntimeRule().getKind() == RuntimeRuleKind.TERMINAL;
+	}
 
-        return r;
-    }
+	@Override
+	public FixedList<ICompleteNode> getGrowingChildren() {
+		return this.children;
+	}
 
-    private String toStringPrevious(final Set<GrowingNode> visited) {
-        visited.add(this);
-        String s = "";
-        if (this.getPrevious().isEmpty()) {
-            //
-        } else {
-            final GrowingNode prev = (GrowingNode) this.getPrevious().iterator().next().node;
-            if (visited.contains(prev)) {
-                s = "--> ...";
-            } else if (this.getPrevious().size() == 1) {
-                s = " --> " + prev.toStringTree(false, false) + prev.toStringPrevious(visited);
-            } else {
-                final int sz = this.getPrevious().size();
-                s = " -" + sz + "> " + prev.toStringTree(false, false) + prev.toStringPrevious(visited);
-            }
+	@Override
+	public String toStringTree(final boolean withChildren, final boolean withPrevious) {
+		String r = "";
+		r += this.getStartPosition() + ",";
+		r += this.getNextInputPosition() + ",";
+		r += -1 == this.getNextItemIndex() ? "C" : this.getNextItemIndex();
+		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
 
-        }
-        return s;
-    }
+		if (withChildren) {
+			if (this.isLeaf()) {
+				// no children
+			} else {
+				r += "{";
+				for (final ICompleteNode c : this.getGrowingChildren()) {
+					r += c.accept(new ParseTreeToSingleLineTreeString(), null);
+				}
+				if (this.getHasCompleteChildren()) {
+					r += "}";
+				} else {
+					r += "...";
+				}
+			}
+		}
 
-    @Override
-    public String toStringId() {
-        String r = "";
-        r += this.getStartPosition() + ",";
-        r += this.getNextInputPosition() + ",";
-        r += -1 == this.getNextItemIndex() ? "C" : this.getNextItemIndex();
-        r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
-        return r;
-    }
+		if (withPrevious) {
+			final HashSet<GrowingNode> visited = new HashSet<>();
+			r += this.toStringPrevious(visited);
+		}
 
-    // --- Object ---
-    @Override
-    public int hashCode() {
-        return this.hashCode_cache;
-    }
+		return r;
+	}
 
-    @Override
-    public boolean equals(final Object obj) {
-        // assume obj is also a GrowingNode, should never be compared otherwise
-        final GrowingNode other = (GrowingNode) obj;
-        return this.getRuntimeRuleNumber() == other.getRuntimeRuleNumber() && this.getStartPosition() == other.getStartPosition()
-                && this.getNextInputPosition() == other.getNextInputPosition() && this.getNextItemIndex() == other.getNextItemIndex();
-    }
+	private String toStringPrevious(final Set<GrowingNode> visited) {
+		visited.add(this);
+		String s = "";
+		if (this.getPrevious().isEmpty()) {
+			//
+		} else {
+			final GrowingNode prev = (GrowingNode) this.getPrevious().iterator().next().node;
+			if (visited.contains(prev)) {
+				s = "--> ...";
+			} else if (this.getPrevious().size() == 1) {
+				s = " --> " + prev.toStringTree(false, false) + prev.toStringPrevious(visited);
+			} else {
+				final int sz = this.getPrevious().size();
+				s = " -" + sz + "> " + prev.toStringTree(false, false) + prev.toStringPrevious(visited);
+			}
 
-    @Override
-    public String toString() {
-        return this.toStringTree(false, true);
-    }
+		}
+		return s;
+	}
+
+	@Override
+	public String toStringId() {
+		String r = "";
+		r += this.getStartPosition() + ",";
+		r += this.getNextInputPosition() + ",";
+		r += -1 == this.getNextItemIndex() ? "C" : this.getNextItemIndex();
+		r += ":" + this.getRuntimeRule().getNodeTypeName() + "(" + this.getRuntimeRule().getRuleNumber() + ")";
+		return r;
+	}
+
+	// --- Object ---
+	@Override
+	public int hashCode() {
+		return this.hashCode_cache;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		// assume obj is also a GrowingNode, should never be compared otherwise
+		final GrowingNode other = (GrowingNode) obj;
+		return this.getRuntimeRuleNumber() == other.getRuntimeRuleNumber() && this.getStartPosition() == other.getStartPosition()
+				&& this.getNextInputPosition() == other.getNextInputPosition() && this.getNextItemIndex() == other.getNextItemIndex();
+	}
+
+	@Override
+	public String toString() {
+		return this.toStringTree(false, true);
+	}
 }

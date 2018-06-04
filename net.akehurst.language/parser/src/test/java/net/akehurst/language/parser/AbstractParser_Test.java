@@ -30,30 +30,39 @@ import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
 
 abstract public class AbstractParser_Test {
 
-	protected RuntimeRuleSetBuilder runtimeRules;
+    private Parser parser;
+    protected RuntimeRuleSetBuilder runtimeRules;
 
-	@Before
-	public void before() {
-		this.runtimeRules = new RuntimeRuleSetBuilder();
-	}
+    @Before
+    public void before() {
+        if (null == this.runtimeRules) {
+            this.runtimeRules = new RuntimeRuleSetBuilder();
+        }
+    }
 
-	ParseTreeBuilder builder(final GrammarDefault grammar, final String text, final String goal) {
+    ParseTreeBuilder builder(final GrammarDefault grammar, final String text, final String goal) {
+        if (null == this.parser) {
+            this.parser = new ScannerLessParser3(this.runtimeRules, grammar);
+            this.parser.build();
+        }
 
-		return new ParseTreeBuilder(this.runtimeRules, grammar, goal, text, 0);
-	}
+        return new ParseTreeBuilder(this.runtimeRules, grammar, goal, text, 0);
+    }
 
-	protected SharedPackedParseTree process(final GrammarDefault grammar, final String text, final String goalName) throws ParseFailedException {
-		try {
-			final Parser parser = new ScannerLessParser3(this.runtimeRules, grammar);
-			final SharedPackedParseTree tree = parser.parse(goalName, text);
-			return tree;
-		} catch (final GrammarRuleNotFoundException e) {
-			Assert.fail(e.getMessage());
-			return null;
-		} catch (final ParseTreeException e) {
-			Assert.fail(e.getMessage());
-			return null;
-		}
-	}
+    protected SharedPackedParseTree process(final GrammarDefault grammar, final String text, final String goalName) throws ParseFailedException {
+        try {
+            if (null == this.parser) {
+                this.parser = new ScannerLessParser3(this.runtimeRules, grammar);
+            }
+            final SharedPackedParseTree tree = this.parser.parse(goalName, text);
+            return tree;
+        } catch (final GrammarRuleNotFoundException e) {
+            Assert.fail(e.getMessage());
+            return null;
+        } catch (final ParseTreeException e) {
+            Assert.fail(e.getMessage());
+            return null;
+        }
+    }
 
 }

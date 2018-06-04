@@ -275,7 +275,7 @@ public class Java8_Test2 {
     }
 
     @Test
-    public void antlr4_optm_compilationUnit() {
+    public void antlr4_optm_compilationUnit1() {
         final antlr4.optm.Java8Parser.CompilationUnitContext tree = Java8_Test2.parseWithAntlr4Optm(this.file);
         Assert.assertNotNull("Failed to Parse", tree);
     }

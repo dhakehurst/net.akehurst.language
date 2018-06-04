@@ -34,7 +34,7 @@ import net.akehurst.language.grammar.parser.NonTerminalRuleReference;
 public class RuntimeRuleSet {
 
     // TODO: compute this not guess !!!
-    private final int maxNextItemIndex = 200;
+    // private final int maxNextItemIndex = 200;
 
     private RuntimeRule[] emptyRulesFor;
     private final int totalRuleNumber;
@@ -398,7 +398,8 @@ public class RuntimeRuleSet {
      * return the set of SuperRuleInfo for which childRule can grow (at some point) into ancesstorRule at position ancesstorItemIndex
      */
     public Set<SuperRuleInfo> growsInto(final RuntimeRule childRule, final RuntimeRule ancesstorRule, final int ancesstorItemIndex) {
-        final Set<SuperRuleInfo> result = new HashSet<>();
+        final Set<SuperRuleInfo> result = new HashSet<>(); // growsInto[childRule.getRuleNumber()][ancesstorRule.getRuleNumber()][cacheIndex];
+        // create the growsInto cache!
         final SuperRuleInfo[] infos = this.getPossibleSuperRuleInfo(childRule);
         for (final SuperRuleInfo info : infos) {
             final RuntimeRule newParentRule = info.getRuntimeRule();
@@ -419,7 +420,8 @@ public class RuntimeRuleSet {
             if (-1 == nextItemIndex) {
                 res = false;
             } else {
-                final Set<RuntimeRule> nextExpectedForStacked = this.getNextExpectedItem(prevRule, nextItemIndex);
+
+                final Set<RuntimeRule> nextExpectedForStacked = this.getNextExpectedItems(prevRule, nextItemIndex, 0);
                 if (nextExpectedForStacked.contains(parentRule)) {
                     res = true;
                 } else {
@@ -513,7 +515,7 @@ public class RuntimeRuleSet {
         return result;
     }
 
-    private Set<RuntimeRule> getNextExpectedItem(final RuntimeRule rr, final int nextItemIndex) {
+    public int cacheIndex(final RuntimeRule rr, final int nextItemIndex, final int currentNumChildren) {
         int index = -1;
         switch (rr.getRhs().getKind()) {
             case EMPTY: {
@@ -538,7 +540,7 @@ public class RuntimeRuleSet {
             }
             break;
             case CONCATENATION: {
-                if (nextItemIndex >= rr.getRhs().getItems().length) {
+                if (currentNumChildren >= rr.getRhs().getItems().length) {
                     throw new RuntimeException("Internal Error: No NextExpectedItem");
                 } else {
                     if (-1 == nextItemIndex) {
@@ -550,7 +552,7 @@ public class RuntimeRuleSet {
             }
             break;
             case MULTI: {
-                if (0 == nextItemIndex && 0 == rr.getRhs().getMultiMin()) {
+                if (currentNumChildren == nextItemIndex && 0 == rr.getRhs().getMultiMin()) {
                     index = 0;
                 } else {
                     index = 1;
@@ -558,16 +560,13 @@ public class RuntimeRuleSet {
             }
             break;
             case SEPARATED_LIST: {
-                if (nextItemIndex % 2 == 1) {
+                if (currentNumChildren % 2 == 1) {
                     index = 0;
                 } else {
-                    if (0 == nextItemIndex && 0 == rr.getRhs().getMultiMin()) {
+                    if (currentNumChildren == nextItemIndex && 0 == rr.getRhs().getMultiMin()) {
                         index = 1;
                     } else {
-                        // TODO: is it worth caching this result at the cost of index = 2!
-                        final Set<RuntimeRule> res = new HashSet<>();
-                        res.add(rr.getRhsItem(0));
-                        return res;
+                        index = 2;
                     }
                 }
             }
@@ -575,8 +574,12 @@ public class RuntimeRuleSet {
             default:
                 throw new RuntimeException("Internal Error: rule kind not recognised");
         }
+        return index;
+    }
 
-        Set<RuntimeRule> result = this.nextExpectedItem[rr.getRuleNumber()][index];
+    public Set<RuntimeRule> getNextExpectedItems(final RuntimeRule rr, final int nextItemIndex, final int currentNumChildren) {
+        final int cacheIndex = this.cacheIndex(rr, nextItemIndex, currentNumChildren);
+        Set<RuntimeRule> result = cacheIndex == 2 ? null : this.nextExpectedItem[rr.getRuleNumber()][cacheIndex];
         if (null == result) {
             switch (rr.getRhs().getKind()) {
                 case EMPTY: {
@@ -607,7 +610,7 @@ public class RuntimeRuleSet {
                 }
                 break;
                 case CONCATENATION: {
-                    if (nextItemIndex >= rr.getRhs().getItems().length) {
+                    if (currentNumChildren >= rr.getRhs().getItems().length) {
                         throw new RuntimeException("Internal Error: No NextExpectedItem");
                     } else {
                         if (-1 == nextItemIndex) {
@@ -623,7 +626,7 @@ public class RuntimeRuleSet {
                 }
                 break;
                 case MULTI: {
-                    if (0 == nextItemIndex && 0 == rr.getRhs().getMultiMin()) {
+                    if (0 == currentNumChildren && 0 == rr.getRhs().getMultiMin()) {
                         result = new HashSet<>();
                         result.add(rr.getRhsItem(0));
                         result.add(rr.getRuntimeRuleSet().getEmptyRule(rr));
@@ -647,7 +650,9 @@ public class RuntimeRuleSet {
                             result.add(rr.getRuntimeRuleSet().getEmptyRule(rr));
                             this.nextExpectedItem[rr.getRuleNumber()][1] = result;
                         } else {
-                            throw new RuntimeException("Internal Error: should not be here");
+                            // TODO: is it worth caching this result at the cost of index = 2!
+                            result = new HashSet<>();
+                            result.add(rr.getRhsItem(0));
                         }
                     }
                 }
