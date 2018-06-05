@@ -1,5 +1,4 @@
 
-
 import org.junit.Assert;
 
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
@@ -48,19 +47,19 @@ public class Main {
 
 	public static void main(final String[] args) {
 		try {
+			for (int len = 1; len < 18; ++len) {
+				final GrammarDefault g = Main.SA();
+				final String goal = "S";
+				String text = "";
 
-			final GrammarDefault g = Main.SA();
-			final String goal = "S";
-			String text = "";
+				for (int i = 0; i < len; i++) {
+					text += "b";
+				}
 
-			for (int i = 0; i < 10; i++) {
-				text += "b";
+				final SharedPackedParseTree tree = Main.process(g, text, goal);
+				System.out.println("length=" + len + "  trees =" + tree.countTrees());
+				//System.out.println(tree.toStringAll());
 			}
-
-			final SharedPackedParseTree tree = Main.process(g, text, goal);
-
-			System.out.println(tree.toStringAll());
-
 		} catch (final Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

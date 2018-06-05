@@ -108,10 +108,9 @@ public class GrowingNode implements IGrowingNode {
 					// TODO: should never be 1, should always be -1 if we create nodes correctly
 					return this.getNextItemIndex() == 1 || this.getNextItemIndex() == -1;
 				case CONCATENATION: {
-					return this.getRuntimeRule().getRhs().getItems().length <= this.getNextItemIndex() || this.getNextItemIndex() == -1; // the -1 is used when
-																																			// creating
-																																			// dummy
-																																			// // test here!
+					// the -1 is used when creating dummy ?
+					// test here!
+					return this.getRuntimeRule().getRhs().getItems().length <= this.getNextItemIndex() || this.getNextItemIndex() == -1;
 				}
 				case MULTI: {
 					boolean res = false;
@@ -126,7 +125,7 @@ public class GrowingNode implements IGrowingNode {
 																																		// really need the test here!
 				}
 				case SEPARATED_LIST: {
-					final int size = this.getNextItemIndex();
+					final int size = this.getNumNonSkipChildren(); //this.getNextItemIndex();
 					return size % 2 == 1 || this.getNextItemIndex() == -1; // the -1 is used when creating dummy branch...should really need the test here!
 				}
 				default:
@@ -169,15 +168,15 @@ public class GrowingNode implements IGrowingNode {
 				if (this.isEmptyRuleMatch()) {
 					return false;
 				}
-				final int size = this.getNextItemIndex();
+				final int size = this.getNumNonSkipChildren();
 				final int max = this.getRuntimeRule().getRhs().getMultiMax();
 				return -1 != size && (-1 == max || size < max);
 			}
 			case SEPARATED_LIST: {
-				if (!this.getGrowingChildren().isEmpty() && this.getGrowingChildren().get(0).getRuntimeRule().getIsEmptyRule()) {
+				if (this.isEmptyRuleMatch()) {
 					return false;
 				}
-				final int size = this.getNextItemIndex();
+				final int size = this.getNumNonSkipChildren();
 				final int max = this.getRuntimeRule().getRhs().getMultiMax();
 				final int x = size / 2;
 				return -1 != size && (-1 == max || x < max);
@@ -236,9 +235,9 @@ public class GrowingNode implements IGrowingNode {
 				}
 				break;
 				case SEPARATED_LIST: {
-					if (this.getRuntimeRule().getRhs().getMultiMin() == 0) {
-						l.add(this.getRuntimeRule().getRuntimeRuleSet().getEmptyRule(this.getRuntimeRule()));
-					}
+					//					if (this.getRuntimeRule().getRhs().getMultiMin() == 0) {
+					//						l.add(this.getRuntimeRule().getRuntimeRuleSet().getEmptyRule(this.getRuntimeRule()));
+					//					}
 				}
 				break;
 				default:

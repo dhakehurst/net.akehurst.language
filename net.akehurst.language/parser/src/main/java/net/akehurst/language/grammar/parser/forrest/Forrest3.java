@@ -297,6 +297,10 @@ public final class Forrest3 {
 				this.graph.growNextChild(info.node, complete, info.atPosition);
 			// info.node.duplicateWithNextChild(gn);
 			break;
+			case PRIORITY_CHOICE:
+				this.graph.growNextChild(info.node, complete, info.atPosition);
+			// info.node.duplicateWithNextChild(gn);
+			break;
 			case CONCATENATION:
 				this.graph.growNextChild(info.node, complete, info.atPosition);
 			// info.node.duplicateWithNextChild(gn);
@@ -324,10 +328,7 @@ public final class Forrest3 {
 					// info.node.duplicateWithNextChild(gn);
 				}
 			break;
-			case PRIORITY_CHOICE:
-				this.graph.growNextChild(info.node, complete, info.atPosition);
-			// info.node.duplicateWithNextChild(gn);
-			break;
+
 			case SEPARATED_LIST:
 				// TODO: should be ok because we need a separator between each item
 				this.graph.growNextChild(info.node, complete, info.atPosition);

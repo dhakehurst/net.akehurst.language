@@ -677,7 +677,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		b.define("  }");
 		b.define("}");
 		final SharedPackedParseTree expected = b.buildAndAdd();
-		Assert.assertEquals(expected.toStringAll(), tree.toStringAll());
+		Assert.assertEquals(expected, tree);
 
 	}
 
@@ -696,7 +696,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final SharedPackedParseTree tree = this.process(g, text, goal);
 		Assert.assertNotNull(tree);
 
-		System.out.println(tree.toStringAll());
+		//System.out.println(tree.toStringAll());
 
 		// final ParseTreeBuilder b = this.builder(g, text, goal);
 		// b.define("S {");
