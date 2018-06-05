@@ -202,7 +202,7 @@ public class GrowingNode implements IGrowingNode {
 		boolean b = false;
 		// for (final PreviousInfo info : previous) {
 		final boolean x = this.isEmptyRuleMatch() && (info.node.getRuntimeRule().getRhs().getKind() == RuntimeRuleItemKind.MULTI
-				|| info.node.getRuntimeRule().getRhs().getKind() == RuntimeRuleItemKind.SEPARATED_LIST) && !info.node.getGrowingChildren().isEmpty();
+				|| info.node.getRuntimeRule().getRhs().getKind() == RuntimeRuleItemKind.SEPARATED_LIST) && !(info.node.getNumNonSkipChildren() == 0);
 
 		b |= info.node.getExpectsItemAt(this.getRuntimeRule(), info.atPosition) && !x;
 		// }

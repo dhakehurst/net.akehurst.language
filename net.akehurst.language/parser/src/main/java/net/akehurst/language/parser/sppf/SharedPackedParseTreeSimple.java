@@ -20,80 +20,87 @@ import java.util.Set;
 import net.akehurst.language.api.sppt.SPPTNode;
 import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor;
+import net.akehurst.language.grammar.parser.CountTreesVisitor;
 import net.akehurst.language.grammar.parser.ParseTreeToInputText;
 import net.akehurst.language.grammar.parser.ToStringVisitor;
 
 public class SharedPackedParseTreeSimple implements SharedPackedParseTree {
 
-    private final SPPTNode root;
+	private final SPPTNode root;
 
-    public SharedPackedParseTreeSimple(final SPPTNode root) {
-        this.root = root;
-    }
+	public SharedPackedParseTreeSimple(final SPPTNode root) {
+		this.root = root;
+	}
 
-    // --- IParseTree ---
-    @Override
-    public String asString() {
-        final ParseTreeToInputText visitor = new ParseTreeToInputText();
-        final String s = this.accept(visitor, "");
-        return s;
-    }
+	// --- IParseTree ---
+	@Override
+	public String asString() {
+		final ParseTreeToInputText visitor = new ParseTreeToInputText();
+		final String s = this.accept(visitor, "");
+		return s;
+	}
 
-    // --- ISharedPackedParseForest ---
-    @Override
-    public SPPTNode getRoot() {
-        return this.root;
-    }
+	// --- SharedPackedParseTree ---
+	@Override
+	public SPPTNode getRoot() {
+		return this.root;
+	}
 
-    @Override
-    public boolean contains(final SharedPackedParseTree other) {
-        final boolean result = this.getRoot().contains(other.getRoot());
-        return result;
-    }
+	@Override
+	public int countTrees() {
+		final CountTreesVisitor counter = new CountTreesVisitor();
+		return counter.visit(this, null);
+	}
 
-    @Override
-    public String toStringAll() {
-        final ToStringVisitor v = new ToStringVisitor();
-        final Set<String> all = this.accept(v, new ToStringVisitor.Indent(""));
-        final StringBuilder b = new StringBuilder();
-        final int total = all.size();
-        int cur = 0;
-        for (final String pt : all) {
-            cur++;
-            b.append("Tree " + cur + " of " + total + System.lineSeparator());
-            b.append(pt);
-            b.append(System.lineSeparator());
-        }
-        return b.toString();
-    }
+	@Override
+	public boolean contains(final SharedPackedParseTree other) {
+		final boolean result = this.getRoot().contains(other.getRoot());
+		return result;
+	}
 
-    // --- IParseTreeVisitable ---
-    @Override
-    public <T, A, E extends Throwable> T accept(final SharedPackedParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
-        return visitor.visit(this, arg);
-    }
+	@Override
+	public String toStringAll() {
+		final ToStringVisitor v = new ToStringVisitor();
+		final Set<String> all = this.accept(v, new ToStringVisitor.Indent(""));
+		final StringBuilder b = new StringBuilder();
+		final int total = all.size();
+		int cur = 0;
+		for (final String pt : all) {
+			cur++;
+			b.append("Tree " + cur + " of " + total + System.lineSeparator());
+			b.append(pt);
+			b.append(System.lineSeparator());
+		}
+		return b.toString();
+	}
 
-    // --- Object ---
-    @Override
-    public String toString() {
-        final ToStringVisitor v = new ToStringVisitor();
-        return this.accept(v, new ToStringVisitor.Indent("")).iterator().next();
-    }
+	// --- IParseTreeVisitable ---
+	@Override
+	public <T, A, E extends Throwable> T accept(final SharedPackedParseTreeVisitor<T, A, E> visitor, final A arg) throws E {
+		return visitor.visit(this, arg);
+	}
 
-    @Override
-    public int hashCode() {
-        return this.getRoot().hashCode();
-    }
+	// --- Object ---
+	@Override
+	public String toString() {
+		final ToStringVisitor v = new ToStringVisitor();
+		return this.accept(v, new ToStringVisitor.Indent("")).iterator().next();
+	}
 
-    @Override
-    public boolean equals(final Object arg) {
-        if (arg instanceof SharedPackedParseTree) {
-            final SharedPackedParseTree other = (SharedPackedParseTree) arg;
-            // return Objects.equals(this.getRoot(), other.getRoot());
-            // TODO: not the fastest way to do this, but will do for now
-            return this.contains(other) && other.contains(this);
-        } else {
-            return false;
-        }
-    }
+	@Override
+	public int hashCode() {
+		return this.getRoot().hashCode();
+	}
+
+	@Override
+	public boolean equals(final Object arg) {
+		if (arg instanceof SharedPackedParseTree) {
+			final SharedPackedParseTree other = (SharedPackedParseTree) arg;
+			// return Objects.equals(this.getRoot(), other.getRoot());
+			// TODO: not the fastest way to do this, but will do for now
+			return this.contains(other) && other.contains(this);
+		} else {
+			return false;
+		}
+	}
 }
