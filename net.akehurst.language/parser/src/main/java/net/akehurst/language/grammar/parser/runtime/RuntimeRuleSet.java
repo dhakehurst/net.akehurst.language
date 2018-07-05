@@ -451,12 +451,13 @@ public class RuntimeRuleSet {
 	}
 
 	private int[] getNextRuleItemIndex(final RuntimeRule rr, final int nextItemIndex) {
-		final int[] result = this.nextRuleItemIndex[rr.getRuleNumber()];
+		int[] result = this.nextRuleItemIndex[rr.getRuleNumber()];
 		if (null == result) {
 
 			switch (rr.getRhs().getKind()) {
 				case EMPTY:
 					result = new int[] {};
+				break;
 				case CHOICE: {
 					if (nextItemIndex == 0) {
 						result = new int[rr.getRhs().getItems().length];
@@ -467,6 +468,7 @@ public class RuntimeRuleSet {
 						result = new int[] {};
 					}
 				}
+				break;
 				case PRIORITY_CHOICE: {
 					if (nextItemIndex == 0) {
 						result = new int[rr.getRhs().getItems().length];
@@ -478,6 +480,7 @@ public class RuntimeRuleSet {
 					}
 					// throw new RuntimeException("Internal Error: item is priority choice");
 				}
+				break;
 				case CONCATENATION: {
 					if (nextItemIndex >= rr.getRhs().getItems().length) {
 						throw new RuntimeException("Internal Error: No NextExpectedItem");
@@ -489,24 +492,27 @@ public class RuntimeRuleSet {
 						}
 					}
 				}
+				break;
 				case MULTI: {
 					if (0 == nextItemIndex && 0 == rr.getRhs().getMultiMin()) {
-						result = Arrays.asList(rr.getRhsItem(0), rr.getRuntimeRuleSet().getEmptyRule(rr));
+						result = new int[] { rr.getRhsItem(0).getRuleNumber(), rr.getRuntimeRuleSet().getEmptyRule(rr).getRuleNumber() };
 					} else {
 						result = new int[] { 0 };
 					}
 				}
+				break;
 				case SEPARATED_LIST: {
 					if (nextItemIndex % 2 == 1) {
 						result = new int[] { 1 };
 					} else {
 						if (0 == nextItemIndex && 0 == rr.getRhs().getMultiMin()) {
-							result = Arrays.asList(rr.getRhsItem(0), rr.getRuntimeRuleSet().getEmptyRule(rr));
+							result = new int[] { rr.getRhsItem(0).getRuleNumber(), rr.getRuntimeRuleSet().getEmptyRule(rr).getRuleNumber() };
 						} else {
 							result = new int[] { 0 };
 						}
 					}
 				}
+				break;
 				default:
 					throw new RuntimeException("Internal Error: rule kind not recognised");
 			}

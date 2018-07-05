@@ -66,7 +66,6 @@ public class OGL_ParseJava_Test {
 
 	@Test
 	public void java8_part2() {
-		// FIXME: this takes too long
 		this.parseGrammar("src/test/resources/java8_part2.og");
 	}
 

@@ -52,7 +52,7 @@ public class ParseTreeBuilder {
 
     private final RuntimeRuleSetBuilder runtimeBuilder;
     private final GrammarDefault grammar;
-    private final Input3 input;
+    private final InputFromCharSequence input;
     // private final String textAccumulator;
     private int textLength;
     private final int offset;
@@ -63,7 +63,7 @@ public class ParseTreeBuilder {
     public ParseTreeBuilder(final RuntimeRuleSetBuilder runtimeRules, final GrammarDefault grammar, final String goal, final CharSequence text,
             final int offset) {
         this.runtimeBuilder = runtimeRules;
-        this.input = new Input3(runtimeRules, text);
+        this.input = new InputFromCharSequence(runtimeRules, text);
         this.grammar = grammar;
         // this.textAccumulator = "";
         this.offset = offset;

@@ -1,4 +1,7 @@
 
+import java.time.Duration;
+import java.time.Instant;
+
 import org.junit.Assert;
 
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
@@ -47,7 +50,7 @@ public class Main {
 
 	public static void main(final String[] args) {
 		try {
-			for (int len = 1; len < 18; ++len) {
+			for (int len = 1; len < 30; ++len) {
 				final GrammarDefault g = Main.SA();
 				final String goal = "S";
 				String text = "";
@@ -56,8 +59,11 @@ public class Main {
 					text += "b";
 				}
 
+				final Instant b = Instant.now();
 				final SharedPackedParseTree tree = Main.process(g, text, goal);
-				System.out.println("length=" + len + "  trees =" + tree.countTrees());
+				final Instant a = Instant.now();
+				final Duration d = Duration.between(b, a);
+				System.out.println("length=" + len + "  time =" + d);
 				//System.out.println(tree.toStringAll());
 			}
 		} catch (final Exception e) {

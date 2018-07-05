@@ -682,14 +682,14 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 	}
 
 	@Test
-	public void SA_S_b15() throws ParseFailedException {
+	public void SA_S_b30() throws ParseFailedException {
 		// grammar, goal, input
 
 		final GrammarDefault g = this.SA();
 		final String goal = "S";
 		String text = "";
 		// TODO: make this 300 (30)
-		for (int i = 0; i < 15; i++) {
+		for (int i = 0; i < 30; i++) {
 			text += "b";
 		}
 

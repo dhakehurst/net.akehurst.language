@@ -25,13 +25,13 @@ import net.akehurst.language.parse.graph.ICompleteNode;
 import net.akehurst.language.parse.graph.IGraphNode;
 import net.akehurst.language.parse.graph.IGrowingNode;
 import net.akehurst.language.parse.graph.IParseGraph;
-import net.akehurst.language.parser.sppf.IInput;
+import net.akehurst.language.parser.sppf.Input;
 import net.akehurst.language.parser.sppf.Leaf;
 import net.akehurst.language.parser.sppf.SharedPackedParseTreeSimple;
 
 public final class Forrest3 {
 
-	public Forrest3(final IParseGraph graph, final RuntimeRuleSet runtimeRuleSet, final IInput input, final RuntimeRule goalRule) {
+	public Forrest3(final IParseGraph graph, final RuntimeRuleSet runtimeRuleSet, final Input input, final RuntimeRule goalRule) {
 		this.graph = graph;
 		this.runtimeRuleSet = runtimeRuleSet;
 		this.input = input;
@@ -45,7 +45,7 @@ public final class Forrest3 {
 	// ForrestFactory2 ffactory;
 
 	protected RuntimeRuleSet runtimeRuleSet;
-	IInput input;
+	Input input;
 	List<IGrowingNode> toGrow;
 
 	public boolean getCanGrow() {
@@ -74,7 +74,7 @@ public final class Forrest3 {
 		}
 	}
 
-	Map<String, Integer> getLineAndColumn(final IInput input, final int position) {
+	Map<String, Integer> getLineAndColumn(final Input input, final int position) {
 		final Map<String, Integer> result = new HashMap<>();
 		int line = 1;
 		int column = 1;
@@ -151,7 +151,7 @@ public final class Forrest3 {
 		// return this.toGrow;
 	}
 
-	public void start(final IParseGraph graph, final RuntimeRule goalRule, final IInput input) {
+	public void start(final IParseGraph graph, final RuntimeRule goalRule, final Input input) {
 
 		graph.createStart(goalRule);
 

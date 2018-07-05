@@ -16,7 +16,7 @@ import net.akehurst.language.grammar.parser.log.Log;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItemKind;
 import net.akehurst.language.parser.sppf.FixedLists;
-import net.akehurst.language.parser.sppf.IInput;
+import net.akehurst.language.parser.sppf.Input;
 import net.akehurst.language.parser.sppf.Leaf;
 
 public class ParseGraph implements IParseGraph {
@@ -24,7 +24,7 @@ public class ParseGraph implements IParseGraph {
 	// TODO: remove, this is for test
 	static boolean with = true;
 
-	public ParseGraph(final RuntimeRule goalRule, final IInput input) {
+	public ParseGraph(final RuntimeRule goalRule, final Input input) {
 		this.goalRule = goalRule;
 		// this.inputLength = inputLength;
 		this.input = input;
@@ -37,7 +37,7 @@ public class ParseGraph implements IParseGraph {
 
 	private final RuntimeRule goalRule;
 	// private final int inputLength;
-	private final IInput input;
+	private final Input input;
 	private final List<ICompleteNode> goals;
 
 	public static final class NodeIndex {

@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.converter.rules.Grammar2RuntimeRuleSet;
-import net.akehurst.language.grammar.parser.forrest.Input3;
+import net.akehurst.language.grammar.parser.forrest.InputFromCharSequence;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
@@ -32,7 +32,7 @@ public class Test_ParseGraph {
         final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
         final RuntimeRule terminalRule = rules.createRuntimeRule(new TerminalLiteralDefault("a"));
 
-        final Input3 input = new Input3(rules, "a");
+        final InputFromCharSequence input = new InputFromCharSequence(rules, "a");
         final IParseGraph graph = new ParseGraph(terminalRule, input);
 
         graph.createStart(terminalRule);
@@ -45,7 +45,7 @@ public class Test_ParseGraph {
         final RuntimeRuleSetBuilder rules = new RuntimeRuleSetBuilder();
         final RuntimeRule terminalRule = rules.createRuntimeRule(new TerminalLiteralDefault("a"));
 
-        final Input3 input = new Input3(rules, "a");
+        final InputFromCharSequence input = new InputFromCharSequence(rules, "a");
         final IParseGraph graph = new ParseGraph(terminalRule, input);
 
         final Leaf l = input.fetchOrCreateBud(terminalRule, 0);
@@ -61,7 +61,7 @@ public class Test_ParseGraph {
 
         final RuntimeRule terminalRule = rules.createRuntimeRule(new TerminalLiteralDefault("a"));
 
-        final Input3 input = new Input3(rules, "a");
+        final InputFromCharSequence input = new InputFromCharSequence(rules, "a");
         final IParseGraph graph = new ParseGraph(terminalRule, input);
 
         final Leaf l = input.fetchOrCreateBud(terminalRule, 0);
@@ -87,7 +87,7 @@ public class Test_ParseGraph {
         final RuntimeRule terminalRule = rules.getRuntimeRule(g.findAllTerminal("a"));
         final RuntimeRule rule = rules.getRuntimeRule(g.findAllRule("A"));
 
-        final Input3 input = new Input3(rules, "a");
+        final InputFromCharSequence input = new InputFromCharSequence(rules, "a");
         final IParseGraph graph = new ParseGraph(rule, input);
 
         // grow leaf
@@ -118,7 +118,7 @@ public class Test_ParseGraph {
         c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
 
         final RuntimeRule goalRule = rules.getRuntimeRule(g.findAllRule("S"));
-        final Input3 input = new Input3(rules, "aaa");
+        final InputFromCharSequence input = new InputFromCharSequence(rules, "aaa");
         final IParseGraph graph = new ParseGraph(goalRule, input);
 
         final RuntimeRule terminal_a = rules.getRuntimeRule(g.findAllTerminal("a"));
@@ -153,7 +153,7 @@ public class Test_ParseGraph {
             c.transformLeft2Right(Grammar2RuntimeRuleSet.class, g);
 
             final RuntimeRule goalRule = rules.getRuntimeRule(g.findAllRule("S"));
-            final Input3 input = new Input3(rules, "b");
+            final InputFromCharSequence input = new InputFromCharSequence(rules, "b");
             final IParseGraph graph = new ParseGraph(goalRule, input);
 
             final RuntimeRule terminal_b = rules.getRuntimeRule(g.findAllTerminal("b"));

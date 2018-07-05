@@ -21,7 +21,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.grammar.parser.converter.Converter;
 import net.akehurst.language.grammar.parser.converter.rules.Grammar2RuntimeRuleSet;
 import net.akehurst.language.grammar.parser.forrest.Forrest3;
-import net.akehurst.language.grammar.parser.forrest.Input3;
+import net.akehurst.language.grammar.parser.forrest.InputFromCharSequence;
 import net.akehurst.language.grammar.parser.log.Log;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleKind;
@@ -33,7 +33,7 @@ import net.akehurst.language.parse.graph.ICompleteNode;
 import net.akehurst.language.parse.graph.IGrowingNode;
 import net.akehurst.language.parse.graph.IParseGraph;
 import net.akehurst.language.parse.graph.ParseGraph;
-import net.akehurst.language.parser.sppf.IInput;
+import net.akehurst.language.parser.sppf.Input;
 import net.akehurst.language.parser.sppf.SharedPackedParseTreeSimple;
 
 public class ScannerLessParser3 implements Parser {
@@ -75,7 +75,7 @@ public class ScannerLessParser3 implements Parser {
 		}
 	}
 
-	private SharedPackedParseTree parse2(final String goalRuleName, final IInput input) throws ParseFailedException, ParseTreeException {
+	private SharedPackedParseTree parse2(final String goalRuleName, final Input input) throws ParseFailedException, ParseTreeException {
 		try {
 			final NodeType goal = ((GrammarDefault) this.getGrammar()).findRule(goalRuleName).getNodeType();
 			final ICompleteNode gr = this.parse3(goal, input);
@@ -100,7 +100,7 @@ public class ScannerLessParser3 implements Parser {
 		}
 	}
 
-	private ICompleteNode parse3(final NodeType goal, final IInput input) throws ParseFailedException, GrammarRuleNotFoundException, ParseTreeException {
+	private ICompleteNode parse3(final NodeType goal, final Input input) throws ParseFailedException, GrammarRuleNotFoundException, ParseTreeException {
 
 		final int goalRuleNumber = this.getRuntimeRuleSet().getRuleNumber(goal.getIdentity().asPrimitive());
 		final RuntimeRule goalRR = this.getRuntimeRuleSet().getRuntimeRule(goalRuleNumber);
@@ -109,7 +109,7 @@ public class ScannerLessParser3 implements Parser {
 		return node;
 	}
 
-	private ICompleteNode doParse3(final RuntimeRule goalRule, final IInput input)
+	private ICompleteNode doParse3(final RuntimeRule goalRule, final Input input)
 			throws ParseFailedException, GrammarRuleNotFoundException, ParseTreeException {
 		// TODO: handle reader directly without converting to string
 		final IParseGraph graph = new ParseGraph(goalRule, input);
@@ -151,7 +151,7 @@ public class ScannerLessParser3 implements Parser {
 		return match;
 	}
 
-	private List<RuleItem> expectedAt1(final String goalRuleName, final IInput input, final int position) throws ParseFailedException, ParseTreeException {
+	private List<RuleItem> expectedAt1(final String goalRuleName, final Input input, final int position) throws ParseFailedException, ParseTreeException {
 		try {
 			final NodeType goal = ((GrammarDefault) this.getGrammar()).findRule(goalRuleName).getNodeType();
 			if (null == this.runtimeRuleSet) {
@@ -240,7 +240,7 @@ public class ScannerLessParser3 implements Parser {
 	@Override
 	public SharedPackedParseTree parse(final String goalRuleName, final CharSequence inputText)
 			throws ParseFailedException, ParseTreeException, GrammarRuleNotFoundException {
-		final IInput input = new Input3(this.runtimeBuilder, inputText);
+		final Input input = new InputFromCharSequence(this.runtimeBuilder, inputText);
 		final SharedPackedParseTree f = this.parse2(goalRuleName, input);
 		return f;
 	}
@@ -252,7 +252,7 @@ public class ScannerLessParser3 implements Parser {
 		final BufferedReader br = new BufferedReader(inputText);
 		final String text = br.lines().collect(Collectors.joining(System.lineSeparator()));
 
-		final Input3 input = new Input3(this.runtimeBuilder, text);
+		final InputFromCharSequence input = new InputFromCharSequence(this.runtimeBuilder, text);
 		final SharedPackedParseTree f = this.parse2(goalRuleName, input);
 		return f;
 	}
@@ -261,7 +261,7 @@ public class ScannerLessParser3 implements Parser {
 	public List<RuleItem> expectedAt(final String goalRuleName, final CharSequence inputText, final int position)
 			throws ParseFailedException, ParseTreeException {
 		final CharSequence text = inputText.subSequence(0, Math.min(position, inputText.length()));
-		final Input3 input = new Input3(this.runtimeBuilder, text);
+		final InputFromCharSequence input = new InputFromCharSequence(this.runtimeBuilder, text);
 		return this.expectedAt1(goalRuleName, input, position);
 	}
 
@@ -270,7 +270,7 @@ public class ScannerLessParser3 implements Parser {
 		final BufferedReader br = new BufferedReader(inputReader);
 		String text = br.lines().collect(Collectors.joining(System.lineSeparator()));
 		text = text.substring(0, Math.min(position, text.length()));
-		final Input3 input = new Input3(this.runtimeBuilder, text);
+		final InputFromCharSequence input = new InputFromCharSequence(this.runtimeBuilder, text);
 		return this.expectedAt1(goalRuleName, input, position);
 	}
 }

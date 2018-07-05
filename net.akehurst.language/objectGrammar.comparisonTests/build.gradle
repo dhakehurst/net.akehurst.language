@@ -5,6 +5,8 @@ dependencies {
 
     testImplementation "junit:junit:${version_junit}"
 	testImplementation project(':net.akehurst.language.processor')
+	testImplementation project(':net.akehurst.language.parser')
+	testImplementation project(':net.akehurst.language.ogl')
 	
 	testImplementation 'org.antlr:antlr4-runtime:4.7'
 }

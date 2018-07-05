@@ -16,27 +16,28 @@ import net.akehurst.language.api.sppt.SPPTNode;
 import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor;
 
-public abstract class SemanticAnalyserVisitorBasedAbstract implements SemanticAnalyser, SharedPackedParseTreeVisitor<Object, Object, UnableToAnalyseExeception> {
+public abstract class SemanticAnalyserVisitorBasedAbstract
+		implements SemanticAnalyser, SharedPackedParseTreeVisitor<Object, Object, UnableToAnalyseExeception> {
 
-	static Class<?>[] parameterTypes = BranchHandler.class.getMethods()[0].getParameterTypes();
+	private static Class<?>[] parameterTypes = BranchHandler.class.getMethods()[0].getParameterTypes();
 
 	static public interface BranchHandler<T> {
 		T handle(SPPTBranch target, List<SPPTBranch> children, Object arg) throws UnableToAnalyseExeception;
 	}
 
+	private GrammarLoader grammarLoader;
+	private final Map<String, BranchHandler<?>> branchHandlers;
+
 	public SemanticAnalyserVisitorBasedAbstract() {
 		this.branchHandlers = new HashMap<>();
 	}
 
-	private GrammarLoader grammarLoader;
-	private final Map<String, BranchHandler> branchHandlers;
-
-	protected void register(final String branchName, final BranchHandler handler) {
+	protected <T> void register(final String branchName, final BranchHandler<T> handler) {
 		this.branchHandlers.put(branchName, handler);
 	}
 
 	private <T> BranchHandler<T> getBranchHandler(final String branchName) throws UnableToAnalyseExeception {
-		BranchHandler<T> handler = this.branchHandlers.get(branchName);
+		BranchHandler<T> handler = (BranchHandler<T>) this.branchHandlers.get(branchName);
 		if (null == handler) {
 			try {
 				final BetterMethodFinder bmf = new BetterMethodFinder(this.getClass());

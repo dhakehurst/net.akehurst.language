@@ -2,7 +2,7 @@ package net.akehurst.language.parser.sppf;
 
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 
-public interface IInput {
+public interface Input {
 
 	Leaf fetchOrCreateBud(RuntimeRule rr, int nextInputPosition);
 

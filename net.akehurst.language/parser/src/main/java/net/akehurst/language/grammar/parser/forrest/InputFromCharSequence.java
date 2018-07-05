@@ -24,12 +24,12 @@ import net.akehurst.language.api.grammar.NodeType;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.parser.sppf.EmptyLeaf;
-import net.akehurst.language.parser.sppf.IInput;
+import net.akehurst.language.parser.sppf.Input;
 import net.akehurst.language.parser.sppf.Leaf;
 
-public class Input3 implements IInput {
+public class InputFromCharSequence implements Input {
 
-    public Input3(final RuntimeRuleSetBuilder ffactory, final CharSequence text) {
+    public InputFromCharSequence(final RuntimeRuleSetBuilder ffactory, final CharSequence text) {
         this.ffactory = ffactory;
         this.NO_LEAF = this.ffactory.createLeaf(null, -1, -1, null);
         this.text = text;
