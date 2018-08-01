@@ -19,28 +19,28 @@ import java.util.Map;
 
 import net.akehurst.language.api.sppt.SharedPackedParseTree;
 
-public class ParseFailedException extends Exception {
+public class ParseFailedException extends RuntimeException {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private final SharedPackedParseTree longestMatch;
+	private final SharedPackedParseTree longestMatch;
 
-    private final Map<String, Integer> location;
+	private final Map<String, Integer> location;
 
-    public ParseFailedException(final String message, final SharedPackedParseTree longestMatch, final Map<String, Integer> location) {
-        super(message);
-        this.longestMatch = longestMatch;
-        this.location = location;
-    }
+	public ParseFailedException(final String message, final SharedPackedParseTree longestMatch, final Map<String, Integer> location) {
+		super(message);
+		this.longestMatch = longestMatch;
+		this.location = location;
+	}
 
-    @Override
-    public String getMessage() {
-        final int line = this.getLongestMatch().getRoot().getNumberOfLines();
-        return super.getMessage() + "(possibly at line: " + this.location + ")";
-    }
+	@Override
+	public String getMessage() {
+		final int line = this.getLongestMatch().getRoot().getNumberOfLines();
+		return super.getMessage() + "(possibly at line: " + this.location + ")";
+	}
 
-    public SharedPackedParseTree getLongestMatch() {
-        return this.longestMatch;
-    }
+	public SharedPackedParseTree getLongestMatch() {
+		return this.longestMatch;
+	}
 
 }

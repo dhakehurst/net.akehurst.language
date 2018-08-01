@@ -15,9 +15,9 @@
  */
 package net.akehurst.language.api.parser;
 
-public class ParseTreeException extends Exception {
+public class ParseTreeException extends RuntimeException {
 
-	public ParseTreeException(String message, Throwable cause) {
+	public ParseTreeException(final String message, final Throwable cause) {
 		super(message, cause);
 	}
 
