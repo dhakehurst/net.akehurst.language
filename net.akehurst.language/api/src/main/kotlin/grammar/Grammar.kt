@@ -14,8 +14,39 @@
  * limitations under the License.
  */
 
-apply plugin: 'kotlin-platform-common'
- 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
+package net.akehurst.language.api.grammar
+
+
+/**
+ *
+ * The definition of a Grammar. A grammar defines a list of rules and may be defined to extend a number of other Grammars.
+ *
+ */
+interface Grammar {
+
+	/**
+	 *
+	 * the namespace of this grammar;
+	 */
+	val namespace: Namespace
+
+	/**
+	 *
+	 * the name of this grammar
+	 */
+	val name: String
+
+	/**
+	 *
+	 * the list of rules defined by this grammar
+	 */
+	val rule: List<Rule>
+
+	val allTerminal: Set<Terminal>
+
+	fun findAllNodeType(): Set<NodeType>
+
+	fun findAllRule(name: String): Rule
+
+	fun findAllTerminal(terminalPattern: String): Terminal
 }

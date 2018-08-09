@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-apply plugin: 'kotlin-platform-common'
- 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
+package net.akehurst.language.api.sppt
+
+/**
+ * elements of a SharedPackedParseTree (Node, Leaf, Branch) are Visitable
+ *
+ */
+interface SharedPackedParseTreeVisitable {
+
+	fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T
+
 }

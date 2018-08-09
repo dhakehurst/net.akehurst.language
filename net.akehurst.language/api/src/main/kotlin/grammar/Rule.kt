@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-apply plugin: 'kotlin-platform-common'
- 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
+package net.akehurst.language.api.grammar
+
+interface Rule {
+
+	val name: String
+
+	val rhs: RuleItem;
+
+	val nodeType: NodeType
+
 }

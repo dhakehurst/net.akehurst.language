@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2015 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package net.akehurst.language.api.sppt;
 
-apply plugin: 'kotlin-platform-common'
- 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
+/**
+ * Visitor interface for a SharedPackedParse
+ *
+ * @param <T>
+ *            result type of visit methods
+ * @param <A>
+ *            parameter type for visit methods
+ * @param <E>
+ *            exception type for visit methods
+ */
+public interface SharedPackedParseTreeVisitor<T, A> {
+
+	fun visit(target: SharedPackedParseTree, arg: A): T
+
+	fun visit(target: SPPTLeaf, arg: A): T
+
+	fun visit(target: SPPTBranch, arg: A): T
+
 }

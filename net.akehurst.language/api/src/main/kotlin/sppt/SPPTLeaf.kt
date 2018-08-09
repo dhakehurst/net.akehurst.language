@@ -14,8 +14,18 @@
  * limitations under the License.
  */
 
-apply plugin: 'kotlin-platform-common'
- 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
+package net.akehurst.language.api.sppt
+
+/**
+ * A leaf node has no children.
+ */
+interface SPPTLeaf : SPPTNode {
+
+	/**
+	 * Indicates if the leaf was constructed by matching a regular expression pattern or not.
+	 *
+	 *  true if the leaf was created by matching a regular expression pattern, false if not.
+	 */
+	val isPattern: Boolean
+
 }

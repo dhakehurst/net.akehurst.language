@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2015 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package net.akehurst.language.api.parser;
 
-apply plugin: 'kotlin-platform-common'
- 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
+
+class ParseFailedException(message: String, longestMatch: SharedPackedParseTree, location: Map<String, Long>) : Exception(message + "(possibly at line: ${location})") {
+
+	val longestMatch: SharedPackedParseTree = longestMatch
+
+	val location: Map<String, Long> = location
+
 }
+

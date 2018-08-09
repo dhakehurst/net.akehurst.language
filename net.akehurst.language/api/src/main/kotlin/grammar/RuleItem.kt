@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
-apply plugin: 'kotlin-platform-common'
- 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
+package net.akehurst.language.api.grammar
+
+ interface RuleItem {
+	 
+    val owningRule: Rule
+
+    fun subItem(index: Long): RuleItem
+
+    val allTerminal: Set<Terminal> 
+
+    val allNonTerminal: Set<NonTerminal>
 }

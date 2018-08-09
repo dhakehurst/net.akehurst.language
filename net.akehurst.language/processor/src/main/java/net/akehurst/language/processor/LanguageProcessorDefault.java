@@ -29,7 +29,6 @@ import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
 import net.akehurst.language.api.grammar.RuleItem;
 import net.akehurst.language.api.parser.ParseFailedException;
 import net.akehurst.language.api.parser.ParseTreeException;
-import net.akehurst.language.api.parser.Parser;
 import net.akehurst.language.api.processor.CompletionItem;
 import net.akehurst.language.api.processor.LanguageProcessor;
 import net.akehurst.language.api.sppt.SharedPackedParseTree;
@@ -90,25 +89,18 @@ public class LanguageProcessorDefault implements LanguageProcessor {
         }
     }
 
-    @Override
-    public <T> T process(final Reader reader, final String goalRuleName, final Class<T> targetType) throws ParseFailedException, UnableToAnalyseExeception {
-        try {
-
-            final SharedPackedParseTree forest = this.getParser().parse(goalRuleName, reader);
-            if (null == this.getSemanticAnalyser()) {
-                throw new UnableToAnalyseExeception("No SemanticAnalyser supplied", null);
-            }
-            final T t = this.getSemanticAnalyser().analyse(targetType, forest);
-
-            return t;
-        } catch (final GrammarRuleNotFoundException | ParseTreeException e) {
-            throw new ParseFailedException(e.getMessage(), null, new HashMap<>());
+    public <T> T process(final Reader reader, final String goalRuleName, final Class<T> targetType) {
+        final SharedPackedParseTree forest = this.getParser().parse(goalRuleName, reader);
+        if (null == this.getSemanticAnalyser()) {
+            throw new UnableToAnalyseExeception("No SemanticAnalyser supplied", null);
         }
+        final T t = this.getSemanticAnalyser().analyse(targetType, forest);
+
+        return t;
     }
 
     @Override
-    public List<CompletionItem> expectedAt(final String text, final String goalRuleName, final int position, final int desiredDepth)
-            throws ParseFailedException, ParseTreeException {
+    public List<CompletionItem> expectedAt(final String text, final String goalRuleName, final long position, final long desiredDepth) {
         final List<RuleItem> parserExpected = this.getParser().expectedAt(goalRuleName, text, position);
         final Set<CompletionItem> expected = new LinkedHashSet<>();
         for (final RuleItem item : parserExpected) {
@@ -118,9 +110,7 @@ public class LanguageProcessorDefault implements LanguageProcessor {
         return new ArrayList<>(expected);
     }
 
-    @Override
-    public List<CompletionItem> expectedAt(final Reader reader, final String goalRuleName, final int position, final int desiredDepth)
-            throws ParseFailedException, ParseTreeException {
+    public List<CompletionItem> expectedAt(final Reader reader, final String goalRuleName, final long position, final long desiredDepth) {
         final List<RuleItem> parserExpected = this.getParser().expectedAt(goalRuleName, reader, position);
         final Set<CompletionItem> expected = new LinkedHashSet<>();
         for (final RuleItem item : parserExpected) {

@@ -13,38 +13,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 buildscript {
+    ext.kotlin_version = '1.2.60'
     repositories {
+        mavenCentral()
         jcenter()
     }
     dependencies {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
+
 subprojects {
 
 	apply plugin: 'java-library'
-	apply plugin: 'osgi'
     apply plugin: 'checkstyle'
 	apply plugin: 'maven-publish'
 	apply plugin: 'com.jfrog.bintray'
 
 
 	group 'net.akehurst.language'
-	version '1.2.0-SNAPSHOT'
+	version '2.0.0-SNAPSHOT'
 
 	sourceCompatibility = '1.8'
 	targetCompatibility = '1.8'
 
     repositories {
-        mavenCentral()
         mavenLocal()
+        mavenCentral()
         jcenter()
     }
 
     ext {
         version_junit = '4.12'
         version_transform = '2.2.0'
+        version_kotlin = '1.2.60'
     }
      
     checkstyle {
@@ -97,10 +102,10 @@ subprojects {
 		publications = ['mavenJava']
 		pkg {
 			repo = 'maven'
-			name = 'net.akehurst.application.framework'
+			name = 'net.akehurst.language'
 			userOrg = user
 			licenses = ['Apache-2.0']
-			vcsUrl = 'https://github.com/dhakehurst/net.akehurst.application.framework.git'
+			vcsUrl = 'https://github.com/dhakehurst/net.akehurst.language.git'
 			version {
 				name = "${project.version}"
 				gpg {
