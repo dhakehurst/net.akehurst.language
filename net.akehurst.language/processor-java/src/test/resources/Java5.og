@@ -1,0 +1,128 @@
+namespace net::akehurst::language::java;
+
+grammar JavaFile {
+	skip
+	WS :  "[ \t\r\n\u000C]+" ;
+
+	skip
+	COMMENT :   "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
+
+	skip
+	LINE_COMMENT :   "(?s)//.*?$" ;
+
+compilationUnit
+	:	packageDeclaration? importDeclaration* typeDeclaration* 
+	;
+
+packageDeclaration
+	:	packageModifier* 'package' Identifier ('.' Identifier)* ';'
+	;
+
+packageModifier
+	:	annotation
+	;
+
+importDeclaration
+	:	singleTypeImportDeclaration
+	|	typeImportOnDemandDeclaration
+	|	singleStaticImportDeclaration
+	|	staticImportOnDemandDeclaration
+	;
+
+singleTypeImportDeclaration
+	:	'import' typeName ';'
+	;
+
+typeImportOnDemandDeclaration
+	:	'import' packageOrTypeName '.' '*' ';'
+	;
+
+singleStaticImportDeclaration
+	:	'import' 'static' typeName '.' Identifier ';'
+	;
+
+staticImportOnDemandDeclaration
+	:	'import' 'static' typeName '.' '*' ';'
+	;
+
+typeDeclaration
+	:	classDeclaration
+	|	';'
+	;
+
+classDeclaration
+    : classModifier* 'class' Identifier /*typeParameters? superclass? superinterfaces?*/ classBody
+    ;
+
+classModifier
+	:	annotation
+	|	'public'
+	|	'protected'
+	|	'private'
+	|	'abstract'
+	|	'static'
+	|	'final'
+	|	'strictfp'
+	;
+	
+classBody
+	:	'{' /* classBodyDeclaration* */  '}'
+	;
+
+annotation
+	:	normalAnnotation
+	|	markerAnnotation
+	|	singleElementAnnotation
+	;
+	
+normalAnnotation
+	:	'@' typeName //'(' elementValuePairList? ')'
+	;
+	
+markerAnnotation
+	:	'@' typeName
+	;
+
+singleElementAnnotation
+	:	'@' typeName '(' elementValue ')'
+	;
+
+elementValue
+	//:	conditionalExpression
+	/*|*/ :	elementValueArrayInitializer
+	|	annotation
+	;
+
+elementValueArrayInitializer
+	:	'{' elementValueList? ','? '}'
+	;
+
+elementValueList
+	:	elementValue (',' elementValue)*
+	;
+
+typeName
+	:	Identifier
+	|	packageOrTypeName '.' Identifier
+	;
+	
+packageOrTypeName
+	:	Identifier
+	|	packageOrTypeName '.' Identifier
+	;
+	
+	type
+	:	primitiveType
+	<	referenceType
+	;
+	
+	primitiveType : 'int' ;
+	
+	referenceType : Identifier ;
+	
+	Identifier
+	:	"([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*"   //JavaLetter JavaLetterOrDigit*
+	;
+	
+
+}

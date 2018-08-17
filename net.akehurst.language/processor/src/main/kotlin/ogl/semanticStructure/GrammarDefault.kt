@@ -59,16 +59,6 @@ data class GrammarDefault(override val namespace: Namespace, override val name: 
 		this.allTerminal.firstOrNull{it.value == terminalPattern} ?: throw GrammarRuleNotFoundException ("Terminal '${terminalPattern}' not found in Grammar(${this.name}).findAllTerminal")
 	}
 
-	Set<Terminal> findAllTerminal()
-	{
-		final Set < Terminal > result = new HashSet<>();
-		for (final Rule rule : this.getAllRule()) {
-		final RuleItem ri = rule.getRhs();
-		result.addAll(this.findAllTerminal(0, rule, ri));
-	}
-		return result;
-	}
-
 	Set<Terminal> findAllTerminal(final int totalItems, final Rule rule, final RuleItem item)
 	{
 		final Set < Terminal > result = new HashSet<>();
