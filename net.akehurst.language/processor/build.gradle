@@ -13,7 +13,8 @@ dependencies {
 sourceSets {
 	main {
 		resources {
-			srcDir "${projectDir}/src/main/ogl"
+            srcDir "${projectDir}/src/main/ogl"
+            srcDir "${projectDir}/src/main/typescript"
 		}
 	}
 }
