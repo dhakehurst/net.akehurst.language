@@ -47,12 +47,14 @@ interface Grammar {
 	 */
 	val rule: List<Rule>
 
+	val allRule : List<Rule>
+	
 	/**
 	 * the Set of all terminals in this grammar and those that this grammar extends
      */
 	val allTerminal: Set<Terminal>
 
-	fun findAllNodeType(): Set<NodeType>
+	val allNodeType: Set<NodeType>
 
 	fun findAllRule(ruleName: String): Rule
 

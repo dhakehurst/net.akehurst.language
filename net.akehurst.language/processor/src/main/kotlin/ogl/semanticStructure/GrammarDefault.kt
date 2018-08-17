@@ -36,14 +36,18 @@ data class GrammarDefault(override val namespace: Namespace, override val name: 
 		this.allTerminal_cache = null;
 	}
 
-	public var allRule: List<Rule> by lazy {
+	override val allRule: List<Rule> by lazy {
 		this.extends.flatMap{it.allRule}.plus(this.rule)
 	}
 
-	public var allTerminal: Set<Terminal> by lazy {
+	override val allTerminal: Set<Terminal> by lazy {
 		this.allRule.flatMap{it.rhs.allTerminal}
 	}
 
+	override val allNodeType : Set<NodeType>by lazy {
+
+	}
+	
 	public override fun findAllRule(ruleName: String): Rule
 	{
 		val all = this.allRule.filter{it.name == ruleName}
@@ -102,24 +106,7 @@ data class GrammarDefault(override val namespace: Namespace, override val name: 
 		return result;
 	}
 
-	@Override
-	public Set<NodeType> findAllNodeType()
-	{
-		final Set < NodeType > res = new HashSet<>();
-		for (final Terminal t : this.getAllTerminal()) {
-		try {
-			res.add(((TerminalAbstract) t).getNodeType());
-		} catch (final GrammarRuleNotFoundException e) {
-			e.printStackTrace();
-		}
-	}
 
-		for (final Rule r : this.getAllRule()) {
-		res.add(r.getNodeType());
-	}
-
-		return res;
-	}
 
 	public NodeType findNodeType(final String ruleName) throws GrammarRuleNotFoundException
 	{
