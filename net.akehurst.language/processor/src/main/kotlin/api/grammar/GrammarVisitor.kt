@@ -14,8 +14,26 @@
  * limitations under the License.
  */
 
-apply plugin: 'kotlin-platform-common'
- 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
+package net.akehurst.language.api.grammar
+
+interface GrammarVisitor<T> {
+
+	fun visit(target: Grammar, vararg args: Any) : T
+
+	fun visit(target: ChoicePriority, vararg args: Any) : T
+	
+	fun visit(target: ChoiceSimple, vararg args: Any) : T
+	
+	fun visit(target: Concatenation, vararg args: Any) : T
+	
+	fun visit(target: Group, vararg args: Any) : T
+	
+	fun visit(target: Multi, vararg args: Any) : T
+	
+	fun visit(target: SeparatedList, vararg args: Any) : T
+	
+	fun visit(target: NonTerminal, vararg args: Any) : T
+	
+	fun visit(target: Terminal, vararg args: Any) : T
+
 }

@@ -1,8 +1,0 @@
-apply plugin: 'kotlin-platform-jvm'
-apply plugin: 'osgi'
-
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:${version_kotlin}"
-    api project(":net.akehurst.language.api.jvm")
-    expectedBy project(":net.akehurst.language.ogl")
-}

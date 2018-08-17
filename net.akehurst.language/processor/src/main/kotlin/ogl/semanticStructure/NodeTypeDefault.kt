@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-apply plugin: 'kotlin-platform-common'
- 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
+package net.akehurst.language.ogl.semanticStructure
+
+import net.akehurst.language.api.grammar.NodeType;
+
+data class NodeTypeDefault(override val identity: String) : NodeType {
+
 }

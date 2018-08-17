@@ -1,6 +1,0 @@
-apply plugin: 'kotlin-platform-js'
-
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-js:${version_kotlin}"
-    expectedBy project(":net.akehurst.language.api")
-}

@@ -14,8 +14,20 @@
  * limitations under the License.
  */
 
-apply plugin: 'kotlin-platform-common'
- 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
+package net.akehurst.language.ogl.semanticStructure
+
+import net.akehurst.language.api.grammar.NonTerminal
+import net.akehurst.language.api.grammar.Rule
+import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.grammar.Terminal
+import net.akehurst.language.api.grammar.GrammarVisitable
+
+abstract class RuleItemAbstract : GrammarVisitable, RuleItem {
+
+	override val owningRule: Rule? = null
+
+	abstract override val allTerminal: Set<Terminal>
+
+	abstract override val allNonTerminal: Set<NonTerminal>
+
 }
