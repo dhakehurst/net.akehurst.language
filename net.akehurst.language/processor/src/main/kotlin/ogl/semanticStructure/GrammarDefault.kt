@@ -26,15 +26,9 @@ import net.akehurst.language.api.grammar.Terminal
 
 data class GrammarDefault(override val namespace: Namespace, override val name: String) : Grammar {
 
-	override val extends: MutableList<Grammar>
+	override val extends: MutableList<Grammar> = mutableListOf<Grammar>();
 
-	override val rule: MutableList<Rule>
-
-	init {
-		this.extends = mutableListOf<Grammar>();
-		this.rule = mutableListOf<Rule>();
-		this.allTerminal_cache = null;
-	}
+	override val rule: MutableList<Rule> = mutableListOf<Rule>();
 
 	override val allRule: List<Rule> by lazy {
 		this.extends.flatMap{it.allRule}.plus(this.rule)
@@ -58,65 +52,6 @@ data class GrammarDefault(override val namespace: Namespace, override val name: 
 	    return all.first() 
 	}
 
-	public override fun findAllTerminal(terminalPattern: String): Terminal
-	{
-		this.allTerminal.firstOrNull{it.value == terminalPattern} ?: throw GrammarRuleNotFoundException ("Terminal '${terminalPattern}' not found in Grammar(${this.name}).findAllTerminal")
-	}
-
-	Set<Terminal> findAllTerminal(final int totalItems, final Rule rule, final RuleItem item)
-	{
-		final Set < Terminal > result = new HashSet<>();
-		if (item instanceof TerminalAbstract) {
-			final TerminalAbstract t = (TerminalAbstract) item;
-			result.add(t);
-		} else if (item instanceof MultiDefault) {
-			result.addAll(this.findAllTerminal(totalItems, rule, ((MultiDefault) item).getItem()));
-		} else if (item instanceof ChoiceAbstract) {
-			for (final ConcatenationDefault ti : ((ChoiceAbstract) item).getAlternative()) {
-				result.addAll(this.findAllTerminal(totalItems, rule, ti));
-			}
-		} else if (item instanceof ConcatenationDefault) {
-			for (final ConcatenationItemAbstract ti : ((ConcatenationDefault) item).getItem()) {
-				result.addAll(this.findAllTerminal(totalItems, rule, ti));
-			}
-		} else if (item instanceof SeparatedListDefault) {
-			result.addAll(this.findAllTerminal(totalItems, rule, ((SeparatedListDefault) item).getSeparator()));
-			result.addAll(this.findAllTerminal(totalItems, rule, ((SeparatedListDefault) item).getItem()));
-		} else if (item instanceof GroupDefault) {
-			result.addAll(this.findAllTerminal(totalItems, rule, ((GroupDefault) item).getChoice()));
-		} else if (item instanceof NonTerminalDefault) {
-			// add nothing
-		} else {
-			throw new RuntimeException ("Internal Error: Should never happen");
-		}
-		return result;
-	}
-
-	public List<ITokenType> findTokenTypes()
-	{
-		final List < ITokenType > result = new ArrayList<>();
-		for (final Terminal t : this.getAllTerminal()) {
-		final String pattern = t.getValue();
-		final String identity = ((TerminalAbstract) t).getOwningRule().getName();
-		final TokenType tt = new TokenType (identity, pattern, t instanceof TerminalPatternDefault);
-		if (!result.contains(tt)) {
-			result.add(tt);
-		}
-	}
-		return result;
-	}
-
-
-
-	public NodeType findNodeType(final String ruleName) throws GrammarRuleNotFoundException
-	{
-		for (final Rule r : this.getAllRule()) {
-		if (r.getName().equals(ruleName)) {
-			return new RuleNodeTypeDefault (r);
-		}
-	}
-		throw new GrammarRuleNotFoundException (ruleName);
-	}
 
 
 }

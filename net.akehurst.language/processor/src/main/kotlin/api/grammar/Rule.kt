@@ -22,7 +22,7 @@ interface Rule {
 	
 	val name: String
 
-	val rhs: RuleItem?;
+	var rhs: RuleItem?;
 
 	val nodeType: NodeType
 

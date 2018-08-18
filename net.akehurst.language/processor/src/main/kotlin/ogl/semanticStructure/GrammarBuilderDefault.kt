@@ -17,89 +17,47 @@
 package net.akehurst.language.ogl.semanticStructure
 
 import net.akehurst.language.api.grammar.Namespace
+import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.grammar.Rule
 
 class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
 	val grammar: GrammarDefault
-	
+
 	init {
 		this.grammar = GrammarDefault(namespace, name);
 	}
 
-	fun rule(name: String) : RuleBuilder {
-		return RuleBuilder(this.grammar, name);
+	fun rule(name: String): RuleBuilder {
+		return RuleBuilder(RuleDefault(grammar, name))
 	}
 
-	class RuleBuilder(grammar: GrammarDefault, name: String) {
-
-	    val rule: RuleDefault
-		
-		init {
-			this.rule = RuleDefault(grammar, name);
-			grammar.rule.add(this.rule);
-		}
-
-		public void concatenation(final ConcatenationItemAbstract... sequence) {
-			this.rule.setRhs(new ChoiceSimpleDefault(new ConcatenationDefault(sequence)));
-		}
-
-		public void choice(final ConcatenationItemAbstract... alternative) {
-			final ConcatenationDefault[] alternativeConcats = new ConcatenationDefault[alternative.length];
-			for (int i = 0; i < alternative.length; ++i) {
-				alternativeConcats[i] = new ConcatenationDefault(alternative[i]);
-			}
-			this.rule.setRhs(new ChoiceSimpleDefault(alternativeConcats));
-		}
-
-		public void priorityChoice(final ConcatenationItemAbstract... alternative) {
-			final ConcatenationDefault[] alternativeConcats = new ConcatenationDefault[alternative.length];
-			for (int i = 0; i < alternative.length; ++i) {
-				alternativeConcats[i] = new ConcatenationDefault(alternative[i]);
-			}
-			this.rule.setRhs(new ChoicePriorityDefault(alternativeConcats));
-		}
-
-		public void multi(final int min, final int max, final TangibleItemAbstract item) {
-			this.rule.setRhs(new ChoiceSimpleDefault(new ConcatenationDefault(new MultiDefault(min, max, item))));
-		}
-
-		public void separatedList(final int min, final int max, final TerminalLiteralDefault separator, final TangibleItemAbstract item) {
-			this.rule.setRhs(new ChoiceSimpleDefault(new ConcatenationDefault(new SeparatedListDefault(min, max, separator, item))));
-		}
+	fun skip(name: String): RuleBuilder {
+		return RuleBuilder(SkipRuleDefault(this.grammar, name))
 	}
+	
+	class RuleBuilder(val rule: Rule) {
 
-	public SkipRuleBuilder skip(final String name) {
-		return new SkipRuleBuilder(name, this.grammar);
-	}
-
-	public class SkipRuleBuilder {
-
-		public SkipRuleBuilder(final String name, final GrammarDefault grammar) {
-			this.rule = new SkipRuleDefault(grammar, name);
-			grammar.getRule().add(this.rule);
+		fun concatenation(vararg sequence: ConcatenationItemAbstract) {
+			this.rule.rhs = ChoiceSimpleDefault(ConcatenationDefault(sequence));
 		}
 
-		RuleDefault rule;
-
-		public void concatenation(final TangibleItemAbstract... sequence) {
-			this.rule.setRhs(new ChoiceSimpleDefault(new ConcatenationDefault(sequence)));
+		fun choice(vararg alternative: ConcatenationItemAbstract) {
+			val alternativeConcats = alternative.map { ConcatenationDefault(it) }
+			this.rule.rhs = ChoiceSimpleDefault(alternativeConcats.toArray());
 		}
 
-		public void choice(final ConcatenationItemAbstract... alternative) {
-			final ConcatenationDefault[] alternativeConcats = new ConcatenationDefault[alternative.length];
-			for (int i = 0; i < alternative.length; ++i) {
-				alternativeConcats[i] = new ConcatenationDefault(alternative[i]);
-			}
-			this.rule.setRhs(new ChoiceSimpleDefault(alternativeConcats));
+		fun priorityChoice(vararg alternative: ConcatenationItemAbstract) {
+			val alternativeConcats = alternative.map { ConcatenationDefault(it) }
+			this.rule.rhs = ChoicePriorityDefault(alternativeConcats.toArray());
 		}
 
-		public void multi(final int min, final int max, final TangibleItemAbstract item) {
-			this.rule.setRhs(new ChoiceSimpleDefault(new ConcatenationDefault(new MultiDefault(min, max, item))));
+		fun multi(min: Long, max: Long, item: TangibleItemAbstract) {
+			this.rule.rhs = ChoiceSimpleDefault(ConcatenationDefault(MultiDefault(min, max, item)));
 		}
 
-		public void separatedList(final int min, final int max, final TerminalLiteralDefault separator, final TangibleItemAbstract item) {
-			this.rule.setRhs(new ChoiceSimpleDefault(new ConcatenationDefault(new SeparatedListDefault(min, max, separator, item))));
+		fun separatedList(min: Long, max: Long, separator: TerminalLiteralDefault, item: TangibleItemAbstract) {
+			this.rule.rhs = ChoiceSimpleDefault(ConcatenationDefault(SeparatedListDefault(min, max, separator, item)));
 		}
-
 	}
 }

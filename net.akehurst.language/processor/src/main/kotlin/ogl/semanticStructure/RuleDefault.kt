@@ -24,8 +24,12 @@ import net.akehurst.language.api.grammar.Rule;
 import net.akehurst.language.api.grammar.RuleItem;
 import net.akehurst.language.api.grammar.Terminal;
 
-public class RuleDefault(override val grammar: Grammar, override val name: String) : Rule {
-
+public class RuleDefault(override val grammar: GrammarDefault, override val name: String) : Rule {
+	
+	init {
+		this.grammar.rule.add(this)
+	}
+	
 	private var _rhs: RuleItem? = null
 	override var rhs: RuleItem?
 		get() = this._rhs
