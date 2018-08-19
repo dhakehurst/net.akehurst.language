@@ -14,24 +14,8 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.semanticStructure
+package net.akehurst.language.api.grammar
 
-import net.akehurst.language.api.grammar.NonTerminal
-import net.akehurst.language.api.grammar.Rule
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.Terminal
-import net.akehurst.language.api.grammar.GrammarVisitable
+class GrammarRuleItemNotFoundException(message: String) : Exception(message) {
 
-abstract class RuleItemAbstract : GrammarVisitable, RuleItem {
-
-	override var owningRule: Rule? = null
-	
-	var index: List<Int>? = null
-
-	abstract override val allTerminal: Set<Terminal>
-
-	abstract override val allNonTerminal: Set<NonTerminal>
-
-	
-	
 }

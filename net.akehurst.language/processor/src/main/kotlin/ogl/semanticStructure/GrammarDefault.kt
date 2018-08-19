@@ -35,23 +35,29 @@ data class GrammarDefault(override val namespace: Namespace, override val name: 
 	}
 
 	override val allTerminal: Set<Terminal> by lazy {
-		this.allRule.flatMap{it.rhs.allTerminal}
+		this.allRule.toSet().flatMap{it.rhs?.allTerminal ?: setOf() }.toSet()
 	}
 
-	override val allNodeType : Set<NodeType>by lazy {
-
+	override val allNodeType : Set<NodeType> by lazy {
+		this.allRule.map{ NodeTypeDefault(it.name) }.toSet()
 	}
 	
-	public override fun findAllRule(ruleName: String): Rule
+	override fun findAllRule(ruleName: String): Rule
 	{
 		val all = this.allRule.filter{it.name == ruleName}
 		when {
 			all.isEmpty() -> throw GrammarRuleNotFoundException ("${ruleName} in Grammar(${this.name}).findAllRule")
-			all.size() > 1 -> throw GrammarRuleNotFoundException ("More than one rule named ${ruleName} in Grammar(${this.name}).findAllRule")
+			all.size > 1 -> throw GrammarRuleNotFoundException ("More than one rule named ${ruleName} in Grammar(${this.name}).findAllRule")
 		}
 	    return all.first() 
 	}
 
-
-
+	override fun findAllTerminal(terminalPattern: String): Terminal {
+				val all = this.allTerminal.filter{it.value == terminalPattern}
+		when {
+			all.isEmpty() -> throw GrammarRuleNotFoundException ("${terminalPattern} in Grammar(${this.name}).findAllRule")
+			all.size > 1 -> throw GrammarRuleNotFoundException ("More than one rule named ${terminalPattern} in Grammar(${this.name}).findAllRule")
+		}
+	    return all.first() 
+	}
 }

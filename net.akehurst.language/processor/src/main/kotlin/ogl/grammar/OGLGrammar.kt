@@ -18,6 +18,9 @@ package net.akehurst.language.ogl.grammar
 
 import net.akehurst.language.ogl.semanticStructure.NamespaceDefault
 import net.akehurst.language.ogl.semanticStructure.GrammarDefault
+import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault
+import net.akehurst.language.ogl.semanticStructure.TerminalPatternDefault
+import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault
 import net.akehurst.language.api.grammar.Rule
 
 class OGLGrammar : GrammarDefault(NamespaceDefault("net.akehurst.language.ogl.grammar"), "OGL") {
@@ -65,5 +68,5 @@ private fun createRules() : List<Rule> {
         b.rule("PATTERN").concatenation( TerminalPatternDefault("\"(?:\\\\?.)*?\""));
         b.rule("IDENTIFIER").concatenation( TerminalPatternDefault("[a-zA-Z_][a-zA-Z_0-9]*"));
 
-        return b.get().getRule();
+        return b.grammar.rule
     }

@@ -16,37 +16,42 @@
 
 package net.akehurst.language.ogl.semanticStructure
 
-
-import net.akehurst.language.api.grammar.Choice
+import net.akehurst.language.api.grammar.SimpleItem
 import net.akehurst.language.api.grammar.Terminal
-import net.akehurst.language.api.grammar.NonTerminal
+import net.akehurst.language.api.grammar.SeparatedList
 import net.akehurst.language.api.grammar.Rule
 import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.Concatenation
+import net.akehurst.language.api.grammar.NonTerminal
+import net.akehurst.language.api.grammar.GrammarVisitor
+import net.akehurst.language.api.grammar.GrammarRuleItemNotFoundException
 
-abstract class ChoiceAbstract(override val alternative: List<Concatenation>) : RuleItemAbstract(), Choice {
+class SeparatedListDefault(val min: Long, val max: Long, val separator: Terminal, val item: SimpleItem) : RuleItemAbstract(), SeparatedList {
 
 	override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this.owningRule = rule
 		this.index = indices
-		var i: Int = 0
-		this.alternative.forEach {
-			val nextIndex: List<Int> = indices + (i++)
-			it.setOwningRule(rule, nextIndex)
-		}
+		val nextIndex: List<Int> = indices + 0
+		this.item.setOwningRule(rule, nextIndex)
 	}
 
 	override fun subItem(index: Int): RuleItem {
-//		 return if (index < this.alternative.size) this.alternative.get(index) else null
-		return this.alternative.get(index)
+		return when (index) {
+			0 -> this.item
+			1 -> this.separator
+			else -> throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+		}
 	}
 
 	override val allTerminal: Set<Terminal> by lazy {
-		this.alternative.flatMap { it.allTerminal }.toSet()
+		this.item.allTerminal + separator
 	}
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
-		this.alternative.flatMap { it.allNonTerminal }.toSet()
+		this.item.allNonTerminal
+	}
+
+	override fun <T> accept(visitor: GrammarVisitor<T>, vararg arg: Any): T {
+		return visitor.visit(this, arg);
 	}
 
 }

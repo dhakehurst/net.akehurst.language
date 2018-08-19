@@ -16,37 +16,41 @@
 
 package net.akehurst.language.ogl.semanticStructure
 
+import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
+import net.akehurst.language.api.grammar.Concatenation;
+import net.akehurst.language.api.grammar.ConcatenationItem;
+import net.akehurst.language.api.grammar.NonTerminal;
+import net.akehurst.language.api.grammar.RuleItem;
+import net.akehurst.language.api.grammar.Terminal;
+import net.akehurst.language.api.grammar.Rule;
+import net.akehurst.language.api.grammar.GrammarVisitor;
 
-import net.akehurst.language.api.grammar.Choice
-import net.akehurst.language.api.grammar.Terminal
-import net.akehurst.language.api.grammar.NonTerminal
-import net.akehurst.language.api.grammar.Rule
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.Concatenation
+class ConcatenationDefault(val item: List<ConcatenationItem>) : RuleItemAbstract(), Concatenation {
 
-abstract class ChoiceAbstract(override val alternative: List<Concatenation>) : RuleItemAbstract(), Choice {
-
-	override fun setOwningRule(rule: Rule, indices: List<Int>) {
+   override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this.owningRule = rule
 		this.index = indices
 		var i: Int = 0
-		this.alternative.forEach {
+		this.item.forEach {
 			val nextIndex: List<Int> = indices + (i++)
 			it.setOwningRule(rule, nextIndex)
 		}
 	}
-
+	
 	override fun subItem(index: Int): RuleItem {
-//		 return if (index < this.alternative.size) this.alternative.get(index) else null
-		return this.alternative.get(index)
+		return this.item.get(index)
 	}
-
+	
 	override val allTerminal: Set<Terminal> by lazy {
-		this.alternative.flatMap { it.allTerminal }.toSet()
+		this.item.flatMap { it.allTerminal }.toSet()
 	}
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
-		this.alternative.flatMap { it.allNonTerminal }.toSet()
+		this.item.flatMap { it.allNonTerminal }.toSet()
 	}
+	
+    override fun <T> accept(visitor: GrammarVisitor<T>, vararg arg: Any): T {
+        return visitor.visit(this, arg);
+    }
 
 }
