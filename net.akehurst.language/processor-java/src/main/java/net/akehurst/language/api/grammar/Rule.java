@@ -19,6 +19,8 @@ public interface Rule {
 
     String getName();
 
+    boolean isSkip();
+
     RuleItem getRhs();
 
     NodeType getNodeType();

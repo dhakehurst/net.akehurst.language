@@ -18,4 +18,6 @@ package net.akehurst.language.api.grammar
 
 interface Choice : RuleItem {
 
+	val alternative: List<Concatenation>
+	
 }

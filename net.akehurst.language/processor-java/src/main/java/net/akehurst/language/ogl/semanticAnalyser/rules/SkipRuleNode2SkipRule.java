@@ -20,7 +20,6 @@ import net.akehurst.language.api.sppt.SPPTNode;
 import net.akehurst.language.ogl.semanticStructure.ChoiceAbstract;
 import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
 import net.akehurst.language.ogl.semanticStructure.RuleDefault;
-import net.akehurst.language.ogl.semanticStructure.SkipRuleDefault;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
@@ -32,12 +31,12 @@ public class SkipRuleNode2SkipRule extends NormalRuleNode2Rule {
     }
 
     @Override
-    public SkipRuleDefault constructLeft2Right(final SPPTNode left, final BinaryTransformer transformer) {
+    public RuleDefault constructLeft2Right(final SPPTNode left, final BinaryTransformer transformer) {
 
         final SPPTNode grammarNode = left.getParent().getParent().getParent().getParent();
         final GrammarDefault grammar = transformer.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, grammarNode);
         final String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, ((SPPTBranch) left).getChild(1));
-        final SkipRuleDefault right = new SkipRuleDefault(grammar, name);
+        final RuleDefault right = new RuleDefault(grammar, name, true);
         return right;
 
     }

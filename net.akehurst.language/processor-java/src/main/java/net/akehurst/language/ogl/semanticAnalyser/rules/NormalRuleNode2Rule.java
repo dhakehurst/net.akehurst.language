@@ -46,7 +46,7 @@ public class NormalRuleNode2Rule implements BinaryRule<SPPTNode, RuleDefault> {
         final SPPTNode grammarNode = left.getParent().getParent().getParent().getParent();
         final GrammarDefault grammar = transformer.transformLeft2Right(GrammarDefinitionBranch2Grammar.class, grammarNode);
         final String name = transformer.transformLeft2Right(IDENTIFIERBranch2String.class, ((SPPTBranch) left).getChild(0));
-        final RuleDefault right = new RuleDefault(grammar, name);
+        final RuleDefault right = new RuleDefault(grammar, name, false);
         return right;
     }
 

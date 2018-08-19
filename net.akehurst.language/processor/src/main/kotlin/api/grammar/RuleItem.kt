@@ -20,12 +20,12 @@ interface RuleItem {
 	 
     val owningRule: Rule?
 
-	fun setOwningRule(rule: Rule, indices: List<Long>)
+	fun setOwningRule(rule: Rule, indices: List<Int>)
 	
     val allTerminal: Set<Terminal> 
 
     val allNonTerminal: Set<NonTerminal>
 
-    fun subItem(index: Long): RuleItem
+    fun subItem(index: Int): RuleItem
 
 }

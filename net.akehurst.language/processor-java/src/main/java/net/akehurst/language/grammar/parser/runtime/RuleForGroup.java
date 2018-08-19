@@ -7,7 +7,7 @@ import net.akehurst.language.ogl.semanticStructure.RuleDefault;
 public class RuleForGroup extends RuleDefault {
 
     public RuleForGroup(final Grammar grammar, final String name, final ChoiceAbstract choice) {
-        super(grammar, name);
+        super(grammar, name, false);
         this.choice = choice;
     }
 

@@ -21,7 +21,6 @@ import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleItem;
 import net.akehurst.language.ogl.semanticStructure.ChoiceAbstract;
 import net.akehurst.language.ogl.semanticStructure.RuleDefault;
-import net.akehurst.language.ogl.semanticStructure.SkipRuleDefault;
 import net.akehurst.transform.binary.api.BinaryRule;
 import net.akehurst.transform.binary.api.BinaryTransformer;
 
@@ -51,7 +50,7 @@ public class Rule2RuntimeRule implements BinaryRule<Rule, RuntimeRule> {
         final RuntimeRuleItem rrItem = transformer.transformLeft2Right(
                 (Class<? extends BinaryRule<ChoiceAbstract, RuntimeRuleItem>>) (Class<?>) AbstractChoice2RuntimeRuleItem.class, (ChoiceAbstract) left.getRhs());
         right.setRhs(rrItem);
-        right.setIsSkipRule(left instanceof SkipRuleDefault);
+        right.setIsSkipRule(left.isSkip());
 
     }
 

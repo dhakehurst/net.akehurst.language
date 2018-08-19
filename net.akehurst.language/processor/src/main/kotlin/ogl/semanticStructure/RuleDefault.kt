@@ -24,7 +24,7 @@ import net.akehurst.language.api.grammar.Rule;
 import net.akehurst.language.api.grammar.RuleItem;
 import net.akehurst.language.api.grammar.Terminal;
 
-public class RuleDefault(override val grammar: GrammarDefault, override val name: String) : Rule {
+data class RuleDefault(override val grammar: GrammarDefault, override val name: String, override val isSkip: Boolean) : Rule {
 	
 	init {
 		this.grammar.rule.add(this)

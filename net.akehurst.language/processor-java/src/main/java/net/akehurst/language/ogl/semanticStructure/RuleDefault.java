@@ -30,11 +30,13 @@ public class RuleDefault implements Rule {
 
     private final Grammar grammar;
     private final String name;
+    private final boolean skip;
     private ChoiceAbstract rhs;
 
-    public RuleDefault(final Grammar grammar, final String name) {
+    public RuleDefault(final Grammar grammar, final String name, final boolean isSkip) {
         this.grammar = grammar;
         this.name = name;
+        this.skip = isSkip;
     }
 
     public Grammar getGrammar() {
@@ -44,6 +46,11 @@ public class RuleDefault implements Rule {
     @Override
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public boolean isSkip() {
+        return this.skip;
     }
 
     @Override

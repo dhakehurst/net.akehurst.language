@@ -29,11 +29,11 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 	}
 
 	fun rule(name: String): RuleBuilder {
-		return RuleBuilder(RuleDefault(grammar, name))
+		return RuleBuilder(RuleDefault(grammar, name, false))
 	}
 
 	fun skip(name: String): RuleBuilder {
-		return RuleBuilder(SkipRuleDefault(this.grammar, name))
+		return RuleBuilder(RuleDefault(this.grammar, name, true))
 	}
 	
 	class RuleBuilder(val rule: Rule) {

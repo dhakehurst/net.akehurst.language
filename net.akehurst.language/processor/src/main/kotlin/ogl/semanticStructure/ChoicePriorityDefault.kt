@@ -16,18 +16,15 @@
 
 package net.akehurst.language.ogl.semanticStructure
 
-import net.akehurst.language.api.grammar.NonTerminal
-import net.akehurst.language.api.grammar.Rule
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.Terminal
-import net.akehurst.language.api.grammar.GrammarVisitable
 
-abstract class RuleItemAbstract : GrammarVisitable, RuleItem {
+import net.akehurst.language.api.grammar.ChoicePriority
+import net.akehurst.language.api.grammar.Concatenation
+import net.akehurst.language.api.grammar.GrammarVisitor
 
-	override var owningRule: Rule? = null
+class ChoicePriorityDefault(override val alternative: List<Concatenation>) : ChoiceAbstract(alternative), ChoicePriority {
 
-	abstract override val allTerminal: Set<Terminal>
-
-	abstract override val allNonTerminal: Set<NonTerminal>
+    override fun <T> accept(visitor: GrammarVisitor<T>, vararg arg: Any): T {
+        return visitor.visit(this, arg);
+    }
 
 }
