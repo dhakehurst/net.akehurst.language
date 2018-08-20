@@ -16,13 +16,12 @@
 
 package net.akehurst.language.processor
 	
-import kotlin.test.Test
+import kotlin.test.*
 	 
 internal class test_LanguageProcessor {
 
-	@Test
-    fun `basic tag list`() {
-		
+	@Test fun test1() {
+		fail()
 	}
 	
 }

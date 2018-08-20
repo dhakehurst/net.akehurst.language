@@ -22,13 +22,14 @@ import net.akehurst.language.api.grammar.Rule
 import net.akehurst.language.api.grammar.ConcatenationItem
 import net.akehurst.language.api.grammar.TangibleItem
 import net.akehurst.language.api.grammar.Terminal
+import net.akehurst.language.api.grammar.NonTerminal
 
 class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
 	val grammar: GrammarDefault
 
 	init {
-		this.grammar = GrammarDefault(namespace, name);
+		this.grammar = GrammarDefault(namespace, name, mutableListOf<Rule>());
 	}
 
 	fun rule(name: String): RuleBuilder {
@@ -38,21 +39,21 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 	fun skip(name: String): RuleBuilder {
 		return RuleBuilder(RuleDefault(this.grammar, name, true))
 	}
-	
+
+	fun terminalLiteral(value: String): Terminal {
+		return TerminalDefault(value, false)
+	}
+
+	fun terminalPattern(value: String): Terminal {
+		return TerminalDefault(value, true)
+	}
+
+	fun nonTerminal(name: String): NonTerminal {
+		return NonTerminalDefault(name)
+	}
+
 	class RuleBuilder(val rule: Rule) {
 
-		fun terminalLiteral(value: String) {
-			
-		}
-		
-		fun terminalPattern(value: String) {
-			
-		}
-		
-		fun nonTerminal(name: String) {
-			
-		}
-		
 		fun concatenation(vararg sequence: ConcatenationItem) {
 			this.rule.rhs = ChoiceSimpleDefault(listOf(ConcatenationDefault(sequence.toList())));
 		}

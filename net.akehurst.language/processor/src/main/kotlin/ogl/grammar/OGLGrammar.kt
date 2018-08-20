@@ -17,56 +17,50 @@
 package net.akehurst.language.ogl.grammar
 
 import net.akehurst.language.ogl.semanticStructure.NamespaceDefault
-import net.akehurst.language.ogl.semanticStructure.GrammarDefault
+import net.akehurst.language.ogl.semanticStructure.GrammarAbstract
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault
-import net.akehurst.language.ogl.semanticStructure.TerminalPatternDefault
-import net.akehurst.language.ogl.semanticStructure.NonTerminalDefault
 import net.akehurst.language.api.grammar.Rule
 
-class OGLGrammar : GrammarDefault(NamespaceDefault("net.akehurst.language.ogl.grammar"), "OGL") {
-
-    init {
-        this.rule = createRules();
-    }
+class OGLGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.ogl.grammar"), "OGL", createRules()) {
 
 }
 
-private fun createRules() : List<Rule> {
-        val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.ogl.grammar"), "OGL");
-        b.skip("WHITESPACE").concatenation(TerminalPatternDefault("\\s+"));
-        b.skip("MULTI_LINE_COMMENT").concatenation(TerminalPatternDefault("/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/"));
-        b.skip("SINGLE_LINE_COMMENT").concatenation(TerminalPatternDefault("//.*?$"));
+private fun createRules(): List<Rule> {
+	val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.ogl.grammar"), "OGL");
+	b.skip("WHITESPACE").concatenation(b.terminalPattern("\\s+"));
+	b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/"));
+	b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//.*?$"));
 
-        b.rule("grammarDefinition").concatenation(NonTerminalDefault("namespace"), NonTerminalDefault("grammar"));
-        b.rule("namespace").concatenation(TerminalLiteralDefault("namespace"), NonTerminalDefault("qualifiedName"),  TerminalLiteralDefault(";"));
-        b.rule("grammar").concatenation(TerminalLiteralDefault("grammar"), NonTerminalDefault("IDENTIFIER"),  NonTerminalDefault("extends"),
-                 TerminalLiteralDefault("{"),  NonTerminalDefault("rules"),  TerminalLiteralDefault("}"));
-        b.rule("extends").multi(0, 1,  NonTerminalDefault("extends1"));
-        b.rule("extends1").concatenation( TerminalLiteralDefault("extends"),  NonTerminalDefault("extends2"));
-        b.rule("extends2").separatedList(1, -1,  TerminalLiteralDefault(","),  NonTerminalDefault("qualifiedName"));
-        b.rule("rules").multi(1, -1,  NonTerminalDefault("anyRule"));
-        b.rule("anyRule").choice( NonTerminalDefault("normalRule"),  NonTerminalDefault("skipRule"));
-        b.rule("skipRule").concatenation( TerminalLiteralDefault("skip"),  NonTerminalDefault("IDENTIFIER"),  TerminalLiteralDefault(":"),
-                 NonTerminalDefault("choice"),  TerminalLiteralDefault(";"));
-        b.rule("normalRule").concatenation( NonTerminalDefault("IDENTIFIER"),  TerminalLiteralDefault(":"),  NonTerminalDefault("choice"),
-                 TerminalLiteralDefault(";"));
-        b.rule("choice").priorityChoice( NonTerminalDefault("simpleChoice"),  NonTerminalDefault("priorityChoice"));
-        b.rule("simpleChoice").separatedList(0, -1,  TerminalLiteralDefault("|"),  NonTerminalDefault("concatenation"));
-        b.rule("priorityChoice").separatedList(0, -1,  TerminalLiteralDefault("<"),  NonTerminalDefault("concatenation"));
-        b.rule("concatenation").multi(1, -1,  NonTerminalDefault("concatenationItem"));
-        b.rule("concatenationItem").choice( NonTerminalDefault("simpleItem"),  NonTerminalDefault("multi"),  NonTerminalDefault("separatedList"));
-        b.rule("simpleItem").choice( NonTerminalDefault("terminal"),  NonTerminalDefault("nonTerminal"),  NonTerminalDefault("group"));
-        b.rule("multi").concatenation( NonTerminalDefault("simpleItem"),  NonTerminalDefault("multiplicity"));
-        b.rule("multiplicity").choice( TerminalLiteralDefault("*"),  TerminalLiteralDefault("+"),  TerminalLiteralDefault("?"));
-        b.rule("group").concatenation( TerminalLiteralDefault("("),  NonTerminalDefault("choice"),  TerminalLiteralDefault(")"));
-        b.rule("separatedList").concatenation( TerminalLiteralDefault("["),  NonTerminalDefault("simpleItem"),  TerminalLiteralDefault("/"),
-                 NonTerminalDefault("LITERAL"),  TerminalLiteralDefault("]"),  NonTerminalDefault("multiplicity"));
-        b.rule("nonTerminal").choice( NonTerminalDefault("IDENTIFIER"));
-        b.rule("qualifiedName").separatedList(1, -1,  TerminalLiteralDefault("::"),  NonTerminalDefault("IDENTIFIER"));
-        b.rule("terminal").choice( NonTerminalDefault("LITERAL"),  NonTerminalDefault("PATTERN"));
-        b.rule("LITERAL").concatenation( TerminalPatternDefault("'(?:\\\\?.)*?'"));
-        b.rule("PATTERN").concatenation( TerminalPatternDefault("\"(?:\\\\?.)*?\""));
-        b.rule("IDENTIFIER").concatenation( TerminalPatternDefault("[a-zA-Z_][a-zA-Z_0-9]*"));
+	b.rule("grammarDefinition").concatenation(b.nonTerminal("namespace"), b.nonTerminal("grammar"));
+	b.rule("namespace").concatenation(b.terminalLiteral("namespace"), b.nonTerminal("qualifiedName"), b.terminalLiteral(";"));
+	b.rule("grammar").concatenation(b.terminalLiteral("grammar"), b.nonTerminal("IDENTIFIER"), b.nonTerminal("extends"),
+			b.terminalLiteral("{"), b.nonTerminal("rules"), b.terminalLiteral("}"));
+	b.rule("extends").multi(0, 1, b.nonTerminal("extends1"));
+	b.rule("extends1").concatenation(b.terminalLiteral("extends"), b.nonTerminal("extends2"));
+	b.rule("extends2").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("qualifiedName"));
+	b.rule("rules").multi(1, -1, b.nonTerminal("anyRule"));
+	b.rule("anyRule").choice(b.nonTerminal("normalRule"), b.nonTerminal("skipRule"));
+	b.rule("skipRule").concatenation(b.terminalLiteral("skip"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral(":"),
+			b.nonTerminal("choice"), b.terminalLiteral(";"));
+	b.rule("normalRule").concatenation(b.nonTerminal("IDENTIFIER"), b.terminalLiteral(":"), b.nonTerminal("choice"),
+			b.terminalLiteral(";"));
+	b.rule("choice").priorityChoice(b.nonTerminal("simpleChoice"), b.nonTerminal("priorityChoice"));
+	b.rule("simpleChoice").separatedList(0, -1, b.terminalLiteral("|"), b.nonTerminal("concatenation"));
+	b.rule("priorityChoice").separatedList(0, -1, b.terminalLiteral("<"), b.nonTerminal("concatenation"));
+	b.rule("concatenation").multi(1, -1, b.nonTerminal("concatenationItem"));
+	b.rule("concatenationItem").choice(b.nonTerminal("simpleItem"), b.nonTerminal("multi"), b.nonTerminal("separatedList"));
+	b.rule("simpleItem").choice(b.nonTerminal("terminal"), b.nonTerminal("b.nonTerminal"), b.nonTerminal("group"));
+	b.rule("multi").concatenation(b.nonTerminal("simpleItem"), b.nonTerminal("multiplicity"));
+	b.rule("multiplicity").choice(b.terminalLiteral("*"), b.terminalLiteral("+"), b.terminalLiteral("?"));
+	b.rule("group").concatenation(b.terminalLiteral("("), b.nonTerminal("choice"), b.terminalLiteral(")"));
+	b.rule("separatedList").concatenation(b.terminalLiteral("["), b.nonTerminal("simpleItem"), b.terminalLiteral("/"),
+			b.nonTerminal("LITERAL"), b.terminalLiteral("]"), b.nonTerminal("multiplicity"));
+	b.rule("nonTerminal").choice(b.nonTerminal("IDENTIFIER"));
+	b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("::"), b.nonTerminal("IDENTIFIER"));
+	b.rule("terminal").choice(b.nonTerminal("LITERAL"), b.nonTerminal("PATTERN"));
+	b.rule("LITERAL").concatenation(b.terminalPattern("'(?:\\\\?.)*?'"));
+	b.rule("PATTERN").concatenation(b.terminalPattern("\"(?:\\\\?.)*?\""));
+	b.rule("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9]*"));
 
-        return b.grammar.rule
-    }
+	return b.grammar.rule
+}

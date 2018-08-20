@@ -24,40 +24,42 @@ import net.akehurst.language.api.grammar.Rule
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.grammar.Terminal
 
-data class GrammarDefault(override val namespace: Namespace, override val name: String) : Grammar {
+class GrammarDefault(override val namespace: Namespace, override val name: String, override val rule: MutableList<Rule>) : GrammarAbstract(namespace, name, rule) {
+
+}
+
+abstract class GrammarAbstract(override val namespace: Namespace, override val name: String, override val rule: List<Rule>) : Grammar {
 
 	override val extends: MutableList<Grammar> = mutableListOf<Grammar>();
 
-	override val rule: MutableList<Rule> = mutableListOf<Rule>();
 
 	override val allRule: List<Rule> by lazy {
-		this.extends.flatMap{it.allRule}.plus(this.rule)
+		this.extends.flatMap { it.allRule }.plus(this.rule)
 	}
 
 	override val allTerminal: Set<Terminal> by lazy {
-		this.allRule.toSet().flatMap{it.rhs?.allTerminal ?: setOf() }.toSet()
+		this.allRule.toSet().flatMap { it.rhs?.allTerminal ?: setOf() }.toSet()
 	}
 
-	override val allNodeType : Set<NodeType> by lazy {
-		this.allRule.map{ NodeTypeDefault(it.name) }.toSet()
+	override val allNodeType: Set<NodeType> by lazy {
+		this.allRule.map { NodeTypeDefault(it.name) }.toSet()
 	}
-	
-	override fun findAllRule(ruleName: String): Rule
-	{
-		val all = this.allRule.filter{it.name == ruleName}
+
+	override fun findAllRule(ruleName: String): Rule {
+		val all = this.allRule.filter { it.name == ruleName }
 		when {
-			all.isEmpty() -> throw GrammarRuleNotFoundException ("${ruleName} in Grammar(${this.name}).findAllRule")
-			all.size > 1 -> throw GrammarRuleNotFoundException ("More than one rule named ${ruleName} in Grammar(${this.name}).findAllRule")
+			all.isEmpty() -> throw GrammarRuleNotFoundException("${ruleName} in Grammar(${this.name}).findAllRule")
+			all.size > 1 -> throw GrammarRuleNotFoundException("More than one rule named ${ruleName} in Grammar(${this.name}).findAllRule")
 		}
-	    return all.first() 
+		return all.first()
 	}
 
 	override fun findAllTerminal(terminalPattern: String): Terminal {
-				val all = this.allTerminal.filter{it.value == terminalPattern}
+		val all = this.allTerminal.filter { it.value == terminalPattern }
 		when {
-			all.isEmpty() -> throw GrammarRuleNotFoundException ("${terminalPattern} in Grammar(${this.name}).findAllRule")
-			all.size > 1 -> throw GrammarRuleNotFoundException ("More than one rule named ${terminalPattern} in Grammar(${this.name}).findAllRule")
+			all.isEmpty() -> throw GrammarRuleNotFoundException("${terminalPattern} in Grammar(${this.name}).findAllRule")
+			all.size > 1 -> throw GrammarRuleNotFoundException("More than one rule named ${terminalPattern} in Grammar(${this.name}).findAllRule")
 		}
-	    return all.first() 
+		return all.first()
 	}
 }
