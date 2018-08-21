@@ -16,9 +16,13 @@
 
 package net.akehurst.language.api.processor
 
-interface LanguageProcessor {
+import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-	fun <T> process(inputText: CharSequence, goalRuleName: String): T
+public interface LanguageProcessor {
+
+	fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree
+
+	fun <T> process(goalRuleName: String, inputText: CharSequence): T
 
 	//fun <T> process(reader: Reader, goalRuleName: String, targetType: Class<T>): T
 
@@ -33,7 +37,7 @@ interface LanguageProcessor {
 	 * @throws ParseFailedException
 	 * @throws ParseTreeException
 	 */
-	fun expectedAt(inputText: CharSequence, goalRuleName: String, position: Long, desiredDepth: Long): List<CompletionItem>
+	fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Long, desiredDepth: Long): List<CompletionItem>
 
 	//List<CompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth)
 }

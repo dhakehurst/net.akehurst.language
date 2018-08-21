@@ -85,7 +85,7 @@ subprojects {
 	    publications {
 	        mavenJava(MavenPublication) {
 	          	groupId "${group}"
-	        	    artifactId "${project.name}".replace("${group}.", "")
+	        	artifactId "${project.name}".replace("${group}.", "")
 				version "${version}"
 	        
 	            from components.java

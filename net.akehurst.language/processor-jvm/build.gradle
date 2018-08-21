@@ -3,7 +3,8 @@ apply plugin: 'osgi'
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${version_kotlin}"
-    expectedBy project(":net.akehurst.language.processor")
+    expectedBy project(":processor")
     
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:${version_kotlin}"
+    testImplementation "junit:junit:4.12"
 }

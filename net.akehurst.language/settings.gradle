@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,22 @@
  */
  
 rootProject.name = file('.').name
- 
-fileTree('.') {
-  include '**/build.gradle'
-  exclude 'build.gradle' // Exclude the root build file.
-}.each {
-  def prj = rootProject.name+'.'+relativePath(it.parent).replace(File.separator, '.')
-  include(prj)
-  project(':'+prj).projectDir = new File(relativePath(it.parent))
-  println "including "+prj+" at "+relativePath(it.parent)
-}
+
+include 'processor-java'
+include 'processor'
+include 'processor-jvm'
+include 'processor-js'
+
+include 'processor-jvm-test'
+
+
+
+//fileTree('.') {
+//  include '**/build.gradle'
+//  exclude 'build.gradle' // Exclude the root build file.
+//}.each {
+//  def prj = rootProject.name+'.'+relativePath(it.parent).replace(File.separator, '.')
+//  include(prj)
+//  project(':'+prj).projectDir = new File(relativePath(it.parent))
+//  println "including "+prj+" at "+relativePath(it.parent)
+//}

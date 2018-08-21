@@ -16,6 +16,6 @@
 
 package net.akehurst.language.api.analyser
 
-class UnableToAnalyseExeception(message: String, cause: Throwable) : Exception(message, cause) {
+class UnableToAnalyseExeception(message: String, cause: Throwable?) : Exception(message, cause) {
 
 }

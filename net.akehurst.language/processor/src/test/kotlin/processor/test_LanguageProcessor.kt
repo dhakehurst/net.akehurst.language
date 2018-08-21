@@ -20,8 +20,14 @@ import kotlin.test.*
 	 
 internal class test_LanguageProcessor {
 
-	@Test fun test1() {
-		fail()
+	@Test fun parser_rules_String() {
+		val lp = parser("a = 'a'")
+		lp.parse("a", "a")
 	}
-	
+
+	@Test fun parser_rules_List() {
+		val lp = parser(listOf("a = 'a'"))
+		lp.parse("a", "a")
+	}
+
 }

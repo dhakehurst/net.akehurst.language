@@ -2,7 +2,7 @@ apply plugin: 'kotlin-platform-js'
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-js:${version_kotlin}"
-    expectedBy project(":net.akehurst.language.processor")
+    expectedBy project(":processor")
 
     testImplementation "org.jetbrains.kotlin:kotlin-test-js:${version_kotlin}"
     

@@ -4,7 +4,7 @@ dependencies {
 	antlr 'org.antlr:antlr4:4.7'
 
     testImplementation "junit:junit:${version_junit}"
-	testImplementation project(':net.akehurst.language.processor')
+	testImplementation project(':processor-java')
 	
 	testImplementation 'org.antlr:antlr4-runtime:4.7'
 }
