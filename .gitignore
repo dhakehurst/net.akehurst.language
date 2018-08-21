@@ -3,7 +3,7 @@ bin/
 target/
 old/
 .gradle/
-
+.idea/
 .project
 .classpath
 .settings/
