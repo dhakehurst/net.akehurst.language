@@ -14,16 +14,28 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.sppt
+package net.akehurst.language.parser.sppt
 
-import net.akehurst.language.api.grammar.GrammarVisitor
+import net.akehurst.language.api.sppt.SPPTNode
+import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 
-/**
- * elements of a SharedPackedParseTree (Node, Leaf, Branch) are Visitable
- *
- */
-interface SharedPackedParseTreeVisitable {
+class SharedPackedParseTreeDefault(override val root: SPPTNode) : SharedPackedParseTree {
 
-	fun <T> accept(visitor: SharedPackedParseTreeVisitor<T>, vararg arg: Any): T
+    fun contains(other: SharedPackedParseTree): Boolean {
+
+    }
+
+    val asString: String
+
+
+    val countTrees: Long
+
+
+    val toStringAll: String
+
+    fun <T> accept(visitor: SharedPackedParseTreeVisitor<T>, vararg arg: Any): T {
+
+    }
 
 }

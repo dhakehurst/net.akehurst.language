@@ -14,16 +14,23 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.sppt
+package net.akehurst.language.ogl.semanticAnalyser
 
-import net.akehurst.language.api.grammar.GrammarVisitor
+import net.akehurst.language.api.analyser.GrammarLoader
+import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.processor.SemanticAnalyserVisitorBasedAbstract
 
-/**
- * elements of a SharedPackedParseTree (Node, Leaf, Branch) are Visitable
- *
- */
-interface SharedPackedParseTreeVisitable {
+class OglSemanticAnalyser : SemanticAnalyserVisitorBasedAbstract() {
 
-	fun <T> accept(visitor: SharedPackedParseTreeVisitor<T>, vararg arg: Any): T
+    override var grammarLoader: GrammarLoader? = null
+
+    override fun clear() {
+
+    }
+
+    override fun <T> analyse(sppt: SharedPackedParseTree): T {
+
+    }
 
 }

@@ -10,14 +10,14 @@ public class test_LanguageProcessor_Java {
 
     @Test
     public void parser_rules_String() {
-        final LanguageProcessor lp = LanguageProcessorDefaultKt.parser("a = 'a'");
+        final LanguageProcessor lp = Ogl.parser("a = 'a'");
         lp.parse("a", "a");
     }
 
     @Test
     public void parser_rules_List() {
         List<String> rules = Arrays.asList("a = 'a'");
-        final LanguageProcessor lp = LanguageProcessorDefaultKt.parser(rules);
+        final LanguageProcessor lp = Ogl.parser(rules);
         lp.parse("a", "a");
     }
 
