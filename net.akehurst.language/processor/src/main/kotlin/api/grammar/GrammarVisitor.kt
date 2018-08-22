@@ -16,24 +16,24 @@
 
 package net.akehurst.language.api.grammar
 
-interface GrammarVisitor<T> {
+interface GrammarVisitor<T, A> {
 
-	fun visit(target: Grammar, vararg args: Any) : T
+	fun visit(target: Grammar, arg: A) : T
 
-	fun visit(target: ChoicePriority, vararg args: Any) : T
+	fun visit(target: ChoicePriority, arg: A) : T
 	
-	fun visit(target: ChoiceSimple, vararg args: Any) : T
+	fun visit(target: ChoiceSimple, arg: A) : T
 	
-	fun visit(target: Concatenation, vararg args: Any) : T
+	fun visit(target: Concatenation, arg: A) : T
 	
-	fun visit(target: Group, vararg args: Any) : T
+	fun visit(target: Group, arg: A) : T
 	
-	fun visit(target: Multi, vararg args: Any) : T
+	fun visit(target: Multi, arg: A) : T
 	
-	fun visit(target: SeparatedList, vararg args: Any) : T
+	fun visit(target: SeparatedList, arg: A) : T
 	
-	fun visit(target: NonTerminal, vararg args: Any) : T
+	fun visit(target: NonTerminal, arg: A) : T
 	
-	fun visit(target: Terminal, vararg args: Any) : T
+	fun visit(target: Terminal, arg: A) : T
 
 }

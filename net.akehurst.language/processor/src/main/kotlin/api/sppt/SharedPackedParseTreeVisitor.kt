@@ -21,12 +21,12 @@ package net.akehurst.language.api.sppt;
  * @param <T>
  *            result type of visit methods
  */
-interface SharedPackedParseTreeVisitor<T> {
+interface SharedPackedParseTreeVisitor<T, A> {
 
-	fun visit(target: SharedPackedParseTree, vararg arg: Any): T
+	fun visit(target: SharedPackedParseTree, arg: A): T
 
-	fun visit(target: SPPTLeaf, vararg arg: Any): T
+	fun visit(target: SPPTLeaf, arg: A): T
 
-	fun visit(target: SPPTBranch, vararg arg: Any): T
+	fun visit(target: SPPTBranch, arg: A): T
 
 }

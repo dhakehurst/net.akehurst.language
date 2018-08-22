@@ -22,20 +22,36 @@ import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 
 class SharedPackedParseTreeDefault(override val root: SPPTNode) : SharedPackedParseTree {
 
-    fun contains(other: SharedPackedParseTree): Boolean {
-
+    override fun contains(other: SharedPackedParseTree): Boolean {
+        return this.root.contains(other.root)
     }
 
-    val asString: String
+    override val asString: String by lazy {
+        this.accept(SPPT2InputText(), "")
+    }
 
+    override val countTrees: Int by lazy {
+        CountTreesVisitor().visit(this)
+    }
 
-    val countTrees: Long
+    override val toStringAll: String by lazy {
+        val visitor = ToStringVisitor("/n", "")
+        val all: Set<String> = this.accept(visitor, ToStringVistor.Indent(""))
+        val total = all.size
+        val sep = "\n"
+        var cur = 0
+        var res = ""
+        for (pt in all) {
+            cur++
+            res += "Tree ${cur} of ${total}\n"
+            res += pt
+            res += "\n"
+        }
+        all.joinToString(sep, prefix)
+    }
 
-
-    val toStringAll: String
-
-    fun <T> accept(visitor: SharedPackedParseTreeVisitor<T>, vararg arg: Any): T {
-
+    override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
+        return visitor.visit(this, arg)
     }
 
 }

@@ -46,7 +46,7 @@ package net.akehurst.language.api.sppt
 	 * 
 	 *  count of the trees contained
 	 */
-	val countTrees: Long
+	val countTrees: Int
 
 	/**
 	 *  a string representation of all contained parse trees

@@ -24,6 +24,6 @@ import net.akehurst.language.api.grammar.GrammarVisitor
  */
 interface SharedPackedParseTreeVisitable {
 
-	fun <T> accept(visitor: SharedPackedParseTreeVisitor<T>, vararg arg: Any): T
+	fun <T,A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T
 
 }

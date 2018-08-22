@@ -1,0 +1,53 @@
+/**
+ * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.akehurst.language.parser.sppt
+
+import net.akehurst.language.api.sppt.SPPTBranch
+import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.api.sppt.SPPTNode
+import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
+
+class CountTreesVisitor : SharedPackedParseTreeVisitor<Int> {
+
+    override fun visit(target: SharedPackedParseTree, vararg args: Any): Int {
+        return target.root.accept(this, args)
+    }
+
+
+    override fun visit(target: SPPTLeaf, vararg args: Any): Int {
+        return 1
+    }
+
+
+    override fun visit(target: SPPTBranch, vararg args: Any): Int {
+        var currentCount: Int = 0
+        for (children in target.childrenAlternatives) {
+            if (children.isEmpty()) {
+                currentCount += 1
+            } else {
+                var max = 0
+                for (i in 0 until children.size) {
+                    max = maxOf(max, children[i].accept(this, args))
+                }
+                currentCount += max
+            }
+        }
+        return currentCount
+    }
+
+}

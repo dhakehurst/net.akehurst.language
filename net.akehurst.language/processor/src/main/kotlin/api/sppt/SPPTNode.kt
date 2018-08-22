@@ -19,7 +19,7 @@ package net.akehurst.language.api.sppt
 /**
  * A leaf node has no children.
  */
-interface SPPTNode {
+interface SPPTNode : SharedPackedParseTreeVisitable {
 
 	/**
 	 * the identity of this node

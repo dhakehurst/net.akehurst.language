@@ -18,6 +18,6 @@ package net.akehurst.language.api.grammar
 
 interface GrammarVisitable {
 
-	fun <T> accept(visitor: GrammarVisitor<T>, vararg arg: Any): T
+	fun <T,A> accept(visitor: GrammarVisitor<T,A>, arg: A): T
 
 }
