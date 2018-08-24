@@ -30,31 +30,31 @@ interface SPPTBranch : SPPTNode {
 
 	// --- convienience methods ---
 	/**
-	 * the one of the children alternatives of this branch.
+	 * the first one of the children alternatives of this branch.
 	 */
 	val children: List<SPPTNode>
 
 	/**
-	 * the one of the children alternatives of this branch with all skip nodes removed.
+	 * the first one of the children alternatives of this branch with all skip nodes removed.
 	 */
 	val nonSkipChildren: List<SPPTNode>
 
 	/**
 	 * @param index of required child
-	 * @return index'th non skip child.
+	 * @return index'th non skip child (in first one of the children alternatives)
 	 */
-	fun nonSkipChild(index: Long): SPPTNode
+	fun nonSkipChild(index: Int): SPPTNode
 
 	/**
 	 * @param index
-	 * @return the index'th non skip child of this Branch but assumes the child is also a Branch and casts the result.
+	 * @return the index'th non skip child (in first one of the children alternatives) of this Branch but assumes the child is also a Branch and casts the result.
 	 */
-	fun branchChild(index: Long): SPPTBranch
+	fun branchChild(index: Int): SPPTBranch
 
 	/**
 	 * Filters out any children that are skip nodes or not branches
 	 *
-	 * all children that are branches and non skip
+	 * all children that are branches and non skip (in first one of the children alternatives)
 	 */
 	 val branchNonSkipChildren: List<SPPTBranch>
 }

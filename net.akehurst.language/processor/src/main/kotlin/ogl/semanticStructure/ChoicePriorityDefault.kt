@@ -23,7 +23,7 @@ import net.akehurst.language.api.grammar.GrammarVisitor
 
 class ChoicePriorityDefault(override val alternative: List<Concatenation>) : ChoiceAbstract(alternative), ChoicePriority {
 
-    override fun <T> accept(visitor: GrammarVisitor<T>, vararg arg: Any): T {
+    override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
         return visitor.visit(this, arg);
     }
 

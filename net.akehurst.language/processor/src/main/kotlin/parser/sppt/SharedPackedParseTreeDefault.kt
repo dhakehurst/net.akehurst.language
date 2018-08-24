@@ -31,12 +31,12 @@ class SharedPackedParseTreeDefault(override val root: SPPTNode) : SharedPackedPa
     }
 
     override val countTrees: Int by lazy {
-        CountTreesVisitor().visit(this)
+        CountTreesVisitor().visit(this, Unit)
     }
 
     override val toStringAll: String by lazy {
         val visitor = ToStringVisitor("/n", "")
-        val all: Set<String> = this.accept(visitor, ToStringVistor.Indent(""))
+        val all: Set<String> = this.accept(visitor, ToStringVisitor.Indent("", true))
         val total = all.size
         val sep = "\n"
         var cur = 0
@@ -47,7 +47,7 @@ class SharedPackedParseTreeDefault(override val root: SPPTNode) : SharedPackedPa
             res += pt
             res += "\n"
         }
-        all.joinToString(sep, prefix)
+        all.joinToString(sep)
     }
 
     override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {

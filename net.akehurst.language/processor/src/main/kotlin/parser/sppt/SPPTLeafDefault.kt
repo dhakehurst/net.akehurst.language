@@ -16,27 +16,30 @@
 
 package net.akehurst.language.parser.sppt
 
-import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
+import net.akehurst.language.parser.runtime.RuntimeRule
 
-class SPPT2InputText : SharedPackedParseTreeVisitor<String, Any> {
+class SPPTLeafDefault(terminalRule: RuntimeRule, startPosition:Int, override val isEmptyLeaf: Boolean, override val matchedText: String) : SPPTNodeDefault(terminalRule, startPosition, matchedText.length), SPPTLeaf {
 
-    override fun visit(target: SharedPackedParseTree, arg: Any): String {
-        val root = target.root
-        return root.accept(this, arg)
+    // --- SPPTLeaf ---
+
+    override val isPattern: Boolean = terminalRule.isPattern
+
+
+    // --- SPPTNode ---
+
+    override val nonSkipMatchedText: String = if (isSkip) "" else this.matchedText
+
+    override fun contains(other: SPPTNode): Boolean {
+        return this.identity == other.identity
     }
 
+    override val isLeaf: Boolean = true
+    override val isBranch: Boolean = false
 
-    override fun visit(target: SPPTLeaf, arg: Any): String {
-        return target.matchedText
+    override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
+        return visitor.visit(this,  arg)
     }
-
-    override fun visit(target: SPPTBranch, arg: Any): String {
-        var result = target.children.map { it.accept(this, arg) }.joinToString("")
-        return result
-    }
-
 }

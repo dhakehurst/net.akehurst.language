@@ -16,10 +16,13 @@
 
 package net.akehurst.language.parser.sppt
 
+import net.akehurst.language.api.sppt.SPPTBranch
+import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.parser.runtime.RuntimeRuleSetBuilder
 
-class SPPTParser {
+class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
 
     private val WS = Regex("(\\s)+")
     private val EMPTY = Regex("[$]empty")
@@ -28,6 +31,9 @@ class SPPTParser {
     private val COLON = Regex("[:]")
     private val CHILDREN_START = Regex("[{]")
     private val CHILDREN_END = Regex("[}]")
+
+    private var textLength: Int = 0
+    private val offset: Int = 0
 
     private class Stack<T>() {
         private val list = mutableListOf<T>()
@@ -75,64 +81,95 @@ class SPPTParser {
         val scanner = SimpleScanner(treeString)
         val nodeNamesStack = Stack<String>()
         val childrenStack = Stack<MutableList<SPPTNode>>()
-
         // add rootList
         childrenStack.push(mutableListOf<SPPTNode>())
-
         while (scanner.hasMore()) {
-
-            if (scanner.hasNext(WS)) {
-                scanner.next(WS)
-            } else if (scanner.hasNext(NAME)) {
-                val name = scanner.next(NAME)
-                nodeNamesStack.push(name)
-            } else if (scanner.hasNext(CHILDREN_START)) {
-                scanner.next(CHILDREN_START)
-                childrenStack.push(ArrayList<SPPTNode>())
-            } else if (scanner.hasNext(LITERAL)) {
-                val leafStr = scanner.next(LITERAL)
-                val text = leafStr.substring(1, leafStr.length - 1)
-
-                while (scanner.hasNext(WS)) {
-                    scanner.next(WS)
+            when {
+                scanner.hasNext(WS) -> scanner.next(WS)
+                scanner.hasNext(NAME) -> {
+                    val name = scanner.next(NAME)
+                    nodeNamesStack.push(name)
                 }
-
-                if (scanner.hasNext(COLON)) {
-                    scanner.next(COLON)
-
+                scanner.hasNext(CHILDREN_START) -> {
+                    scanner.next(CHILDREN_START)
+                    childrenStack.push(ArrayList<SPPTNode>())
+                }
+                scanner.hasNext(LITERAL) -> {
+                    val leafStr = scanner.next(LITERAL)
+                    val text = leafStr.substring(1, leafStr.length - 1)
                     while (scanner.hasNext(WS)) {
                         scanner.next(WS)
                     }
-
-                    val newText = scanner.next(LITERAL)
-                    val newText2 = newText.substring(1, newText.length - 1)
-                    val leaf = this.leaf(text, newText2)
-                    childrenStack.peek().add(leaf)
-                } else {
-
-                    val leaf = this.leaf(text)
-                    childrenStack.peek().add(leaf)
+                    if (scanner.hasNext(COLON)) {
+                        scanner.next(COLON)
+                        while (scanner.hasNext(WS)) {
+                            scanner.next(WS)
+                        }
+                        val newText = scanner.next(LITERAL)
+                        val newText2 = newText.substring(1, newText.length - 1)
+                        val leaf = this.leaf(text, newText2)
+                        childrenStack.peek().add(leaf)
+                    } else {
+                        val leaf = this.leaf(text)
+                        childrenStack.peek().add(leaf)
+                    }
                 }
-            } else if (scanner.hasNext(EMPTY)) {
-                val empty = scanner.next(EMPTY)
-                val ruleNameThatIsEmpty = nodeNamesStack.peek()
-                val emptyNode = this.emptyLeaf(ruleNameThatIsEmpty)
-                childrenStack.peek().add(emptyNode)
+                scanner.hasNext(EMPTY) -> {
+                    val empty = scanner.next(EMPTY)
+                    val ruleNameThatIsEmpty = nodeNamesStack.peek()
+                    val emptyNode = this.emptyLeaf(ruleNameThatIsEmpty)
+                    childrenStack.peek().add(emptyNode)
+                }
+                scanner.hasNext(CHILDREN_END) -> {
+                    scanner.next(CHILDREN_END)
+                    val lastNodeName = nodeNamesStack.pop()
 
-            } else if (scanner.hasNext(CHILDREN_END)) {
-                scanner.next(CHILDREN_END)
-                val lastNodeName = nodeNamesStack.pop()
-
-                val children = childrenStack.pop()
-                val node = this.branch(lastNodeName, children)
-                childrenStack.peek().add(node)
-
-            } else {
-                throw RuntimeException("Tree String invalid at position " + scanner.getPosition())
+                    val children = childrenStack.pop()
+                    val node = this.branch(lastNodeName, children)
+                    childrenStack.peek().add(node)
+                }
+                else -> throw RuntimeException("Tree String invalid at position " + scanner.position)
             }
         }
         val tree = SharedPackedParseTreeDefault(childrenStack.pop().get(0))
         return tree
     }
 
+    fun emptyLeaf(ruleNameThatIsEmpty: String): SPPTLeaf {
+        val start = this.textLength + this.offset
+        val ruleThatIsEmpty = this.runtimeRuleSetBuilder.runtimeRuleSet.findRuntimeRule(ruleNameThatIsEmpty)
+        val terminalRule = this.runtimeRuleSetBuilder.runtimeRuleSet.findEmptyRule(ruleThatIsEmpty)
+        val n = this.runtimeRuleSetBuilder.createEmptyLeaf(start, terminalRule)
+
+        var existing: SPPTLeaf? = this.findLeaf(n.getIdentity())
+        if (null == existing) {
+            this.cacheNode(n)
+            existing = n
+        }
+        return existing
+    }
+
+    fun leaf(text: String): SPPTLeaf {
+        return this.leaf(text, text)
+    }
+
+    fun leaf(pattern: String, text: String): SPPTLeaf {
+
+    }
+
+    fun branch(ruleName: String, children: List<SPPTNode>): SPPTBranch {
+        val rr = this.runtimeRuleSetBuilder.runtimeRuleSet.findRuntimeRule(ruleName)
+        val n = this.runtimeRuleSetBuilder.createBranch(rr, children.toTypedArray())
+
+        var existing: SPPTBranch? = this.findBranch(n.getIdentity())
+        if (null == existing) {
+            this.cacheNode(n)
+            existing = n
+        } else {
+            val newChildren = n.getChildren() // no need to clone as list is fixed!
+            existing.childrenAlternatives.add(newChildren)
+        }
+
+        return existing
+    }
 }

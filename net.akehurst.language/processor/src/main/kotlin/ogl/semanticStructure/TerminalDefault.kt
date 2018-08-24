@@ -55,7 +55,7 @@ class TerminalDefault(override val value: String, override val isPattern: Boolea
 		emptySet<NonTerminal>()
 	}
 
-	override fun <T> accept(visitor: GrammarVisitor<T>, vararg arg: Any): T {
+	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
 		return visitor.visit(this, arg);
 	}
 

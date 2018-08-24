@@ -22,19 +22,19 @@ import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 
-class CountTreesVisitor : SharedPackedParseTreeVisitor<Int> {
+class CountTreesVisitor : SharedPackedParseTreeVisitor<Int, Unit> {
 
-    override fun visit(target: SharedPackedParseTree, vararg args: Any): Int {
-        return target.root.accept(this, args)
+    override fun visit(target: SharedPackedParseTree, arg: Unit): Int {
+        return target.root.accept(this, arg)
     }
 
 
-    override fun visit(target: SPPTLeaf, vararg args: Any): Int {
+    override fun visit(target: SPPTLeaf, arg: Unit): Int {
         return 1
     }
 
 
-    override fun visit(target: SPPTBranch, vararg args: Any): Int {
+    override fun visit(target: SPPTBranch, arg: Unit): Int {
         var currentCount: Int = 0
         for (children in target.childrenAlternatives) {
             if (children.isEmpty()) {
@@ -42,7 +42,7 @@ class CountTreesVisitor : SharedPackedParseTreeVisitor<Int> {
             } else {
                 var max = 0
                 for (i in 0 until children.size) {
-                    max = maxOf(max, children[i].accept(this, args))
+                    max = maxOf(max, children[i].accept(this, arg))
                 }
                 currentCount += max
             }

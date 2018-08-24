@@ -18,7 +18,10 @@ package net.akehurst.language.ogl.semanticAnalyser
 
 import net.akehurst.language.api.analyser.GrammarLoader
 import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.grammar.Rule
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.ogl.semanticStructure.GrammarDefault
+import net.akehurst.language.ogl.semanticStructure.NamespaceDefault
 import net.akehurst.language.processor.SemanticAnalyserVisitorBasedAbstract
 
 class OglSemanticAnalyser : SemanticAnalyserVisitorBasedAbstract() {
@@ -30,7 +33,7 @@ class OglSemanticAnalyser : SemanticAnalyserVisitorBasedAbstract() {
     }
 
     override fun <T> analyse(sppt: SharedPackedParseTree): T {
-
+        return GrammarDefault(NamespaceDefault("temp"), "temp", mutableListOf<Rule>()) as T
     }
 
 }

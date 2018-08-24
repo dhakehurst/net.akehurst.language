@@ -48,9 +48,9 @@ class ConcatenationDefault(val item: List<ConcatenationItem>) : RuleItemAbstract
 	override val allNonTerminal: Set<NonTerminal> by lazy {
 		this.item.flatMap { it.allNonTerminal }.toSet()
 	}
-	
-    override fun <T> accept(visitor: GrammarVisitor<T>, vararg arg: Any): T {
-        return visitor.visit(this, arg);
-    }
+
+	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
+		return visitor.visit(this, arg);
+	}
 
 }

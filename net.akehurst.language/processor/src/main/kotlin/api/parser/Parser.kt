@@ -53,7 +53,7 @@ interface Parser {
 	 * @throws ParseTreeException
 	 * @throws GrammarRuleNotFoundException
 	 **/
-	fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Long): List<RuleItem>
+	fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int): List<RuleItem>
 
 	//fun expectedAt(goalRuleName: String, inputText: Reader, position: Long): List<RuleItem>
 }

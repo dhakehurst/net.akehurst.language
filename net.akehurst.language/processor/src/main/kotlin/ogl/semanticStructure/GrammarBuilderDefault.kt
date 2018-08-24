@@ -68,12 +68,12 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 			this.rule.rhs = ChoicePriorityDefault(alternativeConcats);
 		}
 
-		fun multi(min: Long, max: Long, item: TangibleItem) {
+		fun multi(min: Int, max: Int, item: TangibleItem) {
 			this.rule.rhs = ChoiceSimpleDefault(listOf(ConcatenationDefault(listOf(MultiDefault(min, max, item)))));
 		}
 
 		//TODO: original only to a TerminalLiteral here,  I think any Literal is ok though!
-		fun separatedList(min: Long, max: Long, separator: Terminal, item: TangibleItem) {
+		fun separatedList(min: Int, max: Int, separator: Terminal, item: TangibleItem) {
 			this.rule.rhs = ChoiceSimpleDefault(listOf(ConcatenationDefault(listOf(SeparatedListDefault(min, max, separator, item)))));
 		}
 	}

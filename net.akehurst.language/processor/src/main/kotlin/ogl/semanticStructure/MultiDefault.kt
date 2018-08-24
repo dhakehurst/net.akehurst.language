@@ -25,7 +25,7 @@ import net.akehurst.language.api.grammar.NonTerminal
 import net.akehurst.language.api.grammar.GrammarVisitor
 import net.akehurst.language.api.grammar.GrammarRuleItemNotFoundException
 
-class MultiDefault(val min: Long, val max: Long, val item: SimpleItem) : RuleItemAbstract(), Multi {
+class MultiDefault(val min: Int, val max: Int, val item: SimpleItem) : RuleItemAbstract(), Multi {
 
     override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this.owningRule = rule
@@ -45,9 +45,9 @@ class MultiDefault(val min: Long, val max: Long, val item: SimpleItem) : RuleIte
 	override val allNonTerminal: Set<NonTerminal> by lazy {
 		this.item.allNonTerminal
 	}
-	
-    override fun <T> accept(visitor: GrammarVisitor<T>, vararg arg: Any): T {
-        return visitor.visit(this, arg);
-    }
+
+	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
+		return visitor.visit(this, arg);
+	}
 	
 }

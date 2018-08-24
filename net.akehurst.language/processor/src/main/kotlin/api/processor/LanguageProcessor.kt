@@ -37,7 +37,7 @@ public interface LanguageProcessor {
 	 * @throws ParseFailedException
 	 * @throws ParseTreeException
 	 */
-	fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Long, desiredDepth: Long): List<CompletionItem>
+	fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem>
 
 	//List<CompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth)
 }

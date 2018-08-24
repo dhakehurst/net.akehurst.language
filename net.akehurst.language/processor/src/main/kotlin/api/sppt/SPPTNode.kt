@@ -16,6 +16,9 @@
 
 package net.akehurst.language.api.sppt
 
+import net.akehurst.language.parser.runtime.RuntimeRule
+
+
 /**
  * A leaf node has no children.
  */
@@ -24,7 +27,7 @@ interface SPPTNode : SharedPackedParseTreeVisitable {
 	/**
 	 * the identity of this node
 	 */
-	val identity: SPNodeIdentity
+	val identity: SPPTNodeIdentity
 
 	/**
 	 *
@@ -36,19 +39,19 @@ interface SPPTNode : SharedPackedParseTreeVisitable {
 	 *
 	 *  the rule number from the runtime grammar that caused this node to be constructed, derived from identity
 	 */
-	val runtimeRuleNumber: Long
+	val runtimeRuleNumber: Int
 
 	/**
 	 *
 	 *  the index position of the input text at which this node starts its match, derived from identity
 	 */
-	val startPosition: Long
+	val startPosition: Int
 
 	/**
 	 *
 	 * the length of the text (in characters) matched by this node, derived from identity
 	 */
-	val matchedTextLength: Long
+	val matchedTextLength: Int
 
 	/**
 	 *  all text matched by this node
@@ -65,7 +68,7 @@ interface SPPTNode : SharedPackedParseTreeVisitable {
 	 *
 	 *  the number of lines (end of line markers) covered by the text that this node matches
 	 */
-	val numberOfLines: Long
+	val numberOfLines: Int
 
 	/**
 	 * an Empty Leaf is constructed by a parse by specifically matching nothing, caused by:
@@ -120,7 +123,7 @@ interface SPPTNode : SharedPackedParseTreeVisitable {
 	 *
 	 *  the parent branch of this node.
 	 */
-	var parent: SPPTBranch
+	var parent: SPPTBranch?
 
 
 	/**

@@ -29,7 +29,7 @@ package net.akehurst.language.api.sppt
  * avoid duplication) but supports the alternative lists of children.
  *
  */
-interface SPNodeIdentity {
+interface SPPTNodeIdentity {
 
 	/**
 	 *  the number of the runtime rule used to create the node
