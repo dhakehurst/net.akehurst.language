@@ -16,14 +16,18 @@
 
 package net.akehurst.language.parser.sppt
 
+import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.parser.runtime.RuntimeRuleSetBuilder
 import kotlin.test.Test
+import kotlin.test.assertNotNull
 
 class test_SPPTParser {
 
     @Test fun construct() {
         val rrb = RuntimeRuleSetBuilder()
         val sut = SPPTParser(rrb)
+
+        assertNotNull(sut)
     }
 
     @Test fun leaf_literal() {
@@ -51,6 +55,6 @@ class test_SPPTParser {
         val rrb = RuntimeRuleSetBuilder()
         val sut = SPPTParser(rrb)
 
-        sut.branch("a", listOf())
+        sut.branch("a", listOf<SPPTNode>())
     }
 }

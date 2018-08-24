@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.grammar.parser.forrest;
+package net.akehurst.language.parser.sppf;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,12 +33,12 @@ import net.akehurst.language.api.sppt.SPPTBranch;
 import net.akehurst.language.api.sppt.SPPTLeaf;
 import net.akehurst.language.api.sppt.SPPTNode;
 import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.grammar.parser.forrest.InputFromCharSequence;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRule;
 import net.akehurst.language.grammar.parser.runtime.RuntimeRuleSetBuilder;
 import net.akehurst.language.ogl.semanticStructure.GrammarDefault;
 import net.akehurst.language.ogl.semanticStructure.TerminalAbstract;
 import net.akehurst.language.ogl.semanticStructure.TerminalEmptyDefault;
-import net.akehurst.language.parser.sppf.SharedPackedParseTreeSimple;
 
 public class ParseTreeBuilder {
 

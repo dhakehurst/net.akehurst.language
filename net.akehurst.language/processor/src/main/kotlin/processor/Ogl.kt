@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-@file:JvmName("Ogl")
+//@file:JvmName("Ogl")
 
 package net.akehurst.language.processor
 
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.ogl.grammar.OGLGrammar
-import kotlin.jvm.JvmName
+import net.akehurst.language.ogl.grammar.OglGrammar
 
 private val oglProcessor: LanguageProcessor by lazy {
-    val grammar = OGLGrammar()
+    val grammar = OglGrammar()
     val semanticAnalyser: SemanticAnalyser? = null //TODO:
     processor(grammar)//, semanticAnalyser)
 }

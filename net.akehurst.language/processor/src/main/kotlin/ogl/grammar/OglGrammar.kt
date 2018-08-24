@@ -21,7 +21,7 @@ import net.akehurst.language.ogl.semanticStructure.GrammarAbstract
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault
 import net.akehurst.language.api.grammar.Rule
 
-class OGLGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.ogl.grammar"), "OGL", createRules()) {
+class OglGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.ogl.grammar"), "OGL", createRules()) {
 
 }
 

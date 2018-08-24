@@ -20,6 +20,7 @@ import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault
 import net.akehurst.language.ogl.semanticStructure.NamespaceDefault
 import net.akehurst.language.parser.runtime.RuntimeRuleSetBuilder
 import kotlin.test.Test
+import kotlin.test.assertNotNull
 
 class test_ScannerlessParser {
 
@@ -29,6 +30,8 @@ class test_ScannerlessParser {
         val grammar = gb.grammar
         val rrbuilder = RuntimeRuleSetBuilder()
         val sp = ScannerlessParser(rrbuilder, grammar)
+
+        assertNotNull(sp)
     }
 
     @Test

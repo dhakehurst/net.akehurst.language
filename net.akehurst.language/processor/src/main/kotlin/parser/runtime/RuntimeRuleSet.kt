@@ -18,15 +18,18 @@ package net.akehurst.language.parser.runtime
 
 class RuntimeRuleSet {
 
-    val rules : List<RuntimeRule> = mutableListOf<RuntimeRule>()
+    val rules: List<RuntimeRule> = mutableListOf<RuntimeRule>()
 
 
-    fun findEmptyRule(ruleThatIsEmpty: RuntimeRule) : RuntimeRule {
-
+    fun findEmptyRule(ruleThatIsEmpty: RuntimeRule): RuntimeRule {
+        throw UnsupportedOperationException()
     }
 
-    fun findRuntimeRule(ruleName: String) : RuntimeRule {
-
+    fun findRuntimeRule(ruleName: String): RuntimeRule {
+        throw UnsupportedOperationException()
     }
 
+    fun findTerminalRule(pattern: String): RuntimeRule {
+        throw UnsupportedOperationException()
+    }
 }

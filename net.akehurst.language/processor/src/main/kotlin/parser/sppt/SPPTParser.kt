@@ -16,10 +16,8 @@
 
 package net.akehurst.language.parser.sppt
 
-import net.akehurst.language.api.sppt.SPPTBranch
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.grammar.Terminal
+import net.akehurst.language.api.sppt.*
 import net.akehurst.language.parser.runtime.RuntimeRuleSetBuilder
 
 class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
@@ -34,6 +32,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
 
     private var textLength: Int = 0
     private val offset: Int = 0
+    private val node_cache: MutableMap<SPPTNodeIdentity, SPPTNode> = mutableMapOf()
 
     private class Stack<T>() {
         private val list = mutableListOf<T>()
@@ -66,15 +65,33 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
 
         fun next(pattern: Regex): String {
             val m = pattern.find(this.input, this.position)
-            val lookingAt = (m?.range?.start == this.position) ?: false
+            val lookingAt = (m?.range?.start == this.position)
             if (lookingAt) {
                 val match = m?.value ?: throw SPPTParserException("Should never happen")
-                this.position = m?.range.endInclusive ?: this.input.length
+                this.position = m.range.endInclusive
                 return match
             } else {
                 throw SPPTParserException("Error scanning for pattern ${pattern} at Position ${this.position}")
             }
         }
+    }
+
+    private fun cacheNode(node: SPPTNode) {
+        this.node_cache[node.identity] = node
+    }
+
+    private fun findNode(id: SPPTNodeIdentity): SPPTNode? {
+        return this.node_cache[id]
+    }
+
+    private fun findLeaf(id: SPPTNodeIdentity): SPPTLeaf {
+        val n = this.findNode(id)
+        return n as SPPTLeaf
+    }
+
+    private fun findBranch(id: SPPTNodeIdentity): SPPTBranch {
+        val n = this.findNode(id)
+        return n as SPPTBranch
     }
 
     private fun parse(treeString: String): SharedPackedParseTree {
@@ -141,7 +158,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         val terminalRule = this.runtimeRuleSetBuilder.runtimeRuleSet.findEmptyRule(ruleThatIsEmpty)
         val n = this.runtimeRuleSetBuilder.createEmptyLeaf(start, terminalRule)
 
-        var existing: SPPTLeaf? = this.findLeaf(n.getIdentity())
+        var existing: SPPTLeaf? = this.findLeaf(n.identity)
         if (null == existing) {
             this.cacheNode(n)
             existing = n
@@ -154,20 +171,31 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
     }
 
     fun leaf(pattern: String, text: String): SPPTLeaf {
+        val start = this.textLength + this.offset
+        this.textLength += text.length
+        val end = this.textLength + this.offset
+        val terminalRule = this.runtimeRuleSetBuilder.runtimeRuleSet.findTerminalRule(pattern)
+        val n = this.runtimeRuleSetBuilder.createLeaf(text, start, end, terminalRule)
 
+        var existing: SPPTLeaf? = this.findLeaf(n.identity)
+        if (null == existing) {
+            this.cacheNode(n)
+            existing = n
+        }
+
+        return existing
     }
 
     fun branch(ruleName: String, children: List<SPPTNode>): SPPTBranch {
         val rr = this.runtimeRuleSetBuilder.runtimeRuleSet.findRuntimeRule(ruleName)
-        val n = this.runtimeRuleSetBuilder.createBranch(rr, children.toTypedArray())
+        val n = this.runtimeRuleSetBuilder.createBranch(rr, children)
 
-        var existing: SPPTBranch? = this.findBranch(n.getIdentity())
+        var existing: SPPTBranch? = this.findBranch(n.identity)
         if (null == existing) {
             this.cacheNode(n)
             existing = n
         } else {
-            val newChildren = n.getChildren() // no need to clone as list is fixed!
-            existing.childrenAlternatives.add(newChildren)
+            (existing as SPPTBranchDefault).childrenAlternatives.add(n.children)
         }
 
         return existing
