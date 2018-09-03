@@ -72,7 +72,7 @@ class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val number:
          return RuntimeRuleItemBuilder(this, RuntimeRuleItemKind.UNORDERED, items)
     }
 
-    fun multi(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
+    fun multi(vararg items: RuntimeRule, min:Int, max: Int): RuntimeRuleItemBuilder {
         return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.MULTI, items)
     }
 

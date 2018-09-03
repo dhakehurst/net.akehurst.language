@@ -193,6 +193,32 @@ class test_RuntimeRuleSetBuilder {
     }
 
     @Test
+    fun rule_multi() {
+        val sut = RuntimeRuleSetBuilder()
+        val r0 = sut.literal("a")
+        val r1 = sut.rule("abc").multi(r0,1,-1).build()
+
+        val actual = sut.ruleSet()
+
+        assertNotNull(actual)
+        assertEquals(4, actual.rules.size)
+        assertEquals(0,actual.rules[0].number)
+        assertEquals(1,actual.rules[1].number)
+        assertEquals("abc", actual.rules[3].name)
+        assertEquals(RuntimeRuleKind.NON_TERMINAL, actual.rules[3].kind)
+        assertEquals(false, actual.rules[3].isEmptyRule)
+        assertEquals(false, actual.rules[3].isPattern)
+        assertEquals(false, actual.rules[3].isSkip)
+        assertEquals(RuntimeRuleItemKind.CHOICE_PRIORITY,actual.rules[3].rhs?.kind)
+        assertEquals(0,actual.rules[3].rhs?.multiMin)
+        assertEquals(0,actual.rules[3].rhs?.multiMax)
+        assertEquals(r0,actual.rules[3].rhs?.items?.get(0))
+        assertFailsWith(ParseException::class) {
+            actual.rules[3].emptyRule
+        }
+    }
+
+    @Test
     fun add_rules_before_build() {
         val sut = RuntimeRuleSetBuilder()
 
