@@ -16,7 +16,25 @@
 
 package net.akehurst.language.ogl.runtime.structure
 
-enum class RuntimeRuleKind {
-    NON_TERMINAL,
-    TERMINAL
+class RuntimeRuleItemBuilder(private val rrb: RuntimeRuleNonTerminalBuilder, private val kind: RuntimeRuleItemKind, private val items: Array<out RuntimeRule>) {
+
+    private var min: Int = 0
+    private var max: Int = 0
+
+    fun min(value: Int) : RuntimeRuleItemBuilder{
+        this.min = value
+        return this
+    }
+
+    fun max(value: Int) : RuntimeRuleItemBuilder{
+        this.max = value
+        return this
+    }
+
+    fun build() : RuntimeRule {
+        val rhs = RuntimeRuleItem(this.kind, this.min, this.max, this.items)
+        val rr = rrb.build()
+        rr.rhs = rhs
+        return rr
+    }
 }

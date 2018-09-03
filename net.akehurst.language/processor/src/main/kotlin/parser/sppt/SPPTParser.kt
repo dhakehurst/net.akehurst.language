@@ -153,9 +153,9 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
 
     fun emptyLeaf(ruleNameThatIsEmpty: String): SPPTLeaf {
         val start = this.textLength + this.offset
-        val ruleThatIsEmpty = this.runtimeRuleSetBuilder.runtimeRuleSet.findRuntimeRule(ruleNameThatIsEmpty)
-        val terminalRule = this.runtimeRuleSetBuilder.runtimeRuleSet.findEmptyRule(ruleThatIsEmpty)
-        val n = this.runtimeRuleSetBuilder.createEmptyLeaf(start, terminalRule)
+        val ruleThatIsEmpty = this.runtimeRuleSetBuilder.ruleSet().findRuntimeRule(ruleNameThatIsEmpty)
+        val terminalRule = this.runtimeRuleSetBuilder.ruleSet().findEmptyRule(ruleThatIsEmpty)
+        val n = SPPTLeafDefault(terminalRule, start, true, "")
 
         var existing: SPPTLeaf? = this.findLeaf(n.identity)
         if (null == existing) {
@@ -172,9 +172,8 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
     fun leaf(pattern: String, text: String): SPPTLeaf {
         val start = this.textLength + this.offset
         this.textLength += text.length
-        val end = this.textLength + this.offset
-        val terminalRule = this.runtimeRuleSetBuilder.runtimeRuleSet.findTerminalRule(pattern)
-        val n = this.runtimeRuleSetBuilder.createLeaf(text, start, end, terminalRule)
+        val terminalRule = this.runtimeRuleSetBuilder.ruleSet().findTerminalRule(pattern)
+        val n = SPPTLeafDefault(terminalRule, start, false, text)
 
         var existing: SPPTLeaf? = this.findLeaf(n.identity)
         if (null == existing) {
@@ -186,8 +185,8 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
     }
 
     fun branch(ruleName: String, children: List<SPPTNode>): SPPTBranch {
-        val rr = this.runtimeRuleSetBuilder.runtimeRuleSet.findRuntimeRule(ruleName)
-        val n = this.runtimeRuleSetBuilder.createBranch(rr, children)
+        val rr = this.runtimeRuleSetBuilder.ruleSet().findRuntimeRule(ruleName)
+        val n =  SPPTBranchDefault(rr, children)
 
         var existing: SPPTBranch? = this.findBranch(n.identity)
         if (null == existing) {

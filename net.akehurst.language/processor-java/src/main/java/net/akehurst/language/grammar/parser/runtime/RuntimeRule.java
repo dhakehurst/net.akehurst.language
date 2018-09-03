@@ -177,7 +177,7 @@ public class RuntimeRule {
 	/**
 	 * depending on the kind of rule, determine if the given possibleChild rule could be a child at the given position
 	 *
-	 * @param position
+	 * @param atPosition
 	 * @return
 	 */
 	public boolean couldHaveChild(final RuntimeRule possibleChild, final int atPosition) {

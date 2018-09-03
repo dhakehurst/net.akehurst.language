@@ -7,15 +7,10 @@ import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
 
 class Converter(val grammar: Grammar) {
 
-    val builder: RuntimeRuleSetBuilder
+    val builder: RuntimeRuleSetBuilder= RuntimeRuleSetBuilder()
 
-    init {
-        val rrs = this.transform()
-        this.builder = RuntimeRuleSetBuilder(rrs)
-    }
-
-    private fun transform(): RuntimeRuleSet {
-        val rules: List<RuntimeRule> = emptyList()
-        return RuntimeRuleSet(rules)
+    fun transform(): RuntimeRuleSet {
+        //TODO:
+        return this.builder.ruleSet()
     }
 }

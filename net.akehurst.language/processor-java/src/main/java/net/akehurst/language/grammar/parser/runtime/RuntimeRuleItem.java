@@ -28,7 +28,7 @@ public class RuntimeRuleItem {
 
 	public RuntimeRuleItem(final RuntimeRuleItemKind kind, final int maxRuleNumber) {
 		this.kind = kind;
-		this.itemsByType = new RuntimeRule[maxRuleNumber][];
+		this.itemsByType = new RuntimeRule[maxRuleNumber][]; //FIXME: very bad for memory! do this properly
 	}
 
 	public RuntimeRuleItemKind getKind() {

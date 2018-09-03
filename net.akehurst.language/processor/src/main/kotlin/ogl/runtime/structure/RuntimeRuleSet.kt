@@ -40,7 +40,7 @@ class RuntimeRuleSet(val rules: List<RuntimeRule>) {
             } else {
                 terminalRuleNumber[rrule.name] = rrule.number
                 if (rrule.isEmptyRule) {
-                    this.emptyRulesFor[rrule.ruleThatIsEmptyNumber] = rrule
+                    this.emptyRulesFor[rrule.ruleThatIsEmpty.number] = rrule
                 }
             }
         }
