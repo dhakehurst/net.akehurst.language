@@ -16,10 +16,8 @@
 
 package net.akehurst.language.parser.sppt
 
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
-import net.akehurst.language.parser.runtime.RuntimeRule
+import net.akehurst.language.api.sppt.*
+import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 
 class SPPTLeafDefault(terminalRule: RuntimeRule, startPosition:Int, override val isEmptyLeaf: Boolean, override val matchedText: String) : SPPTNodeDefault(terminalRule, startPosition, matchedText.length), SPPTLeaf {
 
@@ -38,6 +36,10 @@ class SPPTLeafDefault(terminalRule: RuntimeRule, startPosition:Int, override val
 
     override val isLeaf: Boolean = true
     override val isBranch: Boolean = false
+
+    override val asLeaf: SPPTLeaf = this
+
+    override val asBranch: SPPTBranch get() { throw SPPTException("Not a Branch", null) }
 
     override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
         return visitor.visit(this,  arg)

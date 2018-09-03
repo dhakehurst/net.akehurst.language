@@ -16,9 +16,12 @@
 
 package net.akehurst.language.parser
 
+import net.akehurst.language.ogl.runtime.converter.Converter
+import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault
 import net.akehurst.language.ogl.semanticStructure.NamespaceDefault
-import net.akehurst.language.parser.runtime.RuntimeRuleSetBuilder
+import net.akehurst.language.parser.scannerless.ScannerlessParser
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
@@ -28,8 +31,9 @@ class test_ScannerlessParser {
     fun construct() {
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         val grammar = gb.grammar
-        val rrbuilder = RuntimeRuleSetBuilder()
-        val sp = ScannerlessParser(rrbuilder, grammar)
+        val converter = Converter(grammar)
+        val rrb = converter.builder
+        val sp = ScannerlessParser(rrb, grammar)
 
         assertNotNull(sp)
     }
@@ -38,8 +42,9 @@ class test_ScannerlessParser {
     fun build() {
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         val grammar = gb.grammar
-        val rrbuilder = RuntimeRuleSetBuilder()
-        val sp = ScannerlessParser(rrbuilder, grammar)
+        val converter = Converter(grammar)
+        val rrb = converter.builder
+        val sp = ScannerlessParser(rrb, grammar)
         sp.build()
     }
 
@@ -47,8 +52,9 @@ class test_ScannerlessParser {
     fun parse() {
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         val grammar = gb.grammar
-        val rrbuilder = RuntimeRuleSetBuilder()
-        val sp = ScannerlessParser(rrbuilder, grammar)
+        val converter = Converter(grammar)
+        val rrb = converter.builder
+        val sp = ScannerlessParser(rrb, grammar)
         sp.parse("","")
     }
 
@@ -56,8 +62,9 @@ class test_ScannerlessParser {
     fun expectedAt() {
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         val grammar = gb.grammar
-        val rrbuilder = RuntimeRuleSetBuilder()
-        val sp = ScannerlessParser(rrbuilder, grammar)
+        val converter = Converter(grammar)
+        val rrb = converter.builder
+        val sp = ScannerlessParser(rrb, grammar)
         sp.expectedAt("","",0)
     }
 

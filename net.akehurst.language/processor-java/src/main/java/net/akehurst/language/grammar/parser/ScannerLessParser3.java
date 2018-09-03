@@ -52,7 +52,6 @@ public class ScannerLessParser3 implements Parser {
     private final Converter converter;
     private final RuntimeRuleSetBuilder runtimeBuilder;
     private final Grammar grammar;
-    // Grammar pseudoGrammar;
     private RuntimeRuleSet runtimeRuleSet;
 
     private Grammar getGrammar() {

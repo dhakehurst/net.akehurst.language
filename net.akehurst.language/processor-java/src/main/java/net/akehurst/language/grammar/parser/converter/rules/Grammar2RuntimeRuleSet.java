@@ -44,7 +44,7 @@ public class Grammar2RuntimeRuleSet implements BinaryRule<GrammarDefault, Runtim
     @Override
     public RuntimeRuleSet constructLeft2Right(final GrammarDefault left, final BinaryTransformer transformer) {
         final Converter converter = (Converter) transformer;
-        final int totalRuleNumber = left.getAllRule().size() + left.getAllTerminal().size() + 1000;
+        final int totalRuleNumber = left.getAllRule().size() + left.getAllTerminal().size() + 1000; //FIXME: bad code...find the right number!
         final RuntimeRuleSet right = converter.getFactory().createRuntimeRuleSet(totalRuleNumber);
         return right;
     }

@@ -16,9 +16,6 @@
 
 package net.akehurst.language.api.sppt
 
-import net.akehurst.language.parser.runtime.RuntimeRule
-
-
 /**
  * A leaf node has no children.
  */

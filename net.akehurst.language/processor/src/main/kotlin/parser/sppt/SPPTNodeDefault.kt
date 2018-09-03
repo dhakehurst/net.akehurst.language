@@ -16,11 +16,11 @@
 
 package net.akehurst.language.parser.sppt
 
-import net.akehurst.language.api.sppt.SPPTNodeIdentity
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.parser.runtime.RuntimeRule
+import net.akehurst.language.api.sppt.SPPTNodeIdentity
+import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 
 abstract class SPPTNodeDefault(val runtimeRule: RuntimeRule, override val startPosition: Int, override val matchedTextLength: Int) : SPPTNode {
 
@@ -36,9 +36,9 @@ abstract class SPPTNodeDefault(val runtimeRule: RuntimeRule, override val startP
         Regex("\n").findAll(this.matchedText, 0).count()
     }
 
-    override val asLeaf: SPPTLeaf = this as SPPTLeaf
+    abstract override val asLeaf: SPPTLeaf
 
-    override val asBranch: SPPTBranch = this as SPPTBranch
+    abstract override val asBranch: SPPTBranch
 
     override var parent: SPPTBranch? = null
 

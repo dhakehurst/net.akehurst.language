@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.runtime
-
-import parser.runtime.RuntimeRuleKind
+package net.akehurst.language.ogl.runtime.structure
 
 class RuntimeRule(
         val number: Int,
         val name: String,
         val kind: RuntimeRuleKind,
         val isPattern: Boolean,
-        val isSkip: Boolean
+        val isSkip: Boolean,
+        val isEmptyRule: Boolean,
+        val ruleThatIsEmptyNumber: Int
 ) {
 
 }

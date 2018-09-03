@@ -36,7 +36,8 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
 
 
     override fun visit(target: SPPTLeaf, arg: Indent): Set<String> {
-        val s = (if (arg.onlyChild)  " " else arg.text) + target.name + " : \"" + target.matchedText.replace("\n", 0x23CE.toString())
+        val t = target.name + " : '" + target.matchedText.replace("\n", 0x23CE.toString())+"'"
+        val s = (if (arg.onlyChild)  " " else arg.text) + t
         return setOf(s)
     }
 

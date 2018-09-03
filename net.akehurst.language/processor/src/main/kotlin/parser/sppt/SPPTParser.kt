@@ -16,9 +16,8 @@
 
 package net.akehurst.language.parser.sppt
 
-import net.akehurst.language.api.grammar.Terminal
 import net.akehurst.language.api.sppt.*
-import net.akehurst.language.parser.runtime.RuntimeRuleSetBuilder
+import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
 
 class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
 
@@ -68,7 +67,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
             val lookingAt = (m?.range?.start == this.position)
             if (lookingAt) {
                 val match = m?.value ?: throw SPPTParserException("Should never happen")
-                this.position = m.range.endInclusive
+                this.position += m.value.length
                 return match
             } else {
                 throw SPPTParserException("Error scanning for pattern ${pattern} at Position ${this.position}")
@@ -84,14 +83,14 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         return this.node_cache[id]
     }
 
-    private fun findLeaf(id: SPPTNodeIdentity): SPPTLeaf {
+    private fun findLeaf(id: SPPTNodeIdentity): SPPTLeaf? {
         val n = this.findNode(id)
-        return n as SPPTLeaf
+        return n?.asLeaf
     }
 
-    private fun findBranch(id: SPPTNodeIdentity): SPPTBranch {
+    private fun findBranch(id: SPPTNodeIdentity): SPPTBranch? {
         val n = this.findNode(id)
-        return n as SPPTBranch
+        return n?.asBranch
     }
 
     private fun parse(treeString: String): SharedPackedParseTree {
@@ -148,7 +147,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
                 else -> throw RuntimeException("Tree String invalid at position " + scanner.position)
             }
         }
-        val tree = SharedPackedParseTreeDefault(childrenStack.pop().get(0))
+        val tree = SharedPackedParseTreeDefault(childrenStack.pop()[0])
         return tree
     }
 
@@ -199,5 +198,9 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         }
 
         return existing
+    }
+
+    fun addTree(treeString: String) : SharedPackedParseTree {
+        return this.parse(treeString)
     }
 }
