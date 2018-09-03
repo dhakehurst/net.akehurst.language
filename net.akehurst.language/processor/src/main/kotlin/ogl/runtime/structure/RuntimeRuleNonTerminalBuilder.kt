@@ -25,6 +25,13 @@ class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val number:
     private var isSkip: Boolean = false
     private var rule: RuntimeRule? = null
 
+    private fun runtimeRuleItemBuilder(kind: RuntimeRuleItemKind, items: Array<out RuntimeRule>): RuntimeRuleItemBuilder {
+        if (items.isEmpty()) {
+            throw  ParseException("The rule must have some items")
+        }
+        return RuntimeRuleItemBuilder(this, kind, items)
+    }
+
     internal fun build(): RuntimeRule {
         if (null == this.rule) {
             val rr = RuntimeRule(number, name, kind, isPattern, isSkip)
@@ -35,6 +42,8 @@ class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val number:
             return this.rule ?: throw ParseException("Should not happen")
         }
     }
+
+
 
     fun skip(value: Boolean) {
         this.isSkip = value
@@ -48,23 +57,34 @@ class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val number:
     }
 
     fun choiceEqual(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
-        if (items.isEmpty()) {
-            throw  ParseException("The rule must have some items")
-        }
-        return RuntimeRuleItemBuilder(this, RuntimeRuleItemKind.CHOICE_EQUAL, items)
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.CHOICE_EQUAL, items)
     }
 
     fun choicePriority(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
-        if (items.isEmpty()) {
-            throw  ParseException("The rule must have some items")
-        }
-        return RuntimeRuleItemBuilder(this, RuntimeRuleItemKind.CHOICE_PRIORITY, items)
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.CHOICE_PRIORITY, items)
     }
 
     fun concatenation(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
-        if (items.isEmpty()) {
-            throw  ParseException("The rule must have some items")
-        }
-        return RuntimeRuleItemBuilder(this, RuntimeRuleItemKind.CONCATENATION, items)
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.CONCATENATION, items)
+    }
+
+    fun unordered(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
+         return RuntimeRuleItemBuilder(this, RuntimeRuleItemKind.UNORDERED, items)
+    }
+
+    fun multi(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.MULTI, items)
+    }
+
+    fun separatedList(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.SEPARATED_LIST, items)
+    }
+
+    fun leftAssociativeList(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST, items)
+    }
+
+    fun rightAssociativeList(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST, items)
     }
 }
