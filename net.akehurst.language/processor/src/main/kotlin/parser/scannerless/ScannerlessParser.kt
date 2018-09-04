@@ -17,24 +17,46 @@
 package net.akehurst.language.parser.scannerless
 
 import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.grammar.GrammarRuleNotFoundException
 import net.akehurst.language.api.grammar.NodeType
 import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.ParseTreeException
 import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.ogl.runtime.graph.ParseGraph
+import net.akehurst.language.ogl.runtime.structure.RuntimeRule
+import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
 
-class ScannerlessParser(val builder: RuntimeRuleSetBuilder, val grammar: Grammar) : Parser {
+class ScannerlessParser(val runtimeRuleSet: RuntimeRuleSet) : Parser {
 
     override val nodeTypes: Set<NodeType> by lazy {
         emptySet<NodeType>() //TODO:
     }
 
     override fun build() {
-
+        throw UnsupportedOperationException()
     }
 
     override fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree {
-        throw UnsupportedOperationException()
+        val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
+        val input = InputFromCharSequence(inputText)
+        val graph = ParseGraph(goalRule, input)
+
+        var seasons = 0
+
+        graph.start(goalRule)
+        seasons++
+
+        do {
+            graph.grow()
+            seasons++
+        } while (graph.canGrow)
+
+        val match = graph.longestMatch
+        return SharedPackedParseTreeDefault(match)
     }
 
 

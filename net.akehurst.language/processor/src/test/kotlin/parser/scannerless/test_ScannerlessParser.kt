@@ -24,47 +24,41 @@ import net.akehurst.language.ogl.semanticStructure.NamespaceDefault
 import net.akehurst.language.parser.scannerless.ScannerlessParser
 import kotlin.test.Test
 import kotlin.test.assertNotNull
+import kotlin.test.fail
 
 class test_ScannerlessParser {
 
     @Test
     fun construct() {
-        val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        val grammar = gb.grammar
-        val converter = Converter(grammar)
-        val rrb = converter.builder
-        val sp = ScannerlessParser(rrb, grammar)
+        val rrb = RuntimeRuleSetBuilder()
+        val sp = ScannerlessParser(rrb.ruleSet())
 
         assertNotNull(sp)
     }
 
     @Test
     fun build() {
-        val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        val grammar = gb.grammar
-        val converter = Converter(grammar)
-        val rrb = converter.builder
-        val sp = ScannerlessParser(rrb, grammar)
+        val rrb = RuntimeRuleSetBuilder()
+        val sp = ScannerlessParser(rrb.ruleSet())
         sp.build()
+
+        fail("must test if build worked!")
     }
 
     @Test
     fun parse() {
-        val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        val grammar = gb.grammar
-        val converter = Converter(grammar)
-        val rrb = converter.builder
-        val sp = ScannerlessParser(rrb, grammar)
+        val rrb = RuntimeRuleSetBuilder()
+        val r0 = rrb.literal("a")
+        val sp = ScannerlessParser(rrb.ruleSet())
+
         sp.parse("","")
     }
 
     @Test
     fun expectedAt() {
-        val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        val grammar = gb.grammar
-        val converter = Converter(grammar)
-        val rrb = converter.builder
-        val sp = ScannerlessParser(rrb, grammar)
+        val rrb = RuntimeRuleSetBuilder()
+        val sp = ScannerlessParser(rrb.ruleSet())
+
         sp.expectedAt("","",0)
     }
 

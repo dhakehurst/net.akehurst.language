@@ -196,7 +196,7 @@ class test_RuntimeRuleSetBuilder {
     fun rule_multi() {
         val sut = RuntimeRuleSetBuilder()
         val r0 = sut.literal("a")
-        val r1 = sut.rule("abc").multi(r0,1,-1).build()
+        val r1 = sut.rule("abc").multi(1,-1, r0).build()
 
         val actual = sut.ruleSet()
 
