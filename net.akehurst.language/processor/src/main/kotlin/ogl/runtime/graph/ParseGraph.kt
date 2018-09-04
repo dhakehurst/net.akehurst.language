@@ -33,7 +33,9 @@ class ParseGraph {
 
     val canGrow : Boolean = false //TODO:
 
-    val longestMatch : SPPTNode? = null //TODO
+    val longestMatch : SPPTNode get() {
+        throw UnsupportedOperationException()
+    }
 
     private fun createBranchNoChildren(runtimeRule: RuntimeRule, priority: Int, startPosition: Int, nextInputPosition: Int): SPPTBranchDefault {
         val children = emptyList<SPPTNode>()
@@ -84,7 +86,7 @@ class ParseGraph {
     }
 
     private fun findOrCreateGrowingNode(runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int, nextItemIndex: Int,
-                                        priority: Int, children: Array<SPPTNode>, numNonSkipChildren: Int, previous: Set<PreviousInfo>): GrowingNode {
+                                        priority: Int, children: List<SPPTNodeDefault>, numNonSkipChildren: Int, previous: Set<PreviousInfo>): GrowingNode {
         val ruleNumber = runtimeRule.number
         val gnindex = GrowingNodeIndex(ruleNumber, startPosition, nextInputPosition, nextItemIndex)
         val existing = this.growing.get(gnindex)
@@ -189,7 +191,7 @@ class ParseGraph {
 
     fun start(goalRule:RuntimeRule) {
         val gnindex = GrowingNodeIndex(goalRule.number, 0, 0, 0)
-        val gn = GrowingNode(goalRule, 0, 0, 0, 0, emptyList<SPPTNode>(), 0)
+        val gn = GrowingNode(goalRule, 0, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
         this.addGrowingHead(gnindex, gn)
         if (gn.hasCompleteChildren) {
             val cn = this.createBranchNoChildren(goalRule, 0, 0, 0)

@@ -19,6 +19,7 @@ package net.akehurst.language.ogl.runtime.graph
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class GrowingNode(
         val runtimeRule: RuntimeRule,
@@ -26,7 +27,7 @@ class GrowingNode(
         val nextInputPosition: Int,
         val nextItemIndex: Int,
         val priority: Int,
-        val children: List<SPPTNode>,
+        val children: List<SPPTNodeDefault>,
         val numNonSkipChildren: Int
 ) {
 

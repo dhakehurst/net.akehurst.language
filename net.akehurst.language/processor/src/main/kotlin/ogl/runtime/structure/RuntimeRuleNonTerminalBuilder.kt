@@ -73,7 +73,7 @@ class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val number:
     }
 
     fun multi(min:Int, max: Int, vararg items: RuntimeRule): RuntimeRuleItemBuilder {
-        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.MULTI, items)
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.MULTI, items).min(min).max(max)
     }
 
     fun separatedList(vararg items: RuntimeRule): RuntimeRuleItemBuilder {

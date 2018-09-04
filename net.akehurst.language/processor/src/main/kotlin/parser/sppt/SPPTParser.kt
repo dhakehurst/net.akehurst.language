@@ -155,7 +155,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         val start = this.textLength + this.offset
         val ruleThatIsEmpty = this.runtimeRuleSetBuilder.ruleSet().findRuntimeRule(ruleNameThatIsEmpty)
         val terminalRule = this.runtimeRuleSetBuilder.ruleSet().findEmptyRule(ruleThatIsEmpty)
-        val n = SPPTLeafDefault(terminalRule, start, true, "")
+        val n = SPPTLeafDefault(terminalRule, start, true, "",0)
 
         var existing: SPPTLeaf? = this.findLeaf(n.identity)
         if (null == existing) {
@@ -173,7 +173,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         val start = this.textLength + this.offset
         this.textLength += text.length
         val terminalRule = this.runtimeRuleSetBuilder.ruleSet().findTerminalRule(pattern)
-        val n = SPPTLeafDefault(terminalRule, start, false, text)
+        val n = SPPTLeafDefault(terminalRule, start, false, text,0)
 
         var existing: SPPTLeaf? = this.findLeaf(n.identity)
         if (null == existing) {
@@ -186,7 +186,9 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
 
     fun branch(ruleName: String, children: List<SPPTNode>): SPPTBranch {
         val rr = this.runtimeRuleSetBuilder.ruleSet().findRuntimeRule(ruleName)
-        val n =  SPPTBranchDefault(rr, children)
+        val startPosition = 0 //TODO
+        val nextInputPosition = 0 //TODO
+        val n =  SPPTBranchDefault(rr, startPosition, nextInputPosition, children, 0)
 
         var existing: SPPTBranch? = this.findBranch(n.identity)
         if (null == existing) {

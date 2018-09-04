@@ -18,6 +18,7 @@ package net.akehurst.language.ogl.runtime.structure
 
 import net.akehurst.language.api.parser.ParseException
 import net.akehurst.language.api.sppt.SPPTNode
+import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class RuntimeRule(
         val number: Int,
@@ -46,7 +47,7 @@ class RuntimeRule(
         return this.rhs?.items?.get(0) ?: throw ParseException("There are no items defined")
     }
 
-    fun isCompleteChildren(nextItemIndex: Int, numNonSkipChildren:Int, children:List<SPPTNode>): Boolean {
+    fun isCompleteChildren(nextItemIndex: Int, numNonSkipChildren:Int, children:List<SPPTNodeDefault>): Boolean {
         return if (RuntimeRuleKind.TERMINAL == this.kind) {
             true
         } else {

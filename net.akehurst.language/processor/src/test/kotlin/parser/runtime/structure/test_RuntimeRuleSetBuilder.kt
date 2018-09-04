@@ -29,8 +29,8 @@ class test_RuntimeRuleSetBuilder {
         val actual = sut.ruleSet()
 
         assertNotNull(actual)
-        assertEquals(1,actual.rules.size)
-        assertEquals(0,actual.rules[0].number)
+        assertEquals(1, actual.rules.size)
+        assertEquals(0, actual.rules[0].number)
         assertEquals("a", actual.rules[0].name)
         assertEquals(RuntimeRuleKind.TERMINAL, actual.rules[0].kind)
         assertEquals(false, actual.rules[0].isEmptyRule)
@@ -50,7 +50,7 @@ class test_RuntimeRuleSetBuilder {
         val actual = sut.ruleSet()
 
         assertNotNull(actual)
-        assertEquals(0,actual.rules[0].number)
+        assertEquals(0, actual.rules[0].number)
         assertEquals("[a-z]", actual.rules[0].name)
         assertEquals(RuntimeRuleKind.TERMINAL, actual.rules[0].kind)
         assertEquals(false, actual.rules[0].isEmptyRule)
@@ -65,21 +65,21 @@ class test_RuntimeRuleSetBuilder {
     @Test
     fun empty() {
         val sut = RuntimeRuleSetBuilder()
-        val ruleThatIsEmpty = RuntimeRule(0,"a", RuntimeRuleKind.NON_TERMINAL, false, false)
+        val ruleThatIsEmpty = RuntimeRule(0, "a", RuntimeRuleKind.NON_TERMINAL, false, false)
         sut.rules.add(ruleThatIsEmpty)
         sut.empty(ruleThatIsEmpty)
 
         val actual = sut.ruleSet()
 
         assertNotNull(actual)
-        assertEquals(1,actual.rules[1].number)
+        assertEquals(1, actual.rules[1].number)
         assertEquals("${'$'}empty.a", actual.rules[1].name)
         assertEquals(RuntimeRuleKind.TERMINAL, actual.rules[1].kind)
         assertEquals(true, actual.rules[1].isEmptyRule)
         assertEquals(false, actual.rules[1].isPattern)
         assertEquals(false, actual.rules[1].isSkip)
         assertNotNull(actual.rules[1].rhs)
-        assertEquals(ruleThatIsEmpty,actual.rules[1].ruleThatIsEmpty)
+        assertEquals(ruleThatIsEmpty, actual.rules[1].ruleThatIsEmpty)
     }
 
     @Test
@@ -90,17 +90,17 @@ class test_RuntimeRuleSetBuilder {
         val actual = sut.ruleSet()
 
         assertNotNull(actual)
-        assertEquals(0,actual.rules[0].number)
+        assertEquals(0, actual.rules[0].number)
         assertEquals("a", actual.rules[0].name)
         assertEquals(RuntimeRuleKind.NON_TERMINAL, actual.rules[0].kind)
         assertEquals(false, actual.rules[0].isEmptyRule)
         assertEquals(false, actual.rules[0].isPattern)
         assertEquals(false, actual.rules[0].isSkip)
-        assertEquals(RuntimeRuleItemKind.EMPTY,actual.rules[1].rhs?.kind)
-        assertEquals(0,actual.rules[1].rhs?.multiMin)
-        assertEquals(0,actual.rules[1].rhs?.multiMax)
+        assertEquals(RuntimeRuleItemKind.EMPTY, actual.rules[1].rhs?.kind)
+        assertEquals(0, actual.rules[1].rhs?.multiMin)
+        assertEquals(0, actual.rules[1].rhs?.multiMax)
         assertNotNull(actual.rules[0].emptyRule)
-        assertEquals(1,actual.rules[0].emptyRule.number)
+        assertEquals(1, actual.rules[0].emptyRule.number)
         assertEquals("${'$'}empty.a", actual.rules[0].emptyRule.name)
         assertEquals(RuntimeRuleKind.TERMINAL, actual.rules[0].emptyRule.kind)
         assertEquals(true, actual.rules[0].emptyRule.isEmptyRule)
@@ -120,17 +120,17 @@ class test_RuntimeRuleSetBuilder {
 
         assertNotNull(actual)
         assertEquals(4, actual.rules.size)
-        assertEquals(0,actual.rules[0].number)
-        assertEquals(1,actual.rules[1].number)
+        assertEquals(0, actual.rules[0].number)
+        assertEquals(1, actual.rules[1].number)
         assertEquals("abc", actual.rules[3].name)
         assertEquals(RuntimeRuleKind.NON_TERMINAL, actual.rules[3].kind)
         assertEquals(false, actual.rules[3].isEmptyRule)
         assertEquals(false, actual.rules[3].isPattern)
         assertEquals(false, actual.rules[3].isSkip)
-        assertEquals(RuntimeRuleItemKind.CONCATENATION,actual.rules[3].rhs?.kind)
-        assertEquals(0,actual.rules[3].rhs?.multiMin)
-        assertEquals(0,actual.rules[3].rhs?.multiMax)
-        assertEquals(r0,actual.rules[3].rhs?.items?.get(0))
+        assertEquals(RuntimeRuleItemKind.CONCATENATION, actual.rules[3].rhs?.kind)
+        assertEquals(0, actual.rules[3].rhs?.multiMin)
+        assertEquals(0, actual.rules[3].rhs?.multiMax)
+        assertEquals(r0, actual.rules[3].rhs?.items?.get(0))
         assertFailsWith(ParseException::class) {
             actual.rules[3].emptyRule
         }
@@ -148,17 +148,17 @@ class test_RuntimeRuleSetBuilder {
 
         assertNotNull(actual)
         assertEquals(4, actual.rules.size)
-        assertEquals(0,actual.rules[0].number)
-        assertEquals(1,actual.rules[1].number)
+        assertEquals(0, actual.rules[0].number)
+        assertEquals(1, actual.rules[1].number)
         assertEquals("abc", actual.rules[3].name)
         assertEquals(RuntimeRuleKind.NON_TERMINAL, actual.rules[3].kind)
         assertEquals(false, actual.rules[3].isEmptyRule)
         assertEquals(false, actual.rules[3].isPattern)
         assertEquals(false, actual.rules[3].isSkip)
-        assertEquals(RuntimeRuleItemKind.CHOICE_EQUAL,actual.rules[3].rhs?.kind)
-        assertEquals(0,actual.rules[3].rhs?.multiMin)
-        assertEquals(0,actual.rules[3].rhs?.multiMax)
-        assertEquals(r0,actual.rules[3].rhs?.items?.get(0))
+        assertEquals(RuntimeRuleItemKind.CHOICE_EQUAL, actual.rules[3].rhs?.kind)
+        assertEquals(0, actual.rules[3].rhs?.multiMin)
+        assertEquals(0, actual.rules[3].rhs?.multiMax)
+        assertEquals(r0, actual.rules[3].rhs?.items?.get(0))
         assertFailsWith(ParseException::class) {
             actual.rules[3].emptyRule
         }
@@ -176,17 +176,17 @@ class test_RuntimeRuleSetBuilder {
 
         assertNotNull(actual)
         assertEquals(4, actual.rules.size)
-        assertEquals(0,actual.rules[0].number)
-        assertEquals(1,actual.rules[1].number)
+        assertEquals(0, actual.rules[0].number)
+        assertEquals(1, actual.rules[1].number)
         assertEquals("abc", actual.rules[3].name)
         assertEquals(RuntimeRuleKind.NON_TERMINAL, actual.rules[3].kind)
         assertEquals(false, actual.rules[3].isEmptyRule)
         assertEquals(false, actual.rules[3].isPattern)
         assertEquals(false, actual.rules[3].isSkip)
-        assertEquals(RuntimeRuleItemKind.CHOICE_PRIORITY,actual.rules[3].rhs?.kind)
-        assertEquals(0,actual.rules[3].rhs?.multiMin)
-        assertEquals(0,actual.rules[3].rhs?.multiMax)
-        assertEquals(r0,actual.rules[3].rhs?.items?.get(0))
+        assertEquals(RuntimeRuleItemKind.CHOICE_PRIORITY, actual.rules[3].rhs?.kind)
+        assertEquals(0, actual.rules[3].rhs?.multiMin)
+        assertEquals(0, actual.rules[3].rhs?.multiMax)
+        assertEquals(r0, actual.rules[3].rhs?.items?.get(0))
         assertFailsWith(ParseException::class) {
             actual.rules[3].emptyRule
         }
@@ -196,25 +196,25 @@ class test_RuntimeRuleSetBuilder {
     fun rule_multi() {
         val sut = RuntimeRuleSetBuilder()
         val r0 = sut.literal("a")
-        val r1 = sut.rule("abc").multi(1,-1, r0).build()
+        val r1 = sut.rule("abc").multi(1, -1, r0).build()
 
         val actual = sut.ruleSet()
 
         assertNotNull(actual)
-        assertEquals(4, actual.rules.size)
-        assertEquals(0,actual.rules[0].number)
-        assertEquals(1,actual.rules[1].number)
-        assertEquals("abc", actual.rules[3].name)
-        assertEquals(RuntimeRuleKind.NON_TERMINAL, actual.rules[3].kind)
-        assertEquals(false, actual.rules[3].isEmptyRule)
-        assertEquals(false, actual.rules[3].isPattern)
-        assertEquals(false, actual.rules[3].isSkip)
-        assertEquals(RuntimeRuleItemKind.CHOICE_PRIORITY,actual.rules[3].rhs?.kind)
-        assertEquals(0,actual.rules[3].rhs?.multiMin)
-        assertEquals(0,actual.rules[3].rhs?.multiMax)
-        assertEquals(r0,actual.rules[3].rhs?.items?.get(0))
+        assertEquals(2, actual.rules.size)
+        assertEquals(0, actual.rules[0].number)
+        assertEquals(1, actual.rules[1].number)
+        assertEquals("abc", actual.rules[1].name)
+        assertEquals(RuntimeRuleKind.NON_TERMINAL, actual.rules[1].kind)
+        assertEquals(false, actual.rules[1].isEmptyRule)
+        assertEquals(false, actual.rules[1].isPattern)
+        assertEquals(false, actual.rules[1].isSkip)
+        assertEquals(RuntimeRuleItemKind.MULTI, actual.rules[1].rhs?.kind)
+        assertEquals(1, actual.rules[1].rhs?.multiMin)
+        assertEquals(-1, actual.rules[1].rhs?.multiMax)
+        assertEquals(r0, actual.rules[1].rhs?.items?.get(0))
         assertFailsWith(ParseException::class) {
-            actual.rules[3].emptyRule
+            actual.rules[1].emptyRule
         }
     }
 
