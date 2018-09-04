@@ -17,15 +17,34 @@
 package net.akehurst.language.ogl.runtime.graph
 
 import net.akehurst.language.api.sppt.SPPTNode
+import net.akehurst.language.api.sppt.SPPTNodeIdentity
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
+import net.akehurst.language.parser.sppt.SPPTBranchDefault
+import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class ParseGraph {
 
     // TODO: remove, this is for test
     internal var with = true
 
+    private val completeNodes: MutableMap<SPPTNodeIdentity, SPPTNodeDefault>  = mutableMapOf()
     private val growingHead: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
     private val growing: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
+
+    val canGrow : Boolean = false //TODO:
+
+    val longestMatch : SPPTNode? = null //TODO
+
+    private fun createBranchNoChildren(runtimeRule: RuntimeRule, priority: Int, startPosition: Int, nextInputPosition: Int): SPPTBranchDefault {
+        val children = emptyList<SPPTNode>()
+        val gn = SPPTBranchDefault(runtimeRule, startPosition, nextInputPosition, children, priority)
+        this.completeNodes.put(gn.identity, gn)
+        return gn
+    }
+
+    private fun findCompleteNode(runtimeRuleNumber: Int, startPosition: Int, nextInputPosition: Int) : SPPTNodeDefault? {
+        return null // TODO
+    }
 
     private fun addGrowing(gn: GrowingNode) {
         val ruleNumber = gn.runtimeRule.number
@@ -65,7 +84,7 @@ class ParseGraph {
     }
 
     private fun findOrCreateGrowingNode(runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int, nextItemIndex: Int,
-                                        priority: Int, children: Array<CompleteNode>, numNonSkipChildren: Int, previous: Set<PreviousInfo>): GrowingNode {
+                                        priority: Int, children: Array<SPPTNode>, numNonSkipChildren: Int, previous: Set<PreviousInfo>): GrowingNode {
         val ruleNumber = runtimeRule.number
         val gnindex = GrowingNodeIndex(ruleNumber, startPosition, nextInputPosition, nextItemIndex)
         val existing = this.growing.get(gnindex)
@@ -98,13 +117,13 @@ class ParseGraph {
         return result
     }
 
-    fun complete(gn: GrowingNode): CompleteNode? {
+    fun complete(gn: GrowingNode): SPPTNode? {
         if (gn.hasCompleteChildren) {
             val runtimeRule = gn.runtimeRule
             val priority = gn.priority
             val startPosition = gn.startPosition
             val nextInputPosition = gn.nextInputPosition
-            var cn: CompleteNode? = this.findNode(runtimeRule.number, startPosition, nextInputPosition)
+            var cn: SPPTNodeDefault? = this.findCompleteNode(runtimeRule.number, startPosition, nextInputPosition)
             if (null == cn) {
                 cn = this.createBranchNoChildren(runtimeRule, priority, startPosition, nextInputPosition)
                 if (gn.isLeaf) {
@@ -119,7 +138,7 @@ class ParseGraph {
                     // final ICompleteNode.ChildrenOption opt = new ICompleteNode.ChildrenOption();
                     // opt.matchedLength = gn.getMatchedTextLength();
                     // opt.nodes = gn.getGrowingChildren();
-
+                    cn = (cn as SPPTBranchDefault)
                     // TODO: don't add duplicate children
                     // somewhere resolve priorities!
                     val existingPriority = cn.priority
@@ -128,25 +147,25 @@ class ParseGraph {
                         // TODO: record/log ambiguity!
                         cn.childrenAlternatives.add(gn.children)
                         if (gn.isEmptyRuleMatch && cn.isEmptyRuleMatch) {
-                            if (cn!!.getChildrenAlternatives().isEmpty()) {
-                                cn!!.getChildrenAlternatives().add(gn.getGrowingChildren() as FixedList<*> as FixedList<SPPTNode>)
+                            if (cn.childrenAlternatives.isEmpty()) {
+                                cn.childrenAlternatives.add(gn.children)
                             } else {
-                                if (cn!!.getChildrenAlternatives().iterator().next().get(0).isEmptyLeaf()) {
+                                if (cn.childrenAlternatives.iterator().next().get(0).isEmptyLeaf) {
                                     // leave it, no need to add empty alternatives
                                 } else {
-                                    if (gn.getGrowingChildren().get(0).isEmptyLeaf()) {
+                                    if (gn.children.get(0).isEmptyLeaf) {
                                         // use just the empty leaf
-                                        cn!!.getChildrenAlternatives().clear()
-                                        cn!!.getChildrenAlternatives().add(gn.getGrowingChildren() as FixedList<*> as FixedList<SPPTNode>)
+                                        cn.childrenAlternatives.clear()
+                                        cn.childrenAlternatives.add(gn.children)
                                     } else {
                                         // add the alternatives
-                                        cn!!.getChildrenAlternatives().add(gn.getGrowingChildren() as FixedList<*> as FixedList<SPPTNode>)
+                                        cn.childrenAlternatives.add(gn.children)
                                     }
                                 }
                             }
 
                         } else {
-                            cn!!.getChildrenAlternatives().add(gn.getGrowingChildren() as FixedList<*> as FixedList<SPPTNode>)
+                            cn.childrenAlternatives.add(gn.children)
 
                         }
                     } else if (existingPriority < newPriority) {
@@ -154,8 +173,8 @@ class ParseGraph {
                         val i = 0
                     } else if (newPriority < existingPriority) {
                         // replace existing with new
-                        cn!!.getChildrenAlternatives().clear()
-                        cn!!.getChildrenAlternatives().add(gn.getGrowingChildren() as FixedList<*> as FixedList<SPPTNode>)
+                        cn.childrenAlternatives.clear()
+                        cn.childrenAlternatives.add(gn.children)
                     }
                 }
             }
@@ -169,7 +188,25 @@ class ParseGraph {
 
 
     fun start(goalRule:RuntimeRule) {
-        this.findOrCreateGrowingNode(goalRule, 0, 0, 0, 0, emptyArray<CompleteNode>(), 0, emptySet<PreviousInfo>())
+        val gnindex = GrowingNodeIndex(goalRule.number, 0, 0, 0)
+        val gn = GrowingNode(goalRule, 0, 0, 0, 0, emptyList<SPPTNode>(), 0)
+        this.addGrowingHead(gnindex, gn)
+        if (gn.hasCompleteChildren) {
+            val cn = this.createBranchNoChildren(goalRule, 0, 0, 0)
+            if (gn.isLeaf) {
+                // dont try and add children...can't for a leaf
+            } else {
+                cn.childrenAlternatives.add(gn.children)
+            }
+        }
+    }
+
+    fun checkForGoal(node: SPPTNodeDefault) {
+        //TODO
+    }
+
+    fun grow() {
+        //TODO
     }
 
 }

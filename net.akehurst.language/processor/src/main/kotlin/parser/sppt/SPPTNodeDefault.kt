@@ -16,21 +16,39 @@
 
 package net.akehurst.language.parser.sppt
 
+import net.akehurst.language.api.grammar.ChoicePriority
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SPPTNodeIdentity
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 
-abstract class SPPTNodeDefault(val runtimeRule: RuntimeRule, override val startPosition: Int, override val matchedTextLength: Int) : SPPTNode {
+abstract class SPPTNodeDefault(
+        val runtimeRule: RuntimeRule,
+        override val startPosition: Int,
+        val nextInputPosition: Int,
+        val priority: Int                      //not needed as part of the SPPTNode, but needed for the parsing algorithm
+) : SPPTNode {
 
-    override val identity: SPPTNodeIdentity = SPPTNodeIdentityDefault(this.runtimeRule.number, this.startPosition, this.matchedTextLength)
+    override val identity: SPPTNodeIdentity = SPPTNodeIdentityDefault(
+            this.runtimeRule.number,
+            this.startPosition,
+            this.nextInputPosition - this.startPosition
+    )
 
     override val name: String = this.runtimeRule.name
 
-    override val runtimeRuleNumber: Int = runtimeRule.number
+    override val runtimeRuleNumber: Int get() { return this.identity.runtimeRuleNumber }
+
+    override val matchedTextLength: Int get() { return this.identity.matchedTextLength }
 
     override val isSkip: Boolean = runtimeRule.isSkip
+
+    val isEmptyRuleMatch: Boolean get() {
+        // children must be complete or we would not have created the node
+        // therefore must match empty if start and next-input positions are the same
+        return this.startPosition == this.nextInputPosition
+    }
 
     override val numberOfLines: Int by lazy {
         Regex("\n").findAll(this.matchedText, 0).count()

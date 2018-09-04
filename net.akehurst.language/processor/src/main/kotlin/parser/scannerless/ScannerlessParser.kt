@@ -43,7 +43,7 @@ class ScannerlessParser(val runtimeRuleSet: RuntimeRuleSet) : Parser {
     override fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val input = InputFromCharSequence(inputText)
-        val graph = ParseGraph(goalRule, input)
+        val graph = ParseGraph() //goalRule, input)
 
         var seasons = 0
 

@@ -19,7 +19,19 @@ package net.akehurst.language.parser.sppt
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 
-class SPPTLeafDefault(terminalRule: RuntimeRule, startPosition:Int, override val isEmptyLeaf: Boolean, override val matchedText: String) : SPPTNodeDefault(terminalRule, startPosition, matchedText.length), SPPTLeaf {
+class SPPTLeafDefault(
+        terminalRule: RuntimeRule,
+        startPosition:Int,
+        override val isEmptyLeaf: Boolean,
+        override val matchedText: String,
+        priority: Int
+) : SPPTNodeDefault(
+        terminalRule,
+        startPosition,
+        matchedText.length,
+        priority
+), SPPTLeaf
+{
 
     // --- SPPTLeaf ---
 

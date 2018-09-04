@@ -16,7 +16,9 @@
 
 package net.akehurst.language.ogl.runtime.graph
 
+import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
+import net.akehurst.language.ogl.runtime.structure.RuntimeRuleKind
 
 class GrowingNode(
         val runtimeRule: RuntimeRule,
@@ -24,7 +26,7 @@ class GrowingNode(
         val nextInputPosition: Int,
         val nextItemIndex: Int,
         val priority: Int,
-        val children: Array<CompleteNode>,
+        val children: List<SPPTNode>,
         val numNonSkipChildren: Int
 ) {
 
@@ -32,8 +34,13 @@ class GrowingNode(
 
     val previous: MutableList<PreviousInfo> = mutableListOf()
     val next: MutableList<GrowingNode> = mutableListOf()
-
     val hasCompleteChildren : Boolean = this.runtimeRule.isCompleteChildren(nextItemIndex, numNonSkipChildren, children)
+    val isLeaf : Boolean get() { return this.runtimeRule.kind == RuntimeRuleKind.TERMINAL } //TODO: cache or calculate? does it matter?
+    val isEmptyRuleMatch: Boolean get() {
+        // children must be complete or we would not have created the node
+        // therefore must match empty if start and next-input positions are the same
+        return this.startPosition == this.nextInputPosition
+    }
 
     fun addPrevious(previousNode: GrowingNode, atPosition: Int) {
         val info = PreviousInfo(previousNode, atPosition)

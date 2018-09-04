@@ -19,8 +19,19 @@ package net.akehurst.language.parser.sppt
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 
-class SPPTBranchDefault(runtimeRule: RuntimeRule, override val children: List<SPPTNode>) : SPPTNodeDefault(runtimeRule, children.first().startPosition, children.sumBy { it.matchedTextLength }), SPPTBranch {
-
+class SPPTBranchDefault(
+        runtimeRule: RuntimeRule,
+        startPosition: Int,                     // can't use children.first.startPosition, there may not be any children
+        nextInputPosition: Int,                 // dont't use children.sumBy { it.matchedTextLength }, it requires unwanted iteration
+        override val children: List<SPPTNode>,  // initial children, others can be added
+        priority: Int
+) : SPPTNodeDefault(
+        runtimeRule,
+        startPosition,
+        nextInputPosition,
+        priority
+), SPPTBranch
+{
 
     // --- SPPTBranch ---
 
@@ -62,7 +73,10 @@ class SPPTBranchDefault(runtimeRule: RuntimeRule, override val children: List<SP
 
     override val isBranch: Boolean = true
 
-    override val asLeaf: SPPTLeaf get() { throw SPPTException("Not a Leaf", null) }
+    override val asLeaf: SPPTLeaf
+        get() {
+            throw SPPTException("Not a Leaf", null)
+        }
 
     override val asBranch: SPPTBranch = this
 
