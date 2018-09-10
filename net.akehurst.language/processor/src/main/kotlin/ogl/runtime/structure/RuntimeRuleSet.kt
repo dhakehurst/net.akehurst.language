@@ -20,20 +20,40 @@ import net.akehurst.language.api.parser.ParseException
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.parser.ParserConstructionFailedException
 
-class RuntimeRuleSet(val rules: List<RuntimeRule>) {
+class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
-    //TODO: are Arrays faster ?
-    private val runtimeRules: Array<RuntimeRule?> = arrayOfNulls<RuntimeRule>(rules.size)
+    //TODO: are Arrays faster than Lists?
+    private val runtimeRules: Array<out RuntimeRule> = lazy {
+        val result = ArrayList<RuntimeRule>(rules.size)
+        rules.forEach { result[it.number] = it }
+        result.toTypedArray()
+    }.value
     private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
     private val terminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
-    private val emptyRulesFor: Array<RuntimeRule?> =arrayOfNulls<RuntimeRule>(rules.size)
+    private val emptyRulesFor: Array<RuntimeRule?> = arrayOfNulls<RuntimeRule>(rules.size)
+
+    val allSkipRules: Array<RuntimeRule> = lazy {
+        this.runtimeRules.filter { it.isSkip }.toTypedArray()
+    }.value
+
+    val firstTerminals: Array<Set<RuntimeRule>> = lazy {
+        val result = ArrayList<Set<RuntimeRule>>(this.runtimeRules.size)
+        this.runtimeRules.forEach { result[it.number] = this.findFirstTerminals(it) }
+        result.toTypedArray()
+    }.value
+
+    val firstSkipRuleTerminals: Array<Set<RuntimeRule>> = lazy {
+        val result = ArrayList<Set<RuntimeRule>>(this.runtimeRules.size)
+        // rules that are not skip rules will not have a value set
+        this.runtimeRules.forEach { if(it.isSkip) result[it.number] = this.findFirstTerminals(it) }
+        result.toTypedArray()
+    }.value
 
     init {
         for (rrule in rules) {
 //            if (null == rrule) {
 //                throw ParserConstructionFailedException("RuntimeRuleSet must not contain a null rule!")
 //            }
-            this.runtimeRules[rrule.number] = rrule
             if (RuntimeRuleKind.NON_TERMINAL == rrule.kind) {
                 //                  this.nodeTypes.set(i, rrule.name)
                 this.nonTerminalRuleNumber[rrule.name] = rrule.number
@@ -47,7 +67,8 @@ class RuntimeRuleSet(val rules: List<RuntimeRule>) {
     }
 
     fun findEmptyRule(ruleThatIsEmpty: RuntimeRule): RuntimeRule {
-        return this.emptyRulesFor[ruleThatIsEmpty.number] ?: throw ParseException("Empty rule for RuntimeRule ${ruleThatIsEmpty} not found")
+        return this.emptyRulesFor[ruleThatIsEmpty.number]
+                ?: throw ParseException("Empty rule for RuntimeRule ${ruleThatIsEmpty} not found")
     }
 
     fun findRuntimeRule(ruleName: String): RuntimeRule {
@@ -59,6 +80,31 @@ class RuntimeRuleSet(val rules: List<RuntimeRule>) {
     fun findTerminalRule(pattern: String): RuntimeRule {
         val number = this.terminalRuleNumber[pattern]
                 ?: throw ParseException("Terminal RuntimeRule ${pattern} not found")
-        return this.runtimeRules[number]?: throw ParseException("Terminal RuntimeRule ${pattern} not found")
+        return this.runtimeRules[number] ?: throw ParseException("Terminal RuntimeRule ${pattern} not found")
+    }
+
+    fun findNextExpectedItems(runtimeRule: RuntimeRule, nextItemIndex: Int, numNonSkipChildren: Int): Set<RuntimeRule> {
+        return runtimeRule.findNextExpectedItems(nextItemIndex, numNonSkipChildren, this)
+    }
+
+    fun findNextExpectedTerminals(runtimeRule: RuntimeRule, nextItemIndex: Int, numNonSkipChildren: Int): Set<RuntimeRule> {
+        val nextItems = this.findNextExpectedItems(runtimeRule, nextItemIndex, numNonSkipChildren)
+        val result = mutableSetOf<RuntimeRule>()
+        nextItems.forEach {
+            result += this.findFirstTerminals(it)
+        }
+        return result
+    }
+
+    fun findFirstSubRules(runtimeRule: RuntimeRule): Set<RuntimeRule> {
+        return runtimeRule.findSubRulesAt(0)
+    }
+
+    fun findFirstTerminals(runtimeRule: RuntimeRule): Set<RuntimeRule> {
+         var rr = runtimeRule.findTerminalAt(0, this)
+        for (r in this.findFirstSubRules(runtimeRule)) {
+            rr += r.findTerminalAt(0, this)
+        }
+        return rr
     }
 }

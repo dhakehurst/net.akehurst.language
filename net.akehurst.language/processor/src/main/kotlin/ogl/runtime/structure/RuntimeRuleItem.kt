@@ -43,4 +43,36 @@ class RuntimeRuleItem(
             throw ParseException("RHS of a non terminal rule must contain some items")
         }
     }
+
+    val listSeparator = this.items[1] //should we check type here or is that runtime overhead?
+
+    fun findItemAt(n: Int): Array<out RuntimeRule> {
+        return when (this.kind) {
+            RuntimeRuleItemKind.EMPTY -> emptyArray<RuntimeRule>()
+            RuntimeRuleItemKind.CHOICE_PRIORITY -> this.items
+            RuntimeRuleItemKind.CHOICE_EQUAL -> this.items
+            RuntimeRuleItemKind.CONCATENATION -> if (this.items.size > n) arrayOf(this.items[n]) else emptyArray<RuntimeRule>()
+            RuntimeRuleItemKind.MULTI -> {
+                if ((this.multiMax == -1 || n <= this.multiMax - 1) && n >= this.multiMin - 1) {
+                    arrayOf(this.items[0])
+                } else {
+                    emptyArray<RuntimeRule>()
+                }
+            }
+            RuntimeRuleItemKind.SEPARATED_LIST -> {
+                when (n % 2) {
+                    0 -> if ((this.multiMax == -1 || n <= this.multiMax - 1) && n >= this.multiMin - 1) {
+                        arrayOf(this.items[0])
+                    } else {
+                        emptyArray<RuntimeRule>()
+                    }
+                    1-> arrayOf(this.listSeparator)
+                    else -> emptyArray<RuntimeRule>() // should never happen!
+                }
+            }
+            RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> emptyArray<RuntimeRule>() //TODO:
+            RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> emptyArray<RuntimeRule>() //TODO:
+            RuntimeRuleItemKind.UNORDERED -> emptyArray<RuntimeRule>() //TODO:
+        }
+    }
 }

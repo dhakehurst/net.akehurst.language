@@ -30,7 +30,7 @@ import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
 
-class ScannerlessParser(val runtimeRuleSet: RuntimeRuleSet) : Parser {
+class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
 
     override val nodeTypes: Set<NodeType> by lazy {
         emptySet<NodeType>() //TODO:
@@ -43,19 +43,19 @@ class ScannerlessParser(val runtimeRuleSet: RuntimeRuleSet) : Parser {
     override fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val input = InputFromCharSequence(inputText)
-        val graph = ParseGraph() //goalRule, input)
+        val rp = RuntimeParser(this.runtimeRuleSet, goalRule, input)
 
         var seasons = 0
 
-        graph.start(goalRule)
+        rp.start(goalRule)
         seasons++
 
         do {
-            graph.grow()
+            rp.grow()
             seasons++
-        } while (graph.canGrow)
+        } while (rp.canGrow)
 
-        val match = graph.longestMatch
+        val match = rp.longestMatch
         return SharedPackedParseTreeDefault(match)
     }
 

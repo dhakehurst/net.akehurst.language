@@ -42,7 +42,7 @@ class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val number: In
         this.name = "${'$'}empty."+ruleThatIsEmpty.name
         val rr = RuntimeRule(number, name, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
-        rr.rhs = RuntimeRuleItem(RuntimeRuleItemKind.EMPTY,0,0, arrayOf(ruleThatIsEmpty))
+        rr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.EMPTY,0,0, arrayOf(ruleThatIsEmpty))
         return rr
     }
 

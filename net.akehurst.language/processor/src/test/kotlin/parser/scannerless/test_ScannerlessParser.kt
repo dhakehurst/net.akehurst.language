@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser
+package net.akehurst.language.parser.scannerless
 
 import net.akehurst.language.ogl.runtime.converter.Converter
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet

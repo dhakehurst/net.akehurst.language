@@ -18,7 +18,9 @@ package net.akehurst.language.ogl.runtime.graph
 
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
+import net.akehurst.language.ogl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class GrowingNode(
@@ -33,14 +35,33 @@ class GrowingNode(
 
     private val hashCode_cache = intArrayOf(this.runtimeRule.number, this.startPosition, this.nextInputPosition, this.nextItemIndex).contentHashCode()
 
-    val previous: MutableList<PreviousInfo> = mutableListOf()
+    var previous: MutableSet<PreviousInfo> = mutableSetOf()
     val next: MutableList<GrowingNode> = mutableListOf()
     val hasCompleteChildren : Boolean = this.runtimeRule.isCompleteChildren(nextItemIndex, numNonSkipChildren, children)
-    val isLeaf : Boolean get() { return this.runtimeRule.kind == RuntimeRuleKind.TERMINAL } //TODO: cache or calculate? does it matter?
-    val isEmptyRuleMatch: Boolean get() {
-        // children must be complete or we would not have created the node
-        // therefore must match empty if start and next-input positions are the same
+    val isLeaf : Boolean get() { return this.runtimeRule.kind == RuntimeRuleKind.TERMINAL }
+    val isBranch : Boolean get() { return this.runtimeRule.kind == RuntimeRuleKind.NON_TERMINAL }
+    val isEmptyMatch: Boolean get() {
+        // match empty if start and next-input positions are the same
         return this.startPosition == this.nextInputPosition
+    }
+    val isSkip : Boolean = this.runtimeRule.isSkip
+
+    val canGrowWidthWithSkip: Boolean get() {
+        return !this.runtimeRule.isEmptyRule && this.isBranch
+    }
+
+    val canGrowWidth: Boolean = lazy {
+        // not sure we need the test for isEmpty, because if it is empty it should be complete or NOT!???
+        if (this.isLeaf or this.isEmptyMatch or hasCompleteChildren) {
+            false
+        } else {
+             this.runtimeRule.canGrowWidth(this.nextItemIndex, this.numNonSkipChildren)
+        }
+    }.value
+
+
+    fun newPrevious() {
+        this.previous = mutableSetOf()
     }
 
     fun addPrevious(previousNode: GrowingNode, atPosition: Int) {
@@ -52,7 +73,9 @@ class GrowingNode(
     fun addNext(value: GrowingNode) {
         this.next.add(value)
     }
-
+    fun removeNext(value: GrowingNode) {
+        this.next.remove(value)
+    }
     // --- Any ---
 
     override fun hashCode(): Int {

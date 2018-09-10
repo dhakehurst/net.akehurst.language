@@ -44,9 +44,8 @@ abstract class SPPTNodeDefault(
 
     override val isSkip: Boolean = runtimeRule.isSkip
 
-    val isEmptyRuleMatch: Boolean get() {
-        // children must be complete or we would not have created the node
-        // therefore must match empty if start and next-input positions are the same
+    val isEmptyMatch: Boolean get() {
+        // match empty if start and next-input positions are the same
         return this.startPosition == this.nextInputPosition
     }
 

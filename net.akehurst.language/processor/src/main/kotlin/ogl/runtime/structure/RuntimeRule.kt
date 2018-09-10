@@ -27,8 +27,14 @@ class RuntimeRule(
         val isPattern: Boolean,
         val isSkip: Boolean
 ) {
+    // alias for name to use when this is a pattern rule
+    val patternText: String = name
 
-    var rhs : RuntimeRuleItem? = null
+    var rhsOpt : RuntimeRuleItem? = null
+
+    val rhs : RuntimeRuleItem = lazy {
+        this.rhsOpt ?: throw ParseException("rhs must have a value")
+    }.value
 
     val emptyRule : RuntimeRule get() {
         val er = this.rhs?.items?.get(0) ?: throw ParseException("rhs does not contain any rules")
@@ -43,15 +49,18 @@ class RuntimeRule(
         return rhs?.kind == RuntimeRuleItemKind.EMPTY
     }
 
+    val isTerminal = this.kind == RuntimeRuleKind.TERMINAL
+    val isNonTerminal = this.kind == RuntimeRuleKind.NON_TERMINAL
+
     val ruleThatIsEmpty: RuntimeRule get() {
-        return this.rhs?.items?.get(0) ?: throw ParseException("There are no items defined")
+        return this.rhs.items[0]
     }
 
     fun isCompleteChildren(nextItemIndex: Int, numNonSkipChildren:Int, children:List<SPPTNodeDefault>): Boolean {
         return if (RuntimeRuleKind.TERMINAL == this.kind) {
             true
         } else {
-            val rhs: RuntimeRuleItem = this?.rhs ?: throw ParseException("Internal Error: Non Terminal must always have a rhs")
+            val rhs: RuntimeRuleItem = this.rhs
             when (rhs.kind) {
                 RuntimeRuleItemKind.EMPTY -> true
                 RuntimeRuleItemKind.CHOICE_EQUAL ->
@@ -88,4 +97,122 @@ class RuntimeRule(
         }
     }
 
+    fun canGrowWidth(nextItemIndex: Int, numNonSkipChildren:Int) :Boolean {
+        //TODO: other kinds!
+        when (this.rhs.kind) {
+            RuntimeRuleItemKind.EMPTY -> return false
+            RuntimeRuleItemKind.CHOICE_EQUAL -> return nextItemIndex == 0
+            RuntimeRuleItemKind.CHOICE_PRIORITY -> return nextItemIndex == 0
+            RuntimeRuleItemKind.CONCATENATION -> {
+                if (nextItemIndex != -1 && nextItemIndex < this.rhs.items.size) {
+                    return true
+                } else {
+                    return false // !reachedEnd;
+                }
+            }
+            RuntimeRuleItemKind.MULTI -> {
+                val size = numNonSkipChildren
+                val max = this.rhs.multiMax
+                return -1 != size && (-1 == max || size < max)
+            }
+            RuntimeRuleItemKind.SEPARATED_LIST -> {
+                val size = numNonSkipChildren
+                val max = this.rhs.multiMax
+                val x = size / 2
+                return -1 != size && (-1 == max || x < max)
+            }
+            else -> throw RuntimeException("Internal Error: rule kind not recognised")
+        }
+    }
+
+    fun findTerminalAt(n: Int, runtimeRuleSet:RuntimeRuleSet): Set<RuntimeRule> {
+        return if (this.isTerminal) {
+            setOf(this);
+        } else {
+            val firstItems = this.rhs.findItemAt(n).filter { it.isTerminal }.toMutableSet()
+            when (this.rhs.kind) {
+                RuntimeRuleItemKind.MULTI -> {
+                    if (0 == n && 0 == this.rhs.multiMin) {
+                        firstItems.add(runtimeRuleSet.findEmptyRule(this))
+                    }
+                }
+                RuntimeRuleItemKind.SEPARATED_LIST -> {
+                    if (0 == n && 0 == this.rhs.multiMin) {
+                        firstItems.add(runtimeRuleSet.findEmptyRule(this))
+                    }
+                }
+                else  -> {} //TODO: L/R-Assoc and unorderd
+            }
+            return firstItems
+        }
+    }
+
+    fun findAllNonTerminalAt(n: Int): Set<RuntimeRule> {
+        return if (isTerminal) {
+            emptySet<RuntimeRule>()
+        } else {
+            this.rhs.items.filter { it.isTerminal }.toSet()
+        }
+    }
+
+    fun findSubRulesAt(n: Int): Set<RuntimeRule> {
+        var result = this.findAllNonTerminalAt(n)
+        var oldResult= mutableSetOf<RuntimeRule>()
+        while (!oldResult.containsAll(result)) {
+            oldResult = result.toMutableSet()
+            for (nt in oldResult) {
+                result += nt.findAllNonTerminalAt(n)
+            }
+        }
+        return result
+    }
+
+    fun findNextExpectedItems(nextItemIndex: Int, numNonSkipChildren:Int, runtimeRuleSet: RuntimeRuleSet) : Set<RuntimeRule> {
+        when (this.rhs.kind) {
+            RuntimeRuleItemKind.EMPTY -> {
+                return emptySet<RuntimeRule>()
+            }
+            RuntimeRuleItemKind.CHOICE_EQUAL -> {
+                return if (nextItemIndex == 0) {
+                    this.rhs.items.toHashSet()
+                } else {
+                    emptySet<RuntimeRule>()
+                }
+            }
+            RuntimeRuleItemKind.CHOICE_PRIORITY -> {
+                return if (nextItemIndex == 0) {
+                    this.rhs.items.toHashSet()
+                } else {
+                    emptySet<RuntimeRule>()
+                }
+            }
+            RuntimeRuleItemKind.CONCATENATION -> {
+                return if (numNonSkipChildren >= this.rhs.items.size) {
+                    throw RuntimeException("Internal Error: No NextExpectedItem")
+                } else {
+                    if (-1 == nextItemIndex) {
+                        emptySet<RuntimeRule>()
+                    } else {
+                        hashSetOf<RuntimeRule>(this.rhs.items[nextItemIndex])
+                    }
+                }
+            }
+            RuntimeRuleItemKind.MULTI -> {
+                return when {
+                    (0 == numNonSkipChildren && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0], runtimeRuleSet.findEmptyRule(this))
+                    (numNonSkipChildren < this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
+                    else -> emptySet<RuntimeRule>()
+                }
+            }
+            RuntimeRuleItemKind.SEPARATED_LIST -> {
+                return when {
+                    (numNonSkipChildren % 2 == 1) -> hashSetOf<RuntimeRule>(this.rhs.listSeparator)
+                    (0 == numNonSkipChildren && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0], runtimeRuleSet.findEmptyRule(this))
+                    (numNonSkipChildren < this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
+                    else -> emptySet<RuntimeRule>()
+                }
+            }
+            else -> throw RuntimeException("Internal Error: rule kind not recognised")
+        }
+    }
 }

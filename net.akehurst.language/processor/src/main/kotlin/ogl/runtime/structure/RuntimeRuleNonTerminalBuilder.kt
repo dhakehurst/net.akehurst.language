@@ -52,7 +52,7 @@ class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val number:
     fun empty(): RuntimeRule {
         val rr = this.build()
         val e = RuntimeRuleTerminalBuilder(this.rrsb, number+1).empty(rr)
-        rr.rhs = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, 0,0, arrayOf(e))
+        rr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, 0,0, arrayOf(e))
         return rr
     }
 
