@@ -23,31 +23,30 @@ import net.akehurst.language.api.parser.ParserConstructionFailedException
 class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     //TODO: are Arrays faster than Lists?
-    private val runtimeRules: Array<out RuntimeRule> = lazy {
+    private val runtimeRules: Array<out RuntimeRule> by lazy {
         val result = ArrayList<RuntimeRule>(rules.size)
         rules.forEach { result[it.number] = it }
         result.toTypedArray()
-    }.value
+    }
     private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
     private val terminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
-    private val emptyRulesFor: Array<RuntimeRule?> = arrayOfNulls<RuntimeRule>(rules.size)
 
-    val allSkipRules: Array<RuntimeRule> = lazy {
+    val allSkipRules: Array<RuntimeRule> by lazy {
         this.runtimeRules.filter { it.isSkip }.toTypedArray()
-    }.value
+    }
 
-    val firstTerminals: Array<Set<RuntimeRule>> = lazy {
+    val firstTerminals: Array<Set<RuntimeRule>> by lazy {
         val result = ArrayList<Set<RuntimeRule>>(this.runtimeRules.size)
         this.runtimeRules.forEach { result[it.number] = this.findFirstTerminals(it) }
         result.toTypedArray()
-    }.value
+    }
 
-    val firstSkipRuleTerminals: Array<Set<RuntimeRule>> = lazy {
+    val firstSkipRuleTerminals: Array<Set<RuntimeRule>> by lazy {
         val result = ArrayList<Set<RuntimeRule>>(this.runtimeRules.size)
         // rules that are not skip rules will not have a value set
         this.runtimeRules.forEach { if(it.isSkip) result[it.number] = this.findFirstTerminals(it) }
         result.toTypedArray()
-    }.value
+    }
 
     init {
         for (rrule in rules) {
@@ -59,16 +58,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 this.nonTerminalRuleNumber[rrule.name] = rrule.number
             } else {
                 terminalRuleNumber[rrule.name] = rrule.number
-                if (rrule.isEmptyRule) {
-                    this.emptyRulesFor[rrule.ruleThatIsEmpty.number] = rrule
-                }
             }
         }
-    }
-
-    fun findEmptyRule(ruleThatIsEmpty: RuntimeRule): RuntimeRule {
-        return this.emptyRulesFor[ruleThatIsEmpty.number]
-                ?: throw ParseException("Empty rule for RuntimeRule ${ruleThatIsEmpty} not found")
     }
 
     fun findRuntimeRule(ruleName: String): RuntimeRule {

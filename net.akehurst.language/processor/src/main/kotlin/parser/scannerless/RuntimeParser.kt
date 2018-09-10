@@ -192,19 +192,20 @@ class RuntimeParser(
             // if node is nextexpected item on stack, or could grow into nextexpected item
             if (stack.hasNextExpectedItem) {
                 for (expectedRule in stack.nextExpectedItems) {
-                    if (completeNode.runtimeRule.number == expectedRule..runtimeRule.number) {
+                    if (completeNode.runtimeRule.number == expectedRule.number) {
                         // node is nextexpected item on stack
                         return true
                     } else {
                         // node is a possible subnode of nextexpected item
                         if (completeNode.runtimeRule.kind == RuntimeRuleKind.NON_TERMINAL) {
-                            val possibles = Arrays.asList(*this.runtimeRuleSet.getPossibleSubRule(expectedRule))
+                            //TODO: would it help to use 'at' here? rather than all subrules
+                            val possibles = this.runtimeRuleSet.subrules[expectedRule.number]
                             val res = possibles.contains(completeNode.runtimeRule)
                             if (res) {
                                 return true
                             }
                         } else {
-                            val possibles = Arrays.asList(*this.runtimeRuleSet.getPossibleSubTerminal(expectedRule))
+                            val possibles = this.runtimeRuleSet.subTerminals(expectedRule)
                             val res = possibles.contains(completeNode.runtimeRule)
                             if (res) {
                                 return true
@@ -213,7 +214,7 @@ class RuntimeParser(
                     }
                 }
                 return false
-            } else return if (this.runtimeRuleSet.getAllSkipTerminals().contains(completeNode.runtimeRule)) {
+            } else return if (this.runtimeRuleSet.allSkipTerminals.contains(completeNode.runtimeRule)) {
                 true
             } else {
                 false

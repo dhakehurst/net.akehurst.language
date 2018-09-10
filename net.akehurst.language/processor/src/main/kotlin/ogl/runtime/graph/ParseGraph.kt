@@ -66,7 +66,7 @@ class ParseGraph(
 
     fun findOrCreateLeaf(terminalRuntimeRule: RuntimeRule, position: Int): SPPTLeafDefault? {
         val index = LeafIndex(terminalRuntimeRule.number, position)
-        return this.leaves[index] ?: this.createLeaf(terminalRuntimeRule)
+        return this.leaves[index] ?: this.createLeaf(terminalRuntimeRule, index)
     }
 
     fun createBranchNoChildren(runtimeRule: RuntimeRule, priority: Int, startPosition: Int, nextInputPosition: Int): SPPTBranchDefault {

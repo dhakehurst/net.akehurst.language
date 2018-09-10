@@ -36,7 +36,7 @@ class RuntimeRule(
         this.rhsOpt ?: throw ParseException("rhs must have a value")
     }.value
 
-    val emptyRule : RuntimeRule get() {
+    val emptyRuleItem : RuntimeRule get() {
         val er = this.rhs?.items?.get(0) ?: throw ParseException("rhs does not contain any rules")
         if (er.isEmptyRule) {
             return er
@@ -133,12 +133,12 @@ class RuntimeRule(
             when (this.rhs.kind) {
                 RuntimeRuleItemKind.MULTI -> {
                     if (0 == n && 0 == this.rhs.multiMin) {
-                        firstItems.add(runtimeRuleSet.findEmptyRule(this))
+                        firstItems.add(this.emptyRuleItem)
                     }
                 }
                 RuntimeRuleItemKind.SEPARATED_LIST -> {
                     if (0 == n && 0 == this.rhs.multiMin) {
-                        firstItems.add(runtimeRuleSet.findEmptyRule(this))
+                        firstItems.add(this.emptyRuleItem)
                     }
                 }
                 else  -> {} //TODO: L/R-Assoc and unorderd
@@ -167,7 +167,35 @@ class RuntimeRule(
         return result
     }
 
-    fun findNextExpectedItems(nextItemIndex: Int, numNonSkipChildren:Int, runtimeRuleSet: RuntimeRuleSet) : Set<RuntimeRule> {
+    fun findHasNextExpectedItem(nextItemIndex: Int): Boolean {
+        when (this.rhs.kind) {
+            RuntimeRuleItemKind.EMPTY -> return false
+            RuntimeRuleItemKind.CHOICE_EQUAL -> return nextItemIndex == 0
+            RuntimeRuleItemKind.CHOICE_PRIORITY -> return nextItemIndex == 0
+            RuntimeRuleItemKind.CONCATENATION -> {
+                return if (-1 == nextItemIndex || nextItemIndex >= this.rhs.items.size) {
+                    false
+                } else {
+                    true
+                }
+            }
+            RuntimeRuleItemKind.MULTI -> {
+                return if (-1 == nextItemIndex) {
+                    false
+                } else {
+                    true
+                }
+            }
+            RuntimeRuleItemKind.SEPARATED_LIST -> return if (-1 == nextItemIndex) {
+                false
+            } else {
+                true
+            }
+            else -> throw RuntimeException("Internal Error: rule kind not recognised")
+        }
+    }
+
+    fun findNextExpectedItems(nextItemIndex: Int, numNonSkipChildren:Int) : Set<RuntimeRule> {
         when (this.rhs.kind) {
             RuntimeRuleItemKind.EMPTY -> {
                 return emptySet<RuntimeRule>()
@@ -199,7 +227,7 @@ class RuntimeRule(
             }
             RuntimeRuleItemKind.MULTI -> {
                 return when {
-                    (0 == numNonSkipChildren && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0], runtimeRuleSet.findEmptyRule(this))
+                    (0 == numNonSkipChildren && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0], this.emptyRuleItem)
                     (numNonSkipChildren < this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
                     else -> emptySet<RuntimeRule>()
                 }
@@ -207,7 +235,7 @@ class RuntimeRule(
             RuntimeRuleItemKind.SEPARATED_LIST -> {
                 return when {
                     (numNonSkipChildren % 2 == 1) -> hashSetOf<RuntimeRule>(this.rhs.listSeparator)
-                    (0 == numNonSkipChildren && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0], runtimeRuleSet.findEmptyRule(this))
+                    (0 == numNonSkipChildren && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0], this.emptyRuleItem)
                     (numNonSkipChildren < this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
                     else -> emptySet<RuntimeRule>()
                 }

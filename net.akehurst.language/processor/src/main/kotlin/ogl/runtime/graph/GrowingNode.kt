@@ -37,28 +37,46 @@ class GrowingNode(
 
     var previous: MutableSet<PreviousInfo> = mutableSetOf()
     val next: MutableList<GrowingNode> = mutableListOf()
-    val hasCompleteChildren : Boolean = this.runtimeRule.isCompleteChildren(nextItemIndex, numNonSkipChildren, children)
-    val isLeaf : Boolean get() { return this.runtimeRule.kind == RuntimeRuleKind.TERMINAL }
-    val isBranch : Boolean get() { return this.runtimeRule.kind == RuntimeRuleKind.NON_TERMINAL }
-    val isEmptyMatch: Boolean get() {
-        // match empty if start and next-input positions are the same
-        return this.startPosition == this.nextInputPosition
-    }
-    val isSkip : Boolean = this.runtimeRule.isSkip
+    val hasCompleteChildren: Boolean = this.runtimeRule.isCompleteChildren(nextItemIndex, numNonSkipChildren, children)
+    val isLeaf: Boolean
+        get() {
+            return this.runtimeRule.isTerminal
+        }
+    val isBranch: Boolean
+        get() {
+            return this.runtimeRule.isNonTerminal
+        }
+    val isEmptyMatch: Boolean
+        get() {
+            // match empty if start and next-input positions are the same
+            return this.startPosition == this.nextInputPosition
+        }
+    val isSkip: Boolean
+        get() {
+            return this.runtimeRule.isSkip
+        }
+    val canGrowWidthWithSkip: Boolean
+        get() {
+            return !this.runtimeRule.isEmptyRule && this.isBranch
+        }
 
-    val canGrowWidthWithSkip: Boolean get() {
-        return !this.runtimeRule.isEmptyRule && this.isBranch
-    }
-
-    val canGrowWidth: Boolean = lazy {
+    val canGrowWidth: Boolean by lazy {
         // not sure we need the test for isEmpty, because if it is empty it should be complete or NOT!???
         if (this.isLeaf or this.isEmptyMatch or hasCompleteChildren) {
             false
         } else {
-             this.runtimeRule.canGrowWidth(this.nextItemIndex, this.numNonSkipChildren)
+            this.runtimeRule.canGrowWidth(this.nextItemIndex, this.numNonSkipChildren)
         }
-    }.value
+    }
 
+    val hasNextExpectedItem: Boolean
+        get() {
+            return this.runtimeRule.findHasNextExpectedItem(this.nextItemIndex)
+        }
+
+    val nextExpectedItems : Set<RuntimeRule> by lazy {
+        this.runtimeRule.findNextExpectedItems(this.nextItemIndex, this.numNonSkipChildren)
+    }
 
     fun newPrevious() {
         this.previous = mutableSetOf()
@@ -73,6 +91,7 @@ class GrowingNode(
     fun addNext(value: GrowingNode) {
         this.next.add(value)
     }
+
     fun removeNext(value: GrowingNode) {
         this.next.remove(value)
     }
