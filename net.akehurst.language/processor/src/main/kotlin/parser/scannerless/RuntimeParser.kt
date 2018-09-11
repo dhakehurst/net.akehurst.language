@@ -17,6 +17,7 @@
 package net.akehurst.language.parser.scannerless
 
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException
+import net.akehurst.language.api.parser.ParseException
 import net.akehurst.language.ogl.runtime.graph.GrowingNode
 import net.akehurst.language.ogl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.ogl.runtime.graph.ParseGraph
@@ -24,6 +25,7 @@ import net.akehurst.language.ogl.runtime.graph.PreviousInfo
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.parser.sppt.SPPTLeafDefault
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 
@@ -144,15 +146,18 @@ class RuntimeParser(
     private fun tryGraftInto(gn: GrowingNode, info: PreviousInfo): Boolean {
         var result = false
         if (gn.isSkip) {
-            // TODO: why is this code so different to that in the next option?
-            val complete = this.graph.getCompleteNode(gn)
+            // complete will not be null because we do not graftback unless gn has complete children
+            // and graph will try to 'complete' a GraphNode when it is created.
+            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.nextItemIndex) ?: throw ParseException("internal error, should never happen")
             this.graph.growNextSkipChild(info.node, complete)
             // info.node.duplicateWithNextSkipChild(gn);
             // this.graftInto(gn, info);
             result = result or true
-        } else if (info.node.getExpectsItemAt(gn.runtimeRule, info.atPosition)) {
-            val complete = this.graph.getCompleteNode(gn)
-            this.graftInto(complete, info)
+        } else if (info.node.expectsItemAt(gn.runtimeRule, info.atPosition)) {
+            // complete will not be null because we do not graftback unless gn has complete children
+            // and graph will try to 'complete' a GraphNode when it is created.
+            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.nextItemIndex) ?: throw ParseException("internal error, should never happen")
+            this.graph.growNextChild(info.node, complete, info.atPosition)
             result = result or true
         } else {
             // drop
@@ -175,7 +180,7 @@ class RuntimeParser(
         return modified
     }
 
-    fun pushStackNewRoot(leafNode: SPPTNodeDefault, stack: GrowingNode, previous: Set<PreviousInfo>): Boolean {
+    fun pushStackNewRoot(leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var modified = false
         // no existing parent was suitable, use newRoot
         if (this.hasStackedPotential(leafNode, stack)) {
@@ -197,15 +202,15 @@ class RuntimeParser(
                         return true
                     } else {
                         // node is a possible subnode of nextexpected item
-                        if (completeNode.runtimeRule.kind == RuntimeRuleKind.NON_TERMINAL) {
+                        if (completeNode.runtimeRule.isNonTerminal) {
                             //TODO: would it help to use 'at' here? rather than all subrules
-                            val possibles = this.runtimeRuleSet.subrules[expectedRule.number]
+                            val possibles = this.runtimeRuleSet.subNonTerminals[expectedRule.number]
                             val res = possibles.contains(completeNode.runtimeRule)
                             if (res) {
                                 return true
                             }
                         } else {
-                            val possibles = this.runtimeRuleSet.subTerminals(expectedRule)
+                            val possibles = this.runtimeRuleSet.subTerminals[expectedRule.number]
                             val res = possibles.contains(completeNode.runtimeRule)
                             if (res) {
                                 return true

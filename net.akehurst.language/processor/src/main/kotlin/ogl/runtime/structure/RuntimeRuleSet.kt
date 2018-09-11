@@ -35,6 +35,15 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         this.runtimeRules.filter { it.isSkip }.toTypedArray()
     }
 
+    val allSkipTerminals: Array<RuntimeRule> by lazy {
+        this.allSkipRules.flatMap {
+            if (it.isTerminal)
+                listOf(it)
+            else
+                it.rhs.items.filter { it.isTerminal }
+        }.toTypedArray()
+    }
+
     val firstTerminals: Array<Set<RuntimeRule>> by lazy {
         val result = ArrayList<Set<RuntimeRule>>(this.runtimeRules.size)
         this.runtimeRules.forEach { result[it.number] = this.findFirstTerminals(it) }
@@ -44,8 +53,25 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     val firstSkipRuleTerminals: Array<Set<RuntimeRule>> by lazy {
         val result = ArrayList<Set<RuntimeRule>>(this.runtimeRules.size)
         // rules that are not skip rules will not have a value set
-        this.runtimeRules.forEach { if(it.isSkip) result[it.number] = this.findFirstTerminals(it) }
+        this.runtimeRules.forEach { if (it.isSkip) result[it.number] = this.findFirstTerminals(it) }
         result.toTypedArray()
+    }
+
+    val subTerminals: Array<Set<RuntimeRule>> by lazy {
+        this.runtimeRules.map {
+            it.findSubTerminals()
+            val rr = it.findAllTerminal()
+            for (r in this.getPossibleSubRule(runtimeRule)) {
+                rr.addAll(r.findAllTerminal())
+            }
+            val skipTerminal = this.getAllSkipTerminals()
+            rr.addAll(skipTerminal)
+
+        }.toTypedArray()
+    }
+
+    val subNonTerminals: Array<Set<RuntimeRule>> by lazy {
+        this.runtimeRules.map { it.findSubRules() }.toTypedArray()
     }
 
     init {
@@ -75,7 +101,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     fun findNextExpectedItems(runtimeRule: RuntimeRule, nextItemIndex: Int, numNonSkipChildren: Int): Set<RuntimeRule> {
-        return runtimeRule.findNextExpectedItems(nextItemIndex, numNonSkipChildren, this)
+        return runtimeRule.findNextExpectedItems(nextItemIndex, numNonSkipChildren)
     }
 
     fun findNextExpectedTerminals(runtimeRule: RuntimeRule, nextItemIndex: Int, numNonSkipChildren: Int): Set<RuntimeRule> {
@@ -92,7 +118,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     fun findFirstTerminals(runtimeRule: RuntimeRule): Set<RuntimeRule> {
-         var rr = runtimeRule.findTerminalAt(0, this)
+        var rr = runtimeRule.findTerminalAt(0, this)
         for (r in this.findFirstSubRules(runtimeRule)) {
             rr += r.findTerminalAt(0, this)
         }

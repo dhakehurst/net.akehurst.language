@@ -30,33 +30,36 @@ class RuntimeRule(
     // alias for name to use when this is a pattern rule
     val patternText: String = name
 
-    var rhsOpt : RuntimeRuleItem? = null
+    var rhsOpt: RuntimeRuleItem? = null
 
-    val rhs : RuntimeRuleItem = lazy {
+    val rhs: RuntimeRuleItem = lazy {
         this.rhsOpt ?: throw ParseException("rhs must have a value")
     }.value
 
-    val emptyRuleItem : RuntimeRule get() {
-        val er = this.rhs?.items?.get(0) ?: throw ParseException("rhs does not contain any rules")
-        if (er.isEmptyRule) {
-            return er
-        } else {
-            throw ParseException("this is not an empty rule")
+    val emptyRuleItem: RuntimeRule
+        get() {
+            val er = this.rhs?.items?.get(0) ?: throw ParseException("rhs does not contain any rules")
+            if (er.isEmptyRule) {
+                return er
+            } else {
+                throw ParseException("this is not an empty rule")
+            }
         }
-    }
 
-    val isEmptyRule: Boolean get() {
-        return rhs?.kind == RuntimeRuleItemKind.EMPTY
-    }
+    val isEmptyRule: Boolean
+        get() {
+            return rhs?.kind == RuntimeRuleItemKind.EMPTY
+        }
 
     val isTerminal = this.kind == RuntimeRuleKind.TERMINAL
     val isNonTerminal = this.kind == RuntimeRuleKind.NON_TERMINAL
 
-    val ruleThatIsEmpty: RuntimeRule get() {
-        return this.rhs.items[0]
-    }
+    val ruleThatIsEmpty: RuntimeRule
+        get() {
+            return this.rhs.items[0]
+        }
 
-    fun isCompleteChildren(nextItemIndex: Int, numNonSkipChildren:Int, children:List<SPPTNodeDefault>): Boolean {
+    fun isCompleteChildren(nextItemIndex: Int, numNonSkipChildren: Int, children: List<SPPTNodeDefault>): Boolean {
         return if (RuntimeRuleKind.TERMINAL == this.kind) {
             true
         } else {
@@ -97,7 +100,7 @@ class RuntimeRule(
         }
     }
 
-    fun canGrowWidth(nextItemIndex: Int, numNonSkipChildren:Int) :Boolean {
+    fun canGrowWidth(nextItemIndex: Int, numNonSkipChildren: Int): Boolean {
         //TODO: other kinds!
         when (this.rhs.kind) {
             RuntimeRuleItemKind.EMPTY -> return false
@@ -125,7 +128,46 @@ class RuntimeRule(
         }
     }
 
-    fun findTerminalAt(n: Int, runtimeRuleSet:RuntimeRuleSet): Set<RuntimeRule> {
+    fun findAllTerminal(): Set<RuntimeRule> {
+        val result = HashSet<RuntimeRule>()
+        if (this.isTerminal) {
+            return result
+        }
+        for (item in this.rhs.items) {
+            if (item.isTerminal) {
+                result.add(item)
+            }
+        }
+        when (this.rhs.kind) {
+            RuntimeRuleItemKind.MULTI -> {
+                if (0 == this.rhs.multiMin) {
+                    result.add(this.emptyRuleItem)
+                }
+            }
+            RuntimeRuleItemKind.SEPARATED_LIST -> {
+                if (0 == this.rhs.multiMin) {
+                    result.add(this.emptyRuleItem)
+                }
+            }
+            else -> emptySet<RuntimeRule>()
+        }
+        return result
+    }
+
+    private fun findAllNonTerminal(): Set<RuntimeRule> {
+        val result = HashSet<RuntimeRule>()
+        if (this.isTerminal) {
+            return result
+        }
+        for (item in this.rhs.items) {
+            if (item.isNonTerminal) {
+                result.add(item)
+            }
+        }
+        return result
+    }
+
+    fun findTerminalAt(n: Int, runtimeRuleSet: RuntimeRuleSet): Set<RuntimeRule> {
         return if (this.isTerminal) {
             setOf(this);
         } else {
@@ -141,13 +183,14 @@ class RuntimeRule(
                         firstItems.add(this.emptyRuleItem)
                     }
                 }
-                else  -> {} //TODO: L/R-Assoc and unorderd
+                else -> {
+                } //TODO: L/R-Assoc and unorderd
             }
             return firstItems
         }
     }
 
-    fun findAllNonTerminalAt(n: Int): Set<RuntimeRule> {
+    private fun findAllNonTerminalAt(n: Int): Set<RuntimeRule> {
         return if (isTerminal) {
             emptySet<RuntimeRule>()
         } else {
@@ -155,9 +198,21 @@ class RuntimeRule(
         }
     }
 
+    fun findSubRules(): Set<RuntimeRule> {
+        var result = this.findAllNonTerminal()
+        var oldResult = mutableSetOf<RuntimeRule>()
+        while (!oldResult.containsAll(result)) {
+            oldResult = result.toMutableSet()
+            for (nt in oldResult) {
+                result += nt.findAllNonTerminal()
+            }
+        }
+        return result
+    }
+
     fun findSubRulesAt(n: Int): Set<RuntimeRule> {
         var result = this.findAllNonTerminalAt(n)
-        var oldResult= mutableSetOf<RuntimeRule>()
+        var oldResult = mutableSetOf<RuntimeRule>()
         while (!oldResult.containsAll(result)) {
             oldResult = result.toMutableSet()
             for (nt in oldResult) {
@@ -195,7 +250,7 @@ class RuntimeRule(
         }
     }
 
-    fun findNextExpectedItems(nextItemIndex: Int, numNonSkipChildren:Int) : Set<RuntimeRule> {
+    fun findNextExpectedItems(nextItemIndex: Int, numNonSkipChildren: Int): Set<RuntimeRule> {
         when (this.rhs.kind) {
             RuntimeRuleItemKind.EMPTY -> {
                 return emptySet<RuntimeRule>()
@@ -241,6 +296,57 @@ class RuntimeRule(
                 }
             }
             else -> throw RuntimeException("Internal Error: rule kind not recognised")
+        }
+    }
+
+    fun couldHaveChild(possibleChild: RuntimeRule, atPosition: Int): Boolean {
+        return if (this.isTerminal) {
+            false
+        } else {
+            if (possibleChild.isSkip) {
+                true
+            } else {
+                when (this.rhs.kind) {
+                    RuntimeRuleItemKind.EMPTY -> false
+                    RuntimeRuleItemKind.CHOICE_EQUAL ->
+                        // TODO: cache this
+                        0 == atPosition && this.rhs.items.contains(possibleChild)
+                    RuntimeRuleItemKind.CHOICE_PRIORITY -> 0 == atPosition && this.rhs.items.contains(possibleChild)
+                    RuntimeRuleItemKind.CONCATENATION -> {
+                        if (-1 == atPosition || atPosition >= this.rhs.items.size)
+                            false
+                        else
+                            this.rhs.items[atPosition].number == possibleChild.number
+                    }
+                    RuntimeRuleItemKind.MULTI -> this.rhs.items[0].number == possibleChild.number || (this.rhs.multiMin == 0 && atPosition == 0
+                            && possibleChild.isEmptyRule && possibleChild.ruleThatIsEmpty.number == this.number)
+                    RuntimeRuleItemKind.SEPARATED_LIST -> {
+                        if (possibleChild.isEmptyRule) {
+                            this.rhs.multiMin == 0 && possibleChild.ruleThatIsEmpty.number == this.number
+                        } else {
+                            if (atPosition % 2 == 0) {
+                                this.rhs.items[0].number == possibleChild.number
+                            } else {
+                                this.rhs.listSeparator.number == possibleChild.number
+                            }
+                        }
+                    }
+                    else -> throw RuntimeException("Internal Error: rule kind not recognised " + this.rhs.kind)
+                }
+            }
+        }
+    }
+
+    fun incrementNextItemIndex(currentIndex: Int): Int {
+        when (this.rhs.kind) {
+            RuntimeRuleItemKind.EMPTY -> return -1
+            RuntimeRuleItemKind.CHOICE_EQUAL -> return -1
+            RuntimeRuleItemKind.CHOICE_PRIORITY -> return -1
+            RuntimeRuleItemKind.CONCATENATION -> return if (this.rhs.items.size == currentIndex + 1) -1 else currentIndex + 1
+            RuntimeRuleItemKind.MULTI -> return currentIndex
+            RuntimeRuleItemKind.SEPARATED_LIST -> return if (currentIndex == 0) 1 else 0
+
+            else -> throw RuntimeException("Internal Error: Unknown RuleKind " + this.rhs.kind)
         }
     }
 }

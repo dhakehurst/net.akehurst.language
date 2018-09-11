@@ -273,12 +273,16 @@ public final class Forrest3 {
 		if (gn.isSkip()) {
 			// TODO: why is this code so different to that in the next option?
 			final ICompleteNode complete = this.graph.getCompleteNode(gn);
+			// complete will not be null because we do not graftback unless gn has complete children
+			// and graph will try to 'complete' a GraphNode when it is created.
 			this.graph.growNextSkipChild(info.node, complete);
 			// info.node.duplicateWithNextSkipChild(gn);
 			// this.graftInto(gn, info);
 			result |= true;
 		} else if (info.node.getExpectsItemAt(gn.getRuntimeRule(), info.atPosition)) {
 			final ICompleteNode complete = this.graph.getCompleteNode(gn);
+			// complete will not be null because we do not graftback unless gn has complete children
+			// and graph will try to 'complete' a GraphNode when it is created.
 			this.graftInto(complete, info);
 			result |= true;
 		} else {

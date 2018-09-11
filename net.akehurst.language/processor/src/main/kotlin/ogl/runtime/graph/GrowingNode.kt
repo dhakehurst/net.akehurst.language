@@ -16,11 +16,8 @@
 
 package net.akehurst.language.ogl.runtime.graph
 
-import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleItemKind
-import net.akehurst.language.ogl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class GrowingNode(
@@ -69,13 +66,22 @@ class GrowingNode(
         }
     }
 
+
     val hasNextExpectedItem: Boolean
         get() {
             return this.runtimeRule.findHasNextExpectedItem(this.nextItemIndex)
         }
 
-    val nextExpectedItems : Set<RuntimeRule> by lazy {
+    val nextExpectedItems: Set<RuntimeRule> by lazy {
         this.runtimeRule.findNextExpectedItems(this.nextItemIndex, this.numNonSkipChildren)
+    }
+
+    val incrementedNextItemIndex: Int get(){
+        return this.runtimeRule.incrementNextItemIndex(this.nextItemIndex)
+    }
+
+    fun expectsItemAt(runtimeRule: RuntimeRule, atPosition: Int): Boolean {
+        return this.runtimeRule.couldHaveChild(runtimeRule, atPosition)
     }
 
     fun newPrevious() {
@@ -95,6 +101,22 @@ class GrowingNode(
     fun removeNext(value: GrowingNode) {
         this.next.remove(value)
     }
+
+    fun canGraftBack(info: PreviousInfo): Boolean {
+        // TODO: should return false if this is emptyRule and previous' children is not empty
+        // if (this.previous.isEmpty() || !this.getHasCompleteChildren()) {
+        if (!this.hasCompleteChildren) {
+            return false
+        }
+        var b = false
+        // for (final PreviousInfo info : previous) {
+        val x = this.isEmptyMatch && (info.node.runtimeRule.rhs.kind == RuntimeRuleItemKind.MULTI || info.node.runtimeRule.rhs.kind == RuntimeRuleItemKind.SEPARATED_LIST) && info.node.numNonSkipChildren != 0
+
+        b = b or (info.node.expectsItemAt(this.runtimeRule, info.atPosition) && !x)
+        // }
+        return b// && this.getHasCompleteChildren();// && this.getIsStacked();
+    }
+
     // --- Any ---
 
     override fun hashCode(): Int {

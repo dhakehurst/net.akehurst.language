@@ -19,6 +19,7 @@ package net.akehurst.language.ogl.runtime.graph
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SPPTNodeIdentity
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
+import net.akehurst.language.ogl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.parser.scannerless.InputFromCharSequence
 import net.akehurst.language.parser.sppt.SPPTBranchDefault
@@ -76,8 +77,9 @@ class ParseGraph(
         return gn
     }
 
-    private fun findCompleteNode(runtimeRuleNumber: Int, startPosition: Int, nextInputPosition: Int): SPPTNodeDefault? {
-        return null // TODO
+    fun findCompleteNode(runtimeRuleNumber: Int, startPosition: Int, nextInputPosition: Int): SPPTNodeDefault? {
+        val index = SPPTNodeIdentityDefault(runtimeRuleNumber, startPosition, nextInputPosition)
+        return this.completeNodes[index]
     }
 
     private fun addGrowing(gn: GrowingNode) {
@@ -92,6 +94,26 @@ class ParseGraph(
         } else {
             // merge
             for (info in gn.previous) {
+                existing.addPrevious(info.node, info.atPosition)
+            }
+        }
+    }
+
+    private fun addGrowing(gn: GrowingNode, previous: Set<PreviousInfo>) {
+        val ruleNumber = gn.runtimeRule.number
+        val startPosition = gn.startPosition
+        val nextInputPosition = gn.nextInputPosition
+        val nextItemIndex = gn.nextItemIndex
+        val gnindex = GrowingNodeIndex(ruleNumber, startPosition, nextInputPosition, nextItemIndex)
+        val existing = this.growing[gnindex]
+        if (null == existing) {
+            for (info in previous) {
+                gn.addPrevious(info.node, info.atPosition)
+            }
+            this.growing[gnindex] = gn
+        } else {
+            // merge
+            for (info in previous) {
                 existing.addPrevious(info.node, info.atPosition)
             }
         }
@@ -123,6 +145,33 @@ class ParseGraph(
                 }
                 return existing
             }
+        }
+    }
+
+    private fun findOrCreateGrowingLeaf(leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>) {
+        this.addGrowing(stack, previous)
+        // TODO: remove, this is for test
+        if (this.with) {
+            for (info in previous) {
+                this.addGrowing(info.node)
+            }
+        }
+        val ruleNumber = leafNode.runtimeRuleNumber
+        val startPosition = leafNode.startPosition
+        val nextInputPosition = leafNode.nextInputPosition
+        val nextItemIndex = -1
+        val gnindex = GrowingNodeIndex(ruleNumber, startPosition, nextInputPosition, nextItemIndex)
+        val existing = this.growing[gnindex]
+        var actual: GrowingNode? = null
+        if (null == existing) {
+            val runtimeRule = leafNode.runtimeRule
+            val nn = GrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, 0, emptyList(), 0)
+            nn.addPrevious(stack, stack.nextItemIndex)
+            // this.growing.put(gnindex, nn);
+            actual = this.addGrowingHead(gnindex, nn)
+        } else {
+            existing.addPrevious(stack, stack.nextItemIndex)
+            actual = this.addGrowingHead(gnindex, existing)
         }
     }
 
@@ -243,6 +292,23 @@ class ParseGraph(
         }
     }
 
+    private fun growNextChildAt(parent: GrowingNode, nextChild: SPPTNodeDefault, nextItemIndex: Int) {
+        val runtimeRule = parent.runtimeRule
+        val priority = parent.priority
+        val startPosition = parent.startPosition
+        val nextInputPosition = nextChild.nextInputPosition
+        val children = parent.children + nextChild
+        val previous = parent.previous
+        for (pi in previous) {
+            pi.node.removeNext(parent)
+        }
+        val numNonSkipChildren = if (nextChild.isSkip) parent.numNonSkipChildren else parent.numNonSkipChildren + 1
+        val gn = this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children,
+                numNonSkipChildren, previous)
+        if (parent.next.isEmpty()) {
+            this.removeGrowing(parent)
+        }
+    }
 
     fun pop(gn: GrowingNode): Set<PreviousInfo> {
         for (pi in gn.previous) {
@@ -257,5 +323,24 @@ class ParseGraph(
         return previous
     }
 
+    fun pushToStackOf(leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>) {
+        this.findOrCreateGrowingLeaf(leafNode, stack, previous)
+    }
 
+    fun growNextChild(parent: GrowingNode, nextChild: SPPTNodeDefault, position: Int) {
+        if (0 != position && parent.runtimeRule.rhs.kind == RuntimeRuleItemKind.MULTI) {
+            val prev = parent.children[position - 1]
+            if (prev === nextChild) {
+                // dont add same child twice to a multi
+                return
+            }
+        }
+        val newNextItemIndex = parent.incrementedNextItemIndex
+        this.growNextChildAt(parent, nextChild, newNextItemIndex)
+    }
+
+    fun growNextSkipChild(parent: GrowingNode, nextChild: SPPTNodeDefault) {
+        val nextItemIndex = parent.nextItemIndex
+        this.growNextChildAt(parent, nextChild, nextItemIndex)
+    }
 }
