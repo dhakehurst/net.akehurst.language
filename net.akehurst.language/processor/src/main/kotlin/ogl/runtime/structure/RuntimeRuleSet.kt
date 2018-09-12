@@ -23,10 +23,8 @@ import net.akehurst.language.api.parser.ParserConstructionFailedException
 class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     //TODO: are Arrays faster than Lists?
-    private val runtimeRules: Array<out RuntimeRule> by lazy {
-        val result = ArrayList<RuntimeRule>(rules.size)
-        rules.forEach { result[it.number] = it }
-        result.toTypedArray()
+    val runtimeRules: Array<out RuntimeRule> by lazy {
+        rules.sortedBy { it.number }.toTypedArray()
     }
     private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
     private val terminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
@@ -45,16 +43,13 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     val firstTerminals: Array<Set<RuntimeRule>> by lazy {
-        val result = ArrayList<Set<RuntimeRule>>(this.runtimeRules.size)
-        this.runtimeRules.forEach { result[it.number] = this.findFirstTerminals(it) }
-        result.toTypedArray()
+        this.runtimeRules.map { this.findFirstTerminals(it) }
+                .toTypedArray()
     }
 
     val firstSkipRuleTerminals: Array<Set<RuntimeRule>> by lazy {
-        val result = ArrayList<Set<RuntimeRule>>(this.runtimeRules.size)
-        // rules that are not skip rules will not have a value set
-        this.runtimeRules.forEach { if (it.isSkip) result[it.number] = this.findFirstTerminals(it) }
-        result.toTypedArray()
+        this.runtimeRules.map { if (it.isSkip) this.findFirstTerminals(it) else emptySet() }
+                .toTypedArray()
     }
 
     val subTerminals: Array<Set<RuntimeRule>> by lazy {
@@ -88,7 +83,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     fun findRuntimeRule(ruleName: String): RuntimeRule {
         val number = this.nonTerminalRuleNumber[ruleName]
-                ?: throw ParseException("NonTerminal RuntimeRule ${ruleName} not found")
+                ?: this.terminalRuleNumber[ruleName]
+                ?: throw ParseException("NonTerminal RuntimeRule '${ruleName}' not found")
         return this.runtimeRules[number] ?: throw ParseException("NonTerminal RuntimeRule ${ruleName} not found")
     }
 

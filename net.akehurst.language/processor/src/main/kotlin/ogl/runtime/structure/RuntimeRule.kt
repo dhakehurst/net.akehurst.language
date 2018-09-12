@@ -31,9 +31,9 @@ class RuntimeRule(
 
     var rhsOpt: RuntimeRuleItem? = null
 
-    val rhs: RuntimeRuleItem = lazy {
+    val rhs: RuntimeRuleItem by lazy {
         this.rhsOpt ?: throw ParseException("rhs must have a value")
-    }.value
+    }
 
     val emptyRuleItem: RuntimeRule
         get() {
@@ -47,7 +47,7 @@ class RuntimeRule(
 
     val isEmptyRule: Boolean
         get() {
-            return rhs?.kind == RuntimeRuleItemKind.EMPTY
+            return isNonTerminal && rhs.kind == RuntimeRuleItemKind.EMPTY
         }
 
     val isTerminal = this.kind == RuntimeRuleKind.TERMINAL

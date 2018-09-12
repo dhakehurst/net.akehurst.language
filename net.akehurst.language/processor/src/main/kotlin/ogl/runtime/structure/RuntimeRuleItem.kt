@@ -44,7 +44,7 @@ class RuntimeRuleItem(
         }
     }
 
-    val listSeparator = this.items[1] //should we check type here or is that runtime overhead?
+    val listSeparator: RuntimeRule get() { return this.items[1] } //should we check type here or is that runtime overhead?
 
     fun findItemAt(n: Int): Array<out RuntimeRule> {
         return when (this.kind) {

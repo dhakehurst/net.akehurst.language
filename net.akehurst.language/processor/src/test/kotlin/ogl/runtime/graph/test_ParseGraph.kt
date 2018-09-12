@@ -18,27 +18,34 @@ package net.akehurst.language.ogl.runtime.graph
 
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.parser.scannerless.InputFromCharSequence
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class test_ParseGraph {
 
     @Test
     fun construct() {
-        val sut = ParseGraph()
+        val goalRule = RuntimeRule(0,"a", RuntimeRuleKind.TERMINAL, false, false)
+        val text = ""
+        val input = InputFromCharSequence(text)
+
+        val sut = ParseGraph(goalRule,input)
 
         assertNotNull(sut)
     }
 
     @Test
-    fun start() {
-
+    fun canGrow_empty() {
         val goalRule = RuntimeRule(0,"a", RuntimeRuleKind.TERMINAL, false, false)
+        val text = ""
+        val input = InputFromCharSequence(text)
+        val sut = ParseGraph(goalRule,input)
 
-        val sut = ParseGraph()
-        sut.start(goalRule)
+        val actual = sut.canGrow
 
-        assertNotNull(sut)
+        assertEquals(true, actual)
     }
 
 }

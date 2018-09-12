@@ -45,8 +45,8 @@ class GrowingNode(
         }
     val isEmptyMatch: Boolean
         get() {
-            // match empty if start and next-input positions are the same
-            return this.startPosition == this.nextInputPosition
+            // match empty if start and next-input positions are the same and children are complete
+            return this.hasCompleteChildren && this.startPosition == this.nextInputPosition
         }
     val isSkip: Boolean
         get() {

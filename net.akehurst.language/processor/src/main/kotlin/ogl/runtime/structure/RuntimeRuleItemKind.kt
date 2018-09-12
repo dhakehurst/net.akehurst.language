@@ -18,7 +18,7 @@ package net.akehurst.language.ogl.runtime.structure
 
 enum class RuntimeRuleItemKind {
     EMPTY,                       // n : ;
-    CHOICE_EQUAL,                      // n : a | b | c ;
+    CHOICE_EQUAL,                // n : a | b | c ;
     CHOICE_PRIORITY,             // n : a < b < c ;
     CONCATENATION,               // n : a b c ;
     UNORDERED,                   // n : a & b & c ;                           TODO: support this

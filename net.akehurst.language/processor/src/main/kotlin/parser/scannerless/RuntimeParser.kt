@@ -158,8 +158,38 @@ internal class RuntimeParser(
 
     }
 
-    private fun tryGrowHeight(gn: GrowingNode, previous: Set<PreviousInfo>) {
-
+    private fun tryGrowHeight(gn: GrowingNode, previous: Set<PreviousInfo>) : Boolean {
+        var result = false
+        if (gn.hasCompleteChildren) {
+            val childRule = gn.runtimeRule
+            if (this.runtimeRuleSet.isSkipTerminal(childRule)) {
+                val infos = this.runtimeRuleSet.superRuleInfo(childRule)
+                for (info in infos) {
+                    val complete = this.graph.getCompleteNode(gn)
+                    this.growHeightByType(complete, info, previous)
+                    result = result or true // TODO: this should depend on if the growHeight does something
+                }
+            } else {
+                if (previous.isEmpty()) {
+                    // do nothing
+                } else {
+                    val toGrow = HashSet<SuperRuleInfo>()
+                    for ((node) in previous) {
+                        val prevItemIndex = node.nextItemIndex
+                        val prevRule = node.runtimeRule
+                        toGrow.addAll(this.runtimeRuleSet.growsInto(childRule, prevRule, prevItemIndex))
+                    }
+                    for (info in toGrow) {
+                        val complete = this.graph.getCompleteNode(gn)
+                        this.growHeightByType(complete, info, previous)
+                        result = result or true // TODO: this should depend on if the growHeight does something
+                    }
+                }
+            }
+        } else {
+            // do nothing
+        }
+        return result
     }
 
     private fun tryGraftBack(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {

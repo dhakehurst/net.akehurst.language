@@ -49,9 +49,10 @@ class test_ScannerlessParser {
     fun parse() {
         val rrb = RuntimeRuleSetBuilder()
         val r0 = rrb.literal("a")
+        val r1 = rrb.rule("a").concatenation(r0).build()
         val sp = ScannerlessParser(rrb.ruleSet())
 
-        sp.parse("","")
+        sp.parse("a","a")
     }
 
     @Test
