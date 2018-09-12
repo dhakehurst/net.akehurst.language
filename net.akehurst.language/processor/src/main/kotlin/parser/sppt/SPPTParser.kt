@@ -154,7 +154,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
     fun emptyLeaf(ruleNameThatIsEmpty: String): SPPTLeaf {
         val start = this.textLength + this.offset
         val ruleThatIsEmpty = this.runtimeRuleSetBuilder.ruleSet().findRuntimeRule(ruleNameThatIsEmpty)
-        val terminalRule = this.runtimeRuleSetBuilder.ruleSet().findEmptyRule(ruleThatIsEmpty)
+        val terminalRule = ruleThatIsEmpty.emptyRuleItem
         val n = SPPTLeafDefault(terminalRule, start, true, "",0)
 
         var existing: SPPTLeaf? = this.findLeaf(n.identity)

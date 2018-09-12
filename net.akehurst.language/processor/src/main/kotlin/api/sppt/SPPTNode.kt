@@ -51,6 +51,10 @@ interface SPPTNode : SharedPackedParseTreeVisitable {
 	val matchedTextLength: Int
 
 	/**
+	 * startPosition + matchedTextLength
+	 */
+	val nextInputPosition: Int
+	/**
 	 *  all text matched by this node
 	 */
 	val matchedText: String

@@ -18,6 +18,8 @@ package net.akehurst.language.parser.scannerless
 
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException
 import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.ogl.runtime.graph.GrowingNode
 import net.akehurst.language.ogl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.ogl.runtime.graph.ParseGraph
@@ -25,11 +27,13 @@ import net.akehurst.language.ogl.runtime.graph.PreviousInfo
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.parser.sppt.SPPTBranchDefault
 import net.akehurst.language.parser.sppt.SPPTLeafDefault
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
+import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
 
 
-class RuntimeParser(
+internal class RuntimeParser(
         private val runtimeRuleSet: RuntimeRuleSet,
         private val goalRule: RuntimeRule,
         private val input: InputFromCharSequence
@@ -39,11 +43,54 @@ class RuntimeParser(
     // copy of graph growing head for each iteration, cached to that we can find best match in case of error
     private var toGrow: List<GrowingNode> = listOf()
 
-    val canGrow : Boolean get() {
-        return this.graph.canGrow
+    private val lastGrown: Collection<GrowingNode>
+        get() {
+            return if (this.graph.growing.isEmpty())
+                this.toGrow
+            else
+                this.graph.growing.values
+        }
+
+    private val longestLastGrown: SPPTNode? get() {
+        val llg = this.lastGrown.maxWith(Comparator<GrowingNode>{ a,b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
+        return if (null==llg) {
+            return null
+        } else if (llg.isLeaf) {
+            this.graph.findOrTryCreateLeaf(llg.runtimeRule, llg.startPosition)
+        } else {
+            SPPTBranchDefault(llg.runtimeRule, llg.startPosition, llg.nextInputPosition,llg.children,llg.priority)
+        }
     }
 
-    // public
+    val canGrow: Boolean
+        get() {
+            return this.graph.canGrow
+        }
+
+    val longestMatch: SPPTNode
+        get() {
+            if (!this.graph.goals.isEmpty() && this.graph.goals.size >= 1) {
+                var lt = this.graph.goals.iterator().next()
+                for (gt in this.graph.goals) {
+                    if (gt.matchedTextLength > lt.matchedTextLength) {
+                        lt = gt
+                    }
+                }
+                if (!this.input.isEnd(lt.nextInputPosition + 1)) {
+                    val llg = longestLastGrown ?: throw ParseException("Internal Error, should not happen")
+                    val location = this.input.calcLineAndColumn(llg.nextInputPosition)
+                    throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(llg), location)
+                } else {
+                    return lt
+                }
+            } else {
+                val llg = longestLastGrown ?: throw ParseException("Nothing parsed")
+                val location = this.input.calcLineAndColumn(llg.nextInputPosition)
+                throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg), location)
+            }
+        }
+
+
 
     fun start(goalRule: RuntimeRule) {
         val gnindex = GrowingNodeIndex(goalRule.number, 0, 0, 0)
@@ -57,10 +104,6 @@ class RuntimeParser(
                 cn.childrenAlternatives.add(gn.children)
             }
         }
-    }
-
-    fun checkForGoal(node: SPPTNodeDefault) {
-        //TODO
     }
 
     fun grow() {
@@ -102,7 +145,7 @@ class RuntimeParser(
         if (gn.canGrowWidthWithSkip) { // don't grow width if its complete...cant graft back
             val expectedNextTerminal: Set<RuntimeRule> = this.runtimeRuleSet.firstSkipRuleTerminals[gn.runtimeRule.number]
             for (rr in expectedNextTerminal) {
-                val l = this.graph.findOrCreateLeaf(rr, gn.nextInputPosition)
+                val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
                 if (null != l) {
                     modified = this.pushStackNewRoot(l, gn, previous)
                 }
@@ -119,7 +162,7 @@ class RuntimeParser(
 
     }
 
-    private fun tryGraftBack(gn: GrowingNode, previous: Set<PreviousInfo>) :Boolean {
+    private fun tryGraftBack(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var graftBack = false
         for (prev in previous) {
             if (gn.canGraftBack(prev)) { // if hascompleteChildren && isStacked && prevInfo is valid
@@ -148,7 +191,8 @@ class RuntimeParser(
         if (gn.isSkip) {
             // complete will not be null because we do not graftback unless gn has complete children
             // and graph will try to 'complete' a GraphNode when it is created.
-            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.nextItemIndex) ?: throw ParseException("internal error, should never happen")
+            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.nextItemIndex)
+                    ?: throw ParseException("internal error, should never happen")
             this.graph.growNextSkipChild(info.node, complete)
             // info.node.duplicateWithNextSkipChild(gn);
             // this.graftInto(gn, info);
@@ -156,7 +200,8 @@ class RuntimeParser(
         } else if (info.node.expectsItemAt(gn.runtimeRule, info.atPosition)) {
             // complete will not be null because we do not graftback unless gn has complete children
             // and graph will try to 'complete' a GraphNode when it is created.
-            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.nextItemIndex) ?: throw ParseException("internal error, should never happen")
+            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.nextItemIndex)
+                    ?: throw ParseException("internal error, should never happen")
             this.graph.growNextChild(info.node, complete, info.atPosition)
             result = result or true
         } else {
@@ -169,9 +214,9 @@ class RuntimeParser(
     private fun tryGrowWidth(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var modified = false
         if (gn.canGrowWidth) { // don't grow width if its complete...cant graft back
-            val expectedNextTerminal = runtimeRuleSet.findNextExpectedTerminals(gn.runtimeRule,gn.nextItemIndex, gn.numNonSkipChildren)
+            val expectedNextTerminal = runtimeRuleSet.findNextExpectedTerminals(gn.runtimeRule, gn.nextItemIndex, gn.numNonSkipChildren)
             for (rr in expectedNextTerminal) {
-                val l = this.graph.findOrCreateLeaf(rr, gn.nextInputPosition)
+                val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
                 if (null != l) {
                     modified = this.pushStackNewRoot(l, gn, previous)
                 }

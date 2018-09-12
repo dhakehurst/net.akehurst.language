@@ -59,14 +59,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     val subTerminals: Array<Set<RuntimeRule>> by lazy {
         this.runtimeRules.map {
-            it.findSubTerminals()
-            val rr = it.findAllTerminal()
-            for (r in this.getPossibleSubRule(runtimeRule)) {
-                rr.addAll(r.findAllTerminal())
+            var rr = it.findAllTerminal()
+            for (r in this.subNonTerminals[it.number]) {
+                rr += r.findAllTerminal()
             }
-            val skipTerminal = this.getAllSkipTerminals()
-            rr.addAll(skipTerminal)
-
+            rr += this.allSkipTerminals
+            rr
         }.toTypedArray()
     }
 

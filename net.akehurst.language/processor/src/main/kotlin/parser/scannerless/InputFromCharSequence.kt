@@ -19,34 +19,53 @@ package net.akehurst.language.parser.scannerless
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 import net.akehurst.language.parser.sppt.SPPTLeafDefault
 
-class InputFromCharSequence(val text: CharSequence) {
+internal class InputFromCharSequence(val text: CharSequence) {
 
-    fun isStart(position: Int): Boolean {
+    internal fun isStart(position: Int): Boolean {
         // TODO what if we want t0 parse part of the text?, e.g. sub grammar
         return 0 == position
     }
 
-    fun isEnd(position: Int): Boolean {
+    internal fun isEnd(position: Int): Boolean {
         // TODO what if we want t0 parse part of the text?, e.g. sub grammar
         return position >= this.text.length
     }
 
-    internal fun matchLiteral(position: Int, patternText: String) : String? {
+    private fun matchLiteral(position: Int, patternText: String): String? {
         val match = this.text.regionMatches(position, patternText, 0, patternText.length, false)
         return if (match) patternText else null
     }
 
-    internal fun matchRegEx(position: Int, patternText: String) : String? {
+    private fun matchRegEx(position: Int, patternText: String): String? {
         val pattern = Regex(patternText, setOf(RegexOption.MULTILINE))
         val m = pattern.find(this.text, position)
         val lookingAt = (m?.range?.start == position)
         return if (lookingAt) m?.value else null
     }
 
-    fun tryMatchText(position: Int, patternText: String, isPattern:Boolean): String? {
+    internal fun calcLineAndColumn(position: Int): Map<String, Int> {
+        val result = mutableMapOf<String, Int>()
+        var line = 1
+        var column = 1
+
+        for (count in 0 until position) {
+            if (this.text[count] == '\n') {
+                ++line
+                column = 1
+            } else {
+                ++column
+            }
+        }
+
+        result["line"] = line
+        result["column"] = column
+        return result
+    }
+
+    internal fun tryMatchText(position: Int, patternText: String, isPattern: Boolean): String? {
         return when {
             (position > this.text.length) -> null // TODO: should we need to do this?
-            (!isPattern) -> this.matchLiteral(position,patternText)
+            (!isPattern) -> this.matchLiteral(position, patternText)
             else -> this.matchRegEx(position, patternText)
         }
     }

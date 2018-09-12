@@ -26,7 +26,7 @@ import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 abstract class SPPTNodeDefault(
         val runtimeRule: RuntimeRule,
         override val startPosition: Int,
-        val nextInputPosition: Int,
+        override val nextInputPosition: Int,
         val priority: Int                      //not needed as part of the SPPTNode, but needed for the parsing algorithm
 ) : SPPTNode {
 

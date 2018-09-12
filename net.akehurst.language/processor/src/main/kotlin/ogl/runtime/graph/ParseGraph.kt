@@ -27,7 +27,7 @@ import net.akehurst.language.parser.sppt.SPPTLeafDefault
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 import net.akehurst.language.parser.sppt.SPPTNodeIdentityDefault
 
-class ParseGraph(
+internal class ParseGraph(
         private val goalRule: RuntimeRule,
         private val input: InputFromCharSequence
 ) {
@@ -37,8 +37,8 @@ class ParseGraph(
 
     private val leaves: MutableMap<LeafIndex, SPPTLeafDefault> = mutableMapOf()
     private val completeNodes: MutableMap<SPPTNodeIdentity, SPPTNodeDefault> = mutableMapOf()
-    private val growing: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
-    private val goals: MutableList<SPPTNodeDefault> = mutableListOf()
+    internal val growing: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
+    private val _goals: MutableList<SPPTNodeDefault> = mutableListOf()
     val growingHead: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
 
     val canGrow: Boolean
@@ -46,28 +46,30 @@ class ParseGraph(
             return !this.growingHead.isEmpty()
         }
 
-    val longestMatch: SPPTNode
+    val goals: List<SPPTNode>
         get() {
-            throw UnsupportedOperationException()
+            return this._goals
         }
 
-    private fun createLeaf(terminalRuntimeRule: RuntimeRule, index: LeafIndex): SPPTLeafDefault? {
+    private fun tryCreateLeaf(terminalRuntimeRule: RuntimeRule, index: LeafIndex): SPPTLeafDefault? {
         // LeafIndex passed as argument because we already created it to try and find the leaf in the cache
         return if (terminalRuntimeRule.isEmptyRule) {
             val leaf = SPPTLeafDefault(terminalRuntimeRule, index.startPosition, true, "", 0)
             this.leaves[index] = leaf
             leaf
         } else {
-            val matchedText = this.input.tryMatchText(index.startPosition, terminalRuntimeRule.patternText, terminalRuntimeRule.isPattern)
-            val leaf = SPPTLeafDefault(terminalRuntimeRule, index.startPosition, false, "", 0)
+            val matchedText =
+                    this.input.tryMatchText(index.startPosition, terminalRuntimeRule.patternText, terminalRuntimeRule.isPattern)
+                            ?: return null
+            val leaf = SPPTLeafDefault(terminalRuntimeRule, index.startPosition, false, matchedText, 0)
             this.leaves[index] = leaf
             return leaf
         }
     }
 
-    fun findOrCreateLeaf(terminalRuntimeRule: RuntimeRule, position: Int): SPPTLeafDefault? {
+    fun findOrTryCreateLeaf(terminalRuntimeRule: RuntimeRule, position: Int): SPPTLeafDefault? {
         val index = LeafIndex(terminalRuntimeRule.number, position)
-        return this.leaves[index] ?: this.createLeaf(terminalRuntimeRule, index)
+        return this.leaves[index] ?: this.tryCreateLeaf(terminalRuntimeRule, index)
     }
 
     fun createBranchNoChildren(runtimeRule: RuntimeRule, priority: Int, startPosition: Int, nextInputPosition: Int): SPPTBranchDefault {
@@ -219,7 +221,7 @@ class ParseGraph(
     private fun checkForGoal(completeNode: SPPTNodeDefault) {
         if (this.isGoal(completeNode)) {
             // TODO: maybe need to not have duplicates!
-            this.goals.add(completeNode)
+            this._goals.add(completeNode)
         }
     }
 

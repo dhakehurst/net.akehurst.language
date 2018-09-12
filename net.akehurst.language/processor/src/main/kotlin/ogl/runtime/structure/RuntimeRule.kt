@@ -17,7 +17,6 @@
 package net.akehurst.language.ogl.runtime.structure
 
 import net.akehurst.language.api.parser.ParseException
-import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class RuntimeRule(
