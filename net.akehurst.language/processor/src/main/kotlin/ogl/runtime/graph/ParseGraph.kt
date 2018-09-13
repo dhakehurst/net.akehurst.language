@@ -16,16 +16,15 @@
 
 package net.akehurst.language.ogl.runtime.graph
 
+import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SPPTNodeIdentity
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.parser.scannerless.InputFromCharSequence
-import net.akehurst.language.parser.sppt.SPPTBranchDefault
-import net.akehurst.language.parser.sppt.SPPTLeafDefault
-import net.akehurst.language.parser.sppt.SPPTNodeDefault
-import net.akehurst.language.parser.sppt.SPPTNodeIdentityDefault
+import net.akehurst.language.parser.sppt.*
 
 internal class ParseGraph(
         private val goalRule: RuntimeRule,
@@ -49,6 +48,28 @@ internal class ParseGraph(
     val goals: List<SPPTNode>
         get() {
             return this._goals
+        }
+
+    val fun longestMatch(longestLastGrown): SPPTNode{
+            if (!this.goals.isEmpty() && this.goals.size >= 1) {
+                var lt = this.goals.iterator().next()
+                for (gt in this.goals) {
+                    if (gt.matchedTextLength > lt.matchedTextLength) {
+                        lt = gt
+                    }
+                }
+                if (!this.input.isEnd(lt.nextInputPosition + 1)) {
+                    val llg = longestLastGrown ?: throw ParseException("Internal Error, should not happen")
+                    val location = this.input.calcLineAndColumn(llg.nextInputPosition)
+                    throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(llg), location)
+                } else {
+                    return lt
+                }
+            } else {
+                val llg = longestLastGrown ?: throw ParseException("Nothing parsed")
+                val location = this.input.calcLineAndColumn(llg.nextInputPosition)
+                throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg), location)
+            }
         }
 
     private fun tryCreateLeaf(terminalRuntimeRule: RuntimeRule, index: LeafIndex): SPPTLeafDefault? {
@@ -344,5 +365,26 @@ internal class ParseGraph(
     fun growNextSkipChild(parent: GrowingNode, nextChild: SPPTNodeDefault) {
         val nextItemIndex = parent.nextItemIndex
         this.growNextChildAt(parent, nextChild, nextItemIndex)
+    }
+
+    fun createWithFirstChild(runtimeRule: RuntimeRule, priority: Int, firstChild: SPPTNodeDefault,
+                             previous: Set<PreviousInfo>) {
+        val startPosition = firstChild.startPosition
+        val nextInputPosition = firstChild.nextInputPosition
+        var nextItemIndex = 0
+        when (runtimeRule.rhs.kind) {
+            RuntimeRuleItemKind.CHOICE_EQUAL -> nextItemIndex = -1
+            RuntimeRuleItemKind.CHOICE_PRIORITY -> nextItemIndex = -1
+            RuntimeRuleItemKind.CONCATENATION -> nextItemIndex = if (runtimeRule.rhs.items.size == 1) -1 else 1
+            RuntimeRuleItemKind.EMPTY -> nextItemIndex = -1
+            RuntimeRuleItemKind.MULTI -> nextItemIndex = if (firstChild.isEmptyLeaf) -1 else if (1 == runtimeRule.rhs.multiMax) -1 else 1
+            RuntimeRuleItemKind.SEPARATED_LIST -> nextItemIndex = if (firstChild.isEmptyLeaf) -1 else if (1 == runtimeRule.rhs.multiMax) -1 else 1
+            else -> throw RuntimeException("Internal Error: Unknown RuleKind " + runtimeRule.rhs.kind)
+        }
+        val children = listOf(firstChild)
+        val numNonSkipChildren = if (firstChild.isSkip) 0 else 1
+
+        this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children,
+                numNonSkipChildren, previous)
     }
 }

@@ -272,14 +272,16 @@ public class RuntimeRuleSet {
 	}
 
 	public static final class SuperRuleInfo {
+
+		private RuntimeRule runtimeRule;
+		private int index;
+		private int hashCode_cache;
+
 		public SuperRuleInfo(final RuntimeRule runtimeRule, final int index) {
 			this.runtimeRule = runtimeRule;
 			this.index = index;
 			this.hashCode_cache = Objects.hash(runtimeRule, index);
 		}
-
-		RuntimeRule runtimeRule;
-		int index;
 
 		public RuntimeRule getRuntimeRule() {
 			return this.runtimeRule;
@@ -288,8 +290,6 @@ public class RuntimeRuleSet {
 		public int getIndex() {
 			return this.index;
 		}
-
-		int hashCode_cache;
 
 		@Override
 		public int hashCode() {

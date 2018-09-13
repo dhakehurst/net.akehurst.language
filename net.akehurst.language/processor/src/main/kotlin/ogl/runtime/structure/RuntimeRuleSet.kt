@@ -67,6 +67,14 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         this.runtimeRules.map { it.findSubRules() }.toTypedArray()
     }
 
+    //val superRules: Array<List<RuntimeRule>> by lazy {
+    //    this.runtimeRules.map { this.calcSuperRule(it) }.toTypedArray()
+    //}
+
+    val firstSuperNonTerminal by lazy {
+        this.runtimeRules.map { this.calcFirstSuperNonTerminal(it) }.toTypedArray()
+    }
+
     init {
         for (rrule in rules) {
 //            if (null == rrule) {
@@ -117,5 +125,62 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             rr += r.findTerminalAt(0, this)
         }
         return rr
+    }
+
+    /*
+    private fun calcSuperRule(runtimeRule: RuntimeRule): List<RuntimeRule> {
+        val result = this.runtimeRules.filter {
+            runtimeRule.isNonTerminal && it.findSubRules().contains(runtimeRule)
+                    || runtimeRule.isTerminal && it.findAllTerminal().contains(runtimeRule)
+        }
+        return result
+    }
+    */
+
+    fun calcIsSkipTerminal(rr: RuntimeRule): Boolean {
+        val b = this.allSkipTerminals.contains(rr)
+        return b
+    }
+
+    private fun calcFirstSuperNonTerminal(runtimeRule: RuntimeRule): List<RuntimeRule> {
+        return this.runtimeRules.filter {
+            it.isNonTerminal && it.couldHaveChild(runtimeRule, 0)
+        } + if (runtimeRule.isEmptyRule) listOf(runtimeRule.emptyRuleItem) else emptyList()
+    }
+
+    /**
+     * return the set of SuperRules for which childRule can grow (at some point) into ancesstorRule at position ancesstorItemIndex
+     */
+    fun calcGrowsInto(childRule: RuntimeRule, ancesstorRule: RuntimeRule, ancesstorItemIndex: Int): List<RuntimeRule> {
+        return this.firstSuperNonTerminal[childRule.number].filter {
+            this.canGrowInto(it, ancesstorRule, ancesstorItemIndex)
+        }
+    }
+
+    private fun canGrowInto(childRule: RuntimeRule, ancesstorRule: RuntimeRule, ancesstorItemIndex: Int): Boolean {
+        return if (-1 == ancesstorItemIndex) {
+            false
+        } else {
+            val nextExpectedForStacked = this.findNextExpectedItems(ancesstorRule, ancesstorItemIndex, 0)
+            if (nextExpectedForStacked.contains(ancesstorRule)) {
+                true
+            } else {
+                for (rr in nextExpectedForStacked) {
+                    if (rr.isNonTerminal) {
+                        // todo..can we reduce the possibles!
+                        val possibles = this.findFirstSubRules(rr)
+                        if (possibles.contains(ancesstorRule)) {
+                            return true
+                        }
+                    } else {
+                        val possibles = this.firstTerminals[rr.number]
+                        if (possibles.contains(ancesstorRule)) {
+                            return true
+                        }
+                    }
+                }
+                false
+            }
+        }
     }
 }

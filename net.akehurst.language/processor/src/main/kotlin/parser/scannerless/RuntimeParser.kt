@@ -25,6 +25,7 @@ import net.akehurst.language.ogl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.ogl.runtime.graph.ParseGraph
 import net.akehurst.language.ogl.runtime.graph.PreviousInfo
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
+import net.akehurst.language.ogl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.parser.sppt.SPPTBranchDefault
@@ -35,11 +36,8 @@ import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
 
 internal class RuntimeParser(
         private val runtimeRuleSet: RuntimeRuleSet,
-        private val goalRule: RuntimeRule,
-        private val input: InputFromCharSequence
+        private val graph: ParseGraph
 ) {
-
-    private val graph = ParseGraph(this.goalRule, this.input)
     // copy of graph growing head for each iteration, cached to that we can find best match in case of error
     private var toGrow: List<GrowingNode> = listOf()
 
@@ -51,45 +49,22 @@ internal class RuntimeParser(
                 this.graph.growing.values
         }
 
-    private val longestLastGrown: SPPTNode? get() {
-        val llg = this.lastGrown.maxWith(Comparator<GrowingNode>{ a,b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
-        return if (null==llg) {
-            return null
-        } else if (llg.isLeaf) {
-            this.graph.findOrTryCreateLeaf(llg.runtimeRule, llg.startPosition)
-        } else {
-            SPPTBranchDefault(llg.runtimeRule, llg.startPosition, llg.nextInputPosition,llg.children,llg.priority)
+    private val longestLastGrown: SPPTNode?
+        get() {
+            val llg = this.lastGrown.maxWith(Comparator<GrowingNode> { a, b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
+            return if (null == llg) {
+                return null
+            } else if (llg.isLeaf) {
+                this.graph.findOrTryCreateLeaf(llg.runtimeRule, llg.startPosition)
+            } else {
+                SPPTBranchDefault(llg.runtimeRule, llg.startPosition, llg.nextInputPosition, llg.children, llg.priority)
+            }
         }
-    }
 
     val canGrow: Boolean
         get() {
             return this.graph.canGrow
         }
-
-    val longestMatch: SPPTNode
-        get() {
-            if (!this.graph.goals.isEmpty() && this.graph.goals.size >= 1) {
-                var lt = this.graph.goals.iterator().next()
-                for (gt in this.graph.goals) {
-                    if (gt.matchedTextLength > lt.matchedTextLength) {
-                        lt = gt
-                    }
-                }
-                if (!this.input.isEnd(lt.nextInputPosition + 1)) {
-                    val llg = longestLastGrown ?: throw ParseException("Internal Error, should not happen")
-                    val location = this.input.calcLineAndColumn(llg.nextInputPosition)
-                    throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(llg), location)
-                } else {
-                    return lt
-                }
-            } else {
-                val llg = longestLastGrown ?: throw ParseException("Nothing parsed")
-                val location = this.input.calcLineAndColumn(llg.nextInputPosition)
-                throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg), location)
-            }
-        }
-
 
 
     fun start(goalRule: RuntimeRule) {
@@ -158,29 +133,31 @@ internal class RuntimeParser(
 
     }
 
-    private fun tryGrowHeight(gn: GrowingNode, previous: Set<PreviousInfo>) : Boolean {
+    private fun tryGrowHeight(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var result = false
         if (gn.hasCompleteChildren) {
             val childRule = gn.runtimeRule
-            if (this.runtimeRuleSet.isSkipTerminal(childRule)) {
-                val infos = this.runtimeRuleSet.superRuleInfo(childRule)
-                for (info in infos) {
-                    val complete = this.graph.getCompleteNode(gn)
-                    this.growHeightByType(complete, info, previous)
+            if (this.runtimeRuleSet.calcIsSkipTerminal(childRule)) { //TODO: use cache
+                val possibleSuperRules = this.runtimeRuleSet.firstSuperNonTerminal[childRule.number]
+                for (sr in possibleSuperRules) {
+                    val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.nextInputPosition)
+                            ?: throw ParseException("Internal error: Should never happen")
+                    this.growHeightByType(complete, sr, previous)
                     result = result or true // TODO: this should depend on if the growHeight does something
                 }
             } else {
                 if (previous.isEmpty()) {
                     // do nothing
                 } else {
-                    val toGrow = HashSet<SuperRuleInfo>()
+                    val toGrow = mutableSetOf<RuntimeRule>()
                     for ((node) in previous) {
                         val prevItemIndex = node.nextItemIndex
                         val prevRule = node.runtimeRule
-                        toGrow.addAll(this.runtimeRuleSet.growsInto(childRule, prevRule, prevItemIndex))
+                        toGrow.addAll(this.runtimeRuleSet.calcGrowsInto(childRule, prevRule, prevItemIndex))
                     }
                     for (info in toGrow) {
-                        val complete = this.graph.getCompleteNode(gn)
+                        val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.nextInputPosition)
+                                ?: throw ParseException("Internal error: Should never happen")
                         this.growHeightByType(complete, info, previous)
                         result = result or true // TODO: this should depend on if the growHeight does something
                     }
@@ -190,6 +167,40 @@ internal class RuntimeParser(
             // do nothing
         }
         return result
+    }
+
+    private fun growHeightByType(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
+        when (superRule.rhs.kind) {
+            RuntimeRuleItemKind.CHOICE_EQUAL -> this.growHeightChoice(completeNode, superRule, previous)
+            RuntimeRuleItemKind.CHOICE_PRIORITY -> this.growHeightPriorityChoice(completeNode, superRule, previous)
+            RuntimeRuleItemKind.CONCATENATION -> this.growHeightConcatenation(completeNode, superRule, previous)
+            RuntimeRuleItemKind.MULTI -> this.growHeightMulti(completeNode, superRule, previous)
+            RuntimeRuleItemKind.SEPARATED_LIST -> this.growHeightSeparatedList(completeNode, superRule, previous)
+            RuntimeRuleItemKind.EMPTY -> throw ParseException("Internal Error: Should never have called grow on an EMPTY Rule")
+            else -> throw ParseException("Internal Error: RuleItem kind not handled.")
+        }
+
+    }
+
+    private fun growHeightChoice(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
+        this.graph.createWithFirstChild(superRule, 0, completeNode, previous)
+    }
+
+    private fun growHeightPriorityChoice(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
+        val priority = superRule.rhs.items.indexOf(completeNode.runtimeRule)
+        this.graph.createWithFirstChild(superRule, priority, completeNode, previous)
+    }
+
+    private fun growHeightConcatenation(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
+        this.graph.createWithFirstChild(superRule, 0, completeNode, previous)
+    }
+
+    private fun growHeightMulti(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
+        this.graph.createWithFirstChild(superRule, 0, completeNode, previous)
+    }
+
+    private fun growHeightSeparatedList(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
+        this.graph.createWithFirstChild(superRule, 0, completeNode, previous)
     }
 
     private fun tryGraftBack(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
@@ -202,7 +213,7 @@ internal class RuntimeParser(
         return graftBack
     }
 
-    protected fun tryGraftBack(gn: GrowingNode, info: PreviousInfo): Boolean {
+    private fun tryGraftBack(gn: GrowingNode, info: PreviousInfo): Boolean {
         var result = false
         // TODO: perhaps should return list of those who are not grafted!
         // for (final IGrowingNode.PreviousInfo info : previous) {
@@ -255,7 +266,7 @@ internal class RuntimeParser(
         return modified
     }
 
-    fun pushStackNewRoot(leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>): Boolean {
+    private fun pushStackNewRoot(leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var modified = false
         // no existing parent was suitable, use newRoot
         if (this.hasStackedPotential(leafNode, stack)) {
