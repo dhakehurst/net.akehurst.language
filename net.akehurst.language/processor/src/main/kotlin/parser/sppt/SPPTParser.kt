@@ -188,7 +188,8 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         val rr = this.runtimeRuleSetBuilder.ruleSet().findRuntimeRule(ruleName)
         val startPosition = 0 //TODO
         val nextInputPosition = 0 //TODO
-        val n =  SPPTBranchDefault(rr, startPosition, nextInputPosition, children, 0)
+        val n =  SPPTBranchDefault(rr, startPosition, nextInputPosition, 0)
+        n.childrenAlternatives.add(children)
 
         var existing: SPPTBranch? = this.findBranch(n.identity)
         if (null == existing) {

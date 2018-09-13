@@ -23,7 +23,6 @@ class SPPTBranchDefault(
         runtimeRule: RuntimeRule,
         startPosition: Int,                     // can't use children.first.startPosition, there may not be any children
         nextInputPosition: Int,                 // dont't use children.sumBy { it.matchedTextLength }, it requires unwanted iteration
-        override val children: List<SPPTNode>,  // initial children, others can be added
         priority: Int
 ) : SPPTNodeDefault(
         runtimeRule,
@@ -35,7 +34,11 @@ class SPPTBranchDefault(
 
     // --- SPPTBranch ---
 
-    override val childrenAlternatives: MutableSet<List<SPPTNode>> = mutableSetOf(children)
+    override val childrenAlternatives: MutableSet<List<SPPTNode>> = mutableSetOf()
+
+    override val children : List<SPPTNode> get() {
+        return this.childrenAlternatives.first()
+    }
 
     override val nonSkipChildren: List<SPPTNode> by lazy {
         this.children.filter { !it.isSkip }
@@ -61,7 +64,9 @@ class SPPTBranchDefault(
         this.children.joinToString { it.matchedText }
     }
 
-    override val nonSkipMatchedText: String = if (isSkip) "" else this.matchedText
+    override val nonSkipMatchedText: String get() {
+        return if (isSkip) "" else this.matchedText
+    }
 
     override fun contains(other: SPPTNode): Boolean {
         return this.identity == other.identity

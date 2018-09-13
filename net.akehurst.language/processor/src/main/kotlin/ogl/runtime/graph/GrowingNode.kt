@@ -32,6 +32,8 @@ class GrowingNode(
 
     private val hashCode_cache = intArrayOf(this.runtimeRule.number, this.startPosition, this.nextInputPosition, this.nextItemIndex).contentHashCode()
 
+    val matchedTextLength:Int = this.nextInputPosition - this.startPosition
+
     var previous: MutableSet<PreviousInfo> = mutableSetOf()
     val next: MutableList<GrowingNode> = mutableListOf()
     val hasCompleteChildren: Boolean = this.runtimeRule.isCompleteChildren(nextItemIndex, numNonSkipChildren, children)
@@ -117,6 +119,57 @@ class GrowingNode(
         return b// && this.getHasCompleteChildren();// && this.getIsStacked();
     }
 
+    fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {
+        var r = ""
+        r += this.startPosition.toString() + ","
+        r += this.nextInputPosition.toString() + ","
+        r += if (this.hasCompleteChildren) "C" else this.nextItemIndex
+        r += ":" + this.runtimeRule.name + "(" + this.runtimeRule.number + ")"
+
+        if (withChildren) {
+            if (this.isLeaf) {
+                // no children
+            } else {
+                r += "{"
+                for (c in this.children) {
+    //TODO:                r += c.accept(ParseTreeToSingleLineTreeString(), null)
+                }
+                if (this.hasCompleteChildren) {
+                    r += "}"
+                } else {
+                    r += "..."
+                }
+            }
+        }
+
+        if (withPrevious) {
+            val visited = HashSet<GrowingNode>()
+            r += this.toStringPrevious(visited)
+        }
+
+        return r
+    }
+
+    private fun toStringPrevious(visited: MutableSet<GrowingNode>): String {
+        visited.add(this)
+        var s = ""
+        if (this.previous.isEmpty()) {
+            //
+        } else {
+            val prev = this.previous.iterator().next().node as GrowingNode
+            if (visited.contains(prev)) {
+                s = "--> ..."
+            } else if (this.previous.size == 1) {
+                s = " --> " + prev.toStringTree(false, false) + prev.toStringPrevious(visited)
+            } else {
+                val sz = this.previous.size
+                s = " -" + sz + "> " + prev.toStringTree(false, false) + prev.toStringPrevious(visited)
+            }
+
+        }
+        return s
+    }
+
     // --- Any ---
 
     override fun hashCode(): Int {
@@ -136,5 +189,7 @@ class GrowingNode(
         }
     }
 
-    //TODO: toString
+    override fun toString(): String {
+        return this.toStringTree(false, true)
+    }
 }

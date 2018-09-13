@@ -49,7 +49,7 @@ internal class RuntimeParser(
                 this.graph.growing.values
         }
 
-    private val longestLastGrown: SPPTNode?
+    val longestLastGrown: SPPTNode?
         get() {
             val llg = this.lastGrown.maxWith(Comparator<GrowingNode> { a, b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
             return if (null == llg) {
@@ -57,7 +57,9 @@ internal class RuntimeParser(
             } else if (llg.isLeaf) {
                 this.graph.findOrTryCreateLeaf(llg.runtimeRule, llg.startPosition)
             } else {
-                SPPTBranchDefault(llg.runtimeRule, llg.startPosition, llg.nextInputPosition, llg.children, llg.priority)
+                val cn = SPPTBranchDefault(llg.runtimeRule, llg.startPosition, llg.nextInputPosition,  llg.priority)
+                cn.childrenAlternatives.add(llg.children)
+                cn
             }
         }
 
@@ -140,7 +142,7 @@ internal class RuntimeParser(
             if (this.runtimeRuleSet.calcIsSkipTerminal(childRule)) { //TODO: use cache
                 val possibleSuperRules = this.runtimeRuleSet.firstSuperNonTerminal[childRule.number]
                 for (sr in possibleSuperRules) {
-                    val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.nextInputPosition)
+                    val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                             ?: throw ParseException("Internal error: Should never happen")
                     this.growHeightByType(complete, sr, previous)
                     result = result or true // TODO: this should depend on if the growHeight does something
@@ -156,7 +158,7 @@ internal class RuntimeParser(
                         toGrow.addAll(this.runtimeRuleSet.calcGrowsInto(childRule, prevRule, prevItemIndex))
                     }
                     for (info in toGrow) {
-                        val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.nextInputPosition)
+                        val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                                 ?: throw ParseException("Internal error: Should never happen")
                         this.growHeightByType(complete, info, previous)
                         result = result or true // TODO: this should depend on if the growHeight does something
@@ -232,7 +234,7 @@ internal class RuntimeParser(
         if (gn.isSkip) {
             // complete will not be null because we do not graftback unless gn has complete children
             // and graph will try to 'complete' a GraphNode when it is created.
-            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.nextItemIndex)
+            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                     ?: throw ParseException("internal error, should never happen")
             this.graph.growNextSkipChild(info.node, complete)
             // info.node.duplicateWithNextSkipChild(gn);
@@ -241,7 +243,7 @@ internal class RuntimeParser(
         } else if (info.node.expectsItemAt(gn.runtimeRule, info.atPosition)) {
             // complete will not be null because we do not graftback unless gn has complete children
             // and graph will try to 'complete' a GraphNode when it is created.
-            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.nextItemIndex)
+            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                     ?: throw ParseException("internal error, should never happen")
             this.graph.growNextChild(info.node, complete, info.atPosition)
             result = result or true

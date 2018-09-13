@@ -56,7 +56,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
             seasons++
         } while (rp.canGrow)
 
-        val match = rp.longestMatch
+        val match = graph.longestMatch(rp.longestLastGrown)
         return SharedPackedParseTreeDefault(match)
     }
 

@@ -26,7 +26,7 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.fail
 
-class test_ScannerlessParser {
+class test_RuntimeParser {
 
     @Test
     fun construct() {
@@ -52,11 +52,7 @@ class test_ScannerlessParser {
         val r1 = rrb.rule("a").concatenation(r0).build()
         val sp = ScannerlessParser(rrb.ruleSet())
 
-        val actual = sp.parse("a","a")
-
-        assertNotNull(actual)
-
-        println( actual.toStringAll )
+        sp.parse("a","a")
     }
 
     @Test

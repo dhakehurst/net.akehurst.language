@@ -348,4 +348,30 @@ class RuntimeRule(
             else -> throw RuntimeException("Internal Error: Unknown RuleKind " + this.rhs.kind)
         }
     }
+
+    // --- Any ---
+
+    override fun hashCode(): Int {
+        return this.number
+    }
+
+    override fun equals(arg: Any?): Boolean {
+        if (arg is RuntimeRule) {
+            return false
+        } else {
+            val other = arg as RuntimeRule?
+            return this.number == other?.number
+        }
+    }
+
+    override fun toString(): String {
+        return "[" + this.number + "]" + if (this.isNonTerminal) {
+            " (" + this.name + ") : " + this.rhs
+        } else if (this.isPattern) {
+            " \"" + this.patternText + "\""
+        } else {
+            " '" + this.patternText + "'"
+        }
+    }
+
 }

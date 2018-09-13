@@ -162,19 +162,19 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             false
         } else {
             val nextExpectedForStacked = this.findNextExpectedItems(ancesstorRule, ancesstorItemIndex, 0)
-            if (nextExpectedForStacked.contains(ancesstorRule)) {
+            if (nextExpectedForStacked.contains(childRule)) {
                 true
             } else {
                 for (rr in nextExpectedForStacked) {
                     if (rr.isNonTerminal) {
                         // todo..can we reduce the possibles!
                         val possibles = this.findFirstSubRules(rr)
-                        if (possibles.contains(ancesstorRule)) {
+                        if (possibles.contains(childRule)) {
                             return true
                         }
                     } else {
                         val possibles = this.firstTerminals[rr.number]
-                        if (possibles.contains(ancesstorRule)) {
+                        if (possibles.contains(childRule)) {
                             return true
                         }
                     }
