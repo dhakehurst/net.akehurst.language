@@ -23,6 +23,8 @@ import net.akehurst.language.api.grammar.GrammarVisitor
 
 class ChoiceSimpleDefault(override val alternative: List<Concatenation>) : ChoiceAbstract(alternative), ChoiceSimple {
 
+    // --- GrammarVisitable ---
+
     override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
         return visitor.visit(this, arg);
     }

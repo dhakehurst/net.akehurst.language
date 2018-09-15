@@ -16,7 +16,7 @@
 
 package net.akehurst.language.api.grammar
 
-interface Rule {
+interface Rule : GrammarVisitable {
 
 	val grammar: Grammar
 
@@ -24,7 +24,7 @@ interface Rule {
 
 	val isSkip: Boolean
 
-	var rhs: RuleItem?
+	var rhs: RuleItem
 
 	val nodeType: NodeType
 

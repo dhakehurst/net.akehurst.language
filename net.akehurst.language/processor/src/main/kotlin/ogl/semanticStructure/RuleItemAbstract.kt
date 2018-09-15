@@ -16,15 +16,15 @@
 
 package net.akehurst.language.ogl.semanticStructure
 
-import net.akehurst.language.api.grammar.NonTerminal
-import net.akehurst.language.api.grammar.Rule
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.Terminal
-import net.akehurst.language.api.grammar.GrammarVisitable
+import net.akehurst.language.api.grammar.*
 
 abstract class RuleItemAbstract : GrammarVisitable, RuleItem {
 
-	override var owningRule: Rule? = null
+	protected var _owningRule : Rule? = null
+
+	override val owningRule: Rule get() {
+		return this._owningRule ?: throw GrammarRuleNotFoundException("Internal Error: owningRule must be set")
+	}
 	
 	var index: List<Int>? = null
 

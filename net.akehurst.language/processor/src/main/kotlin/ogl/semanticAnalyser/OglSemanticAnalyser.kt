@@ -22,7 +22,7 @@ import net.akehurst.language.processor.SemanticAnalyserVisitorBasedAbstract
 
 class OglSemanticAnalyser : SemanticAnalyserVisitorBasedAbstract() {
 
-    override var grammarLoader: GrammarLoader? = null
+    var grammarLoader: GrammarLoader? = null
 
     override fun clear() {
 

@@ -17,7 +17,9 @@
 package net.akehurst.language.api.grammar
 
 interface Terminal : TangibleItem {
+
 	val isPattern: Boolean
 
 	val value: String
+
 }

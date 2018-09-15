@@ -47,9 +47,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 .toTypedArray()
     }
 
-    val firstSkipRuleTerminals: Array<Set<RuntimeRule>> by lazy {
-        this.runtimeRules.map { if (it.isSkip) this.findFirstTerminals(it) else emptySet() }
-                .toTypedArray()
+    val firstSkipRuleTerminals: Set<RuntimeRule> by lazy {
+        this.runtimeRules.flatMap { if (it.isSkip) this.findFirstTerminals(it) else emptySet() }
+                .toSet()
     }
 
     val subTerminals: Array<Set<RuntimeRule>> by lazy {
@@ -76,22 +76,20 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     init {
-        for (rrule in rules) {
+        for (rr in rules) {
 //            if (null == rrule) {
 //                throw ParserConstructionFailedException("RuntimeRuleSet must not contain a null rule!")
 //            }
-            if (RuntimeRuleKind.NON_TERMINAL == rrule.kind) {
-                //                  this.nodeTypes.set(i, rrule.name)
-                this.nonTerminalRuleNumber[rrule.name] = rrule.number
+            if (rr.isNonTerminal) {
+                this.nonTerminalRuleNumber[rr.name] = rr.number
             } else {
-                terminalRuleNumber[rrule.name] = rrule.number
+                this.terminalRuleNumber[rr.name] = rr.number
             }
         }
     }
 
     fun findRuntimeRule(ruleName: String): RuntimeRule {
         val number = this.nonTerminalRuleNumber[ruleName]
-                ?: this.terminalRuleNumber[ruleName]
                 ?: throw ParseException("NonTerminal RuntimeRule '${ruleName}' not found")
         return this.runtimeRules[number] ?: throw ParseException("NonTerminal RuntimeRule ${ruleName} not found")
     }
@@ -145,7 +143,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     private fun calcFirstSuperNonTerminal(runtimeRule: RuntimeRule): List<RuntimeRule> {
         return this.runtimeRules.filter {
             it.isNonTerminal && it.couldHaveChild(runtimeRule, 0)
-        } + if (runtimeRule.isEmptyRule) listOf(runtimeRule.emptyRuleItem) else emptyList()
+        } + if (runtimeRule.isEmptyRule) listOf(runtimeRule.ruleThatIsEmpty) else emptyList()
     }
 
     /**

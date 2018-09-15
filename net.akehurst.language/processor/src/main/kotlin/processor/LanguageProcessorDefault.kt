@@ -24,13 +24,13 @@ import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.ogl.runtime.converter.Converter
+import net.akehurst.language.ogl.grammar.runtime.Converter
 import net.akehurst.language.parser.scannerless.ScannerlessParser
 
 internal class LanguageProcessorDefault(val grammar: Grammar, val semanticAnalyser: SemanticAnalyser?) : LanguageProcessor {
 
-    private val converter: Converter= Converter(this.grammar)
-    private val parser: Parser = ScannerlessParser(this.converter.builder.ruleSet())
+    private val converter: Converter = Converter(this.grammar)
+    private val parser: Parser = ScannerlessParser(this.converter.transform())
     private val completionProvider: CompletionProvider = CompletionProvider()
 
     override fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree {

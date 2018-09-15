@@ -117,7 +117,7 @@ class test_RuntimeRuleSetBuilder {
         val r0 = sut.literal("a")
         val r1 = sut.literal("b")
         val r2 = sut.literal("c")
-        val r3 = sut.rule("abc").concatenation(r0, r1, r2).build()
+        val r3 = sut.rule("abc").concatenation(r0, r1, r2)
 
         val actual = sut.ruleSet()
 
@@ -145,7 +145,7 @@ class test_RuntimeRuleSetBuilder {
         val r0 = sut.literal("a")
         val r1 = sut.literal("b")
         val r2 = sut.literal("c")
-        val r3 = sut.rule("abc").choiceEqual(r0, r1, r2).build()
+        val r3 = sut.rule("abc").choiceEqual(r0, r1, r2)
 
         val actual = sut.ruleSet()
 
@@ -173,7 +173,7 @@ class test_RuntimeRuleSetBuilder {
         val r0 = sut.literal("a")
         val r1 = sut.literal("b")
         val r2 = sut.literal("c")
-        val r3 = sut.rule("abc").choicePriority(r0, r1, r2).build()
+        val r3 = sut.rule("abc").choicePriority(r0, r1, r2)
 
         val actual = sut.ruleSet()
 
@@ -199,7 +199,7 @@ class test_RuntimeRuleSetBuilder {
     fun rule_multi() {
         val sut = RuntimeRuleSetBuilder()
         val r0 = sut.literal("a")
-        val r1 = sut.rule("abc").multi(1, -1, r0).build()
+        val r1 = sut.rule("abc").multi(1, -1, r0)
 
         val actual = sut.ruleSet()
 

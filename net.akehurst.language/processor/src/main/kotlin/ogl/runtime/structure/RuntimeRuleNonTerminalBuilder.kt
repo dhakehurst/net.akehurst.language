@@ -18,7 +18,7 @@ package net.akehurst.language.ogl.runtime.structure
 
 import net.akehurst.language.api.parser.ParseException
 
-class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val number: Int, val name: String) {
+class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val name: String) {
 
     private var kind: RuntimeRuleKind = RuntimeRuleKind.NON_TERMINAL
     private var isPattern: Boolean = false
@@ -34,7 +34,7 @@ class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val number:
 
     internal fun build(): RuntimeRule {
         if (null == this.rule) {
-            val rr = RuntimeRule(number, name, kind, isPattern, isSkip)
+            val rr = RuntimeRule(this.rrsb.rules.size, name, kind, isPattern, isSkip)
             this.rrsb.rules.add(rr)
             this.rule = rr
             return rr
@@ -43,48 +43,67 @@ class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val number:
         }
     }
 
+    fun withRhs(rhs: RuntimeRuleItem) : RuntimeRule {
+        val rr = this.build()
+        rr.rhsOpt = rhs
+        return rr
+    }
 
-
-    fun skip(value: Boolean) {
+    fun skip(value: Boolean) : RuntimeRuleNonTerminalBuilder {
         this.isSkip = value
+        return this
     }
 
     fun empty(): RuntimeRule {
         val rr = this.build()
-        val e = RuntimeRuleTerminalBuilder(this.rrsb, number+1).empty(rr)
-        rr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, 0,0, arrayOf(e))
+        val e = RuntimeRuleTerminalBuilder(this.rrsb).empty(rr)
+        rr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, 0, 0, arrayOf(e))
         return rr
     }
 
-    fun choiceEqual(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
-        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.CHOICE_EQUAL, items)
+    fun choiceEqual(vararg items: RuntimeRule): RuntimeRule {
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.CHOICE_EQUAL, items).build()
     }
 
-    fun choicePriority(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
-        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.CHOICE_PRIORITY, items)
+    fun choicePriority(vararg items: RuntimeRule): RuntimeRule {
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.CHOICE_PRIORITY, items).build()
     }
 
-    fun concatenation(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
-        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.CONCATENATION, items)
+    fun concatenation(vararg items: RuntimeRule): RuntimeRule {
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.CONCATENATION, items).build()
     }
 
     fun unordered(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
-         return RuntimeRuleItemBuilder(this, RuntimeRuleItemKind.UNORDERED, items)
+        return RuntimeRuleItemBuilder(this, RuntimeRuleItemKind.UNORDERED, items)
     }
 
-    fun multi(min:Int, max: Int, vararg items: RuntimeRule): RuntimeRuleItemBuilder {
-        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.MULTI, items).min(min).max(max)
+    fun multi(min: Int, max: Int, item: RuntimeRule): RuntimeRule {
+        val items = if (0==min) {
+            val rr = this.build()
+            val e = RuntimeRuleTerminalBuilder(this.rrsb).empty(rr)
+            arrayOf(item, e)
+        } else {
+            arrayOf(item)
+        }
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.MULTI, items).min(min).max(max).build()
     }
 
-    fun separatedList(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
-        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.SEPARATED_LIST, items)
+    fun separatedList(min: Int, max: Int, separator: RuntimeRule, item: RuntimeRule): RuntimeRule {
+        val items = if (0==min) {
+            val rr = this.build()
+            val e = RuntimeRuleTerminalBuilder(this.rrsb).empty(rr)
+            arrayOf(item, separator, e)
+        } else {
+            arrayOf(item,separator)
+        }
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.SEPARATED_LIST, items).min(min).max(max).build()
     }
 
-    fun leftAssociativeList(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
-        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST, items)
+    fun leftAssociativeList(min: Int, max: Int, separator: RuntimeRule, item: RuntimeRule): RuntimeRuleItemBuilder {
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST, arrayOf(item, separator)).min(min).max(max)
     }
 
-    fun rightAssociativeList(vararg items: RuntimeRule): RuntimeRuleItemBuilder {
-        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST, items)
+    fun rightAssociativeList(min: Int, max: Int, separator: RuntimeRule, item: RuntimeRule): RuntimeRuleItemBuilder {
+        return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST, arrayOf(item, separator)).min(min).max(max)
     }
 }

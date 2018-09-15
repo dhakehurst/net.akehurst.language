@@ -120,7 +120,7 @@ internal class RuntimeParser(
     private fun tryGrowWidthWithSkipRules(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var modified = false
         if (gn.canGrowWidthWithSkip) { // don't grow width if its complete...cant graft back
-            val expectedNextTerminal: Set<RuntimeRule> = this.runtimeRuleSet.firstSkipRuleTerminals[gn.runtimeRule.number]
+            val expectedNextTerminal: Set<RuntimeRule> = this.runtimeRuleSet.firstSkipRuleTerminals
             for (rr in expectedNextTerminal) {
                 val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
                 if (null != l) {

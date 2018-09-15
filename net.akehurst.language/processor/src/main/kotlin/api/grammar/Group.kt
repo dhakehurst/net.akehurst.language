@@ -16,6 +16,8 @@
 
 package net.akehurst.language.api.grammar
 
-public interface Group : SimpleItem {
+interface Group : SimpleItem {
+
+    val choice: Choice
 
 }

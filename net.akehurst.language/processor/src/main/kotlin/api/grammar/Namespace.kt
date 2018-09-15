@@ -16,7 +16,7 @@
 
 package net.akehurst.language.api.grammar
 
-interface Namespace {
+interface Namespace : GrammarVisitable {
 
 	val qualifiedName: String
 

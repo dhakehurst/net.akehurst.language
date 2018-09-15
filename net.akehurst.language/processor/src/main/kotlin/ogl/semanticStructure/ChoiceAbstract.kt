@@ -27,7 +27,7 @@ import net.akehurst.language.api.grammar.Concatenation
 abstract class ChoiceAbstract(override val alternative: List<Concatenation>) : RuleItemAbstract(), Choice {
 
 	override fun setOwningRule(rule: Rule, indices: List<Int>) {
-		this.owningRule = rule
+		this._owningRule = rule
 		this.index = indices
 		var i: Int = 0
 		this.alternative.forEach {

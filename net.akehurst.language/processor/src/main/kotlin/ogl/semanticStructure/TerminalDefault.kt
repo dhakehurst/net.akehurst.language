@@ -39,7 +39,7 @@ class TerminalDefault(override val value: String, override val isPattern: Boolea
 	}
 
     override fun setOwningRule(rule: Rule, indices: List<Int>) {
-		this.owningRule = rule
+		this._owningRule = rule
 		this.index = indices
 	}
 	
@@ -54,6 +54,8 @@ class TerminalDefault(override val value: String, override val isPattern: Boolea
 	override val allNonTerminal: Set<NonTerminal> by lazy {
 		emptySet<NonTerminal>()
 	}
+
+	// --- GrammarVisitable ---
 
 	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
 		return visitor.visit(this, arg);

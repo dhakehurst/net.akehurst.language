@@ -31,8 +31,12 @@ class RuntimeRuleItemBuilder(private val rrb: RuntimeRuleNonTerminalBuilder, pri
         return this
     }
 
+    fun ruleItem() : RuntimeRuleItem{
+        return RuntimeRuleItem(this.kind, this.min, this.max, this.items)
+    }
+
     fun build() : RuntimeRule {
-        val rhs = RuntimeRuleItem(this.kind, this.min, this.max, this.items)
+        val rhs = this.ruleItem()
         val rr = rrb.build()
         rr.rhsOpt = rhs
         return rr

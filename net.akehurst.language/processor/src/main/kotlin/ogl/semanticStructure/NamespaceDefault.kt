@@ -16,8 +16,14 @@
 
 package net.akehurst.language.ogl.semanticStructure
 
+import net.akehurst.language.api.grammar.GrammarVisitor
 import net.akehurst.language.api.grammar.Namespace
 
 data class NamespaceDefault(override val qualifiedName: String) : Namespace {
 
+    // --- GrammarVisitable ---
+
+    override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
+        return visitor.visit(this, arg);
+    }
 }

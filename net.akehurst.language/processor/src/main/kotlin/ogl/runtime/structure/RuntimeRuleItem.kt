@@ -26,7 +26,7 @@ import net.akehurst.language.api.parser.ParseException
  *   PRIORITY_CHOICE         -> items == what to chose between, 0 is highest priority (I think)
  *   CONCATENATION           -> items == what to concatinate, in order
  *   UNORDERED               -> items == what to concatinate, any order
- *   MULTI                   -> items[0] == the item to repeat
+ *   MULTI                   -> items[0] == the item to repeat, items[1] == empty rule if min==0
  *   SEPARATED_LIST          -> items[0] == the item to repeat, items[1] == separator
  *   LEFT_ASSOCIATIVE_LIST   -> items[0] == the item to repeat, items[1] == separator
  *   RIGHT_ASSOCIATIVE_LIST  -> items[0] == the item to repeat, items[1] == separator
@@ -50,7 +50,7 @@ class RuntimeRuleItem(
         return when (this.kind) {
             RuntimeRuleItemKind.EMPTY -> emptyArray<RuntimeRule>()
             RuntimeRuleItemKind.CHOICE_PRIORITY -> this.items
-            RuntimeRuleItemKind.CHOICE_EQUAL -> this.items
+            RuntimeRuleItemKind.CHOICE_EQUAL -> this.items //TODO: should maybe test n == 0
             RuntimeRuleItemKind.CONCATENATION -> if (this.items.size > n) arrayOf(this.items[n]) else emptyArray<RuntimeRule>()
             RuntimeRuleItemKind.MULTI -> {
                 if ((this.multiMax == -1 || n <= this.multiMax - 1) && n >= this.multiMin - 1) {

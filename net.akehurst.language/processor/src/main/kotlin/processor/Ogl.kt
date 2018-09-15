@@ -38,23 +38,23 @@ fun processor(grammar: Grammar, semanticAnalyser: SemanticAnalyser): LanguagePro
 }
 
 fun processor(grammarStr: String): LanguageProcessor {
-    val grammar = oglProcessor.process<Grammar>(grammarStr, "grammar")
+    val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarStr)
     return processor(grammar)
 }
 
 fun processor(grammarStr: String, semanticAnalyser: SemanticAnalyser): LanguageProcessor {
-    val grammar = oglProcessor.process<Grammar>(grammarStr, "grammar")
+    val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarStr)
     return processor(grammar, semanticAnalyser)
 }
 
 fun parser(rules: List<String>): LanguageProcessor {
-    val grammarStr = "namespace temp; grammar Temp { ${rules.joinToString(";")} }"
-    val grammar = oglProcessor.process<Grammar>(grammarStr, "grammar")
+    val grammarStr = "grammar Temp { ${rules.joinToString(";")} }"
+    val grammar = oglProcessor.process<Grammar>("grammar", grammarStr)
     return LanguageProcessorDefault(grammar, null)
 }
 
 fun parser(rules: String): LanguageProcessor {
-    val grammarStr = "namespace temp; grammar Temp { ${rules} }"
-    val grammar = oglProcessor.process<Grammar>(grammarStr, "grammar")
+    val grammarStr = "grammar Temp { ${rules} }"
+    val grammar = oglProcessor.process<Grammar>("grammar", grammarStr)
     return LanguageProcessorDefault(grammar, null)
 }

@@ -25,10 +25,15 @@ import net.akehurst.language.api.grammar.NonTerminal
 import net.akehurst.language.api.grammar.GrammarVisitor
 import net.akehurst.language.api.grammar.GrammarRuleItemNotFoundException
 
-class SeparatedListDefault(val min: Int, val max: Int, val separator: Terminal, val item: SimpleItem) : RuleItemAbstract(), SeparatedList {
+class SeparatedListDefault(
+		override val min: Int,
+		override val max: Int,
+		override val separator: Terminal,
+		override val item: SimpleItem
+) : RuleItemAbstract(), SeparatedList {
 
 	override fun setOwningRule(rule: Rule, indices: List<Int>) {
-		this.owningRule = rule
+		this._owningRule = rule
 		this.index = indices
 		val nextIndex: List<Int> = indices + 0
 		this.item.setOwningRule(rule, nextIndex)
@@ -49,6 +54,8 @@ class SeparatedListDefault(val min: Int, val max: Int, val separator: Terminal, 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
 		this.item.allNonTerminal
 	}
+
+	// --- GrammarVisitable ---
 
 	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
 		return visitor.visit(this, arg);

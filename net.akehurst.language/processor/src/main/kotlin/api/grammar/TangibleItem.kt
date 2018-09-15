@@ -17,5 +17,7 @@
 package net.akehurst.language.api.grammar
 
 interface TangibleItem : SimpleItem {
+
     val name: String
+
 }

@@ -28,7 +28,7 @@ class SPPTLeafDefault(
 ) : SPPTNodeDefault(
         terminalRule,
         startPosition,
-        matchedText.length,
+        startPosition+matchedText.length,
         priority
 ), SPPTLeaf
 {

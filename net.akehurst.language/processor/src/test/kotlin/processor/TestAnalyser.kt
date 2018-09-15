@@ -14,32 +14,25 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.grammar
+package net.akehurst.language.processor
 
-interface GrammarVisitor<T, A> {
+import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.processor.SemanticAnalyserVisitorBasedAbstract
 
-    fun visit(target: Namespace, arg: A): T
+class TestAnalyser : SemanticAnalyserVisitorBasedAbstract() {
 
-    fun visit(target: Grammar, arg: A): T
+    override fun clear() {
 
-    fun visit(target: Rule, arg: A): T
+    }
 
-    fun visit(target: ChoicePriority, arg: A): T
+    override fun <T> analyse(sppt: SharedPackedParseTree): T {
+        return 1 as T
+    }
 
-    fun visit(target: ChoiceSimple, arg: A): T
+}
 
-    fun visit(target: Concatenation, arg: A): T
-
-    fun visit(target: Group, arg: A): T
-
-    fun visit(target: Multi, arg: A): T
-
-    fun visit(target: SeparatedList, arg: A): T
-
-    fun visit(target: NonTerminal, arg: A): T
-
-    fun visit(target: Terminal, arg: A): T
-
-    fun visit(target: EmptyRule, arg: A): T
+data class A(
+        val value: String
+) {
 
 }

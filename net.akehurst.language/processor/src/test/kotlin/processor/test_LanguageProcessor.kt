@@ -22,7 +22,7 @@ internal class test_LanguageProcessor {
 
     @Test
     fun parser_rules_String() {
-        val p = parser("a = 'a'")
+        val p = parser("a = 'a';")
         p.parse("a", "a")
     }
 
@@ -34,8 +34,24 @@ internal class test_LanguageProcessor {
 
     @Test
     fun parser_grammar() {
-        val lp = processor("namespace test; grammar test { a = 'a' ; }")
+        val lp = processor("namespace test grammar test { a = 'a' ; }")
         lp.parse("a", "a")
+    }
+
+    @Test
+    fun process() {
+        val grammarStr = """
+            namespace test
+
+            import test.A
+
+            grammar test {
+              a:A = v="[a-z]" {this.value=v} ; }
+            }
+        """.trimIndent()
+        val analyser = TestAnalyser()
+        val lp = processor(grammarStr, analyser)
+        val a:A = lp.process("a", "a")
     }
 
 }

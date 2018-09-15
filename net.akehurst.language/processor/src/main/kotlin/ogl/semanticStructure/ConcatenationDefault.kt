@@ -25,29 +25,31 @@ import net.akehurst.language.api.grammar.Terminal;
 import net.akehurst.language.api.grammar.Rule;
 import net.akehurst.language.api.grammar.GrammarVisitor;
 
-class ConcatenationDefault(val item: List<ConcatenationItem>) : RuleItemAbstract(), Concatenation {
+class ConcatenationDefault(override val items: List<ConcatenationItem>) : RuleItemAbstract(), Concatenation {
 
    override fun setOwningRule(rule: Rule, indices: List<Int>) {
-		this.owningRule = rule
+		this._owningRule = rule
 		this.index = indices
 		var i: Int = 0
-		this.item.forEach {
+		this.items.forEach {
 			val nextIndex: List<Int> = indices + (i++)
 			it.setOwningRule(rule, nextIndex)
 		}
 	}
 	
 	override fun subItem(index: Int): RuleItem {
-		return this.item.get(index)
+		return this.items.get(index)
 	}
 	
 	override val allTerminal: Set<Terminal> by lazy {
-		this.item.flatMap { it.allTerminal }.toSet()
+		this.items.flatMap { it.allTerminal }.toSet()
 	}
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
-		this.item.flatMap { it.allNonTerminal }.toSet()
+		this.items.flatMap { it.allNonTerminal }.toSet()
 	}
+
+	// --- GrammarVisitable ---
 
 	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
 		return visitor.visit(this, arg);

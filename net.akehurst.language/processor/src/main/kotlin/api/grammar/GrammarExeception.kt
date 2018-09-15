@@ -13,16 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.api.parser;
 
-import net.akehurst.language.api.sppt.SharedPackedParseTree;
+package net.akehurst.language.api.analyser
 
-class ParseFailedException(message: String, longestMatch: SharedPackedParseTree, location: Map<String, Int>)
-	: Exception(message + "(at: ${location})") {
-
-	val longestMatch: SharedPackedParseTree = longestMatch
-
-	val location: Map<String, Int> = location
+class GrammarExeception(message: String, cause: Throwable?) : Exception(message, cause) {
 
 }
-

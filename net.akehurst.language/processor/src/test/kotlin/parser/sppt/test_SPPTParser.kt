@@ -17,18 +17,11 @@
 package net.akehurst.language.parser.sppt
 
 import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.ogl.runtime.converter.Converter
-import net.akehurst.language.ogl.runtime.structure.RuntimeRule
-import net.akehurst.language.ogl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.ogl.grammar.runtime.Converter
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault
 import net.akehurst.language.ogl.semanticStructure.NamespaceDefault
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
-import kotlin.test.assertFalse
+import kotlin.test.*
 
 class test_SPPTParser {
 
@@ -174,7 +167,7 @@ class test_SPPTParser {
     fun parse_branch() {
         val rrb = RuntimeRuleSetBuilder()
         val lit = rrb.literal("a")
-        rrb.rule("a").choiceEqual(lit).build()
+        rrb.rule("a").choiceEqual(lit)
 
         val sut = SPPTParser(rrb)
 

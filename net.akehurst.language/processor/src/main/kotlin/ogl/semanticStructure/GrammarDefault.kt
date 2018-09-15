@@ -28,7 +28,11 @@ class GrammarDefault(override val namespace: Namespace, override val name: Strin
 
 }
 
-abstract class GrammarAbstract(override val namespace: Namespace, override val name: String, override val rule: List<Rule>) : Grammar {
+abstract class GrammarAbstract(
+		override val namespace: Namespace,
+		override val name: String,
+		override val rule: List<Rule>
+) : Grammar {
 
 	override val extends: MutableList<Grammar> = mutableListOf<Grammar>();
 
@@ -38,7 +42,7 @@ abstract class GrammarAbstract(override val namespace: Namespace, override val n
 	}
 
 	override val allTerminal: Set<Terminal> by lazy {
-		this.allRule.toSet().flatMap { it.rhs?.allTerminal ?: setOf() }.toSet()
+		this.allRule.toSet().flatMap { it.rhs.allTerminal }.toSet()
 	}
 
 	override val allNodeType: Set<NodeType> by lazy {

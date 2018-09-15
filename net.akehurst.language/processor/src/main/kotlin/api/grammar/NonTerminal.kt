@@ -16,7 +16,7 @@
 
 package net.akehurst.language.api.grammar
 
-public interface NonTerminal : TangibleItem {
+interface NonTerminal : TangibleItem {
 
 	 val referencedRule: Rule
 

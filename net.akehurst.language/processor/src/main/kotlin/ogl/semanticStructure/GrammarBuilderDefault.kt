@@ -23,6 +23,7 @@ import net.akehurst.language.api.grammar.ConcatenationItem
 import net.akehurst.language.api.grammar.TangibleItem
 import net.akehurst.language.api.grammar.Terminal
 import net.akehurst.language.api.grammar.NonTerminal
+import ogl.semanticStructure.EmptyRuleDefault
 
 class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
@@ -54,6 +55,10 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
 	class RuleBuilder(val rule: Rule) {
 
+		fun empty() {
+            this.rule.rhs = EmptyRuleDefault()
+        }
+
 		fun concatenation(vararg sequence: ConcatenationItem) {
 			this.rule.rhs = ChoiceSimpleDefault(listOf(ConcatenationDefault(sequence.toList())));
 		}
@@ -72,7 +77,7 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 			this.rule.rhs = ChoiceSimpleDefault(listOf(ConcatenationDefault(listOf(MultiDefault(min, max, item)))));
 		}
 
-		//TODO: original only to a TerminalLiteral here,  I think any Literal is ok though!
+		//TODO: original only allows separator to be a TerminalLiteral here,  I think any Terminal is ok though!
 		fun separatedList(min: Int, max: Int, separator: Terminal, item: TangibleItem) {
 			this.rule.rhs = ChoiceSimpleDefault(listOf(ConcatenationDefault(listOf(SeparatedListDefault(min, max, separator, item)))));
 		}

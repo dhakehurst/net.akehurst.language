@@ -39,14 +39,14 @@ interface Grammar {
 	 * the List of grammars extended by this one
 	 */
 	val extends: List<Grammar>
-	
+
+	val rule: List<Rule>
+
 	/**
 	 * the List of rules defined by this grammar and those that this grammar extends
 	 * the order of the rules is the order they are defined in with the top of the grammar extension
 	 * hierachy coming first (in extension order where more than one grammar is extended)
 	 */
-	val rule: List<Rule>
-
 	val allRule : List<Rule>
 	
 	/**

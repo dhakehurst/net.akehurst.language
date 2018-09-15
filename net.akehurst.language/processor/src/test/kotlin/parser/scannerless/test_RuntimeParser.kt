@@ -16,12 +16,7 @@
 
 package net.akehurst.language.parser.scannerless
 
-import net.akehurst.language.ogl.runtime.converter.Converter
-import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault
-import net.akehurst.language.ogl.semanticStructure.NamespaceDefault
-import net.akehurst.language.parser.scannerless.ScannerlessParser
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.fail
@@ -46,21 +41,11 @@ class test_RuntimeParser {
     }
 
     @Test
-    fun parse() {
-        val rrb = RuntimeRuleSetBuilder()
-        val r0 = rrb.literal("a")
-        val r1 = rrb.rule("a").concatenation(r0).build()
-        val sp = ScannerlessParser(rrb.ruleSet())
-
-        sp.parse("a","a")
-    }
-
-    @Test
     fun expectedAt() {
         val rrb = RuntimeRuleSetBuilder()
         val sp = ScannerlessParser(rrb.ruleSet())
 
-        sp.expectedAt("","",0)
+        sp.expectedAt("", "", 0)
     }
 
 }

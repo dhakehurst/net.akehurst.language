@@ -27,11 +27,11 @@ import net.akehurst.language.api.grammar.GrammarRuleItemNotFoundException
 class NonTerminalDefault(override val name: String) : RuleItemAbstract(), NonTerminal {
 
 	override val referencedRule : Rule by lazy {
-		this.owningRule?.grammar?.findAllRule(this.name) ?: throw GrammarRuleItemNotFoundException("rule with name ${this.name} not found")
+		this.owningRule.grammar.findAllRule(this.name) ?: throw GrammarRuleItemNotFoundException("rule with name ${this.name} not found")
 	}
 
     override fun setOwningRule(rule: Rule, indices: List<Int>) {
-		this.owningRule = rule
+		this._owningRule = rule
 		this.index = indices
 	}
 	
@@ -46,6 +46,8 @@ class NonTerminalDefault(override val name: String) : RuleItemAbstract(), NonTer
 	override val allNonTerminal: Set<NonTerminal> by lazy {
 		setOf(this)
 	}
+
+	// --- GrammarVisitable ---
 
 	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
 		return visitor.visit(this, arg);

@@ -37,17 +37,16 @@ class RuntimeRule(
 
     val emptyRuleItem: RuntimeRule
         get() {
-            val er = this.rhs?.items?.get(0) ?: throw ParseException("rhs does not contain any rules")
-            if (er.isEmptyRule) {
-                return er
-            } else {
-                throw ParseException("this is not an empty rule")
+            return when {
+                this.rhs.kind==RuntimeRuleItemKind.MULTI && 0==this.rhs.multiMin -> this.rhs.items[1]
+                this.rhs.kind==RuntimeRuleItemKind.SEPARATED_LIST && 0==this.rhs.multiMin -> this.rhs.items[2]
+                else -> throw ParseException("this rule cannot be empty and has no emptyRuleItem")
             }
         }
 
     val isEmptyRule: Boolean
         get() {
-            return isNonTerminal && rhs.kind == RuntimeRuleItemKind.EMPTY
+            return this.isTerminal && null!=this.rhsOpt && this.rhs.kind == RuntimeRuleItemKind.EMPTY
         }
 
     val isTerminal = this.kind == RuntimeRuleKind.TERMINAL
@@ -357,10 +356,10 @@ class RuntimeRule(
 
     override fun equals(arg: Any?): Boolean {
         if (arg is RuntimeRule) {
-            return false
-        } else {
             val other = arg as RuntimeRule?
             return this.number == other?.number
+        } else {
+            return false
         }
     }
 

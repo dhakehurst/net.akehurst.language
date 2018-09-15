@@ -27,8 +27,6 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
  */
 interface SemanticAnalyser {
 
-	var grammarLoader: GrammarLoader?
-
 	/**
 	 * reset the analyser, clearing any cached values
 	 */

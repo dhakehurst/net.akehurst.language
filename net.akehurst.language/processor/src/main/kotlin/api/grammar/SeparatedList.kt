@@ -18,4 +18,12 @@ package net.akehurst.language.api.grammar
 
 interface SeparatedList : ConcatenationItem {
 
+    val min: Int
+
+    val max: Int
+
+    val separator: Terminal
+
+    val item: SimpleItem
+
 }

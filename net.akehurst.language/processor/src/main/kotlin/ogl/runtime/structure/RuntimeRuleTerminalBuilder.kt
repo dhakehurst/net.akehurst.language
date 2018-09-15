@@ -16,7 +16,7 @@
 
 package net.akehurst.language.ogl.runtime.structure
 
-class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val number: Int) {
+class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder) {
 
     private var name: String = ""
     private var kind: RuntimeRuleKind = RuntimeRuleKind.TERMINAL
@@ -25,7 +25,7 @@ class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val number: In
 
     fun literal(value: String) : RuntimeRule {
         this.name = value
-        val rr = RuntimeRule(number, name, kind, isPattern, isSkip)
+        val rr = RuntimeRule(this.rrsb.rules.size, name, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
         return rr
     }
@@ -33,14 +33,14 @@ class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val number: In
     fun pattern(pattern: String) : RuntimeRule {
         this.name = pattern
         this.isPattern = true
-        val rr = RuntimeRule(number, name, kind, isPattern, isSkip)
+        val rr = RuntimeRule(this.rrsb.rules.size, name, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
         return rr
     }
 
     fun empty(ruleThatIsEmpty: RuntimeRule): RuntimeRule {
         this.name = "${'$'}empty."+ruleThatIsEmpty.name
-        val rr = RuntimeRule(number, name, kind, isPattern, isSkip)
+        val rr = RuntimeRule(this.rrsb.rules.size, name, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
         rr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.EMPTY,0,0, arrayOf(ruleThatIsEmpty))
         return rr

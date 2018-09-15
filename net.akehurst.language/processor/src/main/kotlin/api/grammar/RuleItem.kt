@@ -16,9 +16,9 @@
 
 package net.akehurst.language.api.grammar
 
-interface RuleItem {
+interface RuleItem : GrammarVisitable {
 	 
-    val owningRule: Rule?
+    val owningRule: Rule
 
 	fun setOwningRule(rule: Rule, indices: List<Int>)
 	

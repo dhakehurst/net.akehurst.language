@@ -26,44 +26,59 @@ import net.akehurst.language.parser.sppt.SPPTLeafDefault
 
 class RuntimeRuleSetBuilder() {
 
-    val rules : MutableList<RuntimeRule> = mutableListOf()
+    private var runtimeRuleSet: RuntimeRuleSet? = null
+    private var nextGroupNumber: Int = 0
 
-    private var runtimeRuleSet : RuntimeRuleSet? = null
+    val rules: MutableList<RuntimeRule> = mutableListOf()
 
-    fun literal(value : String) : RuntimeRule {
-        if (null!=this.runtimeRuleSet) {
-            throw ParseException("Must not add rules after creating the ruleSet")
-        } else {
-            return RuntimeRuleTerminalBuilder(this, rules.size).literal(value)
+    fun createGroupRuleName() :String {
+        return "${'$'}group"+this.nextGroupNumber++ //TODO: include original rule name fo easier debug
+    }
+
+    fun findRuleByName(ruleName: String, terminal: Boolean): RuntimeRule? {
+        return this.rules.firstOrNull {
+            if (terminal) {
+                it.isTerminal && it.name == ruleName
+            } else {
+                it.isNonTerminal && it.name == ruleName
+            }
         }
     }
 
-    fun pattern(pattern : String) : RuntimeRule {
-        if (null!=this.runtimeRuleSet) {
+    fun literal(value: String): RuntimeRule {
+        if (null != this.runtimeRuleSet) {
             throw ParseException("Must not add rules after creating the ruleSet")
         } else {
-            return RuntimeRuleTerminalBuilder(this, rules.size).pattern(pattern)
+            return RuntimeRuleTerminalBuilder(this).literal(value)
         }
     }
 
-    fun empty(ruleThatIsEmpty: RuntimeRule) : RuntimeRule {
-        if (null!=this.runtimeRuleSet) {
+    fun pattern(pattern: String): RuntimeRule {
+        if (null != this.runtimeRuleSet) {
             throw ParseException("Must not add rules after creating the ruleSet")
         } else {
-            return RuntimeRuleTerminalBuilder(this, rules.size).empty(ruleThatIsEmpty)
+            return RuntimeRuleTerminalBuilder(this).pattern(pattern)
         }
     }
 
-    fun rule(name: String) : RuntimeRuleNonTerminalBuilder {
-        if (null!=this.runtimeRuleSet) {
+    fun empty(ruleThatIsEmpty: RuntimeRule): RuntimeRule {
+        if (null != this.runtimeRuleSet) {
             throw ParseException("Must not add rules after creating the ruleSet")
         } else {
-            return RuntimeRuleNonTerminalBuilder(this, rules.size, name)
+            return RuntimeRuleTerminalBuilder(this).empty(ruleThatIsEmpty)
         }
     }
 
-    fun ruleSet() : RuntimeRuleSet {
-        if (null==this.runtimeRuleSet) {
+    fun rule(name: String): RuntimeRuleNonTerminalBuilder {
+        if (null != this.runtimeRuleSet) {
+            throw ParseException("Must not add rules after creating the ruleSet")
+        } else {
+            return RuntimeRuleNonTerminalBuilder(this, name)
+        }
+    }
+
+    fun ruleSet(): RuntimeRuleSet {
+        if (null == this.runtimeRuleSet) {
             this.runtimeRuleSet = RuntimeRuleSet(this.rules)
         }
         return this.runtimeRuleSet ?: throw ParseException("Should never happen")

@@ -16,28 +16,34 @@
 
 package net.akehurst.language.ogl.semanticStructure
 
-import net.akehurst.language.api.grammar.Grammar;
-import net.akehurst.language.api.grammar.GrammarRuleNotFoundException;
-import net.akehurst.language.api.grammar.NodeType;
-import net.akehurst.language.api.grammar.NonTerminal;
-import net.akehurst.language.api.grammar.Rule;
-import net.akehurst.language.api.grammar.RuleItem;
-import net.akehurst.language.api.grammar.Terminal;
+import net.akehurst.language.api.analyser.GrammarExeception
+import net.akehurst.language.api.grammar.*
 
-data class RuleDefault(override val grammar: GrammarDefault, override val name: String, override val isSkip: Boolean) : Rule {
+data class RuleDefault(
+		override val grammar: GrammarDefault,
+		override val name: String,
+		override val isSkip: Boolean
+) : Rule {
 	
 	init {
 		this.grammar.rule.add(this)
 	}
 	
 	private var _rhs: RuleItem? = null
-	override var rhs: RuleItem?
-		get() = this._rhs
+	override var rhs: RuleItem
+		get() {
+			return this._rhs ?: throw GrammarExeception("rhs or rule must be set",null)
+		}
 		set(value) {
-			value?.setOwningRule(this, listOf(0))
+			value.setOwningRule(this, listOf(0))
 			this._rhs = value
 		}
 
 	override val nodeType: NodeType = NodeTypeDefault(this.name)
 
+	// --- GrammarVisitable ---
+
+	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
+		return visitor.visit(this, arg);
+	}
 }

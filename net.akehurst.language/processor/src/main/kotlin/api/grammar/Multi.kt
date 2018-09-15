@@ -16,6 +16,12 @@
 
 package net.akehurst.language.api.grammar
 
-public interface Multi : ConcatenationItem {
+interface Multi : ConcatenationItem {
+
+    val item: SimpleItem
+
+    val min: Int
+
+    val max: Int
 
 }
