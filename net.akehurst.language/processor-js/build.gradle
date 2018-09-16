@@ -1,4 +1,6 @@
 apply plugin: 'kotlin-platform-js'
+apply plugin: 'kotlin-dce-js'
+apply plugin: 'com.moowork.node'
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-js:${version_kotlin}"
@@ -7,3 +9,18 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-test-js:${version_kotlin}"
     
 }
+
+
+node {
+    download = true
+}
+
+compileKotlin2Js {
+
+}
+
+task buildBundle(type: YarnTask, dependsOn: [npmInstall, runDceKotlinJs]) {
+    args = ["run", "bundle"]
+}
+
+assemble.dependsOn buildBundle

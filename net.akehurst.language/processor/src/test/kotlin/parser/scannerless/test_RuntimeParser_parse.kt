@@ -36,7 +36,7 @@ class test_RuntimeParser_parse {
         return ScannerlessParser(rrb.ruleSet())
     }
 
-    //  a = 'a' | 'b'
+    //  a = 'a' | 'a'
     @Test
     fun literal_a_a_a() {
         val sp = literal_a()
@@ -184,7 +184,7 @@ class test_RuntimeParser_parse {
     }
 
     @Test
-    fun abcChoice_r_r_fails() {
+    fun abcChoice_r_d_fails() {
         val sp = this.abcChoice()
         val goalRuleName = "r"
         val inputText = "d"
@@ -195,4 +195,27 @@ class test_RuntimeParser_parse {
         assertEquals(1, ex.location["line"])
         assertEquals(1, ex.location["column"])
     }
+
+    // concatenation
+    private fun abcConcatenation(): ScannerlessParser {
+        val b = RuntimeRuleSetBuilder()
+        val r1 = b.rule("a").concatenation(b.literal("a"))
+        val r2 = b.rule("b").concatenation(b.literal("b"))
+        val r3 = b.rule("c").concatenation(b.literal("c"))
+        b.rule("r").concatenation(r1, r2, r3)
+        val sp = ScannerlessParser(b.ruleSet())
+        return sp
+    }
+
+    @Test
+    fun abcConcatenation_r_abc() {
+        val sp = this.abcConcatenation()
+        val goalRuleName = "r"
+        val inputText = "a"
+
+        val actual = test_parse(sp, goalRuleName, inputText)
+
+        assertNotNull(actual)
+    }
+
 }
