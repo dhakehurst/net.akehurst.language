@@ -1,4 +1,4 @@
-package ogl.semanticStructure
+package net.akehurst.language.ogl.semanticStructure
 
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.ogl.semanticStructure.RuleItemAbstract

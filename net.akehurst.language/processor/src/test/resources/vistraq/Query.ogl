@@ -1,4 +1,4 @@
-namespace de::itemis::vistraq::traceability::computational::language;
+namespace de.itemis.vistraq.traceability.computational.language
  
 grammar Query {
 

@@ -23,7 +23,6 @@ import net.akehurst.language.api.grammar.ConcatenationItem
 import net.akehurst.language.api.grammar.TangibleItem
 import net.akehurst.language.api.grammar.Terminal
 import net.akehurst.language.api.grammar.NonTerminal
-import ogl.semanticStructure.EmptyRuleDefault
 
 class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 

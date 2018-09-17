@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "jasmine": "^3.2.0",
+    "mocha": "^5.2.0",
+    "qunitjs": "^2.4.1"
+  }
+}
