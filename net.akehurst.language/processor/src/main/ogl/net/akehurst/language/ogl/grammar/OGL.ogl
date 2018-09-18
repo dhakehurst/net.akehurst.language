@@ -27,7 +27,7 @@ grammar OGL {
   extends : 'extends' [qualifiedName / ',']+ ;
   rules : anyRule+ ;
   anyRule : normalRule | skipRule ; 
-  normalRule : IDENTIFIER ':' choice ';' ;
+  normalRule : IDENTIFIER '=' choice ';' ;
   skipRule : 'skip' IDENTIFIER ':' choice ';' ;
   choice : simpleChoice < priorityChoice ;
   simpleChoice : [concatenation / '|']* ;

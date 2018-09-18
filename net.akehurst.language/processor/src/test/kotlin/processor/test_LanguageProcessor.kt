@@ -36,7 +36,9 @@ internal class test_LanguageProcessor {
     @Test
     fun parser_rules_List() {
         val p = parser(listOf("a = 'a';"))
-        p.parse("a", "a")
+        val pt = p.parse("a", "a")
+
+        assertNotNull(pt)
     }
 
     @Test

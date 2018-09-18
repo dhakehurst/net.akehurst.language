@@ -55,12 +55,17 @@ fun parser(rules: List<String>): LanguageProcessor {
     } catch (e: ParseFailedException) {
         //TODO: better, different exception to detect which list item fails
         val newCol = e.location["column"]?.minus(prefix.length) ?: 0
-        val location = mapOf<String,Int>(Pair("line", 1), Pair("column", newCol))
+        val location = mapOf<String, Int>(Pair("line", 1), Pair("column", newCol))
         throw ParseFailedException("Unable to parse list of rules", e.longestMatch, location)
     }
 }
 
 fun parser(grammarDefinitionStr: String): LanguageProcessor {
-    val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
-    return processor(grammar)
+    try {
+        val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
+        return processor(grammar)
+    } catch (e: ParseFailedException) {
+        //TODO: better, different exception to detect which list item fails
+        throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
+    }
 }

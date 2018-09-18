@@ -38,6 +38,7 @@ abstract class Sppt2AstTransformerVisitorBasedAbstract : Sppt2AstTransformer, Sh
     private fun <T> findBranchHandler(branchName: String): BranchHandler<T> {
         var handler: BranchHandler<T>? = this.branchHandlers[branchName] as BranchHandler<T>?
         if (null == handler) {
+            /*
             try {
                 val m = Sppt2AstTransformerVisitorBasedAbstract::class.constructors.find {
                     it.parameters[0].type == SPPTBranch::class
@@ -53,8 +54,9 @@ abstract class Sppt2AstTransformerVisitorBasedAbstract : Sppt2AstTransformer, Sh
                 }
                 this.register<T>(branchName, handler)
             } catch (e: Exception) {
-                throw UnableToTransformSppt2AstExeception("Cannot find sppt2ast method named $branchName", e)
-            }
+            */
+                throw UnableToTransformSppt2AstExeception("Cannot find sppt2ast method named $branchName", null)
+            //}
 
         }
         return handler ?: throw UnableToTransformSppt2AstExeception("Cannot find sppt2ast method named $branchName", null)
