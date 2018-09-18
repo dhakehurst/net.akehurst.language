@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.semanticStructure
+package net.akehurst.language.ogl.ast
 
+
+import net.akehurst.language.api.grammar.ChoicePriority
+import net.akehurst.language.api.grammar.Concatenation
 import net.akehurst.language.api.grammar.GrammarVisitor
-import net.akehurst.language.api.grammar.Namespace
 
-data class NamespaceDefault(override val qualifiedName: String) : Namespace {
+class ChoicePriorityDefault(override val alternative: List<Concatenation>) : ChoiceAbstract(alternative), ChoicePriority {
 
     // --- GrammarVisitable ---
 
     override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
         return visitor.visit(this, arg);
     }
+
 }

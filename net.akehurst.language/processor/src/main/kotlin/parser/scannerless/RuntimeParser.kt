@@ -43,10 +43,7 @@ internal class RuntimeParser(
 
     private val lastGrown: Collection<GrowingNode>
         get() {
-            return if (this.graph.growing.isEmpty())
-                this.toGrow
-            else
-                this.graph.growing.values
+            return setOf<GrowingNode>().union(this.graph.growing.values).union(this.toGrow)
         }
 
     val longestLastGrown: SPPTNode?
@@ -132,7 +129,9 @@ internal class RuntimeParser(
     }
 
     private fun tryGraftBackSkipNode(gn: GrowingNode, previous: Set<PreviousInfo>) {
-
+        for (info in previous) {
+            this.tryGraftInto(gn, info)
+        }
     }
 
     private fun tryGrowHeight(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {

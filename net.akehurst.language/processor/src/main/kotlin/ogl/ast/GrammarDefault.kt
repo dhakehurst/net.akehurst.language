@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.semanticStructure
+package net.akehurst.language.ogl.ast
 
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException
@@ -24,7 +24,11 @@ import net.akehurst.language.api.grammar.Rule
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.grammar.Terminal
 
-class GrammarDefault(override val namespace: Namespace, override val name: String, override val rule: MutableList<Rule>) : GrammarAbstract(namespace, name, rule) {
+class GrammarDefault(
+		override val namespace: Namespace,
+		override val name: String,
+        override val rule: MutableList<Rule>
+) : GrammarAbstract(namespace, name, rule) {
 
 }
 

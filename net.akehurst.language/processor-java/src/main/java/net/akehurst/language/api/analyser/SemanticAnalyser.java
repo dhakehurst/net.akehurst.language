@@ -31,7 +31,7 @@ public interface SemanticAnalyser {
     void setGrammarLoader(GrammarLoader value);
 
     /**
-     * reset the analyser, clearing any cached values
+     * reset the sppt2ast, clearing any cached values
      */
     void clear();
 

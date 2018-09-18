@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.semanticStructure
+package net.akehurst.language.ogl.ast
 
 import net.akehurst.language.api.grammar.Namespace
 import net.akehurst.language.api.grammar.Grammar

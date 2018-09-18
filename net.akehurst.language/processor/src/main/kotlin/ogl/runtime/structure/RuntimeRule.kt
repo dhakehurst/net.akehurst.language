@@ -40,6 +40,7 @@ class RuntimeRule(
             return when {
                 this.rhs.kind==RuntimeRuleItemKind.MULTI && 0==this.rhs.multiMin -> this.rhs.items[1]
                 this.rhs.kind==RuntimeRuleItemKind.SEPARATED_LIST && 0==this.rhs.multiMin -> this.rhs.items[2]
+                this.rhs.items[0].isEmptyRule -> this.rhs.items[0]
                 else -> throw ParseException("this rule cannot be empty and has no emptyRuleItem")
             }
         }
@@ -192,7 +193,7 @@ class RuntimeRule(
         return if (isTerminal) {
             emptySet<RuntimeRule>()
         } else {
-            this.rhs.items.filter { it.isTerminal }.toSet()
+            this.rhs.items.filter { it.isNonTerminal }.toSet()
         }
     }
 

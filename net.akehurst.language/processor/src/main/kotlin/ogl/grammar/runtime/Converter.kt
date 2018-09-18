@@ -79,9 +79,10 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, Pair<String,Boolean>
 
     override fun visit(target: ChoicePriority, arg: Pair<String,Boolean>): RuntimeRule {
         val items = target.alternative.map {
-            it.accept(this, arg) as RuntimeRule
+            val virtualRuleName = builder.createChoiceRuleName()
+            it.accept(this, Pair(virtualRuleName, false)) as RuntimeRule
         }
-        return builder.rule(arg.first).skip(arg.second).choiceEqual(*items.toTypedArray())
+        return builder.rule(arg.first).skip(arg.second).choicePriority(*items.toTypedArray())
     }
 
     override fun visit(target: Concatenation, arg: Pair<String,Boolean>): RuntimeRule {

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2015 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,8 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.semanticStructure
+package net.akehurst.language.api.sppt2ast
 
-
-import net.akehurst.language.api.grammar.ChoiceSimple
-import net.akehurst.language.api.grammar.Concatenation
-import net.akehurst.language.api.grammar.GrammarVisitor
-
-class ChoiceSimpleDefault(override val alternative: List<Concatenation>) : ChoiceAbstract(alternative), ChoiceSimple {
-
-    // --- GrammarVisitable ---
-
-    override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
-        return visitor.visit(this, arg);
-    }
+class UnableToTransformSppt2AstExeception(message: String, cause: Throwable?) : Exception(message, cause) {
 
 }

@@ -22,7 +22,7 @@ grammar OGL {
   skip SINGLE_LINE_COMMENT : "//.*?$" ;
 
   grammarDefinition : namespace grammar ;
-  namespace : 'namespace' qualifiedName ';' ;
+  namespace : 'namespace' qualifiedName ;
   grammar : 'grammar' IDENTIFIER extends? '{' rules '}' ;
   extends : 'extends' [qualifiedName / ',']+ ;
   rules : anyRule+ ;
@@ -41,9 +41,8 @@ grammar OGL {
   separatedList : '[' simpleItem '/' terminal ']' multiplicity ;
   nonTerminal : IDENTIFIER ;
   terminal : LITERAL | PATTERN ;
-  LITERAL : "'(?:\\\\?.)*?'" ;
-  PATTERN : "\"(?:\\\\?.)*?\"" ;
   qualifiedName : (IDENTIFIER / '::')+ ;
   IDENTIFIER : "[a-zA-Z_][a-zA-Z_0-9]*";
-
+  LITERAL : "'(?:\\\\?.)*?'" ;
+  PATTERN : "\"(?:\\\\?.)*?\"" ;
 }

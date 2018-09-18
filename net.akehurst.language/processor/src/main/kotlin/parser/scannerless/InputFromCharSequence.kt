@@ -46,12 +46,12 @@ internal class InputFromCharSequence(val text: CharSequence) {
     internal fun calcLineAndColumn(position: Int): Map<String, Int> {
         val result = mutableMapOf<String, Int>()
         var line = 1
-        var column = 1
+        var column = 0
 
         for (count in 0 until position) {
             if (this.text[count] == '\n') {
                 ++line
-                column = 1
+                column = 0
             } else {
                 ++column
             }

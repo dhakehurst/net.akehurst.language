@@ -16,9 +16,9 @@
 
 package net.akehurst.language.ogl.grammar
 
-import net.akehurst.language.ogl.semanticStructure.NamespaceDefault
-import net.akehurst.language.ogl.semanticStructure.GrammarAbstract
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault
+import net.akehurst.language.ogl.ast.NamespaceDefault
+import net.akehurst.language.ogl.ast.GrammarAbstract
+import net.akehurst.language.ogl.ast.GrammarBuilderDefault
 import net.akehurst.language.api.grammar.Rule
 
 class OglGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.ogl.grammar"), "OGL", createRules()) {

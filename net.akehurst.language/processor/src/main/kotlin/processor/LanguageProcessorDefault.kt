@@ -16,8 +16,8 @@
 
 package net.akehurst.language.processor
 
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.UnableToAnalyseExeception
+import net.akehurst.language.api.sppt2ast.Sppt2AstTransformer
+import net.akehurst.language.api.sppt2ast.UnableToTransformSppt2AstExeception
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.Parser
@@ -27,7 +27,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.ogl.grammar.runtime.Converter
 import net.akehurst.language.parser.scannerless.ScannerlessParser
 
-internal class LanguageProcessorDefault(val grammar: Grammar, val semanticAnalyser: SemanticAnalyser?) : LanguageProcessor {
+internal class LanguageProcessorDefault(val grammar: Grammar, val semanticAnalyser: Sppt2AstTransformer?) : LanguageProcessor {
 
     private val converter: Converter = Converter(this.grammar)
     private val parser: Parser = ScannerlessParser(this.converter.transform())
@@ -41,9 +41,9 @@ internal class LanguageProcessorDefault(val grammar: Grammar, val semanticAnalys
     override fun <T> process(goalRuleName: String, inputText: CharSequence): T {
         val sppt: SharedPackedParseTree = this.parse(goalRuleName, inputText)
         if (null == this.semanticAnalyser) {
-            throw UnableToAnalyseExeception("No SemanticAnalyser supplied", null);
+            throw UnableToTransformSppt2AstExeception("No Sppt2AstTransformer supplied", null);
         }
-        val t: T = this.semanticAnalyser.analyse(sppt);
+        val t: T = this.semanticAnalyser.transform(sppt);
 
         return t;
     }

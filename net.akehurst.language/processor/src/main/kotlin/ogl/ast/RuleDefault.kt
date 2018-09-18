@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.semanticStructure
+package net.akehurst.language.ogl.ast
 
 import net.akehurst.language.api.analyser.GrammarExeception
 import net.akehurst.language.api.grammar.*
@@ -32,7 +32,7 @@ data class RuleDefault(
 	private var _rhs: RuleItem? = null
 	override var rhs: RuleItem
 		get() {
-			return this._rhs ?: throw GrammarExeception("rhs or rule must be set",null)
+			return this._rhs ?: throw GrammarExeception("rhs of rule must be set",null)
 		}
 		set(value) {
 			value.setOwningRule(this, listOf(0))

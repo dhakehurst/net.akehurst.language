@@ -14,25 +14,16 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.processor
+package net.akehurst.language.ogl.ast
 
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.processor.SemanticAnalyserVisitorBasedAbstract
+import net.akehurst.language.api.grammar.GrammarVisitor
+import net.akehurst.language.api.grammar.Namespace
 
-class TestAnalyser : SemanticAnalyserVisitorBasedAbstract() {
+data class NamespaceDefault(override val qualifiedName: String) : Namespace {
 
-    override fun clear() {
+    // --- GrammarVisitable ---
 
+    override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
+        return visitor.visit(this, arg);
     }
-
-    override fun <T> analyse(sppt: SharedPackedParseTree): T {
-        return 1 as T
-    }
-
-}
-
-data class A(
-        val value: String
-) {
-
 }

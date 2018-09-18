@@ -28,13 +28,16 @@ class RuntimeRuleSetBuilder() {
 
     private var runtimeRuleSet: RuntimeRuleSet? = null
     private var nextGroupNumber: Int = 0
+    private var nextChoiceNumber: Int = 0
 
     val rules: MutableList<RuntimeRule> = mutableListOf()
 
     fun createGroupRuleName() :String {
         return "${'$'}group"+this.nextGroupNumber++ //TODO: include original rule name fo easier debug
     }
-
+    fun createChoiceRuleName() :String {
+        return "${'$'}choice"+this.nextChoiceNumber++ //TODO: include original rule name fo easier debug
+    }
     fun findRuleByName(ruleName: String, terminal: Boolean): RuntimeRule? {
         return this.rules.firstOrNull {
             if (terminal) {

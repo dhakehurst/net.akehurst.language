@@ -14,37 +14,36 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.semanticStructure
+package net.akehurst.language.ogl.ast
 
-import kotlin.text.Regex
-import net.akehurst.language.api.grammar.NonTerminal
-import net.akehurst.language.api.grammar.Terminal
-import net.akehurst.language.api.grammar.GrammarVisitor
+import net.akehurst.language.api.grammar.SimpleItem
+import net.akehurst.language.api.grammar.Multi
 import net.akehurst.language.api.grammar.Rule
 import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.grammar.Terminal
+import net.akehurst.language.api.grammar.NonTerminal
+import net.akehurst.language.api.grammar.GrammarVisitor
 import net.akehurst.language.api.grammar.GrammarRuleItemNotFoundException
 
-class NonTerminalDefault(override val name: String) : RuleItemAbstract(), NonTerminal {
-
-	override val referencedRule : Rule by lazy {
-		this.owningRule.grammar.findAllRule(this.name) ?: throw GrammarRuleItemNotFoundException("rule with name ${this.name} not found")
-	}
+class MultiDefault(override val min: Int, override val max: Int, override val item: SimpleItem) : RuleItemAbstract(), Multi {
 
     override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this._owningRule = rule
 		this.index = indices
+		val nextIndex: List<Int> = indices + 0
+		this.item.setOwningRule(rule, nextIndex)
 	}
-	
+		
 	override fun subItem(index: Int): RuleItem {
-		throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+		return if (0==index) this.item else throw GrammarRuleItemNotFoundException("subitem ${index} not found")
 	}
 	
 	override val allTerminal: Set<Terminal> by lazy {
-		emptySet<Terminal>()
+		this.item.allTerminal
 	}
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
-		setOf(this)
+		this.item.allNonTerminal
 	}
 
 	// --- GrammarVisitable ---
@@ -52,5 +51,5 @@ class NonTerminalDefault(override val name: String) : RuleItemAbstract(), NonTer
 	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
 		return visitor.visit(this, arg);
 	}
-
+	
 }

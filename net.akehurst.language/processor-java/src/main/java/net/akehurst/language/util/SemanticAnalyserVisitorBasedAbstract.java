@@ -51,7 +51,7 @@ public abstract class SemanticAnalyserVisitorBasedAbstract
 				};
 				this.register(branchName, handler);
 			} catch (final NoSuchMethodException e) {
-				throw new UnableToAnalyseExeception("Cannot find analyser method named " + branchName, e);
+				throw new UnableToAnalyseExeception("Cannot find sppt2ast method named " + branchName, e);
 			}
 
 		}
@@ -101,7 +101,7 @@ public abstract class SemanticAnalyserVisitorBasedAbstract
 		final String branchName = target.getName();
 		final BranchHandler<?> handler = this.getBranchHandler(branchName);
 		if (null == handler) {
-			throw new UnableToAnalyseExeception("Branch not handled in analyser " + branchName, null);
+			throw new UnableToAnalyseExeception("Branch not handled in sppt2ast " + branchName, null);
 		} else {
 			final List<SPPTBranch> branchChildren = target.getBranchNonSkipChildren();// .stream().map(it -> it.getIsEmpty() ? null :
 																						// it).collect(Collectors.toList());

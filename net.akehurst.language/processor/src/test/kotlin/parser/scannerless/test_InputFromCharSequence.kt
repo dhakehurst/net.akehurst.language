@@ -48,7 +48,7 @@ class test_InputFromCharSequence {
 
         val actual = sut.isStart(1)
 
-        assertEquals(true, actual)
+        assertEquals(false, actual)
     }
 
     @Test
@@ -58,7 +58,7 @@ class test_InputFromCharSequence {
 
         val actual = sut.isStart(0)
 
-        assertEquals(false, actual)
+        assertEquals(true, actual)
     }
 
     @Test
@@ -88,7 +88,7 @@ class test_InputFromCharSequence {
 
         val actual = sut.isStart(6)
 
-        assertEquals(true, actual)
+        assertEquals(false, actual)
     }
 
     @Test
@@ -98,7 +98,7 @@ class test_InputFromCharSequence {
 
         val actual = sut.isStart(7)
 
-        assertEquals(true, actual)
+        assertEquals(false, actual)
     }
 
     @Test
@@ -158,7 +158,7 @@ class test_InputFromCharSequence {
 
         val actual = sut.isEnd(6)
 
-        assertEquals(true, actual)
+        assertEquals(false, actual)
     }
 
     @Test
@@ -218,7 +218,7 @@ class test_InputFromCharSequence {
 
         val actual = sut.tryMatchText(0, "[a-c]", true)
 
-        assertEquals("a", actual)
+        assertEquals(null, actual)
     }
 
     //TODO:....tryMatchText

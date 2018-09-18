@@ -65,7 +65,7 @@ class SPPTBranchDefault(
     }
 
     override val nonSkipMatchedText: String get() {
-        return if (isSkip) "" else this.matchedText
+        return this.nonSkipChildren.map { it.nonSkipMatchedText }.joinToString()
     }
 
     override fun contains(other: SPPTNode): Boolean {
@@ -87,5 +87,30 @@ class SPPTBranchDefault(
 
     override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
         return visitor.visit(this, arg)
+    }
+
+    // --- Object ---
+    override fun toString(): String {
+        var r = ""
+        r += this.startPosition.toString() + ","
+        r += this.nextInputPosition
+        r += ":" + this.runtimeRule.name + "(" + this.runtimeRule.number + ")"
+        return r
+    }
+
+    override fun hashCode(): Int {
+        return this.identity.hashCode()
+    }
+
+    override fun equals(arg: Any?): Boolean {
+        if (arg !is SPPTBranch) {
+            return false
+        } else {
+             return if (this.identity != arg.identity) {
+                false
+            } else {
+                 this.children == arg.children
+             }
+        }
     }
 }

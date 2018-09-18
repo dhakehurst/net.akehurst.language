@@ -19,8 +19,8 @@ package net.akehurst.language.parser.sppt
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.ogl.grammar.runtime.Converter
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault
-import net.akehurst.language.ogl.semanticStructure.NamespaceDefault
+import net.akehurst.language.ogl.ast.GrammarBuilderDefault
+import net.akehurst.language.ogl.ast.NamespaceDefault
 import kotlin.test.*
 
 class test_SPPTParser {

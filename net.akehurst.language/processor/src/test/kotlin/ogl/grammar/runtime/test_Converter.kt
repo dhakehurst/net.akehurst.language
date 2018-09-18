@@ -19,8 +19,8 @@ package net.akehurst.language.ogl.grammar.runtime
 import net.akehurst.language.api.parser.ParseException
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.ogl.semanticStructure.GrammarBuilderDefault
-import net.akehurst.language.ogl.semanticStructure.NamespaceDefault
+import net.akehurst.language.ogl.ast.GrammarBuilderDefault
+import net.akehurst.language.ogl.ast.NamespaceDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

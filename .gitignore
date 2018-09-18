@@ -2,6 +2,7 @@ build/
 bin/
 target/
 old/
+node_modules/
 .gradle/
 .idea/
 .project

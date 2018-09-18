@@ -14,45 +14,39 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.semanticStructure
+package net.akehurst.language.ogl.ast
 
-import net.akehurst.language.api.analyser.UnableToAnalyseExeception;
-import net.akehurst.language.api.grammar.Concatenation;
-import net.akehurst.language.api.grammar.ConcatenationItem;
-import net.akehurst.language.api.grammar.NonTerminal;
-import net.akehurst.language.api.grammar.RuleItem;
-import net.akehurst.language.api.grammar.Terminal;
-import net.akehurst.language.api.grammar.Rule;
-import net.akehurst.language.api.grammar.GrammarVisitor;
 
-class ConcatenationDefault(override val items: List<ConcatenationItem>) : RuleItemAbstract(), Concatenation {
+import net.akehurst.language.api.grammar.Choice
+import net.akehurst.language.api.grammar.Terminal
+import net.akehurst.language.api.grammar.NonTerminal
+import net.akehurst.language.api.grammar.Rule
+import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.grammar.Concatenation
 
-   override fun setOwningRule(rule: Rule, indices: List<Int>) {
+abstract class ChoiceAbstract(override val alternative: List<Concatenation>) : RuleItemAbstract(), Choice {
+
+	override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this._owningRule = rule
 		this.index = indices
 		var i: Int = 0
-		this.items.forEach {
+		this.alternative.forEach {
 			val nextIndex: List<Int> = indices + (i++)
 			it.setOwningRule(rule, nextIndex)
 		}
 	}
-	
+
 	override fun subItem(index: Int): RuleItem {
-		return this.items.get(index)
+//		 return if (index < this.alternative.size) this.alternative.get(index) else null
+		return this.alternative.get(index)
 	}
-	
+
 	override val allTerminal: Set<Terminal> by lazy {
-		this.items.flatMap { it.allTerminal }.toSet()
+		this.alternative.flatMap { it.allTerminal }.toSet()
 	}
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
-		this.items.flatMap { it.allNonTerminal }.toSet()
-	}
-
-	// --- GrammarVisitable ---
-
-	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
-		return visitor.visit(this, arg);
+		this.alternative.flatMap { it.allNonTerminal }.toSet()
 	}
 
 }

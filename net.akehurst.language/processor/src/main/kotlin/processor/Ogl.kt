@@ -18,44 +18,49 @@
 
 package net.akehurst.language.processor
 
-import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.sppt2ast.Sppt2AstTransformer
 import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.ogl.grammar.OglGrammar
+import net.akehurst.language.ogl.sppt2ast.OglSppt2AstTransformer
 import kotlin.jvm.JvmName
+
 
 private val oglProcessor: LanguageProcessor by lazy {
     val grammar = OglGrammar()
-    val semanticAnalyser: SemanticAnalyser? = null //TODO:
-    processor(grammar)//, semanticAnalyser)
+    val sppt2ast: Sppt2AstTransformer = OglSppt2AstTransformer()
+    processor(grammar, sppt2ast)
 }
 
 fun processor(grammar: Grammar): LanguageProcessor {
     return LanguageProcessorDefault(grammar, null)
 }
 
-fun processor(grammar: Grammar, semanticAnalyser: SemanticAnalyser): LanguageProcessor {
+fun processor(grammar: Grammar, semanticAnalyser: Sppt2AstTransformer): LanguageProcessor {
     return LanguageProcessorDefault(grammar, semanticAnalyser)
 }
 
-fun processor(grammarStr: String): LanguageProcessor {
-    val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarStr)
-    return processor(grammar)
-}
-
-fun processor(grammarStr: String, semanticAnalyser: SemanticAnalyser): LanguageProcessor {
-    val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarStr)
+fun processor(grammarDefinitionStr: String, semanticAnalyser: Sppt2AstTransformer): LanguageProcessor {
+    val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
     return processor(grammar, semanticAnalyser)
 }
 
 fun parser(rules: List<String>): LanguageProcessor {
-    val grammarStr = "grammar Temp { ${rules.joinToString(";")} }"
-    val grammar = oglProcessor.process<Grammar>("grammar", grammarStr)
-    return LanguageProcessorDefault(grammar, null)
+    val prefix = "namespace temp grammar Temp { "
+    val grammarStr = prefix + rules.joinToString(" ") + "}"
+    try {
+        val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarStr)
+        return LanguageProcessorDefault(grammar, null)
+    } catch (e: ParseFailedException) {
+        //TODO: better, different exception to detect which list item fails
+        val newCol = e.location["column"]?.minus(prefix.length) ?: 0
+        val location = mapOf<String,Int>(Pair("line", 1), Pair("column", newCol))
+        throw ParseFailedException("Unable to parse list of rules", e.longestMatch, location)
+    }
 }
 
-fun parser(rules: String): LanguageProcessor {
-    val grammarStr = "grammar Temp { ${rules} }"
-    val grammar = oglProcessor.process<Grammar>("grammar", grammarStr)
-    return LanguageProcessorDefault(grammar, null)
+fun parser(grammarDefinitionStr: String): LanguageProcessor {
+    val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
+    return processor(grammar)
 }

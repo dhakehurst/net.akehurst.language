@@ -14,10 +14,24 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.semanticStructure
+package net.akehurst.language.ogl.ast
 
-import net.akehurst.language.api.grammar.NodeType;
+import net.akehurst.language.api.grammar.*
 
-data class NodeTypeDefault(override val identity: String) : NodeType {
+abstract class RuleItemAbstract : GrammarVisitable, RuleItem {
 
+	protected var _owningRule : Rule? = null
+
+	override val owningRule: Rule get() {
+		return this._owningRule ?: throw GrammarRuleNotFoundException("Internal Error: owningRule must be set")
+	}
+	
+	var index: List<Int>? = null
+
+	abstract override val allTerminal: Set<Terminal>
+
+	abstract override val allNonTerminal: Set<NonTerminal>
+
+	
+	
 }

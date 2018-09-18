@@ -14,45 +14,45 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.semanticStructure
+package net.akehurst.language.ogl.ast
 
-import net.akehurst.language.api.grammar.NonTerminal
+import net.akehurst.language.api.grammar.SimpleItem
 import net.akehurst.language.api.grammar.Terminal
-import net.akehurst.language.api.grammar.GrammarVisitor
+import net.akehurst.language.api.grammar.SeparatedList
 import net.akehurst.language.api.grammar.Rule
 import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.grammar.NonTerminal
+import net.akehurst.language.api.grammar.GrammarVisitor
 import net.akehurst.language.api.grammar.GrammarRuleItemNotFoundException
 
-class TerminalDefault(override val value: String, override val isPattern: Boolean) : RuleItemAbstract(), Terminal {
+class SeparatedListDefault(
+		override val min: Int,
+		override val max: Int,
+		override val separator: Terminal,
+		override val item: SimpleItem
+) : RuleItemAbstract(), SeparatedList {
 
-	val pattern: Regex by lazy {
-		if (isPattern) Regex(value, RegexOption.MULTILINE) else throw GrammarRuleItemNotFoundException("${this} is not a pattern")
-	}
-
-	override val name : String by lazy {
-		value
-	}
-	
-	fun matches(value: String) : Boolean
-	{
-		return if (isPattern) this.pattern.matches(value) else value.equals(this.value);
-	}
-
-    override fun setOwningRule(rule: Rule, indices: List<Int>) {
+	override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this._owningRule = rule
 		this.index = indices
+		val nextIndex: List<Int> = indices + 0
+		this.item.setOwningRule(rule, nextIndex)
 	}
-	
+
 	override fun subItem(index: Int): RuleItem {
-		throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+		return when (index) {
+			0 -> this.item
+			1 -> this.separator
+			else -> throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+		}
 	}
-	
+
 	override val allTerminal: Set<Terminal> by lazy {
-		setOf(this)
+		this.item.allTerminal + separator
 	}
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
-		emptySet<NonTerminal>()
+		this.item.allNonTerminal
 	}
 
 	// --- GrammarVisitable ---

@@ -59,7 +59,7 @@ class test_RuntimeParser_parse {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location["line"])
-        assertEquals(1, ex.location["column"])
+        assertEquals(0, ex.location["column"])
     }
 
     // pattern
@@ -93,7 +93,7 @@ class test_RuntimeParser_parse {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location["line"])
-        assertEquals(1, ex.location["column"])
+        assertEquals(0, ex.location["column"])
     }
 
     private fun pattern_a2c(): ScannerlessParser {
@@ -193,11 +193,82 @@ class test_RuntimeParser_parse {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location["line"])
-        assertEquals(1, ex.location["column"])
+        assertEquals(0, ex.location["column"])
     }
 
     // concatenation
-    private fun abcConcatenation(): ScannerlessParser {
+    private fun abcConcatenation1(): ScannerlessParser {
+        val b = RuntimeRuleSetBuilder()
+        b.rule("r").concatenation(b.literal("a"), b.literal("b"), b.literal("c"))
+        val sp = ScannerlessParser(b.ruleSet())
+        return sp
+    }
+
+    @Test
+    fun abcConcatenation1_r_abc() {
+        val sp = this.abcConcatenation1()
+        val goalRuleName = "r"
+        val inputText = "abc"
+
+        val actual = test_parse(sp, goalRuleName, inputText)
+
+        assertNotNull(actual)
+    }
+
+    @Test
+    fun abcConcatenation1_r_empty() {
+        val sp = this.abcConcatenation1()
+        val goalRuleName = "r"
+        val inputText = ""
+
+        val ex = assertFailsWith(ParseFailedException::class) {
+            test_parse(sp, goalRuleName, inputText)
+        }
+        assertEquals(1, ex.location["line"], "line is wrong")
+        assertEquals(0, ex.location["column"], "column is wrong")
+    }
+
+    @Test
+    fun abcConcatenation1_r_a() {
+        val sp = this.abcConcatenation1()
+        val goalRuleName = "r"
+        val inputText = "a"
+
+        val ex = assertFailsWith(ParseFailedException::class) {
+            test_parse(sp, goalRuleName, inputText)
+        }
+        assertEquals(1, ex.location["line"], "line is wrong")
+        assertEquals(1, ex.location["column"], "column is wrong")
+    }
+
+    @Test
+    fun abcConcatenation1_r_ab() {
+        val sp = this.abcConcatenation1()
+        val goalRuleName = "r"
+        val inputText = "ab"
+
+        val ex = assertFailsWith(ParseFailedException::class) {
+            test_parse(sp, goalRuleName, inputText)
+        }
+        assertEquals(1, ex.location["line"], "line is wrong")
+        assertEquals(2, ex.location["column"], "column is wrong")
+    }
+
+    @Test
+    fun abcConcatenation1_r_abcd() {
+        val sp = this.abcConcatenation1()
+        val goalRuleName = "r"
+        val inputText = "abcd"
+
+        val ex = assertFailsWith(ParseFailedException::class) {
+            test_parse(sp, goalRuleName, inputText)
+        }
+        assertEquals(1, ex.location["line"], "line is wrong")
+        assertEquals(3, ex.location["column"], "column is wrong")
+    }
+
+    // concatenation
+    private fun abcConcatenation2(): ScannerlessParser {
         val b = RuntimeRuleSetBuilder()
         val r1 = b.rule("a").concatenation(b.literal("a"))
         val r2 = b.rule("b").concatenation(b.literal("b"))
@@ -208,14 +279,61 @@ class test_RuntimeParser_parse {
     }
 
     @Test
-    fun abcConcatenation_r_abc() {
-        val sp = this.abcConcatenation()
+    fun abcConcatenation2_r_empty() {
+        val sp = this.abcConcatenation2()
+        val goalRuleName = "r"
+        val inputText = ""
+
+        val ex = assertFailsWith(ParseFailedException::class) {
+            test_parse(sp, goalRuleName, inputText)
+        }
+        assertEquals(1, ex.location["line"], "line is wrong")
+        assertEquals(0, ex.location["column"], "column is wrong")
+    }
+    @Test
+    fun abcConcatenation2_r_a() {
+        val sp = this.abcConcatenation2()
         val goalRuleName = "r"
         val inputText = "a"
+
+        val ex = assertFailsWith(ParseFailedException::class) {
+            test_parse(sp, goalRuleName, inputText)
+        }
+        assertEquals(1, ex.location["line"], "line is wrong")
+        assertEquals(1, ex.location["column"], "column is wrong")
+    }
+    @Test
+    fun abcConcatenation2_r_ab() {
+        val sp = this.abcConcatenation2()
+        val goalRuleName = "r"
+        val inputText = "ab"
+
+        val ex = assertFailsWith(ParseFailedException::class) {
+            test_parse(sp, goalRuleName, inputText)
+        }
+        assertEquals(1, ex.location["line"], "line is wrong")
+        assertEquals(2, ex.location["column"], "column is wrong")
+    }
+    @Test
+    fun abcConcatenation2_r_abc() {
+        val sp = this.abcConcatenation2()
+        val goalRuleName = "r"
+        val inputText = "abc"
 
         val actual = test_parse(sp, goalRuleName, inputText)
 
         assertNotNull(actual)
     }
+    @Test
+    fun abcConcatenation2_r_abcd() {
+        val sp = this.abcConcatenation2()
+        val goalRuleName = "r"
+        val inputText = "abcd"
 
+        val ex = assertFailsWith(ParseFailedException::class) {
+            test_parse(sp, goalRuleName, inputText)
+        }
+        assertEquals(1, ex.location["line"], "line is wrong")
+        assertEquals(3, ex.location["column"], "column is wrong")
+    }
 }

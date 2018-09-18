@@ -14,22 +14,27 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.semanticAnalyser
+package net.akehurst.language.api.sppt2ast
 
-import net.akehurst.language.api.analyser.GrammarLoader
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.processor.SemanticAnalyserVisitorBasedAbstract
 
-class OglSemanticAnalyser : SemanticAnalyserVisitorBasedAbstract() {
+/**
+ *
+ * A Semantic Analyser converts a Parse Tree (in this case a SharedPackedParseTree) into a "Semantic Model". i.e. it will map the parse tree to some other data
+ * structure that contains carries more semantic meaning than the parse tree, maybe mapping certain string values into actual object references that the string
+ * value implies.
+ *
+ */
+interface Sppt2AstTransformer {
 
-    var grammarLoader: GrammarLoader? = null
+	/**
+	 * reset the sppt2ast, clearing any cached values
+	 */
+	fun clear()
 
-    override fun clear() {
-
-    }
-
-    override fun <T> analyse(sppt: SharedPackedParseTree): T {
-        throw UnsupportedOperationException()
-    }
-
+	/**
+	 * map the tree into an instance of the targetType
+	 *
+	 */
+	fun <T> transform(sppt: SharedPackedParseTree): T
 }

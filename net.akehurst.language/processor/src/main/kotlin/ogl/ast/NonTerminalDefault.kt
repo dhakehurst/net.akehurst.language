@@ -14,39 +14,43 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.semanticStructure
+package net.akehurst.language.ogl.ast
 
-
-import net.akehurst.language.api.grammar.Choice
-import net.akehurst.language.api.grammar.Terminal
+import kotlin.text.Regex
 import net.akehurst.language.api.grammar.NonTerminal
+import net.akehurst.language.api.grammar.Terminal
+import net.akehurst.language.api.grammar.GrammarVisitor
 import net.akehurst.language.api.grammar.Rule
 import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.Concatenation
+import net.akehurst.language.api.grammar.GrammarRuleItemNotFoundException
 
-abstract class ChoiceAbstract(override val alternative: List<Concatenation>) : RuleItemAbstract(), Choice {
+class NonTerminalDefault(override val name: String) : RuleItemAbstract(), NonTerminal {
 
-	override fun setOwningRule(rule: Rule, indices: List<Int>) {
+	override val referencedRule : Rule by lazy {
+		this.owningRule.grammar.findAllRule(this.name) ?: throw GrammarRuleItemNotFoundException("rule with name ${this.name} not found")
+	}
+
+    override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this._owningRule = rule
 		this.index = indices
-		var i: Int = 0
-		this.alternative.forEach {
-			val nextIndex: List<Int> = indices + (i++)
-			it.setOwningRule(rule, nextIndex)
-		}
 	}
-
+	
 	override fun subItem(index: Int): RuleItem {
-//		 return if (index < this.alternative.size) this.alternative.get(index) else null
-		return this.alternative.get(index)
+		throw GrammarRuleItemNotFoundException("subitem ${index} not found")
 	}
-
+	
 	override val allTerminal: Set<Terminal> by lazy {
-		this.alternative.flatMap { it.allTerminal }.toSet()
+		emptySet<Terminal>()
 	}
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
-		this.alternative.flatMap { it.allNonTerminal }.toSet()
+		setOf(this)
+	}
+
+	// --- GrammarVisitable ---
+
+	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
+		return visitor.visit(this, arg);
 	}
 
 }

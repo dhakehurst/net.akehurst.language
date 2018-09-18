@@ -14,11 +14,25 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.semanticStructure;
+package net.akehurst.language.processor
 
-import net.akehurst.language.api.grammar.ConcatenationItem;
+import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.processor.Sppt2AstTransformerVisitorBasedAbstract
 
-abstract class ConcatenationItemAbstract : RuleItemAbstract(), ConcatenationItem {
+class TestAstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
 
+    override fun clear() {
+
+    }
+
+    override fun <T> transform(sppt: SharedPackedParseTree): T {
+        return 1 as T
+    }
+
+}
+
+data class A(
+        val value: String
+) {
 
 }

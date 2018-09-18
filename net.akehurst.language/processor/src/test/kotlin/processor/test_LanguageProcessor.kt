@@ -16,26 +16,57 @@
 
 package net.akehurst.language.processor
 
+import net.akehurst.language.api.parser.ParseFailedException
 import kotlin.test.*
 
 internal class test_LanguageProcessor {
 
     @Test
-    fun parser_rules_String() {
-        val p = parser("a = 'a';")
+    fun parser_grammarDefinitionStr() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+              a = 'a';
+            }
+        """.trimIndent()
+        val p = parser(grammarStr)
         p.parse("a", "a")
     }
 
     @Test
     fun parser_rules_List() {
-        val p = parser(listOf("a = 'a'"))
+        val p = parser(listOf("a = 'a';"))
         p.parse("a", "a")
     }
 
     @Test
-    fun parser_grammar() {
-        val lp = processor("namespace test grammar test { a = 'a' ; }")
-        lp.parse("a", "a")
+    fun parser_rules_List_failAt_0() {
+        val e = assertFailsWith(ParseFailedException::class) {
+            val p = parser(listOf("!"))
+            p.parse("a", "a")
+        }
+        assertEquals(1, e.location["line"])
+        assertEquals(0, e.location["column"])
+    }
+
+    @Test
+    fun parser_rules_List_failAt_1() {
+        val e = assertFailsWith(ParseFailedException::class) {
+            val p = parser(listOf("a!"))
+            p.parse("a", "a")
+        }
+        assertEquals(1, e.location["line"])
+        assertEquals(1, e.location["column"])
+    }
+
+    @Test
+    fun parser_rules_List_failAt_7() {
+        val e = assertFailsWith(ParseFailedException::class) {
+            val p = parser(listOf("a = 'a'"))
+            p.parse("a", "a")
+        }
+        assertEquals(1, e.location["line"])
+        assertEquals(7, e.location["column"])
     }
 
     @Test
@@ -46,12 +77,12 @@ internal class test_LanguageProcessor {
             import test.A
 
             grammar test {
-              a:A = v="[a-z]" {this.value=v} ; }
+              a:A = v="[a-z]" {this.value=v} ;
             }
         """.trimIndent()
-        val analyser = TestAnalyser()
+        val analyser = TestAstTransformer()
         val lp = processor(grammarStr, analyser)
-        val a:A = lp.process("a", "a")
+        val a: A = lp.process("a", "a")
     }
 
 }
