@@ -26,7 +26,7 @@ interface GrammarVisitor<T, A> {
 
     fun visit(target: ChoicePriority, arg: A): T
 
-    fun visit(target: ChoiceSimple, arg: A): T
+    fun visit(target: ChoiceEqual, arg: A): T
 
     fun visit(target: Concatenation, arg: A): T
 

@@ -142,12 +142,12 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
     }
 
     // simpleChoice : [concatenation / '|']* ;
-    fun simpleChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ChoiceSimple {
+    fun simpleChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ChoiceEqual {
         val alternative = children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transform<Concatenation>(it, arg)
                     ?: throw UnableToTransformSppt2AstExeception("cannot transform " + children[0], null)
         }
-        return ChoiceSimpleDefault(alternative)
+        return ChoiceEqualDefault(alternative)
     }
 
     // priorityChoice : [concatenation / '<']* ;
@@ -223,9 +223,11 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
     }
 
     // nonTerminal : IDENTIFIER ;
-    fun nonTerminal(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Choice {
-        return this.transform<Choice>(children[0], arg)
+    fun nonTerminal(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): NonTerminal {
+        val nonTerminalRef = this.transform<String>(children[0], arg)
                 ?: throw UnableToTransformSppt2AstExeception("cannot transform " + children[0], null)
+
+        return NonTerminalDefault(nonTerminalRef)
     }
 
     // terminal : LITERAL | PATTERN ;

@@ -14,19 +14,8 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.ast
+package net.akehurst.language.api.grammar
 
-
-import net.akehurst.language.api.grammar.ChoiceSimple
-import net.akehurst.language.api.grammar.Concatenation
-import net.akehurst.language.api.grammar.GrammarVisitor
-
-class ChoiceSimpleDefault(override val alternative: List<Concatenation>) : ChoiceAbstract(alternative), ChoiceSimple {
-
-    // --- GrammarVisitable ---
-
-    override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
-        return visitor.visit(this, arg);
-    }
+interface ChoiceEqual : Choice {
 
 }

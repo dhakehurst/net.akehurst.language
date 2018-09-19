@@ -65,7 +65,7 @@ class test_Converter {
     @Test
     fun terminalLiteralRule() {
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").choice(gb.terminalLiteral("a"))
+        gb.rule("r").choice(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
         val sut =  Converter(grammar)
@@ -97,7 +97,7 @@ class test_Converter {
     @Test
     fun terminalPatternRule() {
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").choice(gb.terminalPattern("[a-c]"))
+        gb.rule("r").choice(gb.concatenation(gb.terminalPattern("[a-c]")))
         val grammar = gb.grammar
 
         val sut =  Converter(grammar)

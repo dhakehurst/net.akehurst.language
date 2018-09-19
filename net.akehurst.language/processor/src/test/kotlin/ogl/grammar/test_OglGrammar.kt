@@ -16,5 +16,207 @@
 
 package net.akehurst.language.ogl.grammar
 
+import net.akehurst.language.processor.processor
+import kotlin.test.Test
+import kotlin.test.assertNotNull
+
 class test_OglGrammar {
+
+    @Test
+    fun literal() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun pattern() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = "[a-c]" ;
+            }
+        """.trimIndent()
+
+        val p = processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun literal_concatenation() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a' 'b' 'c' ;
+            }
+        """.trimIndent()
+
+        val p = processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun literal_choice_equal() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a' | 'b' | 'c' ;
+            }
+        """.trimIndent()
+
+        val p = processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun literal_choice_priority() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a' < 'b' < 'c' ;
+            }
+        """.trimIndent()
+
+        val p = processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun literal_multi_0_1() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a'? ;
+            }
+        """.trimIndent()
+
+        val p = processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun literal_multi_0_n() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a'* ;
+            }
+        """.trimIndent()
+
+        val p = processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun literal_multi_1_n() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a'+ ;
+            }
+        """.trimIndent()
+
+        val p = processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun nonTerminal_concatenation() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                r = a b c ;
+                a = 'a' ;
+                b = 'b' ;
+                c = 'c' ;
+            }
+        """.trimIndent()
+
+        val p = processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun nonTerminal_multi_0_1() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                r = a ? ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun nonTerminal_multi_0_n() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                r = a* ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun nonTerminal_multi_1_n() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                r = a+ ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
 }

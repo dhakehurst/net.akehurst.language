@@ -17,9 +17,7 @@
 package net.akehurst.language.ogl.grammar.runtime
 
 import net.akehurst.language.api.grammar.*
-import net.akehurst.language.api.processor.LanguageProcessorException
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
-import net.akehurst.language.ogl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
 
@@ -66,23 +64,28 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, Pair<String,Boolean>
                 ?: target.referencedRule.accept(this, arg) as RuntimeRule
     }
 
-    override fun visit(target: ChoiceSimple, arg: Pair<String,Boolean>): RuntimeRule {
+    override fun visit(target: ChoiceEqual, arg: Pair<String,Boolean>): RuntimeRule {
         return if (1 == target.alternative.size) {
             target.alternative.first().accept(this, arg) as RuntimeRule
         } else {
             val items = target.alternative.map {
-                it.accept(this, arg) as RuntimeRule
+                val virtualRuleName = builder.createChoiceRuleName()
+                it.accept(this, Pair(virtualRuleName, false)) as RuntimeRule
             }
             builder.rule(arg.first).skip(arg.second).choiceEqual(*items.toTypedArray())
         }
     }
 
     override fun visit(target: ChoicePriority, arg: Pair<String,Boolean>): RuntimeRule {
-        val items = target.alternative.map {
-            val virtualRuleName = builder.createChoiceRuleName()
-            it.accept(this, Pair(virtualRuleName, false)) as RuntimeRule
+        return if (1 == target.alternative.size) {
+            target.alternative.first().accept(this, arg) as RuntimeRule
+        } else {
+            val items = target.alternative.map {
+                val virtualRuleName = builder.createChoiceRuleName()
+                it.accept(this, Pair(virtualRuleName, false)) as RuntimeRule
+            }
+            builder.rule(arg.first).skip(arg.second).choicePriority(*items.toTypedArray())
         }
-        return builder.rule(arg.first).skip(arg.second).choicePriority(*items.toTypedArray())
     }
 
     override fun visit(target: Concatenation, arg: Pair<String,Boolean>): RuntimeRule {

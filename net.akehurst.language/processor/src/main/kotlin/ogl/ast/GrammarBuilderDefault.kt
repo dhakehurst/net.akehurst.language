@@ -16,13 +16,7 @@
 
 package net.akehurst.language.ogl.ast
 
-import net.akehurst.language.api.grammar.Namespace
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.Rule
-import net.akehurst.language.api.grammar.ConcatenationItem
-import net.akehurst.language.api.grammar.TangibleItem
-import net.akehurst.language.api.grammar.Terminal
-import net.akehurst.language.api.grammar.NonTerminal
+import net.akehurst.language.api.grammar.*
 
 class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
@@ -52,6 +46,10 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 		return NonTerminalDefault(name)
 	}
 
+	fun concatenation(vararg sequence: ConcatenationItem): Concatenation {
+		return ConcatenationDefault(sequence.toList())
+	}
+
 	class RuleBuilder(val rule: Rule) {
 
 		fun empty() {
@@ -59,26 +57,26 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         }
 
 		fun concatenation(vararg sequence: ConcatenationItem) {
-			this.rule.rhs = ChoiceSimpleDefault(listOf(ConcatenationDefault(sequence.toList())));
+			this.rule.rhs = ChoiceEqualDefault(listOf(ConcatenationDefault(sequence.toList())));
 		}
 
-		fun choice(vararg alternative: ConcatenationItem) {
-			val alternativeConcats = alternative.map { ConcatenationDefault(listOf(it)) }
-			this.rule.rhs = ChoiceSimpleDefault(alternativeConcats);
+		fun choice(vararg alternative: Concatenation) {
+			//val alternativeConcats = alternative.map { ChoiceEqualDefault(listOf(it)) }
+			this.rule.rhs = ChoiceEqualDefault(alternative.asList());
 		}
 
-		fun priorityChoice(vararg alternative: ConcatenationItem) {
-			val alternativeConcats = alternative.map { ConcatenationDefault(listOf(it)) }
-			this.rule.rhs = ChoicePriorityDefault(alternativeConcats);
+		fun priorityChoice(vararg alternative: Concatenation) {
+			//val alternativeConcats = alternative.map { ChoicePriorityDefault(listOf(it)) }
+			this.rule.rhs = ChoicePriorityDefault(alternative.asList());
 		}
 
 		fun multi(min: Int, max: Int, item: TangibleItem) {
-			this.rule.rhs = ChoiceSimpleDefault(listOf(ConcatenationDefault(listOf(MultiDefault(min, max, item)))));
+			this.rule.rhs = ChoiceEqualDefault(listOf(ConcatenationDefault(listOf(MultiDefault(min, max, item)))));
 		}
 
 		//TODO: original only allows separator to be a TerminalLiteral here,  I think any Terminal is ok though!
 		fun separatedList(min: Int, max: Int, separator: Terminal, item: TangibleItem) {
-			this.rule.rhs = ChoiceSimpleDefault(listOf(ConcatenationDefault(listOf(SeparatedListDefault(min, max, separator, item)))));
+			this.rule.rhs = ChoiceEqualDefault(listOf(ConcatenationDefault(listOf(SeparatedListDefault(min, max, separator, item)))));
 		}
 	}
 }
