@@ -36,6 +36,7 @@ class SPPTLeafDefault(
     // --- SPPTLeaf ---
 
     override val isPattern: Boolean = terminalRule.isPattern
+    override val isLiteral: Boolean = !terminalRule.isPattern
 
 
     // --- SPPTNode ---
@@ -55,5 +56,10 @@ class SPPTLeafDefault(
 
     override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
         return visitor.visit(this,  arg)
+    }
+
+    override fun toString(): String {
+        val name = if (this.isLiteral) "'${this.runtimeRule.patternText}'" else "\"${this.runtimeRule.patternText}\""
+        return "${this.startPosition},${this.nextInputPosition},C:${name}(${this.runtimeRule.number})"
     }
 }

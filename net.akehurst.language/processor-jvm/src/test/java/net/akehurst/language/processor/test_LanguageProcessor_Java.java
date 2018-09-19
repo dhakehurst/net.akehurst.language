@@ -13,7 +13,7 @@ public class test_LanguageProcessor_Java {
 
     @Test
     public void parser_rules_String() {
-        final LanguageProcessor lp = Ogl.parser("namespace test grammar Test { a = 'a'; }");
+        final LanguageProcessor lp = Ogl.processor("namespace test grammar Test { a = 'a'; }");
         lp.parse("a", "a");
     }
 
@@ -21,7 +21,7 @@ public class test_LanguageProcessor_Java {
     public void parser_rules_List_fails() {
         try {
             List<String> rules = Arrays.asList("a = 'a'");
-            final LanguageProcessor lp = Ogl.parser(rules);
+            final LanguageProcessor lp = Ogl.processor(rules);
 
             lp.parse("a", "a");
             Assert.fail("This test should throw an exception");
@@ -38,7 +38,7 @@ public class test_LanguageProcessor_Java {
     public void parser_rules_List_fails1() {
         try {
             List<String> rules = Arrays.asList("!");
-            final LanguageProcessor lp = Ogl.parser(rules);
+            final LanguageProcessor lp = Ogl.processor(rules);
 
             lp.parse("a", "a");
             Assert.fail("This test should throw an exception");
@@ -54,7 +54,7 @@ public class test_LanguageProcessor_Java {
     public void parser_rules_List_fails2() {
         try {
             List<String> rules = Arrays.asList("a!");
-            final LanguageProcessor lp = Ogl.parser(rules);
+            final LanguageProcessor lp = Ogl.processor(rules);
 
             lp.parse("a", "a");
             Assert.fail("This test should throw an exception");

@@ -20,6 +20,7 @@ package net.akehurst.language.api.parser
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException
 import net.akehurst.language.api.grammar.NodeType
 import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 interface Parser {
@@ -33,6 +34,13 @@ interface Parser {
 	 * get a list of the types of node (is this useful!)
 	 */
 	val nodeTypes: Set<NodeType>
+
+	/**
+	 * using the terminals (literals and patterns) from the grammar, scan the input text
+	 * and return a list of "tokens" leaves. Useful for syntax highlighting.
+	 * Where more than one terminal matches, the longest takes priority, and literals take priority over patterns
+	 */
+	fun scan(inputText: CharSequence): List<SPPTLeaf>
 
 	/**
 	 * parse the inputText starting with the given grammar rule and return the shared packed parse Tree.

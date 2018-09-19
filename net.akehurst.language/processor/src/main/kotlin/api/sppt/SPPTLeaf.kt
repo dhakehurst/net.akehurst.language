@@ -24,8 +24,15 @@ interface SPPTLeaf : SPPTNode {
 	/**
 	 * Indicates if the leaf was constructed by matching a regular expression pattern or not.
 	 *
-	 *  true if the leaf was created by matching a regular expression pattern, false if not.
+	 * true if the leaf was created by matching a regular expression pattern, false if not.
 	 */
 	val isPattern: Boolean
+
+	/**
+	 * Indicates if the leaf was constructed by matching a literal or not.
+	 *
+	 * true if the leaf was created by matching a literal, false if not.
+	 */
+	val isLiteral: Boolean
 
 }

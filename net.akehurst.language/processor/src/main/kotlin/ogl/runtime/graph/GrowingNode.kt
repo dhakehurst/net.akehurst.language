@@ -61,7 +61,7 @@ class GrowingNode(
 
     val canGrowWidth: Boolean by lazy {
         // not sure we need the test for isEmpty, because if it is empty it should be complete or NOT!???
-        if (this.isLeaf or this.isEmptyMatch or hasCompleteChildren) {
+        if (this.isLeaf or this.isEmptyMatch ) {//or this.hasCompleteChildren) {
             false
         } else {
             this.runtimeRule.canGrowWidth(this.nextItemIndex, this.numNonSkipChildren)

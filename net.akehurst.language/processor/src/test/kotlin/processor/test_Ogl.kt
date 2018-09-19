@@ -19,7 +19,7 @@ package net.akehurst.language.processor
 import net.akehurst.language.api.parser.ParseFailedException
 import kotlin.test.*
 
-internal class test_LanguageProcessor {
+internal class test_Ogl {
 
     @Test
     fun parser_grammarDefinitionStr() {
@@ -29,13 +29,13 @@ internal class test_LanguageProcessor {
               a = 'a';
             }
         """.trimIndent()
-        val p = parser(grammarStr)
+        val p = processor(grammarStr)
         p.parse("a", "a")
     }
 
     @Test
     fun parser_rules_List() {
-        val p = parser(listOf("a = 'a';"))
+        val p = processor(listOf("a = 'a';"))
         val pt = p.parse("a", "a")
 
         assertNotNull(pt)
@@ -44,7 +44,7 @@ internal class test_LanguageProcessor {
     @Test
     fun parser_rules_List_failAt_0() {
         val e = assertFailsWith(ParseFailedException::class) {
-            val p = parser(listOf("!"))
+            val p = processor(listOf("!"))
             p.parse("a", "a")
         }
         assertEquals(1, e.location["line"])
@@ -54,7 +54,7 @@ internal class test_LanguageProcessor {
     @Test
     fun parser_rules_List_failAt_1() {
         val e = assertFailsWith(ParseFailedException::class) {
-            val p = parser(listOf("a!"))
+            val p = processor(listOf("a!"))
             p.parse("a", "a")
         }
         assertEquals(1, e.location["line"])
@@ -64,7 +64,7 @@ internal class test_LanguageProcessor {
     @Test
     fun parser_rules_List_failAt_7() {
         val e = assertFailsWith(ParseFailedException::class) {
-            val p = parser(listOf("a = 'a'"))
+            val p = processor(listOf("a = 'a'"))
             p.parse("a", "a")
         }
         assertEquals(1, e.location["line"])

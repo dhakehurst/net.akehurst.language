@@ -41,12 +41,27 @@ fun processor(grammar: Grammar, semanticAnalyser: Sppt2AstTransformer): Language
     return LanguageProcessorDefault(grammar, semanticAnalyser)
 }
 
-fun processor(grammarDefinitionStr: String, semanticAnalyser: Sppt2AstTransformer): LanguageProcessor {
-    val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
-    return processor(grammar, semanticAnalyser)
+fun processor(grammarDefinitionStr: String): LanguageProcessor {
+    try {
+        val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
+        return processor(grammar)
+    } catch (e: ParseFailedException) {
+        //TODO: better, different exception to detect which list item fails
+        throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
+    }
 }
 
-fun parser(rules: List<String>): LanguageProcessor {
+fun processor(grammarDefinitionStr: String, semanticAnalyser: Sppt2AstTransformer): LanguageProcessor {
+    try {
+        val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
+        return processor(grammar, semanticAnalyser)
+    } catch (e: ParseFailedException) {
+        //TODO: better, different exception to detect which list item fails
+        throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
+    }
+}
+
+fun processor(rules: List<String>): LanguageProcessor {
     val prefix = "namespace temp grammar Temp { "
     val grammarStr = prefix + rules.joinToString(" ") + "}"
     try {
@@ -60,12 +75,4 @@ fun parser(rules: List<String>): LanguageProcessor {
     }
 }
 
-fun parser(grammarDefinitionStr: String): LanguageProcessor {
-    try {
-        val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
-        return processor(grammar)
-    } catch (e: ParseFailedException) {
-        //TODO: better, different exception to detect which list item fails
-        throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
-    }
-}
+

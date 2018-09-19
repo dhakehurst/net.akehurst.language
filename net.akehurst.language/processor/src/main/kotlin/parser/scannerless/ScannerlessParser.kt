@@ -23,11 +23,13 @@ import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.parser.ParseTreeException
 import net.akehurst.language.api.parser.Parser
+import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.ogl.runtime.graph.ParseGraph
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.parser.sppt.SPPTLeafDefault
 import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
 
 class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
@@ -38,6 +40,43 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
 
     override fun build() {
         throw UnsupportedOperationException()
+    }
+
+    override fun scan(inputText: CharSequence): List<SPPTLeaf> {
+        //TODO: improve this algorithm...it is not efficient I think
+        val input = InputFromCharSequence(inputText)
+        val terminals = this.runtimeRuleSet.allTerminals
+        var result = mutableListOf<SPPTLeaf>()
+
+        var position = 0
+        while (!input.isEnd(position)) {
+            val matches: List<SPPTLeaf> = terminals.mapNotNull {
+                val match = input.tryMatchText(0, it.patternText, it.isPattern)
+                if (null == match) {
+                    null
+                } else {
+                    SPPTLeafDefault(it, position, false, match, (if (it.isPattern) 0 else 1))
+                }
+            }
+            val longest = matches.maxWith(Comparator<SPPTLeaf> { l1, l2 ->
+                when {
+                    l1.matchedTextLength > l2.matchedTextLength -> 1
+                    l2.matchedTextLength > l1.matchedTextLength -> -1
+                    else -> when {
+                        l1.isLiteral && l2.isPattern -> 1
+                        l1.isPattern && l2.isLiteral -> -1
+                        else -> 0
+                    }
+                }
+            })
+            if (null==longest) {
+                position++
+            } else {
+                result.add(longest)
+                position = longest.nextInputPosition
+            }
+        }
+        return result
     }
 
     override fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree {

@@ -42,6 +42,15 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }.toTypedArray()
     }
 
+    val allTerminals: Array<RuntimeRule> by lazy {
+        this.runtimeRules.mapNotNull {
+            if (it.isTerminal)
+                it
+            else
+                null
+        }.toTypedArray()
+    }
+
     val firstTerminals: Array<Set<RuntimeRule>> by lazy {
         this.runtimeRules.map { this.findFirstTerminals(it) }
                 .toTypedArray()

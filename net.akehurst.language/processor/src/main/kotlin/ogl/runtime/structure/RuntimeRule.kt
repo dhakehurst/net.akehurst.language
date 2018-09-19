@@ -282,7 +282,7 @@ class RuntimeRule(
             RuntimeRuleItemKind.MULTI -> {
                 return when {
                     (0 == numNonSkipChildren && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0], this.emptyRuleItem)
-                    (numNonSkipChildren < this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
+                    (numNonSkipChildren < this.rhs.multiMax || -1==this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
                     else -> emptySet<RuntimeRule>()
                 }
             }
@@ -290,7 +290,7 @@ class RuntimeRule(
                 return when {
                     (numNonSkipChildren % 2 == 1) -> hashSetOf<RuntimeRule>(this.rhs.listSeparator)
                     (0 == numNonSkipChildren && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0], this.emptyRuleItem)
-                    (numNonSkipChildren < this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
+                    (numNonSkipChildren < this.rhs.multiMax|| -1==this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
                     else -> emptySet<RuntimeRule>()
                 }
             }

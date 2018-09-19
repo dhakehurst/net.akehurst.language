@@ -23,6 +23,7 @@ import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.ogl.grammar.runtime.Converter
 import net.akehurst.language.parser.scannerless.ScannerlessParser
@@ -32,6 +33,10 @@ internal class LanguageProcessorDefault(val grammar: Grammar, val semanticAnalys
     private val converter: Converter = Converter(this.grammar)
     private val parser: Parser = ScannerlessParser(this.converter.transform())
     private val completionProvider: CompletionProvider = CompletionProvider()
+
+    override fun scan(inputText: CharSequence): List<SPPTLeaf> {
+        return this.parser.scan(inputText);
+    }
 
     override fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree {
         val sppt: SharedPackedParseTree = this.parser.parse(goalRuleName, inputText)

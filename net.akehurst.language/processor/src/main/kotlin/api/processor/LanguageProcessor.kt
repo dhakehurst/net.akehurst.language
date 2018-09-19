@@ -16,9 +16,12 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-public interface LanguageProcessor {
+interface LanguageProcessor {
+
+	fun scan(inputText: CharSequence): List<SPPTLeaf>
 
 	fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree
 
