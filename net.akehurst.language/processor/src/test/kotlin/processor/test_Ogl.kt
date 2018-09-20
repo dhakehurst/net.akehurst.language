@@ -71,6 +71,7 @@ internal class test_Ogl {
         assertEquals(7, e.location["column"])
     }
 
+    /*
     @Test
     fun process() {
         val grammarStr = """
@@ -86,5 +87,5 @@ internal class test_Ogl {
         val lp = processor(grammarStr, analyser)
         val a: A = lp.process("a", "a")
     }
-
+*/
 }

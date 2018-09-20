@@ -137,13 +137,13 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
 
     // choice : simpleChoice < priorityChoice ;
     fun choice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Choice {
-        return this.transform<Choice>(children[0].branchNonSkipChildren[0], arg)
+        return this.transform<Choice>(children[0], arg)
                 ?: throw UnableToTransformSppt2AstExeception("cannot transform ${children[0]}", null)
     }
 
     // simpleChoice : [concatenation / '|']* ;
     fun simpleChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ChoiceEqual {
-        val alternative = children[0].branchNonSkipChildren.mapIndexed { index, it ->
+        val alternative = children.mapIndexed { index, it ->
             this.transform<Concatenation>(it, arg)
                     ?: throw UnableToTransformSppt2AstExeception("cannot transform " + children[0], null)
         }

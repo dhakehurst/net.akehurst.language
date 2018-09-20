@@ -25,7 +25,7 @@ import net.akehurst.language.ogl.runtime.structure.*
  */
 class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
 
-    private val builder = RuntimeRuleSetBuilder()
+    val builder = RuntimeRuleSetBuilder()
 
     private fun findRule(name: String): RuntimeRule? {
         return this.builder.findRuleByName(name, false)
@@ -47,9 +47,14 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
     }
 
     override fun visit(target: Rule, arg: String): RuntimeRule {
-        val rule = this.builder.rule(target.name).skip(target.isSkip).build()
-        rule.rhsOpt = target.rhs.accept(this, target.name) as RuntimeRuleItem
-        return rule
+        val rule = this.findRule(target.name)
+        return if (null==rule) {
+            val nrule = this.builder.rule(target.name).skip(target.isSkip).build()
+            nrule.rhsOpt = target.rhs.accept(this, target.name) as RuntimeRuleItem
+            nrule
+        } else {
+            rule
+        }
     }
 
     override fun visit(target: EmptyRule, arg: String): RuntimeRuleItem {
@@ -136,29 +141,32 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
     }
 
     override fun visit(target: Multi, arg: String): RuntimeRuleItem {
-        val multiRuleName = builder.createMultiRuleName(arg)
-        val multiRuleItem = target.item.accept(this, multiRuleName) as RuntimeRuleItem
-        val multiRule = builder.rule(multiRuleName).withRhs(multiRuleItem)
+        //val multiRuleName = builder.createMultiRuleName(arg)
+        val multiRuleItem = target.item.accept(this, arg) as RuntimeRuleItem
+        // all ruleitems should only have one rhs.item (Terminal,ot Group), so can use this directly
+        val ruleToBeMultied = multiRuleItem.items[0]
         if (0==target.min) {
             val ruleThatIsEmpty = this.findRule(arg) ?: throw ParseException("Internal Error: should not happen")
             val emptyRule = builder.empty(ruleThatIsEmpty)
-            return RuntimeRuleItem(RuntimeRuleItemKind.MULTI, target.min, target.max, arrayOf(multiRule, emptyRule))
+            return RuntimeRuleItem(RuntimeRuleItemKind.MULTI, target.min, target.max, arrayOf(ruleToBeMultied, emptyRule))
         } else {
-            return RuntimeRuleItem(RuntimeRuleItemKind.MULTI, target.min, target.max, arrayOf(multiRule))
+            return RuntimeRuleItem(RuntimeRuleItemKind.MULTI, target.min, target.max, arrayOf(ruleToBeMultied))
         }
     }
 
     override fun visit(target: SeparatedList, arg: String): RuntimeRuleItem {
-        val listRuleName = builder.createListRuleName(arg)
-        val listRuleItem = target.item.accept(this, listRuleName) as RuntimeRuleItem
-        val listRule = builder.rule(listRuleName).withRhs(listRuleItem)
+        //val listRuleName = builder.createListRuleName(arg)
+        val listRuleItem = target.item.accept(this, arg) as RuntimeRuleItem
+        // all ruleitems should only have one rhs.item (Terminal,ot Group), so can use this directly
+        //val listRule = builder.rule(listRuleName).withRhs(listRuleItem)
+        val ruleToBeListed = listRuleItem.items[0]
         val sepRule = (target.separator.accept(this,arg) as RuntimeRuleItem).items.first()
         if (0==target.min) {
             val ruleThatIsEmpty = this.findRule(arg) ?: throw ParseException("Internal Error: should not happen")
             val emptyRule = builder.empty(ruleThatIsEmpty)
-            return RuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST, target.min, target.max, arrayOf(listRule, sepRule, emptyRule))
+            return RuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST, target.min, target.max, arrayOf(ruleToBeListed, sepRule, emptyRule))
         } else {
-            return RuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST, target.min, target.max, arrayOf(listRule, sepRule))
+            return RuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST, target.min, target.max, arrayOf(ruleToBeListed, sepRule))
         }
     }
 

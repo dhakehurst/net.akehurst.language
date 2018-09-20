@@ -16,35 +16,55 @@
 
 package net.akehurst.language.ogl.grammar
 
+import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.processor.processor
+import net.akehurst.language.ogl.grammar.runtime.Converter
+import net.akehurst.language.parser.scannerless.ScannerlessParser
+import net.akehurst.language.parser.sppt.SPPTParser
+import net.akehurst.language.processor.CompletionProvider
+
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class test_OglGrammar_item {
 
+    private val converter: Converter = Converter( OglGrammar() )
+    private val parser: Parser = ScannerlessParser(this.converter.transform())
+    private val completionProvider: CompletionProvider = CompletionProvider()
+    private val spptParser = SPPTParser(this.converter.builder)
+
     private fun parse(goalRule:String, inputText: CharSequence): SharedPackedParseTree {
-        val grammar = OglGrammar()
-        val lp = processor(grammar)
-        return lp.parse(goalRule, inputText)
+        return this.parser.parse(goalRule, inputText)
+    }
+
+    private fun sppt(treeString:String): SharedPackedParseTree {
+        return this.spptParser.addTree(treeString)
     }
 
     @Test
     fun IDENTIFIER() {
         val actual = parse("IDENTIFIER", "a")
+
+        val expected = this.sppt("IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*':'a'}")
         assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
-    fun literal() {
+    fun LITERAL() {
         val actual = parse("LITERAL", "'a'")
+        val expected = this.sppt("LITERAL { '(?:\\\\?.)*?':'a'}")
         assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
-    fun pattern() {
+    fun PATTERN() {
         val actual = parse("PATTERN", "\"[a-c]\"")
+        val expected = this.sppt("PATTERN { '\"(?:\\\\?.)*?\"':'\"[a-c]\"'}")
         assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
