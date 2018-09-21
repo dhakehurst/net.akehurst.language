@@ -121,11 +121,11 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
             val items = target.items.map {
                 it.accept(this, arg) as RuntimeRuleItem
             }.map {
-                if (1 == it.items.size) {
+                if (RuntimeRuleItemKind.CONCATENATION==it.kind && 1 == it.items.size) {
                     it.items.first()
                 } else {
                     val groupRuleName = builder.createGroupRuleName(arg)
-                    builder.rule(groupRuleName).concatenation(*it.items)
+                    builder.rule(groupRuleName).withRhs(it)
                 }
             }
 

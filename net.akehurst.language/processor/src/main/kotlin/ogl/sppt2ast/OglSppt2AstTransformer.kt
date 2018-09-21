@@ -99,7 +99,7 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
 
     // rules : anyRule+ ;
     fun rules(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<Rule> {
-        return children[0].branchNonSkipChildren.mapIndexed { index, it ->
+        return children.mapIndexed { index, it ->
             this.transform<Rule>(it, arg)
                     ?: throw UnableToTransformSppt2AstExeception("cannot transform ${children[index]}", null)
         }
@@ -161,7 +161,7 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
 
     // concatenation : concatenationItem+ ;
     fun concatenation(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Concatenation {
-        val items = children[0].branchNonSkipChildren.mapIndexed { index, it ->
+        val items = children.mapIndexed { index, it ->
             this.transform<ConcatenationItem>(it, arg)
                     ?: throw UnableToTransformSppt2AstExeception("cannot transform ${children[0]}", null)
         }

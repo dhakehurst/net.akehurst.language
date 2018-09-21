@@ -22,7 +22,7 @@ import kotlin.test.*
 internal class test_Ogl {
 
     @Test
-    fun parser_grammarDefinitionStr() {
+    fun parser_grammarDefinitionStr1() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -31,6 +31,32 @@ internal class test_Ogl {
         """.trimIndent()
         val p = processor(grammarStr)
         p.parse("a", "a")
+    }
+
+    @Test
+    fun parser_grammarDefinitionStr2_1() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+              a = 'a';
+              b = 'b';
+            }
+        """.trimIndent()
+        val p = processor(grammarStr)
+        p.parse("a", "a")
+    }
+
+    @Test
+    fun parser_grammarDefinitionStr2_b() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+              a = 'a';
+              b = 'b';
+            }
+        """.trimIndent()
+        val p = processor(grammarStr)
+        p.parse("b", "b")
     }
 
     @Test

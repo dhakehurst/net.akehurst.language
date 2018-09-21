@@ -23,4 +23,8 @@ data class GrowingNodeIndex(
         val nextItemIndex: Int
 ) {
 
+
+    override fun toString(): String {
+        return "(${ruleNumber},${startPosition},${nextInputPosition},${nextItemIndex})"
+    }
 }

@@ -29,8 +29,6 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
     private val CHILDREN_START = Regex("[{]")
     private val CHILDREN_END = Regex("[}]")
 
-    private var textLength: Int = 0
-    private val offset: Int = 0
     private val node_cache: MutableMap<SPPTNodeIdentity, SPPTNode> = mutableMapOf()
 
     private class Stack<T>() {
@@ -111,7 +109,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
                     childrenStack.push(ArrayList<SPPTNode>())
                 }
                 scanner.hasNext(LITERAL) -> {
-                    val leafStr = scanner.next(LITERAL)
+                    val leafStr = scanner.next(LITERAL).replace("\\'", "'")
                     val text = leafStr.substring(1, leafStr.length - 1)
                     while (scanner.hasNext(WS)) {
                         scanner.next(WS)
@@ -122,18 +120,19 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
                             scanner.next(WS)
                         }
                         val newText = scanner.next(LITERAL)
-                        val newText2 = newText.substring(1, newText.length - 1)
-                        val leaf = this.leaf(text, newText2)
+                        val newText2 = newText.replace("\\'", "'")
+                        val newText3 = newText2.substring(1, newText2.length - 1)
+                        val leaf = this.leaf(text, newText3, scanner.position, newText.length)
                         childrenStack.peek().add(leaf)
                     } else {
-                        val leaf = this.leaf(text)
+                        val leaf = this.leaf(text, scanner.position, leafStr.length)
                         childrenStack.peek().add(leaf)
                     }
                 }
                 scanner.hasNext(EMPTY) -> {
                     val empty = scanner.next(EMPTY)
                     val ruleNameThatIsEmpty = nodeNamesStack.peek()
-                    val emptyNode = this.emptyLeaf(ruleNameThatIsEmpty)
+                    val emptyNode = this.emptyLeaf(ruleNameThatIsEmpty, scanner.position)
                     childrenStack.peek().add(emptyNode)
                 }
                 scanner.hasNext(CHILDREN_END) -> {
@@ -151,11 +150,10 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         return tree
     }
 
-    fun emptyLeaf(ruleNameThatIsEmpty: String): SPPTLeaf {
-        val start = this.textLength + this.offset
+    fun emptyLeaf(ruleNameThatIsEmpty: String, pos:Int): SPPTLeaf {
         val ruleThatIsEmpty = this.runtimeRuleSetBuilder.ruleSet().findRuntimeRule(ruleNameThatIsEmpty)
         val terminalRule = ruleThatIsEmpty.emptyRuleItem
-        val n = SPPTLeafDefault(terminalRule, start, true, "",0)
+        val n = SPPTLeafDefault(terminalRule, pos, true, "",0)
 
         var existing: SPPTLeaf? = this.findLeaf(n.identity)
         if (null == existing) {
@@ -165,15 +163,13 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         return existing
     }
 
-    fun leaf(text: String): SPPTLeaf {
-        return this.leaf(text, text)
+    fun leaf(text: String, pos:Int, len:Int): SPPTLeaf {
+        return this.leaf(text, text, pos, len)
     }
 
-    fun leaf(pattern: String, text: String): SPPTLeaf {
-        val start = this.textLength + this.offset
-        this.textLength += text.length
+    fun leaf(pattern: String, text: String, pos:Int, len:Int): SPPTLeaf {
         val terminalRule = this.runtimeRuleSetBuilder.ruleSet().findTerminalRule(pattern)
-        val n = SPPTLeafDefault(terminalRule, start, false, text,0)
+        val n = SPPTLeafDefault(terminalRule, pos, false, text,0)
 
         var existing: SPPTLeaf? = this.findLeaf(n.identity)
         if (null == existing) {
@@ -186,7 +182,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
 
     fun branch(ruleName: String, children: List<SPPTNode>): SPPTBranch {
         val rr = this.runtimeRuleSetBuilder.ruleSet().findRuntimeRule(ruleName)
-        val startPosition = 0 //TODO
+        val startPosition = children.first().startPosition
         val nextInputPosition = 0 //TODO
         val n =  SPPTBranchDefault(rr, startPosition, nextInputPosition, 0)
         n.childrenAlternatives.add(children)

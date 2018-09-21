@@ -20,13 +20,10 @@ import net.akehurst.language.api.parser.ParseFailedException
 import kotlin.test.*
 
 internal class test_ForMatthias {
-
-    @Test
-    fun parser_grammarDefinitionStr() {
-        val grammarStr = """
+    private val grammarStr = """
             namespace test
             grammar Matthias {
-              skip WHITESPACE = "\\s+";
+              skip WHITESPACE = "\s+";
               conceptDefinition = 'concept' conceptName '{' properties '}';
               properties = 'properties' '{' propertyDefinition* '}' ;
               propertyDefinition = propertyName ':' typeName quantifier ;
@@ -37,15 +34,37 @@ internal class test_ForMatthias {
               IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*" ;
             }
         """.trimIndent()
-        val p = processor(grammarStr)
+    private val p = processor(grammarStr)
+
+    @Test
+    fun conceptDefinition0() {
         p.parse("conceptDefinition", """
             concept Test {
               properties {
-                 p1 : Int [1]
-                 p2 : Int [1]
               }
             }
         """.trimIndent())
     }
 
+    @Test
+    fun conceptDefinition1() {
+        p.parse("conceptDefinition", """
+            concept Test {
+              properties {
+                 p1 : Int [1]
+              }
+            }
+        """.trimIndent())
+    }
+    @Test
+    fun conceptDefinition2() {
+        p.parse("conceptDefinition", """
+            concept Test {
+              properties {
+                 p1 : Int [1]
+                 p2 : Int [0..1]
+              }
+            }
+        """.trimIndent())
+    }
 }
