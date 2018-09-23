@@ -190,4 +190,15 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             }
         }
     }
+
+    override fun toString(): String {
+        val rulesStr = this.runtimeRules.map {
+            "  "+it.toString()
+        }.joinToString("\n")
+        return """
+RuntimeRuleSet {
+${rulesStr}
+}
+        """.trimIndent()
+    }
 }

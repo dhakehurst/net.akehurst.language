@@ -342,4 +342,63 @@ class test_RuntimeParser_parse_multi {
         assertEquals(1, e.location["line"])
         assertEquals(5, e.location["column"])
     }
+
+    // r = m
+    // m = a b? a
+    // a = 'a'
+    // b = 'b'
+    private fun rmab01a(): ScannerlessParser {
+        val ra = rrb.literal("a")
+        val rb = rrb.literal("b")
+        val rbm = rrb.rule("bm").multi(0, 1, rb)
+        val rm = rrb.rule("m").concatenation(ra, rbm, ra)
+        val rr = rrb.rule("r").concatenation(rm)
+        return ScannerlessParser(rrb.ruleSet())
+    }
+
+    @Test
+    fun rma01__r__empty_fails() {
+        val sp = rmab01a()
+        val goalRuleName = "r"
+        val inputText = ""
+
+        val e = assertFailsWith(ParseFailedException::class) {
+            test_parse(sp, goalRuleName, inputText)
+        }
+
+        assertEquals(1, e.location["line"])
+        assertEquals(0, e.location["column"])
+    }
+
+    @Test
+    fun rma01__r__a_fails() {
+        val sp = rmab01a()
+        val goalRuleName = "r"
+        val inputText = "a"
+
+        val e = assertFailsWith(ParseFailedException::class) {
+            test_parse(sp, goalRuleName, inputText)
+        }
+
+        assertEquals(1, e.location["line"])
+        assertEquals(1, e.location["column"])
+    }
+
+
+    @Test
+    fun rma01__r__aa() {
+        val sp = rmab01a()
+        val goalRuleName = "r"
+        val inputText = "aa"
+
+        val actual = test_parse(sp, goalRuleName, inputText)
+
+        assertNotNull(actual)
+
+        val p = SPPTParser(rrb)
+        val expected = p.addTree("r { m { 'a' bm { ${'$'}empty } 'a' } }")
+
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
 }

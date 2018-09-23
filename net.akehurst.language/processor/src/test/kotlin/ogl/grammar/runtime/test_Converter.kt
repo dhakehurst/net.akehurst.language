@@ -94,7 +94,7 @@ class test_Converter {
         val actual = sut.transform()
 
         assertEquals(2, actual.runtimeRules.size)
-        this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CONCATENATION, 1)
+        this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CHOICE_EQUAL, 1)
         this.checkERule(1, actual.runtimeRules[1], "${'$'}empty.r", false, actual.runtimeRules[0])
 
     }

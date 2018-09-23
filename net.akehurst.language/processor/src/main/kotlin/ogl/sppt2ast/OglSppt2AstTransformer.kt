@@ -99,7 +99,8 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
 
     // rules : anyRule+ ;
     fun rules(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<Rule> {
-        return children.mapIndexed { index, it ->
+        // children will have one element, a multi.
+        return children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transform<Rule>(it, arg)
                     ?: throw UnableToTransformSppt2AstExeception("cannot transform ${children[index]}", null)
         }
@@ -143,7 +144,8 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
 
     // simpleChoice : [concatenation / '|']* ;
     fun simpleChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ChoiceEqual {
-        val alternative = children.mapIndexed { index, it ->
+        // children will have one element, an sList
+        val alternative = children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transform<Concatenation>(it, arg)
                     ?: throw UnableToTransformSppt2AstExeception("cannot transform " + children[0], null)
         }
@@ -152,7 +154,7 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
 
     // priorityChoice : [concatenation / '<']* ;
     fun priorityChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ChoicePriority {
-        val alternative = children.mapIndexed { index, it ->
+        val alternative = children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transform<Concatenation>(it, arg)
                     ?: throw UnableToTransformSppt2AstExeception("cannot transform ${children[0]}", null)
         }
@@ -161,7 +163,7 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
 
     // concatenation : concatenationItem+ ;
     fun concatenation(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Concatenation {
-        val items = children.mapIndexed { index, it ->
+        val items = children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transform<ConcatenationItem>(it, arg)
                     ?: throw UnableToTransformSppt2AstExeception("cannot transform ${children[0]}", null)
         }

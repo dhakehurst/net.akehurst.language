@@ -48,126 +48,115 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
 
     override fun visit(target: Rule, arg: String): RuntimeRule {
         val rule = this.findRule(target.name)
-        return if (null==rule) {
+        return if (null == rule) {
             val nrule = this.builder.rule(target.name).skip(target.isSkip).build()
-            nrule.rhsOpt = target.rhs.accept(this, target.name) as RuntimeRuleItem
+
+            //need to get back RuntimeRuleItems here,
+            // then set the rhs accordingly
+
+            val rhs = createRhs(target.rhs, target.name)
+            //val rhs =  target.rhs.accept(this, target.name) as RuntimeRule
+            nrule.rhsOpt = rhs
             nrule
         } else {
             rule
         }
     }
 
-    override fun visit(target: EmptyRule, arg: String): RuntimeRuleItem {
-        val ruleThatIsEmpty = this.findRule(arg) ?: throw ParseException("Internal Error: should not happen")
-        val e = this.builder.empty(ruleThatIsEmpty)
-        return RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, arrayOf(e))
+    private fun createRhs(target: RuleItem, arg: String): RuntimeRuleItem {
+        return when {
+            (target is Choice && target.alternative.size == 1) -> {
+                // only one choice, so can create a concatination
+                val rhsItem = target.alternative[0]
+                val items = rhsItem.items.map { it.accept(this, "") as RuntimeRule }
+                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, items.toTypedArray())
+            }
+            (target is Choice) -> {
+                val items = target.alternative.map {
+                    if (it.items.size == 1) {
+                        it.items[0].accept(this, "") as RuntimeRule
+                    } else {
+                        val thisChoiceName = builder.createChoiceRuleName(arg)
+                        val thisChoiceItems = it.items.map { it.accept(this, thisChoiceName) as RuntimeRule }
+                        builder.rule(thisChoiceName).concatenation(*thisChoiceItems.toTypedArray())
+                    }
+                }
+                val kind = if (target is ChoiceEqual) RuntimeRuleItemKind.CHOICE_EQUAL else RuntimeRuleItemKind.CHOICE_PRIORITY
+                RuntimeRuleItem(kind, -1, 0, items.toTypedArray())
+            }
+            else -> {
+                throw ParseException("Not supported (yet)!")
+            }
+        }
     }
 
-    override fun visit(target: Terminal, arg: String): RuntimeRuleItem {
+    override fun visit(target: EmptyRule, arg: String): RuntimeRule {
+        val ruleThatIsEmpty = this.findRule(arg) ?: throw ParseException("Internal Error: should not happen")
+        val e = this.builder.empty(ruleThatIsEmpty)
+        return e
+    }
+
+    override fun visit(target: Terminal, arg: String): RuntimeRule {
         val terminalRule = if (target.isPattern) {
             builder.pattern(target.value)
         } else {
             builder.literal(target.value)
         }
-        return RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, arrayOf(terminalRule))
+        return terminalRule
     }
 
-    override fun visit(target: NonTerminal, arg: String): RuntimeRuleItem {
+    override fun visit(target: NonTerminal, arg: String): RuntimeRule {
         val nonTerminalRule = this.findRule(target.referencedRule.name)
                 ?: target.referencedRule.accept(this, arg) as RuntimeRule
-        return RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, arrayOf(nonTerminalRule))
+        return nonTerminalRule
     }
 
-    override fun visit(target: ChoiceEqual, arg: String): RuntimeRuleItem {
+    override fun visit(target: ChoiceEqual, arg: String): RuntimeRule {
         return if (1 == target.alternative.size) {
-            target.alternative[0].accept(this, arg) as RuntimeRuleItem
+            target.alternative[0].accept(this, arg) as RuntimeRule
         } else {
+            val choiceRuleName = builder.createChoiceRuleName(arg);
             val items = target.alternative.map {
-                it.accept(this, arg) as RuntimeRuleItem
-            }.map {
-                if (1 == it.items.size) {
-                    it.items.first()
-                } else {
-                    val groupRuleName = builder.createGroupRuleName(arg)
-                    builder.rule(groupRuleName).concatenation(*it.items)
-                }
+                it.accept(this, choiceRuleName) as RuntimeRule
             }
-            RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_EQUAL, -1, 0, items.toTypedArray())
+            builder.rule(choiceRuleName).choiceEqual(*items.toTypedArray())
         }
     }
 
-    override fun visit(target: ChoicePriority, arg: String): RuntimeRuleItem {
+    override fun visit(target: ChoicePriority, arg: String): RuntimeRule {
         return if (1 == target.alternative.size) {
-            target.alternative[0].accept(this, arg) as RuntimeRuleItem
+            target.alternative[0].accept(this, arg) as RuntimeRule
         } else {
+            val choiceRuleName = builder.createChoiceRuleName(arg);
             val items = target.alternative.map {
-                 it.accept(this, arg) as RuntimeRuleItem
-            }.map {
-                if (1 == it.items.size) {
-                    it.items.first()
-                } else {
-                    val groupRuleName = builder.createGroupRuleName(arg)
-                    builder.rule(groupRuleName).concatenation(*it.items)
-                }
+                it.accept(this, choiceRuleName) as RuntimeRule
             }
-            RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_PRIORITY, -1, 0, items.toTypedArray())
+            builder.rule(choiceRuleName).choicePriority(*items.toTypedArray())
         }
     }
 
-    override fun visit(target: Concatenation, arg: String): RuntimeRuleItem {
-        return if (1 == target.items.size) {
-            target.items[0].accept(this, arg) as RuntimeRuleItem
-        } else {
-            val items = target.items.map {
-                it.accept(this, arg) as RuntimeRuleItem
-            }.map {
-                if (RuntimeRuleItemKind.CONCATENATION==it.kind && 1 == it.items.size) {
-                    it.items.first()
-                } else {
-                    val groupRuleName = builder.createGroupRuleName(arg)
-                    builder.rule(groupRuleName).withRhs(it)
-                }
-            }
-
-            RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, items.toTypedArray())
-        }
+    override fun visit(target: Concatenation, arg: String): RuntimeRule {
+        val items = target.items.map { it.accept(this, arg) as RuntimeRule }
+        return builder.rule(arg).concatenation(*items.toTypedArray())
     }
 
-    override fun visit(target: Group, arg: String): RuntimeRuleItem {
+    override fun visit(target: Group, arg: String): RuntimeRule {
         val groupRuleName = builder.createGroupRuleName(arg)
-        val groupRuleItem = target.choice.accept(this, groupRuleName) as RuntimeRuleItem
-        val groupRule = builder.rule(groupRuleName).withRhs(groupRuleItem)
-        return RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, arrayOf(groupRule))
+        val groupRuleItem = target.choice.accept(this, groupRuleName) as RuntimeRule
+        return builder.rule(groupRuleName).concatenation(groupRuleItem)
     }
 
-    override fun visit(target: Multi, arg: String): RuntimeRuleItem {
-        //val multiRuleName = builder.createMultiRuleName(arg)
-        val multiRuleItem = target.item.accept(this, arg) as RuntimeRuleItem
-        // all ruleitems should only have one rhs.item (Terminal,ot Group), so can use this directly
-        val ruleToBeMultied = multiRuleItem.items[0]
-        if (0==target.min) {
-            val ruleThatIsEmpty = this.findRule(arg) ?: throw ParseException("Internal Error: should not happen")
-            val emptyRule = builder.empty(ruleThatIsEmpty)
-            return RuntimeRuleItem(RuntimeRuleItemKind.MULTI, target.min, target.max, arrayOf(ruleToBeMultied, emptyRule))
-        } else {
-            return RuntimeRuleItem(RuntimeRuleItemKind.MULTI, target.min, target.max, arrayOf(ruleToBeMultied))
-        }
+    override fun visit(target: Multi, arg: String): RuntimeRule {
+        val multiRuleName = builder.createMultiRuleName(arg)
+        val multiRuleItem = target.item.accept(this, arg) as RuntimeRule
+        return builder.rule(multiRuleName).multi(target.min, target.max, multiRuleItem)
     }
 
-    override fun visit(target: SeparatedList, arg: String): RuntimeRuleItem {
-        //val listRuleName = builder.createListRuleName(arg)
-        val listRuleItem = target.item.accept(this, arg) as RuntimeRuleItem
-        // all ruleitems should only have one rhs.item (Terminal,ot Group), so can use this directly
-        //val listRule = builder.rule(listRuleName).withRhs(listRuleItem)
-        val ruleToBeListed = listRuleItem.items[0]
-        val sepRule = (target.separator.accept(this,arg) as RuntimeRuleItem).items.first()
-        if (0==target.min) {
-            val ruleThatIsEmpty = this.findRule(arg) ?: throw ParseException("Internal Error: should not happen")
-            val emptyRule = builder.empty(ruleThatIsEmpty)
-            return RuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST, target.min, target.max, arrayOf(ruleToBeListed, sepRule, emptyRule))
-        } else {
-            return RuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST, target.min, target.max, arrayOf(ruleToBeListed, sepRule))
-        }
+    override fun visit(target: SeparatedList, arg: String): RuntimeRule {
+        val listRuleName = builder.createListRuleName(arg)
+        val listRuleItem = target.item.accept(this, arg) as RuntimeRule
+        val sepRule = target.separator.accept(this, arg) as RuntimeRule
+        return builder.rule(listRuleName).separatedList(target.min, target.max, sepRule, listRuleItem)
     }
 
 }

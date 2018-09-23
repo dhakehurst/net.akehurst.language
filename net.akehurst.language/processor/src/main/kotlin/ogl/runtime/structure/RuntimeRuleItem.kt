@@ -75,4 +75,19 @@ class RuntimeRuleItem(
             RuntimeRuleItemKind.UNORDERED -> emptyArray<RuntimeRule>() //TODO:
         }
     }
+
+
+    override fun toString(): String {
+        val kindStr = when (this.kind) {
+            RuntimeRuleItemKind.CONCATENATION -> "CONCAT"
+            RuntimeRuleItemKind.CHOICE_PRIORITY -> "CHOPR"
+            RuntimeRuleItemKind.CHOICE_EQUAL -> "CHOEQ"
+            RuntimeRuleItemKind.MULTI -> "MULTI"
+            RuntimeRuleItemKind.SEPARATED_LIST -> "SLIST"
+            RuntimeRuleItemKind.EMPTY -> "EMPTY"
+            else -> throw ParseException("Unsupported at present")
+        }
+        val itemsStr = items.map { "[${it.number}]" }.joinToString(" ")
+        return "(${kindStr}) ${itemsStr}"
+    }
 }

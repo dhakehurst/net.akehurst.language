@@ -41,10 +41,10 @@ class RuntimeRuleSetBuilder() {
         return "${'$'}choice"+this.nextChoiceNumber++ //TODO: include original rule name fo easier debug
     }
     fun createMultiRuleName(parentRuleName: String) :String {
-        return "${'$'}choice"+this.nextMultiNumber++ //TODO: include original rule name fo easier debug
+        return "${'$'}multi"+this.nextMultiNumber++ //TODO: include original rule name fo easier debug
     }
     fun createListRuleName(parentRuleName: String) :String {
-        return "${'$'}choice"+this.nextListNumber++ //TODO: include original rule name fo easier debug
+        return "${'$'}sList"+this.nextListNumber++ //TODO: include original rule name fo easier debug
     }
     fun findRuleByName(ruleName: String, terminal: Boolean): RuntimeRule? {
         return this.rules.firstOrNull {

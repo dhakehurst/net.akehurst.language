@@ -365,7 +365,7 @@ class RuntimeRule(
     }
 
     override fun toString(): String {
-        return "[" + this.number + "]" + if (this.isNonTerminal) {
+        return "[" + this.number + "]" + if (this.isNonTerminal || this.isEmptyRule) {
             " (" + this.name + ") : " + this.rhs
         } else if (this.isPattern) {
             " \"" + this.patternText + "\""

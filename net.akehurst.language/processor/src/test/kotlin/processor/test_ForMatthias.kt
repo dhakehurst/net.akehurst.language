@@ -67,4 +67,12 @@ internal class test_ForMatthias {
             }
         """.trimIndent())
     }
+    @Test
+    fun properties() {
+        p.parse("properties", """
+            properties {
+
+            }
+        """.trimIndent())
+    }
 }
