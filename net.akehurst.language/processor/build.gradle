@@ -14,11 +14,83 @@
  * limitations under the License.
  */
 
-apply plugin: 'kotlin-platform-common'
- 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
+
+
+
+//apply plugin: 'kotlin-platform-common'
+plugins {
+    id 'org.jetbrains.kotlin.multiplatform' version '1.3.0'
+    id("io.gitlab.arturbosch.detekt").version("[version]")
+    id 'maven-publish'
+}
+
+//dependencies {
+//    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
     
-    testImplementation "org.jetbrains.kotlin:kotlin-test-common:${version_kotlin}"
-    testImplementation "org.jetbrains.kotlin:kotlin-test-annotations-common:${version_kotlin}"
+//    testImplementation "org.jetbrains.kotlin:kotlin-test-common:${version_kotlin}"
+//    testImplementation "org.jetbrains.kotlin:kotlin-test-annotations-common:${version_kotlin}"
+//}
+
+kotlin {
+    targets {
+        fromPreset(presets.jvm, 'jvm8') {
+            // Configure a single target's compilations (main and test)
+            compilations.all {
+                tasks[compileKotlinTaskName].kotlinOptions {
+                    jvmTarget = '1.8'
+                }
+            }
+        }
+        fromPreset(presets.js, 'js') {
+            compilations.all {
+                tasks[compileKotlinTaskName].kotlinOptions {
+                    moduleKind = 'umd'
+                }
+            }
+        }
+  //      fromPreset(presets.macosX64, 'macos') {
+            /* You can specify additional settings for the 'linux' target here */
+  //      }
+    }
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation "org.jetbrains.kotlin:kotlin-test-common:${version_kotlin}"
+                implementation "org.jetbrains.kotlin:kotlin-test-annotations-common:${version_kotlin}"
+            }
+        }
+        jvm8Main {
+            dependencies {
+                implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+            }
+        }
+        jvm8Test {
+            dependencies {
+                implementation 'org.jetbrains.kotlin:kotlin-test'
+                implementation 'org.jetbrains.kotlin:kotlin-test-junit'
+            }
+        }
+        jsMain {
+            dependencies {
+                implementation 'org.jetbrains.kotlin:kotlin-stdlib-js'
+            }
+        }
+        jsTest {
+            dependencies {
+                implementation 'org.jetbrains.kotlin:kotlin-test-js'
+            }
+        }
+    }
+}
+
+detekt {
+    toolVersion = "[version]"
+    input = files("src/main/kotlin")
+    filters = ".*/resources/.*,.*/build/.*"
+    config = files("path/to/config.yml")
 }

@@ -14,31 +14,28 @@
  * limitations under the License.
  */
 
+
 buildscript {
-    ext.kotlin_version = '1.2.60'
     repositories {
         mavenCentral()
         jcenter()
     }
     dependencies {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
 subprojects {
-
-	apply plugin: 'java-library'
-    apply plugin: 'checkstyle'
-	apply plugin: 'maven-publish'
-	apply plugin: 'com.jfrog.bintray'
+    
+//	apply plugin: 'maven-publish'
+//	apply plugin: 'com.jfrog.bintray'
 
 
 	group 'net.akehurst.language'
 	version '2.0.0-SNAPSHOT'
 
-	sourceCompatibility = '1.8'
-	targetCompatibility = '1.8'
+//	sourceCompatibility = '1.8'
+//	targetCompatibility = '1.8'
 
     repositories {
         mavenLocal()
@@ -49,53 +46,11 @@ subprojects {
     ext {
         version_junit = '4.12'
         version_transform = '2.2.0'
-        version_kotlin = '1.2.70'
+        version_kotlin = '1.3.0'
     }
      
-    checkstyle {
-        toolVersion = '8.7'
-        configFile = rootProject.file('src/checkstyle/checkstyle.xml')
-        configProperties = [
-            'configDir': rootProject.file('src/checkstyle'),
-            'baseDir': rootDir,
-        ]
-    }
-     
-	task sourceJar(type: Jar) {
-	    from sourceSets.main.allJava
-	}
 
-	publishing {
-		repositories {
-			maven {
-				name 'itemis-akehurst'
-				url "https://projects.itemis.de/nexus/content/repositories/akehurst/"
-			}
-		}
-
-	    publications {
-	        noSource(MavenPublication) {
-	        	groupId "${group}"
-	         	artifactId "${project.name}".replace("${group}.", "")
-				version "${version}"
-	            from components.java
-	        }
-	    }
-	
-	    publications {
-	        mavenJava(MavenPublication) {
-	          	groupId "${group}"
-	        	artifactId "${project.name}".replace("${group}.", "")
-				version "${version}"
-	        
-	            from components.java
-	            artifact sourceJar {
-	                classifier "sources"
-	            }
-	        }
-	    }
-	}
-	
+/*
 	bintray {
 		user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
 		key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
@@ -115,4 +70,5 @@ subprojects {
 			}
 		}
 	}
+	*/
 }

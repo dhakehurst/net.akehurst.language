@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+apply plugin: 'java-library'
+apply plugin: 'maven-publish'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
 dependencies {
     
     implementation "net.akehurst.transform:binary:2.2.1"
@@ -22,4 +28,40 @@ dependencies {
     
     testImplementation "junit:junit:${version_junit}"
     
+}
+
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
+
+publishing {
+    repositories {
+        maven {
+            name 'itemis-akehurst'
+            url "https://projects.itemis.de/nexus/content/repositories/akehurst/"
+        }
+    }
+
+    publications {
+        noSource(MavenPublication) {
+            groupId "${group}"
+            artifactId "${project.name}".replace("${group}.", "")
+            version "${version}"
+            from components.java
+        }
+    }
+
+    publications {
+        mavenJava(MavenPublication) {
+            groupId "${group}"
+            artifactId "${project.name}".replace("${group}.", "")
+            version "${version}"
+
+            from components.java
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
 }
