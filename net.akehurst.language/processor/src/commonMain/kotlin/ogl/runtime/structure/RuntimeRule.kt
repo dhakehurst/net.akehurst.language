@@ -17,6 +17,7 @@
 package net.akehurst.language.ogl.runtime.structure
 
 import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.collections.transitveClosure
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class RuntimeRule(
@@ -250,6 +251,7 @@ class RuntimeRule(
     }
 
     fun findSubRules(): Set<RuntimeRule> {
+        /*
         var result = this.findAllNonTerminal()
         var oldResult = mutableSetOf<RuntimeRule>()
         while (!oldResult.containsAll(result)) {
@@ -259,9 +261,13 @@ class RuntimeRule(
             }
         }
         return result
+        */
+        var result = setOf(this).transitveClosure { it.findAllNonTerminal() }
+        return result;
     }
 
     fun findSubRulesAt(n: Int): Set<RuntimeRule> {
+        /*
         var result = this.findAllNonTerminalAt(n)
         var oldResult = mutableSetOf<RuntimeRule>()
         while (!oldResult.containsAll(result)) {
@@ -270,6 +276,8 @@ class RuntimeRule(
                 result += nt.findAllNonTerminalAt(n)
             }
         }
+        */
+        var result = setOf(this).transitveClosure { it.findAllNonTerminalAt(n) }
         return result
     }
 
@@ -330,7 +338,7 @@ class RuntimeRule(
                         var nextItem = this.rhs.items[nextItemIndex]
                         val res = mutableSetOf(nextItem)
                         var i = nextItemIndex+1
-                        while (nextItem.canBeEmpty() && i < this.rhs.items.size) {
+                        while (nextItem.canBeEmpty(setOf()) && i < this.rhs.items.size) {
                             nextItem = this.rhs.items[i]
                             res.add(nextItem)
                             ++i
@@ -358,15 +366,17 @@ class RuntimeRule(
         }
     }
 
-    fun canBeEmpty():Boolean {
+    fun canBeEmpty(checked:Set<RuntimeRule>):Boolean {
         if ( this.isTerminal ) {
             return this.isEmptyRule;
         } else {
+            val newchecked = checked.toMutableSet()
+            newchecked.add(this)
             when (this.rhs.kind) {
                 RuntimeRuleItemKind.EMPTY -> return true
-                RuntimeRuleItemKind.CHOICE_EQUAL -> return this.rhs.items.any { it.canBeEmpty() }
-                RuntimeRuleItemKind.CHOICE_PRIORITY -> return this.rhs.items.any { it.canBeEmpty() }
-                RuntimeRuleItemKind.CONCATENATION -> return return this.rhs.items.all { it.canBeEmpty() }
+                RuntimeRuleItemKind.CHOICE_EQUAL -> return this.rhs.items.any { newchecked.contains(it) || it.canBeEmpty(newchecked) }
+                RuntimeRuleItemKind.CHOICE_PRIORITY -> return this.rhs.items.any { newchecked.contains(it) || it.canBeEmpty(newchecked) }
+                RuntimeRuleItemKind.CONCATENATION -> return return this.rhs.items.all { newchecked.contains(it) || it.canBeEmpty(newchecked) }
                 RuntimeRuleItemKind.MULTI -> return 0 == this.rhs.multiMin
                 RuntimeRuleItemKind.SEPARATED_LIST -> return 0 == this.rhs.multiMin
 

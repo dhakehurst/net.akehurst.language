@@ -23,7 +23,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
 
     private val WS = Regex("(\\s)+")
     private val EMPTY = Regex("[$]empty")
-    private val NAME = Regex("[a-zA-Z_][a-zA-Z_0-9]*")
+    private val NAME = Regex("[a-zA-Z_$][a-zA-Z_0-9]*")
     private val LITERAL = Regex("'(?:\\\\?.)*?'")
     private val COLON = Regex("[:]")
     private val CHILDREN_START = Regex("[{]")

@@ -214,7 +214,7 @@ class test_OglGrammar_item {
         val actual = parse("concatenation", "'a'")
         val expected = this.sppt("""
             concatenation {
-                concatenationItem { simpleItem { terminal { LITERAL { '\'(?:\\?.)*?\'' : '\'a\'' } } } }
+                ${'$'}multi2 { concatenationItem { simpleItem { terminal { LITERAL { '\'(?:\\?.)*?\'' : '\'a\'' } } } } }
             }
         """.trimIndent())
         assertNotNull(actual)
