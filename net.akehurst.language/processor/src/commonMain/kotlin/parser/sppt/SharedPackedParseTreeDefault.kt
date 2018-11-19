@@ -19,6 +19,7 @@ package net.akehurst.language.parser.sppt
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
+import kotlin.js.JsName
 
 class SharedPackedParseTreeDefault(override val root: SPPTNode) : SharedPackedParseTree {
 
@@ -35,7 +36,12 @@ class SharedPackedParseTreeDefault(override val root: SPPTNode) : SharedPackedPa
     }
 
     override val toStringAll: String by lazy {
-        val visitor = ToStringVisitor("/n", "")
+        this.toStringAll("")
+    }
+
+
+    override fun toStringAll(indentIncrement:String): String {
+        val visitor = ToStringVisitor("\n", indentIncrement)
         val all: Set<String> = this.accept(visitor, ToStringVisitor.Indent("", true))
         val total = all.size
         val sep = "\n"
@@ -47,7 +53,7 @@ class SharedPackedParseTreeDefault(override val root: SPPTNode) : SharedPackedPa
             res += pt
             res += "\n"
         }
-        all.joinToString(sep)
+        return all.joinToString(sep)
     }
 
     override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {

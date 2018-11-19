@@ -165,6 +165,7 @@ class test_RuntimeParser_parse_choice {
 
         assertNotNull(actual)
     }
+
     @Test
     fun abOcLiteral_r_abc_fails() {
         val sp = this.abOcLiteral()
@@ -177,6 +178,7 @@ class test_RuntimeParser_parse_choice {
         assertEquals(1, ex.location["line"])
         assertEquals(2, ex.location["column"])
     }
+
     @Test
     fun abOcLiteral_r_c() {
         val sp = this.abOcLiteral()
@@ -239,6 +241,7 @@ class test_RuntimeParser_parse_choice {
         assertEquals(1, ex.location["line"])
         assertEquals(1, ex.location["column"])
     }
+
     @Test
     fun aObcLiteral_r_abc_fails() {
         val sp = this.aObcLiteral()
@@ -251,6 +254,7 @@ class test_RuntimeParser_parse_choice {
         assertEquals(1, ex.location["line"])
         assertEquals(2, ex.location["column"])
     }
+
     @Test
     fun aObcLiteral_r_bc() {
         val sp = this.aObcLiteral()

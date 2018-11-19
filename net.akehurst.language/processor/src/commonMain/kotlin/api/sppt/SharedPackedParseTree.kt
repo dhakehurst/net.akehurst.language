@@ -16,6 +16,8 @@
 
 package net.akehurst.language.api.sppt
 
+import kotlin.js.JsName
+
 /**
  * A Shared Packed Parse Forest is a collection of parse trees which share Nodes when possible. There is a Root Node. Each Node in a tree is either a Leaf or an
  * Branch. An Branch contains a Set of Lists of child Nodes. Each list of child nodes is an alternative possible list of children for the Branch
@@ -52,4 +54,7 @@ package net.akehurst.language.api.sppt
 	 *  a string representation of all contained parse trees
 	 */
 	val toStringAll: String
+
+	@JsName("toStringAllWithIndent")
+	fun toStringAll(indentIncrement:String): String
 }

@@ -1,4 +1,5 @@
-package processor
+package net.akehurst.language.processor
+
 
 class Formatter {
     /*

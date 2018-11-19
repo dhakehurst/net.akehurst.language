@@ -30,6 +30,13 @@ internal class test_Ogl_scan {
 
         assertNotNull(tokens)
         assertEquals(1, tokens.size)
+        assertTrue(tokens[0].isLiteral)
+        assertTrue(tokens[0].isLeaf)
+        assertEquals("a", tokens[0].matchedText)
+        assertEquals(0, tokens[0].identity.runtimeRuleNumber)
+        assertEquals(0, tokens[0].identity.startPosition)
+        assertEquals(1, tokens[0].identity.matchedTextLength)
+
     }
 
     @Test

@@ -22,30 +22,30 @@ import kotlin.js.JsName
 
 interface LanguageProcessor {
 
-	@JsName("scan")
-	fun scan(inputText: CharSequence): List<SPPTLeaf>
+    @JsName("scan")
+    fun scan(inputText: CharSequence): List<SPPTLeaf>
 
-	@JsName("parse")
-	fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree
+    @JsName("parse")
+    fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree
 
-	@JsName("process")
-	fun <T> process(goalRuleName: String, inputText: CharSequence): T
+    @JsName("process")
+    fun <T> process(goalRuleName: String, inputText: CharSequence): T
 
-	//fun <T> process(reader: Reader, goalRuleName: String, targetType: Class<T>): T
+    //fun <T> process(reader: Reader, goalRuleName: String, targetType: Class<T>): T
 
-	/**
-	 * returns list of names of expected rules
-	 *
-	 * @param inputText text to parse
-	 * @param goalRuleName name of a rule in the grammar that is the goal rule
-	 * @param position position in the text (from reader) at which to provide completions
-	 * @param desiredDepth depth of nested rules to search when constructing possible completions
-	 * @return list of possible completion items
-	 * @throws ParseFailedException
-	 * @throws ParseTreeException
-	 */
-	@JsName("expectedAt")
-	fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem>
+    /**
+     * returns list of names of expected rules
+     *
+     * @param inputText text to parse
+     * @param goalRuleName name of a rule in the grammar that is the goal rule
+     * @param position position in the text (from reader) at which to provide completions
+     * @param desiredDepth depth of nested rules to search when constructing possible completions
+     * @return list of possible completion items
+     * @throws ParseFailedException
+     * @throws ParseTreeException
+     */
+    @JsName("expectedAt")
+    fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem>
 
-	//List<CompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth)
+    //List<CompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth)
 }

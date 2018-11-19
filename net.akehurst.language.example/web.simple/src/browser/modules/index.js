@@ -16,6 +16,6 @@ function doParse() {
 
   let proc = processor(grammarStr)
   let tree = proc.parse(goal,sentence)
-  let str = tree.toStringAll
+  let str = tree.toStringAllWithIndent('  ')
   document.getElementById("output").value = str
 }

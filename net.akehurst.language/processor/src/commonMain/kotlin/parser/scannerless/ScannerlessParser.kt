@@ -43,7 +43,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
     }
 
     override fun scan(inputText: CharSequence): List<SPPTLeaf> {
-        //TODO: improve this algorithm...it is not efficient I think
+        //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
         val input = InputFromCharSequence(inputText)
         val terminals = this.runtimeRuleSet.allTerminals
         var result = mutableListOf<SPPTLeaf>()

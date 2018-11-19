@@ -29,6 +29,7 @@ import kotlin.jvm.JvmName
 
 
 private val oglProcessor: LanguageProcessor by lazy {
+    //println("Creating ogl processor")
     val grammar = OglGrammar()
     val sppt2ast: Sppt2AstTransformer = OglSppt2AstTransformer()
     processor(grammar, sppt2ast)
