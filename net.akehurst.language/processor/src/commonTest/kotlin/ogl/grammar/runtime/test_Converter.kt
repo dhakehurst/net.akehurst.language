@@ -118,6 +118,24 @@ class test_Converter {
     }
 
     @Test
+    fun terminalLiteralRule_2() {
+        // r = 'a' 'a' ;
+        val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
+        gb.rule("r").choice(gb.concatenation(gb.terminalLiteral("a"),gb.terminalLiteral("a")))
+        val grammar = gb.grammar
+
+        val sut = Converter(grammar)
+
+        val actual = sut.transform()
+
+        assertEquals(2, actual.runtimeRules.size)
+        this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CONCATENATION, 2)
+        this.checkTRule(1, actual.runtimeRules[1], "a", false, false)
+
+        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1],actual.runtimeRules[1])
+    }
+
+    @Test
     fun terminalPatternRule() {
         // r = "[a-c]" ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")

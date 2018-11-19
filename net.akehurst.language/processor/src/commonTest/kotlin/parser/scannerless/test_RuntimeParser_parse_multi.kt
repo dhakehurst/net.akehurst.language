@@ -228,6 +228,22 @@ class test_RuntimeParser_parse_multi {
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
+    @Test
+    fun multi_1_n_a__r__5000a() {
+        val sp = multi_1_n_a()
+        val goalRuleName = "r"
+        val inputText = "a".repeat(5000)
+
+        val actual = test_parse(sp, goalRuleName, inputText)
+
+        assertNotNull(actual)
+
+        val p = SPPTParser(rrb)
+        val aleaves = "'a' ".repeat(5000)
+        val expected = p.addTree("r {${aleaves}}")
+
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
 
     // r = a[2..5]
     // a = 'a'

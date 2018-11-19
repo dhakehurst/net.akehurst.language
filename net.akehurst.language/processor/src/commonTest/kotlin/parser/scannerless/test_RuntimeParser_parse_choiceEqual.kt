@@ -22,7 +22,7 @@ import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
 import kotlin.test.*
 
-class test_RuntimeParser_parse_choice {
+class test_RuntimeParser_parse_choiceEqual {
 
     private fun test_parse(sp: ScannerlessParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
         return sp.parse(goalRuleName, inputText)

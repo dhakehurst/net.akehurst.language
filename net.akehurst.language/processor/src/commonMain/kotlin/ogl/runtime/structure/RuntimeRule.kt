@@ -190,10 +190,62 @@ class RuntimeRule(
     }
 
     private fun findAllNonTerminalAt(n: Int): Set<RuntimeRule> {
-        return if (isTerminal) {
+        //TODO: 'ALL' bit !
+        return if (this.isTerminal) {
             emptySet<RuntimeRule>()
         } else {
-            this.rhs.items.filter { it.isNonTerminal }.toSet()
+            when (this.rhs.kind) {
+                RuntimeRuleItemKind.EMPTY -> {
+                    return emptySet<RuntimeRule>()
+                }
+                RuntimeRuleItemKind.CHOICE_EQUAL -> {
+                    return if (n == 0) {
+                        this.rhs.items.toHashSet()
+                    } else {
+                        emptySet<RuntimeRule>()
+                    }
+                }
+                RuntimeRuleItemKind.CHOICE_PRIORITY -> {
+                    return if (n == 0) {
+                        this.rhs.items.toHashSet()
+                    } else {
+                        emptySet<RuntimeRule>()
+                    }
+                }
+                RuntimeRuleItemKind.CONCATENATION -> {
+                    return if (n >= this.rhs.items.size) {
+                        throw RuntimeException("Internal Error: No NextExpectedItem")
+                    } else {
+                        if (-1 == n) {
+                            emptySet<RuntimeRule>()
+                        } else {
+                            var nextItem = this.rhs.items[n]
+                            val res = mutableSetOf(nextItem)
+                            res
+                        }
+                    }
+                }
+                RuntimeRuleItemKind.MULTI -> {
+                    return when {
+                        (0 == n && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
+                        (n < this.rhs.multiMax || -1==this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
+                        else -> emptySet<RuntimeRule>()
+                    }
+                }
+                RuntimeRuleItemKind.SEPARATED_LIST -> {
+                    return when {
+                        (0 == n && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
+                        (n % 2 == 0) -> if (n < this.rhs.multiMax || -1==this.rhs.multiMax) {
+                                            hashSetOf<RuntimeRule>(this.rhs.items[0])
+                                        } else {
+                                            emptySet<RuntimeRule>()
+                                        }
+                        else -> emptySet<RuntimeRule>()
+                    }
+                }
+                else -> throw RuntimeException("Internal Error: rule kind not recognised")
+            }
+
         }
     }
 
@@ -275,7 +327,15 @@ class RuntimeRule(
                     if (-1 == nextItemIndex) {
                         emptySet<RuntimeRule>()
                     } else {
-                        hashSetOf<RuntimeRule>(this.rhs.items[nextItemIndex])
+                        var nextItem = this.rhs.items[nextItemIndex]
+                        val res = mutableSetOf(nextItem)
+                        var i = nextItemIndex+1
+                        while (nextItem.canBeEmpty() && i < this.rhs.items.size) {
+                            nextItem = this.rhs.items[i]
+                            res.add(nextItem)
+                            ++i
+                        }
+                        res
                     }
                 }
             }
@@ -295,6 +355,23 @@ class RuntimeRule(
                 }
             }
             else -> throw RuntimeException("Internal Error: rule kind not recognised")
+        }
+    }
+
+    fun canBeEmpty():Boolean {
+        if ( this.isTerminal ) {
+            return this.isEmptyRule;
+        } else {
+            when (this.rhs.kind) {
+                RuntimeRuleItemKind.EMPTY -> return true
+                RuntimeRuleItemKind.CHOICE_EQUAL -> return this.rhs.items.any { it.canBeEmpty() }
+                RuntimeRuleItemKind.CHOICE_PRIORITY -> return this.rhs.items.any { it.canBeEmpty() }
+                RuntimeRuleItemKind.CONCATENATION -> return return this.rhs.items.all { it.canBeEmpty() }
+                RuntimeRuleItemKind.MULTI -> return 0 == this.rhs.multiMin
+                RuntimeRuleItemKind.SEPARATED_LIST -> return 0 == this.rhs.multiMin
+
+                else -> throw RuntimeException("Internal Error: Unknown RuleKind " + this.rhs.kind)
+            }
         }
     }
 

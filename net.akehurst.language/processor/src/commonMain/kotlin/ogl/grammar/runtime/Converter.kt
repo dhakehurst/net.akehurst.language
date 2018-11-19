@@ -31,6 +31,10 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
         return this.builder.findRuleByName(name, false)
     }
 
+    private fun findTerminal(value: String): RuntimeRule? {
+        return this.builder.findRuleByName(value, true)
+    }
+
     fun transform(): RuntimeRuleSet {
         this.visit(this.grammar, "")
         return this.builder.ruleSet()
@@ -97,12 +101,17 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
     }
 
     override fun visit(target: Terminal, arg: String): RuntimeRule {
-        val terminalRule = if (target.isPattern) {
-            builder.pattern(target.value)
+        val existing = this.findTerminal(target.value)
+        if (null == existing) {
+            val terminalRule = if (target.isPattern) {
+                builder.pattern(target.value)
+            } else {
+                builder.literal(target.value)
+            }
+            return terminalRule
         } else {
-            builder.literal(target.value)
+            return existing
         }
-        return terminalRule
     }
 
     override fun visit(target: NonTerminal, arg: String): RuntimeRule {

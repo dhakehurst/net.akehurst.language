@@ -117,6 +117,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val nextItems = this.findNextExpectedItems(runtimeRule, nextItemIndex, numNonSkipChildren)
         val result = mutableSetOf<RuntimeRule>()
         nextItems.forEach {
+            //result += this.firstTerminals[it.number]
             result += this.findFirstTerminals(it)
         }
         return result

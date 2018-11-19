@@ -64,7 +64,8 @@ class test_RuntimeParser_parse_empty {
     private fun choiceRempty(): ScannerlessParser {
         val rrb = RuntimeRuleSetBuilder()
         val e = rrb.rule("e").empty()
-        rrb.rule("R").concatenation(rrb.literal("a"), e)
+        val a = rrb.literal("a")
+        rrb.rule("R").choiceEqual(a, e)
         return ScannerlessParser(rrb.ruleSet())
     }
 
