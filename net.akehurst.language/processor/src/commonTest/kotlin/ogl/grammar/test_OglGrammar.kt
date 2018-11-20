@@ -23,6 +23,22 @@ import kotlin.test.assertNotNull
 class test_OglGrammar {
 
     @Test
+    fun empty() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = ;
+            }
+        """.trimIndent()
+
+        val p = processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
     fun literal() {
 
         val grammarStr = """

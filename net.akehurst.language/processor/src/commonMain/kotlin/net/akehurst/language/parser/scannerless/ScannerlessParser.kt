@@ -39,7 +39,14 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
     }
 
     override fun build() {
-        throw UnsupportedOperationException()
+        this.runtimeRuleSet.allSkipRules.size
+        this.runtimeRuleSet.allSkipTerminals.size
+        this.runtimeRuleSet.allTerminals.size
+        this.runtimeRuleSet.firstTerminals.size
+        this.runtimeRuleSet.firstSkipRuleTerminals.size
+        this.runtimeRuleSet.firstSuperNonTerminal.size
+        this.runtimeRuleSet.subNonTerminals.size
+        this.runtimeRuleSet.subTerminals.size
     }
 
     override fun scan(inputText: CharSequence): List<SPPTLeaf> {

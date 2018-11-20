@@ -113,7 +113,7 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
         val grammar = arg as GrammarDefault
         val name = this.transform<String>(children[0], null)
         val result = RuleDefault(grammar, name, false)
-        val rhs = this.transform<Choice>(children[1], arg)
+        val rhs = this.transform<RuleItem>(children[1], arg)
         result.rhs = rhs
         return result
     }
@@ -123,31 +123,39 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
         val grammar = arg as GrammarDefault
         val name = this.transform<String>(children[0], null)
         val result = RuleDefault(grammar, name, true)
-        val rhs = this.transform<Choice>(children[1], arg)
+        val rhs = this.transform<RuleItem>(children[1], arg)
         result.rhs = rhs
         return result
     }
 
     // choice : simpleChoice < priorityChoice ;
-    fun choice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Choice {
-        return this.transform<Choice>(children[0], arg)
+    fun choice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
+        return this.transform<RuleItem>(children[0], arg)
     }
 
     // simpleChoice : [concatenation / '|']* ;
-    fun simpleChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ChoiceEqual {
+    fun simpleChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
         // children will have one element, an sList
         val alternative = children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transform<Concatenation>(it, arg)
         }
-        return ChoiceEqualDefault(alternative)
+        return if (alternative.isEmpty()) {
+            EmptyRuleDefault()
+        } else  {
+            ChoiceEqualDefault(alternative)
+        }
     }
 
     // priorityChoice : [concatenation / '<']* ;
-    fun priorityChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ChoicePriority {
+    fun priorityChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
         val alternative = children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transform<Concatenation>(it, arg)
         }
-        return ChoicePriorityDefault(alternative)
+        return return if (alternative.isEmpty()) {
+            EmptyRuleDefault()
+        } else  {
+            ChoicePriorityDefault(alternative)
+        }
     }
 
     // concatenation : concatenationItem+ ;

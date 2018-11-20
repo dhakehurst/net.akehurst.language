@@ -39,25 +39,25 @@ private fun createRules(): List<Rule> {
 	b.rule("extends1").concatenation(b.terminalLiteral("extends"), b.nonTerminal("extends2"));
 	b.rule("extends2").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("qualifiedName"));
 	b.rule("rules").multi(1, -1, b.nonTerminal("anyRule"));
-	b.rule("anyRule").choice(b.concatenation(b.nonTerminal("normalRule")), b.concatenation(b.nonTerminal("skipRule")));
+	b.rule("anyRule").choiceEqual(b.concatenation(b.nonTerminal("normalRule")), b.concatenation(b.nonTerminal("skipRule")));
 	b.rule("skipRule").concatenation(b.terminalLiteral("skip"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="),
 			b.nonTerminal("choice"), b.terminalLiteral(";"));
 	b.rule("normalRule").concatenation(b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("choice"),
 			b.terminalLiteral(";"));
-	b.rule("choice").priorityChoice(b.concatenation(b.nonTerminal("simpleChoice")), b.concatenation(b.nonTerminal("priorityChoice")));
+	b.rule("choice").choicePriority(b.concatenation(b.nonTerminal("simpleChoice")), b.concatenation(b.nonTerminal("priorityChoice")));
 	b.rule("simpleChoice").separatedList(0, -1, b.terminalLiteral("|"), b.nonTerminal("concatenation"));
 	b.rule("priorityChoice").separatedList(0, -1, b.terminalLiteral("<"), b.nonTerminal("concatenation"));
 	b.rule("concatenation").multi(1, -1, b.nonTerminal("concatenationItem"));
-	b.rule("concatenationItem").choice(b.concatenation(b.nonTerminal("simpleItem")), b.concatenation(b.nonTerminal("multi")), b.concatenation(b.nonTerminal("separatedList")));
-	b.rule("simpleItem").choice(b.concatenation(b.nonTerminal("terminal")), b.concatenation(b.nonTerminal("nonTerminal")), b.concatenation(b.nonTerminal("group")));
+	b.rule("concatenationItem").choiceEqual(b.concatenation(b.nonTerminal("simpleItem")), b.concatenation(b.nonTerminal("multi")), b.concatenation(b.nonTerminal("separatedList")));
+	b.rule("simpleItem").choiceEqual(b.concatenation(b.nonTerminal("terminal")), b.concatenation(b.nonTerminal("nonTerminal")), b.concatenation(b.nonTerminal("group")));
 	b.rule("multi").concatenation(b.nonTerminal("simpleItem"), b.nonTerminal("multiplicity"));
-	b.rule("multiplicity").choice(b.concatenation(b.terminalLiteral("*")), b.concatenation(b.terminalLiteral("+")), b.concatenation(b.terminalLiteral("?")));
+	b.rule("multiplicity").choiceEqual(b.concatenation(b.terminalLiteral("*")), b.concatenation(b.terminalLiteral("+")), b.concatenation(b.terminalLiteral("?")));
 	b.rule("group").concatenation(b.terminalLiteral("("), b.nonTerminal("choice"), b.terminalLiteral(")"));
 	b.rule("separatedList").concatenation(b.terminalLiteral("["), b.nonTerminal("simpleItem"), b.terminalLiteral("/"),
 			b.nonTerminal("LITERAL"), b.terminalLiteral("]"), b.nonTerminal("multiplicity"));
-	b.rule("nonTerminal").choice(b.concatenation(b.nonTerminal("IDENTIFIER")));
+	b.rule("nonTerminal").choiceEqual(b.concatenation(b.nonTerminal("IDENTIFIER")));
 	b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"));
-	b.rule("terminal").choice(b.concatenation(b.nonTerminal("LITERAL")), b.concatenation(b.nonTerminal("PATTERN")));
+	b.rule("terminal").choiceEqual(b.concatenation(b.nonTerminal("LITERAL")), b.concatenation(b.nonTerminal("PATTERN")));
 	b.rule("LITERAL").concatenation(b.terminalPattern("'(?:\\\\?.)*?'"));
 	b.rule("PATTERN").concatenation(b.terminalPattern("\"(?:\\\\?.)*?\""));
 	b.rule("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9]*"));

@@ -154,13 +154,13 @@ class test_SPPTParser {
         val sut = SPPTParser(rrb)
 
         val treeString = """
-            a { ${'$'}empty }
+            a { §empty }
         """.trimIndent()
 
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" a { ${'$'}empty.a : '' }" , actual.toStringAll)
+        assertEquals(" a { §empty.a : '' }" , actual.toStringAll)
     }
 
     @Test

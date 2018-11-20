@@ -22,6 +22,12 @@ import kotlin.js.JsName
 
 interface LanguageProcessor {
 
+    /**
+     * build the parser before use. Optional, but will speed up the first use of the parser.
+     */
+    @JsName("build")
+    fun build();
+
     @JsName("scan")
     fun scan(inputText: CharSequence): List<SPPTLeaf>
 

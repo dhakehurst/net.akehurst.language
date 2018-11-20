@@ -50,7 +50,7 @@ class test_RuntimeParser_parse_sList {
         assertNotNull(actual)
 
         val p = SPPTParser(rrb)
-        val expected = p.addTree("r { ${'$'}empty }")
+        val expected = p.addTree("r { §empty }")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
@@ -132,7 +132,7 @@ class test_RuntimeParser_parse_sList {
         assertNotNull(actual)
 
         val p = SPPTParser(rrb)
-        val expected = p.addTree("r { ${'$'}empty }")
+        val expected = p.addTree("r { §empty }")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }

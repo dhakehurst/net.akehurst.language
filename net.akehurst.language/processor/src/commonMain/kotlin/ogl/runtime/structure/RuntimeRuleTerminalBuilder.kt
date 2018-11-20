@@ -39,7 +39,7 @@ class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder) {
     }
 
     fun empty(ruleThatIsEmpty: RuntimeRule): RuntimeRule {
-        this.name = "${'$'}empty."+ruleThatIsEmpty.name
+        this.name = "§empty."+ruleThatIsEmpty.name
         val rr = RuntimeRule(this.rrsb.rules.size, name, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
         rr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.EMPTY,0,0, arrayOf(ruleThatIsEmpty))

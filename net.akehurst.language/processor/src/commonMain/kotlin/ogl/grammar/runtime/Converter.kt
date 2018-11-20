@@ -88,6 +88,10 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
                 val kind = if (target is ChoiceEqual) RuntimeRuleItemKind.CHOICE_EQUAL else RuntimeRuleItemKind.CHOICE_PRIORITY
                 RuntimeRuleItem(kind, -1, 0, items.toTypedArray())
             }
+            (target is EmptyRule) -> {
+                val item = target.accept(this, arg) as RuntimeRule
+                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, arrayOf(item))
+            }
             else -> {
                 throw ParseException("Not supported (yet)!")
             }

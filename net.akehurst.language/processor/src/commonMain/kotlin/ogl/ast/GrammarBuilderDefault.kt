@@ -60,12 +60,17 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 			this.rule.rhs = ChoiceEqualDefault(listOf(ConcatenationDefault(sequence.toList())));
 		}
 
-		fun choice(vararg alternative: Concatenation) {
+		fun choiceEqual(vararg alternative: Concatenation) {
 			//val alternativeConcats = alternative.map { ChoiceEqualDefault(listOf(it)) }
 			this.rule.rhs = ChoiceEqualDefault(alternative.asList());
 		}
 
-		fun priorityChoice(vararg alternative: Concatenation) {
+		fun choiceEqual(vararg alternative: ConcatenationItem) {
+			val alternativeConcats = alternative.map { ConcatenationDefault(listOf(it)) }
+			this.rule.rhs = ChoiceEqualDefault(alternativeConcats);
+		}
+
+		fun choicePriority(vararg alternative: Concatenation) {
 			//val alternativeConcats = alternative.map { ChoicePriorityDefault(listOf(it)) }
 			this.rule.rhs = ChoicePriorityDefault(alternative.asList());
 		}

@@ -22,14 +22,21 @@ import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
 class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
 
     private val WS = Regex("(\\s)+")
-    private val EMPTY = Regex("[$]empty")
-    private val NAME = Regex("[a-zA-Z_$][a-zA-Z_0-9]*")
+    private val EMPTY = Regex("§empty")
+    private val NAME = Regex("[a-zA-Z_§][a-zA-Z_0-9]*")
     private val LITERAL = Regex("'(?:\\\\?.)*?'")
     private val COLON = Regex("[:]")
     private val CHILDREN_START = Regex("[{]")
     private val CHILDREN_END = Regex("[}]")
 
     private val node_cache: MutableMap<SPPTNodeIdentity, SPPTNode> = mutableMapOf()
+
+    var root: SPPTNode? = null
+
+    val tree: SharedPackedParseTree get() {
+        val root = this.root ?: throw SPPTException("At least one tree must be added",null)
+        return SharedPackedParseTreeDefault(root)
+    }
 
     private class Stack<T>() {
         private val list = mutableListOf<T>()
@@ -91,7 +98,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         return n?.asBranch
     }
 
-    private fun parse(treeString: String): SharedPackedParseTree {
+    private fun parse(treeString: String) {
         val scanner = SimpleScanner(treeString)
         val nodeNamesStack = Stack<String>()
         val childrenStack = Stack<MutableList<SPPTNode>>()
@@ -100,6 +107,12 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         while (scanner.hasMore()) {
             when {
                 scanner.hasNext(WS) -> scanner.next(WS)
+                scanner.hasNext(EMPTY) -> { //must do this before NAME, as EMPTY is also a valid NAME
+                    val empty = scanner.next(EMPTY)
+                    val ruleNameThatIsEmpty = nodeNamesStack.peek()
+                    val emptyNode = this.emptyLeaf(ruleNameThatIsEmpty, scanner.position)
+                    childrenStack.peek().add(emptyNode)
+                }
                 scanner.hasNext(NAME) -> {
                     val name = scanner.next(NAME)
                     nodeNamesStack.push(name)
@@ -129,12 +142,6 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
                         childrenStack.peek().add(leaf)
                     }
                 }
-                scanner.hasNext(EMPTY) -> {
-                    val empty = scanner.next(EMPTY)
-                    val ruleNameThatIsEmpty = nodeNamesStack.peek()
-                    val emptyNode = this.emptyLeaf(ruleNameThatIsEmpty, scanner.position)
-                    childrenStack.peek().add(emptyNode)
-                }
                 scanner.hasNext(CHILDREN_END) -> {
                     scanner.next(CHILDREN_END)
                     val lastNodeName = nodeNamesStack.pop()
@@ -146,8 +153,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
                 else -> throw RuntimeException("Tree String invalid at position " + scanner.position)
             }
         }
-        val tree = SharedPackedParseTreeDefault(childrenStack.pop()[0])
-        return tree
+        this.root = childrenStack.pop()[0]
     }
 
     fun emptyLeaf(ruleNameThatIsEmpty: String, pos:Int): SPPTLeaf {
@@ -199,6 +205,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
     }
 
     fun addTree(treeString: String) : SharedPackedParseTree {
-        return this.parse(treeString)
+        this.parse(treeString)
+        return this.tree
     }
 }
