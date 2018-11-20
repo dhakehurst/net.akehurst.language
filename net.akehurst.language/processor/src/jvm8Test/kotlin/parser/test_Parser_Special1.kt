@@ -69,7 +69,6 @@ class test_Parser_Special1 : test_ParserAbstract() {
         """.trimIndent()
 
         super.test(grammar, goal, sentence, expected1, expected2)
-
     }
 
 
