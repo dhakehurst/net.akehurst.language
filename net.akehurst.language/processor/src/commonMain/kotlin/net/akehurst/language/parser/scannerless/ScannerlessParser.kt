@@ -16,19 +16,16 @@
 
 package net.akehurst.language.parser.scannerless
 
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.GrammarRuleNotFoundException
 import net.akehurst.language.api.grammar.NodeType
 import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.parser.ParseTreeException
 import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.ogl.runtime.graph.GrowingNode
 import net.akehurst.language.ogl.runtime.graph.ParseGraph
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
+import net.akehurst.language.ogl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.sppt.SPPTLeafDefault
 import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
 
@@ -58,7 +55,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         var position = 0
         while (!input.isEnd(position)) {
             val matches: List<SPPTLeaf> = terminals.mapNotNull {
-                val match = input.tryMatchText(0, it.patternText, it.isPattern)
+                val match = input.tryMatchText(position, it.patternText, it.isPattern)
                 if (null == match) {
                     null
                 } else {
@@ -92,10 +89,8 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         val graph = ParseGraph(goalRule, input)
         val rp = RuntimeParser(this.runtimeRuleSet, graph)
 
-        var seasons = 0
-
         rp.start(goalRule)
-        seasons++
+        var seasons = 1
 
         do {
             rp.grow()
@@ -107,7 +102,60 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
     }
 
 
-    override fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int): List<RuleItem> {
-        throw UnsupportedOperationException()
+    override fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int): List<RuntimeRule> {
+        val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
+        val usedText = inputText.subSequence(0,position)
+        val input = InputFromCharSequence(usedText)
+        val graph = ParseGraph(goalRule, input)
+        val rp = RuntimeParser(this.runtimeRuleSet, graph)
+
+        rp.start(goalRule)
+        var seasons = 1
+
+
+
+        // final int length = text.length();
+        val matches = mutableListOf<GrowingNode>()
+
+        do {
+            rp.grow()
+            seasons++
+            for (gn in rp.lastGrown) {
+                // may need to change this to finalInputPos!
+                if (input.isEnd(gn.nextInputPosition)) {
+                    matches.add(gn)
+                }
+            }
+        } while (rp.canGrow)
+
+        // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
+        // must reject the next expected
+
+        val expected = HashSet<RuntimeRule>()
+        for (ep in matches) {
+            var done = false
+            // while (!done) {
+            if (ep.canGrowWidth) {
+                expected.addAll(ep.nextExpectedItems)
+                done = true
+                // TODO: sum from all parents
+                // gn = gn.getPossibleParent().get(0).node;// .getNextExpectedItem();
+            } else {
+                // if has height potential?
+                // gn = gn.getPossibleParent().get(0).node;
+
+            }
+            // }
+        }
+        // final List<RuntimeRule> expected = longest.getNextExpectedItem();
+        val nextExpected = mutableListOf<RuntimeRule>()
+        for (rr in expected) {
+            nextExpected.add(rr)
+        }
+        // add skip rules at end
+        for (rr in this.runtimeRuleSet.allSkipRules) {
+            nextExpected.add(rr)
+        }
+        return nextExpected
     }
 }

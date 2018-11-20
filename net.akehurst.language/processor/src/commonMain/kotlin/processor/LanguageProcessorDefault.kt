@@ -26,6 +26,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.ogl.grammar.runtime.Converter
+import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 import net.akehurst.language.parser.scannerless.ScannerlessParser
 import kotlin.js.JsName
 
@@ -59,8 +60,9 @@ internal class LanguageProcessorDefault(val grammar: Grammar, val semanticAnalys
     }
 
     override fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem> {
-        val parserExpected: List<RuleItem> = this.parser.expectedAt(goalRuleName, inputText, position);
-        val expected = parserExpected.flatMap { this.completionProvider.provideFor(it, desiredDepth) }
+        val parserExpected: List<RuntimeRule> = this.parser.expectedAt(goalRuleName, inputText, position);
+        val grammarExpected : List<RuleItem> = parserExpected.map {  this.converter.originalRuleItemFor(it) }
+        val expected = grammarExpected.flatMap { this.completionProvider.provideFor(it, desiredDepth) }
         return expected
     }
 

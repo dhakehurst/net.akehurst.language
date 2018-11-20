@@ -51,8 +51,8 @@ class test_RuntimeParser_parse_choiceEqual {
         val ex = assertFailsWith(ParseFailedException::class) {
             test_parse(sp, goalRuleName, inputText)
         }
-        assertEquals(1, ex.location["line"])
-        assertEquals(0, ex.location["column"])
+        assertEquals(1, ex.location.line)
+        assertEquals(0, ex.location.column)
     }
 
     @Test
@@ -97,8 +97,8 @@ class test_RuntimeParser_parse_choiceEqual {
         val ex = assertFailsWith(ParseFailedException::class) {
             test_parse(sp, goalRuleName, inputText)
         }
-        assertEquals(1, ex.location["line"])
-        assertEquals(0, ex.location["column"])
+        assertEquals(1, ex.location.line)
+        assertEquals(0, ex.location.column)
     }
 
     @Test
@@ -110,8 +110,8 @@ class test_RuntimeParser_parse_choiceEqual {
         val ex = assertFailsWith(ParseFailedException::class) {
             test_parse(sp, goalRuleName, inputText)
         }
-        assertEquals(1, ex.location["line"])
-        assertEquals(1, ex.location["column"])
+        assertEquals(1, ex.location.line)
+        assertEquals(1, ex.location.column)
     }
 
     // r = a b | c;
@@ -138,8 +138,8 @@ class test_RuntimeParser_parse_choiceEqual {
         val ex = assertFailsWith(ParseFailedException::class) {
             test_parse(sp, goalRuleName, inputText)
         }
-        assertEquals(1, ex.location["line"])
-        assertEquals(0, ex.location["column"])
+        assertEquals(1, ex.location.line)
+        assertEquals(0, ex.location.column)
     }
 
     @Test
@@ -151,8 +151,8 @@ class test_RuntimeParser_parse_choiceEqual {
         val ex = assertFailsWith(ParseFailedException::class) {
             test_parse(sp, goalRuleName, inputText)
         }
-        assertEquals(1, ex.location["line"])
-        assertEquals(1, ex.location["column"])
+        assertEquals(1, ex.location.line)
+        assertEquals(1, ex.location.column)
     }
 
     @Test
@@ -175,8 +175,8 @@ class test_RuntimeParser_parse_choiceEqual {
         val ex = assertFailsWith(ParseFailedException::class) {
             test_parse(sp, goalRuleName, inputText)
         }
-        assertEquals(1, ex.location["line"])
-        assertEquals(2, ex.location["column"])
+        assertEquals(1, ex.location.line)
+        assertEquals(2, ex.location.column)
     }
 
     @Test
@@ -214,8 +214,8 @@ class test_RuntimeParser_parse_choiceEqual {
         val ex = assertFailsWith(ParseFailedException::class) {
             test_parse(sp, goalRuleName, inputText)
         }
-        assertEquals(1, ex.location["line"])
-        assertEquals(0, ex.location["column"])
+        assertEquals(1, ex.location.line)
+        assertEquals(0, ex.location.column)
     }
 
     @Test
@@ -238,8 +238,8 @@ class test_RuntimeParser_parse_choiceEqual {
         val ex = assertFailsWith(ParseFailedException::class) {
             test_parse(sp, goalRuleName, inputText)
         }
-        assertEquals(1, ex.location["line"])
-        assertEquals(1, ex.location["column"])
+        assertEquals(1, ex.location.line)
+        assertEquals(2, ex.location.column)
     }
 
     @Test
@@ -251,8 +251,8 @@ class test_RuntimeParser_parse_choiceEqual {
         val ex = assertFailsWith(ParseFailedException::class) {
             test_parse(sp, goalRuleName, inputText)
         }
-        assertEquals(1, ex.location["line"])
-        assertEquals(2, ex.location["column"])
+        assertEquals(1, ex.location.line)
+        assertEquals(2, ex.location.column)
     }
 
     @Test

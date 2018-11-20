@@ -73,8 +73,8 @@ internal class test_Ogl {
             val p = processor(listOf("!"))
             p.parse("a", "a")
         }
-        assertEquals(1, e.location["line"])
-        assertEquals(0, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(0, e.location.column)
     }
 
     @Test
@@ -83,8 +83,8 @@ internal class test_Ogl {
             val p = processor(listOf("a!"))
             p.parse("a", "a")
         }
-        assertEquals(1, e.location["line"])
-        assertEquals(1, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
     }
 
     @Test
@@ -93,8 +93,8 @@ internal class test_Ogl {
             val p = processor(listOf("a = 'a'"))
             p.parse("a", "a")
         }
-        assertEquals(1, e.location["line"])
-        assertEquals(7, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(7, e.location.column)
     }
 
     /*

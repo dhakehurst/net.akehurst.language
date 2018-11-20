@@ -20,6 +20,7 @@ package net.akehurst.language.processor
 
 import net.akehurst.language.api.sppt2ast.Sppt2AstTransformer
 import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.ogl.grammar.OglGrammar
@@ -76,8 +77,8 @@ fun processor(rules: List<String>): LanguageProcessor {
         return LanguageProcessorDefault(grammar, null)
     } catch (e: ParseFailedException) {
         //TODO: better, different exception to detect which list item fails
-        val newCol = e.location["column"]?.minus(prefix.length) ?: 0
-        val location = mapOf<String, Int>(Pair("line", 1), Pair("column", newCol))
+        val newCol = e.location.column.minus(prefix.length) ?: 0
+        val location = InputLocation(newCol, 1,0)
         throw ParseFailedException("Unable to parse list of rules", e.longestMatch, location)
     }
 }

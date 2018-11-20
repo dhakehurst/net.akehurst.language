@@ -50,7 +50,7 @@ class test_RuntimeParser_parse_multi {
         assertNotNull(actual)
 
         val p = SPPTParser(rrb)
-        val expected = p.addTree("r { ${'$'}empty }")
+        val expected = p.addTree("r { §empty }")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
@@ -82,8 +82,8 @@ class test_RuntimeParser_parse_multi {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(1, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
     }
 
     // r = a*
@@ -105,7 +105,7 @@ class test_RuntimeParser_parse_multi {
         assertNotNull(actual)
 
         val p = SPPTParser(rrb)
-        val expected = p.addTree("r { ${'$'}empty }")
+        val expected = p.addTree("r { §empty }")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
@@ -176,8 +176,8 @@ class test_RuntimeParser_parse_multi {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(0, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(0, e.location.column)
     }
 
     @Test
@@ -263,8 +263,8 @@ class test_RuntimeParser_parse_multi {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(0, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(0, e.location.column)
     }
 
     @Test
@@ -277,8 +277,8 @@ class test_RuntimeParser_parse_multi {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(1, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
     }
 
     @Test
@@ -355,8 +355,8 @@ class test_RuntimeParser_parse_multi {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(5, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(5, e.location.column)
     }
 
     // r = m
@@ -382,8 +382,8 @@ class test_RuntimeParser_parse_multi {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(0, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(0, e.location.column)
     }
 
     @Test
@@ -396,8 +396,8 @@ class test_RuntimeParser_parse_multi {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(1, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
     }
 
 
@@ -412,7 +412,7 @@ class test_RuntimeParser_parse_multi {
         assertNotNull(actual)
 
         val p = SPPTParser(rrb)
-        val expected = p.addTree("r { m { 'a' bm { ${'$'}empty } 'a' } }")
+        val expected = p.addTree("r { m { 'a' bm { §empty } 'a' } }")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }

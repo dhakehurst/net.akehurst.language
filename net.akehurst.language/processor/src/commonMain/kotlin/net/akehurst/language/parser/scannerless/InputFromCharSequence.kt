@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless
 
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 import net.akehurst.language.parser.sppt.SPPTLeafDefault
 
@@ -43,8 +44,7 @@ internal class InputFromCharSequence(val text: CharSequence) {
         return if (lookingAt) m?.value else null
     }
 
-    internal fun calcLineAndColumn(position: Int): Map<String, Int> {
-        val result = mutableMapOf<String, Int>()
+    internal fun calcLineAndColumn(position: Int): InputLocation {
         var line = 1
         var column = 0
 
@@ -56,10 +56,7 @@ internal class InputFromCharSequence(val text: CharSequence) {
                 ++column
             }
         }
-
-        result["line"] = line
-        result["column"] = column
-        return result
+        return InputLocation(column,line,0)
     }
 
     internal fun tryMatchText(position: Int, patternText: String, isPattern: Boolean): String? {

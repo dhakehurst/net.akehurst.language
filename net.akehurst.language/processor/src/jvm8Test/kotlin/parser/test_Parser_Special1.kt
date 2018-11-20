@@ -4,9 +4,9 @@ import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.ogl.ast.GrammarBuilderDefault
 import net.akehurst.language.ogl.ast.NamespaceDefault
-import org.junit.Assert
 import org.junit.Test
-import kotlin.test.assertFails
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class test_Parser_Special1 : test_ParserAbstract() {
     /**
@@ -25,23 +25,52 @@ class test_Parser_Special1 : test_ParserAbstract() {
 
     @Test
     fun S_S_empty() {
-        // grammar, goal, input
-
         val grammar = this.S()
         val goal = "S"
         val sentence = ""
 
-        assertFails {
+        val e = assertFailsWith(ParseFailedException::class) {
             super.test(grammar, goal, sentence)
         }
+        assertEquals(1, e.location.line)
+        assertEquals(0, e.location.column)
+    }
 
+    @Test
+    fun S_S_a() {
+        val grammar = this.S()
+        val goal = "S"
+        val sentence = "a"
 
+        val expected1 = """
+            S { 'a' }
+        """.trimIndent()
+
+        super.test(grammar, goal, sentence, expected1)
+    }
+
+    @Test
+    fun S_S_aa() {
+        val grammar = this.S()
+        val goal = "S"
+        val sentence = "aa"
+
+        val expected1 = """
+            S {
+              S1 {
+                'a'
+                S { 'a' }
+                B { §multi0 { §empty } }
+                B { §multi0 { §empty } }
+              }
+            }
+        """.trimIndent()
+
+        super.test(grammar, goal, sentence, expected1)
     }
 
     @Test
     fun S_S_aab() {
-        // grammar, goal, input
-
         val grammar = this.S()
         val goal = "S"
         val sentence = "aab"

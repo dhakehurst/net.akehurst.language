@@ -41,7 +41,8 @@ internal class RuntimeParser(
     // copy of graph growing head for each iteration, cached to that we can find best match in case of error
     private var toGrow: List<GrowingNode> = listOf()
 
-    private val lastGrown: Collection<GrowingNode>
+    //needs to be public so that expectedAt can use it
+    val lastGrown: Collection<GrowingNode>
         get() {
             return setOf<GrowingNode>().union(this.graph.growing.values).union(this.toGrow)
         }
@@ -69,6 +70,7 @@ internal class RuntimeParser(
     fun start(goalRule: RuntimeRule) {
         val gnindex = GrowingNodeIndex(goalRule.number, 0, 0, 0)
         val gn = GrowingNode(goalRule, 0, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
+        this.toGrow = listOf(gn)
         this.graph.addGrowingHead(gnindex, gn)
         if (gn.hasCompleteChildren) {
             val cn = this.graph.createBranchNoChildren(goalRule, 0, 0, 0)

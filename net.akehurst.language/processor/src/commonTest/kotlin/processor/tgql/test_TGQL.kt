@@ -167,8 +167,8 @@ grammar Query {
             p.parse("REAL", "0")
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(0, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(0, e.location.column)
     }
 
     @Test
@@ -177,8 +177,8 @@ grammar Query {
             p.parse("REAL", ".0")
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(0, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(0, e.location.column)
     }
 
     @Test

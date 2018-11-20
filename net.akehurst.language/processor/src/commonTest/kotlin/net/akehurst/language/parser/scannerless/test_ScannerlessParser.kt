@@ -18,6 +18,7 @@ package net.akehurst.language.parser.scannerless
 
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.fail
 
@@ -54,13 +55,5 @@ class test_ScannerlessParser {
         println( actual.toStringAll )
     }
 
-    @Test
-    fun expectedAt() {
-        val rrb = RuntimeRuleSetBuilder()
-        val sp = ScannerlessParser(rrb.ruleSet())
-
-        val actual =  sp.expectedAt("","",0)
-        assertNotNull(actual)
-    }
 
 }

@@ -76,7 +76,7 @@ class test_RuntimeRuleSetBuilder {
 
         assertNotNull(actual)
         assertEquals(1, actual.runtimeRules[1].number)
-        assertEquals("${'$'}empty.a", actual.runtimeRules[1].name)
+        assertEquals("§empty.a", actual.runtimeRules[1].name)
         assertEquals(RuntimeRuleKind.TERMINAL, actual.runtimeRules[1].kind)
         assertEquals(true, actual.runtimeRules[1].isEmptyRule)
         assertEquals(false, actual.runtimeRules[1].isPattern)
@@ -104,7 +104,7 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(0, actual.runtimeRules[1].rhs?.multiMax)
         assertNotNull(actual.runtimeRules[0].emptyRuleItem)
         assertEquals(1, actual.runtimeRules[0].emptyRuleItem.number)
-        assertEquals("${'$'}empty.a", actual.runtimeRules[0].emptyRuleItem.name)
+        assertEquals("§empty.a", actual.runtimeRules[0].emptyRuleItem.name)
         assertEquals(RuntimeRuleKind.TERMINAL, actual.runtimeRules[0].emptyRuleItem.kind)
         assertEquals(true, actual.runtimeRules[0].emptyRuleItem.isEmptyRule)
         assertEquals(false, actual.runtimeRules[0].emptyRuleItem.isPattern)

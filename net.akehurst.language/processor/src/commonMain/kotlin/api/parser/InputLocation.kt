@@ -15,14 +15,9 @@
  */
 package net.akehurst.language.api.parser;
 
-import net.akehurst.language.api.sppt.SharedPackedParseTree;
-
-class ParseFailedException(message: String, longestMatch: SharedPackedParseTree, location: InputLocation)
-	: Exception(message + "(at: ${location})") {
-
-	val longestMatch: SharedPackedParseTree = longestMatch
-
-	val location: InputLocation = location
-
+class InputLocation(
+        val column: Int,
+        val line: Int,
+        val length: Int
+) {
 }
-

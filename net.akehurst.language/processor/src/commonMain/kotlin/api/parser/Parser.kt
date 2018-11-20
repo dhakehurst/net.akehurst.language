@@ -22,6 +22,7 @@ import net.akehurst.language.api.grammar.NodeType
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.ogl.runtime.structure.RuntimeRule
 
 interface Parser {
 
@@ -61,7 +62,7 @@ interface Parser {
 	 * @throws ParseTreeException
 	 * @throws GrammarRuleNotFoundException
 	 **/
-	fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int): List<RuleItem>
+	fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int): List<RuntimeRule>
 
 	//fun expectedAt(goalRuleName: String, inputText: Reader, position: Long): List<RuleItem>
 }

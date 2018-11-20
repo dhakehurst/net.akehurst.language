@@ -234,6 +234,7 @@ internal class ParseGraph(
         return result
     }
 
+    //TODO: need to detect goal, but indicate that there is additional input, not just reject if additional input
     private fun isGoal(completeNode: SPPTNodeDefault): Boolean {
         val isStart = this.input.isStart(completeNode.startPosition)
         val isEnd = this.input.isEnd(completeNode.nextInputPosition)

@@ -81,8 +81,8 @@ class test_RuntimeParser_parse_sList {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(1, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
     }
 
     @Test
@@ -95,8 +95,8 @@ class test_RuntimeParser_parse_sList {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(2, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(2, e.location.column)
     }
 
     @Test
@@ -109,8 +109,8 @@ class test_RuntimeParser_parse_sList {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(2, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(2, e.location.column)
     }
 
     // r = [a / ',']*
@@ -163,8 +163,8 @@ class test_RuntimeParser_parse_sList {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(1, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
     }
 
     @Test
@@ -192,8 +192,8 @@ class test_RuntimeParser_parse_sList {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(3, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(3, e.location.column)
     }
     @Test
     fun literal_a0n__r__acaca() {
@@ -229,8 +229,8 @@ class test_RuntimeParser_parse_sList {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(0, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(0, e.location.column)
     }
 
     @Test
@@ -259,8 +259,8 @@ class test_RuntimeParser_parse_sList {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(1, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
     }
 
     @Test
@@ -298,8 +298,8 @@ class test_RuntimeParser_parse_sList {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(0, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(0, e.location.column)
     }
 
     @Test
@@ -312,8 +312,8 @@ class test_RuntimeParser_parse_sList {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(1, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
     }
 
     @Test
@@ -390,7 +390,7 @@ class test_RuntimeParser_parse_sList {
             test_parse(sp, goalRuleName, inputText)
         }
 
-        assertEquals(1, e.location["line"])
-        assertEquals(5, e.location["column"])
+        assertEquals(1, e.location.line)
+        assertEquals(5, e.location.column)
     }
 }
