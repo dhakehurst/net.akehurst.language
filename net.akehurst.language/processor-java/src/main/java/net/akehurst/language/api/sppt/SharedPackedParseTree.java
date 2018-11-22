@@ -8,6 +8,8 @@ package net.akehurst.language.api.sppt;
  */
 public interface SharedPackedParseTree extends SharedPackedParseTreeVisitable {
 
+	Integer getSeasons();
+
 	/**
 	 * The root of the tree
 	 */

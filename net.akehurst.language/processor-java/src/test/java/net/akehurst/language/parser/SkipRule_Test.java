@@ -262,7 +262,7 @@ public class SkipRule_Test extends AbstractParser_Test {
 			final ParseTreeBuilder b = this.builder(g, text, goal);
 
 			final SharedPackedParseTree expected = new SharedPackedParseTreeSimple(
-					b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", "."), b.branch("WS", b.leaf("\\s+", " ")))));
+					b.branch("as", b.branch("a_dot", b.branch("a", b.leaf("a", "a")), b.leaf(".", "."), b.branch("WS", b.leaf("\\s+", " ")))), -1);
 
 			Assert.assertEquals(expected, tree);
 

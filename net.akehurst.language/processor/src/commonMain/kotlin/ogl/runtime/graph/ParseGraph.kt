@@ -50,7 +50,7 @@ internal class ParseGraph(
             return this._goals
         }
 
-    fun longestMatch(longestLastGrown: SPPTNode?): SPPTNode{
+    fun longestMatch(longestLastGrown: SPPTNode?, seasons:Int): SPPTNode{
             if (!this.goals.isEmpty() && this.goals.size >= 1) {
                 var lt = this.goals.iterator().next()
                 for (gt in this.goals) {
@@ -61,14 +61,14 @@ internal class ParseGraph(
                 if (!this.input.isEnd(lt.nextInputPosition + 1)) {
                     val llg = longestLastGrown ?: throw ParseException("Internal Error, should not happen")
                     val location = this.input.calcLineAndColumn(llg.nextInputPosition)
-                    throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(llg), location)
+                    throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(llg,seasons), location)
                 } else {
                     return lt
                 }
             } else {
                 val llg = longestLastGrown ?: throw ParseException("Nothing parsed")
                 val location = this.input.calcLineAndColumn(llg.nextInputPosition)
-                throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg), location)
+                throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg,seasons), location)
             }
         }
 

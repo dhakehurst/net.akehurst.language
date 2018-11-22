@@ -272,7 +272,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
         final ParseTreeBuilder b = this.builder(g, text, goal);
 
         final SharedPackedParseTree expected = new SharedPackedParseTreeSimple(
-                b.branch("ab01", b.branch("ab01$group1", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b")))));
+                b.branch("ab01", b.branch("ab01$group1", b.branch("a", b.leaf("a", "a")), b.branch("b", b.leaf("b", "b")))),-1);
         Assert.assertEquals(expected, tree);
 
     }
@@ -370,7 +370,7 @@ public class test_Parser_Multi extends AbstractParser_Test {
 
         final ParseTreeBuilder b = this.builder(g, text, goal);
         final SharedPackedParseTree expected = new SharedPackedParseTreeSimple(
-                b.branch("top", b.branch("level1", b.leaf("a")), b.branch("level1", b.leaf("a"))));
+                b.branch("top", b.branch("level1", b.leaf("a")), b.branch("level1", b.leaf("a"))),-1);
         Assert.assertEquals(expected, tree);
 
     }

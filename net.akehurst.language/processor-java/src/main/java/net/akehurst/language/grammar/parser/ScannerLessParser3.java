@@ -77,8 +77,7 @@ public class ScannerLessParser3 implements Parser {
     private SharedPackedParseTree parse2(final String goalRuleName, final Input input) throws ParseFailedException, ParseTreeException {
         try {
             final NodeType goal = ((GrammarDefault) this.getGrammar()).findRule(goalRuleName).getNodeType();
-            final ICompleteNode gr = this.parse3(goal, input);
-            final SharedPackedParseTree tree = new SharedPackedParseTreeSimple((SPPTNode) gr);
+            final SharedPackedParseTree tree = this.parse3(goal, input);
             // set the parent property of each child, these are not set during parsing
             // TODO: don't know if we need this, probably not
             this.setParentForChildren((SPPTBranch) tree.getRoot());
@@ -99,16 +98,16 @@ public class ScannerLessParser3 implements Parser {
         }
     }
 
-    private ICompleteNode parse3(final NodeType goal, final Input input) throws ParseFailedException, GrammarRuleNotFoundException, ParseTreeException {
+    private SharedPackedParseTree parse3(final NodeType goal, final Input input) throws ParseFailedException, GrammarRuleNotFoundException, ParseTreeException {
 
         final int goalRuleNumber = this.getRuntimeRuleSet().getRuleNumber(goal.getIdentity().asPrimitive());
         final RuntimeRule goalRR = this.getRuntimeRuleSet().getRuntimeRule(goalRuleNumber);
-        final ICompleteNode node = this.doParse3(goalRR, input);
+        final SharedPackedParseTree t = this.doParse3(goalRR, input);
         // GraphNodeRoot gr = new GraphNodeRoot(goalRR, node.getChildren());
-        return node;
+        return t;
     }
 
-    private ICompleteNode doParse3(final RuntimeRule goalRule, final Input input)
+    private SharedPackedParseTree doParse3(final RuntimeRule goalRule, final Input input)
             throws ParseFailedException, GrammarRuleNotFoundException, ParseTreeException {
         // TODO: handle reader directly without converting to string
         final IParseGraph graph = new ParseGraph(goalRule, input);
@@ -141,13 +140,14 @@ public class ScannerLessParser3 implements Parser {
             seasons++;
         } while (newForrest.getCanGrow());
 
-        final ICompleteNode match = newForrest.getLongestMatch();
+        final ICompleteNode match = newForrest.getLongestMatch(seasons);
         if (Log.on) {
             for (final ICompleteNode cn : graph.getGoals()) {
                 Log.traceln("%s", cn.toStringTree());
             }
         }
-        return match;
+        final SharedPackedParseTree tree = new SharedPackedParseTreeSimple((SPPTNode) match, seasons);
+        return tree;
     }
 
     private List<RuleItem> expectedAt1(final String goalRuleName, final Input input, final long position) throws ParseFailedException, ParseTreeException {

@@ -366,7 +366,7 @@ class RuntimeRule(
         }
     }
 
-    fun canBeEmpty(checked:Set<RuntimeRule>):Boolean {
+    private fun canBeEmpty(checked:Set<RuntimeRule>):Boolean {
         if ( this.isTerminal ) {
             return this.isEmptyRule;
         } else {

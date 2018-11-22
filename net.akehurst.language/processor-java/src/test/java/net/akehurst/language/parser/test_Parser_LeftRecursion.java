@@ -68,7 +68,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		Assert.assertNotNull(tree);
 
 		final ParseTreeBuilder b = this.builder(g, text, goal);
-		final SharedPackedParseTree expected = new SharedPackedParseTreeSimple(b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))));
+		final SharedPackedParseTree expected = new SharedPackedParseTreeSimple(b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))),-1);
 		Assert.assertEquals(expected, tree);
 
 	}
@@ -105,7 +105,7 @@ public class test_Parser_LeftRecursion extends AbstractParser_Test {
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
 		final SharedPackedParseTree expected = new SharedPackedParseTreeSimple(
-				b.branch("S", b.branch("S_a", b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))), b.leaf("a"))));
+				b.branch("S", b.branch("S_a", b.branch("S", b.branch("S_a", b.branch("S", b.leaf("a")), b.leaf("a"))), b.leaf("a"))),-1);
 		Assert.assertEquals(expected, tree);
 	}
 

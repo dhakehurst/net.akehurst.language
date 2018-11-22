@@ -326,7 +326,7 @@ public class Parser_Concatination_Test extends AbstractParser_Test {
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 
 		final SharedPackedParseTree expected = new SharedPackedParseTreeSimple(b.branch("abc", b.branch("a", b.leaf("a", "a"), b.branch("SPACE", b.leaf(" ", " "))),
-				b.branch("b", b.leaf("b", "b"), b.branch("SPACE", b.leaf(" ", " "))), b.branch("c", b.leaf("c", "c"))));
+				b.branch("b", b.leaf("b", "b"), b.branch("SPACE", b.leaf(" ", " "))), b.branch("c", b.leaf("c", "c"))), -1);
 		Assert.assertEquals(expected, tree);
 
 	}

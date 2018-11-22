@@ -52,7 +52,7 @@ public final class Forrest3 {
 		return !this.graph.getGrowingHead().isEmpty();
 	}
 
-	public ICompleteNode getLongestMatch() throws ParseFailedException {
+	public ICompleteNode getLongestMatch(Integer seasons) throws ParseFailedException {
 		if (!this.graph.getGoals().isEmpty() && this.graph.getGoals().size() >= 1) {
 			ICompleteNode lt = this.graph.getGoals().iterator().next();
 			for (final ICompleteNode gt : this.graph.getGoals()) {
@@ -61,14 +61,14 @@ public final class Forrest3 {
 				}
 			}
 			if (!this.input.getIsEnd(lt.getNextInputPosition() + 1)) {
-				final SharedPackedParseTree last = this.extractLastGrown();
+				final SharedPackedParseTree last = this.extractLastGrown(seasons);
 				final Map<String, Integer> location = this.getLineAndColumn(this.input, ((ICompleteNode) last.getRoot()).getNextInputPosition());
 				throw new ParseFailedException("Goal does not match full text", last, location);
 			} else {
 				return lt;
 			}
 		} else {
-			final SharedPackedParseTree last = this.extractLastGrown();
+			final SharedPackedParseTree last = this.extractLastGrown(seasons);
 			final Map<String, Integer> location = this.getLineAndColumn(this.input, ((ICompleteNode) last.getRoot()).getNextInputPosition());
 			throw new ParseFailedException("Could not match goal", last, location);
 		}
@@ -93,7 +93,7 @@ public final class Forrest3 {
 		return result;
 	}
 
-	private SharedPackedParseTree extractLastGrown() {
+	private SharedPackedParseTree extractLastGrown(Integer seasons) {
 		if (this.getLastGrown().isEmpty()) {
 			return null;
 		}
@@ -107,10 +107,10 @@ public final class Forrest3 {
 		final ICompleteNode complete = new GraphNodeBranch(this.graph, longest.getRuntimeRule(), longest.getPriority(), longest.getStartPosition(),
 				longest.getNextInputPosition());
 		complete.getChildrenAlternatives().add((FixedList<SPPTNode>) (FixedList<?>) longest.getGrowingChildren());
-		return new SharedPackedParseTreeSimple((SPPTNode) complete);
+		return new SharedPackedParseTreeSimple((SPPTNode) complete, seasons);
 	}
 
-	private SharedPackedParseTree extractLongestMatch() {
+	private SharedPackedParseTree extractLongestMatch(Integer seasons) {
 		if (this.graph.getCompleteNodes().isEmpty()) {
 			return null;
 		}
@@ -120,10 +120,10 @@ public final class Forrest3 {
 				longest = n;
 			}
 		}
-		return new SharedPackedParseTreeSimple((SPPTNode) longest);
+		return new SharedPackedParseTreeSimple((SPPTNode) longest, seasons);
 	}
 
-	private SharedPackedParseTree extractLongestMatchFromStart() {
+	private SharedPackedParseTree extractLongestMatchFromStart(Integer seasons) {
 		if (this.graph.getCompleteNodes().isEmpty()) {
 			return null;
 		}
@@ -136,9 +136,9 @@ public final class Forrest3 {
 			}
 		}
 		if (null == longest) {
-			return this.extractLongestMatch();
+			return this.extractLongestMatch(seasons);
 		} else {
-			return new SharedPackedParseTreeSimple((SPPTNode) longest);
+			return new SharedPackedParseTreeSimple((SPPTNode) longest, seasons);
 		}
 	}
 

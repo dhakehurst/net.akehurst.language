@@ -42,6 +42,7 @@ kotlin {
                 }
             }
         }
+        
         fromPreset(presets.js, 'js') {
             compilations.all {
                 tasks[compileKotlinTaskName].kotlinOptions {

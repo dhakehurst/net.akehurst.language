@@ -1,0 +1,6 @@
+
+dependencies {
+	testImplementation project(":common")
+	testImplementation "junit:junit:4.12"
+	testImplementation "net.akehurst.language:processor-jvm8:2.0.0-SNAPSHOT"
+}

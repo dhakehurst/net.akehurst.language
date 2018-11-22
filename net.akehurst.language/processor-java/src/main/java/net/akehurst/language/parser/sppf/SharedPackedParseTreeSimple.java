@@ -27,9 +27,11 @@ import net.akehurst.language.grammar.parser.ToStringVisitor;
 public class SharedPackedParseTreeSimple implements SharedPackedParseTree {
 
 	private final SPPTNode root;
+	private final Integer seasons;
 
-	public SharedPackedParseTreeSimple(final SPPTNode root) {
+	public SharedPackedParseTreeSimple(final SPPTNode root, Integer seasons) {
 		this.root = root;
+		this.seasons = seasons;
 	}
 
 	// --- IParseTree ---
@@ -41,6 +43,11 @@ public class SharedPackedParseTreeSimple implements SharedPackedParseTree {
 	}
 
 	// --- SharedPackedParseTree ---
+	@Override
+	public Integer getSeasons() {
+		return this.seasons;
+	}
+
 	@Override
 	public SPPTNode getRoot() {
 		return this.root;

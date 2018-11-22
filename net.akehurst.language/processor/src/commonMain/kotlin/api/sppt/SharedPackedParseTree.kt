@@ -26,6 +26,8 @@ import kotlin.js.JsName
  */
  interface SharedPackedParseTree : SharedPackedParseTreeVisitable {
 
+	val seasons:Int
+
 	/**
 	 * The root of the tree
 	 */

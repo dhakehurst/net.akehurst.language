@@ -301,7 +301,7 @@ public class ParseTreeBuilder {
 
             }
 
-            tree = new SharedPackedParseTreeSimple(childrenStack.pop().get(0));
+            tree = new SharedPackedParseTreeSimple(childrenStack.pop().get(0), -1);
         }
         return tree;
     }

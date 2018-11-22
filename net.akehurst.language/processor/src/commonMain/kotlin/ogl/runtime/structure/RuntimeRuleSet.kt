@@ -42,6 +42,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }.toTypedArray()
     }
 
+    val isSkipTerminal: Array<Boolean> by lazy {
+        this.runtimeRules.map {
+            this.calcIsSkipTerminal(it)
+        }.toTypedArray()
+    }
+
     val allTerminals: Array<RuntimeRule> by lazy {
         this.runtimeRules.mapNotNull {
             if (it.isTerminal)
@@ -52,12 +58,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     val firstTerminals: Array<Set<RuntimeRule>> by lazy {
-        this.runtimeRules.map { this.findFirstTerminals(it) }
+        this.runtimeRules.map { this.calcFirstTerminals(it) }
                 .toTypedArray()
     }
 
     val firstSkipRuleTerminals: Set<RuntimeRule> by lazy {
-        this.runtimeRules.flatMap { if (it.isSkip) this.findFirstTerminals(it) else emptySet() }
+        this.runtimeRules.flatMap { if (it.isSkip) this.calcFirstTerminals(it) else emptySet() }
                 .toSet()
     }
 
@@ -117,19 +123,19 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val nextItems = this.findNextExpectedItems(runtimeRule, nextItemIndex, numNonSkipChildren)
         val result = mutableSetOf<RuntimeRule>()
         nextItems.forEach {
-            //result += this.firstTerminals[it.number]
-            result += this.findFirstTerminals(it)
+            result += this.firstTerminals[it.number]
+            //result += this.calcFirstTerminals(it)
         }
         return result
     }
 
-    fun findFirstSubRules(runtimeRule: RuntimeRule): Set<RuntimeRule> {
+    private fun calcFirstSubRules(runtimeRule: RuntimeRule): Set<RuntimeRule> {
         return runtimeRule.findSubRulesAt(0)
     }
 
-    fun findFirstTerminals(runtimeRule: RuntimeRule): Set<RuntimeRule> {
+    private fun calcFirstTerminals(runtimeRule: RuntimeRule): Set<RuntimeRule> {
         var rr = runtimeRule.findTerminalAt(0, this)
-        for (r in this.findFirstSubRules(runtimeRule)) {
+        for (r in this.calcFirstSubRules(runtimeRule)) {
             rr += r.findTerminalAt(0, this)
         }
         return rr
@@ -145,7 +151,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
     */
 
-    fun calcIsSkipTerminal(rr: RuntimeRule): Boolean {
+    private fun calcIsSkipTerminal(rr: RuntimeRule): Boolean {
         val b = this.allSkipTerminals.contains(rr)
         return b
     }
@@ -176,7 +182,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 for (rr in nextExpectedForStacked) {
                     if (rr.isNonTerminal) {
                         // todo..can we reduce the possibles!
-                        val possibles = this.findFirstSubRules(rr)
+                        val possibles = this.calcFirstSubRules(rr)
                         if (possibles.contains(childRule)) {
                             return true
                         }

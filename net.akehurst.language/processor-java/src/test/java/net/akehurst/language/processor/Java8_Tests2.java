@@ -214,6 +214,7 @@ public class Java8_Tests2 {
 			final String queryStr = this.data.queryStr;
 			final String grammarRule = this.data.grammarRule;
 			final SharedPackedParseTree tree = Java8_Tests2.parse(grammarRule, queryStr);
+			System.out.println("seasons "+tree.getSeasons());
 			Assert.assertNotNull(tree);
 			final String resultStr = Java8_Tests2.clean(tree.asString());
 			Assert.assertEquals(queryStr, resultStr);

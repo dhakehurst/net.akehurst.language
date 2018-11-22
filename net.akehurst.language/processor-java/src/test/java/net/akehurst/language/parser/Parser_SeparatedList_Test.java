@@ -267,7 +267,7 @@ public class Parser_SeparatedList_Test extends AbstractParser_Test {
 		final ParseTreeBuilder b = this.builder(g, text, goal);
 		final SharedPackedParseTree expected = new SharedPackedParseTreeSimple(b.branch("as", b.branch("a", b.leaf("a", "a"), b.branch("SP", b.leaf(" ", " "))),
 				b.leaf(",", ","), b.branch("SP", b.leaf(" ", " ")), b.branch("a", b.leaf("a", "a"), b.branch("SP", b.leaf(" ", " "))), b.leaf(",", ","),
-				b.branch("SP", b.leaf(" ", " ")), b.branch("a", b.leaf("a", "a"), b.branch("SP", b.leaf(" ", " ")))));
+				b.branch("SP", b.leaf(" ", " ")), b.branch("a", b.leaf("a", "a"), b.branch("SP", b.leaf(" ", " ")))), -1);
 		Assert.assertEquals(expected, tree);
 
 	}
