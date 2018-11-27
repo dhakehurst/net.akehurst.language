@@ -23,7 +23,7 @@ import kotlin.test.Test
 class test_typeDefs : test_ScannerlessParserAbstract() {
 
     // S = type name ;
-    // type = builtIn > userDefined ;
+    // type = userDefined < builtIn;
     // builtIn = 'int' | 'bool' ;
     // userDefined = "[a-zA-Z]+" ;
     // name = "[a-zA-Z]+" ;
@@ -34,7 +34,7 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
         val r_name = b.rule("name").concatenation(r_azAZ)
         val r_userDefined = b.rule("userDefined").concatenation(r_azAZ)
         val r_builtIn = b.rule("builtIn").choiceEqual(b.literal("int"), b.literal("bool"))
-        val r_type = b.rule("type").choicePriority(r_builtIn, r_userDefined)
+        val r_type = b.rule("type").choicePriority( r_userDefined, r_builtIn)
         b.rule("S").concatenation(r_type, r_name)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b

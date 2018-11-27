@@ -30,7 +30,7 @@ class test_ifThenElse_Deterministic : test_ScannerlessParserAbstract() {
     // S =  expr ;
     // ifthenelse = 'if' expr 'then' expr 'else' expr ;
     // ifthen = 'if' expr 'then' expr ;
-    // expr = var > ifthenelse > ifthen ;
+    // expr = var < ifthenelse < ifthen ;
     // var = "[a-zA-Z]+" ;
     // WS = "\s+" ;
     private fun S(): RuntimeRuleSetBuilder {

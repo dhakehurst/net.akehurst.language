@@ -44,9 +44,9 @@ private fun createRules(): List<Rule> {
 			b.nonTerminal("choice"), b.terminalLiteral(";"));
 	b.rule("normalRule").concatenation(b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("choice"),
 			b.terminalLiteral(";"));
-	b.rule("choice").choicePriority(b.concatenation(b.nonTerminal("simpleChoice")), b.concatenation(b.nonTerminal("priorityChoice")));
+	b.rule("choice").choicePriority(b.concatenation(b.nonTerminal("priorityChoice")), b.concatenation(b.nonTerminal("simpleChoice")));
 	b.rule("simpleChoice").separatedList(0, -1, b.terminalLiteral("|"), b.nonTerminal("concatenation"));
-	b.rule("priorityChoice").separatedList(0, -1, b.terminalLiteral(">"), b.nonTerminal("concatenation"));
+	b.rule("priorityChoice").separatedList(0, -1, b.terminalLiteral("<"), b.nonTerminal("concatenation"));
 	b.rule("concatenation").multi(1, -1, b.nonTerminal("concatenationItem"));
 	b.rule("concatenationItem").choiceEqual(b.concatenation(b.nonTerminal("simpleItem")), b.concatenation(b.nonTerminal("multi")), b.concatenation(b.nonTerminal("separatedList")));
 	b.rule("simpleItem").choiceEqual(b.concatenation(b.nonTerminal("terminal")), b.concatenation(b.nonTerminal("nonTerminal")), b.concatenation(b.nonTerminal("group")));

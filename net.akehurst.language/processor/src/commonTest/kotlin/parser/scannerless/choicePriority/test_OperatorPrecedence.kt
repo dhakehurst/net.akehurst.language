@@ -28,7 +28,7 @@ import kotlin.test.assertFailsWith
 class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
 
     // S =  expr ;
-    // expr = var > group > div > mul > add > sub ;
+    // expr = var < group < div < mul < add < sub ;
     // sub = expr '-' expr ;
     // add = expr '+' expr ;
     // mul = expr '*' expr ;
