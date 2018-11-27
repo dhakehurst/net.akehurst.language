@@ -29,9 +29,9 @@ grammar OGL {
   anyRule = normalRule | skipRule ;
   normalRule = IDENTIFIER '=' choice ';' ;
   skipRule = 'skip' IDENTIFIER '=' choice ';' ;
-  choice = simpleChoice < priorityChoice ;
+  choice = simpleChoice > priorityChoice ;
   simpleChoice = [concatenation / '|']* ;
-  priorityChoice = [concatenation / '<']* ;
+  priorityChoice = [concatenation / '>']* ;
   concatenation = concatenationItem+ ;
   concatenationItem = simpleItem | multi | separatedList ;
   simpleItem = terminal | nonTerminal | group ;

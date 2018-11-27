@@ -111,18 +111,19 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         val childrenStack = Stack<MutableList<SPPTNode>>()
         // add rootList
         childrenStack.push(mutableListOf<SPPTNode>())
+        var sentencePosition = 0;
         while (scanner.hasMore()) {
             when {
                 scanner.hasNext(WS) -> scanner.next(WS)
                 scanner.hasNext(EMPTY) -> { //must do this before NAME, as EMPTY is also a valid NAME
                     val empty = scanner.next(EMPTY)
                     val ruleStartThatIsEmpty = nodeNamesStack.peek()
-                    val emptyNode = this.emptyLeaf(ruleStartThatIsEmpty.name, scanner.position-empty.length)
+                    val emptyNode = this.emptyLeaf(ruleStartThatIsEmpty.name, sentencePosition)
                     childrenStack.peek().add(emptyNode)
                 }
                 scanner.hasNext(NAME) -> {
                     val name = scanner.next(NAME)
-                    nodeNamesStack.push(NodeStart(name, scanner.position-name.length))
+                    nodeNamesStack.push(NodeStart(name, sentencePosition))
                 }
                 scanner.hasNext(CHILDREN_START) -> {
                     scanner.next(CHILDREN_START)
@@ -142,10 +143,12 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
                         val newText = scanner.next(LITERAL)
                         val newText2 = newText.replace("\\'", "'")
                         val newText3 = newText2.substring(1, newText2.length - 1)
-                        val leaf = this.leaf(text, newText3, scanner.position, newText.length)
+                        val leaf = this.leaf(text, newText3, sentencePosition, newText.length)
+                        sentencePosition = leaf.nextInputPosition
                         childrenStack.peek().add(leaf)
                     } else {
-                        val leaf = this.leaf(text, scanner.position, leafStr.length)
+                        val leaf = this.leaf(text, sentencePosition, leafStr.length)
+                        sentencePosition = leaf.nextInputPosition
                         childrenStack.peek().add(leaf)
                     }
                 }
@@ -154,7 +157,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
                     val lastNodeStart = nodeNamesStack.pop()
 
                     val children = childrenStack.pop()
-                    val node = this.branch(lastNodeStart.name, children, lastNodeStart.position)
+                    val node = this.branch(lastNodeStart.name, children, sentencePosition)
                     childrenStack.peek().add(node)
                 }
                 else -> throw RuntimeException("Tree String invalid at position " + scanner.position)

@@ -69,7 +69,48 @@ class SPPTBranchDefault(
     }
 
     override fun contains(other: SPPTNode): Boolean {
-        return this.identity == other.identity
+        if (other is SPPTBranch) {
+            if (this.identity == other.identity) {
+                // for each alternative list of other children, check there is a matching list
+                // of children in this alternative children
+                var allOthersAreContained = true // if no other children alternatives contain is a match
+                for (otherChildren in other.childrenAlternatives) {
+                    // for each of this alternative children, find one that 'contains' otherChildren
+                    var foundContainMatch = false
+                    for (thisChildren in this.childrenAlternatives) {
+                        if (thisChildren.size == otherChildren.size) {
+                            // for each pair of nodes, one from each of otherChildren thisChildren
+                            // check thisChildrenNode contains otherChildrenNode
+                            var thisMatch = true
+                            for (i in 0 until thisChildren.size) {
+                                val thisChildrenNode = thisChildren.get(i)
+                                val otherChildrenNode = otherChildren.get(i)
+                                thisMatch = thisMatch and thisChildrenNode.contains(otherChildrenNode)
+                            }
+                            if (thisMatch) {
+                                foundContainMatch = true
+                                break
+                            } else {
+                                // if thisChildren alternative doesn't contain, try the next one
+                                continue
+                            }
+                        } else {
+                            // if sizes don't match check next in set of this alternative children
+                            continue
+                        }
+                    }
+                    allOthersAreContained = allOthersAreContained and foundContainMatch
+                }
+                return allOthersAreContained
+            } else {
+                // if identities don't match
+                return false
+            }
+
+        } else {
+            // if other is not a branch
+            return false
+        }
     }
 
     override val isEmptyLeaf: Boolean = false
@@ -102,14 +143,14 @@ class SPPTBranchDefault(
         return this.identity.hashCode()
     }
 
-    override fun equals(arg: Any?): Boolean {
-        if (arg !is SPPTBranch) {
+    override fun equals(other: Any?): Boolean {
+        if (other !is SPPTBranch) {
             return false
         } else {
-             return if (this.identity != arg.identity) {
+             return if (this.identity != other.identity) {
                 false
             } else {
-                 this.children == arg.children
+                 this.contains(other) && other.contains(this)
              }
         }
     }

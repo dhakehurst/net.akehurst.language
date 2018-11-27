@@ -62,4 +62,12 @@ class SPPTLeafDefault(
         val name = if (this.isLiteral) "'${this.runtimeRule.patternText}'" else "\"${this.runtimeRule.patternText}\""
         return "${this.startPosition},${this.nextInputPosition},C:${name}(${this.runtimeRule.number})"
     }
+
+    override fun equals(other: Any?): Boolean {
+        return if (other is SPPTLeaf) {
+            this.identity == other.identity
+        } else {
+            false
+        }
+    }
 }

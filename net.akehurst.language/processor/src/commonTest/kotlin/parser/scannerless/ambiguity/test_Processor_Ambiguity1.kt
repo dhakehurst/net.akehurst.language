@@ -1,35 +1,42 @@
 package net.akehurst.language.processor.processor.ambiguity
 
-import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.ogl.ast.GrammarBuilderDefault
-import net.akehurst.language.ogl.ast.NamespaceDefault
-import processor.test_ParserAbstract
+import net.akehurst.language.ogl.runtime.structure.RuntimeRuleItem
+import net.akehurst.language.ogl.runtime.structure.RuntimeRuleItemKind
+import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_Processor_Ambiguity1 : test_ParserAbstract() {
+class test_Processor_Ambiguity1 : test_ScannerlessParserAbstract() {
     /**
      * S : 'a' S B B | 'a' ;
      * B : 'b' ? ;
      */
-    private fun S(): Grammar {
-        val b = GrammarBuilderDefault(NamespaceDefault("test"), "Test")
-        b.rule("S").choiceEqual(b.nonTerminal("S1"), b.terminalLiteral("a"));
-        b.rule("S1").concatenation(b.terminalLiteral("a"), b.nonTerminal("S"), b.nonTerminal("B"), b.nonTerminal("B"))
-        b.rule("B").multi(0, 1, b.terminalLiteral("b"))
-        return b.grammar
+    /**
+     * S : S1 | 'a' ;
+     * S1 = 'a' S B B ;
+     * B : 'b' ? ;
+     */
+    private fun S(): RuntimeRuleSetBuilder {
+        val b = RuntimeRuleSetBuilder()
+        val r_a = b.literal("a")
+        val r_B = b.rule("B").multi(0, 1, b.literal("b"))
+        val r_S = b.rule("S").build()
+        val r_S1 = b.rule("S1").concatenation(r_a, r_S, r_B, r_B)
+        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_EQUAL, -1, 0, arrayOf(r_S1, r_a))
+        return b
     }
 
     @Test
     fun S_S_empty() {
-        val grammar = this.S()
+        val rrb = this.S()
         val goal = "S"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(grammar, goal, sentence)
+            super.test(rrb, goal, sentence)
         }
         assertEquals(1, e.location.line)
         assertEquals(0, e.location.column)
@@ -37,7 +44,7 @@ class test_Processor_Ambiguity1 : test_ParserAbstract() {
 
     @Test
     fun S_S_a() {
-        val grammar = this.S()
+        val rrb = this.S()
         val goal = "S"
         val sentence = "a"
 
@@ -45,12 +52,12 @@ class test_Processor_Ambiguity1 : test_ParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.test(grammar, goal, sentence, expected1)
+        super.test(rrb, goal, sentence, expected1)
     }
 
     @Test
     fun S_S_aa() {
-        val grammar = this.S()
+        val rrb = this.S()
         val goal = "S"
         val sentence = "aa"
 
@@ -59,18 +66,18 @@ class test_Processor_Ambiguity1 : test_ParserAbstract() {
               S1 {
                 'a'
                 S { 'a' }
-                B { §multi0 { §empty } }
-                B { §multi0 { §empty } }
+                B { §empty }
+                B { §empty }
               }
             }
         """.trimIndent()
 
-        super.test(grammar, goal, sentence, expected1)
+        super.test(rrb, goal, sentence, expected1)
     }
 
     @Test
     fun S_S_aab() {
-        val grammar = this.S()
+        val rrb = this.S()
         val goal = "S"
         val sentence = "aab"
 
@@ -79,8 +86,8 @@ class test_Processor_Ambiguity1 : test_ParserAbstract() {
               S1 {
                 'a'
                 S { 'a' }
-                B { §multi0 {'b'} }
-                B { §multi0 { §empty } }
+                B { 'b' }
+                B { §empty }
               }
             }
         """.trimIndent()
@@ -90,13 +97,13 @@ class test_Processor_Ambiguity1 : test_ParserAbstract() {
               S1 {
                 'a'
                 S { 'a' }
-                B { §multi0 { §empty} }
-                B { §multi0 {'b'} }
+                B { §empty }
+                B { 'b' }
               }
             }
         """.trimIndent()
 
-        super.test(grammar, goal, sentence, expected1, expected2)
+        super.test(rrb, goal, sentence, expected1, expected2)
     }
 
 

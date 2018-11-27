@@ -60,4 +60,12 @@ class SharedPackedParseTreeDefault(override val root: SPPTNode, override val sea
         return visitor.visit(this, arg)
     }
 
+    override fun equals(other: Any?): Boolean {
+        return if (other is SharedPackedParseTree) {
+           this.root == other.root
+        } else {
+            false
+        }
+    }
+
 }

@@ -151,9 +151,11 @@ internal class RuntimeParser(
                     for ((node) in previous) {
                         val prevItemIndex = node.nextItemIndex
                         val prevRule = node.runtimeRule
+                        //TODO: find a way to cache the calcGrowsInto
                         toGrow.addAll(this.runtimeRuleSet.calcGrowsInto(childRule, prevRule, prevItemIndex))
                     }
                     for (info in toGrow) {
+                        //TODO: can we cache findCompleteNode
                         val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                                 ?: throw ParseException("Internal error: Should never happen")
                         this.growHeightByType(complete, info, previous)
@@ -275,6 +277,7 @@ internal class RuntimeParser(
     }
 
     private fun hasStackedPotential(completeNode: SPPTNodeDefault, stack: GrowingNode): Boolean {
+        //TODO: can we cache anything here?
         if (completeNode.isSkip) {
             return true
         } else {

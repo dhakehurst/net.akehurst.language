@@ -91,12 +91,12 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         val rp = RuntimeParser(this.runtimeRuleSet, graph)
 
         rp.start(goalRule)
-        println(graph.growingHead)
+        println("1] "+graph.growingHead)
         var seasons = 1
 
         do {
             rp.grow()
-            println(graph.growingHead)
+            println(""+seasons+"] "+graph.growingHead)
             seasons++
         } while (rp.canGrow)
 

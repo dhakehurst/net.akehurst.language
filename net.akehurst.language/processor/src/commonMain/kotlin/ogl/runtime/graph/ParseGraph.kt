@@ -222,7 +222,7 @@ internal class ParseGraph(
             result = nn
         } else {
             for (info in previous) {
-                existing!!.addPrevious(info.node, info.atPosition)
+                existing.addPrevious(info.node, info.atPosition)
                 // TODO: remove, this is for test
                 if (this.with) {
                     this.addGrowing(info.node)
@@ -272,11 +272,12 @@ internal class ParseGraph(
                     // opt.nodes = gn.getGrowingChildren();
                     cn = (cn as SPPTBranchDefault)
                     // TODO: don't add duplicate children
-                    // somewhere resolve priorities!
+                    // TODO: somewhere resolve priorities!
                     val existingPriority = cn.priority
                     val newPriority = gn.priority
                     if (existingPriority == newPriority) {
                         // TODO: record/log ambiguity!
+                        // TODO: match by length if priority the same
                         cn.childrenAlternatives.add(gn.children)
                         if (gn.isEmptyMatch && cn.isEmptyMatch) {
                             if (cn.childrenAlternatives.isEmpty()) {
@@ -300,10 +301,13 @@ internal class ParseGraph(
                             cn.childrenAlternatives.add(gn.children)
 
                         }
-                    } else if (existingPriority < newPriority) {
+                    } else if (existingPriority > newPriority) {
+                        // then existing is the lower precedence item,
+                        // therefore existing nose should be the higher item in the tree
+                        // which it is, so change nothing
                         // do nothing, drop new one
                         val i = 0
-                    } else if (newPriority < existingPriority) {
+                    } else if (newPriority > existingPriority) {
                         // replace existing with new
                         cn.childrenAlternatives.clear()
                         cn.childrenAlternatives.add(gn.children)

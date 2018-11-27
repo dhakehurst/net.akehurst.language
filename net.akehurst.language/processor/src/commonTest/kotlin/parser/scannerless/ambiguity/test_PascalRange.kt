@@ -1,18 +1,13 @@
-package processor.ambiguity
+package parser.scannerless.ambiguity
 
-import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.ogl.ast.GrammarBuilderDefault
-import net.akehurst.language.ogl.ast.NamespaceDefault
-import net.akehurst.language.ogl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.ogl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
-import processor.test_ParserAbstract
+import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_PascalRange : test_ParserAbstract() {
+class test_PascalRange : test_ScannerlessParserAbstract() {
 
     /*
      * expr : range | real ;

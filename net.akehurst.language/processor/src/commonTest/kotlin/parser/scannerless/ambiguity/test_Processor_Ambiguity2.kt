@@ -1,21 +1,21 @@
 package net.akehurst.language.processor.processor.ambiguity
 
-import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.ogl.ast.GrammarBuilderDefault
-import net.akehurst.language.ogl.ast.NamespaceDefault
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleItemKind
-import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
-import processor.test_ParserAbstract
+import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_Processor_Ambiguity2 : test_ParserAbstract() {
+class test_Processor_Ambiguity2 : test_ScannerlessParserAbstract() {
     /**
-     * S : S S | 'a' ;
+     * S = S S | 'a' ;
+     */
+    /**
+     * S = S1 | 'a' ;
+     * S1 = S S ;
      */
     private fun S(): RuntimeRuleSetBuilder {
         val rrb = RuntimeRuleSetBuilder()
@@ -78,23 +78,27 @@ class test_Processor_Ambiguity2 : test_ParserAbstract() {
 
         val expected1 = """
             S {
-              S {
-                S1 {
-                  S { 'a' }
-                  S { 'a' }
+              S1 {
+                S {
+                  S1 {
+                    S { 'a' }
+                    S { 'a' }
+                  }
                 }
+                S { 'a' }
               }
-              S { 'a' }
             }
         """.trimIndent()
 
         val expected2 = """
             S {
-              S { 'a' }
-              S {
-                S1 {
-                  S { 'a' }
-                  S { 'a' }
+              S1 {
+                S { 'a' }
+                S {
+                  S1 {
+                    S { 'a' }
+                    S { 'a' }
+                  }
                 }
               }
             }
