@@ -27,7 +27,7 @@ import net.akehurst.language.api.grammar.GrammarRuleItemNotFoundException
 class NonTerminalDefault(override val name: String) : RuleItemAbstract(), NonTerminal {
 
 	override val referencedRule : Rule by lazy {
-		this.owningRule.grammar.findAllRule(this.name) ?: throw GrammarRuleItemNotFoundException("rule with name ${this.name} not found")
+		this.owningRule.grammar.findAllRule(this.name)
 	}
 
     override fun setOwningRule(rule: Rule, indices: List<Int>) {

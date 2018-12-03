@@ -31,29 +31,29 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
 
     init {
         this.register("grammarDefinition", this::grammarDefinition as BranchHandler<Grammar>)
-        this.register("namespace", this::namespace as BranchHandler<Grammar>)
+        this.register("namespace", this::namespace as BranchHandler<Namespace>)
         this.register("grammar", this::grammar as BranchHandler<Grammar>)
-        this.register("extends", this::extends as BranchHandler<Grammar>)
-        this.register("rules", this::rules as BranchHandler<Grammar>)
-        this.register("anyRule", this::anyRule as BranchHandler<Grammar>)
-        this.register("normalRule", this::normalRule as BranchHandler<Grammar>)
-        this.register("skipRule", this::skipRule as BranchHandler<Grammar>)
-        this.register("choice", this::choice as BranchHandler<Grammar>)
-        this.register("simpleChoice", this::simpleChoice as BranchHandler<Grammar>)
-        this.register("priorityChoice", this::priorityChoice as BranchHandler<Grammar>)
-        this.register("concatenation", this::concatenation as BranchHandler<Grammar>)
-        this.register("concatenationItem", this::concatenationItem as BranchHandler<Grammar>)
-        this.register("simpleItem", this::simpleItem as BranchHandler<Grammar>)
-        this.register("multiplicity", this::multiplicity as BranchHandler<Grammar>)
-        this.register("multi", this::multi as BranchHandler<Grammar>)
-        this.register("group", this::group as BranchHandler<Grammar>)
-        this.register("separatedList", this::separatedList as BranchHandler<Grammar>)
-        this.register("nonTerminal", this::nonTerminal as BranchHandler<Grammar>)
-        this.register("terminal", this::terminal as BranchHandler<Grammar>)
-        this.register("qualifiedName", this::qualifiedName as BranchHandler<Grammar>)
-        this.register("IDENTIFIER", this::IDENTIFIER as BranchHandler<Grammar>)
-        this.register("PATTERN", this::PATTERN as BranchHandler<Grammar>)
-        this.register("LITERAL", this::LITERAL as BranchHandler<Grammar>)
+        this.register("extends", this::extends as BranchHandler<List<Grammar>>)
+        this.register("rules", this::rules as BranchHandler<List<Rule>>)
+        this.register("anyRule", this::anyRule as BranchHandler<Rule>)
+        this.register("normalRule", this::normalRule as BranchHandler<Rule>)
+        this.register("skipRule", this::skipRule as BranchHandler<Rule>)
+        this.register("choice", this::choice as BranchHandler<RuleItem>)
+        this.register("simpleChoice", this::simpleChoice as BranchHandler<RuleItem>)
+        this.register("priorityChoice", this::priorityChoice as BranchHandler<RuleItem>)
+        this.register("concatenation", this::concatenation as BranchHandler<Concatenation>)
+        this.register("concatenationItem", this::concatenationItem as BranchHandler<ConcatenationItem>)
+        this.register("simpleItem", this::simpleItem as BranchHandler<SimpleItem>)
+        this.register("multiplicity", this::multiplicity as BranchHandler<Pair<Int, Int>>)
+        this.register("multi", this::multi as BranchHandler<Multi>)
+        this.register("group", this::group as BranchHandler<Group>)
+        this.register("separatedList", this::separatedList as BranchHandler<SeparatedList>)
+        this.register("nonTerminal", this::nonTerminal as BranchHandler<NonTerminal>)
+        this.register("terminal", this::terminal as BranchHandler<Terminal>)
+        this.register("qualifiedName", this::qualifiedName as BranchHandler<String>)
+        this.register("IDENTIFIER", this::IDENTIFIER as BranchHandler<String>)
+        this.register("PATTERN", this::PATTERN as BranchHandler<Terminal>)
+        this.register("LITERAL", this::LITERAL as BranchHandler<Terminal>)
     }
 
     override fun clear() {
@@ -61,7 +61,7 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
     }
 
     override fun <T> transform(sppt: SharedPackedParseTree): T {
-        return this.transform<T>(sppt.root.asBranch, "") as T
+        return this.transform<T>(sppt.root.asBranch, "")
     }
 
     //   grammarDefinition : namespace grammar ;
@@ -80,7 +80,7 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
     fun grammar(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Grammar {
         val namespace = arg as Namespace
         val name = children[0].nonSkipMatchedText
-        val extends = this.transform<List<Grammar>>(children[1], null) ?: emptyList()
+        val extends = this.transform<List<Grammar>>(children[1], null)
         val result = GrammarDefault(namespace, name, mutableListOf())
         result.extends.addAll(extends)
 
@@ -151,7 +151,7 @@ class OglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
         val alternative = children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transform<Concatenation>(it, arg)
         }
-        return return if (alternative.isEmpty()) {
+        return if (alternative.isEmpty()) {
             EmptyRuleDefault()
         } else  {
             ChoicePriorityDefault(alternative)

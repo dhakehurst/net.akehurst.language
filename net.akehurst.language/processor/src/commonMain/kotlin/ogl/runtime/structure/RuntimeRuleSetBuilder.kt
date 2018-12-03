@@ -35,16 +35,16 @@ class RuntimeRuleSetBuilder() {
     val rules: MutableList<RuntimeRule> = mutableListOf()
 
     fun createGroupRuleName(parentRuleName: String) :String {
-        return "§group"+this.nextGroupNumber++ //TODO: include original rule name fo easier debug
+        return "§${parentRuleName}§group"+this.nextGroupNumber++ //TODO: include original rule name fo easier debug
     }
-    fun createChoiceRuleName(parentRuleName: String) :String {
-        return "§choice"+this.nextChoiceNumber++ //TODO: include original rule name fo easier debug
+    fun createChoiceRuleName(parentRuleName: String) :String { //TODO: split into priority or simple choice type
+        return "§${parentRuleName}§choice"+this.nextChoiceNumber++ //TODO: include original rule name fo easier debug
     }
     fun createMultiRuleName(parentRuleName: String) :String {
-        return "§multi"+this.nextMultiNumber++ //TODO: include original rule name fo easier debug
+        return "§${parentRuleName}§multi"+this.nextMultiNumber++ //TODO: include original rule name fo easier debug
     }
     fun createListRuleName(parentRuleName: String) :String {
-        return "§sList"+this.nextListNumber++ //TODO: include original rule name fo easier debug
+        return "§${parentRuleName}§sList"+this.nextListNumber++ //TODO: include original rule name fo easier debug
     }
     fun findRuleByName(ruleName: String, terminal: Boolean): RuntimeRule? {
         return this.rules.firstOrNull {

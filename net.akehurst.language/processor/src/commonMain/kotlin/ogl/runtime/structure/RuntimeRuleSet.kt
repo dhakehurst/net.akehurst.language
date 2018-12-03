@@ -106,13 +106,13 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     fun findRuntimeRule(ruleName: String): RuntimeRule {
         val number = this.nonTerminalRuleNumber[ruleName]
                 ?: throw ParseException("NonTerminal RuntimeRule '${ruleName}' not found")
-        return this.runtimeRules[number] ?: throw ParseException("NonTerminal RuntimeRule ${ruleName} not found")
+        return this.runtimeRules[number]
     }
 
     fun findTerminalRule(pattern: String): RuntimeRule {
         val number = this.terminalRuleNumber[pattern]
                 ?: throw ParseException("Terminal RuntimeRule ${pattern} not found")
-        return this.runtimeRules[number] ?: throw ParseException("Terminal RuntimeRule ${pattern} not found")
+        return this.runtimeRules[number]
     }
 
     fun findNextExpectedItems(runtimeRule: RuntimeRule, nextItemIndex: Int, numNonSkipChildren: Int): Set<RuntimeRule> {
@@ -134,9 +134,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     private fun calcFirstTerminals(runtimeRule: RuntimeRule): Set<RuntimeRule> {
-        var rr = runtimeRule.findTerminalAt(0, this)
+        var rr = runtimeRule.findTerminalAt(0)
         for (r in this.calcFirstSubRules(runtimeRule)) {
-            rr += r.findTerminalAt(0, this)
+            rr += r.findTerminalAt(0)
         }
         return rr
     }

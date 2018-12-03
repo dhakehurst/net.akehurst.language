@@ -106,12 +106,12 @@ grammar Query {
 	aggregateFunctionCallOrExpression = aggregateFunctionCall | expression ;
 	aggregateFunctionCall = aggregateFunctionName '(' expression ')' ;
     expression	= groupExpression
-				> literalValue
-				> root
-				> propertyCall
-				> methodCall
-				> infixFunction
-				> conditionalExpression
+				< literalValue
+				< root
+				< propertyCall
+				< methodCall
+				< infixFunction
+				< conditionalExpression
             ;
 
     nameDefinition = 'AS' NAME ;

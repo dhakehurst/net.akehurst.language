@@ -156,7 +156,7 @@ class GrowingNode(
         if (this.previous.isEmpty()) {
             //
         } else {
-            val prev = this.previous.iterator().next().node as GrowingNode
+            val prev = this.previous.iterator().next().node
             if (visited.contains(prev)) {
                 s = "--> ..."
             } else if (this.previous.size == 1) {
@@ -176,16 +176,15 @@ class GrowingNode(
         return this.hashCode_cache
     }
 
-    override fun equals(obj: Any?): Boolean {
+    override fun equals(other: Any?): Boolean {
         // assume obj is also a GrowingNode, should never be compared otherwise
-        val other = obj as GrowingNode?
-        if (null == other) {
-            return false
-        } else {
+        if (other is GrowingNode) {
             return this.runtimeRule.number == other.runtimeRule.number
                     && this.startPosition == other.startPosition
                     && this.nextInputPosition == other.nextInputPosition
                     && this.nextItemIndex == other.nextItemIndex
+        } else {
+            return false
         }
     }
 

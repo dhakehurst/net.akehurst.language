@@ -143,11 +143,11 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
                         val newText = scanner.next(LITERAL)
                         val newText2 = newText.replace("\\'", "'")
                         val newText3 = newText2.substring(1, newText2.length - 1)
-                        val leaf = this.leaf(text, newText3, sentencePosition, newText.length)
+                        val leaf = this.leaf(text, newText3, sentencePosition)
                         sentencePosition = leaf.nextInputPosition
                         childrenStack.peek().add(leaf)
                     } else {
-                        val leaf = this.leaf(text, sentencePosition, leafStr.length)
+                        val leaf = this.leaf(text, sentencePosition)
                         sentencePosition = leaf.nextInputPosition
                         childrenStack.peek().add(leaf)
                     }
@@ -179,11 +179,11 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         return existing
     }
 
-    fun leaf(text: String, pos:Int, len:Int): SPPTLeaf {
-        return this.leaf(text, text, pos, len)
+    fun leaf(text: String, pos:Int): SPPTLeaf {
+        return this.leaf(text, text, pos)
     }
 
-    fun leaf(pattern: String, text: String, pos:Int, len:Int): SPPTLeaf {
+    fun leaf(pattern: String, text: String, pos:Int): SPPTLeaf {
         val terminalRule = this.runtimeRuleSetBuilder.ruleSet().findTerminalRule(pattern)
         val n = SPPTLeafDefault(terminalRule, pos, false, text,0)
 

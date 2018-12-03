@@ -331,8 +331,8 @@ class test_Converter {
         assertEquals(4, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(1, actual.runtimeRules[1], "a", false, false)
-        this.checkNRule(2, actual.runtimeRules[2], "§multi0", false, RuntimeRuleItemKind.MULTI, 2)
-        this.checkERule(3, actual.runtimeRules[3], "§empty.§multi0", false, actual.runtimeRules[2])
+        this.checkNRule(2, actual.runtimeRules[2], "§r§multi0", false, RuntimeRuleItemKind.MULTI, 2)
+        this.checkERule(3, actual.runtimeRules[3], "§empty.§r§multi0", false, actual.runtimeRules[2])
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[2])
         this.checkItems(actual.runtimeRules[2], actual.runtimeRules[1], actual.runtimeRules[3])
@@ -356,8 +356,8 @@ class test_Converter {
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkNRule(1, actual.runtimeRules[1], "a", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(2, actual.runtimeRules[2], "a", false, false)
-        this.checkNRule(3, actual.runtimeRules[3], "§multi0", false, RuntimeRuleItemKind.MULTI, 2)
-        this.checkERule(4, actual.runtimeRules[4], "§empty.§multi0", false, actual.runtimeRules[3])
+        this.checkNRule(3, actual.runtimeRules[3], "§r§multi0", false, RuntimeRuleItemKind.MULTI, 2)
+        this.checkERule(4, actual.runtimeRules[4], "§empty.§r§multi0", false, actual.runtimeRules[3])
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[3])
         this.checkItems(actual.runtimeRules[1], actual.runtimeRules[2])
@@ -379,8 +379,8 @@ class test_Converter {
         assertEquals(4, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(1, actual.runtimeRules[1], "a", false, false)
-        this.checkNRule(2, actual.runtimeRules[2], "§multi0", false, RuntimeRuleItemKind.MULTI, 2)
-        this.checkERule(3, actual.runtimeRules[3], "§empty.§multi0", false, actual.runtimeRules[2])
+        this.checkNRule(2, actual.runtimeRules[2], "§r§multi0", false, RuntimeRuleItemKind.MULTI, 2)
+        this.checkERule(3, actual.runtimeRules[3], "§empty.§r§multi0", false, actual.runtimeRules[2])
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[2])
         this.checkItems(actual.runtimeRules[2], actual.runtimeRules[1], actual.runtimeRules[3])
@@ -404,8 +404,8 @@ class test_Converter {
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkNRule(1, actual.runtimeRules[1], "a", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(2, actual.runtimeRules[2], "a", false, false)
-        this.checkNRule(3, actual.runtimeRules[3], "§multi0", false, RuntimeRuleItemKind.MULTI, 2)
-        this.checkERule(4, actual.runtimeRules[4], "§empty.§multi0", false, actual.runtimeRules[3])
+        this.checkNRule(3, actual.runtimeRules[3], "§r§multi0", false, RuntimeRuleItemKind.MULTI, 2)
+        this.checkERule(4, actual.runtimeRules[4], "§empty.§r§multi0", false, actual.runtimeRules[3])
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[3])
         this.checkItems(actual.runtimeRules[1], actual.runtimeRules[2])
@@ -427,7 +427,7 @@ class test_Converter {
         assertEquals(3, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(1, actual.runtimeRules[1], "a", false, false)
-        this.checkNRule(2, actual.runtimeRules[2], "§multi0", false, RuntimeRuleItemKind.MULTI, 1)
+        this.checkNRule(2, actual.runtimeRules[2], "§r§multi0", false, RuntimeRuleItemKind.MULTI, 1)
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[2])
         this.checkItems(actual.runtimeRules[2], actual.runtimeRules[1])
@@ -450,7 +450,7 @@ class test_Converter {
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkNRule(1, actual.runtimeRules[1], "a", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(2, actual.runtimeRules[2], "a", false, false)
-        this.checkNRule(3, actual.runtimeRules[3], "§multi0", false, RuntimeRuleItemKind.MULTI, 1)
+        this.checkNRule(3, actual.runtimeRules[3], "§r§multi0", false, RuntimeRuleItemKind.MULTI, 1)
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[3])
         this.checkItems(actual.runtimeRules[3], actual.runtimeRules[1])
@@ -472,8 +472,8 @@ class test_Converter {
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(1, actual.runtimeRules[1], "a", false, false)
         this.checkTRule(2, actual.runtimeRules[2], ",", false, false)
-        this.checkNRule(3, actual.runtimeRules[3], "§sList0", false, RuntimeRuleItemKind.SEPARATED_LIST, 3)
-        this.checkERule(4, actual.runtimeRules[4], "§empty.§sList0", false, actual.runtimeRules[3])
+        this.checkNRule(3, actual.runtimeRules[3], "§r§sList0", false, RuntimeRuleItemKind.SEPARATED_LIST, 3)
+        this.checkERule(4, actual.runtimeRules[4], "§empty.§r§sList0", false, actual.runtimeRules[3])
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[3])
         this.checkItems(actual.runtimeRules[3], actual.runtimeRules[1], actual.runtimeRules[2], actual.runtimeRules[4])
@@ -498,8 +498,8 @@ class test_Converter {
         this.checkNRule(1, actual.runtimeRules[1], "a", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(2, actual.runtimeRules[2], "a", false, false)
         this.checkTRule(3, actual.runtimeRules[3], ",", false, false)
-        this.checkNRule(4, actual.runtimeRules[4], "§sList0", false, RuntimeRuleItemKind.SEPARATED_LIST, 3)
-        this.checkERule(5, actual.runtimeRules[5], "§empty.§sList0", false, actual.runtimeRules[4])
+        this.checkNRule(4, actual.runtimeRules[4], "§r§sList0", false, RuntimeRuleItemKind.SEPARATED_LIST, 3)
+        this.checkERule(5, actual.runtimeRules[5], "§empty.§r§sList0", false, actual.runtimeRules[4])
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[4])
         this.checkItems(actual.runtimeRules[1], actual.runtimeRules[2])
@@ -522,8 +522,8 @@ class test_Converter {
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(1, actual.runtimeRules[1], "a", false, false)
         this.checkTRule(2, actual.runtimeRules[2], ",", false, false)
-        this.checkNRule(3, actual.runtimeRules[3], "§sList0", false, RuntimeRuleItemKind.SEPARATED_LIST, 3)
-        this.checkERule(4, actual.runtimeRules[4], "§empty.§sList0", false, actual.runtimeRules[3])
+        this.checkNRule(3, actual.runtimeRules[3], "§r§sList0", false, RuntimeRuleItemKind.SEPARATED_LIST, 3)
+        this.checkERule(4, actual.runtimeRules[4], "§empty.§r§sList0", false, actual.runtimeRules[3])
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[3])
         this.checkItems(actual.runtimeRules[3], actual.runtimeRules[1], actual.runtimeRules[2], actual.runtimeRules[4])
@@ -548,8 +548,8 @@ class test_Converter {
         this.checkNRule(1, actual.runtimeRules[1], "a", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(2, actual.runtimeRules[2], "a", false, false)
         this.checkTRule(3, actual.runtimeRules[3], ",", false, false)
-        this.checkNRule(4, actual.runtimeRules[4], "§sList0", false, RuntimeRuleItemKind.SEPARATED_LIST, 3)
-        this.checkERule(5, actual.runtimeRules[5], "§empty.§sList0", false, actual.runtimeRules[4])
+        this.checkNRule(4, actual.runtimeRules[4], "§r§sList0", false, RuntimeRuleItemKind.SEPARATED_LIST, 3)
+        this.checkERule(5, actual.runtimeRules[5], "§empty.§r§sList0", false, actual.runtimeRules[4])
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[4])
         this.checkItems(actual.runtimeRules[1], actual.runtimeRules[2])
@@ -572,7 +572,7 @@ class test_Converter {
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(1, actual.runtimeRules[1], "a", false, false)
         this.checkTRule(2, actual.runtimeRules[2], ",", false, false)
-        this.checkNRule(3, actual.runtimeRules[3], "§sList0", false, RuntimeRuleItemKind.SEPARATED_LIST, 2)
+        this.checkNRule(3, actual.runtimeRules[3], "§r§sList0", false, RuntimeRuleItemKind.SEPARATED_LIST, 2)
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[3])
         this.checkItems(actual.runtimeRules[3], actual.runtimeRules[1], actual.runtimeRules[2])
@@ -596,7 +596,7 @@ class test_Converter {
         this.checkNRule(1, actual.runtimeRules[1], "a", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(2, actual.runtimeRules[2], "a", false, false)
         this.checkTRule(3, actual.runtimeRules[3], ",", false, false)
-        this.checkNRule(4, actual.runtimeRules[4], "§sList0", false, RuntimeRuleItemKind.SEPARATED_LIST, 2)
+        this.checkNRule(4, actual.runtimeRules[4], "§r§sList0", false, RuntimeRuleItemKind.SEPARATED_LIST, 2)
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[4])
         this.checkItems(actual.runtimeRules[1], actual.runtimeRules[2])

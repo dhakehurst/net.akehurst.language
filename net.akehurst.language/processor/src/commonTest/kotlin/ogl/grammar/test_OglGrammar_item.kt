@@ -86,7 +86,7 @@ class test_OglGrammar_item {
     @Test
     fun qualifiedName_1() {
         val actual = parse("qualifiedName", "a")
-        val expected = this.sppt("qualifiedName { §sList0 { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' } } }")
+        val expected = this.sppt("qualifiedName { §qualifiedName§sList0 { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' } } }")
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
@@ -96,7 +96,7 @@ class test_OglGrammar_item {
         val actual = parse("qualifiedName", "a.b")
         val expected = this.sppt("""
             qualifiedName {
-                §sList0 {
+                §qualifiedName§sList0 {
                     IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' }
                     '.'
                     IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' }
@@ -112,7 +112,7 @@ class test_OglGrammar_item {
         val actual = parse("qualifiedName", "a.b.c")
         val expected = this.sppt("""
             qualifiedName {
-                §sList0 {
+                §qualifiedName§sList0 {
                     IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' }
                     '.'
                     IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' }
@@ -218,7 +218,7 @@ class test_OglGrammar_item {
         val actual = parse("concatenation", "'a'")
         val expected = this.sppt("""
             concatenation {
-                §multi2 { concatenationItem { simpleItem { terminal { LITERAL { '\'(?:\\?.)*?\'' : '\'a\'' } } } } }
+                §concatenation§multi2 { concatenationItem { simpleItem { terminal { LITERAL { '\'(?:\\?.)*?\'' : '\'a\'' } } } } }
             }
         """.trimIndent())
         assertNotNull(actual)
@@ -229,7 +229,7 @@ class test_OglGrammar_item {
     fun concatenation_literal_3() {
         val actual = parse("concatenation", "'a' 'b' 'c'")
         val expected = this.sppt("""
-            concatenation { §multi2 {
+            concatenation { §concatenation§multi2 {
                 concatenationItem { simpleItem { terminal { LITERAL { '\'(?:\\?.)*?\'' : '\'a\'' WHITESPACE { '\s+' : ' ' } } } } }
                 concatenationItem { simpleItem { terminal { LITERAL { '\'(?:\\?.)*?\'' : '\'b\'' WHITESPACE { '\s+' : ' ' } } } } }
                 concatenationItem { simpleItem { terminal { LITERAL { '\'(?:\\?.)*?\'' : '\'c\'' } } } }
@@ -244,7 +244,7 @@ class test_OglGrammar_item {
         val actual = parse("concatenation", "a")
         val expected = this.sppt("""
             concatenation {
-                §multi2 { concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' } } } } }
+                §concatenation§multi2 { concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' } } } } }
             }
         """.trimIndent())
         assertNotNull(actual)
@@ -255,7 +255,7 @@ class test_OglGrammar_item {
     fun concatenation_nonTerminal_3() {
         val actual = parse("concatenation", "a b c")
         val expected = this.sppt("""
-            concatenation { §multi2 {
+            concatenation { §concatenation§multi2 {
                 concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
                 concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
                 concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'c' } } } }

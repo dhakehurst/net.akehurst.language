@@ -167,7 +167,7 @@ class RuntimeRule(
         return result
     }
 
-    fun findTerminalAt(n: Int, runtimeRuleSet: RuntimeRuleSet): Set<RuntimeRule> {
+    fun findTerminalAt(n: Int): Set<RuntimeRule> {
         return if (this.isTerminal) {
             setOf(this);
         } else {
@@ -376,7 +376,7 @@ class RuntimeRule(
                 RuntimeRuleItemKind.EMPTY -> return true
                 RuntimeRuleItemKind.CHOICE_EQUAL -> return this.rhs.items.any { newchecked.contains(it) || it.canBeEmpty(newchecked) }
                 RuntimeRuleItemKind.CHOICE_PRIORITY -> return this.rhs.items.any { newchecked.contains(it) || it.canBeEmpty(newchecked) }
-                RuntimeRuleItemKind.CONCATENATION -> return return this.rhs.items.all { newchecked.contains(it) || it.canBeEmpty(newchecked) }
+                RuntimeRuleItemKind.CONCATENATION -> return this.rhs.items.all { newchecked.contains(it) || it.canBeEmpty(newchecked) }
                 RuntimeRuleItemKind.MULTI -> return 0 == this.rhs.multiMin
                 RuntimeRuleItemKind.SEPARATED_LIST -> return 0 == this.rhs.multiMin
 
@@ -442,10 +442,9 @@ class RuntimeRule(
         return this.number
     }
 
-    override fun equals(arg: Any?): Boolean {
-        if (arg is RuntimeRule) {
-            val other = arg as RuntimeRule?
-            return this.number == other?.number
+    override fun equals(other: Any?): Boolean {
+        if (other is RuntimeRule) {
+            return this.number == other.number
         } else {
             return false
         }

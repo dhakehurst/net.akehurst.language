@@ -44,7 +44,7 @@ class test_SPPTParser {
 
         val sut = SPPTParser(rrb)
 
-        val actual = sut.leaf("a", 0, 1)
+        val actual = sut.leaf("a", 0)
 
         assertNotNull(actual)
         assertTrue(actual.isLeaf)
@@ -64,7 +64,7 @@ class test_SPPTParser {
 
         val sut = SPPTParser(rrb)
 
-        val actual = sut.leaf("[a-z]", "a", 0, 5)
+        val actual = sut.leaf("[a-z]", "a", 0)
 
         assertNotNull(actual)
         assertTrue(actual.isLeaf)

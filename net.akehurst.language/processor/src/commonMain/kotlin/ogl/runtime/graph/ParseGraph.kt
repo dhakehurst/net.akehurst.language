@@ -30,10 +30,6 @@ internal class ParseGraph(
         private val goalRule: RuntimeRule,
         private val input: InputFromCharSequence
 ) {
-
-    // TODO: remove, this is for test
-    internal var with = true
-
     private val leaves: MutableMap<LeafIndex, SPPTLeafDefault> = mutableMapOf()
     private val completeNodes: MutableMap<SPPTNodeIdentity, SPPTNodeDefault> = mutableMapOf()
     internal val growing: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
@@ -96,7 +92,6 @@ internal class ParseGraph(
     }
 
     fun createBranchNoChildren(runtimeRule: RuntimeRule, priority: Int, startPosition: Int, nextInputPosition: Int): SPPTBranchDefault {
-        val children = emptyList<SPPTNode>()
         val cn = SPPTBranchDefault(runtimeRule, startPosition, nextInputPosition, priority)
         this.completeNodes.put(cn.identity, cn)
         return cn
@@ -176,27 +171,25 @@ internal class ParseGraph(
     private fun findOrCreateGrowingLeaf(leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>) {
         this.addGrowing(stack, previous)
         // TODO: remove, this is for test
-        if (this.with) {
-            for (info in previous) {
-                this.addGrowing(info.node)
-            }
+        for (info in previous) {
+            this.addGrowing(info.node)
         }
+
         val ruleNumber = leafNode.runtimeRuleNumber
         val startPosition = leafNode.startPosition
         val nextInputPosition = leafNode.nextInputPosition
         val nextItemIndex = -1
         val gnindex = GrowingNodeIndex(ruleNumber, startPosition, nextInputPosition, nextItemIndex)
         val existing = this.growing[gnindex]
-        var actual: GrowingNode? = null
         if (null == existing) {
             val runtimeRule = leafNode.runtimeRule
             val nn = GrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, 0, emptyList(), 0)
             nn.addPrevious(stack, stack.nextItemIndex)
             // this.growing.put(gnindex, nn);
-            actual = this.addGrowingHead(gnindex, nn)
+            this.addGrowingHead(gnindex, nn)
         } else {
             existing.addPrevious(stack, stack.nextItemIndex)
-            actual = this.addGrowingHead(gnindex, existing)
+            this.addGrowingHead(gnindex, existing)
         }
     }
 
@@ -205,15 +198,12 @@ internal class ParseGraph(
         val ruleNumber = runtimeRule.number
         val gnindex = GrowingNodeIndex(ruleNumber, startPosition, nextInputPosition, nextItemIndex)
         val existing = this.growing.get(gnindex)
-        var result: GrowingNode? = null
+        var result: GrowingNode?
         if (null == existing) {
             val nn = GrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children, numNonSkipChildren)
             for (info in previous) {
                 nn.addPrevious(info.node, info.atPosition)
-                // TODO: remove, this is for test
-                if (this.with) {
-                    this.addGrowing(info.node)
-                }
+                this.addGrowing(info.node)
             }
             this.addGrowingHead(gnindex, nn)
             if (nn.hasCompleteChildren) {
@@ -223,10 +213,7 @@ internal class ParseGraph(
         } else {
             for (info in previous) {
                 existing.addPrevious(info.node, info.atPosition)
-                // TODO: remove, this is for test
-                if (this.with) {
-                    this.addGrowing(info.node)
-                }
+                this.addGrowing(info.node)
             }
             this.addGrowingHead(gnindex, existing)
             result = existing
@@ -306,7 +293,7 @@ internal class ParseGraph(
                         // therefore existing node should be the higher item in the tree
                         // which it is, so change nothing
                         // do nothing, drop new one
-                        val i = 0
+                        //val i = 0
                     } else if (newPriority > existingPriority) {
                         // replace existing with new
                         cn.childrenAlternatives.clear()
@@ -333,7 +320,7 @@ internal class ParseGraph(
             pi.node.removeNext(parent)
         }
         val numNonSkipChildren = if (nextChild.isSkip) parent.numNonSkipChildren else parent.numNonSkipChildren + 1
-        val gn = this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children,
+        this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children,
                 numNonSkipChildren, previous)
         if (parent.next.isEmpty()) {
             this.removeGrowing(parent)
@@ -343,10 +330,7 @@ internal class ParseGraph(
     fun pop(gn: GrowingNode): Set<PreviousInfo> {
         for (pi in gn.previous) {
             pi.node.removeNext(gn)
-            // TODO: remove, this is for test
-            if (this.with) {
-                this.removeGrowing(pi.node)
-            }
+            this.removeGrowing(pi.node)
         }
         val previous = gn.previous
         gn.newPrevious()
@@ -378,7 +362,7 @@ internal class ParseGraph(
                              previous: Set<PreviousInfo>) {
         val startPosition = firstChild.startPosition
         val nextInputPosition = firstChild.nextInputPosition
-        var nextItemIndex = 0
+        var nextItemIndex:Int
         when (runtimeRule.rhs.kind) {
             RuntimeRuleItemKind.CHOICE_EQUAL -> nextItemIndex = -1
             RuntimeRuleItemKind.CHOICE_PRIORITY -> nextItemIndex = -1

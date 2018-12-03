@@ -102,13 +102,13 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
             (target is Choice && target.alternative.size == 1) -> {
                 // only one choice, so can create a concatination
                 val rhsItem = target.alternative[0]
-                val items = rhsItem.items.map { it.accept(this, "") as RuntimeRule }
+                val items = rhsItem.items.map { it.accept(this, arg) as RuntimeRule }
                 RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, items.toTypedArray())
             }
             (target is Choice) -> {
                 val items = target.alternative.map {
                     if (it.items.size == 1) {
-                        it.items[0].accept(this, "") as RuntimeRule
+                        it.items[0].accept(this, arg) as RuntimeRule
                     } else {
                         val thisChoiceName = builder.createChoiceRuleName(arg)
                         val thisChoiceItems = it.items.map { it.accept(this, thisChoiceName) as RuntimeRule }
