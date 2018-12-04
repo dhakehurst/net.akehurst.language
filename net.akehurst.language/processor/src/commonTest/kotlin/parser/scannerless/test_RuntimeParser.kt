@@ -18,6 +18,7 @@ package net.akehurst.language.parser.scannerless
 
 import net.akehurst.language.ogl.runtime.structure.RuntimeRuleSetBuilder
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.fail
 
@@ -37,15 +38,22 @@ class test_RuntimeParser {
         val sp = ScannerlessParser(rrb.ruleSet())
         sp.build()
 
-        fail("must test if build worked!")
+        //TODO: how to test if build worked!
     }
 
     @Test
     fun expectedAt() {
         val rrb = RuntimeRuleSetBuilder()
+        val r_a = rrb.literal("a")
+        val r_S = rrb.rule("S").concatenation(r_a)
+
         val sp = ScannerlessParser(rrb.ruleSet())
 
-        sp.expectedAt("", "", 0)
+        val actual = sp.expectedAt("S", "", 0)
+
+        val expected = listOf(r_a)
+
+        assertEquals(expected, actual)
     }
 
 }

@@ -1,0 +1,1 @@
+compoundSentence | Mary lives in New York and come here.
