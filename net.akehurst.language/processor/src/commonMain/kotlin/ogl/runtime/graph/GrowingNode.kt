@@ -124,7 +124,8 @@ class GrowingNode(
         r += this.startPosition.toString() + ","
         r += this.nextInputPosition.toString() + ","
         r += if (this.hasCompleteChildren) "C" else this.nextItemIndex
-        r += ":" + this.runtimeRule.name + "(" + this.runtimeRule.number + ")"
+        val name = if (this.runtimeRule.isTerminal) "'${this.runtimeRule.patternText}'" else this.runtimeRule.name
+        r += ":" + name + "(" + this.runtimeRule.number + ")"
 
         if (withChildren) {
             if (this.isLeaf) {

@@ -91,12 +91,18 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         val rp = RuntimeParser(this.runtimeRuleSet, graph)
 
         rp.start(goalRule)
-        println("1] "+graph.growingHead)
         var seasons = 1
+ //       println("[$seasons] ")
+ //       graph.growingHead.forEach {
+ //           println("  $it")
+ //       }
 
         do {
             rp.grow()
-            println(""+seasons+"] "+graph.growingHead)
+//            println("[$seasons] ")
+//            graph.growingHead.forEach {
+//                println("  $it")
+ //           }
             seasons++
         } while (rp.canGrow)
 
@@ -114,8 +120,6 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
 
         rp.start(goalRule)
         var seasons = 1
-
-
 
         // final int length = text.length();
         val matches = mutableListOf<GrowingNode>()

@@ -337,12 +337,13 @@ class RuntimeRule(
                     } else {
                         var nextItem = this.rhs.items[nextItemIndex]
                         val res = mutableSetOf(nextItem)
-                        var i = nextItemIndex+1
-                        while (nextItem.canBeEmpty(setOf()) && i < this.rhs.items.size) {
-                            nextItem = this.rhs.items[i]
-                            res.add(nextItem)
-                            ++i
-                        }
+                        //TODO: I don't think we need this....or do we?
+                        //var i = nextItemIndex+1
+                        //while (nextItem.canBeEmpty(setOf()) && i < this.rhs.items.size) {
+                        //    nextItem = this.rhs.items[i]
+                         //   res.add(nextItem)
+                        //    ++i
+                        //}
                         res
                     }
                 }

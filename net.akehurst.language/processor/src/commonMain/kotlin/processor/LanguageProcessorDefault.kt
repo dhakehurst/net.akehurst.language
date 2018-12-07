@@ -36,8 +36,9 @@ internal class LanguageProcessorDefault(val grammar: Grammar, val semanticAnalys
     private val parser: Parser = ScannerlessParser(this.converter.transform())
     private val completionProvider: CompletionProvider = CompletionProvider()
 
-    override fun build() {
+    override fun build() : LanguageProcessor {
         this.parser.build()
+        return this;
     }
 
     override fun scan(inputText: CharSequence): List<SPPTLeaf> {

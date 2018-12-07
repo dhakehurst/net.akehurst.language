@@ -15,9 +15,10 @@
  */
 package net.akehurst.language.api.parser;
 
-class InputLocation(
+data class InputLocation(
         val column: Int,
         val line: Int,
         val length: Int
 ) {
+
 }

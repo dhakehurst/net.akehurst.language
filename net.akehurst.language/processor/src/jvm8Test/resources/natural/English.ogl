@@ -14,7 +14,7 @@ grammar English
         | interrogative-sentence
         | imperative-sentence
         | conditional-sentence
-       ;
+        ;
 
     compound-sentence
         = simple-sentence CONJUNCTION simple-sentence

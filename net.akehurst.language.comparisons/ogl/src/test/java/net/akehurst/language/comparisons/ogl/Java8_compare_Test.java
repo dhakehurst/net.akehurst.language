@@ -46,52 +46,52 @@ public class Java8_compare_Test {
     static LanguageProcessor oglOptm1Java8Processor = getOglOptm1Java8Processor();
 
     static LanguageProcessor getOglSpecJava8Processor() {
-        if (null == Java8_Test2.oglSpecJava8Processor) {
+        if (null == oglSpecJava8Processor) {
             try {
                 final Path grammarFile = Paths.get("src/test/ogl/Java8Spec.ogl");
                 final byte[] bytes = Files.readAllBytes(grammarFile);
                 final String javaGrammarStr = new String(bytes);
-                Java8_Test2.oglSpecJava8Processor = Ogl.processor(javaGrammarStr);
-                Java8_Test2.oglSpecJava8Processor.build();
+                oglSpecJava8Processor = Ogl.processor(javaGrammarStr);
+                oglSpecJava8Processor.build();
             } catch (final Exception e) {
                 e.printStackTrace();
                 Assert.fail(e.getMessage());
             }
         }
-        return Java8_Test2.oglSpecJava8Processor;
+        return oglSpecJava8Processor;
     }
 
     static LanguageProcessor getOglOptmAntlr8JavaProcessor() {
-        if (null == Java8_Test2.oglOptmAntlrJava8Processor) {
+        if (null == oglOptmAntlrJava8Processor) {
             try {
                 final Path grammarFile = Paths.get("src/test/ogl/Java8OptmAntlr.ogl");
                 final byte[] bytes = Files.readAllBytes(grammarFile);
                 final String javaGrammarStr = new String(bytes);
-                Java8_Test2.oglOptmAntlrJava8Processor = Ogl.processor(javaGrammarStr);
-                Java8_Test2.oglOptmAntlrJava8Processor.build();
+                oglOptmAntlrJava8Processor = Ogl.processor(javaGrammarStr);
+                oglOptmAntlrJava8Processor.build();
             } catch (final Exception e) {
                 e.printStackTrace();
                 Assert.fail(e.getMessage());
             }
         }
-        return Java8_Test2.oglOptmAntlrJava8Processor;
+        return oglOptmAntlrJava8Processor;
     }
 
     static LanguageProcessor getOglOptm1Java8Processor() {
-        if (null == Java8_Test2.oglOptm1Java8Processor) {
+        if (null == oglOptm1Java8Processor) {
             try {
                 final Path grammarFile = Paths.get("src/test/ogl/Java8Optm1.ogl");
                 final byte[] bytes = Files.readAllBytes(grammarFile);
                 final String javaGrammarStr = new String(bytes);
-                Java8_Test2.oglOptm1Java8Processor = Ogl.processor(javaGrammarStr);
-                Java8_Test2.oglOptm1Java8Processor.build();
+                oglOptm1Java8Processor = Ogl.processor(javaGrammarStr);
+                oglOptm1Java8Processor.build();
             } catch (final Exception e) {
                 e.printStackTrace();
                 Assert.fail(e.getMessage());
             }
 
         }
-        return Java8_Test2.oglOptm1Java8Processor;
+        return oglOptm1Java8Processor;
     }
 
     static SharedPackedParseTree parseWithOglJava8Spec(final Path file) {
@@ -101,28 +101,31 @@ public class Java8_compare_Test {
             timer.success();
             return tree;
         } catch (final Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
 
     static SharedPackedParseTree parseWithOglJava8OptmAntlr(final Path file) {
         try (TimeLogger timer = new TimeLogger("ogl_optmAntlr", file.toString());) {
-            final SharedPackedParseTree tree = Java8_Test2.oglOptmAntlrJava8Processor.parse("compilationUnit",
-                    Java8_Test2.og_input);
+            final SharedPackedParseTree tree = oglOptmAntlrJava8Processor.parse("compilationUnit",
+                    input);
             timer.success();
             return tree;
         } catch (final Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
 
     static SharedPackedParseTree parseWithOglJava8Optm1(final Path file) {
         try (TimeLogger timer = new TimeLogger("ogl_optm1", file.toString());) {
-            final SharedPackedParseTree tree = Java8_Test2.oglOptm1Java8Processor.parse("compilationUnit",
-                    Java8_Test2.og_input);
+            final SharedPackedParseTree tree = oglOptm1Java8Processor.parse("compilationUnit",
+                    input);
             timer.success();
             return tree;
         } catch (final Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
