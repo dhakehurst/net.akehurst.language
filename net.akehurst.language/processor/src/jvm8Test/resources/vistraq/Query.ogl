@@ -14,7 +14,7 @@ grammar Query {
     timespanDefinition = 'FOR' timeDef nameDefinition? ;
 	timeDef =  time | timespan ;
 	time = 'TIME' timePoint ;
-	timePoint = 'start' | 'now' | timestamp ;
+	timePoint = 'first' | 'now' | 'last' | timestamp ;
 	timestamp = SINGLE_QUOTE_STRING ;
 	timespan = 'TIMESPAN' timeRange 'EVERY' period ;
 	timeRange = 'all' | timePoint 'UNTIL' timePoint ;
@@ -95,7 +95,7 @@ grammar Query {
 
 	aggregateFunctionCallOrExpression = aggregateFunctionCall | expression ;
 	aggregateFunctionCall = aggregateFunctionName '(' expression ')' ;
-    expression	= groupExpression
+    expression  = groupExpression
 				< conditionalExpression
 				< infixFunction
 				< literalValue
@@ -115,7 +115,7 @@ grammar Query {
 	operator = arithmeticOperator | comparisonOperator | logicalOperator ;
 	arithmeticOperator = '+' | '-' | '*' | '/' ;
     comparisonOperator = '==' | '!=' | '<' | '>' | '<=' | '>=' ;
-    logicalOperator= 'AND' | 'OR' | 'XOR' ;
+    logicalOperator: 'AND' | 'OR' | 'XOR' ;
     conditionalExpression = expression '?' expression ':' expression ;
 
 
@@ -139,5 +139,4 @@ grammar Query {
     INTEGER = "[0-9]+" ;
     REAL = "[0-9]+[.][0-9]+" ;
     NULL = 'null' ;
-
 }

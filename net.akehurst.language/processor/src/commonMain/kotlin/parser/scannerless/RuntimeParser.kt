@@ -95,6 +95,7 @@ internal class RuntimeParser(
             if (gn.isSkip) {
                 this.tryGraftBackSkipNode(gn, previous)
             } else {
+
                 // TODO: need to find a way to do either height or graft..not both, maybe!
                 // problem is deciding which
                 // try reduce first
@@ -206,6 +207,7 @@ internal class RuntimeParser(
     private fun tryGraftBack(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var graftBack = false
         for (prev in previous) {
+            //TODO: canGraftBack calls expectsItemAt which calls contains, so it has a nested loop, is it worth caching here?
             if (gn.canGraftBack(prev)) { // if hascompleteChildren && isStacked && prevInfo is valid
                 graftBack = this.tryGraftBack(gn, prev)
             }
@@ -283,10 +285,18 @@ internal class RuntimeParser(
         } else {
             // if node is nextexpected item on stack, or could grow into nextexpected item
             if (stack.hasNextExpectedItem) {
+
+               if (
+                       this.runtimeRuleSet.calcCanGrowInto(completeNode.runtimeRule, stack.runtimeRule, stack.nextItemIndex)
+                   || this.runtimeRuleSet.isSkipTerminal[completeNode.runtimeRule.number]
+               ) {
+                   return true;
+               }
+
                 for (expectedRule in stack.nextExpectedItems) {
                     if (completeNode.runtimeRule.number == expectedRule.number) {
                         // node is nextexpected item on stack
-                        return true
+ //                       return true
                     } else {
                         // node is a possible subnode of nextexpected item
                         if (completeNode.runtimeRule.isNonTerminal) {
@@ -294,21 +304,23 @@ internal class RuntimeParser(
                             val possibles = this.runtimeRuleSet.subNonTerminals[expectedRule.number]
                             val res = possibles.contains(completeNode.runtimeRule)
                             if (res) {
-                                return true
+ //                               return true
                             }
                         } else {
                             //TODO: can we change this so that we don't have to test using 'contains' ? (and above) ?
                             val possibles = this.runtimeRuleSet.subTerminals[expectedRule.number]
                             val res = possibles.contains(completeNode.runtimeRule)
                             if (res) {
-                                return true
+  //                              return true
                             }
 
                         }
                     }
                 }
+
                 return false
-            } else return if (this.runtimeRuleSet.allSkipTerminals.contains(completeNode.runtimeRule)) {
+//            } else return if (this.runtimeRuleSet.allSkipTerminals.contains(completeNode.runtimeRule)) {
+            } else return if (this.runtimeRuleSet.isSkipTerminal[completeNode.runtimeRule.number]) { //should be faster, hard to tell!
                 true
             } else {
                 false

@@ -19,7 +19,7 @@
 
 //apply plugin: 'kotlin-platform-common'
 plugins {
-    id 'org.jetbrains.kotlin.multiplatform' version '1.3.10'
+    id 'org.jetbrains.kotlin.multiplatform' version '1.3.11'
     id("io.gitlab.arturbosch.detekt").version("1.0.0-RC10")
     id 'com.moowork.node' version "1.2.0"
     id 'maven-publish'
@@ -68,23 +68,23 @@ kotlin {
         }
         jvm8Main {
             dependencies {
-                implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+                implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${version_kotlin}"
             }
         }
         jvm8Test {
             dependencies {
-                implementation 'org.jetbrains.kotlin:kotlin-test'
-                implementation 'org.jetbrains.kotlin:kotlin-test-junit'
+                implementation "org.jetbrains.kotlin:kotlin-test:${version_kotlin}"
+                implementation "org.jetbrains.kotlin:kotlin-test-junit:${version_kotlin}"
             }
         }
         jsMain {
             dependencies {
-                implementation 'org.jetbrains.kotlin:kotlin-stdlib-js'
+                implementation "org.jetbrains.kotlin:kotlin-stdlib-js:${version_kotlin}"
             }
         }
         jsTest {
             dependencies {
-                implementation 'org.jetbrains.kotlin:kotlin-test-js'
+                implementation "org.jetbrains.kotlin:kotlin-test-js:${version_kotlin}"
             }
         }
     }

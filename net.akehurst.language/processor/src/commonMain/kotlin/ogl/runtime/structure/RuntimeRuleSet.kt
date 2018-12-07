@@ -19,8 +19,12 @@ package net.akehurst.language.ogl.runtime.structure
 import net.akehurst.language.api.parser.ParseException
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.parser.ParserConstructionFailedException
+import net.akehurst.language.ogl.runtime.graph.GrowingNode
+import net.akehurst.language.ogl.runtime.graph.PreviousInfo
 
 class RuntimeRuleSet(rules: List<RuntimeRule>) {
+
+    enum class ParseAction { HEIGHT, GRAFT, WIDTH }
 
     //TODO: are Arrays faster than Lists?
     val runtimeRules: Array<out RuntimeRule> by lazy {
@@ -103,6 +107,27 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
     }
 
+    fun getActions(gn:GrowingNode, previous:Set<PreviousInfo>) : List<ParseAction> {
+        val result = mutableListOf<ParseAction>()
+/*
+        if (gn.hasCompleteChildren && !previous.isEmpty()) {
+            result.add(ParseAction.HEIGHT)
+        }
+
+        var b = false
+        val x = gn.isEmptyMatch && (info.node.runtimeRule.rhs.kind == RuntimeRuleItemKind.MULTI || info.node.runtimeRule.rhs.kind == RuntimeRuleItemKind.SEPARATED_LIST) && info.node.numNonSkipChildren != 0
+        b = b or (info.node.expectsItemAt(gn.runtimeRule, info.atPosition) && !x)
+        if (gn.hasCompleteChildren) {
+            result.add(ParseAction.GRAFT)
+        }
+
+        if (gn.canGrowWidth) {
+            result.add(ParseAction.WIDTH)
+        }
+*/
+        return result;
+    }
+
     fun findRuntimeRule(ruleName: String): RuntimeRule {
         val number = this.nonTerminalRuleNumber[ruleName]
                 ?: throw ParseException("NonTerminal RuntimeRule '${ruleName}' not found")
@@ -163,15 +188,19 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     /**
-     * return the set of SuperRules for which childRule can grow (at some point) into ancesstorRule at position ancesstorItemIndex
+     * return the set of SuperRules for which
+     * childRule can grow (at some point)
+     * into ancesstorRule
+     * at position ancesstorItemIndex
      */
     fun calcGrowsInto(childRule: RuntimeRule, ancesstorRule: RuntimeRule, ancesstorItemIndex: Int): List<RuntimeRule> {
         return this.firstSuperNonTerminal[childRule.number].filter {
-            this.canGrowInto(it, ancesstorRule, ancesstorItemIndex)
+            this.calcCanGrowInto(it, ancesstorRule, ancesstorItemIndex)
         }
     }
 
-    private fun canGrowInto(childRule: RuntimeRule, ancesstorRule: RuntimeRule, ancesstorItemIndex: Int): Boolean {
+    //TODO: should be private and only a cache is public
+     fun calcCanGrowInto(childRule: RuntimeRule, ancesstorRule: RuntimeRule, ancesstorItemIndex: Int): Boolean {
         return if (-1 == ancesstorItemIndex) {
             false
         } else {
