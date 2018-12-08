@@ -14,11 +14,12 @@ class test_RuntimeRuleSet_canGrowInto {
     fun canGrowInto_empty() {
         val rb = RuntimeRuleSetBuilder()
 
-        val r_S = rb.rule("S").empty()
+        val r_e = rb.rule("e").empty()
+        val r_S = rb.rule("S").concatenation(r_e)
 
         val sut = rb.ruleSet()
 
-        val actual = sut.calcCanGrowInto(r_a, r_S, 0)
+        val actual = sut.calcCanGrowInto(r_e, r_S, 0)
         assertEquals(true, actual)
     }
 
@@ -136,22 +137,33 @@ class test_RuntimeRuleSet_canGrowInto {
         val rb = RuntimeRuleSetBuilder()
         val r_a = rb.literal("a")
         val r_b = rb.literal("b")
-        val r_S = rb.rule("S").choiceEqual(r_a, r_b)
+        val r_c = rb.literal("c")
+        val r_S = rb.rule("S").choiceEqual(r_a, r_b, r_c)
 
         val sut = rb.ruleSet()
 
-        val actual1 = sut.calcCanGrowInto(r_a, r_S, 0)
-        assertEquals(true, actual1)
+        var actual = sut.calcCanGrowInto(r_a, r_S, 0)
+        assertEquals(true, actual)
 
-        val actual2 = sut.calcCanGrowInto(r_b, r_S, 0)
-        assertEquals(true, actual2)
+        actual = sut.calcCanGrowInto(r_b, r_S, 0)
+        assertEquals(true, actual)
+
+        actual = sut.calcCanGrowInto(r_b, r_S, 1)
+        assertEquals(false, actual)
+
+        actual = sut.calcCanGrowInto(r_c, r_S, 0)
+        assertEquals(true, actual)
+
+        actual = sut.calcCanGrowInto(r_c, r_S, 1)
+        assertEquals(false, actual)
+
     }
 
     /**
      *   S = 'a' ;
      */
     @Test
-    fun canGrowInto_choicePriority_1() {
+    fun canGrowInto_choicePriority_a() {
         val rb = RuntimeRuleSetBuilder()
         val r_a = rb.literal("a")
         val r_S = rb.rule("S").choicePriority(r_a)
@@ -166,39 +178,62 @@ class test_RuntimeRuleSet_canGrowInto {
     }
 
     /**
+     *   S = 'a' < 'b' ;
+     */
+    @Test
+    fun canGrowInto_choicePriority_ab() {
+
+    }
+
+    /**
+     *   S = 'a' < 'b' < 'c' ;
+     */
+    @Test
+    fun canGrowInto_choicePriority_abc() {
+
+    }
+
+    /**
      *   S = 'a'?;
      */
     @Test
-    fun canGrowInto_multi01_1() {
+    fun canGrowInto_multi01_a() {
         val rb = RuntimeRuleSetBuilder()
-
-        val r_S = rb.rule("S").choicePriority(r_a)
+        val r_a = rb.literal("a")
+        val r_S = rb.rule("S").multi(0,1,r_a)
 
         val sut = rb.ruleSet()
 
-        val actual = sut.calcCanGrowInto(r_a, r_S, 0)
+        var actual = sut.calcCanGrowInto(r_a, r_S, 0)
         assertEquals(true, actual)
 
-        val actual2 = sut.calcCanGrowInto(r_a, r_S, 1)
-        assertEquals(false, actual2)
+        actual = sut.calcCanGrowInto(r_a, r_S, 1)
+        assertEquals(false, actual)
+
+        actual = sut.calcCanGrowInto(r_a, r_S, 2)
+        assertEquals(false, actual)
+
     }
 
     /**
      *   S = 'a'+;
      */
     @Test
-    fun canGrowInto_multi1n_1() {
+    fun canGrowInto_multi1n_a() {
         val rb = RuntimeRuleSetBuilder()
-
-        val r_S = rb.rule("S").choicePriority(r_a)
+        val r_a = rb.literal("a")
+        val r_S = rb.rule("S").multi(1,-1,r_a)
 
         val sut = rb.ruleSet()
 
-        val actual = sut.calcCanGrowInto(r_a, r_S, 0)
+        var actual = sut.calcCanGrowInto(r_a, r_S, 0)
         assertEquals(true, actual)
 
-        val actual2 = sut.calcCanGrowInto(r_a, r_S, 1)
-        assertEquals(false, actual2)
+        actual = sut.calcCanGrowInto(r_a, r_S, 1)
+        assertEquals(false, actual)
+
+        actual = sut.calcCanGrowInto(r_a, r_S, 2)
+        assertEquals(false, actual)
     }
 
     /**
@@ -207,16 +242,19 @@ class test_RuntimeRuleSet_canGrowInto {
     @Test
     fun canGrowInto_multi0n_1() {
         val rb = RuntimeRuleSetBuilder()
-
-        val r_S = rb.rule("S").choicePriority(r_a)
+        val r_a = rb.literal("a")
+        val r_S = rb.rule("S").multi(0,-1,r_a)
 
         val sut = rb.ruleSet()
 
-        val actual = sut.calcCanGrowInto(r_a, r_S, 0)
+        var actual = sut.calcCanGrowInto(r_a, r_S, 0)
         assertEquals(true, actual)
 
-        val actual2 = sut.calcCanGrowInto(r_a, r_S, 1)
-        assertEquals(false, actual2)
+        actual = sut.calcCanGrowInto(r_a, r_S, 1)
+        assertEquals(false, actual)
+
+        actual = sut.calcCanGrowInto(r_a, r_S, 2)
+        assertEquals(false, actual)
     }
 
     /**
@@ -225,16 +263,31 @@ class test_RuntimeRuleSet_canGrowInto {
     @Test
     fun canGrowInto_multi25_1() {
         val rb = RuntimeRuleSetBuilder()
-
-        val r_S = rb.rule("S").choicePriority(r_a)
+        val r_a = rb.literal("a")
+        val r_S = rb.rule("S").multi(2,5,r_a)
 
         val sut = rb.ruleSet()
 
-        val actual = sut.calcCanGrowInto(r_a, r_S, 0)
+        var actual = sut.calcCanGrowInto(r_a, r_S, 0)
         assertEquals(true, actual)
 
-        val actual2 = sut.calcCanGrowInto(r_a, r_S, 1)
-        assertEquals(false, actual2)
+        actual = sut.calcCanGrowInto(r_a, r_S, 1)
+        assertEquals(false, actual)
+
+        actual = sut.calcCanGrowInto(r_a, r_S, 2)
+        assertEquals(false, actual)
+
+        actual = sut.calcCanGrowInto(r_a, r_S, 3)
+        assertEquals(false, actual)
+
+        actual = sut.calcCanGrowInto(r_a, r_S, 4)
+        assertEquals(false, actual)
+
+        actual = sut.calcCanGrowInto(r_a, r_S, 5)
+        assertEquals(false, actual)
+
+        actual = sut.calcCanGrowInto(r_a, r_S, 6)
+        assertEquals(false, actual)
     }
 
     /**
