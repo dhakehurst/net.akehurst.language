@@ -75,7 +75,7 @@ class GrowingNode(
         }
 
     val nextExpectedItems: Set<RuntimeRule> by lazy {
-        this.runtimeRule.findNextExpectedItems(this.nextItemIndex, this.numNonSkipChildren)
+        this.runtimeRule.findNextExpectedItems(this.nextItemIndex)
     }
 
     val incrementedNextItemIndex: Int get(){

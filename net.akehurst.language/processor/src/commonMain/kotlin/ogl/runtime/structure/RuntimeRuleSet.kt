@@ -140,12 +140,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return this.runtimeRules[number]
     }
 
-    fun findNextExpectedItems(runtimeRule: RuntimeRule, nextItemIndex: Int, numNonSkipChildren: Int): Set<RuntimeRule> {
-        return runtimeRule.findNextExpectedItems(nextItemIndex, numNonSkipChildren)
+    fun findNextExpectedItems(runtimeRule: RuntimeRule, nextItemIndex: Int): Set<RuntimeRule> {
+        return runtimeRule.findNextExpectedItems(nextItemIndex)
     }
 
-    fun findNextExpectedTerminals(runtimeRule: RuntimeRule, nextItemIndex: Int, numNonSkipChildren: Int): Set<RuntimeRule> {
-        val nextItems = this.findNextExpectedItems(runtimeRule, nextItemIndex, numNonSkipChildren)
+    fun findNextExpectedTerminals(runtimeRule: RuntimeRule, nextItemIndex: Int): Set<RuntimeRule> {
+        val nextItems = this.findNextExpectedItems(runtimeRule, nextItemIndex)
         val result = mutableSetOf<RuntimeRule>()
         nextItems.forEach {
             result += this.firstTerminals[it.number]
@@ -204,7 +204,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return if (-1 == ancesstorItemIndex) {
             false
         } else {
-            val nextExpectedForStacked = this.findNextExpectedItems(ancesstorRule, ancesstorItemIndex, 0)
+            val nextExpectedForStacked = this.findNextExpectedItems(ancesstorRule, ancesstorItemIndex)
             if (nextExpectedForStacked.contains(childRule)) {
                 true
             } else {
