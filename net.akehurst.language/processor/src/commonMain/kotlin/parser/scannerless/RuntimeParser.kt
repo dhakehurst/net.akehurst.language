@@ -292,7 +292,7 @@ internal class RuntimeParser(
                ) {
                    return true;
                }
-
+/*
                 for (expectedRule in stack.nextExpectedItems) {
                     if (completeNode.runtimeRule.number == expectedRule.number) {
                         // node is nextexpected item on stack
@@ -317,7 +317,7 @@ internal class RuntimeParser(
                         }
                     }
                 }
-
+*/
                 return false
 //            } else return if (this.runtimeRuleSet.allSkipTerminals.contains(completeNode.runtimeRule)) {
             } else return if (this.runtimeRuleSet.isSkipTerminal[completeNode.runtimeRule.number]) { //should be faster, hard to tell!

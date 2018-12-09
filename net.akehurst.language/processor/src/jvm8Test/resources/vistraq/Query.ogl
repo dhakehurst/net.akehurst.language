@@ -115,7 +115,7 @@ grammar Query {
 	operator = arithmeticOperator | comparisonOperator | logicalOperator ;
 	arithmeticOperator = '+' | '-' | '*' | '/' ;
     comparisonOperator = '==' | '!=' | '<' | '>' | '<=' | '>=' ;
-    logicalOperator: 'AND' | 'OR' | 'XOR' ;
+    logicalOperator = 'AND' | 'OR' | 'XOR' ;
     conditionalExpression = expression '?' expression ':' expression ;
 
 

@@ -277,7 +277,7 @@ class RuntimeRule(
             }
         }
         */
-        var result = setOf(this).transitveClosure { it.findAllNonTerminalAt(n) }
+        var result = setOf(this).transitveClosure { it.findAllNonTerminalAt(n)+it.findTerminalAt(n) }
         return result
     }
 

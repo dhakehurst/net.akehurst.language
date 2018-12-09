@@ -244,8 +244,6 @@ class test_RuntimeRuleSet_canGrowInto {
 
         val sut = rb.ruleSet()
 
-        //TODO: test empty !
-
         var actual = sut.calcCanGrowInto(r_a, r_S, 0)
         assertEquals(true, actual)
 
@@ -274,14 +272,16 @@ class test_RuntimeRuleSet_canGrowInto {
 
         val sut = rb.ruleSet()
 
+        assertEquals(2, rb.rules.size) // there is no empty to grow
+
         var actual = sut.calcCanGrowInto(r_a, r_S, 0)
         assertEquals(true, actual)
 
         actual = sut.calcCanGrowInto(r_a, r_S, 1)
-        assertEquals(false, actual)
+        assertEquals(true, actual)
 
         actual = sut.calcCanGrowInto(r_a, r_S, 2)
-        assertEquals(false, actual)
+        assertEquals(true, actual)
     }
 
     /**
@@ -292,6 +292,7 @@ class test_RuntimeRuleSet_canGrowInto {
         val rb = RuntimeRuleSetBuilder()
         val r_a = rb.literal("a")
         val r_S = rb.rule("S").multi(0,-1,r_a)
+        val r_e = rb.rules[2]
 
         val sut = rb.ruleSet()
 
@@ -299,10 +300,17 @@ class test_RuntimeRuleSet_canGrowInto {
         assertEquals(true, actual)
 
         actual = sut.calcCanGrowInto(r_a, r_S, 1)
-        assertEquals(false, actual)
+        assertEquals(true, actual)
 
         actual = sut.calcCanGrowInto(r_a, r_S, 2)
+        assertEquals(true, actual)
+
+        actual = sut.calcCanGrowInto(r_e, r_S, 0)
+        assertEquals(true, actual)
+
+        actual = sut.calcCanGrowInto(r_e, r_S, 1)
         assertEquals(false, actual)
+
     }
 
     /**
@@ -320,16 +328,16 @@ class test_RuntimeRuleSet_canGrowInto {
         assertEquals(true, actual)
 
         actual = sut.calcCanGrowInto(r_a, r_S, 1)
-        assertEquals(false, actual)
+        assertEquals(true, actual)
 
         actual = sut.calcCanGrowInto(r_a, r_S, 2)
-        assertEquals(false, actual)
+        assertEquals(true, actual)
 
         actual = sut.calcCanGrowInto(r_a, r_S, 3)
-        assertEquals(false, actual)
+        assertEquals(true, actual)
 
         actual = sut.calcCanGrowInto(r_a, r_S, 4)
-        assertEquals(false, actual)
+        assertEquals(true, actual)
 
         actual = sut.calcCanGrowInto(r_a, r_S, 5)
         assertEquals(false, actual)
@@ -356,13 +364,28 @@ class test_RuntimeRuleSet_canGrowInto {
         actual = sut.calcCanGrowInto(r_a, r_S, 1)
         assertEquals(false, actual)
 
+        actual = sut.calcCanGrowInto(r_a, r_S, 2)
+        assertEquals(true, actual)
+
+        actual = sut.calcCanGrowInto(r_a, r_S, 3)
+        assertEquals(false, actual)
+
+        actual = sut.calcCanGrowInto(r_a, r_S, 4)
+        assertEquals(true, actual)
+
         actual = sut.calcCanGrowInto(r_s, r_S, 0)
         assertEquals(false, actual)
 
         actual = sut.calcCanGrowInto(r_s, r_S, 1)
+        assertEquals(true, actual)
+
+        actual = sut.calcCanGrowInto(r_s, r_S, 2)
         assertEquals(false, actual)
 
-        actual = sut.calcCanGrowInto(r_a, r_S, 2)
+        actual = sut.calcCanGrowInto(r_s, r_S, 3)
+        assertEquals(true, actual)
+
+        actual = sut.calcCanGrowInto(r_s, r_S, 4)
         assertEquals(false, actual)
     }
 
@@ -375,22 +398,43 @@ class test_RuntimeRuleSet_canGrowInto {
         val r_a = rb.literal("a")
         val r_s = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0,-1, r_s, r_a)
-
+        val r_e = rb.rules[3]
         val sut = rb.ruleSet()
 
-        var actual = sut.calcCanGrowInto(r_a, r_S, 0)
+        var actual = sut.calcCanGrowInto(r_e, r_S, 0)
+        assertEquals(true, actual)
+
+        actual = sut.calcCanGrowInto(r_e, r_S, 1)
+        assertEquals(false, actual)
+
+        actual = sut.calcCanGrowInto(r_a, r_S, 0)
         assertEquals(true, actual)
 
         actual = sut.calcCanGrowInto(r_a, r_S, 1)
         assertEquals(false, actual)
 
+        actual = sut.calcCanGrowInto(r_a, r_S, 2)
+        assertEquals(true, actual)
+
+        actual = sut.calcCanGrowInto(r_a, r_S, 3)
+        assertEquals(false, actual)
+
+        actual = sut.calcCanGrowInto(r_a, r_S, 4)
+        assertEquals(true, actual)
+
         actual = sut.calcCanGrowInto(r_s, r_S, 0)
         assertEquals(false, actual)
 
         actual = sut.calcCanGrowInto(r_s, r_S, 1)
+        assertEquals(true, actual)
+
+        actual = sut.calcCanGrowInto(r_s, r_S, 2)
         assertEquals(false, actual)
 
-        actual = sut.calcCanGrowInto(r_a, r_S, 2)
+        actual = sut.calcCanGrowInto(r_s, r_S, 3)
+        assertEquals(true, actual)
+
+        actual = sut.calcCanGrowInto(r_s, r_S, 4)
         assertEquals(false, actual)
     }
 
