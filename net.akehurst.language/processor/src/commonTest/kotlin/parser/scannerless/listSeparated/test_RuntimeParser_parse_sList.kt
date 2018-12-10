@@ -99,7 +99,7 @@ class test_RuntimeParser_parse_sList {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
+        assertEquals(1, e.location.column)
     }
 
     @Test
@@ -113,7 +113,7 @@ class test_RuntimeParser_parse_sList {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
+        assertEquals(1, e.location.column)
     }
 
     // r = [a / ',']*
@@ -283,17 +283,17 @@ class test_RuntimeParser_parse_sList {
     }
 
 
-    // r = [a / ','][2..5]
+    // r = [a / 'b'][2..5]
     // a = 'a'
-    private fun literal_a25(): ScannerlessParser {
+    private fun literal_ab25(): ScannerlessParser {
         val r0 = rrb.literal("a")
-        val r1 = rrb.rule("r").separatedList(2, 5, rrb.literal(","), r0)
+        val r1 = rrb.rule("r").separatedList(2, 5, rrb.literal("b"), r0)
         return ScannerlessParser(rrb.ruleSet())
     }
 
     @Test
-    fun literal_a25__r__empty_fails() {
-        val sp = literal_a25()
+    fun literal_ab25__r__empty_fails() {
+        val sp = literal_ab25()
         val goalRuleName = "r"
         val inputText = ""
 
@@ -306,8 +306,8 @@ class test_RuntimeParser_parse_sList {
     }
 
     @Test
-    fun literal_a25__r__a_fails() {
-        val sp = literal_a25()
+    fun literal_ab25__r__a_fails() {
+        val sp = literal_ab25()
         val goalRuleName = "r"
         val inputText = "a"
 
@@ -320,80 +320,94 @@ class test_RuntimeParser_parse_sList {
     }
 
     @Test
-    fun literal_a25_a__r__aa() {
-        val sp = literal_a25()
+    fun literal_ab25__r__ab_fails() {
+        val sp = literal_ab25()
         val goalRuleName = "r"
-        val inputText = "aa"
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
-
-    @Test
-    fun literal_a25__r__aaa() {
-        val sp = literal_a25()
-        val goalRuleName = "r"
-        val inputText = "aaa"
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'a' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
-
-    @Test
-    fun literal_a25__r__aaaa() {
-        val sp = literal_a25()
-        val goalRuleName = "r"
-        val inputText = "aaaa"
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'a' 'a' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
-
-    @Test
-    fun literal_a25__r__aaaaa() {
-        val sp = literal_a25()
-        val goalRuleName = "r"
-        val inputText = "aaaaa"
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'a' 'a' 'a' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
-
-    @Test
-    fun literal_a25__r__a6_fails() {
-        val sp = literal_a25()
-        val goalRuleName = "r"
-        val inputText = "aaaaaa"
+        val inputText = "ab"
 
         val e = assertFailsWith(ParseFailedException::class) {
             test_parse(sp, goalRuleName, inputText)
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(5, e.location.column)
+        assertEquals(2, e.location.column)
+    }
+
+    @Test
+    fun literal_ab25__r__aba() {
+        val sp = literal_ab25()
+        val goalRuleName = "r"
+        val inputText = "aba"
+
+        val actual = test_parse(sp, goalRuleName, inputText)
+
+        assertNotNull(actual)
+
+        val p = SPPTParser(rrb)
+        val expected = p.addTree("r {'a' 'b' 'a'}")
+
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
+    @Test
+    fun literal_ab25__r__ababa() {
+        val sp = literal_ab25()
+        val goalRuleName = "r"
+        val inputText = "ababa"
+
+        val actual = test_parse(sp, goalRuleName, inputText)
+
+        assertNotNull(actual)
+
+        val p = SPPTParser(rrb)
+        val expected = p.addTree("r {'a' 'b' 'a' 'b' 'a'}")
+
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
+    @Test
+    fun literal_ab25__r__abababa() {
+        val sp = literal_ab25()
+        val goalRuleName = "r"
+        val inputText = "abababa"
+
+        val actual = test_parse(sp, goalRuleName, inputText)
+
+        assertNotNull(actual)
+
+        val p = SPPTParser(rrb)
+        val expected = p.addTree("r {'a' 'b' 'a' 'b' 'a' 'b' 'a'}")
+
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
+    @Test
+    fun literal_ab25__r__ababababa() {
+        val sp = literal_ab25()
+        val goalRuleName = "r"
+        val inputText = "ababababa"
+
+        val actual = test_parse(sp, goalRuleName, inputText)
+
+        assertNotNull(actual)
+
+        val p = SPPTParser(rrb)
+        val expected = p.addTree("r {'a' 'b' 'a' 'b' 'a' 'b' 'a' 'b' 'a'}")
+
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
+    @Test
+    fun literal_ab25__r__a6_fails() {
+        val sp = literal_ab25()
+        val goalRuleName = "r"
+        val inputText = "abababababa"
+
+        val e = assertFailsWith(ParseFailedException::class) {
+            test_parse(sp, goalRuleName, inputText)
+        }
+
+        assertEquals(1, e.location.line)
+        assertEquals(9, e.location.column)
     }
 }

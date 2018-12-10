@@ -36,15 +36,15 @@ class test_RuntimeParser_parse_multi {
 
     // r = a?
     // a = 'a'
-    private fun multi_0_1_a(): ScannerlessParser {
+    private fun multi01_a(): ScannerlessParser {
         val r0 = rrb.literal("a")
         val r1 = rrb.rule("r").multi(0, 1, r0)
         return ScannerlessParser(rrb.ruleSet())
     }
 
     @Test
-    fun multi_0_1_a__r__empty() {
-        val sp = multi_0_1_a()
+    fun multi01_a__r__empty() {
+        val sp = multi01_a()
         val goalRuleName = "r"
         val inputText = ""
 
@@ -59,8 +59,8 @@ class test_RuntimeParser_parse_multi {
     }
 
     @Test
-    fun multi_0_1_a__r__a() {
-        val sp = multi_0_1_a()
+    fun multi01_a__r__a() {
+        val sp = multi01_a()
         val goalRuleName = "r"
         val inputText = "a"
 
@@ -76,8 +76,8 @@ class test_RuntimeParser_parse_multi {
 
 
     @Test
-    fun multi_0_1_a__r__aa_fails() {
-        val sp = multi_0_1_a()
+    fun multi01_a__r__aa_fails() {
+        val sp = multi01_a()
         val goalRuleName = "r"
         val inputText = "aa"
 

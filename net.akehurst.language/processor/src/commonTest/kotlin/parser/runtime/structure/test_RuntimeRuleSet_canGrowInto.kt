@@ -274,14 +274,10 @@ class test_RuntimeRuleSet_canGrowInto {
 
         assertEquals(2, rb.rules.size) // there is no empty to grow
 
-        var actual = sut.calcCanGrowInto(r_a, r_S, 0)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 1)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 2)
-        assertEquals(true, actual)
+        for (i in 0 until 15) {
+            val actual = sut.calcCanGrowInto(r_a, r_S, i)
+            assertEquals(true, actual,"index = $i")
+        }
     }
 
     /**
@@ -296,21 +292,19 @@ class test_RuntimeRuleSet_canGrowInto {
 
         val sut = rb.ruleSet()
 
-        var actual = sut.calcCanGrowInto(r_a, r_S, 0)
-        assertEquals(true, actual)
+        for (i in 0 until 15) {
+            val actual = sut.calcCanGrowInto(r_a, r_S, i)
+            assertEquals(true, actual,"index = $i")
+        }
 
-        actual = sut.calcCanGrowInto(r_a, r_S, 1)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 2)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_e, r_S, 0)
+        var actual = sut.calcCanGrowInto(r_e, r_S, 0)
         assertEquals(true, actual)
 
         actual = sut.calcCanGrowInto(r_e, r_S, 1)
         assertEquals(false, actual)
 
+        actual = sut.calcCanGrowInto(r_e, r_S, 2)
+        assertEquals(false, actual)
     }
 
     /**
@@ -324,26 +318,15 @@ class test_RuntimeRuleSet_canGrowInto {
 
         val sut = rb.ruleSet()
 
-        var actual = sut.calcCanGrowInto(r_a, r_S, 0)
-        assertEquals(true, actual)
+        for (i in 0 until 5) {
+            var actual = sut.calcCanGrowInto(r_a, r_S, i)
+            assertEquals(true, actual,"index = $i")
+        }
 
-        actual = sut.calcCanGrowInto(r_a, r_S, 1)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 2)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 3)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 4)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 5)
-        assertEquals(false, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 6)
-        assertEquals(false, actual)
+        for (i in 5 until 15) {
+            var actual = sut.calcCanGrowInto(r_a, r_S, i)
+            assertEquals(false, actual,"index = $i")
+        }
     }
 
     /**
@@ -358,35 +341,18 @@ class test_RuntimeRuleSet_canGrowInto {
 
         val sut = rb.ruleSet()
 
-        var actual = sut.calcCanGrowInto(r_a, r_S, 0)
-        assertEquals(true, actual)
+        for (i in 0 until 12) {
+            var actual_a = sut.calcCanGrowInto(r_a, r_S, i)
+            var actual_s = sut.calcCanGrowInto(r_s, r_S, i)
 
-        actual = sut.calcCanGrowInto(r_a, r_S, 1)
-        assertEquals(false, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 2)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 3)
-        assertEquals(false, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 4)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_s, r_S, 0)
-        assertEquals(false, actual)
-
-        actual = sut.calcCanGrowInto(r_s, r_S, 1)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_s, r_S, 2)
-        assertEquals(false, actual)
-
-        actual = sut.calcCanGrowInto(r_s, r_S, 3)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_s, r_S, 4)
-        assertEquals(false, actual)
+            if (i % 2 == 0) {
+                assertEquals(true, actual_a, "index = $i")
+                assertEquals(false, actual_s, "index = $i")
+            } else {
+                assertEquals(false, actual_a, "index = $i")
+                assertEquals(true, actual_s, "index = $i")
+            }
+        }
     }
 
     /**
@@ -401,41 +367,18 @@ class test_RuntimeRuleSet_canGrowInto {
         val r_e = rb.rules[3]
         val sut = rb.ruleSet()
 
-        var actual = sut.calcCanGrowInto(r_e, r_S, 0)
-        assertEquals(true, actual)
+        for (i in 0 until 12) {
+            var actual_a = sut.calcCanGrowInto(r_a, r_S, i)
+            var actual_s = sut.calcCanGrowInto(r_s, r_S, i)
 
-        actual = sut.calcCanGrowInto(r_e, r_S, 1)
-        assertEquals(false, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 0)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 1)
-        assertEquals(false, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 2)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 3)
-        assertEquals(false, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 4)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_s, r_S, 0)
-        assertEquals(false, actual)
-
-        actual = sut.calcCanGrowInto(r_s, r_S, 1)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_s, r_S, 2)
-        assertEquals(false, actual)
-
-        actual = sut.calcCanGrowInto(r_s, r_S, 3)
-        assertEquals(true, actual)
-
-        actual = sut.calcCanGrowInto(r_s, r_S, 4)
-        assertEquals(false, actual)
+            if (i % 2 == 0) {
+                assertEquals(true, actual_a, "item index = $i")
+                assertEquals(false, actual_s, "separator index = $i")
+            } else {
+                assertEquals(false, actual_a, "item index = $i")
+                assertEquals(true, actual_s, "separator index = $i")
+            }
+        }
     }
 
     /**
@@ -450,19 +393,30 @@ class test_RuntimeRuleSet_canGrowInto {
 
         val sut = rb.ruleSet()
 
-        var actual = sut.calcCanGrowInto(r_a, r_S, 0)
-        assertEquals(true, actual)
+        for (i in 0 until 9) {
+            var actual_a = sut.calcCanGrowInto(r_a, r_S, i)
+            var actual_s = sut.calcCanGrowInto(r_s, r_S, i)
 
-        actual = sut.calcCanGrowInto(r_a, r_S, 1)
-        assertEquals(false, actual)
+            if (i % 2 == 0) {
+                assertEquals(true, actual_a, "item index = $i")
+                assertEquals(false, actual_s, "index = $i")
+            } else {
+                assertEquals(false, actual_a, "item index = $i")
+                assertEquals(true, actual_s, "separator index = $i")
+            }
+        }
 
-        actual = sut.calcCanGrowInto(r_s, r_S, 0)
-        assertEquals(false, actual)
+        for (i in 9 until 20) {
+            var actual_a = sut.calcCanGrowInto(r_a, r_S, i)
+            var actual_s = sut.calcCanGrowInto(r_s, r_S, i)
 
-        actual = sut.calcCanGrowInto(r_s, r_S, 1)
-        assertEquals(false, actual)
-
-        actual = sut.calcCanGrowInto(r_a, r_S, 2)
-        assertEquals(false, actual)
+            if (i % 2 == 0) {
+                assertEquals(false, actual_a, "item index = $i")
+                assertEquals(false, actual_s, "separator index = $i")
+            } else {
+                assertEquals(false, actual_a, "item index = $i")
+                assertEquals(false, actual_s, "separator index = $i")
+            }
+        }
     }
 }

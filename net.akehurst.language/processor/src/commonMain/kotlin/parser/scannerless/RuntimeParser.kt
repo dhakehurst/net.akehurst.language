@@ -279,7 +279,6 @@ internal class RuntimeParser(
     }
 
     private fun hasStackedPotential(completeNode: SPPTNodeDefault, stack: GrowingNode): Boolean {
-        //TODO: can we cache anything here?
         if (completeNode.isSkip) {
             return true
         } else {

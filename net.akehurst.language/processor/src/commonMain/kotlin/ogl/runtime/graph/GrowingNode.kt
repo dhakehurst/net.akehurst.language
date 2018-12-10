@@ -64,7 +64,7 @@ class GrowingNode(
         if (this.isLeaf or this.isEmptyMatch ) {//or this.hasCompleteChildren) {
             false
         } else {
-            this.runtimeRule.canGrowWidth(this.nextItemIndex, this.numNonSkipChildren)
+            this.runtimeRule.canGrowWidth(this.nextItemIndex)
         }
     }
 

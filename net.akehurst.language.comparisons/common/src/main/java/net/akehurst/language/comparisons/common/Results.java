@@ -30,7 +30,7 @@ public class Results {
 
     static Path resultsFile = Paths.get("../results/results.xlsx");
 
-    public static void log(boolean success, String col, String item, Duration value) {
+    synchronized public static void log(boolean success, String col, String item, Duration value) {
         ZipSecureFile.setMinInflateRatio(0.00009);
         Workbook wb = null;
         try {
@@ -103,7 +103,7 @@ public class Results {
                 valueCell = valueRow.createCell(colNum);
 
             }
-            valueCell.setCellValue(value.toString());
+            valueCell.setCellValue(value.toMillis());
             if (!success) {
                 valueCell.setCellStyle(errorCellStyle);
             }
@@ -113,7 +113,7 @@ public class Results {
             }
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            throw new RuntimeException("Error logging results", ex);
         }
     }
 

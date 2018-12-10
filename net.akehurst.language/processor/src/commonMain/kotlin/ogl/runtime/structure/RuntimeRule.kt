@@ -92,15 +92,24 @@ class RuntimeRule(
                     // really need the test here!
                 }
                 RuntimeRuleItemKind.SEPARATED_LIST -> {
-                    val size = numNonSkipChildren
-                    size % 2 == 1 || nextItemIndex == -1 // the -1 is used when creating dummy branch...should really need the test here!
+                    var res = false
+                    if (0 == rhs.multiMin && numNonSkipChildren == 1) {
+                        // complete if we have an empty node as child
+                        res = if (children.isEmpty()) false else children[0].runtimeRule.isEmptyRule
+                    }
+                    val max = this.rhs.multiMax
+                    val x = (nextItemIndex+1) / 2
+                    val inRange = (0!=nextItemIndex && (x >= this.rhs.multiMin && (-1 == max || x <= max)))
+                    res || -1 == nextItemIndex || inRange
+                    //nextItemIndex % 2 == 1 || nextItemIndex == -1 // the -1 is used when creating dummy branch...should really need the test here!
                 }
                 else -> throw RuntimeException("Internal Error: rule kind not recognised")
             }
         }
     }
 
-    fun canGrowWidth(nextItemIndex: Int, numNonSkipChildren: Int): Boolean {
+    fun canGrowWidth(nextItemIndex: Int): Boolean {
+        // nextItemIndex and numNonskip children are not always the same, especially for multi.
         //TODO: other kinds!
         when (this.rhs.kind) {
             RuntimeRuleItemKind.EMPTY -> return false
@@ -114,15 +123,13 @@ class RuntimeRule(
                 }
             }
             RuntimeRuleItemKind.MULTI -> {
-                val size = numNonSkipChildren
                 val max = this.rhs.multiMax
-                return -1 != size && (-1 == max || size < max)
+                return -1 != nextItemIndex && (-1 == max || nextItemIndex < max)
             }
             RuntimeRuleItemKind.SEPARATED_LIST -> {
-                val size = numNonSkipChildren
                 val max = this.rhs.multiMax
-                val x = size / 2
-                return -1 != size && (-1 == max || x < max)
+                val x = nextItemIndex / 2
+                return -1 != nextItemIndex && (-1 == max || x < max)
             }
             else -> throw RuntimeException("Internal Error: rule kind not recognised")
         }
@@ -294,16 +301,18 @@ class RuntimeRule(
                 }
             }
             RuntimeRuleItemKind.MULTI -> {
-                return if (-1 == nextItemIndex) {
+                return if (-1 == nextItemIndex || ( -1!=this.rhs.multiMax && nextItemIndex > this.rhs.multiMax )) {
                     false
                 } else {
                     true
                 }
             }
-            RuntimeRuleItemKind.SEPARATED_LIST -> return if (-1 == nextItemIndex) {
-                false
-            } else {
-                true
+            RuntimeRuleItemKind.SEPARATED_LIST -> {
+                return if (-1 == nextItemIndex  || ( -1!=this.rhs.multiMax && (nextItemIndex/2) > this.rhs.multiMax )) {
+                    false
+                } else {
+                    true
+                }
             }
             else -> throw RuntimeException("Internal Error: rule kind not recognised")
         }
@@ -358,9 +367,9 @@ class RuntimeRule(
             }
             RuntimeRuleItemKind.SEPARATED_LIST -> {
                 return when {
-                    (nextItemIndex % 2 == 1) -> hashSetOf<RuntimeRule>(this.rhs.listSeparator)
+                    (nextItemIndex % 2 == 1 && (((nextItemIndex +1)/ 2) < this.rhs.multiMax || -1==this.rhs.multiMax)) -> hashSetOf<RuntimeRule>(this.rhs.listSeparator)
                     (0 == nextItemIndex && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0], this.emptyRuleItem)
-                    (nextItemIndex < this.rhs.multiMax || -1==this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
+                    (nextItemIndex % 2 == 0 && ((nextItemIndex / 2) < this.rhs.multiMax || -1==this.rhs.multiMax)) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
                     else -> emptySet<RuntimeRule>()
                 }
             }
@@ -433,8 +442,10 @@ class RuntimeRule(
             RuntimeRuleItemKind.CHOICE_EQUAL -> return -1
             RuntimeRuleItemKind.CHOICE_PRIORITY -> return -1
             RuntimeRuleItemKind.CONCATENATION -> return if (this.rhs.items.size == currentIndex + 1) -1 else currentIndex + 1
-            RuntimeRuleItemKind.MULTI -> return currentIndex
-            RuntimeRuleItemKind.SEPARATED_LIST -> return if (currentIndex == 0) 1 else 0
+//            RuntimeRuleItemKind.MULTI -> return  currentIndex
+            RuntimeRuleItemKind.MULTI -> return if (-1==this.rhs.multiMax || this.rhs.multiMax > currentIndex + 1)  currentIndex + 1 else -1
+//            RuntimeRuleItemKind.SEPARATED_LIST -> return if (currentIndex == 0) 1 else 0
+            RuntimeRuleItemKind.SEPARATED_LIST -> return if (-1==this.rhs.multiMax || this.rhs.multiMax > (currentIndex/2))  currentIndex + 1 else -1
 
             else -> throw RuntimeException("Internal Error: Unknown RuleKind " + this.rhs.kind)
         }
