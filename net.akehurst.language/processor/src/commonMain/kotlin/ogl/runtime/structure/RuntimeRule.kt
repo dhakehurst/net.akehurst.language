@@ -310,6 +310,7 @@ class RuntimeRule(
     }
 
     fun findNextExpectedItems(nextItemIndex: Int): Set<RuntimeRule> {
+        //TODO: would it be faster to return an array here?
         when (this.rhs.kind) {
             RuntimeRuleItemKind.EMPTY -> {
                 return emptySet<RuntimeRule>()
@@ -398,7 +399,9 @@ class RuntimeRule(
                     RuntimeRuleItemKind.CHOICE_EQUAL ->
                         // TODO: cache this
                         0 == atPosition && this.rhs.items.contains(possibleChild)
-                    RuntimeRuleItemKind.CHOICE_PRIORITY -> 0 == atPosition && this.rhs.items.contains(possibleChild)
+                    RuntimeRuleItemKind.CHOICE_PRIORITY ->
+                        // TODO: cache this
+                        0 == atPosition && this.rhs.items.contains(possibleChild)
                     RuntimeRuleItemKind.CONCATENATION -> {
                         if (-1 == atPosition || atPosition >= this.rhs.items.size)
                             false

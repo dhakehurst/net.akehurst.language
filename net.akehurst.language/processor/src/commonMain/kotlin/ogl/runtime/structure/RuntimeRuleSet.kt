@@ -26,12 +26,20 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     enum class ParseAction { HEIGHT, GRAFT, WIDTH }
 
+    private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
+    private val terminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
+
+    data class IndexCanGrowIntoAt (
+       val childRuleNumber: Int,
+       val ancesstorRuleNumber: Int,
+       val at: Int
+    ){}
+    private val canGrowIntoAt_cache: MutableMap<IndexCanGrowIntoAt, Boolean> = mutableMapOf()
+
     //TODO: are Arrays faster than Lists?
     val runtimeRules: Array<out RuntimeRule> by lazy {
         rules.sortedBy { it.number }.toTypedArray()
     }
-    private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
-    private val terminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
 
     val allSkipRules: Array<RuntimeRule> by lazy {
         this.runtimeRules.filter { it.isSkip }.toTypedArray()
@@ -204,26 +212,35 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return if (-1 == ancesstorItemIndex) {
             false
         } else {
-            val nextExpectedForStacked = this.findNextExpectedItems(ancesstorRule, ancesstorItemIndex)
-            if (nextExpectedForStacked.contains(childRule)) {
-                true
-            } else {
-                for (rr in nextExpectedForStacked) {
-                    if (rr.isNonTerminal) {
-                        // todo..can we reduce the possibles!
-                        val possibles = this.calcFirstSubRules(rr)
-                        if (possibles.contains(childRule)) {
-                            return true
-                        }
-                    } else {
-                        val possibles = this.firstTerminals[rr.number]
-                        if (possibles.contains(childRule)) {
-                            return true
+            //return canGrowIntoAt_cache[childRule.number][ancesstorRule.number][ancesstorItemIndex];
+            val index = IndexCanGrowIntoAt(childRule.number, ancesstorRule.number, ancesstorItemIndex)
+            var result = canGrowIntoAt_cache[index]
+            if (null==result) {
+                val nextExpectedForStacked = this.findNextExpectedItems(ancesstorRule, ancesstorItemIndex)
+                if (nextExpectedForStacked.contains(childRule)) {
+                    result = true
+                } else {
+                    result = false
+                    for (rr in nextExpectedForStacked) {
+                        if (rr.isNonTerminal) {
+                            // todo..can we reduce the possibles!
+                            val possibles = this.calcFirstSubRules(rr)
+                            if (possibles.contains(childRule)) {
+                                result =  true
+                                break
+                            }
+                        } else {
+                            val possibles = this.firstTerminals[rr.number]
+                            if (possibles.contains(childRule)) {
+                                result =  true
+                                break
+                            }
                         }
                     }
                 }
-                false
+                canGrowIntoAt_cache[index] = result ?: throw ParseException("Should never happen")
             }
+            return result
         }
     }
 
