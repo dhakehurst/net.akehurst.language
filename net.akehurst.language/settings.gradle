@@ -16,8 +16,8 @@
 
 rootProject.name = file('.').name
 
-include 'processor-java'
-include 'processor'
+include 'ogl-processor-java'
+include 'ogl-processor'
 //include 'processor-jvm'
 //include 'processor-js'
 

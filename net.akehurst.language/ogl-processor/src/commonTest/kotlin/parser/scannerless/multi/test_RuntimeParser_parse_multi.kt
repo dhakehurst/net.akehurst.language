@@ -237,6 +237,7 @@ class test_RuntimeParser_parse_multi {
         val goalRuleName = "r"
         val inputText = "a".repeat(5000)
 
+
         val actual = test_parse(sp, goalRuleName, inputText)
 
         assertNotNull(actual)

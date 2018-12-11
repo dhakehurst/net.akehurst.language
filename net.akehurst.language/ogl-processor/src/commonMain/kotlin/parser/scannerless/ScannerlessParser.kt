@@ -99,8 +99,8 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
 
         do {
             rp.grow()
- //           println("[$seasons] ")
- //           graph.growingHead.forEach {
+//            println("[$seasons] ")
+//            graph.growingHead.forEach {
  //               println("  $it")
  //          }
             seasons++

@@ -106,5 +106,102 @@ class test_Processor_Ambiguity1 : test_ScannerlessParserAbstract() {
         super.test(rrb, goal, sentence, expected1, expected2)
     }
 
+    @Test
+    fun S_S_aabb() {
+        val rrb = this.S()
+        val goal = "S"
+        val sentence = "aabb"
 
+        val expected1 = """
+            S {
+              S1 {
+                'a'
+                S { 'a' }
+                B { 'b' }
+                B { 'b' }
+              }
+            }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected1)
+    }
+
+    @Test
+    fun S_S_aaabb() {
+        val rrb = this.S()
+        val goal = "S"
+        val sentence = "aaabb"
+
+        val expected1 = """
+            S { S1 {
+              'a'
+              S { S1 {
+                  'a'
+                  S { 'a' }
+                  B { 'b' }
+                  B { §empty }
+              } }
+              B { 'b' }
+              B { §empty }
+            } }
+        """.trimIndent()
+
+        val expected2 = """
+            S { S1 {
+              'a'
+              S { S1 {
+                  'a'
+                  S { 'a' }
+                  B { §empty }
+                  B { 'b' }
+              } }
+              B { 'b' }
+              B { §empty }
+            } }
+        """.trimIndent()
+
+        val expected3 = """
+            S { S1 {
+              'a'
+              S { S1 {
+                  'a'
+                  S { 'a' }
+                  B { 'b' }
+                  B { §empty }
+              } }
+              B { §empty }
+              B { 'b' }
+            } }
+        """.trimIndent()
+
+        val expected4 = """
+            S { S1 {
+              'a'
+              S { S1 {
+                  'a'
+                  S { 'a' }
+                  B { §empty }
+                  B { 'b' }
+              } }
+              B { §empty }
+              B { 'b' }
+            } }
+        """.trimIndent()
+
+        val expected5 = """
+            S { S1 {
+              'a'
+              S { S1 {
+                  'a'
+                  S { 'a' }
+                  B { 'b' }
+                  B { 'b' }
+              } }
+              B { §empty }
+              B { §empty }
+            } }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected1, expected2, expected3, expected4, expected5)
+    }
 }

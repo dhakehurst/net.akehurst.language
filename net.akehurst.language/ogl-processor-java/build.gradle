@@ -40,6 +40,10 @@ publishing {
         maven {
             name 'itemis-akehurst'
             url "https://projects.itemis.de/nexus/content/repositories/akehurst/"
+            credentials {
+                username = project.hasProperty('username') ? project.property('username') : System.getenv('USERNAME')
+                password = project.hasProperty('password') ? project.property('password') : System.getenv('PASSWORD')
+            }
         }
     }
 
@@ -53,7 +57,7 @@ publishing {
     }
 
     publications {
-        mavenJava(MavenPublication) {
+        JavaAll(MavenPublication) {
             groupId "${group}"
             artifactId "${project.name}".replace("${group}.", "")
             version "${version}"
