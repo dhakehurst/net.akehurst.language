@@ -34,7 +34,7 @@ internal class test_ForMatthias {
               IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*" ;
             }
         """.trimIndent()
-    private val p = processor(grammarStr)
+    private val p = Ogl.processor(grammarStr)
 
     @Test
     fun conceptDefinition0() {

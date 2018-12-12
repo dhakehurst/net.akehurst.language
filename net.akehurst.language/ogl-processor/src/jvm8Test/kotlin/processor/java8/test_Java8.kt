@@ -2,7 +2,7 @@ package new.akehurst.language.processor
 
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.processor.processor
+import net.akehurst.language.processor.Ogl
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -18,7 +18,7 @@ class test_Java8(val data: Data) {
 
         fun createJava8Processor() : LanguageProcessor {
             val grammarStr = this::class.java.getResource("/Java8_all.ogl").readText()
-            val proc = processor(grammarStr)
+            val proc = Ogl.processor(grammarStr)
             proc.build()
             return proc
         }

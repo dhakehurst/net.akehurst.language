@@ -23,7 +23,7 @@ internal class test_Ogl_scan {
 
     @Test
     fun scan_a_a() {
-        val sut = processor(listOf("a = 'a';"))
+        val sut = Ogl.processor(listOf("a = 'a';"))
         val tokens = sut.scan("a")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
@@ -41,7 +41,7 @@ internal class test_Ogl_scan {
 
     @Test
     fun scan_a_aa() {
-        val sut = processor(listOf("a = 'a';"))
+        val sut = Ogl.processor(listOf("a = 'a';"))
         val tokens = sut.scan("aa")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
@@ -52,7 +52,7 @@ internal class test_Ogl_scan {
 
     @Test
     fun scan_a_aaa() {
-        val sut = processor(listOf("a = 'a';"))
+        val sut = Ogl.processor(listOf("a = 'a';"))
         val tokens = sut.scan("aaa")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
@@ -63,7 +63,7 @@ internal class test_Ogl_scan {
 
     @Test
     fun scan_ab_aba() {
-        val sut = processor(listOf("a = 'a';", "b = 'b';"))
+        val sut = Ogl.processor(listOf("a = 'a';", "b = 'b';"))
         val tokens = sut.scan("aba")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")

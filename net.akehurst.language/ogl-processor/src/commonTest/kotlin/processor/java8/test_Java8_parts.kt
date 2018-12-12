@@ -16,7 +16,7 @@
 
 package net.akehurst.language.processor.java8
 
-import net.akehurst.language.processor.processor
+import net.akehurst.language.processor.Ogl
 import kotlin.test.Test
 
 class test_Java8_parts {
@@ -1692,7 +1692,7 @@ LINE_COMMENT
     ;
 }
         """.trimIndent()
-    val p = processor(grammarStr).build()
+    val p = Ogl.processor(grammarStr).build()
 
     @Test
     fun t1() {

@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-@file:JvmName("Ogl")
-
 package net.akehurst.language.processor
 
 import net.akehurst.language.api.sppt2ast.Sppt2AstTransformer
@@ -26,61 +24,61 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.ogl.grammar.OglGrammar
 import net.akehurst.language.ogl.sppt2ast.OglSppt2AstTransformer
 import kotlin.js.JsName
-import kotlin.jvm.JvmName
 
+object Ogl {
 
-private val oglProcessor: LanguageProcessor by lazy {
-    //println("Creating ogl processor")
-    val grammar = OglGrammar()
-    val sppt2ast: Sppt2AstTransformer = OglSppt2AstTransformer()
-    processor(grammar, sppt2ast)
-}
-
-@JsName("processorFromGrammar")
-fun processor(grammar: Grammar): LanguageProcessor {
-    return LanguageProcessorDefault(grammar, null)
-}
-
-@JsName("processorFromGrammarWithSemanticAnalyser")
-fun processor(grammar: Grammar, semanticAnalyser: Sppt2AstTransformer): LanguageProcessor {
-    return LanguageProcessorDefault(grammar, semanticAnalyser)
-}
-
-@JsName("processor")
-fun processor(grammarDefinitionStr: String): LanguageProcessor {
-    try {
-        val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
-        return processor(grammar)
-    } catch (e: ParseFailedException) {
-        //TODO: better, different exception to detect which list item fails
-        throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
+    private val oglProcessor: LanguageProcessor by lazy {
+        //println("Creating ogl processor")
+        val grammar = OglGrammar()
+        val sppt2ast: Sppt2AstTransformer = OglSppt2AstTransformer()
+        processor(grammar, sppt2ast)
     }
-}
 
-@JsName("processorWithSemanticAnalyser")
-fun processor(grammarDefinitionStr: String, semanticAnalyser: Sppt2AstTransformer): LanguageProcessor {
-    try {
-        val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
-        return processor(grammar, semanticAnalyser)
-    } catch (e: ParseFailedException) {
-        //TODO: better, different exception to detect which list item fails
-        throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
-    }
-}
-
-@JsName("processorFromRuleList")
-fun processor(rules: List<String>): LanguageProcessor {
-    val prefix = "namespace temp grammar Temp { "
-    val grammarStr = prefix + rules.joinToString(" ") + "}"
-    try {
-        val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarStr)
+    @JsName("processorFromGrammar")
+    fun processor(grammar: Grammar): LanguageProcessor {
         return LanguageProcessorDefault(grammar, null)
-    } catch (e: ParseFailedException) {
-        //TODO: better, different exception to detect which list item fails
-        val newCol = e.location.column.minus(prefix.length)
-        val location = InputLocation(newCol, 1,0)
-        throw ParseFailedException("Unable to parse list of rules", e.longestMatch, location)
     }
+
+    @JsName("processorFromGrammarWithSemanticAnalyser")
+    fun processor(grammar: Grammar, semanticAnalyser: Sppt2AstTransformer): LanguageProcessor {
+        return LanguageProcessorDefault(grammar, semanticAnalyser)
+    }
+
+    @JsName("processor")
+    fun processor(grammarDefinitionStr: String): LanguageProcessor {
+        try {
+            val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
+            return processor(grammar)
+        } catch (e: ParseFailedException) {
+            //TODO: better, different exception to detect which list item fails
+            throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
+        }
+    }
+
+    @JsName("processorWithSemanticAnalyser")
+    fun processor(grammarDefinitionStr: String, semanticAnalyser: Sppt2AstTransformer): LanguageProcessor {
+        try {
+            val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
+            return processor(grammar, semanticAnalyser)
+        } catch (e: ParseFailedException) {
+            //TODO: better, different exception to detect which list item fails
+            throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
+        }
+    }
+
+    @JsName("processorFromRuleList")
+    fun processor(rules: List<String>): LanguageProcessor {
+        val prefix = "namespace temp grammar Temp { "
+        val grammarStr = prefix + rules.joinToString(" ") + "}"
+        try {
+            val grammar = oglProcessor.process<Grammar>("grammarDefinition", grammarStr)
+            return LanguageProcessorDefault(grammar, null)
+        } catch (e: ParseFailedException) {
+            //TODO: better, different exception to detect which list item fails
+            val newCol = e.location.column.minus(prefix.length)
+            val location = InputLocation(newCol, 1, 0)
+            throw ParseFailedException("Unable to parse list of rules", e.longestMatch, location)
+        }
+    }
+
 }
-
-

@@ -29,7 +29,7 @@ internal class test_Ogl {
               a = 'a';
             }
         """.trimIndent()
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
         p.parse("a", "a")
     }
 
@@ -42,7 +42,7 @@ internal class test_Ogl {
               b = 'b';
             }
         """.trimIndent()
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
         p.parse("a", "a")
     }
 
@@ -55,13 +55,13 @@ internal class test_Ogl {
               b = 'b';
             }
         """.trimIndent()
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
         p.parse("b", "b")
     }
 
     @Test
     fun parser_rules_List() {
-        val p = processor(listOf("a = 'a';"))
+        val p = Ogl.processor(listOf("a = 'a';"))
         val pt = p.parse("a", "a")
 
         assertNotNull(pt)
@@ -70,7 +70,7 @@ internal class test_Ogl {
     @Test
     fun parser_rules_List_failAt_0() {
         val e = assertFailsWith(ParseFailedException::class) {
-            val p = processor(listOf("!"))
+            val p = Ogl.processor(listOf("!"))
             p.parse("a", "a")
         }
         assertEquals(1, e.location.line)
@@ -80,7 +80,7 @@ internal class test_Ogl {
     @Test
     fun parser_rules_List_failAt_1() {
         val e = assertFailsWith(ParseFailedException::class) {
-            val p = processor(listOf("a!"))
+            val p = Ogl.processor(listOf("a!"))
             p.parse("a", "a")
         }
         assertEquals(1, e.location.line)
@@ -90,7 +90,7 @@ internal class test_Ogl {
     @Test
     fun parser_rules_List_failAt_7() {
         val e = assertFailsWith(ParseFailedException::class) {
-            val p = processor(listOf("a = 'a'"))
+            val p = Ogl.processor(listOf("a = 'a'"))
             p.parse("a", "a")
         }
         assertEquals(1, e.location.line)

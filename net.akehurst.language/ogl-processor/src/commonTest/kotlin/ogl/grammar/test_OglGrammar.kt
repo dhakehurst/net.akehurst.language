@@ -16,7 +16,7 @@
 
 package net.akehurst.language.ogl.grammar
 
-import net.akehurst.language.processor.processor
+import net.akehurst.language.processor.Ogl
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
@@ -32,7 +32,7 @@ class test_OglGrammar {
             }
         """.trimIndent()
 
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
 
 
         assertNotNull(p)
@@ -48,7 +48,7 @@ class test_OglGrammar {
             }
         """.trimIndent()
 
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
 
 
         assertNotNull(p)
@@ -64,7 +64,7 @@ class test_OglGrammar {
             }
         """.trimIndent()
 
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
 
 
         assertNotNull(p)
@@ -80,7 +80,7 @@ class test_OglGrammar {
             }
         """.trimIndent()
 
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
 
 
         assertNotNull(p)
@@ -96,7 +96,7 @@ class test_OglGrammar {
             }
         """.trimIndent()
 
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
 
 
         assertNotNull(p)
@@ -112,7 +112,7 @@ class test_OglGrammar {
             }
         """.trimIndent()
 
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
 
 
         assertNotNull(p)
@@ -128,7 +128,7 @@ class test_OglGrammar {
             }
         """.trimIndent()
 
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
 
 
         assertNotNull(p)
@@ -144,7 +144,7 @@ class test_OglGrammar {
             }
         """.trimIndent()
 
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
 
 
         assertNotNull(p)
@@ -160,7 +160,7 @@ class test_OglGrammar {
             }
         """.trimIndent()
 
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
 
 
         assertNotNull(p)
@@ -179,7 +179,7 @@ class test_OglGrammar {
             }
         """.trimIndent()
 
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
 
 
         assertNotNull(p)
@@ -196,7 +196,7 @@ class test_OglGrammar {
             }
         """.trimIndent()
 
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
 
 
         assertNotNull(p)
@@ -213,7 +213,7 @@ class test_OglGrammar {
             }
         """.trimIndent()
 
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
 
 
         assertNotNull(p)
@@ -230,7 +230,7 @@ class test_OglGrammar {
             }
         """.trimIndent()
 
-        val p = processor(grammarStr)
+        val p = Ogl.processor(grammarStr)
 
 
         assertNotNull(p)

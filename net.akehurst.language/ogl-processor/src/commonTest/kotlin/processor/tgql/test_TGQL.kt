@@ -1,7 +1,7 @@
 package net.akehurst.language.processor.tgql
 
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.processor.processor
+import net.akehurst.language.processor.Ogl
 import kotlin.test.*
 
 class test_TGQL {
@@ -152,7 +152,7 @@ grammar Query {
 }
         """.trimIndent()
 
-        private val p = processor(grammarStr)
+        private val p = Ogl.processor(grammarStr)
     }
 
     @Test

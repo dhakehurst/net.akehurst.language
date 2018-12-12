@@ -14,8 +14,8 @@ import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.processor.processor
+import net.akehurst.language.processor.Ogl
+
 
 @RunWith(Parameterized::class)
 class test_QueryParserValid(val data:Data) {
@@ -29,7 +29,7 @@ class test_QueryParserValid(val data:Data) {
 
         fun tgqlprocessor() : LanguageProcessor {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return processor(grammarStr)
+            return Ogl.processor(grammarStr)
          }
 
         @JvmStatic
