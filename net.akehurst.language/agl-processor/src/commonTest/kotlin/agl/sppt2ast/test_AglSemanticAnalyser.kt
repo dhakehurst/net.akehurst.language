@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-rootProject.name = file('.').name
+package net.akehurst.language.ogl.semanticAnalyser
 
-include 'agl-processor-java'
-include 'agl-processor'
-//include 'processor-jvm'
-//include 'processor-js'
+import kotlin.test.Test
+import kotlin.test.fail
 
-//include 'processor-jvm-test'
+class test_AglSemanticAnalyser {
 
-enableFeaturePreview('GRADLE_METADATA')
+    @Test
+    fun analyse1() {
+        fail("No test")
+    }
 
-//fileTree('.') {
-//  include '**/build.gradle'
-//  exclude 'build.gradle' // Exclude the root build file.
-//}.each {
-//  def prj = rootProject.name+'.'+relativePath(it.parent).replace(File.separator, '.')
-//  include(prj)
-//  project(':'+prj).projectDir = new File(relativePath(it.parent))
-//  println "including "+prj+" at "+relativePath(it.parent)
-//}
+}

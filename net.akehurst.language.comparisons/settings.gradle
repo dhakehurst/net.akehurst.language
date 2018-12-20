@@ -17,7 +17,7 @@
 rootProject.name = file('.').name
 
 include 'common'
-include 'ogl'
+include 'agl'
 include 'antlr3'
 include 'antlr4'
 include 'iguana'

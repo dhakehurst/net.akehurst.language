@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-rootProject.name = file('.').name
+package net.akehurst.language.agl.ast
 
-include 'agl-processor-java'
-include 'agl-processor'
-//include 'processor-jvm'
-//include 'processor-js'
+import net.akehurst.language.api.grammar.*
 
-//include 'processor-jvm-test'
+abstract class RuleItemAbstract : GrammarVisitable, RuleItem {
 
-enableFeaturePreview('GRADLE_METADATA')
+	protected var _owningRule : Rule? = null
 
-//fileTree('.') {
-//  include '**/build.gradle'
-//  exclude 'build.gradle' // Exclude the root build file.
-//}.each {
-//  def prj = rootProject.name+'.'+relativePath(it.parent).replace(File.separator, '.')
-//  include(prj)
-//  project(':'+prj).projectDir = new File(relativePath(it.parent))
-//  println "including "+prj+" at "+relativePath(it.parent)
-//}
+	override val owningRule: Rule get() {
+		return this._owningRule ?: throw GrammarRuleNotFoundException("Internal Error: owningRule must be set")
+	}
+	
+	var index: List<Int>? = null
+
+	abstract override val allTerminal: Set<Terminal>
+
+	abstract override val allNonTerminal: Set<NonTerminal>
+
+	
+	
+}

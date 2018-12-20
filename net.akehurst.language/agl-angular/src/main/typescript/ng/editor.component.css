@@ -1,0 +1,23 @@
+:host {
+	border: 1px solid lightgrey;
+	width: available;
+	width: -webkit-fill-available;
+	width: -moz-fill-available;
+	height: available;
+	height: -webkit-fill-available;
+	height: -moz-fill-available;
+
+	display: grid;
+	grid-template-columns: 100%;
+	grid-template-rows: 100%;
+	grid-template-areas: "main";
+
+}
+
+:host > div {
+	grid-area: main;
+}
+
+:host * {
+	display: flex;
+}

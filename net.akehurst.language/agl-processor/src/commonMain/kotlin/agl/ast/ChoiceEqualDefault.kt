@@ -14,23 +14,19 @@
  * limitations under the License.
  */
 
-rootProject.name = file('.').name
+package net.akehurst.language.agl.ast
 
-include 'agl-processor-java'
-include 'agl-processor'
-//include 'processor-jvm'
-//include 'processor-js'
 
-//include 'processor-jvm-test'
+import net.akehurst.language.api.grammar.ChoiceEqual
+import net.akehurst.language.api.grammar.Concatenation
+import net.akehurst.language.api.grammar.GrammarVisitor
 
-enableFeaturePreview('GRADLE_METADATA')
+class ChoiceEqualDefault(override val alternative: List<Concatenation>) : ChoiceAbstract(alternative), ChoiceEqual {
 
-//fileTree('.') {
-//  include '**/build.gradle'
-//  exclude 'build.gradle' // Exclude the root build file.
-//}.each {
-//  def prj = rootProject.name+'.'+relativePath(it.parent).replace(File.separator, '.')
-//  include(prj)
-//  project(':'+prj).projectDir = new File(relativePath(it.parent))
-//  println "including "+prj+" at "+relativePath(it.parent)
-//}
+    // --- GrammarVisitable ---
+
+    override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
+        return visitor.visit(this, arg);
+    }
+
+}

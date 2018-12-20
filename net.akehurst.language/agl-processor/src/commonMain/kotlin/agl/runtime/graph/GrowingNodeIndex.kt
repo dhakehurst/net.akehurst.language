@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-rootProject.name = file('.').name
+package net.akehurst.language.agl.runtime.graph
 
-include 'agl-processor-java'
-include 'agl-processor'
-//include 'processor-jvm'
-//include 'processor-js'
+data class GrowingNodeIndex(
+        val ruleNumber: Int,
+        val startPosition: Int,
+        val nextInputPosition: Int,
+        val nextItemIndex: Int
+) {
 
-//include 'processor-jvm-test'
 
-enableFeaturePreview('GRADLE_METADATA')
-
-//fileTree('.') {
-//  include '**/build.gradle'
-//  exclude 'build.gradle' // Exclude the root build file.
-//}.each {
-//  def prj = rootProject.name+'.'+relativePath(it.parent).replace(File.separator, '.')
-//  include(prj)
-//  project(':'+prj).projectDir = new File(relativePath(it.parent))
-//  println "including "+prj+" at "+relativePath(it.parent)
-//}
+    override fun toString(): String {
+        return "(${ruleNumber},${startPosition},${nextInputPosition},${nextItemIndex})"
+    }
+}
