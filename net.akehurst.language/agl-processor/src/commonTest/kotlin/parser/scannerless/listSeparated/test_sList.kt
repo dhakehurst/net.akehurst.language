@@ -26,7 +26,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-class test_RuntimeParser_parse_sList {
+class test_sList {
 
     val rrb = RuntimeRuleSetBuilder()
 

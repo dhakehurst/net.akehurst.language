@@ -136,7 +136,7 @@ internal class RuntimeParser(
         var result = false
         if (gn.hasCompleteChildren) {
             val childRule = gn.runtimeRule
-            if (this.runtimeRuleSet.isSkipTerminal[childRule.number]) { //TODO: use cache
+            if (this.runtimeRuleSet.isSkipTerminal[childRule.number]) {
                 val possibleSuperRules = this.runtimeRuleSet.firstSuperNonTerminal[childRule.number]
                 for (sr in possibleSuperRules) {
                     val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
@@ -156,7 +156,6 @@ internal class RuntimeParser(
                         toGrow.addAll(this.runtimeRuleSet.calcGrowsInto(childRule, prevRule, prevItemIndex))
                     }
                     for (info in toGrow) {
-                        //TODO: can we cache findCompleteNode
                         val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                                 ?: throw ParseException("Internal error: Should never happen")
                         this.growHeightByType(complete, info, previous)

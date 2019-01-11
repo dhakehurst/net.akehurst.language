@@ -59,6 +59,10 @@ class RuntimeRule(
             return this.rhs.items[0]
         }
 
+//    val nextExpectedItems by lazy { lazyArray(rhs.items.size,{
+//        this.findNextExpectedItems(it)
+//    })}
+
     fun isCompleteChildren(nextItemIndex: Int, numNonSkipChildren: Int, children: List<SPPTNodeDefault>): Boolean {
         return if (RuntimeRuleKind.TERMINAL == this.kind) {
             true
