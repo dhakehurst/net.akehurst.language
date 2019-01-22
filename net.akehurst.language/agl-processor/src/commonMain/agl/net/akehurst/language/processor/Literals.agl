@@ -1,12 +1,12 @@
-namespace net::akehurst::lanaguge::processor;
+namespace net.akehurst.lanaguge.processor
 
 grammar Literals {
-    literal : BOOLEAN | string | INTEGER | REAL ;
-    BOOLEAN : 'true' | 'false' ;
-    string : SINGLE_QUOTE_STRING | DOUBLE_QUOTE_STRING | TREBLE_QUOTE_STRING ;
-    SINGLE_QUOTE_STRING : "'(?:\\?.)*?'" ;
-    DOUBLE_QUOTE_STRING : "\"(?:\\?.)*?\"" ;
-    TREBLE_QUOTE_STRING : "'''(?:\\?.)*?'''" ;
-    INTEGER : "[0-9]+" ;
-    REAL : "([0-9]+[.])?[0-9]+" ;
+    literal = BOOLEAN | string | INTEGER | REAL ;
+    BOOLEAN = 'true' | 'false' ;
+    string = SINGLE_QUOTE_STRING | DOUBLE_QUOTE_STRING | TREBLE_QUOTE_STRING ;
+    SINGLE_QUOTE_STRING = "'(?:\\?.)*?'" ;
+    DOUBLE_QUOTE_STRING = "\"(?:\\?.)*?\"" ;
+    TREBLE_QUOTE_STRING = "'''(?:\\?.)*?'''" ;
+    INTEGER = "[0-9]+" ;
+    REAL = "([0-9]+[.])?[0-9]+" ;
 }

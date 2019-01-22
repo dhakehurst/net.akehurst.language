@@ -271,8 +271,9 @@ internal class ParseGraph(
                                 cn.childrenAlternatives.add(gn.children)
                             } else {
                                 if (cn.childrenAlternatives.iterator().next().get(0).isEmptyLeaf) {
-                                    // leave it, no need to add empty alternatives
+                                    //TODO: leave it, no need to add empty alternatives, or is there, if they are empty other things ?
                                 } else {
+                                    //TODO: check this!
                                     if (gn.children.get(0).isEmptyLeaf) {
                                         // use just the empty leaf
                                         cn.childrenAlternatives.clear()
@@ -309,9 +310,8 @@ internal class ParseGraph(
         }
     }
 
-    private fun growNextChildAt(parent: GrowingNode, nextChild: SPPTNodeDefault, nextItemIndex: Int) {
+    private fun growNextChildAt(parent: GrowingNode, priority: Int, nextChild: SPPTNodeDefault, nextItemIndex: Int) {
         val runtimeRule = parent.runtimeRule
-        val priority = parent.priority
         val startPosition = parent.startPosition
         val nextInputPosition = nextChild.nextInputPosition
         val children = parent.children + nextChild
@@ -349,16 +349,22 @@ internal class ParseGraph(
                 return
             }
         }
+        val priority = if (0 == position && parent.runtimeRule.rhs.kind == RuntimeRuleItemKind.CHOICE_PRIORITY) {
+            parent.runtimeRule.rhs.items.indexOf(nextChild.runtimeRule)
+        } else {
+            parent.priority
+        }
         val newNextItemIndex = parent.incrementedNextItemIndex
-        this.growNextChildAt(parent, nextChild, newNextItemIndex)
+        this.growNextChildAt(parent, priority, nextChild, newNextItemIndex)
     }
 
     fun growNextSkipChild(parent: GrowingNode, nextChild: SPPTNodeDefault) {
         val nextItemIndex = parent.nextItemIndex
-        this.growNextChildAt(parent, nextChild, nextItemIndex)
+        val priority = parent.priority
+        this.growNextChildAt(parent, priority, nextChild, nextItemIndex)
     }
 
-    fun createWithFirstChild(runtimeRule: RuntimeRule, priority: Int, firstChild: SPPTNodeDefault,
+    fun createWithFirstChild(runtimeRule: RuntimeRule, firstChild: SPPTNodeDefault,
                              previous: Set<PreviousInfo>) {
         val startPosition = firstChild.startPosition
         val nextInputPosition = firstChild.nextInputPosition
@@ -374,7 +380,11 @@ internal class ParseGraph(
         }
         val children = listOf(firstChild)
         val numNonSkipChildren = if (firstChild.isSkip) 0 else 1
-
+        val priority = if (runtimeRule.rhs.kind==RuntimeRuleItemKind.CHOICE_PRIORITY) {
+            runtimeRule.rhs.items.indexOf(firstChild.runtimeRule)
+        } else {
+            0
+        }
         this.findOrCreateGrowingNode(runtimeRule, startPosition, nextInputPosition, nextItemIndex, priority, children,
                 numNonSkipChildren, previous)
     }

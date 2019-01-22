@@ -183,24 +183,23 @@ internal class RuntimeParser(
     }
 
     private fun growHeightChoice(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-        this.graph.createWithFirstChild(superRule, 0, completeNode, previous)
+        this.graph.createWithFirstChild(superRule, completeNode, previous)
     }
 
     private fun growHeightPriorityChoice(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-        val priority = superRule.rhs.items.indexOf(completeNode.runtimeRule)
-        this.graph.createWithFirstChild(superRule, priority, completeNode, previous)
+        this.graph.createWithFirstChild(superRule, completeNode, previous)
     }
 
     private fun growHeightConcatenation(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-        this.graph.createWithFirstChild(superRule, 0, completeNode, previous)
+        this.graph.createWithFirstChild(superRule, completeNode, previous)
     }
 
     private fun growHeightMulti(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-        this.graph.createWithFirstChild(superRule, 0, completeNode, previous)
+        this.graph.createWithFirstChild(superRule, completeNode, previous)
     }
 
     private fun growHeightSeparatedList(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-        this.graph.createWithFirstChild(superRule, 0, completeNode, previous)
+        this.graph.createWithFirstChild(superRule, completeNode, previous)
     }
 
     private fun tryGraftBack(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {

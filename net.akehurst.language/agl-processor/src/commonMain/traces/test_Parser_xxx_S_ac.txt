@@ -1,0 +1,123 @@
+test
+grammar Test {
+	skip WS : "\s+"  | 
+	S : packageDeclaration_m importDeclaration_m typeDeclaration_m  | 
+	packageDeclaration_m : packageDeclaration?  | 
+	packageDeclaration : packageModifier_m 'package'  | 
+	importDeclaration_m : importDeclaration*  | 
+	importDeclaration : 'import' ';'  | 
+	packageModifier_m : packageModifier*  | 
+	packageModifier : annotation  | 
+	typeDeclaration_m : typeDeclaration*  | 
+	typeDeclaration : classDeclaration  | interfaceDeclaration  | 
+	classDeclaration : classModifier_m 'class'  | 
+	classModifier_m : classModifier*  | 
+	classModifier : annotation  | 
+	interfaceDeclaration : interfaceModifier_m 'interface'  | 
+	interfaceModifier_m : interfaceModifier*  | 
+	interfaceModifier : annotation  | 
+	annotation : normalAnnotation  | markerAnnotation  | singleElementAnnotation  | 
+	normalAnnotation : '@' Identifier '(' elementValuePairList_m ')'  | 
+	markerAnnotation : '@' Identifier  | 
+	singleElementAnnotation : '@' Identifier '(' 'value' ')'  | 
+	elementValuePairList_m : elementValuePairList?  | 
+	elementValuePairList : elementValuePair  | 
+	elementValuePair : 'element' '=' 'value'  | 
+	Identifier : "[a-zA-Z][a-zA-z0-9]*"  | 
+}
+
+input '@An class'
+
+season  | head | action(on)  | start,len,nextItem: path 
+========|======|=============|==================
+0    create     0,0,0:S(2){...
+
+1    0,0,0:S(2){...
+     width     0,0,C:$empty.packageModifier_m$(23) ==> 0,0,0:S(2){...
+     width     0,0,C:$empty.packageDeclaration_m$(25) ==> 0,0,0:S(2){...
+     width     0,1,C:@(9) ==> 0,0,0:S(2){...
+
+2    0,0,C:$empty.packageModifier_m$(23)
+    height     0,0,C:packageModifier_m(5){$empty} --> 0,0,0:S(2)
+    0,1,C:@(9)
+    height     0,1,1:normalAnnotation(8){'@'... --> 0,0,0:S(2)
+    height     0,1,1:singleElementAnnotation(22){'@'... --> 0,0,0:S(2)
+    height     0,1,1:markerAnnotation(21){'@'... --> 0,0,0:S(2)
+    0,0,C:$empty.packageDeclaration_m$(25)
+    height     0,0,C:packageDeclaration_m(3){$empty} --> 0,0,0:S(2)
+
+3    0,0,C:packageDeclaration_m(3){$empty}
+     graft     0,0,1:S(2){packageDeclaration_m{$empty}...
+    0,1,1:singleElementAnnotation(22){'@'...
+     width     1,3,C:[a-zA-Z][a-zA-z0-9]*(11) ==> 0,1,1:singleElementAnnotation(22){'@'... --> 0,0,0:S(2)
+    0,1,1:normalAnnotation(8){'@'...
+     width     1,3,C:[a-zA-Z][a-zA-z0-9]*(11) ==> 0,1,1:normalAnnotation(8){'@'... --> 0,0,0:S(2)
+    0,0,C:packageModifier_m(5){$empty}
+    height     0,0,1:packageDeclaration(4){packageModifier_m{$empty}... --> 0,0,0:S(2)
+    0,1,1:markerAnnotation(21){'@'...
+     width     1,3,C:[a-zA-Z][a-zA-z0-9]*(11) ==> 0,1,1:markerAnnotation(21){'@'... --> 0,0,0:S(2)
+
+4    1,3,C:[a-zA-Z][a-zA-z0-9]*(11)
+    height     1,3,C:Identifier(10){'An'} -3> 0,1,1:markerAnnotation(21) --> 0,0,0:S(2)
+    0,0,1:packageDeclaration(4){packageModifier_m{$empty}...
+    0,0,1:S(2){packageDeclaration_m{$empty}...
+     width     0,0,C:$empty.importDeclaration_m$(30) ==> 0,0,1:S(2){packageDeclaration_m{$empty}...
+
+5    1,3,C:Identifier(10){'An'}
+     width     3,4,C:\s+(1) ==> 1,3,C:Identifier(10){'An'} -3> 0,1,1:markerAnnotation(21) --> 0,0,0:S(2)
+    0,0,C:$empty.importDeclaration_m$(30)
+    height     0,0,C:importDeclaration_m(26){$empty} --> 0,0,1:S(2)
+
+6    3,4,C:\s+(1)
+    height     3,4,C:WS(0){' '} --> 1,3,C:Identifier(10) -3> 0,1,1:markerAnnotation(21) --> 0,0,0:S(2)
+    0,0,C:importDeclaration_m(26){$empty}
+     graft     0,0,2:S(2){packageDeclaration_m{$empty}importDeclaration_m{$empty}...
+
+7    3,4,C:WS(0){' '}
+graft-skip     1,4,C:Identifier(10){'An'WS{' '}} -3> 0,1,1:markerAnnotation(21) --> 0,0,0:S(2)
+    0,0,2:S(2){packageDeclaration_m{$empty}importDeclaration_m{$empty}...
+     width     0,0,C:$empty.classModifier_m$(36) ==> 0,0,2:S(2){packageDeclaration_m{$empty}importDeclaration_m{$empty}...
+     width     0,1,C:@(9) ==> 0,0,2:S(2){packageDeclaration_m{$empty}importDeclaration_m{$empty}...
+     width     0,0,C:$empty.interfaceModifier_m$(41) ==> 0,0,2:S(2){packageDeclaration_m{$empty}importDeclaration_m{$empty}...
+     width     0,0,C:$empty.typeDeclaration_m$(43) ==> 0,0,2:S(2){packageDeclaration_m{$empty}importDeclaration_m{$empty}...
+
+8    1,4,C:Identifier(10){'An'WS{' '}}
+     graft     0,4,C:markerAnnotation(21){'@'Identifier{'An'WS{' '}}} --> 0,0,0:S(2)
+     graft     0,4,2:normalAnnotation(8){'@'Identifier{'An'WS{' '}}... --> 0,0,0:S(2)
+     graft     0,4,2:singleElementAnnotation(22){'@'Identifier{'An'WS{' '}}... --> 0,0,0:S(2)
+    0,0,C:$empty.classModifier_m$(36)
+    height     0,0,C:classModifier_m(34){$empty} --> 0,0,2:S(2)
+    0,1,C:@(9)
+    height     0,1,1:normalAnnotation(8){'@'... -2> 0,0,0:S(2)
+    height     0,1,1:singleElementAnnotation(22){'@'... -2> 0,0,0:S(2)
+    height     0,1,1:markerAnnotation(21){'@'... -2> 0,0,0:S(2)
+    0,0,C:$empty.typeDeclaration_m$(43)
+    height     0,0,C:typeDeclaration_m(31){$empty} --> 0,0,2:S(2)
+    0,0,C:$empty.interfaceModifier_m$(41)
+    height     0,0,C:interfaceModifier_m(39){$empty} --> 0,0,2:S(2)
+
+9    0,4,C:markerAnnotation(21){'@'Identifier{'An'WS{' '}}}
+    height     0,4,C:annotation(7){markerAnnotation{'@'Identifier{'An'WS{' '}}}} --> 0,0,0:S(2)
+    0,4,2:singleElementAnnotation(22){'@'Identifier{'An'WS{' '}}...
+    0,0,C:classModifier_m(34){$empty}
+    height     0,0,1:classDeclaration(33){classModifier_m{$empty}... --> 0,0,2:S(2)
+    0,4,2:normalAnnotation(8){'@'Identifier{'An'WS{' '}}...
+    0,0,C:interfaceModifier_m(39){$empty}
+    height     0,0,1:interfaceDeclaration(38){interfaceModifier_m{$empty}... --> 0,0,2:S(2)
+    0,0,C:typeDeclaration_m(31){$empty}
+     graft     0,0,C:S(2){packageDeclaration_m{$empty}importDeclaration_m{$empty}typeDeclaration_m{$empty}}
+
+10    0,0,C:S(2){packageDeclaration_m{$empty}importDeclaration_m{$empty}typeDeclaration_m{$empty}}
+    0,0,1:interfaceDeclaration(38){interfaceModifier_m{$empty}...
+    0,4,C:annotation(7){markerAnnotation{'@'Identifier{'An'WS{' '}}}}
+    height     0,4,C:packageModifier(6){annotation{markerAnnotation{'@'Identifier{'An'WS{' '}}}}} --> 0,0,0:S(2)
+    0,0,1:classDeclaration(33){classModifier_m{$empty}...
+
+11    0,4,C:packageModifier(6){annotation{markerAnnotation{'@'Identifier{'An'WS{' '}}}}}
+    height     0,4,1:packageModifier_m(5){packageModifier{annotation{markerAnnotation{'@'Identifier{'An'WS{' '}}}}}} --> 0,0,0:S(2)
+
+12    0,4,1:packageModifier_m(5){packageModifier{annotation{markerAnnotation{'@'Identifier{'An'WS{' '}}}}}}
+    height     0,4,1:packageDeclaration(4){packageModifier_m{packageModifier{annotation{markerAnnotation{'@'Identifier{'An'WS{' '}}}}}}... --> 0,0,0:S(2)
+
+13    0,4,1:packageDeclaration(4){packageModifier_m{packageModifier{annotation{markerAnnotation{'@'Identifier{'An'WS{' '}}}}}}...
+

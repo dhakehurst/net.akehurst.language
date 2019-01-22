@@ -188,8 +188,8 @@ class test_ifThenElse_Ambiguous : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1, expected2)
-        //super.testStringResult(rrb, goal, sentence, expected1, expected2)
+        //super.test(rrb, goal, sentence, expected1, expected2)
+        super.testStringResult(rrb, goal, sentence, expected1, expected2)
     }
 
 

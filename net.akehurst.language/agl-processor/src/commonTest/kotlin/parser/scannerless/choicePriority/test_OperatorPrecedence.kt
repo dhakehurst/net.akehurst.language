@@ -28,24 +28,26 @@ import kotlin.test.assertFailsWith
 class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
 
     // S =  expr ;
-    // expr = var < group < div < mul < add < sub ;
+    // expr = var < bool < group < div < mul < add < sub ;
     // sub = expr '-' expr ;
     // add = expr '+' expr ;
     // mul = expr '*' expr ;
     // div = expr '/' expr ;
     // group = '(' expr ')' ;
+    // bool = 'true' | 'false' ;
     // var = "[a-zA-Z]+" ;
     // WS = "\s+" ;
     private fun S(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r_expr = b.rule("expr").build()
         val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
+        val r_bool = b.rule("bool").choiceEqual(b.literal("true"), b.literal("false"))
         val r_group = b.rule("group").concatenation(b.literal("("),r_expr,b.literal(")"))
         val r_div = b.rule("div").concatenation(r_expr,b.literal("/"),r_expr)
         val r_mul = b.rule("mul").concatenation(r_expr,b.literal("*"),r_expr)
         val r_add = b.rule("add").concatenation(r_expr,b.literal("+"),r_expr)
         val r_sub = b.rule("sub").concatenation(r_expr,b.literal("-"),r_expr)
-        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_PRIORITY, -1, 0, arrayOf(r_var, r_group, r_div, r_mul, r_add, r_sub))
+        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_PRIORITY, -1, 0, arrayOf(r_var, r_bool, r_group, r_div, r_mul, r_add, r_sub))
         b.rule("S").concatenation(r_expr)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b
@@ -79,6 +81,55 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
 
         super.test(rrb, goal, sentence, expected)
 
+    }
+
+    @Test
+    fun expr_true() {
+        val rrb = this.S()
+        val goal = "expr"
+        val sentence = "true"
+
+        val expected = """
+              expr {
+                bool { 'true' }
+              }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected)
+    }
+
+    @Test
+    fun S_true() {
+        val rrb = this.S()
+        val goal = "S"
+        val sentence = "true"
+
+        val expected = """
+            S {
+              expr {
+                bool { 'true' }
+              }
+            }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected)
+    }
+
+    @Test
+    fun S_var() {
+        val rrb = this.S()
+        val goal = "S"
+        val sentence = "var"
+
+        val expected = """
+            S {
+              expr {
+                var { '[a-zA-Z]+' : 'var' }
+              }
+            }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected)
     }
 
     @Test
