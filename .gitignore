@@ -9,6 +9,7 @@ node_modules/
 .classpath
 .settings/
 *.class
+.externalToolBuilders/
 
 out/
 db/
