@@ -63,6 +63,10 @@ class SPPTLeafDefault(
         return "${this.startPosition},${this.nextInputPosition},C:${name}(${this.runtimeRule.number})"
     }
 
+    override fun hashCode(): Int {
+        return this.identity.hashCode()
+    }
+
     override fun equals(other: Any?): Boolean {
         return if (other is SPPTLeaf) {
             this.identity == other.identity

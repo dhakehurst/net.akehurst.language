@@ -59,5 +59,7 @@ abstract class SPPTNodeDefault(
 
     override var parent: SPPTBranch? = null
 
+    abstract override fun hashCode() : Int
+
     abstract override fun equals(other: Any?): Boolean
 }
