@@ -2,7 +2,7 @@
 
 namespace net.akehurst.language.natural
 
-grammar English
+grammar English {
 
     sentence
         = simple-sentence
@@ -26,11 +26,11 @@ grammar English
         = declarative-sentence '?'
         | 'Who' predicate '?'
         | ('What' | 'Which') (adverb* adjective)? noun predicate '?'
-        | ('What' | 'When' | 'Where' | 'Who' | 'To whom' | 'Why')?  ('do' |'does' |'don't' |'doesn't' |'did' |'didn't') subject predicate '?'
-        | 'Which'  noun-phrase? ('do' |'does' |'don't' |'doesn't' |'did' |'didn't') subject predicate '?'
-        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('will' |'won't') subject predicate1 '?'
-        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('has' |'have' |'hasn't' |'haven't') subject predicate2 '?'
-        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('are' |'is' |'was' |'were' |  'aren't' |'isn't' |'wasn't' |'weren't') subject (adverb* adjective | prepositional-phrase* | predicate3)? '?'
+        | ('What' | 'When' | 'Where' | 'Who' | 'To whom' | 'Why')?  ('do' |'does' |'don\'t' |'doesn\'t' |'did' |'didn\'t') subject predicate '?'
+        | 'Which'  noun-phrase? ('do' |'does' |'don\'t' |'doesn\'t' |'did' |'didn\'t') subject predicate '?'
+        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('will' |'won\'t') subject predicate1 '?'
+        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('has' |'have' |'hasn\'t' |'haven\'t') subject predicate2 '?'
+        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('are' |'is' |'was' |'were' |  'aren\'t' |'isn\'t' |'wasn\'t' |'weren\'t') subject (adverb* adjective | prepositional-phrase* | predicate3)? '?'
         ;
 
     imperative-sentence =  imperative-predicate ;
@@ -184,3 +184,4 @@ grammar English
     PERSONAL_PRONOUN_POSSESIVE = 'mine' | 'yours' | 'his' | 'hers' | 'ours' | 'theirs' ;
 
     AUX_VERB = 'must' | 'may' | 'might' | 'will' | 'would' | 'shall' | 'should' | 'can' | 'could' ;
+}

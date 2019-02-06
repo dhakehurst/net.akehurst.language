@@ -19,7 +19,7 @@ class test_QueryParserValid(val data:Data) {
 
     companion object {
 
-        private val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.ogl").readText()
+        private val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl").readText()
         var processor: LanguageProcessor = tgqlprocessor()
 
         var sourceFiles = arrayOf("/vistraq/sampleValidQueries.txt")

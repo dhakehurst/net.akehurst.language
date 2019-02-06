@@ -39,12 +39,22 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
      * S2 = Q 'c' ;
      * Q = Q1 | 'a' ;
      * Q1 = Q 'a'
-     * P  = a P | P a | a ;
+     * P  = P1 | P2 | 'a' ;
+     * P1 = a P ;
+     * P2 = P a ;
      */
     private fun S(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
+        val r_a = b.literal("a")
+        val r_b = b.literal("b")
+        val r_c = b.literal("c")
+        val r_P = b.rule("P").build()
+        val r_P1 = b.rule("P1").concatenation(r_a, r_P)
+        val r_P2 = b.rule("P2").concatenation(r_P, r_a)
+         b.rule(r_P).choiceEqual(r_P1, r_P2, r_a)
+        val r_Q = b.rule("Q").build()
         val r_Q1 = b.rule("Q1").concatenation(r_Q, r_a)
-        val r_Q = b.rule("Q").choiceEqual(r_Q1, r_a)
+         b.rule(r_Q).choiceEqual(r_Q1, r_a)
         val r_S2 = b.rule("S2").concatenation(r_Q, r_c)
         val r_S1 = b.rule("S1").concatenation(r_P, r_b)
         b.rule("S").choiceEqual(r_S1, r_S2)
@@ -52,7 +62,7 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun S_S_empty() {
+    fun empty() {
         val rrb = this.S()
         val goal = "S"
         val sentence = ""
@@ -65,7 +75,7 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun S_S_a() {
+    fun a() {
         val rrb = this.S()
         val goal = "S"
         val sentence = "a"
@@ -78,152 +88,66 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun S_S_aa() {
+    fun ab() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "aa"
+        val sentence = "ab"
 
         val expected1 = """
-            S {
-              S1 {
-                'a'
-                S { 'a' }
-                B { §empty }
-                B { §empty }
-              }
-            }
+            S { S1 {
+                P { 'a' }
+                'b'
+            } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
+        super.testStringResult(rrb, goal, sentence, expected1)
     }
 
     @Test
-    fun S_S_aab() {
+    fun ac() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "aab"
+        val sentence = "ac"
 
         val expected1 = """
-            S {
-              S1 {
-                'a'
-                S { 'a' }
-                B { 'b' }
-                B { §empty }
-              }
-            }
+            S { S2 {
+                Q { 'a' }
+                'c'
+            } }
         """.trimIndent()
 
-        val expected2 = """
-            S {
-              S1 {
-                'a'
-                S { 'a' }
-                B { §empty }
-                B { 'b' }
-              }
-            }
-        """.trimIndent()
-
-        super.test(rrb, goal, sentence, expected1, expected2)
+        super.testStringResult(rrb, goal, sentence, expected1)
     }
 
     @Test
-    fun S_S_aabb() {
+    fun a10b() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "aabb"
+        val sentence = "a".repeat(10) +"b"
 
         val expected1 = """
-            S {
-              S1 {
-                'a'
-                S { 'a' }
-                B { 'b' }
-                B { 'b' }
-              }
-            }
+            S { S1 {
+                P { 'a' }
+                'b'
+            } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
+        super.testStringResult(rrb, goal, sentence, expected1)
     }
 
-    @Test
-    fun S_S_aaabb() {
+    //@Test takes too long at present
+    fun a50b() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "aaabb"
+        val sentence = "a".repeat(50) +"b"
 
         val expected1 = """
             S { S1 {
-              'a'
-              S { S1 {
-                  'a'
-                  S { 'a' }
-                  B { 'b' }
-                  B { §empty }
-              } }
-              B { 'b' }
-              B { §empty }
+                P { 'a' }
+                'b'
             } }
         """.trimIndent()
 
-        val expected2 = """
-            S { S1 {
-              'a'
-              S { S1 {
-                  'a'
-                  S { 'a' }
-                  B { §empty }
-                  B { 'b' }
-              } }
-              B { 'b' }
-              B { §empty }
-            } }
-        """.trimIndent()
-
-        val expected3 = """
-            S { S1 {
-              'a'
-              S { S1 {
-                  'a'
-                  S { 'a' }
-                  B { 'b' }
-                  B { §empty }
-              } }
-              B { §empty }
-              B { 'b' }
-            } }
-        """.trimIndent()
-
-        val expected4 = """
-            S { S1 {
-              'a'
-              S { S1 {
-                  'a'
-                  S { 'a' }
-                  B { §empty }
-                  B { 'b' }
-              } }
-              B { §empty }
-              B { 'b' }
-            } }
-        """.trimIndent()
-
-        val expected5 = """
-            S { S1 {
-              'a'
-              S { S1 {
-                  'a'
-                  S { 'a' }
-                  B { 'b' }
-                  B { 'b' }
-              } }
-              B { §empty }
-              B { §empty }
-            } }
-        """.trimIndent()
-
-        super.testStringResult(rrb, goal, sentence, expected1, expected2, expected3, expected4, expected5)
+        super.testStringResult(rrb, goal, sentence, expected1)
     }
 }

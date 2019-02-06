@@ -62,7 +62,7 @@ private fun createRules(): List<Rule> {
 	b.rule("terminal").choiceEqual(b.concatenation(b.nonTerminal("LITERAL")), b.concatenation(b.nonTerminal("PATTERN")));
 	b.rule("LITERAL").concatenation(b.terminalPattern("'(?:\\\\?.)*?'"));
 	b.rule("PATTERN").concatenation(b.terminalPattern("\"(?:\\\\?.)*?\""));
-	b.rule("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9]*"));
+	b.rule("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
 
 	return b.grammar.rule
 }

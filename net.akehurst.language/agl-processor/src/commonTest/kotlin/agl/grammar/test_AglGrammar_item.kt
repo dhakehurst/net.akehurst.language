@@ -46,7 +46,7 @@ class test_AglGrammar_item {
     fun IDENTIFIER() {
         val actual = parse("IDENTIFIER", "a")
 
-        val expected = this.sppt("IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' }")
+        val expected = this.sppt("IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a' }")
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
@@ -86,7 +86,7 @@ class test_AglGrammar_item {
     @Test
     fun qualifiedName_1() {
         val actual = parse("qualifiedName", "a")
-        val expected = this.sppt("qualifiedName { §qualifiedName§sList0 { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' } } }")
+        val expected = this.sppt("qualifiedName { §qualifiedName§sList0 { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a' } } }")
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
@@ -97,9 +97,9 @@ class test_AglGrammar_item {
         val expected = this.sppt("""
             qualifiedName {
                 §qualifiedName§sList0 {
-                    IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' }
+                    IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a' }
                     '.'
-                    IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' }
+                    IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'b' }
                 }
             }
         """.trimIndent())
@@ -113,11 +113,11 @@ class test_AglGrammar_item {
         val expected = this.sppt("""
             qualifiedName {
                 §qualifiedName§sList0 {
-                    IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' }
+                    IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a' }
                     '.'
-                    IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' }
+                    IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'b' }
                     '.'
-                    IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'c' }
+                    IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'c' }
                 }
             }
         """.trimIndent())
@@ -139,7 +139,7 @@ class test_AglGrammar_item {
     fun simpleItem_nonTerminal() {
         val actual = parse("simpleItem", "a")
         val expected = this.sppt("""
-            simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' } } }
+            simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a' } } }
         """.trimIndent())
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
@@ -193,7 +193,7 @@ class test_AglGrammar_item {
         val actual = parse("multi", "a*")
         val expected = this.sppt("""
             multi {
-                simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' } } }
+                simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a' } } }
                 multiplicity { '*' : '*' }
             }
         """.trimIndent())
@@ -244,7 +244,7 @@ class test_AglGrammar_item {
         val actual = parse("concatenation", "a")
         val expected = this.sppt("""
             concatenation {
-                §concatenation§multi2 { concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' } } } } }
+                §concatenation§multi2 { concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a' } } } } }
             }
         """.trimIndent())
         assertNotNull(actual)
@@ -256,9 +256,9 @@ class test_AglGrammar_item {
         val actual = parse("concatenation", "a b c")
         val expected = this.sppt("""
             concatenation { §concatenation§multi2 {
-                concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
-                concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
-                concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'c' } } } }
+                concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
+                concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
+                concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'c' } } } }
             } }
         """.trimIndent())
         assertNotNull(actual)
@@ -271,15 +271,15 @@ class test_AglGrammar_item {
         val expected = this.sppt("""
             priorityChoice { §priorityChoice§sList2 {
                 concatenation { §concatenation§multi2 {
-                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
+                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
                 } }
                 '<' WHITESPACE { '\s+' : ' ' }
                 concatenation { §concatenation§multi2 {
-                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
+                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
                 } }
                 '<' WHITESPACE { '\s+' : ' ' }
                 concatenation { §concatenation§multi2 {
-                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'c' } } } }
+                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'c' } } } }
                 } }
             } }
         """.trimIndent())
@@ -294,15 +294,15 @@ class test_AglGrammar_item {
 
                 simpleChoice { §simpleChoice§sList3 {
                     concatenation { §concatenation§multi2 {
-                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
                     } }
                     '|' WHITESPACE { '\s+' : ' ' }
                     concatenation { §concatenation§multi2 {
-                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
                     } }
                     '|' WHITESPACE { '\s+' : ' ' }
                     concatenation { §concatenation§multi2 {
-                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'c' } } } }
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'c' } } } }
                     } }
                 } }
 
@@ -318,15 +318,15 @@ class test_AglGrammar_item {
             choice {
                 priorityChoice { §priorityChoice§sList2 {
                     concatenation { §concatenation§multi2 {
-                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
                     } }
                     '<' WHITESPACE { '\s+' : ' ' }
                     concatenation { §concatenation§multi2 {
-                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
                     } }
                     '<' WHITESPACE { '\s+' : ' ' }
                     concatenation { §concatenation§multi2 {
-                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'c' } } } }
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'c' } } } }
                     } }
                 } }
             }
@@ -339,19 +339,26 @@ class test_AglGrammar_item {
     fun normalRule_priorityChoice_nonTerminal_3() {
         val actual = parse("normalRule", "r = a < b < c ;")
         val expected = this.sppt("""
-            priorityChoice { §priorityChoice§sList2 {
-                concatenation { §concatenation§multi2 {
-                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
-                } }
-                '<' WHITESPACE { '\s+' : ' ' }
-                concatenation { §concatenation§multi2 {
-                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
-                } }
-                '<' WHITESPACE { '\s+' : ' ' }
-                concatenation { §concatenation§multi2 {
-                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'c' } } } }
-                } }
-            } }
+             normalRule {
+                IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'r' WHITESPACE { '\s+' : ' ' } }
+                '='
+                WHITESPACE { '\s+' : ' ' }
+
+                choice { priorityChoice { §priorityChoice§sList2 {
+                    concatenation { §concatenation§multi2 {
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
+                    } }
+                    '<' WHITESPACE { '\s+' : ' ' }
+                    concatenation { §concatenation§multi2 {
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
+                    } }
+                    '<' WHITESPACE { '\s+' : ' ' }
+                    concatenation { §concatenation§multi2 {
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9-]*' : 'c' WHITESPACE { '\s+' : ' ' } } } } }
+                    } }
+                } } }
+                ';'
+                }
         """.trimIndent())
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)

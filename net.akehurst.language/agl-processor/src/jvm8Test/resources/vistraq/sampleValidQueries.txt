@@ -53,8 +53,8 @@ MATCH Requirement AS r LINKED TO Test AS t
 MATCH Requirement AS r LINKED VIA any TO Test AS t
 MATCH Requirement AS r LINKED VIA testedBy TO Test AS t
 MATCH Requirement AS r LINKED VIA testedBy TO Test AS t
-MATCH * LINKED VIA any TO any LINKED VIA any TO any
-MATCH * AS n RETURN TABLE COLUMN count CONTAINING COUNT(n)
+MATCH any LINKED VIA any TO any LINKED VIA any TO any
+MATCH any AS n RETURN TABLE COLUMN count CONTAINING COUNT(n)
 MATCH A NOT (LINKED VIA a_b TO B)
 MATCH A NOT (LINKED VIA b_a FROM B)
 MATCH A NOT (LINKED TO B)
@@ -94,10 +94,10 @@ MATCH (A OR B) (LINKED TO C OR LINKED TO D)
 MATCH (A OR B) (LINKED TO C AS cd OR LINKED TO D AS cd)
 MATCH (A OR B) (LINKED TO C OR LINKED TO D) (LINKED TO E OR LINKED TO F)
 MATCH (A OR B) AS ab (LINKED TO C AS c OR LINKED TO D AS d) (LINKED TO E AS e OR LINKED TO F AS f)
-MATCH * AS n WHERE n.prop == 1
-MATCH * AS n WHERE n.prop == 'xxx'
-MATCH * AS n WHERE n.prop == true
-MATCH * AS n WHERE true
+MATCH any AS n WHERE n.prop == 1
+MATCH any AS n WHERE n.prop == 'xxx'
+MATCH any AS n WHERE n.prop == true
+MATCH any AS n WHERE true
 MATCH A AS a LINKED TO B AS b WHERE a.prop == b.prop
 MATCH A AS a LINKED TO B AS b WHERE a.prop != b.prop
 MATCH A AS a LINKED TO B AS b WHERE a.prop >= b.prop
