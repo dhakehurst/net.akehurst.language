@@ -48,7 +48,7 @@ grammar Mscript {
     REAL                = "([0-9]+[.])?[0-9]+" ;
     SINGLE_QUOTE_STRING = "'(?:\\?.)*?'" ;
 }
-    """
+    """.trimIndent()
         val sut = Agl.processor(grammarStr)
     }
 

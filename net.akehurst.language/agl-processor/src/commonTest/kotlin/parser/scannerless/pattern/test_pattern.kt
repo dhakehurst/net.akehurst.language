@@ -22,44 +22,10 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import kotlin.test.*
 
-class test_RuntimeParser_parse {
+class test_pattern {
 
     private fun test_parse(sp: ScannerlessParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
         return sp.parse(goalRuleName, inputText)
-    }
-
-    // literal
-    private fun literal_a(): ScannerlessParser {
-        val rrb = RuntimeRuleSetBuilder()
-        val r0 = rrb.literal("a")
-        val r1 = rrb.rule("a").concatenation(r0)
-        return ScannerlessParser(rrb.ruleSet())
-    }
-
-    //  a = 'a' | 'a'
-    @Test
-    fun literal_a_a_a() {
-        val sp = literal_a()
-        val goalRuleName = "a"
-        val inputText = "a"
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-    }
-
-    // a = 'a' | 'b'
-    @Test
-    fun literal_a_a_b_fails() {
-        val sp = literal_a()
-        val goalRuleName = "a"
-        val inputText = "b"
-
-        val ex = assertFailsWith(ParseFailedException::class) {
-            test_parse(sp, goalRuleName, inputText)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(0, ex.location.column)
     }
 
     // pattern

@@ -117,7 +117,8 @@ class test_RuntimeParser_parse_choiceEqual {
         assertEquals(1, ex.location.column)
     }
 
-    // r = a b | c;
+    // S = ab | c;
+    // ab = a b ;
     // a = 'a' ;
     // b = 'b' ;
     // c = 'c' ;

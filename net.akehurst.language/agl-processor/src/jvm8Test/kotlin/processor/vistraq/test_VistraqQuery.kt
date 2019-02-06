@@ -65,7 +65,7 @@ class test_QueryParserValid(val data:Data) {
         }
     }
 
-    @Test
+    @Test(timeout=1000)
     fun test() {
         val queryStr = this.data.queryStr
         val result = processor.parse("query", queryStr)

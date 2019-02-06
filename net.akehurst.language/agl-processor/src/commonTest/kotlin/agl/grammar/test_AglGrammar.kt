@@ -235,4 +235,55 @@ class test_AglGrammar {
 
         assertNotNull(p)
     }
+
+    @Test
+    fun nonTerminal_slist_0_1() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                r = [ a  / ',' ]? ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun nonTerminal_slist_0_n() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                r = [ a  / ',' ]* ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun nonTerminal_slist_1_n() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                r = [ a  / ',' ]+ ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
 }

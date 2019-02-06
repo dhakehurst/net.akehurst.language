@@ -1694,7 +1694,7 @@ LINE_COMMENT
         """.trimIndent()
     val p = Agl.processor(grammarStr).build()
 
-    @Test
+    @Test(timeout=1000)
     fun t1() {
 
         val sentence = """

@@ -17,7 +17,7 @@ class test_Java8(val data: Data) {
         var java8Processor: LanguageProcessor = createJava8Processor()
 
         fun createJava8Processor() : LanguageProcessor {
-            val grammarStr = this::class.java.getResource("/Java8_all.ogl").readText()
+            val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()
             val proc = Agl.processor(grammarStr)
             proc.build()
             return proc
@@ -107,7 +107,7 @@ class test_Java8(val data: Data) {
         }
     }
 
-    @Test
+    @Test(timeout=1000)
     fun test() {
         try {
             val queryStr = this.data.sentence
