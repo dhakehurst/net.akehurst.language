@@ -6,15 +6,15 @@ grammar Query {
 	skip SINGLE_LINE_COMMENT = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
 	skip MULTI_LINE_COMMENT = "//.*?$" ;
 
-	query = singleQuery | unionedQuery ;
-	singleQuery = timespanDefinition? querySource? returnDefinition? ;
-	unionedQuery = query unionOperator query ;
-	unionOperator = 'UNION' ; //TODO: handle distinct or duplicates
+    query = singleQuery | compositeQuery ;
+    singleQuery = timespanDefinition? querySource? returnDefinition? ;
+    compositeQuery = query compositionOperator query ;
+    compositionOperator = 'UNION' | 'JOIN' ;
 
     timespanDefinition = 'FOR' timeDef nameDefinition? ;
 	timeDef =  time | timespan ;
 	time = 'TIME' timePoint ;
-	timePoint = 'first' | 'now' | 'last' | timestamp ;
+	timePoint = 'start' | 'now' | timestamp ;
 	timestamp = SINGLE_QUOTE_STRING ;
 	timespan = 'TIMESPAN' timeRange 'EVERY' period ;
 	timeRange = 'all' | timePoint 'UNTIL' timePoint ;
@@ -27,7 +27,13 @@ grammar Query {
     pathExpression =  nodeSelector linkedNodeSelectorPath? ;
 
 	nodeSelector = nodeTypeReferenceExpression nameDefinition? ;
-    nodeTypeReferenceExpression = ANY_NODE_TYPE | NONE_NODE_TYPE | nodeTypeReference | negatedNodeTypeReferenceExpression | nodeTypeReferenceGroup ;
+    nodeTypeReferenceExpression
+        = nodeTypeReference
+        < NONE_NODE_TYPE
+        < ANY_NODE_TYPE
+        < negatedNodeTypeReferenceExpression
+        < nodeTypeReferenceGroup
+        ;
     negatedNodeTypeReferenceExpression = 'NOT' nodeTypeReferenceExpression ;
     nodeTypeReferenceGroup = '(' [nodeTypeReferenceExpression / 'OR' ]+ ')' ;
 
@@ -36,8 +42,9 @@ grammar Query {
 	linkSelectorExpression = linkSelector | linkSelectorGroupedPath ;
 	linkSelector = 'LINKED' links? multiplicity? via? ('TO'|'FROM'|'WITH') nodeSelector ;
 
-	links = 'USING' POSITIVE_INT '..' UNLIMITED_POSITIVE_INT 'LINKS' ;
-	multiplicity = POSITIVE_INT '..' UNLIMITED_POSITIVE_INT 'TIMES' ;
+	links = 'USING' range 'LINKS' ;
+	multiplicity = range 'TIMES' ;
+    range = POSITIVE_INT '..' UNLIMITED_POSITIVE_INT | UNLIMITED_POSITIVE_INT ;
 
 	via = 'VIA'  linkTypeReferenceExpression ;
 	linkSelectorNegated = 'NOT' linkSelectorGroupedPath ;
@@ -71,7 +78,7 @@ grammar Query {
 	returnGraph = 'RETURN' 'GRAPH' subgraphConstruction ;
 	subgraphConstruction = nodeConstruction linkedSubGraphConstruction? whereConstructionClause?;
 	nodeConstruction = nodeTypeConstructionExpression '{' nodeIdentityExpressionConstruction nodePropertyAssignmentExpressionList? '}' nameDefinition?;
-	nodeTypeConstructionExpression = nodeTypeReference < expression ;
+	nodeTypeConstructionExpression = expression < nodeTypeReference ;
     nodeIdentityExpressionConstruction = expression ;
     nodePropertyAssignmentExpressionList = '|' nodePropertyAssignmentExpression+ ;
     nodePropertyAssignmentExpression = NAME ':=' expression ;
@@ -95,14 +102,15 @@ grammar Query {
 
 	aggregateFunctionCallOrExpression = aggregateFunctionCall | expression ;
 	aggregateFunctionCall = aggregateFunctionName '(' expression ')' ;
-    expression  = groupExpression
-				< conditionalExpression
-				< infixFunction
-				< literalValue
-				< root
-				< propertyCall
-				< methodCall
-            ;
+    expression
+		= conditionalExpression
+		< infixFunction
+		< propertyCall
+		< methodCall
+		< root
+		< literalValue
+    	< groupExpression
+        ;
 
     nameDefinition = 'AS' NAME ;
 
@@ -115,17 +123,17 @@ grammar Query {
 	operator = arithmeticOperator | comparisonOperator | logicalOperator ;
 	arithmeticOperator = '+' | '-' | '*' | '/' ;
     comparisonOperator = '==' | '!=' | '<' | '>' | '<=' | '>=' ;
-    logicalOperator = 'AND' | 'OR' | 'XOR' ;
+    logicalOperator= 'AND' | 'OR' | 'XOR' ;
     conditionalExpression = expression '?' expression ':' expression ;
 
 
 	orderBy = 'ORDER' 'BY' [columnOrder / ',']+ ;
 	columnOrder = NAME ('ASCENDING' | 'DESCENDING')? ;
 
-	ANY_NODE_TYPE = '*' ;
+	ANY_NODE_TYPE = 'any' ;
 	NONE_NODE_TYPE = 'none' ;
 	nodeTypeReference = NAME ;
-	ANY_LINK_TYPE = '*' ;
+	ANY_LINK_TYPE = 'any' ;
 	linkTypeReference = NAME ;
 	aggregateFunctionName = NAME ;
 	STORED_QUERY_ID = "([a-zA-Z_][a-zA-Z0-9_]*)([.][a-zA-Z_][a-zA-Z0-9_]*)?" ; // project metricDef OR metricSet.metricDef
@@ -139,4 +147,5 @@ grammar Query {
     INTEGER = "[0-9]+" ;
     REAL = "[0-9]+[.][0-9]+" ;
     NULL = 'null' ;
+
 }

@@ -30,7 +30,8 @@ class test_ifThenElse_Deterministic : test_ScannerlessParserAbstract() {
     // S =  expr ;
     // ifthenelse = 'if' expr 'then' expr 'else' expr ;
     // ifthen = 'if' expr 'then' expr ;
-    // expr = var < ifthenelse < ifthen ;
+    // expr = var < conditional ;
+    // conditional = ifthenelse < ifthen ;
     // var = "[a-zA-Z]+" ;
     // WS = "\s+" ;
     private fun S(): RuntimeRuleSetBuilder {
@@ -42,7 +43,8 @@ class test_ifThenElse_Deterministic : test_ScannerlessParserAbstract() {
         val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
         val r_ifthen = b.rule("ifthen").concatenation(r_if,r_expr,r_then,r_expr)
         val r_ifthenelse = b.rule("ifthenelse").concatenation(r_if,r_expr,r_then,r_expr,r_else,r_expr)
-        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_PRIORITY, -1, 0, arrayOf(r_var, r_ifthenelse, r_ifthen))
+        val r_conditional = b.rule("conditional").choiceEqual(r_ifthenelse, r_ifthen)
+        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_EQUAL, -1, 0, arrayOf(r_var, r_conditional))
         b.rule("S").concatenation(r_expr)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b
@@ -70,13 +72,15 @@ class test_ifThenElse_Deterministic : test_ScannerlessParserAbstract() {
         val expected = """
             S {
               expr {
-                ifthenelse {
-                  'if' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                  'then' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' WS { '\s+' : ' ' } } }
-                  'else' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'c' } }
+                conditional {
+                    ifthenelse {
+                      'if' WS { '\s+' : ' ' }
+                      expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
+                      'then' WS { '\s+' : ' ' }
+                      expr { var { '[a-zA-Z]+' : 'b' WS { '\s+' : ' ' } } }
+                      'else' WS { '\s+' : ' ' }
+                      expr { var { '[a-zA-Z]+' : 'c' } }
+                    }
                 }
               }
             }
@@ -94,11 +98,13 @@ class test_ifThenElse_Deterministic : test_ScannerlessParserAbstract() {
         val expected = """
             S {
               expr {
-                ifthen {
-                  'if' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                  'then' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' } }
+                conditional {
+                    ifthen {
+                      'if' WS { '\s+' : ' ' }
+                      expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
+                      'then' WS { '\s+' : ' ' }
+                      expr { var { '[a-zA-Z]+' : 'b' } }
+                    }
                 }
               }
             }
@@ -116,20 +122,24 @@ class test_ifThenElse_Deterministic : test_ScannerlessParserAbstract() {
         val expected = """
             S {
               expr {
-                ifthenelse {
-                  'if' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                  'then' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' WS { '\s+' : ' ' } } }
-                  'else' WS { '\s+' : ' ' }
-                  expr {
-                    ifthen {
+                conditional {
+                    ifthenelse {
                       'if' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'c' WS { '\s+' : ' ' } } }
+                      expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
                       'then' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'd' } }
+                      expr { var { '[a-zA-Z]+' : 'b' WS { '\s+' : ' ' } } }
+                      'else' WS { '\s+' : ' ' }
+                      expr {
+                        conditional {
+                            ifthen {
+                              'if' WS { '\s+' : ' ' }
+                              expr { var { '[a-zA-Z]+' : 'c' WS { '\s+' : ' ' } } }
+                              'then' WS { '\s+' : ' ' }
+                              expr { var { '[a-zA-Z]+' : 'd' } }
+                            }
+                        }
+                      }
                     }
-                  }
                 }
               }
             }
@@ -147,20 +157,24 @@ class test_ifThenElse_Deterministic : test_ScannerlessParserAbstract() {
         val expected1 = """
             S {
               expr {
-                ifthen {
-                  'if' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                  'then' WS { '\s+' : ' ' }
-                  expr {
-                    ifthenelse {
+                conditional {
+                    ifthen {
                       'if' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'b' WS { '\s+' : ' ' } } }
+                      expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
                       'then' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'c' WS { '\s+' : ' ' } } }
-                      'else' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'd' } }
+                      expr {
+                        conditional {
+                            ifthenelse {
+                              'if' WS { '\s+' : ' ' }
+                              expr { var { '[a-zA-Z]+' : 'b' WS { '\s+' : ' ' } } }
+                              'then' WS { '\s+' : ' ' }
+                              expr { var { '[a-zA-Z]+' : 'c' WS { '\s+' : ' ' } } }
+                              'else' WS { '\s+' : ' ' }
+                              expr { var { '[a-zA-Z]+' : 'd' } }
+                            }
+                        }
+                      }
                     }
-                  }
                 }
               }
             }

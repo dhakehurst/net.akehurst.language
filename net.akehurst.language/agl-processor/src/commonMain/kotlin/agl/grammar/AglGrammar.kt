@@ -42,6 +42,8 @@ private fun createRules(): List<Rule> {
 	b.rule("anyRule").choiceEqual(b.concatenation(b.nonTerminal("normalRule")), b.concatenation(b.nonTerminal("skipRule")));
 	b.rule("skipRule").concatenation(b.terminalLiteral("skip"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="),
 			b.nonTerminal("choice"), b.terminalLiteral(";"));
+	//TODO: choice has ambiguity, if resolved by priority, then wrong result with "a < b < c", it matches "choiceEqual { a }" as higher priority
+	// make rule = choice | concatination, and choices must have multiple items
 	b.rule("normalRule").concatenation(b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("choice"),
 			b.terminalLiteral(";"));
 	b.rule("choice").choicePriority(b.concatenation(b.nonTerminal("priorityChoice")), b.concatenation(b.nonTerminal("simpleChoice")));

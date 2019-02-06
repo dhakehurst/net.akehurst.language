@@ -264,4 +264,96 @@ class test_AglGrammar_item {
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
+
+    @Test
+    fun priorityChoice_nonTerminal_3() {
+        val actual = parse("priorityChoice", "a < b < c")
+        val expected = this.sppt("""
+            priorityChoice { §priorityChoice§sList2 {
+                concatenation { §concatenation§multi2 {
+                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
+                } }
+                '<' WHITESPACE { '\s+' : ' ' }
+                concatenation { §concatenation§multi2 {
+                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
+                } }
+                '<' WHITESPACE { '\s+' : ' ' }
+                concatenation { §concatenation§multi2 {
+                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'c' } } } }
+                } }
+            } }
+        """.trimIndent())
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
+    @Test
+    fun simpleChoice_nonTerminal_3() {
+        val actual = parse("simpleChoice", "a | b | c")
+        val expected = this.sppt("""
+
+                simpleChoice { §simpleChoice§sList3 {
+                    concatenation { §concatenation§multi2 {
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
+                    } }
+                    '|' WHITESPACE { '\s+' : ' ' }
+                    concatenation { §concatenation§multi2 {
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
+                    } }
+                    '|' WHITESPACE { '\s+' : ' ' }
+                    concatenation { §concatenation§multi2 {
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'c' } } } }
+                    } }
+                } }
+
+        """.trimIndent())
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
+    @Test
+    fun choice_priority_nonTerminal_3() {
+        val actual = parse("choice", "a < b < c")
+        val expected = this.sppt("""
+            choice {
+                priorityChoice { §priorityChoice§sList2 {
+                    concatenation { §concatenation§multi2 {
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
+                    } }
+                    '<' WHITESPACE { '\s+' : ' ' }
+                    concatenation { §concatenation§multi2 {
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
+                    } }
+                    '<' WHITESPACE { '\s+' : ' ' }
+                    concatenation { §concatenation§multi2 {
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'c' } } } }
+                    } }
+                } }
+            }
+        """.trimIndent())
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
+    @Test
+    fun normalRule_priorityChoice_nonTerminal_3() {
+        val actual = parse("normalRule", "r = a < b < c ;")
+        val expected = this.sppt("""
+            priorityChoice { §priorityChoice§sList2 {
+                concatenation { §concatenation§multi2 {
+                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'a' WHITESPACE { '\s+' : ' ' } } } } }
+                } }
+                '<' WHITESPACE { '\s+' : ' ' }
+                concatenation { §concatenation§multi2 {
+                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'b' WHITESPACE { '\s+' : ' ' } } } } }
+                } }
+                '<' WHITESPACE { '\s+' : ' ' }
+                concatenation { §concatenation§multi2 {
+                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER { '[a-zA-Z_][a-zA-Z_0-9]*' : 'c' } } } }
+                } }
+            } }
+        """.trimIndent())
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
 }

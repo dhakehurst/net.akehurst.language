@@ -6,18 +6,18 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 
-class test_expession : test_ScannerlessParserAbstract() {
+class test_expession_ambiguous : test_ScannerlessParserAbstract() {
 
     // S =  I < P < n ;      //  infix < propertyCall < name
     // n = 'a' ;             // "[a-z]+"
     // P = S 'p' n ;         // S '.' name
-    // I = [S / 'o']2+ ;         // [S / '+']2+
+    // I = S 'o' S ;         // S '+' S
     private fun S(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r_n = b.literal("a")
         val r_S = b.rule("S").build()
         val r_P = b.rule("P").concatenation(r_S, b.literal("p"), r_n)
-        val r_I = b.rule("I").separatedList(2,-1,b.literal("o"), r_S)
+        val r_I = b.rule("I").concatenation(r_S,b.literal("o"), r_S)
         r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_PRIORITY, -1, 0, arrayOf(r_n, r_P, r_I))
         return b
     }
@@ -68,7 +68,7 @@ class test_expession : test_ScannerlessParserAbstract() {
         val sentence = "aoaoa"
 
         val expected = """
-            S { I { S{'a'} 'o' S{'a'} 'o' S{'a'} } }
+            S { I { S{'a'} 'o' S{'a'} } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)

@@ -61,11 +61,11 @@ class SPPTBranchDefault(
     // --- SPPTNode ---
 
     override val matchedText: String by lazy {
-        this.children.joinToString { it.matchedText }
+        this.children.joinToString(separator = "") { it.matchedText }
     }
 
     override val nonSkipMatchedText: String get() {
-        return this.nonSkipChildren.map { it.nonSkipMatchedText }.joinToString()
+        return this.nonSkipChildren.map { it.nonSkipMatchedText }.joinToString("")
     }
 
     override fun contains(other: SPPTNode): Boolean {
