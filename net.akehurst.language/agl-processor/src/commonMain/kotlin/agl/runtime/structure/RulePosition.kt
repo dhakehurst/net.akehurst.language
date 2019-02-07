@@ -16,8 +16,18 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-enum class RuntimeRuleKind {
-    GOAL,
-    NON_TERMINAL,
-    TERMINAL
+data class RulePosition(
+    val runtimeRule: RuntimeRule,
+    val position: Int,
+    val lookahead: Array<RuntimeRule>
+) {
+
+    companion object {
+        val END_OF_RULE = -1
+    }
+
+    val items:Set<RuntimeRule> get() {
+        return runtimeRule.calcItemsAt(position)
+    }
+
 }

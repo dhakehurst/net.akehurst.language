@@ -22,6 +22,10 @@ import net.akehurst.language.parser.sppt.SPPTLeafDefault
 
 internal class InputFromCharSequence(val text: CharSequence) {
 
+    companion object {
+        val END_OF_TEXT = 3.toChar().toString()
+    }
+
     internal fun isStart(position: Int): Boolean {
         // TODO what if we want t0 parse part of the text?, e.g. sub grammar
         return 0 == position
@@ -61,7 +65,7 @@ internal class InputFromCharSequence(val text: CharSequence) {
 
     internal fun tryMatchText(position: Int, patternText: String, isPattern: Boolean): String? {
         return when {
-            (position > this.text.length) -> null // TODO: should we need to do this?
+            (position >= this.text.length && patternText== END_OF_TEXT) -> END_OF_TEXT // TODO: should we need to do this?
             (!isPattern) -> this.matchLiteral(position, patternText)
             else -> this.matchRegEx(position, patternText)
         }

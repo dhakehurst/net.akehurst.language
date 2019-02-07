@@ -16,11 +16,13 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class GrowingNode(
+        val rulePosition: RulePosition,
         val runtimeRule: RuntimeRule,
         val startPosition: Int,
         val nextInputPosition: Int,

@@ -18,6 +18,7 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.api.parser.ParseException
 import net.akehurst.language.collections.transitveClosure
+import net.akehurst.language.parser.scannerless.InputFromCharSequence
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class RuntimeRule(
@@ -27,6 +28,7 @@ class RuntimeRule(
         val isPattern: Boolean,
         val isSkip: Boolean
 ) {
+
     // alias for name to use when this is a pattern rule
     val patternText: String = name
 
@@ -39,9 +41,9 @@ class RuntimeRule(
     val emptyRuleItem: RuntimeRule
         get() {
             return when {
-                this.rhs.kind==RuntimeRuleItemKind.MULTI && 0==this.rhs.multiMin -> this.rhs.items[1]
-                this.rhs.kind==RuntimeRuleItemKind.SEPARATED_LIST && 0==this.rhs.multiMin -> this.rhs.items[2]
-                this.rhs.items[0].isEmptyRule -> this.rhs.items[0]
+                this.rhs.kind==RuntimeRuleItemKind.MULTI && 0==this.rhs.multiMin -> this.rhs.MULTI__emptyRule
+                this.rhs.kind==RuntimeRuleItemKind.SEPARATED_LIST && 0==this.rhs.multiMin -> this.rhs.SLIST__emptyRule
+                this.rhs.items[0].isEmptyRule -> this.rhs.EMPTY__ruleThatIsEmpty
                 else -> throw ParseException("this rule cannot be empty and has no emptyRuleItem")
             }
         }
@@ -53,10 +55,11 @@ class RuntimeRule(
 
     val isTerminal = this.kind == RuntimeRuleKind.TERMINAL
     val isNonTerminal = this.kind == RuntimeRuleKind.NON_TERMINAL
+    val isGoal = this.kind == RuntimeRuleKind.GOAL
 
     val ruleThatIsEmpty: RuntimeRule
         get() {
-            return this.rhs.items[0]
+            return this.rhs.EMPTY__ruleThatIsEmpty
         }
 
 //    val nextExpectedItems by lazy { lazyArray(rhs.items.size,{
@@ -239,8 +242,8 @@ class RuntimeRule(
                 }
                 RuntimeRuleItemKind.MULTI -> {
                     return when {
-                        (0 == n && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
-                        (n < this.rhs.multiMax || -1==this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
+                        (0 == n && 0 == this.rhs.multiMin) -> setOf<RuntimeRule>(this.rhs.items[0])
+                        (n < this.rhs.multiMax || -1==this.rhs.multiMax) -> setOf<RuntimeRule>(this.rhs.items[0])
                         else -> emptySet<RuntimeRule>()
                     }
                 }
@@ -322,7 +325,58 @@ class RuntimeRule(
         }
     }
 
-    fun findNextExpectedItems(nextItemIndex: Int): Set<RuntimeRule> {
+    fun calcNextExpectedRulePosition(position: Int): Set<RulePosition> {
+        return when (this.rhs.kind) {
+            RuntimeRuleItemKind.EMPTY -> {
+                emptySet<RulePosition>()
+            }
+            RuntimeRuleItemKind.CHOICE_EQUAL -> {
+                return if (position == 0) {
+                    this.rhs.items.map { RulePosition(this,0, arrayOf()) }.toSet()
+                } else {
+                    emptySet<RulePosition>()
+                }
+            }
+            RuntimeRuleItemKind.CHOICE_PRIORITY -> {
+                return if (position == 0) {
+                    this.rhs.items.map { RulePosition(this,0, arrayOf()) }.toSet()
+                } else {
+                    emptySet<RulePosition>()
+                }
+            }
+            RuntimeRuleItemKind.CONCATENATION -> {
+                return if (position >= this.rhs.items.size) {
+                    throw RuntimeException("Internal Error: No NextExpectedItem")
+                } else {
+                    if (-1 == position) {
+                        emptySet<RulePosition>()
+                    } else {
+                        setOf(RulePosition( this, position, arrayOf() ))
+                    }
+                }
+            }
+            RuntimeRuleItemKind.MULTI -> {
+                return when {
+                    wrong just return the position in this rule!
+                    (0 == position && 0 == this.rhs.multiMin) -> setOf<RulePosition>(RulePosition(this.rhs.MULTI__repeatedItem,0, arrayOf()), RulePosition(this.rhs.MULTI__emptyRule,1,arrayOf()))
+                    (position < this.rhs.multiMax || -1==this.rhs.multiMax) -> setOf<RulePosition>(RulePosition(this.rhs.MULTI__repeatedItem,0, arrayOf()))
+                    else -> emptySet<RulePosition>()
+                }
+            }
+            RuntimeRuleItemKind.SEPARATED_LIST -> {
+                return when {
+                    wrong just return the position in this rule!
+                    (position % 2 == 1 && (((position +1)/ 2) < this.rhs.multiMax || -1==this.rhs.multiMax)) -> setOf<RulePosition>(RulePosition(this.rhs.SLIST__separator,1, arrayOf()))
+                    (0 == position && 0 == this.rhs.multiMin) -> setOf<RulePosition>(RulePosition(this.rhs.SLIST__repeatedItem,0, arrayOf()), RulePosition(this.rhs.SLIST__emptyRule,2,arrayOf()))
+                    (position % 2 == 0 && ((position / 2) < this.rhs.multiMax || -1==this.rhs.multiMax)) -> setOf<RulePosition>(RulePosition(this.rhs.SLIST__repeatedItem,0, arrayOf()))
+                    else -> emptySet<RulePosition>()
+                }
+            }
+            else -> throw RuntimeException("Internal Error: rule kind not recognised")
+        }
+    }
+
+    fun calcItemsAt(nextItemIndex: Int): Set<RuntimeRule> {
         //TODO: would it be faster to return an array here?
         when (this.rhs.kind) {
             RuntimeRuleItemKind.EMPTY -> {
@@ -470,10 +524,12 @@ class RuntimeRule(
     }
 
     override fun toString(): String {
-        return "[" + this.number + "]" + if (this.isNonTerminal || this.isEmptyRule) {
-            " (" + this.name + ") : " + this.rhs
+        return "[$number]" + if (this.isNonTerminal || this.isEmptyRule) {
+            " ($name) = " + this.rhs
         } else if (this.isPattern) {
             " \"" + this.patternText + "\""
+        } else if (this.name == InputFromCharSequence.END_OF_TEXT) {
+            " <EOT>"
         } else {
             " '" + this.patternText + "'"
         }

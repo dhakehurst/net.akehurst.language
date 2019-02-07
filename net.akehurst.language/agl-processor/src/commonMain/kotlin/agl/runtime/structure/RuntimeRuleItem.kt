@@ -27,7 +27,7 @@ import net.akehurst.language.api.parser.ParseException
  *   CONCATENATION           -> items == what to concatinate, in order
  *   UNORDERED               -> items == what to concatinate, any order
  *   MULTI                   -> items[0] == the item to repeat, items[1] == empty rule if min==0
- *   SEPARATED_LIST          -> items[0] == the item to repeat, items[1] == separator
+ *   SEPARATED_LIST          -> items[0] == the item to repeat, items[1] == separator, items[2] == empty rule if min==0
  *   LEFT_ASSOCIATIVE_LIST   -> items[0] == the item to repeat, items[1] == separator
  *   RIGHT_ASSOCIATIVE_LIST  -> items[0] == the item to repeat, items[1] == separator
  * }
@@ -38,13 +38,22 @@ class RuntimeRuleItem(
   val multiMax : Int,
   val items : Array<out RuntimeRule>
 ) {
+
     init {
         if (this.items.isEmpty()) {
             throw ParseException("RHS of a non terminal rule must contain some items")
         }
     }
 
-    val listSeparator: RuntimeRule get() { return this.items[1] } //should we check type here or is that runtime overhead?
+    val EMPTY__ruleThatIsEmpty: RuntimeRule get() { return this.items[0] }
+    val MULTI__repeatedItem: RuntimeRule get() { return this.items[0] }
+    val MULTI__emptyRule: RuntimeRule get() { return this.items[1] }
+
+    val SLIST__repeatedItem: RuntimeRule get() { return this.items[0] }
+    val SLIST__separator: RuntimeRule get() { return this.items[1] }
+    val SLIST__emptyRule: RuntimeRule get() { return this.items[2] }
+
+    //val listSeparator: RuntimeRule get() { return this.items[1] } //should we check type here or is that runtime overhead?
 
     fun findItemAt(n: Int): Array<out RuntimeRule> {
         return when (this.kind) {
@@ -66,7 +75,7 @@ class RuntimeRuleItem(
                     } else {
                         emptyArray<RuntimeRule>()
                     }
-                    1-> arrayOf(this.listSeparator)
+                    1-> arrayOf(this.SLIST__separator)
                     else -> emptyArray<RuntimeRule>() // should never happen!
                 }
             }
