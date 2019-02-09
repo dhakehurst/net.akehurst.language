@@ -93,6 +93,10 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         this.calcFirstTerminalSkipRulePositions()
     }
 
+    val expectedSkipItemRulePositionsTransitive: Set<RulePosition> by lazy {
+        calcExpectedSkipItemRulePositionTransitive()
+    }
+
     val expectedTerminalRulePositions = lazyMap<RulePosition, Array<RulePosition>> {
         calcExpectedTerminalRulePositions(it).toTypedArray()
     }
@@ -297,16 +301,19 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }.toSet() //TODO: cache ?
     }
 
-    //TODO: cache this
-    private fun calcFirstTerminalSkipRulePositions(): Set<RulePosition> {
+    private fun calcExpectedSkipItemRulePositionTransitive() : Set<RulePosition> {
         val skipRuleStarts = allSkipRules.map {
             val x = firstTerminals[it.number]
             RulePosition(it, 0, setOf())
         }
-        val nextItems = skipRuleStarts.flatMap {
+        return skipRuleStarts.flatMap {
             this.calcExpectedItemRulePositionTransitive(it)
-        }
-        return nextItems.filter {
+        }.toSet()
+    }
+
+    private fun calcFirstTerminalSkipRulePositions(): Set<RulePosition> {
+        val skipRPs = calcExpectedSkipItemRulePositionTransitive()
+        return skipRPs.filter {
             it.runtimeRule.itemsAt[it.position].any { it.isTerminal }
         }.toSet() //TODO: cache ?
     }

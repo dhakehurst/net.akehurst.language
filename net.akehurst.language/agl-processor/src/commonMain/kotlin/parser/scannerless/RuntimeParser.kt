@@ -198,15 +198,27 @@ internal class RuntimeParser(
                 }
                 */
                 RulePosition.END_OF_RULE -> {
+                    //TODO: maybe we need to grow height of a skip non-terminal!
                     if (this.runtimeRuleSet.isSkipTerminal[gn.runtimeRule.number]) {
-                        grow the skip terminal
+                        val rps = runtimeRuleSet.expectedSkipItemRulePositionsTransitive
+                        val rpsf = rps.filter { //TODO: do we need this filter?
+                            it.runtimeRule.couldHaveChild(gn.runtimeRule, 0)
+                        }
+                        rpsf.forEach { rp ->
+                            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
+                                ?: throw ParseException("Internal error: Should never happen")
+                            val tgtRPs = runtimeRuleSet.nextRulePosition(rp, complete.runtimeRule)
+                            tgtRPs.forEach {
+                                this.graph.createWithFirstChild(it, it.runtimeRule, complete, previous)
+                            }
+                        }
                     } else {
                         for (prev in previous) {
-                            val rp = RulePosition(prev.node.runtimeRule, prev.atPosition, setOf())
-                            val rps = runtimeRuleSet.expectedItemRulePositionsTransitive[rp]
+                            val goalRp = this.graph.goalNode.targetRulePosition //RulePosition(prev.node.runtimeRule, prev.atPosition, setOf())
+                            val rps = runtimeRuleSet.expectedItemRulePositionsTransitive[goalRp]
                                 ?: setOf()// nextRulePosition(rp, gn.runtimeRule) //FIXME: not the right last param
-                            val rpsf = rps.filter {
-                                it.runtimeRule.couldHaveChild(gn.runtimeRule, 0)
+                            val rpsf = rps.filter { //TODO: do we need this filter?
+                                !it.runtimeRule.isGoal && it.runtimeRule.couldHaveChild(gn.runtimeRule, 0)
                             }
                             rpsf.forEach { rp ->
                                 val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
@@ -270,12 +282,12 @@ internal class RuntimeParser(
             // and graph will try to 'complete' a GraphNode when it is created.
                 val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                     ?: throw ParseException("internal error, should never happen")
-                this.graph.growNextChild(info.node.targetRulePosition, info.node, complete, info.atPosition)
-                //val prp = RulePosition(info.node.runtimeRule, info.atPosition, setOf())
-                //val rps = runtimeRuleSet.nextRulePosition(prp, complete.runtimeRule)
-                //rps.forEach { rp ->
-                //    this.graph.growNextChild(rp, info.node, complete, info.atPosition)
-                //}
+                //this.graph.growNextChild(info.node.targetRulePosition, info.node, complete, info.atPosition)
+                val prp = info.node.targetRulePosition//RulePosition(info.node.runtimeRule, info.atPosition, setOf())
+                val rps = runtimeRuleSet.nextRulePosition(prp, complete.runtimeRule)
+                rps.forEach { rp ->
+                    this.graph.growNextChild(rp, info.node, complete, info.atPosition)
+                }
                 result = result or true
 
         } else {
@@ -308,13 +320,15 @@ internal class RuntimeParser(
             for (rp in rps) {
                 //val nextRP = gn.rulePosition.next
                 for (rr in rp.runtimeRule.itemsAt[rp.position]) {
-                    val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
-                    if (null != l) {
-                        val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
-                        newRP.forEach {
-                            this.graph.pushToStackOf(it, l, gn, previous)
+                    if (rr.isTerminal) { //it might not be, e.g. if rp is in a multi,0 where it could be empty
+                        val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
+                        if (null != l) {
+                            val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
+                            newRP.forEach {
+                                this.graph.pushToStackOf(it, l, gn, previous)
+                            }
+                            //modified = this.pushStackNewRoot(l, rp, gn, previous) //TODO: leaf + RulePosition that terminal fits into
                         }
-                        //modified = this.pushStackNewRoot(l, rp, gn, previous) //TODO: leaf + RulePosition that terminal fits into
                     }
                 }
             }
