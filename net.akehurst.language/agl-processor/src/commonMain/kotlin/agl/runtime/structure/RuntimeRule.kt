@@ -449,7 +449,7 @@ class RuntimeRule(
             RuntimeRuleItemKind.SEPARATED_LIST -> {
                 return when {
                     (position % 2 == 1 && (((position + 1) / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf<RulePosition>(RulePosition(this, RuntimeRuleItem.SLIST__SEPARATOR, setOf()))
-                    (0 == position && 0 == this.rhs.multiMin) -> setOf<RulePosition>(RulePosition(this.rhs.SLIST__repeatedItem, 0, setOf()), RulePosition(this, RuntimeRuleItem.SLIST__EMPTY_RULE, setOf()))
+                    (0 == position && 0 == this.rhs.multiMin) -> setOf<RulePosition>(RulePosition(this, RuntimeRuleItem.SLIST__ITEM, setOf()), RulePosition(this, RuntimeRuleItem.SLIST__EMPTY_RULE, setOf()))
                     (position % 2 == 0 && ((position / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf<RulePosition>(RulePosition(this, RuntimeRuleItem.SLIST__ITEM, setOf()))
                     else -> emptySet<RulePosition>()
                 }

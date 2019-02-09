@@ -267,11 +267,15 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             if (RulePosition.END_OF_RULE == rp.position) {
                 setOf<RulePosition>()
             } else {
-                rp.runtimeRule.itemsAt[rp.position].flatMap {
-                    if (it.isTerminal) {
-                        setOf(rp)
-                    } else {
-                        it.calcExpectedRulePositions(0)
+                if (rp.runtimeRule.isTerminal) {
+                    setOf<RulePosition>()
+                } else {
+                    rp.runtimeRule.itemsAt[rp.position].flatMap {
+                        if (it.isTerminal) {
+                            setOf(rp)
+                        } else {
+                            it.calcExpectedRulePositions(0)
+                        }
                     }
                 }
             }.toSet()
@@ -281,10 +285,14 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     private fun calcExpectedTerminalRulePositions(rp: RulePosition): Set<RulePosition> {
         val nextItems = this.calcExpectedItemRulePositionTransitive(rp)
         return nextItems.filter {
-            if (RulePosition.END_OF_RULE == it.position) {
+            if (it.runtimeRule.isTerminal) { //should never happen!
                 false
             } else {
-                it.runtimeRule.itemsAt[it.position].any { it.isTerminal }
+                if (RulePosition.END_OF_RULE == it.position) {
+                    false
+                } else {
+                    it.runtimeRule.itemsAt[it.position].any { it.isTerminal }
+                }
             }
         }.toSet() //TODO: cache ?
     }

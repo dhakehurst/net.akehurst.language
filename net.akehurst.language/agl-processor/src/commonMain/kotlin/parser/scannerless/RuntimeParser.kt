@@ -124,7 +124,11 @@ internal class RuntimeParser(
                 for (rr in rp.runtimeRule.itemsAt[rp.position]) {
                     val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
                     if (null != l) {
-                        this.graph.pushToStackOf(rp, l, gn, previous)
+                        val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
+                        newRP.forEach {
+                            this.graph.pushToStackOf(it, l, gn, previous)
+                            modified = true
+                        }
                     }
                 }
             }
@@ -180,6 +184,7 @@ internal class RuntimeParser(
         if (gn.hasCompleteChildren) {
             val thisRP = gn.targetRulePosition
             when (thisRP.position) {
+                /*
                 0 -> { // start
                     val thisRP: RulePosition = gn.targetRulePosition
                     val newParentRule = thisRP.runtimeRule
@@ -191,20 +196,26 @@ internal class RuntimeParser(
                         this.graph.createWithFirstChild(tgtRP, newParentRule, complete, previous) //maybe lookahead to wanted next token here (it would need to be part of RP)
                     }
                 }
+                */
                 RulePosition.END_OF_RULE -> {
-                    for (prev in previous) {
-                        val rp = RulePosition(prev.node.runtimeRule, prev.atPosition, setOf())
-                        val rps = runtimeRuleSet.expectedItemRulePositionsTransitive[rp] ?: setOf()// nextRulePosition(rp, gn.runtimeRule) //FIXME: not the right last param
-                        val rpsf = rps.filter {
-                            it.runtimeRule.couldHaveChild(gn.runtimeRule, 0)
-                        }
-                        rpsf.forEach { rp ->
-                            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
-                                ?: throw ParseException("Internal error: Should never happen")
-                            val tgtRPs = runtimeRuleSet.nextRulePosition(rp, complete.runtimeRule)
-                            val newPrev = PreviousInfo(prev.node, prev.atPosition)
-                            tgtRPs.forEach {
-                                this.graph.createWithFirstChild(it, it.runtimeRule, complete, setOf(newPrev))
+                    if (this.runtimeRuleSet.isSkipTerminal[gn.runtimeRule.number]) {
+                        grow the skip terminal
+                    } else {
+                        for (prev in previous) {
+                            val rp = RulePosition(prev.node.runtimeRule, prev.atPosition, setOf())
+                            val rps = runtimeRuleSet.expectedItemRulePositionsTransitive[rp]
+                                ?: setOf()// nextRulePosition(rp, gn.runtimeRule) //FIXME: not the right last param
+                            val rpsf = rps.filter {
+                                it.runtimeRule.couldHaveChild(gn.runtimeRule, 0)
+                            }
+                            rpsf.forEach { rp ->
+                                val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
+                                    ?: throw ParseException("Internal error: Should never happen")
+                                val tgtRPs = runtimeRuleSet.nextRulePosition(rp, complete.runtimeRule)
+                                val newPrev = PreviousInfo(prev.node, prev.atPosition)
+                                tgtRPs.forEach {
+                                    this.graph.createWithFirstChild(it, it.runtimeRule, complete, setOf(newPrev))
+                                }
                             }
                         }
                     }
@@ -217,40 +228,6 @@ internal class RuntimeParser(
         }
     }
 
-    /*
-        private fun growHeightByType(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-            when (superRule.rhs.kind) {
-                RuntimeRuleItemKind.CHOICE_EQUAL -> this.growHeightChoice(completeNode, superRule, previous)
-                RuntimeRuleItemKind.CHOICE_PRIORITY -> this.growHeightPriorityChoice(completeNode, superRule, previous)
-                RuntimeRuleItemKind.CONCATENATION -> this.growHeightConcatenation(completeNode, superRule, previous)
-                RuntimeRuleItemKind.MULTI -> this.growHeightMulti(completeNode, superRule, previous)
-                RuntimeRuleItemKind.SEPARATED_LIST -> this.growHeightSeparatedList(completeNode, superRule, previous)
-                RuntimeRuleItemKind.EMPTY -> throw ParseException("Internal Error: Should never have called grow on an EMPTY Rule")
-                else -> throw ParseException("Internal Error: RuleItem kind not handled.")
-            }
-
-        }
-
-        private fun growHeightChoice(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-            this.graph.createWithFirstChild(superRule, completeNode, previous)
-        }
-
-        private fun growHeightPriorityChoice(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-            this.graph.createWithFirstChild(superRule, completeNode, previous)
-        }
-
-        private fun growHeightConcatenation(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-            this.graph.createWithFirstChild(superRule, completeNode, previous)
-        }
-
-        private fun growHeightMulti(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-            this.graph.createWithFirstChild(superRule, completeNode, previous)
-        }
-
-        private fun growHeightSeparatedList(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-            this.graph.createWithFirstChild(superRule, completeNode, previous)
-        }
-    */
     private fun tryGraftBack(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var graftBack = false
         for (prev in previous) {
@@ -293,11 +270,12 @@ internal class RuntimeParser(
             // and graph will try to 'complete' a GraphNode when it is created.
                 val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                     ?: throw ParseException("internal error, should never happen")
-                val prp = RulePosition(info.node.runtimeRule, info.atPosition, setOf())
-                val rps = runtimeRuleSet.nextRulePosition(prp, complete.runtimeRule)
-                rps.forEach { rp ->
-                    this.graph.growNextChild(rp, info.node, complete, info.atPosition)
-                }
+                this.graph.growNextChild(info.node.targetRulePosition, info.node, complete, info.atPosition)
+                //val prp = RulePosition(info.node.runtimeRule, info.atPosition, setOf())
+                //val rps = runtimeRuleSet.nextRulePosition(prp, complete.runtimeRule)
+                //rps.forEach { rp ->
+                //    this.graph.growNextChild(rp, info.node, complete, info.atPosition)
+                //}
                 result = result or true
 
         } else {
@@ -325,7 +303,7 @@ internal class RuntimeParser(
     private fun tryGrowWidth(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var modified = false
         if (gn.canGrowWidth) { // don't grow width if its complete...cant graft back
-            val thisRP = gn.targetRulePosition
+            val thisRP = RulePosition(gn.runtimeRule, gn.nextItemIndex, setOf())// gn.targetRulePosition
             val rps = runtimeRuleSet.expectedTerminalRulePositions[thisRP] ?: arrayOf()
             for (rp in rps) {
                 //val nextRP = gn.rulePosition.next
