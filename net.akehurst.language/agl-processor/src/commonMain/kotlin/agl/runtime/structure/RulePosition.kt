@@ -19,15 +19,11 @@ package net.akehurst.language.agl.runtime.structure
 data class RulePosition(
     val runtimeRule: RuntimeRule,
     val position: Int,
-    val lookahead: Array<RuntimeRule>
+    val lookahead: Set<RuntimeRule>
 ) {
 
     companion object {
         val END_OF_RULE = -1
-    }
-
-    val items:Set<RuntimeRule> get() {
-        return runtimeRule.calcItemsAt(position)
     }
 
 }

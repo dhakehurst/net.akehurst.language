@@ -18,6 +18,7 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.parser.scannerless.InputFromCharSequence
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 import kotlin.test.Test
@@ -50,18 +51,18 @@ class test_ParseGraph {
     }
 
     @Test
-    fun canGrow_a() {
-        val goalRule = RuntimeRule(0,"a", RuntimeRuleKind.TERMINAL, false, false)
+    fun start() {
+        val userGoalRule = RuntimeRule(0,"a", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"
         val input = InputFromCharSequence(text)
-        val sut = ParseGraph(goalRule,input)
-        //mimic start
-        val gnindex = GrowingNodeIndex(goalRule.number, 0, 0, 0)
-        val gn = GrowingNode(goalRule, 0, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
-        sut.addGrowingHead(gnindex, gn)
+        val sut = ParseGraph(userGoalRule,input)
+
+        val gr = RuntimeRuleSet.createGoal(userGoalRule)
+        sut.start(gr)
 
         val actual = sut.canGrow
 
         assertEquals(true, actual)
     }
+
 }

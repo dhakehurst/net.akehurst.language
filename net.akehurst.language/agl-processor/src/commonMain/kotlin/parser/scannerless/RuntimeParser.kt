@@ -31,8 +31,8 @@ import net.akehurst.language.parser.sppt.SPPTLeafDefault
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 internal class RuntimeParser(
-        private val runtimeRuleSet: RuntimeRuleSet,
-        private val graph: ParseGraph
+    private val runtimeRuleSet: RuntimeRuleSet,
+    private val graph: ParseGraph
 ) {
     // copy of graph growing head for each iteration, cached to that we can find best match in case of error
     private var toGrow: List<GrowingNode> = listOf()
@@ -51,7 +51,7 @@ internal class RuntimeParser(
             } else if (llg.isLeaf) {
                 this.graph.findOrTryCreateLeaf(llg.runtimeRule, llg.startPosition)
             } else {
-                val cn = SPPTBranchDefault(llg.runtimeRule, llg.startPosition, llg.nextInputPosition,  llg.priority)
+                val cn = SPPTBranchDefault(llg.runtimeRule, llg.startPosition, llg.nextInputPosition, llg.priority)
                 cn.childrenAlternatives.add(llg.children)
                 cn
             }
@@ -100,7 +100,6 @@ internal class RuntimeParser(
             if (gn.isSkip) {
                 this.tryGraftBackSkipNode(gn, previous)
             } else {
-
                 // TODO: need to find a way to do either height or graft..not both, maybe!
                 // problem is deciding which
                 // try reduce first
@@ -121,8 +120,8 @@ internal class RuntimeParser(
         var modified = false
         if (gn.canGrowWidthWithSkip) { // don't grow width if its complete...cant graft back
             val rps = this.runtimeRuleSet.firstSkipRuleTerminalPositions
-            for(rp in rps) {
-                for (rr in rp.items) {
+            for (rp in rps) {
+                for (rr in rp.runtimeRule.itemsAt[rp.position]) {
                     val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
                     if (null != l) {
                         this.graph.pushToStackOf(rp, l, gn, previous)
@@ -139,22 +138,21 @@ internal class RuntimeParser(
         }
     }
 
-    private fun tryGrowHeight(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
-        var result = false
-        if (gn.hasCompleteChildren) {
-            val childRule = gn.runtimeRule
-            if (this.runtimeRuleSet.isSkipTerminal[childRule.number]) {
-                val possibleSuperRules = this.runtimeRuleSet.firstSuperNonTerminal[childRule.number]
-                for (sr in possibleSuperRules) {
-                    val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
+    /*
+        private fun tryGrowHeight1(gn: GrowingNode, previous: PreviousInfo): Boolean {
+            var result = false
+            if (gn.hasCompleteChildren) {
+                val childRule = gn.runtimeRule
+                if (this.runtimeRuleSet.isSkipTerminal[childRule.number]) {
+                    val possibleSuperRules = this.runtimeRuleSet.firstSuperNonTerminal[childRule.number]
+                    for (sr in possibleSuperRules) {
+                        val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                             ?: throw ParseException("Internal error: Should never happen")
-                    this.graph.createWithFirstChild(rp, sr, complete, previous)
-                    //this.growHeightByType(complete, sr, previous)
-                    result = result or true // TODO: this should depend on if the growHeight does something
-                }
-            } else {
-                if (previous.isEmpty()) {
-                    // do nothing
+                        val rp = RulePosition(gn.runtimeRule, 1, setOf())
+                        this.graph.createWithFirstChild(rp, sr, complete, setOf(previous))
+                        //this.growHeightByType(complete, sr, previous)
+                        result = result or true // TODO: this should depend on if the growHeight does something
+                    }
                 } else {
                     val toGrow = mutableSetOf<RuntimeRule>()
                     for ((node) in previous) {
@@ -163,54 +161,96 @@ internal class RuntimeParser(
                         //TODO: find a way to cache the calcGrowsInto
                         toGrow.addAll(this.runtimeRuleSet.calcGrowsInto(childRule, prevRule, prevItemIndex))
                     }
-                    for (info in toGrow) {
+                    for (rr in toGrow) {
                         val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
-                                ?: throw ParseException("Internal error: Should never happen")
-                        this.graph.createWithFirstChild(rp, info, complete, previous)
+                            ?: throw ParseException("Internal error: Should never happen")
+                        val rp = RulePosition(rr, 1, setOf())
+                        this.graph.createWithFirstChild(rp, rr, complete, previous)
                         //this.growHeightByType(complete, info, previous)
                         result = result or true // TODO: this should depend on if the growHeight does something
                     }
                 }
+            } else {
+                // do nothing
             }
+            return result
+        }
+    */
+    private fun tryGrowHeight(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
+        if (gn.hasCompleteChildren) {
+            val thisRP = gn.targetRulePosition
+            when (thisRP.position) {
+                0 -> { // start
+                    val thisRP: RulePosition = gn.targetRulePosition
+                    val newParentRule = thisRP.runtimeRule
+                    //if (gn.runtimeRule == prevRP.runtimeRule) { // && ?? == prevRP.position) {
+                    val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
+                        ?: throw ParseException("Internal error: Should never happen")
+                    val newTargetRPs = runtimeRuleSet.nextRulePosition(thisRP, complete.runtimeRule)
+                    newTargetRPs.forEach { tgtRP ->
+                        this.graph.createWithFirstChild(tgtRP, newParentRule, complete, previous) //maybe lookahead to wanted next token here (it would need to be part of RP)
+                    }
+                }
+                RulePosition.END_OF_RULE -> {
+                    for (prev in previous) {
+                        val rp = RulePosition(prev.node.runtimeRule, prev.atPosition, setOf())
+                        val rps = runtimeRuleSet.expectedItemRulePositionsTransitive[rp] ?: setOf()// nextRulePosition(rp, gn.runtimeRule) //FIXME: not the right last param
+                        val rpsf = rps.filter {
+                            it.runtimeRule.couldHaveChild(gn.runtimeRule, 0)
+                        }
+                        rpsf.forEach { rp ->
+                            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
+                                ?: throw ParseException("Internal error: Should never happen")
+                            val tgtRPs = runtimeRuleSet.nextRulePosition(rp, complete.runtimeRule)
+                            val newPrev = PreviousInfo(prev.node, prev.atPosition)
+                            tgtRPs.forEach {
+                                this.graph.createWithFirstChild(it, it.runtimeRule, complete, setOf(newPrev))
+                            }
+                        }
+                    }
+                }
+                else -> return false //throw ParseException("Should never happen")
+            }
+            return true
         } else {
-            // do nothing
+            return false
         }
-        return result
     }
-/*
-    private fun growHeightByType(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-        when (superRule.rhs.kind) {
-            RuntimeRuleItemKind.CHOICE_EQUAL -> this.growHeightChoice(completeNode, superRule, previous)
-            RuntimeRuleItemKind.CHOICE_PRIORITY -> this.growHeightPriorityChoice(completeNode, superRule, previous)
-            RuntimeRuleItemKind.CONCATENATION -> this.growHeightConcatenation(completeNode, superRule, previous)
-            RuntimeRuleItemKind.MULTI -> this.growHeightMulti(completeNode, superRule, previous)
-            RuntimeRuleItemKind.SEPARATED_LIST -> this.growHeightSeparatedList(completeNode, superRule, previous)
-            RuntimeRuleItemKind.EMPTY -> throw ParseException("Internal Error: Should never have called grow on an EMPTY Rule")
-            else -> throw ParseException("Internal Error: RuleItem kind not handled.")
+
+    /*
+        private fun growHeightByType(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
+            when (superRule.rhs.kind) {
+                RuntimeRuleItemKind.CHOICE_EQUAL -> this.growHeightChoice(completeNode, superRule, previous)
+                RuntimeRuleItemKind.CHOICE_PRIORITY -> this.growHeightPriorityChoice(completeNode, superRule, previous)
+                RuntimeRuleItemKind.CONCATENATION -> this.growHeightConcatenation(completeNode, superRule, previous)
+                RuntimeRuleItemKind.MULTI -> this.growHeightMulti(completeNode, superRule, previous)
+                RuntimeRuleItemKind.SEPARATED_LIST -> this.growHeightSeparatedList(completeNode, superRule, previous)
+                RuntimeRuleItemKind.EMPTY -> throw ParseException("Internal Error: Should never have called grow on an EMPTY Rule")
+                else -> throw ParseException("Internal Error: RuleItem kind not handled.")
+            }
+
         }
 
-    }
+        private fun growHeightChoice(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
+            this.graph.createWithFirstChild(superRule, completeNode, previous)
+        }
 
-    private fun growHeightChoice(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-        this.graph.createWithFirstChild(superRule, completeNode, previous)
-    }
+        private fun growHeightPriorityChoice(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
+            this.graph.createWithFirstChild(superRule, completeNode, previous)
+        }
 
-    private fun growHeightPriorityChoice(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-        this.graph.createWithFirstChild(superRule, completeNode, previous)
-    }
+        private fun growHeightConcatenation(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
+            this.graph.createWithFirstChild(superRule, completeNode, previous)
+        }
 
-    private fun growHeightConcatenation(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-        this.graph.createWithFirstChild(superRule, completeNode, previous)
-    }
+        private fun growHeightMulti(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
+            this.graph.createWithFirstChild(superRule, completeNode, previous)
+        }
 
-    private fun growHeightMulti(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-        this.graph.createWithFirstChild(superRule, completeNode, previous)
-    }
-
-    private fun growHeightSeparatedList(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
-        this.graph.createWithFirstChild(superRule, completeNode, previous)
-    }
-*/
+        private fun growHeightSeparatedList(completeNode: SPPTNodeDefault, superRule: RuntimeRule, previous: Set<PreviousInfo>) {
+            this.graph.createWithFirstChild(superRule, completeNode, previous)
+        }
+    */
     private fun tryGraftBack(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var graftBack = false
         for (prev in previous) {
@@ -238,11 +278,12 @@ internal class RuntimeParser(
 
     private fun tryGraftInto(gn: GrowingNode, info: PreviousInfo): Boolean {
         var result = false
+
         if (gn.isSkip) {
             // complete will not be null because we do not graftback unless gn has complete children
             // and graph will try to 'complete' a GraphNode when it is created.
             val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
-                    ?: throw ParseException("internal error, should never happen")
+                ?: throw ParseException("internal error, should never happen")
             this.graph.growNextSkipChild(info.node, complete)
             // info.node.duplicateWithNextSkipChild(gn);
             // this.graftInto(gn, info);
@@ -250,10 +291,15 @@ internal class RuntimeParser(
         } else if (info.node.expectsItemAt(gn.runtimeRule, info.atPosition)) {
             // complete will not be null because we do not graftback unless gn has complete children
             // and graph will try to 'complete' a GraphNode when it is created.
-            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
+                val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                     ?: throw ParseException("internal error, should never happen")
-            this.graph.growNextChild(rp, info.node, complete, info.atPosition)
-            result = result or true
+                val prp = RulePosition(info.node.runtimeRule, info.atPosition, setOf())
+                val rps = runtimeRuleSet.nextRulePosition(prp, complete.runtimeRule)
+                rps.forEach { rp ->
+                    this.graph.growNextChild(rp, info.node, complete, info.atPosition)
+                }
+                result = result or true
+
         } else {
             // drop
             result = result or false
@@ -279,32 +325,36 @@ internal class RuntimeParser(
     private fun tryGrowWidth(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var modified = false
         if (gn.canGrowWidth) { // don't grow width if its complete...cant graft back
-            val thisRP = gn.rulePosition
-            val rps:Set<RulePosition> = runtimeRuleSet.nextExpectedTerminalRulePositions[thisRP] ?: emptySet()
+            val thisRP = gn.targetRulePosition
+            val rps = runtimeRuleSet.expectedTerminalRulePositions[thisRP] ?: arrayOf()
             for (rp in rps) {
                 //val nextRP = gn.rulePosition.next
-                for (rr in rp.items) {
-                        val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
-                        if (null != l) {
-                            this.graph.pushToStackOf(rp, l, gn, previous)
-                            //modified = this.pushStackNewRoot(l, rp, gn, previous) //TODO: leaf + RulePosition that terminal fits into
+                for (rr in rp.runtimeRule.itemsAt[rp.position]) {
+                    val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
+                    if (null != l) {
+                        val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
+                        newRP.forEach {
+                            this.graph.pushToStackOf(it, l, gn, previous)
                         }
+                        //modified = this.pushStackNewRoot(l, rp, gn, previous) //TODO: leaf + RulePosition that terminal fits into
+                    }
                 }
             }
         }
         return modified
     }
-/*
-    private fun pushStackNewRoot(leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>): Boolean {
-        var modified = false
-        // no existing parent was suitable, use newRoot
-        if (this.hasStackedPotential(leafNode, stack)) {
-            this.graph.pushToStackOf(rp, leafNode, stack, previous)
-            modified = true
+
+    /*
+        private fun pushStackNewRoot(leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>): Boolean {
+            var modified = false
+            // no existing parent was suitable, use newRoot
+            if (this.hasStackedPotential(leafNode, stack)) {
+                this.graph.pushToStackOf(rp, leafNode, stack, previous)
+                modified = true
+            }
+            return modified
         }
-        return modified
-    }
-*/
+    */
     private fun hasStackedPotential(completeNode: SPPTNodeDefault, stack: GrowingNode): Boolean {
         if (completeNode.isSkip) {
             return true
@@ -312,12 +362,12 @@ internal class RuntimeParser(
             // if node is nextexpected item on stack, or could grow into nextexpected item
             if (stack.hasNextExpectedItem) {
 
-               if (
-                       this.runtimeRuleSet.calcCanGrowInto(completeNode.runtimeRule, stack.runtimeRule, stack.nextItemIndex)
-                   || this.runtimeRuleSet.isSkipTerminal[completeNode.runtimeRule.number]
-               ) {
-                   return true;
-               }
+                if (
+                    this.runtimeRuleSet.calcCanGrowInto(completeNode.runtimeRule, stack.runtimeRule, stack.nextItemIndex)
+                    || this.runtimeRuleSet.isSkipTerminal[completeNode.runtimeRule.number]
+                ) {
+                    return true;
+                }
 /*
                 for (expectedRule in stack.nextExpectedItems) {
                     if (completeNode.runtimeRule.number == expectedRule.number) {

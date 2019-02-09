@@ -22,7 +22,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class GrowingNode(
-        val rulePosition: RulePosition,
+        val targetRulePosition: RulePosition,
         val runtimeRule: RuntimeRule,
         val startPosition: Int,
         val nextInputPosition: Int,

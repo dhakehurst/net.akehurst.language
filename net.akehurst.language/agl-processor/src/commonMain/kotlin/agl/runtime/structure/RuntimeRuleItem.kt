@@ -39,19 +39,29 @@ class RuntimeRuleItem(
   val items : Array<out RuntimeRule>
 ) {
 
+    companion object {
+        val EMPTY__RULE_THAT_IS_EMPTY = 0
+        val MULTI__ITEM = 0
+        val MULTI__EMPTY_RULE = 1
+        val SLIST__ITEM = 0
+        val SLIST__SEPARATOR = 1
+        val SLIST__EMPTY_RULE = 2
+
+    }
+
     init {
         if (this.items.isEmpty()) {
             throw ParseException("RHS of a non terminal rule must contain some items")
         }
     }
 
-    val EMPTY__ruleThatIsEmpty: RuntimeRule get() { return this.items[0] }
-    val MULTI__repeatedItem: RuntimeRule get() { return this.items[0] }
-    val MULTI__emptyRule: RuntimeRule get() { return this.items[1] }
+    val EMPTY__ruleThatIsEmpty: RuntimeRule get() { return this.items[EMPTY__RULE_THAT_IS_EMPTY] }
+    val MULTI__repeatedItem: RuntimeRule get() { return this.items[MULTI__ITEM] }
+    val MULTI__emptyRule: RuntimeRule get() { return this.items[MULTI__EMPTY_RULE] }
 
-    val SLIST__repeatedItem: RuntimeRule get() { return this.items[0] }
-    val SLIST__separator: RuntimeRule get() { return this.items[1] }
-    val SLIST__emptyRule: RuntimeRule get() { return this.items[2] }
+    val SLIST__repeatedItem: RuntimeRule get() { return this.items[SLIST__ITEM] }
+    val SLIST__separator: RuntimeRule get() { return this.items[SLIST__SEPARATOR] }
+    val SLIST__emptyRule: RuntimeRule get() { return this.items[SLIST__EMPTY_RULE] }
 
     //val listSeparator: RuntimeRule get() { return this.items[1] } //should we check type here or is that runtime overhead?
 

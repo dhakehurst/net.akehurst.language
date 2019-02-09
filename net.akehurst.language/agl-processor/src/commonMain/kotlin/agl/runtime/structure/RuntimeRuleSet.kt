@@ -21,6 +21,7 @@ import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.parser.ParserConstructionFailedException
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.PreviousInfo
+import net.akehurst.language.collections.transitveClosure
 import net.akehurst.language.parser.scannerless.InputFromCharSequence
 
 class RuntimeRuleSet(rules: List<RuntimeRule>) {
@@ -92,12 +93,16 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         this.calcFirstTerminalSkipRulePositions()
     }
 
-    val nextExpectedTerminalRulePositions = lazyMap<RulePosition, Set<RulePosition>> {
-        calcNextExpectedTerminalRulePositions(it)
+    val expectedTerminalRulePositions = lazyMap<RulePosition, Array<RulePosition>> {
+        calcExpectedTerminalRulePositions(it).toTypedArray()
     }
 
-    val nextExpectedItemRulePositions = lazyMap<RulePosition, Set<RulePosition>> {
-        calcNextExpectedItemRulePositions(it)
+    val expectedItemRulePositions = lazyMap<RulePosition, Set<RulePosition>> {
+        calcExpectedItemRulePositions(it)
+    }
+
+    val expectedItemRulePositionsTransitive = lazyMap<RulePosition, Set<RulePosition>> {
+        calcExpectedItemRulePositionTransitive(it)
     }
 
     val subTerminals: Array<Set<RuntimeRule>> by lazy {
@@ -136,6 +141,18 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
     }
 
+    fun buildCaches() {
+        this.allSkipRules.size
+        this.allSkipTerminals.size
+        this.isSkipTerminal.size
+        this.terminalRules.size
+        this.firstTerminals.size
+        this.firstSkipRuleTerminalPositions.size
+        this.firstSuperNonTerminal.size
+        this.subNonTerminals.size
+        this.subTerminals.size
+    }
+
     fun getActions(gn: GrowingNode, previous: Set<PreviousInfo>): List<ParseAction> {
         val result = mutableListOf<ParseAction>()
 /*
@@ -169,6 +186,58 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return this.runtimeRules[number]
     }
 
+    /**
+     * itemRule is the rule we use to increment rp
+     */
+    fun nextRulePosition(rp: RulePosition, itemRule: RuntimeRule): Array<RulePosition> {
+        return when (rp.runtimeRule.rhs.kind) {
+            RuntimeRuleItemKind.EMPTY -> throw ParseException("This should never happen!")
+            RuntimeRuleItemKind.CHOICE_EQUAL -> arrayOf(RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf()))
+            RuntimeRuleItemKind.CHOICE_PRIORITY -> arrayOf(RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf()))
+            RuntimeRuleItemKind.CONCATENATION -> {
+                val np = rp.position + 1
+                if (np < rp.runtimeRule.rhs.items.size) {
+                    arrayOf(RulePosition(rp.runtimeRule, np, setOf()))
+                } else {
+                    //need to compute the set of rps that come after the end of this rule
+                    //    go back to goal
+                    arrayOf(RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf()))
+                    //if (prevNode.previous.isEmpty()) {
+                    //    arrayOf(RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf()))
+                    //} else {
+                    //    nextRulePosition(prevNode.rulePosition, rp.runtimeRule) //TODO: a hack!
+                    //}
+                }
+            }
+            RuntimeRuleItemKind.MULTI -> when {
+                rp.runtimeRule.rhs.multiMin==0 && itemRule == rp.runtimeRule.rhs.MULTI__emptyRule -> arrayOf(
+                    RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf())
+                )
+                itemRule == rp.runtimeRule.rhs.MULTI__repeatedItem -> arrayOf(
+                    RulePosition(rp.runtimeRule, RuntimeRuleItem.MULTI__ITEM, setOf()),
+                    RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf())
+                )
+                else -> arrayOf() //throw ParseException("This should never happen!")
+            }
+            RuntimeRuleItemKind.SEPARATED_LIST -> when {
+                rp.runtimeRule.rhs.multiMin==0 && itemRule == rp.runtimeRule.rhs.SLIST__emptyRule -> arrayOf(
+                    RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf())
+                )
+                itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> arrayOf(
+                    RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, setOf())
+                )
+                itemRule == rp.runtimeRule.rhs.SLIST__separator -> arrayOf(
+                    RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, setOf()),
+                    RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf())
+                )
+                else -> throw ParseException("This should never happen!")
+            }
+            RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> throw ParseException("Not yet supported")
+            RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> throw ParseException("Not yet supported")
+            RuntimeRuleItemKind.UNORDERED -> throw ParseException("Not yet supported")
+        }
+    }
+
     fun findNextExpectedItems(runtimeRule: RuntimeRule, nextItemIndex: Int): Set<RuntimeRule> {
         return runtimeRule.findNextExpectedItems(nextItemIndex)
     }
@@ -183,50 +252,55 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return result
     }
 
-    private fun calcLookahead(rp:RulePosition) : Set<RuntimeRule> {
-
+    private fun calcLookahead(rp: RulePosition): Set<RuntimeRule> {
+        return setOf()
     }
 
-    private fun calcNextExpectedItemRulePositions(rp:RulePosition): Set<RulePosition> {
-        return rp.runtimeRule.calcNextExpectedRulePosition(rp.position)
+    private fun calcExpectedItemRulePositions(rp: RulePosition): Set<RulePosition> {
+        return rp.runtimeRule.calcExpectedRulePositions(rp.position)
     }
 
-    private fun calcNextExpectedRulePositionTransitive(rp: RulePosition): Set<RulePosition> {
-        var result = rp.runtimeRule.findNextExpectedRulePosition(rp.position)
-        var copy = emptySet<RulePosition>()
-        while (result != copy) {
-            copy = result.toSet()
-            result += result.flatMap {
+    private fun calcExpectedItemRulePositionTransitive(rp: RulePosition): Set<RulePosition> {
+        var s = rp.runtimeRule.calcExpectedRulePositions(rp.position)
 
-                it.items.flatMap {
+        return s.transitveClosure { rp ->
+            if (RulePosition.END_OF_RULE == rp.position) {
+                setOf<RulePosition>()
+            } else {
+                rp.runtimeRule.itemsAt[rp.position].flatMap {
                     if (it.isTerminal) {
-                        emptySet<RulePosition>()
+                        setOf(rp)
                     } else {
-                        it.findNextExpectedRulePosition(0)
+                        it.calcExpectedRulePositions(0)
                     }
                 }
-
             }.toSet()
         }
-
-        return result
     }
 
-    fun calcNextExpectedTerminalRulePositions(rp: RulePosition): Set<RulePosition> {
-        val nextItems = this.calcNextExpectedRulePositionTransitive(rp)
-        return nextItems.filter { it.items.any { it.isTerminal } }.toSet() //TODO: cache ?
+    private fun calcExpectedTerminalRulePositions(rp: RulePosition): Set<RulePosition> {
+        val nextItems = this.calcExpectedItemRulePositionTransitive(rp)
+        return nextItems.filter {
+            if (RulePosition.END_OF_RULE == it.position) {
+                false
+            } else {
+                it.runtimeRule.itemsAt[it.position].any { it.isTerminal }
+            }
+        }.toSet() //TODO: cache ?
     }
 
     //TODO: cache this
     private fun calcFirstTerminalSkipRulePositions(): Set<RulePosition> {
         val skipRuleStarts = allSkipRules.map {
-            val x = firstTerminals[]
-            RulePosition(it, 0)
+            val x = firstTerminals[it.number]
+            RulePosition(it, 0, setOf())
         }
         val nextItems = skipRuleStarts.flatMap {
-            this.findNextExpectedRulePositionTransitive(it)
+            this.calcExpectedItemRulePositionTransitive(it)
         }
-        return nextItems.filter { it.items.any { it.isTerminal } }.toSet() //TODO: cache ?
+        return nextItems.filter {
+            it.runtimeRule.itemsAt[it.position].any { it.isTerminal }
+        }.toSet() //TODO: cache ?
     }
 
     private fun calcFirstSubRules(runtimeRule: RuntimeRule): Set<RuntimeRule> {

@@ -324,11 +324,11 @@ internal class ParseGraph(
             this.removeGrowing(parent)
         }
     }
-
+//TODO: addPrevious! goalrule growing node, maybe
     fun start(goalRule:RuntimeRule) {
         val userGoalRule = goalRule.rhs.items[0]
         val gnindex = GrowingNodeIndex(goalRule.number, 0, 0, 0)
-        val rp = RulePosition(goalRule, 0, RuntimeRuleSet.END_OF_TEXT)
+        val rp = RulePosition(goalRule, 0, setOf(RuntimeRuleSet.END_OF_TEXT))
         val gn = GrowingNode(rp, userGoalRule, 0, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
         this.addGrowingHead(gnindex, gn)
     }
@@ -367,7 +367,7 @@ internal class ParseGraph(
     fun growNextSkipChild(parent: GrowingNode, nextChild: SPPTNodeDefault) {
         val nextItemIndex = parent.nextItemIndex
         val priority = parent.priority
-        val rp = parent.rulePosition
+        val rp = parent.targetRulePosition
         this.growNextChildAt(rp, parent, priority, nextChild, nextItemIndex)
     }
 
