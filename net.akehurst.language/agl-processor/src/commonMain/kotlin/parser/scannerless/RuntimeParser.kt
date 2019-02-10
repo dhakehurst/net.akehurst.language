@@ -214,11 +214,12 @@ internal class RuntimeParser(
                         }
                     } else {
                         for (prev in previous) {
-                            val goalRp = this.graph.goalNode.targetRulePosition //RulePosition(prev.node.runtimeRule, prev.atPosition, setOf())
+                            //val goalRp = this.graph.goalNode.targetRulePosition
+                            val goalRp = RulePosition(prev.node.runtimeRule, prev.atPosition, setOf())
                             val rps = runtimeRuleSet.expectedItemRulePositionsTransitive[goalRp]
                                 ?: setOf()// nextRulePosition(rp, gn.runtimeRule) //FIXME: not the right last param
                             val rpsf = rps.filter { //TODO: do we need this filter?
-                                !it.runtimeRule.isGoal && it.runtimeRule.couldHaveChild(gn.runtimeRule, 0)
+                                 it.position==0 && it.runtimeRule.couldHaveChild(gn.runtimeRule, 0)
                             }
                             rpsf.forEach { rp ->
                                 val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
