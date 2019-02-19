@@ -194,51 +194,55 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
      * itemRule is the rule we use to increment rp
      */
     fun nextRulePosition(rp: RulePosition, itemRule: RuntimeRule): Array<RulePosition> {
-        return when (rp.runtimeRule.rhs.kind) {
-            RuntimeRuleItemKind.EMPTY -> throw ParseException("This should never happen!")
-            RuntimeRuleItemKind.CHOICE_EQUAL -> arrayOf(RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf()))
-            RuntimeRuleItemKind.CHOICE_PRIORITY -> arrayOf(RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf()))
-            RuntimeRuleItemKind.CONCATENATION -> {
-                val np = rp.position + 1
-                if (np < rp.runtimeRule.rhs.items.size) {
-                    arrayOf(RulePosition(rp.runtimeRule, np, setOf()))
-                } else {
-                    //need to compute the set of rps that come after the end of this rule
-                    //    go back to goal
-                    arrayOf(RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf()))
-                    //if (prevNode.previous.isEmpty()) {
-                    //    arrayOf(RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf()))
-                    //} else {
-                    //    nextRulePosition(prevNode.rulePosition, rp.runtimeRule) //TODO: a hack!
-                    //}
+        return if(RulePosition.END_OF_RULE == rp.position) {
+            arrayOf()
+        } else {
+            when (rp.runtimeRule.rhs.kind) {
+                RuntimeRuleItemKind.EMPTY -> throw ParseException("This should never happen!")
+                RuntimeRuleItemKind.CHOICE_EQUAL -> arrayOf(RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf()))
+                RuntimeRuleItemKind.CHOICE_PRIORITY -> arrayOf(RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf()))
+                RuntimeRuleItemKind.CONCATENATION -> {
+                    val np = rp.position + 1
+                    if (np < rp.runtimeRule.rhs.items.size) {
+                        arrayOf(RulePosition(rp.runtimeRule, np, setOf()))
+                    } else {
+                        //need to compute the set of rps that come after the end of this rule
+                        //    go back to goal
+                        arrayOf(RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf()))
+                        //if (prevNode.previous.isEmpty()) {
+                        //    arrayOf(RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf()))
+                        //} else {
+                        //    nextRulePosition(prevNode.rulePosition, rp.runtimeRule) //TODO: a hack!
+                        //}
+                    }
                 }
+                RuntimeRuleItemKind.MULTI -> when {
+                    rp.runtimeRule.rhs.multiMin == 0 && itemRule == rp.runtimeRule.rhs.MULTI__emptyRule -> arrayOf(
+                        RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf())
+                    )
+                    itemRule == rp.runtimeRule.rhs.MULTI__repeatedItem -> arrayOf(
+                        RulePosition(rp.runtimeRule, RuntimeRuleItem.MULTI__ITEM, setOf()),
+                        RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf())
+                    )
+                    else -> arrayOf() //throw ParseException("This should never happen!")
+                }
+                RuntimeRuleItemKind.SEPARATED_LIST -> when {
+                    rp.runtimeRule.rhs.multiMin == 0 && itemRule == rp.runtimeRule.rhs.SLIST__emptyRule -> arrayOf(
+                        RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf())
+                    )
+                    itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> arrayOf(
+                        RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, setOf())
+                    )
+                    itemRule == rp.runtimeRule.rhs.SLIST__separator -> arrayOf(
+                        RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, setOf()),
+                        RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf())
+                    )
+                    else -> throw ParseException("This should never happen!")
+                }
+                RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> throw ParseException("Not yet supported")
+                RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> throw ParseException("Not yet supported")
+                RuntimeRuleItemKind.UNORDERED -> throw ParseException("Not yet supported")
             }
-            RuntimeRuleItemKind.MULTI -> when {
-                rp.runtimeRule.rhs.multiMin==0 && itemRule == rp.runtimeRule.rhs.MULTI__emptyRule -> arrayOf(
-                    RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf())
-                )
-                itemRule == rp.runtimeRule.rhs.MULTI__repeatedItem -> arrayOf(
-                    RulePosition(rp.runtimeRule, RuntimeRuleItem.MULTI__ITEM, setOf()),
-                    RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf())
-                )
-                else -> arrayOf() //throw ParseException("This should never happen!")
-            }
-            RuntimeRuleItemKind.SEPARATED_LIST -> when {
-                rp.runtimeRule.rhs.multiMin==0 && itemRule == rp.runtimeRule.rhs.SLIST__emptyRule -> arrayOf(
-                    RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf())
-                )
-                itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> arrayOf(
-                    RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, setOf())
-                )
-                itemRule == rp.runtimeRule.rhs.SLIST__separator -> arrayOf(
-                    RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, setOf()),
-                    RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf())
-                )
-                else -> throw ParseException("This should never happen!")
-            }
-            RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> throw ParseException("Not yet supported")
-            RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> throw ParseException("Not yet supported")
-            RuntimeRuleItemKind.UNORDERED -> throw ParseException("Not yet supported")
         }
     }
 

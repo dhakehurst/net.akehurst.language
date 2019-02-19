@@ -19,15 +19,13 @@ package net.akehurst.language.agl.runtime.graph
 import net.akehurst.language.agl.runtime.structure.RulePosition
 
 data class GrowingNodeIndex(
-        val targetRulePosition: RulePosition,
-        val ruleNumber: Int,
+        val currentRulePosition: RulePosition,
         val startPosition: Int,
-        val nextInputPosition: Int,
-        val nextItemIndex: Int
+        val nextInputPosition: Int
 ) {
 
 
     override fun toString(): String {
-        return "(${ruleNumber},${startPosition},${nextInputPosition},${nextItemIndex})"
+        return "(${currentRulePosition.runtimeRule.number},${startPosition},${nextInputPosition},${currentRulePosition.position})"
     }
 }

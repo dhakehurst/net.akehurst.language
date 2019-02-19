@@ -26,4 +26,5 @@ data class RulePosition(
         val END_OF_RULE = -1
     }
 
+    val isAtEnd = position == END_OF_RULE
 }

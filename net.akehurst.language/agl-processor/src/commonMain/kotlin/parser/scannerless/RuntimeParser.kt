@@ -126,7 +126,7 @@ internal class RuntimeParser(
                     if (null != l) {
                         val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
                         newRP.forEach {
-                            this.graph.pushToStackOf(it, l, gn, previous)
+                            this.graph.pushToStackOf(it, l, gn, previous, setOf())
                             modified = true
                         }
                     }
@@ -182,21 +182,28 @@ internal class RuntimeParser(
     */
     private fun tryGrowHeight(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         if (gn.hasCompleteChildren) {
-            val thisRP = gn.targetRulePosition
-            when (thisRP.position) {
-                /*
+            val tgtRP = gn.targetRulePosition
+            when (tgtRP.position) {
                 0 -> { // start
-                    val thisRP: RulePosition = gn.targetRulePosition
-                    val newParentRule = thisRP.runtimeRule
+                    val newParentRule = tgtRP.runtimeRule
                     //if (gn.runtimeRule == prevRP.runtimeRule) { // && ?? == prevRP.position) {
                     val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                         ?: throw ParseException("Internal error: Should never happen")
-                    val newTargetRPs = runtimeRuleSet.nextRulePosition(thisRP, complete.runtimeRule)
-                    newTargetRPs.forEach { tgtRP ->
-                        this.graph.createWithFirstChild(tgtRP, newParentRule, complete, previous) //maybe lookahead to wanted next token here (it would need to be part of RP)
+                    for (prev in previous) {
+                        val goalRp = RulePosition(prev.node.runtimeRule, prev.atPosition, setOf())
+                        val rps = runtimeRuleSet.expectedItemRulePositionsTransitive[goalRp]
+                            ?: setOf()// nextRulePosition(rp, gn.runtimeRule) //FIXME: not the right last param
+                        val rpsf = rps.filter { //TODO: do we need this filter?
+                            //     rps2.contains(it.runtimeRule) &&
+                            it.position==0 && it.runtimeRule.couldHaveChild(gn.runtimeRule, 0)
+                        }
+                        val newTargetRPs = runtimeRuleSet.firstSuperNonTerminal[tgtRP.runtimeRule.number].map { RulePosition(it,0,setOf()) }
+                        newTargetRPs.forEach { newTgtRP ->
+                            val lookaheadItems = findLookaheadItems(newTgtRP, gn.runtimeRule, null)
+                            this.graph.createWithFirstChild(newTgtRP, newParentRule, complete, previous, lookaheadItems) //maybe lookahead to wanted next token here (it would need to be part of RP)
+                        }
                     }
                 }
-                */
                 RulePosition.END_OF_RULE -> {
                     //TODO: maybe we need to grow height of a skip non-terminal!
                     if (this.runtimeRuleSet.isSkipTerminal[gn.runtimeRule.number]) {
@@ -209,25 +216,42 @@ internal class RuntimeParser(
                                 ?: throw ParseException("Internal error: Should never happen")
                             val tgtRPs = runtimeRuleSet.nextRulePosition(rp, complete.runtimeRule)
                             tgtRPs.forEach {
-                                this.graph.createWithFirstChild(it, it.runtimeRule, complete, previous)
+                                val lookaheadItems = findLookaheadItems(it, gn.runtimeRule, null)
+                                this.graph.createWithFirstChild(it, it.runtimeRule, complete, previous, lookaheadItems)
                             }
                         }
                     } else {
                         for (prev in previous) {
                             //val goalRp = this.graph.goalNode.targetRulePosition
                             val goalRp = RulePosition(prev.node.runtimeRule, prev.atPosition, setOf())
-                            val rps = runtimeRuleSet.expectedItemRulePositionsTransitive[goalRp]
-                                ?: setOf()// nextRulePosition(rp, gn.runtimeRule) //FIXME: not the right last param
+                            val rps = runtimeRuleSet.expectedItemRulePositionsTransitive[goalRp] ?: setOf()// nextRulePosition(rp, gn.runtimeRule) //FIXME: not the right last param
+                            val rps2 = runtimeRuleSet.expectedItemRulePositionsTransitive[prev.node.targetRulePosition] ?: setOf()// nextRulePosition(rp, gn.runtimeRule) //FIXME: not the right last param
+                            //val rps2 = this.runtimeRuleSet.calcGrowsInto(gn.runtimeRule, prev.node.runtimeRule, prev.atPosition)
                             val rpsf = rps.filter { //TODO: do we need this filter?
+                            //     rps2.contains(it.runtimeRule) &&
                                  it.position==0 && it.runtimeRule.couldHaveChild(gn.runtimeRule, 0)
+                            }
+                            val rpsf2 = rpsf.filter {
+                                val nextRP = runtimeRuleSet.nextRulePosition(prev.node.targetRulePosition, it.runtimeRule)
+                                nextRP.any{ nrp ->
+                                    val lh:Array<RulePosition> = runtimeRuleSet.expectedTerminalRulePositions[nrp] ?: arrayOf<RulePosition>()
+                                    lh.any {trp ->
+                                        trp.runtimeRule.itemsAt[trp.position].any {
+                                            null != graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
+                                        }
+                                    }
+                                }
                             }
                             rpsf.forEach { rp ->
                                 val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                                     ?: throw ParseException("Internal error: Should never happen")
-                                val tgtRPs = runtimeRuleSet.nextRulePosition(rp, complete.runtimeRule)
+                                val tgtRules =  runtimeRuleSet.firstSuperNonTerminal[rp.runtimeRule.number]
+
                                 val newPrev = PreviousInfo(prev.node, prev.atPosition)
-                                tgtRPs.forEach {
-                                    this.graph.createWithFirstChild(it, it.runtimeRule, complete, setOf(newPrev))
+                                tgtRules.forEach {
+                                    val newTgtRp = RulePosition(it, 0, setOf())
+                                    val lookaheadItems = findLookaheadItems(newTgtRp, gn.runtimeRule, prev)
+                                    this.graph.createWithFirstChild(newTgtRp, rp.runtimeRule, complete, setOf(newPrev),lookaheadItems)
                                 }
                             }
                         }
@@ -266,29 +290,32 @@ internal class RuntimeParser(
         return result
     }
 
-    private fun tryGraftInto(gn: GrowingNode, info: PreviousInfo): Boolean {
+    private fun tryGraftInto(gn: GrowingNode, prev: PreviousInfo): Boolean {
         var result = false
 
+        //if (gn.targetRulePosition.position == 0) return false
+
+        val correctTgt = gn.currentRulePosition.isAtEnd && gn.targetRulePosition.runtimeRule.number==prev.node.runtimeRule.number //TODO: can we get the proper next target if we grow height to completion immediately!
         if (gn.isSkip) {
             // complete will not be null because we do not graftback unless gn has complete children
             // and graph will try to 'complete' a GraphNode when it is created.
             val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                 ?: throw ParseException("internal error, should never happen")
-            this.graph.growNextSkipChild(info.node, complete)
+            val lookaheadItems = findLookaheadItems(prev.node.targetRulePosition, gn.runtimeRule, prev)
+            this.graph.growNextSkipChild(prev.node, complete, prev.node.lookaheadItems)
             // info.node.duplicateWithNextSkipChild(gn);
             // this.graftInto(gn, info);
             result = result or true
-        } else if (info.node.expectsItemAt(gn.runtimeRule, info.atPosition)) {
+        } else if (correctTgt && prev.node.expectsItemAt(gn.runtimeRule, prev.atPosition)) { //TODO: could we use gn.targetRulePosition here ?
             // complete will not be null because we do not graftback unless gn has complete children
             // and graph will try to 'complete' a GraphNode when it is created.
                 val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                     ?: throw ParseException("internal error, should never happen")
                 //this.graph.growNextChild(info.node.targetRulePosition, info.node, complete, info.atPosition)
-                val prp = info.node.targetRulePosition//RulePosition(info.node.runtimeRule, info.atPosition, setOf())
-                val rps = runtimeRuleSet.nextRulePosition(prp, complete.runtimeRule)
-                rps.forEach { rp ->
-                    this.graph.growNextChild(rp, info.node, complete, info.atPosition)
-                }
+
+                    val lookaheadItems = prev.node.lookaheadItems // findLookaheadItems(prev.node.targetRulePosition, gn.runtimeRule, prev)
+                    this.graph.growNextChild(prev.node, complete, prev.atPosition,lookaheadItems)
+
                 result = result or true
 
         } else {
@@ -316,25 +343,94 @@ internal class RuntimeParser(
     private fun tryGrowWidth(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var modified = false
         if (gn.canGrowWidth) { // don't grow width if its complete...cant graft back
-            val thisRP = RulePosition(gn.runtimeRule, gn.nextItemIndex, setOf())// gn.targetRulePosition
-            val rps = runtimeRuleSet.expectedTerminalRulePositions[thisRP] ?: arrayOf()
+            //val thisRP = RulePosition(gn.runtimeRule, gn.nextItemIndex, setOf())// gn.targetRulePosition
+            val rps = runtimeRuleSet.expectedTerminalRulePositions[gn.currentRulePosition] ?: arrayOf()
+            //val rps2 = previous.flatMap{prev->this.runtimeRuleSet.calcGrowsInto( ??? gn.runtimeRule, prev.node.runtimeRule, prev.atPosition)}
+            //val rpsf = rps.filter { //TODO: do we need this filter?
+            //    (rps2.contains(it.runtimeRule) || rps2.isEmpty())
+            //}
             for (rp in rps) {
                 //val nextRP = gn.rulePosition.next
-                for (rr in rp.runtimeRule.itemsAt[rp.position]) {
+                val items = rp.runtimeRule.itemsAt[rp.position]
+                for (rr in items) {
                     if (rr.isTerminal) { //it might not be, e.g. if rp is in a multi,0 where it could be empty
                         val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
                         if (null != l) {
-                            val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
-                            newRP.forEach {
-                                this.graph.pushToStackOf(it, l, gn, previous)
+                            if (previous.isEmpty()) {
+                                val lookaheadItems = findLookaheadItems(rp, rr, null)
+                                val lhok = lookaheadItems.any{ lhi ->
+                                    null!=this.graph.findOrTryCreateLeaf(lhi, gn.nextInputPosition+l.matchedTextLength)
+                                }
+                                if (lhok) {
+                                    this.graph.pushToStackOf(rp, l, gn, previous, lookaheadItems)
+                                }
+                            } else {
+                                for (prev in previous) {
+
+                                    val lookaheadItems = findLookaheadItems(rp, rr, prev)
+                                    val lhok = lookaheadItems.any{ lhi ->
+                                        null!=this.graph.findOrTryCreateLeaf(lhi, gn.nextInputPosition+l.matchedTextLength)
+                                    }
+                                    //val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
+                                    //newRP.forEach {
+                                    if (lhok) {
+                                        this.graph.pushToStackOf(rp, l, gn, previous, lookaheadItems)
+                                    }
+                                    //}
+                                    //modified = this.pushStackNewRoot(l, rp, gn, previous) //TODO: leaf + RulePosition that terminal fits into
+                                }
                             }
-                            //modified = this.pushStackNewRoot(l, rp, gn, previous) //TODO: leaf + RulePosition that terminal fits into
                         }
                     }
                 }
             }
         }
         return modified
+    }
+
+    private fun findLookaheadItems(rp:RulePosition, item:RuntimeRule, prev:PreviousInfo?) :Set<RuntimeRule> {
+        val result = mutableSetOf<RuntimeRule>()
+        val erps = runtimeRuleSet.expectedItemRulePositionsTransitive[rp] ?: setOf()
+        for(crp in erps) {
+            val nextRPs = runtimeRuleSet.nextRulePosition(crp, item)
+            for (nrp in nextRPs) {
+                if (nrp.isAtEnd) {
+
+                    if (null == prev) {
+                        result.add(RuntimeRuleSet.END_OF_TEXT)
+                    } else {
+                        val goalRp = RulePosition(prev.node.runtimeRule, prev.atPosition, setOf())
+                        val rps = runtimeRuleSet.expectedItemRulePositionsTransitive[goalRp] ?: setOf()// nextRulePosition(rp, gn.runtimeRule) //FIXME: not the right last param
+                        val rps2 = runtimeRuleSet.expectedItemRulePositionsTransitive[prev.node.targetRulePosition] ?: setOf()// nextRulePosition(rp, gn.runtimeRule) //FIXME: not the right last param
+                        //val rps2 = this.runtimeRuleSet.calcGrowsInto(gn.runtimeRule, prev.node.runtimeRule, prev.atPosition)
+
+                        val lhrp = rps.flatMap { runtimeRuleSet.nextRulePosition(it,crp.runtimeRule ).toSet() }
+                        val lht = lhrp.flatMap {
+                            if (it.runtimeRule == graph.runtimeGoalRule) {
+                                it.runtimeRule.itemsAt[it.position].flatMap {
+                                    if (it.isTerminal) {
+                                        setOf(it)
+                                    } else {
+                                        runtimeRuleSet.firstTerminals[it.number]
+                                    }
+                                }
+                            } else {
+                                runtimeRuleSet.firstTerminals[it.runtimeRule.number]
+                            }
+                        }
+                        val growsInto = runtimeRuleSet.firstSuperNonTerminal[nrp.runtimeRule.number]
+                        val lhi = growsInto.flatMap { runtimeRuleSet.firstTerminals[it.number] }
+                        result.addAll( lht ) //TODO: what about getting the EOT ?
+                    }
+                } else {
+                    if (nrp.runtimeRule == graph.runtimeGoalRule) {
+                        result.add(RuntimeRuleSet.END_OF_TEXT)
+                    }
+                    result.addAll( runtimeRuleSet.findNextExpectedTerminals(nrp.runtimeRule, nrp.position) )
+                }
+            }
+        }
+        return result
     }
 
     /*
@@ -356,7 +452,7 @@ internal class RuntimeParser(
             if (stack.hasNextExpectedItem) {
 
                 if (
-                    this.runtimeRuleSet.calcCanGrowInto(completeNode.runtimeRule, stack.runtimeRule, stack.nextItemIndex)
+                    this.runtimeRuleSet.calcCanGrowInto(completeNode.runtimeRule, stack.runtimeRule, stack.currentRulePosition.position)
                     || this.runtimeRuleSet.isSkipTerminal[completeNode.runtimeRule.number]
                 ) {
                     return true;

@@ -22,23 +22,26 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class GrowingNode(
-        val targetRulePosition: RulePosition,
-        val runtimeRule: RuntimeRule,
+        val targetRulePosition: RulePosition, // rp that this node is contributing to
+        val currentRulePosition : RulePosition, // current rp of this node, it is growing, this changes (for new node) when children are added
+        //val runtimeRule: RuntimeRule,
         val startPosition: Int,
         val nextInputPosition: Int,
-        val nextItemIndex: Int,
+        //val nextItemIndex: Int,
         val priority: Int,
         val children: List<SPPTNodeDefault>,
-        val numNonSkipChildren: Int
+        val numNonSkipChildren: Int,
+        val lookaheadItems:Set<RuntimeRule>
 ) {
 
-    private val hashCode_cache = intArrayOf(this.runtimeRule.number, this.startPosition, this.nextInputPosition, this.nextItemIndex).contentHashCode()
+    private val hashCode_cache = intArrayOf(this.runtimeRule.number, currentRulePosition.position, this.startPosition, this.nextInputPosition).contentHashCode()
 
     val matchedTextLength:Int = this.nextInputPosition - this.startPosition
+    val runtimeRule get() = currentRulePosition.runtimeRule
 
     var previous: MutableSet<PreviousInfo> = mutableSetOf()
     val next: MutableList<GrowingNode> = mutableListOf()
-    val hasCompleteChildren: Boolean = this.runtimeRule.isCompleteChildren(nextItemIndex, numNonSkipChildren, children)
+    val hasCompleteChildren: Boolean = this.runtimeRule.isCompleteChildren(currentRulePosition.position, numNonSkipChildren, children)
     val isLeaf: Boolean
         get() {
             return this.runtimeRule.isTerminal
@@ -66,22 +69,22 @@ class GrowingNode(
         if (this.isLeaf or this.isEmptyMatch ) {//or this.hasCompleteChildren) {
             false
         } else {
-            this.runtimeRule.canGrowWidth(this.nextItemIndex)
+            this.runtimeRule.canGrowWidth(this.currentRulePosition.position)
         }
     }
 
 
     val hasNextExpectedItem: Boolean
         get() {
-            return this.runtimeRule.findHasNextExpectedItem(this.nextItemIndex)
+            return this.runtimeRule.findHasNextExpectedItem(this.currentRulePosition.position)
         }
 
     val nextExpectedItems: Set<RuntimeRule> by lazy {
-        this.runtimeRule.findNextExpectedItems(this.nextItemIndex)
+        this.runtimeRule.findNextExpectedItems(this.currentRulePosition.position)
     }
 
     val incrementedNextItemIndex: Int get(){
-        return this.runtimeRule.incrementNextItemIndex(this.nextItemIndex)
+        return this.runtimeRule.incrementNextItemIndex(this.currentRulePosition.position)
     }
 
     fun expectsItemAt(runtimeRule: RuntimeRule, atPosition: Int): Boolean {
@@ -125,7 +128,7 @@ class GrowingNode(
         var r = ""
         r += this.startPosition.toString() + ","
         r += this.nextInputPosition.toString() + ","
-        r += if (this.hasCompleteChildren) "C" else this.nextItemIndex
+        r += if (this.hasCompleteChildren) "C" else this.currentRulePosition.position
         val name = if (this.runtimeRule.isTerminal) "'${this.runtimeRule.patternText}'" else this.runtimeRule.name
         r += ":" + name + "(" + this.runtimeRule.number + ")"
 
@@ -182,10 +185,9 @@ class GrowingNode(
     override fun equals(other: Any?): Boolean {
         // assume obj is also a GrowingNode, should never be compared otherwise
         if (other is GrowingNode) {
-            return this.runtimeRule.number == other.runtimeRule.number
+            return this.currentRulePosition == other.currentRulePosition
                     && this.startPosition == other.startPosition
                     && this.nextInputPosition == other.nextInputPosition
-                    && this.nextItemIndex == other.nextItemIndex
         } else {
             return false
         }
