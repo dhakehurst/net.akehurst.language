@@ -64,7 +64,7 @@ grammar English {
         | ARTICLE common-noun-possessive  (ADVERB* compound-adjective)? compound-noun
         ;
 
-    compound-noun = NOUN prepositional-phrase*
+    compound-noun = NOUN prepositional-phrase* ;
     prepositional-phrase = PREPOSITION object ;
 
     compound-adjective = adjective ('and' | 'or') adjective ;
@@ -87,8 +87,10 @@ grammar English {
         |  VERB_PRESENT_PARTICIPLE
         ;
 
-    indirect-object = <object> =
-       <simple object> | <compound object>
+    indirect-object
+        = simple-object
+        | compound-object
+        ;
 
 
     simple-object

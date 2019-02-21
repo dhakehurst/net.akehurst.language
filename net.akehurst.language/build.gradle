@@ -32,7 +32,7 @@ subprojects {
 
 
 	group 'net.akehurst.language'
-	version '2.1.0-SNAPSHOT'
+	version '2.1.1-SNAPSHOT'
 
 //	sourceCompatibility = '1.8'
 //	targetCompatibility = '1.8'
@@ -43,11 +43,6 @@ subprojects {
         jcenter()
     }
 
-    ext {
-        version_junit = '4.12'
-        version_transform = '2.2.0'
-        version_kotlin = '1.3.20'
-    }
      
 
 /*
