@@ -16,19 +16,31 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-data class RulePosition(
-    val runtimeRule: RuntimeRule,
-    val choice: Int,
-    val position: Int
-) {
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
-    companion object {
-        val END_OF_RULE = -1
+class test_RuntimeRuleSet_firstTerminals {
+
+    @Test
+    fun firstTerminals() {
+        val rb = RuntimeRuleSetBuilder()
+        val A = rb.literal("A")
+        val a = rb.literal("a")
+        val B = rb.literal("B")
+        val b = rb.literal("b")
+        val Aa = rb.rule("Aa").concatenation(A, a)
+        val Bb = rb.rule("Bb").concatenation(B, b)
+        val r = rb.rule("r").choicePriority(Aa, Bb)
+
+        val sut = rb.ruleSet()
+        val actual = sut.firstTerminals[r.number]
+        val expected = setOf(A, B)
+
+        assertEquals(expected, actual)
     }
 
-    val isAtEnd = position == END_OF_RULE
 
-    val items:Set<RuntimeRule> get() {
-         return runtimeRule.items(choice, position)
-    }
+
+
 }

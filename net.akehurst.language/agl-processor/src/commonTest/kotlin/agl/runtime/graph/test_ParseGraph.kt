@@ -52,13 +52,15 @@ class test_ParseGraph {
 
     @Test
     fun start() {
+        val rrs = RuntimeRuleSet(listOf())
+
         val userGoalRule = RuntimeRule(0,"a", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"
         val input = InputFromCharSequence(text)
         val sut = ParseGraph(userGoalRule,input)
 
         val gr = RuntimeRuleSet.createGoal(userGoalRule)
-        sut.start(gr)
+        sut.start(gr,rrs)
 
         val actual = sut.canGrow
 

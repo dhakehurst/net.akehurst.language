@@ -20,10 +20,35 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_RuntimeRuleSet {
+class test_RuntimeRuleSet_firstTerminals2 {
+
+    // S = 'a' ;
+    @Test
+    fun g1_firstTerminals2_S0() {
+        val rb = RuntimeRuleSetBuilder()
+        val r_a = rb.literal("a")
+        val S = rb.rule("S").concatenation(r_a)
+        val sut = rb.ruleSet()
+        val actual = sut.firstTerminals2[RulePosition(S,0,0)] ?: setOf()
+        val expected = setOf(r_a)
+
+        assertEquals<Set<RuntimeRule>>(expected, actual)
+    }
 
     @Test
-    fun firstTerminals() {
+    fun g1_firstTerminals2_Se() {
+        val rb = RuntimeRuleSetBuilder()
+        val r_a = rb.literal("a")
+        val S = rb.rule("S").concatenation(r_a)
+        val sut = rb.ruleSet()
+        val actual = sut.firstTerminals2[RulePosition(S,0,-1)] ?: setOf()
+        val expected = emptySet<RuntimeRule>()
+
+        assertEquals<Set<RuntimeRule>>(expected, actual)
+    }
+
+    @Test
+    fun firstTerminals2() {
         val rb = RuntimeRuleSetBuilder()
         val A = rb.literal("A")
         val a = rb.literal("a")
@@ -34,7 +59,7 @@ class test_RuntimeRuleSet {
         val r = rb.rule("r").choicePriority(Aa, Bb)
 
         val sut = rb.ruleSet()
-        val actual = sut.firstTerminals[r.number]
+        val actual = sut.firstTerminals2[RulePosition(r,0,0)]
         val expected = setOf(A, B)
 
         assertEquals(expected, actual)

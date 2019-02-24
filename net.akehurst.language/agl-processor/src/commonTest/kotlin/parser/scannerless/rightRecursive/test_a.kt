@@ -43,7 +43,7 @@ class test_a : test_ScannerlessParserAbstract() {
             S { S1 { 'a' S { 'a' } } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
 
     @Test

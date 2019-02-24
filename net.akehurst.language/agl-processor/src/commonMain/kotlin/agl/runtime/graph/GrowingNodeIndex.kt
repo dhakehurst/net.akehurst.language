@@ -19,9 +19,10 @@ package net.akehurst.language.agl.runtime.graph
 import net.akehurst.language.agl.runtime.structure.RulePosition
 
 data class GrowingNodeIndex(
-        val currentRulePosition: RulePosition,
-        val startPosition: Int,
-        val nextInputPosition: Int
+    val currentRulePosition: RulePosition,
+    val targetRulePosition: RulePosition,
+    val startPosition: Int,
+    val nextInputPosition: Int
 ) {
 
 

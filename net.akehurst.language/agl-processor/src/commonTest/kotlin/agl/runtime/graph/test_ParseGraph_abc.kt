@@ -34,6 +34,7 @@ class test_ParseGraph_abc {
 
     @Test
     fun start() {
+        val rrs = RuntimeRuleSet(listOf())
         val r_a = RuntimeRule(0, "a", RuntimeRuleKind.TERMINAL, false, false)
         val r_b = RuntimeRule(1, "b", RuntimeRuleKind.TERMINAL, false, false)
         val r_c = RuntimeRule(2, "c", RuntimeRuleKind.TERMINAL, false, false)
@@ -51,7 +52,7 @@ class test_ParseGraph_abc {
         val sut = ParseGraph(r_S,input)
 
         val gr = RuntimeRuleSet.createGoal(r_S)
-        sut.start(gr)
+        sut.start(gr,rrs)
 
         assertEquals(true, gr.isGoal)
         assertEquals(true, sut.canGrow)
@@ -64,13 +65,14 @@ class test_ParseGraph_abc {
 
     @Test
     fun s1() {
+        val rrs = RuntimeRuleSet(listOf())
         val userGoalRule = RuntimeRule(0,"a", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"
         val input = InputFromCharSequence(text)
         val sut = ParseGraph(userGoalRule,input)
 
         val gr = RuntimeRuleSet.createGoal(userGoalRule)
-        sut.start(gr)
+        sut.start(gr,rrs)
 
         val actual = sut.canGrow
 
