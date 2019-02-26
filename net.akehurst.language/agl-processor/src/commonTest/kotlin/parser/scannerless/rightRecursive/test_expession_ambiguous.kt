@@ -68,7 +68,13 @@ class test_expession_ambiguous : test_ScannerlessParserAbstract() {
         val sentence = "aoaoa"
 
         val expected = """
-            S { I { S{'a'} 'o' S{'a'} } }
+            S {
+              I {
+                S{'a'}
+                'o'
+                S{'a'}
+              }
+            }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)

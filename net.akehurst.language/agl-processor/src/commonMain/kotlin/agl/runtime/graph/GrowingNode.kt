@@ -30,8 +30,8 @@ class GrowingNode(
         //val nextItemIndex: Int,
         val priority: Int,
         val children: List<SPPTNodeDefault>,
-        val numNonSkipChildren: Int,
-        val lookaheadItems:Set<RuntimeRule>
+        val numNonSkipChildren: Int
+//        val lookaheadItems:Set<RuntimeRule>
 ) {
 
     private val hashCode_cache = intArrayOf(this.runtimeRule.number, currentRulePosition.position, this.startPosition, this.nextInputPosition).contentHashCode()

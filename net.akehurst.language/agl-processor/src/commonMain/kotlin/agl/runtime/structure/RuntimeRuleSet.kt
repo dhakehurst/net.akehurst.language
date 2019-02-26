@@ -220,6 +220,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
                     }.toSet()
                     result.addAll(terms)
+
                 } else {
                     val lhItems = nextRp.items
                     for (lhItem in lhItems) {
@@ -229,16 +230,6 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 }
             }
         }
-        /*
-        val result = when {
-            (rp.runtimeRule.isGoal) -> emptySet<RuntimeRule>()
-            else -> lookahead[rp] ?: emptySet()
-        } + if (goalRule.couldHaveChild(rp.runtimeRule,0)) {
-            setOf<RuntimeRule>(RuntimeRuleSet.END_OF_TEXT)
-        } else {
-            emptySet()
-        }
-        */
         return result
     }
 
@@ -421,7 +412,13 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }.flatMap {
             when (it.rhs.kind) {
                 RuntimeRuleItemKind.EMPTY -> emptySet<RulePosition>()
-                RuntimeRuleItemKind.CONCATENATION -> setOf(RulePosition(it, 0, it.rhs.items.indexOf(rule)))
+                RuntimeRuleItemKind.CONCATENATION -> it.rhs.items.mapIndexedNotNull { index, item ->
+                    if (item==rule) {
+                        RulePosition(it, 0,index)
+                    } else {
+                        null
+                    }
+                }
                 RuntimeRuleItemKind.CHOICE_EQUAL -> setOf(RulePosition(it, it.rhs.items.indexOf(rule), 0))
                 RuntimeRuleItemKind.CHOICE_PRIORITY -> setOf(RulePosition(it, it.rhs.items.indexOf(rule), 0))
                 RuntimeRuleItemKind.UNORDERED -> TODO()
