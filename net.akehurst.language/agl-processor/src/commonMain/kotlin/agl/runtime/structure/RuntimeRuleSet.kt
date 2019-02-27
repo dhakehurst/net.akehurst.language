@@ -352,7 +352,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     private fun calcExpectedItemRulePositionTransitive(rp: RulePosition): Set<RulePosition> {
-        var s = rp.runtimeRule.calcExpectedRulePositions(rp.position)
+        var s = setOf(rp)//rp.runtimeRule.calcExpectedRulePositions(rp.position)
 
         return s.transitveClosure { rp ->
             if (RulePosition.END_OF_RULE == rp.position) {

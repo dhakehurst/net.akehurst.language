@@ -37,7 +37,7 @@ class test_RuntimeParser_parse_multi {
     // r = a?
     // a = 'a'
     private fun multi01_a(): ScannerlessParser {
-        val r0 = rrb.literal("a")
+        val r0 = rrb.literal("a") //FIXME: this is not what is in the comment above!
         val r1 = rrb.rule("r").multi(0, 1, r0)
         return ScannerlessParser(rrb.ruleSet())
     }
@@ -164,7 +164,7 @@ class test_RuntimeParser_parse_multi {
     // r = a+
     // a = 'a'
     private fun multi_1_n_a(): ScannerlessParser {
-        val r0 = rrb.literal("a")
+        val r0 = rrb.literal("a") //FIXME: this is not what is in the comment above!
         val r1 = rrb.rule("r").multi(1, -1, r0)
         return ScannerlessParser(rrb.ruleSet())
     }
@@ -227,6 +227,42 @@ class test_RuntimeParser_parse_multi {
 
         val p = SPPTParser(rrb)
         val expected = p.addTree("r {'a' 'a' 'a'}")
+
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
+    @Test
+    fun multi_1_n_a__r__50a() {
+        val sp = multi_1_n_a()
+        val goalRuleName = "r"
+        val inputText = "a".repeat(50)
+
+
+        val actual = test_parse(sp, goalRuleName, inputText)
+
+        assertNotNull(actual)
+
+        val p = SPPTParser(rrb)
+        val aleaves = "'a' ".repeat(50)
+        val expected = p.addTree("r {${aleaves}}")
+
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
+    @Test
+    fun multi_1_n_a__r__500a() {
+        val sp = multi_1_n_a()
+        val goalRuleName = "r"
+        val inputText = "a".repeat(500)
+
+
+        val actual = test_parse(sp, goalRuleName, inputText)
+
+        assertNotNull(actual)
+
+        val p = SPPTParser(rrb)
+        val aleaves = "'a' ".repeat(500)
+        val expected = p.addTree("r {${aleaves}}")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }

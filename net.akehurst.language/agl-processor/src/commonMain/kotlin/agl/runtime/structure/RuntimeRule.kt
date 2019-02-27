@@ -226,14 +226,14 @@ class RuntimeRule(
         }
     }
 
-    fun items(choice:Int, position:Int): Set<RuntimeRule> {
+    fun items(option:Int, position:Int): Set<RuntimeRule> {
         return when(rhs.kind) {
             RuntimeRuleItemKind.EMPTY -> emptySet()
-            RuntimeRuleItemKind.CHOICE_EQUAL -> setOf(rhs.items[choice])
-            RuntimeRuleItemKind.CHOICE_PRIORITY -> setOf(rhs.items[choice])
+            RuntimeRuleItemKind.CHOICE_EQUAL -> setOf(rhs.items[option])
+            RuntimeRuleItemKind.CHOICE_PRIORITY -> setOf(rhs.items[option])
             RuntimeRuleItemKind.CONCATENATION -> setOf(rhs.items[position])
             RuntimeRuleItemKind.UNORDERED -> TODO()
-            RuntimeRuleItemKind.MULTI -> TODO()
+            RuntimeRuleItemKind.MULTI -> setOf(rhs.items[option])
             RuntimeRuleItemKind.SEPARATED_LIST -> TODO()
             RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> TODO()
             RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
@@ -423,16 +423,16 @@ class RuntimeRule(
 
     internal fun calcExpectedRulePositions(position: Int): Set<RulePosition> {
         return if (position == RulePosition.END_OF_RULE) {
-            emptySet<RulePosition>()
+            emptySet()
         } else when (this.rhs.kind) {
             RuntimeRuleItemKind.EMPTY -> {
-                emptySet<RulePosition>()
+                emptySet()
             }
             RuntimeRuleItemKind.CHOICE_EQUAL -> {
                 return if (position == 0) {
                     this.rhs.items.mapIndexed { index, runtimeRule ->  RulePosition(this, index,0) }.toSet()
                 } else {
-                    emptySet<RulePosition>()
+                    emptySet()
                 }
             }
             RuntimeRuleItemKind.CHOICE_PRIORITY -> {
@@ -455,8 +455,8 @@ class RuntimeRule(
             }
             RuntimeRuleItemKind.MULTI -> {
                 return when {
-                    (0 == position && 0 == this.rhs.multiMin) -> setOf<RulePosition>(RulePosition(this, 0,RuntimeRuleItem.MULTI__ITEM), RulePosition(this, 0,RuntimeRuleItem.MULTI__EMPTY_RULE))
-                    (position < this.rhs.multiMax || -1 == this.rhs.multiMax) -> setOf<RulePosition>(RulePosition(this, 0,RuntimeRuleItem.MULTI__ITEM))
+                    (0 == position && 0 == this.rhs.multiMin) -> setOf(RulePosition(this, RuntimeRuleItem.MULTI__ITEM,0), RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE,0))
+                    (position < this.rhs.multiMax || -1 == this.rhs.multiMax) -> setOf(RulePosition(this, RuntimeRuleItem.MULTI__ITEM,0))
                     else -> emptySet<RulePosition>()
                 }
             }

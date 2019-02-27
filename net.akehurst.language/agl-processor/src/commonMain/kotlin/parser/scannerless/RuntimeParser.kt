@@ -202,7 +202,10 @@ internal class RuntimeParser(
                         val newTargetRPs = runtimeRuleSet.growsInto(tgtRP.runtimeRule, graph.runtimeGoalRule).map { RulePosition(it.runtimeRule, it.choice, 0) }
                         newTargetRPs.forEach { newTgtRP ->
                             //val lookaheadItems = findLookaheadItems(newTgtRP, gn.runtimeRule, null)
-                            this.graph.createWithFirstChild(newTgtRP, newParentRule, complete, previous) //maybe lookahead to wanted next token here (it would need to be part of RP)
+                            val nextRps = runtimeRuleSet.nextRulePosition(tgtRP, complete.runtimeRule)
+                            nextRps.forEach { nextRp ->
+                                this.graph.createWithFirstChild(nextRp, newTgtRP, newParentRule, complete, previous) //maybe lookahead to wanted next token here (it would need to be part of RP)
+                            }
                         }
                     }
                 }
@@ -220,7 +223,7 @@ internal class RuntimeParser(
                             val tgtRPs = runtimeRuleSet.nextRulePosition(rp, complete.runtimeRule)
                             tgtRPs.forEach {
                                 //val lookaheadItems = findLookaheadItems(it, gn.runtimeRule, null)
-                                this.graph.createWithFirstChild(it, it.runtimeRule, complete, previous)
+                                this.graph.createWithFirstChild(it, it, it.runtimeRule, complete, previous) //FIXME: this is temp, find correct nextRp
                             }
                         }
                     } else {
@@ -258,7 +261,7 @@ internal class RuntimeParser(
                                 tgtRules.forEach {
                                     val newTgtRp = RulePosition(it, 0, 0)
                                     //val lookaheadItems = findLookaheadItems(newTgtRp, gn.runtimeRule, prev)
-                                    this.graph.createWithFirstChild(newTgtRp, rp.runtimeRule, complete, setOf(newPrev))
+                                    this.graph.createWithFirstChild(newTgtRp, newTgtRp, rp.runtimeRule, complete, setOf(newPrev))  //FIXME: this is temp, find correct nextRp
                                 }
                             }
                         }
@@ -319,9 +322,10 @@ internal class RuntimeParser(
             val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
                 ?: throw ParseException("internal error, should never happen")
             //this.graph.growNextChild(info.node.targetRulePosition, info.node, complete, info.atPosition)
-
-            //val lookaheadItems = prev.node.lookaheadItems // findLookaheadItems(prev.node.targetRulePosition, gn.runtimeRule, prev)
-            this.graph.growNextChild(prev.node, complete, prev.atPosition)
+            val nextRps = runtimeRuleSet.nextRulePosition(prev.node.currentRulePosition, gn.runtimeRule)
+            nextRps.forEach { nextRp ->
+                this.graph.growNextChild(nextRp, prev.node, complete, prev.atPosition)
+            }
 
             result = result or true
 
