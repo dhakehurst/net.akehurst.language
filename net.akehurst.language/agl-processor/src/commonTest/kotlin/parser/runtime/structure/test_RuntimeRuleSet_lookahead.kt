@@ -147,6 +147,8 @@ class test_RuntimeRuleSet_lookahead {
         assertEquals<Set<RuntimeRule>>(expected, actual)
     }
 
+    //TODO: multi and sList lookahead
+
     fun g3(): RuntimeRuleSet {
         val rb = RuntimeRuleSetBuilder()
         val A = rb.literal("A")
