@@ -42,13 +42,7 @@ subprojects {
         mavenCentral()
         jcenter()
     }
-
-    ext {
-        version_junit = '4.12'
-        version_transform = '2.2.0'
-        version_kotlin = '1.3.20'
-    }
-     
+    
 
 /*
 	bintray {
