@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.parser.scannerless.ScannerlessParser
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -148,6 +149,22 @@ class test_RuntimeRuleSet_lookahead {
     }
 
     //TODO: multi and sList lookahead
+
+
+    // S = ['a' / ',']?
+    @Test
+    fun sList_lookahead__S_0_0() {
+        val rb = RuntimeRuleSetBuilder()
+        val r_a = rb.literal("a")
+        val r_S = rb.rule("S").separatedList(0, 1, rb.literal(","), r_a)
+        val sut = rb.ruleSet()
+        val gr = RuntimeRuleSet.createGoal(r_S)
+
+        val actual = sut.lookahead(RulePosition(r_S,0,0),gr)
+        val expected = setOf(r_a)
+
+        assertEquals<Set<RuntimeRule>>(expected, actual)
+    }
 
     fun g3(): RuntimeRuleSet {
         val rb = RuntimeRuleSetBuilder()

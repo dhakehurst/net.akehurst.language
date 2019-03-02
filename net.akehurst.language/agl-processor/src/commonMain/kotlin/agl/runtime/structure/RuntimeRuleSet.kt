@@ -246,14 +246,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     if (np < rp.runtimeRule.rhs.items.size) {
                         arrayOf(RulePosition(rp.runtimeRule, 0, np))
                     } else {
-                        //need to compute the set of rps that come after the end of this rule
-                        //    go back to goal
                         arrayOf(RulePosition(rp.runtimeRule, 0, RulePosition.END_OF_RULE))
-                        //if (prevNode.previous.isEmpty()) {
-                        //    arrayOf(RulePosition(rp.runtimeRule, RulePosition.END_OF_RULE, setOf()))
-                        //} else {
-                        //    nextRulePosition(prevNode.rulePosition, rp.runtimeRule) //TODO: a hack!
-                        //}
                     }
                 }
                 RuntimeRuleItemKind.MULTI -> when {
@@ -271,7 +264,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                         RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE)
                     )
                     itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> arrayOf(
-                        RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR,1)
+                        RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR,1),
+                        RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE)
                     )
                     itemRule == rp.runtimeRule.rhs.SLIST__separator -> arrayOf(
                         RulePosition(rp.runtimeRule,  RuntimeRuleItem.SLIST__ITEM,2),

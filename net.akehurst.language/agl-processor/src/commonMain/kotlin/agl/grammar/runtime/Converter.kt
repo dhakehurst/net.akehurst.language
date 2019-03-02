@@ -38,7 +38,7 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
     }
 
     fun originalRuleItemFor(rr: RuntimeRule): RuleItem {
-        return this.map.get(rr) ?: throw LanguageProcessorException("cannot find original item for "+rr,null)
+        return this.map.get(rr) ?: throw LanguageProcessorException("cannot find original item for " + rr, null)
         /*
         val name = rr.name
         if (name.startsWith("§")) {
@@ -131,7 +131,7 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
     override fun visit(target: EmptyRule, arg: String): RuntimeRule {
         val ruleThatIsEmpty = this.findRule(arg) ?: throw ParseException("Internal Error: should not happen")
         val e = this.builder.empty(ruleThatIsEmpty)
-        this.map.put(e,target)
+        this.map.put(e, target)
         return e
     }
 
@@ -143,7 +143,7 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
             } else {
                 builder.literal(target.value)
             }
-            this.map.put(terminalRule,target)
+            this.map.put(terminalRule, target)
             return terminalRule
         } else {
             return existing
@@ -152,7 +152,7 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
 
     override fun visit(target: NonTerminal, arg: String): RuntimeRule {
         val nonTerminalRule = this.findRule(target.referencedRule.name)
-                ?: target.referencedRule.accept(this, arg) as RuntimeRule
+            ?: target.referencedRule.accept(this, arg) as RuntimeRule
         return nonTerminalRule
     }
 
@@ -165,7 +165,7 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
                 it.accept(this, choiceRuleName) as RuntimeRule
             }
             val rr = builder.rule(choiceRuleName).choiceEqual(*items.toTypedArray())
-            this.map.put(rr,target)
+            this.map.put(rr, target)
             return rr
         }
     }
@@ -179,15 +179,19 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
                 it.accept(this, choiceRuleName) as RuntimeRule
             }
             val rr = builder.rule(choiceRuleName).choicePriority(*items.toTypedArray())
-            this.map.put(rr,target)
+            this.map.put(rr, target)
             return rr
         }
+    }
+
+    override fun visit(target: ChoiceAmbiguous, arg: String): RuntimeRule {
+        TODO()
     }
 
     override fun visit(target: Concatenation, arg: String): RuntimeRule {
         val items = target.items.map { it.accept(this, arg) as RuntimeRule }
         val rr = builder.rule(arg).concatenation(*items.toTypedArray())
-        this.map.put(rr,target)
+        this.map.put(rr, target)
         return rr
     }
 
@@ -195,7 +199,7 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
         val groupRuleName = builder.createGroupRuleName(arg)
         val groupRuleItem = target.choice.accept(this, groupRuleName) as RuntimeRule
         val rr = builder.rule(groupRuleName).concatenation(groupRuleItem)
-        this.map.put(rr,target)
+        this.map.put(rr, target)
         return rr
     }
 
@@ -203,7 +207,7 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
         val multiRuleName = builder.createMultiRuleName(arg)
         val multiRuleItem = target.item.accept(this, arg) as RuntimeRule
         val rr = builder.rule(multiRuleName).multi(target.min, target.max, multiRuleItem)
-        this.map.put(rr,target)
+        this.map.put(rr, target)
         return rr
     }
 
@@ -212,7 +216,7 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
         val listRuleItem = target.item.accept(this, arg) as RuntimeRule
         val sepRule = target.separator.accept(this, arg) as RuntimeRule
         val rr = builder.rule(listRuleName).separatedList(target.min, target.max, sepRule, listRuleItem)
-        this.map.put(rr,target)
+        this.map.put(rr, target)
         return rr
     }
 

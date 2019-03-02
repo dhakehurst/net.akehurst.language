@@ -475,24 +475,24 @@ class RuntimeRule(
     internal fun calcItemsAt(position: Int): Set<RuntimeRule> {
         //TODO: would it be faster to return an array here?
         return if (RulePosition.END_OF_RULE == position) {
-            emptySet<RuntimeRule>()
+            emptySet()
         } else {
             when (this.rhs.kind) {
                 RuntimeRuleItemKind.EMPTY -> {
-                    emptySet<RuntimeRule>()
+                    emptySet()
                 }
                 RuntimeRuleItemKind.CHOICE_EQUAL -> {
                     if (position == 0) {
-                        this.rhs.items.toHashSet()
+                        this.rhs.items.toSet()
                     } else {
-                        emptySet<RuntimeRule>()
+                        emptySet()
                     }
                 }
                 RuntimeRuleItemKind.CHOICE_PRIORITY -> {
                     if (position == 0) {
-                        this.rhs.items.toHashSet()
+                        this.rhs.items.toSet()
                     } else {
-                        emptySet<RuntimeRule>()
+                        emptySet()
                     }
                 }
                 RuntimeRuleItemKind.CONCATENATION -> {
@@ -500,7 +500,7 @@ class RuntimeRule(
                         throw RuntimeException("Internal Error: No NextExpectedItem")
                     } else {
                         var nextItem = this.rhs.items[position]
-                        val res = mutableSetOf(nextItem)
+                        val res = setOf(nextItem)
                         //TODO: I don't think we need this....or do we?
                         //var i = nextItemIndex+1
                         //while (nextItem.canBeEmpty(setOf()) && i < this.rhs.items.size) {
@@ -513,17 +513,17 @@ class RuntimeRule(
                 }
                 RuntimeRuleItemKind.MULTI -> {
                     when {
-                        (0 == position && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0], this.emptyRuleItem)
-                        (position < this.rhs.multiMax || -1 == this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
+                        (0 == position && 0 == this.rhs.multiMin) -> setOf(this.rhs.items[0], this.emptyRuleItem)
+                        (position < this.rhs.multiMax || -1 == this.rhs.multiMax) -> setOf(this.rhs.items[0])
                         else -> emptySet<RuntimeRule>()
                     }
                 }
                 RuntimeRuleItemKind.SEPARATED_LIST -> {
                     when {
-                        (position % 2 == 1 && (((position + 1) / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf<RuntimeRule>(this.rhs.SLIST__separator)
-                        (0 == position && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0], this.emptyRuleItem)
-                        (position % 2 == 0 && ((position / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf<RuntimeRule>(this.rhs.items[0])
-                        else -> emptySet<RuntimeRule>()
+                        (position % 2 == 1 && (((position + 1) / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf(this.rhs.SLIST__separator)
+                        (0 == position && 0 == this.rhs.multiMin) -> setOf(this.rhs.items[0], this.emptyRuleItem)
+                        (position % 2 == 0 && ((position / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf(this.rhs.items[0])
+                        else -> emptySet()
                     }
                 }
                 else -> throw RuntimeException("Internal Error: rule kind not recognised")

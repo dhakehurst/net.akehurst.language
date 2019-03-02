@@ -34,18 +34,17 @@ class test_sList {
         return sp.parse(goalRuleName, inputText)
     }
 
-    // r = [a / ',']?
-    // a = 'a'
+    // S = ['a' / ',']?
     private fun literal_a01(): ScannerlessParser {
-        val r0 = rrb.literal("a")
-        val r1 = rrb.rule("r").separatedList(0, 1, rrb.literal(","), r0)
+        val r_a = rrb.literal("a")
+        val r_S = rrb.rule("S").separatedList(0, 1, rrb.literal(","), r_a)
         return ScannerlessParser(rrb.ruleSet())
     }
 
     @Test
     fun literal_a01__r__empty() {
         val sp = literal_a01()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = ""
 
         val actual = test_parse(sp, goalRuleName, inputText)
@@ -53,7 +52,7 @@ class test_sList {
         assertNotNull(actual)
 
         val p = SPPTParser(rrb)
-        val expected = p.addTree("r { §empty }")
+        val expected = p.addTree("S { §empty }")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
@@ -61,7 +60,7 @@ class test_sList {
     @Test
     fun literal_a01__r__a() {
         val sp = literal_a01()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "a"
 
         val actual = test_parse(sp, goalRuleName, inputText)
@@ -69,7 +68,7 @@ class test_sList {
         assertNotNull(actual)
 
         val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a'}")
+        val expected = p.addTree("S {'a'}")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }

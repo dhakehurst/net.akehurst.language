@@ -19,27 +19,17 @@ package net.akehurst.language.api.grammar
 interface GrammarVisitor<T, A> {
 
     fun visit(target: Namespace, arg: A): T
-
     fun visit(target: Grammar, arg: A): T
-
     fun visit(target: Rule, arg: A): T
-
     fun visit(target: ChoicePriority, arg: A): T
-
     fun visit(target: ChoiceEqual, arg: A): T
-
+    fun visit(target: ChoiceAmbiguous, arg: A): T
     fun visit(target: Concatenation, arg: A): T
-
     fun visit(target: Group, arg: A): T
-
     fun visit(target: Multi, arg: A): T
-
     fun visit(target: SeparatedList, arg: A): T
-
     fun visit(target: NonTerminal, arg: A): T
-
     fun visit(target: Terminal, arg: A): T
-
     fun visit(target: EmptyRule, arg: A): T
 
 }

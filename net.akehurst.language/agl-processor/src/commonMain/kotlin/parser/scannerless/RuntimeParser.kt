@@ -103,6 +103,7 @@ internal class RuntimeParser(
                 // TODO: need to find a way to do either height or graft..not both, maybe!
                 // problem is deciding which
                 // try reduce first
+                //TODO: use growFirst/Mid/Last ? maybe
                 val grownHeight = this.tryGrowHeight(gn, previous) // reduce first item & it may be the last (only) item
 
                 // try reduce rest
@@ -381,12 +382,12 @@ internal class RuntimeParser(
 
     private fun hasLookaheadAfterSkip(newTgtRp:RulePosition, initialPosition: Int) : Boolean {
         val position = initialPosition
-        val skipTerms = runtimeRuleSet.allSkipTerminals
         val lookaheadItems = runtimeRuleSet.lookahead(newTgtRp, graph.runtimeGoalRule)
         var foundLookahead = lookaheadItems.any { lhi ->
             null != this.graph.findOrTryCreateLeaf(lhi, position)
         }
         if (!foundLookahead) {
+            val skipTerms = runtimeRuleSet.allSkipTerminals
             val skipAheads = skipTerms.mapNotNull { lhi ->
                 this.graph.findOrTryCreateLeaf(lhi, position)
             }
