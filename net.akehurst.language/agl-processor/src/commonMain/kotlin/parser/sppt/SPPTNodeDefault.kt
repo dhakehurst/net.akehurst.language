@@ -16,7 +16,6 @@
 
 package net.akehurst.language.parser.sppt
 
-import net.akehurst.language.api.grammar.ChoicePriority
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode

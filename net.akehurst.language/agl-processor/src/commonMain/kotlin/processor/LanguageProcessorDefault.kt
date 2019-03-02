@@ -16,7 +16,7 @@
 
 package net.akehurst.language.processor
 
-import net.akehurst.language.api.sppt2ast.Sppt2AstTransformer
+import net.akehurst.language.api.sppt2ast.SyntaxAnalyser
 import net.akehurst.language.api.sppt2ast.UnableToTransformSppt2AstExeception
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
@@ -30,7 +30,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.parser.scannerless.ScannerlessParser
 import kotlin.js.JsName
 
-internal class LanguageProcessorDefault(val grammar: Grammar, val semanticAnalyser: Sppt2AstTransformer?) : LanguageProcessor {
+internal class LanguageProcessorDefault(val grammar: Grammar, val syntaxAnalyser: SyntaxAnalyser?) : LanguageProcessor {
 
     private val converter: Converter = Converter(this.grammar)
     private val parser: Parser = ScannerlessParser(this.converter.transform())
@@ -52,10 +52,10 @@ internal class LanguageProcessorDefault(val grammar: Grammar, val semanticAnalys
 
     override fun <T> process(goalRuleName: String, inputText: CharSequence): T {
         val sppt: SharedPackedParseTree = this.parse(goalRuleName, inputText)
-        if (null == this.semanticAnalyser) {
+        if (null == this.syntaxAnalyser) {
             throw UnableToTransformSppt2AstExeception("No Sppt2AstTransformer supplied", null);
         }
-        val t: T = this.semanticAnalyser.transform(sppt);
+        val t: T = this.syntaxAnalyser.transform(sppt);
 
         return t;
     }

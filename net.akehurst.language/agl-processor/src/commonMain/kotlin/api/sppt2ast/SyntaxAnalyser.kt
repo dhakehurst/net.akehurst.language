@@ -20,12 +20,12 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 /**
  *
- * A Semantic Analyser converts a Parse Tree (in this case a SharedPackedParseTree) into a "Semantic Model". i.e. it will map the parse tree to some other data
- * structure that contains carries more semantic meaning than the parse tree, maybe mapping certain string values into actual object references that the string
- * value implies.
+ * A Syntax Analyser converts a Parse Tree (in this case a SharedPackedParseTree) into a "Syntax Tree/Model".
+ * i.e. it will map the parse tree to some other data structure that abstracts away unwanted concrete syntax information
+ * e.g. as whitesapce
  *
  */
-interface Sppt2AstTransformer {
+interface SyntaxAnalyser {
 
 	/**
 	 * reset the sppt2ast, clearing any cached values

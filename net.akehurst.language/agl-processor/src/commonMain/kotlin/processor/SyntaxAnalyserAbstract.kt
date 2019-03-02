@@ -21,12 +21,12 @@ import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
-import net.akehurst.language.api.sppt2ast.Sppt2AstTransformer
+import net.akehurst.language.api.sppt2ast.SyntaxAnalyser
 import net.akehurst.language.api.sppt2ast.UnableToTransformSppt2AstExeception
 
 typealias BranchHandler<T> = (SPPTBranch, List<SPPTBranch>, Any?) -> T
 
-abstract class Sppt2AstTransformerVisitorBasedAbstract : Sppt2AstTransformer, SharedPackedParseTreeVisitor<Any, Any?> {
+abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVisitor<Any, Any?> {
 
     private var grammarLoader: GrammarLoader? = null
     private val branchHandlers: MutableMap<String, BranchHandler<*>> = mutableMapOf()

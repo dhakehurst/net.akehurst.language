@@ -16,21 +16,20 @@
 
 package net.akehurst.language.processor
 
-import net.akehurst.language.api.sppt2ast.Sppt2AstTransformer
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.grammar.AglGrammar
 import net.akehurst.language.agl.sppt2ast.AglSppt2AstTransformer
+import net.akehurst.language.api.sppt2ast.SyntaxAnalyser
 import kotlin.js.JsName
 
 object Agl {
 
     private val aglProcessor: LanguageProcessor by lazy {
-        //println("Creating agl processor")
         val grammar = AglGrammar()
-        val sppt2ast: Sppt2AstTransformer = AglSppt2AstTransformer()
+        val sppt2ast: SyntaxAnalyser = AglSppt2AstTransformer()
         processor(grammar, sppt2ast)
     }
 
@@ -39,9 +38,9 @@ object Agl {
         return LanguageProcessorDefault(grammar, null)
     }
 
-    @JsName("processorFromGrammarWithSemanticAnalyser")
-    fun processor(grammar: Grammar, semanticAnalyser: Sppt2AstTransformer): LanguageProcessor {
-        return LanguageProcessorDefault(grammar, semanticAnalyser)
+    @JsName("processorFromGrammarWithSyntaxAnalyser")
+    fun processor(grammar: Grammar, syntaxAnalyser: SyntaxAnalyser): LanguageProcessor {
+        return LanguageProcessorDefault(grammar, syntaxAnalyser)
     }
 
     @JsName("processor")
@@ -55,11 +54,11 @@ object Agl {
         }
     }
 
-    @JsName("processorWithSemanticAnalyser")
-    fun processor(grammarDefinitionStr: String, semanticAnalyser: Sppt2AstTransformer): LanguageProcessor {
+    @JsName("processorWithSyntaxAnalyser")
+    fun processor(grammarDefinitionStr: String, syntaxAnalyser: SyntaxAnalyser): LanguageProcessor {
         try {
             val grammar = aglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
-            return processor(grammar, semanticAnalyser)
+            return processor(grammar, syntaxAnalyser)
         } catch (e: ParseFailedException) {
             //TODO: better, different exception to detect which list item fails
             throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)

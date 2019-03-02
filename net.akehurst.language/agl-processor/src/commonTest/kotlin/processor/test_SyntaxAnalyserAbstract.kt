@@ -17,9 +17,18 @@
 package net.akehurst.language.processor
 
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.processor.Sppt2AstTransformerVisitorBasedAbstract
+import kotlin.test.Test
+import kotlin.test.fail
 
-class TestAstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
+class test_SyntaxAnalyserAbstract {
+
+    @Test
+    fun t() {
+        TODO()
+    }
+}
+
+class TestSyntaxAnalyser : SyntaxAnalyserAbstract() {
 
     override fun clear() {
 
@@ -32,7 +41,7 @@ class TestAstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
 }
 
 data class A(
-        val value: String
+    val value: String
 ) {
 
 }
