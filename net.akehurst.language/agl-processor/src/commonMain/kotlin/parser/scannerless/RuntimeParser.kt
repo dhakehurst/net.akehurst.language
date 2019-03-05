@@ -204,7 +204,7 @@ internal class RuntimeParser(
                         newTargetRPs.forEach { newTgtRP ->
                             //val lookaheadItems = findLookaheadItems(newTgtRP, gn.runtimeRule, null)
                             val nextRps = runtimeRuleSet.nextRulePosition(tgtRP, complete.runtimeRule)
-                            nextRps.forEach { nextRp ->
+                            nextRps.forEach { nextRp -> //TODO: maybe check lookahead here also?
                                 this.graph.createWithFirstChild(nextRp, newTgtRP, newParentRule, complete, previous) //maybe lookahead to wanted next token here (it would need to be part of RP)
                             }
                         }
@@ -384,7 +384,7 @@ internal class RuntimeParser(
         val position = initialPosition
         val lookaheadItems = runtimeRuleSet.lookahead(newTgtRp, graph.runtimeGoalRule)
         var foundLookahead = lookaheadItems.any { lhi ->
-            null != this.graph.findOrTryCreateLeaf(lhi, position)
+            null != this.graph.findOrTryCreateLeaf(lhi, position) //TODO: should we do something special if we match empty rules?
         }
         if (!foundLookahead) {
             val skipTerms = runtimeRuleSet.allSkipTerminals

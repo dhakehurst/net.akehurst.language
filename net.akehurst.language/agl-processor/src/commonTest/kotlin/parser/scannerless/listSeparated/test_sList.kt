@@ -76,7 +76,7 @@ class test_sList {
     @Test
     fun literal_a01__r__aa_fails() {
         val sp = literal_a01()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "aa"
 
         val e = assertFailsWith(ParseFailedException::class) {
@@ -90,7 +90,7 @@ class test_sList {
     @Test
     fun literal_a01__r__ac_fails() {
         val sp = literal_a01()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "a,"
 
         val e = assertFailsWith(ParseFailedException::class) {
@@ -104,7 +104,7 @@ class test_sList {
     @Test
     fun literal_a01__r__aca_fails() {
         val sp = literal_a01()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "a,a"
 
         val e = assertFailsWith(ParseFailedException::class) {

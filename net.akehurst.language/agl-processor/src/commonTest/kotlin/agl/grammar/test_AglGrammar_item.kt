@@ -176,6 +176,16 @@ class test_AglGrammar_item {
     }
 
     @Test
+    fun multiplicity_2_5() {
+        val actual = parse("multiplicity", "2..5")
+        val expected = this.sppt("""
+            multiplicity { '+' : '+' }
+        """.trimIndent())
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
+    @Test
     fun multi_literal() {
         val actual = parse("multi", "'a'*")
         val expected = this.sppt("""

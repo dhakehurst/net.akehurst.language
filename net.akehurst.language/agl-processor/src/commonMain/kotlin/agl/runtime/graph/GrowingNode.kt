@@ -33,13 +33,13 @@ class GrowingNode(
         val numNonSkipChildren: Int
 //        val lookaheadItems:Set<RuntimeRule>
 ) {
-
-    private val hashCode_cache = intArrayOf(this.runtimeRule.number, currentRulePosition.position, this.startPosition, this.nextInputPosition).contentHashCode()
+    //FIXME: shouldn't really do this, shouldn't store these in sets!!
+    private val hashCode_cache = arrayOf(this.currentRulePosition, this.targetRulePosition, this.startPosition, this.nextInputPosition).contentHashCode()
 
     val matchedTextLength:Int = this.nextInputPosition - this.startPosition
     val runtimeRule get() = currentRulePosition.runtimeRule
 
-    var previous: MutableSet<PreviousInfo> = mutableSetOf()
+    var previous: MutableMap<GrowingNodeIndex, PreviousInfo> = mutableMapOf()
     val next: MutableList<GrowingNode> = mutableListOf()
     val hasCompleteChildren: Boolean = this.runtimeRule.isCompleteChildren(currentRulePosition.position, numNonSkipChildren, children)
     val isLeaf: Boolean
@@ -92,12 +92,13 @@ class GrowingNode(
     }
 
     fun newPrevious() {
-        this.previous = mutableSetOf()
+        this.previous = mutableMapOf()
     }
 
     fun addPrevious(previousNode: GrowingNode, atPosition: Int) {
         val info = PreviousInfo(previousNode, atPosition)
-        this.previous.add(info)
+        val gi = GrowingNodeIndex(previousNode.currentRulePosition, previousNode.targetRulePosition,previousNode.startPosition,previousNode.nextInputPosition)
+        this.previous.put(gi,info)
         previousNode.addNext(this)
     }
 
@@ -162,7 +163,7 @@ class GrowingNode(
         if (this.previous.isEmpty()) {
             //
         } else {
-            val prev = this.previous.iterator().next().node
+            val prev = this.previous.values.iterator().next().node
             if (visited.contains(prev)) {
                 s = "--> ..."
             } else if (this.previous.size == 1) {

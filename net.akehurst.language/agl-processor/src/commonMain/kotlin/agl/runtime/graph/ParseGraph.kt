@@ -112,8 +112,8 @@ internal class ParseGraph(
             this.growing[gnindex] = gn
         } else {
             // merge
-            for (info in gn.previous) {
-                existing.addPrevious(info.node, info.atPosition)
+            for (info in gn.previous.values) {
+                existing.addPrevious( info.node, info.atPosition)
             }
         }
     }
@@ -125,7 +125,7 @@ internal class ParseGraph(
         val existing = this.growing[gnindex]
         if (null == existing) {
             for (info in previous) {
-                gn.addPrevious(info.node, info.atPosition)
+                gn.addPrevious( info.node, info.atPosition)
             }
             this.growing[gnindex] = gn
         } else {
@@ -155,7 +155,7 @@ internal class ParseGraph(
                 return gn
             } else {
                 // merge
-                for (info in gn.previous) {
+                for (info in gn.previous.values) {
                     existing.addPrevious(info.node, info.atPosition)
                 }
                 return existing
@@ -312,12 +312,12 @@ internal class ParseGraph(
         val nextInputPosition = nextChild.nextInputPosition
         val children = parent.children + nextChild
         val previous = parent.previous
-        for (pi in previous) {
+        for (pi in previous.values) {
             pi.node.removeNext(parent)
         }
         val numNonSkipChildren = if (nextChild.isSkip) parent.numNonSkipChildren else parent.numNonSkipChildren + 1
         this.findOrCreateGrowingNode(nextRp, parent.targetRulePosition, startPosition, nextInputPosition, priority, children,
-            numNonSkipChildren, previous)
+            numNonSkipChildren, previous.values.toSet()) //FIXME: don't convert to set
         if (parent.next.isEmpty()) {
             this.removeGrowing(parent)
         }
@@ -348,13 +348,13 @@ internal class ParseGraph(
     }
 
     fun pop(gn: GrowingNode): Set<PreviousInfo> {
-        for (pi in gn.previous) {
+        for (pi in gn.previous.values) {
             pi.node.removeNext(gn)
             this.removeGrowing(pi.node)
         }
         val previous = gn.previous
         gn.newPrevious()
-        return previous
+        return previous.values.toSet() //FIXME: don't convert to set
     }
 
     fun pushToStackOf(newTgtRp: RulePosition, leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>) {

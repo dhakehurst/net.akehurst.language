@@ -259,18 +259,33 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     )
                     else -> arrayOf() //throw ParseException("This should never happen!")
                 }
-                RuntimeRuleItemKind.SEPARATED_LIST -> when {
-                    rp.runtimeRule.rhs.multiMin == 0 && itemRule == rp.runtimeRule.rhs.SLIST__emptyRule -> arrayOf(
-                        RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE)
-                    )
-                    itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> arrayOf(
-                        RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR,1),
-                        RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE)
-                    )
-                    itemRule == rp.runtimeRule.rhs.SLIST__separator -> arrayOf(
-                        RulePosition(rp.runtimeRule,  RuntimeRuleItem.SLIST__ITEM,2),
-                        RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE)
-                    )
+                RuntimeRuleItemKind.SEPARATED_LIST -> when(rp.choice) {
+                    RuntimeRuleItem.SLIST__EMPTY_RULE -> when {
+                        0==rp.position && rp.runtimeRule.rhs.multiMin == 0 && itemRule == rp.runtimeRule.rhs.SLIST__emptyRule -> arrayOf(
+                            RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE)
+                        )
+                        else -> throw ParseException("This should never happen!")
+                    }
+                    RuntimeRuleItem.SLIST__ITEM -> when {
+                        0==rp.position && (rp.runtimeRule.rhs.multiMax ==1 ) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> arrayOf(
+                            RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE)
+                        )
+                        0==rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1==rp.runtimeRule.rhs.multiMax ) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> arrayOf(
+                            RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR,1),
+                            RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE)
+                        )
+                        2==rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1==rp.runtimeRule.rhs.multiMax ) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> arrayOf(
+                            RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR,1),
+                            RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE)
+                        )
+                        else -> throw ParseException("This should never happen!")
+                    }
+                    RuntimeRuleItem.SLIST__SEPARATOR -> when {
+                        1==rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1==rp.runtimeRule.rhs.multiMax ) && itemRule == rp.runtimeRule.rhs.SLIST__separator -> arrayOf(
+                            RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM,2)
+                        )
+                        else -> throw ParseException("This should never happen!")
+                    }
                     else -> throw ParseException("This should never happen!")
                 }
                 RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> throw ParseException("Not yet supported")

@@ -17,10 +17,13 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scannerless.ScannerlessParser
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class test_RuntimeRuleSet_lookahead {
 
@@ -151,19 +154,86 @@ class test_RuntimeRuleSet_lookahead {
     //TODO: multi and sList lookahead
 
 
-    // S = ['a' / ',']?
+    // S = ['a' / ',']*
     @Test
-    fun sList_lookahead__S_0_0() {
+    fun sList_lookahead__S_empty_0() {
         val rb = RuntimeRuleSetBuilder()
         val r_a = rb.literal("a")
-        val r_S = rb.rule("S").separatedList(0, 1, rb.literal(","), r_a)
+        val r_c = rb.literal(",")
+        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S,0,0),gr)
+        val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__EMPTY_RULE,0),gr)
+        val expected = setOf(RuntimeRuleSet.END_OF_TEXT)
+
+        assertEquals<Set<RuntimeRule>>(expected, actual)
+    }
+
+    // S = ['a' / ',']*
+    @Test
+    fun sList_lookahead__S_item_0() {
+        val rb = RuntimeRuleSetBuilder()
+        val r_a = rb.literal("a")
+        val r_c = rb.literal(",")
+        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
+        val sut = rb.ruleSet()
+        val gr = RuntimeRuleSet.createGoal(r_S)
+
+        val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM,0),gr)
+        val expected = setOf(r_c, RuntimeRuleSet.END_OF_TEXT)
+
+        assertEquals<Set<RuntimeRule>>(expected, actual)
+    }
+
+    // S = ['a' / ',']*
+    @Test
+    fun sList_lookahead__S_separator_1() {
+        val rb = RuntimeRuleSetBuilder()
+        val r_a = rb.literal("a")
+        val r_c = rb.literal(",")
+        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
+        val sut = rb.ruleSet()
+        val gr = RuntimeRuleSet.createGoal(r_S)
+
+        val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR,1),gr)
         val expected = setOf(r_a)
 
         assertEquals<Set<RuntimeRule>>(expected, actual)
+    }
+
+
+
+    // S = ['a' / ',']*
+    @Test
+    fun sList_lookahead__S_item_1() {
+        val rb = RuntimeRuleSetBuilder()
+        val r_a = rb.literal("a")
+        val r_c = rb.literal(",")
+        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
+        val sut = rb.ruleSet()
+        val gr = RuntimeRuleSet.createGoal(r_S)
+
+        val ex = assertFailsWith(ParseException::class) {
+            sut.lookahead(RulePosition(r_S,RuntimeRuleItem.SLIST__ITEM,1),gr)
+        }
+
+    }
+
+    // S = ['a' / ',']*
+    @Test
+    fun sList_lookahead__S_separator_2() {
+        val rb = RuntimeRuleSetBuilder()
+        val r_a = rb.literal("a")
+        val r_c = rb.literal(",")
+        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
+        val sut = rb.ruleSet()
+        val gr = RuntimeRuleSet.createGoal(r_S)
+
+        val ex = assertFailsWith(ParseException::class) {
+            val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 2), gr)
+        }
+
     }
 
     fun g3(): RuntimeRuleSet {
