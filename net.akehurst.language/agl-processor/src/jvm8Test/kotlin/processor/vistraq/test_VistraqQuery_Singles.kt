@@ -263,6 +263,36 @@ grammar Query {
     }
 
     @Test(timeout=1000)
+    fun logicalInfixFunction_long() {
+        val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p AND g.p AND h.p AND i.p AND j.p AND k.p AND l.p"
+
+        val result = processor.parse("logicalInfixFunction", queryStr)
+        Assert.assertNotNull(result)
+        val resultStr = result.asString
+        Assert.assertEquals(queryStr, resultStr)
+    }
+
+    @Test(timeout=1000)
+    fun expression_long3() {
+        val queryStr = "a.p AND b.p AND c.p AND d.p"
+
+        val result = processor.parse("expression", queryStr)
+        Assert.assertNotNull(result)
+        val resultStr = result.asString
+        Assert.assertEquals(queryStr, resultStr)
+    }
+
+    @Test(timeout=1000)
+    fun expression_long5() {
+        val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p"
+
+        val result = processor.parse("expression", queryStr)
+        Assert.assertNotNull(result)
+        val resultStr = result.asString
+        Assert.assertEquals(queryStr, resultStr)
+    }
+
+    @Test(timeout=1000)
     fun expression_long() {
         val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p AND g.p AND h.p AND i.p AND j.p AND k.p AND l.p"
 

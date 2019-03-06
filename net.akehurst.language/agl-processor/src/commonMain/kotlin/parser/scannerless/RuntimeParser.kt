@@ -201,7 +201,15 @@ internal class RuntimeParser(
                         //}
 
                         val newTargetRPs = runtimeRuleSet.growsInto(tgtRP.runtimeRule, graph.runtimeGoalRule).map { RulePosition(it.runtimeRule, it.choice, 0) }
-                        newTargetRPs.forEach { newTgtRP ->
+                        val fntp = if (tgtRP.runtimeRule.isSkip) { //TODO: do we really need to check if we are growing a skip node
+                            newTargetRPs
+                        } else {
+                            newTargetRPs.filter {
+                                //TODO: checking the graftinto rule against prev, position doesn't work!
+                                (it.runtimeRule==prev.node.runtimeRule ) || runtimeRuleSet.calcCanGrowInto(it.runtimeRule, prev.node.runtimeRule, prev.atPosition)
+                            }
+                        }
+                        fntp.forEach { newTgtRP ->
                             //val lookaheadItems = findLookaheadItems(newTgtRP, gn.runtimeRule, null)
                             val nextRps = runtimeRuleSet.nextRulePosition(tgtRP, complete.runtimeRule)
                             nextRps.forEach { nextRp -> //TODO: maybe check lookahead here also?
@@ -210,7 +218,7 @@ internal class RuntimeParser(
                         }
                     }
                 }
-                RulePosition.END_OF_RULE -> {
+                RulePosition.END_OF_RULE -> { //This never happens!
                     //TODO: maybe we need to grow height of a skip non-terminal!
                     if (this.runtimeRuleSet.isSkipTerminal[gn.runtimeRule.number]) {
                         val rps = runtimeRuleSet.expectedSkipItemRulePositionsTransitive
@@ -337,30 +345,16 @@ internal class RuntimeParser(
         return result
     }
 
-    /*
-    private fun tryGrowWidth1(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
-        var modified = false
-        if (gn.canGrowWidth) { // don't grow width if its complete...cant graft back
-            val expectedNextTerminal = runtimeRuleSet.findNextExpectedTerminals(gn.runtimeRule, gn.nextItemIndex)
-            for (rr in expectedNextTerminal) {
-                val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
-                if (null != l) {
-                    modified = this.pushStackNewRoot(l, gn, previous)
-                }
-            }
-        }
-        return modified
-    }
-*/
     private fun tryGrowWidth(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var modified = false
         if (gn.canGrowWidth) { // don't grow width if its complete...cant graft back
             //val thisRP = RulePosition(gn.runtimeRule, gn.nextItemIndex, setOf())// gn.targetRulePosition
+
             val rps = runtimeRuleSet.expectedTerminalRulePositions[gn.currentRulePosition] ?: arrayOf()
             //val rps2 = previous.flatMap{prev->this.runtimeRuleSet.calcGrowsInto( ??? gn.runtimeRule, prev.node.runtimeRule, prev.atPosition)}
-            //val rpsf = rps.filter { //TODO: do we need this filter?
-            //    (rps2.contains(it.runtimeRule) || rps2.isEmpty())
-            //}
+            val rpsf = rps.filter { //TODO: do we need this filter?
+                runtimeRuleSet.calcCanGrowInto(it.runtimeRule, gn.currentRulePosition.runtimeRule, gn.currentRulePosition.position)
+            }
             for (newTgtRp in rps) {
                 //val nextRP = gn.rulePosition.next
                 val items = newTgtRp.items //  rp.runtimeRule.itemsAt[rp.position]

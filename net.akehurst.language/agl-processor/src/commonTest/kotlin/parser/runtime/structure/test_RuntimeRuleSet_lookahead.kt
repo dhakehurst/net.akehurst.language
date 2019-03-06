@@ -39,7 +39,7 @@ class test_RuntimeRuleSet_lookahead {
         val actual = sut.lookahead(RulePosition(r_S,0,0),gr)
         val expected = setOf(RuntimeRuleSet.END_OF_TEXT)
 
-        assertEquals<Set<RuntimeRule>>(expected, actual)
+        assertEquals(expected, actual)
     }
 
     // S = 'a' | S1 ;
@@ -57,7 +57,7 @@ class test_RuntimeRuleSet_lookahead {
         val actual = sut.lookahead(RulePosition(r_S,0,0),gr)
         val expected = setOf(r_a, RuntimeRuleSet.END_OF_TEXT)
 
-        assertEquals<Set<RuntimeRule>>(expected, actual)
+        assertEquals(expected, actual)
     }
 
 
