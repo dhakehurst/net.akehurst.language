@@ -26,6 +26,10 @@ class RuntimeRuleExtender(val rule: RuntimeRule) {
         rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_EQUAL, -1, 0, items)
     }
 
+    fun choicePriority(vararg items: RuntimeRule) {
+        rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_PRIORITY, -1, 0, items)
+    }
+
     fun concatenation(vararg items: RuntimeRule) {
         rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, items)
     }

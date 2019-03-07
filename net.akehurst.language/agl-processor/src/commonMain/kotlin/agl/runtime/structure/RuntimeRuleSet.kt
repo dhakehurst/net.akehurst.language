@@ -233,14 +233,20 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     /**
      * itemRule is the rule we use to increment rp
      */
-    fun nextRulePosition(rp: RulePosition, itemRule: RuntimeRule): Set<RulePosition> {
+    fun nextRulePosition(rp: RulePosition, itemRule: RuntimeRule): Set<RulePosition> { //TODO: cache this
         return if (RulePosition.END_OF_RULE == rp.position) {
             emptySet() //TODO: use goal rule to find next position? maybe
         } else {
             when (rp.runtimeRule.rhs.kind) {
                 RuntimeRuleItemKind.EMPTY -> throw ParseException("This should never happen!")
-                RuntimeRuleItemKind.CHOICE_EQUAL -> setOf(RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE))
-                RuntimeRuleItemKind.CHOICE_PRIORITY -> setOf(RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE))
+                RuntimeRuleItemKind.CHOICE_EQUAL -> when {
+                    itemRule == rp.runtimeRule.rhs.items[rp.choice] -> setOf(RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE))
+                    else -> emptySet() //throw ParseException("This should never happen!")
+                }
+                RuntimeRuleItemKind.CHOICE_PRIORITY ->when {
+                    itemRule == rp.runtimeRule.rhs.items[rp.choice] -> setOf(RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE))
+                    else -> emptySet() //throw ParseException("This should never happen!")
+                }
                 RuntimeRuleItemKind.CONCATENATION -> {
                     val np = rp.position + 1
                     if (np < rp.runtimeRule.rhs.items.size) {

@@ -183,10 +183,8 @@ internal class RuntimeParser(
     */
     private fun tryGrowHeight(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
 //        if (gn.currentRulePosition.isAtEnd && !gn.currentRulePosition.runtimeRule.isGoal && gn.targetRulePosition.items.contains(gn.currentRulePosition.runtimeRule)) { //gn.hasCompleteChildren) {
-        if (gn.currentRulePosition.isAtEnd && !(gn.targetRulePosition.position==-1) && gn.targetRulePosition.items.contains(gn.currentRulePosition.runtimeRule)) { //gn.hasCompleteChildren) {
+        if (gn.currentRulePosition.isAtEnd && gn.targetRulePosition.position==0 && gn.targetRulePosition.items.contains(gn.currentRulePosition.runtimeRule)) { //gn.hasCompleteChildren) {
             val tgtRP = gn.targetRulePosition
-            when (tgtRP.position) {
-                0 -> { // start
                     val newParentRule = tgtRP.runtimeRule
                     //if (gn.runtimeRule == prevRP.runtimeRule) { // && ?? == prevRP.position) {
                     val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
@@ -217,67 +215,6 @@ internal class RuntimeParser(
                             }
                         }
                     }
-                }
-                RulePosition.END_OF_RULE -> { //This never happens!
-                    //TODO: maybe we need to grow height of a skip non-terminal!
-                    if (this.runtimeRuleSet.isSkipTerminal[gn.runtimeRule.number]) {
-                        val rps = runtimeRuleSet.expectedSkipItemRulePositionsTransitive
-                        val rpsf = rps.filter {
-                            //TODO: do we need this filter?
-                            it.runtimeRule.couldHaveChild(gn.runtimeRule, 0)
-                        }
-                        rpsf.forEach { rp ->
-                            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
-                                ?: throw ParseException("Internal error: Should never happen")
-                            val tgtRPs = runtimeRuleSet.nextRulePosition(rp, complete.runtimeRule)
-                            tgtRPs.forEach {
-                                //val lookaheadItems = findLookaheadItems(it, gn.runtimeRule, null)
-                                this.graph.createWithFirstChild(it, it, it.runtimeRule, complete, previous) //FIXME: this is temp, find correct nextRp
-                            }
-                        }
-                    } else {
-                        for (prev in previous) {
-                            //val goalRp = this.graph.goalNode.targetRulePosition
-                            val goalRp = RulePosition(prev.node.runtimeRule, 0, prev.atPosition)
-                            val rps = runtimeRuleSet.expectedItemRulePositionsTransitive[goalRp]
-                                ?: setOf()// nextRulePosition(rp, gn.runtimeRule) //FIXME: not the right last param
-                            val rps2 = runtimeRuleSet.expectedItemRulePositionsTransitive[prev.node.targetRulePosition]
-                                ?: setOf()// nextRulePosition(rp, gn.runtimeRule) //FIXME: not the right last param
-                            //val rps2 = this.runtimeRuleSet.calcGrowsInto(gn.runtimeRule, prev.node.runtimeRule, prev.atPosition)
-                            val rpsf = rps.filter {
-                                //TODO: do we need this filter?
-                                //     rps2.contains(it.runtimeRule) &&
-                                it.position == 0 && it.runtimeRule.couldHaveChild(gn.runtimeRule, 0)
-                            }
-                            val rpsf2 = rpsf.filter {
-                                val nextRP = runtimeRuleSet.nextRulePosition(prev.node.targetRulePosition, it.runtimeRule)
-                                nextRP.any { nrp ->
-                                    val lh: Array<RulePosition> = runtimeRuleSet.expectedTerminalRulePositions[nrp]
-                                        ?: arrayOf<RulePosition>()
-                                    lh.any { trp ->
-                                        trp.runtimeRule.itemsAt[trp.position].any {
-                                            null != graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
-                                        }
-                                    }
-                                }
-                            }
-                            rpsf.forEach { rp ->
-                                val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
-                                    ?: throw ParseException("Internal error: Should never happen")
-                                val tgtRules = runtimeRuleSet.firstSuperNonTerminal[rp.runtimeRule.number]
-
-                                val newPrev = PreviousInfo(prev.node, prev.atPosition)
-                                tgtRules.forEach {
-                                    val newTgtRp = RulePosition(it, 0, 0)
-                                    //val lookaheadItems = findLookaheadItems(newTgtRp, gn.runtimeRule, prev)
-                                    this.graph.createWithFirstChild(newTgtRp, newTgtRp, rp.runtimeRule, complete, setOf(newPrev))  //FIXME: this is temp, find correct nextRp
-                                }
-                            }
-                        }
-                    }
-                }
-                else -> return false //throw ParseException("Should never happen")
-            }
             return true
         } else {
             return false
@@ -288,9 +225,9 @@ internal class RuntimeParser(
         var graftBack = false
         for (prev in previous) {
             //TODO: canGraftBack calls expectsItemAt which calls contains, so it has a nested loop, is it worth caching here?
-            if (gn.canGraftBack(prev)) { // if hascompleteChildren && isStacked && prevInfo is valid
+ //           if (gn.canGraftBack(prev)) { // if hascompleteChildren && isStacked && prevInfo is valid
                 graftBack = this.tryGraftBack(gn, prev)
-            }
+ //           }
         }
         return graftBack
     }

@@ -18,7 +18,7 @@ class test_expession : test_ScannerlessParserAbstract() {
         val r_S = b.rule("S").build()
         val r_P = b.rule("P").concatenation(r_S, b.literal("p"), r_n)
         val r_I = b.rule("I").separatedList(2,-1,b.literal("o"), r_S)
-        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_PRIORITY, -1, 0, arrayOf(r_n, r_P, r_I))
+        b.rule(r_S).choicePriority(r_n, r_P, r_I)
         return b
     }
 
