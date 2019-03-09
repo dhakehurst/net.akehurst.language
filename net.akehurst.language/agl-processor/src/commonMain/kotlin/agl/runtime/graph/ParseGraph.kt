@@ -261,7 +261,7 @@ internal class ParseGraph(
                     if (existingPriority == newPriority) {
                         // TODO: record/log ambiguity!
                         // TODO: match by length if priority the same
-                        cn.childrenAlternatives.add(gn.children)
+                        //cn.childrenAlternatives.add(gn.children)
                         if (gn.isEmptyMatch && cn.isEmptyMatch) {
                             if (cn.childrenAlternatives.isEmpty()) {
                                 cn.childrenAlternatives.add(gn.children)

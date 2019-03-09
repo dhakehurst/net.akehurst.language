@@ -211,7 +211,7 @@ internal class RuntimeParser(
                             //val lookaheadItems = findLookaheadItems(newTgtRP, gn.runtimeRule, null)
                             val nextRps = runtimeRuleSet.nextRulePosition(tgtRP, complete.runtimeRule)
                             nextRps.forEach { nextRp -> //TODO: maybe check lookahead here also?
-                                this.graph.createWithFirstChild(nextRp, newTgtRP, newParentRule, complete, previous) //maybe lookahead to wanted next token here (it would need to be part of RP)
+                                this.graph.createWithFirstChild(nextRp, newTgtRP, newParentRule, complete, setOf(prev)) //maybe lookahead to wanted next token here (it would need to be part of RP)
                             }
                         }
                     }
@@ -299,7 +299,10 @@ internal class RuntimeParser(
                     if (rr.isTerminal) { //it might not be, e.g. if rp is in a multi,0 where it could be empty
                         val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
                         if (null != l) {
-                            val lhok = hasLookaheadAfterSkip(newTgtRp, gn.nextInputPosition + l.matchedTextLength)
+                            //TODO: try doing lookahead in height or graft instead!
+                            // should allow the skip to be consumed before looking ahead
+                            //val lhok = hasLookaheadAfterSkip(newTgtRp, gn.nextInputPosition + l.matchedTextLength)
+                            val lhok = hasLookaheadAfterSkip(gn.currentRulePosition, gn.nextInputPosition + l.matchedTextLength)
                             if (lhok) {
                                 this.graph.pushToStackOf(newTgtRp, l, gn, previous)
                             }

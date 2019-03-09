@@ -14,27 +14,20 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure
+package net.akehurst.language.parser.scannerless.listSeparated
 
-data class RulePosition(
-    val runtimeRule: RuntimeRule,
-    val choice: Int,
-    val position: Int
-) {
+import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import kotlin.test.Test
+import kotlin.test.fail
 
-    companion object {
-        val END_OF_RULE = -1
+class test_leftRecursive  : test_ScannerlessParserAbstract() {
+
+    // S = P | 'a' ;
+    // P = [ S / 'b' ] *;
+
+    @Test
+    fun t() {
+        TODO()
+        fail("TODO")
     }
-
-    val isAtEnd = position == END_OF_RULE
-
-    val items:Set<RuntimeRule> get() {
-         return runtimeRule.items(choice, position)
-    }
-
-
-    override fun toString(): String {
-        return "RP(${runtimeRule.name},$choice,$position)"
-    }
-
 }

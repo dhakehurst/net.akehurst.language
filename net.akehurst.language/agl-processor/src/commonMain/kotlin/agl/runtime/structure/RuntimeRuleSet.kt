@@ -171,6 +171,18 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         this.firstSuperNonTerminal.size
         this.subNonTerminals.size
         this.subTerminals.size
+
+        this.runtimeRules.forEach { rule ->
+            this.growsInto[rule.number]
+            rule.rulePositions.forEach { rp ->
+                if (rp.isAtEnd ) {
+                    //no need to do for end-of-rule (at present)
+                } else {
+                    this.lookahead[rule]?.get(rp)
+                    this.firstTerminals2[rp]
+                }
+            }
+        }
     }
 
     /**
@@ -325,42 +337,63 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val result = mutableSetOf<RuntimeRule>()
         val items = rp.items
         for (item in items) {
-            val nextRps = nextRulePosition(rp, item)
-            for (nextRp in nextRps) {
-                if (nextRp.isAtEnd) {
-                    val growsInto = growsInto(nextRp.runtimeRule, goalRule)
-                    val gin = growsInto.flatMap { it.items.flatMap { it2 -> nextRulePosition(it, it2).toSet() }.toSet() }.toSet()
-                    val gi = gin.transitveClosure {
-                        when {
-                            (it.runtimeRule.isGoal) -> emptySet<RulePosition>()
-                            it.isAtEnd -> {
-                                val x = growsInto(it.runtimeRule, goalRule)
-                                val x1 = x.flatMap { it.items.flatMap { it2 -> nextRulePosition(it, it2).toSet() }.toSet() }
-                                x1.toSet()
+//            if (item.isTerminal) {
+                val nextRps = nextRulePosition(rp, item)
+                for (nextRp in nextRps) {
+                    if (nextRp.isAtEnd) {
+                        val growsInto = growsInto(nextRp.runtimeRule, goalRule)
+                        val gin = growsInto.flatMap { it.items.flatMap { it2 -> nextRulePosition(it, it2).toSet() }.toSet() }.toSet()
+                        val gi = gin.transitveClosure {
+                            when {
+                                (it.runtimeRule.isGoal) -> emptySet<RulePosition>()
+                                it.isAtEnd -> {
+                                    val x = growsInto(it.runtimeRule, goalRule)
+                                    val x1 = x.flatMap { it.items.flatMap { it2 -> nextRulePosition(it, it2).toSet() }.toSet() }
+                                    x1.toSet()
+                                }
+                                else -> setOf(it)
                             }
-                            else -> setOf(it)
                         }
-                    }
-                    val terms = gi.flatMap {
-                        when {
-                            (it.isAtEnd) -> setOf(RuntimeRuleSet.END_OF_TEXT)
-                            else -> firstTerminals2[it] ?: emptySet()
+                        val terms = gi.flatMap {
+                            when {
+                                (it.isAtEnd) -> setOf(RuntimeRuleSet.END_OF_TEXT)
+                                else -> firstTerminals2[it] ?: emptySet()
+                            }
+
+                        }.toSet()
+                        result.addAll(terms)
+
+                    } else {
+                        val lhItems = nextRp.items
+                        for (lhItem in lhItems) {
+                            val x = firstTerminals[lhItem.number]
+                            result.addAll(x)
                         }
-
-                    }.toSet()
-                    result.addAll(terms)
-
-                } else {
-                    val lhItems = nextRp.items
-                    for (lhItem in lhItems) {
-                        val x = firstTerminals[lhItem.number]
-                        result.addAll(x)
                     }
                 }
-            }
+//            } else {
+//                item.calcExpectedRulePositions(0).forEach {
+//                    val s = calcLookaheadNT(it)
+//                    result.addAll(s)
+//                }
+//            }
         }
         return result
     }
+/*
+    private fun calcLookaheadNT(rp: RulePosition): Set<RuntimeRule> {
+        val lhrps = setOf(rp).transitveClosure {
+            it.items.flatMap { item->
+                if (item.isTerminal) {
+                    setOf(rp)
+                } else {
+                    item.calcExpectedRulePositions( 0 )
+                }
+            }.toSet()
+        }
+        return lhrps.map { it.runtimeRule }.toSet()
+    }
+*/
 
     private fun calcExpectedItemRulePositions(rp: RulePosition): Set<RulePosition> {
         return rp.runtimeRule.calcExpectedRulePositions(rp.position)
@@ -376,7 +409,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 if (rp.runtimeRule.isTerminal) {
                     setOf<RulePosition>()
                 } else {
-                    rp.runtimeRule.itemsAt[rp.position].flatMap {
+                    rp.runtimeRule.items(rp.choice,rp.position).flatMap {
                         if (it.isTerminal) {
                             setOf(rp)
                         } else {

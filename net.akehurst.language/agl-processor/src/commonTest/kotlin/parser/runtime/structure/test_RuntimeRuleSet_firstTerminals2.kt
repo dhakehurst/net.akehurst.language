@@ -65,7 +65,22 @@ class test_RuntimeRuleSet_firstTerminals2 {
         assertEquals(expected, actual)
     }
 
+    // S = P | 'a' ;
+    // P =  S*;
+    @Test
+    fun G2_S_0_0() {
+        val b = RuntimeRuleSetBuilder()
+        val r_a = b.literal("a")
+        val r_S = b.rule("S").build()
+        val r_P = b.rule("P").multi(0,-1,r_S)
+        b.rule(r_S).choiceEqual(r_P, r_a)
+        val sut = b.ruleSet()
 
+        val actual = sut.firstTerminals2[RulePosition(r_S,0,0)]
+        val expected = setOf(r_P.emptyRuleItem, r_a)
+
+        assertEquals(expected, actual)
+    }
 
 
 }
