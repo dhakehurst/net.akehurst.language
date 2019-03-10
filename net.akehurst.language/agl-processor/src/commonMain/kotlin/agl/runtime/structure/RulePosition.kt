@@ -26,6 +26,7 @@ data class RulePosition(
         val END_OF_RULE = -1
     }
 
+    val isAtStart = position == 0
     val isAtEnd = position == END_OF_RULE
 
     val items:Set<RuntimeRule> get() {

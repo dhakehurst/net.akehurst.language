@@ -100,19 +100,12 @@ internal class RuntimeParser(
             if (gn.isSkip) {
                 this.tryGraftBackSkipNode(gn, previous)
             } else {
-                // TODO: need to find a way to do either height or graft..not both, maybe!
-                // problem is deciding which
-                // try reduce first
-                //TODO: use growFirst/Mid/Last ? maybe
-                val grownHeight = this.tryGrowHeight(gn, previous) // reduce first item & it may be the last (only) item
-
-                // try reduce rest
-                var graftBack = this.tryGraftBack(gn, previous) // reduce middle or last items
-
-                // maybe only shift if not done either of above!
-                // tomitas original does that!
-                // shift
-                val grownWidth = this.tryGrowWidth(gn, previous)
+                for( prev in previous) {
+                    this.tryReduceFirst(gn, prev)
+                    this.tryReduceMiddle(gn, prev)
+                    this.tryReduceLast(gn, prev)
+                    this.tryShift(gn, prev)
+                }
             }
         }
     }
@@ -143,44 +136,27 @@ internal class RuntimeParser(
         }
     }
 
-    /*
-        private fun tryGrowHeight1(gn: GrowingNode, previous: PreviousInfo): Boolean {
-            var result = false
-            if (gn.hasCompleteChildren) {
-                val childRule = gn.runtimeRule
-                if (this.runtimeRuleSet.isSkipTerminal[childRule.number]) {
-                    val possibleSuperRules = this.runtimeRuleSet.firstSuperNonTerminal[childRule.number]
-                    for (sr in possibleSuperRules) {
-                        val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
-                            ?: throw ParseException("Internal error: Should never happen")
-                        val rp = RulePosition(gn.runtimeRule, 1, setOf())
-                        this.graph.createWithFirstChild(rp, sr, complete, setOf(previous))
-                        //this.growHeightByType(complete, sr, previous)
-                        result = result or true // TODO: this should depend on if the growHeight does something
-                    }
-                } else {
-                    val toGrow = mutableSetOf<RuntimeRule>()
-                    for ((node) in previous) {
-                        val prevItemIndex = node.nextItemIndex
-                        val prevRule = node.runtimeRule
-                        //TODO: find a way to cache the calcGrowsInto
-                        toGrow.addAll(this.runtimeRuleSet.calcGrowsInto(childRule, prevRule, prevItemIndex))
-                    }
-                    for (rr in toGrow) {
-                        val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
-                            ?: throw ParseException("Internal error: Should never happen")
-                        val rp = RulePosition(rr, 1, setOf())
-                        this.graph.createWithFirstChild(rp, rr, complete, previous)
-                        //this.growHeightByType(complete, info, previous)
-                        result = result or true // TODO: this should depend on if the growHeight does something
-                    }
-                }
-            } else {
-                // do nothing
-            }
-            return result
+    private fun tryReduceFirst(gn: GrowingNode, prev:PreviousInfo) {
+        //growHeight
+        if (gn.currentRulePosition.isAtEnd && gn.targetRulePosition.isAtStart && gn.targetRulePosition.items.contains(gn.currentRulePosition.runtimeRule)) { //gn.hasCompleteChildren) {
+
+
         }
-    */
+    }
+
+    private fun tryReduceMiddle(gn: GrowingNode, prev:PreviousInfo) {
+        //graftBack
+        if (gn.currentRulePosition.isAtEnd && gn.targetRulePosition.isMiddle) {
+
+        }
+    }
+
+    private fun tryReduceLast(gn: GrowingNode, prev:PreviousInfo) {
+        if (gn.currentRulePosition.isAtEnd && gn.targetRulePosition.isMiddle) {
+
+        }
+    }
+
     private fun tryGrowHeight(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
 //        if (gn.currentRulePosition.isAtEnd && !gn.currentRulePosition.runtimeRule.isGoal && gn.targetRulePosition.items.contains(gn.currentRulePosition.runtimeRule)) { //gn.hasCompleteChildren) {
         if (gn.currentRulePosition.isAtEnd && gn.targetRulePosition.position==0 && gn.targetRulePosition.items.contains(gn.currentRulePosition.runtimeRule)) { //gn.hasCompleteChildren) {
@@ -282,7 +258,7 @@ internal class RuntimeParser(
         return result
     }
 
-    private fun tryGrowWidth(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
+    private fun tryShift(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var modified = false
         if (gn.canGrowWidth) { // don't grow width if its complete...cant graft back
             //val thisRP = RulePosition(gn.runtimeRule, gn.nextItemIndex, setOf())// gn.targetRulePosition
