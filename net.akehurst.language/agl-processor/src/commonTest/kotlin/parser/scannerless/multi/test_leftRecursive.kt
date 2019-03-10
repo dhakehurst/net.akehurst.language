@@ -34,9 +34,6 @@ class test_leftRecursive : test_ScannerlessParserAbstract() {
         return b
     }
 
-    try this test with the code on the kotlin branch,
-    find out why we don't get the stackoverflow there!
-
     @Test
     fun a() {
         val rrb = this.S()
