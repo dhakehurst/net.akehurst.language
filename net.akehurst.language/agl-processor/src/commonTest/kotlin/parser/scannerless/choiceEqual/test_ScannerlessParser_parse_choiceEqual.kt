@@ -25,7 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-class test_RuntimeParser_parse_choiceEqual {
+class test_ScannerlessParser_parse_choiceEqual {
 
     private fun test_parse(sp: ScannerlessParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
         return sp.parse(goalRuleName, inputText)
@@ -128,7 +128,7 @@ class test_RuntimeParser_parse_choiceEqual {
         val rb = b.rule("b").concatenation(b.literal("b"))
         val rc = b.rule("c").concatenation(b.literal("c"))
         val rab = b.rule("ab").concatenation(ra, rb)
-        b.rule("r").choiceEqual(rab, rc)
+        b.rule("S").choiceEqual(rab, rc)
         val sp = ScannerlessParser(b.ruleSet())
         return sp
     }
@@ -136,7 +136,7 @@ class test_RuntimeParser_parse_choiceEqual {
     @Test
     fun abOcLiteral_r_empty_fails() {
         val sp = this.abOcLiteral()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
@@ -149,7 +149,7 @@ class test_RuntimeParser_parse_choiceEqual {
     @Test
     fun abOcLiteral_r_a_fails() {
         val sp = this.abOcLiteral()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "a"
 
         val ex = assertFailsWith(ParseFailedException::class) {
@@ -162,7 +162,7 @@ class test_RuntimeParser_parse_choiceEqual {
     @Test
     fun abOcLiteral_r_ab() {
         val sp = this.abOcLiteral()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "ab"
 
         val actual = test_parse(sp, goalRuleName, inputText)
@@ -173,7 +173,7 @@ class test_RuntimeParser_parse_choiceEqual {
     @Test
     fun abOcLiteral_r_abc_fails() {
         val sp = this.abOcLiteral()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "abc"
 
         val ex = assertFailsWith(ParseFailedException::class) {
@@ -186,7 +186,7 @@ class test_RuntimeParser_parse_choiceEqual {
     @Test
     fun abOcLiteral_r_c() {
         val sp = this.abOcLiteral()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "c"
 
         val actual = test_parse(sp, goalRuleName, inputText)

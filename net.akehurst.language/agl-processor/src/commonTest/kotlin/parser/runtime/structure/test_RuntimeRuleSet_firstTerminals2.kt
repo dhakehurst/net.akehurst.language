@@ -56,13 +56,13 @@ class test_RuntimeRuleSet_firstTerminals2 {
         val b = rb.literal("b")
         val Aa = rb.rule("Aa").concatenation(A, a)
         val Bb = rb.rule("Bb").concatenation(B, b)
-        val r = rb.rule("r").choicePriority(Aa, Bb)
+        val r_S = rb.rule("S").choicePriority(Aa, Bb)
 
         val sut = rb.ruleSet()
-        val actual = sut.firstTerminals2[RulePosition(r,0,0)]
-        val expected = setOf(A, B)
-
-        assertEquals(expected, actual)
+        val actual1 = sut.firstTerminals2[RulePosition(r_S,0,0)]
+        assertEquals(setOf(A), actual1)
+        val actual2 = sut.firstTerminals2[RulePosition(r_S,1,0)]
+        assertEquals(setOf(B), actual2)
     }
 
     // S = P | 'a' ;

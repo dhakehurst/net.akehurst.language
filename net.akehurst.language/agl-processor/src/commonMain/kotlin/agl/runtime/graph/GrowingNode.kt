@@ -22,7 +22,6 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class GrowingNode(
-        val targetRulePosition: RulePosition, // rp that this node is contributing to
         val currentRulePosition : RulePosition, // current rp of this node, it is growing, this changes (for new node) when children are added
         //val runtimeRule: RuntimeRule,
         val startPosition: Int,
@@ -34,7 +33,7 @@ class GrowingNode(
 //        val lookaheadItems:Set<RuntimeRule>
 ) {
     //FIXME: shouldn't really do this, shouldn't store these in sets!!
-    private val hashCode_cache = arrayOf(this.currentRulePosition, this.targetRulePosition, this.startPosition, this.nextInputPosition).contentHashCode()
+    private val hashCode_cache = arrayOf(this.currentRulePosition, this.startPosition, this.nextInputPosition).contentHashCode()
 
     val matchedTextLength:Int = this.nextInputPosition - this.startPosition
     val runtimeRule get() = currentRulePosition.runtimeRule
@@ -95,9 +94,9 @@ class GrowingNode(
         this.previous = mutableMapOf()
     }
 
-    fun addPrevious(previousNode: GrowingNode, atPosition: Int) {
-        val info = PreviousInfo(previousNode, atPosition)
-        val gi = GrowingNodeIndex(previousNode.currentRulePosition, previousNode.targetRulePosition,previousNode.startPosition,previousNode.nextInputPosition)
+    fun addPrevious(previousNode: GrowingNode) {
+        val info = PreviousInfo(previousNode)
+        val gi = GrowingNodeIndex(previousNode.currentRulePosition, previousNode.startPosition,previousNode.nextInputPosition)
         this.previous.put(gi,info)
         previousNode.addNext(this)
     }
@@ -126,7 +125,7 @@ class GrowingNode(
     }
 
     fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {
-        var r = "$currentRulePosition,$targetRulePosition,$startPosition,$nextInputPosition,"
+        var r = "$currentRulePosition,$startPosition,$nextInputPosition,"
         r += if (this.hasCompleteChildren) "C" else this.currentRulePosition.position
         val name = if (this.runtimeRule.isTerminal) "'${this.runtimeRule.patternText}'" else this.runtimeRule.name
         r += ":" + name + "(" + this.runtimeRule.number + ")"

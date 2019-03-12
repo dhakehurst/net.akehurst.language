@@ -24,12 +24,12 @@ import kotlin.test.fail
 class test_leftRecursive : test_ScannerlessParserAbstract() {
 
     // S = P | 'a' ;
-    // P =  S*;
+    // P =  S+ ;
     private fun S(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r_a = b.literal("a")
         val r_S = b.rule("S").build()
-        val r_P = b.rule("P").multi(0,-1,r_S)
+        val r_P = b.rule("P").multi(1,-1,r_S)
         b.rule(r_S).choiceEqual(r_P, r_a)
         return b
     }

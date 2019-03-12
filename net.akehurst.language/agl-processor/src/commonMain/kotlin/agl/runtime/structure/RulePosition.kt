@@ -28,6 +28,7 @@ data class RulePosition(
 
     val isAtStart = position == 0
     val isAtEnd = position == END_OF_RULE
+    val isAtMiddle = !(isAtStart || isAtEnd)
 
     val items:Set<RuntimeRule> get() {
          return runtimeRule.items(choice, position)

@@ -59,8 +59,8 @@ class test_ParseGraph_abc {
         assertEquals(1, sut.growingHead.values.size)
 
         val head = sut.growingHead.values.first()
-        assertEquals(gr, head.targetRulePosition.runtimeRule)
-        assertEquals(0, head.targetRulePosition.position)
+        assertEquals(gr, head.previous.values.first().node.runtimeRule)
+        assertEquals(0, head.previous.values.first().node.currentRulePosition.position)
     }
 
     @Test

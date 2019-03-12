@@ -366,8 +366,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     } else {
                         val lhItems = nextRp.items
                         for (lhItem in lhItems) {
-                            val x = firstTerminals[lhItem.number]
-                            result.addAll(x)
+                            if (lhItem==RuntimeRuleSet.END_OF_TEXT) {
+                                result.add(RuntimeRuleSet.END_OF_TEXT)
+                            } else {
+                                val x = firstTerminals[lhItem.number]
+                                result.addAll(x)
+                            }
                         }
                     }
                 }
@@ -453,7 +457,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }.toSet() //TODO: cache ?
     }
 
-    //Used by lookahead
+    //Used by lookahead && growHeight
     private fun calcGrowsInto(ruleNumber: Int): Set<RulePosition> {
         val rule = this.runtimeRules[ruleNumber]
         return this.runtimeRules.filter {

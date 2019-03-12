@@ -16,6 +16,10 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-data class PreviousInfo(val node: GrowingNode, val atPosition: Int) {
-
+data class PreviousInfo(
+    val node: GrowingNode
+) {
+    val atPosition:Int get() {
+        return this.node.currentRulePosition.position
+    }
 }

@@ -23,7 +23,7 @@ import kotlin.test.fail
 class test_leftRecursive  : test_ScannerlessParserAbstract() {
 
     // S = P | 'a' ;
-    // P = [ S / 'b' ] *;
+    // P = [ S / 'b' ] 2+;
 
     @Test
     fun t() {
