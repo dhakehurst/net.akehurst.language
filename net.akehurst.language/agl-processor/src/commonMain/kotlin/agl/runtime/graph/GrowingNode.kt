@@ -19,18 +19,17 @@ package net.akehurst.language.agl.runtime.graph
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
+import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class GrowingNode(
+        val isSkipGrowth : Boolean,
         val currentRulePosition : RulePosition, // current rp of this node, it is growing, this changes (for new node) when children are added
-        //val runtimeRule: RuntimeRule,
         val startPosition: Int,
         val nextInputPosition: Int,
-        //val nextItemIndex: Int,
         val priority: Int,
-        val children: List<SPPTNodeDefault>,
+        val children: List<SPPTNode>,
         val numNonSkipChildren: Int
-//        val lookaheadItems:Set<RuntimeRule>
 ) {
     //FIXME: shouldn't really do this, shouldn't store these in sets!!
     private val hashCode_cache = arrayOf(this.currentRulePosition, this.startPosition, this.nextInputPosition).contentHashCode()
@@ -40,7 +39,7 @@ class GrowingNode(
 
     var previous: MutableMap<GrowingNodeIndex, PreviousInfo> = mutableMapOf()
     val next: MutableList<GrowingNode> = mutableListOf()
-    val hasCompleteChildren: Boolean = this.runtimeRule.isCompleteChildren(currentRulePosition.position, numNonSkipChildren, children)
+    val hasCompleteChildren: Boolean = this.currentRulePosition.isAtEnd //this.runtimeRule.isCompleteChildren(currentRulePosition.position, numNonSkipChildren, children)
     val isLeaf: Boolean
         get() {
             return this.runtimeRule.isTerminal
@@ -52,15 +51,7 @@ class GrowingNode(
     val isEmptyMatch: Boolean
         get() {
             // match empty if start and next-input positions are the same and children are complete
-            return this.hasCompleteChildren && this.startPosition == this.nextInputPosition
-        }
-    val isSkip: Boolean
-        get() {
-            return this.runtimeRule.isSkip
-        }
-    val canGrowWidthWithSkip: Boolean
-        get() {
-            return !this.runtimeRule.isEmptyRule && this.isBranch
+            return this.currentRulePosition.isAtEnd && this.startPosition == this.nextInputPosition
         }
 
     val canGrowWidth: Boolean by lazy {
@@ -86,6 +77,8 @@ class GrowingNode(
         return this.runtimeRule.incrementNextItemIndex(this.currentRulePosition.position)
     }
 
+    var skipNodes = mutableListOf<SPPTNode>()
+
     fun expectsItemAt(runtimeRule: RuntimeRule, atPosition: Int): Boolean {
         return this.runtimeRule.couldHaveChild(runtimeRule, atPosition)
     }
@@ -108,7 +101,7 @@ class GrowingNode(
     fun removeNext(value: GrowingNode) {
         this.next.remove(value)
     }
-
+/*
     fun canGraftBack(info: PreviousInfo): Boolean {
         // TODO: should return false if this is emptyRule and previous' children is not empty
         // if (this.previous.isEmpty() || !this.getHasCompleteChildren()) {
@@ -123,7 +116,7 @@ class GrowingNode(
         // }
         return b// && this.getHasCompleteChildren();// && this.getIsStacked();
     }
-
+*/
     fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {
         var r = "$currentRulePosition,$startPosition,$nextInputPosition,"
         r += if (this.hasCompleteChildren) "C" else this.currentRulePosition.position

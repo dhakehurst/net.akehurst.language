@@ -72,18 +72,18 @@ internal class RuntimeParser(
         this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
         this.graph.growingHead.clear()
         for (gn in this.toGrow) {
-            this.growNode(gn)
+            val previous = this.graph.pop(gn)
+            this.growNode(gn, previous)
         }
     }
 
-    private fun growNode(gn: GrowingNode) {
-        val previous = this.graph.pop(gn)
+    private fun growNode(gn: GrowingNode,previous: Set<PreviousInfo>) {
 
         val didSkipNode = this.tryGrowWidthWithSkipRules(gn, previous)
         if (didSkipNode) {
             return
         } else {
-            if (gn.isSkip) {
+            if (gn.runtimeRule.isSkip) {
                 this.tryGraftBackSkipNode(gn, previous)
             } else {
                 for (prev in previous) {
@@ -101,7 +101,7 @@ internal class RuntimeParser(
 
     private fun tryGrowWidthWithSkipRules(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var modified = false
-        if (gn.canGrowWidthWithSkip) { // don't grow width if its complete...cant graft back
+  //      if (gn.currentRulePosition.runtimeRule.isTerminal) { //(gn.canGrowWidthWithSkip) { // don't grow width if its complete...cant graft back
             val rps = this.runtimeRuleSet.firstSkipRuleTerminalPositions
             for (rp in rps) {
                 for (rr in rp.runtimeRule.itemsAt[rp.position]) {
@@ -109,13 +109,13 @@ internal class RuntimeParser(
                     if (null != l) {
                         //val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
                         //newRP.forEach {
-                        this.graph.pushToStackOf(l, gn, previous)
+                        this.graph.pushToStackOf(true, l, gn, previous)
                         modified = true
                         //}
                     }
                 }
             }
-        }
+ //       }
         return modified
     }
 
@@ -183,8 +183,8 @@ internal class RuntimeParser(
             && gn.currentRulePosition.isAtEnd
         //&& !previous.node.currentRulePosition.items.contains(gn.runtimeRule)
 
-        if (canHeight) {
-            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
+        if (canHeight || gn.isSkipGrowth) {
+            val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
                 ?: throw ParseException("Internal error: Should never happen")
 
             //val newTargetRPs = runtimeRuleSet.growsInto(gn.runtimeRule, graph.runtimeGoalRule).map { RulePosition(it.runtimeRule, it.choice, 0) }
@@ -203,8 +203,7 @@ internal class RuntimeParser(
                 if (newRP.runtimeRule.isSkip) {
                     val nextRps = runtimeRuleSet.nextRulePosition(newRP, complete.runtimeRule)
                     for (nextRp in nextRps) {
-
-                        this.graph.createWithFirstChild(nextRp, complete, setOf(previous)) //maybe lookahead to wanted next token here (it would need to be part of RP)
+                        this.graph.createWithFirstChild(gn.isSkipGrowth, nextRp, complete, setOf(previous), gn.skipNodes) //maybe lookahead to wanted next token here (it would need to be part of RP)
                     }
                 } else {
                     val lh = runtimeRuleSet.lookahead(newRP, previous.node.runtimeRule)
@@ -218,7 +217,7 @@ internal class RuntimeParser(
                         val nextRps = runtimeRuleSet.nextRulePosition(newRP, complete.runtimeRule)
                         for (nextRp in nextRps) {
 
-                            this.graph.createWithFirstChild(nextRp, complete, setOf(previous)) //maybe lookahead to wanted next token here (it would need to be part of RP)
+                            this.graph.createWithFirstChild(gn.isSkipGrowth,nextRp, complete, setOf(previous), gn.skipNodes) //maybe lookahead to wanted next token here (it would need to be part of RP)
                         }
                     }
                 }
@@ -261,18 +260,18 @@ internal class RuntimeParser(
             && gn.currentRulePosition.isAtEnd
             && previous.node.currentRulePosition.items.contains(gn.runtimeRule)
 
-        if (gn.isSkip) {
-            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
+        if (gn.runtimeRule.isSkip) {
+            val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
                 ?: throw ParseException("internal error, should never happen")
             this.graph.growNextSkipChild(previous.node, complete)
         } else if (canGraft) {
             // complete will not be null because we do not graftback unless gn has complete children
             // and graph will try to 'complete' a GraphNode when it is created.
-            val complete = this.graph.findCompleteNode(gn.runtimeRule.number, gn.startPosition, gn.matchedTextLength)
+            val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
                 ?: throw ParseException("internal error, should never happen")
             val nextRps = runtimeRuleSet.nextRulePosition(previous.node.currentRulePosition, gn.runtimeRule)
             for (nextRp in nextRps) {
-                this.graph.growNextChild(nextRp, previous.node, complete, previous.atPosition)
+                this.graph.growNextChild(false, nextRp, previous.node, complete, previous.atPosition, gn.skipNodes)
             }
         } else {
             // drop
@@ -301,7 +300,7 @@ internal class RuntimeParser(
                         // should allow the skip to be consumed before looking ahead
                         //val lhok = hasLookaheadAfterSkip(gn.currentRulePosition, gn.nextInputPosition + l.matchedTextLength)
                         //if (lhok) {
-                        this.graph.pushToStackOf(l, gn, setOf(prev))
+                        this.graph.pushToStackOf(false, l, gn, setOf(prev))
                         //}
                     }
                 }

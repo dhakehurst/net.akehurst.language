@@ -98,9 +98,13 @@ internal class ParseGraph(
         return cn
     }
 
-    fun findCompleteNode(runtimeRuleNumber: Int, startPosition: Int, matchedTextLength: Int): SPPTNodeDefault? {
-        val index = SPPTNodeIdentityDefault(runtimeRuleNumber, startPosition, matchedTextLength)
-        return this.completeNodes[index]
+    fun findCompleteNode(runtimeRule: RuntimeRule, startPosition: Int, matchedTextLength: Int): SPPTNodeDefault? {
+        if (runtimeRule.isTerminal) {
+            return this.leaves[LeafIndex(runtimeRule.number, startPosition)]
+        } else {
+            val index = SPPTNodeIdentityDefault(runtimeRule.number, startPosition, matchedTextLength)
+            return this.completeNodes[index]
+        }
     }
 
     private fun addGrowing(gn: GrowingNode) {
@@ -163,25 +167,18 @@ internal class ParseGraph(
         }
     }
 
-    private fun findOrCreateGrowingLeaf(leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>) {
+    private fun findOrCreateGrowingLeaf(isSkipGrowth: Boolean, runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int, stack: GrowingNode, previous: Set<PreviousInfo>) {
         this.addGrowing(stack, previous)
         // TODO: remove, this is for test
         for (info in previous) {
             this.addGrowing(info.node)
         }
-
-        val ruleNumber = leafNode.runtimeRuleNumber
-        val startPosition = leafNode.startPosition
-        val nextInputPosition = leafNode.nextInputPosition
-        val nextItemIndex = -1
-        val curRp = RulePosition(leafNode.runtimeRule, 0, RulePosition.END_OF_RULE) //TODO: get this from the rule so we don't have to create an object here
+        val curRp = RulePosition(runtimeRule, 0, RulePosition.END_OF_RULE) //TODO: get this from the rule so we don't have to create an object here
         val gnindex = GrowingNodeIndex(curRp, startPosition, nextInputPosition) //TODO: not sure we need both tgt and cur for leaves
         val existing = this.growing[gnindex]
         if (null == existing) {
-            val runtimeRule = leafNode.runtimeRule
-            val nn = GrowingNode(curRp, startPosition, nextInputPosition, 0, emptyList(), 0)
+            val nn = GrowingNode(isSkipGrowth, curRp, startPosition, nextInputPosition, 0, emptyList(), 0)
             nn.addPrevious(stack)
-            // this.growing.put(gnindex, nn);
             this.addGrowingHead(gnindex, nn)
         } else {
             existing.addPrevious(stack)
@@ -189,13 +186,33 @@ internal class ParseGraph(
         }
     }
 
-    private fun findOrCreateGrowingNode(newRp: RulePosition, startPosition: Int, nextInputPosition: Int,
-                                        priority: Int, children: List<SPPTNodeDefault>, numNonSkipChildren: Int, previous: Set<PreviousInfo>): GrowingNode {
+    private fun findOrCreateGrowingLeafForSkip(isSkipGrowth: Boolean, runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int, previous: Set<PreviousInfo>, skipChildren: List<SPPTNode>) {
+        // TODO: remove, this is for test
+        for (info in previous) {
+            this.addGrowing(info.node)
+        }
+        val curRp = RulePosition(runtimeRule, 0, RulePosition.END_OF_RULE) //TODO: get this from the rule so we don't have to create an object here
+        val gnindex = GrowingNodeIndex(curRp, startPosition, nextInputPosition) //TODO: not sure we need both tgt and cur for leaves
+        val existing = this.growing[gnindex]
+        if (null == existing) {
+            val nn = GrowingNode(isSkipGrowth, curRp, startPosition, nextInputPosition, 0, emptyList(), 0)
+            previous.forEach { nn.addPrevious(it.node) }
+            nn.skipNodes.addAll(skipChildren)
+            this.addGrowingHead(gnindex, nn)
+        } else {
+            previous.forEach { existing.addPrevious(it.node) }
+            existing.skipNodes.addAll(skipChildren)
+            this.addGrowingHead(gnindex, existing)
+        }
+    }
+
+    private fun findOrCreateGrowingNode(isSkipGrowth: Boolean, newRp: RulePosition, startPosition: Int, nextInputPosition: Int,
+                                        priority: Int, children: List<SPPTNode>, numNonSkipChildren: Int, previous: Set<PreviousInfo>): GrowingNode {
         val gnindex = GrowingNodeIndex(newRp, startPosition, nextInputPosition)
         val existing = this.growing.get(gnindex)
         var result: GrowingNode?
         if (null == existing) {
-            val nn = GrowingNode(newRp, startPosition, nextInputPosition, priority, children, numNonSkipChildren)
+            val nn = GrowingNode(isSkipGrowth, newRp, startPosition, nextInputPosition, priority, children, numNonSkipChildren)
             for (info in previous) {
                 nn.addPrevious(info.node)
                 this.addGrowing(info.node)
@@ -237,7 +254,7 @@ internal class ParseGraph(
             val priority = gn.priority
             val startPosition = gn.startPosition
             val matchedTextLength = gn.matchedTextLength
-            var cn: SPPTNodeDefault? = this.findCompleteNode(runtimeRule.number, startPosition, matchedTextLength)
+            var cn: SPPTNodeDefault? = this.findCompleteNode(runtimeRule, startPosition, matchedTextLength)
             if (null == cn) {
                 cn = this.createBranchNoChildren(runtimeRule, priority, startPosition, gn.nextInputPosition)
                 if (gn.isLeaf) {
@@ -305,18 +322,24 @@ internal class ParseGraph(
         }
     }
 
-    private fun growNextChildAt(nextRp: RulePosition, parent: GrowingNode, priority: Int, nextChild: SPPTNodeDefault, nextItemIndex: Int) {
-        val runtimeRule = parent.runtimeRule
+    private fun growNextChildAt(isSkipGrowth: Boolean, nextRp: RulePosition, parent: GrowingNode, priority: Int, nextChild: SPPTNodeDefault, skipChildren: List<SPPTNode>) {
         val startPosition = parent.startPosition
-        val nextInputPosition = nextChild.nextInputPosition
-        val children = parent.children + nextChild
+        val nextInputPosition = if (skipChildren.isEmpty()) {
+            nextChild.nextInputPosition
+        } else {
+            skipChildren.last().nextInputPosition
+        }
+        val children = parent.children + nextChild + skipChildren
         val previous = parent.previous
         for (pi in previous.values) {
             pi.node.removeNext(parent)
         }
-        val numNonSkipChildren = if (nextChild.isSkip) parent.numNonSkipChildren else parent.numNonSkipChildren + 1
-        this.findOrCreateGrowingNode(nextRp, startPosition, nextInputPosition, priority, children,
-            numNonSkipChildren, previous.values.toSet()) //FIXME: don't convert to set
+        val numNonSkipChildren = if (nextChild.isSkip) {
+            parent.numNonSkipChildren + skipChildren.size
+        } else {
+            parent.numNonSkipChildren + 1 + skipChildren.size
+        }
+        this.findOrCreateGrowingNode(isSkipGrowth, nextRp, startPosition, nextInputPosition, priority, children, numNonSkipChildren, previous.values.toSet()) //FIXME: don't convert to set
         if (parent.next.isEmpty()) {
             this.removeGrowing(parent)
         }
@@ -326,13 +349,13 @@ internal class ParseGraph(
     fun start(runtimeGoalRule: RuntimeRule, runtimeRuleSet: RuntimeRuleSet) {
         this.runtimeGoalRule = runtimeGoalRule
         val tgtRp = RulePosition(runtimeGoalRule, 0, 0)
-        val goalGN = GrowingNode(tgtRp, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
+        val goalGN = GrowingNode(false, tgtRp, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
 
 
         val startRps = userGoalRule.calcExpectedRulePositions(0)
         for (curRp in startRps) {
             //val curRp = RulePosition(userGoalRule, 0, 0)
-            val ugoalGN = GrowingNode(curRp, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
+            val ugoalGN = GrowingNode(false, curRp, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
             ugoalGN.addPrevious(goalGN)
             this.addGrowingHead(GrowingNodeIndex(curRp, 0, 0), ugoalGN)
         }
@@ -360,11 +383,11 @@ internal class ParseGraph(
         return previous.values.toSet() //FIXME: don't convert to set
     }
 
-    fun pushToStackOf(leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>) {
-        this.findOrCreateGrowingLeaf(leafNode, stack, previous)
+    fun pushToStackOf(isSkipGrowth: Boolean, leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>) {
+        this.findOrCreateGrowingLeaf(isSkipGrowth, leafNode.runtimeRule, leafNode.startPosition, leafNode.nextInputPosition, stack, previous)
     }
 
-    fun growNextChild(nextRp: RulePosition, parent: GrowingNode, nextChild: SPPTNodeDefault, position: Int) {
+    fun growNextChild(isSkipGrowth: Boolean, nextRp: RulePosition, parent: GrowingNode, nextChild: SPPTNodeDefault, position: Int, skipChildren: List<SPPTNode>) {
         if (0 != position && parent.runtimeRule.rhs.kind == RuntimeRuleItemKind.MULTI) {
             val prev = parent.children[position - 1]
             if (prev === nextChild) {
@@ -377,28 +400,51 @@ internal class ParseGraph(
         } else {
             parent.priority
         }
-        val newNextItemIndex = parent.incrementedNextItemIndex
-        this.growNextChildAt(nextRp, parent, priority, nextChild, newNextItemIndex)
+        this.growNextChildAt(isSkipGrowth, nextRp, parent, priority, nextChild, skipChildren)
     }
 
-    fun growNextSkipChild(parent: GrowingNode, nextChild: SPPTNodeDefault) {
-        val nextItemIndex = parent.currentRulePosition.position
-        val priority = parent.priority
-        this.growNextChildAt(parent.currentRulePosition, parent, priority, nextChild, nextItemIndex)
+    fun growNextSkipChild(parent: GrowingNode, skipNode: SPPTNodeDefault) {
+        if (parent.runtimeRule.isNonTerminal) {
+            this.growNextChildAt(
+                false,
+                parent.currentRulePosition,
+                parent,
+                parent.priority,
+                skipNode,
+                emptyList()
+            )
+        } else {
+            val nextInputPosition = parent.nextInputPosition + skipNode.matchedTextLength
+            val newLeaf = this.findOrCreateGrowingLeafForSkip(
+                false,
+                parent.runtimeRule,
+                parent.startPosition,
+                nextInputPosition,
+                parent.previous.values.toSet(),  //FIXME: don't convert to set
+                parent.skipNodes + skipNode
+            )
+            if (parent.next.isEmpty()) {
+                this.removeGrowing(parent)
+            }
+        }
     }
 
-    fun createWithFirstChild(newRp: RulePosition, firstChild: SPPTNodeDefault, previous: Set<PreviousInfo>) {
+    fun createWithFirstChild(isSkipGrowth: Boolean, newRp: RulePosition, firstChild: SPPTNodeDefault, previous: Set<PreviousInfo>,skipChildren: List<SPPTNode>) {
         val startPosition = firstChild.startPosition
-        val nextInputPosition = firstChild.nextInputPosition
+        val nextInputPosition = if (skipChildren.isEmpty()) {
+            firstChild.nextInputPosition
+        } else {
+            skipChildren.last().nextInputPosition
+        }
         val runtimeRule = newRp.runtimeRule
-        val children = listOf(firstChild)
-        val numNonSkipChildren = if (firstChild.isSkip) 0 else 1
+        val children = listOf(firstChild) + skipChildren
+        val numNonSkipChildren = skipChildren.size
         val priority = if (runtimeRule.rhs.kind == RuntimeRuleItemKind.CHOICE_PRIORITY) {
             runtimeRule.rhs.items.indexOf(firstChild.runtimeRule)
         } else {
             0
         }
-        this.findOrCreateGrowingNode(newRp, startPosition, nextInputPosition, priority, children,
+        this.findOrCreateGrowingNode(isSkipGrowth, newRp, startPosition, nextInputPosition, priority, children,
             numNonSkipChildren, previous)
     }
 }

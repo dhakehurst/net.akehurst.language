@@ -9,6 +9,7 @@ import kotlin.test.Test
 class test_leftRecursive_a : test_ScannerlessParserAbstract() {
     // S =  'a' | S1 ;
     // S1 = S 'a' ;
+    // skip WS = "\s+" ;
     private fun S(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r_a = b.literal("a")
@@ -43,7 +44,7 @@ class test_leftRecursive_a : test_ScannerlessParserAbstract() {
             S { S1 { S { 'a' WS { '\s+' : ' ' } } 'a' } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
 
     @Test

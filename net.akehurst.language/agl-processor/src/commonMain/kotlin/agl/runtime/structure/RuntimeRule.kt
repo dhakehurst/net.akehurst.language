@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.collections.transitveClosure
 import net.akehurst.language.parser.scannerless.InputFromCharSequence
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
@@ -153,8 +154,8 @@ class RuntimeRule(
             calcItemsAt(index).toTypedArray()
         }
     }
-
-    fun isCompleteChildren(nextItemIndex: Int, numNonSkipChildren: Int, children: List<SPPTNodeDefault>): Boolean {
+/*
+    fun isCompleteChildren(nextItemIndex: Int, numNonSkipChildren: Int, children: List<SPPTNode>): Boolean {
         return if (RuntimeRuleKind.TERMINAL == this.kind) {
             true
         } else {
@@ -202,7 +203,7 @@ class RuntimeRule(
             }
         }
     }
-
+*/
     fun canGrowWidth(nextItemIndex: Int): Boolean {
         // nextItemIndex and numNonskip children are not always the same, especially for multi.
         //TODO: other kinds!

@@ -5,6 +5,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
+import kotlin.test.fail
 
 class test_expession_ambiguous : test_ScannerlessParserAbstract() {
 
@@ -67,17 +68,32 @@ class test_expession_ambiguous : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "aoaoa"
 
-        val expected = """
-            S {
-              I {
-                S{'a'}
+        //think this should be excluded because of priority I < 'a'
+        val expected1 = """
+            S { I {
+                S { I {
+                    S { 'a' }
+                    'o'
+                    S { 'a' }
+                  } }
                 'o'
-                S{'a'}
-              }
-            }
+                S { 'a' }
+            } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val expected2 = """
+         S { I {
+            S { 'a' }
+            'o'
+            S { I {
+                S { 'a' }
+                'o'
+                S { 'a' }
+              } }
+          } }
+        """.trimIndent()
+
+        super.testStringResult(rrb, goal, sentence, expected2)
     }
 
 

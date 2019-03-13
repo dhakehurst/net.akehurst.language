@@ -10,6 +10,7 @@ class test_rightRecursive_a : test_ScannerlessParserAbstract() {
 
     // S =  'a' | S1 ;
     // S1 = 'a' S ;
+    // skip WS = "\s+" ;
     private fun S(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r_a = b.literal("a")
