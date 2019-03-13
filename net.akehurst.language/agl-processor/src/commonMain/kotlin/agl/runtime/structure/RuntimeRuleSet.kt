@@ -142,9 +142,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         calcGrowsInto(it)
     }
 
-    private val lookahead = lazyMap<RulePosition, Map<RulePosition, Set<RuntimeRule>>> { tgtRulePosition ->
+    private val lookahead = lazyMap<Pair<RulePosition,Set<RuntimeRule>>, Map<RulePosition, Set<RuntimeRule>>> { startingAt ->
         lazyMap<RulePosition, Set<RuntimeRule>> { rp ->
-            calcLookahead(tgtRulePosition, rp)
+            calcLookahead(startingAt, rp)
         }
     }
 
@@ -178,7 +178,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 if (rp.isAtEnd) {
                     //no need to do for end-of-rule (at present)
                 } else {
-                    this.lookahead[rp]?.get(rp)
+                    //TODO: this.lookahead[rp]?.get(rp)
                     this.firstTerminals2[rp]
                 }
             }
@@ -186,20 +186,19 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     /**
-     * give a target Rule Position, return the set of RulePositions that rp could grow into
+     * return the set of RulePositions that rule could grow into
+     * the goal rule must be passed, as it is parse specific
      */
-    fun growsInto(tgtRulePosition: RulePosition, rp: RulePosition): Set<RulePosition> {
-        /*val result = when {
+    fun growsInto(rule: RuntimeRule, tgtRule: RuntimeRule): Set<RulePosition> {
+        val result = when {
             (rule.isGoal) -> emptySet<RulePosition>()
             else -> growsInto[rule.number].toSet()
-        } + if (goalRule.couldHaveChild(rule, 0)) {
-            setOf<RulePosition>(RulePosition(goalRule, 0, 0))
-        } else {
-            emptySet()
-        }
+        } //+ if (tgtRule.couldHaveChild(rule, 0)) {
+          //  setOf<RulePosition>(RulePosition(tgtRule, 0, 0))
+        //} else {
+        //    emptySet()
+        //}
         return result
-        */
-        return emptySet()
     }
 
     /**
@@ -207,7 +206,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
      * the goal rule must be passed, as it is parse specific
      */
     fun lookahead(rp: RulePosition, targetRulePosition: RulePosition, previousLookahead: Set<RuntimeRule>): Set<RuntimeRule> {
-        val cached = this.lookahead[targetRulePosition]?.get(rp);
+        val cached = this.lookahead[Pair(targetRulePosition, previousLookahead)]?.get(rp);
         return if (null == cached) {
             emptySet()
         } else {
@@ -322,39 +321,37 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return result
     }
 
-    private fun calcLookahead(tgtRulePosition: RulePosition, rp: RulePosition): Set<RuntimeRule> {
+    private fun calcLookahead(startingAt: Pair<RulePosition, Set<RuntimeRule>>, lookingFor: RulePosition): Set<RuntimeRule> {
         val result = mutableSetOf<RuntimeRule>()
-        val items = rp.items
+        val items = lookingFor.items
         for (item in items) {
-//            if (item.isTerminal) {
-            val nextRps = nextRulePosition(rp, item)
+            val nextRps = nextRulePosition(lookingFor, item)
             for (nextRp in nextRps) {
                 if (nextRp.isAtEnd) {
                     //startingFrom the tgtRPs, find the rp calculating lh as we go
-                    val lh = findLh(tgtRulePosition, nextRp, emptySet())
-                    return lh
-
-                    val growsInto = growsInto(tgtRulePosition, nextRp)
-                    val gin = growsInto.flatMap { it.items.flatMap { it2 -> nextRulePosition(it, it2).toSet() }.toSet() }.toSet()
-                    val gi = gin.transitveClosure {
-                        when {
-                            (it.runtimeRule.isGoal) -> emptySet<RulePosition>()
-                            it.isAtEnd -> {
-                                val x = growsInto(tgtRulePosition, it)
-                                val x1 = x.flatMap { it.items.flatMap { it2 -> nextRulePosition(it, it2).toSet() }.toSet() }
-                                x1.toSet()
+                    val closure = setOf(startingAt).transitveClosure {
+                        it.first.items.flatMap { it2 ->
+                            nextRulePosition(it.first, it2).toSet()
+                        }.map { rp ->
+                            val rplh = this.firstTerminals2[rp] ?: throw ParseException("should never happen")
+                            if (rplh.isEmpty()) {
+                                Pair(rp, it.second)
+                            } else {
+                                Pair(rp, rplh)
                             }
-                            else -> setOf(it)
+                        }.toSet()
+                    }
+
+                    val lhs = closure.filter { it.first == lookingFor }
+                    val lh: Set<RuntimeRule> = when (lhs.size) {
+                        0 -> emptySet()
+                        1 -> lhs.first().second
+                        else -> {
+                            TODO();
                         }
                     }
-                    val terms = gi.flatMap {
-                        when {
-                            (it.isAtEnd) -> setOf(RuntimeRuleSet.END_OF_TEXT)
-                            else -> firstTerminals2[it] ?: emptySet()
-                        }
 
-                    }.toSet()
-                    result.addAll(terms)
+                    result.addAll(lh)
 
                 } else {
                     val lhItems = nextRp.items
@@ -368,12 +365,6 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     }
                 }
             }
-//            } else {
-//                item.calcExpectedRulePositions(0).forEach {
-//                    val s = calcLookaheadNT(it)
-//                    result.addAll(s)
-//                }
-//            }
         }
         return result
     }
@@ -396,7 +387,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             }
 
             val result = closure.filter { it.first == lookingFor }
-            return when(result.size) {
+            return when (result.size) {
                 0 -> lh
                 1 -> result.first().second
                 else -> {

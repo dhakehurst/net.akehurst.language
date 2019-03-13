@@ -167,7 +167,8 @@ internal class ParseGraph(
         }
     }
 
-    private fun findOrCreateGrowingLeaf(isSkipGrowth: Boolean, runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int, stack: GrowingNode, previous: Set<PreviousInfo>) {
+    private fun findOrCreateGrowingLeaf(isSkipGrowth: Boolean, runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int,
+                                        stack: GrowingNode, previous: Set<PreviousInfo>,lookahead:Set<RuntimeRule>) {
         this.addGrowing(stack, previous)
         // TODO: remove, this is for test
         for (info in previous) {
@@ -178,10 +179,10 @@ internal class ParseGraph(
         val existing = this.growing[gnindex]
         if (null == existing) {
             val nn = GrowingNode(isSkipGrowth, curRp, startPosition, nextInputPosition, 0, emptyList(), 0)
-            nn.addPrevious(stack, emptySet()) //TODO: lh
+            nn.addPrevious(stack, lookahead)
             this.addGrowingHead(gnindex, nn)
         } else {
-            existing.addPrevious(stack, emptySet()) //TODO: lh
+            existing.addPrevious(stack, lookahead)
             this.addGrowingHead(gnindex, existing)
         }
     }
@@ -371,8 +372,8 @@ internal class ParseGraph(
         return previous.values.toSet() //FIXME: don't convert to set
     }
 
-    fun pushToStackOf(isSkipGrowth: Boolean, leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>) {
-        this.findOrCreateGrowingLeaf(isSkipGrowth, leafNode.runtimeRule, leafNode.startPosition, leafNode.nextInputPosition, stack, previous)
+    fun pushToStackOf(isSkipGrowth: Boolean, leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>, lookahead:Set<RuntimeRule>) {
+        this.findOrCreateGrowingLeaf(isSkipGrowth, leafNode.runtimeRule, leafNode.startPosition, leafNode.nextInputPosition, stack, previous, lookahead)
     }
 
     fun growNextChild(isSkipGrowth: Boolean, nextRp: RulePosition, parent: GrowingNode, nextChild: SPPTNodeDefault, position: Int, skipChildren: List<SPPTNode>) {
