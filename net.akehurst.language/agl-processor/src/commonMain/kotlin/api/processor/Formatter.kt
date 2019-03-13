@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.processor
+package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.processor.Formatter
+interface Formatter {
 
-
-abstract class FormatterAbstract : Formatter {
+    fun <T> format(asm:T): String
 
 }

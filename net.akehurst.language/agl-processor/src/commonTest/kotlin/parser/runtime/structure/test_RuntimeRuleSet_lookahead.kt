@@ -36,7 +36,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, 0, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S, 0, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(RuntimeRuleSet.END_OF_TEXT)
 
         assertEquals(expected, actual)
@@ -53,7 +53,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, 0, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S, 0, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(r_b)
 
         assertEquals(expected, actual)
@@ -70,7 +70,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, 0, 1), gr)
+        val actual = sut.lookahead(RulePosition(r_S, 0, 1), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(r_c)
 
         assertEquals(expected, actual)
@@ -87,7 +87,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, 0, 2), gr)
+        val actual = sut.lookahead(RulePosition(r_S, 0, 2), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(RuntimeRuleSet.END_OF_TEXT)
 
         assertEquals(expected, actual)
@@ -105,7 +105,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, 0, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S, 0, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(RuntimeRuleSet.END_OF_TEXT)
 
         assertEquals(expected, actual)
@@ -123,7 +123,7 @@ class test_RuntimeRuleSet_lookahead {
         val gr = RuntimeRuleSet.createGoal(r_S)
         val sut = b.ruleSet()
 
-        val actual = sut.lookahead(RulePosition(r_S, 0, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S, 0, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(r_P.emptyRuleItem, r_a, RuntimeRuleSet.END_OF_TEXT)
 
         assertEquals(expected, actual)
@@ -145,7 +145,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = b.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, 0, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S, 0, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(r_p,r_o,RuntimeRuleSet.END_OF_TEXT)
 
         assertEquals(expected, actual)
@@ -167,7 +167,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = b.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, 1, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S, 1, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(r_p, r_o)
 
         assertEquals(expected, actual)
@@ -191,7 +191,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = b.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, 0, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S, 0, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(RuntimeRuleSet.END_OF_TEXT)
 
         assertEquals(expected, actual)
@@ -215,7 +215,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = b.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, 1, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S, 1, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(r_a)
 
         assertEquals(expected, actual)
@@ -233,7 +233,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, 0, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S, 0, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(r_a, RuntimeRuleSet.END_OF_TEXT)
 
         assertEquals(expected, actual)
@@ -252,7 +252,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S1, 0, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S1, 0, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(r_a)
 
         assertEquals<Set<RuntimeRule>>(expected, actual)
@@ -270,8 +270,8 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S1, 0, 1), gr)
-        val expected = setOf(RuntimeRuleSet.END_OF_TEXT, r_a)
+        val actual = sut.lookahead(RulePosition(r_S1, 0, 1), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
+        val expected = setOf(r_a)
 
         assertEquals<Set<RuntimeRule>>(expected, actual)
     }
@@ -288,7 +288,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, 0, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S, 0, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(RuntimeRuleSet.END_OF_TEXT)
 
         assertEquals<Set<RuntimeRule>>(expected, actual)
@@ -306,7 +306,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S1, 0, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S1, 0, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(r_a)
 
         assertEquals<Set<RuntimeRule>>(expected, actual)
@@ -324,7 +324,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S1, 0, 1), gr)
+        val actual = sut.lookahead(RulePosition(r_S1, 0, 1), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(RuntimeRuleSet.END_OF_TEXT)
 
         assertEquals<Set<RuntimeRule>>(expected, actual)
@@ -343,7 +343,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__EMPTY_RULE, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__EMPTY_RULE, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(RuntimeRuleSet.END_OF_TEXT)
 
         assertEquals<Set<RuntimeRule>>(expected, actual)
@@ -359,7 +359,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 0), gr)
+        val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 0), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(r_c, RuntimeRuleSet.END_OF_TEXT)
 
         assertEquals<Set<RuntimeRule>>(expected, actual)
@@ -375,7 +375,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 1), gr)
+        val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 1), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = setOf(r_a)
 
         assertEquals(expected, actual)
@@ -392,7 +392,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 1), gr)
+        val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 1), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = emptySet<RuntimeRule>()
 
         assertEquals(expected, actual)
@@ -408,7 +408,7 @@ class test_RuntimeRuleSet_lookahead {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoal(r_S)
 
-        val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 2), gr)
+        val actual = sut.lookahead(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 2), RulePosition(gr,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
         val expected = emptySet<RuntimeRule>()
 
         assertEquals(expected, actual)

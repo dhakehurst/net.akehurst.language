@@ -86,9 +86,13 @@ class GrowingNode(
     fun newPrevious() {
         this.previous = mutableMapOf()
     }
-
-    fun addPrevious(previousNode: GrowingNode) {
-        val info = PreviousInfo(previousNode)
+    fun addPrevious(info: PreviousInfo) {
+        val gi = GrowingNodeIndex(info.node.currentRulePosition, info.node.startPosition,info.node.nextInputPosition)
+        this.previous.put(gi,info)
+        info.node.addNext(this)
+    }
+    fun addPrevious(previousNode: GrowingNode, lookahead:Set<RuntimeRule>) {
+        val info = PreviousInfo(previousNode, lookahead)
         val gi = GrowingNodeIndex(previousNode.currentRulePosition, previousNode.startPosition,previousNode.nextInputPosition)
         this.previous.put(gi,info)
         previousNode.addNext(this)

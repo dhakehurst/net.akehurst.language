@@ -154,56 +154,57 @@ class RuntimeRule(
             calcItemsAt(index).toTypedArray()
         }
     }
-/*
-    fun isCompleteChildren(nextItemIndex: Int, numNonSkipChildren: Int, children: List<SPPTNode>): Boolean {
-        return if (RuntimeRuleKind.TERMINAL == this.kind) {
-            true
-        } else {
-            val rhs: RuntimeRuleItem = this.rhs
-            when (rhs.kind) {
-                RuntimeRuleItemKind.EMPTY -> true
-                RuntimeRuleItemKind.CHOICE_EQUAL ->
-                    // a choice can only have one child
-                    // TODO: should never be 1, should always be -1 if we create nodes correctly
-                    nextItemIndex == 1 || nextItemIndex == -1
-                RuntimeRuleItemKind.CHOICE_PRIORITY ->
-                    // a choice can only have one child
-                    // TODO: should never be 1, should always be -1 if we create nodes correctly
-                    nextItemIndex == 1 || nextItemIndex == -1
-                RuntimeRuleItemKind.CONCATENATION -> {
-                    // the -1 is used when creating dummy ?
-                    // test here!
-                    rhs.items.size <= nextItemIndex || nextItemIndex == -1
-                }
-                RuntimeRuleItemKind.MULTI -> {
-                    var res = false
-                    if (0 == rhs.multiMin && numNonSkipChildren == 1) {
-                        // complete if we have an empty node as child
-                        res = if (children.isEmpty()) false else children[0].runtimeRule.isEmptyRule
+
+    /*
+        fun isCompleteChildren(nextItemIndex: Int, numNonSkipChildren: Int, children: List<SPPTNode>): Boolean {
+            return if (RuntimeRuleKind.TERMINAL == this.kind) {
+                true
+            } else {
+                val rhs: RuntimeRuleItem = this.rhs
+                when (rhs.kind) {
+                    RuntimeRuleItemKind.EMPTY -> true
+                    RuntimeRuleItemKind.CHOICE_EQUAL ->
+                        // a choice can only have one child
+                        // TODO: should never be 1, should always be -1 if we create nodes correctly
+                        nextItemIndex == 1 || nextItemIndex == -1
+                    RuntimeRuleItemKind.CHOICE_PRIORITY ->
+                        // a choice can only have one child
+                        // TODO: should never be 1, should always be -1 if we create nodes correctly
+                        nextItemIndex == 1 || nextItemIndex == -1
+                    RuntimeRuleItemKind.CONCATENATION -> {
+                        // the -1 is used when creating dummy ?
+                        // test here!
+                        rhs.items.size <= nextItemIndex || nextItemIndex == -1
                     }
-                    val size = numNonSkipChildren
-                    res || size > 0 && size >= rhs.multiMin || nextItemIndex == -1 // the -1 is used when
-                    // creating
-                    // dummy branch...should
-                    // really need the test here!
-                }
-                RuntimeRuleItemKind.SEPARATED_LIST -> {
-                    var res = false
-                    if (0 == rhs.multiMin && numNonSkipChildren == 1) {
-                        // complete if we have an empty node as child
-                        res = if (children.isEmpty()) false else children[0].runtimeRule.isEmptyRule
+                    RuntimeRuleItemKind.MULTI -> {
+                        var res = false
+                        if (0 == rhs.multiMin && numNonSkipChildren == 1) {
+                            // complete if we have an empty node as child
+                            res = if (children.isEmpty()) false else children[0].runtimeRule.isEmptyRule
+                        }
+                        val size = numNonSkipChildren
+                        res || size > 0 && size >= rhs.multiMin || nextItemIndex == -1 // the -1 is used when
+                        // creating
+                        // dummy branch...should
+                        // really need the test here!
                     }
-                    val max = this.rhs.multiMax
-                    val x = (nextItemIndex + 1) / 2
-                    val inRange = (0 != nextItemIndex && (x >= this.rhs.multiMin && (-1 == max || x <= max)))
-                    res || -1 == nextItemIndex || inRange
-                    //nextItemIndex % 2 == 1 || nextItemIndex == -1 // the -1 is used when creating dummy branch...should really need the test here!
+                    RuntimeRuleItemKind.SEPARATED_LIST -> {
+                        var res = false
+                        if (0 == rhs.multiMin && numNonSkipChildren == 1) {
+                            // complete if we have an empty node as child
+                            res = if (children.isEmpty()) false else children[0].runtimeRule.isEmptyRule
+                        }
+                        val max = this.rhs.multiMax
+                        val x = (nextItemIndex + 1) / 2
+                        val inRange = (0 != nextItemIndex && (x >= this.rhs.multiMin && (-1 == max || x <= max)))
+                        res || -1 == nextItemIndex || inRange
+                        //nextItemIndex % 2 == 1 || nextItemIndex == -1 // the -1 is used when creating dummy branch...should really need the test here!
+                    }
+                    else -> throw RuntimeException("Internal Error: rule kind not recognised")
                 }
-                else -> throw RuntimeException("Internal Error: rule kind not recognised")
             }
         }
-    }
-*/
+    */
     fun canGrowWidth(nextItemIndex: Int): Boolean {
         // nextItemIndex and numNonskip children are not always the same, especially for multi.
         //TODO: other kinds!
@@ -687,15 +688,12 @@ class RuntimeRule(
     }
 
     override fun toString(): String {
-        return "[$number]" + if (this.isNonTerminal || this.isEmptyRule) {
-            " ($name) = " + this.rhs
-        } else if (this.isPattern) {
-            " \"" + this.patternText + "\""
-        } else if (this.name == InputFromCharSequence.END_OF_TEXT) {
-            " <EOT>"
-        } else {
-            " '" + this.patternText + "'"
+        return "[$number]" + when {
+            this.isEmptyRule -> " ($name)"
+            this.isNonTerminal -> " ($name) = " + this.rhs
+            this.isPattern -> " \"" + this.patternText + "\""
+            this.name == InputFromCharSequence.END_OF_TEXT -> " <EOT>"
+            else -> " '" + this.patternText + "'"
         }
     }
-
 }

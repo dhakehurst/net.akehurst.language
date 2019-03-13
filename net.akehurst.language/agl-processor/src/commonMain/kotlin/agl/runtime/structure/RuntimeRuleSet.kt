@@ -101,15 +101,15 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     val expectedTerminalRulePositions = lazyMap<RulePosition, Array<RulePosition>> {
         calcExpectedTerminalRulePositions(it).toTypedArray()
     }
+    /*
+        val expectedItemRulePositions = lazyMap<RulePosition, Set<RulePosition>> {
+            calcExpectedItemRulePositions(it)
+        }
 
-    val expectedItemRulePositions = lazyMap<RulePosition, Set<RulePosition>> {
-        calcExpectedItemRulePositions(it)
-    }
-
-    val expectedItemRulePositionsTransitive = lazyMap<RulePosition, Set<RulePosition>> {
-        calcExpectedItemRulePositionTransitive(it)
-    }
-
+        val expectedItemRulePositionsTransitive = lazyMap<RulePosition, Set<RulePosition>> {
+            calcExpectedItemRulePositionTransitive(it)
+        }
+    */
     val subTerminals: Array<Set<RuntimeRule>> by lazy {
         this.runtimeRules.map {
             var rr = it.findAllTerminal()
@@ -142,9 +142,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         calcGrowsInto(it)
     }
 
-    private val lookahead = lazyMap<RuntimeRule,Map<RulePosition, Set<RuntimeRule>>> { goalRule ->
+    private val lookahead = lazyMap<RulePosition, Map<RulePosition, Set<RuntimeRule>>> { tgtRulePosition ->
         lazyMap<RulePosition, Set<RuntimeRule>> { rp ->
-            calcLookahead(goalRule, rp)
+            calcLookahead(tgtRulePosition, rp)
         }
     }
 
@@ -175,10 +175,10 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         this.runtimeRules.forEach { rule ->
             this.growsInto[rule.number]
             rule.rulePositions.forEach { rp ->
-                if (rp.isAtEnd ) {
+                if (rp.isAtEnd) {
                     //no need to do for end-of-rule (at present)
                 } else {
-                    this.lookahead[rule]?.get(rp)
+                    this.lookahead[rp]?.get(rp)
                     this.firstTerminals2[rp]
                 }
             }
@@ -186,11 +186,10 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     /**
-     * return the set of RulePositions that rule could grow into
-     * the goal rule must be passed, as it is parse specific
+     * give a target Rule Position, return the set of RulePositions that rp could grow into
      */
-    fun growsInto(rule: RuntimeRule, goalRule: RuntimeRule): Set<RulePosition> {
-        val result = when {
+    fun growsInto(tgtRulePosition: RulePosition, rp: RulePosition): Set<RulePosition> {
+        /*val result = when {
             (rule.isGoal) -> emptySet<RulePosition>()
             else -> growsInto[rule.number].toSet()
         } + if (goalRule.couldHaveChild(rule, 0)) {
@@ -199,35 +198,25 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             emptySet()
         }
         return result
+        */
+        return emptySet()
     }
 
     /**
      * return the set of terminal RuntimeRules that the given RulePosition could grow into
      * the goal rule must be passed, as it is parse specific
      */
-    fun lookahead(rp: RulePosition, goalRule: RuntimeRule): Set<RuntimeRule> {
-        return this.lookahead[goalRule]?.get(rp) ?: emptySet()
-    }
-
-    fun getActions(gn: GrowingNode, previous: Set<PreviousInfo>): List<ParseAction> {
-        val result = mutableListOf<ParseAction>()
-/*
-        if (gn.hasCompleteChildren && !previous.isEmpty()) {
-            result.add(ParseAction.HEIGHT)
+    fun lookahead(rp: RulePosition, targetRulePosition: RulePosition, previousLookahead: Set<RuntimeRule>): Set<RuntimeRule> {
+        val cached = this.lookahead[targetRulePosition]?.get(rp);
+        return if (null == cached) {
+            emptySet()
+        } else {
+            if (cached.isEmpty()) {
+                previousLookahead
+            } else {
+                cached
+            }
         }
-
-        var b = false
-        val x = gn.isEmptyMatch && (info.node.runtimeRule.rhs.kind == RuntimeRuleItemKind.MULTI || info.node.runtimeRule.rhs.kind == RuntimeRuleItemKind.SEPARATED_LIST) && info.node.numNonSkipChildren != 0
-        b = b or (info.node.expectsItemAt(gn.runtimeRule, info.atPosition) && !x)
-        if (gn.hasCompleteChildren) {
-            result.add(ParseAction.GRAFT)
-        }
-
-        if (gn.canGrowWidth) {
-            result.add(ParseAction.WIDTH)
-        }
-*/
-        return result;
     }
 
     fun findRuntimeRule(ruleName: String): RuntimeRule {
@@ -255,7 +244,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     itemRule == rp.runtimeRule.rhs.items[rp.choice] -> setOf(RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE))
                     else -> emptySet() //throw ParseException("This should never happen!")
                 }
-                RuntimeRuleItemKind.CHOICE_PRIORITY ->when {
+                RuntimeRuleItemKind.CHOICE_PRIORITY -> when {
                     itemRule == rp.runtimeRule.rhs.items[rp.choice] -> setOf(RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE))
                     else -> emptySet() //throw ParseException("This should never happen!")
                 }
@@ -267,9 +256,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                         setOf(RulePosition(rp.runtimeRule, 0, RulePosition.END_OF_RULE))
                     }
                 }
-                RuntimeRuleItemKind.MULTI -> when(rp.choice) {
+                RuntimeRuleItemKind.MULTI -> when (rp.choice) {
                     RuntimeRuleItem.MULTI__EMPTY_RULE -> when {
-                        0==rp.position && rp.runtimeRule.rhs.multiMin == 0 && itemRule == rp.runtimeRule.rhs.MULTI__emptyRule -> setOf(
+                        0 == rp.position && rp.runtimeRule.rhs.multiMin == 0 && itemRule == rp.runtimeRule.rhs.MULTI__emptyRule -> setOf(
                             RulePosition(rp.runtimeRule, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE)
                         )
                         else -> emptySet() //throw ParseException("This should never happen!")
@@ -283,30 +272,30 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     }
                     else -> throw ParseException("This should never happen!")
                 }
-                RuntimeRuleItemKind.SEPARATED_LIST -> when(rp.choice) {
+                RuntimeRuleItemKind.SEPARATED_LIST -> when (rp.choice) {
                     RuntimeRuleItem.SLIST__EMPTY_RULE -> when {
-                        0==rp.position && rp.runtimeRule.rhs.multiMin == 0 && itemRule == rp.runtimeRule.rhs.SLIST__emptyRule -> setOf(
+                        0 == rp.position && rp.runtimeRule.rhs.multiMin == 0 && itemRule == rp.runtimeRule.rhs.SLIST__emptyRule -> setOf(
                             RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE)
                         )
                         else -> emptySet() //throw ParseException("This should never happen!")
                     }
                     RuntimeRuleItem.SLIST__ITEM -> when {
-                        0==rp.position && (rp.runtimeRule.rhs.multiMax ==1 ) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
+                        0 == rp.position && (rp.runtimeRule.rhs.multiMax == 1) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
                             RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
                         )
-                        0==rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1==rp.runtimeRule.rhs.multiMax ) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
-                            RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR,1),
+                        0 == rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1 == rp.runtimeRule.rhs.multiMax) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
+                            RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, 1),
                             RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
                         )
-                        2==rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1==rp.runtimeRule.rhs.multiMax ) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
-                            RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR,1),
+                        2 == rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1 == rp.runtimeRule.rhs.multiMax) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
+                            RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, 1),
                             RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
                         )
                         else -> emptySet() //throw ParseException("This should never happen!")
                     }
                     RuntimeRuleItem.SLIST__SEPARATOR -> when {
-                        1==rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1==rp.runtimeRule.rhs.multiMax ) && itemRule == rp.runtimeRule.rhs.SLIST__separator -> setOf(
-                            RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM,2)
+                        1 == rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1 == rp.runtimeRule.rhs.multiMax) && itemRule == rp.runtimeRule.rhs.SLIST__separator -> setOf(
+                            RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, 2)
                         )
                         else -> emptySet() //throw ParseException("This should never happen!")
                     }
@@ -333,48 +322,52 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return result
     }
 
-    private fun calcLookahead(goalRule: RuntimeRule, rp: RulePosition): Set<RuntimeRule> {
+    private fun calcLookahead(tgtRulePosition: RulePosition, rp: RulePosition): Set<RuntimeRule> {
         val result = mutableSetOf<RuntimeRule>()
         val items = rp.items
         for (item in items) {
 //            if (item.isTerminal) {
-                val nextRps = nextRulePosition(rp, item)
-                for (nextRp in nextRps) {
-                    if (nextRp.isAtEnd) {
-                        val growsInto = growsInto(nextRp.runtimeRule, goalRule)
-                        val gin = growsInto.flatMap { it.items.flatMap { it2 -> nextRulePosition(it, it2).toSet() }.toSet() }.toSet()
-                        val gi = gin.transitveClosure {
-                            when {
-                                (it.runtimeRule.isGoal) -> emptySet<RulePosition>()
-                                it.isAtEnd -> {
-                                    val x = growsInto(it.runtimeRule, goalRule)
-                                    val x1 = x.flatMap { it.items.flatMap { it2 -> nextRulePosition(it, it2).toSet() }.toSet() }
-                                    x1.toSet()
-                                }
-                                else -> setOf(it)
+            val nextRps = nextRulePosition(rp, item)
+            for (nextRp in nextRps) {
+                if (nextRp.isAtEnd) {
+                    //startingFrom the tgtRPs, find the rp calculating lh as we go
+                    val lh = findLh(tgtRulePosition, nextRp, emptySet())
+                    return lh
+
+                    val growsInto = growsInto(tgtRulePosition, nextRp)
+                    val gin = growsInto.flatMap { it.items.flatMap { it2 -> nextRulePosition(it, it2).toSet() }.toSet() }.toSet()
+                    val gi = gin.transitveClosure {
+                        when {
+                            (it.runtimeRule.isGoal) -> emptySet<RulePosition>()
+                            it.isAtEnd -> {
+                                val x = growsInto(tgtRulePosition, it)
+                                val x1 = x.flatMap { it.items.flatMap { it2 -> nextRulePosition(it, it2).toSet() }.toSet() }
+                                x1.toSet()
                             }
+                            else -> setOf(it)
                         }
-                        val terms = gi.flatMap {
-                            when {
-                                (it.isAtEnd) -> setOf(RuntimeRuleSet.END_OF_TEXT)
-                                else -> firstTerminals2[it] ?: emptySet()
-                            }
+                    }
+                    val terms = gi.flatMap {
+                        when {
+                            (it.isAtEnd) -> setOf(RuntimeRuleSet.END_OF_TEXT)
+                            else -> firstTerminals2[it] ?: emptySet()
+                        }
 
-                        }.toSet()
-                        result.addAll(terms)
+                    }.toSet()
+                    result.addAll(terms)
 
-                    } else {
-                        val lhItems = nextRp.items
-                        for (lhItem in lhItems) {
-                            if (lhItem==RuntimeRuleSet.END_OF_TEXT) {
-                                result.add(RuntimeRuleSet.END_OF_TEXT)
-                            } else {
-                                val x = firstTerminals[lhItem.number]
-                                result.addAll(x)
-                            }
+                } else {
+                    val lhItems = nextRp.items
+                    for (lhItem in lhItems) {
+                        if (lhItem == RuntimeRuleSet.END_OF_TEXT) {
+                            result.add(RuntimeRuleSet.END_OF_TEXT)
+                        } else {
+                            val x = firstTerminals[lhItem.number]
+                            result.addAll(x)
                         }
                     }
                 }
+            }
 //            } else {
 //                item.calcExpectedRulePositions(0).forEach {
 //                    val s = calcLookaheadNT(it)
@@ -384,6 +377,35 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
         return result
     }
+
+    private fun findLh(startingAt: RulePosition, lookingFor: RulePosition, lh: Set<RuntimeRule>): Set<RuntimeRule> {
+        if (startingAt == lookingFor) {
+            return lh;
+        } else {
+            val closure = setOf(Pair(startingAt, lh)).transitveClosure {
+                it.first.items.flatMap {
+                    it.rulePositions
+                }.map { rp ->
+                    val rplh = this.firstTerminals2[rp] ?: throw ParseException("should never happen")
+                    if (rplh.isEmpty()) {
+                        Pair(rp, it.second)
+                    } else {
+                        Pair(rp, rplh)
+                    }
+                }.toSet()
+            }
+
+            val result = closure.filter { it.first == lookingFor }
+            return when(result.size) {
+                0 -> lh
+                1 -> result.first().second
+                else -> {
+                    TODO();
+                }
+            }
+        }
+    }
+
 /*
     private fun calcLookaheadNT(rp: RulePosition): Set<RuntimeRule> {
         val lhrps = setOf(rp).transitveClosure {
@@ -408,12 +430,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
         return s.transitveClosure { rp ->
             if (RulePosition.END_OF_RULE == rp.position) {
-                setOf<RulePosition>()
+                emptySet()
             } else {
                 if (rp.runtimeRule.isTerminal) {
-                    setOf<RulePosition>()
+                    emptySet<RulePosition>()
                 } else {
-                    rp.runtimeRule.items(rp.choice,rp.position).flatMap {
+                    rp.runtimeRule.items(rp.choice, rp.position).flatMap {
                         if (it.isTerminal) {
                             setOf(rp)
                         } else {
@@ -466,8 +488,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             when (it.rhs.kind) {
                 RuntimeRuleItemKind.EMPTY -> emptySet<RulePosition>()
                 RuntimeRuleItemKind.CONCATENATION -> it.rhs.items.mapIndexedNotNull { index, item ->
-                    if (item==rule) {
-                        RulePosition(it, 0,index)
+                    if (item == rule) {
+                        RulePosition(it, 0, index)
                     } else {
                         null
                     }
@@ -475,9 +497,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 RuntimeRuleItemKind.CHOICE_EQUAL -> setOf(RulePosition(it, it.rhs.items.indexOf(rule), 0))
                 RuntimeRuleItemKind.CHOICE_PRIORITY -> setOf(RulePosition(it, it.rhs.items.indexOf(rule), 0))
                 RuntimeRuleItemKind.UNORDERED -> TODO()
-                RuntimeRuleItemKind.MULTI -> setOf(RulePosition(it, RuntimeRuleItem.MULTI__ITEM,0)) //do we also need empty and/or position 1?
+                RuntimeRuleItemKind.MULTI -> setOf(RulePosition(it, RuntimeRuleItem.MULTI__ITEM, 0)) //do we also need empty and/or position 1?
                 RuntimeRuleItemKind.SEPARATED_LIST -> it.rhs.items.mapIndexedNotNull { index, item ->
-                    if (item==rule) {
+                    if (item == rule) {
                         when (index) {
                             RuntimeRuleItem.SLIST__ITEM -> RulePosition(it, index, 0) //TODO: might this also be pos=2?
                             RuntimeRuleItem.SLIST__SEPARATOR -> RulePosition(it, index, 1)

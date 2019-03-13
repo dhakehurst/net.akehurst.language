@@ -16,27 +16,31 @@
 
 package net.akehurst.language.processor
 
-import net.akehurst.language.api.sppt2ast.SyntaxAnalyser
-import net.akehurst.language.api.sppt2ast.UnableToTransformSppt2AstExeception
+import net.akehurst.language.agl.grammar.runtime.Converter
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.agl.grammar.runtime.Converter
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.api.sppt2ast.SyntaxAnalyser
+import net.akehurst.language.api.sppt2ast.UnableToTransformSppt2AstExeception
 import net.akehurst.language.parser.scannerless.ScannerlessParser
-import kotlin.js.JsName
 
-internal class LanguageProcessorDefault(val grammar: Grammar, val syntaxAnalyser: SyntaxAnalyser?) : LanguageProcessor {
+internal class LanguageProcessorDefault(
+    val grammar: Grammar,
+    val syntaxAnalyser: SyntaxAnalyser?,
+    val formatter: Formatter?
+) : LanguageProcessor {
 
     private val converter: Converter = Converter(this.grammar)
     private val parser: Parser = ScannerlessParser(this.converter.transform())
     private val completionProvider: CompletionProvider = CompletionProvider()
 
-    override fun build() : LanguageProcessor {
+    override fun build(): LanguageProcessor {
         this.parser.build()
         return this;
     }
@@ -60,9 +64,17 @@ internal class LanguageProcessorDefault(val grammar: Grammar, val syntaxAnalyser
         return t;
     }
 
+    override fun <T> format(asm: T): String {
+        return if (null != formatter) {
+            this.formatter.format(asm)
+        } else {
+            asm.toString()
+        }
+    }
+
     override fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem> {
         val parserExpected: List<RuntimeRule> = this.parser.expectedAt(goalRuleName, inputText, position);
-        val grammarExpected : List<RuleItem> = parserExpected.map {  this.converter.originalRuleItemFor(it) }
+        val grammarExpected: List<RuleItem> = parserExpected.map { this.converter.originalRuleItemFor(it) }
         val expected = grammarExpected.flatMap { this.completionProvider.provideFor(it, desiredDepth) }
         return expected
     }

@@ -22,6 +22,7 @@ import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.grammar.AglGrammar
 import net.akehurst.language.agl.sppt2ast.AglSppt2AstTransformer
+import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.sppt2ast.SyntaxAnalyser
 import kotlin.js.JsName
 
@@ -34,31 +35,15 @@ object Agl {
     }
 
     @JsName("processorFromGrammar")
-    fun processor(grammar: Grammar): LanguageProcessor {
-        return LanguageProcessorDefault(grammar, null)
+    fun processor(grammar: Grammar, syntaxAnalyser: SyntaxAnalyser?=null, formatter: Formatter?=null): LanguageProcessor {
+        return LanguageProcessorDefault(grammar, syntaxAnalyser, formatter)
     }
 
-    @JsName("processorFromGrammarWithSyntaxAnalyser")
-    fun processor(grammar: Grammar, syntaxAnalyser: SyntaxAnalyser): LanguageProcessor {
-        return LanguageProcessorDefault(grammar, syntaxAnalyser)
-    }
-
-    @JsName("processor")
-    fun processor(grammarDefinitionStr: String): LanguageProcessor {
+    @JsName("processorFromString")
+    fun processor(grammarDefinitionStr: String, syntaxAnalyser: SyntaxAnalyser?=null, formatter: Formatter?=null): LanguageProcessor {
         try {
             val grammar = aglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
-            return processor(grammar)
-        } catch (e: ParseFailedException) {
-            //TODO: better, different exception to detect which list item fails
-            throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
-        }
-    }
-
-    @JsName("processorWithSyntaxAnalyser")
-    fun processor(grammarDefinitionStr: String, syntaxAnalyser: SyntaxAnalyser): LanguageProcessor {
-        try {
-            val grammar = aglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
-            return processor(grammar, syntaxAnalyser)
+            return processor(grammar, syntaxAnalyser, formatter)
         } catch (e: ParseFailedException) {
             //TODO: better, different exception to detect which list item fails
             throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
@@ -66,12 +51,12 @@ object Agl {
     }
 
     @JsName("processorFromRuleList")
-    fun processor(rules: List<String>): LanguageProcessor {
+    fun processor(rules: List<String>, syntaxAnalyser: SyntaxAnalyser?=null, formatter: Formatter?=null): LanguageProcessor {
         val prefix = "namespace temp grammar Temp { "
         val grammarStr = prefix + rules.joinToString(" ") + "}"
         try {
             val grammar = aglProcessor.process<Grammar>("grammarDefinition", grammarStr)
-            return LanguageProcessorDefault(grammar, null)
+            return LanguageProcessorDefault(grammar, syntaxAnalyser, formatter)
         } catch (e: ParseFailedException) {
             //TODO: better, different exception to detect which list item fails
             val newCol = e.location.column.minus(prefix.length)

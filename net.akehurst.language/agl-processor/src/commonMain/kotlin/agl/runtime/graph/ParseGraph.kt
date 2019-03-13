@@ -117,7 +117,7 @@ internal class ParseGraph(
         } else {
             // merge
             for (info in gn.previous.values) {
-                existing.addPrevious(info.node)
+                existing.addPrevious(info)
             }
         }
     }
@@ -129,13 +129,13 @@ internal class ParseGraph(
         val existing = this.growing[gnindex]
         if (null == existing) {
             for (info in previous) {
-                gn.addPrevious(info.node)
+                gn.addPrevious(info)
             }
             this.growing[gnindex] = gn
         } else {
             // merge
             for (info in previous) {
-                existing.addPrevious(info.node)
+                existing.addPrevious(info)
             }
         }
     }
@@ -160,7 +160,7 @@ internal class ParseGraph(
             } else {
                 // merge
                 for (info in gn.previous.values) {
-                    existing.addPrevious(info.node)
+                    existing.addPrevious(info)
                 }
                 return existing
             }
@@ -178,10 +178,10 @@ internal class ParseGraph(
         val existing = this.growing[gnindex]
         if (null == existing) {
             val nn = GrowingNode(isSkipGrowth, curRp, startPosition, nextInputPosition, 0, emptyList(), 0)
-            nn.addPrevious(stack)
+            nn.addPrevious(stack, emptySet()) //TODO: lh
             this.addGrowingHead(gnindex, nn)
         } else {
-            existing.addPrevious(stack)
+            existing.addPrevious(stack, emptySet()) //TODO: lh
             this.addGrowingHead(gnindex, existing)
         }
     }
@@ -196,11 +196,11 @@ internal class ParseGraph(
         val existing = this.growing[gnindex]
         if (null == existing) {
             val nn = GrowingNode(isSkipGrowth, curRp, startPosition, nextInputPosition, 0, emptyList(), 0)
-            previous.forEach { nn.addPrevious(it.node) }
+            previous.forEach { nn.addPrevious(it) }
             nn.skipNodes.addAll(skipChildren)
             this.addGrowingHead(gnindex, nn)
         } else {
-            previous.forEach { existing.addPrevious(it.node) }
+            previous.forEach { existing.addPrevious(it) }
             existing.skipNodes.addAll(skipChildren)
             this.addGrowingHead(gnindex, existing)
         }
@@ -214,7 +214,7 @@ internal class ParseGraph(
         if (null == existing) {
             val nn = GrowingNode(isSkipGrowth, newRp, startPosition, nextInputPosition, priority, children, numNonSkipChildren)
             for (info in previous) {
-                nn.addPrevious(info.node)
+                nn.addPrevious(info)
                 this.addGrowing(info.node)
             }
             this.addGrowingHead(gnindex, nn)
@@ -224,7 +224,7 @@ internal class ParseGraph(
             result = nn
         } else {
             for (info in previous) {
-                existing.addPrevious(info.node)
+                existing.addPrevious(info)
                 this.addGrowing(info.node)
             }
             this.addGrowingHead(gnindex, existing)
@@ -356,21 +356,9 @@ internal class ParseGraph(
         for (curRp in startRps) {
             //val curRp = RulePosition(userGoalRule, 0, 0)
             val ugoalGN = GrowingNode(false, curRp, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
-            ugoalGN.addPrevious(goalGN)
+            ugoalGN.addPrevious(goalGN, setOf(RuntimeRuleSet.END_OF_TEXT))
             this.addGrowingHead(GrowingNodeIndex(curRp, 0, 0), ugoalGN)
         }
-        //TODO: check runtimeGoal contains user goal!
-        /*
-        val rps = runtimeRuleSet.expectedTerminalRulePositions[tgtRp] ?: arrayOf<RulePosition>()
-        for(curRp in rps) {
-            val gnindex = GrowingNodeIndex(curRp, tgtRp, 0, 0)
-            val ft = runtimeRuleSet.firstTerminals2[curRp] ?: setOf()
-            val lh = setOf(RuntimeRuleSet.END_OF_TEXT) //+ ft
-            val gn = GrowingNode(tgtRp, curRp, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0, lh)
-            this.addGrowingHead(gnindex, gn)
-            gn.addPrevious(goalGN, 0)
-        }
-        */
     }
 
     fun pop(gn: GrowingNode): Set<PreviousInfo> {
