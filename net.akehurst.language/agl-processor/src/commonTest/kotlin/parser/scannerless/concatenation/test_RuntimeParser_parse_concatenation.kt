@@ -49,6 +49,7 @@ class test_RuntimeParser_parse_concatenation {
         val actual = test_parse(sp, goalRuleName, inputText)
 
         assertNotNull(actual)
+        assertEquals(9,actual.seasons)
     }
 
     @Test

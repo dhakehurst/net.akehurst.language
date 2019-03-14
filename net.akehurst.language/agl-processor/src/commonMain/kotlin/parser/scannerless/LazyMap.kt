@@ -2,7 +2,7 @@ package net.akehurst.language.agl.runtime.structure
 
 fun <K,V> lazyMap(accessor: (K) -> V) = LazyMap(accessor)
 
-class LazyMap<K,V>(val accessor: (K) -> V) : Map<K,V> {
+class LazyMap<K,V>(val accessor: (K) -> V) : MutableMap<K,V> {
 
     val map = mutableMapOf<K,V>()
 
@@ -16,7 +16,7 @@ class LazyMap<K,V>(val accessor: (K) -> V) : Map<K,V> {
         }
     }
 
-    override val entries: Set<Map.Entry<K, V>>
+    override val entries: MutableSet<MutableMap.MutableEntry<K, V>>
         get() = map.entries
 
     override val keys: Set<K>

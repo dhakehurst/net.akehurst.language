@@ -188,7 +188,8 @@ internal class RuntimeParser(
                 ?: throw ParseException("Internal error: Should never happen")
 
             //val newTargetRPs = runtimeRuleSet.growsInto(gn.runtimeRule, graph.runtimeGoalRule).map { RulePosition(it.runtimeRule, it.choice, 0) }
-            val newTargetRPs = runtimeRuleSet.growsInto(gn.runtimeRule, previous.node.runtimeRule).filter { it.isAtStart }
+            //val newTargetRPs = runtimeRuleSet.growsInto(gn.runtimeRule, previous.node.runtimeRule).filter { it.isAtStart }
+            val newTargetRPs = runtimeRuleSet.growsInto(previous.node.currentRulePosition, gn.currentRulePosition)
             val fntp = if (gn.runtimeRule.isSkip) { //TODO: do we really need to check if we are growing a skip node
                 newTargetRPs
             } else {
@@ -206,7 +207,7 @@ internal class RuntimeParser(
                         this.graph.createWithFirstChild(gn.isSkipGrowth, nextRp, complete, setOf(previous), gn.skipNodes) //maybe lookahead to wanted next token here (it would need to be part of RP)
                     }
                 } else {
-                    val lh = previous.lookahead//runtimeRuleSet.lookahead(newRP, previous.node.currentRulePosition, previous.lookahead)
+                    val lh = runtimeRuleSet.lookahead2(newRP, previous.node.currentRulePosition, previous.lookahead)
                     val hasLh = lh.any {
                         val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
                         null != l
@@ -273,7 +274,7 @@ internal class RuntimeParser(
             val nextRps = runtimeRuleSet.nextRulePosition(previous.node.currentRulePosition, gn.runtimeRule)
             for (nextRp in nextRps) {
 
-                    val lh = previous.lookahead//runtimeRuleSet.lookahead(nextRp, pprev.node.currentRulePosition, pprev.lookahead)
+                    val lh = previous.lookahead//runtimeRuleSet.lookahead1(nextRp, pprev.node.currentRulePosition, pprev.lookahead)
                     val hasLh = lh.any {
                         val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
                         null != l
@@ -307,7 +308,7 @@ internal class RuntimeParser(
                     val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
                     if (null != l) {
                         //can compute lh here, but can't test for it until skip terms have been consumed
-                        val lh = runtimeRuleSet.lookahead(gn.currentRulePosition, prev.node.currentRulePosition, prev.lookahead)
+                        val lh = runtimeRuleSet.lookahead1(gn.currentRulePosition, prev.node.currentRulePosition, prev.lookahead)
                         this.graph.pushToStackOf(false, l, gn, setOf(prev), lh)
 
                     }
