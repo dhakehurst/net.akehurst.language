@@ -143,15 +143,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     /** Map of goalRule -> next State number **/
-    private val nextState = lazyMap<RuntimeRule, Int> { 0 } //all next state numbers start at 0
-    /**
-     * Map of Pair(goalRule, rulePosition) -> State number
-     */
-    private val rulePositionToStateNumber = lazyMap<Pair<RuntimeRule,RulePosition>, Int> {
-        val nextStateNumber:Int = this.nextState[it.first]
-        this.nextState[it.first] = nextStateNumber +1
-        nextStateNumber
-    }
+    private val nextState = mutableMapOf<RuntimeRule, Int>()
 
     private val lookahead1 = lazyMap<Pair<RulePosition, Set<RuntimeRule>>, Map<RulePosition, Set<RuntimeRule>>> { startingAt ->
         lazyMap { rp ->
@@ -175,6 +167,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 this.terminalRuleNumber[rr.name] = rr.number
             }
         }
+    }
+
+    private fun createRulePositionState(goalRule: RuntimeRule, rulePosition: RulePosition, heightLookahead: Set<RuntimeRule>, graftLookahead: Set<RuntimeRule>): RulePositionState {
+        val stateNumber: Int = this.nextState[goalRule] ?: 0
+        this.nextState[goalRule] = stateNumber + 1
+        return RulePositionState(stateNumber, rulePosition, heightLookahead, graftLookahead)
     }
 
     fun buildCaches() {
@@ -205,27 +203,14 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
      * return the set of RulePositions that rule could grow into
      * the goal rule must be passed, as it is parse specific
      */
-    fun growsInto(tgtRule: RulePosition, lookingFor: RulePosition): Set<RulePosition> {
-        val startingAt = tgtRule.items.flatMap {
-            it.rulePositions.map { rp -> Pair(rp, emptySet<RulePosition>()) }
-        }.toSet() //Pair(tgtRule, emptySet<RulePosition>())
-        val clos = startingAt.transitveClosure {
-            it.first.items.flatMap { it2 ->
-                if (it2.isTerminal) {
-                    setOf(RulePosition(it2, 0, RulePosition.END_OF_RULE))
-                } else {
-                    it2.rulePositions
-                }
-            }.map { rp ->
-                if (rp == lookingFor) {
-                    Pair(rp, setOf(it.first))
-                } else {
-                    Pair(rp, emptySet())
-                }
-            }.toSet()
+    fun growsInto(goalRule: RuntimeRule, startingAt: RulePositionState, lookingFor: RulePositionState): Set<RulePositionState> {
+        return if (startingAt == lookingFor) {
+            emptySet()
+        } else {
+            emptySet()
+
         }
-        val result = clos.filter { !it.second.isEmpty() }.flatMap { it.second }.toSet()
-        return result
+
     }
 
     /**
@@ -233,7 +218,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
      * The lookahead is the set of terminals that could come after nextRulePosition(rp)
      * Used in 'graft'
      */
-    fun lookahead1(rp: RulePosition, targetRulePosition: RulePosition, previousLookahead: Set<RuntimeRule>): Set<RuntimeRule> {
+/*    fun lookahead1(rp: RulePosition, targetRulePosition: RulePosition): Set<RuntimeRule> {
         val cached = this.lookahead1[Pair(targetRulePosition, previousLookahead)]?.get(rp);
         return if (null == cached) {
             emptySet()
@@ -244,7 +229,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 cached
             }
         }
-    }
+    }*/
 
     /**
      * given the target rulePosition, find the lookahead for rp, if it is empty use the previous LH.
@@ -367,12 +352,66 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return result
     }
 
+    fun startingRulePositionState(userGoalRule: RuntimeRule): RulePositionState {
+        val goalRule = RuntimeRuleSet.createGoal(userGoalRule)
+        val goalRp = RulePosition(goalRule, 0, 0)
+        val goalLookahead = setOf(RuntimeRuleSet.END_OF_TEXT)
+        return createRulePositionState(goalRule, goalRp, emptySet(), goalLookahead)
+    }
+
+    fun currentPossibleRulePositionStates(goalRule: RuntimeRule, current: RulePositionState, providedLookahead: Set<RuntimeRule>): Set<RulePositionState> {
+
+        val closure = setOf(current.rulePosition).transitveClosure {
+            current.items.flatMap { rule ->
+                rule.calcExpectedRulePositions(0)
+            }.toSet()
+        }
+
+        val y = closure.flatMap { rp: RulePosition ->
+            val items = rp.items
+            if (items.isEmpty()) {
+                setOf(Pair(rp, emptySet<RuntimeRule>()))
+            } else {
+                rp.items.flatMap { r ->
+                    nextRulePosition(rp, r)
+                        .map {
+                            val lh = this.firstTerminals2[it] ?: throw ParseException("should never happen")
+                            Pair(rp, lh)
+                        }
+                }
+            }
+        }
+        val z = y.map { p: Pair<RulePosition, Set<RuntimeRule>> ->
+            val rplh = p.second
+                createRulePositionState(goalRule, p.first, rplh, providedLookahead)
+        }.toSet()
+
+        return z
+    }
+
+    fun nextPossibleRulePositionStates(goalRule: RuntimeRule, current: RulePositionState, providedLookahead: Set<RuntimeRule>): Set<RulePositionState> {
+
+        val z = currentPossibleRulePositionStates(goalRule, current, providedLookahead)
+
+        val nexts = z.flatMap { rps ->
+            rps.items.flatMap { rr ->
+                val nextRPs = nextRulePosition(rps.rulePosition, rr)
+                nextRPs.map { nextRP ->
+                    createRulePositionState(goalRule, nextRP, rps.heightLookahead, rps.graftLookahead) //TODO: not sure lh is correct here!
+                }
+            }
+        }.toSet()
+
+        return nexts
+    }
+
     private fun calcLookahead1(startingAt: Pair<RulePosition, Set<RuntimeRule>>, lookingFor: RulePosition): Set<RuntimeRule> {
         //startingFrom the tgtRPs, find the rp calculating lh as we go
         val start = setOf(startingAt)
-        val closure = setOf(start).transitveClosure { seq -> //in kotlin setOf and toSet give a LinkedSet which is ordered
+        val closure = setOf(start).transitveClosure { seq ->
+            //in kotlin setOf and toSet give a LinkedSet which is ordered
             val last = seq.last()
-            if (last.first==lookingFor) {
+            if (last.first == lookingFor) {
                 setOf(seq)
             } else {
                 val x = last.first.items.flatMap { rule ->

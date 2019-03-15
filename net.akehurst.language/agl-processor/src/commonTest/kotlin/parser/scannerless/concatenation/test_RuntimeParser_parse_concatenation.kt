@@ -35,7 +35,7 @@ class test_RuntimeParser_parse_concatenation {
     // r = 'a' 'b' 'c' ;
     private fun abc1(): ScannerlessParser {
         val b = RuntimeRuleSetBuilder()
-        b.rule("r").concatenation(b.literal("a"), b.literal("b"), b.literal("c"))
+        b.rule("S").concatenation(b.literal("a"), b.literal("b"), b.literal("c"))
         val sp = ScannerlessParser(b.ruleSet())
         return sp
     }
@@ -43,7 +43,7 @@ class test_RuntimeParser_parse_concatenation {
     @Test
     fun abc1_r_abc() {
         val sp = this.abc1()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "abc"
 
         val actual = test_parse(sp, goalRuleName, inputText)

@@ -84,7 +84,7 @@ class RuntimeRule(
     val rulePositions: Set<RulePosition>
         get() {
             return if (isTerminal) {
-                emptySet()
+                setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
             } else {
                 when (rhs.kind) {
                     RuntimeRuleItemKind.EMPTY -> setOf(
@@ -490,7 +490,7 @@ class RuntimeRule(
     }
 
     internal fun calcExpectedRulePositions(position: Int): Set<RulePosition> {
-        return if (position == RulePosition.END_OF_RULE) {
+        return if (position == RulePosition.END_OF_RULE || this.isTerminal) {
             emptySet()
         } else when (this.rhs.kind) {
             RuntimeRuleItemKind.EMPTY -> {

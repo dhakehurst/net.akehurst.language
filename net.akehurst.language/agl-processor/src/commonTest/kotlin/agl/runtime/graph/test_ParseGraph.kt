@@ -16,9 +16,7 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.parser.scannerless.InputFromCharSequence
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 import kotlin.test.Test
@@ -60,7 +58,8 @@ class test_ParseGraph {
         val sut = ParseGraph(userGoalRule,input)
 
         val gr = RuntimeRuleSet.createGoal(userGoalRule)
-        sut.start(gr,rrs)
+        val startState = RulePositionState(0, RulePosition(gr,0,0), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+        sut.start(startState, rrs)
 
         val actual = sut.canGrow
 

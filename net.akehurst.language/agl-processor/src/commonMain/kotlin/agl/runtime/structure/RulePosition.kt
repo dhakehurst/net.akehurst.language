@@ -29,7 +29,6 @@ data class RulePosition(
     val isAtStart = position == 0
     val isAtEnd = position == END_OF_RULE
 
-
     val items:Set<RuntimeRule> get() {
          return if (END_OF_RULE==position) {
              emptySet()
@@ -37,7 +36,6 @@ data class RulePosition(
              runtimeRule.items(choice, position)
          }
     }
-
 
     override fun toString(): String {
         return "RP(${runtimeRule.name},$choice,$position)"

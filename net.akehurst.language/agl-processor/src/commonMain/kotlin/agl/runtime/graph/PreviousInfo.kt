@@ -19,10 +19,5 @@ package net.akehurst.language.agl.runtime.graph
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
 data class PreviousInfo(
-    val node: GrowingNode,
-    val lookahead: Set<RuntimeRule>
-) {
-    val atPosition:Int get() {
-        return this.node.currentRulePosition.position
-    }
-}
+    val node: GrowingNode
+)
