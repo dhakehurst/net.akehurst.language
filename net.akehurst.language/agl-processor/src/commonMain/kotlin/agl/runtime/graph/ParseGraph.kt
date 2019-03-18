@@ -167,14 +167,14 @@ internal class ParseGraph(
         }
     }
 
-    private fun findOrCreateGrowingLeaf(isSkipGrowth: Boolean, runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int,
+    private fun findOrCreateGrowingLeaf(isSkipGrowth: Boolean, curRp:RulePositionState, runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int,
                                         stack: GrowingNode, previous: Set<PreviousInfo>,lookahead:Set<RuntimeRule>) {
         this.addGrowing(stack, previous)
         // TODO: remove, this is for test
         for (info in previous) {
             this.addGrowing(info.node)
         }
-        val curRp = RulePositionState(-1, RulePosition(runtimeRule, 0, RulePosition.END_OF_RULE), lookahead, lookahead )//TODO: get this from the rule so we don't have to create an object here
+        val curRp = RulePositionState(-1, RulePosition(runtimeRule, 0, RulePosition.END_OF_RULE), curRp.heightLookahead, curRp.graftLookahead )//TODO: get this from the rule so we don't have to create an object here
         val gnindex = GrowingNodeIndex(curRp, startPosition, nextInputPosition)
         val existing = this.growing[gnindex]
         if (null == existing) {
@@ -352,9 +352,16 @@ internal class ParseGraph(
 
         val goalGN = GrowingNode(false, goalState, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
 
-        val startStates = runtimeRuleSet.currentPossibleRulePositionStates(this.currentGoalRule, goalState, goalState.graftLookahead)
-        val x = startStates.filter { it.items.any { it.isTerminal } }
-        for (curRp in x) {
+        //val startStates = runtimeRuleSet.currentPossibleRulePositionStates(this.currentGoalRule, goalState, goalState.graftLookahead)
+        //val x = startStates.filter { it.items.any { it.isTerminal } }
+
+        val start = goalState.items.flatMap {
+            it.calcExpectedRulePositions(0).map {
+                runtimeRuleSet.fetchOrCreateRulePositionState(this.currentGoalRule, it, setOf(RuntimeRuleSet.END_OF_TEXT), setOf(RuntimeRuleSet.END_OF_TEXT))
+            }
+        }
+
+        for (curRp in start) {
             //val curRp = RulePosition(userGoalRule, 0, 0)
             val ugoalGN = GrowingNode(false, curRp, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
             ugoalGN.addPrevious(goalGN)
@@ -372,8 +379,8 @@ internal class ParseGraph(
         return previous.values.toSet() //FIXME: don't convert to set
     }
 
-    fun pushToStackOf(isSkipGrowth: Boolean, leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>, lookahead:Set<RuntimeRule>) {
-        this.findOrCreateGrowingLeaf(isSkipGrowth, leafNode.runtimeRule, leafNode.startPosition, leafNode.nextInputPosition, stack, previous, lookahead)
+    fun pushToStackOf(isSkipGrowth: Boolean, curRp:RulePositionState, leafNode: SPPTLeafDefault, stack: GrowingNode, previous: Set<PreviousInfo>, lookahead:Set<RuntimeRule>) {
+        this.findOrCreateGrowingLeaf(isSkipGrowth, curRp, leafNode.runtimeRule, leafNode.startPosition, leafNode.nextInputPosition, stack, previous, lookahead)
     }
 
     fun growNextChild(isSkipGrowth: Boolean, nextRp: RulePositionState, parent: GrowingNode, nextChild: SPPTNodeDefault, position: Int, skipChildren: List<SPPTNode>) {

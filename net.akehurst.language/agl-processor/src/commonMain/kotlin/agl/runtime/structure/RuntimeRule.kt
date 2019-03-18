@@ -295,16 +295,20 @@ class RuntimeRule(
     }
 
     fun items(choice: Int, position: Int): Set<RuntimeRule> { //TODO: do we need to return a set here?
-        return when (rhs.kind) {
-            RuntimeRuleItemKind.EMPTY -> emptySet()
-            RuntimeRuleItemKind.CHOICE_EQUAL -> setOf(rhs.items[choice])
-            RuntimeRuleItemKind.CHOICE_PRIORITY -> setOf(rhs.items[choice])
-            RuntimeRuleItemKind.CONCATENATION -> setOf(rhs.items[position])
-            RuntimeRuleItemKind.UNORDERED -> TODO() // will require a multiple items in the set
-            RuntimeRuleItemKind.MULTI -> setOf(rhs.items[choice])
-            RuntimeRuleItemKind.SEPARATED_LIST -> setOf(rhs.items[choice])
-            RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> TODO()
-            RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
+        return if(this.isTerminal) {
+            emptySet()
+        } else {
+            when (rhs.kind) {
+                RuntimeRuleItemKind.EMPTY -> emptySet()
+                RuntimeRuleItemKind.CHOICE_EQUAL -> setOf(rhs.items[choice])
+                RuntimeRuleItemKind.CHOICE_PRIORITY -> setOf(rhs.items[choice])
+                RuntimeRuleItemKind.CONCATENATION -> setOf(rhs.items[position])
+                RuntimeRuleItemKind.UNORDERED -> TODO() // will require a multiple items in the set
+                RuntimeRuleItemKind.MULTI -> setOf(rhs.items[choice])
+                RuntimeRuleItemKind.SEPARATED_LIST -> setOf(rhs.items[choice])
+                RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> TODO()
+                RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
+            }
         }
     }
 
@@ -490,53 +494,55 @@ class RuntimeRule(
     }
 
     internal fun calcExpectedRulePositions(position: Int): Set<RulePosition> {
-        return if (position == RulePosition.END_OF_RULE || this.isTerminal) {
-            emptySet()
-        } else when (this.rhs.kind) {
-            RuntimeRuleItemKind.EMPTY -> {
-                emptySet()
-            }
-            RuntimeRuleItemKind.CHOICE_EQUAL -> {
-                return if (position == 0) {
-                    this.rhs.items.mapIndexed { index, runtimeRule -> RulePosition(this, index, 0) }.toSet()
-                } else {
+        return when {
+            position == RulePosition.END_OF_RULE -> emptySet()
+            this.isTerminal -> setOf(RulePosition(this, 0, 0))
+            else -> when (this.rhs.kind) {
+                RuntimeRuleItemKind.EMPTY -> {
                     emptySet()
                 }
-            }
-            RuntimeRuleItemKind.CHOICE_PRIORITY -> {
-                return if (position == 0) {
-                    this.rhs.items.mapIndexed { index, runtimeRule -> RulePosition(this, index, 0) }.toSet()
-                } else {
-                    emptySet<RulePosition>()
-                }
-            }
-            RuntimeRuleItemKind.CONCATENATION -> {
-                return if (position >= this.rhs.items.size) {
-                    throw RuntimeException("Internal Error: No NextExpectedItem")
-                } else {
-                    if (position == this.rhs.items.size) {
-                        setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
+                RuntimeRuleItemKind.CHOICE_EQUAL -> {
+                    return if (position == 0) {
+                        this.rhs.items.mapIndexed { index, runtimeRule -> RulePosition(this, index, 0) }.toSet()
                     } else {
-                        setOf(RulePosition(this, 0, position))
+                        emptySet()
                     }
                 }
-            }
-            RuntimeRuleItemKind.MULTI -> {
-                return when {
-                    (0 == position && 0 == this.rhs.multiMin) -> setOf(RulePosition(this, RuntimeRuleItem.MULTI__ITEM, 0), RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, 0))
-                    (position < this.rhs.multiMax || -1 == this.rhs.multiMax) -> setOf(RulePosition(this, RuntimeRuleItem.MULTI__ITEM, 0))
-                    else -> emptySet<RulePosition>()
+                RuntimeRuleItemKind.CHOICE_PRIORITY -> {
+                    return if (position == 0) {
+                        this.rhs.items.mapIndexed { index, runtimeRule -> RulePosition(this, index, 0) }.toSet()
+                    } else {
+                        emptySet<RulePosition>()
+                    }
                 }
-            }
-            RuntimeRuleItemKind.SEPARATED_LIST -> {
-                return when {
-                    (position % 2 == 1 && (((position + 1) / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf<RulePosition>(RulePosition(this, RuntimeRuleItem.SLIST__SEPARATOR, 1))
-                    (0 == position && 0 == this.rhs.multiMin) -> setOf<RulePosition>(RulePosition(this, RuntimeRuleItem.SLIST__ITEM, 0), RulePosition(this, RuntimeRuleItem.SLIST__EMPTY_RULE, 0))
-                    (position % 2 == 0 && ((position / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf<RulePosition>(RulePosition(this, RuntimeRuleItem.SLIST__ITEM, 0))
-                    else -> emptySet<RulePosition>()
+                RuntimeRuleItemKind.CONCATENATION -> {
+                    return if (position >= this.rhs.items.size) {
+                        throw RuntimeException("Internal Error: No NextExpectedItem")
+                    } else {
+                        if (position == this.rhs.items.size) {
+                            setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
+                        } else {
+                            setOf(RulePosition(this, 0, position))
+                        }
+                    }
                 }
+                RuntimeRuleItemKind.MULTI -> {
+                    return when {
+                        (0 == position && 0 == this.rhs.multiMin) -> setOf(RulePosition(this, RuntimeRuleItem.MULTI__ITEM, 0), RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, 0))
+                        (position < this.rhs.multiMax || -1 == this.rhs.multiMax) -> setOf(RulePosition(this, RuntimeRuleItem.MULTI__ITEM, 0))
+                        else -> emptySet<RulePosition>()
+                    }
+                }
+                RuntimeRuleItemKind.SEPARATED_LIST -> {
+                    return when {
+                        (position % 2 == 1 && (((position + 1) / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf<RulePosition>(RulePosition(this, RuntimeRuleItem.SLIST__SEPARATOR, 1))
+                        (0 == position && 0 == this.rhs.multiMin) -> setOf<RulePosition>(RulePosition(this, RuntimeRuleItem.SLIST__ITEM, 0), RulePosition(this, RuntimeRuleItem.SLIST__EMPTY_RULE, 0))
+                        (position % 2 == 0 && ((position / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf<RulePosition>(RulePosition(this, RuntimeRuleItem.SLIST__ITEM, 0))
+                        else -> emptySet<RulePosition>()
+                    }
+                }
+                else -> throw RuntimeException("Internal Error: rule kind not recognised")
             }
-            else -> throw RuntimeException("Internal Error: rule kind not recognised")
         }
     }
 
