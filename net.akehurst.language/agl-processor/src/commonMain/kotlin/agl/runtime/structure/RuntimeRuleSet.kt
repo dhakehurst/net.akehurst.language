@@ -398,7 +398,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                                 .map {
                                     val lh = this.firstTerminals2[it] ?: throw ParseException("should never happen")
                                     if (lh.isEmpty()) {
-                                     TODO()
+                                     TODO("not sure to what lh to use here?")
                                     } else {
                                         fetchOrCreateRulePositionState(goalRule, rp, lh, providedLookahead)
                                     }
