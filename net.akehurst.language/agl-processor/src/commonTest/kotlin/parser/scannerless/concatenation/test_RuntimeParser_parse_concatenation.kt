@@ -55,7 +55,7 @@ class test_RuntimeParser_parse_concatenation {
     @Test
     fun abc1_r_empty() {
         val sp = this.abc1()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
@@ -68,7 +68,7 @@ class test_RuntimeParser_parse_concatenation {
     @Test
     fun abc1_r_a() {
         val sp = this.abc1()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "a"
 
         val ex = assertFailsWith(ParseFailedException::class) {
@@ -81,7 +81,7 @@ class test_RuntimeParser_parse_concatenation {
     @Test
     fun abc1_r_ab() {
         val sp = this.abc1()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "ab"
 
         val ex = assertFailsWith(ParseFailedException::class) {
@@ -94,7 +94,7 @@ class test_RuntimeParser_parse_concatenation {
     @Test
     fun abc1_r_abcd() {
         val sp = this.abc1()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "abcd"
 
         val ex = assertFailsWith(ParseFailedException::class) {

@@ -353,7 +353,8 @@ internal class ParseGraph(
         val goalGN = GrowingNode(false, goalState, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
 
         val startStates = runtimeRuleSet.currentPossibleRulePositionStates(this.currentGoalRule, goalState, goalState.graftLookahead)
-        for (curRp in startStates) {
+        val x = startStates.filter { it.items.any { it.isTerminal } }
+        for (curRp in x) {
             //val curRp = RulePosition(userGoalRule, 0, 0)
             val ugoalGN = GrowingNode(false, curRp, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
             ugoalGN.addPrevious(goalGN)
