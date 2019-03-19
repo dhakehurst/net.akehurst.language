@@ -213,8 +213,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
      * return the set of RulePositions that rule could grow into
      * the goal rule must be passed, as it is parse specific
      */
-    fun growsInto(goalRule: RuntimeRule, startingAt: RulePositionState, lookingFor: RulePositionState): Set<RulePositionState> {
-        val parents = calcParents(goalRule, startingAt, lookingFor)
+    fun growsInto(userGoalRule: RuntimeRule, startingAt: RulePositionState, lookingFor: RulePositionState): Set<RulePositionState> {
+        val parents = calcParents(userGoalRule, startingAt, lookingFor)
         return parents.filter { it.second.runtimeRule == lookingFor.runtimeRule }.map { it.first }.toSet()
     }
 
@@ -384,23 +384,23 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }.toSet()
     }
 
-    fun currentPossibleRulePositionStates(goalRule: RuntimeRule, current: RulePositionState, providedLookahead: Set<RuntimeRule>): Set<RulePositionState> {
+    fun currentPossibleRulePositionStates(goalRule: RuntimeRule, current: RulePositionState, previous: RulePositionState): Set<RulePositionState> {
         return setOf(current).transitveClosure { parentRPS ->
             parentRPS.items.flatMap { rule: RuntimeRule ->
                 val rps: Set<RulePosition> = rule.calcExpectedRulePositions(0)
                 rps.flatMap { rp ->
                     val items = rp.items
                     if (items.isEmpty()) {
-                        setOf(fetchOrCreateRulePositionState(goalRule, rp, emptySet(), providedLookahead))
+                        setOf(fetchOrCreateRulePositionState(goalRule, rp, previous.heightLookahead, previous.graftLookahead))
                     } else {
                         rp.items.flatMap { r ->
                             nextRulePosition(rp, r)
                                 .map {
                                     val lh = this.firstTerminals2[it] ?: throw ParseException("should never happen")
                                     if (lh.isEmpty()) {
-                                     TODO("not sure to what lh to use here?")
+                                        fetchOrCreateRulePositionState(goalRule, rp, previous.heightLookahead, previous.graftLookahead)
                                     } else {
-                                        fetchOrCreateRulePositionState(goalRule, rp, lh, providedLookahead)
+                                        fetchOrCreateRulePositionState(goalRule, rp, lh, previous.graftLookahead)
                                     }
                                 }
                         }
@@ -432,17 +432,18 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 val nextRPs = nextRulePosition(rps.rulePosition, rr)
                 nextRPs.flatMap { nextRP ->
                     val nextNextItems = nextRP.items
+                    val hlh = if (nextRP.isAtStart) rps.heightLookahead else rps.graftLookahead
                     if (nextNextItems.isEmpty()) {
-                        setOf(fetchOrCreateRulePositionState(goalRule, nextRP, rps.heightLookahead, rps.graftLookahead)) //TODO: not sure lh is correct here!
+                        setOf(fetchOrCreateRulePositionState(goalRule, nextRP, hlh, rps.graftLookahead)) //TODO: not sure lh is correct here!
                     } else {
                         val nextNext: Set<RulePosition> = nextNextItems.flatMap { nextItem -> nextRulePosition(nextRP, nextItem) }.toSet()
                         nextNext.map { nn ->
                             val lh: Set<RuntimeRule> = this.firstTerminals2[nn]
                                 ?: throw ParseException("should never happen")
                             if (lh.isEmpty()) {
-                                fetchOrCreateRulePositionState(goalRule, nextRP, rps.heightLookahead, rps.graftLookahead)
+                                fetchOrCreateRulePositionState(goalRule, nextRP, hlh, rps.graftLookahead)
                             } else {
-                                fetchOrCreateRulePositionState(goalRule, nextRP, rps.heightLookahead, lh) //TODO: not sure lh is correct here!
+                                fetchOrCreateRulePositionState(goalRule, nextRP, hlh, lh) //TODO: not sure lh is correct here!
                             }
                         }.toSet()
                     }
@@ -456,35 +457,59 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     /**
      * return Pair(parent,child)
      */
-    private fun calcParents(goalRule: RuntimeRule, startingAt: RulePositionState, current: RulePositionState): Set<Pair<RulePositionState, RulePositionState>> {
+    private fun calcParents(userGoalRule: RuntimeRule, startingAt: RulePositionState, current: RulePositionState): Set<Pair<RulePositionState, RulePositionState>> {
 
-        val rps: Set<RulePosition> = startingAt.items.flatMap { it.calcExpectedRulePositions(0) }.toSet()
-        val rpsStates = rps.map {
-            val lh: Set<RuntimeRule> = this.firstTerminals2[it] ?: throw ParseException("should never happen")
-            if (lh.isEmpty()) {
-                fetchOrCreateRulePositionState(goalRule, it, startingAt.heightLookahead, startingAt.graftLookahead)
+        val rps: Set<RulePosition> = startingAt.items.flatMap {
+            it.calcExpectedRulePositions(0)
+        }.toSet()
+        val rpsStates:Set<RulePositionState> = rps.flatMap { childRP ->
+            if(childRP.runtimeRule.isTerminal) {
+                setOf(fetchOrCreateRulePositionState(userGoalRule, childRP, startingAt.heightLookahead, startingAt.graftLookahead))
             } else {
-                fetchOrCreateRulePositionState(goalRule, it, lh, startingAt.graftLookahead)
+                childRP.items.flatMap { rr ->
+                    val nextRPs = nextRulePosition(childRP, rr)
+                    nextRPs.map { nextRP ->
+                        if (nextRP.isAtEnd) {
+                            fetchOrCreateRulePositionState(userGoalRule, childRP, startingAt.heightLookahead, startingAt.graftLookahead)
+                        } else {
+                            val lh: Set<RuntimeRule> = this.firstTerminals2[nextRP]
+                                ?: throw ParseException("should never happen")
+                            if (lh.isEmpty()) {
+                                throw ParseException("Should never happen")
+                            } else {
+                                fetchOrCreateRulePositionState(userGoalRule, childRP, lh, startingAt.graftLookahead)
+                            }
+                        }
+                    }
+                }
             }
-        }
+        }.toSet()
         val start = rpsStates.map { Pair(startingAt, it) }.toSet()
         val parents = start.transitveClosure {
             val newParent = it.second
             val newChildRPs = newParent.items.flatMap {
                 it.calcExpectedRulePositions(0)
-            }
-            val newChildStates:Set<RulePositionState> = newChildRPs.flatMap {
-                newParent.items.flatMap { rr ->
-                    val nextRPs = nextRulePosition(newParent.rulePosition, rr)
-                    nextRPs.map { nextRP ->
-                        val lh: Set<RuntimeRule> = this.firstTerminals2[nextRP] ?: throw ParseException("should never happen")
-                        if (lh.isEmpty()) {
-                            fetchOrCreateRulePositionState(goalRule, it, startingAt.heightLookahead, startingAt.graftLookahead)
-                        } else {
-                                fetchOrCreateRulePositionState(goalRule, it, lh, startingAt.graftLookahead)
+            } //filter out if not at start!
+            val newChildStates:Set<RulePositionState> = newChildRPs.flatMap {newChildRP ->
+                if (newChildRP.runtimeRule.isTerminal) {
+                    setOf(fetchOrCreateRulePositionState(userGoalRule, newChildRP, newParent.heightLookahead, startingAt.graftLookahead))
+                } else {
+                    newParent.items.flatMap { rr ->
+                        val nextRPs = nextRulePosition(newParent.rulePosition, rr)
+                        nextRPs.map { nextRP ->
+                            if (nextRP.isAtEnd) {
+                                fetchOrCreateRulePositionState(userGoalRule, newChildRP, newParent.heightLookahead, startingAt.graftLookahead)
+                            } else {
+                                val lh: Set<RuntimeRule> = this.firstTerminals2[nextRP]
+                                    ?: throw ParseException("should never happen")
+                                if (lh.isEmpty()) {
+                                    fetchOrCreateRulePositionState(userGoalRule, newChildRP, startingAt.heightLookahead, startingAt.graftLookahead)
+                                } else {
+                                    fetchOrCreateRulePositionState(userGoalRule, newChildRP, lh, startingAt.graftLookahead)
+                                }
+                            }
                         }
                     }
-
                 }
             }.toSet()
             newChildStates.map { newChild -> Pair(newParent, newChild) }.toSet()

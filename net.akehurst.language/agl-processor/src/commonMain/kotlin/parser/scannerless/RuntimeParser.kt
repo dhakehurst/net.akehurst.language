@@ -294,7 +294,7 @@ internal class RuntimeParser(
             //TODO: do we need this filter?
             //    runtimeRuleSet.calcCanGrowInto(it.runtimeRule, gn.currentRulePosition.runtimeRule, gn.currentRulePosition.position)
             //}
-            val nextRPSs = runtimeRuleSet.currentPossibleRulePositionStates(this.graph.currentGoalRule, gn.currentRulePositionState, prev.node.currentRulePositionState.graftLookahead)
+            val nextRPSs = runtimeRuleSet.currentPossibleRulePositionStates(this.graph.currentGoalRule, gn.currentRulePositionState, prev.node.currentRulePositionState)
             val termRPSs = nextRPSs.filter { it.items.any { it.isTerminal } }.toSet()
             for (termRPS in termRPSs) {
                 for(rr in termRPS.items) {
