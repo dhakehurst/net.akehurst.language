@@ -19,6 +19,7 @@ package net.akehurst.language.parser.scannerless
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.PreviousInfo
+import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RulePositionState
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -271,13 +272,13 @@ internal class RuntimeParser(
             val nextRPSs = runtimeRuleSet.nextPossibleRulePositionStates(this.graph.currentGoalRule, previous.node.currentRulePositionState, previous.node.currentRulePositionState.graftLookahead)
             for (nextRPS in nextRPSs) {
                 val lh = previous.node.currentRulePositionState.graftLookahead//runtimeRuleSet.lookahead1(nextRp, pprev.node.currentRulePosition, pprev.lookahead)
-                val hasLh = lh.any {
-                    val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
-                    null != l
-                }
-                if (hasLh) {
+//                val hasLh = lh.any {
+//                    val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
+//                    null != l
+//                }
+//                if (hasLh) {
                     this.graph.growNextChild(false, nextRPS, previous.node, complete, previous.node.currentRulePositionState.position, gn.skipNodes)
-                }
+//                }
             }
         } else {
             // drop
@@ -300,9 +301,10 @@ internal class RuntimeParser(
                 for(rr in termRPS.items) {
                     val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
                     if (null != l) {
-                        //can compute lh here, but can't test for it until skip terms have been consumed
+                        //TODO: maybe can test lh here !
                         val lh = gn.currentRulePositionState.heightLookahead
-                        this.graph.pushToStackOf(false, termRPS, l, gn, setOf(prev), lh)
+                        val curRp = runtimeRuleSet.fetchOrCreateRulePositionState(this.graph.currentGoalRule, RulePosition(rr, 0, RulePosition.END_OF_RULE), termRPS.heightLookahead, termRPS.graftLookahead )
+                        this.graph.pushToStackOf(false, curRp, l, gn, setOf(prev), lh)
                     }
                 }
             }

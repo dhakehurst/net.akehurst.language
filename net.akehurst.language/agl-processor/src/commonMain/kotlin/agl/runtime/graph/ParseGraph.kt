@@ -174,7 +174,6 @@ internal class ParseGraph(
         for (info in previous) {
             this.addGrowing(info.node)
         }
-        val curRp = RulePositionState(-1, RulePosition(runtimeRule, 0, RulePosition.END_OF_RULE), curRp.heightLookahead, curRp.graftLookahead )//TODO: get this from the rule so we don't have to create an object here
         val gnindex = GrowingNodeIndex(curRp, startPosition, nextInputPosition)
         val existing = this.growing[gnindex]
         if (null == existing) {

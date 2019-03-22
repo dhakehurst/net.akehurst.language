@@ -113,7 +113,7 @@ class test_RuntimeParser_parse_concatenation {
         val r1 = b.rule("a").concatenation(b.literal("a"))
         val r2 = b.rule("b").concatenation(b.literal("b"))
         val r3 = b.rule("c").concatenation(b.literal("c"))
-        b.rule("r").concatenation(r1, r2, r3)
+        b.rule("S").concatenation(r1, r2, r3)
         val sp = ScannerlessParser(b.ruleSet())
         return sp
     }
@@ -121,7 +121,7 @@ class test_RuntimeParser_parse_concatenation {
     @Test
     fun abc2_r_empty() {
         val sp = this.abc2()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
@@ -133,7 +133,7 @@ class test_RuntimeParser_parse_concatenation {
     @Test
     fun abc2_r_a() {
         val sp = this.abc2()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "a"
 
         val ex = assertFailsWith(ParseFailedException::class) {
@@ -145,7 +145,7 @@ class test_RuntimeParser_parse_concatenation {
     @Test
     fun abc2_r_ab() {
         val sp = this.abc2()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "ab"
 
         val ex = assertFailsWith(ParseFailedException::class) {
@@ -157,7 +157,7 @@ class test_RuntimeParser_parse_concatenation {
     @Test
     fun abc2_r_abc() {
         val sp = this.abc2()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "abc"
 
         val actual = test_parse(sp, goalRuleName, inputText)
@@ -167,7 +167,7 @@ class test_RuntimeParser_parse_concatenation {
     @Test
     fun abc2_r_abcd() {
         val sp = this.abc2()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "abcd"
 
         val ex = assertFailsWith(ParseFailedException::class) {

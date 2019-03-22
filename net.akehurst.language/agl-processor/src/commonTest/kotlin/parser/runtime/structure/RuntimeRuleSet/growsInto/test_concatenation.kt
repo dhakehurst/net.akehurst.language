@@ -36,7 +36,7 @@ class test_concatenation {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val actual = sut.growsInto(r_S, s0, RulePositionState(1, RulePosition(r_a, 0,0), ))
+        val actual = sut.growsInto(r_S, s0, RulePositionState(1, RulePosition(r_a, 0,0),setOf(RuntimeRuleSet.END_OF_TEXT),setOf(RuntimeRuleSet.END_OF_TEXT) ))
         val expected = setOf(
             RulePositionState(3, RulePosition(gr, 0, 1), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT)), //TODO: really lookahead should be emptySet!
             RulePositionState(4, RulePosition(r_S, 0, RulePosition.END_OF_RULE), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
