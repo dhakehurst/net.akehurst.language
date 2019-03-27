@@ -38,7 +38,11 @@ data class RulePosition(
     }
 
     override fun toString(): String {
-        return "RP(${runtimeRule.name},$choice,$position)"
+        return if(runtimeRule.isTerminal) {
+            "RP('${runtimeRule.name}',$choice,$position)"
+        } else {
+            "RP(${runtimeRule.name},$choice,$position)"
+        }
     }
 
 }

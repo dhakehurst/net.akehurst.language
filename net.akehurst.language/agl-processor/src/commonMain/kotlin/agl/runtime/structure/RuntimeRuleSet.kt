@@ -396,7 +396,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 val nextRPs = nextRulePosition(rps.rulePosition, rr)
                 nextRPs.flatMap { nextRP ->
                     val nextNextItems = nextRP.items
-                    val hlh = if (nextRP.isAtStart) rps.heightLookahead else rps.graftLookahead
+                    val hlh = rps.heightLookahead //if (nextRP.isAtStart) rps.heightLookahead else rps.graftLookahead
                     if (nextNextItems.isEmpty()) {
                         setOf(fetchOrCreateRulePositionState(goalRule, nextRP, hlh, rps.graftLookahead)) //TODO: not sure lh is correct here!
                     } else {
@@ -423,6 +423,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
      */
     private fun calcParents(userGoalRule: RuntimeRule, startingAt: RulePositionState, current: RulePositionState): Set<Pair<RulePositionState, RulePositionState>> {
 
+        val firstParentRP = startingAt.rulePosition
         val rps: Set<RulePosition> = startingAt.items.flatMap {
             it.calcExpectedRulePositions(0)
         }.toSet()
@@ -431,8 +432,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             if(childAtEndRP.runtimeRule.isTerminal) {
                 setOf(fetchOrCreateRulePositionState(userGoalRule, childAtEndRP, startingAt.heightLookahead, startingAt.graftLookahead))
             } else {
-                childRP.items.flatMap { rr ->
-                    val nextRPs = nextRulePosition(childRP, rr)
+
+                    val nextRPs = nextRulePosition(firstParentRP, childAtEndRP.runtimeRule)
                     nextRPs.map { nextRP ->
                         if (nextRP.isAtEnd) {
                             fetchOrCreateRulePositionState(userGoalRule, childAtEndRP, startingAt.heightLookahead, startingAt.graftLookahead)
@@ -446,7 +447,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                             }
                         }
                     }
-                }
+
             }
         }.toSet()
         val start = rpsStates.map { Pair(startingAt, it) }.toSet()
