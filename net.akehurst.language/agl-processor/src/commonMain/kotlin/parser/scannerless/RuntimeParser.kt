@@ -19,10 +19,7 @@ package net.akehurst.language.parser.scannerless
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.PreviousInfo
-import net.akehurst.language.agl.runtime.structure.RulePosition
-import net.akehurst.language.agl.runtime.structure.RulePositionState
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseException
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.parser.sppt.SPPTBranchDefault
@@ -91,10 +88,31 @@ internal class RuntimeParser(
     }
 
     private fun growWithPrev(gn: GrowingNode, previous: PreviousInfo) {
+        val rps = gn.currentRulePositionState
+        val prevLh = previous.node.currentRulePositionState.graftLookahead
+        val transitions:Set<Transition> = this.runtimeRuleSet.transitions(this.graph.currentUserGoalRule, rps, prevLh)
+
+        transitions.forEach {
+            when(it.action) {
+                Transition.ParseAction.WIDTH -> doWidth(gn, previous, it)
+            }
+        }
+
+        //TODO("RP should indicate whether to do height or graft")
+        // term a from S1 = S . a  ==> must be a graft
+        // term a from S = . a ==> must be height
         this.tryGrowHeight(gn, previous)
         this.tryGraftInto(gn, previous)
-        this.tryShift(gn, previous)
+        //this.tryShift(gn, previous)
     }
+
+    private fun doWidth(gn: GrowingNode, previous: PreviousInfo, transition:Transition) {
+        val l = this.graph.findOrTryCreateLeaf(transition.item, gn.nextInputPosition)
+        if (null!=l) {
+            this.graph.pushToStackOf(false, transition.to, l, gn, setOf(previous), emptySet())
+        }
+    }
+
 
     private fun tryGrowWidthWithSkipRules(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var modified = false
@@ -106,7 +124,7 @@ internal class RuntimeParser(
                 if (null != l) {
                     //val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
                     //newRP.forEach {
-                    val skipRPS = RulePositionState(-1, rp, emptySet(), emptySet())
+                    val skipRPS = RulePositionState(StateNumber(-1), rp, null, emptySet(), emptySet())
                     this.graph.pushToStackOf(true, skipRPS, l, gn, previous, emptySet())
                     modified = true
                     //}
@@ -187,7 +205,7 @@ internal class RuntimeParser(
 
             //val newTargetRPs = runtimeRuleSet.growsInto(gn.runtimeRule, graph.runtimeGoalRule).map { RulePosition(it.runtimeRule, it.choice, 0) }
             //val newTargetRPs = runtimeRuleSet.growsInto(gn.runtimeRule, previous.node.runtimeRule).filter { it.isAtStart }
-            val newTargetRPs = runtimeRuleSet.growsInto(this.graph.currentGoalRule, previous.node.currentRulePositionState, gn.currentRulePositionState)
+            val newTargetRPs = runtimeRuleSet.growsInto(this.graph.currentUserGoalRule, previous.node.currentRulePositionState, gn.currentRulePositionState)
             val fntp = if (gn.runtimeRule.isSkip) { //TODO: do we really need to check if we are growing a skip node
                 newTargetRPs
             } else {
@@ -200,7 +218,7 @@ internal class RuntimeParser(
             }
             for (newRP in fntp) {
                 if (newRP.runtimeRule.isSkip) {
-                    val nextRps = runtimeRuleSet.nextPossibleRulePositionStates(this.graph.currentGoalRule, newRP, emptySet()) //TODO: lh
+                    val nextRps = runtimeRuleSet.nextPossibleRulePositionStates(this.graph.currentUserGoalRule, newRP, emptySet()) //TODO: lh
                     for (nextRp in nextRps) {
                         this.graph.createWithFirstChild(gn.isSkipGrowth, nextRp, complete, setOf(previous), gn.skipNodes) //maybe lookahead to wanted next token here (it would need to be part of RP)
                     }
@@ -213,7 +231,7 @@ internal class RuntimeParser(
 
                    if (hasLh) {
                         //val lookaheadItems = findLookaheadItems(newTgtRP, gn.runtimeRule, null)
-                        val nextRps = runtimeRuleSet.nextPossibleRulePositionStates(this.graph.currentGoalRule, newRP, emptySet()) //TODO: lh
+                        val nextRps = runtimeRuleSet.nextPossibleRulePositionStates(this.graph.currentUserGoalRule, newRP, emptySet()) //TODO: lh
                         for (nextRp in nextRps) {
 
                             this.graph.createWithFirstChild(gn.isSkipGrowth, nextRp, complete, setOf(previous), gn.skipNodes) //maybe lookahead to wanted next token here (it would need to be part of RP)
@@ -269,7 +287,7 @@ internal class RuntimeParser(
             val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
                 ?: throw ParseException("internal error, should never happen")
 
-            val nextRPSs = runtimeRuleSet.nextPossibleRulePositionStates(this.graph.currentGoalRule, previous.node.currentRulePositionState, previous.node.currentRulePositionState.graftLookahead)
+            val nextRPSs = runtimeRuleSet.nextPossibleRulePositionStates(this.graph.currentUserGoalRule, previous.node.currentRulePositionState, previous.node.currentRulePositionState.graftLookahead)
             for (nextRPS in nextRPSs) {
                 val lh = previous.node.currentRulePositionState.graftLookahead//runtimeRuleSet.lookahead1(nextRp, pprev.node.currentRulePosition, pprev.lookahead)
 //                val hasLh = lh.any {
@@ -295,7 +313,7 @@ internal class RuntimeParser(
             //TODO: do we need this filter?
             //    runtimeRuleSet.calcCanGrowInto(it.runtimeRule, gn.currentRulePosition.runtimeRule, gn.currentRulePosition.position)
             //}
-            val nextRPSs = runtimeRuleSet.currentPossibleRulePositionStates(this.graph.currentGoalRule, gn.currentRulePositionState, prev.node.currentRulePositionState)
+            val nextRPSs = runtimeRuleSet.currentPossibleRulePositionStates(this.graph.currentUserGoalRule, gn.currentRulePositionState, prev.node.currentRulePositionState)
             val termRPSs = nextRPSs.filter { it.items.any { it.isTerminal } }.toSet()
             for (termRPS in termRPSs) {
                 for(rr in termRPS.items) {
@@ -303,7 +321,8 @@ internal class RuntimeParser(
                     if (null != l) {
                         //TODO: maybe can test lh here !
                         val lh = gn.currentRulePositionState.heightLookahead
-                        val curRp = runtimeRuleSet.fetchOrCreateRulePositionState(this.graph.currentGoalRule, RulePosition(rr, 0, RulePosition.END_OF_RULE), termRPS.heightLookahead, termRPS.graftLookahead )
+                        val curRp = runtimeRuleSet.fetchOrCreateRulePositionState(this.graph.currentUserGoalRule, RulePosition(rr, 0, RulePosition.END_OF_RULE), null, termRPS.heightLookahead, termRPS.graftLookahead )
+                        //TODO("use termRPS, then we know whether to do graft or height")
                         this.graph.pushToStackOf(false, curRp, l, gn, setOf(prev), lh)
                     }
                 }

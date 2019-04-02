@@ -14,17 +14,11 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure
+package net.akehurst.language.agl.runtime.structure.RuntimeRuleSet.nextPossibleRulePositionStates
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.api.parser.ParseException
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.ScannerlessParser
+import net.akehurst.language.agl.runtime.structure.*
 import parser.runtime.structure.RuntimeRuleSet.nextPossibleRulePositionStates.assertDeepEquals
-import kotlin.test.BeforeTest
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class test_rightRecursion {
 
@@ -41,11 +35,11 @@ class test_rightRecursion {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s1 = RulePositionState(1, RulePosition(r_a, 0, 2), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+        val s1 = RulePositionState(StateNumber(1), RulePosition(r_a, 0, 2),null, emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
 
         val actual = sut.nextPossibleRulePositionStates(gr, s1, s1.graftLookahead)
         val expected = setOf(
-            RulePositionState(1, RulePosition(r_a, 0, 0), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+            RulePositionState(StateNumber(1), RulePosition(r_a, 0, 0), null,emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
         )
         assertDeepEquals(expected, actual)
     }
@@ -63,11 +57,11 @@ class test_rightRecursion {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s1 = RulePositionState(1, RulePosition(r_a, 0, 2), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+        val s1 = RulePositionState(StateNumber(1), RulePosition(r_a, 0, 2), null,emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
 
         val actual = sut.nextPossibleRulePositionStates(gr, s1, s1.graftLookahead)
         val expected = setOf(
-            RulePositionState(1, RulePosition(r_a, 0, 0), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+            RulePositionState(StateNumber(1), RulePosition(r_a, 0, 0), null,emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
         )
         assertDeepEquals(expected, actual)
     }
@@ -85,11 +79,11 @@ class test_rightRecursion {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s1 = RulePositionState(1, RulePosition(r_a, 0, 2), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+        val s1 = RulePositionState(StateNumber(1), RulePosition(r_a, 0, 2), null,emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
 
         val actual = sut.nextPossibleRulePositionStates(gr, s1, s1.graftLookahead)
         val expected = setOf(
-            RulePositionState(1, RulePosition(r_a, 0, 0), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+            RulePositionState(StateNumber(1), RulePosition(r_a, 0, 0), null,emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
         )
         assertDeepEquals(expected, actual)
     }

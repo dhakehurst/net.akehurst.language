@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure.RuntimeRuleSet.growsInto
+package net.akehurst.language.agl.runtime.structure.RuntimeRuleSet.createClosure
 
 import net.akehurst.language.agl.runtime.structure.*
 import parser.runtime.structure.RuntimeRuleSet.nextPossibleRulePositionStates.assertDeepEquals
@@ -41,15 +41,9 @@ class test_concatenation {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val rp_a_E = RulePosition(r_a, 0, RulePosition.END_OF_RULE)
-        val hlh = setEOT
-        val glh = setEOT
-
-        val lookingFor = RulePositionState(StateNumber(1), rp_a_E, null,hlh, glh)
-
-        val actual = sut.growsInto(r_S, s0, lookingFor)
+        val actual = sut.createClosure(r_S, s0)
         val expected = setOf(
-            RulePositionState(StateNumber(2), RulePosition(r_S, 0, 0),null, setEOT, setEOT)
+            RulePositionState(StateNumber(2), RulePosition(r_S, 0, 0), null, setEOT, setEOT)
         )
 
         assertDeepEquals(expected, actual)
@@ -68,15 +62,15 @@ class test_concatenation {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s2 = RulePositionState(StateNumber(0), RulePosition(r_S, 0, 0),null,setEOT, setEOT)
+        val s2 = RulePositionState(StateNumber(0), RulePosition(r_S, 0, 0),null, setEOT, setEOT)
         val rp_a_E = RulePosition(r_a, 0, RulePosition.END_OF_RULE)
         val hlh = setEOT
         val glh = setEOT
-        val lookingFor = RulePositionState(StateNumber(1), rp_a_E, null,hlh, glh)
+        val lookingFor = RulePositionState(StateNumber(1), rp_a_E, null, hlh, glh)
 
         val actual = sut.growsInto(gr, s2, lookingFor)
         val expected = setOf(
-            RulePositionState(StateNumber(0), RulePosition(r_S, 0, 0), null,setEOT, setEOT)
+            RulePositionState(StateNumber(0), RulePosition(r_S, 0, 0), null, setEOT, setEOT)
         )
 
         assertDeepEquals(expected, actual)
@@ -100,11 +94,11 @@ class test_concatenation {
         val rp_a_E = RulePosition(r_a, 0, RulePosition.END_OF_RULE)
         val hlh = setEOT
         val glh = setEOT
-        val lookingFor = RulePositionState(StateNumber(1), rp_a_E, null,hlh, glh)
+        val lookingFor = RulePositionState(StateNumber(1), rp_a_E, null, hlh, glh)
 
         val actual = sut.growsInto(gr, s0, lookingFor)
         val expected = setOf(
-            RulePositionState(StateNumber(3), RulePosition(r_S, 0, 0), null,setOf(r_b), setEOT)
+            RulePositionState(StateNumber(3), RulePosition(r_S, 0, 0), null, setOf(r_b), setEOT)
         )
         assertDeepEquals(expected, actual)
     }
@@ -123,15 +117,15 @@ class test_concatenation {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s2 = RulePositionState(StateNumber(1), RulePosition(r_S, 0, 0),null, setOf(r_b), setOf(RuntimeRuleSet.END_OF_TEXT))
+        val s2 = RulePositionState(StateNumber(1), RulePosition(r_S, 0, 0), null, setOf(r_b), setOf(RuntimeRuleSet.END_OF_TEXT))
         val rp_a_E = RulePosition(r_a, 0, RulePosition.END_OF_RULE)
         val hlh = setEOT
         val glh = setEOT
-        val lookingFor = RulePositionState(StateNumber(1), rp_a_E, null,hlh, glh)
+        val lookingFor = RulePositionState(StateNumber(1), rp_a_E, null, hlh, glh)
 
         val actual = sut.growsInto(gr, s2, lookingFor)
         val expected = setOf(
-            RulePositionState(StateNumber(0), RulePosition(r_S, 0, 0), null,setOf(r_b), setEOT)
+            RulePositionState(StateNumber(0), RulePosition(r_S, 0, 0), null, setOf(r_b), setEOT)
         )
 
         assertDeepEquals(expected, actual)

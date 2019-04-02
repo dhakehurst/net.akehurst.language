@@ -14,16 +14,9 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure
+package net.akehurst.language.agl.runtime.structure.RuntimeRuleSet.nextPossibleRulePositionStates
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.api.parser.ParseException
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.ScannerlessParser
-import kotlin.test.BeforeTest
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class test_multi {
 

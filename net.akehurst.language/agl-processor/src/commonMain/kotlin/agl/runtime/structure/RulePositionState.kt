@@ -16,16 +16,15 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+inline class StateNumber(val value:Int)
+
 class RulePositionState(
-    val stateNumber: Int,
+    val stateNumber: StateNumber,
     val rulePosition: RulePosition,
+    val parent: RulePosition?,
     val heightLookahead: Set<RuntimeRule>,
     val graftLookahead: Set<RuntimeRule>
 ) {
-
-    companion object {
-        val END_OF_RULE = -1
-    }
 
     val items:Set<RuntimeRule> get() { return this.rulePosition.items }
     val runtimeRule:RuntimeRule get() { return this.rulePosition.runtimeRule }
@@ -34,8 +33,10 @@ class RulePositionState(
 
     val isAtEnd: Boolean get() { return this.rulePosition.isAtEnd }
 
+    // --- Any ---
+
     override fun hashCode(): Int {
-        return stateNumber
+        return stateNumber.value
     }
 
     override fun equals(other: Any?): Boolean {
@@ -55,6 +56,21 @@ class RulePositionState(
             && this.rulePosition == rps2.rulePosition
             && this.heightLookahead == rps2.heightLookahead
             && this.graftLookahead == rps2.graftLookahead
+    }
+
+}
+
+data class Transition(
+    val from: RulePositionState,
+    val to: RulePositionState,
+    val action: ParseAction,
+    val item: RuntimeRule,
+    val lookaheadGuard: Set<RuntimeRule>
+) {
+    enum class ParseAction {
+        HEIGHT, //reduce first
+        GRAFT,  //reduce other
+        WIDTH,  //shift
     }
 
 }
