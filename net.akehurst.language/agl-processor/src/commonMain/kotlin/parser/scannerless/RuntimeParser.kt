@@ -95,14 +95,16 @@ internal class RuntimeParser(
         transitions.forEach {
             when(it.action) {
                 Transition.ParseAction.WIDTH -> doWidth(gn, previous, it)
+                Transition.ParseAction.HEIGHT -> doHeight(gn, previous, it)
+                Transition.ParseAction.GRAFT -> doGraft(gn, previous, it)
             }
         }
 
         //TODO("RP should indicate whether to do height or graft")
         // term a from S1 = S . a  ==> must be a graft
         // term a from S = . a ==> must be height
-        this.tryGrowHeight(gn, previous)
-        this.tryGraftInto(gn, previous)
+        //this.tryGrowHeight(gn, previous)
+        //this.tryGraftInto(gn, previous)
         //this.tryShift(gn, previous)
     }
 
@@ -113,6 +115,18 @@ internal class RuntimeParser(
         }
     }
 
+    private fun doHeight(gn: GrowingNode, previous: PreviousInfo, transition:Transition) {
+        val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
+            ?: throw ParseException("Should never be null")
+
+        this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, complete, setOf(previous), gn.skipNodes)
+    }
+
+    private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition:Transition) {
+        val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
+            ?: throw ParseException("Should never be null")
+        this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentRulePositionState.position, gn.skipNodes)
+    }
 
     private fun tryGrowWidthWithSkipRules(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
         var modified = false
