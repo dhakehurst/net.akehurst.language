@@ -346,19 +346,20 @@ internal class ParseGraph(
     }
 
     //TODO: addPrevious! goalrule growing node, maybe
-    fun start(goalState: RulePositionState, runtimeRuleSet: RuntimeRuleSet) {
-        this.currentUserGoalRule = goalState.rulePosition.runtimeRule
+    fun start(userGoalRule: RuntimeRule, goalState: RulePositionState, runtimeRuleSet: RuntimeRuleSet) {
+        this.currentUserGoalRule = userGoalRule
 
         val goalGN = GrowingNode(false, goalState, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
 
         //val startStates = runtimeRuleSet.currentPossibleRulePositionStates(this.currentGoalRule, goalState, goalState.graftLookahead)
         //val x = startStates.filter { it.items.any { it.isTerminal } }
-
-        val start = goalState.items.flatMap {
-            it.calcExpectedRulePositions(0).map {
-                runtimeRuleSet.fetchOrCreateRulePositionState(this.currentUserGoalRule, it, goalState.rulePosition, setOf(RuntimeRuleSet.END_OF_TEXT), setOf(RuntimeRuleSet.END_OF_TEXT))
-            }
-        }
+        val cls = runtimeRuleSet.fetchOrCreateClosure(userGoalRule, goalState)
+        val start = cls.filter { it.runtimeRule == userGoalRule }
+        //val start = goalState.items.flatMap {
+        //    it.calcExpectedRulePositions(0).map {
+        //        runtimeRuleSet.fetchOrCreateRulePositionStateAndItsClosure(userGoalRule, it, goalState.rulePosition, setOf(RuntimeRuleSet.END_OF_TEXT), setOf(RuntimeRuleSet.END_OF_TEXT))
+        //    }
+        //}
 
         for (curRp in start) {
             //val curRp = RulePosition(userGoalRule, 0, 0)

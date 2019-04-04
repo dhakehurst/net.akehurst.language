@@ -59,7 +59,7 @@ internal class RuntimeParser(
 
     fun start(userGoalRule: RuntimeRule) {
         val gState = runtimeRuleSet.startingRulePositionState(userGoalRule)
-        this.graph.start(gState, runtimeRuleSet)
+        this.graph.start(userGoalRule, gState, runtimeRuleSet)
     }
 
     fun grow() {

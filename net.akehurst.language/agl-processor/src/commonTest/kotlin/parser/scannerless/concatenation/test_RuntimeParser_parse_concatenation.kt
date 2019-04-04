@@ -176,4 +176,27 @@ class test_RuntimeParser_parse_concatenation {
         assertEquals(1, ex.location.line, "line is wrong")
         assertEquals(3, ex.location.column, "column is wrong")
     }
+
+    // S = ab c;
+    // ab = 'a' 'b' ;
+    // c = 'c' ;
+    private fun ab_c(): ScannerlessParser {
+        val b = RuntimeRuleSetBuilder()
+        val r_ab = b.rule("ab").concatenation(b.literal("a"),b.literal("b"))
+        val r_c = b.rule("c").concatenation(b.literal("c"))
+        b.rule("S").concatenation(r_ab, r_c)
+        val sp = ScannerlessParser(b.ruleSet())
+        return sp
+    }
+
+    @Test
+    fun ab_c__S__abc() {
+        val sp = this.ab_c()
+        val goalRuleName = "S"
+        val inputText = "abc"
+
+        val actual = test_parse(sp, goalRuleName, inputText)
+
+        assertNotNull(actual)
+    }
 }

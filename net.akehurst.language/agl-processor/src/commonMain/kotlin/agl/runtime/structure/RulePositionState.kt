@@ -23,7 +23,8 @@ class RulePositionState(
     val rulePosition: RulePosition,
     val parent: RulePosition?,
     val heightLookahead: Set<RuntimeRule>,
-    val graftLookahead: Set<RuntimeRule>
+    val graftLookahead: Set<RuntimeRule>,
+    val closureNumber: ClosureNumber = ClosureNumber(-1) //TODO: remove the default value, its just here so I don't have to modify all the tests
 ) {
 
     val items:Set<RuntimeRule> get() { return this.rulePosition.items }
@@ -48,7 +49,7 @@ class RulePositionState(
     }
 
     override fun toString(): String {
-        return "RP($stateNumber,${rulePosition.runtimeRule.name},${rulePosition.choice},${rulePosition.position},$heightLookahead, $graftLookahead)"
+        return "RPS($stateNumber,${rulePosition},$heightLookahead, $graftLookahead)"
     }
 
     fun deepEquals(rps2:RulePositionState) :Boolean {

@@ -496,7 +496,7 @@ class RuntimeRule(
     internal fun calcExpectedRulePositions(position: Int): Set<RulePosition> {
         return when {
             position == RulePosition.END_OF_RULE -> emptySet()
-            this.isTerminal -> setOf(RulePosition(this, 0, 0))
+            this.isTerminal -> setOf(RulePosition(this, 0, -1))
             else -> when (this.rhs.kind) {
                 RuntimeRuleItemKind.EMPTY -> {
                     emptySet()
