@@ -25,7 +25,7 @@ class test_concatenation {
     companion object {
         val setEOT = setOf(RuntimeRuleSet.END_OF_TEXT)
     }
-
+/*
     // growsInto(userGoal, startingAt, lookingFor)
 
     // S = 'a' ;
@@ -130,5 +130,5 @@ class test_concatenation {
 
         assertDeepEquals(expected, actual)
     }
-
+*/
 }

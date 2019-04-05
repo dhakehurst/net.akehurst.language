@@ -21,7 +21,7 @@ inline class StateNumber(val value:Int)
 class RulePositionState(
     val stateNumber: StateNumber,
     val rulePosition: RulePosition,
-    val parent: RulePosition?,
+    val parent: RulePositionState?,
     val heightLookahead: Set<RuntimeRule>,
     val graftLookahead: Set<RuntimeRule>,
     val closureNumber: ClosureNumber = ClosureNumber(-1) //TODO: remove the default value, its just here so I don't have to modify all the tests
@@ -49,7 +49,7 @@ class RulePositionState(
     }
 
     override fun toString(): String {
-        return "RPS($stateNumber,${rulePosition},$heightLookahead, $graftLookahead)"
+        return "RPS(${closureNumber.value},${stateNumber.value},${parent?.rulePosition},${rulePosition},$heightLookahead, $graftLookahead)"
     }
 
     fun deepEquals(rps2:RulePositionState) :Boolean {
@@ -69,9 +69,10 @@ data class Transition(
     val lookaheadGuard: Set<RuntimeRule>
 ) {
     enum class ParseAction {
-        HEIGHT, //reduce first
-        GRAFT,  //reduce other
-        WIDTH,  //shift
+        HEIGHT, // reduce first
+        GRAFT,  // reduce other
+        WIDTH,  // shift
+        GOAL    // goal
     }
 
 }
