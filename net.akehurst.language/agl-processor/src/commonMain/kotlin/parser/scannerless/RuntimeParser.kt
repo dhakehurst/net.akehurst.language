@@ -111,21 +111,42 @@ internal class RuntimeParser(
     private fun doWidth(gn: GrowingNode, previous: PreviousInfo, transition:Transition) {
         val l = this.graph.findOrTryCreateLeaf(transition.item, gn.nextInputPosition)
         if (null!=l) {
-            this.graph.pushToStackOf(false, transition.to, l, gn, setOf(previous), emptySet())
+            val lh = transition.lookaheadGuard
+            val hasLh = lh.any {
+                val l = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition)
+                null != l
+            }
+            if (hasLh) {
+                this.graph.pushToStackOf(false, transition.to, l, gn, setOf(previous), emptySet())
+            }
         }
     }
 
     private fun doHeight(gn: GrowingNode, previous: PreviousInfo, transition:Transition) {
-        val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
-            ?: throw ParseException("Should never be null")
+        val lh = transition.lookaheadGuard
+        val hasLh = lh.any {
+            val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
+            null != l
+        }
+        if (hasLh) {
+            val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
+                ?: throw ParseException("Should never be null")
 
-        this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, complete, setOf(previous), gn.skipNodes)
+            this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, complete, setOf(previous), gn.skipNodes)
+        }
     }
 
     private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition:Transition) {
-        val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
-            ?: throw ParseException("Should never be null")
-        this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentRulePositionState.position, gn.skipNodes)
+        val lh = transition.lookaheadGuard
+        val hasLh = lh.any {
+            val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
+            null != l
+        }
+        if (hasLh) {
+            val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
+                ?: throw ParseException("Should never be null")
+            this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentRulePositionState.position, gn.skipNodes)
+        }
     }
 
     private fun tryGrowWidthWithSkipRules(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {

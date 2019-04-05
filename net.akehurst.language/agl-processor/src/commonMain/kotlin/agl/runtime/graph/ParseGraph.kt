@@ -354,6 +354,7 @@ internal class ParseGraph(
         //val startStates = runtimeRuleSet.currentPossibleRulePositionStates(this.currentGoalRule, goalState, goalState.graftLookahead)
         //val x = startStates.filter { it.items.any { it.isTerminal } }
         val cls = runtimeRuleSet.fetchOrCreateClosure(userGoalRule, goalState)
+        val trans = runtimeRuleSet.transitions(userGoalRule, goalState, setOf(RuntimeRuleSet.END_OF_TEXT))
         val start = cls.filter { it.runtimeRule == userGoalRule }
         //val start = goalState.items.flatMap {
         //    it.calcExpectedRulePositions(0).map {
