@@ -21,7 +21,7 @@ inline class StateNumber(val value:Int)
 class RulePositionState(
     val stateNumber: StateNumber,
     val rulePosition: RulePosition,
-    val parent: RulePositionState?,
+    val ancestorRPs: Set<RulePosition>,
     val heightLookahead: Set<RuntimeRule>,
     val graftLookahead: Set<RuntimeRule>,
     val closureNumber: ClosureNumber = ClosureNumber(-1) //TODO: remove the default value, its just here so I don't have to modify all the tests
@@ -34,6 +34,11 @@ class RulePositionState(
 
     val isAtEnd: Boolean get() { return this.rulePosition.isAtEnd }
 
+    val directParent = ancestorRPs.lastOrNull() // assumes that sets are ordered, which if created via kotlin setOf, they should be.
+    val parentAncestors:Set<RulePosition> = when (ancestorRPs.size) {
+        0-> emptySet<RulePosition>()
+        else ->ancestorRPs - directParent!!
+    }
     // --- Any ---
 
     override fun hashCode(): Int {
@@ -42,19 +47,22 @@ class RulePositionState(
 
     override fun equals(other: Any?): Boolean {
         return if (other is RulePositionState) {
-            other.stateNumber == this.stateNumber
+            other.closureNumber == this.closureNumber
+                && this.rulePosition == other.rulePosition
+
+                && this.heightLookahead == other.heightLookahead
+                && this.graftLookahead == other.graftLookahead
         } else {
             false
         }
     }
 
     override fun toString(): String {
-        return "RPS(${closureNumber.value},${stateNumber.value},${parent?.rulePosition},${rulePosition},$heightLookahead, $graftLookahead)"
+        return "RPS(${closureNumber.value},${stateNumber.value},${rulePosition},$heightLookahead, $graftLookahead, ${ancestorRPs})"
     }
 
     fun deepEquals(rps2:RulePositionState) :Boolean {
-        return this.stateNumber == rps2.stateNumber
-            && this.rulePosition == rps2.rulePosition
+        return this.rulePosition == rps2.rulePosition
             && this.heightLookahead == rps2.heightLookahead
             && this.graftLookahead == rps2.graftLookahead
     }

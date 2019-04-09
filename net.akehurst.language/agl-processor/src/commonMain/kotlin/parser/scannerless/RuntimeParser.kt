@@ -92,7 +92,7 @@ internal class RuntimeParser(
         val prevLh = previous.node.currentRulePositionState.graftLookahead
         val transitions:Set<Transition> = this.runtimeRuleSet.transitions(this.graph.currentUserGoalRule, rps, prevLh)
 
-        transitions.forEach {
+        for(it in transitions) {
             when(it.action) {
                 Transition.ParseAction.WIDTH -> doWidth(gn, previous, it)
                 Transition.ParseAction.HEIGHT -> doHeight(gn, previous, it)
@@ -159,7 +159,7 @@ internal class RuntimeParser(
                 if (null != l) {
                     //val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
                     //newRP.forEach {
-                    val skipRPS = RulePositionState(StateNumber(-1), rp, null, emptySet(), emptySet())
+                    val skipRPS = RulePositionState(StateNumber(-1), rp, emptySet(), emptySet(), emptySet())
                     this.graph.pushToStackOf(true, skipRPS, l, gn, previous, emptySet())
                     modified = true
                     //}

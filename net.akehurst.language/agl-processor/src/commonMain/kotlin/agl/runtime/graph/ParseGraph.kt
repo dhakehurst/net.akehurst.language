@@ -191,7 +191,7 @@ internal class ParseGraph(
         for (info in previous) {
             this.addGrowing(info.node)
         }
-        val curRp = RulePositionState(StateNumber(-1), RulePosition(runtimeRule, 0, RulePosition.END_OF_RULE), null, emptySet(), emptySet())//TODO: get this from the rule so we don't have to create an object here
+        val curRp = RulePositionState(StateNumber(-1), RulePosition(runtimeRule, 0, RulePosition.END_OF_RULE), emptySet(), emptySet(), emptySet())//TODO: get this from the rule so we don't have to create an object here
         val gnindex = GrowingNodeIndex(curRp, startPosition, nextInputPosition) //TODO: not sure we need both tgt and cur for leaves
         val existing = this.growing[gnindex]
         if (null == existing) {
@@ -354,7 +354,7 @@ internal class ParseGraph(
         //val startStates = runtimeRuleSet.currentPossibleRulePositionStates(this.currentGoalRule, goalState, goalState.graftLookahead)
         //val x = startStates.filter { it.items.any { it.isTerminal } }
         val cls = runtimeRuleSet.fetchOrCreateClosure(userGoalRule, goalState)
-        val trans = runtimeRuleSet.transitions(userGoalRule, goalState, setOf(RuntimeRuleSet.END_OF_TEXT))
+        //val trans = runtimeRuleSet.transitions(userGoalRule, goalState, setOf(RuntimeRuleSet.END_OF_TEXT))
         val start = cls.filter { it.runtimeRule == userGoalRule }
         //val start = goalState.items.flatMap {
         //    it.calcExpectedRulePositions(0).map {
