@@ -32,7 +32,7 @@ class test_RuntimeParser_parse_concatenation {
     }
 
 
-    // r = 'a' 'b' 'c' ;
+    // S = 'a' 'b' 'c' ;
     private fun abc1(): ScannerlessParser {
         val b = RuntimeRuleSetBuilder()
         b.rule("S").concatenation(b.literal("a"), b.literal("b"), b.literal("c"))
@@ -41,7 +41,7 @@ class test_RuntimeParser_parse_concatenation {
     }
 
     @Test
-    fun abc1_r_abc() {
+    fun abc1_S_abc() {
         val sp = this.abc1()
         val goalRuleName = "S"
         val inputText = "abc"
@@ -49,7 +49,7 @@ class test_RuntimeParser_parse_concatenation {
         val actual = test_parse(sp, goalRuleName, inputText)
 
         assertNotNull(actual)
-        assertEquals(9,actual.seasons)
+        assertEquals(11,actual.seasons)
     }
 
     @Test
@@ -104,7 +104,7 @@ class test_RuntimeParser_parse_concatenation {
         assertEquals(3, ex.location.column, "column is wrong")
     }
 
-    // r = a b c;
+    // S = a b c;
     // a = 'a' ;
     // b = 'b' ;
     // c = 'c' ;
@@ -119,7 +119,7 @@ class test_RuntimeParser_parse_concatenation {
     }
 
     @Test
-    fun abc2_r_empty() {
+    fun abc2_S_empty() {
         val sp = this.abc2()
         val goalRuleName = "S"
         val inputText = ""
@@ -131,7 +131,7 @@ class test_RuntimeParser_parse_concatenation {
         assertEquals(0, ex.location.column, "column is wrong")
     }
     @Test
-    fun abc2_r_a() {
+    fun abc2_S_a() {
         val sp = this.abc2()
         val goalRuleName = "S"
         val inputText = "a"
@@ -143,7 +143,7 @@ class test_RuntimeParser_parse_concatenation {
         assertEquals(1, ex.location.column, "column is wrong")
     }
     @Test
-    fun abc2_r_ab() {
+    fun abc2_S_ab() {
         val sp = this.abc2()
         val goalRuleName = "S"
         val inputText = "ab"
@@ -155,7 +155,7 @@ class test_RuntimeParser_parse_concatenation {
         assertEquals(2, ex.location.column, "column is wrong")
     }
     @Test
-    fun abc2_r_abc() {
+    fun abc2_S_abc() {
         val sp = this.abc2()
         val goalRuleName = "S"
         val inputText = "abc"
@@ -165,7 +165,7 @@ class test_RuntimeParser_parse_concatenation {
         assertNotNull(actual)
     }
     @Test
-    fun abc2_r_abcd() {
+    fun abc2_S_abcd() {
         val sp = this.abc2()
         val goalRuleName = "S"
         val inputText = "abcd"

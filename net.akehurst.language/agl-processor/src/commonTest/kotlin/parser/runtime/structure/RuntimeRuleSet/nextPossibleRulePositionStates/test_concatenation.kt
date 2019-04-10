@@ -38,7 +38,7 @@ class test_concatenation {
 
         val actual = sut.nextPossibleRulePositionStates(gr, s0, s0.graftLookahead)
         val expected = setOf(
-            RulePositionState(StateNumber(1), RulePosition(gr, 0, 1),null, setEOT,setEOT)
+            RulePositionState(StateNumber(1), RulePosition(gr, 0, 1),emptySet(), setEOT,setEOT)
         )
 
         assertDeepEquals(expected, actual)
@@ -54,11 +54,11 @@ class test_concatenation {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s1 = RulePositionState(StateNumber(0), RulePosition(gr, 0, 1), null,setEOT,setEOT)
+        val s1 = RulePositionState(StateNumber(0), RulePosition(gr, 0, 1), emptySet(),setEOT,setEOT)
 
         val actual = sut.nextPossibleRulePositionStates(gr, s1, s1.graftLookahead)
         val expected = setOf(
-            RulePositionState(StateNumber(1), RulePosition(gr, 0, RulePosition.END_OF_RULE),null, setEOT,setEOT)
+            RulePositionState(StateNumber(1), RulePosition(gr, 0, RulePosition.END_OF_RULE),emptySet(), setEOT,setEOT)
         )
 
         assertDeepEquals(expected, actual)
@@ -74,11 +74,11 @@ class test_concatenation {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s2 = RulePositionState(StateNumber(0), RulePosition(r_S, 0, 0),null, setEOT,setEOT)
+        val s2 = RulePositionState(StateNumber(0), RulePosition(r_S, 0, 0),emptySet(), setEOT,setEOT)
 
         val actual = sut.nextPossibleRulePositionStates(gr, s2, s2.graftLookahead)
         val expected = setOf(
-            RulePositionState(StateNumber(1), RulePosition(r_S, 0, RulePosition.END_OF_RULE), null,setEOT,setEOT)
+            RulePositionState(StateNumber(1), RulePosition(r_S, 0, RulePosition.END_OF_RULE), emptySet(),setEOT,setEOT)
         )
 
         assertDeepEquals(expected, actual)
@@ -99,7 +99,7 @@ class test_concatenation {
 
         val actual = sut.nextPossibleRulePositionStates(gr, s0, s0.graftLookahead)
         val expected = setOf(
-            RulePositionState(StateNumber(1), RulePosition(gr, 0, 1),null, setEOT,setEOT)
+            RulePositionState(StateNumber(1), RulePosition(gr, 0, 1),emptySet(), setEOT,setEOT)
         )
         assertDeepEquals(expected, actual)
     }
@@ -116,11 +116,11 @@ class test_concatenation {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s1 = RulePositionState(StateNumber(1), RulePosition(gr, 0, 1), null,emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+        val s1 = RulePositionState(StateNumber(1), RulePosition(gr, 0, 1), emptySet(),emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
 
         val actual = sut.nextPossibleRulePositionStates(gr, s1, s1.graftLookahead)
         val expected = setOf(
-            RulePositionState(StateNumber(1), RulePosition(gr, 0, RulePosition.END_OF_RULE), null,emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT)) //TODO: really lookahead should be emptySet!
+            RulePositionState(StateNumber(1), RulePosition(gr, 0, RulePosition.END_OF_RULE), emptySet(),emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT)) //TODO: really lookahead should be emptySet!
         )
 
         assertDeepEquals(expected, actual)
@@ -138,11 +138,11 @@ class test_concatenation {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s2 = RulePositionState(StateNumber(1), RulePosition(r_S, 0, 0),null, emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+        val s2 = RulePositionState(StateNumber(1), RulePosition(r_S, 0, 0),emptySet(), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
 
         val actual = sut.nextPossibleRulePositionStates(gr, s2, s2.graftLookahead)
         val expected = setOf(
-            RulePositionState(StateNumber(1), RulePosition(r_S, 0, 1), null,emptySet(),setOf(r_c))
+            RulePositionState(StateNumber(1), RulePosition(r_S, 0, 1), emptySet(),emptySet(),setOf(r_c))
         )
 
         assertDeepEquals(expected, actual)
@@ -160,11 +160,11 @@ class test_concatenation {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s2 = RulePositionState(StateNumber(0), RulePosition(r_S, 0, 1), null, emptySet(),setOf(r_c))
+        val s2 = RulePositionState(StateNumber(0), RulePosition(r_S, 0, 1), emptySet(), emptySet(),setOf(r_c))
 
         val actual = sut.nextPossibleRulePositionStates(gr, s2, s2.graftLookahead)
         val expected = setOf(
-            RulePositionState(StateNumber(1), RulePosition(r_S, 0, 1),null, emptySet(),setOf(r_c))
+            RulePositionState(StateNumber(1), RulePosition(r_S, 0, 1),emptySet(), emptySet(),setOf(r_c))
         )
 
         assertDeepEquals(expected, actual)
