@@ -26,7 +26,7 @@ import net.akehurst.language.parser.scannerless.InputFromCharSequence
 import net.akehurst.language.parser.sppt.*
 
 internal class ParseGraph(
-    private val userGoalRule: RuntimeRule,
+     val userGoalRule: RuntimeRule,
     private val input: InputFromCharSequence
 ) {
     private val leaves: MutableMap<LeafIndex, SPPTLeafDefault> = mutableMapOf()
@@ -45,7 +45,7 @@ internal class ParseGraph(
             return this._goals
         }
 
-    lateinit var currentUserGoalRule: RuntimeRule
+    //lateinit var currentUserGoalRule: RuntimeRule
 
     fun longestMatch(longestLastGrown: SPPTNode?, seasons: Int): SPPTNode {
         if (!this.goals.isEmpty() && this.goals.size >= 1) {
@@ -237,11 +237,11 @@ internal class ParseGraph(
     private fun isGoal(completeNode: SPPTNodeDefault): Boolean {
         val isStart = this.input.isStart(completeNode.startPosition)
         val isEnd = this.input.isEnd(completeNode.nextInputPosition)
-        val isGoalRule = this.userGoalRule.number == completeNode.runtimeRule.number
+        val isGoalRule = this.userGoalRule.number == completeNode.asBranch.children[0].runtimeRuleNumber
         return isStart && isEnd && isGoalRule
     }
 
-    private fun checkForGoal(completeNode: SPPTNodeDefault) {
+    fun checkForGoal(completeNode: SPPTNodeDefault) {
         if (this.isGoal(completeNode)) {
             // TODO: maybe need to not have duplicates!
             this._goals.add(completeNode)
@@ -346,8 +346,7 @@ internal class ParseGraph(
     }
 
     //TODO: addPrevious! goalrule growing node, maybe
-    fun start(userGoalRule: RuntimeRule, goalState: RulePositionState, runtimeRuleSet: RuntimeRuleSet) {
-        this.currentUserGoalRule = userGoalRule
+    fun start(goalState: RulePositionState, runtimeRuleSet: RuntimeRuleSet) {
 
         val goalGN = GrowingNode(false, goalState, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
 
@@ -361,13 +360,15 @@ internal class ParseGraph(
         //        runtimeRuleSet.fetchOrCreateRulePositionStateAndItsClosure(userGoalRule, it, goalState.rulePosition, setOf(RuntimeRuleSet.END_OF_TEXT), setOf(RuntimeRuleSet.END_OF_TEXT))
         //    }
         //}
-
+/*
         for (curRp in start) {
             //val curRp = RulePosition(userGoalRule, 0, 0)
             val ugoalGN = GrowingNode(false, curRp, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
             ugoalGN.addPrevious(goalGN)
             this.addGrowingHead(GrowingNodeIndex(curRp, 0, 0), ugoalGN)
         }
+ */
+        this.addGrowingHead(GrowingNodeIndex(goalState, 0, 0), goalGN)
     }
 
     fun pop(gn: GrowingNode): Set<PreviousInfo> {

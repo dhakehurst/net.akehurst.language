@@ -59,7 +59,7 @@ class test_ParseGraph {
 
         val gr = RuntimeRuleSet.createGoal(userGoalRule)
         val startState = RulePositionState(StateNumber(0), RulePosition(gr,0,0), emptySet(), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
-        sut.start(userGoalRule, startState, rrs)
+        sut.start(startState, rrs)
 
         val actual = sut.canGrow
 
