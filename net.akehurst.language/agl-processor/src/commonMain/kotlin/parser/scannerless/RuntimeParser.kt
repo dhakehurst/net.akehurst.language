@@ -80,7 +80,7 @@ internal class RuntimeParser(
             if (gn.runtimeRule.isSkip) {
                 this.tryGraftBackSkipNode(gn, previous)
             } else {
-                if(gn.runtimeRule.isGoal) {
+                if (gn.runtimeRule.isGoal) {
                     this.growGoalNode(gn)
                 } else {
                     for (prev in previous) {
