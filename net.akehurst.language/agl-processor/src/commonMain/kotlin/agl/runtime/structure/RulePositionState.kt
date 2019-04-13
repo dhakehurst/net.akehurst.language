@@ -21,7 +21,7 @@ inline class StateNumber(val value:Int)
 class RulePositionState(
     val stateNumber: StateNumber,
     val rulePosition: RulePosition,
-    val ancestorRPs: Set<RulePosition>,
+    val ancestorRPs: List<RulePosition>,
     val heightLookahead: Set<RuntimeRule>,
     val graftLookahead: Set<RuntimeRule>,
     val closureNumber: ClosureNumber = ClosureNumber(-1) //TODO: remove the default value, its just here so I don't have to modify all the tests
@@ -35,8 +35,8 @@ class RulePositionState(
     val isAtEnd: Boolean get() { return this.rulePosition.isAtEnd }
 
     val directParent = ancestorRPs.lastOrNull() // assumes that sets are ordered, which if created via kotlin setOf, they should be.
-    val parentAncestors:Set<RulePosition> = when (ancestorRPs.size) {
-        0-> emptySet<RulePosition>()
+    val parentAncestors:List<RulePosition> = when (ancestorRPs.size) {
+        0-> emptyList<RulePosition>()
         else ->ancestorRPs - directParent!!
     }
     // --- Any ---

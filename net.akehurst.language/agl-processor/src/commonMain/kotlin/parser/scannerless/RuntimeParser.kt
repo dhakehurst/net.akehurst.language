@@ -94,7 +94,7 @@ internal class RuntimeParser(
     private fun growGoalNode(gn: GrowingNode) {
         //no previous, so gn must be the Goal node
         val rps = gn.currentRulePositionState
-        val transitions: Set<Transition> = this.runtimeRuleSet.transitions(this.graph.userGoalRule, rps)
+        val transitions: Set<Transition> = this.runtimeRuleSet.transitions(this.graph.userGoalRule, rps, null)
 
         for (it in transitions) {
             when (it.action) {
@@ -108,7 +108,7 @@ internal class RuntimeParser(
 
     private fun growWithPrev(gn: GrowingNode, previous: PreviousInfo) {
         val rps = gn.currentRulePositionState
-        val transitions: Set<Transition> = this.runtimeRuleSet.transitions(this.graph.userGoalRule, rps)
+        val transitions: Set<Transition> = this.runtimeRuleSet.transitions(this.graph.userGoalRule, rps, previous.node.currentRulePositionState)
 
         for (it in transitions) {
             when (it.action) {
@@ -184,7 +184,7 @@ internal class RuntimeParser(
                 if (null != l) {
                     //val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
                     //newRP.forEach {
-                    val skipRPS = RulePositionState(StateNumber(-1), rp, emptySet(), emptySet(), emptySet())
+                    val skipRPS = RulePositionState(StateNumber(-1), rp, emptyList(), emptySet(), emptySet())
                     this.graph.pushToStackOf(true, skipRPS, l, gn, previous, emptySet())
                     modified = true
                     //}

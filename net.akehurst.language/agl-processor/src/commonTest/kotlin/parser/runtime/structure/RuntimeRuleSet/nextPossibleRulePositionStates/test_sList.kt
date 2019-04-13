@@ -33,11 +33,11 @@ class test_sList {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s1 = RulePositionState(StateNumber(1), RulePosition(r_a, 0, 2),emptySet(), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+        val s1 = RulePositionState(StateNumber(1), RulePosition(r_a, 0, 2),emptyList(), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
 
         val actual = sut.nextPossibleRulePositionStates(gr, s1, s1.graftLookahead)
         val expected = setOf(
-            RulePositionState(StateNumber(1), RulePosition(r_a, 0, 0),emptySet(),emptySet(), setOf(RuntimeRuleSet.END_OF_TEXT))
+            RulePositionState(StateNumber(1), RulePosition(r_a, 0, 0),emptyList(),emptySet(), setOf(RuntimeRuleSet.END_OF_TEXT))
         )
         assertDeepEquals(expected, actual)
     }
@@ -53,11 +53,11 @@ class test_sList {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s1 = RulePositionState(StateNumber(1), RulePosition(r_a, 0, 2), emptySet(),emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+        val s1 = RulePositionState(StateNumber(1), RulePosition(r_a, 0, 2), emptyList(),emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
 
         val actual = sut.nextPossibleRulePositionStates(gr, s1, s1.graftLookahead)
         val expected = setOf(
-            RulePositionState(StateNumber(1), RulePosition(r_a, 0, 0), emptySet(),emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+            RulePositionState(StateNumber(1), RulePosition(r_a, 0, 0), emptyList(),emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
         )
         assertDeepEquals(expected, actual)
     }
@@ -73,11 +73,11 @@ class test_sList {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s1 = RulePositionState(StateNumber(1), RulePosition(r_a, 0, 2),emptySet(), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+        val s1 = RulePositionState(StateNumber(1), RulePosition(r_a, 0, 2),emptyList(), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
 
         val actual = sut.nextPossibleRulePositionStates(gr, s1, s1.graftLookahead)
         val expected = setOf(
-            RulePositionState(StateNumber(1), RulePosition(r_a, 0, 0),emptySet(), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+            RulePositionState(StateNumber(1), RulePosition(r_a, 0, 0),emptyList(), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
         )
         assertDeepEquals(expected, actual)
     }
@@ -94,11 +94,11 @@ class test_sList {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s1 = RulePositionState(StateNumber(1), RulePosition(r_a, 0, 2),emptySet(), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+        val s1 = RulePositionState(StateNumber(1), RulePosition(r_a, 0, 2),emptyList(), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
 
         val actual = sut.nextPossibleRulePositionStates(gr, s1, s1.graftLookahead)
         val expected = setOf(
-            RulePositionState(StateNumber(1), RulePosition(r_a, 0, 0), emptySet(),emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+            RulePositionState(StateNumber(1), RulePosition(r_a, 0, 0), emptyList(),emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
         )
         assertDeepEquals(expected, actual)
     }
@@ -114,11 +114,11 @@ class test_sList {
         val s0 = sut.startingRulePositionState(r_S)
         val gr = s0.rulePosition.runtimeRule
 
-        val s1 = RulePositionState(StateNumber(1), RulePosition(r_a, 0, 2), emptySet(),emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+        val s1 = RulePositionState(StateNumber(1), RulePosition(r_a, 0, 2), emptyList(),emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
 
         val actual = sut.nextPossibleRulePositionStates(gr, s1, s1.graftLookahead)
         val expected = setOf(
-            RulePositionState(StateNumber(1), RulePosition(r_a, 0, 0), emptySet(),emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+            RulePositionState(StateNumber(1), RulePosition(r_a, 0, 0), emptyList(),emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
         )
         assertDeepEquals(expected, actual)
     }
