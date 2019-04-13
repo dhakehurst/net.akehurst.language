@@ -18,15 +18,15 @@ package net.akehurst.language.agl.runtime.structure
 
 inline class ClosureNumber(val value: Int)
 
-class RulePositionStateClosure(
+class RulePositionClosure(
     val number: ClosureNumber,
-    val root: RulePositionState,
-    val content : Set<RulePositionState> //TODO: enable this to be calculated on demand
+    val root: RulePosition,
+    val content : Set<RulePositionPath> //TODO: enable this to be calculated on demand
 ) {
 
 
     override fun equals(other: Any?): Boolean {
-        if (other is RulePositionStateClosure) {
+        if (other is RulePositionClosure) {
             return this.number == other.number
         } else {
             return false
@@ -38,7 +38,7 @@ class RulePositionStateClosure(
     }
 
     override fun toString(): String {
-        return "RPSC(${this.number}, ${this.root.ancestorRPs},${this.root.rulePosition})"
+        return "RPC(${this.number},${this.root})"
     }
 
 }

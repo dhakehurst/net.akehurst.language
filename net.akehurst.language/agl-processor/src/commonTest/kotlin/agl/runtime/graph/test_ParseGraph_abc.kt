@@ -52,7 +52,7 @@ class test_ParseGraph_abc {
         val sut = ParseGraph(r_S,input)
 
         val gr = RuntimeRuleSet.createGoal(r_S)
-        val startState = RulePositionState(StateNumber(0), RulePosition(gr,0,0), emptyList(),emptySet(), setOf(RuntimeRuleSet.END_OF_TEXT))
+        val startState = RulePosition(gr,0,0)
         sut.start(startState, rrs)
 
         assertEquals(true, gr.isGoal)
@@ -61,7 +61,7 @@ class test_ParseGraph_abc {
 
         val head = sut.growingHead.values.first()
         assertEquals(gr, head.previous.values.first().node.runtimeRule)
-        assertEquals(0, head.previous.values.first().node.currentRulePositionState.position)
+        assertEquals(0, head.previous.values.first().node.currentRulePosition.position)
     }
 
     @Test
@@ -73,7 +73,7 @@ class test_ParseGraph_abc {
         val sut = ParseGraph(userGoalRule,input)
 
         val gr = RuntimeRuleSet.createGoal(userGoalRule)
-        val startState = RulePositionState(StateNumber(0), RulePosition(gr,0,0), emptyList(), emptySet(),setOf(RuntimeRuleSet.END_OF_TEXT))
+        val startState = RulePosition(gr,0,0)
         sut.start(startState, rrs)
 
         val actual = sut.canGrow

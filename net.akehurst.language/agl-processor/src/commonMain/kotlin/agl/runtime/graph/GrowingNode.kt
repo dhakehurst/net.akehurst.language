@@ -25,7 +25,7 @@ import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class GrowingNode(
     val isSkipGrowth : Boolean,
-    val currentRulePositionState : RulePositionState, // current rp of this node, it is growing, this changes (for new node) when children are added
+    val currentRulePosition : RulePosition, // current rp of this node, it is growing, this changes (for new node) when children are added
     val startPosition: Int,
     val nextInputPosition: Int,
     val priority: Int,
@@ -33,14 +33,14 @@ class GrowingNode(
     val numNonSkipChildren: Int
 ) {
     //FIXME: shouldn't really do this, shouldn't store these in sets!!
-    private val hashCode_cache = arrayOf(this.currentRulePositionState, this.startPosition, this.nextInputPosition).contentHashCode()
+    private val hashCode_cache = arrayOf(this.currentRulePosition, this.startPosition, this.nextInputPosition).contentHashCode()
 
     val matchedTextLength:Int = this.nextInputPosition - this.startPosition
-    val runtimeRule get() = currentRulePositionState.runtimeRule
+    val runtimeRule get() = currentRulePosition.runtimeRule
 
     var previous: MutableMap<GrowingNodeIndex, PreviousInfo> = mutableMapOf()
     val next: MutableList<GrowingNode> = mutableListOf()
-    val hasCompleteChildren: Boolean = this.currentRulePositionState.isAtEnd //this.runtimeRule.isCompleteChildren(currentRulePosition.position, numNonSkipChildren, children)
+    val hasCompleteChildren: Boolean = this.currentRulePosition.isAtEnd //this.runtimeRule.isCompleteChildren(currentRulePosition.position, numNonSkipChildren, children)
     val isLeaf: Boolean
         get() {
             return this.runtimeRule.isTerminal
@@ -52,7 +52,7 @@ class GrowingNode(
     val isEmptyMatch: Boolean
         get() {
             // match empty if start and next-input positions are the same and children are complete
-            return this.currentRulePositionState.isAtEnd && this.startPosition == this.nextInputPosition
+            return this.currentRulePosition.isAtEnd && this.startPosition == this.nextInputPosition
         }
 
     val canGrowWidth: Boolean by lazy {
@@ -60,22 +60,22 @@ class GrowingNode(
         if (this.isLeaf or this.isEmptyMatch ) {//or this.hasCompleteChildren) {
             false
         } else {
-            this.runtimeRule.canGrowWidth(this.currentRulePositionState.position)
+            this.runtimeRule.canGrowWidth(this.currentRulePosition.position)
         }
     }
 
 
     val hasNextExpectedItem: Boolean
         get() {
-            return this.runtimeRule.findHasNextExpectedItem(this.currentRulePositionState.position)
+            return this.runtimeRule.findHasNextExpectedItem(this.currentRulePosition.position)
         }
 
     val nextExpectedItems: Set<RuntimeRule> by lazy {
-        this.runtimeRule.findNextExpectedItems(this.currentRulePositionState.position)
+        this.runtimeRule.findNextExpectedItems(this.currentRulePosition.position)
     }
 
     val incrementedNextItemIndex: Int get(){
-        return this.runtimeRule.incrementNextItemIndex(this.currentRulePositionState.position)
+        return this.runtimeRule.incrementNextItemIndex(this.currentRulePosition.position)
     }
 
     var skipNodes = mutableListOf<SPPTNode>()
@@ -88,13 +88,13 @@ class GrowingNode(
         this.previous = mutableMapOf()
     }
     fun addPrevious(info: PreviousInfo) {
-        val gi = GrowingNodeIndex(info.node.currentRulePositionState, info.node.startPosition,info.node.nextInputPosition)
+        val gi = GrowingNodeIndex(info.node.currentRulePosition, info.node.startPosition,info.node.nextInputPosition)
         this.previous.put(gi,info)
         info.node.addNext(this)
     }
     fun addPrevious(previousNode: GrowingNode) {
         val info = PreviousInfo(previousNode)
-        val gi = GrowingNodeIndex(previousNode.currentRulePositionState, previousNode.startPosition,previousNode.nextInputPosition)
+        val gi = GrowingNodeIndex(previousNode.currentRulePosition, previousNode.startPosition,previousNode.nextInputPosition)
         this.previous.put(gi,info)
         previousNode.addNext(this)
     }
@@ -123,8 +123,8 @@ class GrowingNode(
     }
 */
     fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {
-        var r = "$currentRulePositionState,$startPosition,$nextInputPosition,"
-        r += if (this.hasCompleteChildren) "C" else this.currentRulePositionState.position
+        var r = "$currentRulePosition,$startPosition,$nextInputPosition,"
+        r += if (this.hasCompleteChildren) "C" else this.currentRulePosition.position
         val name = if (this.runtimeRule.isTerminal) "'${this.runtimeRule.patternText}'" else this.runtimeRule.name
         r += ":" + name + "(" + this.runtimeRule.number + ")"
 
@@ -181,7 +181,7 @@ class GrowingNode(
     override fun equals(other: Any?): Boolean {
         // assume obj is also a GrowingNode, should never be compared otherwise
         if (other is GrowingNode) {
-            return this.currentRulePositionState == other.currentRulePositionState
+            return this.currentRulePosition == other.currentRulePosition
                     && this.startPosition == other.startPosition
                     && this.nextInputPosition == other.nextInputPosition
         } else {

@@ -14,33 +14,20 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure.RuntimeRuleSet.nextPossibleRulePositionStates
+package net.akehurst.language.agl.runtime.structure
 
-import kotlin.test.Test
-
-class test_multi {
-
-    //TODO: multi
-
-    // S = 'a'?
-
-    // S = 'a'*
-
-    // S = 'a'+
-
-    // S = a?
-    // a = 'a'
-
-    // S = a*
-    // a = 'a'
-
-    // S = a+
-    // a = 'a'
-
-    @Test
-    fun sList_lookahead__S_empty_0() {
-        TODO()
+data class Transition(
+    val from: RulePosition,
+    val to: RulePosition,
+    val action: ParseAction,
+    val item: RuntimeRule,
+    val lookaheadGuard: Set<RuntimeRule>
+) {
+    enum class ParseAction {
+        HEIGHT, // reduce first
+        GRAFT,  // reduce other
+        WIDTH,  // shift
+        GOAL    // goal
     }
-
 
 }

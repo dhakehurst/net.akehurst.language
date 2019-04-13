@@ -16,14 +16,10 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-inline class StateNumber(val value:Int)
-
-class RulePositionState(
+class RulePositionPath(
     val stateNumber: StateNumber,
     val rulePosition: RulePosition,
-    val ancestorRPs: List<RulePosition>,
-    val graftLookahead: Set<RuntimeRule>,
-    val closureNumber: ClosureNumber = ClosureNumber(-1) //TODO: remove the default value, its just here so I don't have to modify all the tests
+    val ancestorRPs: List<RulePosition>
 ) {
 
     val items:Set<RuntimeRule> get() { return this.rulePosition.items }
@@ -46,19 +42,18 @@ class RulePositionState(
 
     override fun equals(other: Any?): Boolean {
         return if (other is RulePositionState) {
-            other.closureNumber == this.closureNumber
-                && this.rulePosition == other.rulePosition
+            this.rulePosition == other.rulePosition && this.ancestorRPs == other.ancestorRPs
         } else {
             false
         }
     }
 
     override fun toString(): String {
-        return "RPS(${closureNumber.value},${stateNumber.value},${rulePosition},${ancestorRPs})"
+        return "RPP(${stateNumber.value},${rulePosition},${ancestorRPs})"
     }
 
-    fun deepEquals(rps2:RulePositionState) :Boolean {
-        return this.rulePosition == rps2.rulePosition
+    fun deepEquals(other:RulePositionState) :Boolean {
+        return this.rulePosition == other.rulePosition && this.ancestorRPs == other.ancestorRPs
     }
 
 }
