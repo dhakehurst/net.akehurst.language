@@ -17,9 +17,8 @@
 package net.akehurst.language.agl.runtime.structure
 
 class RulePositionPath(
-    val stateNumber: StateNumber,
-    val rulePosition: RulePosition,
-    val ancestorRPs: List<RulePosition>
+    val ancestorRPs: List<RulePosition>,
+    val rulePosition: RulePosition
 ) {
 
     val items:Set<RuntimeRule> get() { return this.rulePosition.items }
@@ -37,7 +36,7 @@ class RulePositionPath(
     // --- Any ---
 
     override fun hashCode(): Int {
-        return stateNumber.value
+        return rulePosition.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
@@ -49,11 +48,7 @@ class RulePositionPath(
     }
 
     override fun toString(): String {
-        return "RPP(${stateNumber.value},${rulePosition},${ancestorRPs})"
-    }
-
-    fun deepEquals(other:RulePositionState) :Boolean {
-        return this.rulePosition == other.rulePosition && this.ancestorRPs == other.ancestorRPs
+        return "RPP(${ancestorRPs},${rulePosition})"
     }
 
 }
