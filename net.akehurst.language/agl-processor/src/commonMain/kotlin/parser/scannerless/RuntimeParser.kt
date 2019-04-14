@@ -141,7 +141,7 @@ internal class RuntimeParser(
                 val l = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition)
                 null != l
             }
-            if (hasLh) {
+            if (hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
                 this.graph.pushToStackOf(false, transition.to, l, gn, previousSet, emptySet())
             }
         }
@@ -167,7 +167,7 @@ internal class RuntimeParser(
             val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
             null != l
         }
-        if (hasLh) {
+        if (hasLh|| transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
             val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
                 ?: throw ParseException("Should never be null")
             this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentRulePosition.position, gn.skipNodes)
