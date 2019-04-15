@@ -17,11 +17,13 @@
 package net.akehurst.language.agl.runtime.structure
 
 data class Transition(
-    val from: RulePosition,
-    val to: RulePosition,
+    val from: RulePositionState,
+    val to: RulePositionState,
     val action: ParseAction,
     val item: RuntimeRule,
-    val lookaheadGuard: Set<RuntimeRule>
+    val lookaheadGuard: Set<RuntimeRule>,
+    val prevGuard : RulePositionState?
+//TODO: add previousGuard for use in graft
 ) {
     enum class ParseAction {
         HEIGHT, // reduce first

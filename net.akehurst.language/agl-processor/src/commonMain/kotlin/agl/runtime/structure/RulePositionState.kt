@@ -19,11 +19,8 @@ package net.akehurst.language.agl.runtime.structure
 inline class StateNumber(val value:Int)
 
 class RulePositionState(
-    val stateNumber: StateNumber,
     val rulePosition: RulePosition,
-    val ancestorRPs: List<RulePosition>,
-    val graftLookahead: Set<RuntimeRule>,
-    val closureNumber: ClosureNumber = ClosureNumber(-1) //TODO: remove the default value, its just here so I don't have to modify all the tests
+    val graftLookahead: Set<RuntimeRule>
 ) {
 
     val items:Set<RuntimeRule> get() { return this.rulePosition.items }
@@ -31,34 +28,26 @@ class RulePositionState(
     val choice:Int get() { return this.rulePosition.choice }
     val position:Int get() { return this.rulePosition.position }
 
+    val isAtStart: Boolean get() { return this.rulePosition.isAtStart }
     val isAtEnd: Boolean get() { return this.rulePosition.isAtEnd }
 
-    val directParent = ancestorRPs.lastOrNull() // assumes that sets are ordered, which if created via kotlin setOf, they should be.
-    val parentAncestors:List<RulePosition> = when (ancestorRPs.size) {
-        0-> emptyList<RulePosition>()
-        else ->ancestorRPs - directParent!!
-    }
     // --- Any ---
 
     override fun hashCode(): Int {
-        return stateNumber.value
+        return rulePosition.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
         return if (other is RulePositionState) {
-            other.closureNumber == this.closureNumber
-                && this.rulePosition == other.rulePosition
+            other.rulePosition == this.rulePosition
+                && this.graftLookahead == other.graftLookahead
         } else {
             false
         }
     }
 
     override fun toString(): String {
-        return "RPS(${closureNumber.value},${stateNumber.value},${rulePosition},${ancestorRPs})"
-    }
-
-    fun deepEquals(rps2:RulePositionState) :Boolean {
-        return this.rulePosition == rps2.rulePosition
+        return "RPS(${rulePosition},${graftLookahead})"
     }
 
 }

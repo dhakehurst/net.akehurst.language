@@ -17,21 +17,36 @@
 package net.akehurst.language.agl.runtime.structure
 
 class RulePositionPath(
-    val ancestorRPs: List<RulePosition>,
-    val rulePosition: RulePosition
+        val ancestorRPs: List<RulePositionState>,
+        val rulePosition: RulePositionState
 ) {
 
-    val items:Set<RuntimeRule> get() { return this.rulePosition.items }
-    val runtimeRule:RuntimeRule get() { return this.rulePosition.runtimeRule }
-    val choice:Int get() { return this.rulePosition.choice }
-    val position:Int get() { return this.rulePosition.position }
+    val items: Set<RuntimeRule>
+        get() {
+            return this.rulePosition.items
+        }
+    val runtimeRule: RuntimeRule
+        get() {
+            return this.rulePosition.runtimeRule
+        }
+    val choice: Int
+        get() {
+            return this.rulePosition.choice
+        }
+    val position: Int
+        get() {
+            return this.rulePosition.position
+        }
 
-    val isAtEnd: Boolean get() { return this.rulePosition.isAtEnd }
+    val isAtEnd: Boolean
+        get() {
+            return this.rulePosition.isAtEnd
+        }
 
     val directParent = ancestorRPs.lastOrNull() // assumes that sets are ordered, which if created via kotlin setOf, they should be.
-    val parentAncestors:List<RulePosition> = when (ancestorRPs.size) {
-        0-> emptyList<RulePosition>()
-        else ->ancestorRPs - directParent!!
+    val parentAncestors: List<RulePositionState> = when (ancestorRPs.size) {
+        0 -> emptyList<RulePositionState>()
+        else -> ancestorRPs - directParent!!
     }
     // --- Any ---
 
@@ -40,8 +55,33 @@ class RulePositionPath(
     }
 
     override fun equals(other: Any?): Boolean {
-        return if (other is RulePositionState) {
+        return if (other is RulePositionPath) {
             this.rulePosition == other.rulePosition && this.ancestorRPs == other.ancestorRPs
+        } else {
+            false
+        }
+    }
+
+    override fun toString(): String {
+        return "RPP(${ancestorRPs},${rulePosition})"
+    }
+
+}
+
+class RulePositionWithGlhPath(
+        val ancestorRPs: List<Pair<RulePosition, Set<RuntimeRule>>>,
+        val rulePosition: Pair<RulePosition, Set<RuntimeRule>>
+) {
+    // --- Any ---
+
+    override fun hashCode(): Int {
+        return rulePosition.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return if (other is RulePositionWithGlhPath) {
+            this.rulePosition == other.rulePosition //
+                    && this.ancestorRPs == other.ancestorRPs
         } else {
             false
         }

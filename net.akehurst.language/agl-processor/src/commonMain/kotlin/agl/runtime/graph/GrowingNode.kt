@@ -16,16 +16,13 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
-import net.akehurst.language.agl.runtime.structure.RulePositionState
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class GrowingNode(
     val isSkipGrowth : Boolean,
-    val currentRulePosition : RulePosition, // current rp of this node, it is growing, this changes (for new node) when children are added
+    val currentRulePosition : RulePositionState, // current rp of this node, it is growing, this changes (for new node) when children are added
     val startPosition: Int,
     val nextInputPosition: Int,
     val priority: Int,

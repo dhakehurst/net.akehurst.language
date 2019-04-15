@@ -25,8 +25,8 @@ import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.parser.sppt.SPPTBranchDefault
 
 internal class RuntimeParser(
-    private val runtimeRuleSet: RuntimeRuleSet,
-    private val graph: ParseGraph
+        private val runtimeRuleSet: RuntimeRuleSet,
+        private val graph: ParseGraph
 ) {
     // copy of graph growing head for each iteration, cached to that we can find best match in case of error
     private var toGrow: List<GrowingNode> = listOf()
@@ -129,7 +129,7 @@ internal class RuntimeParser(
 
     private fun doGoal(gn: GrowingNode) {
         val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
-            ?: throw ParseException("Should never be null")
+                ?: throw ParseException("Should never be null")
         this.graph.checkForGoal(complete)
     }
 
@@ -155,22 +155,24 @@ internal class RuntimeParser(
         }
         if (hasLh) {
             val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
-                ?: throw ParseException("Should never be null")
+                    ?: throw ParseException("Should never be null")
 
             this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, complete, setOf(previous), gn.skipNodes)
         }
     }
 
     private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
-        val lh = transition.lookaheadGuard
-        val hasLh = lh.any {
-            val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
-            null != l
-        }
-        if (hasLh|| transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
-            val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
-                ?: throw ParseException("Should never be null")
-            this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentRulePosition.position, gn.skipNodes)
+        if (previous.node.currentRulePosition == transition.prevGuard) {
+            val lh = transition.lookaheadGuard
+            val hasLh = lh.any {
+                val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
+                null != l
+            }
+            if (hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
+                val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
+                        ?: throw ParseException("Should never be null")
+                this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentRulePosition.position, gn.skipNodes)
+            }
         }
     }
 
@@ -184,8 +186,8 @@ internal class RuntimeParser(
                 if (null != l) {
                     //val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
                     //newRP.forEach {
-
-                    this.graph.pushToStackOf(true, rp, l, gn, previous, emptySet())
+                    val rpp = RulePositionState(rp, emptySet())
+                    this.graph.pushToStackOf(true, rpp, l, gn, previous, emptySet())
                     modified = true
                     //}
                 }
@@ -197,7 +199,7 @@ internal class RuntimeParser(
 
     private fun tryGraftBackSkipNode(gn: GrowingNode, previous: Set<PreviousInfo>) {
         for (info in previous) {
-           // this.tryGraftInto(gn, info)
+            // this.tryGraftInto(gn, info)
         }
     }
 
