@@ -54,6 +54,12 @@ interface SPPTNode : SharedPackedParseTreeVisitable {
 	 * startPosition + matchedTextLength
 	 */
 	val nextInputPosition: Int
+
+	/**
+	 * the priority of this node according to the grammar (0 if no priority defined by parent rule)
+	 */
+	val priority: Int
+
 	/**
 	 *  all text matched by this node
 	 */

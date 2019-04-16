@@ -148,16 +148,18 @@ internal class RuntimeParser(
     }
 
     private fun doHeight(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
-        val lh = transition.lookaheadGuard
-        val hasLh = lh.any {
-            val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
-            null != l
-        }
-        if (hasLh) {
-            val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
-                    ?: throw ParseException("Should never be null")
+        if (previous.node.currentRulePosition != transition.prevGuard) {
+            val lh = transition.lookaheadGuard
+            val hasLh = lh.any {
+                val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
+                null != l
+            }
+            if (hasLh) {
+                val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
+                        ?: throw ParseException("Should never be null")
 
-            this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, complete, setOf(previous), gn.skipNodes)
+                this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, complete, setOf(previous), gn.skipNodes)
+            }
         }
     }
 

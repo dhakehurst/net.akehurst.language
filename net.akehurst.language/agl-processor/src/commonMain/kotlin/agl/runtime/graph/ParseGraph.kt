@@ -56,11 +56,26 @@ internal class ParseGraph(
                 }
             }
             if (!this.input.isEnd(lt.nextInputPosition + 1)) {
+                //TODO: this can never happen now I think!
                 val llg = longestLastGrown ?: throw ParseException("Internal Error, should not happen")
                 val location = this.input.calcLineAndColumn(llg.nextInputPosition)
                 throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(llg, seasons), location)
             } else {
-                return lt
+                val firstSkipNodes = mutableListOf<SPPTNode>()
+                val userGoalNodes = mutableListOf<SPPTNode>()
+                for(node in lt.asBranch.children) {
+                    if (node.isSkip) {
+                        firstSkipNodes.add(node)
+                    } else if (node.asBranch.runtimeRuleNumber == this.userGoalRule.number){
+                        userGoalNodes.add(node)
+                        break;
+                    }
+                }
+                val userGoalNode = userGoalNodes.first()
+
+                val r= SPPTBranchDefault(this.userGoalRule, userGoalNode.startPosition, userGoalNode.nextInputPosition, userGoalNode.priority)
+                r.childrenAlternatives.add( firstSkipNodes + userGoalNode.asBranch.children )
+                return r
             }
         } else {
             val llg = longestLastGrown ?: throw ParseException("Nothing parsed")

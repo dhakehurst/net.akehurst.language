@@ -26,7 +26,7 @@ abstract class SPPTNodeDefault(
         val runtimeRule: RuntimeRule,
         override val startPosition: Int,
         override val nextInputPosition: Int,
-        val priority: Int                      //not needed as part of the SPPTNode, but needed for the parsing algorithm
+        override val priority: Int                      //not needed as part of the SPPTNode, but needed for the parsing algorithm
 ) : SPPTNode {
 
     override val identity: SPPTNodeIdentity = SPPTNodeIdentityDefault(
