@@ -188,8 +188,11 @@ internal class RuntimeParser(
                 if (null != l) {
                     //val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
                     //newRP.forEach {
-                    val rpp = RulePositionState(rp, emptySet(), emptySet())
-                    this.graph.pushToStackOf(true, rpp, l, gn, previous, emptySet())
+                    val paths = this.runtimeRuleSet.fetchSkipRulePositionPaths(rp)
+                    for(path in paths) {
+                        val rpp = path.rulePosition
+                        this.graph.pushToStackOf(true, rpp, l, gn, previous, emptySet())
+                    }
                     modified = true
                     //}
                 }

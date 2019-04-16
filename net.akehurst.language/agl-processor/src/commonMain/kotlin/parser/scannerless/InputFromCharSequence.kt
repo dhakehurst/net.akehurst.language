@@ -65,7 +65,7 @@ internal class InputFromCharSequence(val text: CharSequence) {
 
     internal fun tryMatchText(position: Int, patternText: String, isPattern: Boolean): String? {
         return when {
-            (position >= this.text.length && patternText== END_OF_TEXT) -> END_OF_TEXT // TODO: should we need to do this?
+            (position >= this.text.length) -> if (patternText== END_OF_TEXT) END_OF_TEXT else null// TODO: should we need to do this?
             (!isPattern) -> this.matchLiteral(position, patternText)
             else -> this.matchRegEx(position, patternText)
         }
