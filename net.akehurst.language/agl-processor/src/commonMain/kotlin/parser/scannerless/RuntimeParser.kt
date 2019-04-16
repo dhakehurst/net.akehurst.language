@@ -188,7 +188,7 @@ internal class RuntimeParser(
                 if (null != l) {
                     //val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
                     //newRP.forEach {
-                    val rpp = RulePositionState(rp, emptySet())
+                    val rpp = RulePositionState(rp, emptySet(), emptySet())
                     this.graph.pushToStackOf(true, rpp, l, gn, previous, emptySet())
                     modified = true
                     //}

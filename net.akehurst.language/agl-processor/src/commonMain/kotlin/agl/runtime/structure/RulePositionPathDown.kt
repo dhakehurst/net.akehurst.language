@@ -16,8 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-class RulePositionPath(
-        //val number:StateNumber,
+class RulePositionPathDown(
         val directParent: RulePositionState?,
         val rulePosition: RulePositionState
 ) {
@@ -44,14 +43,6 @@ class RulePositionPath(
             return this.rulePosition.isAtEnd
         }
 
-/*
-    val parentAncestors: List<RulePositionState> get() {
-        return when (ancestorRPs.size) {
-            0 -> emptyList<RulePositionState>()
-            else -> ancestorRPs - directParent!!
-        }
-    }
- */
     // --- Any ---
 
     override fun hashCode(): Int {
@@ -59,8 +50,7 @@ class RulePositionPath(
     }
 
     override fun equals(other: Any?): Boolean {
-        return if (other is RulePositionPath) {
-            //this.number.value == other.number.value
+        return if (other is RulePositionPathDown) {
             this.rulePosition == other.rulePosition && this.directParent == other.directParent
         } else {
             false
@@ -69,31 +59,6 @@ class RulePositionPath(
 
     override fun toString(): String {
         return "RPP(${directParent},${rulePosition})"
-    }
-
-}
-
-class RulePositionWithGlhPath(
-        val ancestorRPs: List<Pair<RulePosition, Set<RuntimeRule>>>,
-        val rulePosition: Pair<RulePosition, Set<RuntimeRule>>
-) {
-    // --- Any ---
-
-    override fun hashCode(): Int {
-        return rulePosition.hashCode()
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return if (other is RulePositionWithGlhPath) {
-            this.rulePosition == other.rulePosition //
-                    && this.ancestorRPs == other.ancestorRPs
-        } else {
-            false
-        }
-    }
-
-    override fun toString(): String {
-        return "RPP(${ancestorRPs},${rulePosition})"
     }
 
 }

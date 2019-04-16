@@ -21,7 +21,7 @@ inline class ClosureNumber(val value: Int)
 class RulePositionClosure(
     val number: ClosureNumber,
     val root: RulePosition,
-    val content : Set<RulePositionPath> //TODO: enable this to be calculated on demand
+    val content : Set<RulePositionPathDown> //TODO: enable this to be calculated on demand
 ) {
 
 

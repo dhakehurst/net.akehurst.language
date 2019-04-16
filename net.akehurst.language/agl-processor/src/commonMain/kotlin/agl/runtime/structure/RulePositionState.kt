@@ -20,7 +20,8 @@ inline class StateNumber(val value:Int)
 
 class RulePositionState(
     val rulePosition: RulePosition,
-    val graftLookahead: Set<RuntimeRule>
+    val graftLookahead: Set<RuntimeRule>,
+    val heightLookahead: Set<RuntimeRule>
 ) {
 
     val items:Set<RuntimeRule> get() { return this.rulePosition.items }
@@ -41,13 +42,14 @@ class RulePositionState(
         return if (other is RulePositionState) {
             other.rulePosition == this.rulePosition
                 && this.graftLookahead == other.graftLookahead
+                    && this.heightLookahead == other.heightLookahead
         } else {
             false
         }
     }
 
     override fun toString(): String {
-        return "RPS(${rulePosition},${graftLookahead})"
+        return "RPS(${rulePosition},${graftLookahead},${heightLookahead})"
     }
 
 }
