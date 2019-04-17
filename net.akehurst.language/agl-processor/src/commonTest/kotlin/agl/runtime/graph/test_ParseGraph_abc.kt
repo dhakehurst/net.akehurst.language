@@ -51,7 +51,7 @@ class test_ParseGraph_abc {
         val input = InputFromCharSequence(text)
         val sut = ParseGraph(r_S,input)
 
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
         val startState = rrs.startingRulePosition(r_S)
         sut.start(startState, rrs)
 
@@ -72,7 +72,7 @@ class test_ParseGraph_abc {
         val input = InputFromCharSequence(text)
         val sut = ParseGraph(userGoalRule,input)
 
-        val gr = RuntimeRuleSet.createGoal(userGoalRule)
+        val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
         val startState = RulePositionState(RulePosition(gr,0,0), emptySet(),emptySet())
         sut.start(startState, rrs)
 

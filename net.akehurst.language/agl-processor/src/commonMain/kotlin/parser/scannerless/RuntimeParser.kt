@@ -183,28 +183,32 @@ internal class RuntimeParser(
     }
 
     private fun tryGrowWidthWithSkipRules(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
-        var modified = false
-        //      if (gn.currentRulePosition.runtimeRule.isTerminal) { //(gn.canGrowWidthWithSkip) { // don't grow width if its complete...cant graft back
-        val rps = this.runtimeRuleSet.firstSkipRuleTerminalPositions
-        for (rp in rps) {
-            for (rr in rp.runtimeRule.itemsAt[rp.position]) {
-                val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
-                if (null != l) {
-                    //val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
-                    //newRP.forEach {
-                    val leafRp = RulePosition(rr, 0, -1)
-                    val paths = this.runtimeRuleSet.fetchSkipRulePositionPaths(leafRp)
-                    for (path in paths) {
-                        val rpp = path.rulePosition
-                        this.graph.pushToStackOf(true, rpp, l, gn, previous, emptySet())
+        if (gn.isSkipGrowth) {
+            return false //dont grow more skip if currently doing a skip
+        } else {
+            var modified = false
+            //      if (gn.currentRulePosition.runtimeRule.isTerminal) { //(gn.canGrowWidthWithSkip) { // don't grow width if its complete...cant graft back
+            val rps = this.runtimeRuleSet.firstSkipRuleTerminalPositions
+            for (rp in rps) {
+                for (rr in rp.runtimeRule.itemsAt[rp.position]) {
+                    val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
+                    if (null != l) {
+                        //val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
+                        //newRP.forEach {
+                        val leafRp = RulePosition(rr, 0, -1)
+                        val paths = this.runtimeRuleSet.fetchSkipRulePositionPaths(leafRp)
+                        for (path in paths) {
+                            val rpp = path.rulePosition
+                            this.graph.pushToStackOf(true, rpp, l, gn, previous, emptySet())
+                        }
+                        modified = true
+                        //}
                     }
-                    modified = true
-                    //}
                 }
             }
+            //       }
+            return modified
         }
-        //       }
-        return modified
     }
 
     private fun growSkip(gn: GrowingNode, previous: PreviousInfo) {

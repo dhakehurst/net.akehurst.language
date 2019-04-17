@@ -28,11 +28,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val EOT_RULE_NUMBER = -2;
         val END_OF_TEXT = RuntimeRule(EOT_RULE_NUMBER, InputFromCharSequence.END_OF_TEXT, RuntimeRuleKind.TERMINAL, false, false)
 
-        fun createGoal(userGoalRule: RuntimeRule): RuntimeRule {
+        fun createGoalRule(userGoalRule: RuntimeRule): RuntimeRule {
             val gr = RuntimeRule(GOAL_RULE_NUMBER, "<GOAL>", RuntimeRuleKind.GOAL, false, false)
             gr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, arrayOf(userGoalRule, END_OF_TEXT))
             return gr
         }
+
     }
 
     private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
@@ -752,12 +753,13 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     fun startingRulePosition(userGoalRule: RuntimeRule): RulePositionState {
-        val goalRule = RuntimeRuleSet.createGoal(userGoalRule)
+        val goalRule = RuntimeRuleSet.createGoalRule(userGoalRule)
         val goalRp = RulePosition(goalRule, 0, 0)
         val goalState = RulePositionState(goalRp, emptySet(), emptySet())
 
-        val states = this.createAllRulePositionPaths(userGoalRule, goalState)
         val skipStates = this.createAllSkipRulePositionPaths(userGoalRule)
+        val states = this.createAllRulePositionPaths(userGoalRule, goalState)
+
         //this.createAllRulePositionPathsAndClosures(userGoalRule, goalRp)
 
         //val userGoalRP = userGoalRule.calcExpectedRulePositions(0).first()
@@ -768,12 +770,6 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
         //return this.fetchRulePositionPaths(userGoalRule, goalRp).first()
         return goalState
-    }
-
-    fun createSkipGoal(skipRule: RuntimeRule): RulePositionState {
-        val skipGoalRule = RuntimeRuleSet.createGoal(skipRule)
-        val skipGoalRP = RulePosition(skipGoalRule, 0, 0)
-        return RulePositionState(skipGoalRP, emptySet(), emptySet())
     }
 
     fun transitions(userGoalRule: RuntimeRule, from: RulePositionState, prevRP: RulePositionState?): Set<Transition> {

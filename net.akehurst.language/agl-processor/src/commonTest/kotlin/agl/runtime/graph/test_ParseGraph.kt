@@ -57,7 +57,7 @@ class test_ParseGraph {
         val input = InputFromCharSequence(text)
         val sut = ParseGraph(userGoalRule,input)
 
-        val gr = RuntimeRuleSet.createGoal(userGoalRule)
+        val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
         val startState = rrs.startingRulePosition(userGoalRule)
         sut.start(startState, rrs)
 

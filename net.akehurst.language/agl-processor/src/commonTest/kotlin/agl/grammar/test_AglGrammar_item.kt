@@ -43,6 +43,25 @@ class test_AglGrammar_item {
     }
 
     @Test
+    fun SINGLE_LINE_COMMENT() {
+        val text = """
+            // a single line comment
+            a
+        """.trimIndent()
+        val actual = parse("IDENTIFIER", text)
+
+        val expected = this.sppt("""
+             IDENTIFIER {
+                SINGLE_LINE_COMMENT { '//.*?$' : '// a single line comment' }
+                WHITESPACE { '\s+' : '9166' }
+                '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a'
+             }
+        """)
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
+    @Test
     fun IDENTIFIER() {
         val actual = parse("IDENTIFIER", "a")
 

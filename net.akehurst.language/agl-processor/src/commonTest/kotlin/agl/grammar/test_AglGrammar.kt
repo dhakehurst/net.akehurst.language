@@ -23,6 +23,24 @@ import kotlin.test.assertNotNull
 class test_AglGrammar {
 
     @Test
+    fun single_line_comment() {
+
+        val grammarStr = """
+            // single line comment
+            namespace test
+            grammar Test {
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+
+    @Test
     fun empty() {
 
         val grammarStr = """

@@ -28,7 +28,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val rb = RuntimeRuleSetBuilder()
         val r_S = rb.rule("S").empty()
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, 0, 0), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf(RulePosition(r_S, 0, RulePosition.END_OF_RULE))
@@ -46,7 +46,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal("c")
         val r_S = rb.rule("S").choiceEqual(r_a, r_b, r_c)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, 0, 0), r_a)
         val expected: Set<RulePosition> = setOf(RulePosition(r_S, 0, RulePosition.END_OF_RULE))
@@ -63,7 +63,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal("c")
         val r_S = rb.rule("S").choiceEqual(r_a, r_b, r_c)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, 0, 0), r_b)
         val expected: Set<RulePosition> = setOf()
@@ -80,7 +80,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal("c")
         val r_S = rb.rule("S").choiceEqual(r_a, r_b, r_c)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, 1, 0), r_b)
         val expected: Set<RulePosition> = setOf(RulePosition(r_S, 1, RulePosition.END_OF_RULE))
@@ -97,7 +97,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal("c")
         val r_S = rb.rule("S").choiceEqual(r_a, r_b, r_c)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, 2, 0), r_c)
         val expected: Set<RulePosition> = setOf(RulePosition(r_S, 2, RulePosition.END_OF_RULE))
@@ -114,7 +114,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal("c")
         val r_S = rb.rule("S").choiceEqual(r_a, r_b, r_c)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, 2, 0), r_a)
         val expected: Set<RulePosition> = setOf()
@@ -135,7 +135,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_a = rb.literal("a")
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf(RulePosition(r_S, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE))
@@ -149,7 +149,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_a = rb.literal("a")
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), r_a)
         val expected: Set<RulePosition> = setOf()
@@ -163,7 +163,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_a = rb.literal("a")
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.MULTI__EMPTY_RULE, 1), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf()
@@ -177,7 +177,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_a = rb.literal("a")
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.MULTI__ITEM, 0), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf()
@@ -191,7 +191,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_a = rb.literal("a")
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.MULTI__ITEM, 1), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf()
@@ -205,7 +205,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_a = rb.literal("a")
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.MULTI__ITEM, 0), r_a)
         val expected: Set<RulePosition> = setOf(
@@ -222,7 +222,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_a = rb.literal("a")
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.MULTI__ITEM, 1), r_a)
         val expected: Set<RulePosition> = setOf(
@@ -243,7 +243,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__EMPTY_RULE, 0), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf(RulePosition(r_S, RuntimeRuleItem.SLIST__EMPTY_RULE, RulePosition.END_OF_RULE))
@@ -258,7 +258,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__EMPTY_RULE, 0), r_a)
         val expected: Set<RulePosition> = setOf()
@@ -273,7 +273,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__EMPTY_RULE, 0), r_c)
         val expected: Set<RulePosition> = setOf()
@@ -288,7 +288,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__EMPTY_RULE, 1), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf()
@@ -303,7 +303,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__EMPTY_RULE, 1), r_a)
         val expected: Set<RulePosition> = setOf()
@@ -318,7 +318,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__EMPTY_RULE, 1), r_c)
         val expected: Set<RulePosition> = setOf()
@@ -333,7 +333,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__EMPTY_RULE, 2), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf()
@@ -348,7 +348,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__EMPTY_RULE, 2), r_a)
         val expected: Set<RulePosition> = setOf()
@@ -363,7 +363,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__EMPTY_RULE, 2), r_c)
         val expected: Set<RulePosition> = setOf()
@@ -378,7 +378,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 0), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf()
@@ -393,7 +393,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 0), r_a)
         val expected: Set<RulePosition> = setOf(
@@ -411,7 +411,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 0), r_c)
         val expected: Set<RulePosition> = setOf()
@@ -426,7 +426,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 1), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf()
@@ -441,7 +441,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 1), r_a)
         val expected: Set<RulePosition> = setOf()
@@ -456,7 +456,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 1), r_c)
         val expected: Set<RulePosition> = setOf()
@@ -471,7 +471,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 2), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf()
@@ -486,7 +486,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 2), r_a)
         val expected: Set<RulePosition> = setOf(
@@ -504,7 +504,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 2), r_c)
         val expected: Set<RulePosition> = setOf()
@@ -519,7 +519,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 0), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf()
@@ -534,7 +534,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 0), r_a)
         val expected: Set<RulePosition> = setOf()
@@ -549,7 +549,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 0), r_c)
         val expected: Set<RulePosition> = setOf()
@@ -564,7 +564,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 1), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf()
@@ -579,7 +579,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 1), r_a)
         val expected: Set<RulePosition> = setOf()
@@ -594,7 +594,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 1), r_c)
         val expected: Set<RulePosition> = setOf(
@@ -611,7 +611,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 2), r_S.emptyRuleItem)
         val expected: Set<RulePosition> = setOf()
@@ -626,7 +626,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 2), r_a)
         val expected: Set<RulePosition> = setOf()
@@ -641,7 +641,7 @@ class test_RuntimeRuleSet_nextRulePosition {
         val r_c = rb.literal(",")
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoal(r_S)
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val actual: Set<RulePosition> = sut.nextRulePosition(RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 2), r_c)
         val expected: Set<RulePosition> = setOf()

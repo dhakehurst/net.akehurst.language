@@ -32,9 +32,9 @@ subprojects {
 
 
 	group 'net.akehurst.language'
-	version '2.1.0-SNAPSHOT'
+	version '3.0.0-SNAPSHOT'
 
-    buildDir = new File(rootProject.projectDir, ".gradle/build/" + project.name)
+    buildDir = new File(rootProject.projectDir, ".gradle_build/" + project.name)
     
 //	sourceCompatibility = '1.8'
 //	targetCompatibility = '1.8'
