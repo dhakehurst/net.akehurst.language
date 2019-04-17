@@ -3,8 +3,11 @@ package parser.scannerless.examples
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class test_AhoSetiUlman_4_5_5 : test_ScannerlessParserAbstract() {
 
@@ -27,11 +30,11 @@ class test_AhoSetiUlman_4_5_5 : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "c"
 
-        val expected = """
-            S { 'c' }
-        """.trimIndent()
-
-        super.testStringResult(rrb, goal, sentence, expected)
+        val ex = assertFailsWith(ParseFailedException::class) {
+            super.test(rrb, goal, sentence)
+        }
+        assertEquals(1, ex.location.line, "line is wrong")
+        assertEquals(1, ex.location.column, "column is wrong")
     }
 
     @Test
@@ -40,11 +43,11 @@ class test_AhoSetiUlman_4_5_5 : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "d"
 
-        val expected = """
-            S { 'd' }
-        """.trimIndent()
-
-        super.testStringResult(rrb, goal, sentence, expected)
+        val ex = assertFailsWith(ParseFailedException::class) {
+            super.test(rrb, goal, sentence)
+        }
+        assertEquals(1, ex.location.line, "line is wrong")
+        assertEquals(1, ex.location.column, "column is wrong")
     }
 
 
@@ -59,6 +62,20 @@ class test_AhoSetiUlman_4_5_5 : test_ScannerlessParserAbstract() {
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
+    }
+
+
+    @Test
+    fun dcd() {
+        val rrb = this.S()
+        val goal = "S"
+        val sentence = "dcd"
+
+        val expected = """
+            S { C { 'd' } C{ C1 { 'c' C { 'd' } } } }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected)
     }
 
 }
