@@ -159,7 +159,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             parentRP.items.flatMap { rr ->
                 rr.rulePositions.mapNotNull { childRP ->
                     val glh = this.calcGraftLookahead(parentRP, childRP)
-                    val hlh = this.calcHeightLookahead(parentRP, childRP)
+                    val hlh = this.calcGraftLookahead(parentRP, childRP)
                     val childRPS = RulePositionState(childRP, glh, hlh)
                     //if (ancestors.contains(childRPS)) {
                     //val rpp=this.createRulePositionPath(userGoalRule, childRP, ancestors)
@@ -178,8 +178,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     private fun createAllSkipRulePositionPaths(userGoalRule: RuntimeRule): Set<RulePositionPath> {
 
-        val startSet = this.allSkipRules.flatMap { rr ->
-            rr.rulePositions.map { rp ->
+        val startSet = this.allSkipRules.flatMap { skipRule ->
+            skipRule.rulePositions.map { rp ->
                 val rps = RulePositionState(rp, emptySet(), emptySet())
                 val rpp = this.createRulePositionPath(userGoalRule, rps, null)
                 //this.skipPaths.add(rpp)
@@ -193,7 +193,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             parentRP.items.flatMap { rr ->
                 rr.rulePositions.mapNotNull { childRP ->
                     val glh = this.calcGraftLookahead(parentRP, childRP)
-                    val hlh = this.calcHeightLookahead(parentRP, childRP)
+                    val hlh = this.calcGraftLookahead(parentRP, childRP)
                     val childRPS = RulePositionState(childRP, glh, hlh)
                     //if (ancestors.contains(childRPS)) {
                     //val rpp=this.createRulePositionPath(userGoalRule, childRP, ancestors)
@@ -208,7 +208,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             }.toSet()
         }
         this.skipPaths.addAll(states)
-        return  this.skipPaths
+        return this.skipPaths
     }
 
 
@@ -231,16 +231,31 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
     }
 
-    private fun fetchRulePositionPaths(userGoalRule: RuntimeRule, rulePosition: RulePositionState): Set<RulePositionPath> {
-        val currentPaths = this.paths[userGoalRule]
-        val paths = currentPaths.filter {
-            it.rulePosition == rulePosition
+    private fun fetchRulePositionPaths(pathSet: Set<RulePositionPath>, state: RulePositionState): Set<RulePositionPath> {
+        val paths = pathSet.filter {
+            it.rulePosition == state
         }.toSet()
         return if (paths.size > 0) {
             paths
         } else {
             throw Exception("Should never be happen, states shaould already be created")
         }
+    }
+
+    private fun fetchRulePositionPaths(pathSet: Set<RulePositionPath>, rulePosition: RulePosition): Set<RulePositionPath> {
+        val paths = pathSet.filter {
+            it.rulePosition.rulePosition == rulePosition
+        }.toSet()
+        return if (paths.size > 0) {
+            paths
+        } else {
+            throw Exception("Should never be happen, states shaould already be created")
+        }
+    }
+
+    private fun fetchRulePositionPaths(userGoalRule: RuntimeRule, rulePosition: RulePositionState): Set<RulePositionPath> {
+        val currentPaths = this.paths[userGoalRule]
+        return this.fetchRulePositionPaths(currentPaths, rulePosition)
     }
 
     private fun fetchRulePositionPaths(userGoalRule: RuntimeRule, rulePosition: RulePosition): Set<RulePositionPath> {
@@ -256,15 +271,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     public fun fetchSkipRulePositionPaths(rulePosition: RulePosition): Set<RulePositionPath> {
-        val currentPaths = this.skipPaths
-        val paths = currentPaths.filter {
-            it.rulePosition.rulePosition == rulePosition
-        }.toSet()
-        return if (paths.size > 0) {
-            paths
-        } else {
-            throw Exception("Should never be happen, states shaould already be created")
-        }
+        return this.fetchRulePositionPaths(this.skipPaths, rulePosition)
     }
 
     private fun calcHeightLookahead(parent: RulePositionState?, childRP: RulePosition): Set<RuntimeRule> {
@@ -428,7 +435,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 childrenRP.mapNotNull { childRP ->
                     //val childAncestors = root.ancestorRPs + ancestorRPs
                     val glh = this.calcGraftLookahead(parentRP, childRP)
-                    val hlh = this.calcHeightLookahead(parentRP, childRP)
+                    val hlh = this.calcGraftLookahead(parentRP, childRP)
                     val childRPS = RulePositionState(childRP, glh, hlh)
                     RulePositionPathDown(parentRP, childRPS)
                 }
@@ -438,54 +445,6 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return RulePositionClosure(closureNumber, root.rulePosition.rulePosition, closureSet)
     }
 
-
-    internal fun fetchOrCreateClosure(userGoalRule: RuntimeRule, rps: RulePositionState): RulePositionClosure {
-        TODO("not needed")
-    }
-/*
-    internal fun fetchOrCreateClosure(userGoalRule: RuntimeRule, rp: RulePosition, ancestorRPs: List<RulePosition>): RulePositionClosure {
-        val currentClosure = this.closures[userGoalRule]
-
-        val closure = currentClosure.values.firstOrNull { it.root == rp }
-        return if (null == closure) {
-            val closureNumber = this.calcNextClosureNumber(userGoalRule)
-            val newRps = this.fetchRulePositionPath(userGoalRule, rp, ancestorRPs)
-            val newClosure = this.createClosure(userGoalRule, closureNumber, newRps)
-            currentClosure[closureNumber] = newClosure
-            newClosure
-        } else {
-            closure
-        }
-    }
-
-    private fun createAllRulePositionPathsAndClosures(userGoalRule: RuntimeRule, goalRP: RulePosition): Set<RulePositionClosure> {
-        val currentClosure = this.closures[userGoalRule]
-
-        //TODO: can we create the closures reachable by transition on-demand rather than up front?
-        //Do all rulePositions from here, rather than just the nextRulePosition, otherwise we can't keep the ancestorRPs
-
-        val startPath = this.createRulePositionPath(userGoalRule, goalRP, emptyList())
-        val startClosures = goalRP.runtimeRule.rulePositions.map { rp ->
-            val closureNumber = this.calcNextClosureNumber(userGoalRule)
-            val closure = this.createClosure(userGoalRule, closureNumber, startPath)
-            currentClosure[closureNumber] = closure
-            closure
-        }.toSet()
-
-        val closures = startClosures.transitveClosure { closure ->
-            closure.content.flatMap { rps ->
-                //Do all rulePositions from here, rather than just the nextRulePosition, otherwise we can't keep the ancestorRPs
-                val rulePositions = rps.runtimeRule.rulePositions
-                val rpsToDo = rulePositions.filter { it.isAtStart.not() && it.runtimeRule.isNonTerminal }
-                rpsToDo.mapNotNull { rp ->
-                    this.fetchOrCreateClosure(userGoalRule, rp, rps.ancestorRPs)
-                }
-            }.toSet()
-        }
-
-        return closures
-    }
-*/
     /**
      * itemRule is the rule we use to increment rp
      */
@@ -563,7 +522,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
     }
 
-    private fun createWidthTransition(userGoalRule: RuntimeRule, from: RulePositionState, closureRPS: RulePositionPathDown): Set<Transition> {
+    private fun createWidthTransition(from: RulePositionState, closureRPS: RulePositionPathDown): Set<Transition> {
         val action = Transition.ParseAction.WIDTH
         val item = closureRPS.runtimeRule
         var glh = closureRPS.rulePosition.graftLookahead //this.calcGraftLookahead(userGoalRule,  closureRPS.rulePosition)
@@ -574,7 +533,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return setOf(Transition(from, to, action, item, lookaheadGuard, null))
     }
 
-    private fun createHeightTransition(userGoalRule: RuntimeRule, from: RulePositionState, parentRP: RulePositionState): Set<Transition> {
+    private fun createHeightTransition(pathSet: Set<RulePositionPath>, from: RulePositionState, parentRP: RulePositionState): Set<Transition> {
         //val parentRP = closureRPS.directParent ?: throw ParseException("Should never be null")
         val prevGuard = parentRP //for height, previous must not match prevGuard
         val action = Transition.ParseAction.HEIGHT
@@ -582,31 +541,31 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val nextRPs = this.nextRulePosition(parentRP.rulePosition, item)
         return nextRPs.flatMap { nextRP ->
             val glh = parentRP.graftLookahead
-            var hlh = this.calcHeightLookahead(null, nextRP)
-            if (hlh.isEmpty()) hlh = parentRP.graftLookahead
-            val toSet = this.fetchRulePositionPaths(userGoalRule, RulePositionState(nextRP, glh, hlh))
+            val hlh = parentRP.graftLookahead//this.calcHeightLookahead(null, nextRP)
+            //if (hlh.isEmpty()) hlh = parentRP.graftLookahead
+            val toSet = this.fetchRulePositionPaths(pathSet, RulePositionState(nextRP, glh, hlh))
 
-            val lookaheadGuard = from.heightLookahead //this.calcHeightLookahead(closureRPS.ancestorRPs.map { it.rulePosition }, closureRPS.rulePosition.rulePosition) //from.heightLookahead
+            val lookaheadGuard = from.graftLookahead //this.calcHeightLookahead(closureRPS.ancestorRPs.map { it.rulePosition }, closureRPS.rulePosition.rulePosition) //from.heightLookahead
             toSet.map { to ->
                 Transition(from, to.rulePosition, action, item, lookaheadGuard, prevGuard)
             }
         }.toSet()
     }
 
-    private fun createGraftTransition(userGoalRule: RuntimeRule, from: RulePositionState, parentRP: RulePositionState): Set<Transition> {
+    private fun createGraftTransition(pathSet: Set<RulePositionPath>, from: RulePositionState, parentRP: RulePositionState): Set<Transition> {
         //val parentRP = closureRPS.directParent ?: throw ParseException("Should never be null")
         val prevGuard = parentRP //for graft, previous must match prevGuard
         val action = Transition.ParseAction.GRAFT
         val itemRP = from.rulePosition
         val item = from.runtimeRule
         //val ansRPs = closureRPS.ancestorRPs
-        val lookaheadGuard = this.calcGraftLookahead(parentRP, itemRP)
+        val lookaheadGuard = from.graftLookahead //this.calcGraftLookahead(parentRP, itemRP)
         val nextRPs = this.nextRulePosition(parentRP.rulePosition, item)
         return nextRPs.flatMap { nextRP ->
             val glh = parentRP.graftLookahead
-            var hlh = this.calcHeightLookahead(null, nextRP)
-            if (hlh.isEmpty()) hlh = parentRP.graftLookahead
-            val toSet = this.fetchRulePositionPaths(userGoalRule, RulePositionState(nextRP, glh, hlh))
+            val hlh = parentRP.graftLookahead//this.calcHeightLookahead(null, nextRP)
+            //if (hlh.isEmpty()) hlh = parentRP.graftLookahead
+            val toSet = this.fetchRulePositionPaths(pathSet, RulePositionState(nextRP, glh, hlh))
             toSet.map { to ->
                 Transition(from, to.rulePosition, action, item, lookaheadGuard, prevGuard)
             }
@@ -614,6 +573,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     private fun calcTransitions2(userGoalRule: RuntimeRule, from: RulePositionState, prevRP: RulePositionState?): Set<Transition> {
+        val pathSet = this.paths[userGoalRule]
         val transitions = mutableSetOf<Transition>()
         //assume all closures are created already
         //val closures = this.fetchClosuresContaining(userGoalRule, from)
@@ -630,16 +590,16 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 val parentRP = path.directParent
                 if (null != parentRP) {
                     if (from.isAtEnd && parentRP != null && parentRP.rulePosition.runtimeRule.isGoal) {
-                        transitions += this.createGraftTransition(userGoalRule, from, parentRP)
+                        transitions += this.createGraftTransition(pathSet, from, parentRP)
                     } else {
                         val height = from.isAtEnd && parentRP.isAtStart
                         val graft = from.isAtEnd && parentRP.isAtStart.not()
 
                         if (height) {
-                            transitions += this.createHeightTransition(userGoalRule, from, parentRP)
+                            transitions += this.createHeightTransition(pathSet, from, parentRP)
                         }
                         if (graft) {
-                            transitions += this.createGraftTransition(userGoalRule, from, parentRP)
+                            transitions += this.createGraftTransition(pathSet, from, parentRP)
                         }
                     }
                 }
@@ -663,7 +623,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     // val graftToGoal = parentRP.runtimeRule.isGoal && relevantHG && from.isAtEnd && closureRPS.isAtEnd && parentRP.isAtStart
 
                     if (width) {
-                        transitions += this.createWidthTransition(userGoalRule, from, closureRPS)
+                        transitions += this.createWidthTransition(from, closureRPS)
                     }
 
                 }
@@ -672,54 +632,71 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return transitions
     }
 
-    private fun calcTransitions(userGoalRule: RuntimeRule, from: RulePositionState, prevState: RulePositionState?): Set<Transition> {
-        val prevRP = prevState?.rulePosition
-        val closure = this.fetchOrCreateClosure(userGoalRule, from)
-/*
-        val transitions: Set<Transition> = closure.content.flatMap { closureRPS ->
-            val closureRP = closureRPS.rulePosition
-            val parentRP = closureRPS.directParent
-            //val parentClosure = if (null==parentRPS) emptySet<RulePositionState>() else setOf(closureRPS).transitveClosure { if (null==it.parent) emptySet() else setOf(it.parent) }
-            val relevantW = closureRP.runtimeRule.isTerminal //closureRP==from.rulePosition || closureRPS.ancestorRPs.contains(from.rulePosition) //parentClosure.contains(from)
-            val relevantHG = closureRPS.ancestorRPs.contains(from.directParent)
-            when {
-                (relevantW && from.isAtEnd.not()) -> {
-                    val tr = this.createWidthTransition(from, closureRPS)
-                    return tr
-                }
-                (null == parentRP) -> when {
-                    (from.runtimeRule.isGoal && from.isAtEnd && closureRPS.isAtEnd) -> {
+    private fun calcSkipTransitions(userGoalRule: RuntimeRule, from: RulePositionState, prevState: RulePositionState?): Set<Transition> {
+        val pathSet = this.skipPaths
+        val transitions = mutableSetOf<Transition>()
+        //assume all closures are created already
+        //val closures = this.fetchClosuresContaining(userGoalRule, from)
+
+        val goal = from.runtimeRule.isGoal && from.isAtEnd
+        if (goal) {
+            val action = Transition.ParseAction.GOAL
+            val to = from
+            transitions += Transition(from, to, action, RuntimeRuleSet.END_OF_TEXT, emptySet(), null)
+        } else {
+//TODO: only need to do either WIDTH or (HEIGHT or GRAFT) ! maybe?
+            val paths = this.fetchSkipRulePositionPaths(from.rulePosition)
+            for (path in paths) {
+                val parentRP = path.directParent
+                if (null != parentRP) {
+                    if (from.isAtEnd && parentRP != null && parentRP.rulePosition.runtimeRule.isGoal) {
+                        transitions += this.createGraftTransition(pathSet, from, parentRP)
+                    } else {
+                        val height = from.isAtEnd && parentRP.isAtStart
+                        val graft = from.isAtEnd && parentRP.isAtStart.not()
+
+                        if (height) {
+                            transitions += this.createHeightTransition(pathSet, from, parentRP)
+                        }
+                        if (graft) {
+                            transitions += this.createGraftTransition(pathSet, from, parentRP)
+                        }
+                    }
+                } else {
+                    //could be goal
+                    if (from.isAtEnd) {
                         val action = Transition.ParseAction.GOAL
                         val to = from
-                        setOf(Transition(from, to, action, RuntimeRuleSet.END_OF_TEXT, emptySet()))
-                    }
-                    else -> emptySet<Transition>()
-                }
-                //special case because we 'artificially' create first child of goal in ParseGraph.start
-                // (because we want starting skip nodes (i.e. whitespace) to appear inside the userGoal node, rather than inside the top 'GOAL' node)
-                (parentRP.runtimeRule.isGoal && relevantHG && from.isAtEnd && closureRPS.isAtEnd && parentRP.isAtStart) -> {
-                    val action = Transition.ParseAction.GRAFT
-                    val item = closureRP.runtimeRule
-                    val nextRPs = this.nextRulePosition(parentRP, item)
-                    nextRPs.flatMap { nextRP ->
-                        val toSet = this.fetchRulePositionStates(userGoalRule, nextRP, closureRPS.graftLookahead)
-                        val lookaheadGuard = from.graftLookahead
-                        toSet.map { to -> Transition(from, to, action, item, lookaheadGuard) }
+                        transitions += Transition(from, to, action, RuntimeRuleSet.END_OF_TEXT, emptySet(), null)
                     }
                 }
-                (relevantHG && from.isAtEnd && closureRPS.isAtEnd && parentRP.isAtStart) -> {
-                    this.createHeightTransition(userGoalRule, from, closureRPS)
-                }
-                (relevantHG && from.isAtEnd && closureRPS.isAtEnd && parentRP.isAtStart.not()) -> {
-                    this.createGraftTransition(userGoalRule, from, closureRPS)
-                }
-                else -> emptySet<Transition>()
             }
-        }.toSet()
 
+            val closures = paths.map { this.createClosure(userGoalRule, it) } //should we create closure from the path!
+            //val closures = setOf(this.createClosure(userGoalRule, from))
+
+            for (closure in closures) {
+                for (closureRPS in closure.content) {
+                    val parentRP = closureRPS.directParent
+                    val width = closureRPS.runtimeRule.isTerminal && from.isAtEnd.not()
+                    //val height = closureRPS.ancestorRPs.contains(from.directParent) && from.isAtEnd && closureRPS.isAtEnd && (parentRP?.isAtStart
+                    //    ?: false)
+                    //val graft = closureRPS.ancestorRPs.contains(from.directParent) && from.isAtEnd && closureRPS.isAtEnd && (parentRP?.isAtStart?.not()
+                    //    ?: false)
+
+
+                    //special case because we 'artificially' create first child of goal in ParseGraph.start
+                    // (because we want starting skip nodes (i.e. whitespace) to appear inside the userGoal node, rather than inside the top 'GOAL' node)
+                    // val graftToGoal = parentRP.runtimeRule.isGoal && relevantHG && from.isAtEnd && closureRPS.isAtEnd && parentRP.isAtStart
+
+                    if (width) {
+                        transitions += this.createWidthTransition(from, closureRPS)
+                    }
+
+                }
+            }
+        }
         return transitions
- */
-        return emptySet()
     }
 
     fun buildCaches() {
@@ -745,8 +722,18 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return goalState
     }
 
+    fun createSkipGoal(skipRule: RuntimeRule): RulePositionState {
+        val skipGoalRule = RuntimeRuleSet.createGoal(skipRule)
+        val skipGoalRP = RulePosition(skipGoalRule, 0, 0)
+        return RulePositionState(skipGoalRP, emptySet(), emptySet())
+    }
+
     fun transitions(userGoalRule: RuntimeRule, from: RulePositionState, prevRP: RulePositionState?): Set<Transition> {
         return this.calcTransitions2(userGoalRule, from, prevRP)
+    }
+
+    fun skipTransitions(userGoalRule: RuntimeRule, from: RulePositionState, prevRP: RulePositionState?): Set<Transition> {
+        return this.calcSkipTransitions(userGoalRule, from, prevRP)
     }
 
     // ---

@@ -248,6 +248,10 @@ internal class ParseGraph(
         return result
     }
 
+    fun recordGoal(completeNode: SPPTNodeDefault) {
+            this._goals.add(completeNode)
+    }
+
     //TODO: need to detect goal, but indicate that there is additional input, not just reject if additional input
     private fun isGoal(completeNode: SPPTNodeDefault): Boolean {
         val isStart = this.input.isStart(completeNode.startPosition)
@@ -416,8 +420,8 @@ internal class ParseGraph(
         this.growNextChildAt(isSkipGrowth, nextRp, parent, priority, nextChild, skipChildren)
     }
 
-    fun growNextSkipChild(nextRp: RulePositionState, parent: GrowingNode, skipNode: SPPTNodeDefault) {
-        if (parent.runtimeRule.isNonTerminal) {
+    fun growNextSkipChild(parent: GrowingNode, skipNode: SPPTNodeDefault) {
+        if (parent.runtimeRule.isNonTerminal || parent.runtimeRule.isGoal) {
             this.growNextChildAt(
                 false,
                 parent.currentRulePosition,
@@ -427,6 +431,7 @@ internal class ParseGraph(
                 emptyList()
             )
         } else {
+            val nextRp = parent.currentRulePosition
             val nextInputPosition = parent.nextInputPosition + skipNode.matchedTextLength
             val newLeaf = this.findOrCreateGrowingLeafForSkip(
                 false,
