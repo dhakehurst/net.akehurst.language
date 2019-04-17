@@ -109,10 +109,10 @@ class RuntimeRule(
                     RuntimeRuleItemKind.UNORDERED -> TODO()
                     RuntimeRuleItemKind.MULTI -> if (0 == rhs.multiMin) {
                         setOf(
-                            RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, 0),
+                            RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.BEGIN_OF_RULE),
                             RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE),
-                            RulePosition(this, RuntimeRuleItem.MULTI__ITEM, 0),
-                            RulePosition(this, RuntimeRuleItem.MULTI__ITEM, 1),
+                            RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.BEGIN_OF_RULE),
+                            RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.MID_OF_RULE),
                             RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.END_OF_RULE)
                         )
                     } else {

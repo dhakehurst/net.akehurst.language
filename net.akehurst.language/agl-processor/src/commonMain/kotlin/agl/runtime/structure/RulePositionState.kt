@@ -49,7 +49,7 @@ class RulePositionState(
     }
 
     override fun toString(): String {
-        return "RPS(${rulePosition},${graftLookahead},${heightLookahead})"
+        return "RPS(${rulePosition},${graftLookahead})"//,${heightLookahead})"
     }
 
 }

@@ -20,13 +20,14 @@ import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.ScannerlessParser
+import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import net.akehurst.language.parser.sppt.SPPTParser
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-class test_RuntimeParser_parse_multi {
+class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
 
     val rrb = RuntimeRuleSetBuilder()
 
@@ -34,55 +35,51 @@ class test_RuntimeParser_parse_multi {
         return sp.parse(goalRuleName, inputText)
     }
 
-    // r = a?
+    // S = a?
     // a = 'a'
-    private fun multi01_a(): ScannerlessParser {
-        val r0 = rrb.literal("a") //FIXME: this is not what is in the comment above!
-        val r1 = rrb.rule("r").multi(0, 1, r0)
-        return ScannerlessParser(rrb.ruleSet())
+    private fun multi01_a(): RuntimeRuleSetBuilder {
+        val b = RuntimeRuleSetBuilder()
+        val r0 = b.literal("a") //FIXME: this is not what is in the comment above!
+        val r1 = b.rule("S").multi(0, 1, r0)
+        return b
     }
 
     @Test
     fun multi01_a__r__empty() {
-        val sp = multi01_a()
-        val goalRuleName = "r"
-        val inputText = ""
+        val rrb = multi01_a()
+        val goal = "S"
+        val sentence = ""
 
-        val actual = test_parse(sp, goalRuleName, inputText)
+        val expected = """
+            S { §empty }
+        """.trimIndent()
 
-        assertNotNull(actual)
+        super.testStringResult(rrb, goal, sentence, expected)
 
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r { §empty }")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun multi01_a__r__a() {
-        val sp = multi01_a()
-        val goalRuleName = "r"
-        val inputText = "a"
+        val rrb = multi01_a()
+        val goal = "S"
+        val sentence = "a"
 
-        val actual = test_parse(sp, goalRuleName, inputText)
+        val expected = """
+            S { 'a' }
+        """.trimIndent()
 
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
 
 
     @Test
     fun multi01_a__r__aa_fails() {
-        val sp = multi01_a()
-        val goalRuleName = "r"
-        val inputText = "aa"
+        val rrb = multi01_a()
+        val goal = "S"
+        val sentence = "aa"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            test_parse(sp, goalRuleName, inputText)
+            super.testStringResult(rrb, goal, sentence)
         }
 
         assertEquals(1, e.location.line)

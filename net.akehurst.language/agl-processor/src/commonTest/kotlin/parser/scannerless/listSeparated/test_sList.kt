@@ -115,18 +115,18 @@ class test_sList {
         assertEquals(1, e.location.column)
     }
 
-    // r = [a / ',']*
+    // S = [a / ',']*
     // a = 'a'
     private fun literal_a0n(): ScannerlessParser {
         val r0 = rrb.literal("a")
-        val r1 = rrb.rule("r").separatedList(0, -1, rrb.literal(","), r0)
+        val r1 = rrb.rule("S").separatedList(0, -1, rrb.literal(","), r0)
         return ScannerlessParser(rrb.ruleSet())
     }
 
     @Test
     fun literal_a0n__r__empty() {
         val sp = literal_a0n()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = ""
 
         val actual = test_parse(sp, goalRuleName, inputText)
@@ -134,7 +134,7 @@ class test_sList {
         assertNotNull(actual)
 
         val p = SPPTParser(rrb)
-        val expected = p.addTree("r { §empty }")
+        val expected = p.addTree("S { §empty }")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
@@ -142,7 +142,7 @@ class test_sList {
     @Test
     fun literal_a0n_r__a() {
         val sp = literal_a0n()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "a"
 
         val actual = test_parse(sp, goalRuleName, inputText)
@@ -150,7 +150,7 @@ class test_sList {
         assertNotNull(actual)
 
         val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a'}")
+        val expected = p.addTree("S {'a'}")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
@@ -158,7 +158,7 @@ class test_sList {
     @Test
     fun literal_a0n__r__aa_fails() {
         val sp = literal_a0n()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "aa"
 
         val e = assertFailsWith(ParseFailedException::class) {
@@ -172,7 +172,7 @@ class test_sList {
     @Test
     fun literal_a0n__r__aca() {
         val sp = literal_a0n()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "a,a"
 
         val actual = test_parse(sp, goalRuleName, inputText)
@@ -180,14 +180,14 @@ class test_sList {
         assertNotNull(actual)
 
         val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' ',' 'a'}")
+        val expected = p.addTree("S {'a' ',' 'a'}")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
     @Test
     fun literal_a0n__r__acaa_fails() {
         val sp = literal_a0n()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "a,aa"
 
         val e = assertFailsWith(ParseFailedException::class) {
@@ -200,7 +200,7 @@ class test_sList {
     @Test
     fun literal_a0n__r__acaca() {
         val sp = literal_a0n()
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = "a,a,a"
 
         val actual = test_parse(sp, goalRuleName, inputText)
@@ -208,7 +208,7 @@ class test_sList {
         assertNotNull(actual)
 
         val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' ',' 'a' ',' 'a'}")
+        val expected = p.addTree("S {'a' ',' 'a' ',' 'a'}")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }

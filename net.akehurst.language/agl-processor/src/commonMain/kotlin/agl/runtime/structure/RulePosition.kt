@@ -23,10 +23,12 @@ data class RulePosition(
 ) {
 
     companion object {
+        val BEGIN_OF_RULE = 0
+        val MID_OF_RULE = 1
         val END_OF_RULE = -1
     }
 
-    val isAtStart = position == 0
+    val isAtStart = position == BEGIN_OF_RULE
     val isAtEnd = position == END_OF_RULE
 
     val items:Set<RuntimeRule> get() {
