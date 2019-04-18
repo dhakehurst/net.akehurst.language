@@ -98,7 +98,7 @@ internal class RuntimeParser(
     private fun growGoalNode(gn: GrowingNode) {
         //no previous, so gn must be the Goal node
         val rps = gn.currentRulePosition
-        val transitions: Set<Transition> = this.runtimeRuleSet.transitions(this.graph.userGoalRule, rps, null)
+        val transitions: Set<Transition> = this.runtimeRuleSet.transitions(this.graph.userGoalRule, rps)
 
         for (it in transitions) {
             when (it.action) {
@@ -112,7 +112,7 @@ internal class RuntimeParser(
 
     private fun growWithPrev(gn: GrowingNode, previous: PreviousInfo) {
         val rps = gn.currentRulePosition
-        val transitions: Set<Transition> = this.runtimeRuleSet.transitions(this.graph.userGoalRule, rps, previous.node.currentRulePosition)
+        val transitions: Set<Transition> = this.runtimeRuleSet.transitions(this.graph.userGoalRule, rps)
 
         for (it in transitions) {
             when (it.action) {
@@ -152,7 +152,7 @@ internal class RuntimeParser(
     }
 
     private fun doHeight(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
-        if (previous.node.currentRulePosition != transition.prevGuard) {
+        if (previous.node.currentRulePosition.rulePosition != transition.prevGuard) {
             val lh = transition.lookaheadGuard
             val hasLh = lh.any {
                 val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
@@ -168,7 +168,7 @@ internal class RuntimeParser(
     }
 
     private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
-        if (previous.node.currentRulePosition == transition.prevGuard) {
+        if (previous.node.currentRulePosition.rulePosition == transition.prevGuard) {
             val lh = transition.lookaheadGuard
             val hasLh = lh.any {
                 val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
@@ -198,7 +198,7 @@ internal class RuntimeParser(
                         val leafRp = RulePosition(rr, 0, -1)
                         val paths = this.runtimeRuleSet.fetchSkipRulePositionPaths(leafRp)
                         for (path in paths) {
-                            val rpp = path.rulePosition
+                            val rpp = path
                             this.graph.pushToStackOf(true, rpp, l, gn, previous, emptySet())
                         }
                         modified = true
@@ -213,7 +213,7 @@ internal class RuntimeParser(
 
     private fun growSkip(gn: GrowingNode, previous: PreviousInfo) {
         val rps = gn.currentRulePosition
-        val transitions: Set<Transition> = this.runtimeRuleSet.skipTransitions(this.graph.userGoalRule, rps, previous.node.currentRulePosition)
+        val transitions: Set<Transition> = this.runtimeRuleSet.skipTransitions(this.graph.userGoalRule, rps)
 
         for (it in transitions) {
             when (it.action) {

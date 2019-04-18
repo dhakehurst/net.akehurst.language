@@ -22,7 +22,7 @@ import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class GrowingNode(
     val isSkipGrowth : Boolean,
-    val currentRulePosition : RulePositionState, // current rp of this node, it is growing, this changes (for new node) when children are added
+    val currentRulePosition : RulePositionPath, // current rp of this node, it is growing, this changes (for new node) when children are added
     val startPosition: Int,
     val nextInputPosition: Int,
     val priority: Int,

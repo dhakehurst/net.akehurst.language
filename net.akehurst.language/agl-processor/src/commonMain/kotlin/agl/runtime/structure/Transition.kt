@@ -17,8 +17,8 @@
 package net.akehurst.language.agl.runtime.structure
 
 data class Transition(
-    val from: RulePositionState,
-    val to: RulePositionState,
+    val from: RulePositionPath,
+    val to: RulePositionPath,
     val action: ParseAction,
     val item: RuntimeRule,
     val lookaheadGuard: Set<RuntimeRule>,

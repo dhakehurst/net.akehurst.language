@@ -74,8 +74,8 @@ class test_ParseGraph_abc {
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
         val startState = RulePositionState(RulePosition(gr,0,0), emptySet(),emptySet())
-        sut.start(startState, rrs)
-
+        //sut.start(startState, rrs)
+TODO()
         val actual = sut.canGrow
 
         assertEquals(true, actual)
