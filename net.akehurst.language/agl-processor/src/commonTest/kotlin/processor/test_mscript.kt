@@ -68,6 +68,15 @@ grammar Mscript {
         val sut = Agl.processor(grammarStr)
     }
 
+    @Test
+    fun process_BOOLEAN_true() {
+
+        val text = "true"
+        val actual = sut.parse("BOOLEAN", text)
+
+        assertNotNull(actual)
+        assertEquals("BOOLEAN", actual.root.name)
+    }
 
     @Test
     fun process_expression_true() {

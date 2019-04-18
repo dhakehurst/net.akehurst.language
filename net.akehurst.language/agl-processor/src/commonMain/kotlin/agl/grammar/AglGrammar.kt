@@ -57,7 +57,12 @@ private fun createRules(): List<Rule> {
 	b.rule("concatenationItem").choiceEqual(b.concatenation(b.nonTerminal("simpleItem")), b.concatenation(b.nonTerminal("multi")), b.concatenation(b.nonTerminal("separatedList")));
 	b.rule("simpleItem").choiceEqual(b.concatenation(b.nonTerminal("terminal")), b.concatenation(b.nonTerminal("nonTerminal")), b.concatenation(b.nonTerminal("group")));
 	b.rule("multi").concatenation(b.nonTerminal("simpleItem"), b.nonTerminal("multiplicity"));
-	b.rule("multiplicity").choiceEqual(b.concatenation(b.terminalLiteral("*")), b.concatenation(b.terminalLiteral("+")), b.concatenation(b.terminalLiteral("?")));
+	b.rule("multiplicity").choiceEqual(//
+			b.concatenation(b.terminalLiteral("*")), //
+			b.concatenation(b.terminalLiteral("+")), //
+			b.concatenation(b.terminalLiteral("?")), //
+			b.concatenation(b.nonTerminal("POSITIVE_INTEGER"),b.terminalLiteral(".."),b.nonTerminal("POSITIVE_INTEGER")) //
+	);
 	b.rule("group").concatenation(b.terminalLiteral("("), b.nonTerminal("choice"), b.terminalLiteral(")"));
 	b.rule("separatedList").concatenation(b.terminalLiteral("["), b.nonTerminal("simpleItem"), b.terminalLiteral("/"),
 			b.nonTerminal("LITERAL"), b.terminalLiteral("]"), b.nonTerminal("multiplicity"));
@@ -67,6 +72,6 @@ private fun createRules(): List<Rule> {
 	b.rule("LITERAL").concatenation(b.terminalPattern("'(?:\\\\?.)*?'"));
 	b.rule("PATTERN").concatenation(b.terminalPattern("\"(?:\\\\?.)*?\""));
 	b.rule("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
-
+	b.rule("POSITIVE_INTEGER").concatenation(b.terminalPattern("[0-9]+"));
 	return b.grammar.rule
 }
