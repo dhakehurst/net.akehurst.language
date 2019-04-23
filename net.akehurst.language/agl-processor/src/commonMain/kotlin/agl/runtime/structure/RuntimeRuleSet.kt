@@ -118,7 +118,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     fun fetchNextStates1(state: ParserState): Set<ParserState> {
         if (null==state.directParent) {
             return state.rulePositionWlh.rulePosition.next().map { nextRP ->
-                val childRPS = RulePositionWithLookahead(nextRP, emptySet(), emptySet())
+                val childRPS = RulePositionWithLookahead(nextRP, emptySet())
                 state.stateMap.fetchNextParseState(childRPS, null)
             }.toSet()
         } else {
@@ -129,19 +129,19 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     val posParentRPwl = posParentState.rulePositionWlh
                     val posParentLH = posParentRPwl.graftLookahead
                     val lh = this.calcLookahead(posParentRPwl, nextRP, posParentLH)
-                    val nlh = this.calcNextLookahead(posParentRPwl, nextRP, posParentLH)
-                    val childRPS = RulePositionWithLookahead(nextRP, lh, nlh)
+                    //val nlh = this.calcNextLookahead(posParentRPwl, nextRP, posParentLH)
+                    val childRPS = RulePositionWithLookahead(nextRP, lh)
                     state.stateMap.fetchNextParseState(childRPS, posParentState)
                 }
             }.toSet()
         }
     }
-
+/*
     fun fetchNextStates2(state: ParserState): Set<ParserState> {
         if (state.rulePositionWlh.runtimeRule.isGoal) {
             // parent will be null
             return state.rulePositionWlh.rulePosition.next().map { nextRP ->
-                val childRPS = RulePositionWithLookahead(nextRP, emptySet(), emptySet())
+                val childRPS = RulePositionWithLookahead(nextRP, emptySet())
                 state.stateMap.fetchNextParseState(childRPS, null)
             }.toSet()
         } else {
@@ -155,11 +155,11 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             }.toSet()
         }
     }
-
+*/
     fun fetchNextStates(state: ParserState): Set<ParserState> {
         if (null==state.directParent) {
             return state.rulePositionWlh.rulePosition.next().map { nextRP ->
-                val childRPS = RulePositionWithLookahead(nextRP, emptySet(), emptySet())
+                val childRPS = RulePositionWithLookahead(nextRP, emptySet())
                 state.stateMap.fetchNextParseState(childRPS, null)
             }.toSet()
         } else {
@@ -170,8 +170,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     val posParentRPwl = posParentState.rulePositionWlh
                     val posParentLH = posParentRPwl.graftLookahead
                     val lh = this.calcLookahead(posParentRPwl, nextRP, posParentLH)
-                    val nlh = this.calcNextLookahead(posParentRPwl, nextRP, posParentLH)
-                    val childRPS = RulePositionWithLookahead(nextRP, lh, nlh)
+                    //val nlh = this.calcNextLookahead(posParentRPwl, nextRP, posParentLH)
+                    val childRPS = RulePositionWithLookahead(nextRP, lh)
                     state.stateMap.fetchAll(childRPS)
                 }
             }.toSet()
@@ -181,7 +181,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     private fun createAllParserStates(userGoalRule: RuntimeRule, goalRP: RulePositionWithLookahead) {
         val stateMap = this.states_cache[userGoalRule]
         val startSet = goalRP.runtimeRule.rulePositions.map { rp ->
-            val rps = RulePositionWithLookahead(rp, emptySet(), emptySet())
+            val rps = RulePositionWithLookahead(rp, emptySet())
             val rpp = stateMap.fetchOrCreateParseState(rps, null)
             rpp
         }.toSet()
@@ -190,8 +190,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             parentRP.items.flatMap { rr ->
                 rr.rulePositions.mapNotNull { childRP ->
                     val lh = this.calcLookahead(parentRP, childRP, parentRP.graftLookahead)
-                    val nlh = this.calcNextLookahead(parentRP, childRP, parentRP.graftLookahead)
-                    val childRPS = RulePositionWithLookahead(childRP, lh, nlh)
+                    //val nlh = this.calcNextLookahead(parentRP, childRP, parentRP.graftLookahead)
+                    val childRPS = RulePositionWithLookahead(childRP, lh)
                     val rpp = stateMap.fetchOrCreateParseState(childRPS, parent)
                     rpp
                 }
@@ -203,7 +203,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val stateMap = this.skipPaths
         val startSet = this.allSkipRules.flatMap { skipRule ->
             skipRule.rulePositions.map { rp ->
-                val rps = RulePositionWithLookahead(rp, emptySet(), emptySet())
+                val rps = RulePositionWithLookahead(rp, emptySet())
                 val rpp = stateMap.fetchOrCreateParseState(rps, null)
                 //this.skipPaths.add(rpp)
                 rpp
@@ -215,8 +215,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             parentRP.items.flatMap { rr ->
                 rr.rulePositions.mapNotNull { childRP ->
                     val lh = this.calcLookahead(parentRP, childRP, parentRP.graftLookahead)
-                    val nlh = this.calcNextLookahead(parentRP, childRP, parentRP.graftLookahead)
-                    val childRPS = RulePositionWithLookahead(childRP, lh, nlh)
+                    //val nlh = this.calcNextLookahead(parentRP, childRP, parentRP.graftLookahead)
+                    val childRPS = RulePositionWithLookahead(childRP, lh)
                     val rpp = stateMap.fetchOrCreateParseState(childRPS, parent)
                     rpp
                 }
@@ -393,8 +393,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 childrenRP.mapNotNull { childRP ->
                     //val childAncestors = root.ancestorRPs + ancestorRPs
                     val lh = this.calcLookahead(parentRP, childRP, parentRP.graftLookahead)
-                    val nlh = this.calcNextLookahead(parentRP, childRP, parentRP.graftLookahead)
-                    val childRP = RulePositionWithLookahead(childRP, lh, nlh)
+                    //val nlh = this.calcNextLookahead(parentRP, childRP, parentRP.graftLookahead)
+                    val childRP = RulePositionWithLookahead(childRP, lh)
                     val childState = TemporaryParserState(ancestors, childRP)
                     childState
                 }
@@ -413,8 +413,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 //must be tempRoot, and a state for this already exists, so only need to try create next states
                 tps.rulePositionWlh.rulePosition.next().forEach { nextRP ->
                     val lh = this.calcLookahead(rootParentRPwl, nextRP, rootParentGlh)
-                    val nlh = this.calcNextLookahead(rootParentRPwl, nextRP, rootParentGlh)
-                    val childRPwlh = RulePositionWithLookahead(nextRP, lh, nlh)
+                    //val nlh = this.calcNextLookahead(rootParentRPwl, nextRP, rootParentGlh)
+                    val childRPwlh = RulePositionWithLookahead(nextRP, lh)
                     states.fetchOrCreateParseState(childRPwlh, rootParent)
                 }
             } else {
@@ -427,8 +427,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 val parentRPl = parent.rulePositionWlh
                 tps.rulePositionWlh.rulePosition.next().forEach { nextRP ->
                     val lh = this.calcLookahead(parentRPl, nextRP, parentRPl.graftLookahead)
-                    val nlh = this.calcNextLookahead(parentRPl, nextRP, parentRPl.graftLookahead)
-                    val nextRPwlh = RulePositionWithLookahead(nextRP, lh, nlh)
+                    //val nlh = this.calcNextLookahead(parentRPl, nextRP, parentRPl.graftLookahead)
+                    val nextRPwlh = RulePositionWithLookahead(nextRP, lh)
                     states.fetchOrCreateParseState(nextRPwlh, parent)
                 }
             }
@@ -666,7 +666,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     fun startingState(userGoalRule: RuntimeRule): ParserState {
         val goalRule = RuntimeRuleSet.createGoalRule(userGoalRule)
         val goalRp = RulePosition(goalRule, 0, 0)
-        val goalRpLh = RulePositionWithLookahead(goalRp, emptySet(), emptySet())
+        val goalRpLh = RulePositionWithLookahead(goalRp, emptySet())
         this.createAllSkipStates(userGoalRule)
         this.createAllParserStates(userGoalRule,goalRpLh)
         val states = this.states_cache[userGoalRule]
