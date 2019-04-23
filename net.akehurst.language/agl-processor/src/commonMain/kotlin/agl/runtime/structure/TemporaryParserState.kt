@@ -17,28 +17,28 @@
 package net.akehurst.language.agl.runtime.structure
 
 class TemporaryParserState(
-        val ancestors: List<RulePositionWithLookahead>,
-        val rulePosition: RulePositionWithLookahead
+        val directParent: RulePositionWithLookahead?,
+        val rulePositionWlh: RulePositionWithLookahead
 ) {
 
-    val directParent = ancestors.lastOrNull()
+    //val directParent = ancestors.lastOrNull()
 
     // --- Any ---
 
     override fun hashCode(): Int {
-        return (rulePosition.hashCode() * 31 + (directParent.hashCode()))
+        return (rulePositionWlh.hashCode() * 31 + (directParent.hashCode()))
     }
 
     override fun equals(other: Any?): Boolean {
         return if (other is TemporaryParserState) {
-            this.rulePosition == other.rulePosition && this.directParent == other.directParent
+            this.rulePositionWlh == other.rulePositionWlh && this.directParent == other.directParent
         } else {
             false
         }
     }
 
     override fun toString(): String {
-        return "RPP(${ancestors},${rulePosition})"
+        return "RPP(${directParent},${rulePositionWlh})"
     }
 
 }

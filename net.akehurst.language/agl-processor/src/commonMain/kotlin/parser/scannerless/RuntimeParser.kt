@@ -152,7 +152,7 @@ internal class RuntimeParser(
     }
 
     private fun doHeight(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
-        if (previous.node.currentRulePosition.rulePosition != transition.prevGuard) {
+        if (previous.node.currentRulePosition.rulePositionWlh != transition.prevGuard) {
             val lh = transition.lookaheadGuard
             val hasLh = lh.any {
                 val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
@@ -168,7 +168,7 @@ internal class RuntimeParser(
     }
 
     private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
-        if (previous.node.currentRulePosition.rulePosition == transition.prevGuard) {
+        if (previous.node.currentRulePosition.rulePositionWlh == transition.prevGuard) {
             val lh = transition.lookaheadGuard
             val hasLh = lh.any {
                 val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)

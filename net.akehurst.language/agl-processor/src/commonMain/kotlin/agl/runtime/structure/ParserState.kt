@@ -34,9 +34,9 @@ package net.akehurst.language.agl.runtime.structure
 import net.akehurst.language.api.parser.ParseException
 
 class ParserState(
-        //val number:StateNumber,
+        val number:StateNumber,
         val directParent: ParserState?,
-        val rulePosition: RulePositionWithLookahead,
+        val rulePositionWlh: RulePositionWithLookahead,
         val stateMap: ParserStateSet
 ) {
 
@@ -45,24 +45,24 @@ class ParserState(
 
     val items: Set<RuntimeRule>
         get() {
-            return this.rulePosition.items
+            return this.rulePositionWlh.items
         }
     val runtimeRule: RuntimeRule
         get() {
-            return this.rulePosition.runtimeRule
+            return this.rulePositionWlh.runtimeRule
         }
     val choice: Int
         get() {
-            return this.rulePosition.choice
+            return this.rulePositionWlh.choice
         }
     val position: Int
         get() {
-            return this.rulePosition.position
+            return this.rulePositionWlh.position
         }
 
     val isAtEnd: Boolean
         get() {
-            return this.rulePosition.isAtEnd
+            return this.rulePositionWlh.isAtEnd
         }
 
     val ancestors:List<ParserState> get() {
@@ -74,7 +74,7 @@ class ParserState(
 
     fun next(runtimeRuleSet: RuntimeRuleSet) : Set<ParserState> {
         if (null==nextStates_cache) {
-            this.nextStates_cache = runtimeRuleSet.createNextStates(this)
+            this.nextStates_cache = runtimeRuleSet.fetchNextStates(this)
         }
         return this.nextStates_cache ?: throw ParseException("shouild never be null")
     }
@@ -82,20 +82,20 @@ class ParserState(
     // --- Any ---
 
     override fun hashCode(): Int {
-        return (rulePosition.hashCode() * 31 + (directParent.hashCode()))
+        return this.number.hashCode() //rulePositionWlh.hashCode() * 31 + (directParent.hashCode()))
     }
 
     override fun equals(other: Any?): Boolean {
         return if (other is ParserState) {
-            //this.number.value == other.number.value
-            this.rulePosition == other.rulePosition && this.directParent == other.directParent
+            this.number.value == other.number.value
+            //this.rulePositionWlh == other.rulePositionWlh && this.directParent == other.directParent
         } else {
             false
         }
     }
 
     override fun toString(): String {
-        return "State(${directParent?.rulePosition}-${rulePosition})"
+        return "State(${directParent?.rulePositionWlh}-${rulePositionWlh})"
     }
 
 }

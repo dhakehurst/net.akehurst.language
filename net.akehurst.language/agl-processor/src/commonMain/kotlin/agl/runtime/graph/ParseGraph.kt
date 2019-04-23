@@ -375,7 +375,7 @@ internal class ParseGraph(
         //val start = closure0.content.filter { it.runtimeRule == userGoalRule }
         //val start = goalState.items.flatMap {
         //    it.calcExpectedRulePositions(0).map {
-        //        runtimeRuleSet.fetchOrCreateRulePositionStateAndItsClosure(userGoalRule, it, goalState.rulePosition, setOf(RuntimeRuleSet.END_OF_TEXT), setOf(RuntimeRuleSet.END_OF_TEXT))
+        //        runtimeRuleSet.fetchOrCreateRulePositionStateAndItsClosure(userGoalRule, it, goalState.rulePositionWlh, setOf(RuntimeRuleSet.END_OF_TEXT), setOf(RuntimeRuleSet.END_OF_TEXT))
         //    }
         //}
 /*

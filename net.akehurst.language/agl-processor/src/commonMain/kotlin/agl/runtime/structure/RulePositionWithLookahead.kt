@@ -20,7 +20,8 @@ inline class StateNumber(val value:Int)
 
 class RulePositionWithLookahead(
     val rulePosition: RulePosition,
-    val graftLookahead: Set<RuntimeRule>
+    val graftLookahead: Set<RuntimeRule>,
+    val nextLookahead: Set<RuntimeRule>
 ) {
 
     val items:Set<RuntimeRule> get() { return this.rulePosition.items }

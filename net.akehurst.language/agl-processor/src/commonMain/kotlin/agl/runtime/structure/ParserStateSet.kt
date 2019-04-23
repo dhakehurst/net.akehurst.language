@@ -16,9 +16,13 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.api.parser.ParseException
+
 class ParserStateSet(
 
 ) {
+
+    private var nextState = 0
 
     /*
      * A RulePosition with Lookahead identifies a set of Parser states.
@@ -31,10 +35,11 @@ class ParserStateSet(
 
     internal fun fetchOrCreateParseState(rulePosition: RulePositionWithLookahead, parent: ParserState?): ParserState {
         val possible = this.states[rulePosition]
-        val parentAncestors = if (null == parent) emptyList() else parent.ancestors + parent
-        val existing = possible.find { ps -> ps.ancestors == parentAncestors }
+//        val parentAncestors = if (null == parent) emptyList() else parent.ancestors + parent
+//        val existing = possible.find { ps -> ps.ancestors == parentAncestors }
+        val existing = possible.find { ps -> ps.directParent?.rulePositionWlh == parent?.rulePositionWlh }
         return if (null == existing) {
-            val v = ParserState(parent, rulePosition, this)
+            val v = ParserState(StateNumber(this.nextState++), parent, rulePosition, this)
             this.states[rulePosition].add(v)
             v
         } else {
@@ -42,13 +47,24 @@ class ParserStateSet(
         }
     }
 
-    internal fun fetch(rulePosition: RulePositionWithLookahead) :Set<ParserState> {
+    internal fun fetchNextParseState(rulePosition: RulePositionWithLookahead, parent: ParserState?): ParserState {
+        val possible = this.states[rulePosition]
+        //val parentAncestors = if (null == parent) emptyList() else parent.ancestors + parent
+        val existing = possible.find { ps -> ps.directParent?.rulePositionWlh == parent?.rulePositionWlh }
+        return if (null == existing) {
+            throw ParseException("next states should be already created")
+        } else {
+            existing
+        }
+    }
+
+    internal fun fetchAll(rulePosition: RulePositionWithLookahead) :Set<ParserState> {
         return this.states[rulePosition]
     }
 
-    internal fun fetch(rulePosition: RulePositionWithLookahead, ancestors: List<ParserState>) :ParserState {
-        return this.fetch(rulePosition).first {
-            it.ancestors==ancestors
+    internal fun fetch(rulePosition: RulePositionWithLookahead, directParent: ParserState?) :ParserState {
+        return this.fetchAll(rulePosition).first {
+            it.directParent==directParent
         }
     }
 
@@ -56,7 +72,7 @@ class ParserStateSet(
         //TODO: this is not very efficient, skip stuff needs a rework
         return this.states.values.flatMap {
             it.filter {
-                ps->ps.rulePosition.rulePosition==rulePosition
+                ps->ps.rulePositionWlh.rulePosition==rulePosition
             }
         }.toSet()
     }
