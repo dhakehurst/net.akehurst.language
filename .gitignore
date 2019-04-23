@@ -4,6 +4,7 @@ target/
 old/
 node_modules/
 .gradle/
+.gradle_build/
 .idea/
 .project
 .classpath
