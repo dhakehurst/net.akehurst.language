@@ -178,7 +178,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
     }
 
-    private fun createAllRulePositionPaths(userGoalRule: RuntimeRule, goalRP: RulePositionWithLookahead) {
+    private fun createAllParserStates(userGoalRule: RuntimeRule, goalRP: RulePositionWithLookahead) {
         val stateMap = this.states_cache[userGoalRule]
         val startSet = goalRP.runtimeRule.rulePositions.map { rp ->
             val rps = RulePositionWithLookahead(rp, emptySet(), emptySet())
@@ -199,7 +199,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
     }
 
-    private fun createAllSkipRulePositionPaths(userGoalRule: RuntimeRule) {
+    private fun createAllSkipStates(userGoalRule: RuntimeRule) {
         val stateMap = this.skipPaths
         val startSet = this.allSkipRules.flatMap { skipRule ->
             skipRule.rulePositions.map { rp ->
@@ -403,6 +403,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
         val ancestorMap = mutableMapOf<RulePositionWithLookahead, ParserState?>()
         val rootParent = root.directParent ?: null
+        val rootParentRPwl = rootParent?.rulePositionWlh
+        val rootParentGlh = rootParent?.rulePositionWlh?.graftLookahead ?: emptySet()
         ancestorMap[tempRoot.rulePositionWlh] = rootParent
         val extendedStates = mutableSetOf<ParserState>()
 
@@ -410,8 +412,10 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             if (null==tps.directParent) {
                 //must be tempRoot, and a state for this already exists, so only need to try create next states
                 tps.rulePositionWlh.rulePosition.next().forEach { nextRP ->
-                    val childRPwlh = RulePositionWithLookahead(nextRP, root.rulePositionWlh.graftLookahead, root.rulePositionWlh.nextLookahead)
-                    states.fetchOrCreateParseState(childRPwlh, root.directParent)
+                    val lh = this.calcLookahead(rootParentRPwl, nextRP, rootParentGlh)
+                    val nlh = this.calcNextLookahead(rootParentRPwl, nextRP, rootParentGlh)
+                    val childRPwlh = RulePositionWithLookahead(nextRP, lh, nlh)
+                    states.fetchOrCreateParseState(childRPwlh, rootParent)
                 }
             } else {
                 val parentParent = ancestorMap[tps.directParent]// ?: throw ParseException("should never be null")
@@ -465,9 +469,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                         )
                         else -> emptySet() //throw ParseException("This should never happen!")
                     }
-                    RuntimeRuleItem.MULTI__ITEM -> when { //TODO: reduce this set based on min/max
+                    RuntimeRuleItem.MULTI__ITEM -> when {
                         itemRule == rp.runtimeRule.rhs.MULTI__repeatedItem -> setOf(
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.MULTI__ITEM, 1),
+                                RulePosition(rp.runtimeRule, RuntimeRuleItem.MULTI__ITEM, RulePosition.MID_OF_RULE),
                                 RulePosition(rp.runtimeRule, RuntimeRuleItem.MULTI__ITEM, RulePosition.END_OF_RULE)
                         )
                         else -> emptySet() //throw ParseException("This should never happen!")
@@ -486,11 +490,11 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                                 RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
                         )
                         0 == rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1 == rp.runtimeRule.rhs.multiMax) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, 1),
+                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.MID_OF_RULE),
                                 RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
                         )
                         2 == rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1 == rp.runtimeRule.rhs.multiMax) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, 1),
+                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.MID_OF_RULE),
                                 RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
                         )
                         else -> emptySet() //throw ParseException("This should never happen!")
@@ -572,6 +576,11 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                             transitions += this.createGraftTransition(from, parentRP)
                         }
                     }
+                } else {
+                    //end of skip
+                    val action = Transition.ParseAction.GOAL
+                    val to = from
+                    transitions += Transition(from, to, action, RuntimeRuleSet.END_OF_TEXT, emptySet(), null)
                 }
             }
             if (from.isAtEnd.not()) {
@@ -658,7 +667,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val goalRule = RuntimeRuleSet.createGoalRule(userGoalRule)
         val goalRp = RulePosition(goalRule, 0, 0)
         val goalRpLh = RulePositionWithLookahead(goalRp, emptySet(), emptySet())
-        this.createAllSkipRulePositionPaths(userGoalRule)
+        this.createAllSkipStates(userGoalRule)
+        this.createAllParserStates(userGoalRule,goalRpLh)
         val states = this.states_cache[userGoalRule]
         val startState = states.fetchOrCreateParseState(goalRpLh, null)
         return startState

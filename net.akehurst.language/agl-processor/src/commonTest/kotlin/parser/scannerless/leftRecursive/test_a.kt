@@ -70,6 +70,30 @@ class test_a : test_ScannerlessParserAbstract() {
     }
 
     @Test
+    fun a50() {
+        val rrb = this.S()
+        val goal = "S"
+        val sentence = "a".repeat(50)
+
+        val expected = "S { S1 { ".repeat(49) + "S { 'a' }" + "'a' } }".repeat(49)
+
+
+        super.test(rrb, goal, sentence, expected)
+    }
+
+    @Test
+    fun a150() {
+        val rrb = this.S()
+        val goal = "S"
+        val sentence = "a".repeat(150)
+
+        val expected = "S { S1 { ".repeat(149) + "S { 'a' }" + "'a' } }".repeat(149)
+
+
+        super.test(rrb, goal, sentence, expected)
+    }
+
+    @Test
     fun a500() {
         val rrb = this.S()
         val goal = "S"
