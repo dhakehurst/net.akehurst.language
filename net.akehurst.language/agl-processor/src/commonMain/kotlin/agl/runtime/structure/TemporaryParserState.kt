@@ -16,32 +16,12 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-class RulePositionPathDown(
-        val directParent: RulePositionState?,
-        val rulePosition: RulePositionState
+class TemporaryParserState(
+        val ancestors: List<RulePositionWithLookahead>,
+        val rulePosition: RulePositionWithLookahead
 ) {
 
-    val items: Set<RuntimeRule>
-        get() {
-            return this.rulePosition.items
-        }
-    val runtimeRule: RuntimeRule
-        get() {
-            return this.rulePosition.runtimeRule
-        }
-    val choice: Int
-        get() {
-            return this.rulePosition.choice
-        }
-    val position: Int
-        get() {
-            return this.rulePosition.position
-        }
-
-    val isAtEnd: Boolean
-        get() {
-            return this.rulePosition.isAtEnd
-        }
+    val directParent = ancestors.lastOrNull()
 
     // --- Any ---
 
@@ -50,7 +30,7 @@ class RulePositionPathDown(
     }
 
     override fun equals(other: Any?): Boolean {
-        return if (other is RulePositionPathDown) {
+        return if (other is TemporaryParserState) {
             this.rulePosition == other.rulePosition && this.directParent == other.directParent
         } else {
             false
@@ -58,7 +38,7 @@ class RulePositionPathDown(
     }
 
     override fun toString(): String {
-        return "RPP(${directParent},${rulePosition})"
+        return "RPP(${ancestors},${rulePosition})"
     }
 
 }

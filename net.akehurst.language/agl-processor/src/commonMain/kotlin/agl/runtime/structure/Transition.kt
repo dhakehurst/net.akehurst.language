@@ -17,12 +17,12 @@
 package net.akehurst.language.agl.runtime.structure
 
 data class Transition(
-    val from: RulePositionPath,
-    val to: RulePositionPath,
-    val action: ParseAction,
-    val item: RuntimeRule,
-    val lookaheadGuard: Set<RuntimeRule>,
-    val prevGuard : RulePositionState?
+        val from: ParserState,
+        val to: ParserState,
+        val action: ParseAction,
+        val item: RuntimeRule,
+        val lookaheadGuard: Set<RuntimeRule>,
+        val prevGuard : RulePositionWithLookahead?
 //TODO: add previousGuard for use in graft
 ) {
     enum class ParseAction {

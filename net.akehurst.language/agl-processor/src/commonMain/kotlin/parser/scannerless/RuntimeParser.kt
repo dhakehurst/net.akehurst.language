@@ -58,7 +58,7 @@ internal class RuntimeParser(
 
 
     fun start(userGoalRule: RuntimeRule) {
-        val gState = runtimeRuleSet.startingRulePosition(userGoalRule)
+        val gState = runtimeRuleSet.startingState(userGoalRule)
         this.graph.start(gState, runtimeRuleSet)
     }
 
@@ -188,7 +188,7 @@ internal class RuntimeParser(
         } else {
             var modified = false
             //      if (gn.currentRulePosition.runtimeRule.isTerminal) { //(gn.canGrowWidthWithSkip) { // don't grow width if its complete...cant graft back
-            val rps = this.runtimeRuleSet.firstSkipRuleTerminalPositions
+            val rps = this.runtimeRuleSet.firstSkipRuleTerminalPositions //TODO: get skipStates here, probably be better/faster
             for (rp in rps) {
                 for (rr in rp.runtimeRule.itemsAt[rp.position]) {
                     val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
@@ -196,10 +196,9 @@ internal class RuntimeParser(
                         //val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
                         //newRP.forEach {
                         val leafRp = RulePosition(rr, 0, -1)
-                        val paths = this.runtimeRuleSet.fetchSkipRulePositionPaths(leafRp)
-                        for (path in paths) {
-                            val rpp = path
-                            this.graph.pushToStackOf(true, rpp, l, gn, previous, emptySet())
+                        val skipStates = this.runtimeRuleSet.fetchSkipStates(leafRp)
+                        for (ss in skipStates) {
+                            this.graph.pushToStackOf(true, ss, l, gn, previous, emptySet())
                         }
                         modified = true
                         //}

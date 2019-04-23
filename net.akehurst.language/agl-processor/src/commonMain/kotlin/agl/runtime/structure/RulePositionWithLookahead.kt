@@ -18,10 +18,9 @@ package net.akehurst.language.agl.runtime.structure
 
 inline class StateNumber(val value:Int)
 
-class RulePositionState(
+class RulePositionWithLookahead(
     val rulePosition: RulePosition,
-    val graftLookahead: Set<RuntimeRule>,
-    val nextLookahead: Set<RuntimeRule>
+    val graftLookahead: Set<RuntimeRule>
 ) {
 
     val items:Set<RuntimeRule> get() { return this.rulePosition.items }
@@ -39,17 +38,16 @@ class RulePositionState(
     }
 
     override fun equals(other: Any?): Boolean {
-        return if (other is RulePositionState) {
+        return if (other is RulePositionWithLookahead) {
             other.rulePosition == this.rulePosition
                 && this.graftLookahead == other.graftLookahead
-                    && this.nextLookahead == other.nextLookahead
         } else {
             false
         }
     }
 
     override fun toString(): String {
-        return "RPS(${rulePosition},${graftLookahead},${nextLookahead})"
+        return "(${rulePosition},${graftLookahead})"
     }
 
 }

@@ -18,16 +18,15 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class GrowingNode(
-    val isSkipGrowth : Boolean,
-    val currentRulePosition : RulePositionPath, // current rp of this node, it is growing, this changes (for new node) when children are added
-    val startPosition: Int,
-    val nextInputPosition: Int,
-    val priority: Int,
-    val children: List<SPPTNode>,
-    val numNonSkipChildren: Int
+        val isSkipGrowth : Boolean,
+        val currentRulePosition : ParserState, // current rp of this node, it is growing, this changes (for new node) when children are added
+        val startPosition: Int,
+        val nextInputPosition: Int,
+        val priority: Int,
+        val children: List<SPPTNode>,
+        val numNonSkipChildren: Int
 ) {
     //FIXME: shouldn't really do this, shouldn't store these in sets!!
     private val hashCode_cache = arrayOf(this.currentRulePosition, this.startPosition, this.nextInputPosition).contentHashCode()

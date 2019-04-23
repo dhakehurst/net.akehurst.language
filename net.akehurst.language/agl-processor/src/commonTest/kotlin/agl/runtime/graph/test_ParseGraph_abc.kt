@@ -18,10 +18,8 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.parser.scannerless.InputFromCharSequence
-import net.akehurst.language.parser.sppt.SPPTNodeDefault
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 class test_ParseGraph_abc {
 
@@ -52,7 +50,7 @@ class test_ParseGraph_abc {
         val sut = ParseGraph(r_S,input)
 
         val gr = RuntimeRuleSet.createGoalRule(r_S)
-        val startState = rrs.startingRulePosition(r_S)
+        val startState = rrs.startingState(r_S)
         sut.start(startState, rrs)
 
         assertEquals(true, gr.isGoal)
@@ -73,7 +71,7 @@ class test_ParseGraph_abc {
         val sut = ParseGraph(userGoalRule,input)
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
-        val startState = RulePositionState(RulePosition(gr,0,0), emptySet(),emptySet())
+        val startState = RulePositionWithLookahead(RulePosition(gr,0,0), emptySet())
         //sut.start(startState, rrs)
 TODO()
         val actual = sut.canGrow
