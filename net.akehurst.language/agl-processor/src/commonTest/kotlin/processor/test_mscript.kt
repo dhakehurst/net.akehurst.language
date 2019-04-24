@@ -169,6 +169,15 @@ grammar Mscript {
     }
 
     @Test
+    fun process_INTEGER_1_fails() {
+        val text = "1"
+        val actual = sut.parse("INTEGER", text)
+
+        assertNotNull(actual)
+        assertEquals("INTEGER", actual.root.name)
+    }
+
+    @Test
     fun process_matrix_0x0() {
 
         val text = "[]"
