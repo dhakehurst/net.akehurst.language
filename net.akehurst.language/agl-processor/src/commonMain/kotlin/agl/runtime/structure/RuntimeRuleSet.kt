@@ -202,7 +202,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 if (parent.isAtEnd) {
                     parent.graftLookahead
                 } else {
-                    val nextRPs = nextRulePosition(parent.rulePosition, childRP.runtimeRule)
+                    val nextRPs = parent.rulePosition.next() //nextRulePosition(parent.rulePosition, childRP.runtimeRule)
                     nextRPs.flatMap { nextRP ->
                         if (nextRP.isAtEnd) {
                             calcLookahead(null, parent.rulePosition, parent.graftLookahead)
@@ -222,7 +222,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             // however it should carry the FIRST of next in the child,
             // so that this childs children can use it if needed
             childRP.items.flatMap { fstChildItem ->
-                val nextRPs = nextRulePosition(childRP, fstChildItem)
+                val nextRPs = childRP.next() //nextRulePosition(childRP, fstChildItem)
                 nextRPs.flatMap { nextChildRP ->
                     if (nextChildRP.isAtEnd) {
                         if (null == parent) {
@@ -233,7 +233,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     } else {
 
                         nextChildRP.items.flatMap { sndChildItem ->
-                            val nextNextRPs = nextRulePosition(nextChildRP, sndChildItem)
+                            val nextNextRPs = nextChildRP.next() //nextRulePosition(nextChildRP, sndChildItem)
                             nextNextRPs.flatMap { nextNextChildRP ->
                                 if (nextNextChildRP.isAtEnd) {
                                     if (null == parent) {
@@ -266,7 +266,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 if (parent.isAtEnd) {
                     parent.graftLookahead
                 } else {
-                    val nextRPs = nextRulePosition(parent.rulePosition, childRP.runtimeRule)
+                    val nextRPs = parent.rulePosition.next()//nextRulePosition(parent.rulePosition, childRP.runtimeRule)
                     nextRPs.flatMap { nextRP ->
                         if (nextRP.isAtEnd) {
                             calcLookahead(null, parent.rulePosition, parent.graftLookahead)
@@ -286,7 +286,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             // however it should carry the FIRST of next in the child,
             // so that this childs children can use it if needed
             childRP.items.flatMap { fstChildItem ->
-                val nextRPs = nextRulePosition(childRP, fstChildItem)
+                val nextRPs = childRP.next() //nextRulePosition(childRP, fstChildItem)
                 nextRPs.flatMap { nextChildRP ->
                     if (nextChildRP.isAtEnd) {
                         if (null == parent) {
@@ -366,6 +366,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     /**
      * itemRule is the rule we use to increment rp
      */
+
+    /*  moved to RulePosition
+
     internal fun nextRulePosition(rp: RulePosition, itemRule: RuntimeRule): Set<RulePosition> { //TODO: cache this
         return if (RulePosition.END_OF_RULE == rp.position) {
             emptySet() //TODO: use goal rule to find next position? maybe
@@ -439,7 +442,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             }
         }
     }
-
+*/
     private fun createWidthTransition(from: ParserState, closureState: ParserState): Transition {
         val action = Transition.ParseAction.WIDTH
         val item = closureState.runtimeRule

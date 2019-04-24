@@ -148,7 +148,8 @@ class test_multi_a_WS : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected) //works
+        super.test(rrb, goal, sentence, expected) //fails ?
     }
 
 }
