@@ -400,7 +400,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     }
                     RuntimeRuleItem.MULTI__ITEM -> when {
                         itemRule == rp.runtimeRule.rhs.MULTI__repeatedItem -> setOf(
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.MULTI__ITEM, RulePosition.MID_OF_RULE),
+                                RulePosition(rp.runtimeRule, RuntimeRuleItem.MULTI__ITEM, RulePosition.MULIT_ITEM_POSITION),
                                 RulePosition(rp.runtimeRule, RuntimeRuleItem.MULTI__ITEM, RulePosition.END_OF_RULE)
                         )
                         else -> emptySet() //throw ParseException("This should never happen!")
@@ -419,11 +419,11 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                                 RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
                         )
                         0 == rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1 == rp.runtimeRule.rhs.multiMax) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.MID_OF_RULE),
+                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.MULIT_ITEM_POSITION),
                                 RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
                         )
                         2 == rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1 == rp.runtimeRule.rhs.multiMax) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.MID_OF_RULE),
+                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.MULIT_ITEM_POSITION),
                                 RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
                         )
                         else -> emptySet() //throw ParseException("This should never happen!")

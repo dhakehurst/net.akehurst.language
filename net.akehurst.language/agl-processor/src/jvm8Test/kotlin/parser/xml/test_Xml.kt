@@ -1,5 +1,7 @@
 package net.akehurst.language.processor.xml
 
+import com.soywiz.korio.async.runBlockingNoSuspensions
+import com.soywiz.korio.file.std.resourcesVfs
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.ArrayList
@@ -19,7 +21,8 @@ class test_Xml(val data:Data) {
 
     companion object {
 
-        private val grammarStr = this::class.java.getResource("/xml/Xml.agl").readText()
+        //private val grammarStr = this::class.java.getResource("/xml/Xml.agl").readText()
+        private val grammarStr = runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
         var processor: LanguageProcessor = tgqlprocessor()
 
         var xmlFiles = arrayOf("/xml/valid/empty.xml")

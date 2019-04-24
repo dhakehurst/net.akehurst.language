@@ -43,6 +43,10 @@ subprojects {
         mavenLocal()
         mavenCentral()
         jcenter()
+        maven {
+            name "soywiz"
+            url "https://dl.bintray.com/soywiz/soywiz"
+        }
     }
     
 

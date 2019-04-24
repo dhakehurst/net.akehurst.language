@@ -50,12 +50,12 @@ internal class InputFromCharSequence(val text: CharSequence) {
 
     internal fun calcLineAndColumn(position: Int): InputLocation {
         var line = 1
-        var column = 0
+        var column = 1
 
         for (count in 0 until position) {
             if (this.text[count] == '\n') {
                 ++line
-                column = 0
+                column = 1
             } else {
                 ++column
             }

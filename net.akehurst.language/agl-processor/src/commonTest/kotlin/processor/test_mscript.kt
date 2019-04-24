@@ -16,8 +16,10 @@
 
 package net.akehurst.language.processor
 
+import net.akehurst.language.api.parser.ParseFailedException
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 
@@ -50,7 +52,7 @@ grammar Mscript {
       ;
 
     functionCall = NAME '(' argumentList ')' ;
-    argumentList = [ expression / ',' ]* ;
+    argumentList =  [ expression / ',' ]* ;
 
     matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
     row = [expression / ',']+ | expression+ ;
@@ -68,7 +70,7 @@ grammar Mscript {
 
     BOOLEAN             = 'true' | 'false' ;
     INTEGER             = "([+]|[-])?[0-9]+" ;
-    REAL                = "([+]|[-])?([0-9]+[.])?[0-9]+" ;
+    REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
     SINGLE_QUOTE_STRING = "'(?:\\?.)*?'" ;
 }
     """.trimIndent()
@@ -113,6 +115,57 @@ grammar Mscript {
 
         assertNotNull(actual)
         assertEquals("expression", actual.root.name)
+    }
+
+
+    @Test
+    fun process_REAL_0p1() {
+
+        val text = "0.1"
+        val actual = sut.parse("REAL", text)
+
+        assertNotNull(actual)
+        assertEquals("REAL", actual.root.name)
+    }
+    @Test
+    fun process_REAL_0p1em5() {
+
+        val text = "0.1e-5"
+        val actual = sut.parse("REAL", text)
+
+        assertNotNull(actual)
+        assertEquals("REAL", actual.root.name)
+    }
+    @Test
+    fun process_REAL_p1() {
+
+        val text = ".1"
+        val actual = sut.parse("REAL", text)
+
+        assertNotNull(actual)
+        assertEquals("REAL", actual.root.name)
+    }
+
+    @Test
+    fun process_REAL_p1e5() {
+
+        val text = ".1e5"
+        val actual = sut.parse("REAL", text)
+
+        assertNotNull(actual)
+        assertEquals("REAL", actual.root.name)
+    }
+
+    @Test
+    fun process_REAL_1_fails() {
+
+        val text = "1"
+        val e = assertFailsWith(ParseFailedException::class) {
+            sut.parse("REAL", text)
+        }
+
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
     }
 
     @Test
@@ -216,6 +269,15 @@ grammar Mscript {
 
         val text = "func(a, 1, b, 2, c, 3, d, 4, e, 5)"
         val actual = sut.parse("expression", text)
+
+        assertNotNull(actual)
+    }
+
+
+    @Test
+    fun process_func_100_args() {
+        val text = "fprintf(''"+",0".repeat(99)+");"
+        val actual = sut.parse("script", text)
 
         assertNotNull(actual)
     }

@@ -232,7 +232,7 @@ class test_sList {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(0, e.location.column)
+        assertEquals(1, e.location.column)
     }
 
     @Test
@@ -281,6 +281,21 @@ class test_sList {
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
+    @Test
+    fun literal_a1n__r__500() {
+        val sp = literal_a1n()
+        val goalRuleName = "r"
+        val inputText = "a"+",a".repeat(499)
+
+        val actual = test_parse(sp, goalRuleName, inputText)
+
+        assertNotNull(actual)
+
+        val p = SPPTParser(rrb)
+        val expected = p.addTree("r {'a'"+" ',' 'a'".repeat(499)+"}")
+
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
 
     // r = [a / 'b'][2..5]
     // a = 'a'
@@ -301,7 +316,7 @@ class test_sList {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(0, e.location.column)
+        assertEquals(1, e.location.column)
     }
 
     @Test

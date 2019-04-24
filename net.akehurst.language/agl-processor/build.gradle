@@ -56,40 +56,22 @@ kotlin {
             /* You can specify additional settings for the 'linux' target here */
   //      }
     }
-    sourceSets {
-        commonMain {
-            dependencies {
-                implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
-            }
-        }
-        commonTest {
-            dependencies {
-                implementation "org.jetbrains.kotlin:kotlin-test-common:${version_kotlin}"
-                implementation "org.jetbrains.kotlin:kotlin-test-annotations-common:${version_kotlin}"
-            }
-        }
-        jvm8Main {
-            dependencies {
-                implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${version_kotlin}"
-            }
-        }
-        jvm8Test {
-            dependencies {
-                implementation "org.jetbrains.kotlin:kotlin-test:${version_kotlin}"
-                implementation "org.jetbrains.kotlin:kotlin-test-junit:${version_kotlin}"
-            }
-        }
-        jsMain {
-            dependencies {
-                implementation "org.jetbrains.kotlin:kotlin-stdlib-js:${version_kotlin}"
-            }
-        }
-        jsTest {
-            dependencies {
-                implementation "org.jetbrains.kotlin:kotlin-test-js:${version_kotlin}"
-            }
-        }
-    }
+}
+
+dependencies {
+    commonMainImplementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
+    commonTestImplementation "org.jetbrains.kotlin:kotlin-test-common:${version_kotlin}"
+    commonTestImplementation"org.jetbrains.kotlin:kotlin-test-annotations-common:${version_kotlin}"
+    commonTestImplementation "com.soywiz:korio-metadata:$version_korio"
+
+    jvm8MainImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${version_kotlin}"
+    jvm8TestImplementation "org.jetbrains.kotlin:kotlin-test:${version_kotlin}"
+    jvm8TestImplementation"org.jetbrains.kotlin:kotlin-test-junit:${version_kotlin}"
+    jvm8TestImplementation "com.soywiz:korio-jvm:$version_korio"
+
+    jsMainImplementation "org.jetbrains.kotlin:kotlin-stdlib-js:${version_kotlin}"
+    jsTestImplementation "org.jetbrains.kotlin:kotlin-test-js:${version_kotlin}"
+    jsTestImplementation "com.soywiz:korio-js:$version_korio"
 }
 
 detekt {

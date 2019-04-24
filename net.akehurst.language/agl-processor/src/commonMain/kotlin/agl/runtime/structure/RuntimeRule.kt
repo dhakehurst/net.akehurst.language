@@ -17,10 +17,8 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.api.parser.ParseException
-import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.collections.transitveClosure
 import net.akehurst.language.parser.scannerless.InputFromCharSequence
-import net.akehurst.language.parser.sppt.SPPTNodeDefault
 
 class RuntimeRule(
     val number: Int,
@@ -109,10 +107,10 @@ class RuntimeRule(
                     RuntimeRuleItemKind.UNORDERED -> TODO()
                     RuntimeRuleItemKind.MULTI -> if (0 == rhs.multiMin) {
                         setOf(
-                            RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.BEGIN_OF_RULE),
+                            RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.START_OF_RULE),
                             RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE),
-                            RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.BEGIN_OF_RULE),
-                            RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.MID_OF_RULE),
+                            RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.START_OF_RULE),
+                            RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.MULIT_ITEM_POSITION),
                             RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.END_OF_RULE)
                         )
                     } else {
