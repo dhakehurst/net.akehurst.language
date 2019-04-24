@@ -126,16 +126,17 @@ internal class RuntimeParser(
     }
 
     private fun doWidth(gn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition) {
-        val l = this.graph.findOrTryCreateLeaf(transition.item, gn.nextInputPosition)
-        if (null != l) {
-            val lh = transition.lookaheadGuard + this.runtimeRuleSet.allSkipTerminals
-            val hasLh = lh.any {
-                val l = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition)
-                null != l
-            }
-            if (hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
-                this.graph.pushToStackOf(false, transition.to, l, gn, previousSet, emptySet())
-            }
+            val l = this.graph.findOrTryCreateLeaf(transition.item, gn.nextInputPosition)
+            if (null != l) {
+                //TODO: find a better way to look past skip terminals, this means wrong matches can be made...though they will be dropped on H or G!
+                val lh = transition.lookaheadGuard + this.runtimeRuleSet.allSkipTerminals
+                val hasLh = lh.any {
+                    val l = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition)
+                    null != l
+                }
+                if (hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
+                    this.graph.pushToStackOf(false, transition.to, l, gn, previousSet, emptySet())
+                }
         }
     }
 

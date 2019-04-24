@@ -363,87 +363,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return RulePositionClosure(closureNumber, root.rulePositionWlh.rulePosition, extendedStates)
     }
 
-    /**
-     * itemRule is the rule we use to increment rp
-     */
-
-    /*  moved to RulePosition
-
-    internal fun nextRulePosition(rp: RulePosition, itemRule: RuntimeRule): Set<RulePosition> { //TODO: cache this
-        return if (RulePosition.END_OF_RULE == rp.position) {
-            emptySet() //TODO: use goal rule to find next position? maybe
-        } else {
-            when (rp.runtimeRule.rhs.kind) {
-                RuntimeRuleItemKind.EMPTY -> throw ParseException("This should never happen!")
-                RuntimeRuleItemKind.CHOICE_EQUAL -> when {
-                    itemRule == rp.runtimeRule.rhs.items[rp.choice] -> setOf(RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE))
-                    else -> emptySet() //throw ParseException("This should never happen!")
-                }
-                RuntimeRuleItemKind.CHOICE_PRIORITY -> when {
-                    itemRule == rp.runtimeRule.rhs.items[rp.choice] -> setOf(RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE))
-                    else -> emptySet() //throw ParseException("This should never happen!")
-                }
-                RuntimeRuleItemKind.CONCATENATION -> { //TODO: check itemRule?
-                    val np = rp.position + 1
-                    if (np < rp.runtimeRule.rhs.items.size) {
-                        setOf(RulePosition(rp.runtimeRule, 0, np))
-                    } else {
-                        setOf(RulePosition(rp.runtimeRule, 0, RulePosition.END_OF_RULE))
-                    }
-                }
-                RuntimeRuleItemKind.MULTI -> when (rp.choice) {
-                    RuntimeRuleItem.MULTI__EMPTY_RULE -> when {
-                        0 == rp.position && rp.runtimeRule.rhs.multiMin == 0 && itemRule == rp.runtimeRule.rhs.MULTI__emptyRule -> setOf(
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE)
-                        )
-                        else -> emptySet() //throw ParseException("This should never happen!")
-                    }
-                    RuntimeRuleItem.MULTI__ITEM -> when {
-                        itemRule == rp.runtimeRule.rhs.MULTI__repeatedItem -> setOf(
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.MULTI__ITEM, RulePosition.MULIT_ITEM_POSITION),
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.MULTI__ITEM, RulePosition.END_OF_RULE)
-                        )
-                        else -> emptySet() //throw ParseException("This should never happen!")
-                    }
-                    else -> throw ParseException("This should never happen!")
-                }
-                RuntimeRuleItemKind.SEPARATED_LIST -> when (rp.choice) {
-                    RuntimeRuleItem.SLIST__EMPTY_RULE -> when {
-                        0 == rp.position && rp.runtimeRule.rhs.multiMin == 0 && itemRule == rp.runtimeRule.rhs.SLIST__emptyRule -> setOf(
-                                RulePosition(rp.runtimeRule, rp.choice, RulePosition.END_OF_RULE)
-                        )
-                        else -> emptySet() //throw ParseException("This should never happen!")
-                    }
-                    RuntimeRuleItem.SLIST__ITEM -> when {
-                        0 == rp.position && (rp.runtimeRule.rhs.multiMax == 1) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
-                        )
-                        0 == rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1 == rp.runtimeRule.rhs.multiMax) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.MULIT_ITEM_POSITION),
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
-                        )
-                        2 == rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1 == rp.runtimeRule.rhs.multiMax) && itemRule == rp.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.MULIT_ITEM_POSITION),
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
-                        )
-                        else -> emptySet() //throw ParseException("This should never happen!")
-                    }
-                    RuntimeRuleItem.SLIST__SEPARATOR -> when {
-                        1 == rp.position && (rp.runtimeRule.rhs.multiMax > 1 || -1 == rp.runtimeRule.rhs.multiMax) && itemRule == rp.runtimeRule.rhs.SLIST__separator -> setOf(
-                                RulePosition(rp.runtimeRule, RuntimeRuleItem.SLIST__ITEM, 2)
-                        )
-                        else -> emptySet() //throw ParseException("This should never happen!")
-                    }
-                    else -> throw ParseException("This should never happen!")
-                }
-                RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> throw ParseException("Not yet supported")
-                RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> throw ParseException("Not yet supported")
-                RuntimeRuleItemKind.UNORDERED -> throw ParseException("Not yet supported")
-            }
-        }
-    }
-*/
     private fun createWidthTransition(from: ParserState, closureState: ParserState): Transition {
+
         val action = Transition.ParseAction.WIDTH
         val item = closureState.runtimeRule
         val lookaheadGuard = closureState.rulePositionWlh.graftLookahead
@@ -451,23 +372,26 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return Transition(from, to, action, item, lookaheadGuard, null)
     }
 
-    private fun createHeightTransition(from: ParserState, parentRP: RulePositionWithLookahead): Set<Transition> {
+    private fun createHeightTransition(from: ParserState): Set<Transition> {
+        val parentRP = from.directParent?.rulePositionWlh ?: throw ParseException("should never be null")
         val prevGuard = parentRP //for height, previous must not match prevGuard
         val action = Transition.ParseAction.HEIGHT
         val item = from.runtimeRule
-        val lookaheadGuard = from.rulePositionWlh.graftLookahead
-        val toSet = from.directParent?.next(this) ?: emptySet()
+        val lookaheadGuard = parentRP.graftLookahead //from.rulePositionWlh.graftLookahead
+        val lh = this.calcLookahead(from.directParent.rulePositionWlh, from.rulePositionWlh.rulePosition, parentRP.graftLookahead)
+        val toSet = from.directParent.next(this) //TODO: the next call is returning too much, can we reduce it?
         return toSet.map { to ->
             Transition(from, to, action, item, lookaheadGuard, prevGuard)
         }.toSet()
     }
 
-    private fun createGraftTransition(from: ParserState, parentRP: RulePositionWithLookahead): Set<Transition> {
+    private fun createGraftTransition(from: ParserState): Set<Transition> {
+        val parentRP = from.directParent?.rulePositionWlh ?: throw ParseException("should never be null")
         val prevGuard = parentRP //for graft, previous must match prevGuard
         val action = Transition.ParseAction.GRAFT
         val item = from.runtimeRule
-        val lookaheadGuard = from.rulePositionWlh.graftLookahead
-        val toSet = from.directParent?.next(this) ?: emptySet()
+        val lookaheadGuard = parentRP.graftLookahead //from.rulePositionWlh.graftLookahead
+        val toSet = from.directParent.next(this)  //TODO: the next call is returning too much, can we reduce it?
         return toSet.map { to ->
             Transition(from, to, action, item, lookaheadGuard, prevGuard)
         }.toSet()
@@ -486,18 +410,17 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             if (from.isAtEnd) {
                 val parentState = from.directParent
                 if (null != parentState) {
-                    val parentRP = parentState.rulePositionWlh
                     if (parentState != null && parentState.rulePositionWlh.runtimeRule.isGoal) {
-                        transitions += this.createGraftTransition(from, parentRP)
+                        transitions += this.createGraftTransition(from)
                     } else {
                         val height = parentState.rulePositionWlh.isAtStart
                         val graft = parentState.rulePositionWlh.isAtStart.not()
 
                         if (height) {
-                            transitions += this.createHeightTransition(from, parentRP)
+                            transitions += this.createHeightTransition(from)
                         }
                         if (graft) {
-                            transitions += this.createGraftTransition(from, parentRP)
+                            transitions += this.createGraftTransition(from)
                         }
                     }
                 } else {
