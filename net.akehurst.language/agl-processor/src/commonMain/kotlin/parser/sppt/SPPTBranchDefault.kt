@@ -34,7 +34,7 @@ class SPPTBranchDefault(
 
     // --- SPPTBranch ---
 
-    override val childrenAlternatives: MutableSet<List<SPPTNode>> = mutableSetOf()
+    override val childrenAlternatives: MutableSet<List<SPPTNode>> = mutableSetOf() //TODO: need to be sure a List is ok here !
 
     override val children : List<SPPTNode> get() {
         return this.childrenAlternatives.first()

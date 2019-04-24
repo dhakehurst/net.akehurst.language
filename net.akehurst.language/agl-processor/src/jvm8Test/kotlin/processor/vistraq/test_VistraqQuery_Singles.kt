@@ -1,17 +1,9 @@
 package net.akehurst.language.processor.vistraq
 
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.ArrayList
-
-import org.junit.Assert
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import org.junit.runners.Parameterized.Parameters
-
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.processor.Agl
+import org.junit.Assert
+import org.junit.Test
 
 class test_VistraqQuery_Singles {
 

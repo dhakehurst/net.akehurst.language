@@ -44,8 +44,6 @@ internal class ParseGraph(
             return this._goals
         }
 
-    //lateinit var currentUserGoalRule: RuntimeRule
-
     fun longestMatch(longestLastGrown: SPPTNode?, seasons: Int): SPPTNode {
         if (!this.goals.isEmpty() && this.goals.size >= 1) {
             var lt = this.goals.iterator().next()
@@ -124,7 +122,7 @@ internal class ParseGraph(
     private fun addGrowing(gn: GrowingNode) {
         val startPosition = gn.startPosition
         val nextInputPosition = gn.nextInputPosition
-        val gnindex = GrowingNodeIndex(gn.currentRulePosition, startPosition, nextInputPosition)
+        val gnindex = GrowingNodeIndex(gn.currentState, startPosition, nextInputPosition)
         val existing = this.growing[gnindex]
         if (null == existing) {
             this.growing[gnindex] = gn
@@ -139,7 +137,7 @@ internal class ParseGraph(
     private fun addGrowing(gn: GrowingNode, previous: Set<PreviousInfo>) {
         val startPosition = gn.startPosition
         val nextInputPosition = gn.nextInputPosition
-        val gnindex = GrowingNodeIndex(gn.currentRulePosition, startPosition, nextInputPosition)
+        val gnindex = GrowingNodeIndex(gn.currentState, startPosition, nextInputPosition)
         val existing = this.growing[gnindex]
         if (null == existing) {
             for (info in previous) {
@@ -157,7 +155,7 @@ internal class ParseGraph(
     private fun removeGrowing(gn: GrowingNode) {
         val startPosition = gn.startPosition
         val nextInputPosition = gn.nextInputPosition
-        val gnindex = GrowingNodeIndex(gn.currentRulePosition, startPosition, nextInputPosition)
+        val gnindex = GrowingNodeIndex(gn.currentState, startPosition, nextInputPosition)
         this.growing.remove(gnindex)
     }
 
@@ -205,7 +203,6 @@ internal class ParseGraph(
         for (info in previous) {
             this.addGrowing(info.node)
         }
-        //val curRp = RulePosition(runtimeRule, 0, RulePosition.END_OF_RULE)//TODO: get this from the rule so we don't have to create an object here
         val gnindex = GrowingNodeIndex(curRp, startPosition, nextInputPosition) //TODO: not sure we need both tgt and cur for leaves
         val existing = this.growing[gnindex]
         if (null == existing) {
@@ -364,28 +361,8 @@ internal class ParseGraph(
     }
 
     //TODO: addPrevious! goalrule growing node, maybe
-    fun start(goalState: ParserState, runtimeRuleSet: RuntimeRuleSet) {
-
+    fun start(goalState: ParserState) {
         val goalGN = GrowingNode(false, goalState, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
-
-        //val startStates = runtimeRuleSet.currentPossibleRulePositionStates(this.currentGoalRule, goalState, goalState.graftLookahead)
-        //val x = startStates.filter { it.items.any { it.isTerminal } }
-        //val closure0 = runtimeRuleSet.fetchOrCreateClosure(userGoalRule, goalState)
-        //val trans = runtimeRuleSet.transitions(userGoalRule, goalState, setOf(RuntimeRuleSet.END_OF_TEXT))
-        //val start = closure0.content.filter { it.runtimeRule == userGoalRule }
-        //val start = goalState.items.flatMap {
-        //    it.calcExpectedRulePositions(0).map {
-        //        runtimeRuleSet.fetchOrCreateRulePositionStateAndItsClosure(userGoalRule, it, goalState.rulePositionWlh, setOf(RuntimeRuleSet.END_OF_TEXT), setOf(RuntimeRuleSet.END_OF_TEXT))
-        //    }
-        //}
-/*
-        for (curRp in start) {
-            //val curRp = RulePosition(userGoalRule, 0, 0)
-            val ugoalGN = GrowingNode(false, curRp, 0, 0, 0, emptyList<SPPTNodeDefault>(), 0)
-            ugoalGN.addPrevious(goalGN)
-            this.addGrowingHead(GrowingNodeIndex(curRp, 0, 0), ugoalGN)
-        }
- */
         this.addGrowingHead(GrowingNodeIndex(goalState, 0, 0), goalGN)
     }
 
@@ -423,14 +400,14 @@ internal class ParseGraph(
         if (parent.runtimeRule.isNonTerminal || parent.runtimeRule.isGoal) {
             this.growNextChildAt(
                 false,
-                parent.currentRulePosition,
+                parent.currentState,
                 parent,
                 parent.priority,
                 skipNode,
                 emptyList()
             )
         } else {
-            val nextRp = parent.currentRulePosition
+            val nextRp = parent.currentState
             val nextInputPosition = parent.nextInputPosition + skipNode.matchedTextLength
             val newLeaf = this.findOrCreateGrowingLeafForSkip(
                 false,

@@ -59,7 +59,7 @@ internal class RuntimeParser(
 
     fun start(userGoalRule: RuntimeRule) {
         val gState = runtimeRuleSet.startingState(userGoalRule)
-        this.graph.start(gState, runtimeRuleSet)
+        this.graph.start(gState)
     }
 
     fun grow() {
@@ -72,14 +72,10 @@ internal class RuntimeParser(
     }
 
     private fun growNode(gn: GrowingNode, previous: Set<PreviousInfo>) {
-
         val didSkipNode = this.tryGrowWidthWithSkipRules(gn, previous)
         if (didSkipNode) {
             return
         } else {
-            //if (gn.runtimeRule.isSkip && gn.currentRulePosition.isAtEnd) {
-            //    this.tryGraftBackSkipNode(gn, previous)
-            //} else {
             if (gn.runtimeRule.isGoal) {
                 this.growGoalNode(gn)
             } else {
@@ -91,13 +87,12 @@ internal class RuntimeParser(
                     }
                 }
             }
-            // }
         }
     }
 
     private fun growGoalNode(gn: GrowingNode) {
         //no previous, so gn must be the Goal node
-        val rps = gn.currentRulePosition
+        val rps = gn.currentState
         val transitions: Set<Transition> = this.runtimeRuleSet.transitions(this.graph.userGoalRule, rps)
 
         for (it in transitions) {
@@ -111,7 +106,7 @@ internal class RuntimeParser(
     }
 
     private fun growWithPrev(gn: GrowingNode, previous: PreviousInfo) {
-        val rps = gn.currentRulePosition
+        val rps = gn.currentState
         val transitions: Set<Transition> = this.runtimeRuleSet.transitions(this.graph.userGoalRule, rps)
 
         for (it in transitions) {
@@ -122,13 +117,6 @@ internal class RuntimeParser(
                 Transition.ParseAction.GOAL -> throw ParseException("Should never happen")
             }
         }
-
-        //TODO("RP should indicate whether to do height or graft")
-        // term a from S1 = S . a  ==> must be a graft
-        // term a from S = . a ==> must be height
-        //this.tryGrowHeight(gn, previous)
-        //this.tryGraftInto(gn, previous)
-        //this.tryShift(gn, previous)
     }
 
     private fun doGoal(gn: GrowingNode) {
@@ -152,7 +140,7 @@ internal class RuntimeParser(
     }
 
     private fun doHeight(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
-        if (previous.node.currentRulePosition.rulePositionWlh != transition.prevGuard) {
+        if (previous.node.currentState.rulePositionWlh != transition.prevGuard) {
             val lh = transition.lookaheadGuard
             val hasLh = lh.any {
                 val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
@@ -168,7 +156,7 @@ internal class RuntimeParser(
     }
 
     private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
-        if (previous.node.currentRulePosition.rulePositionWlh == transition.prevGuard) {
+        if (previous.node.currentState.rulePositionWlh == transition.prevGuard) {
             val lh = transition.lookaheadGuard
             val hasLh = lh.any {
                 val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
@@ -177,7 +165,7 @@ internal class RuntimeParser(
             if (hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
                 val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
                         ?: throw ParseException("Should never be null")
-                this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentRulePosition.position, gn.skipNodes)
+                this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
             }
         }
     }
@@ -187,31 +175,26 @@ internal class RuntimeParser(
             return false //dont grow more skip if currently doing a skip
         } else {
             var modified = false
-            //      if (gn.currentRulePosition.runtimeRule.isTerminal) { //(gn.canGrowWidthWithSkip) { // don't grow width if its complete...cant graft back
             val rps = this.runtimeRuleSet.firstSkipRuleTerminalPositions //TODO: get skipStates here, probably be better/faster
             for (rp in rps) {
                 for (rr in rp.runtimeRule.itemsAt[rp.position]) {
                     val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
                     if (null != l) {
-                        //val newRP = runtimeRuleSet.nextRulePosition(rp, rr)
-                        //newRP.forEach {
                         val leafRp = RulePosition(rr, 0, -1)
                         val skipStates = this.runtimeRuleSet.fetchSkipStates(leafRp)
                         for (ss in skipStates) {
                             this.graph.pushToStackOf(true, ss, l, gn, previous, emptySet())
                         }
                         modified = true
-                        //}
                     }
                 }
             }
-            //       }
             return modified
         }
     }
 
     private fun growSkip(gn: GrowingNode, previous: PreviousInfo) {
-        val rps = gn.currentRulePosition
+        val rps = gn.currentState
         val transitions: Set<Transition> = this.runtimeRuleSet.skipTransitions(this.graph.userGoalRule, rps)
 
         for (it in transitions) {
@@ -222,13 +205,6 @@ internal class RuntimeParser(
                 Transition.ParseAction.GOAL -> doGraftSkip(gn, previous, it)
             }
         }
-
-        //TODO("RP should indicate whether to do height or graft")
-        // term a from S1 = S . a  ==> must be a graft
-        // term a from S = . a ==> must be height
-        //this.tryGrowHeight(gn, previous)
-        //this.tryGraftInto(gn, previous)
-        //this.tryShift(gn, previous)
     }
 
     private fun doGraftSkip(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
