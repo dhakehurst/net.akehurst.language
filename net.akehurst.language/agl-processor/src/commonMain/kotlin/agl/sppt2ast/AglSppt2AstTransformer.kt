@@ -23,9 +23,9 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt2ast.UnableToTransformSppt2AstExeception
 import net.akehurst.language.agl.ast.*
 import net.akehurst.language.processor.BranchHandler
-import net.akehurst.language.processor.Sppt2AstTransformerVisitorBasedAbstract
+import net.akehurst.language.processor.SyntaxAnalyserAbstract
 
-class AglSppt2AstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
+class AglSppt2AstTransformer : SyntaxAnalyserAbstract() {
 
     var grammarLoader: GrammarLoader? = null
 

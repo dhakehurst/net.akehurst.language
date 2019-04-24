@@ -17,9 +17,8 @@
 package net.akehurst.language.processor
 
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.processor.Sppt2AstTransformerVisitorBasedAbstract
 
-class TestAstTransformer : Sppt2AstTransformerVisitorBasedAbstract() {
+class TestAstTransformer : SyntaxAnalyserAbstract() {
 
     override fun clear() {
 

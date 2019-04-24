@@ -26,7 +26,7 @@ import net.akehurst.language.api.sppt2ast.UnableToTransformSppt2AstExeception
 
 typealias BranchHandler<T> = (SPPTBranch, List<SPPTBranch>, Any?) -> T
 
-abstract class Sppt2AstTransformerVisitorBasedAbstract : Sppt2AstTransformer, SharedPackedParseTreeVisitor<Any, Any?> {
+abstract class SyntaxAnalyserAbstract : Sppt2AstTransformer, SharedPackedParseTreeVisitor<Any, Any?> {
 
     private var grammarLoader: GrammarLoader? = null
     private val branchHandlers: MutableMap<String, BranchHandler<*>> = mutableMapOf()
