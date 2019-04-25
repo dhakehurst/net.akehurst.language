@@ -141,7 +141,7 @@ internal class RuntimeParser(
     }
 
     private fun doHeight(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
-        if (previous.node.currentState.rulePositionWlh != transition.prevGuard) {
+        if (previous.node.currentState.rulePosition != transition.prevGuard) {
             val lh = transition.lookaheadGuard
             val hasLh = lh.any {
                 val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
@@ -157,7 +157,7 @@ internal class RuntimeParser(
     }
 
     private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
-        if (previous.node.currentState.rulePositionWlh == transition.prevGuard) {
+        if (previous.node.currentState.rulePosition == transition.prevGuard) {
             val lh = transition.lookaheadGuard
             val hasLh = lh.any {
                 val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
@@ -182,10 +182,8 @@ internal class RuntimeParser(
                     val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
                     if (null != l) {
                         val leafRp = RulePosition(rr, 0, -1)
-                        val skipStates = this.runtimeRuleSet.fetchSkipStates(leafRp)
-                        for (ss in skipStates) {
-                            this.graph.pushToStackOf(true, ss, l, gn, previous, emptySet())
-                        }
+                        val skipState = this.runtimeRuleSet.fetchSkipStates(leafRp)
+                        this.graph.pushToStackOf(true, skipState, l, gn, previous, emptySet())
                         modified = true
                     }
                 }

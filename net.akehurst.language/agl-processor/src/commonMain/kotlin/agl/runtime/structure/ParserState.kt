@@ -33,69 +33,66 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.api.parser.ParseException
 
+data class ParentRelation(
+        val rulePosition: RulePosition,
+        val lookahead: Set<RuntimeRule>
+)
+
 class ParserState(
-        val number:StateNumber,
-        val directParent: ParserState?,
-        val rulePositionWlh: RulePositionWithLookahead,
+        val number: StateNumber,
+        val rulePosition: RulePosition,
         val stateMap: ParserStateSet
 ) {
 
     private var nextStates_cache: Set<ParserState>? = null
-    private var ancestors_cache:List<ParserState>? = null
+
+    val parentRelations = mutableSetOf<ParentRelation>()
 
     val items: Set<RuntimeRule>
-        get() {
-            return this.rulePositionWlh.items
+        inline get() {
+            return this.rulePosition.items
         }
     val runtimeRule: RuntimeRule
-        get() {
-            return this.rulePositionWlh.runtimeRule
+        inline get() {
+            return this.rulePosition.runtimeRule
         }
     val choice: Int
-        get() {
-            return this.rulePositionWlh.choice
+        inline get() {
+            return this.rulePosition.choice
         }
     val position: Int
-        get() {
-            return this.rulePositionWlh.position
+        inline get() {
+            return this.rulePosition.position
         }
 
     val isAtEnd: Boolean
-        get() {
-            return this.rulePositionWlh.isAtEnd
+        inline get() {
+            return this.rulePosition.isAtEnd
         }
-
-    val ancestors:List<ParserState> get() {
-        if (null==ancestors_cache) {
-            this.ancestors_cache = if (null==this.directParent) emptyList() else this.directParent.ancestors + this.directParent
-        }
-        return this.ancestors_cache ?: throw ParseException("should never be null")
-    }
-
-    fun next(runtimeRuleSet: RuntimeRuleSet) : Set<ParserState> {
-        if (null==nextStates_cache) {
+/*
+    fun next(runtimeRuleSet: RuntimeRuleSet): Set<ParserState> {
+        if (null == nextStates_cache) {
             this.nextStates_cache = runtimeRuleSet.fetchNextStates(this)
         }
         return this.nextStates_cache ?: throw ParseException("shouild never be null")
     }
-
+*/
     // --- Any ---
 
     override fun hashCode(): Int {
-        return this.number.hashCode() //rulePositionWlh.hashCode() * 31 + (directParent.hashCode()))
+        return this.number.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
         return if (other is ParserState) {
             this.number.value == other.number.value
-            //this.rulePositionWlh == other.rulePositionWlh && this.directParent == other.directParent
         } else {
             false
         }
     }
 
     override fun toString(): String {
-        return "State(${directParent?.rulePositionWlh}-${rulePositionWlh})"
+        return "State(${this.number.value}-${rulePosition})"
     }
 
 }

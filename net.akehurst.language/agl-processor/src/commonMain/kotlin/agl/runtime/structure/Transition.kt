@@ -22,7 +22,7 @@ data class Transition(
         val action: ParseAction,
         val item: RuntimeRule,
         val lookaheadGuard: Set<RuntimeRule>,
-        val prevGuard : RulePositionWithLookahead?
+        val prevGuard : RulePosition?
 //TODO: add previousGuard for use in graft
 ) {
     enum class ParseAction {

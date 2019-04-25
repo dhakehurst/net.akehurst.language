@@ -20,7 +20,7 @@ inline class StateNumber(val value:Int)
 
 class RulePositionWithLookahead(
     val rulePosition: RulePosition,
-    val graftLookahead: Set<RuntimeRule>
+    val lookahead: Set<RuntimeRule>
 ) {
 
     val items:Set<RuntimeRule> get() { return this.rulePosition.items }
@@ -40,14 +40,14 @@ class RulePositionWithLookahead(
     override fun equals(other: Any?): Boolean {
         return if (other is RulePositionWithLookahead) {
             other.rulePosition == this.rulePosition
-                && this.graftLookahead == other.graftLookahead
+                && this.lookahead == other.lookahead
         } else {
             false
         }
     }
 
     override fun toString(): String {
-        return "(${rulePosition},${graftLookahead})"
+        return "(${rulePosition},${lookahead})"
     }
 
 }

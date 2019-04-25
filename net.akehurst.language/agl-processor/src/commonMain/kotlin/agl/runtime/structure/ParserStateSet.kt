@@ -29,24 +29,19 @@ class ParserStateSet(
      * we index the map with RulePositionWithLookahead because that is what is used to create a new state,
      * and thus it should give fast lookup
      */
-    private val states = lazyMapNonNull<RulePositionWithLookahead, MutableSet<ParserState>> {
-        mutableSetOf()
-    }
+    private val states = mutableMapOf<RulePosition, ParserState>()
 
-    internal fun fetchOrCreateParseState(rulePosition: RulePositionWithLookahead, parent: ParserState?): ParserState {
-        val possible = this.states[rulePosition]
-//        val parentAncestors = if (null == parent) emptyList() else parent.ancestors + parent
-//        val existing = possible.find { ps -> ps.ancestors == parentAncestors }
-        val existing = possible.find { ps -> ps.directParent?.rulePositionWlh == parent?.rulePositionWlh }
+    internal fun fetchOrCreateParseState(rulePosition: RulePosition): ParserState {
+        val existing = this.states[rulePosition]
         return if (null == existing) {
-            val v = ParserState(StateNumber(this.nextState++), parent, rulePosition, this)
-            this.states[rulePosition].add(v)
+            val v = ParserState(StateNumber(this.nextState++), rulePosition, this)
+            this.states[rulePosition] = v
             v
         } else {
             existing
         }
     }
-
+/*
     internal fun fetchNextParseState(rulePosition: RulePositionWithLookahead, parent: ParserState?): ParserState {
         val possible = this.states[rulePosition]
         //val parentAncestors = if (null == parent) emptyList() else parent.ancestors + parent
@@ -67,14 +62,9 @@ class ParserStateSet(
             it.directParent==directParent
         }
     }
-
-    internal  fun fetchAll(rulePosition: RulePosition) :Set<ParserState> {
-        //TODO: this is not very efficient, skip stuff needs a rework
-        return this.states.values.flatMap {
-            it.filter {
-                ps->ps.rulePositionWlh.rulePosition==rulePosition
-            }
-        }.toSet()
+*/
+    internal  fun fetch(rulePosition: RulePosition) :ParserState {
+        return this.states[rulePosition] ?: throw ParseException("should never be null")
     }
 
 }
