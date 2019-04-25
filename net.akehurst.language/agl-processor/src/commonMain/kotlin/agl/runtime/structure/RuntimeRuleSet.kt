@@ -22,7 +22,6 @@ import net.akehurst.language.parser.scannerless.InputFromCharSequence
 
 class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
-
     companion object {
         val GOAL_RULE_NUMBER = -1;
         val EOT_RULE_NUMBER = -2;
