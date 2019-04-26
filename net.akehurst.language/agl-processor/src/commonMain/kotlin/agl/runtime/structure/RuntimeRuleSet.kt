@@ -395,43 +395,40 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return Transition(from, to, action, lookaheadGuard, null)
     }
 
-    private fun createHeightTransition(from: ParserState, parentRelation: ParentRelation): Set<Transition> {
+    private fun createHeightTransition(from: ParserState, parentRelation: ParentRelation, previous: RulePosition?): Set<Transition> {
         val parentRP = parentRelation.rulePosition
         val prevGuard = parentRP //for height, previous must not match prevGuard
         val action = Transition.ParseAction.HEIGHT
         val lookaheadGuard = parentRelation.lookahead
         val toSet = parentRP.next().map { from.stateSet.fetchOrCreateParseState(it) }
+        //val filteredToSet = toSet.filter { this.canGrowInto(it, previous) }
         return toSet.map { to ->
             Transition(from, to, action, lookaheadGuard, prevGuard)
         }.toSet()
     }
 
-    private fun createGraftTransition(from: ParserState, parentRelation: ParentRelation): Set<Transition> {
+    private fun createGraftTransition(from: ParserState, parentRelation: ParentRelation, previous: RulePosition?): Set<Transition> {
         val parentRP = parentRelation.rulePosition
         val prevGuard = parentRP //for graft, previous must match prevGuard
         val action = Transition.ParseAction.GRAFT
         val lookaheadGuard = parentRelation.lookahead
         val toSet = parentRP.next().map { from.stateSet.fetchOrCreateParseState(it) }
+        //val filteredToSet = toSet.filter { this.canGrowInto(it, previous) }
         return toSet.map { to ->
             Transition(from, to, action, lookaheadGuard, prevGuard)
         }.toSet()
 
     }
 
-    private fun canGrowInto(pr:ParentRelation, prevRp:RulePosition?) :Boolean {
+    private fun canGrowInto(pr: ParentRelation, prevRp: RulePosition?): Boolean {
         return when {
             null == prevRp -> true
             prevRp.isAtEnd -> false
-            pr.rulePosition==prevRp -> true
+            pr.rulePosition == prevRp -> true
             else -> {
-                val nextExpectedItems = this.calcExpectedItemRulePositionTransitive(prevRp)
-                if (nextExpectedItems.contains(pr.rulePosition)) {
-                    true
-                } else {
-                    nextExpectedItems.any { nextPrevRp ->
-                        val prevClosure = this.createClosure(nextPrevRp, null)
-                        prevClosure.content.any { it.rulePosition==pr.rulePosition }
-                    }
+                val prevClosure = this.createClosure(prevRp, null)
+                prevClosure.content.any {
+                    it.runtimeRule == pr.rulePosition.runtimeRule //&& it.lookahead == pr.lookahead
                 }
             }
         }
@@ -475,7 +472,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
     */
 
-    internal fun calcTransitions(from: ParserState, previous:RulePosition?): Set<Transition> { //TODO: add previous in order to filter parent relations
+    internal fun calcTransitions(from: ParserState, previous: RulePosition?): Set<Transition> { //TODO: add previous in order to filter parent relations
         val heightTransitions = mutableSetOf<Transition>()
         val graftTransitions = mutableSetOf<Transition>()
         val widthTransitions = mutableSetOf<Transition>()
@@ -497,16 +494,16 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     val filteredRelations = from.parentRelations.filter { pr -> this.canGrowInto(pr, previous) }
                     for (parentRelation in filteredRelations) {
                         if (parentRelation.rulePosition.runtimeRule.isGoal) {
-                            graftTransitions += this.createGraftTransition(from, parentRelation)
+                            graftTransitions += this.createGraftTransition(from, parentRelation, previous)
                         } else {
                             val height = parentRelation.rulePosition.isAtStart
                             val graft = parentRelation.rulePosition.isAtStart.not()
 
                             if (height) {
-                                heightTransitions += this.createHeightTransition(from, parentRelation)
+                                heightTransitions += this.createHeightTransition(from, parentRelation, previous)
                             }
                             if (graft) {
-                                graftTransitions += this.createGraftTransition(from, parentRelation)
+                                graftTransitions += this.createGraftTransition(from, parentRelation, previous)
                             }
                         }
                     }
@@ -586,10 +583,10 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             }
         }
     */
-    fun skipTransitions(userGoalRule: RuntimeRule, from: ParserState,previous:RulePosition): Set<Transition> {
+    fun skipTransitions(userGoalRule: RuntimeRule, from: ParserState, previous: RulePosition): Set<Transition> {
         val transitions = this.skipTransitions_cache[userGoalRule][from]
         if (null == transitions) {
-            val t = this.calcTransitions(from, previous)
+            val t = this.calcTransitions(from, null)//previous)
             this.skipTransitions_cache[userGoalRule][from] = t
             return t
         } else {

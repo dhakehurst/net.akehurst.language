@@ -59,7 +59,7 @@ class test_pattern {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(0, ex.location.column)
+        assertEquals(1, ex.location.column)
     }
 
     private fun pattern_a2c(): ScannerlessParser {

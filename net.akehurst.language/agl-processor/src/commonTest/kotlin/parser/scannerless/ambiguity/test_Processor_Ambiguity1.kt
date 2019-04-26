@@ -46,7 +46,7 @@ class test_Processor_Ambiguity1 : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun S_S_empty() {
+    fun S_S_empty_fails() {
         val rrb = this.S()
         val goal = "S"
         val sentence = ""
@@ -55,7 +55,7 @@ class test_Processor_Ambiguity1 : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, e.location.line)
-        assertEquals(0, e.location.column)
+        assertEquals(1, e.location.column)
     }
 
     @Test

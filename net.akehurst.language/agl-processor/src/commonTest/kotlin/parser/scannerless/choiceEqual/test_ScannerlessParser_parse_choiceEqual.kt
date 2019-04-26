@@ -143,7 +143,7 @@ class test_ScannerlessParser_parse_choiceEqual {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(0, ex.location.column)
+        assertEquals(1, ex.location.column)
     }
 
     @Test

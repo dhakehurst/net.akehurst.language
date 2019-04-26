@@ -184,7 +184,7 @@ grammar Query {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(0, e.location.column)
+        assertEquals(1, e.location.column)
     }
 
     @Test
@@ -194,7 +194,7 @@ grammar Query {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(0, e.location.column)
+        assertEquals(1, e.location.column)
     }
 
     @Test

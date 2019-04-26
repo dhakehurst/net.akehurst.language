@@ -125,9 +125,9 @@ grammar English {
         | AUX_VERB 'not'? 'have' 'been' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
         | AUX_VERB 'not'? 'be' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
         | AUX_VERB 'not'? VERB_INFINITIVE
-        | 'ought' ('to | 'not') VERB_INFINITIVE
-        | 'ought' ('to | 'not') 'be' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
-        | 'ought' ('to | 'not') 'have' VERB_PAST_PARTICIPLE
+        | 'ought' ('to' | 'not') VERB_INFINITIVE
+        | 'ought' ('to' | 'not') 'be' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
+        | 'ought' ('to' | 'not') 'have' VERB_PAST_PARTICIPLE
         | 'ought' ('to' | 'not') 'have' 'been' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
         | ('do' |'does' |'did') 'not'? VERB_INFINITIVE?
         | ('am' |'are' |'is' |'was' |'were') 'not'? (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?

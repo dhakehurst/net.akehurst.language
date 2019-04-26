@@ -151,10 +151,10 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
+        val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S,RuntimeRuleItem.MULTI__EMPTY_RULE,RulePosition.END_OF_RULE))
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s1.transitions(rrs, null)
         val expected = setOf<Transition>(
-
         )
 
         assertEquals(expected, actual)

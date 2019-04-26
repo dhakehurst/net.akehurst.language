@@ -1,4 +1,4 @@
-package new.akehurst.language.processor
+package net.akehurst.language.processor
 
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
