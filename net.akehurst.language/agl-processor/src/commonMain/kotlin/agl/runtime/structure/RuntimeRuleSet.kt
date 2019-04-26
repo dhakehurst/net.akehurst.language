@@ -478,6 +478,10 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 }
             }
         }
+
+        //TODO: merge transitions with everything duplicate except lookahead (merge lookaheads)
+        //not sure if this should be before or after the h/g conflict test.
+
         val conflictHeightTransitions = mutableSetOf<Pair<Transition, Transition>>()
         for (trh in heightTransitions) {
             for (trg in graftTransitions) {
