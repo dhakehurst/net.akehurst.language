@@ -1,9 +1,12 @@
 package net.akehurst.language.processor.vistraq
 
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.processor.Agl
 import org.junit.Assert
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class test_VistraqQuery_Singles {
 
@@ -188,6 +191,43 @@ grammar Query {
          }
 
     }
+
+    @Test
+    fun NULL() {
+        processor.parse("NULL", "null")
+    }
+
+    @Test
+    fun REAL_0() {
+
+        val e = assertFailsWith(ParseFailedException::class) {
+            processor.parse("REAL", "0")
+        }
+
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
+    }
+
+    @Test
+    fun REAL_p0() {
+        val e = assertFailsWith(ParseFailedException::class) {
+            processor.parse("REAL", ".0")
+        }
+
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
+    }
+
+    @Test
+    fun REAL_0p0() {
+        processor.parse("REAL", "0.0")
+    }
+
+    @Test
+    fun REAL_3p14() {
+        processor.parse("REAL", "3.14")
+    }
+
 
     @Test
     fun expression_1() {

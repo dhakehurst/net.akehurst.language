@@ -553,7 +553,20 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             val trg = it.second
             Transition(trh.from, trh.to, trh.action, trh.lookaheadGuard, trg.prevGuard)
         } + (heightTransitions - conflictHeightTransitions.map { it.first })
-        val transitions = newHeightTransitions + graftTransitions + widthTransitions + goalTransitions
+
+        val mergedWidthTransitions = widthTransitions.groupBy { it.to }.map {
+            Transition(from, it.key, Transition.ParseAction.WIDTH, it.value.flatMap { it.lookaheadGuard }.toSet(), null)
+        }
+
+        val mergedHeightTransitions = newHeightTransitions.groupBy { Pair(it.to, it.prevGuard) }.map {
+            Transition(from, it.key.first, Transition.ParseAction.HEIGHT, it.value.flatMap { it.lookaheadGuard }.toSet(), it.key.second)
+        }
+
+        val mergedGraftTransitions = graftTransitions.groupBy { Pair(it.to, it.prevGuard) }.map {
+            Transition(from, it.key.first, Transition.ParseAction.GRAFT, it.value.flatMap { it.lookaheadGuard }.toSet(), it.key.second)
+        }
+
+        val transitions = mergedHeightTransitions + mergedGraftTransitions + mergedWidthTransitions + goalTransitions
         return transitions.toSet()
     }
 

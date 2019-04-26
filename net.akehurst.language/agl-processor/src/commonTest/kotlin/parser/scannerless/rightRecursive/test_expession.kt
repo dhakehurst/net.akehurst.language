@@ -16,8 +16,6 @@
 
 package net.akehurst.language.parser.scannerless.rightRecursive
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
