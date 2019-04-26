@@ -424,11 +424,11 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             prevRp.isAtEnd -> false
             pr.rulePosition==prevRp -> true
             else -> {
-                val nextRPs = prevRp.next()
-                if (nextRPs.contains(pr.rulePosition)) {
+                val nextExpectedItems = this.calcExpectedItemRulePositionTransitive(prevRp)
+                if (nextExpectedItems.contains(pr.rulePosition)) {
                     true
                 } else {
-                    nextRPs.any { nextPrevRp ->
+                    nextExpectedItems.any { nextPrevRp ->
                         val prevClosure = this.createClosure(nextPrevRp, null)
                         prevClosure.content.any { it.rulePosition==pr.rulePosition }
                     }
