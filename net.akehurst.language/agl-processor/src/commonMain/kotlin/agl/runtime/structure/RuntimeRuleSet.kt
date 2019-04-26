@@ -419,15 +419,61 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     private fun canGrowInto(pr:ParentRelation, prevRp:RulePosition?) :Boolean {
-        if (null == prevRp || pr.rulePosition==prevRp) { //TODO: do we need to check LH here also?
-            return true
-        } else {
-            val prevClosure = this.createClosure(prevRp, null)
-
+        return when {
+            null == prevRp -> true
+            prevRp.isAtEnd -> false
+            pr.rulePosition==prevRp -> true
+            else -> {
+                val nextRPs = prevRp.next()
+                if (nextRPs.contains(pr.rulePosition)) {
+                    true
+                } else {
+                    nextRPs.any { nextPrevRp ->
+                        val prevClosure = this.createClosure(nextPrevRp, null)
+                        prevClosure.content.any { it.rulePosition==pr.rulePosition }
+                    }
+                }
+            }
         }
-        //pr.rulePosition.runtimeRule.isGoal || prevClosure.content.any{ it.rulePosition==pr.rulePosition && it.lookahead==pr.lookahead  }
-        return true
+
     }
+/*
+    fun calcCanGrowInto(childRule: RuntimeRule, ancesstorRule: RuntimeRule, ancesstorItemIndex: Int): Boolean {
+        return if (-1 == ancesstorItemIndex) {
+            false
+        } else {
+            //return canGrowIntoAt_cache[childRule.number][ancesstorRule.number][ancesstorItemIndex];
+            val index = IndexCanGrowIntoAt(childRule.number, ancesstorRule.number, ancesstorItemIndex)
+            var result = canGrowIntoAt_cache[index]
+            if (null==result) {
+                val nextExpectedForStacked = this.findNextExpectedItems(ancesstorRule, ancesstorItemIndex)
+                if (nextExpectedForStacked.contains(childRule)) {
+                    result = true
+                } else {
+                    result = false
+                    for (rr in nextExpectedForStacked) {
+                        if (rr.isNonTerminal) {
+                            // todo..can we reduce the possibles!
+                            val possibles = this.calcFirstSubRules(rr)
+                            if (possibles.contains(childRule)) {
+                                result =  true
+                                break
+                            }
+                        } else {
+                            val possibles = this.firstTerminals[rr.number]
+                            if (possibles.contains(childRule)) {
+                                result =  true
+                                break
+                            }
+                        }
+                    }
+                }
+                canGrowIntoAt_cache[index] = result ?: throw ParseException("Should never happen")
+            }
+            return result
+        }
+    }
+    */
 
     internal fun calcTransitions(from: ParserState, previous:RulePosition?): Set<Transition> { //TODO: add previous in order to filter parent relations
         val heightTransitions = mutableSetOf<Transition>()
