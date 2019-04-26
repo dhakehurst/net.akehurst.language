@@ -20,7 +20,6 @@ data class Transition(
         val from: ParserState,
         val to: ParserState,
         val action: ParseAction,
-        val item: RuntimeRule,
         val lookaheadGuard: Set<RuntimeRule>,
         val prevGuard : RulePosition?
 //TODO: add previousGuard for use in graft

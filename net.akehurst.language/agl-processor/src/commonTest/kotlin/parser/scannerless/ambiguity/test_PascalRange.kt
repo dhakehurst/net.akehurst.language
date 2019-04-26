@@ -51,7 +51,7 @@ class test_PascalRange : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, e.location.line)
-        assertEquals(0, e.location.column)
+        assertEquals(1, e.location.column)
     }
 
     @Test

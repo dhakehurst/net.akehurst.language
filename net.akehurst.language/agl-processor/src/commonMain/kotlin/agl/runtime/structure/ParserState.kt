@@ -41,12 +41,17 @@ data class ParentRelation(
 class ParserState(
         val number: StateNumber,
         val rulePosition: RulePosition,
-        val stateMap: ParserStateSet
+        val stateSet: ParserStateSet
 ) {
 
     private var nextStates_cache: Set<ParserState>? = null
+    private var _parentRelations: MutableSet<ParentRelation> = mutableSetOf()
+    private var transitions_cache: Set<Transition>? = null
 
-    val parentRelations = mutableSetOf<ParentRelation>()
+    val parentRelations: Set<ParentRelation>
+        get() {
+            return this._parentRelations
+        }
 
     val items: Set<RuntimeRule>
         inline get() {
@@ -69,6 +74,22 @@ class ParserState(
         inline get() {
             return this.rulePosition.isAtEnd
         }
+
+    fun transitions(runtimeRuleSet: RuntimeRuleSet): Set<Transition> {
+        val cache = this.transitions_cache
+        if (null==cache) {
+            val transitions = runtimeRuleSet.calcTransitions(this)
+            this.transitions_cache = transitions
+            return transitions
+        } else {
+            return cache
+        }
+    }
+
+    fun addParentRelation(value:ParentRelation) {
+        val modified = this._parentRelations.add(value)
+        if (modified) this.transitions_cache = null
+    }
 /*
     fun next(runtimeRuleSet: RuntimeRuleSet): Set<ParserState> {
         if (null == nextStates_cache) {

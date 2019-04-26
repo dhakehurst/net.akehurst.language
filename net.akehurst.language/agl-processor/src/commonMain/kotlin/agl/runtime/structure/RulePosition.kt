@@ -45,6 +45,7 @@ data class RulePosition(
             }
         }
 
+    fun atEnd() = RulePosition(this.runtimeRule, this.choice, END_OF_RULE)
 
     fun next(): Set<RulePosition> {
         return this.items.flatMap { this.next(it) }.toSet()

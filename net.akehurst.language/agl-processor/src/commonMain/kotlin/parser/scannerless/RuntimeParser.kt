@@ -93,7 +93,7 @@ internal class RuntimeParser(
     private fun growGoalNode(gn: GrowingNode) {
         //no previous, so gn must be the Goal node
         val rps = gn.currentState
-        val transitions: Set<Transition> = this.runtimeRuleSet.transitions(this.graph.userGoalRule, rps)
+        val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet)
 
         for (it in transitions) {
             when (it.action) {
@@ -107,7 +107,7 @@ internal class RuntimeParser(
 
     private fun growWithPrev(gn: GrowingNode, previous: PreviousInfo) {
         val rps = gn.currentState
-        val transitions: Set<Transition> = this.runtimeRuleSet.transitions(this.graph.userGoalRule, rps)
+        val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet)
 
         for (it in transitions) {
             when (it.action) {
@@ -126,7 +126,7 @@ internal class RuntimeParser(
     }
 
     private fun doWidth(gn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition) {
-            val l = this.graph.findOrTryCreateLeaf(transition.item, gn.nextInputPosition)
+            val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, gn.nextInputPosition)
             if (null != l) {
                 //TODO: find a better way to look past skip terminals, this means wrong matches can be made...though they will be dropped on H or G!
                 val lh = transition.lookaheadGuard + this.runtimeRuleSet.allSkipTerminals

@@ -117,7 +117,6 @@ grammar Mscript {
         assertEquals("expression", actual.root.name)
     }
 
-
     @Test
     fun process_REAL_0p1() {
 
@@ -127,6 +126,7 @@ grammar Mscript {
         assertNotNull(actual)
         assertEquals("REAL", actual.root.name)
     }
+
     @Test
     fun process_REAL_0p1em5() {
 
@@ -136,6 +136,7 @@ grammar Mscript {
         assertNotNull(actual)
         assertEquals("REAL", actual.root.name)
     }
+
     @Test
     fun process_REAL_p1() {
 
@@ -238,6 +239,15 @@ grammar Mscript {
     }
 
     @Test
+    fun process_argumentList_50() {
+
+        val text = "0" + ",0".repeat(49)
+        val actual = sut.parse("argumentList", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
     fun process_expression_func() {
 
         val text = "func()"
@@ -282,10 +292,27 @@ grammar Mscript {
         assertNotNull(actual)
     }
 
+    @Test
+    fun process_expression_func20() {
+
+        val text = "func(a,1,b,2,c,3,d,4,e,5,f,6,g,7,h,8,i,9,j,10)"
+        val actual = sut.parse("expression", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
+    fun process_expression_func50() {
+
+        val text = "fprintf(''" + ",0".repeat(49) + ")"
+        val actual = sut.parse("expression", text)
+
+        assertNotNull(actual)
+    }
 
     @Test
     fun process_func_100_args() {
-        val text = "fprintf(''"+",0".repeat(99)+");"
+        val text = "fprintf(''" + ",0".repeat(99) + ");"
         val actual = sut.parse("script", text)
 
         assertNotNull(actual)
@@ -304,7 +331,7 @@ grammar Mscript {
     fun process_script_func() {
 
         val text = "func();"
-        val actual = sut.parse("script",text)
+        val actual = sut.parse("script", text)
 
         assertNotNull(actual)
     }
@@ -313,7 +340,7 @@ grammar Mscript {
     fun parse_script_func_args() {
 
         val text = "func(false,1,'abc',3.14, root);"
-        val actual = sut.parse("script",text)
+        val actual = sut.parse("script", text)
 
         assertNotNull(actual)
     }

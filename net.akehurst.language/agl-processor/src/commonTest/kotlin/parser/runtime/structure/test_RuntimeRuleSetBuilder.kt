@@ -99,9 +99,9 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(false, actual.runtimeRules[0].isEmptyRule)
         assertEquals(false, actual.runtimeRules[0].isPattern)
         assertEquals(false, actual.runtimeRules[0].isSkip)
-        assertEquals(RuntimeRuleItemKind.EMPTY, actual.runtimeRules[1].rhs?.kind)
-        assertEquals(0, actual.runtimeRules[1].rhs?.multiMin)
-        assertEquals(0, actual.runtimeRules[1].rhs?.multiMax)
+        assertEquals(RuntimeRuleItemKind.EMPTY, actual.runtimeRules[1].rhs.kind)
+        assertEquals(0, actual.runtimeRules[1].rhs.multiMin)
+        assertEquals(0, actual.runtimeRules[1].rhs.multiMax)
         assertNotNull(actual.runtimeRules[0].emptyRuleItem)
         assertEquals(1, actual.runtimeRules[0].emptyRuleItem.number)
         assertEquals("§empty.a", actual.runtimeRules[0].emptyRuleItem.name)
@@ -130,10 +130,10 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(false, actual.runtimeRules[3].isEmptyRule)
         assertEquals(false, actual.runtimeRules[3].isPattern)
         assertEquals(false, actual.runtimeRules[3].isSkip)
-        assertEquals(RuntimeRuleItemKind.CONCATENATION, actual.runtimeRules[3].rhs?.kind)
-        assertEquals(0, actual.runtimeRules[3].rhs?.multiMin)
-        assertEquals(0, actual.runtimeRules[3].rhs?.multiMax)
-        assertEquals(r0, actual.runtimeRules[3].rhs?.items?.get(0))
+        assertEquals(RuntimeRuleItemKind.CONCATENATION, actual.runtimeRules[3].rhs.kind)
+        assertEquals(0, actual.runtimeRules[3].rhs.multiMin)
+        assertEquals(0, actual.runtimeRules[3].rhs.multiMax)
+        assertEquals(r0, actual.runtimeRules[3].rhs.items.get(0))
         assertFailsWith(ParseException::class) {
             actual.runtimeRules[3].emptyRuleItem
         }
@@ -158,10 +158,10 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(false, actual.runtimeRules[3].isEmptyRule)
         assertEquals(false, actual.runtimeRules[3].isPattern)
         assertEquals(false, actual.runtimeRules[3].isSkip)
-        assertEquals(RuntimeRuleItemKind.CHOICE_EQUAL, actual.runtimeRules[3].rhs?.kind)
-        assertEquals(0, actual.runtimeRules[3].rhs?.multiMin)
-        assertEquals(0, actual.runtimeRules[3].rhs?.multiMax)
-        assertEquals(r0, actual.runtimeRules[3].rhs?.items?.get(0))
+        assertEquals(RuntimeRuleItemKind.CHOICE_EQUAL, actual.runtimeRules[3].rhs.kind)
+        assertEquals(0, actual.runtimeRules[3].rhs.multiMin)
+        assertEquals(0, actual.runtimeRules[3].rhs.multiMax)
+        assertEquals(r0, actual.runtimeRules[3].rhs.items.get(0))
         assertFailsWith(ParseException::class) {
             actual.runtimeRules[3].emptyRuleItem
         }
@@ -186,10 +186,10 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(false, actual.runtimeRules[3].isEmptyRule)
         assertEquals(false, actual.runtimeRules[3].isPattern)
         assertEquals(false, actual.runtimeRules[3].isSkip)
-        assertEquals(RuntimeRuleItemKind.CHOICE_PRIORITY, actual.runtimeRules[3].rhs?.kind)
-        assertEquals(0, actual.runtimeRules[3].rhs?.multiMin)
-        assertEquals(0, actual.runtimeRules[3].rhs?.multiMax)
-        assertEquals(r0, actual.runtimeRules[3].rhs?.items?.get(0))
+        assertEquals(RuntimeRuleItemKind.CHOICE_PRIORITY, actual.runtimeRules[3].rhs.kind)
+        assertEquals(0, actual.runtimeRules[3].rhs.multiMin)
+        assertEquals(0, actual.runtimeRules[3].rhs.multiMax)
+        assertEquals(r0, actual.runtimeRules[3].rhs.items.get(0))
         assertFailsWith(ParseException::class) {
             actual.runtimeRules[3].emptyRuleItem
         }
@@ -212,10 +212,10 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(false, actual.runtimeRules[1].isEmptyRule)
         assertEquals(false, actual.runtimeRules[1].isPattern)
         assertEquals(false, actual.runtimeRules[1].isSkip)
-        assertEquals(RuntimeRuleItemKind.MULTI, actual.runtimeRules[1].rhs?.kind)
-        assertEquals(1, actual.runtimeRules[1].rhs?.multiMin)
-        assertEquals(-1, actual.runtimeRules[1].rhs?.multiMax)
-        assertEquals(r0, actual.runtimeRules[1].rhs?.items?.get(0))
+        assertEquals(RuntimeRuleItemKind.MULTI, actual.runtimeRules[1].rhs.kind)
+        assertEquals(1, actual.runtimeRules[1].rhs.multiMin)
+        assertEquals(-1, actual.runtimeRules[1].rhs.multiMax)
+        assertEquals(r0, actual.runtimeRules[1].rhs.items.get(0))
         assertFailsWith(ParseException::class) {
             actual.runtimeRules[1].emptyRuleItem
         }
