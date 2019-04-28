@@ -22,7 +22,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 
-class test_a : test_ScannerlessParserAbstract() {
+class  test_a : test_ScannerlessParserAbstract() {
 
     // S =  'a' | S1 ;
     // S1 = S 'a' ;

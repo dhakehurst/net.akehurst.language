@@ -294,7 +294,7 @@ grammar Query {
         Assert.assertEquals(queryStr, resultStr)
     }
 
-    @Test(timeout=1000)
+    @Test
     fun logicalInfixFunction_long() {
         val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p AND g.p AND h.p AND i.p AND j.p AND k.p AND l.p"
 
@@ -350,6 +350,7 @@ grammar Query {
         val queryStr = "MATCH Milestone WHERE true"
 
         val result = processor.parse("pathQuery", queryStr)
+
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
