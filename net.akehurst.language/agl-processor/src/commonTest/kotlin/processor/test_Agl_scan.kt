@@ -34,7 +34,7 @@ internal class test_Agl_scan {
         assertEquals("a", tokens[0].matchedText)
         assertEquals(1, tokens[0].identity.runtimeRuleNumber)
         assertEquals(0, tokens[0].identity.startPosition)
-        assertEquals(1, tokens[0].identity.matchedTextLength)
+        assertEquals(1, tokens[0].matchedTextLength)
 
     }
 

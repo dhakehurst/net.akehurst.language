@@ -20,8 +20,8 @@ import net.akehurst.language.api.sppt.SPPTNodeIdentity
 
 data class SPPTNodeIdentityDefault(
         override val runtimeRuleNumber: Int,
-        override val startPosition: Int,
-        override val matchedTextLength: Int
+        override val startPosition: Int//,
+        //override val matchedTextLength: Int
 ) : SPPTNodeIdentity {
 
 }

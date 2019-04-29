@@ -80,7 +80,7 @@ grammar English {
     verb = V1s | V2s | V3s | V1p | V2p | V3p | Vpast | LINKING_VERB ;
 
     complement
-        =  \*indirect*\ object? object
+        =  object? object     // indirect-object? object
         |  adverb* adjective
         |  prepositional-phrase*
         |  'to' VERB_INFINITIVE object?

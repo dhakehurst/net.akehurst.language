@@ -62,7 +62,7 @@ class test_RuntimeParser_parse_concatenation {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(0, ex.location.column, "column is wrong")
+        assertEquals(1, ex.location.column, "column is wrong")
     }
 
     @Test
@@ -128,7 +128,7 @@ class test_RuntimeParser_parse_concatenation {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(0, ex.location.column, "column is wrong")
+        assertEquals(1, ex.location.column, "column is wrong")
     }
     @Test
     fun abc2_S_a_fails() {

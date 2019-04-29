@@ -31,15 +31,15 @@ abstract class SPPTNodeDefault(
 
     override val identity: SPPTNodeIdentity = SPPTNodeIdentityDefault(
             this.runtimeRule.number,
-            this.startPosition,
-            this.nextInputPosition - this.startPosition
+            this.startPosition//,
+            //this.nextInputPosition - this.startPosition
     )
 
     override val name: String = this.runtimeRule.name
 
     override val runtimeRuleNumber: Int get() { return this.identity.runtimeRuleNumber }
 
-    override val matchedTextLength: Int get() { return this.identity.matchedTextLength }
+    override val matchedTextLength: Int get() { return this.nextInputPosition - this.startPosition}//this.identity.matchedTextLength }
 
     override val isSkip: Boolean = runtimeRule.isSkip
 

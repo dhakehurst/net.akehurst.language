@@ -44,6 +44,6 @@ interface SPPTNodeIdentity {
 	/**
 	 * the length of the text matched by the node
 	 */
-	val matchedTextLength: Int
+	//val matchedTextLength: Int
 
 }

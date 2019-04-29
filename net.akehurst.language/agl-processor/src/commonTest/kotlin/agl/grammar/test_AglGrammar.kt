@@ -137,6 +137,29 @@ class test_AglGrammar {
     }
 
     @Test
+    fun nonTerminal_choice_priority() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a' ;
+                b = 'b' ;
+                c = 'c' ;
+                d = 'd' ;
+                e = 'e' ;
+                f = 'f' ;
+                g = 'g' ;
+                choice = a < b < c < d < e < f < g;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
     fun literal_multi_0_1() {
 
         val grammarStr = """

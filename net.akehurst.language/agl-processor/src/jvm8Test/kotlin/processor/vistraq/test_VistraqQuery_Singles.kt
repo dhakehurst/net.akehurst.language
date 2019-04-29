@@ -141,7 +141,7 @@ grammar Query {
         ;
 
     logicalInfixFunction
-        = expression ('AND' expression)+  //[ expression / 'AND' expression]2+
+        = expression ('AND' expression)+
         < expression ('OR' expression)+
         < expression ('XOR' expression)+
         ;
@@ -174,7 +174,7 @@ grammar Query {
 	POSITIVE_INT = "[0-9]+" ;
 	UNLIMITED_POSITIVE_INT = "[0-9]+" | '*' ;
 
-    literalValue = BOOLEAN | SINGLE_QUOTE_STRING | INTEGER | REAL | NULL ;
+    literalValue = BOOLEAN < SINGLE_QUOTE_STRING < INTEGER < REAL < NULL ;
     BOOLEAN = 'true' | 'false' ;
     SINGLE_QUOTE_STRING = "'(?:\\?.)*?'" ;
     INTEGER = "[0-9]+" ;

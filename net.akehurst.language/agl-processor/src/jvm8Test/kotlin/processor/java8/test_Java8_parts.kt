@@ -16,6 +16,8 @@
 
 package net.akehurst.language.processor.java8
 
+import com.soywiz.korio.async.runBlockingNoSuspensions
+import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.processor.Agl
 import kotlin.test.Test
@@ -27,14 +29,14 @@ class test_Java8_parts {
         var java8Processor: LanguageProcessor = createJava8Processor()
 
         fun createJava8Processor(): LanguageProcessor {
-            val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()
+            val grammarStr = runBlockingNoSuspensions { resourcesVfs["/java8/Java8_all.agl"].readString() }
             val proc = Agl.processor(grammarStr)
             proc.build()
             return proc
         }
     }
 
-    @Test(timeout=1000)
+    @Test(timeout = 5000)
     fun long_concatenation() {
 
         val sentence = """
@@ -83,7 +85,7 @@ class test_Java8_parts {
 
         val t = java8Processor.parse(goal, sentence)
 
-       // println( t.toStringAll("  ") )
+        // println( t.toStringAll("  ") )
     }
 
 }

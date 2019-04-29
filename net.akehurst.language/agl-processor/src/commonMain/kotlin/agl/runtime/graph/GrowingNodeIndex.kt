@@ -20,12 +20,11 @@ import net.akehurst.language.agl.runtime.structure.ParserState
 
 data class GrowingNodeIndex(
         val currentRulePosition: ParserState,
-        val startPosition: Int,
-        val nextInputPosition: Int
+        val startPosition: Int
 ) {
 
 
     override fun toString(): String {
-        return "(${currentRulePosition},${startPosition},${nextInputPosition})"
+        return "(${currentRulePosition},${startPosition})"
     }
 }

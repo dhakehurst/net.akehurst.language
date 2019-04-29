@@ -29,7 +29,7 @@ class GrowingNode(
         val numNonSkipChildren: Int
 ) {
     //FIXME: shouldn't really do this, shouldn't store these in sets!!
-    private val hashCode_cache = arrayOf(this.currentState, this.startPosition, this.nextInputPosition).contentHashCode()
+    private val hashCode_cache = arrayOf(this.currentState, this.startPosition).contentHashCode()
 
     val matchedTextLength:Int = this.nextInputPosition - this.startPosition
     val runtimeRule get() = currentState.runtimeRule
@@ -84,13 +84,13 @@ class GrowingNode(
         this.previous = mutableMapOf()
     }
     fun addPrevious(info: PreviousInfo) {
-        val gi = GrowingNodeIndex(info.node.currentState, info.node.startPosition,info.node.nextInputPosition)
+        val gi = GrowingNodeIndex(info.node.currentState, info.node.startPosition)
         this.previous.put(gi,info)
         info.node.addNext(this)
     }
     fun addPrevious(previousNode: GrowingNode) {
         val info = PreviousInfo(previousNode)
-        val gi = GrowingNodeIndex(previousNode.currentState, previousNode.startPosition,previousNode.nextInputPosition)
+        val gi = GrowingNodeIndex(previousNode.currentState, previousNode.startPosition)
         this.previous.put(gi,info)
         previousNode.addNext(this)
     }

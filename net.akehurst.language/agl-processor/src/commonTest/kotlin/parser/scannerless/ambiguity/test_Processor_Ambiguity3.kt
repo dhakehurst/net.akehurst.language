@@ -71,7 +71,7 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, e.location.line)
-        assertEquals(0, e.location.column)
+        assertEquals(1, e.location.column)
     }
 
     @Test
@@ -80,11 +80,11 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "a"
 
-        val expected1 = """
-            S { 'a' }
-        """.trimIndent()
-
-        super.test(rrb, goal, sentence, expected1)
+        val e = assertFailsWith(ParseFailedException::class) {
+            super.test(rrb, goal, sentence)
+        }
+        assertEquals(1, e.location.line)
+        assertEquals(2, e.location.column)
     }
 
     @Test

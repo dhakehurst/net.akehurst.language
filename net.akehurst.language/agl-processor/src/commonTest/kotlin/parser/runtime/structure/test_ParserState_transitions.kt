@@ -69,6 +69,7 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").choiceEqual(r_a, r_b, r_c)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
+        s0.transitions(rrs, null)
         val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S,0,0))
         s1.addParentRelation(ParentRelation(s0.rulePosition, setOf(RuntimeRuleSet.END_OF_TEXT)))
 
@@ -90,6 +91,7 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").choiceEqual(r_a, r_b, r_c)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
+        s0.transitions(rrs, null)
         val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S,1,0))
 
         val actual = s1.transitions(rrs, null)
@@ -110,6 +112,7 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").choiceEqual(r_a, r_b, r_c)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
+        s0.transitions(rrs, null)
         val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S,2,0))
 
         val actual = s1.transitions(rrs, null)
@@ -145,16 +148,38 @@ class test_ParserState_transitions {
     }
 
     @Test
+    fun multi01__emptyItem_0_end() {
+        val rb = RuntimeRuleSetBuilder()
+        val r_a = rb.literal("a")
+        val r_S = rb.rule("S").multi(0, 1, r_a)
+        val rrs = rb.ruleSet()
+        val s0 = rrs.startingState(r_S)
+        s0.transitions(rrs, null)
+        val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S.emptyRuleItem,0,RulePosition.END_OF_RULE))
+
+        val actual = s1.transitions(rrs, s0.rulePosition)
+        val expected = setOf<Transition>(
+                Transition(s1, s0.stateSet.fetch(RulePosition(r_S,RuntimeRuleItem.MULTI__EMPTY_RULE,RulePosition.END_OF_RULE)), Transition.ParseAction.HEIGHT, setOf(RuntimeRuleSet.END_OF_TEXT), RulePosition(r_S,RuntimeRuleItem.MULTI__EMPTY_RULE,RulePosition.START_OF_RULE))
+        )
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun multi01__S_Empty_end() {
         val rb = RuntimeRuleSetBuilder()
         val r_a = rb.literal("a")
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
-        val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S,RuntimeRuleItem.MULTI__EMPTY_RULE,RulePosition.END_OF_RULE))
+        s0.transitions(rrs, null)
+        val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S.emptyRuleItem,0,RulePosition.END_OF_RULE))
+        s1.transitions(rrs, s0.rulePosition)
+        val s2 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S,RuntimeRuleItem.MULTI__EMPTY_RULE,RulePosition.END_OF_RULE))
 
-        val actual = s1.transitions(rrs, null)
+        val actual = s2.transitions(rrs, s0.rulePosition)
         val expected = setOf<Transition>(
+                Transition(s2, s0.stateSet.fetchOrCreateParseState(RulePosition(s0.runtimeRule,0,1)), Transition.ParseAction.GRAFT, setOf(RuntimeRuleSet.END_OF_TEXT), s0.rulePosition)
         )
 
         assertEquals(expected, actual)
@@ -167,10 +192,12 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
+        s0.transitions(rrs, null)
+        val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S,RuntimeRuleItem.MULTI__ITEM,RulePosition.START_OF_RULE))
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s1.transitions(rrs, null)
         val expected = setOf<Transition>(
-
+                Transition(s1, s0.stateSet.fetch(RulePosition(r_a,0,RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null)
         )
 
         assertEquals(expected, actual)
@@ -183,10 +210,12 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
+        s0.transitions(rrs, null)
+        val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S,RuntimeRuleItem.MULTI__ITEM,RulePosition.MULIT_ITEM_POSITION))
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s1.transitions(rrs, RulePosition(r_S,RuntimeRuleItem.MULTI__ITEM,RulePosition.START_OF_RULE))
         val expected = setOf<Transition>(
-
+                Transition(s1, s0.stateSet.fetch(RulePosition(r_a,0,RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null)
         )
 
         assertEquals(expected, actual)
@@ -212,7 +241,7 @@ class test_ParserState_transitions {
 
     // -- S = ['a' / ',']* ;
     @Test
-    fun sList0n__S_Empty_start() {
+    fun sList0n__G_0_0() {
         val rb = RuntimeRuleSetBuilder()
         val r_a = rb.literal("a")
         val r_c = rb.literal(",")
@@ -222,8 +251,9 @@ class test_ParserState_transitions {
 
         val actual = s0.transitions(rrs, null)
         val expected = setOf<Transition>(
-
-        )
+                Transition(s0, s0.stateSet.fetch(RulePosition(r_a,0,RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(r_c,RuntimeRuleSet.END_OF_TEXT), null),
+                Transition(s0, s0.stateSet.fetch(RulePosition(r_S.emptyRuleItem,0,RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null)
+         )
 
         assertEquals(expected, actual)
     }
@@ -236,10 +266,11 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
+        val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S,RuntimeRuleItem.MULTI__EMPTY_RULE,RulePosition.END_OF_RULE))
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s1.transitions(rrs, null)
         val expected = setOf<Transition>(
-
+                Transition(s1, s1, Transition.ParseAction.GOAL, emptySet(), null)
         )
 
         assertEquals(expected, actual)

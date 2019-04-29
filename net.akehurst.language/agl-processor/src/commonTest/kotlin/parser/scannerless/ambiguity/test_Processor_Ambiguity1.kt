@@ -26,6 +26,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class test_Processor_Ambiguity1 : test_ScannerlessParserAbstract() {
+    //TODO: make this use || ambiguouse choice
     /**
      * S : 'a' S B B | 'a' ;
      * B : 'b' ? ;
@@ -119,7 +120,7 @@ class test_Processor_Ambiguity1 : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1, expected2)
+        super.testStringResult(rrb, goal, sentence, expected1, expected2)
     }
 
     @Test
