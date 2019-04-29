@@ -141,7 +141,7 @@ grammar Query {
         ;
 
     logicalInfixFunction
-        = expression ('AND' expression)+
+        = expression ('AND' expression)+  //[ expression / 'AND' expression]2+
         < expression ('OR' expression)+
         < expression ('XOR' expression)+
         ;
@@ -304,8 +304,8 @@ grammar Query {
         Assert.assertEquals(queryStr, resultStr)
     }
 
-    @Test(timeout=1000)
-    fun expression_long3() {
+    @Test(timeout=5000)
+    fun expression_long_3() {
         val queryStr = "a.p AND b.p AND c.p AND d.p"
 
         val result = processor.parse("expression", queryStr)
@@ -314,8 +314,8 @@ grammar Query {
         Assert.assertEquals(queryStr, resultStr)
     }
 
-    @Test(timeout=1000)
-    fun expression_long5() {
+    @Test(timeout=5000)
+    fun expression_long_5() {
         val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p"
 
         val result = processor.parse("expression", queryStr)
@@ -324,8 +324,8 @@ grammar Query {
         Assert.assertEquals(queryStr, resultStr)
     }
 
-    @Test(timeout=1000)
-    fun expression_long() {
+    @Test(timeout=5000)
+    fun expression_long_11() {
         val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p AND g.p AND h.p AND i.p AND j.p AND k.p AND l.p"
 
         val result = processor.parse("expression", queryStr)
@@ -378,7 +378,7 @@ grammar Query {
         Assert.assertEquals(queryStr, resultStr)
     }
 
-    @Test(timeout = 1000)
+    @Test(timeout = 5000)
     fun query1() {
         val queryStr = """
    MATCH A WHERE a == b AND a == b AND true RETURN TABLE COLUMN a CONTAINING a
@@ -390,7 +390,7 @@ grammar Query {
         Assert.assertEquals(queryStr, resultStr)
     }
 
-    @Test(timeout = 1000)
+    @Test(timeout = 5000)
     fun fromBlog() {
         val queryStr = """
 FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month

@@ -21,7 +21,11 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 import kotlin.js.JsName
 
-class SharedPackedParseTreeDefault(override val root: SPPTNode, override val seasons:Int) : SharedPackedParseTree {
+class SharedPackedParseTreeDefault(
+        override val root: SPPTNode,
+        override val seasons:Int,
+        override val maxNumHeads:Int
+) : SharedPackedParseTree {
 
     override fun contains(other: SharedPackedParseTree): Boolean {
         return this.root.contains(other.root)

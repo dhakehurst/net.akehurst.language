@@ -107,7 +107,7 @@ class test_Java8(val data: Data) {
         }
     }
 
-    @Test(timeout=1000)
+    @Test(timeout=5000)
     fun test() {
         try {
             val queryStr = this.data.sentence

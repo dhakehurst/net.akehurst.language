@@ -26,7 +26,15 @@ import kotlin.js.JsName
  */
  interface SharedPackedParseTree : SharedPackedParseTreeVisitable {
 
+	/**
+	 * Diagnostic info.
+	 */
 	val seasons:Int
+
+	/**
+	 * Diagnostic info. Indication of ambiguity if > 1
+	 */
+	val maxNumHeads:Int
 
 	/**
 	 * The root of the tree

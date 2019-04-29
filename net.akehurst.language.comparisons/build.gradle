@@ -21,7 +21,7 @@ subprojects {
 
 
 	group 'net.akehurst.language.comparisons'
-	version '2.0.0-SNAPSHOT'
+	version "$version_project"
 
 	sourceCompatibility = '1.8'
 	targetCompatibility = '1.8'
@@ -31,46 +31,5 @@ subprojects {
         mavenCentral()
         jcenter()
     }
-
-    ext {
-        version_junit = '4.12'
-        version_transform = '2.2.0'
-        version_kotlin = '1.3.10'
-    }
-     
-	task sourceJar(type: Jar) {
-	    from sourceSets.main.allJava
-	}
-
-	publishing {
-		repositories {
-			maven {
-				name 'itemis-akehurst'
-				url "https://projects.itemis.de/nexus/content/repositories/akehurst/"
-			}
-		}
-
-	    publications {
-	        noSource(MavenPublication) {
-	        	groupId "${group}"
-	         	artifactId "${project.name}".replace("${group}.", "")
-				version "${version}"
-	            from components.java
-	        }
-	    }
-	
-	    publications {
-	        mavenJava(MavenPublication) {
-	          	groupId "${group}"
-	        	artifactId "${project.name}".replace("${group}.", "")
-				version "${version}"
-	        
-	            from components.java
-	            artifact sourceJar {
-	                classifier "sources"
-	            }
-	        }
-	    }
-	}
 
 }

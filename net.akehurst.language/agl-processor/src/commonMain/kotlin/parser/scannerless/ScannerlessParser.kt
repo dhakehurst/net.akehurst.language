@@ -28,6 +28,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.parser.sppt.SPPTLeafDefault
 import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
+import kotlin.math.max
 
 class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
 
@@ -66,7 +67,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
                     }
                 }
             })
-            if (null==longest) {
+            if (null == longest) {
                 position++
             } else {
                 result.add(longest)
@@ -84,28 +85,30 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
 
         rp.start(goalRule)
         var seasons = 1
- //       println("[$seasons] ")
- //       graph.growingHead.forEach {
- //           println("  $it")
- //       }
+        var maxNumHeads = graph.growingHead.size
+        //       println("[$seasons] ")
+        //       graph.growingHead.forEach {
+        //           println("  $it")
+        //       }
 
         do {
             rp.grow()
 //            println("[$seasons] ")
 //            graph.growingHead.forEach {
- //               println("  $it")
- //          }
+            //               println("  $it")
+            //          }
             seasons++
+            maxNumHeads = max(maxNumHeads, graph.growingHead.size)
         } while (rp.canGrow)
 
-        val match = graph.longestMatch(rp.longestLastGrown, seasons)
-        return SharedPackedParseTreeDefault(match, seasons)
+        val match = graph.longestMatch(rp.longestLastGrown, seasons, maxNumHeads)
+        return SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
     }
 
 
     override fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int): List<RuntimeRule> {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
-        val usedText = inputText.subSequence(0,position)
+        val usedText = inputText.subSequence(0, position)
         val input = InputFromCharSequence(usedText)
         val graph = ParseGraph(goalRule, input)
         val rp = RuntimeParser(this.runtimeRuleSet, graph)

@@ -54,8 +54,8 @@ grammar English {
     simple-subject = noun-phrase | NOMINATIVE_PERSONAL_PRONOUN ;
 
     noun-phrase
-        = 'the' specific-proper-noun
-        | proper-noun
+        = 'the' SPECIFIC_PROPER_NOUN
+        | PROPER_NOUN
         | NON_PERSONAL_PRONOUN
         | ARTICLE (ADVERB* compound-adjective)? compound-noun
         | (ADVERB* compound-adjective)? noun-plural
@@ -80,14 +80,14 @@ grammar English {
     verb = V1s | V2s | V3s | V1p | V2p | V3p | Vpast | LINKING_VERB ;
 
     complement
-        =  indirect-object? object
+        =  \*indirect*\ object? object
         |  adverb* adjective
         |  prepositional-phrase*
         |  'to' VERB_INFINITIVE object?
         |  VERB_PRESENT_PARTICIPLE
         ;
 
-    indirect-object = // = object ??
+    object =
        simple-object | compound-object ;
 
 
@@ -141,6 +141,11 @@ grammar English {
         | ADJECTIVE_SUPERLATIVE
         ;
 
+
+    //TODO: these should come from a dictionary not be listed here
+    PROPER_NOUN = 'John' | 'America' | 'Dr. Allen' | 'State Street' ;
+    SPECIFIC_PROPER_NOUN = 'Atlantic Ocean' | 'Sahara' ;
+
     //TODO: these should come from a dictionary not be listed here
     ADJECTIVE_POSITIVE = 'new' | 'yellow' | 'pretty' | 'useful' ;
     ADJECTIVE_COMPARATIVE = 'newer' | 'yellower' | 'prettier' ;
@@ -184,4 +189,6 @@ grammar English {
     PERSONAL_PRONOUN_POSSESIVE = 'mine' | 'yours' | 'his' | 'hers' | 'ours' | 'theirs' ;
 
     AUX_VERB = 'must' | 'may' | 'might' | 'will' | 'would' | 'shall' | 'should' | 'can' | 'could' ;
+
+
 }

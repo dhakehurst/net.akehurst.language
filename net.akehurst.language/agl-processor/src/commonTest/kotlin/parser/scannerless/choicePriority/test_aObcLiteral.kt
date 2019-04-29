@@ -25,7 +25,7 @@ import kotlin.test.assertFailsWith
 
 class test_aObcLiteral : test_ScannerlessParserAbstract() {
 
-    // r = a > b c;
+    // r = a < b c;
     // a = 'a' ;
     // b = 'b' ;
     // c = 'c' ;

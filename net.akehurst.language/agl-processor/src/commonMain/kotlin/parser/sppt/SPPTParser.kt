@@ -35,7 +35,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
 
     val tree: SharedPackedParseTree get() {
         val root = this.root ?: throw SPPTException("At least one tree must be added",null)
-        return SharedPackedParseTreeDefault(root, -1)
+        return SharedPackedParseTreeDefault(root, -1,-1)
     }
 
     private data class NodeStart (

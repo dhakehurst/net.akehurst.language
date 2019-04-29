@@ -2,5 +2,5 @@
 dependencies {
 	testImplementation project(":common")
 	testImplementation "junit:junit:4.12"
-	testImplementation "net.akehurst.language:agl-processor-jvm8:2.1.0-SNAPSHOT"
+	testImplementation "net.akehurst.language:agl-processor-jvm8:$version_agl"
 }

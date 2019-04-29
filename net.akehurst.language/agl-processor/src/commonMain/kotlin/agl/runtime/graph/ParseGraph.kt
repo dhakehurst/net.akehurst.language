@@ -19,14 +19,15 @@ package net.akehurst.language.agl.runtime.graph
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseException
 import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SPPTNodeIdentity
 import net.akehurst.language.parser.scannerless.InputFromCharSequence
 import net.akehurst.language.parser.sppt.*
 
 internal class ParseGraph(
-     val userGoalRule: RuntimeRule,
-    private val input: InputFromCharSequence
+        val userGoalRule: RuntimeRule,
+        private val input: InputFromCharSequence
 ) {
     private val leaves: MutableMap<LeafIndex, SPPTLeafDefault> = mutableMapOf()
     private val completeNodes: MutableMap<SPPTNodeIdentity, SPPTNodeDefault> = mutableMapOf()
@@ -44,7 +45,7 @@ internal class ParseGraph(
             return this._goals
         }
 
-    fun longestMatch(longestLastGrown: SPPTNode?, seasons: Int): SPPTNode {
+    fun longestMatch(longestLastGrown: SPPTNode?, seasons: Int, maxNumHeads: Int): SPPTNode {
         if (!this.goals.isEmpty() && this.goals.size >= 1) {
             var lt = this.goals.iterator().next()
             for (gt in this.goals) {
@@ -56,28 +57,35 @@ internal class ParseGraph(
                 //TODO: this can never happen now I think!
                 val llg = longestLastGrown ?: throw ParseException("Internal Error, should not happen")
                 val location = this.input.calcLineAndColumn(llg.nextInputPosition)
-                throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(llg, seasons), location)
+                throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location)
             } else {
+                val alternatives = mutableListOf<List<SPPTNode>>()
                 val firstSkipNodes = mutableListOf<SPPTNode>()
                 val userGoalNodes = mutableListOf<SPPTNode>()
-                for(node in lt.asBranch.children) {
+                for (node in lt.asBranch.children) {
                     if (node.isSkip) {
                         firstSkipNodes.add(node)
-                    } else if (node.asBranch.runtimeRuleNumber == this.userGoalRule.number){
+                    } else if (node.asBranch.runtimeRuleNumber == this.userGoalRule.number) {
                         userGoalNodes.add(node)
                         break;
                     }
                 }
                 val userGoalNode = userGoalNodes.first()
 
-                val r= SPPTBranchDefault(this.userGoalRule, userGoalNode.startPosition, userGoalNode.nextInputPosition, userGoalNode.priority)
-                r.childrenAlternatives.add( firstSkipNodes + userGoalNode.asBranch.children )
+                val r = SPPTBranchDefault(this.userGoalRule, userGoalNode.startPosition, userGoalNode.nextInputPosition, userGoalNode.priority)
+                if (userGoalNode is SPPTBranch) {
+                    for (alt in userGoalNode.childrenAlternatives) {
+                        r.childrenAlternatives.add(firstSkipNodes + alt)
+                    }
+                } else {
+                    r.childrenAlternatives.add(firstSkipNodes + userGoalNode.asBranch.children)
+                }
                 return r
             }
         } else {
             val llg = longestLastGrown ?: throw ParseException("Nothing parsed")
             val location = this.input.calcLineAndColumn(llg.nextInputPosition)
-            throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons), location)
+            throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location)
         }
     }
 
@@ -90,8 +98,8 @@ internal class ParseGraph(
             leaf
         } else {
             val matchedText =
-                this.input.tryMatchText(index.startPosition, terminalRuntimeRule.patternText, terminalRuntimeRule.isPattern)
-                    ?: return null
+                    this.input.tryMatchText(index.startPosition, terminalRuntimeRule.patternText, terminalRuntimeRule.isPattern)
+                            ?: return null
             val leaf = SPPTLeafDefault(terminalRuntimeRule, index.startPosition, false, matchedText, 0)
             this.leaves[index] = leaf
             this.completeNodes[leaf.identity] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
@@ -245,7 +253,7 @@ internal class ParseGraph(
     }
 
     fun recordGoal(completeNode: SPPTNodeDefault) {
-            this._goals.add(completeNode)
+        this._goals.add(completeNode)
     }
 
     //TODO: need to detect goal, but indicate that there is additional input, not just reject if additional input
@@ -330,7 +338,7 @@ internal class ParseGraph(
                 }
             }
 
-            this.checkForGoal(cn)
+            //this.checkForGoal(cn)
             return cn
         } else {
             return null
@@ -399,24 +407,24 @@ internal class ParseGraph(
     fun growNextSkipChild(parent: GrowingNode, skipNode: SPPTNodeDefault) {
         if (parent.runtimeRule.isNonTerminal || parent.runtimeRule.isGoal) {
             this.growNextChildAt(
-                false,
-                parent.currentState,
-                parent,
-                parent.priority,
-                skipNode,
-                emptyList()
+                    false,
+                    parent.currentState,
+                    parent,
+                    parent.priority,
+                    skipNode,
+                    emptyList()
             )
         } else {
             val nextRp = parent.currentState
             val nextInputPosition = parent.nextInputPosition + skipNode.matchedTextLength
             val newLeaf = this.findOrCreateGrowingLeafForSkip(
-                false,
+                    false,
                     nextRp,
-                parent.runtimeRule,
-                parent.startPosition,
-                nextInputPosition,
-                parent.previous.values.toSet(),  //FIXME: don't convert to set
-                parent.skipNodes + skipNode
+                    parent.runtimeRule,
+                    parent.startPosition,
+                    nextInputPosition,
+                    parent.previous.values.toSet(),  //FIXME: don't convert to set
+                    parent.skipNodes + skipNode
             )
             if (parent.next.isEmpty()) {
                 this.removeGrowing(parent)

@@ -47,7 +47,7 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
         val r_mul = b.rule("mul").concatenation(r_expr,b.literal("*"),r_expr)
         val r_add = b.rule("add").concatenation(r_expr,b.literal("+"),r_expr)
         val r_sub = b.rule("sub").concatenation(r_expr,b.literal("-"),r_expr)
-        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_PRIORITY, -1, 0, arrayOf(r_var, r_bool, r_group, r_div, r_mul, r_add, r_sub))
+        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_PRIORITY, -1, 0, arrayOf(r_var, r_bool, r_group, r_add, r_sub, r_div, r_mul))
         b.rule("S").concatenation(r_expr)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b
@@ -266,7 +266,7 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
 
     @Test

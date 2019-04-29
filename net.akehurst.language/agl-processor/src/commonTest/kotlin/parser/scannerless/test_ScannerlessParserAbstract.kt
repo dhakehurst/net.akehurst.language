@@ -17,6 +17,7 @@
 package net.akehurst.language.parser.scannerless
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.parser.sppt.SPPTParser
 import kotlin.test.assertEquals
 
@@ -32,7 +33,7 @@ abstract class test_ScannerlessParserAbstract {
         assertEquals(expected, actual)
     }
 
-    fun testStringResult(rrsb:RuntimeRuleSetBuilder, goal:String, sentence:String, vararg expectedTrees:String) {
+    fun testStringResult(rrsb:RuntimeRuleSetBuilder, goal:String, sentence:String, vararg expectedTrees:String) : SharedPackedParseTree {
         val parser = ScannerlessParser(rrsb.ruleSet())
         val actual = parser.parse(goal, sentence)
 
@@ -40,5 +41,6 @@ abstract class test_ScannerlessParserAbstract {
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
         assertEquals(expected.toStringAll("  "), actual.toStringAll("  "))
+        return actual
     }
 }
