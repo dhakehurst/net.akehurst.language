@@ -35,56 +35,6 @@ class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
         return sp.parse(goalRuleName, inputText)
     }
 
-    // S = 'a'?
-    private fun multi01_a(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r0 = b.literal("a")
-        val r1 = b.rule("S").multi(0, 1, r0)
-        return b
-    }
-
-    @Test
-    fun multi01_a__r__empty() {
-        val rrb = multi01_a()
-        val goal = "S"
-        val sentence = ""
-
-        val expected = """
-            S { §empty }
-        """.trimIndent()
-
-        super.testStringResult(rrb, goal, sentence, expected)
-
-    }
-
-    @Test
-    fun multi01_a__r__a() {
-        val rrb = multi01_a()
-        val goal = "S"
-        val sentence = "a"
-
-        val expected = """
-            S { 'a' }
-        """.trimIndent()
-
-        super.testStringResult(rrb, goal, sentence, expected)
-    }
-
-
-    @Test
-    fun multi01_a__r__aa_fails() {
-        val rrb = multi01_a()
-        val goal = "S"
-        val sentence = "aa"
-
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.testStringResult(rrb, goal, sentence)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
-    }
-
     // S = 'a'*
     private fun multi_0_n_a(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()

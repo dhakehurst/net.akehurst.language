@@ -23,7 +23,7 @@ import kotlin.test.assertEquals
 
 abstract class test_ScannerlessParserAbstract {
 
-    fun test(rrsb:RuntimeRuleSetBuilder, goal:String, sentence:String, vararg expectedTrees:String) {
+    fun test(rrsb:RuntimeRuleSetBuilder, goal:String, sentence:String, vararg expectedTrees:String) : SharedPackedParseTree {
         val parser = ScannerlessParser(rrsb.ruleSet())
         val actual = parser.parse(goal, sentence)
 
@@ -31,6 +31,7 @@ abstract class test_ScannerlessParserAbstract {
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
         assertEquals(expected, actual)
+        return actual
     }
 
     fun testStringResult(rrsb:RuntimeRuleSetBuilder, goal:String, sentence:String, vararg expectedTrees:String) : SharedPackedParseTree {

@@ -21,6 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class  test_a : test_ScannerlessParserAbstract() {
 
@@ -45,7 +46,8 @@ class  test_a : test_ScannerlessParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
 
@@ -59,7 +61,8 @@ class  test_a : test_ScannerlessParserAbstract() {
             S { S1 { S { 'a' } 'a' } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -82,7 +85,8 @@ class  test_a : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -93,8 +97,8 @@ class  test_a : test_ScannerlessParserAbstract() {
 
         val expected = "S { S1 { ".repeat(49) + "S { 'a' }" + "'a' } }".repeat(49)
 
-
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -105,8 +109,8 @@ class  test_a : test_ScannerlessParserAbstract() {
 
         val expected = "S { S1 { ".repeat(149) + "S { 'a' }" + "'a' } }".repeat(149)
 
-
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -117,8 +121,8 @@ class  test_a : test_ScannerlessParserAbstract() {
 
         val expected = "S { S1 { ".repeat(499) + "S { 'a' }" + "'a' } }".repeat(499)
 
-
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -129,7 +133,7 @@ class  test_a : test_ScannerlessParserAbstract() {
 
         val expected = "S { S1 { ".repeat(1999) + "S { 'a' }" + "'a' } }".repeat(1999)
 
-
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 }

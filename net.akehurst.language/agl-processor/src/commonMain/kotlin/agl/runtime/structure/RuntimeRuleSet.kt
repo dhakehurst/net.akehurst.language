@@ -416,11 +416,20 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val parentRP = parentRelation.rulePosition
         val prevGuard = parentRP //for height, previous must not match prevGuard
         val action = Transition.ParseAction.HEIGHT
-        val lookaheadGuard = parentRelation.lookahead
+
         val toSet = parentRP.next().map { from.stateSet.fetchOrCreateParseState(it) }
         //val filteredToSet = toSet.filter { this.canGrowInto(it, previous) }
-        return toSet.map { to ->
-            Transition(from, to, action, lookaheadGuard, prevGuard)
+        return toSet.flatMap { to ->
+            if (to.parentRelations.isEmpty()) {
+                val lookaheadGuard = this.calcLookahead(null, from.rulePosition, parentRelation.lookahead)
+                setOf(Transition(from, to, action, lookaheadGuard, prevGuard))
+            } else {
+                to.parentRelations.map { toParent ->
+                    val lookaheadGuard = this.calcLookahead(RulePositionWithLookahead(toParent.rulePosition, toParent.lookahead), from.rulePosition, toParent.lookahead)
+                    Transition(from, to, action, lookaheadGuard, prevGuard)
+                }
+            }
+
         }.toSet()
     }
 
@@ -428,11 +437,19 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val parentRP = parentRelation.rulePosition
         val prevGuard = parentRP //for graft, previous must match prevGuard
         val action = Transition.ParseAction.GRAFT
-        val lookaheadGuard = parentRelation.lookahead
         val toSet = parentRP.next().map { from.stateSet.fetchOrCreateParseState(it) }
         //val filteredToSet = toSet.filter { this.canGrowInto(it, previous) }
-        return toSet.map { to ->
-            Transition(from, to, action, lookaheadGuard, prevGuard)
+        return toSet.flatMap { to ->
+            if (to.parentRelations.isEmpty()) {
+                val lookaheadGuard = this.calcLookahead(null, from.rulePosition, parentRelation.lookahead)
+                setOf(Transition(from, to, action, lookaheadGuard, prevGuard))
+            } else {
+                to.parentRelations.map { toParent ->
+                    val lookaheadGuard = this.calcLookahead(RulePositionWithLookahead(toParent.rulePosition, toParent.lookahead), from.rulePosition, toParent.lookahead)
+                    Transition(from, to, action, lookaheadGuard, prevGuard)
+                }
+            }
+
         }.toSet()
 
     }
@@ -556,22 +573,24 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         //TODO: merge transitions with everything duplicate except lookahead (merge lookaheads)
         //not sure if this should be before or after the h/g conflict test.
 
-        val conflictHeightTransitions = mutableSetOf<Pair<Transition, Transition>>()
+        val conflictHeightTransitionPairs = mutableSetOf<Pair<Transition, Transition>>()
         for (trh in heightTransitions) {
             for (trg in graftTransitions) {
                 if (trg.lookaheadGuard.containsAll(trh.lookaheadGuard)) {
                     val newTr = Transition(trh.from, trh.to, trh.action, trh.lookaheadGuard, trg.prevGuard)
-                    conflictHeightTransitions.add(Pair(trh, trg))
+                    conflictHeightTransitionPairs.add(Pair(trh, trg))
                 }
             }
         }
 
-        val newHeightTransitions = conflictHeightTransitions.map {
+        val conflictHeightTransitions = conflictHeightTransitionPairs.map {
             val trh = it.first
             val trg = it.second
             Transition(trh.from, trh.to, trh.action, trh.lookaheadGuard, trg.prevGuard)
-        } + (heightTransitions - conflictHeightTransitions.map { it.first })
+        }
+        val newHeightTransitions =  (heightTransitions - conflictHeightTransitionPairs.map { it.first }) + conflictHeightTransitions
 
+        //val newHeightTransitions = heightTransitions
         val mergedWidthTransitions = widthTransitions.groupBy { it.to }.map {
             Transition(from, it.key, Transition.ParseAction.WIDTH, it.value.flatMap { it.lookaheadGuard }.toSet(), null)
         }
