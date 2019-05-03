@@ -20,7 +20,8 @@ import net.akehurst.language.agl.runtime.structure.ParserState
 
 data class GrowingNodeIndex(
         val currentRulePosition: ParserState,
-        val startPosition: Int
+        val startPosition: Int,
+        val nextInputPosition: Int
 ) {
 
 

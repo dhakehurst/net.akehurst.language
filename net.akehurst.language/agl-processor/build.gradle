@@ -28,6 +28,14 @@ apply plugin: "org.jetbrains.kotlin.multiplatform"
 
 kotlin {
     targets {
+        jvm('jvm8') {
+            compilations.all {
+                tasks[compileKotlinTaskName].kotlinOptions {
+                    jvmTarget = '1.8'
+                }
+            }
+        }
+        /*
         fromPreset(presets.jvm, 'jvm8') {
             // Configure a single target's compilations (main and test)
             compilations.all {
@@ -35,18 +43,18 @@ kotlin {
                     jvmTarget = '1.8'
                 }
             }
-        }
+        }*/
         
         fromPreset(presets.js, 'js') {
             compilations.all {
                 tasks[compileKotlinTaskName].kotlinOptions {
-                    moduleKind = 'umd'
+                    moduleKind = 'plain'
                 }
             }
         }
-  //      fromPreset(presets.macosX64, 'macos') {
+        fromPreset(presets.macosX64, 'macosX64') {
             /* You can specify additional settings for the 'linux' target here */
-  //      }
+        }
     }
 }
 

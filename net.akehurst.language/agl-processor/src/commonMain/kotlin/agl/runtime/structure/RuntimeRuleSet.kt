@@ -588,7 +588,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             val trg = it.second
             Transition(trh.from, trh.to, trh.action, trh.lookaheadGuard, trg.prevGuard)
         }
-        val newHeightTransitions =  (heightTransitions - conflictHeightTransitionPairs.map { it.first }) + conflictHeightTransitions
+        //Note: need to do the conflict stuff to make multi work, at present!
+
+        val newHeightTransitions = heightTransitions// (heightTransitions - conflictHeightTransitionPairs.map { it.first }) + conflictHeightTransitions
 
         //val newHeightTransitions = heightTransitions
         val mergedWidthTransitions = widthTransitions.groupBy { it.to }.map {
