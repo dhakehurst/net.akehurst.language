@@ -228,7 +228,6 @@ grammar Query {
         processor.parse("REAL", "3.14")
     }
 
-
     @Test
     fun expression_1() {
         val queryStr = "1"

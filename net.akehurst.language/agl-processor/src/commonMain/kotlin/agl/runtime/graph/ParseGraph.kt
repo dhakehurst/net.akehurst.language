@@ -345,7 +345,7 @@ internal class ParseGraph(
                         // therefore existing node should be the higher item in the tree
                         // which it is, so change nothing
                         // do nothing, drop new one
-                        //val i = 0
+                        val i = 0
                     } else if (newPriority > existingPriority) {
                         // replace existing with new
                         //cn.childrenAlternatives.clear()

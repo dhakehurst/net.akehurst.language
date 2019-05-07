@@ -1,52 +1,34 @@
-/**
- * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package parser.scannerless.choicePriority
 
-package net.akehurst.language.parser.scannerless.choicePriority
-
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_ifThenElse_Deterministic : test_ScannerlessParserAbstract() {
+class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
 
     // S =  expr ;
     // ifthenelse = 'if' expr 'then' expr 'else' expr ;
     // ifthen = 'if' expr 'then' expr ;
     // expr = var < conditional ;
     // conditional = ifthenelse < ifthen ;
-    // var = "[a-zA-Z]+" ;
-    // WS = "\s+" ;
+    // var = 'V' ;
     private fun S(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r_expr = b.rule("expr").build()
         val r_if = b.literal("if")
         val r_then = b.literal("then")
         val r_else = b.literal("else")
-        val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
+        val r_var = b.rule("var").choiceEqual(b.literal("W"),b.literal("X"),b.literal("Y"),b.literal("Z"))
         val r_ifthen = b.rule("ifthen").concatenation(r_if,r_expr,r_then,r_expr)
         val r_ifthenelse = b.rule("ifthenelse").concatenation(r_if,r_expr,r_then,r_expr,r_else,r_expr)
-        val r_conditional = b.rule("conditional").choicePriority(r_ifthenelse,r_ifthen)
-        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_EQUAL, -1, 0, arrayOf(r_var, r_conditional))
+        val r_conditional = b.rule("conditional").choicePriority(r_ifthen,r_ifthenelse)
+        b.rule(r_expr).choiceEqual(r_var, r_conditional)
         b.rule("S").concatenation(r_expr)
-        b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b
     }
 
@@ -67,19 +49,19 @@ class test_ifThenElse_Deterministic : test_ScannerlessParserAbstract() {
     fun ifthenelse() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "if a then b else c"
+        val sentence = "ifVthenVelseV"
 
         val expected = """
             S {
               expr {
                 conditional {
                     ifthenelse {
-                      'if' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                      'then' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'b' WS { '\s+' : ' ' } } }
-                      'else' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'c' } }
+                      'if'
+                      expr { var { 'V' } }
+                      'then'
+                      expr { var { 'V' } }
+                      'else'
+                      expr { var { 'V' } }
                     }
                 }
               }
@@ -95,17 +77,17 @@ class test_ifThenElse_Deterministic : test_ScannerlessParserAbstract() {
     fun ifthen() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "if a then b"
+        val sentence = "ifVthenV"
 
         val expected = """
             S {
               expr {
                 conditional {
                     ifthen {
-                      'if' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                      'then' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'b' } }
+                      'if'
+                      expr { var { 'V' } }
+                      'then'
+                      expr { var { 'V' } }
                     }
                 }
               }
@@ -119,25 +101,25 @@ class test_ifThenElse_Deterministic : test_ScannerlessParserAbstract() {
     fun ifthenelseifthen() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "if a then b else if c then d"
+        val sentence = "ifVthenVelseifVthenV"
 
         val expected = """
             S {
               expr {
                 conditional {
                     ifthenelse {
-                      'if' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                      'then' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'b' WS { '\s+' : ' ' } } }
-                      'else' WS { '\s+' : ' ' }
+                      'if'
+                      expr { var { 'V' } }
+                      'then'
+                      expr { var { 'V' } }
+                      'else'
                       expr {
                         conditional {
                             ifthen {
-                              'if' WS { '\s+' : ' ' }
-                              expr { var { '[a-zA-Z]+' : 'c' WS { '\s+' : ' ' } } }
-                              'then' WS { '\s+' : ' ' }
-                              expr { var { '[a-zA-Z]+' : 'd' } }
+                              'if'
+                              expr { var { 'V'} }
+                              'then'
+                              expr { var { 'V' } }
                             }
                         }
                       }
@@ -154,25 +136,25 @@ class test_ifThenElse_Deterministic : test_ScannerlessParserAbstract() {
     fun ifthenifthenelse() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "if a then if b then c else d"
+        val sentence = "ifWthenifXthenYelseZ"
 
         val expected1 = """
             S {
               expr {
                 conditional {
                     ifthen {
-                      'if' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                      'then' WS { '\s+' : ' ' }
+                      'if'
+                      expr { var { 'V' } }
+                      'then'
                       expr {
                         conditional {
                             ifthenelse {
-                              'if' WS { '\s+' : ' ' }
-                              expr { var { '[a-zA-Z]+' : 'b' WS { '\s+' : ' ' } } }
-                              'then' WS { '\s+' : ' ' }
-                              expr { var { '[a-zA-Z]+' : 'c' WS { '\s+' : ' ' } } }
-                              'else' WS { '\s+' : ' ' }
-                              expr { var { '[a-zA-Z]+' : 'd' } }
+                              'if'
+                              expr { var { 'V' } }
+                              'then'
+                              expr { var { 'V' } }
+                              'else'
+                              expr { var { 'V' } }
                             }
                         }
                       }
