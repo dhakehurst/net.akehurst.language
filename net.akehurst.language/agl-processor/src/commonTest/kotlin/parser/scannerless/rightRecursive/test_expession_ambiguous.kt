@@ -35,7 +35,7 @@ class test_expession_ambiguous : test_ScannerlessParserAbstract() {
         val r_S = b.rule("S").build()
         val r_P = b.rule("P").concatenation(r_S, b.literal("p"), r_n)
         val r_I = b.rule("I").concatenation(r_S,b.literal("o"), r_S)
-        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_PRIORITY, -1, 0, arrayOf(r_n, r_P, r_I))
+        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_PRIORITY, -1, 0, arrayOf(r_P, r_I, r_n))
         return b
     }
 
@@ -97,19 +97,7 @@ class test_expession_ambiguous : test_ScannerlessParserAbstract() {
             } }
         """.trimIndent()
 
-        val expected2 = """
-         S { I {
-            S { 'a' }
-            'o'
-            S { I {
-                S { 'a' }
-                'o'
-                S { 'a' }
-              } }
-          } }
-        """.trimIndent()
-
-        super.testStringResult(rrb, goal, sentence, expected2)
+        super.testStringResult(rrb, goal, sentence, expected1)
     }
 
 

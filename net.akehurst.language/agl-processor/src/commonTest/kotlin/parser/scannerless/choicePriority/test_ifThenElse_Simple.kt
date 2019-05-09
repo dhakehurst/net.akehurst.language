@@ -26,7 +26,7 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
         val r_var = b.rule("var").choiceEqual(b.literal("W"),b.literal("X"),b.literal("Y"),b.literal("Z"))
         val r_ifthen = b.rule("ifthen").concatenation(r_if,r_expr,r_then,r_expr)
         val r_ifthenelse = b.rule("ifthenelse").concatenation(r_if,r_expr,r_then,r_expr,r_else,r_expr)
-        val r_conditional = b.rule("conditional").choicePriority(r_ifthen,r_ifthenelse)
+        val r_conditional = b.rule("conditional").choicePriority(r_ifthenelse,r_ifthen)
         b.rule(r_expr).choiceEqual(r_var, r_conditional)
         b.rule("S").concatenation(r_expr)
         return b
@@ -49,7 +49,7 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
     fun ifthenelse() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "ifVthenVelseV"
+        val sentence = "ifWthenXelseY"
 
         val expected = """
             S {
@@ -57,11 +57,11 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
                 conditional {
                     ifthenelse {
                       'if'
-                      expr { var { 'V' } }
+                      expr { var { 'W' } }
                       'then'
-                      expr { var { 'V' } }
+                      expr { var { 'X' } }
                       'else'
-                      expr { var { 'V' } }
+                      expr { var { 'Y' } }
                     }
                 }
               }
@@ -77,7 +77,7 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
     fun ifthen() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "ifVthenV"
+        val sentence = "ifWthenX"
 
         val expected = """
             S {
@@ -85,9 +85,9 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
                 conditional {
                     ifthen {
                       'if'
-                      expr { var { 'V' } }
+                      expr { var { 'W' } }
                       'then'
-                      expr { var { 'V' } }
+                      expr { var { 'X' } }
                     }
                 }
               }
@@ -101,7 +101,7 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
     fun ifthenelseifthen() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "ifVthenVelseifVthenV"
+        val sentence = "ifWthenXelseifYthenZ"
 
         val expected = """
             S {
@@ -109,17 +109,17 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
                 conditional {
                     ifthenelse {
                       'if'
-                      expr { var { 'V' } }
+                      expr { var { 'W' } }
                       'then'
-                      expr { var { 'V' } }
+                      expr { var { 'X' } }
                       'else'
                       expr {
                         conditional {
                             ifthen {
                               'if'
-                              expr { var { 'V'} }
+                              expr { var { 'Y'} }
                               'then'
-                              expr { var { 'V' } }
+                              expr { var { 'Z' } }
                             }
                         }
                       }
@@ -144,17 +144,17 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
                 conditional {
                     ifthen {
                       'if'
-                      expr { var { 'V' } }
+                      expr { var { 'W' } }
                       'then'
                       expr {
                         conditional {
                             ifthenelse {
                               'if'
-                              expr { var { 'V' } }
+                              expr { var { 'X' } }
                               'then'
-                              expr { var { 'V' } }
+                              expr { var { 'Y' } }
                               'else'
-                              expr { var { 'V' } }
+                              expr { var { 'Z' } }
                             }
                         }
                       }

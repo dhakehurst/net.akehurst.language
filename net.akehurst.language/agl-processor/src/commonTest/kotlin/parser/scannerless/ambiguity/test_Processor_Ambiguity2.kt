@@ -120,7 +120,7 @@ class test_Processor_Ambiguity2 : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected1, expected2)
+        super.testStringResult(rrb, goal, sentence, expected1)//, expected2)
     }
 
 

@@ -311,6 +311,7 @@ grammar Query {
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
+        println(result.toStringAll("  "))
     }
 
     @Test(timeout=5000)

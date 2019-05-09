@@ -31,15 +31,19 @@ namespace com.yakindu.modelviewer.parser
 grammar Mscript {
 
     skip WHITESPACE = "\s+" ;
+    skip SINGLE_LINE_COMMENT = "%.*?${'$'}" ;
+    skip MULTI_LINE_COMMENT = "%[{].*?%[}]" ;
 
     script = statementList ;
     statementList = (statement ';'?)* ;
     statement
       = conditional
+      | assignment
       | expressionStatement
       //TODO: others
       ;
 
+    assignment = rootVariable '=' expression ;
     conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
 
     expressionStatement = expression ;
@@ -47,24 +51,40 @@ grammar Mscript {
     expression
       = rootVariable
       < literal
+      < createVector
       < matrix
       < functionCall
+      < infixExpression
+      < groupExpression
       ;
 
+    groupExpression = '(' expression ')' ;
+
     functionCall = NAME '(' argumentList ')' ;
-    argumentList =  [ expression / ',' ]* ;
+    argumentList = [ expression / ',' ]* ;
+
+    infixExpression =  expression (operator expression)+ ;
+    //TODO: operator precedence !
+    operator = arithmeticOperator | relationalOperator | logicalOperator ;
+    arithmeticOperator = '+' | '-' | '*' | '.*' | '/' | './' | '\\' | '.\\' | '^' | '.^' | '\'' | '.\'' ;
+    relationalOperator = '==' | '~=' | '>' | '>=' | '<' | '<=' ;
+    logicalOperator = '&' | '|' | '&&' | '||' | '~' ;
+
+    createVector = expression ':' expression (':' expression)? ;
 
     matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
-    row = [expression / ',']+ | expression+ ;
+    row = expression (','? expression)* ;
 
     literal
       = BOOLEAN
-      | INTEGER
-      | REAL
+      | number
       | SINGLE_QUOTE_STRING
+      | DOUBLE_QUOTE_STRING
       ;
 
     rootVariable = NAME ;
+
+    number = INTEGER | REAL ;
 
     NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
 
@@ -72,6 +92,7 @@ grammar Mscript {
     INTEGER             = "([+]|[-])?[0-9]+" ;
     REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
     SINGLE_QUOTE_STRING = "'(?:\\?.)*?'" ;
+    DOUBLE_QUOTE_STRING = "\"(?:\\?.)*?\"" ;
 }
     """.trimIndent()
         val sut = Agl.processor(grammarStr)
@@ -322,6 +343,24 @@ grammar Mscript {
     fun process_expression_func_func_1() {
 
         val text = "func( func(a) )"
+        val actual = sut.parse("expression", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
+    fun process_expression_operators_1() {
+
+        val text = "1 + 1"
+        val actual = sut.parse("expression", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
+    fun process_expression_operators_100() {
+
+        val text = "1"+" + 1".repeat(100)
         val actual = sut.parse("expression", text)
 
         assertNotNull(actual)
