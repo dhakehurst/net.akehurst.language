@@ -61,6 +61,7 @@ private fun createRules(): List<Rule> {
 			b.concatenation(b.terminalLiteral("*")), //
 			b.concatenation(b.terminalLiteral("+")), //
 			b.concatenation(b.terminalLiteral("?")), //
+			b.concatenation(b.nonTerminal("POSITIVE_INTEGER"),b.terminalLiteral("+")), //
 			b.concatenation(b.nonTerminal("POSITIVE_INTEGER"),b.terminalLiteral(".."),b.nonTerminal("POSITIVE_INTEGER")) //
 	);
 	b.rule("group").concatenation(b.terminalLiteral("("), b.nonTerminal("choice"), b.terminalLiteral(")"));

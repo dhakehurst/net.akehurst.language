@@ -35,66 +35,6 @@ class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
         return sp.parse(goalRuleName, inputText)
     }
 
-    // S = 'a'*
-    private fun multi_0_n_a(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r0 = b.literal("a")
-        val r1 = b.rule("S").multi(0, -1, r0)
-        return b
-    }
-
-    @Test
-    fun multi_0_n_a__r__empty() {
-        val rrb = multi_0_n_a()
-        val goal = "S"
-        val sentence = ""
-
-        val expected = """
-            S { §empty }
-        """.trimIndent()
-
-        super.testStringResult(rrb, goal, sentence, expected)
-    }
-
-    @Test
-    fun multi_0_n_a__r__a() {
-        val rrb = multi_0_n_a()
-        val goal = "S"
-        val sentence = "a"
-
-        val expected = """
-            S { 'a' }
-        """.trimIndent()
-
-        super.testStringResult(rrb, goal, sentence, expected)
-    }
-
-    @Test
-    fun multi_0_n_a__r__aa() {
-        val rrb = multi_0_n_a()
-        val goal = "S"
-        val sentence = "aa"
-
-        val expected = """
-            S { 'a' 'a' }
-        """.trimIndent()
-
-        super.testStringResult(rrb, goal, sentence, expected)
-    }
-
-    @Test
-    fun multi_0_n_a__r__aaa() {
-        val rrb = multi_0_n_a()
-        val goal = "S"
-        val sentence = "aaa"
-
-        val expected = """
-            S { 'a' 'a' 'a' }
-        """.trimIndent()
-
-        super.testStringResult(rrb, goal, sentence, expected)
-    }
-
     // r = a+
     // a = 'a'
     private fun multi_1_n_a(): ScannerlessParser {

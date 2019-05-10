@@ -183,7 +183,22 @@ class AglSppt2AstTransformer : SyntaxAnalyserAbstract() {
             "*" -> Pair(0, -1)
             "+" -> Pair(1, -1)
             "?" -> Pair(0, 1)
-            else -> throw UnableToTransformSppt2AstExeception("cannot transform ${target}", null)
+            else -> {
+                val multArgs = children[0].branchNonSkipChildren
+                when (multArgs.size) {
+                    1 -> {
+                        val min = multArgs[0].nonSkipMatchedText.toInt()
+                        Pair(min, -1)
+                    }
+                    2 -> {
+                        val min = multArgs[0].nonSkipMatchedText.toInt()
+                        val max = multArgs[1].nonSkipMatchedText.toInt()
+                        Pair(min,max)
+                    }
+                    else -> throw UnableToTransformSppt2AstExeception("cannot transform ${target}", null)
+                }
+            }
+
         }
     }
 

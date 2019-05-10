@@ -19,7 +19,7 @@ grammar Query {
 
     skip WHITE_SPACE = "\s+" ;
 	skip SINGLE_LINE_COMMENT = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
-	skip MULTI_LINE_COMMENT = "//.*?${'$'}" ;
+	skip MULTI_LINE_COMMENT = "//.*?$" ;
 
     query = singleQuery | compositeQuery ;
     singleQuery = timespanDefinition? querySource? returnDefinition? ;

@@ -214,10 +214,23 @@ class test_AglGrammar_item {
     }
 
     @Test
+    fun multiplicity_2_n() {
+        val actual = parse("multiplicity", "2+")
+        val expected = this.sppt("""
+            multiplicity { §multiplicity§choice0 {
+              POSITIVE_INTEGER { '[0-9]+' : '2' }
+              '+'
+             } }
+        """.trimIndent())
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
+    @Test
     fun multiplicity_2_5() {
         val actual = parse("multiplicity", "2..5")
         val expected = this.sppt("""
-            multiplicity { §multiplicity§choice0 {
+            multiplicity { §multiplicity§choice1 {
               POSITIVE_INTEGER { '[0-9]+' : '2' }
               '..'
               POSITIVE_INTEGER { '[0-9]+' : '5' }

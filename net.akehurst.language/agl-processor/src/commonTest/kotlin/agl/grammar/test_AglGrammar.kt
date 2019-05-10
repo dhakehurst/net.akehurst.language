@@ -278,6 +278,38 @@ class test_AglGrammar {
     }
 
     @Test
+    fun nonTerminal_multi_2_n() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                r = (a)2+ ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+    @Test
+    fun nonTerminal_multi_2_5() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                r = (a)2..5 ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+    @Test
     fun nonTerminal_slist_0_1() {
 
         val grammarStr = """
@@ -318,6 +350,38 @@ class test_AglGrammar {
             namespace test
             grammar Test {
                 r = [ a  / ',' ]+ ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+    @Test
+    fun nonTerminal_slist_2_n() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                r = [ a  / ',' ]2+ ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+    @Test
+    fun nonTerminal_slist_2_5() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                r = [ a  / ',' ]2..5 ;
                 a = 'a' ;
             }
         """.trimIndent()
