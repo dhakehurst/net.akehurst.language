@@ -158,15 +158,17 @@ internal class RuntimeParser(
 
     private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
         if (previous.node.currentState.rulePosition == transition.prevGuard) {
-            val lh = transition.lookaheadGuard
-            val hasLh = lh.any {
-                val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
-                null != l
-            }
-            if (hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
-                val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
-                        ?: throw ParseException("Should never be null")
-                this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
+            if (transition.runtimeGuard(previous.node)) {
+                val lh = transition.lookaheadGuard
+                val hasLh = lh.any {
+                    val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
+                    null != l
+                }
+                if (hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
+                    val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
+                            ?: throw ParseException("Should never be null")
+                    this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
+                }
             }
         }
     }

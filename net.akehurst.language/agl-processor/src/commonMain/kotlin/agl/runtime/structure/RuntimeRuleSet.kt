@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.api.parser.ParseException
 import net.akehurst.language.collections.transitveClosure
 import net.akehurst.language.parser.scannerless.InputFromCharSequence
@@ -409,7 +410,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val action = Transition.ParseAction.WIDTH
         val lookaheadGuard = closureRPlh.lookahead
         val to = from.stateSet.fetchOrCreateParseState(closureRPlh.rulePosition)
-        return Transition(from, to, action, lookaheadGuard, null)
+        return Transition(from, to, action, lookaheadGuard, null) { true }
     }
 
     private fun createHeightTransition(from: ParserState, parentRelation: ParentRelation, previous: RulePosition?): Set<Transition> {
@@ -422,31 +423,54 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return toSet.flatMap { to ->
             if (to.parentRelations.isEmpty()) {
                 val lookaheadGuard = this.calcLookahead(null, from.rulePosition, parentRelation.lookahead)
-                setOf(Transition(from, to, action, lookaheadGuard, prevGuard))
+                setOf(Transition(from, to, action, lookaheadGuard, prevGuard) { true })
             } else {
                 to.parentRelations.map { toParent ->
                     val lookaheadGuard = this.calcLookahead(RulePositionWithLookahead(toParent.rulePosition, toParent.lookahead), from.rulePosition, toParent.lookahead)
-                    Transition(from, to, action, lookaheadGuard, prevGuard)
+                    Transition(from, to, action, lookaheadGuard, prevGuard) { true }
                 }
             }
 
         }.toSet()
     }
 
+    val multiRuntimeGuard = { gn: GrowingNode ->
+        when (gn.currentState.rulePosition.position) {
+            RulePosition.END_OF_RULE -> gn.children.size >= gn.runtimeRule.rhs.multiMin
+            RulePosition.MULIT_ITEM_POSITION -> -1==gn.runtimeRule.rhs.multiMax || gn.children.size <= gn.runtimeRule.rhs.multiMax
+            else -> true
+        }
+    }
+    val sListRuntimeGuard = { gn: GrowingNode ->
+        when (gn.currentState.rulePosition.position) {
+            RulePosition.END_OF_RULE -> (gn.children.size % 2) >= gn.runtimeRule.rhs.multiMin
+            RulePosition.SLIST_ITEM_POSITION -> -1==gn.runtimeRule.rhs.multiMax || (gn.children.size % 2) <= gn.runtimeRule.rhs.multiMax
+            else -> true
+        }
+    }
     private fun createGraftTransition(from: ParserState, parentRelation: ParentRelation, previous: RulePosition?): Set<Transition> {
         val parentRP = parentRelation.rulePosition
         val prevGuard = parentRP //for graft, previous must match prevGuard
         val action = Transition.ParseAction.GRAFT
         val toSet = parentRP.next().map { from.stateSet.fetchOrCreateParseState(it) }
         //val filteredToSet = toSet.filter { this.canGrowInto(it, previous) }
+        val runtimeGuard: (GrowingNode) -> Boolean = if (null==previous) {
+            { _ -> true }
+        } else {
+            when (previous.runtimeRule.rhs.kind) {
+                RuntimeRuleItemKind.MULTI -> multiRuntimeGuard
+                RuntimeRuleItemKind.SEPARATED_LIST -> sListRuntimeGuard
+                else -> { _ -> true }
+            }
+        }
         return toSet.flatMap { to ->
             if (to.parentRelations.isEmpty()) {
                 val lookaheadGuard = this.calcLookahead(null, from.rulePosition, parentRelation.lookahead)
-                setOf(Transition(from, to, action, lookaheadGuard, prevGuard))
+                setOf(Transition(from, to, action, lookaheadGuard, prevGuard, runtimeGuard))
             } else {
                 to.parentRelations.map { toParent ->
                     val lookaheadGuard = this.calcLookahead(RulePositionWithLookahead(toParent.rulePosition, toParent.lookahead), from.rulePosition, toParent.lookahead)
-                    Transition(from, to, action, lookaheadGuard, prevGuard)
+                    Transition(from, to, action, lookaheadGuard, prevGuard, runtimeGuard)
                 }
             }
 
@@ -516,14 +540,14 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         if (goal) {
             val action = Transition.ParseAction.GOAL
             val to = from
-            goalTransitions += Transition(from, to, action, emptySet(), null)
+            goalTransitions += Transition(from, to, action, emptySet(), null) { true }
         } else {
             if (from.isAtEnd) {
                 if (from.parentRelations.isEmpty()) {
                     //end of skip
                     val action = Transition.ParseAction.GOAL
                     val to = from
-                    goalTransitions += Transition(from, to, action, emptySet(), null)
+                    goalTransitions += Transition(from, to, action, emptySet(), null) { true }
                 } else {
                     val filteredRelations = from.parentRelations.filter { pr -> this.canGrowInto(pr, previous) }
                     for (parentRelation in filteredRelations) {
@@ -577,7 +601,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         for (trh in heightTransitions) {
             for (trg in graftTransitions) {
                 if (trg.lookaheadGuard.containsAll(trh.lookaheadGuard)) {
-                    val newTr = Transition(trh.from, trh.to, trh.action, trh.lookaheadGuard, trg.prevGuard)
+                    val newTr = Transition(trh.from, trh.to, trh.action, trh.lookaheadGuard, trg.prevGuard, trh.runtimeGuard)
                     conflictHeightTransitionPairs.add(Pair(trh, trg))
                 }
             }
@@ -586,23 +610,23 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val conflictHeightTransitions = conflictHeightTransitionPairs.map {
             val trh = it.first
             val trg = it.second
-            Transition(trh.from, trh.to, trh.action, trh.lookaheadGuard, trg.prevGuard)
+            Transition(trh.from, trh.to, trh.action, trh.lookaheadGuard, trg.prevGuard, trh.runtimeGuard)
         }
         //Note: need to do the conflict stuff to make multi work, at present!
 
-        val newHeightTransitions =  (heightTransitions - conflictHeightTransitionPairs.map { it.first }) + conflictHeightTransitions
+        //val newHeightTransitions = (heightTransitions - conflictHeightTransitionPairs.map { it.first }) + conflictHeightTransitions
 
-        //val newHeightTransitions = heightTransitions
+        val newHeightTransitions = heightTransitions
         val mergedWidthTransitions = widthTransitions.groupBy { it.to }.map {
-            Transition(from, it.key, Transition.ParseAction.WIDTH, it.value.flatMap { it.lookaheadGuard }.toSet(), null)
+            Transition(from, it.key, Transition.ParseAction.WIDTH, it.value.flatMap { it.lookaheadGuard }.toSet(), null) { true }
         }
 
         val mergedHeightTransitions = newHeightTransitions.groupBy { Pair(it.to, it.prevGuard) }.map {
-            Transition(from, it.key.first, Transition.ParseAction.HEIGHT, it.value.flatMap { it.lookaheadGuard }.toSet(), it.key.second)
+            Transition(from, it.key.first, Transition.ParseAction.HEIGHT, it.value.flatMap { it.lookaheadGuard }.toSet(), it.key.second) { true }
         }
 
         val mergedGraftTransitions = graftTransitions.groupBy { Pair(it.to, it.prevGuard) }.map {
-            Transition(from, it.key.first, Transition.ParseAction.GRAFT, it.value.flatMap { it.lookaheadGuard }.toSet(), it.key.second)
+            Transition(from, it.key.first, Transition.ParseAction.GRAFT, it.value.flatMap { it.lookaheadGuard }.toSet(), it.key.second, it.value[0].runtimeGuard)
         }
 
         val transitions = mergedHeightTransitions + mergedGraftTransitions + mergedWidthTransitions + goalTransitions

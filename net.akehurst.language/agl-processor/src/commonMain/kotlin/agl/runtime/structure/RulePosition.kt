@@ -88,6 +88,9 @@ data class RulePosition(
                             1 == this.runtimeRule.rhs.multiMax -> setOf(
                                     RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, END_OF_RULE)
                             )
+                            1 <= this.runtimeRule.rhs.multiMin -> setOf(
+                                    RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, MULIT_ITEM_POSITION)
+                            )
                             else -> setOf(
                                     RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, MULIT_ITEM_POSITION),
                                     RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, END_OF_RULE)
@@ -109,6 +112,26 @@ data class RulePosition(
                         )
                         else -> emptySet() //throw ParseException("This should never happen!")
                     }
+                    RuntimeRuleItem.SLIST__ITEM -> when(this.position) {
+                        START_OF_RULE -> when {
+                            1 == this.runtimeRule.rhs.multiMax -> setOf(
+                                    RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
+                            )
+                            2 <= this.runtimeRule.rhs.multiMin -> setOf(
+                                    RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, 1)
+                            )
+                            else -> setOf(
+                                    RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, 1),
+                                    RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
+                            )
+                        }
+                        SLIST_ITEM_POSITION -> setOf(
+                                RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, 1),
+                                RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
+                        )
+                        END_OF_RULE -> emptySet()
+                        else -> emptySet()
+                    }/*
                     RuntimeRuleItem.SLIST__ITEM -> when {
                         START_OF_RULE == this.position && (this.runtimeRule.rhs.multiMax == 1) && itemRule == this.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
                                 RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
@@ -122,7 +145,7 @@ data class RulePosition(
                                 RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
                         )
                         else -> emptySet() //throw ParseException("This should never happen!")
-                    }
+                    }*/
                     RuntimeRuleItem.SLIST__SEPARATOR -> when {
                         SLIST_SEPARATOR_POSITION == this.position && (this.runtimeRule.rhs.multiMax > 1 || -1 == this.runtimeRule.rhs.multiMax) && itemRule == this.runtimeRule.rhs.SLIST__separator -> setOf(
                                 RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, 2)

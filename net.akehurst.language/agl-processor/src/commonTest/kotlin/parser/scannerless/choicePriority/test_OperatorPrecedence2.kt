@@ -42,12 +42,13 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         val r_expr = b.rule("expr").build()
         val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
         val r_bool = b.rule("bool").choiceEqual(b.literal("true"), b.literal("false"))
-        val r_group = b.rule("group").concatenation(b.literal("("),r_expr,b.literal(")"))
-        val r_div = b.rule("div").separatedList(2,-1,b.literal("/"),r_expr)
-        val r_mul = b.rule("mul").separatedList(2,-1,b.literal("*"),r_expr)
-        val r_add = b.rule("add").separatedList(2,-1,b.literal("+"),r_expr)
-        val r_sub = b.rule("sub").separatedList(2,-1,b.literal("-"),r_expr)
-        b.rule(r_expr).choicePriority(r_var, r_bool, r_group, r_div, r_mul,r_add, r_sub)
+        val r_group = b.rule("group").concatenation(b.literal("("), r_expr, b.literal(")"))
+        val r_div = b.rule("div").separatedList(2, -1, b.literal("/"), r_expr)
+        val r_mul = b.rule("mul").separatedList(2, -1, b.literal("*"), r_expr)
+        val r_add = b.rule("add").separatedList(2, -1, b.literal("+"), r_expr)
+        val r_sub = b.rule("sub").separatedList(2, -1, b.literal("-"), r_expr)
+        val r_root = b.rule("root").choicePriority(r_var, r_bool)
+        b.rule(r_expr).choiceEqual(r_root, r_group, r_div, r_mul, r_add, r_sub)
         b.rule("S").concatenation(r_expr)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b
@@ -75,11 +76,11 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr { var { '[a-zA-Z]+' : 'a' } }
+              expr { root{ var { '[a-zA-Z]+' : 'a' } } }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
 
     }
 
@@ -90,12 +91,12 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         val sentence = "true"
 
         val expected = """
-              expr {
+              expr { root {
                 bool { 'true' }
-              }
+              } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
 
     @Test
@@ -106,13 +107,13 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr { root {
                 bool { 'true' }
-              }
+              } }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
 
     @Test
@@ -123,17 +124,17 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr { root {
                 var { '[a-zA-Z]+' : 'var' }
-              }
+              } }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
 
     @Test
-    fun Og_a_Cg() {
+    fun S_group_a() {
         val rrb = this.S()
         val goal = "S"
         val sentence = "(a)"
@@ -143,14 +144,14 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
               expr {
                 group {
                   '('
-                  expr { var { '[a-zA-Z]+' : 'a' } }
+                  expr { root { var { '[a-zA-Z]+' : 'a' } } }
                   ')'
                 }
               }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
 
     }
 
@@ -164,15 +165,15 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
             S {
               expr {
                 div {
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
+                  expr { root { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } } }
                   '/' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' } }
+                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
                 }
               }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
 
     }
 
@@ -186,15 +187,15 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
             S {
               expr {
                 mul {
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
+                  expr { root { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } } }
                   '*' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' } }
+                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
                 }
               }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
 
     }
 
@@ -208,9 +209,9 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
             S {
               expr {
                 add {
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
+                  expr { root { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } } }
                   '+' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' } }
+                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
                 }
               }
             }
@@ -230,9 +231,9 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
             S {
               expr {
                 sub {
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
+                  expr { root { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } } }
                   '-' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' } }
+                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
                 }
               }
             }
@@ -252,13 +253,13 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
             S {
              expr {
               add {
-                expr { var { '[a-zA-Z]+' : 'a' } }
+                expr { root { var { '[a-zA-Z]+' : 'a' } } }
                 '+'
                 expr {
                   mul {
-                    expr { var { '[a-zA-Z]+' : 'b' } }
+                    expr { root { var { '[a-zA-Z]+' : 'b' } } }
                     '*'
-                    expr { var { '[a-zA-Z]+' : 'c' } }
+                    expr { root { var { '[a-zA-Z]+' : 'c' } } }
                   }
                 }
               }
@@ -281,19 +282,19 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
               add {
                 expr {
                   mul {
-                    expr { var { '[a-zA-Z]+' : 'a' } }
+                    expr { root { var { '[a-zA-Z]+' : 'a' } } }
                     '*'
-                    expr { var { '[a-zA-Z]+' : 'b' } }
+                    expr { root { var { '[a-zA-Z]+' : 'b' } } }
                   }
                 }
                '+'
-               expr { var { '[a-zA-Z]+' : 'c' } }
+               expr { root { var { '[a-zA-Z]+' : 'c' } } }
               }
              }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
 
     @Test
@@ -303,21 +304,17 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         val sentence = "a+b+c+c+d"
 
         val expected = """
-            S {
-             expr {
-              add {
-                expr {
-                  mul {
-                    expr { var { '[a-zA-Z]+' : 'a' } }
-                    '*'
-                    expr { var { '[a-zA-Z]+' : 'b' } }
-                  }
-                }
-               '+'
-               expr { var { '[a-zA-Z]+' : 'c' } }
-              }
-             }
-            }
+             S { expr { add {
+                  expr { root { var { '[a-zA-Z]+' : 'a' } } }
+                  '+'
+                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                  '+'
+                  expr { root { var { '[a-zA-Z]+' : 'c' } } }
+                  '+'
+                  expr { root { var { '[a-zA-Z]+' : 'c' } } }
+                  '+'
+                  expr { root { var { '[a-zA-Z]+' : 'd' } } }
+                } } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
@@ -330,21 +327,21 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         val sentence = "a+b+c+c+d+e+f"
 
         val expected = """
-            S {
-             expr {
-              add {
-                expr {
-                  mul {
-                    expr { var { '[a-zA-Z]+' : 'a' } }
-                    '*'
-                    expr { var { '[a-zA-Z]+' : 'b' } }
-                  }
-                }
-               '+'
-               expr { var { '[a-zA-Z]+' : 'c' } }
-              }
-             }
-            }
+         S { expr { add {
+              expr { root { var { '[a-zA-Z]+' : 'a' } } }
+              '+'
+              expr { root { var { '[a-zA-Z]+' : 'b' } } }
+              '+'
+              expr { root { var { '[a-zA-Z]+' : 'c' } } }
+              '+'
+              expr { root { var { '[a-zA-Z]+' : 'c' } } }
+              '+'
+              expr { root { var { '[a-zA-Z]+' : 'd' } } }
+              '+'
+              expr { root { var { '[a-zA-Z]+' : 'e' } } }
+              '+'
+              expr { root { var { '[a-zA-Z]+' : 'f' } } }
+            } } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
@@ -364,20 +361,21 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
                   '('
                     expr {
                       add {
-                        expr { var { '[a-zA-Z]+' : 'a' } }
+                        expr { root { var { '[a-zA-Z]+' : 'a' } } }
                         '+'
-                        expr { var { '[a-zA-Z]+' : 'b' } }
+                        expr { root { var { '[a-zA-Z]+' : 'b' } } }
                       }
                     }
                   ')'
                 }
               }
               '*'
-              expr { var { '[a-zA-Z]+' : 'c' } }
+              expr { root { var { '[a-zA-Z]+' : 'c' } } }
             } } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
+
 
 }

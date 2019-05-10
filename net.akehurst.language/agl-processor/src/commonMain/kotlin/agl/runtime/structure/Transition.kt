@@ -16,12 +16,15 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.runtime.graph.GrowingNode
+
 data class Transition(
         val from: ParserState,
         val to: ParserState,
         val action: ParseAction,
         val lookaheadGuard: Set<RuntimeRule>,
-        val prevGuard : RulePosition?
+        val prevGuard : RulePosition?,
+        val runtimeGuard: (GrowingNode)->Boolean
 //TODO: add previousGuard for use in graft
 ) {
     enum class ParseAction {
