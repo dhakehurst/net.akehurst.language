@@ -271,7 +271,7 @@ internal class ParseGraph(
         }
     }
 
-    private fun complete(gn: GrowingNode): SPPTNode? {
+    private fun complete1(gn: GrowingNode): SPPTNode? {
         if (gn.hasCompleteChildren) {
             val runtimeRule = gn.runtimeRule
             val priority = gn.priority
@@ -362,6 +362,107 @@ internal class ParseGraph(
         }
     }
 
+    private fun complete(gn: GrowingNode): SPPTNode? {
+        if (gn.hasCompleteChildren) {
+            val runtimeRule = gn.runtimeRule
+            val priority = gn.priority
+            val startPosition = gn.startPosition
+            val matchedTextLength = gn.matchedTextLength
+            var cn: SPPTNodeDefault? = this.findCompleteNode(runtimeRule, startPosition, matchedTextLength)
+            if (null == cn) {
+                cn = this.createBranchNoChildren(runtimeRule, priority, startPosition, gn.nextInputPosition)
+                if (gn.isLeaf) {
+                    // dont try and add children...can't for a leaf
+                } else {
+                    cn.childrenAlternatives.add(gn.children)
+                }
+            } else {
+                if (gn.isLeaf) {
+                    // dont try and add children...can't for a leaf
+                } else {
+                    // final ICompleteNode.ChildrenOption opt = new ICompleteNode.ChildrenOption();
+                    // opt.matchedLength = gn.getMatchedTextLength();
+                    // opt.nodes = gn.getGrowingChildren();
+                    cn = (cn as SPPTBranchDefault)
+
+                    when (runtimeRule.rhs.kind) {
+                        RuntimeRuleItemKind.CHOICE_EQUAL -> {
+                            val choice = pickLongest(gn, cn) ?: pickHigestPriority(gn,cn)
+                            if (null==choice) {
+                                //ambiguous, keep existing
+                            } else {
+                                cn = choice
+                            }
+                        }
+                        RuntimeRuleItemKind.CHOICE_PRIORITY -> {
+                            val choice = pickHigestPriority(gn, cn) ?: pickLongest(gn,cn)
+                            if (null==choice) {
+                                //ambiguous, keep existing
+                            } else {
+                                cn = choice
+                            }
+                        }
+                        else -> {
+                            val choice = pickLongest(gn, cn)
+                            if (null==choice) {
+                                //ambiguous, keep existing
+                            } else {
+                                cn = choice
+                            }
+                        }
+                    }
+                }
+            }
+
+            //this.checkForGoal(cn)
+            return cn
+        } else {
+            return null
+        }
+    }
+
+    // return null if length is the same
+    private fun pickLongest(newNode:GrowingNode, exisingNode:SPPTNodeDefault) : SPPTNodeDefault? {
+        val gnLength = newNode.matchedTextLength
+        val existingLength = exisingNode.matchedTextLength
+        return when {
+            (gnLength > existingLength) -> {
+                //replace existing with new node
+                val longest = this.createBranchNoChildren(newNode.runtimeRule, newNode.priority, newNode.startPosition, newNode.nextInputPosition)
+                longest.childrenAlternatives.add(newNode.children)
+                longest
+            }
+            (gnLength < existingLength) -> {
+                //keep existing drop this
+                exisingNode
+            }
+            else -> null
+        }
+    }
+
+    // return null if priority is the same
+    private fun pickHigestPriority(newNode:GrowingNode, exisingNode:SPPTNodeDefault) : SPPTNodeDefault? {
+        val newPriority = newNode.priority
+        val existingPriority = exisingNode.priority
+        return when {
+            (newPriority > existingPriority) -> {
+                // replace existing with new
+                //cn.childrenAlternatives.clear()
+                val highest = this.createBranchNoChildren(newNode.runtimeRule, newNode.priority, newNode.startPosition, newNode.nextInputPosition)
+                highest.childrenAlternatives.add(newNode.children)
+                highest
+            }
+            (existingPriority > newPriority) -> {
+                // then existing is the higher precedence item,
+                // therefore existing node should be the higher item in the tree
+                // which it is, so change nothing
+                // do nothing, drop new one
+                exisingNode
+            }
+            else -> null
+        }
+    }
+
     private fun growNextChildAt(isSkipGrowth: Boolean, nextRp: ParserState, parent: GrowingNode, priority: Int, nextChild: SPPTNodeDefault, skipChildren: List<SPPTNode>) {
         val startPosition = parent.startPosition
         val nextInputPosition = if (skipChildren.isEmpty()) {
@@ -413,8 +514,12 @@ internal class ParseGraph(
                 return
             }
         }
-        val priority = if (0 == position && parent.runtimeRule.rhs.kind == RuntimeRuleItemKind.CHOICE_PRIORITY) {
-            parent.runtimeRule.rhs.items.indexOf(nextChild.runtimeRule)
+        val priority = if (0 == position) {
+            when (parent.runtimeRule.rhs.kind) {
+                RuntimeRuleItemKind.CHOICE_PRIORITY -> parent.runtimeRule.rhs.items.indexOf(nextChild.runtimeRule)
+                RuntimeRuleItemKind.CHOICE_EQUAL -> parent.runtimeRule.rhs.items.indexOf(nextChild.runtimeRule)
+                else -> parent.priority
+            }
         } else {
             parent.priority
         }
@@ -459,11 +564,11 @@ internal class ParseGraph(
         val runtimeRule = newRp.runtimeRule
         val children = listOf(firstChild) + skipChildren
         val numNonSkipChildren = skipChildren.size
-        val priority = if (runtimeRule.rhs.kind == RuntimeRuleItemKind.CHOICE_PRIORITY) {
-            runtimeRule.rhs.items.indexOf(firstChild.runtimeRule)
-        } else {
-            0
-        }
+        val priority = when (runtimeRule.rhs.kind) {
+                RuntimeRuleItemKind.CHOICE_PRIORITY -> runtimeRule.rhs.items.indexOf(firstChild.runtimeRule)
+                RuntimeRuleItemKind.CHOICE_EQUAL -> runtimeRule.rhs.items.indexOf(firstChild.runtimeRule)
+                else -> 0
+            }
         this.findOrCreateGrowingNode(isSkipGrowth, newRp, startPosition, nextInputPosition, priority, children, numNonSkipChildren, previous)
     }
 }

@@ -60,7 +60,26 @@ class test_AglGrammar_item {
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
+    @Test
+    fun MULTI_LINE_COMMENT() {
+        val text = """
+            /* a single line comment
+            sfgh
+            */
+            a
+        """.trimIndent()
+        val actual = parse("IDENTIFIER", text)
 
+        val expected = this.sppt("""
+             IDENTIFIER {
+                MULTI_LINE_COMMENT { '/\*[^*]*\*+(?:[^*/][^*]*\*+)*/' : '/* a single line comment9166sfgh9166*/' }
+                WHITESPACE { '\s+' : '9166' }
+                '[a-zA-Z_][a-zA-Z_0-9-]*' : 'a'
+             }
+        """)
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
     @Test
     fun IDENTIFIER() {
         val actual = parse("IDENTIFIER", "a")

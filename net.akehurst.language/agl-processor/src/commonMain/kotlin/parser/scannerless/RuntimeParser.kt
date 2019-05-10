@@ -172,6 +172,8 @@ internal class RuntimeParser(
     }
 
     private fun tryGrowWidthWithSkipRules(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
+        //TODO: make skip rule parsing essentially be a separate parser, with root rule $skip = all | marked | skip | rules
+        // so we always get the longest possible skip match
         if (gn.isSkipGrowth) {
             return false //dont grow more skip if currently doing a skip
         } else {

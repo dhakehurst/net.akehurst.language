@@ -118,13 +118,13 @@ grammar Query {
 	aggregateFunctionCallOrExpression = aggregateFunctionCall | expression ;
 	aggregateFunctionCall = aggregateFunctionName '(' expression ')' ;
     expression
-		= conditionalExpression
-		< infixFunction
-		< propertyCall
-		< methodCall
-		< root
-		< literalValue
-    	< groupExpression
+		= root
+		| literalValue
+		| propertyCall
+		| methodCall
+		| infixFunction
+		| conditionalExpression
+    	| groupExpression
         ;
 
     nameDefinition = 'AS' NAME ;
@@ -136,19 +136,19 @@ grammar Query {
 	argList = [expression / ',']* ;
 	infixFunction
         = logicalInfixFunction
-        < arithmeticInfixFunction
-        < comparisonInfixFunction
+        | arithmeticInfixFunction
+        | comparisonInfixFunction
         ;
 
     logicalInfixFunction
         = expression ('AND' expression)+
-        < expression ('OR' expression)+
-        < expression ('XOR' expression)+
+        | expression ('OR' expression)+
+        | expression ('XOR' expression)+
         ;
 
     arithmeticInfixFunction
         = expression (('+'|'-') expression)+
-        < expression (('*'|'/') expression)+
+        | expression (('*'|'/') expression)+
         ;
 
     comparisonInfixFunction

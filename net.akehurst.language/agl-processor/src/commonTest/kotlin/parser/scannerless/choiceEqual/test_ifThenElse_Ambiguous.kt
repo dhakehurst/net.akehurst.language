@@ -42,7 +42,7 @@ class test_ifThenElse_Ambiguous : test_ScannerlessParserAbstract() {
         val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
         val r_ifthen = b.rule("ifthen").concatenation(r_if,r_expr,r_then,r_expr)
         val r_ifthenelse = b.rule("ifthenelse").concatenation(r_if,r_expr,r_then,r_expr,r_else,r_expr)
-        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_EQUAL, -1, 0, arrayOf(r_var, r_ifthen, r_ifthenelse))
+        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_EQUAL, -1, 0, arrayOf(r_var, r_ifthenelse,r_ifthen))
         b.rule("S").concatenation(r_expr)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b

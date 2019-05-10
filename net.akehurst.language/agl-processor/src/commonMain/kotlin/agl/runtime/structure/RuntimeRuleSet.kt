@@ -698,9 +698,10 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     private fun calcExpectedSkipItemRulePositionTransitive(): Set<RulePosition> {
-        val skipRuleStarts = allSkipRules.map {
+        val skipRuleStarts = allSkipRules.flatMap {
             val x = firstTerminals[it.number]
             RulePosition(it, 0, 0)
+            it.rulePositionsAt[0]
         }
         return skipRuleStarts.flatMap {
             this.calcExpectedItemRulePositionTransitive(it)

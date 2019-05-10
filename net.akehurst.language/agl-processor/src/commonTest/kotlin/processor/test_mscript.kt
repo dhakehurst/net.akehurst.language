@@ -31,8 +31,9 @@ namespace com.yakindu.modelviewer.parser
 grammar Mscript {
 
     skip WHITESPACE = "\s+" ;
-    skip SINGLE_LINE_COMMENT = "%.*?${'$'}" ;
-    skip MULTI_LINE_COMMENT = "%[{].*?%[}]" ;
+    //skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
+    skip MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
+    skip SINGLE_LINE_COMMENT = "%(?:[^{].*?)?$" ;
 
     script = statementList ;
     statementList = (statement ';'?)* ;
@@ -96,6 +97,31 @@ grammar Mscript {
 }
     """.trimIndent()
         val sut = Agl.processor(grammarStr)
+    }
+
+    @Test
+    fun process_single_line_comment() {
+
+        val text = "% this is a comment"
+        val actual = sut.parse("script", text)
+
+        assertNotNull(actual)
+
+    }
+
+    @Test
+    fun process_multi_line_comment() {
+
+        val text = """
+            %{
+             a multiline comment
+             a multiline comment
+            %}
+        """.trimIndent()
+        val actual = sut.parse("script", text)
+
+        assertNotNull(actual)
+
     }
 
     @Test
@@ -358,6 +384,15 @@ grammar Mscript {
     }
 
     @Test
+    fun process_expression_operators_10() {
+
+        val text = "1"+" + 1".repeat(10)
+        val actual = sut.parse("expression", text)
+
+        assertNotNull(actual)
+    }
+
+    //@Test
     fun process_expression_operators_100() {
 
         val text = "1"+" + 1".repeat(100)

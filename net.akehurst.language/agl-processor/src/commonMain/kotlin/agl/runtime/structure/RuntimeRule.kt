@@ -143,6 +143,10 @@ class RuntimeRule(
             }
         }
 
+    val rulePositionsAt = lazyMapNonNull<Int,Set<RulePosition>> {index ->
+        this.calcExpectedRulePositions(index)
+    }
+
 //    val nextExpectedItems by lazy { lazyArray(rhs.items.size,{
 //        this.findNextExpectedItems(it)
 //    })}
@@ -153,56 +157,6 @@ class RuntimeRule(
         }
     }
 
-    /*
-        fun isCompleteChildren(nextItemIndex: Int, numNonSkipChildren: Int, children: List<SPPTNode>): Boolean {
-            return if (RuntimeRuleKind.TERMINAL == this.kind) {
-                true
-            } else {
-                val rhs: RuntimeRuleItem = this.rhs
-                when (rhs.kind) {
-                    RuntimeRuleItemKind.EMPTY -> true
-                    RuntimeRuleItemKind.CHOICE_EQUAL ->
-                        // a choice can only have one child
-                        // TODO: should never be 1, should always be -1 if we create nodes correctly
-                        nextItemIndex == 1 || nextItemIndex == -1
-                    RuntimeRuleItemKind.CHOICE_PRIORITY ->
-                        // a choice can only have one child
-                        // TODO: should never be 1, should always be -1 if we create nodes correctly
-                        nextItemIndex == 1 || nextItemIndex == -1
-                    RuntimeRuleItemKind.CONCATENATION -> {
-                        // the -1 is used when creating dummy ?
-                        // test here!
-                        rhs.items.size <= nextItemIndex || nextItemIndex == -1
-                    }
-                    RuntimeRuleItemKind.MULTI -> {
-                        var res = false
-                        if (0 == rhs.multiMin && numNonSkipChildren == 1) {
-                            // complete if we have an empty node as child
-                            res = if (children.isEmpty()) false else children[0].runtimeRule.isEmptyRule
-                        }
-                        val size = numNonSkipChildren
-                        res || size > 0 && size >= rhs.multiMin || nextItemIndex == -1 // the -1 is used when
-                        // creating
-                        // dummy branch...should
-                        // really need the test here!
-                    }
-                    RuntimeRuleItemKind.SEPARATED_LIST -> {
-                        var res = false
-                        if (0 == rhs.multiMin && numNonSkipChildren == 1) {
-                            // complete if we have an empty node as child
-                            res = if (children.isEmpty()) false else children[0].runtimeRule.isEmptyRule
-                        }
-                        val max = this.rhs.multiMax
-                        val x = (nextItemIndex + 1) / 2
-                        val inRange = (0 != nextItemIndex && (x >= this.rhs.multiMin && (-1 == max || x <= max)))
-                        res || -1 == nextItemIndex || inRange
-                        //nextItemIndex % 2 == 1 || nextItemIndex == -1 // the -1 is used when creating dummy branch...should really need the test here!
-                    }
-                    else -> throw RuntimeException("Internal Error: rule kind not recognised")
-                }
-            }
-        }
-    */
     fun canGrowWidth(nextItemIndex: Int): Boolean {
         // nextItemIndex and numNonskip children are not always the same, especially for multi.
         //TODO: other kinds!
