@@ -63,6 +63,7 @@ class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
         val goalRuleName = "r"
         val inputText = "a"
 
+
         val actual = test_parse(sp, goalRuleName, inputText)
 
         assertNotNull(actual)
