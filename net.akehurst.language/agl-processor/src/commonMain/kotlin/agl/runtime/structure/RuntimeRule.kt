@@ -480,8 +480,13 @@ class RuntimeRule(
                 }
                 RuntimeRuleItemKind.MULTI -> {
                     return when {
-                        (0 == position && 0 == this.rhs.multiMin) -> setOf(RulePosition(this, RuntimeRuleItem.MULTI__ITEM, 0), RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, 0))
-                        (position < this.rhs.multiMax || -1 == this.rhs.multiMax) -> setOf(RulePosition(this, RuntimeRuleItem.MULTI__ITEM, 0))
+                        (0 == position && 0 == this.rhs.multiMin) -> setOf(
+                                RulePosition(this, RuntimeRuleItem.MULTI__ITEM, 0),
+                                RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, 0)
+                        )
+                        (position < this.rhs.multiMax || -1 == this.rhs.multiMax) -> setOf(
+                                RulePosition(this, RuntimeRuleItem.MULTI__ITEM, 0)
+                        )
                         else -> emptySet<RulePosition>()
                     }
                 }

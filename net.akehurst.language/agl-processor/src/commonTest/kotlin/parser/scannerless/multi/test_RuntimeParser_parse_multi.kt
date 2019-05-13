@@ -35,130 +35,6 @@ class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
         return sp.parse(goalRuleName, inputText)
     }
 
-    // r = a+
-    // a = 'a'
-    private fun multi_1_n_a(): ScannerlessParser {
-        val r0 = rrb.literal("a") //FIXME: this is not what is in the comment above!
-        val r1 = rrb.rule("r").multi(1, -1, r0)
-        return ScannerlessParser(rrb.ruleSet())
-    }
-
-    @Test
-    fun multi_1_n_a__r__empty_fails() {
-        val sp = multi_1_n_a()
-        val goalRuleName = "r"
-        val inputText = ""
-
-        val e = assertFailsWith(ParseFailedException::class) {
-            test_parse(sp, goalRuleName, inputText)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
-    }
-
-    @Test
-    fun multi_1_n_a__r__a() {
-        val sp = multi_1_n_a()
-        val goalRuleName = "r"
-        val inputText = "a"
-
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
-
-    @Test
-    fun multi_1_n_a__r__aa() {
-        val sp = multi_1_n_a()
-        val goalRuleName = "r"
-        val inputText = "aa"
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
-
-    @Test
-    fun multi_1_n_a__r__aaa() {
-        val sp = multi_1_n_a()
-        val goalRuleName = "r"
-        val inputText = "aaa"
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'a' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
-
-    @Test
-    fun multi_1_n_a__r__50a() {
-        val sp = multi_1_n_a()
-        val goalRuleName = "r"
-        val inputText = "a".repeat(50)
-
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val aleaves = "'a' ".repeat(50)
-        val expected = p.addTree("r {${aleaves}}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
-
-    @Test
-    fun multi_1_n_a__r__500a() {
-        val sp = multi_1_n_a()
-        val goalRuleName = "r"
-        val inputText = "a".repeat(500)
-
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val aleaves = "'a' ".repeat(500)
-        val expected = p.addTree("r {${aleaves}}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
-
-    @Test
-    fun multi_1_n_a__r__5000a() {
-        val sp = multi_1_n_a()
-        val goalRuleName = "r"
-        val inputText = "a".repeat(5000)
-
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val aleaves = "'a' ".repeat(5000)
-        val expected = p.addTree("r {${aleaves}}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
 
     // r = a[2..5]
     // a = 'a'
@@ -214,7 +90,7 @@ class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
 
     @Test
     fun multi_2_5_a__r__aaa() {
-        val sp = multi_1_n_a()
+        val sp = multi_2_5_a()
         val goalRuleName = "r"
         val inputText = "aaa"
 
@@ -230,7 +106,7 @@ class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
 
     @Test
     fun multi_2_5_a__r__aaaa() {
-        val sp = multi_1_n_a()
+        val sp = multi_2_5_a()
         val goalRuleName = "r"
         val inputText = "aaaa"
 
@@ -246,7 +122,7 @@ class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
 
     @Test
     fun multi_2_5_a__r__aaaaa() {
-        val sp = multi_1_n_a()
+        val sp = multi_2_5_a()
         val goalRuleName = "r"
         val inputText = "aaaaa"
 

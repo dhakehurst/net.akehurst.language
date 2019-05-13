@@ -88,7 +88,7 @@ data class RulePosition(
                             1 == this.runtimeRule.rhs.multiMax -> setOf(
                                     RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, END_OF_RULE)
                             )
-                            1 <= this.runtimeRule.rhs.multiMin -> setOf(
+                            2 <= this.runtimeRule.rhs.multiMin -> setOf(
                                     RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, MULIT_ITEM_POSITION)
                             )
                             else -> setOf(

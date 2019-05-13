@@ -27,14 +27,14 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-class test_literal_a0n : test_ScannerlessParserAbstract() {
+class test_literal_a1n : test_ScannerlessParserAbstract() {
 
-    // S = [a / ',']*
+    // S = [a / ',']+
     // a = 'a'
     private fun S(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r0 = b.literal("a")
-        val r1 = b.rule("S").separatedList(0, -1, b.literal(","), r0)
+        val r1 = b.rule("S").separatedList(1, -1, b.literal(","), r0)
         return b
     }
 
@@ -44,9 +44,12 @@ class test_literal_a0n : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = ""
 
-        val expected = "S { §empty }"
+        val e = assertFailsWith(ParseFailedException::class) {
+            super.test(b, goal, sentence)
+        }
 
-        super.test(b, goal, sentence, expected)
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
     }
 
     @Test
@@ -55,7 +58,7 @@ class test_literal_a0n : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "a"
 
-        val expected = "S { 'a' }"
+        val expected = "S {'a'}"
 
         super.test(b, goal, sentence, expected)
     }

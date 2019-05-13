@@ -92,7 +92,7 @@ class RuntimeRuleSetBuilder() {
         if (null != this.runtimeRuleSet) {
             throw ParseException("Must not add rules after creating the ruleSet")
         } else {
-            return RuntimeRuleExtender(this.rules.first { it == rule })
+            return RuntimeRuleExtender(this, this.rules.first { it == rule })
         }
     }
 

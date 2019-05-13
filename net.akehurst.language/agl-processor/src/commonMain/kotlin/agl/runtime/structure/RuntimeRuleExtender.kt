@@ -20,7 +20,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 
-class RuntimeRuleExtender(val rule: RuntimeRule) {
+class RuntimeRuleExtender(val rrsb: RuntimeRuleSetBuilder, val rule: RuntimeRule) {
 
     fun choiceEqual(vararg items: RuntimeRule) {
         rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_EQUAL, -1, 0, items)
@@ -34,4 +34,23 @@ class RuntimeRuleExtender(val rule: RuntimeRule) {
         rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, items)
     }
 
+    fun multi(min: Int, max: Int, item: RuntimeRule) {
+        val items = if (0==min) {
+            val e = RuntimeRuleTerminalBuilder(this.rrsb).empty(this.rule)
+            arrayOf(item, e)
+        } else {
+            arrayOf(item)
+        }
+        rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.MULTI, min, max, items)
+    }
+
+    fun sList(min: Int, max: Int, separator: RuntimeRule, item: RuntimeRule) {
+        val items = if (0==min) {
+            val e = RuntimeRuleTerminalBuilder(this.rrsb).empty(this.rule)
+            arrayOf(item, separator, e)
+        } else {
+            arrayOf(item,separator)
+        }
+        rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST, min, max, items)
+    }
 }

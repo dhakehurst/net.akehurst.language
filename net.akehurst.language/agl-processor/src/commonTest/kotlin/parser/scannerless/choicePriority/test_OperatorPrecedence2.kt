@@ -48,7 +48,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         val r_add = b.rule("add").separatedList(2, -1, b.literal("+"), r_expr)
         val r_sub = b.rule("sub").separatedList(2, -1, b.literal("-"), r_expr)
         val r_root = b.rule("root").choicePriority(r_var, r_bool)
-        b.rule(r_expr).choiceEqual(r_root, r_group, r_div, r_mul, r_add, r_sub)
+        b.rule(r_expr).choicePriority(r_root, r_group, r_div, r_mul, r_add, r_sub)
         b.rule("S").concatenation(r_expr)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b
@@ -275,6 +275,33 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         val rrb = this.S()
         val goal = "S"
         val sentence = "a*b+c"
+
+        val expected = """
+            S {
+             expr {
+              add {
+                expr {
+                  mul {
+                    expr { root { var { '[a-zA-Z]+' : 'a' } } }
+                    '*'
+                    expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                  }
+                }
+               '+'
+               expr { root { var { '[a-zA-Z]+' : 'c' } } }
+              }
+             }
+            }
+        """.trimIndent()
+
+        super.testStringResult(rrb, goal, sentence, expected)
+    }
+
+    @Test
+    fun a_mul_b_mul_c_add_d() {
+        val rrb = this.S()
+        val goal = "S"
+        val sentence = "a+b*c*d+f+g"
 
         val expected = """
             S {

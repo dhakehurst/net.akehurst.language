@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.listSeparated
+package net.akehurst.language.parser.scannerless.multi
 
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -27,47 +27,24 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-class test_literal_a0n : test_ScannerlessParserAbstract() {
+class test_multi_1_n_literal : test_ScannerlessParserAbstract() {
 
-    // S = [a / ',']*
-    // a = 'a'
+    // S = 'a'+
     private fun S(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r0 = b.literal("a")
-        val r1 = b.rule("S").separatedList(0, -1, b.literal(","), r0)
+        val r1 = b.rule("S").multi(1, -1, r0)
         return b
     }
 
     @Test
     fun empty() {
-        val b = S()
+        val rrb = S()
         val goal = "S"
         val sentence = ""
 
-        val expected = "S { §empty }"
-
-        super.test(b, goal, sentence, expected)
-    }
-
-    @Test
-    fun a() {
-        val b = S()
-        val goal = "S"
-        val sentence = "a"
-
-        val expected = "S { 'a' }"
-
-        super.test(b, goal, sentence, expected)
-    }
-
-    @Test
-    fun aa_fails() {
-        val b = S()
-        val goal = "S"
-        val sentence = "aa"
-
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(b, goal, sentence)
+            super.test(rrb, goal, sentence)
         }
 
         assertEquals(1, e.location.line)
@@ -75,50 +52,74 @@ class test_literal_a0n : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun aca() {
-        val b = S()
+    fun a() {
+        val rrb = S()
         val goal = "S"
-        val sentence = "a,a"
+        val sentence = "a"
 
-        val expected = "S {'a' ',' 'a'}"
+        val expected = """
+            S { 'a' }
+        """.trimIndent()
 
-        super.test(b, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
 
     @Test
-    fun acaa_fails() {
-        val b = S()
+    fun aa() {
+        val rrb = S()
         val goal = "S"
-        val sentence = "a,aa"
+        val sentence = "aa"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(b, goal, sentence)
-        }
+        val expected = """
+            S { 'a' 'a' }
+        """.trimIndent()
 
-        assertEquals(1, e.location.line)
-        assertEquals(3, e.location.column)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
 
     @Test
-    fun acaca() {
-        val b = S()
+    fun aaa() {
+        val rrb = S()
         val goal = "S"
-        val sentence = "a,a,a"
+        val sentence = "aaa"
 
-        val expected = "S {'a' ',' 'a' ',' 'a'}"
+        val expected = """
+            S { 'a' 'a' 'a' }
+        """.trimIndent()
 
-        super.test(b, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
 
     @Test
-    fun acax100() {
-        val b = S()
+    fun a50() {
+        val rrb = S()
         val goal = "S"
-        val sentence = "a"+",a".repeat(99)
+        val sentence = "a".repeat(50)
 
-        val expected = "S {'a'"+" ',' 'a'".repeat(99)+"}"
+        val expected = "S { "+"'a' ".repeat(50)+" }"
 
-        super.test(b, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
 
+    @Test
+    fun a500() {
+        val rrb = S()
+        val goal = "S"
+        val sentence = "a".repeat(500)
+
+        val expected = "S { "+"'a' ".repeat(500)+" }"
+
+        super.testStringResult(rrb, goal, sentence, expected)
+    }
+
+    @Test
+    fun a2000() {
+        val rrb = S()
+        val goal = "S"
+        val sentence = "a".repeat(2000)
+
+        val expected = "S { "+"'a' ".repeat(2000)+" }"
+
+        super.testStringResult(rrb, goal, sentence, expected)
+    }
 }
