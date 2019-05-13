@@ -119,31 +119,17 @@ grammar Query {
 	propertyCall = expression '.' NAME ;
 	methodCall = expression '.' NAME '(' argList ')';
 	argList = [expression / ',']* ;
-	infixFunction
-        = logicalInfixFunction
-        | arithmeticInfixFunction
-        | comparisonInfixFunction
+	infixFunction = [expression / operator]2+ ;
+    operator
+        = logicalOperator
+        | arithmeticOperator
+        | comparisonOperator
         ;
-
-    logicalInfixFunction
-        = expression ('AND' expression)+
-        | expression ('OR' expression)+
-        | expression ('XOR' expression)+
-        ;
-
-    arithmeticInfixFunction
-        = expression (('+'|'-') expression)+
-        | expression (('*'|'/') expression)+
-        ;
-
-    comparisonInfixFunction
-        = expression (comparisonOperator expression)+
-        ;
-
+    arithmeticOperator =  '/' | '*' | '+' | '-' ;
     comparisonOperator = '==' | '!=' | '<' | '>' | '<=' | '>=' ;
     logicalOperator = 'AND' | 'OR' | 'XOR' ;
-    conditionalExpression = expression '?' expression ':' expression ;
 
+    conditionalExpression = expression '?' expression ':' expression ;
 
 	orderBy = 'ORDER' 'BY' [columnOrder / ',']+ ;
 	columnOrder = NAME ('ASCENDING' | 'DESCENDING')? ;

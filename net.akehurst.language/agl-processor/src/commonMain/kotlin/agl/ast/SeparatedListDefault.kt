@@ -37,6 +37,7 @@ class SeparatedListDefault(
 		this.index = indices
 		val nextIndex: List<Int> = indices + 0
 		this.item.setOwningRule(rule, nextIndex)
+		this.separator.setOwningRule(rule, nextIndex)
 	}
 
 	override fun subItem(index: Int): RuleItem {
