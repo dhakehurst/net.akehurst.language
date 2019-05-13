@@ -222,7 +222,7 @@ class AglSppt2AstTransformer : SyntaxAnalyserAbstract() {
         val multiplicity = this.transform<Pair<Int, Int>>(children[2], arg)
         val min = multiplicity.first
         val max = multiplicity.second
-        val separator = this.transform<Terminal>(children[1], arg)
+        val separator = this.transform<SimpleItem>(children[1], arg)
         val item = this.transform<SimpleItem>(children[0], arg)
         return SeparatedListDefault(min, max, separator, item)
     }

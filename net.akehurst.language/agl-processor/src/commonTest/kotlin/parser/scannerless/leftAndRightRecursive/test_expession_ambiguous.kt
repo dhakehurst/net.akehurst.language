@@ -80,6 +80,7 @@ class test_expession_ambiguous : test_ScannerlessParserAbstract() {
 
     @Test
     fun aoaoa() {
+        fail("this does not terminate!")
         val rrb = this.S()
         val goal = "S"
         val sentence = "aoaoa"

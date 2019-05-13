@@ -66,7 +66,7 @@ private fun createRules(): List<Rule> {
 	);
 	b.rule("group").concatenation(b.terminalLiteral("("), b.nonTerminal("choice"), b.terminalLiteral(")"));
 	b.rule("separatedList").concatenation(b.terminalLiteral("["), b.nonTerminal("simpleItem"), b.terminalLiteral("/"),
-			b.nonTerminal("LITERAL"), b.terminalLiteral("]"), b.nonTerminal("multiplicity"));
+			b.nonTerminal("simpleItem"), b.terminalLiteral("]"), b.nonTerminal("multiplicity"));
 	b.rule("nonTerminal").choiceEqual(b.concatenation(b.nonTerminal("IDENTIFIER")));
 	b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"));
 	b.rule("terminal").choiceEqual(b.concatenation(b.nonTerminal("LITERAL")), b.concatenation(b.nonTerminal("PATTERN")));

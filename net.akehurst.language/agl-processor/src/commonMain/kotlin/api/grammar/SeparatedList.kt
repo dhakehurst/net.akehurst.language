@@ -22,8 +22,8 @@ interface SeparatedList : ConcatenationItem {
 
     val max: Int
 
-    val separator: Terminal
-
     val item: SimpleItem
+
+    val separator: SimpleItem
 
 }

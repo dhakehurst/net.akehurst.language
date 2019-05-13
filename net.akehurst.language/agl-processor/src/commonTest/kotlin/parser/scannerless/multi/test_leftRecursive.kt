@@ -36,6 +36,7 @@ class test_leftRecursive : test_ScannerlessParserAbstract() {
 
     @Test
     fun a() {
+        fail("this does not terminate!")
         val rrb = this.S()
         val goal = "S"
         val sentence = "a"

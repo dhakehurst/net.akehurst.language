@@ -28,7 +28,7 @@ import net.akehurst.language.api.grammar.GrammarRuleItemNotFoundException
 class SeparatedListDefault(
 		override val min: Int,
 		override val max: Int,
-		override val separator: Terminal,
+		override val separator: SimpleItem,
 		override val item: SimpleItem
 ) : RuleItemAbstract(), SeparatedList {
 
@@ -48,7 +48,7 @@ class SeparatedListDefault(
 	}
 
 	override val allTerminal: Set<Terminal> by lazy {
-		this.item.allTerminal + separator
+		this.item.allTerminal + this.separator.allTerminal
 	}
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {

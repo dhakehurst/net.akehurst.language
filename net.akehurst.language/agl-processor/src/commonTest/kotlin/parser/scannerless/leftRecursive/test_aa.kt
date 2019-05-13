@@ -19,6 +19,7 @@ package net.akehurst.language.parser.scannerless.leftRecursive
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
+import kotlin.test.fail
 
 class test_aa : test_ScannerlessParserAbstract() {
 
@@ -38,6 +39,7 @@ class test_aa : test_ScannerlessParserAbstract() {
 
     @Test
     fun a() {
+        fail("this does not terminate")
         val rrb = this.S()
         val goal = "S"
         val sentence = "a"
@@ -51,6 +53,7 @@ class test_aa : test_ScannerlessParserAbstract() {
 
     @Test
     fun aa() {
+        fail("this does not terminate")
         val rrb = this.S()
         val goal = "S"
         val sentence = "aa"
