@@ -17,6 +17,7 @@
 package net.akehurst.language.processor
 
 import net.akehurst.language.api.parser.ParseFailedException
+import kotlin.reflect.KClass
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -208,7 +209,8 @@ grammar Mscript {
     fun process_REAL_1_fails() {
 
         val text = "1"
-        val e = assertFailsWith(ParseFailedException::class) {
+        val ex = ParseFailedException::class
+        val e = assertFailsWith<ParseFailedException> {
             sut.parse("REAL", text)
         }
 

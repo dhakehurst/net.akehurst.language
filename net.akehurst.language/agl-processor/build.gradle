@@ -57,7 +57,6 @@ kotlin {
         }
     }
 }
-
 dependencies {
     commonMainImplementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
     commonTestImplementation "org.jetbrains.kotlin:kotlin-test-common:${version_kotlin}"
