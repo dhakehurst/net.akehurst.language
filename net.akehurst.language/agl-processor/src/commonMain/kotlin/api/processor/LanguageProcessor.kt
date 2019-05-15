@@ -37,8 +37,13 @@ interface LanguageProcessor {
     @JsName("process")
     fun <T> process(goalRuleName: String, inputText: CharSequence): T
 
-    @JsName("format")
+    @JsName("formatText")
+    fun <T> format(goalRuleName: String, inputText: CharSequence): String
+
+    @JsName("formatAsm")
     fun <T> format(asm:T): String
+
+
     //fun <T> process(reader: Reader, goalRuleName: String, targetType: Class<T>): T
 
     /**

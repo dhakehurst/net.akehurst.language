@@ -64,6 +64,11 @@ internal class LanguageProcessorDefault(
         return t;
     }
 
+    override fun <T> format(goalRuleName: String, inputText: CharSequence): String {
+        val asm = this.process<T>(goalRuleName, inputText)
+        return this.format(asm)
+    }
+
     override fun <T> format(asm: T): String {
         return if (null != formatter) {
             this.formatter.format(asm)
