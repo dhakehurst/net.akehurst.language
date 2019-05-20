@@ -32,9 +32,10 @@ namespace com.yakindu.modelviewer.parser
 grammar Mscript {
 
     skip WHITESPACE = "\s+" ;
-    //skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
-    skip MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
-    skip SINGLE_LINE_COMMENT = "%(?:[^{].*?)?$" ;
+    skip LINE_CONTINUATION = '...' ;
+    skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
+         MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
+         SINGLE_LINE_COMMENT = "%(?:[^{].*?)?${'$'}" ;
 
     script = statementList ;
     statementList = (statement ';'?)* ;
@@ -52,12 +53,13 @@ grammar Mscript {
 
     expression
       = rootVariable
-      < literal
-      < createVector
-      < matrix
-      < functionCall
-      < infixExpression
-      < groupExpression
+      | literal
+      | createVector
+      | matrix
+      | functionCall
+      | prefixExpression
+      | infixExpression
+      | groupExpression
       ;
 
     groupExpression = '(' expression ')' ;
@@ -65,14 +67,17 @@ grammar Mscript {
     functionCall = NAME '(' argumentList ')' ;
     argumentList = [ expression / ',' ]* ;
 
-    infixExpression =  expression (operator expression)+ ;
-    //TODO: operator precedence !
-    operator = arithmeticOperator | relationalOperator | logicalOperator ;
-    arithmeticOperator = '+' | '-' | '*' | '.*' | '/' | './' | '\\' | '.\\' | '^' | '.^' | '\'' | '.\'' ;
-    relationalOperator = '==' | '~=' | '>' | '>=' | '<' | '<=' ;
-    logicalOperator = '&' | '|' | '&&' | '||' | '~' ;
+    prefixExpression = prefixOperator expression ;
+    prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
 
-    createVector = expression ':' expression (':' expression)? ;
+    infixExpression =  [ expression / infixOperator ]2+ ;
+    infixOperator
+        = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-'     // arithmetic
+        | '==' | '~=' | '>' | '>=' | '<' | '<='                 // relational
+        | '&' | '|' | '&&' | '||' | '~'                         // logical
+        ;
+
+    createVector = expression ':' expression (':' expression)? ; //TODO: having this separate causes precedence issues!
 
     matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
     row = expression (','? expression)* ;
@@ -394,7 +399,6 @@ grammar Mscript {
         assertNotNull(actual)
     }
 
-    //@Test
     fun process_expression_operators_100() {
 
         val text = "1"+" + 1".repeat(100)
@@ -402,6 +406,16 @@ grammar Mscript {
 
         assertNotNull(actual)
     }
+
+    @Test
+    fun process_expression_groups() {
+
+        val text = "((1+1)*(2+3)+4)*5"
+        val actual = sut.parse("expression", text)
+
+        assertNotNull(actual)
+    }
+
 
     @Test
     fun process_script_func() {
