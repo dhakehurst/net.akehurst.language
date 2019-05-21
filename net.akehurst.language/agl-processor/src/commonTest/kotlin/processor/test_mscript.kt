@@ -31,14 +31,17 @@ namespace com.yakindu.modelviewer.parser
 
 grammar Mscript {
 
-    skip WHITESPACE = "\s+" ;
-    skip LINE_CONTINUATION = '...' ;
+    skip WHITESPACE = "[ \t\x0B\f]+" ;
+    skip LINE_CONTINUATION =  "[.][.][.](?:.*)\R" ;
     skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
          MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
-         SINGLE_LINE_COMMENT = "%(?:[^{].*?)?${'$'}" ;
+         SINGLE_LINE_COMMENT = "%(?:[^{].*?)?$" ;
 
     script = statementList ;
-    statementList = (statement ';'?)* ;
+    statementList = [line / "\R"]* ;
+    // if we treat '\n' as part of the WHITESPACE skip rule, we get ambiguity in statements
+    line = statement? ';'?  ;
+
     statement
       = conditional
       | assignment
@@ -103,31 +106,6 @@ grammar Mscript {
 }
     """.trimIndent()
         val sut = Agl.processor(grammarStr)
-    }
-
-    @Test
-    fun process_single_line_comment() {
-
-        val text = "% this is a comment"
-        val actual = sut.parse("script", text)
-
-        assertNotNull(actual)
-
-    }
-
-    @Test
-    fun process_multi_line_comment() {
-
-        val text = """
-            %{
-             a multiline comment
-             a multiline comment
-            %}
-        """.trimIndent()
-        val actual = sut.parse("script", text)
-
-        assertNotNull(actual)
-
     }
 
     @Test
@@ -365,17 +343,21 @@ grammar Mscript {
     }
 
     @Test
-    fun process_func_100_args() {
-        val text = "fprintf(''" + ",0".repeat(99) + ");"
-        val actual = sut.parse("script", text)
+    fun process_expression_func_func_1() {
+
+        val text = "func( func(a) )"
+        val actual = sut.parse("expression", text)
 
         assertNotNull(actual)
     }
 
     @Test
-    fun process_expression_func_func_1() {
+    fun process_expression_line_continuation() {
 
-        val text = "func( func(a) )"
+        val text = """
+            func( 1, 2, ...
+              3, 4)
+        """.trimIndent()
         val actual = sut.parse("expression", text)
 
         assertNotNull(actual)
@@ -418,6 +400,59 @@ grammar Mscript {
 
 
     @Test
+    fun process_single_line_comment() {
+
+        val text = "% this is a comment"
+        val actual = sut.parse("script", text)
+
+        assertNotNull(actual)
+
+    }
+
+    @Test
+    fun process_multi_line_comment() {
+
+        val text = """
+            %{
+             a multiline comment
+             a multiline comment
+            %}
+        """.trimIndent()
+        val actual = sut.parse("script", text)
+
+        assertNotNull(actual)
+
+    }
+
+
+    @Test
+    fun process_script_empty() {
+
+        val text = ""
+        val actual = sut.parse("script", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
+    fun process_script_blankline() {
+
+        val text = """
+        """
+        val actual = sut.parse("script", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
+    fun process_func_100_args() {
+        val text = "fprintf(''" + ",0".repeat(99) + ");"
+        val actual = sut.parse("script", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
     fun process_script_func() {
 
         val text = "func();"
@@ -427,6 +462,18 @@ grammar Mscript {
     }
 
     @Test
+    fun process_script_func3() {
+
+        val text = """
+            func();
+            func();
+            func();
+        """.trimIndent()
+        val actual = sut.parse("script", text)
+
+        assertNotNull(actual)
+    }
+    @Test
     fun parse_script_func_args() {
 
         val text = "func(false,1,'abc',3.14, root);"
@@ -434,4 +481,17 @@ grammar Mscript {
 
         assertNotNull(actual)
     }
+
+    @Test
+    fun process_script_nested_func() {
+
+        val text = "disp(get_param(gcbh,'xxx'))"
+        val actual = sut.parse("script", text)
+
+        assertNotNull(actual)
+        assertEquals("script",actual.root.name)
+        assertEquals("functionCall",actual.root.asBranch.branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].name)
+    }
+
+
 }

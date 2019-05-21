@@ -385,6 +385,8 @@ internal class ParseGraph(
                     // opt.nodes = gn.getGrowingChildren();
                     cn = (cn as SPPTBranchDefault)
 
+                    //TODO: when there is ambiguity, sometimes a complete node is replaced after it has been used in the completiona of another node
+                    // this give unexpected (wrong!) results
                     when (runtimeRule.rhs.kind) {
                         RuntimeRuleItemKind.CHOICE_EQUAL -> {
                             val choice = pickLongest(gn, cn) ?: pickHigestPriority(gn,cn)
