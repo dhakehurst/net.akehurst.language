@@ -428,4 +428,15 @@ class test_AglGrammar_item {
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
+
+    @Test
+    fun x() {
+        val sentence = """
+            HEX_FLOAT_LITERAL =  '0' "[xX]" (HexDigits '.'? | HexDigits? '.' HexDigits) "[pP]" "[+-]"? Digits "[fFdD]"? ;
+        """.trimIndent()
+        val actual = parse("normalRule", "r = a < b < c ;")
+
+        assertNotNull(actual)
+
+    }
 }

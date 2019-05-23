@@ -22,7 +22,7 @@ import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SPPTNodeIdentity
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
-abstract class SPPTNodeDefault(
+abstract class SPPTNodeAbstract(
         val runtimeRule: RuntimeRule,
         override val startPosition: Int,
         override val nextInputPosition: Int,
@@ -43,7 +43,7 @@ abstract class SPPTNodeDefault(
 
     override val isSkip: Boolean = runtimeRule.isSkip
 
-    val isEmptyMatch: Boolean get() {
+    override val isEmptyMatch: Boolean get() {
         // match empty if start and next-input positions are the same
         return this.startPosition == this.nextInputPosition
     }

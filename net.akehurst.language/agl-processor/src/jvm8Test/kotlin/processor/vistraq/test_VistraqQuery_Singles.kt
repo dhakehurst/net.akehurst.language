@@ -83,7 +83,7 @@ grammar Query {
 	returnExpression = 'RETURN' aggregateFunctionCallOrExpression ;
 
 	returnTable = 'RETURN' 'TABLE' columnDefinition+ orderBy? ;
-	columnDefinition = 'COLUMN' NAME 'CONTAINING' aggregateFunctionCallOrExpression ;
+	columnDefinition = 'COLUMN' NAME 'CONTAINING' aggregateFunctionCallOrExpression whereClause? ;
 
     returnSelect = 'RETURN' 'SELECT' selectList;
     selectList = [selectItem / ',']* ;
@@ -349,6 +349,25 @@ grammar Query {
         """.trimIndent()
 
         val result = processor.parse("singleQuery", queryStr)
+        Assert.assertNotNull(result)
+        val resultStr = result.asString
+        Assert.assertEquals(queryStr, resultStr)
+    }
+
+
+    @Test(timeout = 5000)
+    fun q2() {
+        val queryStr = """
+            FOR TIMESPAN all EVERY month
+             FROM artefactCount
+             RETURN TABLE
+             COLUMN timestamp CONTAINING timestamp
+             COLUMN count CONTAINING count
+             COLUMN X CONTAINING Name WHERE Name=='X'
+             COLUMN Y CONTAINING Name WHERE Name=='Y'
+        """.trimIndent()
+
+        val result = processor.parse("query", queryStr)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)

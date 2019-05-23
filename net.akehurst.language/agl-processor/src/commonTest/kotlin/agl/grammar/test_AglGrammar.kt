@@ -391,4 +391,26 @@ class test_AglGrammar {
 
         assertNotNull(p)
     }
+
+    @Test
+    fun eg1() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                HexDigits = HexDigit ((HexDigit | '_')* HexDigit)? ;
+                HexDigit = "[0-9a-fA-F]" ;
+                Digits = "[0-9]([0-9_]*[0-9])?" ;
+                HEX_FLOAT_LITERAL =  '0' "[xX]" (HexDigits '.'? | HexDigits? '.' HexDigits) "[pP]" "[+-]"? Digits "[fFdD]"? ;
+                BOOL_LITERAL=       'true' | 'false' ;
+                FLOAT_LITERAL=		"(((0|([1-9](0|[1-9])*)).(0|[1-9])*|.(0|[1-9])+ )([eE][+-]?(0|[1-9])+)?)|((0|N(0|[1-9]))([eE][+-]?(0|[1-9])+))";
+
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
 }

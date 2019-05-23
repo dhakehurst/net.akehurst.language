@@ -88,11 +88,11 @@ interface SPPTNode : SharedPackedParseTreeVisitable {
 	 */
 	val isEmptyLeaf: Boolean
 
-	// /**
-	// *
-	// * @return true if this node isEmptyLeaf or all its children return true for containsOnlyEmptyLeafs
-	// */
-	// boolean containsOnlyEmptyLeafs();
+	/*
+	 * does this node match none of the input.
+	 * It might match empty leaves, but the matched text will be empty if this is true.
+	 */
+	val isEmptyMatch: Boolean
 
 	/**
 	 *

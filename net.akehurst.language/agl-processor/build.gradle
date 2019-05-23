@@ -38,6 +38,22 @@ def getPassword(String currentUser, String location) {
 
 apply plugin: "org.jetbrains.kotlin.multiplatform"
 
+def buildStamp() {
+    return java.time.ZonedDateTime.now().toString()
+}
+def buildDate() {
+    return java.time.ZonedDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MMM-dd"))
+}
+def buildTime() {
+    return java.time.ZonedDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z"))
+}
+task generateFromTemplates(type:Copy) {
+    def templateContext = [version: project.version, buildStamp: buildStamp(), buildDate:buildDate(), buildTime:buildTime()]
+    inputs.properties templateContext // for gradle up-to-date check
+    from 'src/template/kotlin'
+    into "$buildDir/generated/kotlin"
+    expand templateContext
+}
 
 kotlin {
     targets {
@@ -48,16 +64,6 @@ kotlin {
                 }
             }
         }
-        /*
-        fromPreset(presets.jvm, 'jvm8') {
-            // Configure a single target's compilations (main and test)
-            compilations.all {
-                tasks[compileKotlinTaskName].kotlinOptions {
-                    jvmTarget = '1.8'
-                }
-            }
-        }*/
-        
         fromPreset(presets.js, 'js') {
             compilations.all {
                 tasks[compileKotlinTaskName].kotlinOptions {
@@ -69,7 +75,17 @@ kotlin {
             /* You can specify additional settings for the 'linux' target here */
         }
     }
+    sourceSets {
+        commonMain {
+            kotlin.srcDir("$buildDir/generated/kotlin")
+        }
+    }
 }
+compileKotlinMetadata.dependsOn generateFromTemplates // wire the generateJava task into the DAG
+compileKotlinJvm8.dependsOn generateFromTemplates // wire the generateJava task into the DAG
+compileKotlinJs.dependsOn generateFromTemplates // wire the generateJava task into the DAG
+compileKotlinMacosX64.dependsOn generateFromTemplates // wire the generateJava task into the DAG
+
 dependencies {
     commonMainImplementation "org.jetbrains.kotlin:kotlin-stdlib-common:${version_kotlin}"
     commonTestImplementation "org.jetbrains.kotlin:kotlin-test-common:${version_kotlin}"

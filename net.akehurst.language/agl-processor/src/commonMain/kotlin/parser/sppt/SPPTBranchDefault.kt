@@ -24,7 +24,7 @@ class SPPTBranchDefault(
         startPosition: Int,                     // can't use children.first.startPosition, there may not be any children
         nextInputPosition: Int,                 // dont't use children.sumBy { it.matchedTextLength }, it requires unwanted iteration
         priority: Int
-) : SPPTNodeDefault(
+) : SPPTNodeAbstract(
         runtimeRule,
         startPosition,
         nextInputPosition,

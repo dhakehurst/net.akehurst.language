@@ -57,7 +57,6 @@ grammar Mscript {
     expression
       = rootVariable
       | literal
-      | createVector
       | matrix
       | functionCall
       | prefixExpression
@@ -68,7 +67,8 @@ grammar Mscript {
     groupExpression = '(' expression ')' ;
 
     functionCall = NAME '(' argumentList ')' ;
-    argumentList = [ expression / ',' ]* ;
+    argumentList = [ argument / ',' ]* ;
+    argument = expression | COLON ;
 
     prefixExpression = prefixOperator expression ;
     prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
@@ -78,9 +78,8 @@ grammar Mscript {
         = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-'     // arithmetic
         | '==' | '~=' | '>' | '>=' | '<' | '<='                 // relational
         | '&' | '|' | '&&' | '||' | '~'                         // logical
+        | ':'
         ;
-
-    createVector = expression ':' expression (':' expression)? ; //TODO: having this separate causes precedence issues!
 
     matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
     row = expression (','? expression)* ;
@@ -98,6 +97,7 @@ grammar Mscript {
 
     NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
 
+    COLON               = ':' ;
     BOOLEAN             = 'true' | 'false' ;
     INTEGER             = "([+]|[-])?[0-9]+" ;
     REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;

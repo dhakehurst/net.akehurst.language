@@ -34,6 +34,9 @@ object Agl {
         processor(grammar, sppt2ast)
     }
 
+    val version: String = BuildInfo.version
+    val buildStamp: String = BuildInfo.buildStamp
+
     @JsName("processorFromGrammar")
     fun processor(grammar: Grammar, syntaxAnalyser: SyntaxAnalyser?=null, formatter: Formatter?=null): LanguageProcessor {
         return LanguageProcessorDefault(grammar, syntaxAnalyser, formatter)

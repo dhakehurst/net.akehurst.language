@@ -1,4 +1,4 @@
-package net.akehurst.language.processor.vistraq
+package net.akehurst.language.processor.natural
 
 import java.io.BufferedReader
 import java.io.InputStreamReader

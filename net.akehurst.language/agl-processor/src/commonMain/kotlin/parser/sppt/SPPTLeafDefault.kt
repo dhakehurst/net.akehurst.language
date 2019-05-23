@@ -25,7 +25,7 @@ class SPPTLeafDefault(
         override val isEmptyLeaf: Boolean,
         override val matchedText: String,
         priority: Int
-) : SPPTNodeDefault(
+) : SPPTNodeAbstract(
         terminalRule,
         startPosition,
         startPosition+matchedText.length,
