@@ -64,14 +64,14 @@ kotlin {
                 }
             }
         }
-        fromPreset(presets.js, 'js') {
+        js('js') {
             compilations.all {
                 tasks[compileKotlinTaskName].kotlinOptions {
                     moduleKind = 'plain'
                 }
             }
         }
-        fromPreset(presets.macosX64, 'macosX64') {
+        macosX64('macosX64') {
             /* You can specify additional settings for the 'linux' target here */
         }
     }
@@ -80,6 +80,18 @@ kotlin {
             kotlin.srcDir("$buildDir/generated/kotlin")
         }
     }
+/*
+    configure([targets["metadata"], jvm(), js(),macosX64()]) {
+        mavenPublication { publication ->
+            publication.
+            tasks.withType(PublishToMavenRepository).all {
+                onlyIf {
+                    findProperty("withSource") == "true"
+                }
+            }
+        }
+    }
+*/
 }
 compileKotlinMetadata.dependsOn generateFromTemplates // wire the generateJava task into the DAG
 compileKotlinJvm8.dependsOn generateFromTemplates // wire the generateJava task into the DAG
