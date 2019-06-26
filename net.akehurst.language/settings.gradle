@@ -23,7 +23,7 @@ include 'agl-processor'
 
 //include 'processor-jvm-test'
 
-enableFeaturePreview('GRADLE_METADATA')
+//enableFeaturePreview('GRADLE_METADATA')
 
 //fileTree('.') {
 //  include '**/build.gradle'
