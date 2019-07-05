@@ -20,42 +20,35 @@ buildscript {
         mavenCentral()
         jcenter()
         google()       // for com.android.tools.build
-        maven {
-            name "kotlin-eap"
-            url "https://dl.bintray.com/kotlin/kotlin-eap/"
-        }
     }
 
     dependencies {
 //        classpath "com.android.tools.build:gradle:$version_abt"   // for com.android.application
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$version_kotlin"
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
+        classpath( "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6")
     }
 }
 
+allprojects {
+    val version_project: String by project
+    val group_project = "${rootProject.name}"
 
+    group = group_project
+    version = version_project
+
+    buildDir = File(rootProject.projectDir, ".gradle-build/${project.name}")
+}
 
 subprojects {
     
-//	apply plugin: 'maven-publish'
-//	apply plugin: 'com.jfrog.bintray'
 
-
-	group 'net.akehurst.language'
-	version "$version_project"
-
-    buildDir = new File(rootProject.projectDir, ".gradle_build/" + project.name)
-    
-//	sourceCompatibility = '1.8'
-//	targetCompatibility = '1.8'
 
     repositories {
         mavenLocal()
         mavenCentral()
         jcenter()
         maven {
-            name "soywiz"
-            url "https://dl.bintray.com/soywiz/soywiz"
+            name ="soywiz"
+            url =uri("https://dl.bintray.com/soywiz/soywiz")
         }
     }
     
