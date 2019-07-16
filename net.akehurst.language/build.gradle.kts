@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-buildscript {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        jcenter()
-        google()       // for com.android.tools.build
-    }
+import com.jfrog.bintray.gradle.BintrayExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import java.io.File
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
-    dependencies {
-//        classpath "com.android.tools.build:gradle:$version_abt"   // for com.android.application
-        classpath( "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6")
-    }
+plugins {
+    kotlin("multiplatform") version("1.3.41") apply false
+    id("com.jfrog.bintray") version("1.8.4") apply false
 }
 
 allprojects {
+
     val version_project: String by project
     val group_project = "${rootProject.name}"
 
@@ -36,42 +35,106 @@ allprojects {
     version = version_project
 
     buildDir = File(rootProject.projectDir, ".gradle-build/${project.name}")
+
 }
 
-subprojects {
-    
+fun getProjectProperty(s: String) = project.findProperty(s) as String?
 
+
+subprojects {
+
+    apply(plugin="org.jetbrains.kotlin.multiplatform")
+    apply(plugin = "maven-publish")
+    apply(plugin = "com.jfrog.bintray")
 
     repositories {
         mavenLocal()
         mavenCentral()
         jcenter()
-        maven {
-            name ="soywiz"
-            url =uri("https://dl.bintray.com/soywiz/soywiz")
+    }
+
+    configure<KotlinMultiplatformExtension> {
+        jvm("jvm8") {
+            val main by compilations.getting {
+                kotlinOptions {
+                    jvmTarget = JavaVersion.VERSION_1_8.toString()
+                }
+            }
+            val test by compilations.getting {
+                kotlinOptions {
+                    jvmTarget = JavaVersion.VERSION_1_8.toString()
+                }
+            }
+        }
+        js("js") {
+            nodejs()
+            browser()
+        }
+        sourceSets {
+            val commonMain by getting {
+                kotlin.srcDir("$buildDir/generated/kotlin")
+            }
         }
     }
-    
 
-/*
-	bintray {
-		user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
-		key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
-		publications = ['mavenJava']
-		pkg {
-			repo = 'maven'
-			name = 'net.akehurst.language'
-			userOrg = user
-			licenses = ['Apache-2.0']
-			vcsUrl = 'https://github.com/dhakehurst/net.akehurst.language.git'
-			version {
-				name = "${project.version}"
-				gpg {
-                    sign = true
-                    passphrase = project.hasProperty('passphrase') ? project.property('passphrase') : System.getenv('BINTRAY_PASSPHRASE')
-                }
-			}
-		}
-	}
-	*/
+    val now = Instant.now()
+    fun fBbuildStamp(): String {
+        return DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneId.of("UTC")).format(now)
+    }
+    fun fBuildDate(): String {
+        return DateTimeFormatter.ofPattern("yyyy-MMM-dd").withZone(ZoneId.of("UTC")).format(now)
+    }
+    fun fBuildTime(): String {
+        return DateTimeFormatter.ofPattern("HH:mm:ss z").withZone(ZoneId.of("UTC")).format(now)
+    }
+    tasks.register<Copy>("generateFromTemplates") {
+        val templateContext = mapOf(
+                "version" to project.version,
+                "buildStamp" to fBbuildStamp(),
+                "buildDate" to fBuildDate(),
+                "buildTime" to fBuildTime()
+        )
+        inputs.properties(templateContext) // for gradle up-to-date check
+        from("src/template/kotlin")
+        into("$buildDir/generated/kotlin")
+        expand(templateContext)
+    }
+    tasks.getByName("compileKotlinMetadata") {
+        dependsOn("generateFromTemplates")
+    }
+    tasks.getByName("compileKotlinJvm8") {
+        dependsOn("generateFromTemplates")
+    }
+    tasks.getByName("compileKotlinJs") {
+        dependsOn("generateFromTemplates")
+    }
+
+    dependencies {
+        "commonMainImplementation"(kotlin("stdlib"))
+        "commonTestImplementation"(kotlin("test"))
+        "commonTestImplementation"(kotlin("test-annotations-common"))
+
+        "jvm8MainImplementation"(kotlin("stdlib-jdk8"))
+        "jvm8TestImplementation"(kotlin("test-junit"))
+
+        "jsMainImplementation"(kotlin("stdlib-js"))
+        "jsTestImplementation"(kotlin("test-js"))
+    }
+
+    configure<BintrayExtension> {
+        user = getProjectProperty("bintrayUser")
+        key = getProjectProperty("bintrayApiKey")
+        publish = true
+        override = true
+        setPublications("kotlinMultiplatform","metadata","js","jvm8")
+        pkg(delegateClosureOf<BintrayExtension.PackageConfig> {
+            repo = "maven"
+            name = "${rootProject.name}"
+            userOrg = user
+            websiteUrl = "https://github.com/dhakehurst/net.akehurst.language"
+            vcsUrl = "https://github.com/dhakehurst/net.akehurst.language"
+            setLabels("kotlin")
+            setLicenses("Apache-2.0")
+        })
+    }
 }

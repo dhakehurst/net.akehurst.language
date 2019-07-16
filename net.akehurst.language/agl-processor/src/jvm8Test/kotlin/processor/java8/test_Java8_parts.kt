@@ -16,8 +16,8 @@
 
 package net.akehurst.language.processor.java8
 
-import com.soywiz.korio.async.runBlockingNoSuspensions
-import com.soywiz.korio.file.std.resourcesVfs
+//import com.soywiz.korio.async.runBlockingNoSuspensions
+//import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.processor.Agl
 import kotlin.test.Test
@@ -29,7 +29,7 @@ class test_Java8_parts {
         var java8Processor: LanguageProcessor = createJava8Processor()
 
         fun createJava8Processor(): LanguageProcessor {
-            val grammarStr = runBlockingNoSuspensions { resourcesVfs["/java8/Java8_all.agl"].readString() }
+            val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/java8/Java8_all.agl"].readString() }
             val proc = Agl.processor(grammarStr)
             proc.build()
             return proc
