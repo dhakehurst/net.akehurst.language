@@ -15,6 +15,8 @@
  */
 
 import com.jfrog.bintray.gradle.BintrayExtension
+import com.jfrog.bintray.gradle.tasks.BintrayUploadTask
+import org.gradle.api.publish.maven.internal.artifact.FileBasedMavenArtifact
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import java.io.File
 import java.time.Instant
@@ -22,7 +24,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 plugins {
-    kotlin("multiplatform") version("1.3.41") apply false
+    kotlin("multiplatform") version("1.3.50") apply false
     id("com.jfrog.bintray") version("1.8.4") apply false
 }
 
@@ -48,7 +50,6 @@ subprojects {
     apply(plugin = "com.jfrog.bintray")
 
     repositories {
-        mavenLocal()
         mavenCentral()
         jcenter()
     }
@@ -69,6 +70,8 @@ subprojects {
         js("js") {
             nodejs()
             browser()
+        }
+        macosX64("macosX64") {
         }
         sourceSets {
             val commonMain by getting {
@@ -108,7 +111,9 @@ subprojects {
     tasks.getByName("compileKotlinJs") {
         dependsOn("generateFromTemplates")
     }
-
+    tasks.getByName("compileKotlinMacosX64") {
+        dependsOn("generateFromTemplates")
+    }
     dependencies {
         "commonMainImplementation"(kotlin("stdlib"))
         "commonTestImplementation"(kotlin("test"))
@@ -136,5 +141,26 @@ subprojects {
             setLabels("kotlin")
             setLicenses("Apache-2.0")
         })
+    }
+
+    val bintrayUpload by tasks.getting
+    val publishToMavenLocal by tasks.getting
+    val publishing = extensions.getByType(PublishingExtension::class.java)
+
+    bintrayUpload.dependsOn(publishToMavenLocal)
+
+    tasks.withType<BintrayUploadTask> {
+        doFirst {
+            publishing.publications
+                    .filterIsInstance<MavenPublication>()
+                    .forEach { publication ->
+                        val moduleFile = buildDir.resolve("publications/${publication.name}/module.json")
+                        if (moduleFile.exists()) {
+                            publication.artifact(object : FileBasedMavenArtifact(moduleFile) {
+                                override fun getDefaultExtension() = "module"
+                            })
+                        }
+                    }
+        }
     }
 }

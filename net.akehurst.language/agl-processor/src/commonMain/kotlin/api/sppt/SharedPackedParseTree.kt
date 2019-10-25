@@ -66,5 +66,5 @@ import kotlin.js.JsName
 	val toStringAll: String
 
 	@JsName("toStringAllWithIndent")
-	fun toStringAll(indentIncrement:String): String
+	fun toStringIndented(indentIncrement:String): String
 }

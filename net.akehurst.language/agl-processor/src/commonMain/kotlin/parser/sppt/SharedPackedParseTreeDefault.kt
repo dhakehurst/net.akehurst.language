@@ -40,11 +40,11 @@ class SharedPackedParseTreeDefault(
     }
 
     override val toStringAll: String by lazy {
-        this.toStringAll("")
+        this.toStringIndented("")
     }
 
 
-    override fun toStringAll(indentIncrement:String): String {
+    override fun toStringIndented(indentIncrement:String): String {
         val visitor = ToStringVisitor("\n", indentIncrement)
         val all: Set<String> = this.accept(visitor, ToStringVisitor.Indent("", true))
         val total = all.size

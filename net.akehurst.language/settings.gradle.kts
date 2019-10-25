@@ -13,11 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+    }
+}
 
-rootProject.name = file('.').name
 
-include 'agl-processor'
+rootProject.name = file(".").name
 
-enableFeaturePreview('GRADLE_METADATA')
+include( "agl-processor")
+
+enableFeaturePreview("GRADLE_METADATA")
 
 
