@@ -24,7 +24,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 plugins {
-    kotlin("multiplatform") version("1.3.50") apply false
+    kotlin("multiplatform") version("1.3.60") apply false
     id("com.jfrog.bintray") version("1.8.4") apply false
 }
 
@@ -71,8 +71,9 @@ subprojects {
             nodejs()
             browser()
         }
-        macosX64("macosX64") {
-        }
+        //macosX64("macosX64") {
+        // uncomment stuff below too
+        //}
         sourceSets {
             val commonMain by getting {
                 kotlin.srcDir("$buildDir/generated/kotlin")
@@ -111,9 +112,9 @@ subprojects {
     tasks.getByName("compileKotlinJs") {
         dependsOn("generateFromTemplates")
     }
-    tasks.getByName("compileKotlinMacosX64") {
-        dependsOn("generateFromTemplates")
-    }
+//    tasks.getByName("compileKotlinMacosX64") {
+//        dependsOn("generateFromTemplates")
+//    }
     dependencies {
         "commonMainImplementation"(kotlin("stdlib"))
         "commonTestImplementation"(kotlin("test"))
