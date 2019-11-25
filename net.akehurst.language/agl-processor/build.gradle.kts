@@ -1,5 +1,5 @@
 plugins {
-    id("net.akehurst.kotlin.kt2ts-plugin") version "1.0.0"
+    id("net.akehurst.kotlin.kt2ts") version "1.0.0"
 }
 
 
