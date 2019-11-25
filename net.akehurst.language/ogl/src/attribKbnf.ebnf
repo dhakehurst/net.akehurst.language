@@ -1,0 +1,10 @@
+package kmf::grammars;
+
+grammar attribKbnf extends kbnf {
+
+  rule = NAME [ typeSpec ] '=' choice [assignments] ';'
+  
+  rule : Rule { a : String } = 
+
+
+}

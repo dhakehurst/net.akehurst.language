@@ -1,0 +1,45 @@
+parse()
+-------
+  FOR-EACH gn IN head gssNodes
+    IF gn MATCHES goal
+      ADD gn TO goals
+    ELSE
+      grow(gn)
+    
+    
+grow(gn)
+--------
+  tryGrowWidthWithSkipRules(gn)
+  IF SUCCESS
+    add new nodes to result
+  ELSE
+    IF gn.isSkipNode
+      tryGraftBack(gn)
+    ELSE
+      tryGrowHeight(gn)
+      tryGraftBack(gn)    //reduce
+      tryGrowWidth(gn)    //shift
+      
+
+tryGrowWidth(gn)
+----------------
+  IF gn.canGrowWidth
+    newBuds := tryCreateBudFromNextExpectedTerminals(gn)
+    FOR-EACH bud IN newBuds
+      nn := gn.push(bud)                  //gss modification
+      IF nn.isEmpty
+        nn := growHeight(nn)  //why do this here ?
+      add nn to results
+
+
+tryGraftBack(gn)
+----------------
+  FOR-EACH pn IN gn.previous
+    IF can extend pn WITH gn
+      nn := pn.addAsChild(gn)
+      pn.duplicate( nn )                  //gss modification
+      
+      
+tryGrowHeight(gn)
+----------------
+  

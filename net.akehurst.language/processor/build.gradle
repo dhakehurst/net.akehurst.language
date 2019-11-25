@@ -1,0 +1,20 @@
+
+dependencies {
+
+	implementation project(':net.akehurst.language.ogl')
+	implementation project(':net.akehurst.language.parser')
+	
+	implementation "net.akehurst.transform:binary:${version_transform}"
+	
+	testImplementation "junit:junit:${version_junit}"
+	
+}
+
+sourceSets {
+	main {
+		resources {
+            srcDir "${projectDir}/src/main/ogl"
+            srcDir "${projectDir}/src/main/typescript"
+		}
+	}
+}

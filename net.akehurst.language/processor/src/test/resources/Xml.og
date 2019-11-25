@@ -1,0 +1,25 @@
+namespace net::akehurst::language::dot;
+
+grammar Xml {
+
+
+	skip COMMENT : "<!-- [.]* -->" ;
+	
+	file : element? ;
+	
+	element : elementEmpty | elementContent ;
+	elementEmpty : '<' WS? NAME WS? attribute* '/>' ;
+    elementContent : startTag content endTag ;
+	startTag : '<' WS? NAME WS? attribute* '>' ;
+	endTag : '</' WS? NAME WS? '>' ;
+
+	content : (CHARDATA | element)* ;
+
+	attribute : NAME WS? '=' WS? string WS? ;
+	string : DOUBLE_QUOTE_STRING | SINGLE_QUOTE_STRING ;
+	WS : "\s" ;
+	CHARDATA : "[^<]+" ;
+	NAME : "[a-zA-Z][a-zA-Z0-9]*" ;
+	DOUBLE_QUOTE_STRING : "[\"][^\"]*[\"]" ;
+	SINGLE_QUOTE_STRING : "['][^']*[']" ;
+}

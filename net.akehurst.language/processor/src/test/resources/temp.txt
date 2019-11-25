@@ -1,0 +1,877 @@
+test
+grammar Java8 {
+literal : IntegerLiteral  | FloatingPointLiteral  | BooleanLiteral  | CharacterLiteral  | StringLiteral  | NullLiteral  | 
+type : primitiveType  < referenceType  < 
+primitiveType : annotation* numericType  | annotation* 'boolean'  | 
+numericType : integralType  | floatingPointType  | 
+integralType : 'byte'  | 'short'  | 'int'  | 'long'  | 'char'  | 
+floatingPointType : 'float'  | 'double'  | 
+referenceType : classOrInterfaceType  | typeVariable  | arrayType  | 
+classOrInterfaceType : (classType_lfno_classOrInterfaceType  | interfaceType_lfno_classOrInterfaceType  | ) (classType_lf_classOrInterfaceType  | interfaceType_lf_classOrInterfaceType  | )*  | 
+classType : annotation* Identifier typeArguments?  | classOrInterfaceType '.' annotation* Identifier typeArguments?  | 
+classType_lf_classOrInterfaceType : '.' annotation* Identifier typeArguments?  | 
+classType_lfno_classOrInterfaceType : annotation* Identifier typeArguments?  | 
+interfaceType : classType  | 
+interfaceType_lf_classOrInterfaceType : classType_lf_classOrInterfaceType  | 
+interfaceType_lfno_classOrInterfaceType : classType_lfno_classOrInterfaceType  | 
+typeVariable : annotation* Identifier  | 
+arrayType : primitiveType dims  | classOrInterfaceType dims  | typeVariable dims  | 
+dims : annotation* '[' ']' (annotation* '[' ']'  | )*  | 
+typeParameter : typeParameterModifier* Identifier typeBound?  | 
+typeParameterModifier : annotation  | 
+typeBound : 'extends' typeVariable  | 'extends' classOrInterfaceType additionalBound*  | 
+additionalBound : '&' interfaceType  | 
+typeArguments : '<' typeArgumentList '>'  | 
+typeArgumentList : typeArgument (',' typeArgument  | )*  | 
+typeArgument : referenceType  | wildcard  | 
+wildcard : annotation* '?' wildcardBounds?  | 
+wildcardBounds : 'extends' referenceType  | 'super' referenceType  | 
+packageName : Identifier  | packageName '.' Identifier  | 
+typeName : Identifier  | packageOrTypeName '.' Identifier  | 
+packageOrTypeName : Identifier  | packageOrTypeName '.' Identifier  | 
+expressionName : Identifier  | ambiguousName '.' Identifier  | 
+methodName : Identifier  | 
+ambiguousName : Identifier  | ambiguousName '.' Identifier  | 
+compilationUnit : packageDeclaration? importDeclaration* typeDeclaration*  | 
+packageDeclaration : packageModifier* 'package' Identifier ('.' Identifier  | )* ';'  | 
+packageModifier : annotation  | 
+importDeclaration : singleTypeImportDeclaration  | typeImportOnDemandDeclaration  | singleStaticImportDeclaration  | staticImportOnDemandDeclaration  | 
+singleTypeImportDeclaration : 'import' typeName ';'  | 
+typeImportOnDemandDeclaration : 'import' packageOrTypeName '.' '*' ';'  | 
+singleStaticImportDeclaration : 'import' 'static' typeName '.' Identifier ';'  | 
+staticImportOnDemandDeclaration : 'import' 'static' typeName '.' '*' ';'  | 
+typeDeclaration : classDeclaration  | interfaceDeclaration  | ';'  | 
+classDeclaration : normalClassDeclaration  | enumDeclaration  | 
+normalClassDeclaration : classModifier* 'class' Identifier typeParameters? superclass? superinterfaces? classBody  | 
+classModifier : annotation  | 'public'  | 'protected'  | 'private'  | 'abstract'  | 'static'  | 'final'  | 'strictfp'  | 
+typeParameters : '<' typeParameterList '>'  | 
+typeParameterList : typeParameter (',' typeParameter  | )*  | 
+superclass : 'extends' classType  | 
+superinterfaces : 'implements' interfaceTypeList  | 
+interfaceTypeList : interfaceType (',' interfaceType  | )*  | 
+classBody : '{' classBodyDeclaration* '}'  | 
+classBodyDeclaration : classMemberDeclaration  | instanceInitializer  | staticInitializer  | constructorDeclaration  | 
+classMemberDeclaration : fieldDeclaration  | methodDeclaration  | classDeclaration  | interfaceDeclaration  | ';'  | 
+fieldDeclaration : fieldModifier* unannType variableDeclaratorList ';'  | 
+fieldModifier : annotation  | 'public'  | 'protected'  | 'private'  | 'static'  | 'final'  | 'transient'  | 'volatile'  | 
+variableDeclaratorList : variableDeclarator (',' variableDeclarator  | )*  | 
+variableDeclarator : variableDeclaratorId ('=' variableInitializer  | )?  | 
+variableDeclaratorId : Identifier dims?  | 
+variableInitializer : expression  | arrayInitializer  | 
+unannType : unannPrimitiveType  | unannReferenceType  | 
+unannPrimitiveType : numericType  | 'boolean'  | 
+unannReferenceType : unannClassOrInterfaceType  | unannTypeVariable  | unannArrayType  | 
+unannClassOrInterfaceType : (unannClassType_lfno_unannClassOrInterfaceType  | unannInterfaceType_lfno_unannClassOrInterfaceType  | ) (unannClassType_lf_unannClassOrInterfaceType  | unannInterfaceType_lf_unannClassOrInterfaceType  | )*  | 
+unannClassType : Identifier typeArguments?  | unannClassOrInterfaceType '.' annotation* Identifier typeArguments?  | 
+unannClassType_lf_unannClassOrInterfaceType : '.' annotation* Identifier typeArguments?  | 
+unannClassType_lfno_unannClassOrInterfaceType : Identifier typeArguments?  | 
+unannInterfaceType : unannClassType  | 
+unannInterfaceType_lf_unannClassOrInterfaceType : unannClassType_lf_unannClassOrInterfaceType  | 
+unannInterfaceType_lfno_unannClassOrInterfaceType : unannClassType_lfno_unannClassOrInterfaceType  | 
+unannTypeVariable : Identifier  | 
+unannArrayType : unannPrimitiveType dims  | unannClassOrInterfaceType dims  | unannTypeVariable dims  | 
+methodDeclaration : methodModifier* methodHeader methodBody  | 
+methodModifier : annotation  | 'public'  | 'protected'  | 'private'  | 'abstract'  | 'static'  | 'final'  | 'synchronized'  | 'native'  | 'strictfp'  | 
+methodHeader : result methodDeclarator throws_?  | typeParameters annotation* result methodDeclarator throws_?  | 
+result : unannType  | 'void'  | 
+methodDeclarator : Identifier '(' formalParameterList? ')' dims?  | 
+formalParameterList : formalParameters ',' lastFormalParameter  | lastFormalParameter  | 
+formalParameters : formalParameter (',' formalParameter  | )*  | receiverParameter (',' formalParameter  | )*  | 
+formalParameter : variableModifier* unannType variableDeclaratorId  | 
+variableModifier : annotation  | 'final'  | 
+lastFormalParameter : variableModifier* unannType annotation* '...' variableDeclaratorId  | formalParameter  | 
+receiverParameter : annotation* unannType (Identifier '.'  | )? 'this'  | 
+throws_ : 'throws' exceptionTypeList  | 
+exceptionTypeList : exceptionType (',' exceptionType  | )*  | 
+exceptionType : classType  | typeVariable  | 
+methodBody : block  | ';'  | 
+instanceInitializer : block  | 
+staticInitializer : 'static' block  | 
+constructorDeclaration : constructorModifier* constructorDeclarator throws_? constructorBody  | 
+constructorModifier : annotation  | 'public'  | 'protected'  | 'private'  | 
+constructorDeclarator : typeParameters? simpleTypeName '(' formalParameterList? ')'  | 
+simpleTypeName : Identifier  | 
+constructorBody : '{' explicitConstructorInvocation? blockStatements? '}'  | 
+explicitConstructorInvocation : typeArguments? 'this' '(' argumentList? ')' ';'  | typeArguments? 'super' '(' argumentList? ')' ';'  | expressionName '.' typeArguments? 'super' '(' argumentList? ')' ';'  | primary '.' typeArguments? 'super' '(' argumentList? ')' ';'  | 
+enumDeclaration : classModifier* 'enum' Identifier superinterfaces? enumBody  | 
+enumBody : '{' enumConstantList? ','? enumBodyDeclarations? '}'  | 
+enumConstantList : enumConstant (',' enumConstant  | )*  | 
+enumConstant : enumConstantModifier* Identifier ('(' argumentList? ')'  | )? classBody?  | 
+enumConstantModifier : annotation  | 
+enumBodyDeclarations : ';' classBodyDeclaration*  | 
+interfaceDeclaration : normalInterfaceDeclaration  | annotationTypeDeclaration  | 
+normalInterfaceDeclaration : interfaceModifier* 'interface' Identifier typeParameters? extendsInterfaces? interfaceBody  | 
+interfaceModifier : annotation  | 'public'  | 'protected'  | 'private'  | 'abstract'  | 'static'  | 'strictfp'  | 
+extendsInterfaces : 'extends' interfaceTypeList  | 
+interfaceBody : '{' interfaceMemberDeclaration* '}'  | 
+interfaceMemberDeclaration : constantDeclaration  | interfaceMethodDeclaration  | classDeclaration  | interfaceDeclaration  | ';'  | 
+constantDeclaration : constantModifier* unannType variableDeclaratorList ';'  | 
+constantModifier : annotation  | 'public'  | 'static'  | 'final'  | 
+interfaceMethodDeclaration : interfaceMethodModifier* methodHeader methodBody  | 
+interfaceMethodModifier : annotation  | 'public'  | 'abstract'  | 'default'  | 'static'  | 'strictfp'  | 
+annotationTypeDeclaration : interfaceModifier* '@' 'interface' Identifier annotationTypeBody  | 
+annotationTypeBody : '{' annotationTypeMemberDeclaration* '}'  | 
+annotationTypeMemberDeclaration : annotationTypeElementDeclaration  | constantDeclaration  | classDeclaration  | interfaceDeclaration  | ';'  | 
+annotationTypeElementDeclaration : annotationTypeElementModifier* unannType Identifier '(' ')' dims? defaultValue? ';'  | 
+annotationTypeElementModifier : annotation  | 'public'  | 'abstract'  | 
+defaultValue : 'default' elementValue  | 
+annotation : normalAnnotation  | markerAnnotation  | singleElementAnnotation  | 
+normalAnnotation : '@' typeName '(' elementValuePairList? ')'  | 
+elementValuePairList : elementValuePair (',' elementValuePair  | )*  | 
+elementValuePair : Identifier '=' elementValue  | 
+elementValue : conditionalExpression  | elementValueArrayInitializer  | annotation  | 
+elementValueArrayInitializer : '{' elementValueList? ','? '}'  | 
+elementValueList : elementValue (',' elementValue  | )*  | 
+markerAnnotation : '@' typeName  | 
+singleElementAnnotation : '@' typeName '(' elementValue ')'  | 
+arrayInitializer : '{' variableInitializerList? ','? '}'  | 
+variableInitializerList : variableInitializer (',' variableInitializer  | )*  | 
+block : '{' blockStatements? '}'  | 
+blockStatements : blockStatement blockStatement*  | 
+blockStatement : localVariableDeclarationStatement  | classDeclaration  | statement  | 
+localVariableDeclarationStatement : localVariableDeclaration ';'  | 
+localVariableDeclaration : variableModifier* unannType variableDeclaratorList  | 
+statement : statementWithoutTrailingSubstatement  | labeledStatement  | ifThenStatement  | ifThenElseStatement  | whileStatement  | forStatement  | 
+statementNoShortIf : statementWithoutTrailingSubstatement  | labeledStatementNoShortIf  | ifThenElseStatementNoShortIf  | whileStatementNoShortIf  | forStatementNoShortIf  | 
+statementWithoutTrailingSubstatement : block  | emptyStatement  | expressionStatement  | assertStatement  | switchStatement  | doStatement  | breakStatement  | continueStatement  | returnStatement  | synchronizedStatement  | throwStatement  | tryStatement  | 
+emptyStatement : ';'  | 
+labeledStatement : Identifier ':' statement  | 
+labeledStatementNoShortIf : Identifier ':' statementNoShortIf  | 
+expressionStatement : statementExpression ';'  | 
+statementExpression : assignment  | preIncrementExpression  | preDecrementExpression  | postIncrementExpression  | postDecrementExpression  | methodInvocation  | classInstanceCreationExpression  | 
+ifThenStatement : 'if' '(' expression ')' statement  | 
+ifThenElseStatement : 'if' '(' expression ')' statementNoShortIf 'else' statement  | 
+ifThenElseStatementNoShortIf : 'if' '(' expression ')' statementNoShortIf 'else' statementNoShortIf  | 
+assertStatement : 'assert' expression ';'  | 'assert' expression ':' expression ';'  | 
+switchStatement : 'switch' '(' expression ')' switchBlock  | 
+switchBlock : '{' switchBlockStatementGroup* switchLabel* '}'  | 
+switchBlockStatementGroup : switchLabels blockStatements  | 
+switchLabels : switchLabel switchLabel*  | 
+switchLabel : 'case' constantExpression ':'  | 'case' enumConstantName ':'  | 'default' ':'  | 
+enumConstantName : Identifier  | 
+whileStatement : 'while' '(' expression ')' statement  | 
+whileStatementNoShortIf : 'while' '(' expression ')' statementNoShortIf  | 
+doStatement : 'do' statement 'while' '(' expression ')' ';'  | 
+forStatement : basicForStatement  | enhancedForStatement  | 
+forStatementNoShortIf : basicForStatementNoShortIf  | enhancedForStatementNoShortIf  | 
+basicForStatement : 'for' '(' forInit? ';' expression? ';' forUpdate? ')' statement  | 
+basicForStatementNoShortIf : 'for' '(' forInit? ';' expression? ';' forUpdate? ')' statementNoShortIf  | 
+forInit : statementExpressionList  | localVariableDeclaration  | 
+forUpdate : statementExpressionList  | 
+statementExpressionList : statementExpression (',' statementExpression  | )*  | 
+enhancedForStatement : 'for' '(' variableModifier* unannType variableDeclaratorId ':' expression ')' statement  | 
+enhancedForStatementNoShortIf : 'for' '(' variableModifier* unannType variableDeclaratorId ':' expression ')' statementNoShortIf  | 
+breakStatement : 'break' Identifier? ';'  | 
+continueStatement : 'continue' Identifier? ';'  | 
+returnStatement : 'return' expression? ';'  | 
+throwStatement : 'throw' expression ';'  | 
+synchronizedStatement : 'synchronized' '(' expression ')' block  | 
+tryStatement : 'try' block catches  | 'try' block catches? finally_  | tryWithResourcesStatement  | 
+catches : catchClause catchClause*  | 
+catchClause : 'catch' '(' catchFormalParameter ')' block  | 
+catchFormalParameter : variableModifier* catchType variableDeclaratorId  | 
+catchType : unannClassType ('|' classType  | )*  | 
+finally_ : 'finally' block  | 
+tryWithResourcesStatement : 'try' resourceSpecification block catches? finally_?  | 
+resourceSpecification : '(' resourceList ';'? ')'  | 
+resourceList : resource (';' resource  | )*  | 
+resource : variableModifier* unannType variableDeclaratorId '=' expression  | 
+primary : (primaryNoNewArray_lfno_primary  | arrayCreationExpression  | ) (primaryNoNewArray_lf_primary  | )*  | 
+primaryNoNewArray : literal  | typeName ('[' ']'  | )* '.' 'class'  | 'void' '.' 'class'  | 'this'  | typeName '.' 'this'  | '(' expression ')'  | classInstanceCreationExpression  | fieldAccess  | arrayAccess  | methodInvocation  | methodReference  | 
+primaryNoNewArray_lf_arrayAccess : 
+primaryNoNewArray_lfno_arrayAccess : literal  | typeName ('[' ']'  | )* '.' 'class'  | 'void' '.' 'class'  | 'this'  | typeName '.' 'this'  | '(' expression ')'  | classInstanceCreationExpression  | fieldAccess  | methodInvocation  | methodReference  | 
+primaryNoNewArray_lf_primary : classInstanceCreationExpression_lf_primary  | fieldAccess_lf_primary  | arrayAccess_lf_primary  | methodInvocation_lf_primary  | methodReference_lf_primary  | 
+primaryNoNewArray_lf_primary_lf_arrayAccess_lf_primary : 
+primaryNoNewArray_lf_primary_lfno_arrayAccess_lf_primary : classInstanceCreationExpression_lf_primary  | fieldAccess_lf_primary  | methodInvocation_lf_primary  | methodReference_lf_primary  | 
+primaryNoNewArray_lfno_primary : literal  | typeName ('[' ']'  | )* '.' 'class'  | unannPrimitiveType ('[' ']'  | )* '.' 'class'  | 'void' '.' 'class'  | 'this'  | typeName '.' 'this'  | '(' expression ')'  | classInstanceCreationExpression_lfno_primary  | fieldAccess_lfno_primary  | arrayAccess_lfno_primary  | methodInvocation_lfno_primary  | methodReference_lfno_primary  | 
+primaryNoNewArray_lfno_primary_lf_arrayAccess_lfno_primary : 
+primaryNoNewArray_lfno_primary_lfno_arrayAccess_lfno_primary : literal  | typeName ('[' ']'  | )* '.' 'class'  | unannPrimitiveType ('[' ']'  | )* '.' 'class'  | 'void' '.' 'class'  | 'this'  | typeName '.' 'this'  | '(' expression ')'  | classInstanceCreationExpression_lfno_primary  | fieldAccess_lfno_primary  | methodInvocation_lfno_primary  | methodReference_lfno_primary  | 
+classInstanceCreationExpression : 'new' typeArguments? annotation* Identifier ('.' annotation* Identifier  | )* typeArgumentsOrDiamond? '(' argumentList? ')' classBody?  | expressionName '.' 'new' typeArguments? annotation* Identifier typeArgumentsOrDiamond? '(' argumentList? ')' classBody?  | primary '.' 'new' typeArguments? annotation* Identifier typeArgumentsOrDiamond? '(' argumentList? ')' classBody?  | 
+classInstanceCreationExpression_lf_primary : '.' 'new' typeArguments? annotation* Identifier typeArgumentsOrDiamond? '(' argumentList? ')' classBody?  | 
+classInstanceCreationExpression_lfno_primary : 'new' typeArguments? annotation* Identifier ('.' annotation* Identifier  | )* typeArgumentsOrDiamond? '(' argumentList? ')' classBody?  | expressionName '.' 'new' typeArguments? annotation* Identifier typeArgumentsOrDiamond? '(' argumentList? ')' classBody?  | 
+typeArgumentsOrDiamond : typeArguments  | '<' '>'  | 
+fieldAccess : primary '.' Identifier  | 'super' '.' Identifier  | typeName '.' 'super' '.' Identifier  | 
+fieldAccess_lf_primary : '.' Identifier  | 
+fieldAccess_lfno_primary : 'super' '.' Identifier  | typeName '.' 'super' '.' Identifier  | 
+arrayAccess : (expressionName '[' expression ']'  | primaryNoNewArray_lfno_arrayAccess '[' expression ']'  | ) (primaryNoNewArray_lf_arrayAccess '[' expression ']'  | )*  | 
+arrayAccess_lf_primary : (primaryNoNewArray_lf_primary_lfno_arrayAccess_lf_primary '[' expression ']'  | ) (primaryNoNewArray_lf_primary_lf_arrayAccess_lf_primary '[' expression ']'  | )*  | 
+arrayAccess_lfno_primary : (expressionName '[' expression ']'  | primaryNoNewArray_lfno_primary_lfno_arrayAccess_lfno_primary '[' expression ']'  | ) (primaryNoNewArray_lfno_primary_lf_arrayAccess_lfno_primary '[' expression ']'  | )*  | 
+methodInvocation : methodName '(' argumentList? ')'  | typeName '.' typeArguments? Identifier '(' argumentList? ')'  | expressionName '.' typeArguments? Identifier '(' argumentList? ')'  | primary '.' typeArguments? Identifier '(' argumentList? ')'  | 'super' '.' typeArguments? Identifier '(' argumentList? ')'  | typeName '.' 'super' '.' typeArguments? Identifier '(' argumentList? ')'  | 
+methodInvocation_lf_primary : '.' typeArguments? Identifier '(' argumentList? ')'  | 
+methodInvocation_lfno_primary : methodName '(' argumentList? ')'  | typeName '.' typeArguments? Identifier '(' argumentList? ')'  | expressionName '.' typeArguments? Identifier '(' argumentList? ')'  | 'super' '.' typeArguments? Identifier '(' argumentList? ')'  | typeName '.' 'super' '.' typeArguments? Identifier '(' argumentList? ')'  | 
+argumentList : expression (',' expression  | )*  | 
+methodReference : expressionName '::' typeArguments? Identifier  | referenceType '::' typeArguments? Identifier  | primary '::' typeArguments? Identifier  | 'super' '::' typeArguments? Identifier  | typeName '.' 'super' '::' typeArguments? Identifier  | classType '::' typeArguments? 'new'  | arrayType '::' 'new'  | 
+methodReference_lf_primary : '::' typeArguments? Identifier  | 
+methodReference_lfno_primary : expressionName '::' typeArguments? Identifier  | referenceType '::' typeArguments? Identifier  | 'super' '::' typeArguments? Identifier  | typeName '.' 'super' '::' typeArguments? Identifier  | classType '::' typeArguments? 'new'  | arrayType '::' 'new'  | 
+arrayCreationExpression : 'new' primitiveType dimExprs dims?  | 'new' classOrInterfaceType dimExprs dims?  | 'new' primitiveType dims arrayInitializer  | 'new' classOrInterfaceType dims arrayInitializer  | 
+dimExprs : dimExpr dimExpr*  | 
+dimExpr : annotation* '[' expression ']'  | 
+constantExpression : expression  | 
+expression : lambdaExpression  | assignmentExpression  | 
+lambdaExpression : lambdaParameters '->' lambdaBody  | 
+lambdaParameters : Identifier  | '(' formalParameterList? ')'  | '(' inferredFormalParameterList ')'  | 
+inferredFormalParameterList : Identifier (',' Identifier  | )*  | 
+lambdaBody : expression  | block  | 
+assignmentExpression : conditionalExpression  | assignment  | 
+assignment : leftHandSide assignmentOperator expression  | 
+leftHandSide : expressionName  | fieldAccess  | arrayAccess  | 
+assignmentOperator : '='  | '*='  | '/='  | '%='  | '+='  | '-='  | '<<='  | '>>='  | '>>>='  | '&='  | '^='  | '|='  | 
+conditionalExpression : conditionalOrExpression  | conditionalOrExpression '?' expression ':' conditionalExpression  | 
+conditionalOrExpression : conditionalAndExpression  | conditionalOrExpression '||' conditionalAndExpression  | 
+conditionalAndExpression : inclusiveOrExpression  | conditionalAndExpression '&&' inclusiveOrExpression  | 
+inclusiveOrExpression : exclusiveOrExpression  | inclusiveOrExpression '|' exclusiveOrExpression  | 
+exclusiveOrExpression : andExpression  | exclusiveOrExpression '^' andExpression  | 
+andExpression : equalityExpression  | andExpression '&' equalityExpression  | 
+equalityExpression : relationalExpression  | equalityExpression '==' relationalExpression  | equalityExpression '!=' relationalExpression  | 
+relationalExpression : shiftExpression  | relationalExpression '<' shiftExpression  | relationalExpression '>' shiftExpression  | relationalExpression '<=' shiftExpression  | relationalExpression '>=' shiftExpression  | relationalExpression 'instanceof' referenceType  | 
+shiftExpression : additiveExpression  | shiftExpression '<' '<' additiveExpression  | shiftExpression '>' '>' additiveExpression  | shiftExpression '>' '>' '>' additiveExpression  | 
+additiveExpression : multiplicativeExpression  | additiveExpression '+' multiplicativeExpression  | additiveExpression '-' multiplicativeExpression  | 
+multiplicativeExpression : unaryExpression  | multiplicativeExpression '*' unaryExpression  | multiplicativeExpression '/' unaryExpression  | multiplicativeExpression '%' unaryExpression  | 
+unaryExpression : preIncrementExpression  | preDecrementExpression  | '+' unaryExpression  | '-' unaryExpression  | unaryExpressionNotPlusMinus  | 
+preIncrementExpression : '++' unaryExpression  | 
+preDecrementExpression : '--' unaryExpression  | 
+unaryExpressionNotPlusMinus : postfixExpression  | '~' unaryExpression  | '!' unaryExpression  | castExpression  | 
+postfixExpression : (primary  | expressionName  | ) (postIncrementExpression_lf_postfixExpression  | postDecrementExpression_lf_postfixExpression  | )*  | 
+postIncrementExpression : postfixExpression '++'  | 
+postIncrementExpression_lf_postfixExpression : '++'  | 
+postDecrementExpression : postfixExpression '--'  | 
+postDecrementExpression_lf_postfixExpression : '--'  | 
+castExpression : '(' primitiveType ')' unaryExpression  | '(' referenceType additionalBound* ')' unaryExpressionNotPlusMinus  | '(' referenceType additionalBound* ')' lambdaExpression  | 
+ABSTRACT : 'abstract'  | 
+ASSERT : 'assert'  | 
+BOOLEAN : 'boolean'  | 
+BREAK : 'break'  | 
+BYTE : 'byte'  | 
+CASE : 'case'  | 
+CATCH : 'catch'  | 
+CHAR : 'char'  | 
+CLASS : 'class'  | 
+CONST : 'const'  | 
+CONTINUE : 'continue'  | 
+DEFAULT : 'default'  | 
+DO : 'do'  | 
+DOUBLE : 'double'  | 
+ELSE : 'else'  | 
+ENUM : 'enum'  | 
+EXTENDS : 'extends'  | 
+FINAL : 'final'  | 
+FINALLY : 'finally'  | 
+FLOAT : 'float'  | 
+FOR : 'for'  | 
+IF : 'if'  | 
+GOTO : 'goto'  | 
+IMPLEMENTS : 'implements'  | 
+IMPORT : 'import'  | 
+INSTANCEOF : 'instanceof'  | 
+INT : 'int'  | 
+INTERFACE : 'interface'  | 
+LONG : 'long'  | 
+NATIVE : 'native'  | 
+NEW : 'new'  | 
+PACKAGE : 'package'  | 
+PRIVATE : 'private'  | 
+PROTECTED : 'protected'  | 
+PUBLIC : 'public'  | 
+RETURN : 'return'  | 
+SHORT : 'short'  | 
+STATIC : 'static'  | 
+STRICTFP : 'strictfp'  | 
+SUPER : 'super'  | 
+SWITCH : 'switch'  | 
+SYNCHRONIZED : 'synchronized'  | 
+THIS : 'this'  | 
+THROW : 'throw'  | 
+THROWS : 'throws'  | 
+TRANSIENT : 'transient'  | 
+TRY : 'try'  | 
+VOID : 'void'  | 
+VOLATILE : 'volatile'  | 
+WHILE : 'while'  | 
+IntegerLiteral : DecimalIntegerLiteral  | HexIntegerLiteral  | OctalIntegerLiteral  | BinaryIntegerLiteral  | 
+DecimalIntegerLiteral : DecimalNumeral IntegerTypeSuffix?  | 
+HexIntegerLiteral : HexNumeral IntegerTypeSuffix?  | 
+OctalIntegerLiteral : OctalNumeral IntegerTypeSuffix?  | 
+BinaryIntegerLiteral : BinaryNumeral IntegerTypeSuffix?  | 
+IntegerTypeSuffix : "[lL]"  | 
+DecimalNumeral : '0'  | NonZeroDigit (Digits?  | Underscores Digits  | )  | 
+Digits : Digit (DigitsAndUnderscores? Digit  | )?  | 
+Digit : '0'  | NonZeroDigit  | 
+NonZeroDigit : "[1-9]"  | 
+DigitsAndUnderscores : DigitOrUnderscore*  | 
+DigitOrUnderscore : Digit  | '_'  | 
+Underscores : '_'*  | 
+HexNumeral : '0' "[xX]" HexDigits  | 
+HexDigits : HexDigit (HexDigitsAndUnderscores? HexDigit  | )?  | 
+HexDigit : "[0-9a-fA-F]"  | 
+HexDigitsAndUnderscores : HexDigitOrUnderscore*  | 
+HexDigitOrUnderscore : HexDigit  | '_'  | 
+OctalNumeral : '0' Underscores? OctalDigits  | 
+OctalDigits : OctalDigit (OctalDigitsAndUnderscores? OctalDigit  | )?  | 
+OctalDigit : "[0-7]"  | 
+OctalDigitsAndUnderscores : OctalDigitOrUnderscore*  | 
+OctalDigitOrUnderscore : OctalDigit  | '_'  | 
+BinaryNumeral : '0' "[bB]" BinaryDigits  | 
+BinaryDigits : BinaryDigit (BinaryDigitsAndUnderscores? BinaryDigit  | )?  | 
+BinaryDigit : "[01]"  | 
+BinaryDigitsAndUnderscores : BinaryDigitOrUnderscore*  | 
+BinaryDigitOrUnderscore : BinaryDigit  | '_'  | 
+FloatingPointLiteral : DecimalFloatingPointLiteral  | HexadecimalFloatingPointLiteral  | 
+DecimalFloatingPointLiteral : Digits '.' Digits? ExponentPart? FloatTypeSuffix?  | '.' Digits ExponentPart? FloatTypeSuffix?  | Digits ExponentPart FloatTypeSuffix?  | Digits FloatTypeSuffix  | 
+ExponentPart : ExponentIndicator SignedInteger  | 
+ExponentIndicator : "[eE]"  | 
+SignedInteger : Sign? Digits  | 
+Sign : "[+-]"  | 
+FloatTypeSuffix : "[fFdD]"  | 
+HexadecimalFloatingPointLiteral : HexSignificand BinaryExponent FloatTypeSuffix?  | 
+HexSignificand : HexNumeral '.'?  | '0' "[xX]" HexDigits? '.' HexDigits  | 
+BinaryExponent : BinaryExponentIndicator SignedInteger  | 
+BinaryExponentIndicator : "[pP]"  | 
+BooleanLiteral : 'true'  | 'false'  | 
+CharacterLiteral : ''' SingleCharacter '''  | ''' EscapeSequence '''  | 
+SingleCharacter : "[^'\\]"  | 
+StringLiteral : '"' StringCharacters? '"'  | 
+StringCharacters : StringCharacter*  | 
+StringCharacter : "[^\x22\\]"  | EscapeSequence  | 
+EscapeSequence : '\' "[btnfr\x22'\\]"  | OctalEscape  | UnicodeEscape  | 
+OctalEscape : '\' OctalDigit  | '\' OctalDigit OctalDigit  | '\' ZeroToThree OctalDigit OctalDigit  | 
+ZeroToThree : "[0-3]"  | 
+UnicodeEscape : '\' 'u' HexDigit HexDigit HexDigit HexDigit  | 
+NullLiteral : 'null'  | 
+LPAREN : '('  | 
+RPAREN : ')'  | 
+LBRACE : '{'  | 
+RBRACE : '}'  | 
+LBRACK : '['  | 
+RBRACK : ']'  | 
+SEMI : ';'  | 
+COMMA : ','  | 
+DOT : '.'  | 
+ASSIGN : '='  | 
+GT : '>'  | 
+LT : '<'  | 
+BANG : '!'  | 
+TILDE : '~'  | 
+QUESTION : '?'  | 
+COLON : ':'  | 
+EQUAL : '=='  | 
+LE : '<='  | 
+GE : '>='  | 
+NOTEQUAL : '!='  | 
+AND : '&&'  | 
+OR : '||'  | 
+INC : '++'  | 
+DEC : '--'  | 
+ADD : '+'  | 
+SUB : '-'  | 
+MUL : '*'  | 
+DIV : '/'  | 
+BITAND : '&'  | 
+BITOR : '|'  | 
+CARET : '^'  | 
+MOD : '%'  | 
+ARROW : '->'  | 
+COLONCOLON : '::'  | 
+ADD_ASSIGN : '+='  | 
+SUB_ASSIGN : '-='  | 
+MUL_ASSIGN : '*='  | 
+DIV_ASSIGN : '/='  | 
+AND_ASSIGN : '&='  | 
+OR_ASSIGN : '|='  | 
+XOR_ASSIGN : '^='  | 
+MOD_ASSIGN : '%='  | 
+LSHIFT_ASSIGN : '<<='  | 
+RSHIFT_ASSIGN : '>>='  | 
+URSHIFT_ASSIGN : '>>>='  | 
+Identifier : "([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*"  | 
+AT : '@'  | 
+ELLIPSIS : '...'  | 
+skip WS : "[ \t\r\n\u000C]+"  | 
+skip COMMENT : "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/"  | 
+skip LINE_COMMENT : "//.*?$"  | 
+}
+
+input '@An() class An {  }'
+0    create     0,0,0:compilationUnit(1047){...
+
+1    0,0,0:compilationUnit(1047){...
+     width     0,1,C:@(152) ==> 0,0,0:compilationUnit(1047){...
+     width     0,0,C:$empty.$compilationUnit.multi.0.0.0$(1049) ==> 0,0,0:compilationUnit(1047){...
+     width     0,0,C:$empty.$packageDeclaration.multi.0.0.0$(1052) ==> 0,0,0:compilationUnit(1047){...
+
+2    0,1,C:@(152)
+    height     0,1,1:singleElementAnnotation(1041){'@'... --> 0,0,0:compilationUnit(1047)
+    height     0,1,1:markerAnnotation(1040){'@'... --> 0,0,0:compilationUnit(1047)
+    height     0,1,1:normalAnnotation(151){'@'... --> 0,0,0:compilationUnit(1047)
+    0,0,C:$empty.$packageDeclaration.multi.0.0.0$(1052)
+    height     0,0,C:$packageDeclaration.multi.0.0.0(1051){$empty} --> 0,0,0:compilationUnit(1047)
+    0,0,C:$empty.$compilationUnit.multi.0.0.0$(1049)
+    height     0,0,C:$compilationUnit.multi.0.0.0(1048){$empty} --> 0,0,0:compilationUnit(1047)
+
+3    0,0,C:$compilationUnit.multi.0.0.0(1048){$empty}
+     graft     0,0,1:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}...
+    0,1,1:singleElementAnnotation(1041){'@'...
+     width     1,3,C:([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*(155) ==> 0,1,1:singleElementAnnotation(1041){'@'... --> 0,0,0:compilationUnit(1047)
+    0,1,1:markerAnnotation(1040){'@'...
+     width     1,3,C:([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*(155) ==> 0,1,1:markerAnnotation(1040){'@'... --> 0,0,0:compilationUnit(1047)
+    0,1,1:normalAnnotation(151){'@'...
+     width     1,3,C:([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*(155) ==> 0,1,1:normalAnnotation(151){'@'... --> 0,0,0:compilationUnit(1047)
+    0,0,C:$packageDeclaration.multi.0.0.0(1051){$empty}
+    height     0,0,1:packageDeclaration(1050){$packageDeclaration.multi.0.0.0{$empty}... --> 0,0,0:compilationUnit(1047)
+
+4    0,0,1:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}...
+     width     0,0,C:$empty.$compilationUnit.multi.0.0.1$(1059) ==> 0,0,1:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}...
+    0,0,1:packageDeclaration(1050){$packageDeclaration.multi.0.0.0{$empty}...
+    1,3,C:([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*(155)
+    height     1,3,C:Identifier(154){'An'} -3> 0,1,1:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+
+5    1,3,C:Identifier(154){'An'}
+    height     1,3,C:packageOrTypeName(157){Identifier{'An'}} -3> 0,1,1:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+    height     1,3,C:typeName(153){Identifier{'An'}} -3> 0,1,1:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+    0,0,C:$empty.$compilationUnit.multi.0.0.1$(1059)
+    height     0,0,C:$compilationUnit.multi.0.0.1(1058){$empty} --> 0,0,1:compilationUnit(1047)
+
+6    0,0,C:$compilationUnit.multi.0.0.1(1058){$empty}
+     graft     0,0,2:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}$compilationUnit.multi.0.0.1{$empty}...
+    1,3,C:packageOrTypeName(157){Identifier{'An'}}
+    height     1,3,1:$packageOrTypeName.concatenation.0.1(158){packageOrTypeName{Identifier{'An'}}... -3> 0,1,1:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+    height     1,3,1:$typeName.concatenation.0.1(156){packageOrTypeName{Identifier{'An'}}... -3> 0,1,1:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+    1,3,C:typeName(153){Identifier{'An'}}
+     graft     0,3,2:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}... --> 0,0,0:compilationUnit(1047)
+     graft     0,3,C:markerAnnotation(1040){'@'typeName{Identifier{'An'}}} --> 0,0,0:compilationUnit(1047)
+     graft     0,3,2:normalAnnotation(151){'@'typeName{Identifier{'An'}}... --> 0,0,0:compilationUnit(1047)
+
+7    1,3,1:$typeName.concatenation.0.1(156){packageOrTypeName{Identifier{'An'}}...
+    0,0,2:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}$compilationUnit.multi.0.0.1{$empty}...
+     width     0,0,C:$empty.$enumDeclaration.multi.0.0.0$(553) ==> 0,0,2:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}$compilationUnit.multi.0.0.1{$empty}...
+     width     0,0,C:$empty.$annotationTypeDeclaration.multi.0.0.0$(489) ==> 0,0,2:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}$compilationUnit.multi.0.0.1{$empty}...
+     width     0,0,C:$empty.$compilationUnit.multi.0.0.2$(1067) ==> 0,0,2:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}$compilationUnit.multi.0.0.1{$empty}...
+     width     0,0,C:$empty.$normalInterfaceDeclaration.multi.0.0.0$(466) ==> 0,0,2:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}$compilationUnit.multi.0.0.1{$empty}...
+     width     0,0,C:$empty.$normalClassDeclaration.multi.0.0.0$(372) ==> 0,0,2:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}$compilationUnit.multi.0.0.1{$empty}...
+     width     0,1,C:@(152) ==> 0,0,2:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}$compilationUnit.multi.0.0.1{$empty}...
+    1,3,1:$packageOrTypeName.concatenation.0.1(158){packageOrTypeName{Identifier{'An'}}...
+    0,3,2:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}...
+     width     3,4,C:((159) ==> 0,3,2:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}... --> 0,0,0:compilationUnit(1047)
+    0,3,C:markerAnnotation(1040){'@'typeName{Identifier{'An'}}}
+    height     0,3,C:annotation(150){markerAnnotation{'@'typeName{Identifier{'An'}}}} --> 0,0,0:compilationUnit(1047)
+    0,3,2:normalAnnotation(151){'@'typeName{Identifier{'An'}}...
+     width     3,4,C:((159) ==> 0,3,2:normalAnnotation(151){'@'typeName{Identifier{'An'}}... --> 0,0,0:compilationUnit(1047)
+
+8    0,1,C:@(152)
+    height     0,1,1:singleElementAnnotation(1041){'@'... --> 0,0,2:compilationUnit(1047)
+    height     0,1,1:markerAnnotation(1040){'@'... --> 0,0,2:compilationUnit(1047)
+    height     0,1,1:normalAnnotation(151){'@'... --> 0,0,2:compilationUnit(1047)
+    0,3,C:annotation(150){markerAnnotation{'@'typeName{Identifier{'An'}}}}
+    height     0,3,C:packageModifier(1053){annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}} --> 0,0,0:compilationUnit(1047)
+    0,0,C:$empty.$compilationUnit.multi.0.0.2$(1067)
+    height     0,0,C:$compilationUnit.multi.0.0.2(1066){$empty} --> 0,0,2:compilationUnit(1047)
+    3,4,C:((159)
+     graft     0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('... --> 0,0,0:compilationUnit(1047)
+     graft     0,4,3:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('... --> 0,0,0:compilationUnit(1047)
+    0,0,C:$empty.$annotationTypeDeclaration.multi.0.0.0$(489)
+    height     0,0,C:$annotationTypeDeclaration.multi.0.0.0(488){$empty} --> 0,0,2:compilationUnit(1047)
+    0,0,C:$empty.$normalClassDeclaration.multi.0.0.0$(372)
+    height     0,0,C:$normalClassDeclaration.multi.0.0.0(371){$empty} --> 0,0,2:compilationUnit(1047)
+    0,0,C:$empty.$enumDeclaration.multi.0.0.0$(553)
+    height     0,0,C:$enumDeclaration.multi.0.0.0(552){$empty} --> 0,0,2:compilationUnit(1047)
+    0,0,C:$empty.$normalInterfaceDeclaration.multi.0.0.0$(466)
+    height     0,0,C:$normalInterfaceDeclaration.multi.0.0.0(465){$empty} --> 0,0,2:compilationUnit(1047)
+
+9    0,0,C:$enumDeclaration.multi.0.0.0(552){$empty}
+    height     0,0,1:enumDeclaration(551){$enumDeclaration.multi.0.0.0{$empty}... --> 0,0,2:compilationUnit(1047)
+    0,0,C:$annotationTypeDeclaration.multi.0.0.0(488){$empty}
+    height     0,0,1:annotationTypeDeclaration(487){$annotationTypeDeclaration.multi.0.0.0{$empty}... --> 0,0,2:compilationUnit(1047)
+    0,0,C:$compilationUnit.multi.0.0.2(1066){$empty}
+     graft     0,0,C:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}$compilationUnit.multi.0.0.1{$empty}$compilationUnit.multi.0.0.2{$empty}}
+    0,1,1:singleElementAnnotation(1041){'@'...
+     width     1,3,C:([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*(155) ==> 0,1,1:singleElementAnnotation(1041){'@'... --> 0,0,2:compilationUnit(1047)
+    0,1,1:markerAnnotation(1040){'@'...
+     width     1,3,C:([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*(155) ==> 0,1,1:markerAnnotation(1040){'@'... --> 0,0,2:compilationUnit(1047)
+    0,1,1:normalAnnotation(151){'@'...
+     width     1,3,C:([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*(155) ==> 0,1,1:normalAnnotation(151){'@'... --> 0,0,2:compilationUnit(1047)
+    0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('...
+     width     4,4,C:$empty.$typeVariable.multi.0.0.0$(265) ==> 0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('... --> 0,0,0:compilationUnit(1047)
+     width     4,4,C:$empty.$classType.multi.0.0.0$(401) ==> 0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('... --> 0,0,0:compilationUnit(1047)
+     width     4,4,C:$empty.$primitiveType.multi.0.1.0$(1044) ==> 0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('... --> 0,0,0:compilationUnit(1047)
+     width     4,4,C:$empty.$primitiveType.multi.0.0.0$(149) ==> 0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('... --> 0,0,0:compilationUnit(1047)
+     width     4,4,C:$empty.$classType_lfno_classOrInterfaceType.multi.0.0.0$(250) ==> 0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('... --> 0,0,0:compilationUnit(1047)
+    0,4,3:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('...
+     width     4,4,C:$empty.$normalAnnotation.multi.0.0.3$(161) ==> 0,4,3:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('... --> 0,0,0:compilationUnit(1047)
+    0,0,C:$normalClassDeclaration.multi.0.0.0(371){$empty}
+    height     0,0,1:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{$empty}... --> 0,0,2:compilationUnit(1047)
+    0,3,C:packageModifier(1053){annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}
+    height     0,3,1:$packageDeclaration.multi.0.0.0(1051){packageModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}} --> 0,0,0:compilationUnit(1047)
+    0,0,C:$normalInterfaceDeclaration.multi.0.0.0(465){$empty}
+    height     0,0,1:normalInterfaceDeclaration(464){$normalInterfaceDeclaration.multi.0.0.0{$empty}... --> 0,0,2:compilationUnit(1047)
+
+10    0,0,C:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}$compilationUnit.multi.0.0.1{$empty}$compilationUnit.multi.0.0.2{$empty}}
+    4,4,C:$empty.$primitiveType.multi.0.1.0$(1044)
+    height     4,4,C:$primitiveType.multi.0.1.0(1043){$empty} --> 0,4,3:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+    0,0,1:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{$empty}...
+    4,4,C:$empty.$normalAnnotation.multi.0.0.3$(161)
+    height     4,4,C:$normalAnnotation.multi.0.0.3(160){$empty} --> 0,4,3:normalAnnotation(151) --> 0,0,0:compilationUnit(1047)
+    4,4,C:$empty.$classType.multi.0.0.0$(401)
+    height     4,4,C:$classType.multi.0.0.0(400){$empty} --> 0,4,3:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+    0,3,1:$packageDeclaration.multi.0.0.0(1051){packageModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}
+    height     0,3,1:packageDeclaration(1050){$packageDeclaration.multi.0.0.0{packageModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}... --> 0,0,0:compilationUnit(1047)
+    0,0,1:annotationTypeDeclaration(487){$annotationTypeDeclaration.multi.0.0.0{$empty}...
+     width     0,1,C:@(152) ==> 0,0,1:annotationTypeDeclaration(487){$annotationTypeDeclaration.multi.0.0.0{$empty}... --> 0,0,2:compilationUnit(1047)
+    4,4,C:$empty.$typeVariable.multi.0.0.0$(265)
+    height     4,4,C:$typeVariable.multi.0.0.0(264){$empty} --> 0,4,3:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+    0,0,1:enumDeclaration(551){$enumDeclaration.multi.0.0.0{$empty}...
+    0,0,1:normalInterfaceDeclaration(464){$normalInterfaceDeclaration.multi.0.0.0{$empty}...
+    1,3,C:([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*(155)
+    height     1,3,C:Identifier(154){'An'} -3> 0,1,1:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    4,4,C:$empty.$classType_lfno_classOrInterfaceType.multi.0.0.0$(250)
+    height     4,4,C:$classType_lfno_classOrInterfaceType.multi.0.0.0(249){$empty} --> 0,4,3:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+    4,4,C:$empty.$primitiveType.multi.0.0.0$(149)
+    height     4,4,C:$primitiveType.multi.0.0.0(148){$empty} --> 0,4,3:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+
+11    4,4,C:$primitiveType.multi.0.1.0(1043){$empty}
+    height     4,4,1:$primitiveType.concatenation.0.1(1042){$primitiveType.multi.0.1.0{$empty}... --> 0,4,3:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+    0,3,1:packageDeclaration(1050){$packageDeclaration.multi.0.0.0{packageModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}...
+    1,3,C:Identifier(154){'An'}
+    height     1,3,C:packageOrTypeName(157){Identifier{'An'}} -3> 0,1,1:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    height     1,3,C:typeName(153){Identifier{'An'}} -3> 0,1,1:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    4,4,C:$classType.multi.0.0.0(400){$empty}
+    height     4,4,1:$classType.concatenation.0.0(399){$classType.multi.0.0.0{$empty}... --> 0,4,3:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+    0,1,C:@(152)
+     graft     0,1,2:annotationTypeDeclaration(487){$annotationTypeDeclaration.multi.0.0.0{$empty}'@'... --> 0,0,2:compilationUnit(1047)
+    4,4,C:$normalAnnotation.multi.0.0.3(160){$empty}
+     graft     0,4,4:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}... --> 0,0,0:compilationUnit(1047)
+    4,4,C:$classType_lfno_classOrInterfaceType.multi.0.0.0(249){$empty}
+    height     4,4,1:classType_lfno_classOrInterfaceType(248){$classType_lfno_classOrInterfaceType.multi.0.0.0{$empty}... --> 0,4,3:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+    4,4,C:$primitiveType.multi.0.0.0(148){$empty}
+    height     4,4,1:$primitiveType.concatenation.0.0(147){$primitiveType.multi.0.0.0{$empty}... --> 0,4,3:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+    4,4,C:$typeVariable.multi.0.0.0(264){$empty}
+    height     4,4,1:typeVariable(263){$typeVariable.multi.0.0.0{$empty}... --> 0,4,3:singleElementAnnotation(1041) --> 0,0,0:compilationUnit(1047)
+
+12    4,4,1:$classType.concatenation.0.0(399){$classType.multi.0.0.0{$empty}...
+    0,1,2:annotationTypeDeclaration(487){$annotationTypeDeclaration.multi.0.0.0{$empty}'@'...
+    1,3,C:packageOrTypeName(157){Identifier{'An'}}
+    height     1,3,1:$packageOrTypeName.concatenation.0.1(158){packageOrTypeName{Identifier{'An'}}... -3> 0,1,1:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    height     1,3,1:$typeName.concatenation.0.1(156){packageOrTypeName{Identifier{'An'}}... -3> 0,1,1:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    4,4,1:classType_lfno_classOrInterfaceType(248){$classType_lfno_classOrInterfaceType.multi.0.0.0{$empty}...
+    1,3,C:typeName(153){Identifier{'An'}}
+     graft     0,3,2:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}... --> 0,0,2:compilationUnit(1047)
+     graft     0,3,C:markerAnnotation(1040){'@'typeName{Identifier{'An'}}} --> 0,0,2:compilationUnit(1047)
+     graft     0,3,2:normalAnnotation(151){'@'typeName{Identifier{'An'}}... --> 0,0,2:compilationUnit(1047)
+    4,4,1:$primitiveType.concatenation.0.1(1042){$primitiveType.multi.0.1.0{$empty}...
+    0,4,4:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}...
+     width     4,5,C:)(331) ==> 0,4,4:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}... --> 0,0,0:compilationUnit(1047)
+    4,4,1:typeVariable(263){$typeVariable.multi.0.0.0{$empty}...
+    4,4,1:$primitiveType.concatenation.0.0(147){$primitiveType.multi.0.0.0{$empty}...
+
+13    0,3,2:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}...
+     width     3,4,C:((159) ==> 0,3,2:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}... --> 0,0,2:compilationUnit(1047)
+    0,3,C:markerAnnotation(1040){'@'typeName{Identifier{'An'}}}
+    height     0,3,C:annotation(150){markerAnnotation{'@'typeName{Identifier{'An'}}}} --> 0,0,2:compilationUnit(1047)
+    4,5,C:)(331)
+     graft     0,5,C:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'} --> 0,0,0:compilationUnit(1047)
+    1,3,1:$typeName.concatenation.0.1(156){packageOrTypeName{Identifier{'An'}}...
+    1,3,1:$packageOrTypeName.concatenation.0.1(158){packageOrTypeName{Identifier{'An'}}...
+    0,3,2:normalAnnotation(151){'@'typeName{Identifier{'An'}}...
+     width     3,4,C:((159) ==> 0,3,2:normalAnnotation(151){'@'typeName{Identifier{'An'}}... --> 0,0,2:compilationUnit(1047)
+
+14    0,3,C:annotation(150){markerAnnotation{'@'typeName{Identifier{'An'}}}}
+    height     0,3,C:interfaceModifier(467){annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}} --> 0,0,2:compilationUnit(1047)
+    height     0,3,C:classModifier(373){annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}} --> 0,0,2:compilationUnit(1047)
+    3,4,C:((159)
+     graft     0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('... --> 0,0,2:compilationUnit(1047)
+     graft     0,4,3:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('... --> 0,0,2:compilationUnit(1047)
+    0,5,C:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'}
+     width     5,6,C:[ \t\r\n\u000C]+(1177) ==> 0,5,C:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'} --> 0,0,0:compilationUnit(1047)
+
+15    5,6,C:[ \t\r\n\u000C]+(1177)
+    height     5,6,C:WS(1176){' '} --> 0,5,C:normalAnnotation(151) --> 0,0,0:compilationUnit(1047)
+    0,3,C:interfaceModifier(467){annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}
+    height     0,3,1:$normalInterfaceDeclaration.multi.0.0.0(465){interfaceModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}} --> 0,0,2:compilationUnit(1047)
+    height     0,3,1:$annotationTypeDeclaration.multi.0.0.0(488){interfaceModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}} --> 0,0,2:compilationUnit(1047)
+    0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('...
+     width     4,4,C:$empty.$typeVariable.multi.0.0.0$(265) ==> 0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('... --> 0,0,2:compilationUnit(1047)
+     width     4,4,C:$empty.$classType.multi.0.0.0$(401) ==> 0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('... --> 0,0,2:compilationUnit(1047)
+     width     4,4,C:$empty.$primitiveType.multi.0.1.0$(1044) ==> 0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('... --> 0,0,2:compilationUnit(1047)
+     width     4,4,C:$empty.$primitiveType.multi.0.0.0$(149) ==> 0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('... --> 0,0,2:compilationUnit(1047)
+     width     4,4,C:$empty.$classType_lfno_classOrInterfaceType.multi.0.0.0$(250) ==> 0,4,3:singleElementAnnotation(1041){'@'typeName{Identifier{'An'}}'('... --> 0,0,2:compilationUnit(1047)
+    0,4,3:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('...
+     width     4,4,C:$empty.$normalAnnotation.multi.0.0.3$(161) ==> 0,4,3:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('... --> 0,0,2:compilationUnit(1047)
+    0,3,C:classModifier(373){annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}
+    height     0,3,1:$enumDeclaration.multi.0.0.0(552){classModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}} --> 0,0,2:compilationUnit(1047)
+    height     0,3,1:$normalClassDeclaration.multi.0.0.0(371){classModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}} --> 0,0,2:compilationUnit(1047)
+
+16    5,6,C:WS(1176){' '}
+     graft     0,6,C:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}} --> 0,0,0:compilationUnit(1047)
+    4,4,C:$empty.$primitiveType.multi.0.1.0$(1044)
+    height     4,4,C:$primitiveType.multi.0.1.0(1043){$empty} --> 0,4,3:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    4,4,C:$empty.$normalAnnotation.multi.0.0.3$(161)
+    height     4,4,C:$normalAnnotation.multi.0.0.3(160){$empty} --> 0,4,3:normalAnnotation(151) --> 0,0,2:compilationUnit(1047)
+    4,4,C:$empty.$classType.multi.0.0.0$(401)
+    height     4,4,C:$classType.multi.0.0.0(400){$empty} --> 0,4,3:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    0,3,1:$normalInterfaceDeclaration.multi.0.0.0(465){interfaceModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}
+    height     0,3,1:normalInterfaceDeclaration(464){$normalInterfaceDeclaration.multi.0.0.0{interfaceModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}... --> 0,0,2:compilationUnit(1047)
+    4,4,C:$empty.$typeVariable.multi.0.0.0$(265)
+    height     4,4,C:$typeVariable.multi.0.0.0(264){$empty} --> 0,4,3:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    4,4,C:$empty.$classType_lfno_classOrInterfaceType.multi.0.0.0$(250)
+    height     4,4,C:$classType_lfno_classOrInterfaceType.multi.0.0.0(249){$empty} --> 0,4,3:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    4,4,C:$empty.$primitiveType.multi.0.0.0$(149)
+    height     4,4,C:$primitiveType.multi.0.0.0(148){$empty} --> 0,4,3:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    0,3,1:$normalClassDeclaration.multi.0.0.0(371){classModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}
+    height     0,3,1:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}... --> 0,0,2:compilationUnit(1047)
+    0,3,1:$annotationTypeDeclaration.multi.0.0.0(488){interfaceModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}
+    height     0,3,1:annotationTypeDeclaration(487){$annotationTypeDeclaration.multi.0.0.0{interfaceModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}... --> 0,0,2:compilationUnit(1047)
+    0,3,1:$enumDeclaration.multi.0.0.0(552){classModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}
+    height     0,3,1:enumDeclaration(551){$enumDeclaration.multi.0.0.0{classModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}... --> 0,0,2:compilationUnit(1047)
+
+17    4,4,C:$primitiveType.multi.0.1.0(1043){$empty}
+    height     4,4,1:$primitiveType.concatenation.0.1(1042){$primitiveType.multi.0.1.0{$empty}... --> 0,4,3:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    0,3,1:normalInterfaceDeclaration(464){$normalInterfaceDeclaration.multi.0.0.0{interfaceModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}...
+    0,3,1:enumDeclaration(551){$enumDeclaration.multi.0.0.0{classModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}...
+    0,6,C:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}
+    height     0,6,C:annotation(150){normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}} --> 0,0,0:compilationUnit(1047)
+    4,4,C:$classType.multi.0.0.0(400){$empty}
+    height     4,4,1:$classType.concatenation.0.0(399){$classType.multi.0.0.0{$empty}... --> 0,4,3:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    0,3,1:annotationTypeDeclaration(487){$annotationTypeDeclaration.multi.0.0.0{interfaceModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}...
+    4,4,C:$normalAnnotation.multi.0.0.3(160){$empty}
+     graft     0,4,4:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}... --> 0,0,2:compilationUnit(1047)
+    4,4,C:$classType_lfno_classOrInterfaceType.multi.0.0.0(249){$empty}
+    height     4,4,1:classType_lfno_classOrInterfaceType(248){$classType_lfno_classOrInterfaceType.multi.0.0.0{$empty}... --> 0,4,3:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    0,3,1:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{markerAnnotation{'@'typeName{Identifier{'An'}}}}}}...
+    4,4,C:$primitiveType.multi.0.0.0(148){$empty}
+    height     4,4,1:$primitiveType.concatenation.0.0(147){$primitiveType.multi.0.0.0{$empty}... --> 0,4,3:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+    4,4,C:$typeVariable.multi.0.0.0(264){$empty}
+    height     4,4,1:typeVariable(263){$typeVariable.multi.0.0.0{$empty}... --> 0,4,3:singleElementAnnotation(1041) --> 0,0,2:compilationUnit(1047)
+
+18    4,4,1:$classType.concatenation.0.0(399){$classType.multi.0.0.0{$empty}...
+    4,4,1:classType_lfno_classOrInterfaceType(248){$classType_lfno_classOrInterfaceType.multi.0.0.0{$empty}...
+    0,6,C:annotation(150){normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}
+    height     0,6,C:packageModifier(1053){annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}} --> 0,0,0:compilationUnit(1047)
+    4,4,1:$primitiveType.concatenation.0.1(1042){$primitiveType.multi.0.1.0{$empty}...
+    0,4,4:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}...
+     width     4,5,C:)(331) ==> 0,4,4:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}... --> 0,0,2:compilationUnit(1047)
+    4,4,1:typeVariable(263){$typeVariable.multi.0.0.0{$empty}...
+    4,4,1:$primitiveType.concatenation.0.0(147){$primitiveType.multi.0.0.0{$empty}...
+
+19    4,5,C:)(331)
+     graft     0,5,C:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'} --> 0,0,2:compilationUnit(1047)
+    0,6,C:packageModifier(1053){annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}
+    height     0,6,1:$packageDeclaration.multi.0.0.0(1051){packageModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}} --> 0,0,0:compilationUnit(1047)
+
+20    0,6,1:$packageDeclaration.multi.0.0.0(1051){packageModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}
+    height     0,6,1:packageDeclaration(1050){$packageDeclaration.multi.0.0.0{packageModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}... --> 0,0,0:compilationUnit(1047)
+    0,5,C:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'}
+     width     5,6,C:[ \t\r\n\u000C]+(1177) ==> 0,5,C:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'} --> 0,0,2:compilationUnit(1047)
+
+21    5,6,C:[ \t\r\n\u000C]+(1177)
+    height     5,6,C:WS(1176){' '} --> 0,5,C:normalAnnotation(151) --> 0,0,2:compilationUnit(1047)
+    0,6,1:packageDeclaration(1050){$packageDeclaration.multi.0.0.0{packageModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}...
+
+22    5,6,C:WS(1176){' '}
+     graft     0,6,C:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}} --> 0,0,2:compilationUnit(1047)
+
+23    0,6,C:normalAnnotation(151){'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}
+    height     0,6,C:annotation(150){normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}} --> 0,0,2:compilationUnit(1047)
+
+24    0,6,C:annotation(150){normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}
+    height     0,6,C:interfaceModifier(467){annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}} --> 0,0,2:compilationUnit(1047)
+    height     0,6,C:classModifier(373){annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}} --> 0,0,2:compilationUnit(1047)
+
+25    0,6,C:interfaceModifier(467){annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}
+    height     0,6,1:$normalInterfaceDeclaration.multi.0.0.0(465){interfaceModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}} --> 0,0,2:compilationUnit(1047)
+    height     0,6,1:$annotationTypeDeclaration.multi.0.0.0(488){interfaceModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}} --> 0,0,2:compilationUnit(1047)
+    0,6,C:classModifier(373){annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}
+    height     0,6,1:$enumDeclaration.multi.0.0.0(552){classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}} --> 0,0,2:compilationUnit(1047)
+    height     0,6,1:$normalClassDeclaration.multi.0.0.0(371){classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}} --> 0,0,2:compilationUnit(1047)
+
+26    0,6,1:$normalInterfaceDeclaration.multi.0.0.0(465){interfaceModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}
+    height     0,6,1:normalInterfaceDeclaration(464){$normalInterfaceDeclaration.multi.0.0.0{interfaceModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}... --> 0,0,2:compilationUnit(1047)
+    0,6,1:$enumDeclaration.multi.0.0.0(552){classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}
+    height     0,6,1:enumDeclaration(551){$enumDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}... --> 0,0,2:compilationUnit(1047)
+    0,6,1:$annotationTypeDeclaration.multi.0.0.0(488){interfaceModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}
+    height     0,6,1:annotationTypeDeclaration(487){$annotationTypeDeclaration.multi.0.0.0{interfaceModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}... --> 0,0,2:compilationUnit(1047)
+    0,6,1:$normalClassDeclaration.multi.0.0.0(371){classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}
+    height     0,6,1:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}... --> 0,0,2:compilationUnit(1047)
+
+27    0,6,1:normalInterfaceDeclaration(464){$normalInterfaceDeclaration.multi.0.0.0{interfaceModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}...
+    0,6,1:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}...
+     width     6,11,C:class(198) ==> 0,6,1:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}... --> 0,0,2:compilationUnit(1047)
+    0,6,1:enumDeclaration(551){$enumDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}...
+    0,6,1:annotationTypeDeclaration(487){$annotationTypeDeclaration.multi.0.0.0{interfaceModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}...
+
+28    6,11,C:class(198)
+     graft     0,11,2:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'... --> 0,0,2:compilationUnit(1047)
+
+29    0,11,2:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'...
+     width     11,12,C:[ \t\r\n\u000C]+(1177) ==> 0,11,2:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'... --> 0,0,2:compilationUnit(1047)
+
+30    11,12,C:[ \t\r\n\u000C]+(1177)
+    height     11,12,C:WS(1176){' '} --> 0,11,2:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+31    11,12,C:WS(1176){' '}
+     graft     0,12,2:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}... --> 0,0,2:compilationUnit(1047)
+
+32    0,12,2:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}...
+     width     12,14,C:([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*(155) ==> 0,12,2:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}... --> 0,0,2:compilationUnit(1047)
+
+33    12,14,C:([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*(155)
+    height     12,14,C:Identifier(154){'An'} --> 0,12,2:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+34    12,14,C:Identifier(154){'An'}
+     width     14,15,C:[ \t\r\n\u000C]+(1177) ==> 12,14,C:Identifier(154){'An'} --> 0,12,2:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+35    14,15,C:[ \t\r\n\u000C]+(1177)
+    height     14,15,C:WS(1176){' '} --> 12,14,C:Identifier(154) --> 0,12,2:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+36    14,15,C:WS(1176){' '}
+     graft     12,15,C:Identifier(154){'An'WS{' '}} --> 0,12,2:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+37    12,15,C:Identifier(154){'An'WS{' '}}
+     graft     0,15,3:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}... --> 0,0,2:compilationUnit(1047)
+
+38    0,15,3:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}...
+     width     15,15,C:$empty.$normalClassDeclaration.multi.0.0.3$(381) ==> 0,15,3:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}... --> 0,0,2:compilationUnit(1047)
+
+39    15,15,C:$empty.$normalClassDeclaration.multi.0.0.3$(381)
+    height     15,15,C:$normalClassDeclaration.multi.0.0.3(380){$empty} --> 0,15,3:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+40    15,15,C:$normalClassDeclaration.multi.0.0.3(380){$empty}
+     graft     0,15,4:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}... --> 0,0,2:compilationUnit(1047)
+
+41    0,15,4:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}...
+     width     15,15,C:$empty.$normalClassDeclaration.multi.0.0.4$(413) ==> 0,15,4:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}... --> 0,0,2:compilationUnit(1047)
+
+42    15,15,C:$empty.$normalClassDeclaration.multi.0.0.4$(413)
+    height     15,15,C:$normalClassDeclaration.multi.0.0.4(412){$empty} --> 0,15,4:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+43    15,15,C:$normalClassDeclaration.multi.0.0.4(412){$empty}
+     graft     0,15,5:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}... --> 0,0,2:compilationUnit(1047)
+
+44    0,15,5:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}...
+     width     15,15,C:$empty.$normalClassDeclaration.multi.0.0.5$(416) ==> 0,15,5:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}... --> 0,0,2:compilationUnit(1047)
+
+45    15,15,C:$empty.$normalClassDeclaration.multi.0.0.5$(416)
+    height     15,15,C:$normalClassDeclaration.multi.0.0.5(415){$empty} --> 0,15,5:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+46    15,15,C:$normalClassDeclaration.multi.0.0.5(415){$empty}
+     graft     0,15,6:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}... --> 0,0,2:compilationUnit(1047)
+
+47    0,15,6:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}...
+     width     15,16,C:{(340) ==> 0,15,6:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}... --> 0,0,2:compilationUnit(1047)
+
+48    15,16,C:{(340)
+    height     15,16,1:classBody(423){'{'... --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+49    15,16,1:classBody(423){'{'...
+     width     16,18,C:[ \t\r\n\u000C]+(1177) ==> 15,16,1:classBody(423){'{'... --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+50    16,18,C:[ \t\r\n\u000C]+(1177)
+    height     16,18,C:WS(1176){'  '} --> 15,16,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+51    16,18,C:WS(1176){'  '}
+     graft     15,18,1:classBody(423){'{'WS{'  '}... --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+52    15,18,1:classBody(423){'{'WS{'  '}...
+     width     18,18,C:$empty.$classBody.multi.0.0.1$(425) ==> 15,18,1:classBody(423){'{'WS{'  '}... --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+     width     18,18,C:$empty.$enumDeclaration.multi.0.0.0$(553) ==> 15,18,1:classBody(423){'{'WS{'  '}... --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+     width     18,18,C:$empty.$annotationTypeDeclaration.multi.0.0.0$(489) ==> 15,18,1:classBody(423){'{'WS{'  '}... --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+     width     18,18,C:$empty.$fieldDeclaration.multi.0.0.0$(430) ==> 15,18,1:classBody(423){'{'WS{'  '}... --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+     width     18,18,C:$empty.$normalInterfaceDeclaration.multi.0.0.0$(466) ==> 15,18,1:classBody(423){'{'WS{'  '}... --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+     width     18,18,C:$empty.$methodDeclaration.multi.0.0.0$(436) ==> 15,18,1:classBody(423){'{'WS{'  '}... --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+     width     18,18,C:$empty.$normalClassDeclaration.multi.0.0.0$(372) ==> 15,18,1:classBody(423){'{'WS{'  '}... --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+     width     18,18,C:$empty.$constructorDeclaration.multi.0.0.0$(507) ==> 15,18,1:classBody(423){'{'WS{'  '}... --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+53    18,18,C:$empty.$fieldDeclaration.multi.0.0.0$(430)
+    height     18,18,C:$fieldDeclaration.multi.0.0.0(429){$empty} --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$empty.$normalInterfaceDeclaration.multi.0.0.0$(466)
+    height     18,18,C:$normalInterfaceDeclaration.multi.0.0.0(465){$empty} --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$empty.$constructorDeclaration.multi.0.0.0$(507)
+    height     18,18,C:$constructorDeclaration.multi.0.0.0(506){$empty} --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$empty.$classBody.multi.0.0.1$(425)
+    height     18,18,C:$classBody.multi.0.0.1(424){$empty} --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$empty.$methodDeclaration.multi.0.0.0$(436)
+    height     18,18,C:$methodDeclaration.multi.0.0.0(435){$empty} --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$empty.$annotationTypeDeclaration.multi.0.0.0$(489)
+    height     18,18,C:$annotationTypeDeclaration.multi.0.0.0(488){$empty} --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$empty.$normalClassDeclaration.multi.0.0.0$(372)
+    height     18,18,C:$normalClassDeclaration.multi.0.0.0(371){$empty} --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$empty.$enumDeclaration.multi.0.0.0$(553)
+    height     18,18,C:$enumDeclaration.multi.0.0.0(552){$empty} --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+54    18,18,C:$fieldDeclaration.multi.0.0.0(429){$empty}
+    height     18,18,1:fieldDeclaration(428){$fieldDeclaration.multi.0.0.0{$empty}... --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$normalInterfaceDeclaration.multi.0.0.0(465){$empty}
+    height     18,18,1:normalInterfaceDeclaration(464){$normalInterfaceDeclaration.multi.0.0.0{$empty}... --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$enumDeclaration.multi.0.0.0(552){$empty}
+    height     18,18,1:enumDeclaration(551){$enumDeclaration.multi.0.0.0{$empty}... --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$constructorDeclaration.multi.0.0.0(506){$empty}
+    height     18,18,1:constructorDeclaration(505){$constructorDeclaration.multi.0.0.0{$empty}... --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$annotationTypeDeclaration.multi.0.0.0(488){$empty}
+    height     18,18,1:annotationTypeDeclaration(487){$annotationTypeDeclaration.multi.0.0.0{$empty}... --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$classBody.multi.0.0.1(424){$empty}
+     graft     15,18,2:classBody(423){'{'WS{'  '}$classBody.multi.0.0.1{$empty}... --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$methodDeclaration.multi.0.0.0(435){$empty}
+    height     18,18,1:methodDeclaration(434){$methodDeclaration.multi.0.0.0{$empty}... --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$normalClassDeclaration.multi.0.0.0(371){$empty}
+    height     18,18,1:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{$empty}... --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+55    18,18,1:methodDeclaration(434){$methodDeclaration.multi.0.0.0{$empty}...
+    18,18,1:fieldDeclaration(428){$fieldDeclaration.multi.0.0.0{$empty}...
+    18,18,1:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{$empty}...
+    18,18,1:annotationTypeDeclaration(487){$annotationTypeDeclaration.multi.0.0.0{$empty}...
+    18,18,1:normalInterfaceDeclaration(464){$normalInterfaceDeclaration.multi.0.0.0{$empty}...
+    18,18,1:enumDeclaration(551){$enumDeclaration.multi.0.0.0{$empty}...
+    15,18,2:classBody(423){'{'WS{'  '}$classBody.multi.0.0.1{$empty}...
+     width     18,19,C:}(364) ==> 15,18,2:classBody(423){'{'WS{'  '}$classBody.multi.0.0.1{$empty}... --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,1:constructorDeclaration(505){$constructorDeclaration.multi.0.0.0{$empty}...
+     width     18,18,C:$empty.$constructorDeclarator.multi.0.0.0$(511) ==> 18,18,1:constructorDeclaration(505){$constructorDeclaration.multi.0.0.0{$empty}... --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+56    18,19,C:}(364)
+     graft     15,19,C:classBody(423){'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'} --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    18,18,C:$empty.$constructorDeclarator.multi.0.0.0$(511)
+    height     18,18,C:$constructorDeclarator.multi.0.0.0(510){$empty} --> 18,18,1:constructorDeclaration(505) --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+
+57    18,18,C:$constructorDeclarator.multi.0.0.0(510){$empty}
+    height     18,18,1:constructorDeclarator(509){$constructorDeclarator.multi.0.0.0{$empty}... --> 18,18,1:constructorDeclaration(505) --> 15,18,1:classBody(423) --> 0,15,6:normalClassDeclaration(370) --> 0,0,2:compilationUnit(1047)
+    15,19,C:classBody(423){'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}
+     graft     0,19,C:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}} --> 0,0,2:compilationUnit(1047)
+
+58    0,19,C:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}
+    height     0,19,C:classDeclaration(369){normalClassDeclaration{$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}} --> 0,0,2:compilationUnit(1047)
+    18,18,1:constructorDeclarator(509){$constructorDeclarator.multi.0.0.0{$empty}...
+
+59    0,19,C:classDeclaration(369){normalClassDeclaration{$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}}
+    height     0,19,C:typeDeclaration(1068){classDeclaration{normalClassDeclaration{$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}}} --> 0,0,2:compilationUnit(1047)
+
+60    0,19,C:typeDeclaration(1068){classDeclaration{normalClassDeclaration{$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}}}
+    height     0,19,1:$compilationUnit.multi.0.0.2(1066){typeDeclaration{classDeclaration{normalClassDeclaration{$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}}}} --> 0,0,2:compilationUnit(1047)
+
+61    0,19,1:$compilationUnit.multi.0.0.2(1066){typeDeclaration{classDeclaration{normalClassDeclaration{$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}}}}
+     graft     0,19,C:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}$compilationUnit.multi.0.0.1{$empty}$compilationUnit.multi.0.0.2{typeDeclaration{classDeclaration{normalClassDeclaration{$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}}}}}
+     width     19,19,C:$empty.$enumDeclaration.multi.0.0.0$(553) ==> 0,19,1:$compilationUnit.multi.0.0.2(1066){typeDeclaration{classDeclaration{normalClassDeclaration{$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}}}} --> 0,0,2:compilationUnit(1047)
+     width     19,19,C:$empty.$annotationTypeDeclaration.multi.0.0.0$(489) ==> 0,19,1:$compilationUnit.multi.0.0.2(1066){typeDeclaration{classDeclaration{normalClassDeclaration{$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}}}} --> 0,0,2:compilationUnit(1047)
+     width     19,19,C:$empty.$normalInterfaceDeclaration.multi.0.0.0$(466) ==> 0,19,1:$compilationUnit.multi.0.0.2(1066){typeDeclaration{classDeclaration{normalClassDeclaration{$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}}}} --> 0,0,2:compilationUnit(1047)
+     width     19,19,C:$empty.$normalClassDeclaration.multi.0.0.0$(372) ==> 0,19,1:$compilationUnit.multi.0.0.2(1066){typeDeclaration{classDeclaration{normalClassDeclaration{$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}}}} --> 0,0,2:compilationUnit(1047)
+
+62    19,19,C:$empty.$normalInterfaceDeclaration.multi.0.0.0$(466)
+    height     19,19,C:$normalInterfaceDeclaration.multi.0.0.0(465){$empty} --> 0,19,1:$compilationUnit.multi.0.0.2(1066) --> 0,0,2:compilationUnit(1047)
+    19,19,C:$empty.$annotationTypeDeclaration.multi.0.0.0$(489)
+    height     19,19,C:$annotationTypeDeclaration.multi.0.0.0(488){$empty} --> 0,19,1:$compilationUnit.multi.0.0.2(1066) --> 0,0,2:compilationUnit(1047)
+    19,19,C:$empty.$normalClassDeclaration.multi.0.0.0$(372)
+    height     19,19,C:$normalClassDeclaration.multi.0.0.0(371){$empty} --> 0,19,1:$compilationUnit.multi.0.0.2(1066) --> 0,0,2:compilationUnit(1047)
+    0,19,C:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}$compilationUnit.multi.0.0.1{$empty}$compilationUnit.multi.0.0.2{typeDeclaration{classDeclaration{normalClassDeclaration{$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}}}}}
+    19,19,C:$empty.$enumDeclaration.multi.0.0.0$(553)
+    height     19,19,C:$enumDeclaration.multi.0.0.0(552){$empty} --> 0,19,1:$compilationUnit.multi.0.0.2(1066) --> 0,0,2:compilationUnit(1047)
+
+63    19,19,C:$normalInterfaceDeclaration.multi.0.0.0(465){$empty}
+    height     19,19,1:normalInterfaceDeclaration(464){$normalInterfaceDeclaration.multi.0.0.0{$empty}... --> 0,19,1:$compilationUnit.multi.0.0.2(1066) --> 0,0,2:compilationUnit(1047)
+    19,19,C:$enumDeclaration.multi.0.0.0(552){$empty}
+    height     19,19,1:enumDeclaration(551){$enumDeclaration.multi.0.0.0{$empty}... --> 0,19,1:$compilationUnit.multi.0.0.2(1066) --> 0,0,2:compilationUnit(1047)
+    19,19,C:$annotationTypeDeclaration.multi.0.0.0(488){$empty}
+    height     19,19,1:annotationTypeDeclaration(487){$annotationTypeDeclaration.multi.0.0.0{$empty}... --> 0,19,1:$compilationUnit.multi.0.0.2(1066) --> 0,0,2:compilationUnit(1047)
+    19,19,C:$normalClassDeclaration.multi.0.0.0(371){$empty}
+    height     19,19,1:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{$empty}... --> 0,19,1:$compilationUnit.multi.0.0.2(1066) --> 0,0,2:compilationUnit(1047)
+
+64    19,19,1:normalClassDeclaration(370){$normalClassDeclaration.multi.0.0.0{$empty}...
+    19,19,1:annotationTypeDeclaration(487){$annotationTypeDeclaration.multi.0.0.0{$empty}...
+    19,19,1:normalInterfaceDeclaration(464){$normalInterfaceDeclaration.multi.0.0.0{$empty}...
+    19,19,1:enumDeclaration(551){$enumDeclaration.multi.0.0.0{$empty}...
+
+0,19:compilationUnit(1047){$compilationUnit.multi.0.0.0{$empty}$compilationUnit.multi.0.0.1{$empty}$compilationUnit.multi.0.0.2{typeDeclaration{classDeclaration{normalClassDeclaration{$normalClassDeclaration.multi.0.0.0{classModifier{annotation{normalAnnotation{'@'typeName{Identifier{'An'}}'('$normalAnnotation.multi.0.0.3{$empty}')'WS{' '}}}}}'class'WS{' '}Identifier{'An'WS{' '}}$normalClassDeclaration.multi.0.0.3{$empty}$normalClassDeclaration.multi.0.0.4{$empty}$normalClassDeclaration.multi.0.0.5{$empty}classBody{'{'WS{'  '}$classBody.multi.0.0.1{$empty}'}'}}}}}}

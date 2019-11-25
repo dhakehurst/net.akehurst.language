@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>net.akehurst.build</groupId>
+		<artifactId>net.akehurst.build.maven.java</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+
+	<groupId>net.akehurst.language</groupId>
+	<artifactId>net.akehurst.language.core</artifactId>
+	<version>1.0.0</version>
+
+	<packaging>jar</packaging>
+
+	<inceptionYear>2015</inceptionYear>
+	<organization>
+		<name>Dr. David H. Akehurst</name>
+		<url>http://dr.david.h.akehurst.net</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>The Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Dr. David H. Akehurst</name>
+			<email>dr.david.h@akehurst.net</email>
+			<organization>akehurst.net</organization>
+			<organizationUrl>http://dr.david.h.akehurst.net</organizationUrl>
+		</developer>
+	</developers>
+
+	<prerequisites>
+		<maven>3.0.4</maven>
+	</prerequisites>
+
+	<scm>
+		<connection>scm:git:git@github.com:dhakehurst/net.akehurst.language.git</connection>
+		<developerConnection>scm:git:git@github.com:dhakehurst/net.akehurst.language.git</developerConnection>
+		<url>git@github.com:dhakehurst/net.akehurst.language.git</url>
+	</scm>
+
+	<build>
+
+		<plugins>
+
+		</plugins>
+
+	</build>
+
+</project>

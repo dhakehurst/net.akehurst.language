@@ -1,0 +1,20 @@
+
+dependencies {
+
+	implementation project(':net.akehurst.language.ogl')
+	implementation "net.akehurst.transform:binary:${version_transform}"
+
+	testImplementation "junit:junit:${version_junit}"
+	
+}
+
+sourceSets {
+	main {
+		java {
+			resources {
+				srcDir "$projectDir/src/main/resources"
+				srcDir "$projectDir/src/main/ogl"
+			}
+		}
+	}
+}

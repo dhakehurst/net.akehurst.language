@@ -1,0 +1,34 @@
+namespace net::akehurst::language::objectGrammar::semanticStructure
+
+
+datatype Grammar
+
+datatype Rule
+	rhs : RuleItem [*]
+
+datatype SkipRule extends Rule
+
+datatype RuleItem
+
+datatype Choice extends RuleItem
+
+datatype PriorityChoice extends RuleItem
+
+datatype Concatenation extends RuleItem
+	item : TangibleItem
+
+datatype Multi extends RuleItem
+
+datatype SeparatedList extends RuleItem
+
+datatype TangibleItem extends RuleItem
+
+datatype NonTerminal extends TangibleItem
+
+datatype Terminal extends TangibleItem
+
+datatype TerminalPattern extends Terminal
+
+datatype TerminalLiteral extends Terminal
+
+datatype TerminalEmpty extends TerminalLiteral
