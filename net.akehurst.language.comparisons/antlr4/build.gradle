@@ -1,0 +1,11 @@
+apply plugin: 'antlr'
+
+dependencies {
+    antlr 'org.antlr:antlr4:4.7'
+
+    testImplementation project(":common")
+
+    testImplementation "junit:junit:4.12"
+
+    testImplementation 'org.antlr:antlr4-runtime:4.7'
+}

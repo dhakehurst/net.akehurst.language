@@ -1,0 +1,194 @@
+// based on [https://www.scientificpsychic.com/grammar/enggram1.html]
+
+namespace net.akehurst.language.natural
+
+grammar English {
+
+    sentence
+        = simple-sentence
+        | compound-sentence
+        ;
+
+    simple-sentence
+        = declarative-sentence
+        | interrogative-sentence
+        | imperative-sentence
+        | conditional-sentence
+        ;
+
+    compound-sentence
+        = simple-sentence CONJUNCTION simple-sentence
+        | 'Either' declarative-sentence 'or' declarative-sentence
+        | 'Either' imperative-sentence 'or' imperative-sentence
+        ;
+
+    interrogative-sentence
+        = declarative-sentence '?'
+        | 'Who' predicate '?'
+        | ('What' | 'Which') (adverb* adjective)? noun predicate '?'
+        | ('What' | 'When' | 'Where' | 'Who' | 'To whom' | 'Why')?  ('do' |'does' |'don\'t' |'doesn\'t' |'did' |'didn\'t') subject predicate '?'
+        | 'Which'  noun-phrase? ('do' |'does' |'don\'t' |'doesn\'t' |'did' |'didn\'t') subject predicate '?'
+        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('will' |'won\'t') subject predicate1 '?'
+        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('has' |'have' |'hasn\'t' |'haven\'t') subject predicate2 '?'
+        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('are' |'is' |'was' |'were' |  'aren\'t' |'isn\'t' |'wasn\'t' |'weren\'t') subject (adverb* adjective | prepositional-phrase* | predicate3)? '?'
+        ;
+
+    imperative-sentence =  imperative-predicate ;
+    imperative-predicate = imperative-verb complement ;
+    imperative-verb = VERB_INFINITIVE ;
+
+    conditional-sentence
+        = dependent-clause ',' independent-clause
+        | independent-clause dependent-clause
+        ;
+    dependent-clause = ('if' | 'when') declarative-sentence ;
+    independent-clause
+        = declarative-sentence
+        | interrogative-sentence
+        ;
+
+    declarative-sentence = subject predicate ;
+
+    subject = simple-subject compound-subject ;
+
+    simple-subject = noun-phrase | NOMINATIVE_PERSONAL_PRONOUN ;
+
+    noun-phrase
+        = 'the' SPECIFIC_PROPER_NOUN
+        | PROPER_NOUN
+        | NON_PERSONAL_PRONOUN
+        | ARTICLE (ADVERB* compound-adjective)? compound-noun
+        | (ADVERB* compound-adjective)? noun-plural
+        | proper-noun-possessive (ADVERB* compound-adjective)? compound-noun
+        | PERSONAL_PRONOUN_POSSESIVE_ADJECTIVE (ADVERB* compound-adjective)? compound-noun
+        | ARTICLE common-noun-possessive  (ADVERB* compound-adjective)? compound-noun
+        ;
+
+    compound-noun = NOUN prepositional-phrase* ;
+    prepositional-phrase = PREPOSITION object ;
+
+    compound-adjective = adjective ('and' | 'or') adjective ;
+
+    compound-subject
+        = simple-subject ('and' | 'or') simple-subject
+        | 'Either' simple-subject 'or' simple-subject
+        | 'Neither' simple-subject 'nor' simple-subject
+        ;
+
+    predicate = (verb | verb-phrase) complement? ;
+
+    verb = V1s | V2s | V3s | V1p | V2p | V3p | Vpast | LINKING_VERB ;
+
+    complement
+        =  object? object     // indirect-object? object
+        |  adverb* adjective
+        |  prepositional-phrase*
+        |  'to' VERB_INFINITIVE object?
+        |  VERB_PRESENT_PARTICIPLE
+        ;
+
+    object =
+       simple-object | compound-object ;
+
+
+    simple-object
+        = noun-phrase
+        | OBJECTIVE_PERSONAL_PRONOUN
+        ;
+
+    compound-object = simple-object ('and' | 'or') simple-object ;
+
+    verbal-phrase
+        = 'to' VERB_INFINITIVE complement?
+        | VERB_PRESENT_PARTICIPLE complement?
+        | VERB_PAST_PARTICIPLE complement?
+        ;
+
+    predicate1 = verb1 complement? ;
+    verb1
+        = 'have' VERB_PAST_PARTICIPLE
+        | 'have' 'been' VERB_PRESENT_PARTICIPLE
+        | 'be' VERB_PRESENT_PARTICIPLE
+        | VERB_INFINITIVE
+        ;
+
+    predicate2 = verb2 complement? ;
+    verb2 = VERB_PAST_PARTICIPLE ;
+
+    predicate3 = verb3 complement? ;
+    verb3 = VERB_PRESENT_PARTICIPLE | VERB_PAST_PARTICIPLE ;
+
+    verb-phrase
+        = ('had' | 'have' | 'has') 'not'? VERB_PAST_PARTICIPLE
+        | ('had' | 'have' | 'has') 'not'? 'been' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
+        | AUX_VERB 'not'? 'have' VERB_PAST_PARTICIPLE
+        | AUX_VERB 'not'? 'have' 'been' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
+        | AUX_VERB 'not'? 'be' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
+        | AUX_VERB 'not'? VERB_INFINITIVE
+        | 'ought' ('to' | 'not') VERB_INFINITIVE
+        | 'ought' ('to' | 'not') 'be' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
+        | 'ought' ('to' | 'not') 'have' VERB_PAST_PARTICIPLE
+        | 'ought' ('to' | 'not') 'have' 'been' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
+        | ('do' |'does' |'did') 'not'? VERB_INFINITIVE?
+        | ('am' |'are' |'is' |'was' |'were') 'not'? (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
+        | ('am' |'are' |'is' |'was' |'were') 'not'? 'being' VERB_PAST_PARTICIPLE?
+        | ('am' |'are' |'is' |'was' |'were') 'not'? 'going' 'to' VERB_INFINITIVE?
+        ;
+
+    adjective
+        = ADJECTIVE_POSITIVE
+        | ADJECTIVE_COMPARATIVE
+        | ADJECTIVE_SUPERLATIVE
+        ;
+
+
+    //TODO: these should come from a dictionary not be listed here
+    PROPER_NOUN = 'John' | 'America' | 'Dr. Allen' | 'State Street' ;
+    SPECIFIC_PROPER_NOUN = 'Atlantic Ocean' | 'Sahara' ;
+
+    //TODO: these should come from a dictionary not be listed here
+    ADJECTIVE_POSITIVE = 'new' | 'yellow' | 'pretty' | 'useful' ;
+    ADJECTIVE_COMPARATIVE = 'newer' | 'yellower' | 'prettier' ;
+    ADJECTIVE_SUPERLATIVE = 'newest' | 'yellowest' | 'prettiest' ;
+    ARTICLE = 'a' | 'an' | 'the' ; //TODO: definite or indefinite
+    ADVERB = 'very' | 'extremely' | 'carefully' | 'gracefully' ;
+    CONJUNCTION = 'and' | 'or' | 'but' ;
+    SUBORDINATE_CONJUNCTION = 'where' | 'when' | 'while' | 'because' | 'if' | 'unless' ; //TODO: where is this used?
+    INTERJECTION = 'Oh!' | 'Aha!' ;
+    NOUN = 'mouse' | 'fire' | 'Michael' ;
+    PREPOSITION =  'in' | 'about' | 'toward' | 'from' | 'over' | 'under' | 'at' | 'below' ;
+
+    LINKING_VERB = 'be' | 'am' | 'are' | 'is' | 'was' | 'were' | 'look' | 'looks' | 'looked' | 'become' | 'became' | 'become' ;
+
+    //TODO: these should come from a dictionary not be listed here
+    VERB_INFINITIVE         = 'be'    | 'start'    ;
+    VERB_PRESENT_PARTICIPLE = 'being' | 'starting' ;
+    VERB_PAST_PARTICIPLE    = 'been'  | 'started'  ;
+    VERB_1s_PRESENT         = 'am'    | 'start'    ;
+    VERB_2s_PRESENT         = 'are'   | 'start'    ;
+    VERB_3s_PRESENT         = 'is'    | 'starts'   ;
+    VERB_1p_PRESENT         = 'are'   | 'start'    ;
+    VERB_2p_PRESENT         = 'are'   | 'start'    ;
+    VERB_3p_PRESENT         = 'are'   | 'start'    ;
+    VERB_1s_PAST            = 'was'   | 'started'  ;
+    VERB_2s_PAST            = 'were'  | 'started'  ;
+    VERB_3s_PAST            = 'was'   | 'started'  ;
+    VERB_1p_PAST            = 'were'  | 'started'  ;
+    VERB_2p_PAST            = 'were'  | 'started'  ;
+    VERB_3p_PAST            = 'were'  | 'started'  ;
+
+
+    NOMINATIVE_PERSONAL_PRONOUN = 'I' | 'you' | 'he' | 'she' | 'it' | 'we' | 'they' ;
+    NON_PERSONAL_PRONOUN = 'someone' | 'anyone' | 'this' ;
+    DEMONSTRATIVE_PRONOUN = 'this' | 'that' | 'such' ;
+    INTERROGATIVE_PRONOUN = 'who' | 'which' ;
+    RELATIVE_PRONOUN = 'who' | 'which' ;
+    INDEFINITE_PRONOUN = 'each' | 'either' | 'some' | 'any' | 'many' | 'few' | 'all' ;
+    OBJECTIVE_PERSONAL_PRONOUN = 'me' |'you' | 'him' | 'her' | 'us' | 'you' | 'them' ;
+    PERSONAL_PRONOUN_POSSESIVE_ADJECTIVE = 'my' | 'your' | 'his' | 'her' | 'our' | 'their' ;
+    PERSONAL_PRONOUN_POSSESIVE = 'mine' | 'yours' | 'his' | 'hers' | 'ours' | 'theirs' ;
+
+    AUX_VERB = 'must' | 'may' | 'might' | 'will' | 'would' | 'shall' | 'should' | 'can' | 'could' ;
+
+
+}

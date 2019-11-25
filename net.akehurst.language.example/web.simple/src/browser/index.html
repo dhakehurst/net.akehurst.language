@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+   <body>
+
+      <h1>OGL Parser</h1>
+      <section>
+         <h2>Grammar</h2>
+         <textarea id='grammar'>
+namespace test
+grammar Test {
+   skip WS = "\s+" ;
+   S = hello world ;
+   hello = 'hello' ;
+   world = 'world' ;
+}
+         </textarea>
+      </section>
+
+      <section>
+         <h2>Sentence</h2>
+         <textarea id='sentence'>
+hello world
+         </textarea>
+      </section>
+
+      <section>
+         <h2>Goal</h2>
+         <textarea id='goal'>S</textarea>
+      </section>
+
+      <button onclick="doScan()" >scan</button>
+      <button onclick="doParse()" >parse</button>
+
+      <section>
+         <h2>Output</h2>
+         <textarea id='output'>
+         </textarea>
+      </section>
+
+
+      <script type="text/javascript" src="./modules/kotlin.js"></script>
+      <script type="text/javascript" src="./modules/processor.js"></script>
+      <script type="text/javascript" src="./modules/index.js"></script>
+
+   </body>
+
+</html>

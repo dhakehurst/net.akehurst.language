@@ -1,0 +1,17 @@
+apply plugin: 'java-library'
+
+configurations {
+    kotlinJs
+}
+
+dependencies {
+
+//    kotlinJs 'org.jetbrains.kotlin:kotlin-stdlib-js:1.3.0'
+//    kotlinJs "net.akehurst.language:processor:2.0.0-SNAPSHOT"
+    
+}
+
+task unpack_webjars(type:Copy) {
+    dependsOn configurations.kotlinJs
+    from(configurations.kotlinJs.resolvedConfiguration.resolvedArtifacts.collect { zipTree(it) })
+}
