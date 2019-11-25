@@ -6,8 +6,6 @@ plugins {
 dependencies {
 }
 
-
-
 val tsdDir ="${buildDir}/tmp/jsJar/ts"
 
 kotlin {
@@ -19,16 +17,12 @@ kotlin {
 }
 
 kt2ts {
+    outputDirectory.set(file(tsdDir))
     localJvmName.set("jvm8")
     modulesConfigurationName.set("jvm8RuntimeClasspath")
-    packageJsonDir.set(file("${tsdDir}"))
-    declarationsFile.set(file("${tsdDir}/${project.group}-${project.name}.d.ts"))
     classPatterns.set(listOf(
             "net.akehurst.language.api.sppt.*",
             "net.akehurst.language.api.processor.*"
-    ))
-    dependencies.set(listOf(
-            "kotlin-stdlib-js"
     ))
 }
 
