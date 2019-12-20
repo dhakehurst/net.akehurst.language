@@ -35,5 +35,13 @@ class test_SimpleExample {
     fun process() {
 
         val result: SimpleExampleUnit = SimpleExample.processor.process("unit", text1)
+        println(result)
+    }
+
+    @Test
+    fun format() {
+        val result: SimpleExampleUnit = SimpleExample.processor.process("unit", text1)
+        val formatted = SimpleExample.processor.format(result)
+        print(formatted)
     }
 }

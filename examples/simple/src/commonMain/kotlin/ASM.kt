@@ -1,13 +1,14 @@
 package net.akehurst.language.examples.simple
 
 data class SimpleExampleUnit(
-        val name: String
-) {
-}
+    val definition : List<Definition>
+)
+
+abstract class Definition
 
 data class ClassDefinition(
         val name: String
-) {
+) : Definition() {
     val properties = mutableListOf<PropertyDefinition>()
     val methods = mutableListOf<MethodDefinition>()
     val members get() = properties + methods
