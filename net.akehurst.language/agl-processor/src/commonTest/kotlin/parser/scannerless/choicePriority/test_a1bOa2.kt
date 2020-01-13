@@ -25,14 +25,14 @@ import kotlin.test.assertFailsWith
 
 class test_a1bOa2 : test_ScannerlessParserAbstract() {
 
-    // S = S1 | a
+    // S = S1 > a
     // S1 = a b?
     private fun ambiguous(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r_a = b.literal("a")
         val r_bOpt = b.rule("bOpt").multi(0,1,b.literal("b"))
         val r_S1 = b.rule("S1").concatenation(r_a, r_bOpt)
-        b.rule("S").choiceEqual(r_S1, r_a)
+        b.rule("S").choicePriority(r_S1, r_a)
         return b
     }
 

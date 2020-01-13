@@ -16,10 +16,8 @@
 
 package net.akehurst.language.parser.scannerless.choicePriority
 
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -50,14 +48,24 @@ class test_ifThenElse_Priority : test_ScannerlessParserAbstract() {
         return b
     }
 
+    private val SS = runtimeRuleSet {
+        skip("WS") { pattern("\\s+") }
+        concatenation("S") { ref("expr") }
+        choiceEqual("expr") { ref("var"); ref("conditional") }
+        choicePriority("conditional") { ref("ifThen"); ref("ifThenElse") }
+        concatenation("ifThen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
+        concatenation("ifThenElse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
+        pattern("var", "[a-zA-Z]+")
+    }
+
     @Test
     fun empty_fails() {
-        val rrb = this.S()
+        val rrb = this.SS
         val goal = "S"
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+                super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)

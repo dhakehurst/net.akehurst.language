@@ -32,7 +32,7 @@ class test_AglGrammar_item {
     private val converter: Converter = Converter(AglGrammar())
     private val parser: Parser = ScannerlessParser(this.converter.transform())
     private val completionProvider: CompletionProvider = CompletionProvider()
-    private val spptParser = SPPTParser(this.converter.builder)
+    private val spptParser = SPPTParser(this.converter.builder.ruleSet())
 
     private fun parse(goalRule: String, inputText: CharSequence): SharedPackedParseTree {
         return this.parser.parse(goalRule, inputText)

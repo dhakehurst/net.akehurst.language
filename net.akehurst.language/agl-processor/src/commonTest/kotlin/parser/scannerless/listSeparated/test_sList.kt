@@ -66,7 +66,7 @@ class test_sList {
 
         assertNotNull(actual)
 
-        val p = SPPTParser(rrb)
+        val p = SPPTParser(rrb.ruleSet())
         val expected = p.addTree("r {'a'}")
 
         assertEquals(expected.toStringAll, actual.toStringAll)

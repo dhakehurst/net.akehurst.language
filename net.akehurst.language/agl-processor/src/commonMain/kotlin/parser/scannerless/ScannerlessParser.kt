@@ -133,7 +133,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
         // must reject the next expected
 
-        val expected = HashSet<RuntimeRule>()
+        val expected = mutableSetOf<RuntimeRule>()
         for (ep in matches) {
             var done = false
             // while (!done) {

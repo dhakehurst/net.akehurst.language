@@ -16,10 +16,12 @@
 
 package net.akehurst.language.parser.sppt
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 
-class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
+class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
+    constructor(rrsb: RuntimeRuleSetBuilder) : this(rrsb.ruleSet())
 
     private val WS = Regex("(\\s)+")
     private val EMPTY = Regex("§empty")
@@ -29,18 +31,19 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
     private val CHILDREN_START = Regex("[{]")
     private val CHILDREN_END = Regex("[}]")
 
-    private val node_cache: MutableMap<Pair<SPPTNodeIdentity,Int>, SPPTNode> = mutableMapOf()
+    private val node_cache: MutableMap<Pair<SPPTNodeIdentity, Int>, SPPTNode> = mutableMapOf()
 
     var root: SPPTNode? = null
 
-    val tree: SharedPackedParseTree get() {
-        val root = this.root ?: throw SPPTException("At least one tree must be added",null)
-        return SharedPackedParseTreeDefault(root, -1,-1)
-    }
+    val tree: SharedPackedParseTree
+        get() {
+            val root = this.root ?: throw SPPTException("At least one tree must be added", null)
+            return SharedPackedParseTreeDefault(root, -1, -1)
+        }
 
-    private data class NodeStart (
-            val name:String,
-            val position:Int
+    private data class NodeStart(
+            val name: String,
+            val position: Int
     ) {
 
     }
@@ -88,20 +91,20 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
     }
 
     private fun cacheNode(node: SPPTNode) {
-        this.node_cache[Pair(node.identity,node.matchedTextLength)] = node
+        this.node_cache[Pair(node.identity, node.matchedTextLength)] = node
     }
 
-    private fun findNode(id: SPPTNodeIdentity, length:Int): SPPTNode? {
-        return this.node_cache[Pair(id,length)]
+    private fun findNode(id: SPPTNodeIdentity, length: Int): SPPTNode? {
+        return this.node_cache[Pair(id, length)]
     }
 
-    private fun findLeaf(id: SPPTNodeIdentity, length:Int): SPPTLeaf? {
-        val n = this.findNode(id,length)
+    private fun findLeaf(id: SPPTNodeIdentity, length: Int): SPPTLeaf? {
+        val n = this.findNode(id, length)
         return n?.asLeaf
     }
 
-    private fun findBranch(id: SPPTNodeIdentity, length:Int): SPPTBranch? {
-        val n = this.findNode(id,length)
+    private fun findBranch(id: SPPTNodeIdentity, length: Int): SPPTBranch? {
+        val n = this.findNode(id, length)
         return n?.asBranch
     }
 
@@ -166,10 +169,10 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         this.root = childrenStack.pop()[0]
     }
 
-    fun emptyLeaf(ruleNameThatIsEmpty: String, pos:Int): SPPTLeaf {
-        val ruleThatIsEmpty = this.runtimeRuleSetBuilder.ruleSet().findRuntimeRule(ruleNameThatIsEmpty)
+    fun emptyLeaf(ruleNameThatIsEmpty: String, pos: Int): SPPTLeaf {
+        val ruleThatIsEmpty = this.runtimeRuleSet.findRuntimeRule(ruleNameThatIsEmpty)
         val terminalRule = ruleThatIsEmpty.emptyRuleItem
-        val n = SPPTLeafDefault(terminalRule, pos, true, "",0)
+        val n = SPPTLeafDefault(terminalRule, pos, true, "", 0)
 
         var existing: SPPTLeaf? = this.findLeaf(n.identity, n.matchedTextLength)
         if (null == existing) {
@@ -179,13 +182,13 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         return existing
     }
 
-    fun leaf(text: String, pos:Int): SPPTLeaf {
+    fun leaf(text: String, pos: Int): SPPTLeaf {
         return this.leaf(text, text, pos)
     }
 
-    fun leaf(pattern: String, text: String, pos:Int): SPPTLeaf {
-        val terminalRule = this.runtimeRuleSetBuilder.ruleSet().findTerminalRule(pattern)
-        val n = SPPTLeafDefault(terminalRule, pos, false, text,0)
+    fun leaf(pattern: String, text: String, pos: Int): SPPTLeaf {
+        val terminalRule = this.runtimeRuleSet.findTerminalRule(pattern)
+        val n = SPPTLeafDefault(terminalRule, pos, false, text, 0)
 
         var existing: SPPTLeaf? = this.findLeaf(n.identity, n.matchedTextLength)
         if (null == existing) {
@@ -196,10 +199,10 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         return existing
     }
 
-    fun branch(ruleName: String, children: List<SPPTNode>, nextInputPosition:Int): SPPTBranch {
-        val rr = this.runtimeRuleSetBuilder.ruleSet().findRuntimeRule(ruleName)
+    fun branch(ruleName: String, children: List<SPPTNode>, nextInputPosition: Int): SPPTBranch {
+        val rr = this.runtimeRuleSet.findRuntimeRule(ruleName)
         val startPosition = children.first().startPosition
-        val n =  SPPTBranchDefault(rr, startPosition, nextInputPosition, 0)
+        val n = SPPTBranchDefault(rr, startPosition, nextInputPosition, 0)
         n.childrenAlternatives.add(children)
 
         var existing: SPPTBranch? = this.findBranch(n.identity, n.matchedTextLength)
@@ -213,7 +216,7 @@ class SPPTParser(val runtimeRuleSetBuilder: RuntimeRuleSetBuilder) {
         return existing
     }
 
-    fun addTree(treeString: String) : SharedPackedParseTree {
+    fun addTree(treeString: String): SharedPackedParseTree {
         this.parse(treeString)
         return this.tree
     }

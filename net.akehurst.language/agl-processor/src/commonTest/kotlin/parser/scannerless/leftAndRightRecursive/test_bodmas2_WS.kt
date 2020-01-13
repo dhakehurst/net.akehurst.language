@@ -20,6 +20,7 @@ import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -53,6 +54,16 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         b.rule("S").concatenation(r_expr)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b
+    }
+
+    private val S = runtimeRuleSet {
+        concatenation("S") { ref("expr") }
+        choiceEqual("expr") { ref("root"); ref("group"); ref("div"); ref("mul"); ref("add"); ref("sub") }
+        choicePriority("root") { ref("var"); ref("bool") }
+        pattern("var", "[a-zA-Z]+")
+        choiceEqual("bool") { literal("true"); literal("false") }
+        concatenation("group") { literal("("); ref("expr"); literal(")") }
+
     }
 
     @Test

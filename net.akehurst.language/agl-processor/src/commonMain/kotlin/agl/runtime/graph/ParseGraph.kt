@@ -59,6 +59,7 @@ internal class ParseGraph(
                 val location = this.input.calcLineAndColumn(llg.nextInputPosition)
                 throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location)
             } else {
+                // need to re-write top of the tree so that any initial skip nodes come under the userGoal node
                 val alternatives = mutableListOf<List<SPPTNode>>()
                 val firstSkipNodes = mutableListOf<SPPTNode>()
                 val userGoalNodes = mutableListOf<SPPTNode>()
@@ -71,8 +72,8 @@ internal class ParseGraph(
                     }
                 }
                 val userGoalNode = userGoalNodes.first()
-
-                val r = SPPTBranchDefault(this.userGoalRule, userGoalNode.startPosition, userGoalNode.nextInputPosition, userGoalNode.priority)
+                val startPosition = if(firstSkipNodes.isEmpty()) { userGoalNode.startPosition } else { firstSkipNodes.first().startPosition }
+                val r = SPPTBranchDefault(this.userGoalRule, startPosition, userGoalNode.nextInputPosition, userGoalNode.priority)
                 if (userGoalNode is SPPTBranch) {
                     for (alt in userGoalNode.childrenAlternatives) {
                         r.childrenAlternatives.add(firstSkipNodes + alt)

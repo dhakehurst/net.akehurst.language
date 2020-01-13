@@ -58,13 +58,13 @@ grammar English {
         | PROPER_NOUN
         | NON_PERSONAL_PRONOUN
         | ARTICLE (ADVERB* compound-adjective)? compound-noun
-        | (ADVERB* compound-adjective)? noun-plural
-        | proper-noun-possessive (ADVERB* compound-adjective)? compound-noun
-        | PERSONAL_PRONOUN_POSSESIVE_ADJECTIVE (ADVERB* compound-adjective)? compound-noun
-        | ARTICLE common-noun-possessive  (ADVERB* compound-adjective)? compound-noun
+        | (ADVERB* compound-adjective)? COMMON_NOUN_PLURAL
+        | PROPER_NOUN_POSSESSIVE (ADVERB* compound-adjective)? compound-noun
+        | PERSONAL_PRONOUN_POSSESSIVE_ADJECTIVE (ADVERB* compound-adjective)? compound-noun
+        | ARTICLE COMMON_NOUN_POSSESSIVE  (ADVERB* compound-adjective)? compound-noun
         ;
 
-    compound-noun = NOUN prepositional-phrase* ;
+    compound-noun = noun prepositional-phrase* ;
     prepositional-phrase = PREPOSITION object ;
 
     compound-adjective = adjective ('and' | 'or') adjective ;
@@ -141,10 +141,23 @@ grammar English {
         | ADJECTIVE_SUPERLATIVE
         ;
 
+    //TODO: need to enable some kind of function to get these words!
+    noun = noun-singular | noun-plural | noun-possessive ;
+    noun-singular = COMMON_NOUN | PROPER_NOUN ;
+    noun-plural = COMMON_NOUN_PLURAL | PROPER_NOUN_PLURAL ;
+    noun-possessive = COMMON_NOUN_POSSESSIVE | PROPER_NOUN_POSSESSIVE ;
+
 
     //TODO: these should come from a dictionary not be listed here
     PROPER_NOUN = 'John' | 'America' | 'Dr. Allen' | 'State Street' ;
+    PROPER_NOUN_PLURAL = 'Johns' | 'Americas' ;
+    PROPER_NOUN_POSSESSIVE = 'John\'s' | 'America\'s' | 'Dr. Allen\'s' ;
     SPECIFIC_PROPER_NOUN = 'Atlantic Ocean' | 'Sahara' ;
+
+    COMMON_NOUN = 'mouse' | 'cat' | 'book' | 'tree' ;
+    COMMON_NOUN_PLURAL = 'cats' | 'books' | 'trees' ;
+    COMMON_NOUN_POSSESSIVE = 'cat\'s' | 'book\'s' | 'tree\'s' ;
+
 
     //TODO: these should come from a dictionary not be listed here
     ADJECTIVE_POSITIVE = 'new' | 'yellow' | 'pretty' | 'useful' ;
@@ -155,7 +168,6 @@ grammar English {
     CONJUNCTION = 'and' | 'or' | 'but' ;
     SUBORDINATE_CONJUNCTION = 'where' | 'when' | 'while' | 'because' | 'if' | 'unless' ; //TODO: where is this used?
     INTERJECTION = 'Oh!' | 'Aha!' ;
-    NOUN = 'mouse' | 'fire' | 'Michael' ;
     PREPOSITION =  'in' | 'about' | 'toward' | 'from' | 'over' | 'under' | 'at' | 'below' ;
 
     LINKING_VERB = 'be' | 'am' | 'are' | 'is' | 'was' | 'were' | 'look' | 'looks' | 'looked' | 'become' | 'became' | 'become' ;
@@ -185,8 +197,8 @@ grammar English {
     RELATIVE_PRONOUN = 'who' | 'which' ;
     INDEFINITE_PRONOUN = 'each' | 'either' | 'some' | 'any' | 'many' | 'few' | 'all' ;
     OBJECTIVE_PERSONAL_PRONOUN = 'me' |'you' | 'him' | 'her' | 'us' | 'you' | 'them' ;
-    PERSONAL_PRONOUN_POSSESIVE_ADJECTIVE = 'my' | 'your' | 'his' | 'her' | 'our' | 'their' ;
-    PERSONAL_PRONOUN_POSSESIVE = 'mine' | 'yours' | 'his' | 'hers' | 'ours' | 'theirs' ;
+    PERSONAL_PRONOUN_POSSESSIVE_ADJECTIVE = 'my' | 'your' | 'his' | 'her' | 'our' | 'their' ;
+    PERSONAL_PRONOUN_POSSESSIVE = 'mine' | 'yours' | 'his' | 'hers' | 'ours' | 'theirs' ;
 
     AUX_VERB = 'must' | 'may' | 'might' | 'will' | 'would' | 'shall' | 'should' | 'can' | 'could' ;
 

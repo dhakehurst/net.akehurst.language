@@ -34,18 +34,22 @@ class RuntimeRuleSetBuilder() {
 
     val rules: MutableList<RuntimeRule> = mutableListOf()
 
-    fun createGroupRuleName(parentRuleName: String) :String {
-        return "§${parentRuleName}§group"+this.nextGroupNumber++ //TODO: include original rule name fo easier debug
+    fun createGroupRuleName(parentRuleName: String): String {
+        return "§${parentRuleName}§group" + this.nextGroupNumber++ //TODO: include original rule name fo easier debug
     }
-    fun createChoiceRuleName(parentRuleName: String) :String { //TODO: split into priority or simple choice type
-        return "§${parentRuleName}§choice"+this.nextChoiceNumber++ //TODO: include original rule name fo easier debug
+
+    fun createChoiceRuleName(parentRuleName: String): String { //TODO: split into priority or simple choice type
+        return "§${parentRuleName}§choice" + this.nextChoiceNumber++ //TODO: include original rule name fo easier debug
     }
-    fun createMultiRuleName(parentRuleName: String) :String {
-        return "§${parentRuleName}§multi"+this.nextMultiNumber++ //TODO: include original rule name fo easier debug
+
+    fun createMultiRuleName(parentRuleName: String): String {
+        return "§${parentRuleName}§multi" + this.nextMultiNumber++ //TODO: include original rule name fo easier debug
     }
-    fun createListRuleName(parentRuleName: String) :String {
-        return "§${parentRuleName}§sList"+this.nextListNumber++ //TODO: include original rule name fo easier debug
+
+    fun createListRuleName(parentRuleName: String): String {
+        return "§${parentRuleName}§sList" + this.nextListNumber++ //TODO: include original rule name fo easier debug
     }
+
     fun findRuleByName(ruleName: String, terminal: Boolean): RuntimeRule? {
         return this.rules.firstOrNull {
             if (terminal) {
@@ -88,7 +92,7 @@ class RuntimeRuleSetBuilder() {
         }
     }
 
-    fun rule(rule:RuntimeRule): RuntimeRuleExtender {
+    fun rule(rule: RuntimeRule): RuntimeRuleExtender {
         if (null != this.runtimeRuleSet) {
             throw ParseException("Must not add rules after creating the ruleSet")
         } else {
