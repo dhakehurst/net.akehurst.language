@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.choicePriority
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
@@ -25,14 +26,14 @@ import kotlin.test.assertFailsWith
 
 class test_a1bOa2 : test_ScannerlessParserAbstract() {
 
-    // S = S1 > a
+    // S = S1 || a
     // S1 = a b?
     private fun ambiguous(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r_a = b.literal("a")
         val r_bOpt = b.rule("bOpt").multi(0,1,b.literal("b"))
         val r_S1 = b.rule("S1").concatenation(r_a, r_bOpt)
-        b.rule("S").choicePriority(r_S1, r_a)
+        b.rule("S").choice(RuntimeRuleChoiceKind.AMBIGUOUS,r_S1, r_a)
         return b
     }
 
@@ -97,7 +98,7 @@ class test_a1bOa2 : test_ScannerlessParserAbstract() {
         val r_a = b.literal("a")
         val r_bOpt = b.rule("bOpt").multi(0,1,b.literal("b"))
         val r_S1 = b.rule("S1").concatenation(r_a, r_bOpt)
-        b.rule("S").choicePriority(r_S1, r_a)
+        b.rule("S").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,r_S1, r_a)
         return b
     }
 

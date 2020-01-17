@@ -16,22 +16,14 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
-
 class RuntimeRuleExtender(val rrsb: RuntimeRuleSetBuilder, val rule: RuntimeRule) {
 
-    fun choiceEqual(vararg items: RuntimeRule) {
-        rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_EQUAL, -1, 0, items)
-    }
-
-    fun choicePriority(vararg items: RuntimeRule) {
-        rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_PRIORITY, -1, 0, items)
+    fun choice(choiceKind: RuntimeRuleChoiceKind, vararg items: RuntimeRule) {
+        rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, choiceKind,-1, 0, items)
     }
 
     fun concatenation(vararg items: RuntimeRule) {
-        rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, items)
+        rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, items)
     }
 
     fun multi(min: Int, max: Int, item: RuntimeRule) {
@@ -41,7 +33,7 @@ class RuntimeRuleExtender(val rrsb: RuntimeRuleSetBuilder, val rule: RuntimeRule
         } else {
             arrayOf(item)
         }
-        rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.MULTI, min, max, items)
+        rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.MULTI, RuntimeRuleChoiceKind.NONE,min, max, items)
     }
 
     fun sList(min: Int, max: Int, separator: RuntimeRule, item: RuntimeRule) {
@@ -51,6 +43,6 @@ class RuntimeRuleExtender(val rrsb: RuntimeRuleSetBuilder, val rule: RuntimeRule
         } else {
             arrayOf(item,separator)
         }
-        rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST, min, max, items)
+        rule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.SEPARATED_LIST,RuntimeRuleChoiceKind.NONE, min, max, items)
     }
 }

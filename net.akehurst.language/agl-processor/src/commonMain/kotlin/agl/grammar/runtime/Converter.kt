@@ -103,7 +103,7 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
                 // only one choice, so can create a concatination
                 val rhsItem = target.alternative[0]
                 val items = rhsItem.items.map { it.accept(this, arg) as RuntimeRule }
-                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, items.toTypedArray())
+                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, items.toTypedArray())
             }
             (target is Choice) -> {
                 val items = target.alternative.map {
@@ -115,12 +115,17 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
                         builder.rule(thisChoiceName).concatenation(*thisChoiceItems.toTypedArray())
                     }
                 }
-                val kind = if (target is ChoiceEqual) RuntimeRuleItemKind.CHOICE_EQUAL else RuntimeRuleItemKind.CHOICE_PRIORITY
-                RuntimeRuleItem(kind, -1, 0, items.toTypedArray())
+                val kind =  RuntimeRuleItemKind.CHOICE
+                val choiceKind = when (target) {
+                    is ChoiceEqual -> RuntimeRuleChoiceKind.LONGEST_PRIORITY
+                    is ChoicePriority -> RuntimeRuleChoiceKind.PRIORITY_LONGEST
+                    else -> throw RuntimeException("unsupported")
+                }
+                RuntimeRuleItem(kind, choiceKind,-1, 0, items.toTypedArray())
             }
             (target is EmptyRule) -> {
                 val item = target.accept(this, arg) as RuntimeRule
-                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, arrayOf(item))
+                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(item))
             }
             else -> {
                 throw ParseException("Not supported (yet)!")
@@ -164,7 +169,7 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
             val items = target.alternative.map {
                 it.accept(this, choiceRuleName) as RuntimeRule
             }
-            val rr = builder.rule(choiceRuleName).choiceEqual(*items.toTypedArray())
+            val rr = builder.rule(choiceRuleName).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,*items.toTypedArray())
             this.map.put(rr, target)
             return rr
         }
@@ -178,7 +183,7 @@ class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
             val items = target.alternative.map {
                 it.accept(this, choiceRuleName) as RuntimeRule
             }
-            val rr = builder.rule(choiceRuleName).choicePriority(*items.toTypedArray())
+            val rr = builder.rule(choiceRuleName).choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,*items.toTypedArray())
             this.map.put(rr, target)
             return rr
         }

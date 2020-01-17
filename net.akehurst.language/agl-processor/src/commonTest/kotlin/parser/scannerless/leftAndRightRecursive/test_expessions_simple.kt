@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.leftAndRightRecursive
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
@@ -33,7 +34,7 @@ class test_expessions_simple : test_ScannerlessParserAbstract() {
         val r_a = b.literal("a")
         val r_o = b.literal("o")
         val r_I = b.rule("I").build()
-        val r_E = b.rule("E").choiceEqual(r_a, r_I)
+        val r_E = b.rule("E").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r_a, r_I)
         b.rule(r_I).concatenation(r_E, r_o, r_E)
         val r_S = b.rule("S").concatenation(r_E)
         return b

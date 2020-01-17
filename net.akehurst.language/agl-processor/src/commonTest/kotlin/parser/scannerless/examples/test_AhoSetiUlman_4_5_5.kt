@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.examples
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
@@ -32,7 +33,7 @@ class test_AhoSetiUlman_4_5_5 : test_ScannerlessParserAbstract() {
         val r_c = b.literal("c")
         val r_d = b.literal("d")
         val r_C1 = b.rule("C1").build()
-        val r_C = b.rule("C").choiceEqual(r_C1, r_d)
+        val r_C = b.rule("C").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_C1, r_d)
         b.rule(r_C1).concatenation(r_c, r_C)
         val r_S = b.rule("S").concatenation(r_C, r_C)
         return b

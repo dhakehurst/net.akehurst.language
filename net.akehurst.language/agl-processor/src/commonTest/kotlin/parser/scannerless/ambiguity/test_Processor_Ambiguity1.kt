@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.ambiguity
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
@@ -42,7 +43,7 @@ class test_Processor_Ambiguity1 : test_ScannerlessParserAbstract() {
         val r_B = b.rule("B").multi(0, 1, b.literal("b"))
         val r_S = b.rule("S").build()
         val r_S1 = b.rule("S1").concatenation(r_a, r_S, r_B, r_B)
-        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_EQUAL, -1, 0, arrayOf(r_S1, r_a))
+        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(r_S1, r_a))
         return b
     }
 

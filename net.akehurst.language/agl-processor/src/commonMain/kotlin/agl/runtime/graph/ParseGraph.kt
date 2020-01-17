@@ -388,30 +388,34 @@ internal class ParseGraph(
 
                     //TODO: when there is ambiguity, sometimes a complete node is replaced after it has been used in the completiona of another node
                     // this give unexpected (wrong!) results
-                    when (runtimeRule.rhs.kind) {
-                        RuntimeRuleItemKind.CHOICE_EQUAL -> {
-                            val choice = pickLongest(gn, cn) ?: pickHigestPriority(gn,cn)
-                            if (null==choice) {
-                                //ambiguous, keep existing
-                            } else {
-                                cn = choice
+                    if (RuntimeRuleItemKind.CHOICE == runtimeRule.rhs.kind) {
+                        when (runtimeRule.rhs.choiceKind) {
+                            RuntimeRuleChoiceKind.LONGEST_PRIORITY -> {
+                                val choice = pickLongest(gn, cn) ?: pickHigestPriority(gn, cn)
+                                if (null == choice) {
+                                    //ambiguous, keep existing
+                                } else {
+                                    cn = choice
+                                }
+                            }
+                            RuntimeRuleChoiceKind.PRIORITY_LONGEST -> {
+                                val choice = pickHigestPriority(gn, cn) ?: pickLongest(gn, cn)
+                                if (null == choice) {
+                                    //ambiguous, keep existing
+                                } else {
+                                    cn = choice
+                                }
+                            }
+                            else -> {
+                                TODO()
                             }
                         }
-                        RuntimeRuleItemKind.CHOICE_PRIORITY -> {
-                            val choice = pickHigestPriority(gn, cn) ?: pickLongest(gn,cn)
-                            if (null==choice) {
-                                //ambiguous, keep existing
-                            } else {
-                                cn = choice
-                            }
-                        }
-                        else -> {
-                            val choice = pickLongest(gn, cn)
-                            if (null==choice) {
-                                //ambiguous, keep existing
-                            } else {
-                                cn = choice
-                            }
+                    } else {
+                        val choice = pickLongest(gn, cn)
+                        if (null == choice) {
+                            //ambiguous, keep existing
+                        } else {
+                            cn = choice
                         }
                     }
                 }
@@ -519,8 +523,7 @@ internal class ParseGraph(
         }
         val priority = if (0 == position) {
             when (parent.runtimeRule.rhs.kind) {
-                RuntimeRuleItemKind.CHOICE_PRIORITY -> parent.runtimeRule.rhs.items.indexOfFirst { it.number== nextChild.runtimeRuleNumber}
-                RuntimeRuleItemKind.CHOICE_EQUAL -> parent.runtimeRule.rhs.items.indexOfFirst{ it.number== nextChild.runtimeRuleNumber}
+                RuntimeRuleItemKind.CHOICE -> parent.runtimeRule.rhs.items.indexOfFirst { it.number== nextChild.runtimeRuleNumber}
                 else -> parent.priority
             }
         } else {
@@ -568,8 +571,7 @@ internal class ParseGraph(
         val children = listOf(firstChild) + skipChildren
         val numNonSkipChildren = skipChildren.size
         val priority = when (runtimeRule.rhs.kind) {
-                RuntimeRuleItemKind.CHOICE_PRIORITY -> runtimeRule.rhs.items.indexOfFirst{ it.number== firstChild.runtimeRuleNumber}
-                RuntimeRuleItemKind.CHOICE_EQUAL -> runtimeRule.rhs.items.indexOfFirst{ it.number== firstChild.runtimeRuleNumber}
+                RuntimeRuleItemKind.CHOICE -> runtimeRule.rhs.items.indexOfFirst{ it.number== firstChild.runtimeRuleNumber}
                 else -> 0
             }
         this.findOrCreateGrowingNode(isSkipGrowth, newRp, startPosition, nextInputPosition, priority, children, numNonSkipChildren, previous)

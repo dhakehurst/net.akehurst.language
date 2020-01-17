@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.choiceEqual
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
@@ -40,7 +41,7 @@ class test_ScannerlessParser_parse_choiceEqual {
         val r1 = b.rule("a").concatenation(b.literal("a"))
         val r2 = b.rule("b").concatenation(b.literal("b"))
         val r3 = b.rule("c").concatenation(b.literal("c"))
-        b.rule("r").choiceEqual(r1, r2, r3)
+        b.rule("r").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r1, r2, r3)
         val sp = ScannerlessParser(b.ruleSet())
         return sp
     }
@@ -128,7 +129,7 @@ class test_ScannerlessParser_parse_choiceEqual {
         val rb = b.rule("b").concatenation(b.literal("b"))
         val rc = b.rule("c").concatenation(b.literal("c"))
         val rab = b.rule("ab").concatenation(ra, rb)
-        b.rule("S").choiceEqual(rab, rc)
+        b.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, rab, rc)
         val sp = ScannerlessParser(b.ruleSet())
         return sp
     }
@@ -204,7 +205,7 @@ class test_ScannerlessParser_parse_choiceEqual {
         val rb = b.rule("b").concatenation(b.literal("b"))
         val rc = b.rule("c").concatenation(b.literal("c"))
         val rbc = b.rule("bc").concatenation(rb, rc)
-        b.rule("r").choiceEqual(ra, rbc)
+        b.rule("r").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, ra, rbc)
         val sp = ScannerlessParser(b.ruleSet())
         return sp
     }

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.multi
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
@@ -30,7 +31,7 @@ class test_leftRecursive : test_ScannerlessParserAbstract() {
         val r_a = b.literal("a")
         val r_S = b.rule("S").build()
         val r_P = b.rule("P").multi(1,-1,r_S)
-        b.rule(r_S).choiceEqual(r_P, r_a)
+        b.rule(r_S).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r_P, r_a)
         return b
     }
 

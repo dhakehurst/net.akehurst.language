@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.ambiguity
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
@@ -51,13 +52,13 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
         val r_P = b.rule("P").build()
         val r_P1 = b.rule("P1").concatenation(r_a, r_P)
         val r_P2 = b.rule("P2").concatenation(r_P, r_a)
-         b.rule(r_P).choiceEqual(r_P1, r_P2, r_a)
+        b.rule(r_P).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_P1, r_P2, r_a)
         val r_Q = b.rule("Q").build()
         val r_Q1 = b.rule("Q1").concatenation(r_Q, r_a)
-         b.rule(r_Q).choiceEqual(r_Q1, r_a)
+        b.rule(r_Q).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_Q1, r_a)
         val r_S2 = b.rule("S2").concatenation(r_Q, r_c)
         val r_S1 = b.rule("S1").concatenation(r_P, r_b)
-        b.rule("S").choiceEqual(r_S1, r_S2)
+        b.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_S1, r_S2)
         return b
     }
 
@@ -123,7 +124,7 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
     fun a10b() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "a".repeat(10) +"b"
+        val sentence = "a".repeat(10) + "b"
 
         val expected1 = """
             S { S1 {
@@ -139,7 +140,7 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
     fun a50b() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "a".repeat(50) +"b"
+        val sentence = "a".repeat(50) + "b"
 
         val expected1 = """
             S { S1 {

@@ -21,6 +21,7 @@ import net.akehurst.language.agl.grammar.runtime.Converter
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.ast.GrammarBuilderDefault
 import net.akehurst.language.agl.ast.NamespaceDefault
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import kotlin.test.*
 
 class test_SPPTParser {
@@ -167,7 +168,7 @@ class test_SPPTParser {
     fun parse_branch() {
         val rrb = RuntimeRuleSetBuilder()
         val lit = rrb.literal("a")
-        rrb.rule("a").choiceEqual(lit)
+        rrb.rule("a").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,lit)
 
         val sut = SPPTParser(rrb)
 

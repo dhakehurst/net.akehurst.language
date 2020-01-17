@@ -60,11 +60,7 @@ data class RulePosition(
         } else {
             when (this.runtimeRule.rhs.kind) {
                 RuntimeRuleItemKind.EMPTY -> throw ParseException("This should never happen!")
-                RuntimeRuleItemKind.CHOICE_EQUAL -> when {
-                    itemRule == this.runtimeRule.rhs.items[this.choice] -> setOf(RulePosition(this.runtimeRule, this.choice, END_OF_RULE))
-                    else -> emptySet() //throw ParseException("This should never happen!")
-                }
-                RuntimeRuleItemKind.CHOICE_PRIORITY -> when {
+                RuntimeRuleItemKind.CHOICE -> when {
                     itemRule == this.runtimeRule.rhs.items[this.choice] -> setOf(RulePosition(this.runtimeRule, this.choice, END_OF_RULE))
                     else -> emptySet() //throw ParseException("This should never happen!")
                 }

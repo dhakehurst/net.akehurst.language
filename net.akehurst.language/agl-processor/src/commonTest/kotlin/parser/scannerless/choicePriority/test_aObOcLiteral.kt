@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.choicePriority
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
@@ -34,7 +35,7 @@ class test_aObOcLiteral : test_ScannerlessParserAbstract() {
         val r1 = b.rule("a").concatenation(b.literal("a"))
         val r2 = b.rule("b").concatenation(b.literal("b"))
         val r3 = b.rule("c").concatenation(b.literal("c"))
-        b.rule("S").choicePriority(r1, r2, r3)
+        b.rule("S").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,r1, r2, r3)
         return b
     }
 

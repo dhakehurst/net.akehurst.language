@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.ambiguity
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
@@ -37,7 +38,7 @@ class test_PascalRange : test_ScannerlessParserAbstract() {
         val r_real = rrb.rule("real").concatenation(rrb.pattern("([0-9]+[.][0-9]*)|([.][0-9]+)"))
         val r_integer = rrb.rule("integer").concatenation(rrb.pattern("[0-9]+"))
         val r_range = rrb.rule("range").concatenation(r_integer, rrb.literal(".."), r_integer)
-        val r_expr = rrb.rule("expr").choiceEqual(r_range, r_real)
+        val r_expr = rrb.rule("expr").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_range, r_real)
         return rrb
     }
 

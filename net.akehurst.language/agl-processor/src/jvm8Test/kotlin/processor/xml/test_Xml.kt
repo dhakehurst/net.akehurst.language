@@ -21,8 +21,8 @@ class test_Xml(val data:Data) {
 
     companion object {
 
-        //private val grammarStr = this::class.java.getResource("/xml/Xml.agl").readText()
-        private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
+        private val grammarStr = this::class.java.getResource("/xml/Xml.agl").readText()
+        //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
         var processor: LanguageProcessor = tgqlprocessor()
 
         var xmlFiles = arrayOf("/xml/valid/empty.xml")

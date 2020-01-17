@@ -1,5 +1,6 @@
 package net.akehurst.language.parser.scannerless.choicePriority
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
@@ -25,11 +26,11 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
         val r_if = b.literal("if")
         val r_then = b.literal("then")
         val r_else = b.literal("else")
-        val r_var = b.rule("var").choiceEqual(b.literal("W"),b.literal("X"),b.literal("Y"),b.literal("Z"))
+        val r_var = b.rule("var").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("W"),b.literal("X"),b.literal("Y"),b.literal("Z"))
         val r_ifthen = b.rule("ifthen").concatenation(r_if,r_expr,r_then,r_expr)
         val r_ifthenelse = b.rule("ifthenelse").concatenation(r_if,r_expr,r_then,r_expr,r_else,r_expr)
-        val r_conditional = b.rule("conditional").choicePriority(r_ifthen, r_ifthenelse)
-        b.rule(r_expr).choiceEqual(r_var, r_conditional)
+        val r_conditional = b.rule("conditional").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_ifthen, r_ifthenelse)
+        b.rule(r_expr).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_var, r_conditional)
         b.rule("S").concatenation(r_expr)
         return b
     }

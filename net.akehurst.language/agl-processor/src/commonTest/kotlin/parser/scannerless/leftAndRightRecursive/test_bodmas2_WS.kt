@@ -16,11 +16,8 @@
 
 package net.akehurst.language.parser.scannerless.choiceEqual
 
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -43,14 +40,14 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         val b = RuntimeRuleSetBuilder()
         val r_expr = b.rule("expr").build()
         val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
-        val r_bool = b.rule("bool").choiceEqual(b.literal("true"), b.literal("false"))
+        val r_bool = b.rule("bool").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("true"), b.literal("false"))
         val r_group = b.rule("group").concatenation(b.literal("("), r_expr, b.literal(")"))
         val r_div = b.rule("div").separatedList(2, -1, b.literal("/"), r_expr)
         val r_mul = b.rule("mul").separatedList(2, -1, b.literal("*"), r_expr)
         val r_add = b.rule("add").separatedList(2, -1, b.literal("+"), r_expr)
         val r_sub = b.rule("sub").separatedList(2, -1, b.literal("-"), r_expr)
-        val r_root = b.rule("root").choicePriority(r_var, r_bool)
-        b.rule(r_expr).choiceEqual(r_root, r_group, r_div, r_mul, r_add, r_sub)
+        val r_root = b.rule("root").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_var, r_bool)
+        b.rule(r_expr).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_root, r_group, r_div, r_mul, r_add, r_sub)
         b.rule("S").concatenation(r_expr)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b
@@ -58,10 +55,10 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
     private val S = runtimeRuleSet {
         concatenation("S") { ref("expr") }
-        choiceEqual("expr") { ref("root"); ref("group"); ref("div"); ref("mul"); ref("add"); ref("sub") }
-        choicePriority("root") { ref("var"); ref("bool") }
+        choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("root"); ref("group"); ref("div"); ref("mul"); ref("add"); ref("sub") }
+        choice("root", RuntimeRuleChoiceKind.PRIORITY_LONGEST) { ref("var"); ref("bool") }
         pattern("var", "[a-zA-Z]+")
-        choiceEqual("bool") { literal("true"); literal("false") }
+        choice("bool", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("true"); literal("false") }
         concatenation("group") { literal("("); ref("expr"); literal(")") }
 
     }

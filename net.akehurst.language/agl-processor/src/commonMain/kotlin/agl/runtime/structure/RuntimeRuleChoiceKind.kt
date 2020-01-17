@@ -16,13 +16,9 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-enum class RuntimeRuleItemKind {
-    EMPTY,                       // n : ;
-    CHOICE,                      // n : a | b | c ; (or other types of choice)
-    CONCATENATION,               // n : a b c ;
-    UNORDERED,                   // n : a & b & c ;                           TODO: support this
-    MULTI,                       // n : a? ; , n : a* ; n : a+ ; ,            TODO: n : a[0..5]
-    SEPARATED_LIST,              // n : [ a / ',' ]* ;  n : [ a / ',' ]+ ;    TODO: n : [ a / ',' ][0..6] ;
-    LEFT_ASSOCIATIVE_LIST,       // n : [ a < '+' ]* ;  n : [ a < ',' ]+ ;    TODO: support this
-    RIGHT_ASSOCIATIVE_LIST,      // n : [ a > '-' ]* ;  n : [ a > ',' ]+ ;    TODO: support this
+enum class RuntimeRuleChoiceKind {
+    NONE,
+    AMBIGUOUS,
+    LONGEST_PRIORITY,
+    PRIORITY_LONGEST
 }

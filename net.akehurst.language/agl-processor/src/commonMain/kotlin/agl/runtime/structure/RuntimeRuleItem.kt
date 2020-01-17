@@ -34,6 +34,7 @@ import net.akehurst.language.api.parser.ParseException
  */
 class RuntimeRuleItem(
   val kind: RuntimeRuleItemKind,
+  val choiceKind : RuntimeRuleChoiceKind,
   val multiMin : Int,
   val multiMax : Int,
   val items : Array<out RuntimeRule>
@@ -68,8 +69,7 @@ class RuntimeRuleItem(
     fun findItemAt(n: Int): Array<out RuntimeRule> {
         return when (this.kind) {
             RuntimeRuleItemKind.EMPTY -> emptyArray<RuntimeRule>()
-            RuntimeRuleItemKind.CHOICE_PRIORITY -> this.items
-            RuntimeRuleItemKind.CHOICE_EQUAL -> this.items //TODO: should maybe test n == 0
+            RuntimeRuleItemKind.CHOICE -> this.items //TODO: should maybe test n == 0
             RuntimeRuleItemKind.CONCATENATION -> if (this.items.size > n) arrayOf(this.items[n]) else emptyArray<RuntimeRule>()
             RuntimeRuleItemKind.MULTI -> {
                 if ((this.multiMax == -1 || n <= this.multiMax - 1) && n >= this.multiMin - 1) {
@@ -99,8 +99,12 @@ class RuntimeRuleItem(
     override fun toString(): String {
         val kindStr = when (this.kind) {
             RuntimeRuleItemKind.CONCATENATION -> "CONCAT"
-            RuntimeRuleItemKind.CHOICE_PRIORITY -> "CHOPR"
-            RuntimeRuleItemKind.CHOICE_EQUAL -> "CHOEQ"
+            RuntimeRuleItemKind.CHOICE -> when(this.choiceKind) {
+                RuntimeRuleChoiceKind.NONE -> "ERROR"
+                RuntimeRuleChoiceKind.AMBIGUOUS -> "CH_AMB"
+                RuntimeRuleChoiceKind.LONGEST_PRIORITY -> "CH_LNG"
+                RuntimeRuleChoiceKind.PRIORITY_LONGEST -> "CH_PRI"
+            }
             RuntimeRuleItemKind.MULTI -> "MULTI"
             RuntimeRuleItemKind.SEPARATED_LIST -> "SLIST"
             RuntimeRuleItemKind.EMPTY -> "EMPTY"

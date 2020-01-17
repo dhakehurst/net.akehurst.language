@@ -17,12 +17,6 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.api.parser.ParseException
-import net.akehurst.language.api.processor.LanguageProcessorException
-import net.akehurst.language.api.sppt.SPPTBranch
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.parser.sppt.SPPTBranchDefault
-import net.akehurst.language.parser.sppt.SPPTLeafDefault
 
 fun runtimeRuleSet(init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
     val b = RuntimeRuleSetBuilder2()
@@ -91,16 +85,15 @@ class RuntimeRuleSetBuilder2() {
         return b.build()
     }
 
-    private fun _rule(name: String, kind: RuntimeRuleItemKind, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule {
-        val b = RuntimeRuleBuilder2(this, name, kind)
+    private fun _rule(name: String, kind: RuntimeRuleItemKind, choiceKind: RuntimeRuleChoiceKind, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule {
+        val b = RuntimeRuleBuilder2(this, name, kind, choiceKind)
         b.init()
         return b.build()
     }
 
-    fun concatenation(name: String, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule = _rule(name, RuntimeRuleItemKind.CONCATENATION, init)
-    fun choiceEqual(name: String, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule = _rule(name, RuntimeRuleItemKind.CHOICE_EQUAL, init)
-    fun choicePriority(name: String, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule = _rule(name, RuntimeRuleItemKind.CHOICE_PRIORITY, init)
-    fun multi(name: String, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule = _rule(name, RuntimeRuleItemKind.MULTI, init)
+    fun concatenation(name: String, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule = _rule(name, RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, init)
+    fun choice(name: String, choiceKind: RuntimeRuleChoiceKind, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule = _rule(name, RuntimeRuleItemKind.CHOICE, choiceKind, init)
+    fun multi(name: String, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule = _rule(name, RuntimeRuleItemKind.MULTI, RuntimeRuleChoiceKind.NONE, init)
 
 }
 
@@ -108,6 +101,7 @@ class RuntimeRuleBuilder2(
         val rrsb: RuntimeRuleSetBuilder2,
         val ruleName: String,
         val kind: RuntimeRuleItemKind,
+        val choiceKind: RuntimeRuleChoiceKind = RuntimeRuleChoiceKind.NONE,
         val min: Int = -1,
         val max: Int = 0,
         val isSkip: Boolean = false
@@ -156,7 +150,7 @@ class RuntimeRuleBuilder2(
     }
 
     fun build(): RuntimeRule {
-        val rhs = RuntimeRuleItem(this.kind, this.min, this.max, this.items.toTypedArray())
+        val rhs = RuntimeRuleItem(this.kind, this.choiceKind, this.min, this.max, this.items.toTypedArray())
         val existing = this.rrsb.rules.firstOrNull { it.name == ruleName }
         return if (null == existing) {
             val rr = RuntimeRule(this.rrsb.rules.size, ruleName, RuntimeRuleKind.NON_TERMINAL, false, isSkip)

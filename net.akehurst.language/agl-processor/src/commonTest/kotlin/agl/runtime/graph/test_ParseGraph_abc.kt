@@ -37,13 +37,13 @@ class test_ParseGraph_abc {
         val r_b = RuntimeRule(1, "b", RuntimeRuleKind.TERMINAL, false, false)
         val r_c = RuntimeRule(2, "c", RuntimeRuleKind.TERMINAL, false, false)
         val r_A = RuntimeRule(3,"A", RuntimeRuleKind.NON_TERMINAL, false, false)
-        r_A.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, arrayOf(r_a))
+        r_A.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_a))
         val r_B = RuntimeRule(3,"B", RuntimeRuleKind.NON_TERMINAL, false, false)
-        r_B.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, arrayOf(r_b))
+        r_B.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_b))
         val r_C = RuntimeRule(3,"C", RuntimeRuleKind.NON_TERMINAL, false, false)
-        r_C.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, arrayOf(r_c))
+        r_C.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_c))
         val r_S = RuntimeRule(0,"S", RuntimeRuleKind.NON_TERMINAL, false, false)
-        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, arrayOf(r_A, r_B, r_C))
+        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_A, r_B, r_C))
 
         val text = "a"
         val input = InputFromCharSequence(text)

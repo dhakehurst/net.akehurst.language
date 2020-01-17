@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.rightRecursive
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
@@ -32,7 +33,7 @@ class test_a : test_ScannerlessParserAbstract() {
         val r_a = b.literal("a")
         val r_S = b.rule("S").build()
         val r_S1 = b.rule("S1").concatenation(r_a, r_S)
-        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_EQUAL, -1, 0, arrayOf(r_a, r_S1))
+        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE,RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(r_a, r_S1))
         return b
     }
 

@@ -38,7 +38,7 @@ class test_multi_3_5_literal : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun empty() {
+    fun empty_fails() {
         val rrb = S()
         val goal = "S"
         val sentence = ""
@@ -52,7 +52,7 @@ class test_multi_3_5_literal : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun a() {
+    fun a_fails() {
         val rrb = S()
         val goal = "S"
         val sentence = "a"
@@ -66,7 +66,7 @@ class test_multi_3_5_literal : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun aa() {
+    fun aa_fails() {
         val rrb = S()
         val goal = "S"
         val sentence = "aa"
@@ -115,7 +115,7 @@ class test_multi_3_5_literal : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun a6() {
+    fun a6_fails() {
         val rrb = S()
         val goal = "S"
         val sentence = "a".repeat(6)

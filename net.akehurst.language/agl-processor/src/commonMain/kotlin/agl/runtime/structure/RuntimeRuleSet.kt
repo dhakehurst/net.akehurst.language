@@ -30,7 +30,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
         fun createGoalRule(userGoalRule: RuntimeRule): RuntimeRule {
             val gr = RuntimeRule(GOAL_RULE_NUMBER, "<GOAL>", RuntimeRuleKind.GOAL, false, false)
-            gr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, -1, 0, arrayOf(userGoalRule, END_OF_TEXT))
+            gr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(userGoalRule, END_OF_TEXT))
             return gr
         }
 

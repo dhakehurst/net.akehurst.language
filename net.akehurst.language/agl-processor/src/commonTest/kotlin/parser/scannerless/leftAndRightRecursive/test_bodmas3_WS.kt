@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.leftAndRightRecursive
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
@@ -39,12 +40,12 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
         val b = RuntimeRuleSetBuilder()
         val r_expr = b.rule("expr").build()
         val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
-        val r_bool = b.rule("bool").choiceEqual(b.literal("true"), b.literal("false"))
-        val r_op = b.rule("op").choiceEqual(b.literal("/"), b.literal("*"),b.literal("+"),b.literal("-"))
+        val r_bool = b.rule("bool").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("true"), b.literal("false"))
+        val r_op = b.rule("op").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,b.literal("/"), b.literal("*"),b.literal("+"),b.literal("-"))
         val r_group = b.rule("group").concatenation(b.literal("("), r_expr, b.literal(")"))
         val r_infix = b.rule("infix").separatedList(2, -1, r_op, r_expr)
-        val r_root = b.rule("root").choicePriority(r_var, r_bool)
-        b.rule(r_expr).choiceEqual(r_root, r_group, r_infix)
+        val r_root = b.rule("root").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,r_var, r_bool)
+        b.rule(r_expr).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r_root, r_group, r_infix)
         b.rule("S").concatenation(r_expr)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b

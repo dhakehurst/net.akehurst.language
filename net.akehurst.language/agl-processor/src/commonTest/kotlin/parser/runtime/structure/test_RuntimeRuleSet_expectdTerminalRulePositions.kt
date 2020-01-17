@@ -31,8 +31,8 @@ class test_RuntimeRuleSet_expectdTerminalRulePositions {
         val sut = rb.ruleSet()
 
         val goal = RuntimeRuleSet.createGoalRule(S)
-        val actual = sut.expectedTerminalRulePositions[RulePosition(goal,0,0)] ?: arrayOf()
-        val expected = arrayOf(RulePosition(S,0,0))
+        val actual = sut.expectedTerminalRulePositions[RulePosition(goal, 0, 0)] ?: arrayOf()
+        val expected = arrayOf(RulePosition(S, 0, 0))
 
         assertEquals(expected.toList(), actual.toList())
     }
@@ -45,12 +45,12 @@ class test_RuntimeRuleSet_expectdTerminalRulePositions {
         val r_a = rb.literal("a")
         val r_S = rb.rule("S").build()
         val r_S1 = rb.rule("S1").concatenation(r_S, r_a)
-        rb.rule(r_S).choiceEqual(r_a, r_S1)
+        rb.rule(r_S).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_a, r_S1)
         val sut = rb.ruleSet()
 
         val goal = RuntimeRuleSet.createGoalRule(r_S)
-        val actual = sut.expectedTerminalRulePositions[RulePosition(goal,0,0)] ?: arrayOf()
-        val expected = arrayOf(RulePosition(r_S,0,0))
+        val actual = sut.expectedTerminalRulePositions[RulePosition(goal, 0, 0)] ?: arrayOf()
+        val expected = arrayOf(RulePosition(r_S, 0, 0))
 
         assertEquals(expected.toList(), actual.toList())
     }
@@ -63,12 +63,12 @@ class test_RuntimeRuleSet_expectdTerminalRulePositions {
         val r_a = rb.literal("a")
         val r_S = rb.rule("S").build()
         val r_S1 = rb.rule("S1").concatenation(r_a, r_S)
-        rb.rule(r_S).choiceEqual(r_a, r_S1)
+        rb.rule(r_S).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_a, r_S1)
         val sut = rb.ruleSet()
 
         val goal = RuntimeRuleSet.createGoalRule(r_S)
-        val actual = sut.expectedTerminalRulePositions[RulePosition(goal,0,0)] ?: arrayOf()
-        val expected = arrayOf(RulePosition(r_S,0,0), RulePosition(r_S1,0,0))
+        val actual = sut.expectedTerminalRulePositions[RulePosition(goal, 0, 0)] ?: arrayOf()
+        val expected = arrayOf(RulePosition(r_S, 0, 0), RulePosition(r_S1, 0, 0))
 
         assertEquals(expected.toList(), actual.toList())
     }

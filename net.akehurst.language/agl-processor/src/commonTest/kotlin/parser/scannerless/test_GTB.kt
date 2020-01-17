@@ -16,13 +16,11 @@
 
 package net.akehurst.language.parser.scannerless
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.api.parser.ParseFailedException
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class test_GTB : test_ScannerlessParserAbstract() {
 
@@ -42,10 +40,10 @@ class test_GTB : test_ScannerlessParserAbstract() {
         val r_A = rrb.rule("A").concatenation(r_a)
         val r_B = rrb.rule("B").build()
         val r_be= rrb.empty(r_B)
-        r_B.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_EQUAL,-1,0,arrayOf(r_b, r_be))
+        r_B.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE,RuntimeRuleChoiceKind.LONGEST_PRIORITY,-1,0,arrayOf(r_b, r_be))
         val r_S1 = rrb.rule("S1").concatenation(r_A, r_B)
         val r_S2 = rrb.rule("S2").concatenation(r_A, rrb.literal("z"))
-        val r_S = rrb.rule("S").choiceEqual(r_a, r_S1, r_S2)
+        val r_S = rrb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r_a, r_S1, r_S2)
         return rrb
     }
 

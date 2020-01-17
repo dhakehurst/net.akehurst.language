@@ -39,10 +39,10 @@ class test_ifThenElse_Priority : test_ScannerlessParserAbstract() {
         val r_then = b.literal("then")
         val r_else = b.literal("else")
         val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
-        val r_ifthen = b.rule("ifthen").concatenation(r_if,r_expr,r_then,r_expr)
-        val r_ifthenelse = b.rule("ifthenelse").concatenation(r_if,r_expr,r_then,r_expr,r_else,r_expr)
-        val r_conditional = b.rule("conditional").choicePriority(r_ifthen,r_ifthenelse)
-        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE_EQUAL, -1, 0, arrayOf(r_var, r_conditional))
+        val r_ifthen = b.rule("ifthen").concatenation(r_if, r_expr, r_then, r_expr)
+        val r_ifthenelse = b.rule("ifthenelse").concatenation(r_if, r_expr, r_then, r_expr, r_else, r_expr)
+        val r_conditional = b.rule("conditional").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_ifthen, r_ifthenelse)
+        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(r_var, r_conditional))
         b.rule("S").concatenation(r_expr)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b
@@ -51,8 +51,8 @@ class test_ifThenElse_Priority : test_ScannerlessParserAbstract() {
     private val SS = runtimeRuleSet {
         skip("WS") { pattern("\\s+") }
         concatenation("S") { ref("expr") }
-        choiceEqual("expr") { ref("var"); ref("conditional") }
-        choicePriority("conditional") { ref("ifThen"); ref("ifThenElse") }
+        choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("var"); ref("conditional") }
+        choice("conditional", RuntimeRuleChoiceKind.PRIORITY_LONGEST) { ref("ifThen"); ref("ifThenElse") }
         concatenation("ifThen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
         concatenation("ifThenElse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
         pattern("var", "[a-zA-Z]+")
@@ -65,7 +65,7 @@ class test_ifThenElse_Priority : test_ScannerlessParserAbstract() {
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-                super.test(rrb, goal, sentence)
+            super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)

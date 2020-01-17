@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.choicePriority
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
@@ -41,13 +42,13 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
         val b = RuntimeRuleSetBuilder()
         val r_expr = b.rule("expr").build()
         val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
-        val r_bool = b.rule("bool").choiceEqual(b.literal("true"), b.literal("false"))
-        val r_group = b.rule("group").concatenation(b.literal("("),r_expr,b.literal(")"))
-        val r_div = b.rule("div").concatenation(r_expr,b.literal("/"),r_expr)
-        val r_mul = b.rule("mul").concatenation(r_expr,b.literal("*"),r_expr)
-        val r_add = b.rule("add").concatenation(r_expr,b.literal("+"),r_expr)
-        val r_sub = b.rule("sub").concatenation(r_expr,b.literal("-"),r_expr)
-        b.rule(r_expr).choicePriority(r_var, r_bool, r_group, r_div, r_mul,r_add, r_sub)
+        val r_bool = b.rule("bool").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("true"), b.literal("false"))
+        val r_group = b.rule("group").concatenation(b.literal("("), r_expr, b.literal(")"))
+        val r_div = b.rule("div").concatenation(r_expr, b.literal("/"), r_expr)
+        val r_mul = b.rule("mul").concatenation(r_expr, b.literal("*"), r_expr)
+        val r_add = b.rule("add").concatenation(r_expr, b.literal("+"), r_expr)
+        val r_sub = b.rule("sub").concatenation(r_expr, b.literal("-"), r_expr)
+        b.rule(r_expr).choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_var, r_bool, r_group, r_div, r_mul, r_add, r_sub)
         b.rule("S").concatenation(r_expr)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b
@@ -65,7 +66,6 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
     }
-
 
     @Test
     fun a() {
@@ -327,7 +327,7 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
     fun a_add_b_add_c_add_d_add_e_add_f() {
         val rrb = this.S()
         val goal = "S"
-        val sentence = "a+b+c+c+d+e+f"
+        val sentence = "a+b+c+d+e+f"
 
         val expected = """
             S {

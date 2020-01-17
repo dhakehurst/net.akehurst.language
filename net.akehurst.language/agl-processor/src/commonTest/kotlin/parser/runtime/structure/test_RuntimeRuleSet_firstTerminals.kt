@@ -31,7 +31,7 @@ class test_RuntimeRuleSet_firstTerminals {
         val b = rb.literal("b")
         val Aa = rb.rule("Aa").concatenation(A, a)
         val Bb = rb.rule("Bb").concatenation(B, b)
-        val r = rb.rule("r").choicePriority(Aa, Bb)
+        val r = rb.rule("r").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, Aa, Bb)
 
         val sut = rb.ruleSet()
         val actual = sut.firstTerminals[r.number]
@@ -39,8 +39,6 @@ class test_RuntimeRuleSet_firstTerminals {
 
         assertEquals(expected, actual)
     }
-
-
 
 
 }

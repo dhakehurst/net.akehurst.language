@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -65,7 +66,7 @@ class test_RuntimeParser_parse_empty {
         val rrb = RuntimeRuleSetBuilder()
         val e = rrb.rule("e").empty()
         val a = rrb.literal("a")
-        rrb.rule("R").choiceEqual(a, e)
+        rrb.rule("R").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,a, e)
         return ScannerlessParser(rrb.ruleSet())
     }
 

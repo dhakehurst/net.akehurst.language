@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.choicePriority
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
@@ -33,8 +34,8 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
         val r_azAZ = b.pattern("[a-zA-Z]+")
         val r_name = b.rule("name").concatenation(r_azAZ)
         val r_userDefined = b.rule("userDefined").concatenation(r_azAZ)
-        val r_builtIn = b.rule("builtIn").choiceEqual(b.literal("int"), b.literal("bool"))
-        val r_type = b.rule("type").choicePriority( r_userDefined, r_builtIn)
+        val r_builtIn = b.rule("builtIn").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("int"), b.literal("bool"))
+        val r_type = b.rule("type").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_userDefined, r_builtIn)
         b.rule("S").concatenation(r_type, r_name)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b

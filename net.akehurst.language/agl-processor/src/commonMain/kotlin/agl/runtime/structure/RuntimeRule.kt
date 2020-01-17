@@ -67,8 +67,7 @@ class RuntimeRule(
         } else {
             when (rhs.kind) {
                 RuntimeRuleItemKind.EMPTY -> 1
-                RuntimeRuleItemKind.CHOICE_EQUAL -> 1
-                RuntimeRuleItemKind.CHOICE_PRIORITY -> 1
+                RuntimeRuleItemKind.CHOICE -> 1
                 RuntimeRuleItemKind.CONCATENATION -> rhs.items.size
                 RuntimeRuleItemKind.MULTI -> 2
                 RuntimeRuleItemKind.SEPARATED_LIST -> 3
@@ -89,13 +88,7 @@ class RuntimeRule(
                         RulePosition(this, 0, 0),
                         RulePosition(this, 0, RulePosition.END_OF_RULE)
                     )
-                    RuntimeRuleItemKind.CHOICE_EQUAL -> rhs.items.mapIndexed { index, runtimeRule ->
-                        setOf(
-                            RulePosition(this, index, 0),
-                            RulePosition(this, index, RulePosition.END_OF_RULE)
-                        )
-                    }.flatMap { it }.toSet()
-                    RuntimeRuleItemKind.CHOICE_PRIORITY -> rhs.items.mapIndexed { index, runtimeRule ->
+                    RuntimeRuleItemKind.CHOICE -> rhs.items.mapIndexed { index, runtimeRule ->
                         setOf(
                             RulePosition(this, index, 0),
                             RulePosition(this, index, RulePosition.END_OF_RULE)
@@ -162,8 +155,7 @@ class RuntimeRule(
         //TODO: other kinds!
         when (this.rhs.kind) {
             RuntimeRuleItemKind.EMPTY -> return false
-            RuntimeRuleItemKind.CHOICE_EQUAL -> return nextItemIndex == 0
-            RuntimeRuleItemKind.CHOICE_PRIORITY -> return nextItemIndex == 0
+            RuntimeRuleItemKind.CHOICE -> return nextItemIndex == 0
             RuntimeRuleItemKind.CONCATENATION -> {
                 if (nextItemIndex != -1 && nextItemIndex < this.rhs.items.size) {
                     return true
@@ -252,8 +244,7 @@ class RuntimeRule(
         } else {
             when (rhs.kind) {
                 RuntimeRuleItemKind.EMPTY -> emptySet()
-                RuntimeRuleItemKind.CHOICE_EQUAL -> setOf(rhs.items[choice])
-                RuntimeRuleItemKind.CHOICE_PRIORITY -> setOf(rhs.items[choice])
+                RuntimeRuleItemKind.CHOICE -> setOf(rhs.items[choice])
                 RuntimeRuleItemKind.CONCATENATION -> setOf(rhs.items[position])
                 RuntimeRuleItemKind.UNORDERED -> TODO() // will require a multiple items in the set
                 RuntimeRuleItemKind.MULTI -> setOf(rhs.items[choice])
@@ -273,16 +264,9 @@ class RuntimeRule(
                 RuntimeRuleItemKind.EMPTY -> {
                     return emptySet<RuntimeRule>()
                 }
-                RuntimeRuleItemKind.CHOICE_EQUAL -> {
+                RuntimeRuleItemKind.CHOICE -> {
                     return if (n == 0) {
-                        this.rhs.items.toHashSet()
-                    } else {
-                        emptySet<RuntimeRule>()
-                    }
-                }
-                RuntimeRuleItemKind.CHOICE_PRIORITY -> {
-                    return if (n == 0) {
-                        this.rhs.items.toHashSet()
+                        this.rhs.items.toSet()
                     } else {
                         emptySet<RuntimeRule>()
                     }
@@ -358,8 +342,7 @@ class RuntimeRule(
     fun findHasNextExpectedItem(nextItemIndex: Int): Boolean {
         when (this.rhs.kind) {
             RuntimeRuleItemKind.EMPTY -> return false
-            RuntimeRuleItemKind.CHOICE_EQUAL -> return nextItemIndex == 0
-            RuntimeRuleItemKind.CHOICE_PRIORITY -> return nextItemIndex == 0
+            RuntimeRuleItemKind.CHOICE -> return nextItemIndex == 0
             RuntimeRuleItemKind.CONCATENATION -> {
                 return if (-1 == nextItemIndex || nextItemIndex >= this.rhs.items.size) {
                     false
@@ -392,16 +375,9 @@ class RuntimeRule(
             RuntimeRuleItemKind.EMPTY -> {
                 return emptySet<RuntimeRule>()
             }
-            RuntimeRuleItemKind.CHOICE_EQUAL -> {
+            RuntimeRuleItemKind.CHOICE -> {
                 return if (nextItemIndex == 0) {
-                    this.rhs.items.toHashSet()
-                } else {
-                    emptySet<RuntimeRule>()
-                }
-            }
-            RuntimeRuleItemKind.CHOICE_PRIORITY -> {
-                return if (nextItemIndex == 0) {
-                    this.rhs.items.toHashSet()
+                    this.rhs.items.toSet()
                 } else {
                     emptySet<RuntimeRule>()
                 }
@@ -453,18 +429,11 @@ class RuntimeRule(
                 RuntimeRuleItemKind.EMPTY -> {
                     emptySet()
                 }
-                RuntimeRuleItemKind.CHOICE_EQUAL -> {
+                RuntimeRuleItemKind.CHOICE -> {
                     return if (position == 0) {
                         this.rhs.items.mapIndexed { index, runtimeRule -> RulePosition(this, index, 0) }.toSet()
                     } else {
                         emptySet()
-                    }
-                }
-                RuntimeRuleItemKind.CHOICE_PRIORITY -> {
-                    return if (position == 0) {
-                        this.rhs.items.mapIndexed { index, runtimeRule -> RulePosition(this, index, 0) }.toSet()
-                    } else {
-                        emptySet<RulePosition>()
                     }
                 }
                 RuntimeRuleItemKind.CONCATENATION -> {
@@ -512,14 +481,7 @@ class RuntimeRule(
                 RuntimeRuleItemKind.EMPTY -> {
                     emptySet()
                 }
-                RuntimeRuleItemKind.CHOICE_EQUAL -> {
-                    if (position == 0) {
-                        this.rhs.items.toSet()
-                    } else {
-                        emptySet()
-                    }
-                }
-                RuntimeRuleItemKind.CHOICE_PRIORITY -> {
+                RuntimeRuleItemKind.CHOICE -> {
                     if (position == 0) {
                         this.rhs.items.toSet()
                     } else {
@@ -570,8 +532,7 @@ class RuntimeRule(
             newchecked.add(this)
             when (this.rhs.kind) {
                 RuntimeRuleItemKind.EMPTY -> return true
-                RuntimeRuleItemKind.CHOICE_EQUAL -> return this.rhs.items.any { newchecked.contains(it) || it.canBeEmpty(newchecked) }
-                RuntimeRuleItemKind.CHOICE_PRIORITY -> return this.rhs.items.any { newchecked.contains(it) || it.canBeEmpty(newchecked) }
+                RuntimeRuleItemKind.CHOICE -> return this.rhs.items.any { newchecked.contains(it) || it.canBeEmpty(newchecked) }
                 RuntimeRuleItemKind.CONCATENATION -> return this.rhs.items.all { newchecked.contains(it) || it.canBeEmpty(newchecked) }
                 RuntimeRuleItemKind.MULTI -> return 0 == this.rhs.multiMin
                 RuntimeRuleItemKind.SEPARATED_LIST -> return 0 == this.rhs.multiMin
@@ -590,10 +551,7 @@ class RuntimeRule(
             } else {
                 when (this.rhs.kind) {
                     RuntimeRuleItemKind.EMPTY -> false
-                    RuntimeRuleItemKind.CHOICE_EQUAL ->
-                        // TODO: cache this
-                        0 == atPosition && this.rhs.items.contains(possibleChild)
-                    RuntimeRuleItemKind.CHOICE_PRIORITY ->
+                    RuntimeRuleItemKind.CHOICE ->
                         // TODO: cache this
                         0 == atPosition && this.rhs.items.contains(possibleChild)
                     RuntimeRuleItemKind.CONCATENATION -> {
@@ -624,8 +582,7 @@ class RuntimeRule(
     fun incrementNextItemIndex(currentIndex: Int): Int {
         when (this.rhs.kind) {
             RuntimeRuleItemKind.EMPTY -> return -1
-            RuntimeRuleItemKind.CHOICE_EQUAL -> return -1
-            RuntimeRuleItemKind.CHOICE_PRIORITY -> return -1
+            RuntimeRuleItemKind.CHOICE -> return -1
             RuntimeRuleItemKind.CONCATENATION -> return if (this.rhs.items.size == currentIndex + 1) -1 else currentIndex + 1
 //            RuntimeRuleItemKind.MULTI -> return  currentIndex
             RuntimeRuleItemKind.MULTI -> return if (-1 == this.rhs.multiMax || this.rhs.multiMax > currentIndex + 1) currentIndex + 1 else -1

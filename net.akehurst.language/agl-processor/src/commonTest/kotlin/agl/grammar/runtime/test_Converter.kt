@@ -16,13 +16,13 @@
 
 package net.akehurst.language.agl.grammar.runtime
 
-import net.akehurst.language.api.grammar.EmptyRule
 import net.akehurst.language.api.parser.ParseException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.ast.GrammarBuilderDefault
 import net.akehurst.language.agl.ast.NamespaceDefault
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import kotlin.test.*
 
 class test_Converter {
@@ -67,6 +67,17 @@ class test_Converter {
         assertEquals(name, r.name)
         assertEquals(numItems, r.rhs.items.size)
         assertEquals(itemKind, r.rhs.kind)
+    }
+
+    private fun checkNRule(n: Int, r: RuntimeRule, name: String, isSkip: Boolean, itemKind: RuntimeRuleItemKind, choiceKind: RuntimeRuleChoiceKind, numItems: Int) {
+        assertEquals(n, r.number)
+        assertEquals(RuntimeRuleKind.NON_TERMINAL, r.kind)
+        assertEquals(false, r.isTerminal)
+        assertEquals(true, r.isNonTerminal)
+        assertEquals(name, r.name)
+        assertEquals(numItems, r.rhs.items.size)
+        assertEquals(itemKind, r.rhs.kind)
+        assertEquals(choiceKind, r.rhs.choiceKind)
     }
 
     private fun checkItems(owner: RuntimeRule, vararg items: RuntimeRule) {
@@ -121,7 +132,7 @@ class test_Converter {
     fun terminalLiteralRule_2() {
         // r = 'a' 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").choiceEqual(gb.concatenation(gb.terminalLiteral("a"),gb.terminalLiteral("a")))
+        gb.rule("r").choiceEqual(gb.concatenation(gb.terminalLiteral("a"), gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
         val sut = Converter(grammar)
@@ -132,7 +143,7 @@ class test_Converter {
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CONCATENATION, 2)
         this.checkTRule(1, actual.runtimeRules[1], "a", false, false)
 
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1],actual.runtimeRules[1])
+        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[1])
     }
 
     @Test
@@ -217,7 +228,7 @@ class test_Converter {
         val actual = sut.transform()
 
         assertEquals(4, actual.runtimeRules.size)
-        this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CHOICE_EQUAL, 3)
+        this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, 3)
         this.checkTRule(1, actual.runtimeRules[1], "a", false, false)
         this.checkTRule(2, actual.runtimeRules[2], "b", false, false)
         this.checkTRule(3, actual.runtimeRules[3], "c", false, false)
@@ -249,7 +260,7 @@ class test_Converter {
         this.checkTRule(3, actual.runtimeRules[3], "b", false, false)
         this.checkNRule(4, actual.runtimeRules[4], "c", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(5, actual.runtimeRules[5], "c", false, false)
-        this.checkNRule(6, actual.runtimeRules[6], "r", false, RuntimeRuleItemKind.CHOICE_EQUAL, 3)
+        this.checkNRule(6, actual.runtimeRules[6], "r", false, RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, 3)
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1])
         this.checkItems(actual.runtimeRules[2], actual.runtimeRules[3])
@@ -273,7 +284,7 @@ class test_Converter {
         val actual = sut.transform()
 
         assertEquals(4, actual.runtimeRules.size)
-        this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CHOICE_PRIORITY, 3)
+        this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.PRIORITY_LONGEST, 3)
         this.checkTRule(1, actual.runtimeRules[1], "a", false, false)
         this.checkTRule(2, actual.runtimeRules[2], "b", false, false)
         this.checkTRule(3, actual.runtimeRules[3], "c", false, false)
@@ -309,7 +320,7 @@ class test_Converter {
         this.checkTRule(3, actual.runtimeRules[3], "b", false, false)
         this.checkNRule(4, actual.runtimeRules[4], "c", false, RuntimeRuleItemKind.CONCATENATION, 1)
         this.checkTRule(5, actual.runtimeRules[5], "c", false, false)
-        this.checkNRule(6, actual.runtimeRules[6], "r", false, RuntimeRuleItemKind.CHOICE_PRIORITY, 3)
+        this.checkNRule(6, actual.runtimeRules[6], "r", false, RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.PRIORITY_LONGEST, 3)
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1])
         this.checkItems(actual.runtimeRules[2], actual.runtimeRules[3])
@@ -461,7 +472,7 @@ class test_Converter {
     fun sList_0_1_LiteralRule() {
         // r = ['a' / ',']? ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").separatedList(0, 1, gb.terminalLiteral(","),gb.terminalLiteral("a"))
+        gb.rule("r").separatedList(0, 1, gb.terminalLiteral(","), gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
         val sut = Converter(grammar)
@@ -511,7 +522,7 @@ class test_Converter {
     fun sList_0_n_LiteralRule() {
         // r = ['a' / ',']* ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").separatedList(0, -1, gb.terminalLiteral(","),gb.terminalLiteral("a"))
+        gb.rule("r").separatedList(0, -1, gb.terminalLiteral(","), gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
         val sut = Converter(grammar)
@@ -535,7 +546,7 @@ class test_Converter {
         // r = [a / ',']* ;
         // a = 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").separatedList(0, -1, gb.terminalLiteral(","),gb.nonTerminal("a"))
+        gb.rule("r").separatedList(0, -1, gb.terminalLiteral(","), gb.nonTerminal("a"))
         gb.rule("a").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
@@ -561,7 +572,7 @@ class test_Converter {
     fun sList_1_n_LiteralRule() {
         // r = ['a' / ',']+ ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").separatedList(1, -1, gb.terminalLiteral(","),gb.terminalLiteral("a"))
+        gb.rule("r").separatedList(1, -1, gb.terminalLiteral(","), gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
         val sut = Converter(grammar)
@@ -583,7 +594,7 @@ class test_Converter {
         // r = [a / ',']+ ;
         // a = 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").separatedList(1, -1, gb.terminalLiteral(","),gb.nonTerminal("a"))
+        gb.rule("r").separatedList(1, -1, gb.terminalLiteral(","), gb.nonTerminal("a"))
         gb.rule("a").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 

@@ -44,7 +44,7 @@ class test_RulePosition_next {
         val r_a = rb.literal("a")
         val r_b = rb.literal("b")
         val r_c = rb.literal("c")
-        val r_S = rb.rule("S").choiceEqual(r_a, r_b, r_c)
+        val r_S = rb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_a, r_b, r_c)
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoalRule(r_S)
 
@@ -61,7 +61,7 @@ class test_RulePosition_next {
         val r_a = rb.literal("a")
         val r_b = rb.literal("b")
         val r_c = rb.literal("c")
-        val r_S = rb.rule("S").choiceEqual(r_a, r_b, r_c)
+        val r_S = rb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_a, r_b, r_c)
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoalRule(r_S)
 
@@ -78,7 +78,7 @@ class test_RulePosition_next {
         val r_a = rb.literal("a")
         val r_b = rb.literal("b")
         val r_c = rb.literal("c")
-        val r_S = rb.rule("S").choiceEqual(r_a, r_b, r_c)
+        val r_S = rb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_a, r_b, r_c)
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoalRule(r_S)
 

@@ -145,7 +145,7 @@ class test_RuntimeRuleSetBuilder {
         val r0 = sut.literal("a")
         val r1 = sut.literal("b")
         val r2 = sut.literal("c")
-        val r3 = sut.rule("abc").choiceEqual(r0, r1, r2)
+        val r3 = sut.rule("abc").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r0, r1, r2)
 
         val actual = sut.ruleSet()
 
@@ -158,7 +158,8 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(false, actual.runtimeRules[3].isEmptyRule)
         assertEquals(false, actual.runtimeRules[3].isPattern)
         assertEquals(false, actual.runtimeRules[3].isSkip)
-        assertEquals(RuntimeRuleItemKind.CHOICE_EQUAL, actual.runtimeRules[3].rhs.kind)
+        assertEquals(RuntimeRuleItemKind.CHOICE, actual.runtimeRules[3].rhs.kind)
+        assertEquals(RuntimeRuleChoiceKind.PRIORITY_LONGEST, actual.runtimeRules[3].rhs.choiceKind)
         assertEquals(0, actual.runtimeRules[3].rhs.multiMin)
         assertEquals(0, actual.runtimeRules[3].rhs.multiMax)
         assertEquals(r0, actual.runtimeRules[3].rhs.items.get(0))
@@ -173,7 +174,7 @@ class test_RuntimeRuleSetBuilder {
         val r0 = sut.literal("a")
         val r1 = sut.literal("b")
         val r2 = sut.literal("c")
-        val r3 = sut.rule("abc").choicePriority(r0, r1, r2)
+        val r3 = sut.rule("abc").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,r0, r1, r2)
 
         val actual = sut.ruleSet()
 
@@ -186,7 +187,8 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(false, actual.runtimeRules[3].isEmptyRule)
         assertEquals(false, actual.runtimeRules[3].isPattern)
         assertEquals(false, actual.runtimeRules[3].isSkip)
-        assertEquals(RuntimeRuleItemKind.CHOICE_PRIORITY, actual.runtimeRules[3].rhs.kind)
+        assertEquals(RuntimeRuleItemKind.CHOICE, actual.runtimeRules[3].rhs.kind)
+        assertEquals(RuntimeRuleChoiceKind.PRIORITY_LONGEST, actual.runtimeRules[3].rhs.choiceKind)
         assertEquals(0, actual.runtimeRules[3].rhs.multiMin)
         assertEquals(0, actual.runtimeRules[3].rhs.multiMax)
         assertEquals(r0, actual.runtimeRules[3].rhs.items.get(0))

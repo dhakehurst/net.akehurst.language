@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import kotlin.test.Test
@@ -143,7 +144,7 @@ class test_ScannerlessParser_expectedAt {
         val rrb = RuntimeRuleSetBuilder()
         val a = rrb.literal("a")
         val b = rrb.literal("b")
-        val r1 = rrb.rule("S").choiceEqual(a,b)
+        val r1 = rrb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,a,b)
         return rrb.ruleSet()
     }
 

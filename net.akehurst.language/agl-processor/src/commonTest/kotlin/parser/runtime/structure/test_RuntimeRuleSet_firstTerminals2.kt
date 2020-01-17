@@ -56,7 +56,7 @@ class test_RuntimeRuleSet_firstTerminals2 {
         val b = rb.literal("b")
         val Aa = rb.rule("Aa").concatenation(A, a)
         val Bb = rb.rule("Bb").concatenation(B, b)
-        val r_S = rb.rule("S").choicePriority(Aa, Bb)
+        val r_S = rb.rule("S").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,Aa, Bb)
 
         val sut = rb.ruleSet()
         val actual1 = sut.firstTerminals2[RulePosition(r_S,0,0)]
@@ -73,7 +73,7 @@ class test_RuntimeRuleSet_firstTerminals2 {
         val r_a = b.literal("a")
         val r_S = b.rule("S").build()
         val r_P = b.rule("P").multi(0,-1,r_S)
-        b.rule(r_S).choiceEqual(r_P, r_a)
+        b.rule(r_S).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r_P, r_a)
         val sut = b.ruleSet()
 
         val actual = sut.firstTerminals2[RulePosition(r_S,0,0)]

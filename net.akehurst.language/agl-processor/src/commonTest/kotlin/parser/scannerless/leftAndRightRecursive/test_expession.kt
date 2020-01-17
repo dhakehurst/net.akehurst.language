@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.rightRecursive
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
@@ -32,7 +33,7 @@ class test_expession : test_ScannerlessParserAbstract() {
         val r_S = b.rule("S").build()
         val r_P = b.rule("P").concatenation(r_S, b.literal("p"), r_n)
         val r_I = b.rule("I").separatedList(2,-1,b.literal("o"), r_S)
-        b.rule(r_S).choicePriority(r_n, r_P, r_I)
+        b.rule(r_S).choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,r_n, r_P, r_I)
         return b
     }
 
@@ -141,9 +142,19 @@ class test_expession : test_ScannerlessParserAbstract() {
 
         val expected = """
              S { I {
-                  S { 'a' }
-                  'o'
-                  S { P {
+                S { P {
+                    S { 'a' }
+                    'p'
+                    'a'
+                  } }
+                'o'
+                S { P {
+                    S { 'a' }
+                    'p'
+                    'a'
+                  } }
+                'o'
+                S { P {
                     S { 'a' }
                     'p'
                     'a'
