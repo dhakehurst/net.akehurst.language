@@ -17,7 +17,7 @@
 package net.akehurst.language.processor
 
 import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.agl.grammar.runtime.Converter
+import net.akehurst.language.agl.grammar.runtime.ConverterToRuntimeRules
 import net.akehurst.language.parser.sppt.SPPTParser
 import kotlin.test.assertEquals
 
@@ -27,7 +27,7 @@ abstract class test_ProcessorAbstract {
         val processor = Agl.processor(grammar)
         val actual = processor.parse(goal, sentence)
 
-        val converter = Converter(grammar)
+        val converter = ConverterToRuntimeRules(grammar)
         converter.transform()
         val rrb = converter.builder
         val sppt = SPPTParser(rrb)

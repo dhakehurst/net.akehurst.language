@@ -24,7 +24,7 @@ import net.akehurst.language.agl.runtime.structure.*
 /**
  * arg: String =
  */
-class Converter(val grammar: Grammar) : GrammarVisitor<Any, String> {
+class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String> {
 
     private val map: MutableMap<RuntimeRule, RuleItem> = mutableMapOf()
     val builder = RuntimeRuleSetBuilder()

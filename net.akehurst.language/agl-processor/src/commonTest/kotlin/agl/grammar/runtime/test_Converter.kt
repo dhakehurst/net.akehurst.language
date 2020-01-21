@@ -89,7 +89,7 @@ class test_Converter {
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         assertNotNull(sut)
     }
@@ -100,7 +100,7 @@ class test_Converter {
         gb.rule("r").empty()
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -117,7 +117,7 @@ class test_Converter {
         gb.rule("r").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -135,7 +135,7 @@ class test_Converter {
         gb.rule("r").choiceEqual(gb.concatenation(gb.terminalLiteral("a"), gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -153,7 +153,7 @@ class test_Converter {
         gb.rule("r").choiceEqual(gb.concatenation(gb.terminalPattern("[a-c]")))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -171,7 +171,7 @@ class test_Converter {
         gb.rule("r").choiceEqual(gb.concatenation(gb.terminalLiteral("a"), gb.terminalLiteral("b"), gb.terminalLiteral("c")))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -197,7 +197,7 @@ class test_Converter {
         gb.rule("r").choiceEqual(gb.concatenation(gb.nonTerminal("a"), gb.nonTerminal("b"), gb.nonTerminal("c")))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -223,7 +223,7 @@ class test_Converter {
         gb.rule("r").choiceEqual(gb.concatenation(gb.terminalLiteral("a")), gb.concatenation(gb.terminalLiteral("b")), gb.concatenation(gb.terminalLiteral("c")))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -249,7 +249,7 @@ class test_Converter {
         gb.rule("r").choiceEqual(gb.concatenation(gb.nonTerminal("a")), gb.concatenation(gb.nonTerminal("b")), gb.concatenation(gb.nonTerminal("c")))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -279,7 +279,7 @@ class test_Converter {
         )
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -309,7 +309,7 @@ class test_Converter {
         )
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -335,7 +335,7 @@ class test_Converter {
         gb.rule("r").multi(0, 1, gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -359,7 +359,7 @@ class test_Converter {
         gb.rule("a").choiceEqual(gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -383,7 +383,7 @@ class test_Converter {
         gb.rule("r").multi(0, -1, gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -407,7 +407,7 @@ class test_Converter {
         gb.rule("a").choiceEqual(gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -431,7 +431,7 @@ class test_Converter {
         gb.rule("r").multi(1, -1, gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -453,7 +453,7 @@ class test_Converter {
         gb.rule("a").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -475,7 +475,7 @@ class test_Converter {
         gb.rule("r").separatedList(0, 1, gb.terminalLiteral(","), gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -500,7 +500,7 @@ class test_Converter {
         gb.rule("a").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -525,7 +525,7 @@ class test_Converter {
         gb.rule("r").separatedList(0, -1, gb.terminalLiteral(","), gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -550,7 +550,7 @@ class test_Converter {
         gb.rule("a").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -575,7 +575,7 @@ class test_Converter {
         gb.rule("r").separatedList(1, -1, gb.terminalLiteral(","), gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 
@@ -598,7 +598,7 @@ class test_Converter {
         gb.rule("a").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
-        val sut = Converter(grammar)
+        val sut = ConverterToRuntimeRules(grammar)
 
         val actual = sut.transform()
 

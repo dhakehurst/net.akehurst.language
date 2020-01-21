@@ -20,7 +20,7 @@ import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.agl.grammar.AglGrammar
+import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.sppt2ast.AglSppt2AstTransformer
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.sppt2ast.SyntaxAnalyser
@@ -28,8 +28,20 @@ import kotlin.js.JsName
 
 object Agl {
 
-    private val aglProcessor: LanguageProcessor by lazy {
-        val grammar = AglGrammar()
+    val grammarProcessor: LanguageProcessor by lazy {
+        val grammar = AglGrammarGrammar()
+        val sppt2ast: SyntaxAnalyser = AglSppt2AstTransformer()
+        processor(grammar, sppt2ast)
+    }
+
+    val styleProcessor: LanguageProcessor by lazy {
+        val grammar = AglGrammarGrammar()
+        val sppt2ast: SyntaxAnalyser = AglSppt2AstTransformer()
+        processor(grammar, sppt2ast)
+    }
+
+    val formatProcessor: LanguageProcessor by lazy {
+        val grammar = AglGrammarGrammar()
         val sppt2ast: SyntaxAnalyser = AglSppt2AstTransformer()
         processor(grammar, sppt2ast)
     }
@@ -45,7 +57,7 @@ object Agl {
     @JsName("processorFromString")
     fun processor(grammarDefinitionStr: String, syntaxAnalyser: SyntaxAnalyser?=null, formatter: Formatter?=null): LanguageProcessor {
         try {
-            val grammar = aglProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
+            val grammar = grammarProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
             return processor(grammar, syntaxAnalyser, formatter)
         } catch (e: ParseFailedException) {
             //TODO: better, different exception to detect which list item fails
@@ -58,7 +70,7 @@ object Agl {
         val prefix = "namespace temp grammar Temp { "
         val grammarStr = prefix + rules.joinToString(" ") + "}"
         try {
-            val grammar = aglProcessor.process<Grammar>("grammarDefinition", grammarStr)
+            val grammar = grammarProcessor.process<Grammar>("grammarDefinition", grammarStr)
             return LanguageProcessorDefault(grammar, syntaxAnalyser, formatter)
         } catch (e: ParseFailedException) {
             //TODO: better, different exception to detect which list item fails

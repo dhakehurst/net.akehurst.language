@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+	<Appenders>
+	
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%highlight{%d{HH:mm:ss.SSS} %-5level [%t] (%logger{36}) - %msg%n}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=blue, DEBUG=green bold, TRACE=magenta}" />
+		</Console>
+
+		<RollingRandomAccessFile
+		    name="RollingRandomAccessFile"
+		    fileName="logs/application.log"
+		    filePattern="logs/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz"
+		>
+			<PatternLayout>
+				<Pattern>%d{HH:mm:ss.SSS} %-5level [%t] (%logger{36}) - %msg%n </Pattern>
+			</PatternLayout>
+			<Policies>
+				<TimeBasedTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="250 MB" />
+			</Policies>
+		</RollingRandomAccessFile>
+
+	</Appenders>
+	
+	<Loggers>
+    		<Root level="INFO">
+			<AppenderRef ref="Console" />
+			<AppenderRef ref="RollingRandomAccessFile" level="ALL" />
+		</Root>
+	</Loggers>
+	
+</Configuration>

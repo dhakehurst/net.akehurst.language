@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar
+package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.ast.NamespaceDefault
 import net.akehurst.language.agl.ast.GrammarAbstract
 import net.akehurst.language.agl.ast.GrammarBuilderDefault
 import net.akehurst.language.api.grammar.Rule
 
-class AglGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl.grammar"), "Agl", createRules()) {
+class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar", createRules()) {
 
 }
 
 private fun createRules(): List<Rule> {
-	val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl.grammar"), "OGL");
+	val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar");
 	b.skip("WHITESPACE").concatenation(b.terminalPattern("\\s+"));
 	b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/"));
 	b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//.*?$"));

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar
+package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.agl.grammar.runtime.Converter
+import net.akehurst.language.agl.grammar.runtime.ConverterToRuntimeRules
 import net.akehurst.language.parser.scannerless.ScannerlessParser
 import net.akehurst.language.parser.sppt.SPPTParser
 import net.akehurst.language.processor.CompletionProvider
@@ -29,10 +29,10 @@ import kotlin.test.assertNotNull
 
 class test_AglGrammar_item {
 
-    private val converter: Converter = Converter(AglGrammar())
-    private val parser: Parser = ScannerlessParser(this.converter.transform())
+    private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(AglGrammarGrammar())
+    private val parser: Parser = ScannerlessParser(this.converterToRuntimeRules.transform())
     private val completionProvider: CompletionProvider = CompletionProvider()
-    private val spptParser = SPPTParser(this.converter.builder.ruleSet())
+    private val spptParser = SPPTParser(this.converterToRuntimeRules.builder.ruleSet())
 
     private fun parse(goalRule: String, inputText: CharSequence): SharedPackedParseTree {
         return this.parser.parse(goalRule, inputText)

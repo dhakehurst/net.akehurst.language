@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.ogl.grammar
+package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.processor.Agl
 import kotlin.test.Test
