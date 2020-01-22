@@ -16,6 +16,7 @@
 
 plugins {
     application
+    id("org.openjfx.javafxplugin") version "0.0.8"
 }
 
 // so that the application plugin can find the jars from the kotlin-plugin jvm configuration
@@ -26,21 +27,20 @@ application {
     mainClassName = "net.akehurst.language.editor.desktop.jfx.tornado.MainKt"
 }
 
-val version_kaf:String by project
+javafx {
+    configuration = "jvm8Implementation"
+    //version = "8"
+    modules("javafx.base", "javafx.controls", "javafx.fxml", "javafx.graphics")
+}
+
+val version_tornado: String = "1.7.19"
+val version_agl:String by project
 dependencies {
     // need this so that the gradle application-plugin can find the module built by the kotlin-plugin
     runtime( project(path=":application-editor-desktop-jfx", configuration="jvm8RuntimeElements") )
 
-    // --- framework ---
-    jvm8MainImplementation("net.akehurst.kaf:kaf-common-realisation:$version_kaf")
-
-    // --- services
-    commonMainImplementation("net.akehurst.kaf:kaf-service-logging-api:$version_kaf")
-    jvm8MainImplementation("net.akehurst.kaf:kaf-service-logging-log4j2:$version_kaf")
-    commonMainImplementation("net.akehurst.kaf:kaf-service-configuration-persistence-fs-korio-hjson:$version_kaf")
-    jvm8MainImplementation("net.akehurst.kaf:kaf-service-commandLineHandler-kaf:$version_kaf")
-
-    // -- information ---
-    commonMainImplementation(project(":information-editor"))
+    jvm8MainImplementation("no.tornado:tornadofx:$version_tornado")
+    jvm8MainImplementation("org.fxmisc.richtext:richtextfx:0.10.3")
+    jvm8MainImplementation("net.akehurst.language:agl-processor:$version_agl")
 
 }

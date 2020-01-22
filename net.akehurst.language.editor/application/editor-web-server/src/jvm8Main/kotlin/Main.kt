@@ -1,51 +1,63 @@
 package net.akehurst.language.editor.web.server
 
-import net.akehurst.kaf.common.api.Application
-import net.akehurst.kaf.common.realisation.afApplication
-import net.akehurst.kaf.service.commandLineHandler.api.CommandLineHandlerService
-import net.akehurst.kaf.service.commandLineHandler.clikt.CommandLineHandlerClikt
-import net.akehurst.kaf.service.configuration.api.ConfigurationService
-import net.akehurst.kaf.service.configuration.hjson.ServiceConfigurationHJsonFile
-import net.akehurst.kaf.service.logging.api.LoggingService
-import net.akehurst.kaf.service.logging.log4j2.LoggingServiceLog4j2
-import net.akehurst.kaf.technology.webserver.ktor.WebserverKtor
-import net.akehurst.language.editor.information.UserSession
+
+import io.ktor.application.ApplicationCallPipeline
+import io.ktor.application.call
+import io.ktor.application.install
+import io.ktor.features.CallLogging
+import io.ktor.features.DefaultHeaders
+import io.ktor.routing.Routing
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.jetty.Jetty
+import io.ktor.sessions.Sessions
+import io.ktor.sessions.cookie
+import io.ktor.sessions.sessions
+import io.ktor.sessions.set
+import io.ktor.util.generateNonce
 import java.io.File
 
 fun main(args: Array<String>) {
     println("PWD: " + File(".").absolutePath)
     val application = EditorApplication
-    application.af.startBlocking(args.toList())
+    application.start()
 }
 
-object EditorApplication : Application {
+object EditorApplication {
 
-    // computational
-    //val core = Core()
+    val server = Server("0.0.0.0", 9999)
 
-    // engineering
-    //val core2gui = Core2Gui()
-
-    // technology
-    val webserver = WebserverKtor<UserSession>(UserSession::class) { UserSession(it) }
-
-    override val af = afApplication(this,"application") {
-        defineService(LoggingService::class) { LoggingServiceLog4j2() }
-        defineService(CommandLineHandlerService::class) { commandLineArgs -> CommandLineHandlerClikt(commandLineArgs) }
-        defineService(ConfigurationService::class) { ServiceConfigurationHJsonFile("configuration/application.configuration.hjson") }
-        initialise = {
-            // --- Computational <-> Engineering
-
-            // --- Engineering <-> Technology
-
-        }
-        execute = {
-            webserver.addTextRoute("/test", "Server Running")
-            webserver.addSinglePageApplication("/dist","angular")
-        }
-        finalise = {
-
-        }
+    fun start() {
+        server.start()
     }
+
+}
+
+class Server(
+        val host:String,
+        val port:Int
+) {
+
+    fun start() {
+        val server = embeddedServer(Jetty, port = port, host = host) {
+            install(DefaultHeaders)
+            install(CallLogging)
+            install(Routing)
+            install(Sessions) {
+                cookie<String>("SESSION_ID")
+            }
+            intercept(ApplicationCallPipeline.Features) {
+                call.sessions.set<String>(generateNonce())
+            }
+            install(SinglePageApplication) {
+                defaultPage = "index.html"
+                folderPath = "/dist"
+                spaRoute = ""
+                useFiles = false
+            }
+        }
+
+        server.start(true)
+    }
+
 
 }

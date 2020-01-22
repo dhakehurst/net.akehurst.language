@@ -1,7 +1,5 @@
-package net.akehurst.language.editor.gui.tornadofx
+package net.akehurst.language.editor.desktop.jfx.tornado
 
-import com.sun.javafx.application.PlatformImpl
-import javafx.application.Platform
 import javafx.concurrent.Task
 import javafx.scene.control.Label
 import javafx.scene.input.KeyCode
@@ -9,157 +7,32 @@ import javafx.scene.input.KeyCombination
 import javafx.scene.input.KeyEvent
 import javafx.scene.text.TextFlow
 import javafx.stage.Popup
-import javafx.stage.Stage
-import kotlinx.coroutines.delay
-import net.akehurst.kaf.common.api.Active
-import net.akehurst.kaf.common.realisation.afActive
 import net.akehurst.language.api.api.style.AglStyleRule
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.processor.Agl
-import org.fxmisc.richtext.*
+import org.fxmisc.richtext.LineNumberFactory
+import org.fxmisc.richtext.StyledTextArea
+import org.fxmisc.richtext.TextExt
 import org.fxmisc.richtext.event.MouseOverTextEvent
 import org.fxmisc.richtext.model.StyleSpans
 import org.fxmisc.richtext.model.StyleSpansBuilder
-import org.fxmisc.richtext.model.TwoDimensional
 import org.fxmisc.wellbehaved.event.EventPattern
 import org.fxmisc.wellbehaved.event.InputMap
 import org.fxmisc.wellbehaved.event.Nodes
-import tornadofx.*
+import tornadofx.label
+import tornadofx.vbox
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.Executors
+import kotlin.collections.List
+import kotlin.collections.forEach
+import kotlin.collections.joinToString
+import kotlin.collections.map
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
 
 
-class MyApp() : App(MyView::class) {
-}
-
-class MyView : View() {
-    val grammarArea = AGLEditorComponent(Agl.grammarProcessor)
-    val styleArea = AGLEditorComponent(Agl.styleProcessor)
-    val formatArea = AGLEditorComponent(Agl.formatProcessor)
-
-    val expressionArea = AGLEditorComponent(createProcessor(grammarArea.text))
-
-    override val root = borderpane {
-        top {
-            menubar {
-                val menubar = this
-                menu("File") {
-                    item("New")
-                    item("Open...")
-                    item("Save")
-                    item("Quit")
-                }
-                menu("Edit") {
-                    item("Copy")
-                    item("Paste")
-                }
-                menu("About") {
-                    checkmenuitem(name = "Use System Menu Bar", selected = menubar.useSystemMenuBarProperty()) {
-                        //menubar.setUseSystemMenuBar(menubar.isUseSystemMenuBar.not())
-                    }
-                }
-            }
-            center {
-                tabpane {
-                    tab("Expression") {
-                        splitpane() {
-                            opcr(this, expressionArea)
-                            treeview<Any> { }
-                        }
-                    }
-                    tab("Language") {
-                        tabpane {
-                            tab("grammar") {
-                                opcr(this, grammarArea)
-                            }
-                            tab("style") {
-                                opcr(this, styleArea)
-                            }
-                            tab("format") {
-                                opcr(this, formatArea)
-                            }
-                        }
-
-                    }
-                }
-
-            }
-        }
-    }
-
-    init {
-        expressionArea.paragraphGraphicFactory = LineNumberFactory.get(expressionArea)
-        grammarArea.textProperty().addListener { observable, oldValue, newValue ->
-            expressionArea.processor = createProcessor(newValue)
-        }
-        styleArea.textProperty().addListener { observable, oldValue, newValue ->
-            expressionArea.setStyleSheetFromString(newValue)
-        }
-
-        grammarArea.setStyleSheetFromString("""
-                'namespace' {
-                    -fx-font-size: 12pt;
-                    -fx-font-family: "Courier New";
-                    -fx-fill: darkgreen;
-                    -fx-font-weight: bold;
-                }
-                'grammar' {
-                    -fx-font-size: 12pt;
-                    -fx-font-family: "Courier New";
-                    -fx-fill: darkgreen;
-                    -fx-font-weight: bold;
-                }
-            """.trimIndent())
-
-        styleArea.appendText("""
-                'class' {
-                    -fx-font-size: 14pt;
-                    -fx-font-family: "Courier New";
-                    -fx-fill: purple;
-                    -fx-font-weight: bold;
-                }
-                "[A-Za-z_][A-Za-z0-9_]*" {
-                    -fx-font-size: 14pt;
-                    -fx-font-family: "Courier New";
-                    -fx-fill: red;
-                    -fx-font-style: italic;
-                }
-                '{' {
-                    -fx-fill: darkgreen;
-                }
-                '}' {
-                    -fx-fill: darkgreen;
-                }
-            """.trimIndent())
-        grammarArea.appendText("""
-            namespace test
-            
-            grammar Test {
-              declaration = 'class' ID '{' '}' ;
-            
-              ID = "[A-Za-z_][A-Za-z0-9_]*" ;
-            
-            }
-        """.trimIndent())
-
-        expressionArea.appendText("""
-            class XXX {
-            
-            }
-        """.trimIndent())
-    }
-
-    fun createProcessor(grammarStr: String): LanguageProcessor {
-        try {
-            return Agl.processor(grammarStr) //TODO: don't want this hard coded!
-        } catch (t: Throwable) {
-            //if can't create processor, must return a valid processor
-            t.printStackTrace()
-            return Agl.processor("namespace empty grammar Empty { skip WS = \"\\s+\" ; }", "WS")
-        }
-    }
-}
+//TODO: move this into its own lib eventually, here whilst we work on it
 
 class StyleObject(
         val name: String,
@@ -316,47 +189,4 @@ class AGLEditorComponent(
             t.printStackTrace()
         }
     }
-}
-
-class GUI : Active {
-
-    val expression by stringProperty("// an expression")
-    val grammar by stringProperty("// the grammar")
-    val style by stringProperty("// style definitions")
-    val format by stringProperty("// format definitions")
-
-    var stopped = false
-
-    override val af = afActive {
-        execute = {
-            val l = object : PlatformImpl.FinishListener {
-                override fun exitCalled() {
-                    stopped = true
-                }
-
-                override fun idle(implicitExit: Boolean) {
-                    stopped = true
-                }
-            }
-            PlatformImpl.addListener(l)
-            Platform.startup {
-                val stage = Stage()
-                stage.title = "AGL Editor"
-                stage.setOnCloseRequest { we ->
-                    stopped = true
-                }
-                val app = MyApp()
-                app.start(stage)
-            }
-
-            while (stopped.not()) {
-                delay(1000)
-            }
-        }
-        finalise = {
-            Platform.exit()
-        }
-    }
-
-
 }

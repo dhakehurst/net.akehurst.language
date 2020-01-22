@@ -13,24 +13,18 @@ application {
 }
 
 val version_kaf:String by project
+val version_ktor:String by project
 dependencies {
     // need this so that the gradle application-plugin can find the module built by the kotlin-plugin
     runtime( project(path=":application-editor-web-server", configuration="jvm8RuntimeElements") )
 
     jvm8MainImplementation(project(":application-client-angular"))
 
-    // --- framework ---
-    jvm8MainImplementation("net.akehurst.kaf:kaf-common-realisation:$version_kaf")
+    // ktor server modules
+    jvm8MainImplementation("io.ktor:ktor-websockets:$version_ktor")
+    jvm8MainImplementation("io.ktor:ktor-server-core:$version_ktor")
+    jvm8MainImplementation("io.ktor:ktor-server-jetty:$version_ktor")
 
-    // --- services
-    commonMainImplementation("net.akehurst.kaf:kaf-service-logging-api:$version_kaf")
-    jvm8MainImplementation("net.akehurst.kaf:kaf-service-logging-log4j2:$version_kaf")
-    commonMainImplementation("net.akehurst.kaf:kaf-service-configuration-persistence-fs-korio-hjson:$version_kaf")
-    jvm8MainImplementation("net.akehurst.kaf:kaf-service-commandLineHandler-kaf:$version_kaf")
-
-    // -- information ---
-    commonMainImplementation(project(":information-editor"))
-
-    // --- technology
-    jvm8MainImplementation("net.akehurst.kaf:kaf-technology-webserver-ktor:$version_kaf")
+    // for logging
+    jvm8MainImplementation("org.slf4j:slf4j-simple:1.7.29")
 }
