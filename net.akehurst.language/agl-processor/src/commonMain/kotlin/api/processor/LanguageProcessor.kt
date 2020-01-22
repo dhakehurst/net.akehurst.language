@@ -26,22 +26,34 @@ interface LanguageProcessor {
      * build the parser before use. Optional, but will speed up the first use of the parser.
      */
     @JsName("build")
-    fun build() : LanguageProcessor;
+    fun build(): LanguageProcessor;
 
     @JsName("scan")
     fun scan(inputText: CharSequence): List<SPPTLeaf>
 
     @JsName("parse")
+    fun parse(inputText: CharSequence): SharedPackedParseTree
+
+    @JsName("parseForGoal")
     fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree
 
+
     @JsName("process")
+    fun <T> process(inputText: CharSequence): T
+
+    @JsName("processForGoal")
     fun <T> process(goalRuleName: String, inputText: CharSequence): T
 
+
     @JsName("formatText")
+    fun <T> format(inputText: CharSequence): String
+
+    @JsName("formatTextForGoal")
     fun <T> format(goalRuleName: String, inputText: CharSequence): String
 
+
     @JsName("formatAsm")
-    fun <T> format(asm:T): String
+    fun <T> format(asm: T): String
 
 
     //fun <T> process(reader: Reader, goalRuleName: String, targetType: Class<T>): T
@@ -58,7 +70,11 @@ interface LanguageProcessor {
      * @throws ParseTreeException
      */
     @JsName("expectedAt")
+    fun expectedAt(inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem>
+
+    @JsName("expectedAtForGoal")
     fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem>
+
 
     //List<CompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth)
 }

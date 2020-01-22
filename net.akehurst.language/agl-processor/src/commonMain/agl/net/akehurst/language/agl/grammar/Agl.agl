@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace net.akehurst.language.ogl.grammar
+namespace net.akehurst.language.agl.grammar
 
 grammar Agl {
 
@@ -35,13 +35,13 @@ grammar Agl {
   concatenation = concatenationItem+ ;
   concatenationItem = simpleItem | multi | separatedList ;
   simpleItem = terminal | nonTerminal | group ;
-  multiplicity : '*' | '+' | '?'
+  multiplicity = '*' | '+' | '?' ;
   multi = simpleItem multiplicity ;
   group = '(' choice ')' ;
   separatedList = '[' simpleItem '/' terminal ']' multiplicity ;
   nonTerminal = IDENTIFIER ;
   terminal = LITERAL | PATTERN ;
-  qualifiedName = (IDENTIFIER / '::')+ ;
+  qualifiedName = [IDENTIFIER / '.']+ ;
   IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*";
   LITERAL = "'(?:\\\\?.)*?'" ;
   PATTERN = "\"(?:\\\\?.)*?\"" ;

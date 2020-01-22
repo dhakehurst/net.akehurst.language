@@ -63,6 +63,19 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }.toTypedArray()
     }
 
+    val allNonSkipRules: Array<RuntimeRule> by lazy {
+        this.runtimeRules.filter { it.isSkip.not() }.toTypedArray()
+    }
+
+    val allNonSkipTerminals: Array<RuntimeRule> by lazy {
+        this.allNonSkipRules.flatMap {
+            if (it.isTerminal)
+                listOf(it)
+            else
+                it.rhs.items.filter { it.isTerminal }
+        }.toTypedArray()
+    }
+
     val terminalRules: Array<RuntimeRule> by lazy {
         this.runtimeRules.mapNotNull {
             if (it.isTerminal)

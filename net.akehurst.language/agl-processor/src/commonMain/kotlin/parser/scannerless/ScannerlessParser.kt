@@ -40,10 +40,10 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         this.runtimeRuleSet.buildCaches()
     }
 
-    override fun scan(inputText: CharSequence): List<SPPTLeaf> {
+    override fun scan(inputText: CharSequence, includeSkipRules:Boolean): List<SPPTLeaf> {
         //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
         val input = InputFromCharSequence(inputText)
-        val terminals = this.runtimeRuleSet.terminalRules
+        val terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.allNonSkipTerminals
         var result = mutableListOf<SPPTLeaf>()
 
         var position = 0

@@ -1,6 +1,5 @@
 package net.akehurst.language.editor.gui.tornadofx
 
-import net.akehurst.kaf.common.api.AFApplication
 import net.akehurst.kaf.common.api.Application
 import net.akehurst.kaf.common.realisation.afApplication
 import net.akehurst.kaf.service.commandLineHandler.api.CommandLineHandlerService

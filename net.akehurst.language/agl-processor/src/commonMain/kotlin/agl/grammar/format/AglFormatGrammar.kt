@@ -7,7 +7,9 @@ import net.akehurst.language.api.grammar.Rule
 
 
 class AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglFormat", createRules()) {
-
+    companion object {
+        const val goalRuleName = "rules"
+    }
 }
 
 private fun createRules(): List<Rule> {

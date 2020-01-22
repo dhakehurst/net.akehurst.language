@@ -16,11 +16,14 @@
 
 package net.akehurst.language.processor
 
+import net.akehurst.language.agl.grammar.format.AglFormatGrammar
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
+import net.akehurst.language.agl.grammar.style.AglStyleGrammar
+import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
 import net.akehurst.language.agl.sppt2ast.AglSppt2AstTransformer
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.sppt2ast.SyntaxAnalyser
@@ -31,19 +34,19 @@ object Agl {
     val grammarProcessor: LanguageProcessor by lazy {
         val grammar = AglGrammarGrammar()
         val sppt2ast: SyntaxAnalyser = AglSppt2AstTransformer()
-        processor(grammar, sppt2ast)
+        processor(grammar, AglGrammarGrammar.goalRuleName, sppt2ast)
     }
 
     val styleProcessor: LanguageProcessor by lazy {
-        val grammar = AglGrammarGrammar()
-        val sppt2ast: SyntaxAnalyser = AglSppt2AstTransformer()
-        processor(grammar, sppt2ast)
+        val grammar = AglStyleGrammar()
+        val sppt2ast: SyntaxAnalyser = AglStyleSyntaxAnalyser()
+        processor(grammar, AglStyleGrammar.goalRuleName, sppt2ast)
     }
 
     val formatProcessor: LanguageProcessor by lazy {
-        val grammar = AglGrammarGrammar()
+        val grammar = AglFormatGrammar()
         val sppt2ast: SyntaxAnalyser = AglSppt2AstTransformer()
-        processor(grammar, sppt2ast)
+        processor(grammar, AglFormatGrammar.goalRuleName, sppt2ast)
     }
 
     val version: String = BuildInfo.version
@@ -51,7 +54,13 @@ object Agl {
 
     @JsName("processorFromGrammar")
     fun processor(grammar: Grammar, syntaxAnalyser: SyntaxAnalyser?=null, formatter: Formatter?=null): LanguageProcessor {
-        return LanguageProcessorDefault(grammar, syntaxAnalyser, formatter)
+        val goalRuleName = grammar.rule.first { it.isSkip.not() }.name
+        return LanguageProcessorDefault(grammar, goalRuleName, syntaxAnalyser, formatter)
+    }
+
+    @JsName("processorFromGrammarForGoal")
+    fun processor(grammar: Grammar, goalRuleName:String, syntaxAnalyser: SyntaxAnalyser?=null, formatter: Formatter?=null): LanguageProcessor {
+        return LanguageProcessorDefault(grammar, goalRuleName, syntaxAnalyser, formatter)
     }
 
     @JsName("processorFromString")
@@ -64,6 +73,16 @@ object Agl {
             throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
         }
     }
+    @JsName("processorFromStringForGoal")
+    fun processor(grammarDefinitionStr: String, goalRuleName:String, syntaxAnalyser: SyntaxAnalyser?=null, formatter: Formatter?=null): LanguageProcessor {
+        try {
+            val grammar = grammarProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
+            return processor(grammar, goalRuleName, syntaxAnalyser, formatter)
+        } catch (e: ParseFailedException) {
+            //TODO: better, different exception to detect which list item fails
+            throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
+        }
+    }
 
     @JsName("processorFromRuleList")
     fun processor(rules: List<String>, syntaxAnalyser: SyntaxAnalyser?=null, formatter: Formatter?=null): LanguageProcessor {
@@ -71,7 +90,7 @@ object Agl {
         val grammarStr = prefix + rules.joinToString(" ") + "}"
         try {
             val grammar = grammarProcessor.process<Grammar>("grammarDefinition", grammarStr)
-            return LanguageProcessorDefault(grammar, syntaxAnalyser, formatter)
+            return processor(grammar, syntaxAnalyser, formatter)
         } catch (e: ParseFailedException) {
             //TODO: better, different exception to detect which list item fails
             val newCol = e.location.column.minus(prefix.length)

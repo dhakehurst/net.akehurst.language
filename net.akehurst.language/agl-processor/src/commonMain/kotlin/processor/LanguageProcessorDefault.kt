@@ -31,9 +31,10 @@ import net.akehurst.language.api.sppt2ast.UnableToTransformSppt2AstExeception
 import net.akehurst.language.parser.scannerless.ScannerlessParser
 
 internal class LanguageProcessorDefault(
-    val grammar: Grammar,
-    val syntaxAnalyser: SyntaxAnalyser?,
-    val formatter: Formatter?
+        val grammar: Grammar,
+        val goalRuleName: String,
+        val syntaxAnalyser: SyntaxAnalyser?,
+        val formatter: Formatter?
 ) : LanguageProcessor {
 
     private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(this.grammar)
@@ -49,11 +50,14 @@ internal class LanguageProcessorDefault(
         return this.parser.scan(inputText);
     }
 
+    override fun parse(inputText: CharSequence): SharedPackedParseTree = parse(this.goalRuleName, inputText)
+
     override fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree {
         val sppt: SharedPackedParseTree = this.parser.parse(goalRuleName, inputText)
         return sppt
     }
 
+    override fun <T> process(inputText: CharSequence): T = process(this.goalRuleName, inputText)
     override fun <T> process(goalRuleName: String, inputText: CharSequence): T {
         val sppt: SharedPackedParseTree = this.parse(goalRuleName, inputText)
         if (null == this.syntaxAnalyser) {
@@ -64,6 +68,7 @@ internal class LanguageProcessorDefault(
         return t;
     }
 
+    override fun <T> format(inputText: CharSequence): String = format<T>(this.goalRuleName, inputText)
     override fun <T> format(goalRuleName: String, inputText: CharSequence): String {
         val asm = this.process<T>(goalRuleName, inputText)
         return this.format(asm)
@@ -77,6 +82,7 @@ internal class LanguageProcessorDefault(
         }
     }
 
+    override fun expectedAt(inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem> = expectedAt(this.goalRuleName, inputText, position, desiredDepth)
     override fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem> {
         val parserExpected: List<RuntimeRule> = this.parser.expectedAt(goalRuleName, inputText, position);
         val grammarExpected: List<RuleItem> = parserExpected.map { this.converterToRuntimeRules.originalRuleItemFor(it) }

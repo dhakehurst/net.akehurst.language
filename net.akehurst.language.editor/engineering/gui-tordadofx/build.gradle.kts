@@ -6,7 +6,7 @@ val version_coroutines:String by project
 val version_kaf:String by project
 val version_javafx: String = "11.0.2"
 val version_tornado: String = "1.7.19"
-val version_agl:String = "3.3.2"
+val version_agl:String by project
 dependencies {
 
     commonMainImplementation( "org.jetbrains.kotlinx:kotlinx-coroutines-core-native:$version_coroutines")

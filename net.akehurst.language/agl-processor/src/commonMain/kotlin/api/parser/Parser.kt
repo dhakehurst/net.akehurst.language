@@ -41,7 +41,7 @@ interface Parser {
 	 * and return a list of "tokens" leaves. Useful for syntax highlighting.
 	 * Where more than one terminal matches, the longest takes priority, and literals take priority over patterns
 	 */
-	fun scan(inputText: CharSequence): List<SPPTLeaf>
+	fun scan(inputText: CharSequence, includeSkipRules:Boolean=false): List<SPPTLeaf>
 
 	/**
 	 * parse the inputText starting with the given grammar rule and return the shared packed parse Tree.
