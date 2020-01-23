@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>AGL Editor Example (Ace)</title>
+    <link rel="stylesheet" type="text/css" href="../lib/gridtab-2.1.1/gridtab/gridtab.min.css"/>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+<main>
+    <tabview>
+        <nav>
+            <a href="javascript:void(0)" onclick="tabSelect(this, 'expression')">Expression</a>
+            <a href="javascript:void(0)" onclick="tabSelect(this, 'language')">Language</a>
+        </nav>
+        <tab id="expression">
+            <section class="text">
+                <div id="expression.text"></div>
+            </section>
+        </tab>
+        <tab id="language">
+            <section>
+                <tabview>
+                    <nav>
+                        <a href="javascript:void(0)" onclick="tabSelect(this,'grammar')">Grammar</a>
+                        <a href="javascript:void(0)" onclick="tabSelect(this,'style')">Style</a>
+                        <a href="javascript:void(0)" onclick="tabSelect(this,'format')">Format</a>
+                    </nav>
+                    <tab id="grammar">
+                        <section>
+                            <div id="language.grammar"></div>
+                        </section>
+                    </tab>
+                    <tab id="style">
+                        <section>
+                            <div id="language.style"></div>
+                        </section>
+                    </tab>
+                    <tab id="format">
+                        <section>
+                            <div id="language.format"></div>
+                        </section>
+                    </tab>
+                </tabview>
+            </section>
+        </tab>
+    </tabview>
+
+</main>
+
+<script src="http://ajaxorg.github.io/ace-builds/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="../lib/kotlin/1.3.61/kotlin.js" type="text/javascript" charset="utf-8"></script>
+<script src="../lib/net.akehurst.language-agl-processor-3.3.2/net.akehurst.language-agl-processor.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" src="index.js"></script>
+
+</body>
+</html>

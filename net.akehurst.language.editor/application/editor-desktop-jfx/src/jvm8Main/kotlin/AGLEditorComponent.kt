@@ -165,7 +165,11 @@ class AGLEditorComponent(
             val position = this.caretPosition
             val expected = this.processor.expectedAt(inputText, position, 1)
 
-            val popup = Popup()
+            val popup = contextMenu {
+                item {
+                    label("aaa")
+                }
+            }
 
             val content = vbox {
                 label("aaa")
