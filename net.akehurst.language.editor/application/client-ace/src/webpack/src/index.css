@@ -37,7 +37,7 @@ tabview {
     grid-auto-flow: column;
 }
 
-tabview > nav {
+tabview > tab-nav {
     display: flex;
     flex-direction: row;
     justify-items: left;
@@ -48,7 +48,7 @@ tab {
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
 }
 
-tabview > nav > a {
+tabview > tab-nav > tab-header {
     display: grid;
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
     /* style */
@@ -56,7 +56,7 @@ tabview > nav > a {
     border-width: 1px;
 }
 
-tabview > nav > a:hover {
+tabview > tab-nav > tab-header:hover {
     background-color: white;
 }
 

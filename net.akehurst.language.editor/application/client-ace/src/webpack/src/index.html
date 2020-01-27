@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>AGL Editor Example (Ace)</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+<main>
+    <tabview>
+        <tab id="expression">
+            <section class="text">
+                <agl-ace id="expression-text">
+                    class XXX {
+
+                    }
+                </agl-ace>
+            </section>
+        </tab>
+        <tab id="language">
+            <section>
+                <tabview>
+                    <tab id="grammar">
+                        <section>
+                            <agl-ace id="language-grammar">
+                                namespace test
+
+                                grammar Test {
+                                  skip WS = "\s+" ;
+
+                                  declaration = 'class' ID '{' '}' ;
+
+                                  ID = "[A-Za-z_][A-Za-z0-9_]*" ;
+
+                                }
+                            </agl-ace>
+                        </section>
+                    </tab>
+                    <tab id="style">
+                        <section>
+                            <agl-ace id="language-style">
+                                'class' {
+                                  -fx-font-size: 14pt;
+                                  -fx-font-family: "Courier New";
+                                  -fx-fill: purple;
+                                  -fx-font-weight: bold;
+                                }
+                                "[A-Za-z_][A-Za-z0-9_]*" {
+                                  -fx-font-size: 14pt;
+                                  -fx-font-family: "Courier New";
+                                  -fx-fill: red;
+                                  -fx-font-style: italic;
+                                }
+                                '{' {
+                                  -fx-fill: darkgreen;
+                                }
+                                '}' {
+                                  -fx-fill: darkgreen;
+                                }
+                            </agl-ace>
+                        </section>
+                    </tab>
+                    <tab id="format">
+                        <section>
+                            <agl-ace id="language-format"></agl-ace>
+                        </section>
+                    </tab>
+                </tabview>
+            </section>
+        </tab>
+    </tabview>
+
+</main>
+
+</body>
+</html>

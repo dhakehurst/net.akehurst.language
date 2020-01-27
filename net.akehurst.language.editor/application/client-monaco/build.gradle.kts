@@ -8,10 +8,12 @@ dependencies {
 
     nodeKotlin("net.akehurst.language:agl-processor:$version_agl")
 
+    //jsMainImplementation("net.akehurst.language:agl-processor:$version_agl")
+    //jsMainImplementation(npm("ace-builds", version_ace))
 }
 
-val srcDir = project.layout.projectDirectory.dir("src/webpack")
-val outDir = project.layout.buildDirectory.dir("webpack")
+val srcDir = project.layout.projectDirectory.dir("src/typescript")
+val outDir = project.layout.buildDirectory.dir("typescript")
 
 kt2ts {
     nodeSrcDirectory.set(srcDir)

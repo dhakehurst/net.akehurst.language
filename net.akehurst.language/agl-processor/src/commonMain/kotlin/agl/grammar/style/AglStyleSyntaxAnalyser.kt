@@ -39,7 +39,10 @@ class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
     fun rule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): AglStyleRule {
         val selector = children[0].nonSkipMatchedText //TODO: ?
         val rule = AglStyleRule(selector)
-        rule.styles = this.transform(children[1], arg)
+        val styles:List<AglStyle> = this.transform(children[1], arg)
+        styles.forEach {
+            rule.styles[it.name] = it
+        }
         return rule
     }
 

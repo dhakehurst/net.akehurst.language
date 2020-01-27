@@ -1,0 +1,22 @@
+{
+  "name": "client-monaco",
+  "version": "1.0.0",
+  "scripts": {},
+  "private": true,
+  "dependencies": {
+    "kotlin": "1.3.61",
+    "monaco-editor": "^0.19.3"
+  },
+  "devDependencies": {
+    "css-loader": "^3.4.2",
+    "file-loader": "^5.0.2",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^3.2.0",
+    "monaco-editor-webpack-plugin": "^1.8.2",
+    "style-loader": "^1.1.3",
+    "ts-loader": "6.2.1",
+    "typescript": "3.7.5",
+    "webpack": "4.20.2",
+    "webpack-cli": "3.1.2"
+  }
+}
