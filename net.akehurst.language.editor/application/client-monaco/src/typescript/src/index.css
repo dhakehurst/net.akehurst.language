@@ -79,3 +79,11 @@ section {
     display: grid;
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
 }
+
+.ace_editor {
+    background-color: white;
+}
+
+.x {
+    font-style: italic;
+}

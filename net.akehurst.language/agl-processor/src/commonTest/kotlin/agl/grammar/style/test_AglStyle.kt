@@ -1,6 +1,6 @@
 package net.akehurst.language.agl.grammar.style
 
-import net.akehurst.language.api.api.style.AglStyleRule
+import net.akehurst.language.api.style.AglStyleRule
 import net.akehurst.language.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -79,3 +79,18 @@ section {
     display: grid;
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
 }
+
+.ace_tok1 {
+    font-size : 14pt ;
+    font-family : \"Courier New\" ;
+    color : purple ;
+    font-weight : bold ;
+}
+.ace_tok2 {
+    font-size : 14pt ;
+    font-family : \"Courier New\" ;
+    color : red ;
+    font-style : italic ;
+}
+.ace_tok3 {\n color : darkgreen ;\n}
+.ace_tok4 {\n color : darkgreen ;\n}

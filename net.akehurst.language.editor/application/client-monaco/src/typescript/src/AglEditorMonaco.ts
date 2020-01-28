@@ -128,12 +128,12 @@ export class AglEditorMonaco implements api.AglEditor {
     private onChangeHandler: (text: string) => void;
     public languageThemePrefix: string;
 
+    private _tokenProvider: AglScanTokenProvider = null;
+
     private _processor: agl.api.processor.LanguageProcessor = null;
     public get processor(): agl.api.processor.LanguageProcessor {
         return this._processor;
     }
-
-    private _tokenProvider: AglScanTokenProvider = null;
 
     public set processor(value: agl.api.processor.LanguageProcessor) {
         this._processor = value;

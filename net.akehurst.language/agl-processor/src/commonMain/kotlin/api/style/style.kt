@@ -1,4 +1,4 @@
-package net.akehurst.language.api.api.style
+package net.akehurst.language.api.style
 
 import kotlin.js.JsName
 
@@ -10,6 +10,14 @@ data class AglStyleRule(
     @JsName("getStyle")
     fun getStyle(name:String) : AglStyle? {
         return this.styles[name]
+    }
+
+    fun toCss(): String {
+        return """
+            ${this.selector} {
+                ${this.styles.values.joinToString(separator = "\n"){it.toCss()}}
+            }
+         """.trimIndent()
     }
 }
 

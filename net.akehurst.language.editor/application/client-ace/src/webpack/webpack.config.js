@@ -4,13 +4,18 @@ const HtmlWebPackPlugin = require('html-webpack-plugin');
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 module.exports = {
-    entry: './src/index.js',
+    entry: './src/index.ts',
     devtool: 'source-map',
     module: {
         rules: [
             {
                 test: /\.css$/,
                 use: ['style-loader', 'css-loader'],
+            },
+            {
+                test: /\.ts$/,
+                use: 'ts-loader',
+                exclude: [/node_modules/],
             },
             {
                 test: /\.html$/,
@@ -20,11 +25,15 @@ module.exports = {
                         options: {minimize: !isDevelopment}
                     }
                 ]
+            },
+            {
+                test: /\.ttf$/,
+                use: ['file-loader']
             }
         ],
     },
     resolve: {
-        extensions: ['.js'],
+        extensions: ['.ts', '.js'],
     },
     plugins: [
         new HtmlWebPackPlugin({

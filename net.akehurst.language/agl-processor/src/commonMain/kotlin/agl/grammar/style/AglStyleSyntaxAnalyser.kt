@@ -1,10 +1,7 @@
 package net.akehurst.language.agl.grammar.style
 
-import net.akehurst.language.api.api.style.AglStyle
-import net.akehurst.language.api.api.style.AglStyleRule
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.Namespace
-import net.akehurst.language.api.grammar.Rule
+import net.akehurst.language.api.style.AglStyle
+import net.akehurst.language.api.style.AglStyleRule
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.processor.BranchHandler
