@@ -4,6 +4,7 @@
     "noImplicitAny": true,
     "module": "es6",
     "target": "es6",
-    "allowJs": true
+    "allowJs": true,
+    "esModuleInterop": true
   }
 }

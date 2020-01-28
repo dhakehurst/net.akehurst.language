@@ -1,7 +1,7 @@
 import {TabView} from "./TabView.js"
 import {AglEditorAce} from "./AglEditorAce"
 import * as agl_js from 'net.akehurst.language-agl-processor';
-const agl = agl_js.net.akehurst.language;
+import agl = agl_js.net.akehurst.language;
 const Agl = agl.processor.Agl;
 
 TabView.initialise();
@@ -16,28 +16,60 @@ grammarEditor.processor = Agl.grammarProcessor;
 styleEditor.processor = Agl.styleProcessor;
 formatEditor.processor = Agl.formatProcessor;
 
+grammarEditor.editor.setOptions({
+    fontFamily: 'Courier New',
+    fontSize: '12pt',
+});
+styleEditor.editor.setOptions({
+    fontFamily: 'Courier New',
+    fontSize: '12pt',
+});
+formatEditor.editor.setOptions({
+    fontFamily: 'Courier New',
+    fontSize: '12pt',
+});
+expressionEditor.editor.setOptions({
+    fontFamily: 'Courier New',
+    fontSize: '12pt',
+});
+
 grammarEditor.setStyle(`
 'namespace' {
-  font-size: 12pt;
-  font-family: "Courier New";
   color: darkgreen;
   font-weight: bold;
 }
 'grammar' {
-  font-size: 12pt;
-  font-family: "Courier New";
   color: darkgreen;
   font-weight: bold;
 }
 'skip' {
-  font-size: 12pt;
-  font-family: "Courier New";
   color: darkgreen;
   font-weight: bold;
 }
+"'(?:\\\\\\\\?.)*?'" {
+  color: blue;
+}
+"\\\"(?:\\\\\\\\?.)*?\\\"" {
+  color: darkblue;
+}
 "[a-zA-Z_][a-zA-Z_0-9-]*" {
-  font-size: 12pt;
+  color: darkred;
+  font-style: italic;
+}
+`);
+
+styleEditor.setStyle(`
+"'(?:\\\\\\\\?.)*?'" {
+  color: blue;
+}
+"\\\"(?:[^\\\"\\\\\\\\]|\\\\\\\\.)*?\\\"" {
   font-family: "Courier New";
+  color: darkblue;
+}
+"[a-zA-Z_][a-zA-Z_0-9-]*" {
+  color: red;
+}
+"[-a-zA-Z_][-a-zA-Z_0-9-]*(?=\\\\s*[:])" {
   color: darkred;
   font-style: italic;
 }
@@ -50,7 +82,7 @@ try {
     console.error(e);
 }
 
-grammarEditor.editor.on("blur", e =>{
+grammarEditor.editor.on("blur", (e:Event) =>{
     console.info("grammar changed");
     try {
         expressionEditor.processor = Agl.processorFromString(grammarEditor.editor.getValue());
@@ -59,7 +91,7 @@ grammarEditor.editor.on("blur", e =>{
     }
 });
 
-styleEditor.editor.on("blur", e =>{
+styleEditor.editor.on("blur", (e:Event) =>{
    console.info("style changed");
    expressionEditor.setStyle(styleEditor.editor.getValue());
 });

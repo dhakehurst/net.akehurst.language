@@ -27,13 +27,15 @@ private fun createRules(): List<Rule> {
     b.rule("rules").multi(0,-1, b.nonTerminal("rule"))
     b.rule("rule").concatenation(b.nonTerminal("SELECTOR"), b.terminalLiteral("{"), b.nonTerminal("styleList"), b.terminalLiteral("}"))
     b.rule("SELECTOR").choiceEqual(b.nonTerminal("LITERAL"), b.nonTerminal("PATTERN"), b.nonTerminal("IDENTIFIER"))
-    b.rule("styleList").multi(0,-1,b.nonTerminal("style"))
-    b.rule("style").concatenation(b.nonTerminal("STYLE_ID"), b.terminalLiteral(":"), b.nonTerminal("STYLE_VALUE"), b.terminalLiteral(";"))
-    b.rule("STYLE_ID").concatenation(b.terminalPattern("[-a-zA-Z_][-a-zA-Z_0-9-]*"));
-    b.rule("STYLE_VALUE").concatenation(b.terminalPattern("[^;]*"))
     // these must match what is in the AglGrammarGrammar
     b.rule("LITERAL").concatenation(b.terminalPattern("'(?:\\\\?.)*?'"));
-    b.rule("PATTERN").concatenation(b.terminalPattern("\"(?:\\\\?.)*?\""));
+    b.rule("PATTERN").concatenation(b.terminalPattern("\"(?:[^\"\\\\]|\\\\.)*?\""));
     b.rule("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
+
+    b.rule("styleList").multi(0,-1,b.nonTerminal("style"))
+    b.rule("style").concatenation(b.nonTerminal("STYLE_ID"), b.terminalLiteral(":"), b.nonTerminal("STYLE_VALUE"), b.terminalLiteral(";"))
+    b.rule("STYLE_ID").concatenation(b.terminalPattern("[-a-zA-Z_][-a-zA-Z_0-9-]*(?=\\s*[:])"));
+    b.rule("STYLE_VALUE").concatenation(b.terminalPattern("([^;:]*)(?=\\s*[;])"))
+
     return b.grammar.rule
 }

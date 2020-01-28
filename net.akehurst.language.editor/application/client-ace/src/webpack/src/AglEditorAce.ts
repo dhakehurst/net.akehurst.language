@@ -1,7 +1,7 @@
 import * as ace from "ace-builds"
 import * as agl_js from 'net.akehurst.language-agl-processor';
 import agl = agl_js.net.akehurst.language;
-import {VirtualRenderer} from "ace-builds";
+//import {VirtualRenderer} from "ace-builds";
 
 function trimIndent(text: string): string {
     let lines = text.split('\n');
@@ -77,13 +77,21 @@ export class AglEditorAce {
         const rules = agl.processor.Agl.styleProcessor.process(css);
         let mappedCss = '';
         rules.toArray().forEach( (it:agl.api.style.AglStyleRule) => {
-            const cssClass = '.ace_'+this.mapTokenTypeToClass(it.selector);
+            const cssClass = '.'+this.languageId + ' ' +'.ace_'+this.mapTokenTypeToClass(it.selector);
             const mappedRule = new agl.api.style.AglStyleRule(cssClass);
             mappedRule.styles = it.styles;
             mappedCss = mappedCss + '\n' + mappedRule.toCss();
         });
         const module = { cssClass:this.languageId, cssText: mappedCss };
-        this.editor.renderer.setTheme(module);
+        // remove the current style element for 'languageId' (which is used as the theme name) from the container
+        // else the theme css is not reapplied
+        const curStyle = document.querySelector('style#'+this.languageId);
+        if (curStyle) {
+            curStyle.parentElement.removeChild(curStyle);
+        }
+        // the use of an object instead of a string is undocumented but seems to work
+        this.editor.setOption('theme', module); //not sure but maybe this is better than settin gon renderer direct
+//        this.editor.renderer.setTheme(module);
     }
 
 }
@@ -177,9 +185,5 @@ class AglTokenizer implements ace.Ace.Tokenizer {
     removeCapturingGroups(src: string): string {
         return "";
     }
-
-}
-
-class AglVirtualRenderer extends VirtualRenderer {
 
 }

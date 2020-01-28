@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <title>AGL Editor Example (Ace)</title>
+    <link rel="stylesheet" href="ace.css">
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
@@ -11,7 +12,9 @@
             <section class="text">
                 <agl-ace id="expression-text">
                     class XXX {
-
+                        prop1 : String
+                        prop2 : Integer
+                        propList : List&lt;String&gt;
                     }
                 </agl-ace>
             </section>
@@ -27,7 +30,10 @@
                                 grammar Test {
                                   skip WS = "\s+" ;
 
-                                  declaration = 'class' ID '{' '}' ;
+                                  declaration = 'class' ID '{' propertyList '}' ;
+                                  propertyList = ID ':' typeReference ;
+                                  typeReference = ID typeArguments? ;
+                                  typeArguments = '<' [typeReference / ',']+ '>' ;
 
                                   ID = "[A-Za-z_][A-Za-z0-9_]*" ;
 
@@ -39,13 +45,11 @@
                         <section>
                             <agl-ace id="language-style">
                                 'class' {
-                                  font-size: 14pt;
                                   font-family: "Courier New";
                                   color: purple;
                                   font-weight: bold;
                                 }
                                 "[A-Za-z_][A-Za-z0-9_]*" {
-                                  font-size: 14pt;
                                   font-family: "Courier New";
                                   color: red;
                                   font-style: italic;

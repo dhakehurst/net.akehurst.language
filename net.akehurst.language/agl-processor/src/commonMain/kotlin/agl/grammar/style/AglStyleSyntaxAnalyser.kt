@@ -34,7 +34,7 @@ class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
 
     // rule = SELECTOR '{' styleList '}'
     fun rule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): AglStyleRule {
-        val selector = children[0].nonSkipMatchedText //TODO: ?
+        val selector = children[0].nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")  //TODO: ? selector combinations, and/or/contains etc
         val rule = AglStyleRule(selector)
         val styles:List<AglStyle> = this.transform(children[1], arg)
         styles.forEach {
@@ -52,7 +52,7 @@ class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
 
     // style = STYLE_ID ':' STYLE_VALUE ';' ;
     fun style(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): AglStyle {
-        val name = children[0].nonSkipMatchedText //TODO: ?
+        val name = children[0].nonSkipMatchedText //TODO:
         val value = children[1].nonSkipMatchedText //TODO: ?
         return AglStyle(name, value)
     }

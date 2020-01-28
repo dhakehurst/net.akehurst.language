@@ -87,4 +87,19 @@ class test_AglStyle {
         assertNotNull(actual)
         assertEquals(2, actual.size)
     }
+    @Test
+    fun regexWithQuotes() {
+        val text = """
+            "\\\"(?:\\\\?.)*?\\\"" {
+              font-family: "Courier New";
+              color: darkblue;
+            }
+        """.trimIndent()
+
+        val actual = Agl.styleProcessor.process<List<AglStyleRule>>("rules", text)
+
+        assertNotNull(actual)
+        assertEquals(1, actual.size)
+    }
+
 }
