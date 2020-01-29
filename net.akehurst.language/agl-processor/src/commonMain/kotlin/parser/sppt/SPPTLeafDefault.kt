@@ -18,17 +18,19 @@ package net.akehurst.language.parser.sppt
 
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
 
 class SPPTLeafDefault(
         terminalRule: RuntimeRule,
-        startPosition:Int,
+        location: InputLocation,
         override val isEmptyLeaf: Boolean,
         override val matchedText: String,
         priority: Int
 ) : SPPTNodeAbstract(
         terminalRule,
-        startPosition,
-        startPosition+matchedText.length,
+        location,
+        location.position+matchedText.length,
         priority
 ), SPPTLeaf
 {
@@ -59,7 +61,13 @@ class SPPTLeafDefault(
     }
 
     override fun toString(): String {
-        val name = if (this.isLiteral) "'${this.runtimeRule.patternText}'" else "\"${this.runtimeRule.patternText}\""
+        val name = when {
+            this.runtimeRule == RuntimeRuleSet.END_OF_TEXT -> "EOT"
+            this.isLiteral -> "'${this.runtimeRule.name}'"
+            this.isPattern -> "\"${this.runtimeRule.patternText}\""
+            else -> this.name //shouldn't happen!
+        }
+
         return "${this.startPosition},${this.nextInputPosition},C:${name}(${this.runtimeRule.number})"
     }
 

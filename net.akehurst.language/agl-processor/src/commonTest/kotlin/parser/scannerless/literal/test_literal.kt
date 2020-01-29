@@ -29,6 +29,7 @@ class test_literal {
     }
 
     // literal
+    //  a = 'a'
     private fun literal_a(): ScannerlessParser {
         val rrb = RuntimeRuleSetBuilder()
         val r0 = rrb.literal("a")
@@ -36,9 +37,8 @@ class test_literal {
         return ScannerlessParser(rrb.ruleSet())
     }
 
-    //  a = 'a' | 'a'
     @Test
-    fun literal_a_a_a() {
+    fun a() {
         val sp = literal_a()
         val goalRuleName = "a"
         val inputText = "a"
@@ -48,9 +48,8 @@ class test_literal {
         assertNotNull(actual)
     }
 
-    // a = 'a' | 'b'
     @Test
-    fun literal_a_a_b_fails() {
+    fun b_fails() {
         val sp = literal_a()
         val goalRuleName = "a"
         val inputText = "b"
@@ -59,7 +58,7 @@ class test_literal {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        assertEquals(0, ex.location.column)
     }
 
 }

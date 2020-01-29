@@ -26,6 +26,7 @@ import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.sppt.SPPTLeafDefault
 import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
 import kotlin.math.max
@@ -47,13 +48,15 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         var result = mutableListOf<SPPTLeaf>()
 
         var position = 0
+        var lastLocation = InputLocation(0,1,1,0)
         while (!input.isEnd(position)) {
             val matches: List<SPPTLeaf> = terminals.mapNotNull {
                 val match = input.tryMatchText(position, it.patternText, it.isPattern)
                 if (null == match) {
                     null
                 } else {
-                    SPPTLeafDefault(it, position, false, match, (if (it.isPattern) 0 else 1))
+                    val location = input.nextLocation(lastLocation,match)
+                    SPPTLeafDefault(it, location, false, match, (if (it.isPattern) 0 else 1))
                 }
             }
             val longest = matches.maxWith(Comparator<SPPTLeaf> { l1, l2 ->
@@ -68,10 +71,12 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
                 }
             })
             if (null == longest) {
+                lastLocation = input.nextLocation(lastLocation,inputText[position].toString())
                 position++
             } else {
                 result.add(longest)
                 position = longest.nextInputPosition
+                lastLocation = longest.location
             }
         }
         return result

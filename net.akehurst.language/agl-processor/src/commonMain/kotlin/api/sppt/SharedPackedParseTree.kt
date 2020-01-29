@@ -49,6 +49,8 @@ import kotlin.js.JsName
 	 */
 	 fun contains(other: SharedPackedParseTree ): Boolean
 
+	fun tokensByLine() : List<List<SPPTLeaf>>
+
 	/**
 	 *  the original input text
 	 */

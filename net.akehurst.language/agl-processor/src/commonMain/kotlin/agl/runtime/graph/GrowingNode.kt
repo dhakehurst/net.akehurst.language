@@ -17,22 +17,30 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SPPTNode
 
 class GrowingNode(
         val isSkipGrowth : Boolean,
         val currentState : ParserState, // current rp of this node, it is growing, this changes (for new node) when children are added
-        val startPosition: Int,
+        val location: InputLocation,
         val nextInputPosition: Int,
         val priority: Int,
         val children: List<SPPTNode>,
         val numNonSkipChildren: Int
 ) {
     //FIXME: shouldn't really do this, shouldn't store these in sets!!
-    private val hashCode_cache = arrayOf(this.currentState, this.startPosition).contentHashCode()
+    private val hashCode_cache = arrayOf(this.currentState, this.location.position).contentHashCode()
 
+    val startPosition = location.position
     val matchedTextLength:Int = this.nextInputPosition - this.startPosition
     val runtimeRule get() = currentState.runtimeRule
+    var skipNodes = mutableListOf<SPPTNode>()
+    val lastLocation get() = if(this.runtimeRule.isTerminal) {
+        if (this.skipNodes.isEmpty()) this.location else this.skipNodes.last().location
+    } else {
+        if (children.isEmpty()) this.location else children.last().location
+    }
 
     var previous: MutableMap<GrowingNodeIndex, PreviousInfo> = mutableMapOf()
     val next: MutableList<GrowingNode> = mutableListOf()
@@ -74,7 +82,6 @@ class GrowingNode(
         return this.runtimeRule.incrementNextItemIndex(this.currentState.position)
     }
 
-    var skipNodes = mutableListOf<SPPTNode>()
 
     fun expectsItemAt(runtimeRule: RuntimeRule, atPosition: Int): Boolean {
         return this.runtimeRule.couldHaveChild(runtimeRule, atPosition)

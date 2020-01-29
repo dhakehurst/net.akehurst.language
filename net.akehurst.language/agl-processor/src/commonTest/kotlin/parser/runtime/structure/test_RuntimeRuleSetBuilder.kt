@@ -159,7 +159,7 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(false, actual.runtimeRules[3].isPattern)
         assertEquals(false, actual.runtimeRules[3].isSkip)
         assertEquals(RuntimeRuleItemKind.CHOICE, actual.runtimeRules[3].rhs.kind)
-        assertEquals(RuntimeRuleChoiceKind.PRIORITY_LONGEST, actual.runtimeRules[3].rhs.choiceKind)
+        assertEquals(RuntimeRuleChoiceKind.LONGEST_PRIORITY, actual.runtimeRules[3].rhs.choiceKind)
         assertEquals(0, actual.runtimeRules[3].rhs.multiMin)
         assertEquals(0, actual.runtimeRules[3].rhs.multiMax)
         assertEquals(r0, actual.runtimeRules[3].rhs.items.get(0))

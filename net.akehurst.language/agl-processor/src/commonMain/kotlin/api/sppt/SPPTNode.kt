@@ -16,6 +16,8 @@
 
 package net.akehurst.language.api.sppt
 
+import net.akehurst.language.api.parser.InputLocation
+
 /**
  * A leaf node has no children.
  */
@@ -37,6 +39,8 @@ interface SPPTNode : SharedPackedParseTreeVisitable {
 	 *  the rule number from the runtime grammar that caused this node to be constructed, derived from identity
 	 */
 	val runtimeRuleNumber: Int
+
+	val location: InputLocation
 
 	/**
 	 *

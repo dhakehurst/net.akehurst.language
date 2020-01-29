@@ -178,7 +178,7 @@ class test_InputFromCharSequence {
 
         val actual = sut.tryMatchText(0, "", false)
 
-        assertEquals("", actual)
+        assertEquals(null, actual)
     }
 
     @Test
@@ -198,7 +198,7 @@ class test_InputFromCharSequence {
 
         val actual = sut.tryMatchText(0, "", true)
 
-        assertEquals("", actual)
+        assertEquals(null, actual)
     }
 
     @Test

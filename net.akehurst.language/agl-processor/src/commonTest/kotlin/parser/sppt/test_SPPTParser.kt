@@ -22,6 +22,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.ast.GrammarBuilderDefault
 import net.akehurst.language.agl.ast.NamespaceDefault
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.api.parser.InputLocation
 import kotlin.test.*
 
 class test_SPPTParser {
@@ -45,7 +46,7 @@ class test_SPPTParser {
 
         val sut = SPPTParser(rrb)
 
-        val actual = sut.leaf("a", 0)
+        val actual = sut.leaf("a", InputLocation(0, 0, 0, 0))
 
         assertNotNull(actual)
         assertTrue(actual.isLeaf)
@@ -65,7 +66,7 @@ class test_SPPTParser {
 
         val sut = SPPTParser(rrb)
 
-        val actual = sut.leaf("[a-z]", "a", 0)
+        val actual = sut.leaf("[a-z]", "a", InputLocation(0, 0, 0, 0))
 
         assertNotNull(actual)
         assertTrue(actual.isLeaf)
@@ -84,7 +85,7 @@ class test_SPPTParser {
 
         val sut = SPPTParser(rrb)
 
-        val actual = sut.emptyLeaf("a",0)
+        val actual = sut.emptyLeaf("a", InputLocation(0, 0, 0, 0))
         assertNotNull(actual)
         assertTrue(actual.isLeaf)
         assertFalse(actual.isPattern)
@@ -102,7 +103,7 @@ class test_SPPTParser {
 
         val sut = SPPTParser(rrb)
 
-        val actual = sut.branch("a", listOf<SPPTNode>( sut.emptyLeaf("a",0) ), 0)
+        val actual = sut.branch("a", listOf<SPPTNode>(sut.emptyLeaf("a", InputLocation(0, 0, 0, 0))))
 
         assertNotNull(actual)
         assertFalse(actual.isLeaf)
@@ -127,7 +128,7 @@ class test_SPPTParser {
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" 'a'" , actual.toStringAll)
+        assertEquals(" 'a'", actual.toStringAll)
     }
 
     @Test
@@ -144,7 +145,7 @@ class test_SPPTParser {
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" '[a-z]' : 'a'" , actual.toStringAll)
+        assertEquals(" '[a-z]' : 'a'", actual.toStringAll)
     }
 
     @Test
@@ -161,14 +162,14 @@ class test_SPPTParser {
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" a { §empty.a }" , actual.toStringAll)
+        assertEquals(" a { §empty.a }", actual.toStringAll)
     }
 
     @Test
     fun parse_branch() {
         val rrb = RuntimeRuleSetBuilder()
         val lit = rrb.literal("a")
-        rrb.rule("a").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,lit)
+        rrb.rule("a").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, lit)
 
         val sut = SPPTParser(rrb)
 
@@ -179,7 +180,7 @@ class test_SPPTParser {
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" a { 'a' }" , actual.toStringAll)
+        assertEquals(" a { 'a' }", actual.toStringAll)
     }
 
 

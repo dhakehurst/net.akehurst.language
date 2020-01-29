@@ -18,7 +18,7 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 
-data class Transition(
+class Transition(
         val from: ParserState,
         val to: ParserState,
         val action: ParseAction,
@@ -34,4 +34,29 @@ data class Transition(
         GOAL    // goal
     }
 
+    private val hashCode_cache:Int by lazy {
+        arrayListOf<Any>(from, to, action, lookaheadGuard).hashCode()
+    }
+
+
+    override fun hashCode(): Int {
+        return this.hashCode_cache
+    }
+
+    override fun equals(other: Any?): Boolean {
+        when(other) {
+            is Transition -> {
+                if (this.from!=other.from) return false
+                if (this.to!=other.to) return false
+                if (this.action!=other.action) return false
+                if (this.lookaheadGuard!=other.lookaheadGuard) return false
+                return true
+            }
+            else -> return false
+        }
+    }
+
+    override fun toString(): String {
+        return "Transition { $from -- $action$lookaheadGuard[$prevGuard] --> $to }"
+    }
 }

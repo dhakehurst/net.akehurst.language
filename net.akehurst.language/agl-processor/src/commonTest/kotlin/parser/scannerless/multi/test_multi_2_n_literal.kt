@@ -48,7 +48,7 @@ class test_multi_2_n_literal : test_ScannerlessParserAbstract() {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        assertEquals(0, e.location.column)
     }
 
     @Test

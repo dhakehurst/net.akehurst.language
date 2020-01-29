@@ -29,7 +29,8 @@ import kotlin.test.assertFailsWith
 class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
     // S =  expr ;
-    // expr = var < bool < group < div < mul < add < sub ;
+    // expr = root < group < div < mul < add < sub ;
+    // root = var < bool ;
     // sub = [ expr / '-' ]+ ;
     // add = [ expr / '+' ]+ ;
     // mul = [ expr / '*' ]+ ;
@@ -65,7 +66,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        assertEquals(0, ex.location.column)
     }
 
 
@@ -313,10 +314,12 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
                     expr { root { var { '[a-zA-Z]+' : 'a' } } }
                     '*'
                     expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                    '*'
+                    expr { root { var { '[a-zA-Z]+' : 'c' } } }
                   }
                 }
                '+'
-               expr { root { var { '[a-zA-Z]+' : 'c' } } }
+               expr { root { var { '[a-zA-Z]+' : 'd' } } }
               }
              }
             }

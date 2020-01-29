@@ -127,10 +127,37 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
         val sentence = "a".repeat(10) + "b"
 
         val expected1 = """
-            S { S1 {
-                P { 'a' }
-                'b'
-            } }
+         S { S1 {
+            P { P2 {
+                P { P2 {
+                    P { P2 {
+                        P { P2 {
+                            P { P2 {
+                                P { P2 {
+                                    P { P2 {
+                                        P { P2 {
+                                            P { P2 {
+                                                P { 'a' }
+                                                'a'
+                                              } }
+                                            'a'
+                                          } }
+                                        'a'
+                                      } }
+                                    'a'
+                                  } }
+                                'a'
+                              } }
+                            'a'
+                          } }
+                        'a'
+                      } }
+                    'a'
+                  } }
+                'a'
+              } }
+            'b'
+          } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected1)

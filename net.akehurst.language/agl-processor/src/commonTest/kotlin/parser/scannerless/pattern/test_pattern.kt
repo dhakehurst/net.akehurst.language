@@ -29,6 +29,7 @@ class test_pattern {
     }
 
     // pattern
+    // a = "a"
     private fun pattern_a(): ScannerlessParser {
         val rrb = RuntimeRuleSetBuilder()
         val r0 = rrb.pattern("a")
@@ -36,7 +37,6 @@ class test_pattern {
         return ScannerlessParser(rrb.ruleSet())
     }
 
-    // a = "a" | 'a'
     @Test
     fun pattern_a_a_a() {
         val sp = pattern_a()
@@ -48,7 +48,6 @@ class test_pattern {
         assertNotNull(actual)
     }
 
-    // a = "a" | 'b'
     @Test
     fun pattern_a_a_b_fails() {
         val sp = pattern_a()
@@ -62,6 +61,7 @@ class test_pattern {
         assertEquals(1, ex.location.column)
     }
 
+    // a = "[a-c]"
     private fun pattern_a2c(): ScannerlessParser {
         val rrb = RuntimeRuleSetBuilder()
         val r0 = rrb.pattern("[a-c]")
@@ -69,7 +69,6 @@ class test_pattern {
         return ScannerlessParser(rrb.ruleSet())
     }
 
-    // a = "[a-c]" | 'a'
     @Test
     fun pattern_a2c_a_a() {
         val sp = pattern_a2c()
@@ -81,7 +80,6 @@ class test_pattern {
         assertNotNull(actual)
     }
 
-    // a = "[a-c]" | 'b'
     @Test
     fun pattern_a2c_a_b() {
         val sp = pattern_a2c()
@@ -93,7 +91,6 @@ class test_pattern {
         assertNotNull(actual)
     }
 
-    // a = "[a-c]" | 'c'
     @Test
     fun pattern_a2c_a_c() {
         val sp = pattern_a2c()
@@ -105,4 +102,16 @@ class test_pattern {
         assertNotNull(actual)
     }
 
+    @Test
+    fun pattern_a2c_a_d() {
+        val sp = pattern_a2c()
+        val goalRuleName = "a"
+        val inputText = "d"
+
+        val ex = assertFailsWith(ParseFailedException::class) {
+            test_parse(sp, goalRuleName, inputText)
+        }
+        assertEquals(1, ex.location.line)
+        assertEquals(0, ex.location.column)
+    }
 }

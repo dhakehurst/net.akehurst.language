@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.sppt
 
+import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
@@ -29,6 +30,12 @@ class SharedPackedParseTreeDefault(
 
     override fun contains(other: SharedPackedParseTree): Boolean {
         return this.root.contains(other.root)
+    }
+
+    override fun tokensByLine(): List<List<SPPTLeaf>> {
+        val result = mutableListOf<List<SPPTLeaf>>()
+        this.root
+        return result
     }
 
     override val asString: String by lazy {

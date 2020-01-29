@@ -39,13 +39,26 @@ internal class RuntimeParser(
 
     val longestLastGrown: SPPTNode?
         get() {
+            //TODO: handle the fact that we can parse next token, but if the lookahead is wrong then it fails
+
+
             val llg = this.lastGrown.maxWith(Comparator<GrowingNode> { a, b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
             return if (null == llg) {
                 return null
             } else if (llg.isLeaf) {
-                this.graph.findOrTryCreateLeaf(llg.runtimeRule, llg.startPosition)
+                this.graph.findOrTryCreateLeaf(llg.runtimeRule, llg.nextInputPosition, llg.lastLocation)
             } else {
-                val cn = SPPTBranchDefault(llg.runtimeRule, llg.startPosition, llg.nextInputPosition, llg.priority)
+                //try grow width
+                /*
+                val rps = llg.currentState
+                val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, llg.previous.values.first().node.currentState.rulePosition)
+                val transition = transitions.firstOrNull { it -> it.action==Transition.ParseAction.WIDTH }
+                if (null!=transition) {
+                    val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, llg.nextInputPosition, llg.location)
+                }
+
+                 */
+                val cn = SPPTBranchDefault(llg.runtimeRule, llg.location, llg.nextInputPosition, llg.priority)
                 cn.childrenAlternatives.add(llg.children)
                 cn
             }
@@ -126,12 +139,12 @@ internal class RuntimeParser(
     }
 
     private fun doWidth(gn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition) {
-            val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, gn.nextInputPosition)
+            val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, gn.nextInputPosition, gn.lastLocation)
             if (null != l) {
                 //TODO: find a better way to look past skip terminals, this means wrong matches can be made...though they will be dropped on H or G!
                 val lh = transition.lookaheadGuard + this.runtimeRuleSet.allSkipTerminals
                 val hasLh = lh.any {
-                    val l = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition)
+                    val l = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition, l.location)
                     null != l
                 }
                 if (hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
@@ -144,7 +157,7 @@ internal class RuntimeParser(
         if (previous.node.currentState.rulePosition != transition.prevGuard) {
             val lh = transition.lookaheadGuard
             val hasLh = lh.any {
-                val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
+                val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
                 null != l
             }
             if (hasLh || lh.isEmpty()) {
@@ -161,7 +174,7 @@ internal class RuntimeParser(
             if (transition.runtimeGuard(previous.node)) {
                 val lh = transition.lookaheadGuard
                 val hasLh = lh.any {
-                    val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition)
+                    val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
                     null != l
                 }
                 if (hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
@@ -183,7 +196,7 @@ internal class RuntimeParser(
             val rps = this.runtimeRuleSet.firstSkipRuleTerminalPositions //TODO: get skipStates here, probably be better/faster
             for (rp in rps) {
                 for (rr in rp.runtimeRule.itemsAt[rp.position]) {
-                    val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition)
+                    val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition, gn.lastLocation)
                     if (null != l) {
                         val leafRp = RulePosition(rr, 0, -1)
                         val skipState = this.runtimeRuleSet.fetchSkipStates(leafRp)

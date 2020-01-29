@@ -21,10 +21,11 @@ import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SPPTNodeIdentity
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.api.parser.InputLocation
 
 abstract class SPPTNodeAbstract(
         val runtimeRule: RuntimeRule,
-        override val startPosition: Int,
+        override val location: InputLocation,
         override val nextInputPosition: Int,
         override val priority: Int                      //not needed as part of the SPPTNode, but needed for the parsing algorithm
 ) : SPPTNode {
@@ -36,6 +37,8 @@ abstract class SPPTNodeAbstract(
     )
 
     override val name: String = this.runtimeRule.name
+
+    override val startPosition get() = location.position
 
     override val runtimeRuleNumber: Int get() { return this.identity.runtimeRuleNumber }
 
