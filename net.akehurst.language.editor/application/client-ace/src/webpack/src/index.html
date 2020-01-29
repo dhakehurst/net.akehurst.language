@@ -2,8 +2,6 @@
 <html lang="en">
 <head>
     <title>AGL Editor Example (Ace)</title>
-    <link rel="stylesheet" href="ace.css">
-    <link rel="stylesheet" href="index.css">
 </head>
 <body>
 <main>
@@ -28,14 +26,14 @@
                                 namespace test
 
                                 grammar Test {
-                                  skip WS = "\s+" ;
+                                    skip WS = "\s+" ;
 
-                                  declaration = 'class' ID '{' propertyList '}' ;
-                                  propertyList = ID ':' typeReference ;
-                                  typeReference = ID typeArguments? ;
-                                  typeArguments = '<' [typeReference / ',']+ '>' ;
+                                    declaration = 'class' ID '{' property* '}' ;
+                                    property = ID ':' typeReference ;
+                                    typeReference = ID typeArguments? ;
+                                    typeArguments = '<' [typeReference / ',']+ '>' ;
 
-                                  ID = "[A-Za-z_][A-Za-z0-9_]*" ;
+                                    ID = "[A-Za-z_][A-Za-z0-9_]*" ;
 
                                 }
                             </agl-ace>

@@ -1,3 +1,5 @@
+import './ace.css'
+import './index.css'
 import {TabView} from "./TabView.js"
 import {AglEditorAce} from "./AglEditorAce"
 import * as agl_js from 'net.akehurst.language-agl-processor';
@@ -82,7 +84,7 @@ try {
     console.error(e);
 }
 
-grammarEditor.editor.on("blur", (e:Event) =>{
+grammarEditor.editor.on("input", (e:Event) =>{
     console.info("grammar changed");
     try {
         expressionEditor.processor = Agl.processorFromString(grammarEditor.editor.getValue());
@@ -91,7 +93,7 @@ grammarEditor.editor.on("blur", (e:Event) =>{
     }
 });
 
-styleEditor.editor.on("blur", (e:Event) =>{
+styleEditor.editor.on("input", (e:Event) =>{
    console.info("style changed");
    expressionEditor.setStyle(styleEditor.editor.getValue());
 });

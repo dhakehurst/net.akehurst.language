@@ -42,6 +42,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
     }
 
     override fun scan(inputText: CharSequence, includeSkipRules:Boolean): List<SPPTLeaf> {
+        val undefined = RuntimeRule(-5, "undefined",RuntimeRuleKind.TERMINAL, false, true)
         //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
         val input = InputFromCharSequence(inputText)
         val terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.allNonSkipTerminals
@@ -59,19 +60,23 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
                     SPPTLeafDefault(it, location, false, match, (if (it.isPattern) 0 else 1))
                 }
             }
+            // prefer literals over patterns
             val longest = matches.maxWith(Comparator<SPPTLeaf> { l1, l2 ->
                 when {
-                    l1.matchedTextLength > l2.matchedTextLength -> 1
-                    l2.matchedTextLength > l1.matchedTextLength -> -1
+                    l1.isLiteral && l2.isPattern -> 1
+                    l1.isPattern && l2.isLiteral -> -1
                     else -> when {
-                        l1.isLiteral && l2.isPattern -> 1
-                        l1.isPattern && l2.isLiteral -> -1
+                        l1.matchedTextLength > l2.matchedTextLength -> 1
+                        l2.matchedTextLength > l1.matchedTextLength -> -1
                         else -> 0
                     }
                 }
             })
             if (null == longest) {
-                lastLocation = input.nextLocation(lastLocation,inputText[position].toString())
+                val text = inputText[position].toString()
+                lastLocation = input.nextLocation(lastLocation,text)
+                val unscanned = SPPTLeafDefault(undefined, lastLocation,false, text,0)
+                result.add(unscanned)
                 position++
             } else {
                 result.add(longest)
