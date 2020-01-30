@@ -23,3 +23,12 @@ My Requirements:
  - Supports families of languages, i.e. grammar composition/extension
  - 
 
+
+# TODO
+
+lots:
+ - performance improvements
+ - grammar composition
+ - support for AST creation (rather than just PT) within the grammar definition
+ - PT is not always what one expects
+ 
