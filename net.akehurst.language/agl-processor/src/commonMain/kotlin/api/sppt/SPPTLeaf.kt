@@ -37,4 +37,9 @@ interface SPPTLeaf : SPPTNode {
 	 */
 	val isLiteral: Boolean
 
+	/**
+		list of names of all the parent nodes leading to this leaf
+	    ( currently  populated by TokensByLineVisitor - called by SharedPackedParseTree.tokensByLine )
+	 */
+	val tagList: List<String>
 }

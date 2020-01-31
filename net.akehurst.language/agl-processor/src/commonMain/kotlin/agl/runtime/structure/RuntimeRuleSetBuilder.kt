@@ -53,9 +53,9 @@ class RuntimeRuleSetBuilder() {
     fun findRuleByName(ruleName: String, terminal: Boolean): RuntimeRule? {
         return this.rules.firstOrNull {
             if (terminal) {
-                it.isTerminal && it.name == ruleName
+                it.isTerminal && it.tag == ruleName
             } else {
-                it.isNonTerminal && it.name == ruleName
+                it.isNonTerminal && it.tag == ruleName
             }
         }
     }
@@ -68,11 +68,27 @@ class RuntimeRuleSetBuilder() {
         }
     }
 
+    fun literal(name: String, value: String): RuntimeRule {
+        if (null != this.runtimeRuleSet) {
+            throw ParseException("Must not add rules after creating the ruleSet")
+        } else {
+            return RuntimeRuleTerminalBuilder(this).literal(name, value)
+        }
+    }
+
     fun pattern(pattern: String): RuntimeRule {
         if (null != this.runtimeRuleSet) {
             throw ParseException("Must not add rules after creating the ruleSet")
         } else {
             return RuntimeRuleTerminalBuilder(this).pattern(pattern)
+        }
+    }
+
+    fun pattern(name: String, pattern: String): RuntimeRule {
+        if (null != this.runtimeRuleSet) {
+            throw ParseException("Must not add rules after creating the ruleSet")
+        } else {
+            return RuntimeRuleTerminalBuilder(this).pattern(name, pattern)
         }
     }
 

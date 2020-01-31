@@ -36,7 +36,7 @@ abstract class SPPTNodeAbstract(
             //this.nextInputPosition - this.startPosition
     )
 
-    override val name: String = this.runtimeRule.name
+    override val name: String = this.runtimeRule.tag
 
     override val startPosition get() = location.position
 

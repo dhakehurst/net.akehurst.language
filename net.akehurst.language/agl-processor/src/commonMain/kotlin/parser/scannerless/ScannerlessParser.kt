@@ -42,7 +42,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
     }
 
     override fun scan(inputText: CharSequence, includeSkipRules:Boolean): List<SPPTLeaf> {
-        val undefined = RuntimeRule(-5, "undefined",RuntimeRuleKind.TERMINAL, false, true)
+        val undefined = RuntimeRule(-5, "undefined","", RuntimeRuleKind.TERMINAL, false, true)
         //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
         val input = InputFromCharSequence(inputText)
         val terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.allNonSkipTerminals
@@ -52,7 +52,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         var lastLocation = InputLocation(0,1,1,0)
         while (!input.isEnd(position)) {
             val matches: List<SPPTLeaf> = terminals.mapNotNull {
-                val match = input.tryMatchText(position, it.patternText, it.isPattern)
+                val match = input.tryMatchText(position, it.value, it.isPattern)
                 if (null == match) {
                     null
                 } else {

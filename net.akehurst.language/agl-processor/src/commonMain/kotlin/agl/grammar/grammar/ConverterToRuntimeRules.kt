@@ -20,11 +20,14 @@ import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.ParseException
 import net.akehurst.language.api.processor.LanguageProcessorException
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.analyser.GrammarExeception
 
 /**
  * arg: String =
  */
 class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String> {
+
+    class CompressedItem(val value: String, val isPattern: Boolean)
 
     private val map: MutableMap<RuntimeRule, RuleItem> = mutableMapOf()
     val builder = RuntimeRuleSetBuilder()
@@ -35,6 +38,27 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
 
     private fun findTerminal(value: String): RuntimeRule? {
         return this.builder.findRuleByName(value, true)
+    }
+
+    private fun compressRhs(rhs: RuleItem): CompressedItem {
+        return when {
+            rhs is Terminal -> when {
+                rhs.isPattern -> CompressedItem(rhs.value, true)
+                else -> CompressedItem(rhs.value, false)
+            }
+            1 == rhs.allTerminal.size -> this.compressRhs(rhs.allTerminal.first())
+            else -> throw GrammarExeception("Compressing ${rhs::class} to leaf is not yet supported", null)
+        }
+    }
+
+    private fun buildCompressedRule(target: Rule): RuntimeRule {
+        val ci = this.compressRhs(target.rhs)
+        val rule = if (ci.isPattern) {
+            this.builder.pattern(target.name, ci.value)
+        } else {
+            this.builder.literal(target.name, ci.value)
+        }
+        return rule
     }
 
     fun originalRuleItemFor(rr: RuntimeRule): RuleItem {
@@ -83,15 +107,20 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
     override fun visit(target: Rule, arg: String): RuntimeRule {
         val rule = this.findRule(target.name)
         return if (null == rule) {
-            val nrule = this.builder.rule(target.name).skip(target.isSkip).build()
+            when {
+                target.isLeaf -> this.buildCompressedRule(target)
+                else -> {
+                    val nrule = this.builder.rule(target.name).skip(target.isSkip).build()
 
-            //need to get back RuntimeRuleItems here,
-            // then set the rhs accordingly
+                    //need to get back RuntimeRuleItems here,
+                    // then set the rhs accordingly
 
-            val rhs = createRhs(target.rhs, target.name)
-            //val rhs =  target.rhs.accept(this, target.name) as RuntimeRule
-            nrule.rhsOpt = rhs
-            nrule
+                    val rhs = createRhs(target.rhs, target.name)
+                    //val rhs =  target.rhs.accept(this, target.name) as RuntimeRule
+                    nrule.rhsOpt = rhs
+                    nrule
+                }
+            }
         } else {
             rule
         }
@@ -103,7 +132,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
                 // only one choice, so can create a concatination
                 val rhsItem = target.alternative[0]
                 val items = rhsItem.items.map { it.accept(this, arg) as RuntimeRule }
-                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, items.toTypedArray())
+                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, items.toTypedArray())
             }
             (target is Choice) -> {
                 val items = target.alternative.map {
@@ -115,17 +144,17 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
                         builder.rule(thisChoiceName).concatenation(*thisChoiceItems.toTypedArray())
                     }
                 }
-                val kind =  RuntimeRuleItemKind.CHOICE
+                val kind = RuntimeRuleItemKind.CHOICE
                 val choiceKind = when (target) {
                     is ChoiceEqual -> RuntimeRuleChoiceKind.LONGEST_PRIORITY
                     is ChoicePriority -> RuntimeRuleChoiceKind.PRIORITY_LONGEST
                     else -> throw RuntimeException("unsupported")
                 }
-                RuntimeRuleItem(kind, choiceKind,-1, 0, items.toTypedArray())
+                RuntimeRuleItem(kind, choiceKind, -1, 0, items.toTypedArray())
             }
             (target is EmptyRule) -> {
                 val item = target.accept(this, arg) as RuntimeRule
-                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(item))
+                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, arrayOf(item))
             }
             else -> {
                 throw ParseException("Not supported (yet)!")
@@ -157,7 +186,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
 
     override fun visit(target: NonTerminal, arg: String): RuntimeRule {
         val nonTerminalRule = this.findRule(target.referencedRule.name)
-            ?: target.referencedRule.accept(this, arg) as RuntimeRule
+                ?: target.referencedRule.accept(this, arg) as RuntimeRule
         return nonTerminalRule
     }
 
@@ -169,7 +198,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
             val items = target.alternative.map {
                 it.accept(this, choiceRuleName) as RuntimeRule
             }
-            val rr = builder.rule(choiceRuleName).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,*items.toTypedArray())
+            val rr = builder.rule(choiceRuleName).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, *items.toTypedArray())
             this.map.put(rr, target)
             return rr
         }
@@ -183,7 +212,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
             val items = target.alternative.map {
                 it.accept(this, choiceRuleName) as RuntimeRule
             }
-            val rr = builder.rule(choiceRuleName).choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,*items.toTypedArray())
+            val rr = builder.rule(choiceRuleName).choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, *items.toTypedArray())
             this.map.put(rr, target)
             return rr
         }

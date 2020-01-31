@@ -27,6 +27,8 @@ class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
     init {
         this.register("rules", this::rules as BranchHandler<List<AglStyleRule>>)
         this.register("rule", this::rule as BranchHandler<AglStyleRule>)
+        this.register("selectorExpression", this::selectorExpression as BranchHandler<String>)
+        this.register("selectorSingle", this::selectorSingle as BranchHandler<String>)
         this.register("styleList", this::styleList as BranchHandler<List<AglStyle>>)
         this.register("style", this::style as BranchHandler<AglStyle>)
 
@@ -40,14 +42,14 @@ class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
         return this.transform<T>(sppt.root.asBranch, "")
     }
 
-    //   rules : rule* ;
+    // rules : rule* ;
     fun rules(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<AglStyleRule> {
         return children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transform<AglStyleRule>(it, arg)
         }
     }
 
-    // rule = SELECTOR '{' styleList '}'
+    // rule = selectorExpression '{' styleList '}' ;
     fun rule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): AglStyleRule {
         val selector = children[0].nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")  //TODO: ? selector combinations, and/or/contains etc
         val rule = AglStyleRule(selector)
@@ -56,6 +58,16 @@ class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
             rule.styles[it.name] = it
         }
         return rule
+    }
+
+    // selectorExpression = selectorSingle ; //TODO
+    fun selectorExpression(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): String {
+        return transform<String>(children[0],arg)
+    }
+
+    // selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
+    fun selectorSingle(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): String {
+        return target.nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")
     }
 
     // styleList = style* ;
@@ -67,8 +79,8 @@ class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
 
     // style = STYLE_ID ':' STYLE_VALUE ';' ;
     fun style(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): AglStyle {
-        val name = children[0].nonSkipMatchedText //TODO:
-        val value = children[1].nonSkipMatchedText //TODO: ?
+        val name = target.nonSkipChildren[0].nonSkipMatchedText
+        val value = target.nonSkipChildren[1].nonSkipMatchedText
         return AglStyle(name, value)
     }
 }

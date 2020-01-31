@@ -19,7 +19,7 @@ package net.akehurst.language.parser.sppt
 import net.akehurst.language.api.sppt.*
 
 
-class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, Unit> {
+class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<String>> {
 
     val lines = mutableListOf<MutableList<SPPTLeaf>>()
     fun MutableList<MutableList<SPPTLeaf>>.getOrCreate(index:Int): MutableList<SPPTLeaf> {
@@ -31,7 +31,7 @@ class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, Unit> {
         return this[index]
     }
 
-    fun visit(target: SPPTNode, arg: Unit) {
+    fun visit(target: SPPTNode, arg: List<String>) {
         return when (target) {
             is SPPTBranch -> this.visit(target, arg)
             is SPPTLeaf -> this.visit(target, arg)
@@ -39,17 +39,20 @@ class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, Unit> {
         }
     }
 
-    override fun visit(target: SharedPackedParseTree, arg: Unit) {
+    override fun visit(target: SharedPackedParseTree, arg: List<String>) {
         return this.visit(target.root, arg)
     }
 
-    override fun visit(target: SPPTBranch, arg: Unit) {
+    override fun visit(target: SPPTBranch, arg: List<String>) {
         target.children.forEach {
-            this.visit(it, arg)
+            val list = arg + target.name
+            this.visit(it, list)
         }
     }
 
-    override fun visit(target: SPPTLeaf, arg: Unit) {
+    override fun visit(target: SPPTLeaf, arg: List<String>) {
+        (target.tagList as MutableList<String>).addAll(arg)
+        (target.tagList as MutableList<String>).add(target.name)
         lines.getOrCreate(target.location.line-1).add(target)
     }
 }

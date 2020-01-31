@@ -160,6 +160,20 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
                         childrenStack.peek().add(leaf)
                     }
                 }
+                scanner.hasNext(COLON) -> {
+                    scanner.next(COLON)
+                    while (scanner.hasNext(WS)) {
+                        scanner.next(WS)
+                    }
+                    val name = nodeNamesStack.pop().name
+                    val newText = scanner.next(LITERAL)
+                    val newText2 = newText.replace("\\'", "'")
+                    val newText3 = newText2.substring(1, newText2.length - 1)
+                    val location = InputLocation(sentenceLocation.position,sentenceLocation.column, sentenceLocation.line, newText3.length)
+                    val leaf = this.leaf(name, newText3, location)
+                    sentenceLocation = input.nextLocation(location, leaf.matchedText.length)
+                    childrenStack.peek().add(leaf)
+                }
                 scanner.hasNext(CHILDREN_END) -> {
                     scanner.next(CHILDREN_END)
                     val lastNodeStart = nodeNamesStack.pop()

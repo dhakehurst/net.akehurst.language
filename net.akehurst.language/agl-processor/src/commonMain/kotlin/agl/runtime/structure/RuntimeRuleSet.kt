@@ -26,10 +26,10 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     companion object {
         val GOAL_RULE_NUMBER = -1;
         val EOT_RULE_NUMBER = -2;
-        val END_OF_TEXT = RuntimeRule(EOT_RULE_NUMBER, InputFromCharSequence.END_OF_TEXT, RuntimeRuleKind.TERMINAL, false, false)
+        val END_OF_TEXT = RuntimeRule(EOT_RULE_NUMBER, "<EOT>", InputFromCharSequence.END_OF_TEXT, RuntimeRuleKind.TERMINAL, false, false)
 
         fun createGoalRule(userGoalRule: RuntimeRule): RuntimeRule {
-            val gr = RuntimeRule(GOAL_RULE_NUMBER, "<GOAL>", RuntimeRuleKind.GOAL, false, false)
+            val gr = RuntimeRule(GOAL_RULE_NUMBER, "<GOAL>", "", RuntimeRuleKind.GOAL, false, false)
             gr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(userGoalRule, END_OF_TEXT))
             return gr
         }
@@ -121,9 +121,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     init {
         for (rr in rules) {
             if (rr.isNonTerminal) {
-                this.nonTerminalRuleNumber[rr.name] = rr.number
+                this.nonTerminalRuleNumber[rr.tag] = rr.number
             } else {
-                this.terminalRuleNumber[rr.name] = rr.number
+                this.terminalRuleNumber[rr.tag] = rr.number
             }
         }
     }
@@ -687,6 +687,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     fun findRuntimeRule(ruleName: String): RuntimeRule {
         val number = this.nonTerminalRuleNumber[ruleName]
+                ?: this.terminalRuleNumber[ruleName]
                 ?: throw ParseException("NonTerminal RuntimeRule '${ruleName}' not found")
         return this.runtimeRules[number]
     }

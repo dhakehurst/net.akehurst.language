@@ -40,6 +40,7 @@ class SPPTLeafDefault(
     override val isPattern: Boolean = terminalRule.isPattern
     override val isLiteral: Boolean = !terminalRule.isPattern
 
+    override val tagList = mutableListOf<String>()
 
     // --- SPPTNode ---
 
@@ -63,8 +64,8 @@ class SPPTLeafDefault(
     override fun toString(): String {
         val name = when {
             this.runtimeRule == RuntimeRuleSet.END_OF_TEXT -> "EOT"
-            this.isLiteral -> "'${this.runtimeRule.name}'"
-            this.isPattern -> "\"${this.runtimeRule.patternText}\""
+            this.isLiteral -> "'${this.runtimeRule.value}'"
+            this.isPattern -> "\"${this.runtimeRule.value}\""
             else -> this.name //shouldn't happen!
         }
 

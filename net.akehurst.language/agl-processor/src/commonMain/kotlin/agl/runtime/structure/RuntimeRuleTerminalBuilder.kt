@@ -25,7 +25,14 @@ class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder) {
 
     fun literal(value: String) : RuntimeRule {
         this.name = value
-        val rr = RuntimeRule(this.rrsb.rules.size, name, kind, isPattern, isSkip)
+        val rr = RuntimeRule(this.rrsb.rules.size, value, value, kind, isPattern, isSkip)
+        this.rrsb.rules.add(rr)
+        return rr
+    }
+
+    fun literal(name:String, value: String) : RuntimeRule {
+        this.name = value
+        val rr = RuntimeRule(this.rrsb.rules.size, name, value, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
         return rr
     }
@@ -33,14 +40,20 @@ class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder) {
     fun pattern(pattern: String) : RuntimeRule {
         this.name = pattern
         this.isPattern = true
-        val rr = RuntimeRule(this.rrsb.rules.size, name, kind, isPattern, isSkip)
+        val rr = RuntimeRule(this.rrsb.rules.size, pattern, pattern, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
         return rr
     }
-
+    fun pattern(name:String, pattern: String) : RuntimeRule {
+        this.name = pattern
+        this.isPattern = true
+        val rr = RuntimeRule(this.rrsb.rules.size, name, pattern, kind, isPattern, isSkip)
+        this.rrsb.rules.add(rr)
+        return rr
+    }
     fun empty(ruleThatIsEmpty: RuntimeRule): RuntimeRule {
-        this.name = "§empty."+ruleThatIsEmpty.name
-        val rr = RuntimeRule(this.rrsb.rules.size, name, kind, isPattern, isSkip)
+        this.name = "§empty."+ruleThatIsEmpty.tag
+        val rr = RuntimeRule(this.rrsb.rules.size, name, name, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
         rr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.EMPTY,RuntimeRuleChoiceKind.NONE,0,0, arrayOf(ruleThatIsEmpty))
         return rr

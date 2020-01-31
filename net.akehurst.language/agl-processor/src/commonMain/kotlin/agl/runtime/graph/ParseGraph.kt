@@ -67,7 +67,7 @@ internal class ParseGraph(
                 for (node in lt.asBranch.children) {
                     if (node.isSkip) {
                         firstSkipNodes.add(node)
-                    } else if (node.asBranch.runtimeRuleNumber == this.userGoalRule.number) {
+                    } else if (node.runtimeRuleNumber == this.userGoalRule.number) {
                         userGoalNodes.add(node)
                         break;
                     }
@@ -78,13 +78,15 @@ internal class ParseGraph(
                     else -> firstSkipNodes.last().startPosition + firstSkipNodes.last().location.length + userGoalNode.location.length
                 }
                 val location = InputLocation(0,1,1,length)
-                val r = SPPTBranchDefault(this.userGoalRule, location, userGoalNode.nextInputPosition, userGoalNode.priority)
-                if (userGoalNode is SPPTBranch) {
+                val r = if (userGoalNode is SPPTBranch) {
+                    val r = SPPTBranchDefault(this.userGoalRule, location, userGoalNode.nextInputPosition, userGoalNode.priority)
                     for (alt in userGoalNode.childrenAlternatives) {
                         r.childrenAlternatives.add(firstSkipNodes + alt)
                     }
+                    r
                 } else {
-                    r.childrenAlternatives.add(firstSkipNodes + userGoalNode.asBranch.children)
+                    //can't add skip nodes to a leaf !?
+                    userGoalNode
                 }
                 return r
             }
@@ -105,7 +107,7 @@ internal class ParseGraph(
             this.completeNodes[leaf.identity] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
             leaf
         } else {
-            val matchedText = this.input.tryMatchText(index.startPosition, terminalRuntimeRule.patternText, terminalRuntimeRule.isPattern)
+            val matchedText = this.input.tryMatchText(index.startPosition, terminalRuntimeRule.value, terminalRuntimeRule.isPattern)
                     ?: return null
             val location = this.input.nextLocation(lastLocation, matchedText.length)
             val leaf = SPPTLeafDefault(terminalRuntimeRule, location, false, matchedText, 0)

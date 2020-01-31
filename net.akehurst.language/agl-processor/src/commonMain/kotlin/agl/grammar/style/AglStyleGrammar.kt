@@ -29,7 +29,9 @@ class AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.
 
 /*
     rules = rule* ;
-    rule = SELECTOR '{' styleList '}' ;
+    rule = selectorExpression '{' styleList '}' ;
+    selectorExpression = selectorSingle ; //TODO
+    selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
     styleList = style* ;
     style = STYLE_ID ':' STYLE_VALUE ';' ;
  */
@@ -40,17 +42,18 @@ private fun createRules(): List<Rule> {
     b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//.*?$"));
 
     b.rule("rules").multi(0,-1, b.nonTerminal("rule"))
-    b.rule("rule").concatenation(b.nonTerminal("SELECTOR"), b.terminalLiteral("{"), b.nonTerminal("styleList"), b.terminalLiteral("}"))
-    b.rule("SELECTOR").choiceEqual(b.nonTerminal("LITERAL"), b.nonTerminal("PATTERN"), b.nonTerminal("IDENTIFIER"))
+    b.rule("rule").concatenation(b.nonTerminal("selectorExpression"), b.terminalLiteral("{"), b.nonTerminal("styleList"), b.terminalLiteral("}"))
+    b.rule("selectorExpression").choiceEqual(b.nonTerminal("selectorSingle"))
+    b.rule("selectorSingle").choiceEqual(b.nonTerminal("LITERAL"), b.nonTerminal("PATTERN"), b.nonTerminal("IDENTIFIER"))
     // these must match what is in the AglGrammarGrammar
-    b.rule("LITERAL").concatenation(b.terminalPattern("'(?:\\\\?.)*?'"));
-    b.rule("PATTERN").concatenation(b.terminalPattern("\"(?:[^\"\\\\]|\\\\.)*?\""));
-    b.rule("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
+    b.leaf("LITERAL").concatenation(b.terminalPattern("'(?:\\\\?.)*?'"));
+    b.leaf("PATTERN").concatenation(b.terminalPattern("\"(?:[^\"\\\\]|\\\\.)*?\""));
+    b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
 
     b.rule("styleList").multi(0,-1,b.nonTerminal("style"))
     b.rule("style").concatenation(b.nonTerminal("STYLE_ID"), b.terminalLiteral(":"), b.nonTerminal("STYLE_VALUE"), b.terminalLiteral(";"))
-    b.rule("STYLE_ID").concatenation(b.terminalPattern("[-a-zA-Z_][-a-zA-Z_0-9-]*(?=\\s*[:])"));
-    b.rule("STYLE_VALUE").concatenation(b.terminalPattern("([^;:]*)(?=\\s*[;])"))
+    b.leaf("STYLE_ID").concatenation(b.terminalPattern("[-a-zA-Z_][-a-zA-Z_0-9-]*(?=\\s*[:])"));
+    b.leaf("STYLE_VALUE").concatenation(b.terminalPattern("([^;:]*)(?=\\s*[;])"))
 
     return b.grammar.rule
 }

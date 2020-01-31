@@ -38,8 +38,8 @@ class test_Converter {
         assertEquals(ruleThatIsEmpty.emptyRuleItem, r)
         assertEquals(false, r.isNonTerminal)
         assertEquals(isSkip, r.isSkip)
-        assertEquals(ptext, r.name)
-        assertEquals(ptext, r.patternText)
+        assertEquals(ptext, r.tag)
+        assertEquals(ptext, r.value)
         assertEquals(ruleThatIsEmpty, r.rhs.items[0])
     }
 
@@ -52,8 +52,8 @@ class test_Converter {
         assertEquals(false, r.isEmptyRule)
         assertEquals(false, r.isNonTerminal)
         assertEquals(isSkip, r.isSkip)
-        assertEquals(ptext, r.name)
-        assertEquals(ptext, r.patternText)
+        assertEquals(ptext, r.tag)
+        assertEquals(ptext, r.value)
         assertFailsWith(ParseException::class) {
             r.rhs
         }
@@ -64,7 +64,7 @@ class test_Converter {
         assertEquals(RuntimeRuleKind.NON_TERMINAL, r.kind)
         assertEquals(false, r.isTerminal)
         assertEquals(true, r.isNonTerminal)
-        assertEquals(name, r.name)
+        assertEquals(name, r.tag)
         assertEquals(numItems, r.rhs.items.size)
         assertEquals(itemKind, r.rhs.kind)
     }
@@ -74,7 +74,7 @@ class test_Converter {
         assertEquals(RuntimeRuleKind.NON_TERMINAL, r.kind)
         assertEquals(false, r.isTerminal)
         assertEquals(true, r.isNonTerminal)
-        assertEquals(name, r.name)
+        assertEquals(name, r.tag)
         assertEquals(numItems, r.rhs.items.size)
         assertEquals(itemKind, r.rhs.kind)
         assertEquals(choiceKind, r.rhs.choiceKind)

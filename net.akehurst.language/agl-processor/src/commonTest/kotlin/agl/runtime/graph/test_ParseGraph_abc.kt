@@ -33,16 +33,16 @@ class test_ParseGraph_abc {
     @Test
     fun start() {
         val rrs = RuntimeRuleSet(listOf())
-        val r_a = RuntimeRule(0, "a", RuntimeRuleKind.TERMINAL, false, false)
-        val r_b = RuntimeRule(1, "b", RuntimeRuleKind.TERMINAL, false, false)
-        val r_c = RuntimeRule(2, "c", RuntimeRuleKind.TERMINAL, false, false)
-        val r_A = RuntimeRule(3,"A", RuntimeRuleKind.NON_TERMINAL, false, false)
+        val r_a = RuntimeRule(0, "a", "a", RuntimeRuleKind.TERMINAL, false, false)
+        val r_b = RuntimeRule(1, "b","b", RuntimeRuleKind.TERMINAL, false, false)
+        val r_c = RuntimeRule(2, "c", "c", RuntimeRuleKind.TERMINAL, false, false)
+        val r_A = RuntimeRule(3,"A","A", RuntimeRuleKind.NON_TERMINAL, false, false)
         r_A.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_a))
-        val r_B = RuntimeRule(3,"B", RuntimeRuleKind.NON_TERMINAL, false, false)
+        val r_B = RuntimeRule(3,"B", "B", RuntimeRuleKind.NON_TERMINAL, false, false)
         r_B.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_b))
-        val r_C = RuntimeRule(3,"C", RuntimeRuleKind.NON_TERMINAL, false, false)
+        val r_C = RuntimeRule(3,"C", "C", RuntimeRuleKind.NON_TERMINAL, false, false)
         r_C.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_c))
-        val r_S = RuntimeRule(0,"S", RuntimeRuleKind.NON_TERMINAL, false, false)
+        val r_S = RuntimeRule(0,"S", "", RuntimeRuleKind.NON_TERMINAL, false, false)
         r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_A, r_B, r_C))
 
         val text = "a"
@@ -65,7 +65,7 @@ class test_ParseGraph_abc {
     @Test
     fun s1() {
         val rrs = RuntimeRuleSet(listOf())
-        val userGoalRule = RuntimeRule(0,"a", RuntimeRuleKind.TERMINAL, false, false)
+        val userGoalRule = RuntimeRule(0,"a", "a", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"
         val input = InputFromCharSequence(text)
         val sut = ParseGraph(userGoalRule,input)

@@ -22,14 +22,12 @@ import net.akehurst.language.parser.scannerless.InputFromCharSequence
 
 class RuntimeRule(
     val number: Int,
-    val name: String,
+    val tag: String,
+    val value:String,
     val kind: RuntimeRuleKind,
     val isPattern: Boolean,
     val isSkip: Boolean
 ) {
-
-    // alias for name to use when this is a pattern rule
-    val patternText: String = name
 
     var rhsOpt: RuntimeRuleItem? = null
 
@@ -609,11 +607,11 @@ class RuntimeRule(
 
     override fun toString(): String {
         return "[$number]" + when {
-            this.isEmptyRule -> " ($name)"
-            this.isNonTerminal -> " ($name) = " + this.rhs
-            this.isPattern -> " \"" + this.patternText + "\""
-            this.name == InputFromCharSequence.END_OF_TEXT -> " <EOT>"
-            else -> " '" + this.patternText + "'"
+            this.isEmptyRule -> " ($tag)"
+            this.isNonTerminal -> " ($tag) = " + this.rhs
+            this.isPattern -> if(this.tag==this.value) "\"${this.value}\"" else "${this.tag}(\"${this.value}\")"
+            this.value == InputFromCharSequence.END_OF_TEXT -> " <EOT>"
+            else -> if(this.tag==this.value) "'${this.value}'" else "${this.tag}('${this.value}')"
         }
     }
 }

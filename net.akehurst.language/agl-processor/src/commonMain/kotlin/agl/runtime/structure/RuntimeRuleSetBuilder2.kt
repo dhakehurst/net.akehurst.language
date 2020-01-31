@@ -53,9 +53,9 @@ class RuntimeRuleSetBuilder2() {
     fun findRuleByName(ruleName: String, terminal: Boolean): RuntimeRule? {
         return this.rules.firstOrNull {
             if (terminal) {
-                it.isTerminal && it.name == ruleName
+                it.isTerminal && it.tag == ruleName
             } else {
-                it.isNonTerminal && it.name == ruleName
+                it.isNonTerminal && it.tag == ruleName
             }
         }
     }
@@ -112,7 +112,7 @@ class RuntimeRuleBuilder2(
     fun literal(value: String): RuntimeRule {
         val existing = this.rrsb.findRuleByName(value, true)
         return if (null == existing) {
-            val rr = RuntimeRule(this.rrsb.rules.size, value, RuntimeRuleKind.TERMINAL, false, false)
+            val rr = RuntimeRule(this.rrsb.rules.size, value, value, RuntimeRuleKind.TERMINAL, false, false)
             this.rrsb.rules.add(rr)
             items.add(rr)
             rr
@@ -125,7 +125,7 @@ class RuntimeRuleBuilder2(
     fun pattern(pattern: String): RuntimeRule {
         val existing = this.rrsb.findRuleByName(pattern, true)
         return if (null == existing) {
-            val rr = RuntimeRule(this.rrsb.rules.size, pattern, RuntimeRuleKind.TERMINAL, true, false)
+            val rr = RuntimeRule(this.rrsb.rules.size, pattern, pattern, RuntimeRuleKind.TERMINAL, true, false)
             this.rrsb.rules.add(rr)
             items.add(rr)
             rr
@@ -136,10 +136,10 @@ class RuntimeRuleBuilder2(
     }
 
     fun ref(name: String): RuntimeRule {
-        val existing = this.rrsb.rules.firstOrNull { it.name == name }
+        val existing = this.rrsb.rules.firstOrNull { it.tag == name }
         return if (null == existing) {
             //add placeholder rule
-            val rr = RuntimeRule(this.rrsb.rules.size, name, RuntimeRuleKind.NON_TERMINAL, false, false)
+            val rr = RuntimeRule(this.rrsb.rules.size, name, "", RuntimeRuleKind.NON_TERMINAL, false, false)
             this.rrsb.rules.add(rr)
             items.add(rr)
             rr
@@ -151,9 +151,9 @@ class RuntimeRuleBuilder2(
 
     fun build(): RuntimeRule {
         val rhs = RuntimeRuleItem(this.kind, this.choiceKind, this.min, this.max, this.items.toTypedArray())
-        val existing = this.rrsb.rules.firstOrNull { it.name == ruleName }
+        val existing = this.rrsb.rules.firstOrNull { it.tag == ruleName }
         return if (null == existing) {
-            val rr = RuntimeRule(this.rrsb.rules.size, ruleName, RuntimeRuleKind.NON_TERMINAL, false, isSkip)
+            val rr = RuntimeRule(this.rrsb.rules.size, ruleName, "", RuntimeRuleKind.NON_TERMINAL, false, isSkip)
             rr.rhsOpt = rhs
             this.rrsb.rules.add(rr)
             rr

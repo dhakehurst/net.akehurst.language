@@ -33,7 +33,7 @@
                                     typeReference = ID typeArguments? ;
                                     typeArguments = '<' [typeReference / ',']+ '>' ;
 
-                                    ID = "[A-Za-z_][A-Za-z0-9_]*" ;
+                                    leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
 
                                 }
                             </agl-ace>
@@ -46,7 +46,7 @@
                                   color: purple;
                                   font-weight: bold;
                                 }
-                                "[A-Za-z_][A-Za-z0-9_]*" {
+                                ID {
                                   color: red;
                                   font-style: italic;
                                 }

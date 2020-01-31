@@ -24,6 +24,8 @@ interface Rule : GrammarVisitable {
 
 	val isSkip: Boolean
 
+	val isLeaf: Boolean
+
 	var rhs: RuleItem
 
 	val nodeType: NodeType

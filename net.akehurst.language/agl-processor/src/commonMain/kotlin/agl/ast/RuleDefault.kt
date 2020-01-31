@@ -22,7 +22,8 @@ import net.akehurst.language.api.grammar.*
 data class RuleDefault(
 		override val grammar: GrammarDefault,
 		override val name: String,
-		override val isSkip: Boolean
+		override val isSkip: Boolean,
+		override val isLeaf: Boolean
 ) : Rule {
 	
 	init {

@@ -161,8 +161,8 @@ data class RulePosition(
     override fun toString(): String {
         val r = when {
             runtimeRule == RuntimeRuleSet.END_OF_TEXT -> "EOT"
-            runtimeRule.isTerminal -> if (runtimeRule.isPattern) "\"${runtimeRule.name}\"" else "'${runtimeRule.name}'"
-            else -> runtimeRule.name
+            //runtimeRule.isTerminal -> if (runtimeRule.isPattern) "\"${runtimeRule.name}\"" else "'${runtimeRule.name}'"
+            else -> runtimeRule.tag
         }
         return "RP(${r},$choice,$position)"
     }

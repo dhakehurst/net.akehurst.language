@@ -34,7 +34,7 @@ class SharedPackedParseTreeDefault(
 
     override val tokensByLine: List<List<SPPTLeaf>> by lazy {
         val visitor = TokensByLineVisitor()
-        visitor.visit(this, Unit)
+        visitor.visit(this, emptyList())
         visitor.lines
     }
 

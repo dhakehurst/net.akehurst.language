@@ -22,7 +22,7 @@ import net.akehurst.language.agl.grammar.format.AglFormatSyntaxAnalyser
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.style.AglStyleGrammar
 import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
-import net.akehurst.language.agl.sppt2ast.AglSppt2AstTransformer
+import net.akehurst.language.agl.sppt2ast.AglGrammarSyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
@@ -35,7 +35,7 @@ object Agl {
 
     val grammarProcessor: LanguageProcessor by lazy {
         val grammar = AglGrammarGrammar()
-        val sppt2ast: SyntaxAnalyser = AglSppt2AstTransformer(GrammarRegistryDefault) //TODO: enable the registry to be changed
+        val sppt2ast: SyntaxAnalyser = AglGrammarSyntaxAnalyser(GrammarRegistryDefault) //TODO: enable the registry to be changed
         processor(grammar, AglGrammarGrammar.goalRuleName, sppt2ast)
     }
 

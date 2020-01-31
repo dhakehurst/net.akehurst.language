@@ -25,7 +25,7 @@ import net.akehurst.language.agl.ast.*
 import net.akehurst.language.processor.BranchHandler
 import net.akehurst.language.processor.SyntaxAnalyserAbstract
 
-class AglSppt2AstTransformer(
+class AglGrammarSyntaxAnalyser(
         val grammarRegistry: GrammarRegistry
 ) : SyntaxAnalyserAbstract() {
 
@@ -40,6 +40,7 @@ class AglSppt2AstTransformer(
         this.register("anyRule", this::anyRule as BranchHandler<Rule>)
         this.register("normalRule", this::normalRule as BranchHandler<Rule>)
         this.register("skipRule", this::skipRule as BranchHandler<Rule>)
+        this.register("leafRule", this::leafRule as BranchHandler<Rule>)
         this.register("choice", this::choice as BranchHandler<RuleItem>)
         this.register("simpleChoice", this::simpleChoice as BranchHandler<RuleItem>)
         this.register("priorityChoice", this::priorityChoice as BranchHandler<RuleItem>)
@@ -53,9 +54,6 @@ class AglSppt2AstTransformer(
         this.register("nonTerminal", this::nonTerminal as BranchHandler<NonTerminal>)
         this.register("terminal", this::terminal as BranchHandler<Terminal>)
         this.register("qualifiedName", this::qualifiedName as BranchHandler<String>)
-        this.register("IDENTIFIER", this::IDENTIFIER as BranchHandler<String>)
-        this.register("PATTERN", this::PATTERN as BranchHandler<Terminal>)
-        this.register("LITERAL", this::LITERAL as BranchHandler<Terminal>)
     }
 
     override fun clear() {
@@ -83,12 +81,12 @@ class AglSppt2AstTransformer(
     // grammar : 'grammar' IDENTIFIER extends? '{' rules '}' ;
     fun grammar(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Grammar {
         val namespace = arg as Namespace
-        val name = children[0].nonSkipMatchedText
-        val extends = this.transform<List<Grammar>>(children[1], namespace)
+        val name = target.nonSkipChildren[1].nonSkipMatchedText
+        val extends = this.transform<List<Grammar>>(children[0], namespace)
         val result = GrammarDefault(namespace, name, mutableListOf())
         result.extends.addAll(extends)
 
-        this.transform<List<Rule>>(children[2], result) //creating a Rule adds it to the grammar
+        this.transform<List<Rule>>(children[1], result) //creating a Rule adds it to the grammar
 
         return result
     }
@@ -115,7 +113,7 @@ class AglSppt2AstTransformer(
         }
     }
 
-    // anyRule : normalRule | skipRule ;
+    // anyRule : normalRule | skipRule | leafRule;
     fun anyRule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Rule {
         return this.transform<Rule>(children[0], arg)
     }
@@ -123,9 +121,9 @@ class AglSppt2AstTransformer(
     // normalRule : IDENTIFIER ':' choice ';' ;
     fun normalRule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Rule {
         val grammar = arg as GrammarDefault
-        val name = this.transform<String>(children[0], null)
-        val result = RuleDefault(grammar, name, false)
-        val rhs = this.transform<RuleItem>(children[1], arg)
+        val name = target.nonSkipChildren[0].nonSkipMatchedText
+        val result = RuleDefault(grammar, name, false, false)
+        val rhs = this.transform<RuleItem>(children[0], arg)
         result.rhs = rhs
         return result
     }
@@ -133,9 +131,19 @@ class AglSppt2AstTransformer(
     // skipRule : 'skip' IDENTIFIER ':' choice ';' ;
     fun skipRule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Rule {
         val grammar = arg as GrammarDefault
-        val name = this.transform<String>(children[0], null)
-        val result = RuleDefault(grammar, name, true)
-        val rhs = this.transform<RuleItem>(children[1], arg)
+        val name = target.nonSkipChildren[1].nonSkipMatchedText
+        val result = RuleDefault(grammar, name, true, false)
+        val rhs = this.transform<RuleItem>(children[0], arg)
+        result.rhs = rhs
+        return result
+    }
+
+    // leafRule : 'leaf' IDENTIFIER ':' choice ';' ;
+    fun leafRule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Rule {
+        val grammar = arg as GrammarDefault
+        val name = target.nonSkipChildren[1].nonSkipMatchedText
+        val result = RuleDefault(grammar, name, false, true)
+        val rhs = this.transform<RuleItem>(children[0], arg)
         result.rhs = rhs
         return result
     }
@@ -188,7 +196,7 @@ class AglSppt2AstTransformer(
         return this.transform<SimpleItem>(children[0], arg)
     }
 
-    // multiplicity : '*' | '+' | '?'
+    // multiplicity : '*' | '+' | '?' | POSITIVE_INTEGER '+' | POSITIVE_INTEGER '..' POSITIVE_INTEGER ;
     fun multiplicity(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Pair<Int, Int> {
         val symbol = target.nonSkipMatchedText
         return when (symbol) {
@@ -196,15 +204,15 @@ class AglSppt2AstTransformer(
             "+" -> Pair(1, -1)
             "?" -> Pair(0, 1)
             else -> {
-                val multArgs = children[0].branchNonSkipChildren
+                val multArgs = children[0].nonSkipChildren
                 when (multArgs.size) {
-                    1 -> {
+                    2 -> {
                         val min = multArgs[0].nonSkipMatchedText.toInt()
                         Pair(min, -1)
                     }
-                    2 -> {
+                    3 -> {
                         val min = multArgs[0].nonSkipMatchedText.toInt()
-                        val max = multArgs[1].nonSkipMatchedText.toInt()
+                        val max = multArgs[2].nonSkipMatchedText.toInt()
                         Pair(min,max)
                     }
                     else -> throw UnableToTransformSppt2AstExeception("cannot transform ${target}", null)
@@ -241,14 +249,16 @@ class AglSppt2AstTransformer(
 
     // nonTerminal : IDENTIFIER ;
     fun nonTerminal(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): NonTerminal {
-        val nonTerminalRef = this.transform<String>(children[0], arg)
-
+        val nonTerminalRef = target.nonSkipChildren[0].nonSkipMatchedText
         return NonTerminalDefault(nonTerminalRef)
     }
 
     // terminal : LITERAL | PATTERN ;
     fun terminal(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Terminal {
-        return this.transform<Terminal>(children[0], arg)
+        val isPattern = target.nonSkipChildren[0].name=="PATTERN"
+        val mt = target.nonSkipMatchedText
+        val value = mt.substring(1,mt.length-1)
+        return TerminalDefault(value, isPattern)
     }
 
     // qualifiedName : (IDENTIFIER / '.')+ ;
@@ -256,22 +266,4 @@ class AglSppt2AstTransformer(
         return children[0].branchNonSkipChildren.map { it.nonSkipMatchedText }.joinToString(".")
     }
 
-    // IDENTIFIER : "[a-zA-Z_][a-zA-Z_0-9]*" ;
-    fun IDENTIFIER(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): String {
-        return target.nonSkipMatchedText
-    }
-
-    // LITERAL : "'(?:\\\\?.)*?'" ;
-    fun LITERAL(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Terminal {
-        val mt = target.nonSkipMatchedText
-        val value = mt.substring(1,mt.length-1)
-        return TerminalDefault(value, false)
-    }
-
-    // PATTERN : "\"(?:\\\\?.)*?\"" ;
-    fun PATTERN(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Terminal {
-        val mt = target.nonSkipMatchedText
-        val value = mt.substring(1,mt.length-1)
-        return TerminalDefault(value, true)
-    }
 }

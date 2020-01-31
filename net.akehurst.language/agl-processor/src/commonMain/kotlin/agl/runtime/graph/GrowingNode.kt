@@ -113,7 +113,7 @@ class GrowingNode(
     fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {
         var r = "$currentState,$startPosition,$nextInputPosition,"
         r += if (this.hasCompleteChildren) "C" else this.currentState.position
-        val name = if (this.runtimeRule.isTerminal) "'${this.runtimeRule.patternText}'" else this.runtimeRule.name
+        val name = this.runtimeRule.tag //if (this.runtimeRule.isTerminal) "'${this.runtimeRule.patternText}'" else this.runtimeRule.name
         r += ":" + name + "(" + this.runtimeRule.number + ")"
 
         if (withChildren) {

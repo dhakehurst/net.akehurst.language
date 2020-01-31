@@ -27,11 +27,15 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 	}
 
 	fun rule(name: String): RuleBuilder {
-		return RuleBuilder(RuleDefault(grammar, name, false))
+		return RuleBuilder(RuleDefault(grammar, name, false, false))
 	}
 
 	fun skip(name: String): RuleBuilder {
-		return RuleBuilder(RuleDefault(this.grammar, name, true))
+		return RuleBuilder(RuleDefault(this.grammar, name, true, false))
+	}
+
+	fun leaf(name: String): RuleBuilder {
+		return RuleBuilder(RuleDefault(this.grammar, name, false, true))
 	}
 
 	fun terminalLiteral(value: String): Terminal {

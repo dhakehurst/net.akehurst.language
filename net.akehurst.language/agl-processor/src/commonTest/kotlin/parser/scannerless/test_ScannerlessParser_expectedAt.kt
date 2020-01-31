@@ -43,7 +43,7 @@ class test_ScannerlessParser_expectedAt {
 
         assertEquals(1, actual.size)
         assertEquals(true, actual[0].isTerminal)
-        assertEquals("a", actual[0].patternText)
+        assertEquals("a", actual[0].value)
     }
 
     @Test
@@ -56,7 +56,7 @@ class test_ScannerlessParser_expectedAt {
 
         assertEquals(1, actual.size)
         assertEquals(true, actual[0].isTerminal)
-        assertEquals("a", actual[0].patternText)
+        assertEquals("a", actual[0].value)
     }
 
     @Test
@@ -88,7 +88,7 @@ class test_ScannerlessParser_expectedAt {
 
         assertEquals(1, actual.size)
         assertEquals(true, actual[0].isTerminal)
-        assertEquals("a", actual[0].patternText)
+        assertEquals("a", actual[0].value)
     }
 
     @Test
@@ -101,7 +101,7 @@ class test_ScannerlessParser_expectedAt {
 
         assertEquals(1, actual.size)
         assertEquals(true, actual[0].isTerminal)
-        assertEquals("a", actual[0].patternText)
+        assertEquals("a", actual[0].value)
     }
 
     @Test
@@ -114,7 +114,7 @@ class test_ScannerlessParser_expectedAt {
 
         assertEquals(1, actual.size)
         assertEquals(true, actual[0].isTerminal)
-        assertEquals("b", actual[0].patternText)
+        assertEquals("b", actual[0].value)
     }
 
     @Test
@@ -127,7 +127,7 @@ class test_ScannerlessParser_expectedAt {
 
         assertEquals(1, actual.size)
         assertEquals(true, actual[0].isTerminal)
-        assertEquals("b", actual[0].patternText)
+        assertEquals("b", actual[0].value)
     }
     @Test
     fun concat_ab_ab_2() {
@@ -158,9 +158,9 @@ class test_ScannerlessParser_expectedAt {
 
         assertEquals(2, actual.size)
         assertEquals(true, actual[0].isTerminal)
-        assertEquals("a", actual[0].patternText)
+        assertEquals("a", actual[0].value)
         assertEquals(true, actual[1].isTerminal)
-        assertEquals("b", actual[1].patternText)
+        assertEquals("b", actual[1].value)
     }
 
     @Test

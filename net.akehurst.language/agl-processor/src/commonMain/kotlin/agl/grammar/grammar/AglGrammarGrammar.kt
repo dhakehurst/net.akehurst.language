@@ -23,8 +23,8 @@ import net.akehurst.language.api.grammar.Rule
 
 class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar", createRules()) {
     companion object {
-    	const val goalRuleName = "grammarDefinition"
-	}
+        const val goalRuleName = "grammarDefinition"
+    }
 }
 
 private fun createRules(): List<Rule> {
@@ -41,13 +41,12 @@ private fun createRules(): List<Rule> {
     b.rule("extends1").concatenation(b.terminalLiteral("extends"), b.nonTerminal("extends2"));
     b.rule("extends2").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("qualifiedName"));
     b.rule("rules").multi(1, -1, b.nonTerminal("anyRule"));
-    b.rule("anyRule").choiceEqual(b.concatenation(b.nonTerminal("skipRule")), b.concatenation(b.nonTerminal("normalRule")));
-    b.rule("skipRule").concatenation(b.terminalLiteral("skip"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="),
-            b.nonTerminal("choice"), b.terminalLiteral(";"));
+    b.rule("anyRule").choiceEqual(b.concatenation(b.nonTerminal("skipRule")), b.concatenation(b.nonTerminal("leafRule")), b.concatenation(b.nonTerminal("normalRule")));
+    b.rule("skipRule").concatenation(b.terminalLiteral("skip"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("choice"), b.terminalLiteral(";"));
+    b.rule("leafRule").concatenation(b.terminalLiteral("leaf"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("choice"), b.terminalLiteral(";"));
     //TODO: choice has ambiguity, if resolved by priority, then wrong result with "a < b < c", it matches "choiceEqual { a }" as higher priority
     // make rule = choice | concatination, and choices must have multiple items
-    b.rule("normalRule").concatenation(b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("choice"),
-            b.terminalLiteral(";"));
+    b.rule("normalRule").concatenation(b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("choice"), b.terminalLiteral(";"));
     b.rule("choice").choicePriority(b.concatenation(b.nonTerminal("priorityChoice")), b.concatenation(b.nonTerminal("simpleChoice")));
     b.rule("simpleChoice").separatedList(0, -1, b.terminalLiteral("|"), b.nonTerminal("concatenation"));
     b.rule("priorityChoice").separatedList(0, -1, b.terminalLiteral("<"), b.nonTerminal("concatenation"));
@@ -72,9 +71,9 @@ private fun createRules(): List<Rule> {
     b.rule("nonTerminal").choiceEqual(b.concatenation(b.nonTerminal("IDENTIFIER")));
     b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"));
     b.rule("terminal").choiceEqual(b.concatenation(b.nonTerminal("LITERAL")), b.concatenation(b.nonTerminal("PATTERN")));
-    b.rule("LITERAL").concatenation(b.terminalPattern("'(?:\\\\?.)*?'"));
-    b.rule("PATTERN").concatenation(b.terminalPattern("\"(?:\\\\?.)*?\""));
-    b.rule("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
-    b.rule("POSITIVE_INTEGER").concatenation(b.terminalPattern("[0-9]+"));
+    b.leaf("LITERAL").concatenation(b.terminalPattern("'(?:\\\\?.)*?'"));
+    b.leaf("PATTERN").concatenation(b.terminalPattern("\"(?:\\\\?.)*?\""));
+    b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
+    b.leaf("POSITIVE_INTEGER").concatenation(b.terminalPattern("[0-9]+"));
     return b.grammar.rule
 }

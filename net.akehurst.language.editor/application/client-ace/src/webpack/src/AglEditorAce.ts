@@ -162,7 +162,6 @@ class AglMode implements ace.Ace.SyntaxMode {
     }
 
     createWorker(session: ace.Ace.EditSession): any {
-        return 1;
     }
 
     getCompletions(state: string, session: ace.Ace.EditSession, pos: ace.Ace.Point, prefix: string): ace.Ace.Completion[] {
@@ -232,11 +231,24 @@ class AglTokenizer implements ace.Ace.Tokenizer {
     }
 
     getLineTokensByScan(line: string, startState: string | string[],row:number): any {
-        const text = (startState) ? startState + line : line;
-        const leafs = this.agl.processor.scan(text);
-        const leafArray = leafs.toArray();
-        const tokens = this.transformToAceTokens(leafArray);
-        return {state: '', tokens};
+        if (this.agl.processor) {
+            const text = (startState) ? startState + line : line;
+            const leafs = this.agl.processor.scan(text);
+            const leafArray = leafs.toArray();
+            const tokens = this.transformToAceTokens(leafArray);
+            return {state: '', tokens};
+        } else {
+            return {
+                state:'',
+                tokens: [
+                    {
+                        type:'nostyle',
+                        value:line,
+                        start:1
+                    }
+                ]
+            }
+        }
     }
 
     getLineTokensByParse(line: string, startState: string | string[],row:number): any {

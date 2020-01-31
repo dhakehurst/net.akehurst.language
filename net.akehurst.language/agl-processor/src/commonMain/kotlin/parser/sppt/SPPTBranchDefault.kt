@@ -136,7 +136,7 @@ class SPPTBranchDefault(
         var r = ""
         r += this.startPosition.toString() + ","
         r += this.nextInputPosition
-        r += ":" + this.runtimeRule.name + "(" + this.runtimeRule.number + ")"
+        r += ":" + this.runtimeRule.tag + "(" + this.runtimeRule.number + ")"
         return r
     }
 
