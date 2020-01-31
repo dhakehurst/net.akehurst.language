@@ -18,41 +18,39 @@ package net.akehurst.language.agl.runtime.structure
 
 class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder) {
 
-    private var name: String = ""
+
     private var kind: RuntimeRuleKind = RuntimeRuleKind.TERMINAL
     private var isPattern: Boolean = false
     private var isSkip: Boolean = false
 
     fun literal(value: String) : RuntimeRule {
-        this.name = value
-        val rr = RuntimeRule(this.rrsb.rules.size, value, value, kind, isPattern, isSkip)
+        val name = "'$value'"
+        val rr = RuntimeRule(this.rrsb.rules.size, name, value, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
         return rr
     }
 
     fun literal(name:String, value: String) : RuntimeRule {
-        this.name = value
         val rr = RuntimeRule(this.rrsb.rules.size, name, value, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
         return rr
     }
 
     fun pattern(pattern: String) : RuntimeRule {
-        this.name = pattern
+        val name = "\"$pattern\""
         this.isPattern = true
-        val rr = RuntimeRule(this.rrsb.rules.size, pattern, pattern, kind, isPattern, isSkip)
+        val rr = RuntimeRule(this.rrsb.rules.size, name, pattern, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
         return rr
     }
     fun pattern(name:String, pattern: String) : RuntimeRule {
-        this.name = pattern
         this.isPattern = true
         val rr = RuntimeRule(this.rrsb.rules.size, name, pattern, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
         return rr
     }
     fun empty(ruleThatIsEmpty: RuntimeRule): RuntimeRule {
-        this.name = "§empty."+ruleThatIsEmpty.tag
+        val name = "§empty."+ruleThatIsEmpty.tag
         val rr = RuntimeRule(this.rrsb.rules.size, name, name, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
         rr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.EMPTY,RuntimeRuleChoiceKind.NONE,0,0, arrayOf(ruleThatIsEmpty))

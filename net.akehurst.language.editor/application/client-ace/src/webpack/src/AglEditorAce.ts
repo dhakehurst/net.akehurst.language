@@ -219,11 +219,16 @@ class AglTokenizer implements ace.Ace.Tokenizer {
 
     transformToAceTokens(leafArray: agl.api.sppt.SPPTLeaf[]): any {
         return leafArray.map((it: agl.api.sppt.SPPTLeaf) => {
-            const tokenType = (it.isPattern) ? '"' + it.name + '"' : "'" + it.name + "'";
+            const tokenType = it.name; //(it.isPattern) ? '"' + it.name + '"' : "'" + it.name + "'";
             const cssClass = this.mapTokenTypeToClass(tokenType);
+            let beforeEOL = it.matchedText;
+            const eolIndex = it.matchedText.indexOf('\n');
+            if (-1 !==eolIndex) {
+                beforeEOL = it.matchedText.substr(0,eolIndex);
+            }
             return {
                 type: cssClass,
-                value: it.matchedText,
+                value: beforeEOL,
                 //index?: number;
                 start: it.startPosition
             }
@@ -251,11 +256,30 @@ class AglTokenizer implements ace.Ace.Tokenizer {
         }
     }
 
-    getLineTokensByParse(line: string, startState: string | string[],row:number): any {
+    getLineTokensByParse(line: string, startState: any, row:number): any {
         const leafs = this.agl.sppt.tokensByLine.toArray()[row];
         const leafArray = leafs.toArray();
         const tokens = this.transformToAceTokens(leafArray);
-        return {state: '', tokens};
+        if (startState) {
+            tokens.unshift(startState);
+        }
+        let state = null;
+        //TODO: if there are tokens that span multiple lines, then this rows leaf array maybe empty
+        const lastLeaf = leafArray[leafArray.length-1];
+        if (lastLeaf) {
+            const eolIndex = lastLeaf.matchedText.indexOf('\n');
+            if (-1 !== eolIndex) {
+                const afterEOL = lastLeaf.matchedText.substring(eolIndex+1);
+                state = {
+                    type: this.mapTokenTypeToClass(lastLeaf.name),
+                    value: afterEOL,
+                    //index?: number;
+                    start: 1,
+                    line: lastLeaf.location.line +1
+                }
+            }
+        }
+        return {state, tokens};
     }
 
     // --- ace.Ace.Tokenizer ---

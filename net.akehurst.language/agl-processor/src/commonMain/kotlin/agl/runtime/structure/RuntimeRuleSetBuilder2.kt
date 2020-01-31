@@ -112,7 +112,8 @@ class RuntimeRuleBuilder2(
     fun literal(value: String): RuntimeRule {
         val existing = this.rrsb.findRuleByName(value, true)
         return if (null == existing) {
-            val rr = RuntimeRule(this.rrsb.rules.size, value, value, RuntimeRuleKind.TERMINAL, false, false)
+            val name = "'$value'"
+            val rr = RuntimeRule(this.rrsb.rules.size, name, value, RuntimeRuleKind.TERMINAL, false, false)
             this.rrsb.rules.add(rr)
             items.add(rr)
             rr
@@ -125,7 +126,8 @@ class RuntimeRuleBuilder2(
     fun pattern(pattern: String): RuntimeRule {
         val existing = this.rrsb.findRuleByName(pattern, true)
         return if (null == existing) {
-            val rr = RuntimeRule(this.rrsb.rules.size, pattern, pattern, RuntimeRuleKind.TERMINAL, true, false)
+            val name = "\"$pattern\""
+            val rr = RuntimeRule(this.rrsb.rules.size, name, pattern, RuntimeRuleKind.TERMINAL, true, false)
             this.rrsb.rules.add(rr)
             items.add(rr)
             rr

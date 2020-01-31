@@ -80,7 +80,7 @@ class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
     // style = STYLE_ID ':' STYLE_VALUE ';' ;
     fun style(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): AglStyle {
         val name = target.nonSkipChildren[0].nonSkipMatchedText
-        val value = target.nonSkipChildren[1].nonSkipMatchedText
+        val value = target.nonSkipChildren[2].nonSkipMatchedText
         return AglStyle(name, value)
     }
 }

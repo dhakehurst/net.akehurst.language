@@ -48,30 +48,29 @@ grammarEditor.setStyle(`
   color: darkgreen;
   font-weight: bold;
 }
-"'(?:\\\\\\\\?.)*?'" {
+LITERAL {
   color: blue;
 }
-"\\\"(?:\\\\\\\\?.)*?\\\"" {
+PATTERN {
   color: darkblue;
 }
-"[a-zA-Z_][a-zA-Z_0-9-]*" {
+IDENTIFIER {
   color: darkred;
   font-style: italic;
 }
 `);
 
 styleEditor.setStyle(`
-"'(?:\\\\\\\\?.)*?'" {
+LITERAL {
   color: blue;
 }
-"\\\"(?:[^\\\"\\\\\\\\]|\\\\\\\\.)*?\\\"" {
-  font-family: "Courier New";
+PATTERN {
   color: darkblue;
 }
-"[a-zA-Z_][a-zA-Z_0-9-]*" {
+ID {
   color: red;
 }
-"[-a-zA-Z_][-a-zA-Z_0-9-]*(?=\\\\s*[:])" {
+STYLE_ID {
   color: darkred;
   font-style: italic;
 }
