@@ -41,6 +41,8 @@ import kotlin.js.JsName
 	 */
 	val root: SPPTNode
 
+	val tokensByLine : List<List<SPPTLeaf>>
+
 	/**
 	 * Determines if there is an equivalent tree in this forest for every tree in the other forest.
 	 *
@@ -48,8 +50,6 @@ import kotlin.js.JsName
 	 * @return true if this tree contains the other
 	 */
 	 fun contains(other: SharedPackedParseTree ): Boolean
-
-	fun tokensByLine() : List<List<SPPTLeaf>>
 
 	/**
 	 *  the original input text

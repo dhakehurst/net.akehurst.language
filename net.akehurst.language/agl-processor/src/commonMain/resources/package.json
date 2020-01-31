@@ -1,0 +1,23 @@
+{
+  "name": "net.akehurst.language-agl-processor",
+  "author": {
+    "name": "Dr. David H. Akehurst",
+    "email": "dr.david.h@akehurst.net",
+    "url": "https://medium.com/@dr.david.h.akehurst"
+  },
+  "version": "3.4.1",
+  "license": "Apache-2.0",
+
+  "keywords": ["parser","grammar","langauge", "agl"],
+  "homepage": "https://github.com/dhakehurst/net.akehurst.language",
+  "description:" : "Generic Language (DSL) support, (parser, syntax-analyser, formatter, processor, etc), built using Kotlin multiplatform",
+
+  "main": "./net.akehurst.language-agl-processor.js",
+  "types": "./net.akehurst.language-agl-processor.d.ts",
+
+  "dependencies": {
+    "kotlin": "1.3.61"
+  },
+
+  "scripts": { }
+}

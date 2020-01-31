@@ -16,16 +16,18 @@
 
 package net.akehurst.language.processor
 
+import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 import net.akehurst.language.agl.grammar.format.AglFormatGrammar
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.agl.grammar.format.AglFormatSyntaxAnalyser
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.style.AglStyleGrammar
 import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
 import net.akehurst.language.agl.sppt2ast.AglSppt2AstTransformer
+import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.Formatter
+import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt2ast.SyntaxAnalyser
 import kotlin.js.JsName
 
@@ -33,7 +35,7 @@ object Agl {
 
     val grammarProcessor: LanguageProcessor by lazy {
         val grammar = AglGrammarGrammar()
-        val sppt2ast: SyntaxAnalyser = AglSppt2AstTransformer()
+        val sppt2ast: SyntaxAnalyser = AglSppt2AstTransformer(GrammarRegistryDefault) //TODO: enable the registry to be changed
         processor(grammar, AglGrammarGrammar.goalRuleName, sppt2ast)
     }
 
@@ -45,7 +47,7 @@ object Agl {
 
     val formatProcessor: LanguageProcessor by lazy {
         val grammar = AglFormatGrammar()
-        val sppt2ast: SyntaxAnalyser = AglSppt2AstTransformer()
+        val sppt2ast: SyntaxAnalyser = AglFormatSyntaxAnalyser()
         processor(grammar, AglFormatGrammar.goalRuleName, sppt2ast)
     }
 

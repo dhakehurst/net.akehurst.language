@@ -1,0 +1,146 @@
+// Boolean Literal
+//# PrimitiveValueExpression
+true
+false
+yes
+no
+
+// Int Literal
+//# PrimitiveValueExpression
+0
+4
+42
+
+// Hex Literal
+//# PrimitiveValueExpression
+0xFFB5C5
+0XFFB5C5
+
+// Binary Literal
+//# PrimitiveValueExpression
+0b1101101
+0B1110001
+
+// Real Literal
+//# PrimitiveValueExpression
+0.2f
+0.2F
+0.2d
+0.2D
+
+// String Literal
+//# PrimitiveValueExpression
+'Hello World'
+"Hello World"
+''
+
+// Null Literal
+//# PrimitiveValueExpression
+null
+
+// Variable Definition
+//# ScopeDeclaration
+var MyVar : integer
+var MyVar : integer = 97
+var readonly MyVar : integer
+var MyVar : integer = 3 * 3
+var MyVar : string = null
+
+// Event Definition
+//# ScopeDeclaration
+event event1
+event event1 : integer
+event event1 : boolean
+in event event1 : integer
+out event event1 : integer
+event event1 : integer
+event event1 : string
+
+//Operation Definition
+//# ScopeDeclaration
+operation myOpp()
+operation myOpp() : boolean
+operation myOpp(param1: integer)
+operation myOpp(param1 : boolean) : integer
+operation myOpp(param1 : boolean, param2 : real) : integer
+operation myOpp(param1 : real, param2 : real) : integer
+
+//# ReactionTrigger
+after 10 s
+after 10 ms
+after 10 us
+after 10 ns
+every 10 ns
+entry
+exit
+oncycle
+always
+intEvent, after 10s
+intEvent, after 10s, every 10 ms
+intEvent, after 10s [false == true]
+intEvent, after 10s ['' != null]
+intEvent, after 10s [5  > 10]
+ABC.intEvent
+
+//# DefaultTrigger
+default
+else
+
+//# ReactionEffect
+raise intEvent
+intVar = 5
+voidOp()
+intVar = intOp()
+raise ABC.intEvent : 5
+ABC.paramOp()
+ABC.paramOp(5,false)
+ABC.paramOp(null)
+ABC.paramOp(); raise ABC.voidEvent
+
+// Reaction Properties
+//# TransitionReaction
+# > EntryPoint
+# ExitPoint >
+
+// Local Reaction
+//# LocalReaction
+entry [ABC.intVar > 10] / raise ABC.intEvent
+
+//# TransitionReaction
+after 10 s / raise ABC.intEvent
+
+//# InterfaceScope
+interface :
+interface ABC:
+interface : in event Event1
+interface ABC : var myVar : integer
+interface : operation myOpp()
+
+//# InternalScope
+internal :
+internal : event voidEvent
+internal : var intVar : integer
+internal : operation voidOp()
+internal : every 10 ms / raise intEvent
+
+//# StatechartSpecification
+interface: in event namespace
+interface: in event interface
+interface: in event internal
+interface: in event import
+interface: in event event
+interface: in event local
+interface: in event in
+interface: in event out
+interface: in event const
+interface: in event var
+interface: in event readonly
+interface: in event operation
+interface: in event default
+interface: in event else
+interface: in event raise
+interface: in event valueof
+interface: in event active
+
+
+

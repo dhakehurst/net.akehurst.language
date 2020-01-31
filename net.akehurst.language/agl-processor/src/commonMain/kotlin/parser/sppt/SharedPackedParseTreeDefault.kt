@@ -24,18 +24,18 @@ import kotlin.js.JsName
 
 class SharedPackedParseTreeDefault(
         override val root: SPPTNode,
-        override val seasons:Int,
-        override val maxNumHeads:Int
+        override val seasons: Int,
+        override val maxNumHeads: Int
 ) : SharedPackedParseTree {
 
     override fun contains(other: SharedPackedParseTree): Boolean {
         return this.root.contains(other.root)
     }
 
-    override fun tokensByLine(): List<List<SPPTLeaf>> {
-        val result = mutableListOf<List<SPPTLeaf>>()
-        this.root
-        return result
+    override val tokensByLine: List<List<SPPTLeaf>> by lazy {
+        val visitor = TokensByLineVisitor()
+        visitor.visit(this, Unit)
+        visitor.lines
     }
 
     override val asString: String by lazy {
@@ -51,7 +51,7 @@ class SharedPackedParseTreeDefault(
     }
 
 
-    override fun toStringIndented(indentIncrement:String): String {
+    override fun toStringIndented(indentIncrement: String): String {
         val visitor = ToStringVisitor("\n", indentIncrement)
         val all: Set<String> = this.accept(visitor, ToStringVisitor.Indent("", true))
         val total = all.size
@@ -73,7 +73,7 @@ class SharedPackedParseTreeDefault(
 
     override fun equals(other: Any?): Boolean {
         return if (other is SharedPackedParseTree) {
-           this.root == other.root
+            this.root == other.root
         } else {
             false
         }

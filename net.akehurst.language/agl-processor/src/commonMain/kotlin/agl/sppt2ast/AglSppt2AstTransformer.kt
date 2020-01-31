@@ -25,7 +25,9 @@ import net.akehurst.language.agl.ast.*
 import net.akehurst.language.processor.BranchHandler
 import net.akehurst.language.processor.SyntaxAnalyserAbstract
 
-class AglSppt2AstTransformer : SyntaxAnalyserAbstract() {
+class AglSppt2AstTransformer(
+        val grammarRegistry: GrammarRegistry
+) : SyntaxAnalyserAbstract() {
 
     var grammarLoader: GrammarLoader? = null
 
@@ -67,7 +69,9 @@ class AglSppt2AstTransformer : SyntaxAnalyserAbstract() {
     //   grammarDefinition : namespace grammar ;
     fun grammarDefinition(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Grammar {
         val namespace = this.transform<Namespace>(children[0], null)
-        return this.transform<Grammar>(children[1], namespace)
+        val grammar = this.transform<Grammar>(children[1], namespace)
+        this.grammarRegistry.register(grammar)
+        return grammar
     }
 
     // namespace : 'namespace' qualifiedName ;
@@ -80,7 +84,7 @@ class AglSppt2AstTransformer : SyntaxAnalyserAbstract() {
     fun grammar(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Grammar {
         val namespace = arg as Namespace
         val name = children[0].nonSkipMatchedText
-        val extends = this.transform<List<Grammar>>(children[1], null)
+        val extends = this.transform<List<Grammar>>(children[1], namespace)
         val result = GrammarDefault(namespace, name, mutableListOf())
         result.extends.addAll(extends)
 
@@ -91,8 +95,16 @@ class AglSppt2AstTransformer : SyntaxAnalyserAbstract() {
 
     // extends : 'extends' [qualifiedName / ',']+ ;
     fun extends(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<Grammar> {
-        //TODO:
-        return emptyList<Grammar>()
+        val localNamespace = arg as Namespace
+        return if (children[0].isEmptyMatch) {
+            emptyList<Grammar>()
+        } else {
+            val extendNameList = children[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren.map { it.nonSkipMatchedText }
+            val extendedGrammars = extendNameList.map {
+                this.grammarRegistry.find(localNamespace.qualifiedName, it)
+            }
+            extendedGrammars
+        }
     }
 
     // rules : anyRule+ ;

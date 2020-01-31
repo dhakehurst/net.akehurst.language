@@ -51,23 +51,24 @@ internal class InputFromCharSequence(val text: CharSequence) {
         return if (lookingAt) m?.value else null
     }
 
-    fun nextLocation(lastLocation:InputLocation, matchedText:String ) :InputLocation {
+    fun nextLocation(lastLocation:InputLocation, newLength:Int) :InputLocation {
+        val lastText = this.text.substring(lastLocation.position,lastLocation.position+lastLocation.length)
         var linesInText = 0
-        var lastEol = -1
-        matchedText.forEachIndexed { index,ch ->
+        var lastEolInText = -1
+        lastText.forEachIndexed { index,ch ->
             if (ch == '\n') {
                 linesInText++
-                lastEol = index
+                lastEolInText = index
             }
         }
         val position = lastLocation.position + lastLocation.length
         val line = lastLocation.line + linesInText
-        val column = if (-1==lastEol) {
-            lastLocation.column + matchedText.length
-        } else {
-            lastLocation.column + (matchedText.length - lastEol)
+        val column = when {
+            0==lastLocation.position && 0==lastLocation.length -> 1
+            -1==lastEolInText -> lastLocation.column + lastLocation.length
+            else -> lastLocation.length - lastEolInText
         }
-        return InputLocation(position, column, line, matchedText.length)
+        return InputLocation(position, column, line, newLength)
     }
 
 /*

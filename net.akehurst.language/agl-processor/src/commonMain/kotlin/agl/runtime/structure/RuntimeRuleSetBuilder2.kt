@@ -85,15 +85,15 @@ class RuntimeRuleSetBuilder2() {
         return b.build()
     }
 
-    private fun _rule(name: String, kind: RuntimeRuleItemKind, choiceKind: RuntimeRuleChoiceKind, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule {
+    private fun _rule(name: String, kind: RuntimeRuleItemKind, choiceKind: RuntimeRuleChoiceKind, min: Int=-1, max: Int=0, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule {
         val b = RuntimeRuleBuilder2(this, name, kind, choiceKind)
         b.init()
         return b.build()
     }
 
-    fun concatenation(name: String, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule = _rule(name, RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, init)
-    fun choice(name: String, choiceKind: RuntimeRuleChoiceKind, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule = _rule(name, RuntimeRuleItemKind.CHOICE, choiceKind, init)
-    fun multi(name: String, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule = _rule(name, RuntimeRuleItemKind.MULTI, RuntimeRuleChoiceKind.NONE, init)
+    fun concatenation(name: String, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule = _rule(name, RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1,0,init)
+    fun choice(name: String, choiceKind: RuntimeRuleChoiceKind, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule = _rule(name, RuntimeRuleItemKind.CHOICE, choiceKind, -1,0,init)
+    fun multi(name: String, min: Int, max: Int, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule = _rule(name, RuntimeRuleItemKind.MULTI, RuntimeRuleChoiceKind.NONE, -1,0,init)
 
 }
 

@@ -151,12 +151,12 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
                         val newText3 = newText2.substring(1, newText2.length - 1)
                         val location = InputLocation(sentenceLocation.position,sentenceLocation.column, sentenceLocation.line, newText3.length)
                         val leaf = this.leaf(text, newText3, location)
-                        sentenceLocation = input.nextLocation(location, leaf.matchedText)
+                        sentenceLocation = input.nextLocation(location, leaf.matchedText.length)
                         childrenStack.peek().add(leaf)
                     } else {
                         val location = InputLocation(sentenceLocation.position,sentenceLocation.column, sentenceLocation.line, text.length)
                         val leaf = this.leaf(text, location)
-                        sentenceLocation = input.nextLocation(location, text)
+                        sentenceLocation = input.nextLocation(location, text.length)
                         childrenStack.peek().add(leaf)
                     }
                 }

@@ -19,25 +19,37 @@ package net.akehurst.language.parser.sppt
 import net.akehurst.language.api.sppt.*
 
 
-class TokensByLineVisitor: SharedPackedParseTreeVisitor<List<List<SPPTLeaf>>, Any> {
+class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, Unit> {
 
-    fun visit(target: SPPTNode, arg: Any): List<List<SPPTLeaf>> {
-        return when(target) {
+    val lines = mutableListOf<MutableList<SPPTLeaf>>()
+    fun MutableList<MutableList<SPPTLeaf>>.getOrCreate(index:Int): MutableList<SPPTLeaf> {
+        if (index >= this.size) {
+            for(i in this.size-1 until index) {
+                this.add(mutableListOf())
+            }
+        }
+        return this[index]
+    }
+
+    fun visit(target: SPPTNode, arg: Unit) {
+        return when (target) {
             is SPPTBranch -> this.visit(target, arg)
             is SPPTLeaf -> this.visit(target, arg)
             else -> throw SPPTException("Unknown subtype of SPPTNode ${target::class.simpleName}", null)
         }
     }
 
-    override fun visit(target: SharedPackedParseTree, arg: Any): List<List<SPPTLeaf>> {
+    override fun visit(target: SharedPackedParseTree, arg: Unit) {
         return this.visit(target.root, arg)
     }
 
-    override fun visit(target: SPPTBranch, arg: Any): List<List<SPPTLeaf>> {
-        TODO("not implemented")
+    override fun visit(target: SPPTBranch, arg: Unit) {
+        target.children.forEach {
+            this.visit(it, arg)
+        }
     }
 
-    override fun visit(target: SPPTLeaf, arg: Any): List<List<SPPTLeaf>> {
-        TODO("not implemented")
+    override fun visit(target: SPPTLeaf, arg: Unit) {
+        lines.getOrCreate(target.location.line-1).add(target)
     }
 }

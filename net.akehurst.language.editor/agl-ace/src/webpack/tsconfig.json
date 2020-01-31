@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "outDir": "dist",
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "module": "es6",
+    "target": "es6",
+    "allowJs": true,
+    "esModuleInterop": true
+  },
+  "exclude": ["node_modules", "**/__tests__/*"]
+}

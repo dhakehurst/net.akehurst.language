@@ -56,7 +56,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
                 if (null == match) {
                     null
                 } else {
-                    val location = input.nextLocation(lastLocation,match)
+                    val location = input.nextLocation(lastLocation,match.length)
                     SPPTLeafDefault(it, location, false, match, (if (it.isPattern) 0 else 1))
                 }
             }
@@ -74,7 +74,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
             })
             if (null == longest) {
                 val text = inputText[position].toString()
-                lastLocation = input.nextLocation(lastLocation,text)
+                lastLocation = input.nextLocation(lastLocation,text.length)
                 val unscanned = SPPTLeafDefault(undefined, lastLocation,false, text,0)
                 result.add(unscanned)
                 position++

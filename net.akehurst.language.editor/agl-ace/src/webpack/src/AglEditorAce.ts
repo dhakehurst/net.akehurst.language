@@ -1,8 +1,8 @@
-import * as ace from "ace-builds"
-import 'ace-builds/src-noconflict/ext-language_tools'
+import * as ace from 'ace-builds';
+import 'ace-builds/src-noconflict/ext-language_tools';
 import * as agl_js from 'net.akehurst.language-agl-processor';
 import agl = agl_js.net.akehurst.language;
-const bgTokenizer = ace['require']('ace/background_tokenizer');
+
 const autocomplete = ace['require']('ace/autocomplete');
 
 function trimIndent(text: string): string {
@@ -16,15 +16,6 @@ function trimIndent(text: string): string {
         });
         return lines.join('\n').trim();
     }
-}
-
-class AglComponents {
-    nextCssClassNum = 1;
-    cssClassPrefix = 'tok';
-    tokenToClassMap = new Map<string, string>();
-
-    sppt: agl.api.sppt.SharedPackedParseTree = null;
-    processor: agl.api.processor.LanguageProcessor = null;
 }
 
 export class AglEditorAce {
@@ -41,17 +32,22 @@ export class AglEditorAce {
         return map;
     }
 
+    private nextCssClassNum = 1;
+    private cssClassPrefix = 'tok';
+    private tokenToClassMap = new Map<string, string>();
+
     private mode: ace.Ace.SyntaxMode = null;
     public editor: ace.Ace.Editor;
 
-    agl = new AglComponents();
+    private sppt: agl.api.sppt.SharedPackedParseTree = null;
 
+    private _processor: agl.api.processor.LanguageProcessor = null;
     public get processor(): agl.api.processor.LanguageProcessor {
-        return this.agl.processor;
+        return this._processor;
     }
 
     public set processor(value: agl.api.processor.LanguageProcessor) {
-        this.agl.processor = value;
+        this._processor = value;
         this.updateSyntaxMode();
     }
 
@@ -64,50 +60,46 @@ export class AglEditorAce {
         this.editor = ace.edit(this.element, {
             enableBasicAutocompletion: true
         });
-        this.editor.getSession().bgTokenizer = new AglBackgroundTokenizer(new AglTokenizer(this.agl), this.editor);
-        this.editor.getSession().bgTokenizer.setDocument(this.editor.getSession().getDocument());
-
         if (initialText) {
             this.editor.setValue(initialText, -1);
             this.editor.commands.addCommand(autocomplete.Autocomplete.startCommand);
             this.editor.completers = [new AglCompleter()];
         }
 
-        this.editor.on('input', (e: Event) => {
+        this.editor.on('input',(e:Event) =>{
             console.info("text changed");
             this.doBackgroundTryParse()
         });
     }
 
     doBackgroundTryParse() {
-        if (typeof (Worker) !== "undefined") {
-            setTimeout(() => this.tryParse(), 500)
+        if (typeof(Worker) !== "undefined") {
+            setTimeout(()=>this.tryParse(), 500)
             //TODO: use web worker stuff
         } else {
-            setTimeout(() => this.tryParse(), 500)
+            setTimeout(()=>this.tryParse(), 500)
         }
     }
 
     tryParse() {
         try {
-            this.agl.sppt = this.processor.parse(this.editor.getValue());
-            this.editor.session.bgTokenizer.start(0);
+            this.sppt = this.processor.parse(this.editor.getValue());
         } catch (e) {
-            this.agl.sppt = null;
-            console.error("Error parsing text in " + this.languageId, e)
+            this.sppt = null;
+            console.error("Error parsing text in "+this.languageId,e)
         }
     }
 
     private updateSyntaxMode() {
-        this.mode = new AglMode(this.languageId, this.agl);
+        this.mode = new AglMode(this.languageId, this.processor, this.tokenToClassMap);
         this.editor.getSession().setMode(this.mode);
     }
 
     mapTokenTypeToClass(tokenType: string): string {
-        let cssClass = this.agl.tokenToClassMap.get(tokenType);
+        let cssClass = this.tokenToClassMap.get(tokenType);
         if (!cssClass) {
-            cssClass = this.agl.cssClassPrefix + this.agl.nextCssClassNum++;
-            this.agl.tokenToClassMap.set(tokenType, cssClass);
+            cssClass = this.cssClassPrefix + this.nextCssClassNum++;
+            this.tokenToClassMap.set(tokenType, cssClass);
         }
         return cssClass;
     }
@@ -135,19 +127,12 @@ export class AglEditorAce {
 
 }
 
-class AglBackgroundTokenizer extends bgTokenizer.BackgroundTokenizer {
-    constructor(tok:AglTokenizer, ed:ace.Ace.Editor) {
-        super(tok, ed);
-    }
-}
-
 class AglMode implements ace.Ace.SyntaxMode {
-
-    private _tokenizer: AglTokenizer;
 
     constructor(
         public languageId: string,
-        private agl: AglComponents
+        private processor: agl.api.processor.LanguageProcessor,
+        private tokenToClassMap: Map<string, string>
     ) {
     }
 
@@ -162,7 +147,6 @@ class AglMode implements ace.Ace.SyntaxMode {
     }
 
     createWorker(session: ace.Ace.EditSession): any {
-        return 1;
     }
 
     getCompletions(state: string, session: ace.Ace.EditSession, pos: ace.Ace.Point, prefix: string): ace.Ace.Completion[] {
@@ -186,10 +170,7 @@ class AglMode implements ace.Ace.SyntaxMode {
     }
 
     getTokenizer(): ace.Ace.Tokenizer {
-        if (!this._tokenizer) {
-            this._tokenizer = new AglTokenizer(this.agl);
-        }
-        return this._tokenizer;
+        return new AglTokenizer(this.processor, this.tokenToClassMap);
     }
 
     toggleBlockComment(state: any, session: ace.Ace.EditSession, range: ace.Ace.Range, cursor: ace.Ace.Point): void {
@@ -206,20 +187,34 @@ class AglMode implements ace.Ace.SyntaxMode {
 class AglTokenizer implements ace.Ace.Tokenizer {
 
     constructor(
-        private agl: AglComponents
+        private processor: agl.api.processor.LanguageProcessor,
+        private tokenToClassMap: Map<string, string>
     ) {
     }
 
+    tryParse() : List<List<agl.api.sppt.SPPTLeaf>> {
+        try {
+
+        }
+    }
+
     mapTokenTypeToClass(tokenType: string): string {
-        let cssClass = this.agl.tokenToClassMap.get(tokenType);
+        let cssClass = this.tokenToClassMap.get(tokenType);
         if (!cssClass) {
             cssClass = 'nostyle';
         }
         return cssClass;
     }
 
-    transformToAceTokens(leafArray: agl.api.sppt.SPPTLeaf[]): any {
-        return leafArray.map((it: agl.api.sppt.SPPTLeaf) => {
+    createSplitterRegexp(src: string, flag?: string): RegExp {
+        return undefined;
+    }
+
+    getLineTokens(line: string, startState: string | string[]): any {
+        let text = (startState) ? startState + line : line;
+        let leafs = this.processor.scan(text);
+        let leafArray = leafs.toArray();
+        const tokens = leafArray.map((it: agl.api.sppt.SPPTLeaf) => {
             const tokenType = (it.isPattern) ? '"' + it.name + '"' : "'" + it.name + "'";
             const cssClass = this.mapTokenTypeToClass(tokenType);
             return {
@@ -229,34 +224,7 @@ class AglTokenizer implements ace.Ace.Tokenizer {
                 start: it.startPosition
             }
         });
-    }
-
-    getLineTokensByScan(line: string, startState: string | string[],row:number): any {
-        const text = (startState) ? startState + line : line;
-        const leafs = this.agl.processor.scan(text);
-        const leafArray = leafs.toArray();
-        const tokens = this.transformToAceTokens(leafArray);
         return {state: '', tokens};
-    }
-
-    getLineTokensByParse(line: string, startState: string | string[],row:number): any {
-        const leafs = this.agl.sppt.tokensByLine.toArray()[row];
-        const leafArray = leafs.toArray();
-        const tokens = this.transformToAceTokens(leafArray);
-        return {state: '', tokens};
-    }
-
-    // --- ace.Ace.Tokenizer ---
-    createSplitterRegexp(src: string, flag?: string): RegExp {
-        return undefined;
-    }
-
-    getLineTokens(line: string, startState: string, row:number): any {
-        if (this.agl.sppt) {
-            return this.getLineTokensByParse(line, startState, row)
-        } else {
-            return this.getLineTokensByScan(line, startState, row)
-        }
     }
 
     removeCapturingGroups(src: string): string {

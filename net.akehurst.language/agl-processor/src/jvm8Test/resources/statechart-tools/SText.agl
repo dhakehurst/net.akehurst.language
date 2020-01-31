@@ -1,0 +1,106 @@
+/**
+ * Copyright (c) 2010 - 2018 committers of YAKINDU and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * Contributors:
+ * 	committers of YAKINDU - initial API and implementation
+ *
+ */
+namespace org.yakindu.stext
+
+grammar SText extends Expressions {
+
+// ---- root rules ----
+//These root rules are not relevant for the grammar integration in the statechart. They just integrate the different start rules consistently
+//into a single grammar.
+//
+
+Root = DefRoot*;
+
+DefRoot = StatechartRoot | StateRoot | TransitionRoot ;
+StatechartRoot = '@@statechart@@' StatechartSpecification ;
+StateRoot = '@@state@@' StateSpecification ;
+
+TransitionRoot = '@@transition@@' TransitionSpecification ;
+
+// ---- start rules ----
+// Define the starting points used by the statechart integration. These rules hook in the concrete rules of the specific grammar.
+//
+StatechartSpecification = ('namespace' FQN)? Annotation* StatechartScope* ;
+StateSpecification = StateScope;
+TransitionSpecification = TransitionReaction ;
+StateScope = LocalReaction* ;
+StatechartScope = InterfaceScope | InternalScope | ImportScope ;
+InterfaceScope = 'interface' ID? ':' ScopeDeclaration* ;
+ScopeDeclaration = Annotation*
+	(
+		('const' | 'var') ('readonly'?) ID ':'	TypeSpecifier ('=' Expression)?
+	|
+		Direction? 'event' ID (':' TypeSpecifier)?
+	|
+		'alias' ID ':' TypeSpecifier
+	|
+		'operation' ID '(' (Parameter (',' Parameter)*)? ')' (':' TypeSpecifier)?
+	);
+
+InternalScope = 'internal' ':' (ScopeDeclaration | LocalReaction)*;
+ImportScope = 'import' ':' STRING* ;
+
+Direction = 'in' | 'out' ;
+Annotation = '@' QID ('(' (ConditionalExpression (',' ConditionalExpression)*)? ')')?;
+
+Parameter = ID ('...')? ':' TypeSpecifier;
+
+LocalReaction = ReactionTrigger ('/' ReactionEffect);
+
+TransitionReaction = StextTrigger? ('/' ReactionEffect)? ('#' TransitionProperty*)?;
+
+StextTrigger = ReactionTrigger | DefaultTrigger;
+
+ReactionTrigger = ((EventSpec ("," EventSpec)* ('['Guard ']')?) | ('[' Guard ']'));
+
+DefaultTrigger = ('default' | 'else');
+
+Guard = Expression;
+
+ReactionEffect = (Expression | EventRaisingExpression) ( ';' (Expression | EventRaisingExpression))*;
+
+TransitionProperty  = EntryPointSpec | ExitPointSpec;
+
+EntryPointSpec = '>' ID;
+
+ExitPointSpec = ID '>';
+
+EventSpec =	RegularEventSpec | TimeEventSpec | BuiltinEventSpec;
+
+// Use SimpleFeatureCall for eventSpec to avoid guard ambiguity with array access
+RegularEventSpec = SimpleFeatureCall;
+SimpleFeatureCall = SimpleElementReferenceExpression (('.' | '.@') ID ('(' (Argument (',' Argument)*)? ')')?)*;
+SimpleElementReferenceExpression = ID ('(' (Argument (',' Argument)*)? ')')?;
+TimeEventSpec = TimeEventType ConditionalExpression TimeUnit;
+TimeEventType =	'after' | 'every';
+BuiltinEventSpec = EntryEvent | ExitEvent | AlwaysEvent;
+EntryEvent= 'entry';
+ExitEvent= 'exit';
+AlwaysEvent= 'always' | 'oncycle' ;
+
+EventRaisingExpression = 'raise' FeatureCall (':' Expression)?;
+EventValueReferenceExpression = 'valueof' '(' FeatureCall ')';
+ActiveStateReferenceExpression = 'active' '(' FQN ')';
+
+PrimaryExpression
+    = PrimitiveValueExpression
+    | FeatureCall
+    | ActiveStateReferenceExpression
+    | EventValueReferenceExpression
+    | ParenthesizedExpression
+    ;
+
+TimeUnit = 's' | 'ms' | 'us' | 'ns' ;
+
+
+FQN = ID ('.' ID)*;
+
+}

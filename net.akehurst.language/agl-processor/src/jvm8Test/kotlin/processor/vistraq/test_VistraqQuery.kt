@@ -25,7 +25,6 @@ class test_QueryParserValid(val data:Data) {
         var sourceFiles = arrayOf("/vistraq/sampleValidQueries.txt")
 
         fun tgqlprocessor() : LanguageProcessor {
-            //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
             return Agl.processor(grammarStr)
          }
 
