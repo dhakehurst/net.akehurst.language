@@ -26,8 +26,13 @@ internal class InputFromCharSequence(val text: CharSequence) {
         val END_OF_TEXT = 3.toChar().toString()
     }
 
-   // private var lastlocationCachePosition = -1
-   // private val locationCache = mutableMapOf<Int, InputLocation>()
+    // private var lastlocationCachePosition = -1
+    // private val locationCache = mutableMapOf<Int, InputLocation>()
+
+    data class Match(
+            val matchedText: String,
+            val eolPositions: List<Int>
+    )
 
     internal fun isStart(position: Int): Boolean {
         // TODO what if we want t0 parse part of the text?, e.g. sub grammar
@@ -39,23 +44,50 @@ internal class InputFromCharSequence(val text: CharSequence) {
         return position >= this.text.length
     }
 
-    private fun matchLiteral(position: Int, patternText: String): String? {
-        val match = this.text.regionMatches(position, patternText, 0, patternText.length, false)
-        return if (match) patternText else null
+    //TODO: write a scanner that counts eols as it goes, rather than scanning the text twice
+     fun eolPositions(text: String): List<Int> {
+        val regex = Regex("\n", setOf(RegexOption.MULTILINE))
+        return regex.findAll(text).toList().map { it.range.first }
     }
 
-    private fun matchRegEx(position: Int, patternText: String): String? {
+    private fun matchLiteral(position: Int, patternText: String): Match? {
+        val match = this.text.regionMatches(position, patternText, 0, patternText.length, false)
+        val matchedText = if (match) patternText else null
+        return if (null == matchedText) {
+            null
+        } else {
+            val eolPositions = this.eolPositions(matchedText)
+            Match(matchedText, eolPositions)
+        }
+    }
+
+    private fun matchRegEx(position: Int, patternText: String): Match? {
         val pattern = Regex(patternText, setOf(RegexOption.MULTILINE))
         val m = pattern.find(this.text, position)
         val lookingAt = (m?.range?.start == position)
-        return if (lookingAt) m?.value else null
+        val matchedText = if (lookingAt) m?.value else null
+        return if (null == matchedText) {
+            null
+        } else {
+            val eolPositions = this.eolPositions(matchedText)
+            Match(matchedText, eolPositions)
+        }
     }
 
-    fun nextLocation(lastLocation:InputLocation, newLength:Int) :InputLocation {
-        val lastText = this.text.substring(lastLocation.position,lastLocation.position+lastLocation.length)
+    internal fun tryMatchText(position: Int, patternText: String, isPattern: Boolean): Match? {
+        val matched = when {
+            (position >= this.text.length) -> if (patternText == END_OF_TEXT) Match(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
+            (!isPattern) -> this.matchLiteral(position, patternText)
+            else -> this.matchRegEx(position, patternText)
+        }
+        return matched
+    }
+
+    fun nextLocation(lastLocation: InputLocation, newLength: Int): InputLocation {
+        val lastText = this.text.substring(lastLocation.position, lastLocation.position + lastLocation.length)
         var linesInText = 0
         var lastEolInText = -1
-        lastText.forEachIndexed { index,ch ->
+        lastText.forEachIndexed { index, ch ->
             if (ch == '\n') {
                 linesInText++
                 lastEolInText = index
@@ -64,47 +96,10 @@ internal class InputFromCharSequence(val text: CharSequence) {
         val position = lastLocation.position + lastLocation.length
         val line = lastLocation.line + linesInText
         val column = when {
-            0==lastLocation.position && 0==lastLocation.length -> 1
-            -1==lastEolInText -> lastLocation.column + lastLocation.length
+            0 == lastLocation.position && 0 == lastLocation.length -> 1
+            -1 == lastEolInText -> lastLocation.column + lastLocation.length
             else -> lastLocation.length - lastEolInText
         }
         return InputLocation(position, column, line, newLength)
-    }
-
-/*
-    internal fun calcLineAndColumn(position: Int): InputLocation {
-        val existing = this.locationCache[position]
-        return if (null!=existing) {
-            existing
-        } else {
-            val lastCachedLocation = if (-1 == this.lastlocationCachePosition) {
-                InputLocation(1, 1, 0)
-            } else {
-                this.locationCache[this.lastlocationCachePosition]!!
-            }
-            var line = lastCachedLocation.line
-            var column = lastCachedLocation.column
-
-            for (count in this.lastlocationCachePosition until position+1) {
-                if (this.text[count] == '\n') {
-                    ++line
-                    column = 1
-                } else {
-                    ++column
-                }
-                this.locationCache[count] = InputLocation(column, line, 0)
-                this.lastlocationCachePosition = count
-            }
-            this.locationCache[position]!!
-        }
-    }
-*/
-    internal fun tryMatchText(position: Int, patternText: String, isPattern: Boolean): String? {
-        val matched = when {
-            (position >= this.text.length) -> if (patternText== END_OF_TEXT) END_OF_TEXT else null// TODO: should we need to do this?
-            (!isPattern) -> this.matchLiteral(position, patternText)
-            else -> this.matchRegEx(position, patternText)
-        }
-        return matched
     }
 }

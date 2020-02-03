@@ -107,10 +107,10 @@ internal class ParseGraph(
             this.completeNodes[leaf.identity] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
             leaf
         } else {
-            val matchedText = this.input.tryMatchText(index.startPosition, terminalRuntimeRule.value, terminalRuntimeRule.isPattern)
-                    ?: return null
-            val location = this.input.nextLocation(lastLocation, matchedText.length)
-            val leaf = SPPTLeafDefault(terminalRuntimeRule, location, false, matchedText, 0)
+            val match = this.input.tryMatchText(index.startPosition, terminalRuntimeRule.value, terminalRuntimeRule.isPattern)?: return null
+            val location = this.input.nextLocation(lastLocation, match.matchedText.length)
+            val leaf = SPPTLeafDefault(terminalRuntimeRule, location, false, match.matchedText, 0)
+            leaf.eolPositions = match.eolPositions
             this.leaves[index] = leaf
             this.completeNodes[leaf.identity] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
             leaf

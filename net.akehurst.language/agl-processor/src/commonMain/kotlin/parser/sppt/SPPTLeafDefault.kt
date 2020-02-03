@@ -42,6 +42,8 @@ class SPPTLeafDefault(
 
     override val tagList = mutableListOf<String>()
 
+    override var eolPositions: List<Int> = emptyList()
+
     // --- SPPTNode ---
 
     override val nonSkipMatchedText: String = if (isSkip) "" else this.matchedText

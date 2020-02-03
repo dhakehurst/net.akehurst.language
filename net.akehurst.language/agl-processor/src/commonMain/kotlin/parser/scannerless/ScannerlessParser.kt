@@ -41,23 +41,25 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         this.runtimeRuleSet.buildCaches()
     }
 
-    override fun scan(inputText: CharSequence, includeSkipRules:Boolean): List<SPPTLeaf> {
-        val undefined = RuntimeRule(-5, "undefined","", RuntimeRuleKind.TERMINAL, false, true)
+    override fun scan(inputText: CharSequence, includeSkipRules: Boolean): List<SPPTLeaf> {
+        val undefined = RuntimeRule(-5, "undefined", "", RuntimeRuleKind.TERMINAL, false, true)
         //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
         val input = InputFromCharSequence(inputText)
         val terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.allNonSkipTerminals
         var result = mutableListOf<SPPTLeaf>()
 
         var position = 0
-        var lastLocation = InputLocation(0,1,1,0)
+        var lastLocation = InputLocation(0, 1, 1, 0)
         while (!input.isEnd(position)) {
             val matches: List<SPPTLeaf> = terminals.mapNotNull {
                 val match = input.tryMatchText(position, it.value, it.isPattern)
                 if (null == match) {
                     null
                 } else {
-                    val location = input.nextLocation(lastLocation,match.length)
-                    SPPTLeafDefault(it, location, false, match, (if (it.isPattern) 0 else 1))
+                    val location = input.nextLocation(lastLocation, match.matchedText.length)
+                    val leaf = SPPTLeafDefault(it, location, false, match.matchedText, (if (it.isPattern) 0 else 1))
+                    leaf.eolPositions = match.eolPositions
+                    leaf
                 }
             }
             // prefer literals over patterns
@@ -73,9 +75,11 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
                 }
             })
             if (null == longest) {
+                //TODO: collate unscanned, rather than make a separate token for each char
                 val text = inputText[position].toString()
-                lastLocation = input.nextLocation(lastLocation,text.length)
-                val unscanned = SPPTLeafDefault(undefined, lastLocation,false, text,0)
+                lastLocation = input.nextLocation(lastLocation, text.length)
+                val unscanned = SPPTLeafDefault(undefined, lastLocation, false, text, 0)
+                unscanned.eolPositions = input.eolPositions(text)
                 result.add(unscanned)
                 position++
             } else {

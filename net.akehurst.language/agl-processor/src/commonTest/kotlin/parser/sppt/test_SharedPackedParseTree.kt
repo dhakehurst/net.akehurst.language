@@ -39,6 +39,27 @@ class test_SharedPackedParseTree {
             }
         """.trimIndent())
 
+        val sut = proc.parse("a".trimIndent())
+
+        val actual = sut.tokensByLine
+
+        assertEquals("a", actual[0][0].matchedText)
+    }
+
+    @Test
+    fun tokensByLine_eolx1() {
+        val proc = Agl.processor("""
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                
+                S = expr ;
+                expr = VAR < infix ;
+                infix = expr '+' expr ;
+                VAR = "[a-z]+" ;
+            }
+        """.trimIndent())
+
         val sut = proc.parse("""
             a + b
             + c
@@ -46,7 +67,75 @@ class test_SharedPackedParseTree {
 
         val actual = sut.tokensByLine
 
-        assertEquals("a", actual[0][0].matchedText)
+        assertEquals("a + b\n", actual[0].map { it.matchedText }.joinToString(""))
+        assertEquals(1, actual[0][0].location.line)
+        assertEquals(2, actual[1][0].location.line)
     }
 
+    @Test
+    fun tokensByLine_eolx1_indent() {
+        val proc = Agl.processor("""
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                
+                S = expr ;
+                expr = VAR < infix ;
+                infix = expr '+' expr ;
+                VAR = "[a-z]+" ;
+            }
+        """.trimIndent())
+
+        val sut = proc.parse("""
+            a + b
+              + c
+        """.trimIndent())
+
+        val actual = sut.tokensByLine
+
+        assertEquals("a + b\n", actual[0].map { it.matchedText }.joinToString(""))
+        assertEquals(1, actual[0][0].location.line)
+        assertEquals(2, actual[1][0].location.line)
+        assertEquals("  ", actual[1][0].matchedText)
+    }
+
+    @Test
+    fun tokensByLine_eolx2() {
+        val proc = Agl.processor("""
+            namespace test
+
+            grammar Test {
+                skip WS = "\s+" ;
+
+                declaration = 'class' ID '{' property* '}' ;
+                property = ID ':' typeReference ;
+                typeReference = ID typeArguments? ;
+                typeArguments = '<' [typeReference / ',']+ '>' ;
+
+                leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
+
+            }
+        """.trimIndent())
+
+        val text = """
+class XXX {
+    
+    prop1 : String
+    prop2 : Integer
+    propList : List<String>
+}
+        """
+        val text2 = text.trimStart()
+        val sut = proc.parse(text2)
+
+        val actual = sut.tokensByLine
+
+        assertEquals("class XXX {\n", actual[0].map { it.matchedText }.joinToString(""))
+        assertEquals(1, actual[0][0].location.line)
+        assertEquals(2, actual[1][0].location.line)
+        assertEquals("    \n", actual[1][0].matchedText)
+        assertEquals(3, actual[2][0].location.line)
+        assertEquals("    ", actual[2][0].matchedText)
+        assertEquals("prop1", actual[2][1].matchedText)
+    }
 }

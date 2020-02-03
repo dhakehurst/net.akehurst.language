@@ -16,15 +16,16 @@
 
 package net.akehurst.language.parser.sppt
 
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 
 
 class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<String>> {
 
     val lines = mutableListOf<MutableList<SPPTLeaf>>()
-    fun MutableList<MutableList<SPPTLeaf>>.getOrCreate(index:Int): MutableList<SPPTLeaf> {
+    fun MutableList<MutableList<SPPTLeaf>>.getOrCreate(index: Int): MutableList<SPPTLeaf> {
         if (index >= this.size) {
-            for(i in this.size-1 until index) {
+            for (i in this.size - 1 until index) {
                 this.add(mutableListOf())
             }
         }
@@ -51,8 +52,31 @@ class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<String>> {
     }
 
     override fun visit(target: SPPTLeaf, arg: List<String>) {
-        (target.tagList as MutableList<String>).addAll(arg)
-        (target.tagList as MutableList<String>).add(target.name)
-        lines.getOrCreate(target.location.line-1).add(target)
+        if (target.eolPositions.isEmpty()) {
+            (target.tagList as MutableList<String>).addAll(arg)
+            (target.tagList as MutableList<String>).add(target.name)
+            lines.getOrCreate(target.location.line - 1).add(target)
+        } else {
+            val rr = (target as SPPTLeafDefault).runtimeRule
+            var line = target.location.line
+            var startLinePos = 0
+            var startPos = target.location.position
+            var column = target.location.column
+            target.eolPositions.forEach { eolPos ->
+                val lineText = target.matchedText.substring(startLinePos, eolPos+1)
+                val segmentLeaf = SPPTLeafDefault(rr, InputLocation(startLinePos + startPos, column, line, lineText.length), false, lineText, target.priority)
+                lines.getOrCreate(line - 1).add(segmentLeaf)
+                line++
+                startLinePos += lineText.length
+                column = 0
+            }
+            // add remaining text if there is any
+            val lineText = target.matchedText.substring(startLinePos)
+            if (lineText.isNotEmpty()) {
+                val segmentLeaf = SPPTLeafDefault(rr, InputLocation(startLinePos + startPos, column, line, lineText.length), false, lineText, target.priority)
+                lines.getOrCreate(line - 1).add(segmentLeaf)
+            }
+
+        }
     }
 }

@@ -48,6 +48,10 @@ grammarEditor.setStyle(`
   color: darkgreen;
   font-weight: bold;
 }
+'leaf' {
+  color: darkgreen;
+  font-weight: bold;
+}
 LITERAL {
   color: blue;
 }
@@ -88,7 +92,8 @@ grammarEditor.editor.on("input", (e:Event) =>{
     try {
         expressionEditor.processor = Agl.processorFromString(grammarEditor.editor.getValue());
     } catch (e) {
-        console.error(e);
+        expressionEditor.processor = null;
+        console.error(e.message);
     }
 });
 

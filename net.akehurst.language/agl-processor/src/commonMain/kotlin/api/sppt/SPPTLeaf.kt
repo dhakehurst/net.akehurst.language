@@ -23,23 +23,25 @@ import net.akehurst.language.api.parser.InputLocation
  */
 interface SPPTLeaf : SPPTNode {
 
-	/**
-	 * Indicates if the leaf was constructed by matching a regular expression pattern or not.
-	 *
-	 * true if the leaf was created by matching a regular expression pattern, false if not.
-	 */
-	val isPattern: Boolean
+    /**
+     * Indicates if the leaf was constructed by matching a regular expression pattern or not.
+     *
+     * true if the leaf was created by matching a regular expression pattern, false if not.
+     */
+    val isPattern: Boolean
 
-	/**
-	 * Indicates if the leaf was constructed by matching a literal or not.
-	 *
-	 * true if the leaf was created by matching a literal, false if not.
-	 */
-	val isLiteral: Boolean
+    /**
+     * Indicates if the leaf was constructed by matching a literal or not.
+     *
+     * true if the leaf was created by matching a literal, false if not.
+     */
+    val isLiteral: Boolean
 
-	/**
-		list of names of all the parent nodes leading to this leaf
-	    ( currently  populated by TokensByLineVisitor - called by SharedPackedParseTree.tokensByLine )
-	 */
-	val tagList: List<String>
+    /**
+     * list of names of all the parent nodes leading to this leaf
+     * ( currently  populated by TokensByLineVisitor - called by SharedPackedParseTree.tokensByLine )
+     */
+    val tagList: List<String>
+
+    val eolPositions: List<Int>
 }

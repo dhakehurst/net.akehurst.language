@@ -208,7 +208,7 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
     fun leaf(pattern: String, text: String, location: InputLocation): SPPTLeaf {
         val terminalRule = this.runtimeRuleSet.findTerminalRule(pattern)
         val n = SPPTLeafDefault(terminalRule, location, false, text, 0 )
-
+        n.eolPositions =  Regex("\n", setOf(RegexOption.MULTILINE)).findAll(text).toList().map { it.range.first }
         var existing: SPPTLeaf? = this.findLeaf(n.identity, n.matchedTextLength)
         if (null == existing) {
             this.cacheNode(n)
