@@ -10,18 +10,24 @@ dependencies {
 
 }
 
-val srcDir = project.layout.projectDirectory.dir("src/angular")
+val srcDir = project.layout.projectDirectory.dir("src/ng-workspace")
 val outDir = project.layout.buildDirectory.dir("angular")
+
+// use newer version of node and yarn
+project.rootProject.configure<org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension> {
+    nodeVersion = "13.7.0"
+}
 
 kt2ts {
     nodeSrcDirectory.set(srcDir)
     nodeOutDirectory.set(outDir)
 
     nodeBuildCommand.set(
+            // building an ng library does not support --outputPath
             if (project.hasProperty("prod")) {
-                listOf("webpack", "--output=${outDir.get()}/main.js")
+                listOf("ng", "build", "--prod")//, "--outputPath=${outDir.get()}/dist")
             } else {
-                listOf("webpack", "--mode=development", "--output=${outDir.get()}/main.js")
+                listOf("ng", "build")//, "--outputPath=${outDir.get()}/dist")
             }
     )
 }

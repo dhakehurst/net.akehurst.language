@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.parser
-
+package net.akehurst.language.parser.scannerless
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException
-import net.akehurst.language.api.grammar.NodeType
-import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
@@ -34,7 +31,7 @@ interface Parser {
 	/**
 	 * get a list of the types of node (is this useful!)
 	 */
-	val nodeTypes: Set<NodeType>
+	//val nodeTypes: Set<NodeType>
 
 	/**
 	 * using the terminals (literals and patterns) from the grammar, scan the input text

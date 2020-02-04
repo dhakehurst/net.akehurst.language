@@ -16,9 +16,9 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.grammar.runtime.ConverterToRuntimeRules
+import net.akehurst.language.parser.scannerless.Parser
 import net.akehurst.language.parser.scannerless.ScannerlessParser
 import net.akehurst.language.parser.sppt.SPPTParser
 import net.akehurst.language.processor.CompletionProvider

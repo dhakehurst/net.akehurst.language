@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.sppt2ast
+package net.akehurst.language.api.analyser
 
 class UnableToTransformSppt2AstExeception(message: String, cause: Throwable?) : Exception(message, cause) {
 

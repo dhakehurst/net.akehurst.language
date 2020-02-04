@@ -28,6 +28,7 @@
                                 grammar Test {
                                     skip WS = "\s+" ;
 
+                                    unit = declaration* ;
                                     declaration = 'class' ID '{' property* '}' ;
                                     property = ID ':' typeReference ;
                                     typeReference = ID typeArguments? ;

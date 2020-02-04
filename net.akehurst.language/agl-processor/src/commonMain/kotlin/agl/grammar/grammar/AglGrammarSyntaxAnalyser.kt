@@ -20,7 +20,7 @@ import net.akehurst.language.api.analyser.GrammarLoader
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt2ast.UnableToTransformSppt2AstExeception
+import net.akehurst.language.api.analyser.UnableToTransformSppt2AstExeception
 import net.akehurst.language.agl.ast.*
 import net.akehurst.language.processor.BranchHandler
 import net.akehurst.language.processor.SyntaxAnalyserAbstract

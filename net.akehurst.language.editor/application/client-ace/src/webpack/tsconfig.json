@@ -1,10 +1,12 @@
 {
   "compilerOptions": {
     "sourceMap": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
+    "strict": false,
     "module": "es6",
     "target": "es6",
     "allowJs": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "moduleResolution": "node"
   }
 }

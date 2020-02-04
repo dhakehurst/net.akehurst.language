@@ -16,9 +16,6 @@
 
 package net.akehurst.language.parser.scannerless
 
-import net.akehurst.language.api.grammar.NodeType
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.graph.GrowingNode
@@ -33,9 +30,9 @@ import kotlin.math.max
 
 class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
 
-    override val nodeTypes: Set<NodeType> by lazy {
-        emptySet<NodeType>() //TODO:
-    }
+    //override val nodeTypes: Set<NodeType> by lazy {
+    //    emptySet<NodeType>() //TODO:
+    //}
 
     override fun build() {
         this.runtimeRuleSet.buildCaches()

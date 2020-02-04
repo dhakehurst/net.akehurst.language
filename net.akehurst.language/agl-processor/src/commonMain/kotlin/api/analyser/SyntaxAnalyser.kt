@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.sppt2ast
+package net.akehurst.language.api.analyser
 
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 

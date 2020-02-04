@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.grammar.format
 
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt2ast.SyntaxAnalyser
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 
 class AglFormatSyntaxAnalyser : SyntaxAnalyser {
     override fun clear() {

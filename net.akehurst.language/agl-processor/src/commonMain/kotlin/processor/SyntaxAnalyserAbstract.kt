@@ -21,8 +21,8 @@ import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
-import net.akehurst.language.api.sppt2ast.SyntaxAnalyser
-import net.akehurst.language.api.sppt2ast.UnableToTransformSppt2AstExeception
+import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.analyser.UnableToTransformSppt2AstExeception
 
 typealias BranchHandler<T> = (SPPTBranch, List<SPPTBranch>, Any?) -> T
 

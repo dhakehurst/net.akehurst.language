@@ -392,6 +392,39 @@ class test_AglGrammar {
         assertNotNull(p)
     }
 
+
+    @Test
+    fun group_A_A0n_() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                R = (A A* ) ;
+                leaf A = 'A' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun group_A_A0n() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                R = (A A*) ;
+                leaf A = 'A' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+        assertNotNull(p)
+    }
+
     @Test
     fun eg1() {
 

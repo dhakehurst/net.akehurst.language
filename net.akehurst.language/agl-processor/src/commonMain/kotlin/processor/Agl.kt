@@ -28,7 +28,7 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.sppt2ast.SyntaxAnalyser
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 import kotlin.js.JsName
 
 object Agl {

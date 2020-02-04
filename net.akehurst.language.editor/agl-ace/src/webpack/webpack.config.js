@@ -1,14 +1,13 @@
 const path = require('path');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const CopyPkgJsonPlugin = require("copy-pkg-json-webpack-plugin");
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 module.exports = {
-    entry: './src/AglEditorAce.ts',
+    entry: path.resolve('./src/AglEditorAce.ts'),
     output: {
-        path: './dist',
-        library: 'AglEditorAce'
+        library: 'AglEditorAce',
+        libraryTarget: 'umd'
     },
     devtool: 'source-map',
     module: {
@@ -20,7 +19,7 @@ module.exports = {
             {
                 test: /\.ts$/,
                 use: [{
-                    loader:'ts-loader',
+                    loader:'awesome-typescript-loader',
                     options: {
                     }
                 }],
@@ -29,17 +28,14 @@ module.exports = {
         ],
     },
     resolve: {
-        extensions: ['.ts', '.js'],
+        extensions: ['.ts', '.js', ".json"],
     },
+    externals:[
+        'ace-builds/src-noconflict/ace',
+        'ace-builds/src-noconflict/ext-language_tools',
+        'net.akehurst.language-agl-processor'
+    ],
     plugins: [
-        new UglifyJsPlugin({
-            exclude: /node_modules/,
-            sourceMap: true,
-            uglifyOptions: {
-                compress: {},
-                mangle: true,
-            }
-        }),
         new CopyPkgJsonPlugin({
             remove: ['devDependencies']
         })

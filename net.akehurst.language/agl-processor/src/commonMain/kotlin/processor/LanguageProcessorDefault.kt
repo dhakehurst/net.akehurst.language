@@ -20,14 +20,14 @@ import net.akehurst.language.agl.grammar.runtime.ConverterToRuntimeRules
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.parser.Parser
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt2ast.SyntaxAnalyser
-import net.akehurst.language.api.sppt2ast.UnableToTransformSppt2AstExeception
+import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.analyser.UnableToTransformSppt2AstExeception
+import net.akehurst.language.parser.scannerless.Parser
 import net.akehurst.language.parser.scannerless.ScannerlessParser
 
 internal class LanguageProcessorDefault(
