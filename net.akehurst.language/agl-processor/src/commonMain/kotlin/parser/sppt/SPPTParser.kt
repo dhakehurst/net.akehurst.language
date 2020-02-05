@@ -202,10 +202,14 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
     }
 
     fun leaf(text: String, location: InputLocation): SPPTLeaf {
-        return this.leaf(text, text, location)
+        val pattern = "'$text'"
+        return this._leaf(pattern, text, location)
     }
-
     fun leaf(pattern: String, text: String, location: InputLocation): SPPTLeaf {
+        val pattern = "\"$pattern\""
+        return this._leaf(pattern, text, location)
+    }
+    fun _leaf(pattern: String, text: String, location: InputLocation): SPPTLeaf {
         val terminalRule = this.runtimeRuleSet.findTerminalRule(pattern)
         val n = SPPTLeafDefault(terminalRule, location, false, text, 0 )
         n.eolPositions =  Regex("\n", setOf(RegexOption.MULTILINE)).findAll(text).toList().map { it.range.first }

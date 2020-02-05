@@ -65,6 +65,9 @@ object Agl {
         return LanguageProcessorDefault(grammar, goalRuleName, syntaxAnalyser, formatter)
     }
 
+    /**
+     * Create a LanguageProcessor from a grammar definition string
+     */
     @JsName("processorFromString")
     fun processor(grammarDefinitionStr: String, syntaxAnalyser: SyntaxAnalyser?=null, formatter: Formatter?=null): LanguageProcessor {
         try {
@@ -75,6 +78,10 @@ object Agl {
             throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
         }
     }
+
+    /**
+     * Create a LanguageProcessor from a grammar definition string
+     */
     @JsName("processorFromStringForGoal")
     fun processor(grammarDefinitionStr: String, goalRuleName:String, syntaxAnalyser: SyntaxAnalyser?=null, formatter: Formatter?=null): LanguageProcessor {
         try {

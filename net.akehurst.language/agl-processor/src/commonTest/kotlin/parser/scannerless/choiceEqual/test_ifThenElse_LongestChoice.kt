@@ -26,7 +26,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_ifThenElse_Ambiguous : test_ScannerlessParserAbstract() {
+class test_ifThenElse_LongestChoice : test_ScannerlessParserAbstract() {
 
     // S =  expr ;
     // ifthenelse = 'if' expr 'then' expr 'else' expr ;
@@ -41,9 +41,9 @@ class test_ifThenElse_Ambiguous : test_ScannerlessParserAbstract() {
         val r_then = b.literal("then")
         val r_else = b.literal("else")
         val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
-        val r_ifthen = b.rule("ifthen").concatenation(r_if,r_expr,r_then,r_expr)
-        val r_ifthenelse = b.rule("ifthenelse").concatenation(r_if,r_expr,r_then,r_expr,r_else,r_expr)
-        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(r_var, r_ifthenelse,r_ifthen))
+        val r_ifthen = b.rule("ifthen").concatenation(r_if, r_expr, r_then, r_expr)
+        val r_ifthenelse = b.rule("ifthenelse").concatenation(r_if, r_expr, r_then, r_expr, r_else, r_expr)
+        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(r_var, r_ifthenelse, r_ifthen))
         b.rule("S").concatenation(r_expr)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b
@@ -190,7 +190,7 @@ class test_ifThenElse_Ambiguous : test_ScannerlessParserAbstract() {
         """.trimIndent()
 
         //super.test(rrb, goal, sentence, expected1, expected2)
-        super.testStringResult(rrb, goal, sentence, expected1, expected2)
+        super.testStringResult(rrb, goal, sentence, expected1)
     }
 
 

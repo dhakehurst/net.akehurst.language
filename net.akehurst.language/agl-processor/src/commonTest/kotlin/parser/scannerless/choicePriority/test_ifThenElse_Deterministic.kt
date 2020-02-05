@@ -29,7 +29,7 @@ class test_ifThenElse_Priority : test_ScannerlessParserAbstract() {
     // ifthenelse = 'if' expr 'then' expr 'else' expr ;
     // ifthen = 'if' expr 'then' expr ;
     // expr = var < conditional ;
-    // conditional = ifthenelse < ifthen ;
+    // conditional = ifthen < ifthenelse ;
     // var = "[a-zA-Z]+" ;
     // WS = "\s+" ;
     private fun S(): RuntimeRuleSetBuilder {
