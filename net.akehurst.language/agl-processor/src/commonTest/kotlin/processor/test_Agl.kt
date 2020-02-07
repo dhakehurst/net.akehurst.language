@@ -71,10 +71,10 @@ internal class test_Agl {
     fun parser_rules_List_failAt_0() {
         val e = assertFailsWith(ParseFailedException::class) {
             val p = Agl.processor(listOf("!"))
-            p.parse("a", "a")
+            //p.parse("a", "a")
         }
         assertEquals(1, e.location.line)
-        assertEquals(0, e.location.column)
+        assertEquals(1, e.location.column)
     }
 
     @Test
@@ -90,7 +90,7 @@ internal class test_Agl {
     @Test
     fun parser_rules_List_failAt_7() {
         val e = assertFailsWith(ParseFailedException::class) {
-            val p = Agl.processor(listOf("a = 'a'1..6"))
+            val p = Agl.processor(listOf("a = 'a'1..6;"))
             p.parse("a", "aaaaaaa")
         }
         assertEquals(1, e.location.line)

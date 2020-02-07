@@ -75,7 +75,7 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr { var { '[a-zA-Z]+' : 'a' } }
+              expr { var { "[a-zA-Z]+" : 'a' } }
             }
         """.trimIndent()
 
@@ -124,7 +124,7 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
         val expected = """
             S {
               expr {
-                var { '[a-zA-Z]+' : 'var' }
+                var { "[a-zA-Z]+" : 'var' }
               }
             }
         """.trimIndent()
@@ -143,7 +143,7 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
               expr {
                 group {
                   '('
-                  expr { var { '[a-zA-Z]+' : 'a' } }
+                  expr { var { "[a-zA-Z]+" : 'a' } }
                   ')'
                 }
               }
@@ -164,9 +164,9 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
             S {
               expr {
                 div {
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                  '/' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' } }
+                  expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
+                  '/' WS { "\s+" : ' ' }
+                  expr { var { "[a-zA-Z]+" : 'b' } }
                 }
               }
             }
@@ -186,9 +186,9 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
             S {
               expr {
                 mul {
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                  '*' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' } }
+                  expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
+                  '*' WS { "\s+" : ' ' }
+                  expr { var { "[a-zA-Z]+" : 'b' } }
                 }
               }
             }
@@ -208,9 +208,9 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
             S {
               expr {
                 add {
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                  '+' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' } }
+                  expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
+                  '+' WS { "\s+" : ' ' }
+                  expr { var { "[a-zA-Z]+" : 'b' } }
                 }
               }
             }
@@ -230,9 +230,9 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
             S {
               expr {
                 sub {
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                  '-' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' } }
+                  expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
+                  '-' WS { "\s+" : ' ' }
+                  expr { var { "[a-zA-Z]+" : 'b' } }
                 }
               }
             }
@@ -252,13 +252,13 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
             S {
              expr {
               add {
-                expr { var { '[a-zA-Z]+' : 'a' } }
+                expr { var { "[a-zA-Z]+" : 'a' } }
                 '+'
                 expr {
                   mul {
-                    expr { var { '[a-zA-Z]+' : 'b' } }
+                    expr { var { "[a-zA-Z]+" : 'b' } }
                     '*'
-                    expr { var { '[a-zA-Z]+' : 'c' } }
+                    expr { var { "[a-zA-Z]+" : 'c' } }
                   }
                 }
               }
@@ -281,13 +281,13 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
               add {
                 expr {
                   mul {
-                    expr { var { '[a-zA-Z]+' : 'a' } }
+                    expr { var { "[a-zA-Z]+" : 'a' } }
                     '*'
-                    expr { var { '[a-zA-Z]+' : 'b' } }
+                    expr { var { "[a-zA-Z]+" : 'b' } }
                   }
                 }
                '+'
-               expr { var { '[a-zA-Z]+' : 'c' } }
+               expr { var { "[a-zA-Z]+" : 'c' } }
               }
              }
             }
@@ -308,13 +308,13 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
               add {
                 expr {
                   mul {
-                    expr { var { '[a-zA-Z]+' : 'a' } }
+                    expr { var { "[a-zA-Z]+" : 'a' } }
                     '*'
-                    expr { var { '[a-zA-Z]+' : 'b' } }
+                    expr { var { "[a-zA-Z]+" : 'b' } }
                   }
                 }
                '+'
-               expr { var { '[a-zA-Z]+' : 'c' } }
+               expr { var { "[a-zA-Z]+" : 'c' } }
               }
              }
             }
@@ -335,13 +335,13 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
               add {
                 expr {
                   mul {
-                    expr { var { '[a-zA-Z]+' : 'a' } }
+                    expr { var { "[a-zA-Z]+" : 'a' } }
                     '*'
-                    expr { var { '[a-zA-Z]+' : 'b' } }
+                    expr { var { "[a-zA-Z]+" : 'b' } }
                   }
                 }
                '+'
-               expr { var { '[a-zA-Z]+' : 'c' } }
+               expr { var { "[a-zA-Z]+" : 'c' } }
               }
              }
             }
@@ -364,16 +364,16 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
                   '('
                     expr {
                       add {
-                        expr { var { '[a-zA-Z]+' : 'a' } }
+                        expr { var { "[a-zA-Z]+" : 'a' } }
                         '+'
-                        expr { var { '[a-zA-Z]+' : 'b' } }
+                        expr { var { "[a-zA-Z]+" : 'b' } }
                       }
                     }
                   ')'
                 }
               }
               '*'
-              expr { var { '[a-zA-Z]+' : 'c' } }
+              expr { var { "[a-zA-Z]+" : 'c' } }
             } } }
         """.trimIndent()
 

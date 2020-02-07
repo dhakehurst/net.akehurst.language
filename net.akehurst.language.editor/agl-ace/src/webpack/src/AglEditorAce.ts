@@ -9,6 +9,8 @@ const VirtualRenderer = ace.require("./virtual_renderer").VirtualRenderer;
 const BackgroundTokenizer = ace.require('ace/background_tokenizer').BackgroundTokenizer;
 //const TextLayer = ace.require("./layer/text").Text;
 const autocomplete = ace.require('ace/autocomplete');
+const Range = ace.require('ace/range').Range;
+
 //const oop = ace.require("./lib/oop");
 //const dom = ace.require("./lib/dom");
 //const config = ace.require("./config");
@@ -50,14 +52,15 @@ export class AglEditorAce {
             let edId = langId; //TODO: make this different
             let initContent = trimIndent(element.textContent);
             element.textContent = '';
-            let editor = new AglEditorAce(element as HTMLElement, edId, langId,null, initContent, {});
-            map.set(id, editor);
+            let editor = new AglEditorAce(element as HTMLElement, edId, langId, null, initContent, {});
+            map.set(edId, editor);
         });
         return map;
     }
 
-    private mode:any = null; //: ace.SyntaxMode = null;
+    private mode: any = null; //: ace.SyntaxMode = null;
     public editor: any; // ace.Editor;
+    errorMarkerIds = [];
 
     agl = new AglComponents();
 
@@ -90,6 +93,16 @@ export class AglEditorAce {
         this.editor.getSession().bgTokenizer.setDocument(this.editor.getSession().getDocument());
         this.mode = new AglMode(this.languageId, this.agl);
 
+        this.setupCommands();
+
+        // set default style
+        this.setStyle(`
+            $keyword {
+              color: purple;
+              font-weight: bold;
+            }
+        `);
+
         if (initialText) {
             this.editor.setValue(initialText, -1);
             this.editor.commands.addCommand(autocomplete.Autocomplete.startCommand);
@@ -108,6 +121,15 @@ export class AglEditorAce {
         });
     }
 
+    setupCommands() {
+        this.editor.commands.addCommand({
+            name: 'format',
+            bindKey: {win: 'Ctrl-F', mac: 'Command-F'},
+            exec: (editor) => this.format(),
+            readOnly: false
+        });
+    }
+
     doBackgroundTryParse() {
         if (typeof (Worker) !== "undefined") {
             setTimeout(() => this.tryParse(), 500)
@@ -120,6 +142,9 @@ export class AglEditorAce {
     tryParse() {
         if (this.processor) {
             try {
+                this.editor.getSession().clearAnnotations();
+                this.errorMarkerIds.forEach( id => this.editor.getSession().removeMarker(id));
+
                 if (this.goalRule) {
                     this.agl.sppt = this.processor.parseForGoal(this.goalRule, this.editor.getValue());
                 } else {
@@ -128,10 +153,29 @@ export class AglEditorAce {
                 //start getTokens from parse result
                 this.updateSyntax();
             } catch (e) {
-                this.agl.sppt = null;
-                // parse failed so re-tokenize from scan
-                this.updateSyntax();
-                console.error("Error parsing text in " + this.editorId + ' for language ' + this.languageId, e.message)
+                if (e.name=='ParseFailedException') {
+                    this.agl.sppt = null;
+                    // parse failed so re-tokenize from scan
+                    this.updateSyntax();
+                    console.error("Error parsing text in " + this.editorId + ' for language ' + this.languageId, e.message);
+                    const errors = [];
+                    errors.push(new AglErrorAnnotation(
+                        e.location.line,
+                        e.location.column -1,
+                        "Syntax Error",
+                        "error",
+                        e.message
+                    ));
+                    this.editor.getSession().setAnnotations(errors);
+                    errors.forEach( e => {
+                        const range = new Range(e.row, e.column, e.row, e.column+1);
+                        const cls = 'ace_marker_text_error';
+                        const errMrkId = this.editor.getSession().addMarker(range, cls, 'text');
+                        this.errorMarkerIds.push(errMrkId);
+                    });
+                } else {
+                    console.error("Error parsing text in " + this.editorId + ' for language ' + this.languageId, e.message);
+                }
             }
         }
     }
@@ -151,29 +195,56 @@ export class AglEditorAce {
     }
 
     setStyle(css: string) {
-        const rules = agl.processor.Agl.styleProcessor.process(css);
-        let mappedCss = '';
-        rules.toArray().forEach((it: agl.api.style.AglStyleRule) => {
-            const cssClass = '.' + this.languageId + ' ' + '.ace_' + this.mapTokenTypeToClass(it.selector);
-            const mappedRule = new agl.api.style.AglStyleRule(cssClass);
-            mappedRule.styles = it.styles;
-            mappedCss = mappedCss + '\n' + mappedRule.toCss();
-        });
-        const module = {cssClass: this.languageId, cssText: mappedCss, _v:Date.now()}; // _v:Date added in order to force use of new module definition
-        // remove the current style element for 'languageId' (which is used as the theme name) from the container
-        // else the theme css is not reapplied
-        const curStyle = document.querySelector('style#' + this.languageId);
-        if (curStyle) {
-            curStyle.parentElement.removeChild(curStyle);
-        }
-        // the use of an object instead of a string is undocumented but seems to work
-        this.editor.setOption('theme', module); //not sure but maybe this is better than setting on renderer direct
+        if (css) {
+            const rules = agl.processor.Agl.styleProcessor.process(css);
+            let mappedCss = '';
+            rules.toArray().forEach((it: agl.api.style.AglStyleRule) => {
+                const cssClass = '.' + this.languageId + ' ' + '.ace_' + this.mapTokenTypeToClass(it.selector);
+                const mappedRule = new agl.api.style.AglStyleRule(cssClass);
+                mappedRule.styles = it.styles;
+                mappedCss = mappedCss + '\n' + mappedRule.toCss();
+            });
+            const module = {cssClass: this.languageId, cssText: mappedCss, _v: Date.now()}; // _v:Date added in order to force use of new module definition
+            // remove the current style element for 'languageId' (which is used as the theme name) from the container
+            // else the theme css is not reapplied
+            const curStyle = document.querySelector('style#' + this.languageId);
+            if (curStyle) {
+                curStyle.parentElement.removeChild(curStyle);
+            }
+            // the use of an object instead of a string is undocumented but seems to work
+            this.editor.setOption('theme', module); //not sure but maybe this is better than setting on renderer direct
 
-        // force refresh of renderer
-        this.updateSyntax();
+            // force refresh of renderer
+            this.updateSyntax();
+        }
+    }
+
+    format() {
+        if (this.agl.processor) {
+            const pos = this.editor.selection.getCursor();
+            const text = this.editor.getValue();
+            const formattedText = this.agl.processor.format(text);
+            this.editor.setValue(formattedText, -1);
+        }
     }
 
 }
+
+class AglErrorAnnotation {
+
+    public row = -1;
+
+    constructor(
+        public line: number,
+        public column: number,
+        public text: string,
+        public type: string,
+        public raw: string,
+    ) {
+        this.row = line-1;
+    }
+}
+
 /*
 class AglRenderer extends VirtualRenderer {
 
@@ -360,7 +431,7 @@ class AglMode implements ace.SyntaxMode {
 
 class AglLineToken {
 
-    type:string;
+    type: string;
 
     constructor(
         public styles: string[],
@@ -392,22 +463,26 @@ class AglTokenizer implements ace.Tokenizer {
     }
 
     mapTagListToCssClasses(tagArray: string[]): string[] {
-        let cssClasses = tagArray.map((it:string) => {
+        let cssClasses = tagArray.map((it: string) => {
             let cssClass = this.agl.tokenToClassMap.get(it);
             if (!cssClass) {
                 cssClass = null;
             }
             return cssClass;
-        }).filter((it:string) => null!==it); //TODO: find faster way than filter
+        }).filter((it: string) => null !== it); //TODO: find faster way than filter
         return cssClasses;
     }
 
-    mapToCssClasses(leaf:agl.api.sppt.SPPTLeaf) : string[] {
+    mapToCssClasses(leaf: agl.api.sppt.SPPTLeaf): string[] {
+        let metaTagClasses = this.mapTagListToCssClasses(leaf.metaTags.toArray());
+        let otherClasses = [];
         if (!leaf.tagList.isEmpty()) {
-            return this.mapTagListToCssClasses(leaf.tagList.toArray());
+            otherClasses = this.mapTagListToCssClasses(leaf.tagList.toArray());
         } else {
-            return [this.mapTokenTypeToClass(leaf.name)];
+            otherClasses = [this.mapTokenTypeToClass(leaf.name)];
         }
+        let classes = [...metaTagClasses, ...otherClasses];
+        return classes;
     }
 
     transformToAceTokens(leafArray: agl.api.sppt.SPPTLeaf[]): AglLineToken[] {
@@ -468,7 +543,7 @@ class AglTokenizer implements ace.Tokenizer {
             }
             return {state, tokens};
         } else {
-            return { state:null, tokens:[]}
+            return {state: null, tokens: []}
         }
     }
 

@@ -81,3 +81,7 @@ section {
 }
 
 
+.ace_marker_text_error {
+    position:absolute;
+    border-bottom: 1px solid red;
+}

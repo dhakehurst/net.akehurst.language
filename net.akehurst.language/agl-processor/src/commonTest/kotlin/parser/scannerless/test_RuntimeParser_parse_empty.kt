@@ -48,7 +48,7 @@ class test_RuntimeParser_parse_empty {
     }
 
     @Test
-    fun empty_R_a() {
+    fun empty_R_a_fails() {
         val sp = empty()
         val goalRuleName = "R"
         val inputText = "a"
@@ -93,7 +93,7 @@ class test_RuntimeParser_parse_empty {
     }
 
     @Test
-    fun choiceRempty_R_b() {
+    fun choiceRempty_R_b_fails() {
         val sp = empty()
         val goalRuleName = "R"
         val inputText = "b"

@@ -73,7 +73,7 @@ class test_sList {
     }
 
     @Test
-    fun literal_a1n__r__aa() {
+    fun literal_a1n__r__aa_fails() {
         val sp = literal_a1n()
         val goalRuleName = "r"
         val inputText = "aa"

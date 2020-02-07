@@ -52,8 +52,8 @@ class test_AglGrammar_item {
 
         val expected = this.sppt("""
              nonTerminal {
-                SINGLE_LINE_COMMENT { '//.*?$' : '// a single line comment' }
-                WHITESPACE { '\s+' : '9166' }
+                SINGLE_LINE_COMMENT { "//.*?$" : '// a single line comment' }
+                WHITESPACE { "\s+" : '9166' }
                 IDENTIFIER : 'a'
              }
         """)
@@ -72,8 +72,8 @@ class test_AglGrammar_item {
 
         val expected = this.sppt("""
              nonTerminal {
-                MULTI_LINE_COMMENT { '/\*[^*]*\*+(?:[^*/][^*]*\*+)*/' : '/* a single line comment9166sfgh9166*/' }
-                WHITESPACE { '\s+' : '9166' }
+                MULTI_LINE_COMMENT { "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" : '/* a single line comment9166sfgh9166*/' }
+                WHITESPACE { "\s+" : '9166' }
                 IDENTIFIER : 'a'
              }
         """)
@@ -295,8 +295,8 @@ class test_AglGrammar_item {
         val actual = parse("concatenation", "'a' 'b' 'c'")
         val expected = this.sppt("""
             concatenation { §concatenation§multi2 {
-                concatenationItem { simpleItem { terminal { LITERAL  : '\'a\''  WHITESPACE { '\s+' : ' ' } } } }
-                concatenationItem { simpleItem { terminal { LITERAL  : '\'b\''  WHITESPACE { '\s+' : ' ' } } } }
+                concatenationItem { simpleItem { terminal { LITERAL  : '\'a\''  WHITESPACE { "\s+" : ' ' } } } }
+                concatenationItem { simpleItem { terminal { LITERAL  : '\'b\''  WHITESPACE { "\s+" : ' ' } } } }
                 concatenationItem { simpleItem { terminal { LITERAL  : '\'c\''  } } 
             } } }
         """.trimIndent())
@@ -321,8 +321,8 @@ class test_AglGrammar_item {
         val actual = parse("concatenation", "a b c")
         val expected = this.sppt("""
             concatenation { §concatenation§multi2 {
-                concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'a' WHITESPACE { '\s+' : ' ' } } } } 
-                concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'b' WHITESPACE { '\s+' : ' ' } } } } 
+                concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'a' WHITESPACE { "\s+" : ' ' } } } } 
+                concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'b' WHITESPACE { "\s+" : ' ' } } } } 
                 concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'c' } } } 
             } }
         """.trimIndent())
@@ -336,13 +336,13 @@ class test_AglGrammar_item {
         val expected = this.sppt("""
             priorityChoice { §priorityChoice§sList2 {
                 concatenation { §concatenation§multi2 {
-                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'a' WHITESPACE { '\s+' : ' ' } } } } 
+                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'a' WHITESPACE { "\s+" : ' ' } } } } 
                 } }
-                '<' WHITESPACE { '\s+' : ' ' }
+                '<' WHITESPACE { "\s+" : ' ' }
                 concatenation { §concatenation§multi2 {
-                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'b' WHITESPACE { '\s+' : ' ' } } } } 
+                    concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'b' WHITESPACE { "\s+" : ' ' } } } } 
                 } }
-                '<' WHITESPACE { '\s+' : ' ' }
+                '<' WHITESPACE { "\s+" : ' ' }
                 concatenation { §concatenation§multi2 {
                     concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'c' } } } 
                 } }
@@ -359,13 +359,13 @@ class test_AglGrammar_item {
 
                 simpleChoice { §simpleChoice§sList3 {
                     concatenation { §concatenation§multi2 {
-                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'a' WHITESPACE { '\s+' : ' ' } } } } 
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'a' WHITESPACE { "\s+" : ' ' } } } } 
                     } }
-                    '|' WHITESPACE { '\s+' : ' ' }
+                    '|' WHITESPACE { "\s+" : ' ' }
                     concatenation { §concatenation§multi2 {
-                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'b' WHITESPACE { '\s+' : ' ' } } } } 
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'b' WHITESPACE { "\s+" : ' ' } } } } 
                     } }
-                    '|' WHITESPACE { '\s+' : ' ' }
+                    '|' WHITESPACE { "\s+" : ' ' }
                     concatenation { §concatenation§multi2 {
                         concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'c' } } } 
                     } }
@@ -383,13 +383,13 @@ class test_AglGrammar_item {
             choice {
                 priorityChoice { §priorityChoice§sList2 {
                     concatenation { §concatenation§multi2 {
-                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER : 'a' WHITESPACE { '\s+' : ' ' } } } } 
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER : 'a' WHITESPACE { "\s+" : ' ' } } } } 
                     } }
-                    '<' WHITESPACE { '\s+' : ' ' }
+                    '<' WHITESPACE { "\s+" : ' ' }
                     concatenation { §concatenation§multi2 {
-                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'b' WHITESPACE { '\s+' : ' ' } } } } 
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'b' WHITESPACE { "\s+" : ' ' } } } } 
                     } }
-                    '<' WHITESPACE { '\s+' : ' ' }
+                    '<' WHITESPACE { "\s+" : ' ' }
                     concatenation { §concatenation§multi2 {
                         concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'c' } } } 
                     } }
@@ -405,21 +405,21 @@ class test_AglGrammar_item {
         val actual = parse("normalRule", "r = a < b < c ;")
         val expected = this.sppt("""
              normalRule {
-                IDENTIFIER  : 'r' WHITESPACE { '\s+' : ' ' } 
+                IDENTIFIER  : 'r' WHITESPACE { "\s+" : ' ' } 
                 '='
-                WHITESPACE { '\s+' : ' ' }
+                WHITESPACE { "\s+" : ' ' }
 
                 choice { priorityChoice { §priorityChoice§sList2 {
                     concatenation { §concatenation§multi2 {
-                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'a' WHITESPACE { '\s+' : ' ' } } } } 
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'a' WHITESPACE { "\s+" : ' ' } } } } 
                     } }
-                    '<' WHITESPACE { '\s+' : ' ' }
+                    '<' WHITESPACE { "\s+" : ' ' }
                     concatenation { §concatenation§multi2 {
-                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'b' WHITESPACE { '\s+' : ' ' } } } } 
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'b' WHITESPACE { "\s+" : ' ' } } } } 
                     } }
-                    '<' WHITESPACE { '\s+' : ' ' }
+                    '<' WHITESPACE { "\s+" : ' ' }
                     concatenation { §concatenation§multi2 {
-                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'c' WHITESPACE { '\s+' : ' ' } } } } 
+                        concatenationItem { simpleItem { nonTerminal { IDENTIFIER  : 'c' WHITESPACE { "\s+" : ' ' } } } } 
                     } }
                 } } }
                 ';'

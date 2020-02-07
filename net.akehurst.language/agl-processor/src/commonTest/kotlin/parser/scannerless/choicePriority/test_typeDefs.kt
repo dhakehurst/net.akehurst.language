@@ -37,7 +37,7 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
         val r_builtIn = b.rule("builtIn").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("int"), b.literal("bool"))
         val r_type = b.rule("type").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_userDefined, r_builtIn)
         b.rule("S").concatenation(r_type, r_name)
-        b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
+        b.pattern("WS","\\s+", isSkip = true)
         return b
     }
 
@@ -50,10 +50,10 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
         val expected = """
             S {
               type {
-                builtIn { 'int' WS { '\s+' : ' ' } }
+                builtIn { 'int' WS : ' '  }
               }
               name {
-                '[a-zA-Z]+' : 'a'
+                "[a-zA-Z]+" : 'a'
               }
             }
         """.trimIndent()
@@ -70,10 +70,10 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
         val expected = """
             S {
               type {
-                builtIn { 'bool' WS { '\s+' : ' ' } }
+                builtIn { 'bool' WS  : ' '  }
               }
               name {
-                '[a-zA-Z]+' : 'a'
+                "[a-zA-Z]+" : 'a'
               }
             }
         """.trimIndent()
@@ -90,10 +90,10 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
         val expected = """
             S {
               type {
-                userDefined { '[a-zA-Z]+' : 'A' WS { '\s+' : ' ' } }
+                userDefined { "[a-zA-Z]+" : 'A' WS : ' '  }
               }
               name {
-                '[a-zA-Z]+' : 'a'
+                "[a-zA-Z]+" : 'a'
               }
             }
         """.trimIndent()
@@ -110,10 +110,10 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
         val expected = """
             S {
               type {
-                builtIn { 'int' WS { '\s+' : ' ' } }
+                builtIn { 'int' WS:' ' }
               }
               name {
-                '[a-zA-Z]+' : 'int'
+                "[a-zA-Z]+" : 'int'
               }
             }
         """.trimIndent()
@@ -131,10 +131,10 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
         val expected = """
             S {
               type {
-                userDefined { '[a-zA-Z]+' : 'A' WS { '\s+' : ' ' } }
+                userDefined { "[a-zA-Z]+" : 'A' WS:' ' }
               }
               name {
-                '[a-zA-Z]+' : 'int'
+                "[a-zA-Z]+" : 'int'
               }
             }
         """.trimIndent()

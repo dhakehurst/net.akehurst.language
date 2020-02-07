@@ -23,6 +23,11 @@ class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder) {
     private var isPattern: Boolean = false
     private var isSkip: Boolean = false
 
+    fun skip(value:Boolean): RuntimeRuleTerminalBuilder {
+        this.isSkip = value
+        return this
+    }
+
     fun literal(value: String) : RuntimeRule {
         val name = "'$value'"
         val rr = RuntimeRule(this.rrsb.rules.size, name, value, kind, isPattern, isSkip)

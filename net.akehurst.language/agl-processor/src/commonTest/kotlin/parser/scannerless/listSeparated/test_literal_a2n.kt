@@ -53,7 +53,7 @@ class test_literal_a2n : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun a() {
+    fun a_fails() {
         val b = literal_a0n()
         val goal = "S"
         val sentence = "a"

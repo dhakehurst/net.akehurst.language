@@ -66,13 +66,19 @@ IDENTIFIER {
 `);
 
 styleEditor.setStyle(`
+IDENTIFIER {
+  color: blue;
+  font-weight: bold;
+}
 LITERAL {
   color: blue;
+  font-weight: bold;
 }
 PATTERN {
   color: darkblue;
+  font-weight: bold;
 }
-ID {
+STYLE_ID {
   color: red;
 }
 STYLE_ID {
@@ -101,4 +107,10 @@ grammarEditor.editor.on("input", (e: Event) => {
 styleEditor.editor.on("input", (e: Event) => {
     console.info("style changed");
     expressionEditor.setStyle(styleEditor.editor.getValue());
+});
+
+expressionEditor.on("input", (e: Event) => {
+
+
+
 });

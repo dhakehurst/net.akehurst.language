@@ -45,7 +45,7 @@ class test_rightRecursive_a : test_ScannerlessParserAbstract() {
         val sentence = " a "
 
         val expected = """
-            S { WS { '\s+' : ' ' } 'a' WS { '\s+' : ' ' }}
+            S { WS { "\s+" : ' ' } 'a' WS { "\s+" : ' ' }}
         """.trimIndent()
 
         super.test(rrb, goal, sentence, expected)
@@ -59,7 +59,7 @@ class test_rightRecursive_a : test_ScannerlessParserAbstract() {
         val sentence = " a a "
 
         val expected = """
-            S { WS { '\s+' : ' ' } S1 { 'a' WS { '\s+' : ' ' } S { 'a' WS { '\s+' : ' ' } } } }
+            S { WS { "\s+" : ' ' } S1 { 'a' WS { "\s+" : ' ' } S { 'a' WS { "\s+" : ' ' } } } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
@@ -72,13 +72,13 @@ class test_rightRecursive_a : test_ScannerlessParserAbstract() {
         val sentence = " a a a "
 
         val expected = """
-            S { WS { '\s+' : ' ' }
+            S { WS { "\s+" : ' ' }
                 S1 {
-                    'a' WS { '\s+' : ' ' }
+                    'a' WS { "\s+" : ' ' }
                     S {
                         S1 {
-                            'a' WS { '\s+' : ' ' }
-                            S { 'a'  WS { '\s+' : ' ' } }
+                            'a' WS { "\s+" : ' ' }
+                            S { 'a'  WS { "\s+" : ' ' } }
                         }
                     }
                 }

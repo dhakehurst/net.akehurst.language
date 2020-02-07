@@ -61,7 +61,7 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        assertEquals(0, ex.location.column)
     }
 
 
@@ -73,7 +73,7 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr { root{ var { '[a-zA-Z]+' : 'a' } } }
+              expr { root{ var { "[a-zA-Z]+" : 'a' } } }
             }
         """.trimIndent()
 
@@ -122,7 +122,7 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
         val expected = """
             S {
               expr { root {
-                var { '[a-zA-Z]+' : 'var' }
+                var { "[a-zA-Z]+" : 'var' }
               } }
             }
         """.trimIndent()
@@ -141,7 +141,7 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
               expr {
                 group {
                   '('
-                  expr { root { var { '[a-zA-Z]+' : 'a' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' } } }
                   ')'
                 }
               }
@@ -162,9 +162,9 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
             S {
               expr {
                 infix {
-                  expr { root { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' WS { '\s+' : ' ' } } } }
                   op { '/' WS { '\s+' : ' ' } }
-                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
             }
@@ -184,9 +184,9 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
             S {
               expr {
                 infix {
-                  expr { root { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' WS { '\s+' : ' ' } } } }
                   op { '*' WS { '\s+' : ' ' } }
-                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
             }
@@ -206,9 +206,9 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
             S {
               expr {
                 infix {
-                  expr { root { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' WS { '\s+' : ' ' } } } }
                   op { '+' WS { '\s+' : ' ' } }
-                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
             }
@@ -228,9 +228,9 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
             S {
               expr {
                 infix {
-                  expr { root { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' WS { '\s+' : ' ' } } } }
                   op { '-' WS { '\s+' : ' ' } }
-                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
             }
@@ -248,11 +248,11 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
          S { expr { infix {
-              expr { root { var { '[a-zA-Z]+' : 'a' } } }
+              expr { root { var { "[a-zA-Z]+" : 'a' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'b' } } }
+              expr { root { var { "[a-zA-Z]+" : 'b' } } }
               op { '*' }
-              expr { root { var { '[a-zA-Z]+' : 'c' } } }
+              expr { root { var { "[a-zA-Z]+" : 'c' } } }
             } } }
         """.trimIndent()
 
@@ -267,11 +267,11 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
          S { expr { infix {
-              expr { root { var { '[a-zA-Z]+' : 'a' } } }
+              expr { root { var { "[a-zA-Z]+" : 'a' } } }
               op { '*' }
-              expr { root { var { '[a-zA-Z]+' : 'b' } } }
+              expr { root { var { "[a-zA-Z]+" : 'b' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'c' } } }
+              expr { root { var { "[a-zA-Z]+" : 'c' } } }
             } } }
         """.trimIndent()
 
@@ -286,13 +286,13 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
          S { expr { infix {
-              expr { root { var { '[a-zA-Z]+' : 'a' } } }
+              expr { root { var { "[a-zA-Z]+" : 'a' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'b' } } }
+              expr { root { var { "[a-zA-Z]+" : 'b' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'c' } } }
+              expr { root { var { "[a-zA-Z]+" : 'c' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'd' } } }
+              expr { root { var { "[a-zA-Z]+" : 'd' } } }
             } } }
         """.trimIndent()
 
@@ -307,17 +307,17 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
          S { expr { infix {
-              expr { root { var { '[a-zA-Z]+' : 'a' } } }
+              expr { root { var { "[a-zA-Z]+" : 'a' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'b' } } }
+              expr { root { var { "[a-zA-Z]+" : 'b' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'c' } } }
+              expr { root { var { "[a-zA-Z]+" : 'c' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'd' } } }
+              expr { root { var { "[a-zA-Z]+" : 'd' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'e' } } }
+              expr { root { var { "[a-zA-Z]+" : 'e' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'f' } } }
+              expr { root { var { "[a-zA-Z]+" : 'f' } } }
             } } }
         """.trimIndent()
 
@@ -332,17 +332,17 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
          S { expr { infix {
-              expr { root { var { '[a-zA-Z]+' : 'a' } } }
+              expr { root { var { "[a-zA-Z]+" : 'a' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'b' } } }
+              expr { root { var { "[a-zA-Z]+" : 'b' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'c' } } }
+              expr { root { var { "[a-zA-Z]+" : 'c' } } }
               op { '*' }
-              expr { root { var { '[a-zA-Z]+' : 'd' } } }
+              expr { root { var { "[a-zA-Z]+" : 'd' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'e' } } }
+              expr { root { var { "[a-zA-Z]+" : 'e' } } }
               op { '+' }
-              expr { root { var { '[a-zA-Z]+' : 'f' } } }
+              expr { root { var { "[a-zA-Z]+" : 'f' } } }
             } } }
         """.trimIndent()
 
@@ -360,14 +360,14 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
               expr { group {
                   '('
                   expr { infix {
-                      expr { root { var { '[a-zA-Z]+' : 'a' } } }
+                      expr { root { var { "[a-zA-Z]+" : 'a' } } }
                       op { '+' }
-                      expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                      expr { root { var { "[a-zA-Z]+" : 'b' } } }
                     } }
                   ')'
                 } }
               op { '*' }
-              expr { root { var { '[a-zA-Z]+' : 'c' } } }
+              expr { root { var { "[a-zA-Z]+" : 'c' } } }
             } } }
         """.trimIndent()
 

@@ -24,6 +24,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.sppt.SPPTLeafDefault
 import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
 import kotlin.math.max
@@ -112,10 +113,44 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
             maxNumHeads = max(maxNumHeads, graph.growingHead.size)
         } while (rp.canGrow)
 
-        val match = graph.longestMatch(rp.longestLastGrown, seasons, maxNumHeads)
-        return SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
+        val match = graph.longestMatch(seasons, maxNumHeads)
+        return if (match!=null) {
+             SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
+        } else {
+            throwError(graph, rp, seasons, maxNumHeads)
+        }
     }
 
+    private fun throwError(graph:ParseGraph, rp: RuntimeParser,seasons:Int, maxNumHeads:Int) : SharedPackedParseTreeDefault{
+        val llg = rp.longestLastGrown ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0,0,1,0))
+        val possibleNextLeaf:SPPTLeafDefault? = null//graph.leaves.values.filter { it.startPosition == llg.nextInputPosition }.firstOrNull()
+        if (null!=possibleNextLeaf) {
+            val errorPos = possibleNextLeaf.location.position + possibleNextLeaf.location.length
+            val lastEolPos = possibleNextLeaf.matchedText.lastIndexOf('\n')
+            val errorLine = possibleNextLeaf.location.line + possibleNextLeaf.numberOfLines
+            val errorColumn = when {
+                possibleNextLeaf.lastLocation.position == 0 && possibleNextLeaf.lastLocation.length == 0 -> errorPos+1
+                -1 == lastEolPos -> errorPos + 1
+                else -> possibleNextLeaf.matchedTextLength - lastEolPos
+            }
+            val errorLength = 1
+            val location = InputLocation(errorPos, errorColumn, errorLine, errorLength)
+            throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location)
+        } else {
+            val errorPos = llg.lastLocation.position + llg.lastLocation.length
+            val lastEolPos = llg.matchedText.lastIndexOf('\n')
+            val errorLine = llg.location.line + llg.numberOfLines
+            val errorColumn = when {
+                llg.lastLocation.position == 0 && llg.lastLocation.length == 0 -> errorPos+1
+                -1 == lastEolPos -> llg.lastLocation.column  + llg.lastLocation.length
+                else -> llg.matchedTextLength - lastEolPos
+            }
+            val errorLength = 1
+            val location = InputLocation(errorPos, errorColumn, errorLine, errorLength)//this.input.calcLineAndColumn(llg.nextInputPosition)
+            throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location)
+        }
+
+    }
 
     override fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int): List<RuntimeRule> {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)

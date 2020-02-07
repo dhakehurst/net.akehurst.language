@@ -25,8 +25,8 @@ import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : SharedPackedParseTreeVisitor<Set<String>, ToStringVisitor.Indent> {
 
     class Indent(val text: String, val onlyChild: Boolean) {
-        fun next( increment: String, onlyChild: Boolean) : Indent {
-            return Indent(this.text+increment, onlyChild)
+        fun next(increment: String, onlyChild: Boolean): Indent {
+            return Indent(this.text + increment, onlyChild)
         }
     }
 
@@ -41,11 +41,12 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
             (target.isLiteral) -> {
                 "'${target.matchedText.replace("\n", 0x23CE.toString())}'"
             }
-            else -> {
-                    "'${target.name}' : '${target.matchedText.replace("\n", 0x23CE.toString())}'"
-                }
+            (target.isPattern) -> {
+                "${target.name} : '${target.matchedText.replace("\n", 0x23CE.toString())}'"
             }
-        val s = (if (arg.onlyChild)  " " else arg.text) + t
+            else -> throw RuntimeException("should not happen")
+        }
+        val s = (if (arg.onlyChild) " " else arg.text) + t
         return setOf(s)
     }
 

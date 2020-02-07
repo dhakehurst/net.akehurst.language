@@ -50,7 +50,7 @@ class test_expessions_bodmas3_Longest : test_ScannerlessParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S { E { var { '[a-z]+':'a' } } }
+            S { E { var { "[a-z]+":'a' } } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
@@ -64,9 +64,9 @@ class test_expessions_bodmas3_Longest : test_ScannerlessParserAbstract() {
 
         val expected = """
          S { E { I {
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '+' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
             } } }
         """.trimIndent()
 
@@ -82,11 +82,11 @@ class test_expessions_bodmas3_Longest : test_ScannerlessParserAbstract() {
         //think this should be excluded because of priority I < 'a'
         val expected1 = """
          S { E { I {
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '+' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '+' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
             } } }
         """.trimIndent()
 
@@ -102,13 +102,13 @@ class test_expessions_bodmas3_Longest : test_ScannerlessParserAbstract() {
 
         val expected = """
           S { E { I {
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '+' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '+' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '+' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
             } } }
         """.trimIndent()
 
@@ -124,15 +124,15 @@ class test_expessions_bodmas3_Longest : test_ScannerlessParserAbstract() {
 
         val expected = """
           S { E { I {
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '+' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '+' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '+' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '+' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
             } } }
         """.trimIndent()
 
@@ -148,15 +148,15 @@ class test_expessions_bodmas3_Longest : test_ScannerlessParserAbstract() {
 
         val expected = """
           S { E { I {
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '/' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '*' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '+' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
               op { '-' }
-              E { var { '[a-z]+' : 'v' } }
+              E { var { "[a-z]+" : 'v' } }
             } } }
         """.trimIndent()
 

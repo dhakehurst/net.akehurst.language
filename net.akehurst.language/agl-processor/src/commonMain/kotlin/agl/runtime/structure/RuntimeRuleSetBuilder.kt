@@ -84,11 +84,11 @@ class RuntimeRuleSetBuilder() {
         }
     }
 
-    fun pattern(name: String, pattern: String): RuntimeRule {
+    fun pattern(name: String, pattern: String, isSkip:Boolean = false): RuntimeRule {
         if (null != this.runtimeRuleSet) {
             throw ParseException("Must not add rules after creating the ruleSet")
         } else {
-            return RuntimeRuleTerminalBuilder(this).pattern(name, pattern)
+            return RuntimeRuleTerminalBuilder(this).skip(isSkip).pattern(name, pattern)
         }
     }
 

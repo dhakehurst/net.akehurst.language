@@ -44,4 +44,6 @@ interface SPPTLeaf : SPPTNode {
     val tagList: List<String>
 
     val eolPositions: List<Int>
+
+    val metaTags: List<String>
 }

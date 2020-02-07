@@ -127,6 +127,9 @@ class SPPTBranchDefault(
 
     override val asBranch: SPPTBranch = this
 
+    override val lastLocation get() = if (children.isEmpty()) this.location else children.last().lastLocation
+
+
     override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
         return visitor.visit(this, arg)
     }

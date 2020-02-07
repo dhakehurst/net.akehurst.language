@@ -30,7 +30,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
         fun createGoalRule(userGoalRule: RuntimeRule): RuntimeRule {
             val gr = RuntimeRule(GOAL_RULE_NUMBER, "<GOAL>", "", RuntimeRuleKind.GOAL, false, false)
-            gr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(userGoalRule, END_OF_TEXT))
+            gr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, arrayOf(userGoalRule, END_OF_TEXT))
             return gr
         }
 
@@ -90,8 +90,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 .toTypedArray()
     }
 
-    val firstSkipRuleTerminalPositions: Set<RulePosition> by lazy {
-        this.calcFirstTerminalSkipRulePositions()
+    val firstSkipRuleTerminalPositions: Set<RuntimeRule> by lazy {
+        this.runtimeRules.filter { it.isSkip }.flatMap { this.calcFirstTerminals(it) }.toSet()
+//        this.calcFirstTerminalSkipRulePositions()
     }
 
     val expectedTerminalRulePositions = lazyMap<RulePosition, Array<RulePosition>> {
@@ -447,27 +448,59 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }.toSet()
     }
 
-    val multiRuntimeGuard = { gn: GrowingNode ->
-        when (gn.currentState.rulePosition.position) {
-            RulePosition.END_OF_RULE -> gn.children.size >= gn.runtimeRule.rhs.multiMin
-            RulePosition.MULIT_ITEM_POSITION -> -1==gn.runtimeRule.rhs.multiMax || gn.children.size <= gn.runtimeRule.rhs.multiMax
+    val multiRuntimeGuard: Transition.(GrowingNode) -> Boolean = { gn: GrowingNode ->
+        val previousRp = gn.currentState.rulePosition
+        when {
+            previousRp.isAtEnd -> gn.children.size+1 >= gn.runtimeRule.rhs.multiMin
+            previousRp.position == RulePosition.MULIT_ITEM_POSITION -> {
+                //if the to state creates a complete node then min must be >= multiMin
+                if (this.to.isAtEnd) {
+                    val minSatisfied = gn.children.size + 1 >= gn.runtimeRule.rhs.multiMin
+                    val maxSatisfied = -1 == gn.runtimeRule.rhs.multiMax || gn.children.size + 1 <= gn.runtimeRule.rhs.multiMax
+                    minSatisfied && maxSatisfied
+                } else {
+                    -1 == gn.runtimeRule.rhs.multiMax || gn.children.size + 1 <= gn.runtimeRule.rhs.multiMax
+                }
+
+            }
             else -> true
         }
     }
-    val sListRuntimeGuard = { gn: GrowingNode ->
-        when (gn.currentState.rulePosition.position) {
-            RulePosition.END_OF_RULE -> (gn.children.size % 2) >= gn.runtimeRule.rhs.multiMin
-            RulePosition.SLIST_ITEM_POSITION -> -1==gn.runtimeRule.rhs.multiMax || (gn.children.size % 2) <= gn.runtimeRule.rhs.multiMax
+    val sListRuntimeGuard: Transition.(GrowingNode) -> Boolean = { gn: GrowingNode ->
+        val previousRp = gn.currentState.rulePosition
+        when {
+            previousRp.isAtEnd -> (gn.children.size / 2)+1 >= gn.runtimeRule.rhs.multiMin
+            previousRp.position == RulePosition.SLIST_ITEM_POSITION -> {
+                //if the to state creates a complete node then min must be >= multiMin
+                if (this.to.isAtEnd) {
+                    val minSatisfied = (gn.children.size / 2)+1 >= gn.runtimeRule.rhs.multiMin
+                    val maxSatisfied = -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2)+1 <= gn.runtimeRule.rhs.multiMax
+                    minSatisfied && maxSatisfied
+                } else {
+                    -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2)+1 <= gn.runtimeRule.rhs.multiMax
+                }
+            }
+            previousRp.position == RulePosition.SLIST_SEPARATOR_POSITION -> {
+                //if the to state creates a complete node then min must be >= multiMin
+                if (this.to.isAtEnd) {
+                    val minSatisfied = (gn.children.size / 2)+1 >= gn.runtimeRule.rhs.multiMin
+                    val maxSatisfied = -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2)+1 < gn.runtimeRule.rhs.multiMax
+                    minSatisfied && maxSatisfied
+                } else {
+                    -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2)+1 < gn.runtimeRule.rhs.multiMax
+                }
+            }
             else -> true
         }
     }
+
     private fun createGraftTransition(from: ParserState, parentRelation: ParentRelation, previous: RulePosition?): Set<Transition> {
         val parentRP = parentRelation.rulePosition
         val prevGuard = parentRP //for graft, previous must match prevGuard
         val action = Transition.ParseAction.GRAFT
         val toSet = parentRP.next().map { from.stateSet.fetchOrCreateParseState(it) }
         //val filteredToSet = toSet.filter { this.canGrowInto(it, previous) }
-        val runtimeGuard: (GrowingNode) -> Boolean = if (null==previous) {
+        val runtimeGuard: Transition.(GrowingNode) -> Boolean = if (null == previous) {
             { _ -> true }
         } else {
             when (previous.runtimeRule.rhs.kind) {
@@ -746,10 +779,14 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }.toSet()
     }
 
-    private fun calcFirstTerminalSkipRulePositions(): Set<RulePosition> {
+    private fun calcFirstTerminalSkipRulePositions(): Set<RuntimeRule> {
         val skipRPs = calcExpectedSkipItemRulePositionTransitive()
-        return skipRPs.filter {
-            it.runtimeRule.itemsAt[it.position].any { it.isTerminal }
+        return skipRPs.flatMap {
+            if (it.runtimeRule.isTerminal) {
+                setOf(it.runtimeRule)
+            } else {
+                it.runtimeRule.itemsAt[it.position].toSet()
+            }
         }.toSet() //TODO: cache ?
     }
 

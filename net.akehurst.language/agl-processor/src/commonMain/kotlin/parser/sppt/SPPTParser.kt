@@ -29,6 +29,7 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
     private val EMPTY = Regex("§empty")
     private val NAME = Regex("[a-zA-Z_§][a-zA-Z_0-9§]*")
     private val LITERAL = Regex("'(?:\\\\?.)*?'")
+    private val PATTERN = Regex("\"(?:\\\\?.)*?\"")
     private val COLON = Regex("[:]")
     private val CHILDREN_START = Regex("[{]")
     private val CHILDREN_END = Regex("[}]")
@@ -117,7 +118,7 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
         val childrenStack = Stack<MutableList<SPPTNode>>()
         // add rootList
         childrenStack.push(mutableListOf<SPPTNode>())
-        var sentenceLocation = InputLocation(0,1,1,0)
+        var sentenceLocation = InputLocation(0, 1, 1, 0)
         while (scanner.hasMore()) {
             when {
                 scanner.hasNext(WS) -> scanner.next(WS)
@@ -136,8 +137,8 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
                     childrenStack.push(ArrayList<SPPTNode>())
                 }
                 scanner.hasNext(LITERAL) -> {
-                    val leafStr = scanner.next(LITERAL).replace("\\'", "'")
-                    val text = leafStr.substring(1, leafStr.length - 1)
+                    val leafName = scanner.next(LITERAL).replace("\\'", "'")
+                    val text = leafName.substring(1, leafName.length - 1)
                     while (scanner.hasNext(WS)) {
                         scanner.next(WS)
                     }
@@ -149,13 +150,38 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
                         val newText = scanner.next(LITERAL)
                         val newText2 = newText.replace("\\'", "'")
                         val newText3 = newText2.substring(1, newText2.length - 1)
-                        val location = InputLocation(sentenceLocation.position,sentenceLocation.column, sentenceLocation.line, newText3.length)
-                        val leaf = this.leaf(text, newText3, location)
+                        val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, newText3.length)
+                        val leaf = this.leaf(leafName, newText3, location)
                         sentenceLocation = input.nextLocation(location, leaf.matchedText.length)
                         childrenStack.peek().add(leaf)
                     } else {
-                        val location = InputLocation(sentenceLocation.position,sentenceLocation.column, sentenceLocation.line, text.length)
-                        val leaf = this.leaf(text, location)
+                        val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, text.length)
+                        val leaf = this.leaf(leafName, text, location)
+                        sentenceLocation = input.nextLocation(location, text.length)
+                        childrenStack.peek().add(leaf)
+                    }
+                }
+                scanner.hasNext(PATTERN) -> {
+                    val leafName = scanner.next(PATTERN).replace("\\'", "'")
+                    val text = leafName.substring(1, leafName.length - 1)
+                    while (scanner.hasNext(WS)) {
+                        scanner.next(WS)
+                    }
+                    if (scanner.hasNext(COLON)) {
+                        scanner.next(COLON)
+                        while (scanner.hasNext(WS)) {
+                            scanner.next(WS)
+                        }
+                        val newText = scanner.next(LITERAL)
+                        val newText2 = newText.replace("\\'", "'")
+                        val newText3 = newText2.substring(1, newText2.length - 1)
+                        val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, newText3.length)
+                        val leaf = this.leaf(leafName, newText3, location)
+                        sentenceLocation = input.nextLocation(location, leaf.matchedText.length)
+                        childrenStack.peek().add(leaf)
+                    } else {
+                        val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, text.length)
+                        val leaf = this.leaf(leafName, text, location)
                         sentenceLocation = input.nextLocation(location, text.length)
                         childrenStack.peek().add(leaf)
                     }
@@ -169,7 +195,7 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
                     val newText = scanner.next(LITERAL)
                     val newText2 = newText.replace("\\'", "'")
                     val newText3 = newText2.substring(1, newText2.length - 1)
-                    val location = InputLocation(sentenceLocation.position,sentenceLocation.column, sentenceLocation.line, newText3.length)
+                    val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, newText3.length)
                     val leaf = this.leaf(name, newText3, location)
                     sentenceLocation = input.nextLocation(location, leaf.matchedText.length)
                     childrenStack.peek().add(leaf)
@@ -201,18 +227,10 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
         return existing
     }
 
-    fun leaf(text: String, location: InputLocation): SPPTLeaf {
-        val pattern = "'$text'"
-        return this._leaf(pattern, text, location)
-    }
     fun leaf(pattern: String, text: String, location: InputLocation): SPPTLeaf {
-        val pattern = "\"$pattern\""
-        return this._leaf(pattern, text, location)
-    }
-    fun _leaf(pattern: String, text: String, location: InputLocation): SPPTLeaf {
         val terminalRule = this.runtimeRuleSet.findTerminalRule(pattern)
-        val n = SPPTLeafDefault(terminalRule, location, false, text, 0 )
-        n.eolPositions =  Regex("\n", setOf(RegexOption.MULTILINE)).findAll(text).toList().map { it.range.first }
+        val n = SPPTLeafDefault(terminalRule, location, false, text, 0)
+        n.eolPositions = Regex("\n", setOf(RegexOption.MULTILINE)).findAll(text).toList().map { it.range.first }
         var existing: SPPTLeaf? = this.findLeaf(n.identity, n.matchedTextLength)
         if (null == existing) {
             this.cacheNode(n)
@@ -228,7 +246,7 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
         val lastLocation = children.last().location
         val length = (lastLocation.position - firstLocation.position) + lastLocation.length
         val location = InputLocation(firstLocation.position, firstLocation.column, firstLocation.line, length)
-        val nextInputPosition = location.position+location.length
+        val nextInputPosition = location.position + location.length
         val n = SPPTBranchDefault(rr, location, nextInputPosition, 0)
         n.childrenAlternatives.add(children)
 

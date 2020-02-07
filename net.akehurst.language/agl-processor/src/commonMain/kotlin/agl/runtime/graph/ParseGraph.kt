@@ -30,10 +30,10 @@ internal class ParseGraph(
         val userGoalRule: RuntimeRule,
         private val input: InputFromCharSequence
 ) {
-    private val leaves: MutableMap<LeafIndex, SPPTLeafDefault> = mutableMapOf()
-    private val completeNodes: MutableMap<SPPTNodeIdentity, SPPTNode> = mutableMapOf()
+    internal val leaves: MutableMap<LeafIndex, SPPTLeafDefault> = mutableMapOf()
+    internal val completeNodes: MutableMap<SPPTNodeIdentity, SPPTNode> = mutableMapOf()
     internal val growing: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
-    private val _goals: MutableList<SPPTNode> = mutableListOf()
+    internal val _goals: MutableList<SPPTNode> = mutableListOf()
     val growingHead: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
 
     val canGrow: Boolean
@@ -46,7 +46,10 @@ internal class ParseGraph(
             return this._goals
         }
 
-    fun longestMatch(longestLastGrown: SPPTNode?, seasons: Int, maxNumHeads: Int): SPPTNode {
+    val longestCompleteNodeFromStart: SPPTNode? get() = this.completeNodes.values.filter { it.startPosition == 0 }.sortedBy { it.matchedTextLength }.lastOrNull()
+
+
+    fun longestMatch(seasons: Int, maxNumHeads: Int): SPPTNode? {
         if (!this.goals.isEmpty() && this.goals.size >= 1) {
             var lt = this.goals.iterator().next()
             for (gt in this.goals) {
@@ -55,10 +58,8 @@ internal class ParseGraph(
                 }
             }
             if (!this.input.isEnd(lt.nextInputPosition + 1)) {
-                //TODO: this can never happen now I think!
-                val llg = longestLastGrown ?: throw ParseException("Internal Error, should not happen")
-                val location = llg.location //this.input.calcLineAndColumn(llg.nextInputPosition)
-                throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location)
+                val location = lt.lastLocation //this.input.calcLineAndColumn(llg.nextInputPosition)
+                throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(lt, seasons, maxNumHeads), location)
             } else {
                 // need to re-write top of the tree so that any initial skip nodes come under the userGoal node
                 val alternatives = mutableListOf<List<SPPTNode>>()
@@ -77,7 +78,7 @@ internal class ParseGraph(
                     firstSkipNodes.isEmpty() -> userGoalNode.location.length
                     else -> firstSkipNodes.last().startPosition + firstSkipNodes.last().location.length + userGoalNode.location.length
                 }
-                val location = InputLocation(0,1,1,length)
+                val location = InputLocation(0, 1, 1, length)
                 val r = if (userGoalNode is SPPTBranch) {
                     val r = SPPTBranchDefault(this.userGoalRule, location, userGoalNode.nextInputPosition, userGoalNode.priority)
                     for (alt in userGoalNode.childrenAlternatives) {
@@ -91,9 +92,7 @@ internal class ParseGraph(
                 return r
             }
         } else {
-            val llg = longestLastGrown ?: throw ParseException("Nothing parsed")
-            val location = llg.location //this.input.calcLineAndColumn(llg.nextInputPosition)
-            throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location)
+            return null;
         }
     }
 
@@ -101,13 +100,13 @@ internal class ParseGraph(
     private fun tryCreateLeaf(terminalRuntimeRule: RuntimeRule, index: LeafIndex, lastLocation: InputLocation): SPPTLeafDefault? {
         // LeafIndex passed as argument because we already created it to try and find the leaf in the cache
         return if (terminalRuntimeRule.isEmptyRule) {
-            val location = this.input.nextLocation(lastLocation,0)
+            val location = this.input.nextLocation(lastLocation, 0)
             val leaf = SPPTLeafDefault(terminalRuntimeRule, location, true, "", 0)
             this.leaves[index] = leaf
             this.completeNodes[leaf.identity] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
             leaf
         } else {
-            val match = this.input.tryMatchText(index.startPosition, terminalRuntimeRule.value, terminalRuntimeRule.isPattern)?: return null
+            val match = this.input.tryMatchText(index.startPosition, terminalRuntimeRule.value, terminalRuntimeRule.isPattern) ?: return null
             val location = this.input.nextLocation(lastLocation, match.matchedText.length)
             val leaf = SPPTLeafDefault(terminalRuntimeRule, location, false, match.matchedText, 0)
             leaf.eolPositions = match.eolPositions
@@ -140,7 +139,7 @@ internal class ParseGraph(
     private fun addGrowing(gn: GrowingNode) {
         val startPosition = gn.startPosition
         val nextInputPosition = gn.nextInputPosition
-        val gnindex = GrowingNodeIndex(gn.currentState, startPosition, nextInputPosition)
+        val gnindex = GrowingNodeIndex(gn.currentState, startPosition, nextInputPosition, gn.priority)
         val existing = this.growing[gnindex]
         if (null == existing) {
             this.growing[gnindex] = gn
@@ -155,7 +154,7 @@ internal class ParseGraph(
     private fun addGrowing(gn: GrowingNode, previous: Set<PreviousInfo>) {
         val startPosition = gn.startPosition
         val nextInputPosition = gn.nextInputPosition
-        val gnindex = GrowingNodeIndex(gn.currentState, startPosition, nextInputPosition)
+        val gnindex = GrowingNodeIndex(gn.currentState, startPosition, nextInputPosition, gn.priority)
         val existing = this.growing[gnindex]
         if (null == existing) {
             for (info in previous) {
@@ -173,7 +172,7 @@ internal class ParseGraph(
     private fun removeGrowing(gn: GrowingNode) {
         val startPosition = gn.startPosition
         val nextInputPosition = gn.nextInputPosition
-        val gnindex = GrowingNodeIndex(gn.currentState, startPosition, nextInputPosition)
+        val gnindex = GrowingNodeIndex(gn.currentState, startPosition, nextInputPosition, gn.priority)
         this.growing.remove(gnindex)
     }
 
@@ -204,7 +203,7 @@ internal class ParseGraph(
         for (info in previous) {
             this.addGrowing(info.node)
         }
-        val gnindex = GrowingNodeIndex(curRp, location.position, nextInputPosition)
+        val gnindex = GrowingNodeIndex(curRp, location.position, nextInputPosition, 0) //leafs don't have priority
         val existing = this.growing[gnindex]
         if (null == existing) {
             val nn = GrowingNode(isSkipGrowth, curRp, location, nextInputPosition, 0, emptyList(), 0)
@@ -221,7 +220,7 @@ internal class ParseGraph(
         for (info in previous) {
             this.addGrowing(info.node)
         }
-        val gnindex = GrowingNodeIndex(curRp, location.position, nextInputPosition) //TODO: not sure we need both tgt and cur for leaves
+        val gnindex = GrowingNodeIndex(curRp, location.position, nextInputPosition, 0) //leafs don't have priority //TODO: not sure we need both tgt and cur for leaves
         val existing = this.growing[gnindex]
         if (null == existing) {
             val nn = GrowingNode(isSkipGrowth, curRp, location, nextInputPosition, 0, emptyList(), 0)
@@ -237,7 +236,7 @@ internal class ParseGraph(
 
     private fun findOrCreateGrowingNode(isSkipGrowth: Boolean, newRp: ParserState, location: InputLocation, nextInputPosition: Int,
                                         priority: Int, children: List<SPPTNode>, numNonSkipChildren: Int, previous: Set<PreviousInfo>): GrowingNode {
-        val gnindex = GrowingNodeIndex(newRp, location.position, nextInputPosition)
+        val gnindex = GrowingNodeIndex(newRp, location.position, nextInputPosition, priority)
         val existing = this.growing.get(gnindex)
         var result: GrowingNode?
         if (null == existing) {
@@ -384,12 +383,14 @@ internal class ParseGraph(
                 cn = this.createBranchNoChildren(runtimeRule, priority, location, gn.nextInputPosition)
                 if (gn.isLeaf) {
                     // dont try and add children...can't for a leaf
+                    gn.skipNodes
                 } else {
                     cn.childrenAlternatives.add(gn.children)
                 }
             } else {
                 if (gn.isLeaf) {
                     // dont try and add children...can't for a leaf
+                    gn.skipNodes
                 } else {
                     // final ICompleteNode.ChildrenOption opt = new ICompleteNode.ChildrenOption();
                     // opt.matchedLength = gn.getMatchedTextLength();
@@ -513,7 +514,7 @@ internal class ParseGraph(
     fun start(goalState: ParserState) {
         val location = InputLocation(0, 0, 1, 0)
         val goalGN = GrowingNode(false, goalState, location, 0, 0, emptyList<SPPTNode>(), 0)
-        this.addGrowingHead(GrowingNodeIndex(goalState, 0, 0), goalGN)
+        this.addGrowingHead(GrowingNodeIndex(goalState, 0, 0, 0), goalGN)
     }
 
     fun pop(gn: GrowingNode): Set<PreviousInfo> {

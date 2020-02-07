@@ -52,7 +52,7 @@ class test_a : test_ScannerlessParserAbstract() {
         val sentence = " a"
 
         val expected = """
-            S { WS { '\s+' : ' ' } 'a' }
+            S { WS { "\s+" : ' ' } 'a' }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
@@ -65,7 +65,7 @@ class test_a : test_ScannerlessParserAbstract() {
         val sentence = "a "
 
         val expected = """
-            S { 'a' WS { '\s+' : ' ' } }
+            S { 'a' WS { "\s+" : ' ' } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
@@ -78,7 +78,7 @@ class test_a : test_ScannerlessParserAbstract() {
         val sentence = " a "
 
         val expected = """
-            S { WS { '\s+' : ' ' } 'a' WS { '\s+' : ' ' } }
+            S { WS { "\s+" : ' ' } 'a' WS { "\s+" : ' ' } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
@@ -116,7 +116,7 @@ class test_a : test_ScannerlessParserAbstract() {
         val sentence = " ab"
 
         val expected = """
-            S { WS { '\s+' : ' ' } 'a' 'b' }
+            S { WS { "\s+" : ' ' } 'a' 'b' }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
@@ -129,7 +129,7 @@ class test_a : test_ScannerlessParserAbstract() {
         val sentence = "a b"
 
         val expected = """
-            S { 'a' WS { '\s+' : ' ' } 'b' }
+            S { 'a' WS { "\s+" : ' ' } 'b' }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
@@ -142,7 +142,7 @@ class test_a : test_ScannerlessParserAbstract() {
         val sentence = " a b "
 
         val expected = """
-            S { WS { '\s+' : ' ' } 'a' WS { '\s+' : ' ' } 'b' WS { '\s+' : ' ' } }
+            S { WS { "\s+" : ' ' } 'a' WS { "\s+" : ' ' } 'b' WS { "\s+" : ' ' } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)

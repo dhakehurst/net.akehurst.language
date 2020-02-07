@@ -41,7 +41,7 @@ interface SPPTNode : SharedPackedParseTreeVisitable {
 	val runtimeRuleNumber: Int
 
 	val location: InputLocation
-
+	val lastLocation: InputLocation
 	/**
 	 *
 	 *  the index position of the input text at which this node starts its match, derived from identity

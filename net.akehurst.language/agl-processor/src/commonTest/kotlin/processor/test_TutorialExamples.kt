@@ -30,31 +30,7 @@ class test_TutorialExamples {
     }
 
     @Test
-    fun example3_1() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                typeReference =  userDefinedType | builtInType;
-                builtInType = 'int' | 'boolean' | 'real' ;
-                userDefinedType = NAME ;
-                leaf NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
-            }
-        """.trimIndent()
-        val processor = Agl.processor(grammarStr)
-
-        val sppt = processor.parse("int")
-        val actual = sppt.toStringAll.trim()
-        assertNotNull(sppt)
-
-        val expected = """
-            typeReference { builtInType { 'int' } }
-        """.trimIndent()
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun example3_3() {
+    fun example3_int_as_userDefinedType() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -70,17 +46,17 @@ class test_TutorialExamples {
         val actual = sppt.toStringAll.trim()
         assertNotNull(sppt)
 
-        val expected = "typeReference { builtInType { 'int' } }"
+        val expected = "typeReference { userDefinedType { NAME : 'int' } }"
 
         assertEquals(expected, actual)
     }
 
     @Test
-    fun example3_4() {
+    fun example3_xxx_as_userDefinedType() {
         val grammarStr = """
             namespace test
             grammar Test {
-                typeReference = builtInType | userDefinedType ;
+                typeReference =  userDefinedType | builtInType;
                 builtInType = 'int' | 'boolean' | 'real' ;
                 userDefinedType = NAME ;
                 NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
@@ -88,14 +64,60 @@ class test_TutorialExamples {
         """.trimIndent()
         val processor = Agl.processor(grammarStr)
 
-        val sppt = processor.parse("prop : int")
-        val actual = sppt.toStringAll
+        val sppt = processor.parse("xxx")
+        val actual = sppt.toStringAll.trim()
         assertNotNull(sppt)
 
         val expected = """
-            propertyDeclaration {
-                typeReference { userDefinedType { 'NAME' : 'int' } }
+                typeReference { userDefinedType { NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xxx' } } }
+        """.trimIndent()
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun example3_boolean_as_builtInType() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                typeReference =  userDefinedType | builtInType;
+                builtInType = 'int' | 'boolean' | 'real' ;
+                userDefinedType = NAME ;
+                NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
+        """.trimIndent()
+        val processor = Agl.processor(grammarStr)
+
+        val sppt = processor.parse("boolean")
+        val actual = sppt.toStringAll.trim()
+        assertNotNull(sppt)
+
+        val expected = """
+                typeReference { builtInType { 'boolean' } }
+        """.trimIndent()
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun example3_int_as_builtInType() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                typeReference =  userDefinedType | builtInType;
+                builtInType = 'int' | 'boolean' | 'real' ;
+                userDefinedType = NAME ;
+                NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
+            }
+        """.trimIndent()
+        val processor = Agl.processor(grammarStr)
+
+        val sppt = processor.parse("int")
+        val actual = sppt.toStringAll.trim()
+        assertNotNull(sppt)
+
+        val expected = """
+                typeReference { builtInType { 'int' } }
         """.trimIndent()
 
         assertEquals(expected, actual)

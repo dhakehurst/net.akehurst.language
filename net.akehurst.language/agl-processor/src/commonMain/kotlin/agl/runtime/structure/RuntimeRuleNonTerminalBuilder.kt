@@ -61,7 +61,7 @@ class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val name: S
         return rr
     }
 
-    fun choice(choiceKind: RuntimeRuleChoiceKind,vararg items: RuntimeRule): RuntimeRule {
+    fun choice(choiceKind: RuntimeRuleChoiceKind, vararg items: RuntimeRule): RuntimeRule {
         return this.runtimeRuleItemBuilder(RuntimeRuleItemKind.CHOICE, choiceKind, items).build()
     }
 

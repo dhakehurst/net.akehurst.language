@@ -59,7 +59,7 @@ class test_ifThenElse_LongestChoice : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        assertEquals(0, ex.location.column)
     }
 
     @Test
@@ -72,11 +72,11 @@ class test_ifThenElse_LongestChoice : test_ScannerlessParserAbstract() {
             S {
               expr {
                 ifthenelse {
-                  'if' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                  'then' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' WS { '\s+' : ' ' } } }
-                  'else' WS { '\s+' : ' ' }
+                  'if' WS { "\s+" : ' ' }
+                  expr { var { '[a-zA-Z]+' : 'a' WS { "\s+" : ' ' } } }
+                  'then' WS { "\s+" : ' ' }
+                  expr { var { '[a-zA-Z]+' : 'b' WS { "\s+" : ' ' } } }
+                  'else' WS { "\s+" : ' ' }
                   expr { var { '[a-zA-Z]+' : 'c' } }
                 }
               }
@@ -96,9 +96,9 @@ class test_ifThenElse_LongestChoice : test_ScannerlessParserAbstract() {
             S {
               expr {
                 ifthen {
-                  'if' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                  'then' WS { '\s+' : ' ' }
+                  'if' WS { "\s+" : ' ' }
+                  expr { var { '[a-zA-Z]+' : 'a' WS { "\s+" : ' ' } } }
+                  'then' WS { "\s+" : ' ' }
                   expr { var { '[a-zA-Z]+' : 'b' } }
                 }
               }
@@ -118,16 +118,16 @@ class test_ifThenElse_LongestChoice : test_ScannerlessParserAbstract() {
             S {
               expr {
                 ifthenelse {
-                  'if' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                  'then' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' WS { '\s+' : ' ' } } }
-                  'else' WS { '\s+' : ' ' }
+                  'if' WS { "\s+" : ' ' }
+                  expr { var { '[a-zA-Z]+' : 'a' WS { "\s+" : ' ' } } }
+                  'then' WS { "\s+" : ' ' }
+                  expr { var { '[a-zA-Z]+' : 'b' WS { "\s+" : ' ' } } }
+                  'else' WS { "\s+" : ' ' }
                   expr {
                     ifthen {
-                      'if' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'c' WS { '\s+' : ' ' } } }
-                      'then' WS { '\s+' : ' ' }
+                      'if' WS { "\s+" : ' ' }
+                      expr { var { '[a-zA-Z]+' : 'c' WS { "\s+" : ' ' } } }
+                      'then' WS { "\s+" : ' ' }
                       expr { var { '[a-zA-Z]+' : 'd' } }
                     }
                   }
@@ -149,16 +149,16 @@ class test_ifThenElse_LongestChoice : test_ScannerlessParserAbstract() {
             S {
               expr {
                 ifthen {
-                  'if' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                  'then' WS { '\s+' : ' ' }
+                  'if' WS { "\s+" : ' ' }
+                  expr { var { '[a-zA-Z]+' : 'a' WS { "\s+" : ' ' } } }
+                  'then' WS { "\s+" : ' ' }
                   expr {
                     ifthenelse {
-                      'if' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'b' WS { '\s+' : ' ' } } }
-                      'then' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'c' WS { '\s+' : ' ' } } }
-                      'else' WS { '\s+' : ' ' }
+                      'if' WS { "\s+" : ' ' }
+                      expr { var { '[a-zA-Z]+' : 'b' WS { "\s+" : ' ' } } }
+                      'then' WS { "\s+" : ' ' }
+                      expr { var { '[a-zA-Z]+' : 'c' WS { "\s+" : ' ' } } }
+                      'else' WS { "\s+" : ' ' }
                       expr { var { '[a-zA-Z]+' : 'd' } }
                     }
                   }
@@ -171,18 +171,18 @@ class test_ifThenElse_LongestChoice : test_ScannerlessParserAbstract() {
             S {
               expr {
                 ifthenelse {
-                  'if' WS { '\s+' : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } }
-                  'then' WS { '\s+' : ' ' }
+                  'if' WS { "\s+" : ' ' }
+                  expr { var { '[a-zA-Z]+' : 'a' WS { "\s+" : ' ' } } }
+                  'then' WS { "\s+" : ' ' }
                   expr {
                     ifthen {
-                      'if' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'b' WS { '\s+' : ' ' } } }
-                      'then' WS { '\s+' : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'c' WS { '\s+' : ' ' } } }
+                      'if' WS { "\s+" : ' ' }
+                      expr { var { '[a-zA-Z]+' : 'b' WS { "\s+" : ' ' } } }
+                      'then' WS { "\s+" : ' ' }
+                      expr { var { '[a-zA-Z]+' : 'c' WS { "\s+" : ' ' } } }
                     }
                   }
-                  'else' WS { '\s+' : ' ' }
+                  'else' WS { "\s+" : ' ' }
                   expr { var { '[a-zA-Z]+' : 'd' } }
                 }
               }

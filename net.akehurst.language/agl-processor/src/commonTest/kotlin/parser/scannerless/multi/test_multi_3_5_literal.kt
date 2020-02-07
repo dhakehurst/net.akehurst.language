@@ -48,7 +48,7 @@ class test_multi_3_5_literal : test_ScannerlessParserAbstract() {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        assertEquals(0, e.location.column)
     }
 
     @Test
@@ -76,7 +76,7 @@ class test_multi_3_5_literal : test_ScannerlessParserAbstract() {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        assertEquals(3, e.location.column)
     }
 
     @Test
@@ -125,6 +125,6 @@ class test_multi_3_5_literal : test_ScannerlessParserAbstract() {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(5, e.location.column)
+        assertEquals(6, e.location.column)
     }
 }

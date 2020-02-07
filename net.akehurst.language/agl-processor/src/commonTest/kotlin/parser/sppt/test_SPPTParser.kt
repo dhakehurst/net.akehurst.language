@@ -46,7 +46,7 @@ class test_SPPTParser {
 
         val sut = SPPTParser(rrb)
 
-        val actual = sut.leaf("a", InputLocation(0, 0, 0, 0))
+        val actual = sut.leaf("'a'", "a", InputLocation(0, 0, 0, 0))
 
         assertNotNull(actual)
         assertTrue(actual.isLeaf)
@@ -66,7 +66,7 @@ class test_SPPTParser {
 
         val sut = SPPTParser(rrb)
 
-        val actual = sut.leaf("[a-z]", "a", InputLocation(0, 0, 0, 0))
+        val actual = sut.leaf("\"[a-z]\"", "a", InputLocation(0, 0, 0, 0))
 
         assertNotNull(actual)
         assertTrue(actual.isLeaf)
@@ -139,13 +139,13 @@ class test_SPPTParser {
         val sut = SPPTParser(rrb)
 
         val treeString = """
-            '[a-z]' : 'a'
+            "[a-z]" : 'a'
         """.trimIndent()
 
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" '[a-z]' : 'a'", actual.toStringAll)
+        assertEquals("\"[a-z]\" : 'a'", actual.toStringAll.trim())
     }
 
     @Test

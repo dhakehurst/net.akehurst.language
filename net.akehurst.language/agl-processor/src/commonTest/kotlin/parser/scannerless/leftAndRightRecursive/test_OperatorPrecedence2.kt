@@ -78,7 +78,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr { root{ var { '[a-zA-Z]+' : 'a' } } }
+              expr { root{ var { "[a-zA-Z]+" : 'a' } } }
             }
         """.trimIndent()
 
@@ -127,7 +127,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         val expected = """
             S {
               expr { root {
-                var { '[a-zA-Z]+' : 'var' }
+                var { "[a-zA-Z]+" : 'var' }
               } }
             }
         """.trimIndent()
@@ -146,7 +146,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
               expr {
                 group {
                   '('
-                  expr { root { var { '[a-zA-Z]+' : 'a' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' } } }
                   ')'
                 }
               }
@@ -167,9 +167,9 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
             S {
               expr {
                 div {
-                  expr { root { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } } }
-                  '/' WS { '\s+' : ' ' }
-                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
+                  '/' WS { "\s+" : ' ' }
+                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
             }
@@ -189,9 +189,9 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
             S {
               expr {
                 mul {
-                  expr { root { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } } }
-                  '*' WS { '\s+' : ' ' }
-                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
+                  '*' WS { "\s+" : ' ' }
+                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
             }
@@ -211,9 +211,9 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
             S {
               expr {
                 add {
-                  expr { root { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } } }
-                  '+' WS { '\s+' : ' ' }
-                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
+                  '+' WS { "\s+" : ' ' }
+                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
             }
@@ -233,9 +233,9 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
             S {
               expr {
                 sub {
-                  expr { root { var { '[a-zA-Z]+' : 'a' WS { '\s+' : ' ' } } } }
-                  '-' WS { '\s+' : ' ' }
-                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
+                  '-' WS { "\s+" : ' ' }
+                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
             }
@@ -255,13 +255,13 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
             S {
              expr {
               add {
-                expr { root { var { '[a-zA-Z]+' : 'a' } } }
+                expr { root { var { "[a-zA-Z]+" : 'a' } } }
                 '+'
                 expr {
                   mul {
-                    expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                    expr { root { var { "[a-zA-Z]+" : 'b' } } }
                     '*'
-                    expr { root { var { '[a-zA-Z]+' : 'c' } } }
+                    expr { root { var { "[a-zA-Z]+" : 'c' } } }
                   }
                 }
               }
@@ -284,13 +284,13 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
               add {
                 expr {
                   mul {
-                    expr { root { var { '[a-zA-Z]+' : 'a' } } }
+                    expr { root { var { "[a-zA-Z]+" : 'a' } } }
                     '*'
-                    expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                    expr { root { var { "[a-zA-Z]+" : 'b' } } }
                   }
                 }
                '+'
-               expr { root { var { '[a-zA-Z]+' : 'c' } } }
+               expr { root { var { "[a-zA-Z]+" : 'c' } } }
               }
              }
             }
@@ -311,15 +311,15 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
               add {
                 expr {
                   mul {
-                    expr { root { var { '[a-zA-Z]+' : 'a' } } }
+                    expr { root { var { "[a-zA-Z]+" : 'a' } } }
                     '*'
-                    expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                    expr { root { var { "[a-zA-Z]+" : 'b' } } }
                     '*'
-                    expr { root { var { '[a-zA-Z]+' : 'c' } } }
+                    expr { root { var { "[a-zA-Z]+" : 'c' } } }
                   }
                 }
                '+'
-               expr { root { var { '[a-zA-Z]+' : 'd' } } }
+               expr { root { var { "[a-zA-Z]+" : 'd' } } }
               }
              }
             }
@@ -340,13 +340,13 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
               add {
                 expr {
                   mul {
-                    expr { root { var { '[a-zA-Z]+' : 'a' } } }
+                    expr { root { var { "[a-zA-Z]+" : 'a' } } }
                     '*'
-                    expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                    expr { root { var { "[a-zA-Z]+" : 'b' } } }
                   }
                 }
                '+'
-               expr { root { var { '[a-zA-Z]+' : 'c' } } }
+               expr { root { var { "[a-zA-Z]+" : 'c' } } }
               }
              }
             }
@@ -363,15 +363,15 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
         val expected = """
              S { expr { add {
-                  expr { root { var { '[a-zA-Z]+' : 'a' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' } } }
                   '+'
-                  expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
                   '+'
-                  expr { root { var { '[a-zA-Z]+' : 'c' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'c' } } }
                   '+'
-                  expr { root { var { '[a-zA-Z]+' : 'c' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'c' } } }
                   '+'
-                  expr { root { var { '[a-zA-Z]+' : 'd' } } }
+                  expr { root { var { "[a-zA-Z]+" : 'd' } } }
                 } } }
         """.trimIndent()
 
@@ -386,19 +386,19 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
         val expected = """
          S { expr { add {
-              expr { root { var { '[a-zA-Z]+' : 'a' } } }
+              expr { root { var { "[a-zA-Z]+" : 'a' } } }
               '+'
-              expr { root { var { '[a-zA-Z]+' : 'b' } } }
+              expr { root { var { "[a-zA-Z]+" : 'b' } } }
               '+'
-              expr { root { var { '[a-zA-Z]+' : 'c' } } }
+              expr { root { var { "[a-zA-Z]+" : 'c' } } }
               '+'
-              expr { root { var { '[a-zA-Z]+' : 'c' } } }
+              expr { root { var { "[a-zA-Z]+" : 'c' } } }
               '+'
-              expr { root { var { '[a-zA-Z]+' : 'd' } } }
+              expr { root { var { "[a-zA-Z]+" : 'd' } } }
               '+'
-              expr { root { var { '[a-zA-Z]+' : 'e' } } }
+              expr { root { var { "[a-zA-Z]+" : 'e' } } }
               '+'
-              expr { root { var { '[a-zA-Z]+' : 'f' } } }
+              expr { root { var { "[a-zA-Z]+" : 'f' } } }
             } } }
         """.trimIndent()
 
@@ -419,16 +419,16 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
                   '('
                     expr {
                       add {
-                        expr { root { var { '[a-zA-Z]+' : 'a' } } }
+                        expr { root { var { "[a-zA-Z]+" : 'a' } } }
                         '+'
-                        expr { root { var { '[a-zA-Z]+' : 'b' } } }
+                        expr { root { var { "[a-zA-Z]+" : 'b' } } }
                       }
                     }
                   ')'
                 }
               }
               '*'
-              expr { root { var { '[a-zA-Z]+' : 'c' } } }
+              expr { root { var { "[a-zA-Z]+" : 'c' } } }
             } } }
         """.trimIndent()
 

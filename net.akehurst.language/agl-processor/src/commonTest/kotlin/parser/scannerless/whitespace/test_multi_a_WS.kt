@@ -56,7 +56,7 @@ class test_multi_a_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-                WS { '\s+' : ' ' }
+                WS { "\s+" : ' ' }
                 a { 'a' }
             }
         """.trimIndent()
@@ -89,8 +89,8 @@ class test_multi_a_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-                a { 'a' WS { '\s+' : ' ' } }
-                a { 'a' WS { '\s+' : ' ' } }
+                a { 'a' WS { "\s+" : ' ' } }
+                a { 'a' WS { "\s+" : ' ' } }
                 a { 'a' }
             }
         """.trimIndent()
@@ -106,9 +106,9 @@ class test_multi_a_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-                WS { '\s+' : ' ' }
-                a { 'a' WS { '\s+' : ' ' } }
-                a { 'a' WS { '\s+' : ' ' } }
+                WS { "\s+" : ' ' }
+                a { 'a' WS { "\s+" : ' ' } }
+                a { 'a' WS { "\s+" : ' ' } }
                 a { 'a' }
             }
         """.trimIndent()
@@ -124,9 +124,9 @@ class test_multi_a_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-                a { 'a' WS { '\s+' : ' ' } }
-                a { 'a' WS { '\s+' : ' ' } }
-                a { 'a' WS { '\s+' : ' ' } }
+                a { 'a' WS { "\s+" : ' ' } }
+                a { 'a' WS { "\s+" : ' ' } }
+                a { 'a' WS { "\s+" : ' ' } }
             }
         """.trimIndent()
 
@@ -141,10 +141,10 @@ class test_multi_a_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-                WS { '\s+' : ' ' }
-                a { 'a' WS { '\s+' : ' ' } }
-                a { 'a' WS { '\s+' : ' ' } }
-                a { 'a' WS { '\s+' : ' ' } }
+                WS { "\s+" : ' ' }
+                a { 'a' WS { "\s+" : ' ' } }
+                a { 'a' WS { "\s+" : ' ' } }
+                a { 'a' WS { "\s+" : ' ' } }
             }
         """.trimIndent()
 

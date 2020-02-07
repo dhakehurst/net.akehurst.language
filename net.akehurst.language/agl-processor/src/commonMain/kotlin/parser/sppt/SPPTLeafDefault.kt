@@ -44,6 +44,17 @@ class SPPTLeafDefault(
 
     override var eolPositions: List<Int> = emptyList()
 
+    override val metaTags: List<String> by lazy { //TODO: make this configurable on the LanguageProcessor
+        val map = mutableMapOf<String, String>(
+                "\$keyword" to "'[a-zA-Z][a-zA-Z0-9]*'"
+        )
+        map.mapNotNull {
+            when {
+                this.name.matches(Regex(it.value)) -> it.key
+                else -> null
+            }
+        }
+    }
     // --- SPPTNode ---
 
     override val nonSkipMatchedText: String = if (isSkip) "" else this.matchedText
@@ -58,6 +69,8 @@ class SPPTLeafDefault(
     override val asLeaf: SPPTLeaf = this
 
     override val asBranch: SPPTBranch get() { throw SPPTException("Not a Branch", null) }
+
+    override val lastLocation get() = this.location
 
     override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
         return visitor.visit(this,  arg)

@@ -43,7 +43,7 @@ class test_PascalRange : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun expr_empty() {
+    fun expr_empty_fails() {
         val rrb = this.S()
         val goal = "expr"
         val sentence = ""
@@ -52,7 +52,7 @@ class test_PascalRange : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        assertEquals(0, e.location.column)
     }
 
     @Test
@@ -63,7 +63,7 @@ class test_PascalRange : test_ScannerlessParserAbstract() {
 
         val expected1 = """
             expr {
-              real { '([0-9]+[.][0-9]*)|([.][0-9]+)' : '1.' }
+              real { "([0-9]+[.][0-9]*)|([.][0-9]+)" : '1.' }
             }
         """.trimIndent()
 
@@ -80,9 +80,9 @@ class test_PascalRange : test_ScannerlessParserAbstract() {
         val expected1 = """
             expr {
               range {
-                integer { '[0-9]+' : '1' }
+                integer { "[0-9]+" : '1' }
                 '..'
-                integer { '[0-9]+' : '5' }
+                integer { "[0-9]+" : '5' }
               }
             }
         """.trimIndent()

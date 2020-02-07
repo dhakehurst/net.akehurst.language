@@ -20,6 +20,7 @@ import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.PreviousInfo
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseException
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.parser.sppt.SPPTBranchDefault
@@ -41,12 +42,26 @@ internal class RuntimeParser(
         get() {
             //TODO: handle the fact that we can parse next token, but if the lookahead is wrong then it fails
 
-
+            //val llg = this.graph.longestCompleteNodeFromStart
+            //return llg
             val llg = this.lastGrown.maxWith(Comparator<GrowingNode> { a, b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
+
             return if (null == llg) {
                 return null
             } else if (llg.isLeaf) {
-                this.graph.findOrTryCreateLeaf(llg.runtimeRule, llg.nextInputPosition, llg.lastLocation)
+                val leaf = this.graph.findOrTryCreateLeaf(llg.runtimeRule, llg.startPosition, llg.location)!!
+                if (llg.skipNodes.isEmpty()) {
+                    leaf
+                } else {
+                    val children = listOf(leaf)+llg.skipNodes
+                    val firstChild = children.first()
+                    val lastChild = children.last()
+                    val length = (lastChild.location.position - firstChild.location.position) + lastChild.location.length
+                    val location = InputLocation(firstChild.location.position, firstChild.location.column, firstChild.location.line, length)
+                    val branch = SPPTBranchDefault(llg.runtimeRule,location,llg.skipNodes.last().nextInputPosition,llg.priority)
+                    branch.childrenAlternatives.add(children)
+                    branch
+                }
             } else {
                 //try grow width
                 /*
@@ -139,17 +154,17 @@ internal class RuntimeParser(
     }
 
     private fun doWidth(gn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition) {
-            val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, gn.nextInputPosition, gn.lastLocation)
-            if (null != l) {
-                //TODO: find a better way to look past skip terminals, this means wrong matches can be made...though they will be dropped on H or G!
-                val lh = transition.lookaheadGuard + this.runtimeRuleSet.allSkipTerminals
-                val hasLh = lh.any {
-                    val l = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition, l.location)
-                    null != l
-                }
-                if (hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
-                    this.graph.pushToStackOf(false, transition.to, l, gn, previousSet, emptySet())
-                }
+        val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, gn.nextInputPosition, gn.lastLocation)
+        if (null != l) {
+            //TODO: find a better way to look past skip terminals, this means wrong matches can be made...though they will be dropped on H or G!
+            val lh = transition.lookaheadGuard + this.runtimeRuleSet.allSkipTerminals
+            val hasLh = lh.any {
+                val l = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition, l.location)
+                null != l
+            }
+            if (hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
+                this.graph.pushToStackOf(false, transition.to, l, gn, previousSet, emptySet())
+            }
         }
     }
 
@@ -171,7 +186,7 @@ internal class RuntimeParser(
 
     private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
         if (previous.node.currentState.rulePosition == transition.prevGuard) {
-            if (transition.runtimeGuard(previous.node)) {
+            if (transition.runtimeGuard(transition,previous.node)) {
                 val lh = transition.lookaheadGuard
                 val hasLh = lh.any {
                     val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
@@ -194,17 +209,18 @@ internal class RuntimeParser(
         } else {
             var modified = false
             val rps = this.runtimeRuleSet.firstSkipRuleTerminalPositions //TODO: get skipStates here, probably be better/faster
-            for (rp in rps) {
-                for (rr in rp.runtimeRule.itemsAt[rp.position]) {
-                    val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition, gn.lastLocation)
-                    if (null != l) {
-                        val leafRp = RulePosition(rr, 0, -1)
-                        val skipState = this.runtimeRuleSet.fetchSkipStates(leafRp)
-                        this.graph.pushToStackOf(true, skipState, l, gn, previous, emptySet())
-                        modified = true
-                    }
+            //for (rp in rps) {
+            //for (rr in rp.runtimeRule.itemsAt[rp.position]) {
+            for (rr in rps) {
+                val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition, gn.lastLocation)
+                if (null != l) {
+                    val leafRp = RulePosition(rr, 0, -1)
+                    val skipState = this.runtimeRuleSet.fetchSkipStates(leafRp)
+                    this.graph.pushToStackOf(true, skipState, l, gn, previous, emptySet())
+                    modified = true
                 }
             }
+            //}
             return modified
         }
     }

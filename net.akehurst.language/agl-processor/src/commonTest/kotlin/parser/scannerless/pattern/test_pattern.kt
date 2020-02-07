@@ -58,7 +58,7 @@ class test_pattern {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        assertEquals(0, ex.location.column)
     }
 
     // a = "[a-c]"

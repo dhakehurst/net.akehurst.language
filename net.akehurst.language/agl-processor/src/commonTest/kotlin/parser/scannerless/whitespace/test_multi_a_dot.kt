@@ -79,7 +79,7 @@ class test_multi_a_dot : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-                ad { a { 'a' } '.' WS { '\s+' : ' ' } }
+                ad { a { 'a' } '.' WS { "\s+" : ' ' } }
             }
         """.trimIndent()
 
