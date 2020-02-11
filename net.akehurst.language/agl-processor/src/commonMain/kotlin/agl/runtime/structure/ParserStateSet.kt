@@ -29,7 +29,7 @@ class ParserStateSet(
      * we index the map with RulePositionWithLookahead because that is what is used to create a new state,
      * and thus it should give fast lookup
      */
-    private val states = mutableMapOf<RulePosition, ParserState>()
+    internal val states = mutableMapOf<RulePosition, ParserState>()
 
     internal fun fetchOrCreateParseState(rulePosition: RulePosition): ParserState {
         val existing = this.states[rulePosition]

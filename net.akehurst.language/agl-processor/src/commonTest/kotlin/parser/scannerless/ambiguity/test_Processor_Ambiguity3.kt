@@ -163,18 +163,13 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
         super.testStringResult(rrb, goal, sentence, expected1)
     }
 
-    //@Test takes too long at present
+    @Test //takes too long at present
     fun a50b() {
         val rrb = this.S()
         val goal = "S"
         val sentence = "a".repeat(50) + "b"
 
-        val expected1 = """
-            S { S1 {
-                P { 'a' }
-                'b'
-            } }
-        """.trimIndent()
+        val expected1 = "S { S1 {" + "P { P2 {".repeat(49) + "P{'a'}" + "'a' } }".repeat(49) + "'b'} }"
 
         super.testStringResult(rrb, goal, sentence, expected1)
     }

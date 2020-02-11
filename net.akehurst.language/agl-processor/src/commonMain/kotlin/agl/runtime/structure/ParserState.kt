@@ -47,7 +47,7 @@ class ParserState(
 
     private var nextStates_cache: Set<ParserState>? = null
     private var _parentRelations: MutableSet<ParentRelation> = mutableSetOf()
-    private var transitions_cache: MutableMap<RulePosition?,Set<Transition>?> = mutableMapOf()
+    internal var transitions_cache: MutableMap<RulePosition?,Set<Transition>?> = mutableMapOf()
 
     val parentRelations: Set<ParentRelation>
         get() {

@@ -4,13 +4,19 @@ import {TabView} from "./TabView.js"
 import {AglEditorAce} from 'net.akehurst.language.editor-agl-ace'
 import * as agl_js from 'net.akehurst.language-agl-processor';
 import agl = agl_js.net.akehurst.language;
+import {TreeView} from "./TreeView";
+import {Examples} from "./examples";
 
 const Agl = agl.processor.Agl;
 
 TabView.initialise();
 const editors = AglEditorAce.initialise();
+const trees = TreeView.initialise();
 
-const expressionEditor = editors.get('expression-text');
+const exampleSelect = document.querySelector('select#example') as HTMLElement;
+Examples.initialise(exampleSelect);
+
+const sentenceEditor = editors.get('expression-text');
 const grammarEditor = editors.get('language-grammar');
 const styleEditor = editors.get('language-style');
 const formatEditor = editors.get('language-format');
@@ -31,7 +37,7 @@ formatEditor.editor.setOptions({
     fontFamily: 'Courier New',
     fontSize: '12pt',
 });
-expressionEditor.editor.setOptions({
+sentenceEditor.editor.setOptions({
     fontFamily: 'Courier New',
     fontSize: '12pt',
 });
@@ -88,8 +94,8 @@ STYLE_ID {
 `);
 
 try {
-    expressionEditor.processor = Agl.processorFromString(grammarEditor.editor.getValue());
-    expressionEditor.setStyle(styleEditor.editor.getValue());
+    sentenceEditor.processor = Agl.processorFromString(grammarEditor.editor.getValue());
+    sentenceEditor.setStyle(styleEditor.editor.getValue());
 } catch (e) {
     console.error(e);
 }
@@ -97,20 +103,39 @@ try {
 grammarEditor.editor.on("input", (e: Event) => {
     console.info("grammar changed");
     try {
-        expressionEditor.processor = Agl.processorFromString(grammarEditor.editor.getValue());
+        sentenceEditor.processor = Agl.processorFromString(grammarEditor.editor.getValue());
     } catch (e) {
-        expressionEditor.processor = null;
+        sentenceEditor.processor = null;
         console.error(e.message);
     }
 });
 
 styleEditor.editor.on("input", (e: Event) => {
     console.info("style changed");
-    expressionEditor.setStyle(styleEditor.editor.getValue());
+    sentenceEditor.setStyle(styleEditor.editor.getValue());
 });
 
-expressionEditor.on("input", (e: Event) => {
+sentenceEditor.element.addEventListener('parseSuccess', e => {
 
+    if (sentenceEditor.agl.sppt) {
+        const sppt = sentenceEditor.agl.sppt;
+        const tree = trees.get("parse");
+        const root = tree.root;
+        tree.setRoot(
+            sppt.root,
+            {
+                label : n => n.name,
+                hasChildren: n => n.isBranch,
+                children : n => n.children.toArray()
+            }
+        );
+    }
+});
 
-
+exampleSelect.addEventListener('change', (e:Event) => {
+    let eg = Examples.map.get(e.target.value);
+    grammarEditor.editor.setValue(eg.grammar,-1);
+    styleEditor.editor.setValue(eg.style,-1);
+    formatEditor.editor.setValue(eg.format,-1);
+    sentenceEditor.editor.setValue(eg.sentence,-1);
 });

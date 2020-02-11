@@ -451,7 +451,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     val multiRuntimeGuard: Transition.(GrowingNode) -> Boolean = { gn: GrowingNode ->
         val previousRp = gn.currentState.rulePosition
         when {
-            previousRp.isAtEnd -> gn.children.size+1 >= gn.runtimeRule.rhs.multiMin
+            previousRp.isAtEnd -> gn.children.size + 1 >= gn.runtimeRule.rhs.multiMin
             previousRp.position == RulePosition.MULIT_ITEM_POSITION -> {
                 //if the to state creates a complete node then min must be >= multiMin
                 if (this.to.isAtEnd) {
@@ -469,25 +469,25 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     val sListRuntimeGuard: Transition.(GrowingNode) -> Boolean = { gn: GrowingNode ->
         val previousRp = gn.currentState.rulePosition
         when {
-            previousRp.isAtEnd -> (gn.children.size / 2)+1 >= gn.runtimeRule.rhs.multiMin
+            previousRp.isAtEnd -> (gn.children.size / 2) + 1 >= gn.runtimeRule.rhs.multiMin
             previousRp.position == RulePosition.SLIST_ITEM_POSITION -> {
                 //if the to state creates a complete node then min must be >= multiMin
                 if (this.to.isAtEnd) {
-                    val minSatisfied = (gn.children.size / 2)+1 >= gn.runtimeRule.rhs.multiMin
-                    val maxSatisfied = -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2)+1 <= gn.runtimeRule.rhs.multiMax
+                    val minSatisfied = (gn.children.size / 2) + 1 >= gn.runtimeRule.rhs.multiMin
+                    val maxSatisfied = -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2) + 1 <= gn.runtimeRule.rhs.multiMax
                     minSatisfied && maxSatisfied
                 } else {
-                    -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2)+1 <= gn.runtimeRule.rhs.multiMax
+                    -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2) + 1 <= gn.runtimeRule.rhs.multiMax
                 }
             }
             previousRp.position == RulePosition.SLIST_SEPARATOR_POSITION -> {
                 //if the to state creates a complete node then min must be >= multiMin
                 if (this.to.isAtEnd) {
-                    val minSatisfied = (gn.children.size / 2)+1 >= gn.runtimeRule.rhs.multiMin
-                    val maxSatisfied = -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2)+1 < gn.runtimeRule.rhs.multiMax
+                    val minSatisfied = (gn.children.size / 2) + 1 >= gn.runtimeRule.rhs.multiMin
+                    val maxSatisfied = -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2) + 1 < gn.runtimeRule.rhs.multiMax
                     minSatisfied && maxSatisfied
                 } else {
-                    -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2)+1 < gn.runtimeRule.rhs.multiMax
+                    -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2) + 1 < gn.runtimeRule.rhs.multiMax
                 }
             }
             else -> true
@@ -805,6 +805,27 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     private fun calcIsSkipTerminal(rr: RuntimeRule): Boolean {
         val b = this.allSkipTerminals.contains(rr)
         return b
+    }
+
+    internal fun printAutomaton(goalRuleName: String): String {
+        val b = StringBuilder()
+        val gr = this.findRuntimeRule(goalRuleName)
+
+        val s0 = this.startingState(gr)
+
+        val states = this.states_cache[gr].states.values
+        val transitions = states.flatMap { it.transitions_cache.values.flatMap { it ?: emptySet() }.toSet() }.toSet()
+
+
+        states.forEach {
+            b.append(it).append("\n")
+        }
+        transitions.forEach {
+            b.append(it).append("\n")
+        }
+
+
+        return b.toString()
     }
 
     override fun toString(): String {

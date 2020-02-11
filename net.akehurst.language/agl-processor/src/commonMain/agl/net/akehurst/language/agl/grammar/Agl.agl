@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace net.akehurst.language.agl.grammar
+namespace net.akehurst.language.agl.grammar.grammar
 
 grammar Agl {
 

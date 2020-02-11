@@ -5,6 +5,18 @@
 </head>
 <body>
 <main>
+    <header>
+        <div>
+        <label for="example">Please choose an example :</label>
+            <select id="example">
+            </select>
+        </div>
+        <div>
+            <label for="goal">Optionally choose a goal rule:</label>
+            <select id="goal">
+            </select>
+        </div>
+    </header>
     <tabview>
         <tab id="expression">
             <section class="text">
@@ -19,10 +31,10 @@
             <section class="trees">
                 <tabview>
                     <tab id="parse">
-                        <treeview></treeview>
+                        <treeview id="parse"></treeview>
                     </tab>
                     <tab id="ast">
-                        <treeview></treeview>
+                        <treeview id="ast"></treeview>
                     </tab>
                 </tabview>
             </section>

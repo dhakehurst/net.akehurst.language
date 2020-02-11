@@ -150,11 +150,17 @@ export class AglEditorAce {
                 } else {
                     this.agl.sppt = this.processor.parse(this.editor.getValue());
                 }
+                const event = document.createEvent("HTMLEvents");
+                event.initEvent('parseSuccess', true, true);
+                this.element.dispatchEvent(event);
                 //start getTokens from parse result
                 this.updateSyntax();
             } catch (e) {
                 if (e.name=='ParseFailedException') {
                     this.agl.sppt = null;
+                    const event = document.createEvent("HTMLEvents");
+                    event.initEvent('parseFailed', true, true);
+                    this.element.dispatchEvent(event);
                     // parse failed so re-tokenize from scan
                     this.updateSyntax();
                     console.error("Error parsing text in " + this.editorId + ' for language ' + this.languageId, e.message);

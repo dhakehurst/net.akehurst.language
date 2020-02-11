@@ -514,7 +514,8 @@ internal class ParseGraph(
     fun start(goalState: ParserState) {
         val location = InputLocation(0, 0, 1, 0)
         val goalGN = GrowingNode(false, goalState, location, 0, 0, emptyList<SPPTNode>(), 0)
-        this.addGrowingHead(GrowingNodeIndex(goalState, 0, 0, 0), goalGN)
+        val gi = GrowingNodeIndex(goalState, 0, 0, 0)
+        this.addGrowingHead(gi, goalGN)
     }
 
     fun pop(gn: GrowingNode): Set<PreviousInfo> {

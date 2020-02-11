@@ -23,6 +23,8 @@ main {
     /*layout-children*/
     display: grid;
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas: "header" "body";
 }
 
 tabview {
@@ -30,7 +32,7 @@ tabview {
 
     /*layout-children*/
     display: grid;
-    grid-template-columns: auto ;
+    grid-template-columns: auto;
     grid-template-rows: auto;
     grid-auto-rows: 1fr;
     grid-auto-columns: 1fr;
@@ -54,14 +56,23 @@ tabview > tab-nav > tab-header {
     /* style */
     border: solid;
     border-width: 1px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    padding: 5px;
+    background-color: #f0f0f0;
 }
 
 tabview > tab-nav > tab-header:hover {
     background-color: white;
 }
 
+tabview > tab-nav > tab-header.tab-active {
+    background-color: white;
+    border-bottom: none;
+}
+
 tabview > tab {
-    margin:0;
+    margin: 0;
     grid-row: 2;
     grid-column-start: 1;
     grid-column-end: span all;
@@ -75,6 +86,37 @@ tabview > tab:first-of-type {
     display: grid;
 }
 
+treeview tree-children {
+    margin: 0;
+    padding: 0;
+    margin-left: 10px;
+    display: none;
+}
+treeview tree-leaf {
+    display: block;
+}
+
+treeview tree-branch {
+    cursor: pointer;
+    user-select: none;
+    display: block;
+}
+
+treeview tree-branch:before {
+    content: "\25B6";
+    color: black;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+treeview tree-branch[open]:before {
+    transform: rotate(90deg);
+}
+
+treeview tree-branch[open] > tree-children {
+    display: block;
+}
+
 section {
     display: grid;
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
@@ -82,6 +124,24 @@ section {
 
 
 .ace_marker_text_error {
-    position:absolute;
+    position: absolute;
     border-bottom: 1px solid red;
+}
+
+tab#expression {
+    grid-template-columns: 5fr 4fr;
+    grid-template-areas: "text trees";
+}
+
+section#text {
+    grid-area: text;
+}
+
+section#trees {
+    grid-area: trees;
+    background-color: blanchedalmond;
+}
+
+tab#parse {
+    background-color: burlywood;
 }
