@@ -143,5 +143,8 @@ section#trees {
 }
 
 tab#parse {
-    background-color: burlywood;
+     background-color: burlywood;
+}
+tab#asm {
+    background-color: bisque;
 }

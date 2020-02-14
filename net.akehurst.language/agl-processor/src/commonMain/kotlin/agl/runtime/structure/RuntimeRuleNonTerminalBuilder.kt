@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.parser.ParserException
 
 class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val name: String) {
 
@@ -27,7 +27,7 @@ class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val name: S
 
     private fun runtimeRuleItemBuilder(kind: RuntimeRuleItemKind, choiceKind: RuntimeRuleChoiceKind, items: Array<out RuntimeRule>): RuntimeRuleItemBuilder {
         if (items.isEmpty()) {
-            throw  ParseException("The rule must have some items")
+            throw  ParserException("The rule must have some items")
         }
         return RuntimeRuleItemBuilder(this, kind, choiceKind, items)
     }
@@ -39,7 +39,7 @@ class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val name: S
             this.rule = rr
             return rr
         } else {
-            return this.rule ?: throw ParseException("Should not happen")
+            return this.rule ?: throw ParserException("Should not happen")
         }
     }
 

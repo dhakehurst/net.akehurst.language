@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.parser.ParserException
 
 data class RulePosition(
         val runtimeRule: RuntimeRule,
@@ -59,7 +59,7 @@ data class RulePosition(
             emptySet() //TODO: use goal rule to find next position? maybe
         } else {
             when (this.runtimeRule.rhs.kind) {
-                RuntimeRuleItemKind.EMPTY -> throw ParseException("This should never happen!")
+                RuntimeRuleItemKind.EMPTY -> throw ParserException("This should never happen!")
                 RuntimeRuleItemKind.CHOICE -> when {
                     itemRule == this.runtimeRule.rhs.items[this.choice] -> setOf(RulePosition(this.runtimeRule, this.choice, END_OF_RULE))
                     else -> emptySet() //throw ParseException("This should never happen!")
@@ -148,11 +148,12 @@ data class RulePosition(
                         )
                         else -> emptySet() //throw ParseException("This should never happen!")
                     }
-                    else -> throw ParseException("This should never happen!")
+                    else -> throw ParserException("This should never happen!")
                 }
-                RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> throw ParseException("Not yet supported")
-                RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> throw ParseException("Not yet supported")
-                RuntimeRuleItemKind.UNORDERED -> throw ParseException("Not yet supported")
+                RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> throw ParserException("Not yet supported")
+                RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> throw ParserException("Not yet supported")
+                RuntimeRuleItemKind.UNORDERED -> throw ParserException("Not yet supported")
+                RuntimeRuleItemKind.EMBEDDED -> TODO()
             }
         }
     }

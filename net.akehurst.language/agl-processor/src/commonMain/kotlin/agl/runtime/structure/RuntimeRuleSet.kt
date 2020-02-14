@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.runtime.graph.GrowingNode
-import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.collections.transitveClosure
 import net.akehurst.language.parser.scannerless.InputFromCharSequence
 
@@ -221,9 +221,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                         if (nextRP.isAtEnd) {
                             calcLookahead(null, parent.rulePosition, parent.lookahead)
                         } else {
-                            val lh: Set<RuntimeRule> = this.firstTerminals2[nextRP] ?: throw ParseException("should never happen")
+                            val lh: Set<RuntimeRule> = this.firstTerminals2[nextRP] ?: throw ParserException("should never happen")
                             if (lh.isEmpty()) {
-                                throw ParseException("should never happen")
+                                throw ParserException("should never happen")
                             } else {
                                 lh
                             }
@@ -256,9 +256,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                                         calcLookahead(null, parent.rulePosition, parent.lookahead)
                                     }
                                 } else {
-                                    val lh: Set<RuntimeRule> = this.firstTerminals2[nextNextChildRP] ?: throw ParseException("should never happen")
+                                    val lh: Set<RuntimeRule> = this.firstTerminals2[nextNextChildRP] ?: throw ParserException("should never happen")
                                     if (lh.isEmpty()) {
-                                        throw ParseException("should never happen")
+                                        throw ParserException("should never happen")
                                     } else {
                                         lh
                                     }
@@ -285,9 +285,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                         if (nextRP.isAtEnd) {
                             calcLookahead(null, parent.rulePosition, parent.lookahead)
                         } else {
-                            val lh: Set<RuntimeRule> = this.firstTerminals2[nextRP] ?: throw ParseException("should never happen")
+                            val lh: Set<RuntimeRule> = this.firstTerminals2[nextRP] ?: throw ParserException("should never happen")
                             if (lh.isEmpty()) {
-                                throw ParseException("should never happen")
+                                throw ParserException("should never happen")
                             } else {
                                 lh
                             }
@@ -309,9 +309,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                             calcLookahead(null, parent.rulePosition, parent.lookahead)
                         }
                     } else {
-                        val lh: Set<RuntimeRule> = this.firstTerminals2[nextChildRP] ?: throw ParseException("should never happen")
+                        val lh: Set<RuntimeRule> = this.firstTerminals2[nextChildRP] ?: throw ParserException("should never happen")
                         if (lh.isEmpty()) {
-                            throw ParseException("should never happen")
+                            throw ParserException("should never happen")
                         } else {
                             lh
                         }
@@ -721,13 +721,13 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     fun findRuntimeRule(ruleName: String): RuntimeRule {
         val number = this.nonTerminalRuleNumber[ruleName]
                 ?: this.terminalRuleNumber[ruleName]
-                ?: throw ParseException("NonTerminal RuntimeRule '${ruleName}' not found")
+                ?: throw ParserException("NonTerminal RuntimeRule '${ruleName}' not found")
         return this.runtimeRules[number]
     }
 
     fun findTerminalRule(pattern: String): RuntimeRule {
         val number = this.terminalRuleNumber[pattern]
-                ?: throw ParseException("Terminal RuntimeRule ${pattern} not found")
+                ?: throw ParserException("Terminal RuntimeRule ${pattern} not found")
         return this.runtimeRules[number]
     }
 

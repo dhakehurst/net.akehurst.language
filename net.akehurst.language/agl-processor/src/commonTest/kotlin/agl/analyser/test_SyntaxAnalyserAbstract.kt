@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.processor
+package net.akehurst.language.agl.analyser
 
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.test.Test
-import kotlin.test.fail
 
 class test_SyntaxAnalyserAbstract {
 

@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package net.akehurst.language.api.parser;
 
-package net.akehurst.language.api.analyser
+import net.akehurst.language.api.sppt.SharedPackedParseTree;
 
-class UnableToTransformSppt2AstExeception(message: String, cause: Throwable?) : Exception(message, cause) {
+class ParserException(message: String) : Exception(message) {
 
 }
+

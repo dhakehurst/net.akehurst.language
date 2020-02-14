@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.processor
+package net.akehurst.language.agl.analyser
 
 import net.akehurst.language.api.analyser.GrammarLoader
 import net.akehurst.language.api.sppt.SPPTBranch
@@ -22,7 +22,7 @@ import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.analyser.UnableToTransformSppt2AstExeception
+import net.akehurst.language.api.analyser.SyntaxAnalyserException
 
 typealias BranchHandler<T> = (SPPTBranch, List<SPPTBranch>, Any?) -> T
 
@@ -55,15 +55,15 @@ abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVis
                 this.register<T>(branchName, handler)
             } catch (e: Exception) {
             */
-                throw UnableToTransformSppt2AstExeception("Cannot find sppt2ast method named $branchName", null)
+                throw SyntaxAnalyserException("Cannot find sppt2ast method named $branchName", null)
             //}
 
         }
-        return handler ?: throw UnableToTransformSppt2AstExeception("Cannot find sppt2ast method named $branchName", null)
+        return handler ?: throw SyntaxAnalyserException("Cannot find sppt2ast method named $branchName", null)
     }
 
     protected fun <T> transform(branch: SPPTBranch, arg: Any?): T {
-        return this.transformOpt(branch, arg) ?: throw UnableToTransformSppt2AstExeception("cannot transform ${branch}", null)
+        return this.transformOpt(branch, arg) ?: throw SyntaxAnalyserException("cannot transform ${branch}", null)
     }
 
     protected fun <T> transformOpt(branch: SPPTBranch?, arg: Any?): T? {
@@ -84,14 +84,14 @@ abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVis
         val branchName = target.name
         val handler = this.findBranchHandler<Any>(branchName)
         if (null == handler) {
-            throw UnableToTransformSppt2AstExeception("Branch not handled in sppt2ast $branchName", null)
+            throw SyntaxAnalyserException("Branch not handled in sppt2ast $branchName", null)
         } else {
             val branchChildren = target.branchNonSkipChildren// .stream().map(it -> it.getIsEmpty() ? null :
             // it).collect(Collectors.toList());
             try {
                 return handler.invoke(target, branchChildren, arg)
             } catch (e: Exception) {
-                throw UnableToTransformSppt2AstExeception("Exception trying to transform ${target}",e)
+                throw SyntaxAnalyserException("Exception trying to transform ${target}",e)
             }
         }
 

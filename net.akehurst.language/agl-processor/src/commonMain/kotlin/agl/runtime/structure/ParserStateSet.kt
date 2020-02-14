@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.parser.ParserException
 
 class ParserStateSet(
 
@@ -64,7 +64,7 @@ class ParserStateSet(
     }
 */
     internal  fun fetch(rulePosition: RulePosition) :ParserState {
-        return this.states[rulePosition] ?: throw ParseException("should never be null")
+        return this.states[rulePosition] ?: throw ParserException("should never be null")
     }
 
 }

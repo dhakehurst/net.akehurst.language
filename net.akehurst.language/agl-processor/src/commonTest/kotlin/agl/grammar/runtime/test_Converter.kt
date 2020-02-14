@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.grammar.runtime
 
-import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.ast.GrammarBuilderDefault
@@ -54,7 +54,7 @@ class test_Converter {
         assertEquals(isSkip, r.isSkip)
         assertEquals(tag, r.tag)
         assertEquals(ptext, r.value)
-        assertFailsWith(ParseException::class) {
+        assertFailsWith(ParserException::class) {
             r.rhs
         }
     }

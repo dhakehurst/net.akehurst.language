@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.parser.ParserException
 
 
 /**
@@ -37,7 +37,8 @@ class RuntimeRuleItem(
   val choiceKind : RuntimeRuleChoiceKind,
   val multiMin : Int,
   val multiMax : Int,
-  val items : Array<out RuntimeRule>
+  val items : Array<out RuntimeRule>,
+  val embeddedRuntimeRuleSet: RuntimeRuleSet? = null
 ) {
 
     companion object {
@@ -51,8 +52,8 @@ class RuntimeRuleItem(
     }
 
     init {
-        if (this.items.isEmpty()) {
-            throw ParseException("RHS of a non terminal rule must contain some items")
+        if (this.items.isEmpty() && null==this.embeddedRuntimeRuleSet) {
+            throw ParserException("RHS of a non terminal rule must contain some items or contain an embedded RuleSet")
         }
     }
 
@@ -92,9 +93,9 @@ class RuntimeRuleItem(
             RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> emptyArray<RuntimeRule>() //TODO:
             RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> emptyArray<RuntimeRule>() //TODO:
             RuntimeRuleItemKind.UNORDERED -> emptyArray<RuntimeRule>() //TODO:
+            RuntimeRuleItemKind.EMBEDDED -> TODO()
         }
     }
-
 
     override fun toString(): String {
         val kindStr = when (this.kind) {
@@ -108,7 +109,7 @@ class RuntimeRuleItem(
             RuntimeRuleItemKind.MULTI -> "MULTI"
             RuntimeRuleItemKind.SEPARATED_LIST -> "SLIST"
             RuntimeRuleItemKind.EMPTY -> "EMPTY"
-            else -> throw ParseException("Unsupported at present")
+            else -> throw ParserException("Unsupported at present")
         }
         val itemsStr = items.map { "[${it.number}]" }.joinToString(" ")
         return "(${kindStr}) ${itemsStr}"

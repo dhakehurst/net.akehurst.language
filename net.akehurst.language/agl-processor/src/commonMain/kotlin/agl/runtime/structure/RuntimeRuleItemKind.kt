@@ -17,12 +17,13 @@
 package net.akehurst.language.agl.runtime.structure
 
 enum class RuntimeRuleItemKind {
-    EMPTY,                       // n : ;
-    CHOICE,                      // n : a | b | c ; (or other types of choice)
-    CONCATENATION,               // n : a b c ;
-    UNORDERED,                   // n : a & b & c ;                           TODO: support this
-    MULTI,                       // n : a? ; , n : a* ; n : a+ ; ,            TODO: n : a[0..5]
-    SEPARATED_LIST,              // n : [ a / ',' ]* ;  n : [ a / ',' ]+ ;    TODO: n : [ a / ',' ][0..6] ;
-    LEFT_ASSOCIATIVE_LIST,       // n : [ a < '+' ]* ;  n : [ a < ',' ]+ ;    TODO: support this
-    RIGHT_ASSOCIATIVE_LIST,      // n : [ a > '-' ]* ;  n : [ a > ',' ]+ ;    TODO: support this
+    EMPTY,                       // r = ;
+    CHOICE,                      // r = a | b | c ; (or other types of choice)
+    CONCATENATION,               // r = a b c ;
+    UNORDERED,                   // r = a & b & c ;                           TODO: support this
+    MULTI,                       // r = a? ; , n : a* ; n : a+ ; ,            TODO: n : a0..5
+    SEPARATED_LIST,              // r = [ a / ',' ]* ;  n : [ a / ',' ]+ ;    TODO: n : [ a / ',' ]0..6 ;
+    LEFT_ASSOCIATIVE_LIST,       // r = [ a < '+' ]* ;  n : [ a < ',' ]+ ;    TODO: support this
+    RIGHT_ASSOCIATIVE_LIST,      // r = [ a > '-' ]* ;  n : [ a > ',' ]+ ;    TODO: support this
+    EMBEDDED                     // embed r = ns.ns.Other ;
 }

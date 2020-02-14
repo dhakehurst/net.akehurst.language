@@ -16,6 +16,7 @@
 
 package net.akehurst.language.processor
 
+import net.akehurst.language.agl.analyser.SyntaxAnalyserSimple
 import net.akehurst.language.agl.grammar.runtime.ConverterToRuntimeRules
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.grammar.Grammar
@@ -26,7 +27,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.analyser.UnableToTransformSppt2AstExeception
+import net.akehurst.language.api.analyser.SyntaxAnalyserException
 import net.akehurst.language.parser.scannerless.Parser
 import net.akehurst.language.parser.scannerless.ScannerlessParser
 
@@ -57,13 +58,20 @@ internal class LanguageProcessorDefault(
         return sppt
     }
 
-    override fun <T> process(inputText: CharSequence): T = process(this.goalRuleName, inputText)
+    override fun <T> process(inputText: CharSequence): T = this.process(this.goalRuleName, inputText)
     override fun <T> process(goalRuleName: String, inputText: CharSequence): T {
         val sppt: SharedPackedParseTree = this.parse(goalRuleName, inputText)
-        if (null == this.syntaxAnalyser) {
-            throw UnableToTransformSppt2AstExeception("No Sppt2AstTransformer supplied", null);
+        return this.process(sppt)
+    }
+
+    override fun <T> process(sppt: SharedPackedParseTree): T {
+        val sa = if (null == this.syntaxAnalyser) {
+            // No SyntaxAnalyser supplied, using SyntaxAnalyserSimple TODO: warning!
+            SyntaxAnalyserSimple()
+        } else {
+            this.syntaxAnalyser
         }
-        val t: T = this.syntaxAnalyser.transform(sppt);
+        val t: T = sa.transform(sppt);
 
         return t;
     }

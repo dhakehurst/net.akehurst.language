@@ -39,8 +39,9 @@ class AglComponents {
     cssClassPrefix = 'tok';
     tokenToClassMap = new Map<string, string>();
 
-    sppt: agl.api.sppt.SharedPackedParseTree = null;
     processor: agl.api.processor.LanguageProcessor = null;
+    sppt: agl.api.sppt.SharedPackedParseTree = null;
+    asm: agl.api.analyser.AstElementSimple = null;
 }
 
 export class AglEditorAce {
@@ -60,7 +61,8 @@ export class AglEditorAce {
 
     private mode: any = null; //: ace.SyntaxMode = null;
     public editor: any; // ace.Editor;
-    errorMarkerIds = [];
+    errorParseMarkerIds = [];
+    errorProcessMarkerIds = [];
 
     agl = new AglComponents();
 
@@ -139,11 +141,20 @@ export class AglEditorAce {
         }
     }
 
+    doBackgroundTryProcess() {
+        if (typeof (Worker) !== "undefined") {
+            setTimeout(() => this.tryProcess(), 500)
+            //TODO: use web worker stuff
+        } else {
+            setTimeout(() => this.tryProcess(), 500)
+        }
+    }
+
     tryParse() {
         if (this.processor) {
             try {
                 this.editor.getSession().clearAnnotations();
-                this.errorMarkerIds.forEach( id => this.editor.getSession().removeMarker(id));
+                this.errorParseMarkerIds.forEach(id => this.editor.getSession().removeMarker(id));
 
                 if (this.goalRule) {
                     this.agl.sppt = this.processor.parseForGoal(this.goalRule, this.editor.getValue());
@@ -156,7 +167,7 @@ export class AglEditorAce {
                 //start getTokens from parse result
                 this.updateSyntax();
             } catch (e) {
-                if (e.name=='ParseFailedException') {
+                if (e.name == 'ParseFailedException') {
                     this.agl.sppt = null;
                     const event = document.createEvent("HTMLEvents");
                     event.initEvent('parseFailed', true, true);
@@ -167,23 +178,67 @@ export class AglEditorAce {
                     const errors = [];
                     errors.push(new AglErrorAnnotation(
                         e.location.line,
-                        e.location.column -1,
+                        e.location.column - 1,
                         "Syntax Error",
                         "error",
                         e.message
                     ));
                     this.editor.getSession().setAnnotations(errors);
-                    errors.forEach( e => {
-                        const range = new Range(e.row, e.column, e.row, e.column+1);
+                    errors.forEach(e => {
+                        const range = new Range(e.row, e.column, e.row, e.column + 1);
                         const cls = 'ace_marker_text_error';
                         const errMrkId = this.editor.getSession().addMarker(range, cls, 'text');
-                        this.errorMarkerIds.push(errMrkId);
+                        this.errorParseMarkerIds.push(errMrkId);
                     });
                 } else {
                     console.error("Error parsing text in " + this.editorId + ' for language ' + this.languageId, e.message);
                 }
             }
         }
+    }
+
+    tryProcess() {
+        if (this.processor && this.agl.sppt) {
+            try {
+                this.editor.getSession().clearAnnotations(); //assume there are no parse errors or there would be no sppt!
+                this.errorProcessMarkerIds.forEach(id => this.editor.getSession().removeMarker(id));
+
+                this.agl.asm = this.processor.processFromSPPT(this.agl.sppt);
+
+                const event = document.createEvent("HTMLEvents");
+                event.initEvent('processSuccess', true, true);
+                this.element.dispatchEvent(event);
+            } catch (e) {
+                if (e.name == 'SyntaxAnalyserException') {
+                    this.agl.sppt = null;
+                    const event = document.createEvent("HTMLEvents");
+                    event.initEvent('processFailed', true, true);
+                    this.element.dispatchEvent(event);
+
+                    console.error("Error processing parse result in " + this.editorId + ' for language ' + this.languageId, e.message);
+                    /*
+                    const errors = [];
+                    errors.push(new AglErrorAnnotation(
+                        e.location.line,
+                        e.location.column - 1,
+                        "Syntax Error",
+                        "error",
+                        e.message
+                    ));
+                    this.editor.getSession().setAnnotations(errors);
+                    errors.forEach(e => {
+                        const range = new Range(e.row, e.column, e.row, e.column + 1);
+                        const cls = 'ace_marker_text_error';
+                        const errMrkId = this.editor.getSession().addMarker(range, cls, 'text');
+                        this.errorProcessMarkerIds.push(errMrkId);
+                    });
+                     */
+                } else {
+                    console.error("Error processing parse result in " + this.editorId + ' for language ' + this.languageId, e.message);
+                }
+            }
+        }
+
     }
 
     updateSyntax() {
@@ -247,7 +302,7 @@ class AglErrorAnnotation {
         public type: string,
         public raw: string,
     ) {
-        this.row = line-1;
+        this.row = line - 1;
     }
 }
 

@@ -44,6 +44,8 @@ interface LanguageProcessor {
     @JsName("processForGoal")
     fun <T> process(goalRuleName: String, inputText: CharSequence): T
 
+    @JsName("processFromSPPT")
+    fun <T> process(sppt: SharedPackedParseTree): T
 
     @JsName("formatText")
     fun <T> format(inputText: CharSequence): String

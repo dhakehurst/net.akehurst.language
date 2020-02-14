@@ -32,5 +32,11 @@ private fun createRules(): List<Rule> {
     b.skip("WHITESPACE").concatenation(b.terminalPattern("\\s+"));
     b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/"));
     b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//.*?$"));
+
+    b.rule("rules").multi(0,-1, b.nonTerminal("rule"))
+    b.rule("rule").concatenation(b.nonTerminal("IDENTIFIER"), b.terminalLiteral("{"), b.terminalLiteral("}"))
+
+    b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
+
     return b.grammar.rule
 }

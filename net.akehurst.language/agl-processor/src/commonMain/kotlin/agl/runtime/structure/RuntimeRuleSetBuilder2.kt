@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.parser.ParserException
 
 fun runtimeRuleSet(init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
     val b = RuntimeRuleSetBuilder2()
@@ -62,9 +62,15 @@ class RuntimeRuleSetBuilder2() {
 
     fun ruleSet(): RuntimeRuleSet {
         if (null == this.runtimeRuleSet) {
+            //validate
+            this.rules.forEach { rule ->
+               if (rule.isNonTerminal && rule.rhsOpt==null) {
+                   throw ParserException("Invalid Rule ${rule.tag}")
+               }
+            }
             this.runtimeRuleSet = RuntimeRuleSet(this.rules)
         }
-        return this.runtimeRuleSet ?: throw ParseException("Should never happen")
+        return this.runtimeRuleSet ?: throw ParserException("Should never happen")
     }
 
     fun skip(name: String, init: RuntimeRuleBuilder2.() -> Unit): RuntimeRule {
@@ -101,6 +107,20 @@ class RuntimeRuleSetBuilder2() {
         return rr
     }
 
+    fun embedded(name: String, embeddedRuleSet: RuntimeRuleSet): RuntimeRule {
+        val existing = this.rules.firstOrNull { it.tag == name }
+        val rule = if (null == existing) {
+            val rr = RuntimeRule(this.rules.size, name, "", RuntimeRuleKind.NON_TERMINAL, false, false)
+            this.rules.add(rr)
+            rr
+        } else {
+            existing
+        }
+
+        val rhs = RuntimeRuleItem(RuntimeRuleItemKind.EMBEDDED, RuntimeRuleChoiceKind.NONE, -1, 0, emptyArray(), embeddedRuleSet)
+        rule.rhsOpt = rhs
+        return rule
+    }
 }
 
 class RuntimeRuleBuilder2(

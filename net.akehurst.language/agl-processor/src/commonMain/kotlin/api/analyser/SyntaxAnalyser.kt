@@ -18,6 +18,10 @@ package net.akehurst.language.api.analyser
 
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
+class SyntaxAnalyserException(message: String, cause: Throwable?) : Exception(message, cause) {
+
+}
+
 /**
  *
  * A Syntax Analyser converts a Parse Tree (in this case a SharedPackedParseTree) into a "Syntax Tree/Model".

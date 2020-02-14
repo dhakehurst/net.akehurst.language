@@ -15,12 +15,13 @@
  */
 package net.akehurst.language.agl.grammar.style
 
+import net.akehurst.language.agl.analyser.BranchHandler
+import net.akehurst.language.agl.analyser.SyntaxAnalyserAbstract
 import net.akehurst.language.api.style.AglStyle
 import net.akehurst.language.api.style.AglStyleRule
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.processor.BranchHandler
-import net.akehurst.language.processor.SyntaxAnalyserAbstract
+
 
 class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
 

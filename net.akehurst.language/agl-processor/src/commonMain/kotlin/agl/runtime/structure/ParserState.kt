@@ -31,9 +31,6 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.api.grammar.Rule
-import net.akehurst.language.api.parser.ParseException
-
 data class ParentRelation(
         val rulePosition: RulePosition,
         val lookahead: Set<RuntimeRule>

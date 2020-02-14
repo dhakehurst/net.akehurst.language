@@ -1,11 +1,15 @@
 import './ace.css'
 import './index.css'
-import {TabView} from "./TabView.js"
+import {TabView} from './TabView.js';
 import {AglEditorAce} from 'net.akehurst.language.editor-agl-ace'
 import * as agl_js from 'net.akehurst.language-agl-processor';
 import agl = agl_js.net.akehurst.language;
 import {TreeView} from "./TreeView";
-import {Examples} from "./examples";
+
+import './examples/classes';
+import './examples/agl-grammar';
+import {Examples} from './examples/examples';
+
 
 const Agl = agl.processor.Agl;
 
@@ -127,6 +131,60 @@ sentenceEditor.element.addEventListener('parseSuccess', e => {
                 label : n => n.name,
                 hasChildren: n => n.isBranch,
                 children : n => n.children.toArray()
+            }
+        );
+        sentenceEditor.doBackgroundTryProcess()
+    }
+});
+
+sentenceEditor.element.addEventListener('processSuccess', e => {
+
+    if (sentenceEditor.agl.asm) {
+        const asm = sentenceEditor.agl.asm;
+        const tree = trees.get("asm");
+        const root = tree.root;
+        tree.setRoot(
+            asm,
+            {
+                label : n => {
+                    if (n instanceof agl.api.analyser.AsmElementSimple) {
+                        return ':' + n.typeName;
+                    } else if (n instanceof agl.api.analyser.AsmElementProperty) {
+                        if (n.value instanceof agl.api.analyser.AsmElementSimple) {
+                            return n.name + ":" + n.value.typeName;
+                        } else {
+                            return n.name;
+                        }
+                    } else {
+                        return n.toString();
+                    }
+                },
+                hasChildren: n => {
+                    if (n instanceof agl.api.analyser.AsmElementSimple) {
+                        return !n.properties.isEmpty();
+                    } else if (n instanceof agl.api.analyser.AsmElementProperty) {
+                        if (n.value instanceof agl.api.analyser.AsmElementSimple) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                },
+                children : n => {
+                    if (n instanceof agl.api.analyser.AsmElementSimple) {
+                        return n.properties.toArray();
+                    } else if (n instanceof agl.api.analyser.AsmElementProperty) {
+                        if (n.value instanceof agl.api.analyser.AsmElementSimple) {
+                            return n.value.properties.toArray();
+                        } else {
+                            return [];
+                        }
+                    } else {
+                        return [];
+                    }
+                },
             }
         );
     }

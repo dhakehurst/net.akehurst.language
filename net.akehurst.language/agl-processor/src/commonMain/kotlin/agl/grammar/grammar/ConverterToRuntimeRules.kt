@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.grammar.runtime
 
 import net.akehurst.language.api.grammar.*
-import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.api.processor.LanguageProcessorException
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.analyser.GrammarExeception
@@ -157,13 +157,13 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
                 RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, arrayOf(item))
             }
             else -> {
-                throw ParseException("Not supported (yet)!")
+                throw ParserException("Not supported (yet)!")
             }
         }
     }
 
     override fun visit(target: EmptyRule, arg: String): RuntimeRule {
-        val ruleThatIsEmpty = this.findRule(arg) ?: throw ParseException("Internal Error: should not happen")
+        val ruleThatIsEmpty = this.findRule(arg) ?: throw ParserException("Internal Error: should not happen")
         val e = this.builder.empty(ruleThatIsEmpty)
         this.map.put(e, target)
         return e

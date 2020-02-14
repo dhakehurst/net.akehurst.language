@@ -1,90 +1,9 @@
-export class Example {
+import {Examples} from "./examples";
 
-    constructor(
-        public id: string,
-        public label: string,
-        public sentence: string,
-        public grammar: string,
-        public style: string,
-        public format: string
-    ) {
-    }
-}
+const id = 'agl-grammar';
+const label = 'Agl Grammar';
 
-export class Examples {
-
-    static initialise(selectEl) {
-        Examples.list.forEach(eg => {
-            Examples.map.set(eg.id, eg);
-            let option = document.createElement('option');
-            selectEl.appendChild(option);
-            option.setAttribute('value', eg.id);
-            option.textContent = eg.label;
-        });
-    }
-
-    static map = new Map<string, Example>();
-    static list = [
-        new Example(
-            'classes',
-            'Classes',
-            `
-class Person {
-    name: String
-    dob: Date
-    friends: List<Person>
-}
-class class {
-    prop: String
-}
-`,
-            `
-namespace test
-
-grammar Test {
-    skip WS = "\\s+" ;
-
-    unit = declaration* ;
-    declaration = 'class' ID '{' property* '}' ;
-    property = ID ':' typeReference ;
-    typeReference = ID typeArguments? ;
-    typeArguments = '<' [typeReference / ',']+ '>' ;
-
-    leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
-
-}
-`,
-            `
-'class' {
-  color: purple;
-  font-weight: bold;
-}
-ID {
-  color: red;
-  font-style: italic;
-}
-'{' {
-  color: darkgreen;
-  font-weight: bold;
-}
-'}' {
-  color: darkgreen;
-  font-weight: bold;
-}
-property {
-  background-color: lightgray;
-}
-typeReference {
-  background-color: lightblue;
-}
-`,
-            `
-`
-        ),
-        new Example(
-            'agl-grammar',
-            'AGL Grammar',
-            `
+const sentence = `
 namespace test
 
 grammar Test {
@@ -99,8 +18,8 @@ grammar Test {
     leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
 
 }
-            `,
-            `
+`;
+const grammar = `
 /**
  * Copyright (C) 2015 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
@@ -150,8 +69,8 @@ grammar Agl {
   LITERAL = "'(?:\\\\?.)*?'" ;
   PATTERN = "\\"(?:\\\\?.)*?\\"" ;
 }
-            `,
-            `
+`;
+const style = `
 'namespace' {
   color: darkgreen;
   font-weight: bold;
@@ -178,9 +97,8 @@ IDENTIFIER {
   color: darkred;
   font-style: italic;
 }
-`,
-            ``
-        )
-    ];
+`;
+const format = `
+`;
 
-}
+Examples.add(id, label, sentence, grammar, style, format);

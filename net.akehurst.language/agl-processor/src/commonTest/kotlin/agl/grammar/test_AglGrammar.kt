@@ -450,4 +450,21 @@ class test_AglGrammar {
 
         assertNotNull(p)
     }
+
+    @Test
+    fun embedded() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test1 {
+                S = A gB A ;
+                leaf A = 'A' ;
+                grammar gB = test.Test2 ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+        assertNotNull(p)
+    }
 }

@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.collections.transitveClosure
 import net.akehurst.language.parser.scannerless.InputFromCharSequence
 
@@ -32,7 +32,7 @@ class RuntimeRule(
     var rhsOpt: RuntimeRuleItem? = null
 
     val rhs: RuntimeRuleItem by lazy {
-        this.rhsOpt ?: throw ParseException("rhs must have a value: ${this}")
+        this.rhsOpt ?: throw ParserException("rhs must have a value: ${this}")
     }
 
     val emptyRuleItem: RuntimeRule
@@ -41,7 +41,7 @@ class RuntimeRule(
                 this.rhs.kind == RuntimeRuleItemKind.MULTI && 0 == this.rhs.multiMin -> this.rhs.MULTI__emptyRule
                 this.rhs.kind == RuntimeRuleItemKind.SEPARATED_LIST && 0 == this.rhs.multiMin -> this.rhs.SLIST__emptyRule
                 this.rhs.items[0].isEmptyRule -> this.rhs.EMPTY__ruleThatIsEmpty
-                else -> throw ParseException("this rule cannot be empty and has no emptyRuleItem")
+                else -> throw ParserException("this rule cannot be empty and has no emptyRuleItem")
             }
         }
 
@@ -72,6 +72,7 @@ class RuntimeRule(
                 RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> 3
                 RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> 3
                 RuntimeRuleItemKind.UNORDERED -> rhs.items.size
+                RuntimeRuleItemKind.EMBEDDED -> TODO()
             }
         }
     }
@@ -130,6 +131,7 @@ class RuntimeRule(
                     }
                     RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> TODO()
                     RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
+                    RuntimeRuleItemKind.EMBEDDED -> TODO()
                 }
             }
         }
@@ -137,10 +139,6 @@ class RuntimeRule(
     val rulePositionsAt = lazyMapNonNull<Int,Set<RulePosition>> {index ->
         this.calcExpectedRulePositions(index)
     }
-
-//    val nextExpectedItems by lazy { lazyArray(rhs.items.size,{
-//        this.findNextExpectedItems(it)
-//    })}
 
     val itemsAt by lazy {
         lazyArray(numberOfRulePositions) { index ->
@@ -249,6 +247,7 @@ class RuntimeRule(
                 RuntimeRuleItemKind.SEPARATED_LIST -> setOf(rhs.items[choice])
                 RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> TODO()
                 RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
+                RuntimeRuleItemKind.EMBEDDED -> TODO()
             }
         }
     }
@@ -465,6 +464,11 @@ class RuntimeRule(
                         else -> emptySet<RulePosition>()
                     }
                 }
+                RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> TODO()
+                RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
+                RuntimeRuleItemKind.EMBEDDED -> {
+                    TODO()
+                }
                 else -> throw RuntimeException("Internal Error: rule kind not recognised")
             }
         }
@@ -608,6 +612,7 @@ class RuntimeRule(
     override fun toString(): String {
         return "[$number]" + when {
             this.isEmptyRule -> " ($tag)"
+            this.isNonTerminal && this.rhs.kind==RuntimeRuleItemKind.EMBEDDED -> " ($tag) = EMBEDDED"
             this.isNonTerminal -> " ($tag) = " + this.rhs
             this.isPattern -> if(this.tag==this.value) "\"${this.value}\"" else "${this.tag}(\"${this.value}\")"
             this.value == InputFromCharSequence.END_OF_TEXT -> " <EOT>"

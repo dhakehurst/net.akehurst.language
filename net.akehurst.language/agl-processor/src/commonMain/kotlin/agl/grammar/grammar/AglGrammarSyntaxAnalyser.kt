@@ -16,14 +16,15 @@
 
 package net.akehurst.language.agl.sppt2ast
 
+import net.akehurst.language.agl.analyser.BranchHandler
+import net.akehurst.language.agl.analyser.SyntaxAnalyserAbstract
 import net.akehurst.language.api.analyser.GrammarLoader
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.analyser.UnableToTransformSppt2AstExeception
+import net.akehurst.language.api.analyser.SyntaxAnalyserException
 import net.akehurst.language.agl.ast.*
-import net.akehurst.language.processor.BranchHandler
-import net.akehurst.language.processor.SyntaxAnalyserAbstract
+
 
 class AglGrammarSyntaxAnalyser(
         val grammarRegistry: GrammarRegistry
@@ -215,7 +216,7 @@ class AglGrammarSyntaxAnalyser(
                         val max = multArgs[2].nonSkipMatchedText.toInt()
                         Pair(min,max)
                     }
-                    else -> throw UnableToTransformSppt2AstExeception("cannot transform ${target}", null)
+                    else -> throw SyntaxAnalyserException("cannot transform ${target}", null)
                 }
             }
 

@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.api.parser.ParseException
+import net.akehurst.language.api.parser.ParserException
 import kotlin.test.*
 
 class test_RuntimeRuleSetBuilder {
@@ -37,10 +37,10 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(false, actual.runtimeRules[0].isPattern)
         assertEquals(false, actual.runtimeRules[0].isSkip)
         assertEquals(null, actual.runtimeRules[0].rhsOpt)
-        assertFailsWith(ParseException::class) {
+        assertFailsWith(ParserException::class) {
             actual.runtimeRules[0].rhs
         }
-        assertFailsWith(ParseException::class) {
+        assertFailsWith(ParserException::class) {
             actual.runtimeRules[0].ruleThatIsEmpty
         }
     }
@@ -60,7 +60,7 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(true, actual.runtimeRules[0].isPattern)
         assertEquals(false, actual.runtimeRules[0].isSkip)
         assertEquals(null, actual.runtimeRules[0].rhsOpt)
-        assertFailsWith(ParseException::class) {
+        assertFailsWith(ParserException::class) {
             actual.runtimeRules[0].ruleThatIsEmpty
         }
     }
@@ -134,7 +134,7 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(0, actual.runtimeRules[3].rhs.multiMin)
         assertEquals(0, actual.runtimeRules[3].rhs.multiMax)
         assertEquals(r0, actual.runtimeRules[3].rhs.items.get(0))
-        assertFailsWith(ParseException::class) {
+        assertFailsWith(ParserException::class) {
             actual.runtimeRules[3].emptyRuleItem
         }
     }
@@ -163,7 +163,7 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(0, actual.runtimeRules[3].rhs.multiMin)
         assertEquals(0, actual.runtimeRules[3].rhs.multiMax)
         assertEquals(r0, actual.runtimeRules[3].rhs.items.get(0))
-        assertFailsWith(ParseException::class) {
+        assertFailsWith(ParserException::class) {
             actual.runtimeRules[3].emptyRuleItem
         }
     }
@@ -192,7 +192,7 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(0, actual.runtimeRules[3].rhs.multiMin)
         assertEquals(0, actual.runtimeRules[3].rhs.multiMax)
         assertEquals(r0, actual.runtimeRules[3].rhs.items.get(0))
-        assertFailsWith(ParseException::class) {
+        assertFailsWith(ParserException::class) {
             actual.runtimeRules[3].emptyRuleItem
         }
     }
@@ -218,7 +218,7 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(1, actual.runtimeRules[1].rhs.multiMin)
         assertEquals(-1, actual.runtimeRules[1].rhs.multiMax)
         assertEquals(r0, actual.runtimeRules[1].rhs.items.get(0))
-        assertFailsWith(ParseException::class) {
+        assertFailsWith(ParserException::class) {
             actual.runtimeRules[1].emptyRuleItem
         }
     }
@@ -230,13 +230,13 @@ class test_RuntimeRuleSetBuilder {
         val actual = sut.ruleSet()
 
         assertNotNull(actual)
-        assertFailsWith(ParseException::class) {
+        assertFailsWith(ParserException::class) {
             sut.literal("a")
         }
-        assertFailsWith(ParseException::class) {
+        assertFailsWith(ParserException::class) {
             sut.pattern("[a-z]")
         }
-        assertFailsWith(ParseException::class) {
+        assertFailsWith(ParserException::class) {
             sut.rule("a").empty()
         }
 
