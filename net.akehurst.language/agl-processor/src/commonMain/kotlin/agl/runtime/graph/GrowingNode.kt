@@ -21,8 +21,8 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SPPTNode
 
 class GrowingNode(
-        val isSkipGrowth : Boolean,
-        val currentState : ParserState, // current rp of this node, it is growing, this changes (for new node) when children are added
+        val isSkipGrowth: Boolean,
+        val currentState: ParserState, // current rp of this node, it is growing, this changes (for new node) when children are added
         val location: InputLocation,
         val nextInputPosition: Int,
         val priority: Int,
@@ -33,25 +33,24 @@ class GrowingNode(
     private val hashCode_cache = arrayOf(this.currentState, this.location.position).contentHashCode()
 
     val startPosition = location.position
-    val matchedTextLength:Int = this.nextInputPosition - this.startPosition
+    val matchedTextLength: Int = this.nextInputPosition - this.startPosition
     val runtimeRule get() = currentState.runtimeRule
     var skipNodes = mutableListOf<SPPTNode>()
-    val lastLocation get() = if(this.runtimeRule.isTerminal) {
-        if (this.skipNodes.isEmpty()) this.location else this.skipNodes.last().location
-    } else {
-        if (children.isEmpty()) this.location else children.last().location
-    }
+    val lastLocation
+        get() = when (this.runtimeRule.kind) {
+            RuntimeRuleKind.TERMINAL -> if (this.skipNodes.isEmpty()) this.location else this.skipNodes.last().location
+            RuntimeRuleKind.GOAL,
+            RuntimeRuleKind.NON_TERMINAL -> if (children.isEmpty()) this.location else children.last().location
+            RuntimeRuleKind.EMBEDDED -> TODO()
+        }
+
 
     var previous: MutableMap<GrowingNodeIndex, PreviousInfo> = mutableMapOf()
     val next: MutableList<GrowingNode> = mutableListOf()
     val hasCompleteChildren: Boolean get() = this.currentState.isAtEnd //this.runtimeRule.isCompleteChildren(currentState.position, numNonSkipChildren, children)
     val isLeaf: Boolean
         get() {
-            return this.runtimeRule.isTerminal
-        }
-    val isBranch: Boolean
-        get() {
-            return this.runtimeRule.isNonTerminal
+            return this.runtimeRule.kind == RuntimeRuleKind.TERMINAL
         }
     val isEmptyMatch: Boolean
         get() {
@@ -61,7 +60,7 @@ class GrowingNode(
 
     val canGrowWidth: Boolean by lazy {
         // not sure we need the test for isEmpty, because if it is empty it should be complete or NOT!???
-        if (this.isLeaf or this.isEmptyMatch ) {//or this.hasCompleteChildren) {
+        if (this.isLeaf or this.isEmptyMatch) {//or this.hasCompleteChildren) {
             false
         } else {
             this.runtimeRule.canGrowWidth(this.currentState.position)
@@ -78,9 +77,10 @@ class GrowingNode(
         this.runtimeRule.findNextExpectedItems(this.currentState.position)
     }
 
-    val incrementedNextItemIndex: Int get(){
-        return this.runtimeRule.incrementNextItemIndex(this.currentState.position)
-    }
+    val incrementedNextItemIndex: Int
+        get() {
+            return this.runtimeRule.incrementNextItemIndex(this.currentState.position)
+        }
 
 
     fun expectsItemAt(runtimeRule: RuntimeRule, atPosition: Int): Boolean {
@@ -90,15 +90,17 @@ class GrowingNode(
     fun newPrevious() {
         this.previous = mutableMapOf()
     }
+
     fun addPrevious(info: PreviousInfo) {
         val gi = GrowingNodeIndex(info.node.currentState, info.node.startPosition, info.node.nextInputPosition, info.node.priority)
-        this.previous.put(gi,info)
+        this.previous.put(gi, info)
         info.node.addNext(this)
     }
+
     fun addPrevious(previousNode: GrowingNode) {
         val info = PreviousInfo(previousNode)
         val gi = GrowingNodeIndex(previousNode.currentState, previousNode.startPosition, previousNode.nextInputPosition, previousNode.priority)
-        this.previous.put(gi,info)
+        this.previous.put(gi, info)
         previousNode.addNext(this)
     }
 
@@ -122,7 +124,7 @@ class GrowingNode(
             } else {
                 r += "{"
                 for (c in this.children) {
-    //TODO:                r += c.accept(ParseTreeToSingleLineTreeString(), null)
+                    //TODO:                r += c.accept(ParseTreeToSingleLineTreeString(), null)
                 }
                 if (this.hasCompleteChildren) {
                     r += "}"

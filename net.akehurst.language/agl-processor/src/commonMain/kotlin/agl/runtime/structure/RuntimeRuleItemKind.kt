@@ -25,5 +25,4 @@ enum class RuntimeRuleItemKind {
     SEPARATED_LIST,              // r = [ a / ',' ]* ;  n : [ a / ',' ]+ ;    TODO: n : [ a / ',' ]0..6 ;
     LEFT_ASSOCIATIVE_LIST,       // r = [ a < '+' ]* ;  n : [ a < ',' ]+ ;    TODO: support this
     RIGHT_ASSOCIATIVE_LIST,      // r = [ a > '-' ]* ;  n : [ a > ',' ]+ ;    TODO: support this
-    EMBEDDED                     // embed r = ns.ns.Other ;
 }

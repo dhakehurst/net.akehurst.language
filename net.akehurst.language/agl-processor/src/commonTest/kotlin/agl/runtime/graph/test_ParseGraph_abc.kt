@@ -53,7 +53,7 @@ class test_ParseGraph_abc {
         val startState = rrs.startingState(r_S)
         sut.start(startState)
 
-        assertEquals(true, gr.isGoal)
+        assertEquals(RuntimeRuleKind.GOAL, gr.kind)
         assertEquals(true, sut.canGrow)
         assertEquals(1, sut.growingHead.values.size)
 

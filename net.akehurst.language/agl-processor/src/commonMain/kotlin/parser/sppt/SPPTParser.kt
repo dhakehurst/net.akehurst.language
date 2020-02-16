@@ -125,7 +125,8 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
                 scanner.hasNext(EMPTY) -> { //must do this before NAME, as EMPTY is also a valid NAME
                     val empty = scanner.next(EMPTY)
                     val ruleStartThatIsEmpty = nodeNamesStack.peek()
-                    val emptyNode = this.emptyLeaf(ruleStartThatIsEmpty.name, sentenceLocation)
+                    val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, 0)
+                    val emptyNode = this.emptyLeaf(ruleStartThatIsEmpty.name, location)
                     childrenStack.peek().add(emptyNode)
                 }
                 scanner.hasNext(NAME) -> {

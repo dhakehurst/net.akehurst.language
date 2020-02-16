@@ -38,6 +38,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
     private val terminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
+    private val embeddedRuleNumber: MutableMap<String, Int> = mutableMapOf()
 
     //TODO: are Arrays faster than Lists?
     val runtimeRules: Array<out RuntimeRule> by lazy {
@@ -48,6 +49,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         this.runtimeRules.filter { it.isSkip }.toTypedArray()
     }
 
+    /*
+    // used to add to lookahead
     val allSkipTerminals: Array<RuntimeRule> by lazy {
         this.allSkipRules.flatMap {
             if (it.isTerminal)
@@ -56,32 +59,46 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 it.rhs.items.filter { it.isTerminal }
         }.toTypedArray()
     }
+    */
+    // used to add to lookahead
+    val firstSkipTerminals: Array<RuntimeRule> by lazy {
+        this.allSkipRules.flatMap {
+            firstTerminals[it.number]
+        }.toTypedArray()
+    }
 
+    /*
     val isSkipTerminal: Array<Boolean> by lazy {
         this.runtimeRules.map {
             this.calcIsSkipTerminal(it)
         }.toTypedArray()
     }
-
+*/
     val allNonSkipRules: Array<RuntimeRule> by lazy {
         this.runtimeRules.filter { it.isSkip.not() }.toTypedArray()
     }
 
+    // used if scanning with no skip
     val allNonSkipTerminals: Array<RuntimeRule> by lazy {
         this.allNonSkipRules.flatMap {
-            if (it.isTerminal)
-                listOf(it)
-            else
-                it.rhs.items.filter { it.isTerminal }
+            when (it.kind) {
+                RuntimeRuleKind.GOAL -> emptyList()
+                RuntimeRuleKind.TERMINAL -> listOf(it)
+                RuntimeRuleKind.NON_TERMINAL -> emptyList()//it.rhs.items.filter { it.kind == RuntimeRuleKind.TERMINAL }
+                RuntimeRuleKind.EMBEDDED -> it.embeddedRuntimeRuleSet!!.allNonSkipTerminals.toList()
+            }
         }.toTypedArray()
     }
 
+    // used if scanning
     val terminalRules: Array<RuntimeRule> by lazy {
-        this.runtimeRules.mapNotNull {
-            if (it.isTerminal)
-                it
-            else
-                null
+        this.runtimeRules.flatMap {
+            when (it.kind) {
+                RuntimeRuleKind.GOAL -> emptyList()
+                RuntimeRuleKind.TERMINAL -> listOf(it)
+                RuntimeRuleKind.NON_TERMINAL -> emptyList()
+                RuntimeRuleKind.EMBEDDED -> it.embeddedRuntimeRuleSet!!.terminalRules.toList()
+            }
         }.toTypedArray()
     }
 
@@ -121,10 +138,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     init {
         for (rr in rules) {
-            if (rr.isNonTerminal) {
-                this.nonTerminalRuleNumber[rr.tag] = rr.number
-            } else {
-                this.terminalRuleNumber[rr.tag] = rr.number
+            when (rr.kind) {
+                RuntimeRuleKind.GOAL -> { /*do nothing*/
+                }
+                RuntimeRuleKind.TERMINAL -> this.terminalRuleNumber[rr.tag] = rr.number
+                RuntimeRuleKind.NON_TERMINAL -> this.nonTerminalRuleNumber[rr.tag] = rr.number
+                RuntimeRuleKind.EMBEDDED -> this.embeddedRuleNumber[rr.tag] = rr.number
             }
         }
     }
@@ -272,52 +291,59 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     private fun calcLookahead(parent: RulePositionWithLookahead?, childRP: RulePosition, ifEmpty: Set<RuntimeRule>): Set<RuntimeRule> {
-        return if (childRP.isAtEnd) {
-            // lh should be FIRST of next item in parent, so it can be tested against this childRP
-            if (null == parent) {
-                ifEmpty
-            } else {
-                if (parent.isAtEnd) {
-                    parent.lookahead
+        return when {
+            childRP.runtimeRule.kind == RuntimeRuleKind.EMBEDDED -> {
+                val rr = childRP.runtimeRule
+                rr.embeddedRuntimeRuleSet!!.firstTerminals[rr.embeddedStartRule!!.number]
+            }
+            childRP.isAtEnd -> {
+                // lh should be FIRST of next item in parent, so it can be tested against this childRP
+                if (null == parent) {
+                    ifEmpty
                 } else {
-                    val nextRPs = parent.rulePosition.next()//nextRulePosition(parent.rulePosition, childRP.runtimeRule)
-                    nextRPs.flatMap { nextRP ->
-                        if (nextRP.isAtEnd) {
-                            calcLookahead(null, parent.rulePosition, parent.lookahead)
+                    if (parent.isAtEnd) {
+                        parent.lookahead
+                    } else {
+                        val nextRPs = parent.rulePosition.next()//nextRulePosition(parent.rulePosition, childRP.runtimeRule)
+                        nextRPs.flatMap { nextRP ->
+                            if (nextRP.isAtEnd) {
+                                calcLookahead(null, parent.rulePosition, parent.lookahead)
+                            } else {
+                                val lh: Set<RuntimeRule> = this.firstTerminals2[nextRP] ?: throw ParserException("should never happen")
+                                if (lh.isEmpty()) {
+                                    throw ParserException("should never happen")
+                                } else {
+                                    lh
+                                }
+                            }
+                        }.toSet()
+                    }
+                }
+            }
+            else -> {
+                //this childRP will not itself be applied to Height or GRAFT,
+                // however it should carry the FIRST of next in the child,
+                // so that this childs children can use it if needed
+                childRP.items.flatMap { fstChildItem ->
+                    val nextRPs = childRP.next() //nextRulePosition(childRP, fstChildItem)
+                    nextRPs.flatMap { nextChildRP ->
+                        if (nextChildRP.isAtEnd) {
+                            if (null == parent) {
+                                ifEmpty
+                            } else {
+                                calcLookahead(null, parent.rulePosition, parent.lookahead)
+                            }
                         } else {
-                            val lh: Set<RuntimeRule> = this.firstTerminals2[nextRP] ?: throw ParserException("should never happen")
+                            val lh: Set<RuntimeRule> = this.firstTerminals2[nextChildRP] ?: throw ParserException("should never happen")
                             if (lh.isEmpty()) {
                                 throw ParserException("should never happen")
                             } else {
                                 lh
                             }
                         }
-                    }.toSet()
-                }
-            }
-        } else {
-            //this childRP will not itself be applied to Height or GRAFT,
-            // however it should carry the FIRST of next in the child,
-            // so that this childs children can use it if needed
-            childRP.items.flatMap { fstChildItem ->
-                val nextRPs = childRP.next() //nextRulePosition(childRP, fstChildItem)
-                nextRPs.flatMap { nextChildRP ->
-                    if (nextChildRP.isAtEnd) {
-                        if (null == parent) {
-                            ifEmpty
-                        } else {
-                            calcLookahead(null, parent.rulePosition, parent.lookahead)
-                        }
-                    } else {
-                        val lh: Set<RuntimeRule> = this.firstTerminals2[nextChildRP] ?: throw ParserException("should never happen")
-                        if (lh.isEmpty()) {
-                            throw ParserException("should never happen")
-                        } else {
-                            lh
-                        }
                     }
-                }
-            }.toSet()
+                }.toSet()
+            }
         }
     }
 
@@ -582,7 +608,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val widthTransitions = mutableSetOf<Transition>()
         val goalTransitions = mutableSetOf<Transition>()
 
-        val goal = from.runtimeRule.isGoal && from.isAtEnd
+        val goal = from.runtimeRule.kind==RuntimeRuleKind.GOAL && from.isAtEnd
         if (goal) {
             val action = Transition.ParseAction.GOAL
             val to = from
@@ -597,7 +623,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 } else {
                     val filteredRelations = from.parentRelations.filter { pr -> this.canGrowInto(pr, previous) }
                     for (parentRelation in filteredRelations) {
-                        if (parentRelation.rulePosition.runtimeRule.isGoal) {
+                        if (parentRelation.rulePosition.runtimeRule.kind==RuntimeRuleKind.GOAL) {
                             graftTransitions += this.createGraftTransition(from, parentRelation, previous)
                         } else {
                             val height = parentRelation.rulePosition.isAtStart
@@ -618,10 +644,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 if (parentRelations.isEmpty()) {
                     val closure = this.createClosure(from, null)
                     for (closureRPlh in closure.content) {
-                        val width = closureRPlh.runtimeRule.isTerminal
-
-                        if (width) {
-                            widthTransitions += this.createWidthTransition(from, closureRPlh)
+                        when ( closureRPlh.runtimeRule.kind) {
+                            RuntimeRuleKind.TERMINAL -> widthTransitions += this.createWidthTransition(from, closureRPlh)
                         }
                     }
                 } else {
@@ -629,10 +653,8 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     for (parentRelation in filteredRelations) {
                         val closure = this.createClosure(from, parentRelation)
                         for (closureRPlh in closure.content) {
-                            val width = closureRPlh.runtimeRule.isTerminal
-
-                            if (width) {
-                                widthTransitions += this.createWidthTransition(from, closureRPlh)
+                            when ( closureRPlh.runtimeRule.kind) {
+                                RuntimeRuleKind.TERMINAL -> widthTransitions += this.createWidthTransition(from, closureRPlh)
                             }
                         }
                     }
@@ -738,16 +760,18 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             if (RulePosition.END_OF_RULE == rp.position) {
                 emptySet()
             } else {
-                if (rp.runtimeRule.isTerminal) {
-                    emptySet<RulePosition>()
-                } else {
-                    rp.runtimeRule.items(rp.choice, rp.position).flatMap {
-                        if (it.isTerminal) {
-                            setOf(rp)
-                        } else {
-                            it.calcExpectedRulePositions(0)
+                when (rp.runtimeRule.kind) {
+                    RuntimeRuleKind.TERMINAL -> emptySet<RulePosition>()
+                    RuntimeRuleKind.GOAL,
+                    RuntimeRuleKind.NON_TERMINAL  -> rp.runtimeRule.items(rp.choice, rp.position).flatMap {
+                        when (it.kind) {
+                            RuntimeRuleKind.GOAL -> TODO()
+                            RuntimeRuleKind.TERMINAL -> setOf(rp)
+                            RuntimeRuleKind.NON_TERMINAL -> it.calcExpectedRulePositions(0)
+                            RuntimeRuleKind.EMBEDDED -> TODO()
                         }
                     }
+                    RuntimeRuleKind.EMBEDDED -> TODO()
                 }
             }.toSet()
         }
@@ -756,40 +780,42 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     private fun calcExpectedTerminalRulePositions(rp: RulePosition): Set<RulePosition> {
         val nextItems = this.calcExpectedItemRulePositionTransitive(rp)
         return nextItems.filter {
-            if (it.runtimeRule.isTerminal) { //should never happen!
-                false
-            } else {
-                if (RulePosition.END_OF_RULE == it.position) {
-                    false
-                } else {
-                    it.items.any { it.isTerminal }
+            when (it.runtimeRule.kind) {
+                RuntimeRuleKind.TERMINAL -> false
+                else -> {
+                    if (RulePosition.END_OF_RULE == it.position) {
+                        false
+                    } else {
+                        it.items.any { it.kind == RuntimeRuleKind.TERMINAL }
+                    }
                 }
             }
         }.toSet() //TODO: cache ?
     }
 
-    private fun calcExpectedSkipItemRulePositionTransitive(): Set<RulePosition> {
-        val skipRuleStarts = allSkipRules.flatMap {
-            val x = firstTerminals[it.number]
-            RulePosition(it, 0, 0)
-            it.rulePositionsAt[0]
-        }
-        return skipRuleStarts.flatMap {
-            this.calcExpectedItemRulePositionTransitive(it)
-        }.toSet()
-    }
-
-    private fun calcFirstTerminalSkipRulePositions(): Set<RuntimeRule> {
-        val skipRPs = calcExpectedSkipItemRulePositionTransitive()
-        return skipRPs.flatMap {
-            if (it.runtimeRule.isTerminal) {
-                setOf(it.runtimeRule)
-            } else {
-                it.runtimeRule.itemsAt[it.position].toSet()
+    /*
+        private fun calcExpectedSkipItemRulePositionTransitive(): Set<RulePosition> {
+            val skipRuleStarts = allSkipRules.flatMap {
+                val x = firstTerminals[it.number]
+                RulePosition(it, 0, 0)
+                it.rulePositionsAt[0]
             }
-        }.toSet() //TODO: cache ?
-    }
+            return skipRuleStarts.flatMap {
+                this.calcExpectedItemRulePositionTransitive(it)
+            }.toSet()
+        }
 
+        private fun calcFirstTerminalSkipRulePositions(): Set<RuntimeRule> {
+            val skipRPs = calcExpectedSkipItemRulePositionTransitive()
+            return skipRPs.flatMap {
+                if (it.runtimeRule.isTerminal) {
+                    setOf(it.runtimeRule)
+                } else {
+                    it.runtimeRule.itemsAt[it.position].toSet()
+                }
+            }.toSet() //TODO: cache ?
+        }
+    */
     private fun calcFirstSubRules(runtimeRule: RuntimeRule): Set<RuntimeRule> {
         return runtimeRule.findSubRulesAt(0)
     }
@@ -802,11 +828,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return rr
     }
 
-    private fun calcIsSkipTerminal(rr: RuntimeRule): Boolean {
-        val b = this.allSkipTerminals.contains(rr)
-        return b
-    }
-
+    /*
+        private fun calcIsSkipTerminal(rr: RuntimeRule): Boolean {
+            val b = this.allSkipTerminals.contains(rr)
+            return b
+        }
+    */
     internal fun printAutomaton(goalRuleName: String): String {
         val b = StringBuilder()
         val gr = this.findRuntimeRule(goalRuleName)

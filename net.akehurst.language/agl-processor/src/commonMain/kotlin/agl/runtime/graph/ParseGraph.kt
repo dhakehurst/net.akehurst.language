@@ -127,11 +127,14 @@ internal class ParseGraph(
     }
 
     fun findCompleteNode(runtimeRule: RuntimeRule, startPosition: Int, matchedTextLength: Int): SPPTNode? {
-        if (runtimeRule.isTerminal) {
-            return this.leaves[LeafIndex(runtimeRule.number, startPosition)]
-        } else {
-            val index = SPPTNodeIdentityDefault(runtimeRule.number, startPosition)//, matchedTextLength)
-            return this.completeNodes[index]
+        return when (runtimeRule.kind) {
+            RuntimeRuleKind.TERMINAL -> this.leaves[LeafIndex(runtimeRule.number, startPosition)]
+            RuntimeRuleKind.GOAL,
+            RuntimeRuleKind.NON_TERMINAL -> {
+                val index = SPPTNodeIdentityDefault(runtimeRule.number, startPosition)//, matchedTextLength)
+                return this.completeNodes[index]
+            }
+            RuntimeRuleKind.EMBEDDED -> TODO()
         }
     }
 
@@ -551,8 +554,8 @@ internal class ParseGraph(
     }
 
     fun growNextSkipChild(parent: GrowingNode, skipNode: SPPTNode) {
-        if (parent.runtimeRule.isNonTerminal || parent.runtimeRule.isGoal) {
-            this.growNextChildAt(
+        when (parent.runtimeRule.kind) {
+            RuntimeRuleKind.GOAL -> this.growNextChildAt(
                     false,
                     parent.currentState,
                     parent,
@@ -560,22 +563,32 @@ internal class ParseGraph(
                     skipNode,
                     emptyList()
             )
-        } else {
-            val nextRp = parent.currentState
-            val nextInputPosition = parent.nextInputPosition + skipNode.matchedTextLength
-            val location = parent.location
-            val newLeaf = this.findOrCreateGrowingLeafForSkip(
-                    false,
-                    nextRp,
-                    parent.runtimeRule,
-                    location,
-                    nextInputPosition,
-                    parent.previous.values.toSet(),  //FIXME: don't convert to set
-                    parent.skipNodes + skipNode
-            )
-            if (parent.next.isEmpty()) {
-                this.removeGrowing(parent)
+            RuntimeRuleKind.TERMINAL -> {
+                val nextRp = parent.currentState
+                val nextInputPosition = parent.nextInputPosition + skipNode.matchedTextLength
+                val location = parent.location
+                val newLeaf = this.findOrCreateGrowingLeafForSkip(
+                        false,
+                        nextRp,
+                        parent.runtimeRule,
+                        location,
+                        nextInputPosition,
+                        parent.previous.values.toSet(),  //FIXME: don't convert to set
+                        parent.skipNodes + skipNode
+                )
+                if (parent.next.isEmpty()) {
+                    this.removeGrowing(parent)
+                }
             }
+            RuntimeRuleKind.NON_TERMINAL -> this.growNextChildAt(
+                    false,
+                    parent.currentState,
+                    parent,
+                    parent.priority,
+                    skipNode,
+                    emptyList()
+            )
+            RuntimeRuleKind.EMBEDDED -> TODO()
         }
     }
 

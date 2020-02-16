@@ -116,7 +116,7 @@ class test_leftRecursive_a : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "a ".repeat(500)
 
-        val expected = "S { S1 { ".repeat(499) + "S { 'a' WS { '\\s+' : ' ' } }" + "'a' WS { '\\s+' : ' ' } } }".repeat(499)
+        val expected = "S { S1 { ".repeat(499) + "S { 'a' WS { \"\\s+\" : ' ' } }" + "'a' WS { '\\s+' : ' ' } } }".repeat(499)
 
 
         super.test(rrb, goal, sentence, expected)

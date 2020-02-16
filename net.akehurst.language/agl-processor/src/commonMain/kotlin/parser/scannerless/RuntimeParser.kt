@@ -53,12 +53,12 @@ internal class RuntimeParser(
                 if (llg.skipNodes.isEmpty()) {
                     leaf
                 } else {
-                    val children = listOf(leaf)+llg.skipNodes
+                    val children = listOf(leaf) + llg.skipNodes
                     val firstChild = children.first()
                     val lastChild = children.last()
                     val length = (lastChild.location.position - firstChild.location.position) + lastChild.location.length
                     val location = InputLocation(firstChild.location.position, firstChild.location.column, firstChild.location.line, length)
-                    val branch = SPPTBranchDefault(llg.runtimeRule,location,llg.skipNodes.last().nextInputPosition,llg.priority)
+                    val branch = SPPTBranchDefault(llg.runtimeRule, location, llg.skipNodes.last().nextInputPosition, llg.priority)
                     branch.childrenAlternatives.add(children)
                     branch
                 }
@@ -104,16 +104,11 @@ internal class RuntimeParser(
         if (didSkipNode) {
             return
         } else {
-            if (gn.runtimeRule.isGoal) {
-                this.growGoalNode(gn)
-            } else {
-                for (prev in previous) {
-                    if (gn.isSkipGrowth) {
-                        this.growSkip(gn, prev)
-                    } else {
-                        this.growWithPrev(gn, prev)
-                    }
-                }
+            when (gn.runtimeRule.kind) {
+                RuntimeRuleKind.GOAL -> this.growGoalNode(gn)
+                RuntimeRuleKind.TERMINAL -> this.growNormal(gn, previous)
+                RuntimeRuleKind.NON_TERMINAL -> this.growNormal(gn, previous)
+                RuntimeRuleKind.EMBEDDED -> this.growEmbedded(gn)
             }
         }
     }
@@ -129,6 +124,16 @@ internal class RuntimeParser(
                 Transition.ParseAction.HEIGHT -> throw ParserException("Should never happen")
                 Transition.ParseAction.GRAFT -> throw ParserException("Should never happen")
                 Transition.ParseAction.GOAL -> doGoal(gn)
+            }
+        }
+    }
+
+    private fun growNormal(gn: GrowingNode, previous: Set<PreviousInfo>) {
+        for (prev in previous) {
+            if (gn.isSkipGrowth) {
+                this.growSkip(gn, prev)
+            } else {
+                this.growWithPrev(gn, prev)
             }
         }
     }
@@ -157,7 +162,7 @@ internal class RuntimeParser(
         val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, gn.nextInputPosition, gn.lastLocation)
         if (null != l) {
             //TODO: find a better way to look past skip terminals, this means wrong matches can be made...though they will be dropped on H or G!
-            val lh = transition.lookaheadGuard + this.runtimeRuleSet.allSkipTerminals
+            val lh = transition.lookaheadGuard + this.runtimeRuleSet.firstSkipTerminals
             val hasLh = lh.any {
                 val l = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition, l.location)
                 null != l
@@ -186,7 +191,7 @@ internal class RuntimeParser(
 
     private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
         if (previous.node.currentState.rulePosition == transition.prevGuard) {
-            if (transition.runtimeGuard(transition,previous.node)) {
+            if (transition.runtimeGuard(transition, previous.node)) {
                 val lh = transition.lookaheadGuard
                 val hasLh = lh.any {
                     val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
@@ -243,5 +248,9 @@ internal class RuntimeParser(
         val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
                 ?: throw ParserException("Should never be null")
         this.graph.growNextSkipChild(previous.node, complete)
+    }
+
+    private fun growEmbedded(gn: GrowingNode) {
+        TODO()
     }
 }

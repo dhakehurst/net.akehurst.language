@@ -52,7 +52,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b
     }
-
+/*
     private val S = runtimeRuleSet {
         concatenation("S") { ref("expr") }
         choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("root"); ref("group"); ref("div"); ref("mul"); ref("add"); ref("sub") }
@@ -62,7 +62,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         concatenation("group") { literal("("); ref("expr"); literal(")") }
 
     }
-
+*/
     @Test
     fun empty_fails() {
         val rrb = this.S()
@@ -73,7 +73,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(0, ex.location.column)
+        assertEquals(1, ex.location.column)
     }
 
 
@@ -365,9 +365,9 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
               expr { root { var { "[a-zA-Z]+" : 'b' } } }
               '+'
               expr { mul {
-                expr { root { var { '"[a-zA-Z]+"' : 'c' } } }
+                expr { root { var { "[a-zA-Z]+" : 'c' } } }
                 '*'
-                expr { root { var { '"[a-zA-Z]+"' : 'd' } } }
+                expr { root { var { "[a-zA-Z]+" : 'd' } } }
               } }
               '+'
               expr { root { var { "[a-zA-Z]+" : 'e' } } }

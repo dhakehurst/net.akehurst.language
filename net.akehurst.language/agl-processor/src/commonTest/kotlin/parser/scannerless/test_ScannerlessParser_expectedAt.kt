@@ -17,6 +17,7 @@
 package net.akehurst.language.parser.scannerless
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import kotlin.test.Test
@@ -42,7 +43,7 @@ class test_ScannerlessParser_expectedAt {
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
-        assertEquals(true, actual[0].isTerminal)
+        assertEquals(RuntimeRuleKind.TERMINAL, actual[0].kind)
         assertEquals("a", actual[0].value)
     }
 
@@ -55,7 +56,7 @@ class test_ScannerlessParser_expectedAt {
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
-        assertEquals(true, actual[0].isTerminal)
+        assertEquals(RuntimeRuleKind.TERMINAL, actual[0].kind)
         assertEquals("a", actual[0].value)
     }
 
@@ -87,7 +88,7 @@ class test_ScannerlessParser_expectedAt {
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
-        assertEquals(true, actual[0].isTerminal)
+        assertEquals(RuntimeRuleKind.TERMINAL, actual[0].kind)
         assertEquals("a", actual[0].value)
     }
 
@@ -100,7 +101,7 @@ class test_ScannerlessParser_expectedAt {
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
-        assertEquals(true, actual[0].isTerminal)
+        assertEquals(RuntimeRuleKind.TERMINAL, actual[0].kind)
         assertEquals("a", actual[0].value)
     }
 
@@ -113,7 +114,7 @@ class test_ScannerlessParser_expectedAt {
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
-        assertEquals(true, actual[0].isTerminal)
+        assertEquals(RuntimeRuleKind.TERMINAL, actual[0].kind)
         assertEquals("b", actual[0].value)
     }
 
@@ -126,7 +127,7 @@ class test_ScannerlessParser_expectedAt {
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
-        assertEquals(true, actual[0].isTerminal)
+        assertEquals(RuntimeRuleKind.TERMINAL, actual[0].kind)
         assertEquals("b", actual[0].value)
     }
     @Test
@@ -157,9 +158,9 @@ class test_ScannerlessParser_expectedAt {
         assertNotNull(actual)
 
         assertEquals(2, actual.size)
-        assertEquals(true, actual[0].isTerminal)
+        assertEquals(RuntimeRuleKind.TERMINAL, actual[0].kind)
         assertEquals("a", actual[0].value)
-        assertEquals(true, actual[1].isTerminal)
+        assertEquals(RuntimeRuleKind.TERMINAL, actual[1].kind)
         assertEquals("b", actual[1].value)
     }
 

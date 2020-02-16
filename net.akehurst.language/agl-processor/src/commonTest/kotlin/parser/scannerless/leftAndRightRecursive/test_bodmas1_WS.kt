@@ -18,8 +18,6 @@ package net.akehurst.language.parser.scannerless.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
@@ -66,7 +64,7 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(0, ex.location.column)
+        assertEquals(1, ex.location.column)
     }
 
 

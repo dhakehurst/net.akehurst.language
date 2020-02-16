@@ -59,7 +59,7 @@ class test_ifThenElse_LongestChoice : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(0, ex.location.column)
+        assertEquals(1, ex.location.column)
     }
 
     @Test
@@ -73,11 +73,11 @@ class test_ifThenElse_LongestChoice : test_ScannerlessParserAbstract() {
               expr {
                 ifthenelse {
                   'if' WS { "\s+" : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { "\s+" : ' ' } } }
+                  expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
                   'then' WS { "\s+" : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' WS { "\s+" : ' ' } } }
+                  expr { var { "[a-zA-Z]+" : 'b' WS { "\s+" : ' ' } } }
                   'else' WS { "\s+" : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'c' } }
+                  expr { var { "[a-zA-Z]+" : 'c' } }
                 }
               }
             }
@@ -97,9 +97,9 @@ class test_ifThenElse_LongestChoice : test_ScannerlessParserAbstract() {
               expr {
                 ifthen {
                   'if' WS { "\s+" : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { "\s+" : ' ' } } }
+                  expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
                   'then' WS { "\s+" : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' } }
+                  expr { var { "[a-zA-Z]+" : 'b' } }
                 }
               }
             }
@@ -119,16 +119,16 @@ class test_ifThenElse_LongestChoice : test_ScannerlessParserAbstract() {
               expr {
                 ifthenelse {
                   'if' WS { "\s+" : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { "\s+" : ' ' } } }
+                  expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
                   'then' WS { "\s+" : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'b' WS { "\s+" : ' ' } } }
+                  expr { var { "[a-zA-Z]+" : 'b' WS { "\s+" : ' ' } } }
                   'else' WS { "\s+" : ' ' }
                   expr {
                     ifthen {
                       'if' WS { "\s+" : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'c' WS { "\s+" : ' ' } } }
+                      expr { var { "[a-zA-Z]+" : 'c' WS { "\s+" : ' ' } } }
                       'then' WS { "\s+" : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'd' } }
+                      expr { var { "[a-zA-Z]+" : 'd' } }
                     }
                   }
                 }
@@ -150,16 +150,16 @@ class test_ifThenElse_LongestChoice : test_ScannerlessParserAbstract() {
               expr {
                 ifthen {
                   'if' WS { "\s+" : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { "\s+" : ' ' } } }
+                  expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
                   'then' WS { "\s+" : ' ' }
                   expr {
                     ifthenelse {
                       'if' WS { "\s+" : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'b' WS { "\s+" : ' ' } } }
+                      expr { var { "[a-zA-Z]+" : 'b' WS { "\s+" : ' ' } } }
                       'then' WS { "\s+" : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'c' WS { "\s+" : ' ' } } }
+                      expr { var { "[a-zA-Z]+" : 'c' WS { "\s+" : ' ' } } }
                       'else' WS { "\s+" : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'd' } }
+                      expr { var { "[a-zA-Z]+" : 'd' } }
                     }
                   }
                 }
@@ -172,18 +172,18 @@ class test_ifThenElse_LongestChoice : test_ScannerlessParserAbstract() {
               expr {
                 ifthenelse {
                   'if' WS { "\s+" : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'a' WS { "\s+" : ' ' } } }
+                  expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
                   'then' WS { "\s+" : ' ' }
                   expr {
                     ifthen {
                       'if' WS { "\s+" : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'b' WS { "\s+" : ' ' } } }
+                      expr { var { "[a-zA-Z]+" : 'b' WS { "\s+" : ' ' } } }
                       'then' WS { "\s+" : ' ' }
-                      expr { var { '[a-zA-Z]+' : 'c' WS { "\s+" : ' ' } } }
+                      expr { var { "[a-zA-Z]+" : 'c' WS { "\s+" : ' ' } } }
                     }
                   }
                   'else' WS { "\s+" : ' ' }
-                  expr { var { '[a-zA-Z]+' : 'd' } }
+                  expr { var { "[a-zA-Z]+" : 'd' } }
                 }
               }
             }

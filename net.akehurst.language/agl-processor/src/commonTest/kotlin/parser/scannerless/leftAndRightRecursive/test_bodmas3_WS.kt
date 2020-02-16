@@ -61,7 +61,7 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(0, ex.location.column)
+        assertEquals(1, ex.location.column)
     }
 
 
@@ -162,8 +162,8 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
             S {
               expr {
                 infix {
-                  expr { root { var { "[a-zA-Z]+" : 'a' WS { '\s+' : ' ' } } } }
-                  op { '/' WS { '\s+' : ' ' } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
+                  op { '/' WS { "\s+" : ' ' } }
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
@@ -184,8 +184,8 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
             S {
               expr {
                 infix {
-                  expr { root { var { "[a-zA-Z]+" : 'a' WS { '\s+' : ' ' } } } }
-                  op { '*' WS { '\s+' : ' ' } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
+                  op { '*' WS { "\s+" : ' ' } }
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
@@ -206,8 +206,8 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
             S {
               expr {
                 infix {
-                  expr { root { var { "[a-zA-Z]+" : 'a' WS { '\s+' : ' ' } } } }
-                  op { '+' WS { '\s+' : ' ' } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
+                  op { '+' WS { "\s+" : ' ' } }
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
@@ -228,8 +228,8 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
             S {
               expr {
                 infix {
-                  expr { root { var { "[a-zA-Z]+" : 'a' WS { '\s+' : ' ' } } } }
-                  op { '-' WS { '\s+' : ' ' } }
+                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
+                  op { '-' WS { "\s+" : ' ' } }
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }

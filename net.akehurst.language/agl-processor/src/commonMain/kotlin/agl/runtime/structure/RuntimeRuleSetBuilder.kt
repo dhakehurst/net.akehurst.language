@@ -47,9 +47,9 @@ class RuntimeRuleSetBuilder() {
     fun findRuleByName(ruleName: String, terminal: Boolean): RuntimeRule? {
         return this.rules.firstOrNull {
             if (terminal) {
-                it.isTerminal && it.tag == ruleName
+                it.kind==RuntimeRuleKind.TERMINAL && it.tag == ruleName
             } else {
-                it.isNonTerminal && it.tag == ruleName
+                it.tag == ruleName
             }
         }
     }

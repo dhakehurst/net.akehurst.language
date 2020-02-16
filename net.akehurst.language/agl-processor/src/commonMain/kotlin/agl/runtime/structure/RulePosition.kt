@@ -153,7 +153,6 @@ data class RulePosition(
                 RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> throw ParserException("Not yet supported")
                 RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> throw ParserException("Not yet supported")
                 RuntimeRuleItemKind.UNORDERED -> throw ParserException("Not yet supported")
-                RuntimeRuleItemKind.EMBEDDED -> TODO()
             }
         }
     }

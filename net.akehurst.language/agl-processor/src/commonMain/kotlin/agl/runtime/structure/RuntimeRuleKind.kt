@@ -19,5 +19,6 @@ package net.akehurst.language.agl.runtime.structure
 enum class RuntimeRuleKind {
     GOAL,
     NON_TERMINAL,
-    TERMINAL
+    TERMINAL,
+    EMBEDDED
 }

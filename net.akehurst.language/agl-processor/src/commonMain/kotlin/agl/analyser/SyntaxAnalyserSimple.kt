@@ -66,6 +66,7 @@ class SyntaxAnalyserSimple : SyntaxAnalyser, SharedPackedParseTreeVisitor<Any?, 
                 else -> throw SyntaxAnalyserException("Unsupported rhs type",null)
             }
             RuntimeRuleKind.GOAL -> br.children[0].accept(this, arg)
+            RuntimeRuleKind.EMBEDDED -> TODO()
         }
     }
 

@@ -124,13 +124,16 @@ class test_Johnson : test_ScannerlessParserAbstract() {
         val sentence = "aaaa"
 
         val expected1 = """
-            S {
-              S1 {
+         S { S2 {
+            S { S2 {
                 S { 'a' }
                 S { 'a' }
+              } }
+            S { S2 {
                 S { 'a' }
-              }
-            }
+                S { 'a' }
+              } }
+          } }
         """.trimIndent()
 
 

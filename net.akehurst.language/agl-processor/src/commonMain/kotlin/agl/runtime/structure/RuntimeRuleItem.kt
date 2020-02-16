@@ -37,8 +37,7 @@ class RuntimeRuleItem(
   val choiceKind : RuntimeRuleChoiceKind,
   val multiMin : Int,
   val multiMax : Int,
-  val items : Array<out RuntimeRule>,
-  val embeddedRuntimeRuleSet: RuntimeRuleSet? = null
+  val items : Array<out RuntimeRule>
 ) {
 
     companion object {
@@ -52,8 +51,8 @@ class RuntimeRuleItem(
     }
 
     init {
-        if (this.items.isEmpty() && null==this.embeddedRuntimeRuleSet) {
-            throw ParserException("RHS of a non terminal rule must contain some items or contain an embedded RuleSet")
+        if (this.items.isEmpty()) {
+            throw ParserException("RHS of a non terminal rule must contain some items")
         }
     }
 
@@ -90,10 +89,9 @@ class RuntimeRuleItem(
                     else -> emptyArray<RuntimeRule>() // should never happen!
                 }
             }
-            RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> emptyArray<RuntimeRule>() //TODO:
-            RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> emptyArray<RuntimeRule>() //TODO:
-            RuntimeRuleItemKind.UNORDERED -> emptyArray<RuntimeRule>() //TODO:
-            RuntimeRuleItemKind.EMBEDDED -> TODO()
+            RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> TODO()
+            RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
+            RuntimeRuleItemKind.UNORDERED -> TODO()
         }
     }
 

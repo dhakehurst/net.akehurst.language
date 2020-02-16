@@ -30,13 +30,10 @@ class test_Converter {
     private fun checkERule(n: Int, r: RuntimeRule, ptext: String, isSkip: Boolean, ruleThatIsEmpty: RuntimeRule) {
         assertEquals(n, r.number)
         assertEquals(RuntimeRuleKind.TERMINAL, r.kind)
-        assertEquals(true, r.isTerminal)
-        assertEquals(false, r.isNonTerminal)
         assertEquals(false, r.isPattern)
         assertEquals(RuntimeRuleItemKind.EMPTY, r.rhs.kind)
         assertEquals(true, r.isEmptyRule)
         assertEquals(ruleThatIsEmpty.emptyRuleItem, r)
-        assertEquals(false, r.isNonTerminal)
         assertEquals(isSkip, r.isSkip)
         assertEquals(ptext, r.tag)
         assertEquals(ptext, r.value)
@@ -46,11 +43,8 @@ class test_Converter {
     private fun checkTRule(n: Int, r: RuntimeRule, tag: String, ptext: String, isPattern: Boolean, isSkip: Boolean) {
         assertEquals(n, r.number)
         assertEquals(RuntimeRuleKind.TERMINAL, r.kind)
-        assertEquals(true, r.isTerminal)
-        assertEquals(false, r.isNonTerminal)
         assertEquals(isPattern, r.isPattern)
         assertEquals(false, r.isEmptyRule)
-        assertEquals(false, r.isNonTerminal)
         assertEquals(isSkip, r.isSkip)
         assertEquals(tag, r.tag)
         assertEquals(ptext, r.value)
@@ -62,8 +56,6 @@ class test_Converter {
     private fun checkNRule(n: Int, r: RuntimeRule, name: String, isSkip: Boolean, itemKind: RuntimeRuleItemKind, numItems: Int) {
         assertEquals(n, r.number)
         assertEquals(RuntimeRuleKind.NON_TERMINAL, r.kind)
-        assertEquals(false, r.isTerminal)
-        assertEquals(true, r.isNonTerminal)
         assertEquals(name, r.tag)
         assertEquals(numItems, r.rhs.items.size)
         assertEquals(itemKind, r.rhs.kind)
@@ -72,8 +64,6 @@ class test_Converter {
     private fun checkNRule(n: Int, r: RuntimeRule, name: String, isSkip: Boolean, itemKind: RuntimeRuleItemKind, choiceKind: RuntimeRuleChoiceKind, numItems: Int) {
         assertEquals(n, r.number)
         assertEquals(RuntimeRuleKind.NON_TERMINAL, r.kind)
-        assertEquals(false, r.isTerminal)
-        assertEquals(true, r.isNonTerminal)
         assertEquals(name, r.tag)
         assertEquals(numItems, r.rhs.items.size)
         assertEquals(itemKind, r.rhs.kind)

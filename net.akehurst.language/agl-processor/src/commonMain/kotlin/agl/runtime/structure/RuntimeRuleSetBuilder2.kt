@@ -53,9 +53,9 @@ class RuntimeRuleSetBuilder2() {
     fun findRuleByName(ruleName: String, terminal: Boolean): RuntimeRule? {
         return this.rules.firstOrNull {
             if (terminal) {
-                it.isTerminal && it.tag == ruleName
+                it.kind==RuntimeRuleKind.TERMINAL && it.tag == ruleName
             } else {
-                it.isNonTerminal && it.tag == ruleName
+                it.tag == ruleName
             }
         }
     }
@@ -64,9 +64,29 @@ class RuntimeRuleSetBuilder2() {
         if (null == this.runtimeRuleSet) {
             //validate
             this.rules.forEach { rule ->
-               if (rule.isNonTerminal && rule.rhsOpt==null) {
-                   throw ParserException("Invalid Rule ${rule.tag}")
-               }
+                when (rule.kind) {
+                    RuntimeRuleKind.GOAL -> {
+                        TODO()
+                    }
+                    RuntimeRuleKind.TERMINAL -> {
+                        if (null!=rule.rhsOpt) {
+                            throw ParserException("Invalid Rule ${rule.tag}")
+                        }
+                    }
+                    RuntimeRuleKind.NON_TERMINAL -> {
+                        if (null==rule.rhsOpt) {
+                            throw ParserException("Invalid Rule ${rule.tag}")
+                        }
+                    }
+                    RuntimeRuleKind.EMBEDDED -> {
+                        if (null==rule.embeddedRuntimeRuleSet) {
+                            throw ParserException("Invalid Rule ${rule.tag}")
+                        }
+                        if (null==rule.embeddedStartRule) {
+                            throw ParserException("Invalid Rule ${rule.tag}")
+                        }
+                    }
+                }
             }
             this.runtimeRuleSet = RuntimeRuleSet(this.rules)
         }
@@ -107,18 +127,14 @@ class RuntimeRuleSetBuilder2() {
         return rr
     }
 
-    fun embedded(name: String, embeddedRuleSet: RuntimeRuleSet): RuntimeRule {
-        val existing = this.rules.firstOrNull { it.tag == name }
-        val rule = if (null == existing) {
-            val rr = RuntimeRule(this.rules.size, name, "", RuntimeRuleKind.NON_TERMINAL, false, false)
-            this.rules.add(rr)
-            rr
+    fun embedded(name: String, embeddedRuleSet: RuntimeRuleSet, startRule:RuntimeRule): RuntimeRule {
+        val rule = RuntimeRule(this.rules.size, name, ".${startRule.tag}", RuntimeRuleKind.EMBEDDED, false, false, embeddedRuleSet, startRule)
+        val existing = this.rules.indexOfFirst { it.tag == name }
+        if (-1 == existing) {
+            this.rules.add(rule)
         } else {
-            existing
+            this.rules.set(existing, rule)
         }
-
-        val rhs = RuntimeRuleItem(RuntimeRuleItemKind.EMBEDDED, RuntimeRuleChoiceKind.NONE, -1, 0, emptyArray(), embeddedRuleSet)
-        rule.rhsOpt = rhs
         return rule
     }
 }

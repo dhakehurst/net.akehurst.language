@@ -27,6 +27,26 @@ import kotlin.test.assertFailsWith
 
 class test_embedded1 : test_ScannerlessParserAbstract() {
 
+    val Sn = runtimeRuleSet {
+        concatenation("S") { ref("a"); ref("B"); ref("a"); }
+        literal("a", "a")
+        concatenation("B") { ref("b") }
+        literal("b", "b")
+    }
+
+    @Test
+    fun Sn_a_fails() {
+        val rrb = this.Sn
+        val goal = "S"
+        val sentence = "a"
+
+        val ex = assertFailsWith(ParseFailedException::class) {
+            super.test(rrb, goal, sentence)
+        }
+        assertEquals(1, ex.location.line)
+        assertEquals(1, ex.location.column)
+    }
+
     // B = b ;
     val B = runtimeRuleSet {
         concatenation("B") { ref("b") }
@@ -37,7 +57,7 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
     val S = runtimeRuleSet {
         concatenation("S") { ref("a"); ref("gB"); ref("a"); }
         literal("a", "a")
-        embedded("gB", B)
+        embedded("gB", B, B.findRuntimeRule("B"))
     }
 
     @Test
@@ -46,49 +66,66 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = ""
 
-//        val ex = assertFailsWith(ParseFailedException::class) {
+        val ex = assertFailsWith(ParseFailedException::class) {
             super.test(rrb, goal, sentence)
-//        }
-//        assertEquals(1, ex.location.line)
-//        assertEquals(0, ex.location.column)
+        }
+        assertEquals(1, ex.location.line)
+        assertEquals(1, ex.location.column)
     }
 
     @Test
-    fun ambiguous_a() {
+    fun d_fails() {
         val rrb = this.S
         val goal = "S"
-        val sentence = "a"
-
-        val expected1 = """
-            S {
-              'a'
-            }
-        """.trimIndent()
-
-        val expected2 = """
-         S { S1 {
-            'a'
-            bOpt { §empty }
-          } }
-        """.trimIndent()
-
-        super.test(rrb, goal, sentence, expected1, expected2)
-
-    }
-
-
-    @Test
-    fun deterministic_empty_fails() {
-        val rrb = this.S
-        val goal = "S"
-        val sentence = ""
+        val sentence = "d"
 
         val ex = assertFailsWith(ParseFailedException::class) {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(0, ex.location.column)
+        assertEquals(1, ex.location.column)
     }
 
+    @Test
+    fun a_fails() {
+        val rrb = this.S
+        val goal = "S"
+        val sentence = "a"
 
+        val ex = assertFailsWith(ParseFailedException::class) {
+            super.test(rrb, goal, sentence)
+        }
+        assertEquals(1, ex.location.line)
+        assertEquals(1, ex.location.column)
+    }
+
+    @Test
+    fun ab_fails() {
+        val rrb = this.S
+        val goal = "S"
+        val sentence = "ab"
+
+        val ex = assertFailsWith(ParseFailedException::class) {
+            super.test(rrb, goal, sentence)
+        }
+        assertEquals(1, ex.location.line)
+        assertEquals(1, ex.location.column)
+    }
+
+    @Test
+    fun aba() {
+        val rrb = this.S
+        val goal = "S"
+        val sentence = "ab"
+
+        val expected = """
+            S {
+              'a'
+              gB.B { 'b' }
+              'a'
+            }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected)
+    }
 }
