@@ -28,10 +28,8 @@ import kotlin.test.assertFailsWith
 class test_embedded1 : test_ScannerlessParserAbstract() {
 
     val Sn = runtimeRuleSet {
-        concatenation("S") { ref("a"); ref("B"); ref("a"); }
-        literal("a", "a")
-        concatenation("B") { ref("b") }
-        literal("b", "b")
+        concatenation("S") { literal("a"); ref("B"); literal("a"); }
+        concatenation("B") { literal("b") }
     }
 
     @Test
@@ -47,16 +45,31 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
         assertEquals(1, ex.location.column)
     }
 
+    @Test
+    fun Sn_aba() {
+        val rrb = this.Sn
+        val goal = "S"
+        val sentence = "aba"
+
+        val expected = """
+            S {
+              'a'
+              B { 'b' }
+              'a'
+            }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected)
+    }
+
     // B = b ;
     val B = runtimeRuleSet {
-        concatenation("B") { ref("b") }
-        literal("b", "b")
+        concatenation("B") { literal("b") }
     }
     // S = a gB a ;
     // gB = grammar B ;
     val S = runtimeRuleSet {
-        concatenation("S") { ref("a"); ref("gB"); ref("a"); }
-        literal("a", "a")
+        concatenation("S") { literal("a"); ref("gB"); literal("a"); }
         embedded("gB", B, B.findRuntimeRule("B"))
     }
 
@@ -116,12 +129,12 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
     fun aba() {
         val rrb = this.S
         val goal = "S"
-        val sentence = "ab"
+        val sentence = "aba"
 
         val expected = """
             S {
               'a'
-              gB.B { 'b' }
+              B { 'b' }
               'a'
             }
         """.trimIndent()

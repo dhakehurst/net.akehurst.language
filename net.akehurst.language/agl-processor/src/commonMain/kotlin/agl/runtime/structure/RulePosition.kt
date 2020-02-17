@@ -58,76 +58,84 @@ data class RulePosition(
         return if (RulePosition.END_OF_RULE == this.position) {
             emptySet() //TODO: use goal rule to find next position? maybe
         } else {
-            when (this.runtimeRule.rhs.kind) {
-                RuntimeRuleItemKind.EMPTY -> throw ParserException("This should never happen!")
-                RuntimeRuleItemKind.CHOICE -> when {
-                    itemRule == this.runtimeRule.rhs.items[this.choice] -> setOf(RulePosition(this.runtimeRule, this.choice, END_OF_RULE))
-                    else -> emptySet() //throw ParseException("This should never happen!")
+            when (this.runtimeRule.kind) {
+                RuntimeRuleKind.TERMINAL -> TODO() // possibly these never happen!
+                RuntimeRuleKind.EMBEDDED -> TODO()
+                RuntimeRuleKind.GOAL -> when (this.position) {
+                    0 -> setOf(RulePosition(this.runtimeRule, 0, 1))
+                    1 -> setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE))
+                    else -> error("Should never happen")
                 }
-                RuntimeRuleItemKind.CONCATENATION -> { //TODO: check itemRule?
-                    val np = this.position + 1
-                    if (np < this.runtimeRule.rhs.items.size) {
-                        setOf(RulePosition(this.runtimeRule, 0, np))
-                    } else {
-                        setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE))
-                    }
-                }
-                RuntimeRuleItemKind.MULTI -> when (this.choice) {
-                    RuntimeRuleItem.MULTI__EMPTY_RULE -> when {
-                        START_OF_RULE == this.position && this.runtimeRule.rhs.multiMin == 0 && itemRule == this.runtimeRule.rhs.MULTI__emptyRule -> setOf(
-                                RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__EMPTY_RULE, END_OF_RULE)
-                        )
+                RuntimeRuleKind.NON_TERMINAL -> when (this.runtimeRule.rhs.kind) {
+                    RuntimeRuleItemKind.EMPTY -> throw ParserException("This should never happen!")
+                    RuntimeRuleItemKind.CHOICE -> when {
+                        itemRule == this.runtimeRule.rhs.items[this.choice] -> setOf(RulePosition(this.runtimeRule, this.choice, END_OF_RULE))
                         else -> emptySet() //throw ParseException("This should never happen!")
                     }
-                    RuntimeRuleItem.MULTI__ITEM -> when (this.position) {
-                        START_OF_RULE -> when {
-                            1 == this.runtimeRule.rhs.multiMax -> setOf(
-                                    RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, END_OF_RULE)
+                    RuntimeRuleItemKind.CONCATENATION -> { //TODO: check itemRule?
+                        val np = this.position + 1
+                        if (np < this.runtimeRule.rhs.items.size) {
+                            setOf(RulePosition(this.runtimeRule, 0, np))
+                        } else {
+                            setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE))
+                        }
+                    }
+                    RuntimeRuleItemKind.MULTI -> when (this.choice) {
+                        RuntimeRuleItem.MULTI__EMPTY_RULE -> when {
+                            START_OF_RULE == this.position && this.runtimeRule.rhs.multiMin == 0 && itemRule == this.runtimeRule.rhs.MULTI__emptyRule -> setOf(
+                                    RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__EMPTY_RULE, END_OF_RULE)
                             )
-                            2 <= this.runtimeRule.rhs.multiMin -> setOf(
-                                    RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, MULIT_ITEM_POSITION)
-                            )
-                            else -> setOf(
+                            else -> emptySet() //throw ParseException("This should never happen!")
+                        }
+                        RuntimeRuleItem.MULTI__ITEM -> when (this.position) {
+                            START_OF_RULE -> when {
+                                1 == this.runtimeRule.rhs.multiMax -> setOf(
+                                        RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, END_OF_RULE)
+                                )
+                                2 <= this.runtimeRule.rhs.multiMin -> setOf(
+                                        RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, MULIT_ITEM_POSITION)
+                                )
+                                else -> setOf(
+                                        RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, MULIT_ITEM_POSITION),
+                                        RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, END_OF_RULE)
+                                )
+                            }
+                            MULIT_ITEM_POSITION -> setOf(
                                     RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, MULIT_ITEM_POSITION),
                                     RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, END_OF_RULE)
                             )
+                            END_OF_RULE -> emptySet()
+                            else -> emptySet()
                         }
-                        MULIT_ITEM_POSITION -> setOf(
-                                RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, MULIT_ITEM_POSITION),
-                                RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, END_OF_RULE)
-                        )
-                        END_OF_RULE -> emptySet()
                         else -> emptySet()
                     }
-                    else -> emptySet()
-                }
-                RuntimeRuleItemKind.SEPARATED_LIST -> when (this.choice) {
-                    RuntimeRuleItem.SLIST__EMPTY_RULE -> when {
-                        START_OF_RULE == this.position && this.runtimeRule.rhs.multiMin == 0 && itemRule == this.runtimeRule.rhs.SLIST__emptyRule -> setOf(
-                                RulePosition(this.runtimeRule, this.choice, RulePosition.END_OF_RULE)
-                        )
-                        else -> emptySet() //throw ParseException("This should never happen!")
-                    }
-                    RuntimeRuleItem.SLIST__ITEM -> when(this.position) {
-                        START_OF_RULE -> when {
-                            1 == this.runtimeRule.rhs.multiMax -> setOf(
-                                    RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
+                    RuntimeRuleItemKind.SEPARATED_LIST -> when (this.choice) {
+                        RuntimeRuleItem.SLIST__EMPTY_RULE -> when {
+                            START_OF_RULE == this.position && this.runtimeRule.rhs.multiMin == 0 && itemRule == this.runtimeRule.rhs.SLIST__emptyRule -> setOf(
+                                    RulePosition(this.runtimeRule, this.choice, RulePosition.END_OF_RULE)
                             )
-                            2 <= this.runtimeRule.rhs.multiMin -> setOf(
-                                    RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, 1)
-                            )
-                            else -> setOf(
+                            else -> emptySet() //throw ParseException("This should never happen!")
+                        }
+                        RuntimeRuleItem.SLIST__ITEM -> when (this.position) {
+                            START_OF_RULE -> when {
+                                1 == this.runtimeRule.rhs.multiMax -> setOf(
+                                        RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
+                                )
+                                2 <= this.runtimeRule.rhs.multiMin -> setOf(
+                                        RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, 1)
+                                )
+                                else -> setOf(
+                                        RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, 1),
+                                        RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
+                                )
+                            }
+                            SLIST_ITEM_POSITION -> setOf(
                                     RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, 1),
                                     RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
                             )
-                        }
-                        SLIST_ITEM_POSITION -> setOf(
-                                RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, 1),
-                                RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
-                        )
-                        END_OF_RULE -> emptySet()
-                        else -> emptySet()
-                    }/*
+                            END_OF_RULE -> emptySet()
+                            else -> emptySet()
+                        }/*
                     RuntimeRuleItem.SLIST__ITEM -> when {
                         START_OF_RULE == this.position && (this.runtimeRule.rhs.multiMax == 1) && itemRule == this.runtimeRule.rhs.SLIST__repeatedItem -> setOf(
                                 RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
@@ -142,17 +150,18 @@ data class RulePosition(
                         )
                         else -> emptySet() //throw ParseException("This should never happen!")
                     }*/
-                    RuntimeRuleItem.SLIST__SEPARATOR -> when {
-                        SLIST_SEPARATOR_POSITION == this.position && (this.runtimeRule.rhs.multiMax > 1 || -1 == this.runtimeRule.rhs.multiMax) && itemRule == this.runtimeRule.rhs.SLIST__separator -> setOf(
-                                RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, 2)
-                        )
-                        else -> emptySet() //throw ParseException("This should never happen!")
+                        RuntimeRuleItem.SLIST__SEPARATOR -> when {
+                            SLIST_SEPARATOR_POSITION == this.position && (this.runtimeRule.rhs.multiMax > 1 || -1 == this.runtimeRule.rhs.multiMax) && itemRule == this.runtimeRule.rhs.SLIST__separator -> setOf(
+                                    RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, 2)
+                            )
+                            else -> emptySet() //throw ParseException("This should never happen!")
+                        }
+                        else -> throw ParserException("This should never happen!")
                     }
-                    else -> throw ParserException("This should never happen!")
+                    RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> throw ParserException("Not yet supported")
+                    RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> throw ParserException("Not yet supported")
+                    RuntimeRuleItemKind.UNORDERED -> throw ParserException("Not yet supported")
                 }
-                RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> throw ParserException("Not yet supported")
-                RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> throw ParserException("Not yet supported")
-                RuntimeRuleItemKind.UNORDERED -> throw ParserException("Not yet supported")
             }
         }
     }

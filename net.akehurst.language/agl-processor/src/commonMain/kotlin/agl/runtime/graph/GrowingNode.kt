@@ -41,7 +41,7 @@ class GrowingNode(
             RuntimeRuleKind.TERMINAL -> if (this.skipNodes.isEmpty()) this.location else this.skipNodes.last().location
             RuntimeRuleKind.GOAL,
             RuntimeRuleKind.NON_TERMINAL -> if (children.isEmpty()) this.location else children.last().location
-            RuntimeRuleKind.EMBEDDED -> TODO()
+            RuntimeRuleKind.EMBEDDED -> if (children.isEmpty()) this.location else children.last().location
         }
 
 

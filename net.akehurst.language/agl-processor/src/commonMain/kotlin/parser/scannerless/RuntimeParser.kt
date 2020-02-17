@@ -24,6 +24,8 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.parser.sppt.SPPTBranchDefault
+import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
+import kotlin.math.max
 
 internal class RuntimeParser(
         private val runtimeRuleSet: RuntimeRuleSet,
@@ -84,11 +86,16 @@ internal class RuntimeParser(
             return this.graph.canGrow
         }
 
-
     fun start(userGoalRule: RuntimeRule) {
-        val gState = runtimeRuleSet.startingState(userGoalRule)
+        val gState = runtimeRuleSet.startingState(userGoalRule, listOf(RuntimeRuleSet.END_OF_TEXT))
         this.graph.start(gState)
     }
+
+    fun start(userGoalRule: RuntimeRule, startLocation: InputLocation, possibleEndOfText: List<RuntimeRule>) {
+        val gState = runtimeRuleSet.startingState(userGoalRule, possibleEndOfText)
+        this.graph.start(gState, startLocation)
+    }
+
 
     fun grow() {
         this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
@@ -108,7 +115,7 @@ internal class RuntimeParser(
                 RuntimeRuleKind.GOAL -> this.growGoalNode(gn)
                 RuntimeRuleKind.TERMINAL -> this.growNormal(gn, previous)
                 RuntimeRuleKind.NON_TERMINAL -> this.growNormal(gn, previous)
-                RuntimeRuleKind.EMBEDDED -> this.growEmbedded(gn)
+                RuntimeRuleKind.EMBEDDED -> this.growNormal(gn, previous)
             }
         }
     }
@@ -124,6 +131,7 @@ internal class RuntimeParser(
                 Transition.ParseAction.HEIGHT -> throw ParserException("Should never happen")
                 Transition.ParseAction.GRAFT -> throw ParserException("Should never happen")
                 Transition.ParseAction.GOAL -> doGoal(gn)
+                Transition.ParseAction.EMBED -> TODO()
             }
         }
     }
@@ -148,6 +156,7 @@ internal class RuntimeParser(
                 Transition.ParseAction.HEIGHT -> doHeight(gn, previous, it)
                 Transition.ParseAction.GRAFT -> doGraft(gn, previous, it)
                 Transition.ParseAction.GOAL -> throw ParserException("Should never happen")
+                Transition.ParseAction.EMBED -> doEmbedded(gn, setOf(previous), it)
             }
         }
     }
@@ -240,6 +249,7 @@ internal class RuntimeParser(
                 Transition.ParseAction.HEIGHT -> doHeight(gn, previous, it)
                 Transition.ParseAction.GRAFT -> doGraft(gn, previous, it)
                 Transition.ParseAction.GOAL -> doGraftSkip(gn, previous, it)
+                Transition.ParseAction.EMBED -> TODO()
             }
         }
     }
@@ -250,7 +260,34 @@ internal class RuntimeParser(
         this.graph.growNextSkipChild(previous.node, complete)
     }
 
-    private fun growEmbedded(gn: GrowingNode) {
-        TODO()
+    private fun doEmbedded(gn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition) {
+        val embeddedRule = transition.to.runtimeRule
+
+        val embeddedRuntimeRuleSet = embeddedRule.embeddedRuntimeRuleSet ?: error("Should never be null")
+        val embeddedStartRule = embeddedRule.embeddedStartRule ?: error("Should never be null")
+        val graph = ParseGraph(embeddedStartRule, this.graph.input)
+        val rp = RuntimeParser(embeddedRuntimeRuleSet, graph)
+        val startPosition = gn.lastLocation.position + gn.lastLocation.length
+        val startLocation = InputLocation(startPosition, gn.lastLocation.column, gn.lastLocation.line, 0) //TODO: compute correct line and column
+        val endingLookahead = transition.lookaheadGuard.toList()
+        rp.start(embeddedStartRule, startLocation, endingLookahead)
+        var seasons = 1
+        var maxNumHeads = graph.growingHead.size
+        do {
+            rp.grow()
+            seasons++
+            maxNumHeads = max(maxNumHeads, graph.growingHead.size)
+        } while (rp.canGrow)
+        val match = graph.longestMatch(seasons, maxNumHeads)
+        if (match != null) {
+            this.graph.pushToStackOf(false, transition.to, match, gn, previousSet, emptySet())
+            //SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
+        } else {
+            TODO()
+//            throwError(graph, rp, seasons, maxNumHeads)
+        }
+
+
+        //this.graph.pushToStackOf(false, transition.to, l, gn, previousSet, emptySet())
     }
 }

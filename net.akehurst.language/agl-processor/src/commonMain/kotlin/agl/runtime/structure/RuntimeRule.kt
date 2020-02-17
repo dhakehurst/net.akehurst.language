@@ -247,7 +247,11 @@ class RuntimeRule(
 
     fun items(choice: Int, position: Int): Set<RuntimeRule> { //TODO: do we need to return a set here?
         return when (kind) {
-            RuntimeRuleKind.GOAL -> setOf(rhs.items[position]) // always a concatenation
+            RuntimeRuleKind.GOAL -> when(position) {
+                0 -> setOf(rhs.items[position])
+                1 -> rhs.items.drop(1).toSet()
+                else -> error("Should not happen")
+            }// always a concatenation
             RuntimeRuleKind.TERMINAL -> emptySet()
             RuntimeRuleKind.NON_TERMINAL -> when (rhs.kind) {
                 RuntimeRuleItemKind.EMPTY -> emptySet()
@@ -485,7 +489,7 @@ class RuntimeRule(
                     RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
                     else -> throw RuntimeException("Internal Error: rule kind not recognised")
                 }
-                RuntimeRuleKind.EMBEDDED -> setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
+                RuntimeRuleKind.EMBEDDED -> setOf(RulePosition(this, 0, position))
             }
         }
     }
@@ -541,7 +545,7 @@ class RuntimeRule(
             }
         }
     }
-
+/*
     private fun canBeEmpty(checked: Set<RuntimeRule>): Boolean {
         return when (kind) {
             RuntimeRuleKind.GOAL -> false
@@ -562,7 +566,7 @@ class RuntimeRule(
             RuntimeRuleKind.EMBEDDED -> TODO()
         }
     }
-
+*/
     fun couldHaveChild(possibleChild: RuntimeRule, atPosition: Int): Boolean {
         return when (kind) {
             RuntimeRuleKind.GOAL -> TODO()

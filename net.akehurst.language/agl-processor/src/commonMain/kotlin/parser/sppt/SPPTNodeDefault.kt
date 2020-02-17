@@ -30,6 +30,8 @@ abstract class SPPTNodeAbstract(
         override val priority: Int                      //not needed as part of the SPPTNode, but needed for the parsing algorithm
 ) : SPPTNode {
 
+    var embeddedIn : String? = null
+
     override val identity: SPPTNodeIdentity = SPPTNodeIdentityDefault(
             this.runtimeRule.number,
             this.startPosition//,
