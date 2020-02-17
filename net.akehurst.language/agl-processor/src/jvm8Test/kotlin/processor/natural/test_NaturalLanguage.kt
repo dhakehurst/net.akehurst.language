@@ -69,7 +69,7 @@ class test_NaturalLanguage(val data:Data) {
 
     @Test
     fun test() {
-        val result = processor.parse("query", this.data.sentence)
+        val result = processor.parse(this.data.goal, this.data.sentence)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(this.data.sentence, resultStr)

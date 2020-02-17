@@ -23,9 +23,9 @@ import net.akehurst.language.api.parser.ParserException
  * when (kind) {
  *   EMPTY                   -> items[0] == the rule that is empty
  *   CHOICE                  -> items == what to chose between
- *   PRIORITY_CHOICE         -> items == what to chose between, 0 is highest priority (I think)
- *   CONCATENATION           -> items == what to concatinate, in order
- *   UNORDERED               -> items == what to concatinate, any order
+ *   PRIORITY_CHOICE         -> items == what to chose between, 0 is lowest priority
+ *   CONCATENATION           -> items == what to concatenate, in order
+ *   UNORDERED               -> items == what to concatenate, any order
  *   MULTI                   -> items[0] == the item to repeat, items[1] == empty rule if min==0
  *   SEPARATED_LIST          -> items[0] == the item to repeat, items[1] == separator, items[2] == empty rule if min==0
  *   LEFT_ASSOCIATIVE_LIST   -> items[0] == the item to repeat, items[1] == separator

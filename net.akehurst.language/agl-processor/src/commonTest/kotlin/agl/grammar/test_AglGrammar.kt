@@ -452,14 +452,38 @@ class test_AglGrammar {
     }
 
     @Test
-    fun embedded() {
+    fun embedded_qualified_defaultGoal() {
 
         val grammarStr = """
             namespace test
-            grammar Test1 {
+            grammar Inner {
+                B = 'b' ;
+            }
+            grammar Outer {
                 S = A gB A ;
                 leaf A = 'A' ;
-                grammar gB = test.Test2 ;
+                grammar gB = test.Inner ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun embedded_unqualified_explicitGoal() {
+
+        val grammarStr = """
+            namespace test
+            grammar Inner {
+                B = 'b' ;
+                C = 'c' ;
+            }
+            grammar Outer {
+                S = A gB A ;
+                leaf A = 'A' ;
+                grammar gB = Inner.C;
             }
         """.trimIndent()
 

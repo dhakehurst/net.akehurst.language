@@ -112,10 +112,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 //        this.calcFirstTerminalSkipRulePositions()
     }
 
+    // used when calculating lookahead
     val expectedTerminalRulePositions = lazyMap<RulePosition, Array<RulePosition>> {
         calcExpectedTerminalRulePositions(it).toTypedArray()
     }
 
+    // used when calculating lookahead
     val firstTerminals2 = lazyMap<RulePosition, Set<RuntimeRule>> {
         val trps = expectedTerminalRulePositions[it] ?: arrayOf()
         trps.flatMap { it.items }.toSet()
@@ -215,17 +217,17 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             }.toSet()
         }
     }
-
+/*
     private fun calcNextClosureNumber(userGoalRule: RuntimeRule): ClosureNumber {
         val num: ClosureNumber = this.nextClosure[userGoalRule] ?: ClosureNumber(0)
         this.nextClosure[userGoalRule] = ClosureNumber(num.value + 1)
         return num
     }
-
+*/
     fun fetchSkipStates(rulePosition: RulePosition): ParserState {
         return this.skipPaths.fetch(rulePosition)
     }
-
+/*
     private fun calcNextLookahead(parent: RulePositionWithLookahead?, childRP: RulePosition, ifEmpty: Set<RuntimeRule>): Set<RuntimeRule> {
         return if (childRP.isAtEnd) {
             // lh should be FIRST of next item in parent, so it can be tested against this childRP
@@ -289,7 +291,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             }.toSet()
         }
     }
-
+*/
     private fun calcLookahead(parent: RulePositionWithLookahead?, childRP: RulePosition, ifEmpty: Set<RuntimeRule>): Set<RuntimeRule> {
         return when {
             childRP.runtimeRule.kind == RuntimeRuleKind.EMBEDDED -> {
@@ -753,6 +755,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return this.runtimeRules[number]
     }
 
+    // used when calculating lookahead ?
     private fun calcExpectedItemRulePositionTransitive(rp: RulePosition): Set<RulePosition> {
         var s = setOf(rp)//rp.runtimeRule.calcExpectedRulePositions(rp.position)
 
@@ -768,7 +771,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                             RuntimeRuleKind.GOAL -> TODO()
                             RuntimeRuleKind.TERMINAL -> setOf(rp)
                             RuntimeRuleKind.NON_TERMINAL -> it.calcExpectedRulePositions(0)
-                            RuntimeRuleKind.EMBEDDED -> TODO()
+                            RuntimeRuleKind.EMBEDDED -> TODO() //it.embeddedRuntimeRuleSet.expectedTerminalRulePositions
                         }
                     }
                     RuntimeRuleKind.EMBEDDED -> TODO()

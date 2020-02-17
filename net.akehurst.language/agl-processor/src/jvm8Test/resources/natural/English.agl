@@ -30,7 +30,7 @@ grammar English {
         | 'Which'  noun-phrase? ('do' |'does' |'don\'t' |'doesn\'t' |'did' |'didn\'t') subject predicate '?'
         | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('will' |'won\'t') subject predicate1 '?'
         | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('has' |'have' |'hasn\'t' |'haven\'t') subject predicate2 '?'
-        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('are' |'is' |'was' |'were' |  'aren\'t' |'isn\'t' |'wasn\'t' |'weren\'t') subject (adverb* adjective | prepositional-phrase* | predicate3)? '?'
+        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('are' |'is' |'was' |'were' |  'aren\'t' |'isn\'t' |'wasn\'t' |'weren\'t') subject (ADVERB* adjective | prepositional-phrase* | predicate3)? '?'
         ;
 
     imperative-sentence =  imperative-predicate ;
