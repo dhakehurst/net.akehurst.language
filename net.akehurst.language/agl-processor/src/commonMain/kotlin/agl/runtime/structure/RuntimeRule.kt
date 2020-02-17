@@ -259,7 +259,7 @@ class RuntimeRule(
                 RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> TODO()
                 RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
             }
-            RuntimeRuleKind.EMBEDDED -> TODO()
+            RuntimeRuleKind.EMBEDDED ->emptySet() //an embedded grammar is treated like a terminal, matches or not, so no 'items'
         }
     }
 
@@ -438,7 +438,7 @@ class RuntimeRule(
             position == RulePosition.END_OF_RULE -> emptySet()
             else -> when (kind) {
                 RuntimeRuleKind.GOAL -> TODO()
-                RuntimeRuleKind.TERMINAL -> setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
+                RuntimeRuleKind.TERMINAL -> setOf(RulePosition(this, 0, position))
                 RuntimeRuleKind.NON_TERMINAL -> when (this.rhs.kind) {
                     RuntimeRuleItemKind.EMPTY -> {
                         emptySet()
@@ -485,7 +485,7 @@ class RuntimeRule(
                     RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
                     else -> throw RuntimeException("Internal Error: rule kind not recognised")
                 }
-                RuntimeRuleKind.EMBEDDED -> TODO()
+                RuntimeRuleKind.EMBEDDED -> setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
             }
         }
     }

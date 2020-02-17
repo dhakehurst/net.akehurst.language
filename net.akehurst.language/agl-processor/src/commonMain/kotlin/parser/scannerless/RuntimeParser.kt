@@ -164,8 +164,8 @@ internal class RuntimeParser(
             //TODO: find a better way to look past skip terminals, this means wrong matches can be made...though they will be dropped on H or G!
             val lh = transition.lookaheadGuard + this.runtimeRuleSet.firstSkipTerminals
             val hasLh = lh.any {
-                val l = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition, l.location)
-                null != l
+                val lhLeaf = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition, l.location)
+                null != lhLeaf
             }
             if (hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
                 this.graph.pushToStackOf(false, transition.to, l, gn, previousSet, emptySet())

@@ -31,7 +31,8 @@ class Transition(
         HEIGHT, // reduce first
         GRAFT,  // reduce other
         WIDTH,  // shift
-        GOAL    // goal
+        GOAL,    // goal
+        EMBED
     }
 
     private val hashCode_cache:Int by lazy {
