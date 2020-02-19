@@ -33,7 +33,8 @@ private fun createRules(): List<Rule> {
     b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/"));
     b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//.*?$"));
 
-    b.rule("grammarDefinition").concatenation(b.nonTerminal("namespace"), b.nonTerminal("grammar"));
+    b.rule("grammarDefinition").concatenation(b.nonTerminal("namespace"), b.nonTerminal("definitions"));
+    b.rule("definitions").multi(1, -1, b.nonTerminal("grammar"))
     b.rule("namespace").concatenation(b.terminalLiteral("namespace"), b.nonTerminal("qualifiedName"));
     b.rule("grammar").concatenation(b.terminalLiteral("grammar"), b.nonTerminal("IDENTIFIER"), b.nonTerminal("extends"),
             b.terminalLiteral("{"), b.nonTerminal("rules"), b.terminalLiteral("}"));
@@ -68,7 +69,7 @@ private fun createRules(): List<Rule> {
     b.rule("group").concatenation(b.terminalLiteral("("), b.nonTerminal("choice"), b.terminalLiteral(")"));
     b.rule("separatedList").concatenation(b.terminalLiteral("["), b.nonTerminal("simpleItem"), b.terminalLiteral("/"),
             b.nonTerminal("simpleItem"), b.terminalLiteral("]"), b.nonTerminal("multiplicity"));
-    b.rule("nonTerminal").choiceEqual(b.concatenation(b.nonTerminal("IDENTIFIER")));
+    b.rule("nonTerminal").choiceEqual(b.concatenation(b.nonTerminal("qualifiedName")));
     b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"));
     b.rule("terminal").choiceEqual(b.concatenation(b.nonTerminal("LITERAL")), b.concatenation(b.nonTerminal("PATTERN")));
     b.leaf("LITERAL").concatenation(b.terminalPattern("'(?:\\\\?.)*?'"));

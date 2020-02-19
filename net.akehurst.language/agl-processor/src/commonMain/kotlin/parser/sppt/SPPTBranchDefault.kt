@@ -136,10 +136,11 @@ class SPPTBranchDefault(
 
     // --- Object ---
     override fun toString(): String {
+        val tag = if (null==this.embeddedIn) this.runtimeRule.tag else "${embeddedIn}.${runtimeRule.tag}"
         var r = ""
         r += this.startPosition.toString() + ","
         r += this.nextInputPosition
-        r += ":" + this.runtimeRule.tag + "(" + this.runtimeRule.number + ")"
+        r += ":" + tag + "(" + this.runtimeRule.number + ")"
         return r
     }
 

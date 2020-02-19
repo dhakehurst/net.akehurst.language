@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
+import net.akehurst.language.api.analyser.AsmElementSimple
 import net.akehurst.language.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -482,13 +483,14 @@ class test_AglGrammar {
             }
             grammar Outer {
                 S = A gB A ;
-                leaf A = 'A' ;
-                grammar gB = Inner.C;
+                leaf A = 'a' ;
+                gB = Inner.C;
             }
         """.trimIndent()
 
         val p = Agl.processor(grammarStr)
-
         assertNotNull(p)
+
+        val actual:AsmElementSimple = p.process("aca")
     }
 }

@@ -16,18 +16,13 @@
 
 package net.akehurst.language.agl.ast
 
+import net.akehurst.language.api.grammar.*
 import kotlin.text.Regex
-import net.akehurst.language.api.grammar.NonTerminal
-import net.akehurst.language.api.grammar.Terminal
-import net.akehurst.language.api.grammar.GrammarVisitor
-import net.akehurst.language.api.grammar.Rule
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.GrammarRuleItemNotFoundException
 
-class NonTerminalDefault(override val name: String) : RuleItemAbstract(), NonTerminal {
+class NonTerminalDefault(override val name: String, val owningGrammar:Grammar) : RuleItemAbstract(), NonTerminal {
 
 	override val referencedRule : Rule by lazy {
-		this.owningRule.grammar.findAllRule(this.name)
+		this.owningGrammar.findAllRule(this.name)
 	}
 
     override fun setOwningRule(rule: Rule, indices: List<Int>) {

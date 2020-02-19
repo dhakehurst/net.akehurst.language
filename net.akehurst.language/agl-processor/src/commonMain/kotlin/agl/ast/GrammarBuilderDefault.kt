@@ -47,7 +47,11 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 	}
 
 	fun nonTerminal(name: String): NonTerminal {
-		return NonTerminalDefault(name)
+		if (name.contains(".")) {
+			TODO()
+		} else {
+			return NonTerminalDefault(name, this.grammar)
+		}
 	}
 
 	fun concatenation(vararg sequence: ConcatenationItem): Concatenation {

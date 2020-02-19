@@ -24,6 +24,7 @@ import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.analyser.SyntaxAnalyserException
 import net.akehurst.language.agl.ast.*
+import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 
 
 class AglGrammarSyntaxAnalyser(
@@ -35,6 +36,7 @@ class AglGrammarSyntaxAnalyser(
     init {
         this.register("grammarDefinition", this::grammarDefinition as BranchHandler<Grammar>)
         this.register("namespace", this::namespace as BranchHandler<Namespace>)
+        this.register("definitions", this::definitions as BranchHandler<List<Grammar>>)
         this.register("grammar", this::grammar as BranchHandler<Grammar>)
         this.register("extends", this::extends as BranchHandler<List<Grammar>>)
         this.register("rules", this::rules as BranchHandler<List<Rule>>)
@@ -66,11 +68,18 @@ class AglGrammarSyntaxAnalyser(
     }
 
     //   grammarDefinition : namespace grammar ;
-    fun grammarDefinition(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Grammar {
+    fun grammarDefinition(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<Grammar> {
         val namespace = this.transform<Namespace>(children[0], null)
-        val grammar = this.transform<Grammar>(children[1], namespace)
-        this.grammarRegistry.register(grammar)
-        return grammar
+        val definitions = this.transform<List<Grammar>>(children[1], namespace)
+        return definitions
+    }
+
+    // definitions = grammar+ ;
+    fun definitions(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<Grammar> {
+        val definitions = target.branchNonSkipChildren[0].branchNonSkipChildren.map {
+            this.transform<Grammar>(it, arg)
+        }
+        return definitions
     }
 
     // namespace : 'namespace' qualifiedName ;
@@ -86,6 +95,8 @@ class AglGrammarSyntaxAnalyser(
         val extends = this.transform<List<Grammar>>(children[0], namespace)
         val result = GrammarDefault(namespace, name, mutableListOf())
         result.extends.addAll(extends)
+
+        this.grammarRegistry.register(result)
 
         this.transform<List<Rule>>(children[1], result) //creating a Rule adds it to the grammar
 
@@ -250,8 +261,16 @@ class AglGrammarSyntaxAnalyser(
 
     // nonTerminal : IDENTIFIER ;
     fun nonTerminal(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): NonTerminal {
+        val thisGrammar = arg as Grammar
         val nonTerminalRef = target.nonSkipChildren[0].nonSkipMatchedText
-        return NonTerminalDefault(nonTerminalRef)
+        return if (nonTerminalRef.contains(".")) {
+            val embeddedGrammarRef = nonTerminalRef.substringBeforeLast(".")
+            val embeddedStartRuleRef = nonTerminalRef.substringAfterLast(".")
+            val embeddedGrammar = GrammarRegistryDefault.find(thisGrammar.namespace.qualifiedName, embeddedGrammarRef)
+            NonTerminalDefault(embeddedStartRuleRef, embeddedGrammar)
+        } else {
+             NonTerminalDefault(nonTerminalRef, thisGrammar)
+        }
     }
 
     // terminal : LITERAL | PATTERN ;
@@ -264,7 +283,7 @@ class AglGrammarSyntaxAnalyser(
 
     // qualifiedName : (IDENTIFIER / '.')+ ;
     fun qualifiedName(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): String {
-        return children[0].branchNonSkipChildren.map { it.nonSkipMatchedText }.joinToString(".")
+        return target.nonSkipMatchedText //children[0].branchNonSkipChildren.map { it.nonSkipMatchedText }.joinToString(".")
     }
 
 }

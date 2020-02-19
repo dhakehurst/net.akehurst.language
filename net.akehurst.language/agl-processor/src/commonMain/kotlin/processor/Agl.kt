@@ -71,7 +71,7 @@ object Agl {
     @JsName("processorFromString")
     fun processor(grammarDefinitionStr: String, syntaxAnalyser: SyntaxAnalyser?=null, formatter: Formatter?=null): LanguageProcessor {
         try {
-            val grammar = grammarProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
+            val grammar = grammarProcessor.process<List<Grammar>>("grammarDefinition", grammarDefinitionStr).last()
             return processor(grammar, syntaxAnalyser, formatter)
         } catch (e: ParseFailedException) {
             //TODO: better, different exception to detect which list item fails
