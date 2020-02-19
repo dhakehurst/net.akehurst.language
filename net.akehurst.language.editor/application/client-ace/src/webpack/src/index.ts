@@ -8,6 +8,7 @@ import {TreeView} from "./TreeView";
 
 import './examples/classes';
 import './examples/agl-grammar';
+import './examples/embedded-dot';
 import {Examples} from './examples/examples';
 
 
