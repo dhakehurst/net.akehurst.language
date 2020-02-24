@@ -3,6 +3,8 @@ import './index.css'
 import {TabView} from './TabView.js';
 import {AglEditorAce} from 'net.akehurst.language.editor-agl-ace'
 import * as agl_js from 'net.akehurst.language-agl-processor';
+import * as kotlin_js from 'kotlin';
+import $kotlin = kotlin_js.kotlin;
 import agl = agl_js.net.akehurst.language;
 import {TreeView} from "./TreeView";
 
@@ -99,7 +101,7 @@ STYLE_ID {
 `);
 
 try {
-    sentenceEditor.processor = Agl.processorFromString(grammarEditor.editor.getValue());
+    sentenceEditor.processor = (Agl as any).processorFromString(grammarEditor.editor.getValue());
     sentenceEditor.setStyle(styleEditor.editor.getValue());
 } catch (e) {
     console.error(e);
@@ -108,7 +110,7 @@ try {
 grammarEditor.editor.on("input", (e: Event) => {
     console.info("grammar changed");
     try {
-        sentenceEditor.processor = Agl.processorFromString(grammarEditor.editor.getValue());
+        sentenceEditor.processor = (Agl as any).processorFromString(grammarEditor.editor.getValue());
     } catch (e) {
         sentenceEditor.processor = null;
         console.error(e.message);
@@ -118,6 +120,33 @@ grammarEditor.editor.on("input", (e: Event) => {
 styleEditor.editor.on("input", (e: Event) => {
     console.info("style changed");
     sentenceEditor.setStyle(styleEditor.editor.getValue());
+});
+
+sentenceEditor.element.addEventListener('parseFailed', e => {
+
+    if (sentenceEditor.agl.sppt) {
+        const sppt = sentenceEditor.agl.sppt;
+        const tree = trees.get("parse");
+        const root = tree.root;
+        if (e['exception'] && e['exception'].longestMatch) {
+            tree.setRoot(
+                e['exception'].longestMatch.root,
+                {
+                    label: n => n.name,
+                    hasChildren: n => n.isBranch,
+                    children: n => n.children.toArray()
+                }
+            );
+        } else {
+            tree.setRoot(
+                null,
+                {
+                    label:n=>'Parse Exception',
+                    hasChildren: n=> false
+                }
+            )
+        }
+    }
 });
 
 sentenceEditor.element.addEventListener('parseSuccess', e => {
@@ -139,7 +168,6 @@ sentenceEditor.element.addEventListener('parseSuccess', e => {
 });
 
 sentenceEditor.element.addEventListener('processSuccess', e => {
-
     if (sentenceEditor.agl.asm) {
         const asm = sentenceEditor.agl.asm;
         const tree = trees.get("asm");
@@ -152,9 +180,9 @@ sentenceEditor.element.addEventListener('processSuccess', e => {
                         return ':' + n.typeName;
                     } else if (n instanceof agl.api.analyser.AsmElementProperty) {
                         if (n.value instanceof agl.api.analyser.AsmElementSimple) {
-                            return n.name + ":" + n.value.typeName;
+                            return n.name + " : " + n.value.typeName;
                         } else {
-                            return n.name;
+                            return n.name + ' = ' + n.value;
                         }
                     } else {
                         return n.toString();
@@ -166,6 +194,8 @@ sentenceEditor.element.addEventListener('processSuccess', e => {
                     } else if (n instanceof agl.api.analyser.AsmElementProperty) {
                         if (n.value instanceof agl.api.analyser.AsmElementSimple) {
                             return true;
+                        } else if (n.value instanceof $kotlin.collections.List) {
+                            return true
                         } else {
                             return false;
                         }
@@ -179,6 +209,8 @@ sentenceEditor.element.addEventListener('processSuccess', e => {
                     } else if (n instanceof agl.api.analyser.AsmElementProperty) {
                         if (n.value instanceof agl.api.analyser.AsmElementSimple) {
                             return n.value.properties.toArray();
+                        } else if (n.value instanceof $kotlin.collections.List) {
+                            return n.value.toArray()
                         } else {
                             return [];
                         }
@@ -192,7 +224,7 @@ sentenceEditor.element.addEventListener('processSuccess', e => {
 });
 
 exampleSelect.addEventListener('change', (e:Event) => {
-    let eg = Examples.map.get(e.target.value);
+    let eg = Examples.map.get((e.target as any).value);
     grammarEditor.editor.setValue(eg.grammar,-1);
     styleEditor.editor.setValue(eg.style,-1);
     formatEditor.editor.setValue(eg.format,-1);

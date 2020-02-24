@@ -31,6 +31,7 @@ abstract class test_ScannerlessParserAbstract {
         val sppt = SPPTParser(rrs)
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
+        assertEquals(expected.toStringIndented("  "), actual.toStringIndented("  "))
         assertEquals(expected, actual)
         return actual
     }

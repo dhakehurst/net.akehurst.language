@@ -178,6 +178,7 @@ internal class RuntimeParser(
             }
             if (hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
                 this.graph.pushToStackOf(false, transition.to, l, gn, previousSet, emptySet())
+ //               println(transition)
             }
         }
     }
@@ -192,8 +193,8 @@ internal class RuntimeParser(
             if (hasLh || lh.isEmpty()) {
                 val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
                         ?: throw ParserException("Should never be null")
-
                 this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, complete, setOf(previous), gn.skipNodes)
+ //               println(transition)
             }
         }
     }
@@ -210,6 +211,7 @@ internal class RuntimeParser(
                     val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
                             ?: throw ParserException("Should never be null")
                     this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
+ //                   println(transition)
                 }
             }
         }
@@ -258,6 +260,7 @@ internal class RuntimeParser(
         val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
                 ?: throw ParserException("Should never be null")
         this.graph.growNextSkipChild(previous.node, complete)
+ //       println(transition)
     }
 
     private fun doEmbedded(gn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition) {
@@ -286,8 +289,6 @@ internal class RuntimeParser(
             TODO()
 //            throwError(graph, rp, seasons, maxNumHeads)
         }
-
-
-        //this.graph.pushToStackOf(false, transition.to, l, gn, previousSet, emptySet())
+//        println(transition)
     }
 }

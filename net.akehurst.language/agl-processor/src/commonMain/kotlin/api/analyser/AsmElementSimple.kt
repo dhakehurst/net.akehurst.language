@@ -20,7 +20,7 @@ import kotlin.js.JsName
 
 class AsmElementProperty(
         val name: String,
-        val value: Any
+        val value: Any?
 )
 
 class AsmElementSimple(
@@ -34,14 +34,18 @@ class AsmElementSimple(
     fun hasProperty(name: String): Boolean = _properties.containsKey(name)
 
     @JsName("getPropertyValue")
-    fun getPropertyValue(name: String): Any = _properties[name]?.value!!
+    fun getPropertyValue(name: String): Any? = _properties[name]?.value
 
     @JsName("getPropertyAstItem")
     fun getPropertyAstItem(name: String): AsmElementSimple = getPropertyValue(name) as AsmElementSimple
 
     @JsName("setProperty")
-    fun setProperty(name: String, value: Any) {
+    fun setProperty(name: String, value: Any?) {
         _properties[name] = AsmElementProperty(name, value)
+    }
+    @JsName("addAllProperty")
+    fun addAllProperty(value: List<AsmElementProperty>) {
+        value.forEach { this._properties[it.name] = it }
     }
 
     override fun toString(): String {

@@ -45,7 +45,8 @@ class test_Character_vs_RegEx : test_ScannerlessParserAbstract() {
                 })
         val charParser = ScannerlessParser(
                 runtimeRuleSet {
-                    multi("S", 0, -1) { literal("a") }
+                    multi("S", 0, -1,"'a'")
+                    literal("'a'","a")
                 })
     }
 

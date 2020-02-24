@@ -26,23 +26,52 @@ class test_group : test_ScannerlessParserAbstract() {
     val S = runtimeRuleSet {
         concatenation("R") { ref("grp") }
         concatenation("grp") { ref("A"); ref("Am")}
-        concatenation("A") { literal("A") }
-        multi("Am", 0,-1) { ref("A") }
+        multi("Am", 0,-1,"A")
+        literal("A","A")
     }
 
     @Test
-    fun t() {
+    fun t1() {
         val rrb = this.S
         val goal = "R"
-        val sentence = "AA"
+        val sentence = "A"
 
         val expected = """
             R {
-              grp { A Am { A } }
+              grp { A:'A' Am { §empty } }
             }
         """.trimIndent()
 
         super.test(rrb, goal, sentence, expected)
     }
 
+    @Test
+    fun t2() {
+        val rrb = this.S
+        val goal = "R"
+        val sentence = "AA"
+
+        val expected = """
+            R {
+              grp { A:'A' Am { A:'A' } }
+            }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected)
+    }
+
+    @Test
+    fun t3() {
+        val rrb = this.S
+        val goal = "R"
+        val sentence = "AAA"
+
+        val expected = """
+            R {
+              grp { A:'A' Am { A:'A' A:'A' } }
+            }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected)
+    }
 }

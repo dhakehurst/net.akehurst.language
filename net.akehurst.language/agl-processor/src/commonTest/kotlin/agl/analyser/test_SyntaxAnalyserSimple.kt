@@ -39,7 +39,8 @@ class test_SyntaxAnalyserSimple {
         val actual = proc.process<AsmElementSimple>(sentence)
 
         assertEquals("S", actual.typeName)
-        assertEquals(0, actual.properties.size)
+        assertEquals(1, actual.properties.size)
+        assertEquals("a", actual.getPropertyValue("'a'"))
     }
 
     @Test
@@ -61,6 +62,31 @@ class test_SyntaxAnalyserSimple {
         assertEquals(1, actual.properties.size)
         assertEquals(true, actual.hasProperty("ID"))
         assertEquals("a", actual.getPropertyValue("ID"))
+    }
+
+    @Test
+    fun patternChoice() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = ID ':' type ;
+                type = 'int' | 'bool' | "[A-Z][a-z]*" ;
+                leaf ID = "[a-z]" ;
+            }
+        """.trimIndent()
+
+        val sentence = "a : A"
+
+        val proc = Agl.processor(grammarStr, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmElementSimple>(sentence)
+
+        assertEquals("S", actual.typeName)
+        assertEquals(2, actual.properties.size)
+        assertEquals(true, actual.hasProperty("ID"))
+        assertEquals("a", actual.getPropertyValue("ID"))
+        assertEquals(true, actual.hasProperty("type"))
+        assertEquals("a", actual.getPropertyValue("A"))
     }
 
 
@@ -137,6 +163,85 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test
+    fun optional_full() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = ID NUMBER? NAME ;
+                leaf ID = "[a-z]" ;
+                leaf NUMBER = "[0-9]+" ;
+                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
+            }
+        """.trimIndent()
+
+        val sentence = "a 8 fred"
+
+        val proc = Agl.processor(grammarStr, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmElementSimple>(sentence)
+
+        assertEquals("S", actual.typeName)
+        assertEquals(3, actual.properties.size)
+        assertEquals(true, actual.hasProperty("ID"))
+        assertEquals("a", actual.getPropertyValue("ID"))
+        assertEquals("8", actual.getPropertyValue("NUMBER"))
+        assertEquals("fred", actual.getPropertyValue("NAME"))
+    }
+
+    @Test
+    fun optional_empty() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = ID NUMBER? NAME ;
+                leaf ID = "[a-z]" ;
+                leaf NUMBER = "[0-9]+" ;
+                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
+            }
+        """.trimIndent()
+
+        val sentence = "a fred"
+
+        val proc = Agl.processor(grammarStr, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmElementSimple>(sentence)
+
+        assertEquals("S", actual.typeName)
+        assertEquals(3, actual.properties.size)
+        assertEquals(true, actual.hasProperty("ID"))
+        assertEquals("a", actual.getPropertyValue("ID"))
+        assertEquals(null, actual.getPropertyValue("NUMBER"))
+        assertEquals("fred", actual.getPropertyValue("NAME"))
+    }
+
+    @Test
+    fun multi_empty() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = ID NAME* ;
+                leaf ID = "[a-z]" ;
+                leaf NUMBER = "[0-9]+" ;
+                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
+            }
+        """.trimIndent()
+
+        val sentence = "a"
+
+        val proc = Agl.processor(grammarStr, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmElementSimple>(sentence)
+
+        assertEquals("S", actual.typeName)
+        assertEquals(2, actual.properties.size)
+        assertEquals(true, actual.hasProperty("ID"))
+        assertEquals("a", actual.getPropertyValue("ID"))
+        assertEquals(true, actual.hasProperty("NAME"))
+        assertEquals(0, (actual.getPropertyValue("NAME") as List<Any>).size)
+        assertEquals(emptyList<String>(), actual.getPropertyValue("NAME"))
+    }
+
+    @Test
     fun multi() {
         val grammarStr = """
             namespace test
@@ -160,5 +265,42 @@ class test_SyntaxAnalyserSimple {
         assertEquals("a", actual.getPropertyValue("ID"))
         assertEquals(true, actual.hasProperty("NAME"))
         assertEquals(3, (actual.getPropertyValue("NAME") as List<Any>).size)
+        assertEquals(listOf("adam", "betty", "charles"), actual.getPropertyValue("NAME"))
+    }
+
+    @Test
+    fun slist() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                addressBook = ID contacts;
+                contacts = [person / ',']* ;
+                person = NAME NAME NUMBER ;
+                leaf ID = "[a-zA-Z0-9]+" ;
+                leaf NUMBER = "[0-9]+" ;
+                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
+            }
+        """.trimIndent()
+
+        val sentence = "bk1 adam ant 12345, betty boo 34567, charlie chaplin 98765"
+
+        val proc = Agl.processor(grammarStr, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmElementSimple>(sentence)
+
+        assertEquals("addressBook", actual.typeName)
+        assertEquals(2, actual.properties.size)
+        assertEquals(true, actual.hasProperty("ID"))
+        assertEquals("bk1", actual.getPropertyValue("ID"))
+        assertEquals(true, actual.hasProperty("contacts"))
+        assertEquals(5, (actual.getPropertyValue("contacts") as List<Any>).size)
+        val list = (actual.getPropertyValue("contacts") as List<Any>)
+        val actual0 = list[0] as AsmElementSimple
+        assertEquals(true, actual0.hasProperty("NAME"))
+        assertEquals("adam", actual0.getPropertyValue("NAME"))
+        assertEquals(true, actual0.hasProperty("NAME2"))
+        assertEquals("ant", actual0.getPropertyValue("NAME2"))
+        assertEquals(true, actual0.hasProperty("NUMBER"))
+        assertEquals("12345", actual0.getPropertyValue("NUMBER"))
     }
 }

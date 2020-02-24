@@ -157,7 +157,7 @@ export class AglEditorAce {
                 this.errorParseMarkerIds.forEach(id => this.editor.getSession().removeMarker(id));
 
                 if (this.goalRule) {
-                    this.agl.sppt = this.processor.parseForGoal(this.goalRule, this.editor.getValue());
+                    this.agl.sppt = (this.processor as any).parseForGoal(this.goalRule, this.editor.getValue()); // cast to any because .d.ts file has wrong name for 'parseForGoal'
                 } else {
                     this.agl.sppt = this.processor.parse(this.editor.getValue());
                 }
@@ -171,6 +171,7 @@ export class AglEditorAce {
                     this.agl.sppt = null;
                     const event = document.createEvent("HTMLEvents");
                     event.initEvent('parseFailed', true, true);
+                    event['exception'] = e;
                     this.element.dispatchEvent(event);
                     // parse failed so re-tokenize from scan
                     this.updateSyntax();
@@ -203,7 +204,7 @@ export class AglEditorAce {
                 this.editor.getSession().clearAnnotations(); //assume there are no parse errors or there would be no sppt!
                 this.errorProcessMarkerIds.forEach(id => this.editor.getSession().removeMarker(id));
 
-                this.agl.asm = this.processor.processFromSPPT(this.agl.sppt);
+                this.agl.asm = (this.processor as any).processFromSPPT(this.agl.sppt); // cast to any because .d.ts file has wrong name for 'processFromSPPT'
 
                 const event = document.createEvent("HTMLEvents");
                 event.initEvent('processSuccess', true, true);
@@ -213,9 +214,9 @@ export class AglEditorAce {
                     this.agl.sppt = null;
                     const event = document.createEvent("HTMLEvents");
                     event.initEvent('processFailed', true, true);
+                    event['exception'] = e;
                     this.element.dispatchEvent(event);
 
-                    console.error("Error processing parse result in " + this.editorId + ' for language ' + this.languageId, e.message);
                     /*
                     const errors = [];
                     errors.push(new AglErrorAnnotation(

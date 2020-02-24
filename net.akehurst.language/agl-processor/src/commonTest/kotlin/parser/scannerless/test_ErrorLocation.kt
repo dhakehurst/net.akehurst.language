@@ -132,7 +132,8 @@ class test_ErrorLocation : test_ScannerlessParserAbstract() {
     fun multi1n_empty_fail() {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("as") }
-            multi("as", 1, -1) { literal("a") }
+            multi("as", 1, -1, "'a'")
+            literal("'a'","a")
         }
         val goal = "S"
         val sentence = ""
@@ -150,7 +151,8 @@ class test_ErrorLocation : test_ScannerlessParserAbstract() {
     fun multi2n_empty_fail() {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("as") }
-            multi("as", 2, -1) { literal("a") }
+            multi("as", 2, -1,"'a'")
+            literal("'a'","a")
         }
         val goal = "S"
         val sentence = "a"
@@ -168,7 +170,8 @@ class test_ErrorLocation : test_ScannerlessParserAbstract() {
     fun multi25_empty_fail() {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("as") }
-            multi("as", 2, 5) { literal("a") }
+            multi("as", 2, 5,"'a'")
+            literal("'a'","a")
         }
         val goal = "S"
         val sentence = "aaaaaa"

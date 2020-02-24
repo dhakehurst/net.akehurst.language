@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.analyser
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
@@ -30,7 +31,7 @@ import net.akehurst.language.parser.sppt.SPPTBranchDefault
 import net.akehurst.language.parser.sppt.SPPTLeafDefault
 
 
-class SyntaxAnalyserSimple : SyntaxAnalyser, SharedPackedParseTreeVisitor<Any?, Any?> {
+class SyntaxAnalyserSimple : SyntaxAnalyser, SharedPackedParseTreeVisitor<AsmElementSimple, Any?> {
 
 
     override fun clear() {
@@ -41,42 +42,112 @@ class SyntaxAnalyserSimple : SyntaxAnalyser, SharedPackedParseTreeVisitor<Any?, 
         return sppt.accept(this, null) as T
     }
 
-    override fun visit(target: SharedPackedParseTree, arg: Any?): Any? {
+    override fun visit(target: SharedPackedParseTree, arg: Any?): AsmElementSimple {
         val root = target.root
         return root.accept(this, arg)
     }
 
-    override fun visit(target: SPPTLeaf, arg: Any?): Any? {
+    override fun visit(target: SPPTLeaf, arg: Any?): AsmElementSimple {
         val leaf = target as SPPTLeafDefault
-        return when {
-            leaf.runtimeRule.isPattern -> target.matchedText
-            else -> null
+        val value = when {
+            leaf.isEmptyLeaf -> null
+            else -> leaf.nonSkipMatchedText
         }
+        val el = AsmElementSimple(leaf.name)
+        el.setProperty(leaf.name, value)
+        return el
+
     }
 
-    override fun visit(target: SPPTBranch, arg: Any?): Any? {
+    override fun visit(target: SPPTBranch, arg: Any?): AsmElementSimple {
         val br = target as SPPTBranchDefault //TODO: make write thing available on interface
-        return when (br.runtimeRule.kind) {
-            RuntimeRuleKind.TERMINAL -> throw SyntaxAnalyserException("Should not happen",null)
+        var el = AsmElementSimple(br.name)
+        when (br.runtimeRule.kind) {
+            RuntimeRuleKind.TERMINAL -> throw SyntaxAnalyserException("Should not happen", null)
             RuntimeRuleKind.NON_TERMINAL -> when (br.runtimeRule.rhs.kind) {
-                RuntimeRuleItemKind.MULTI -> this.multi(target,arg)
-                RuntimeRuleItemKind.SEPARATED_LIST -> target.children.map { it.accept(this, arg) }
-                RuntimeRuleItemKind.CHOICE -> br.children[0].accept(this, arg)
-                RuntimeRuleItemKind.CONCATENATION -> createAstElement(target, arg)
-                else -> throw SyntaxAnalyserException("Unsupported rhs type",null)
+                RuntimeRuleItemKind.MULTI -> {
+                    val name = br.runtimeRule.rhs.items[RuntimeRuleItem.MULTI__ITEM].tag
+                    val list = br.nonSkipChildren.map { it.accept(this, arg) }
+                    val value = list.mapNotNull { it.properties[0].value } // there should be only one property
+                    if (br.runtimeRule.rhs.multiMax == 1) {
+                        val v = if (value.isEmpty()) null else value[0]
+                        el.setProperty(name, v)
+                    } else {
+                        el.setProperty(name, value)
+                    }
+                }
+                RuntimeRuleItemKind.SEPARATED_LIST -> {
+                    val name = br.runtimeRule.rhs.items[RuntimeRuleItem.SLIST__ITEM].tag
+                    val list = br.nonSkipChildren.map { it.accept(this, arg) }
+                    val value = list.map {
+                        if (it.properties.size == 1)
+                            it.properties[0].value
+                        else
+                            it
+                    } // there should be only one property
+                    el.setProperty(name, value)
+                }
+                RuntimeRuleItemKind.CHOICE -> {
+                    val v = br.children[0].accept(this, arg)
+                    val name = createPropertyName(br.runtimeRule)
+                    when {
+                       1 == v.properties.size -> {
+                           el.setProperty(name, v.properties[0].value)
+                       }
+                       else -> {
+                           el = v
+                       }
+                    }
+
+                }
+                RuntimeRuleItemKind.CONCATENATION -> {
+                    val count = mutableMapOf<String, Int>()
+                    br.runtimeRule.rhs.items.forEachIndexed { index, rr ->
+                        val name = createPropertyName(rr)
+                        val value = br.nonSkipChildren[index].accept(this, arg)
+                        val vvalue = if (1 == value.properties.size) {
+                            value.properties[0].value
+                        } else {
+                            value
+                        }
+                        if (el.hasProperty(name)) {
+                            val i = count[name] ?: 2
+                            count[name] = i + 1
+                            val nname = name + i
+                            el.setProperty(nname, vvalue)
+                        } else {
+                            el.setProperty(name, vvalue)
+                        }
+                    }
+                }
+                else -> throw SyntaxAnalyserException("Unsupported rhs type", null)
             }
             RuntimeRuleKind.GOAL -> br.children[0].accept(this, arg)
             RuntimeRuleKind.EMBEDDED -> TODO()
         }
+        return el
     }
 
-    fun createAstElement(target: SPPTBranch, arg: Any?) : AsmElementSimple {
+    fun createPropertyName(runtimeRule: RuntimeRule): String {
+        return when (runtimeRule.kind) {
+            RuntimeRuleKind.TERMINAL -> runtimeRule.tag
+            RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.kind) {
+                RuntimeRuleItemKind.MULTI -> createPropertyName(runtimeRule.rhs.items[RuntimeRuleItem.MULTI__ITEM])
+                RuntimeRuleItemKind.SEPARATED_LIST -> createPropertyName(runtimeRule.rhs.items[RuntimeRuleItem.SLIST__ITEM])
+                else -> runtimeRule.tag
+            }
+            RuntimeRuleKind.EMBEDDED -> runtimeRule.tag
+            RuntimeRuleKind.GOAL -> runtimeRule.tag
+        }
+    }
+
+    fun createAstElement(target: SPPTBranch, arg: Any?): AsmElementSimple {
         val asm = AsmElementSimple(target.name)
         target.nonSkipChildren.forEach {
             val name = when {
                 it is SPPTBranchDefault -> {
                     when (it.runtimeRule.kind) {
-                        RuntimeRuleKind.NON_TERMINAL -> when(it.runtimeRule.rhs.kind) {
+                        RuntimeRuleKind.NON_TERMINAL -> when (it.runtimeRule.rhs.kind) {
                             RuntimeRuleItemKind.MULTI -> it.runtimeRule.rhs.items[RuntimeRuleItem.MULTI__ITEM].tag
                             else -> it.name
                         }
@@ -85,16 +156,16 @@ class SyntaxAnalyserSimple : SyntaxAnalyser, SharedPackedParseTreeVisitor<Any?, 
                 }
                 else -> it.name
             }
-            val value = it.accept(this,arg)
-            if (null!=value) {
+            val value = it.accept(this, arg)
+            if (null != value) {
 
-                asm.setProperty(name,value)
+                asm.setProperty(name, value)
             }
         }
         return asm
     }
 
-    fun multi(target: SPPTBranch, arg: Any?) : List<Any> {
+    fun multi(target: SPPTBranch, arg: Any?): List<Any> {
         return target.nonSkipChildren.mapNotNull { it.accept(this, arg) }
     }
 }

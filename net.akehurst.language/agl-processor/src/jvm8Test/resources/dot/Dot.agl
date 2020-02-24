@@ -1,12 +1,3 @@
-import {Examples} from "./examples";
-
-const id = 'embedded-dot';
-const label = 'Graphviz DOT Language (XML Embedded in DOT) ';
-
-const sentence = `
-
-`;
-const grammar = `
 namespace net.akehurst.language.example.dot
 
 grammar Xml {
@@ -25,17 +16,17 @@ grammar Xml {
 
 	attribute = NAME WS? '=' WS? string WS? ;
 	string = DOUBLE_QUOTE_STRING | SINGLE_QUOTE_STRING ;
-	WS = "\\s+" ;
+	WS = "\s+" ;
 	CHARDATA = "[^<]+" ;
 	NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
-	DOUBLE_QUOTE_STRING = "[\\"][^\\"]*[\\"]" ;
+	DOUBLE_QUOTE_STRING = "[\"][^\"]*[\"]" ;
 	SINGLE_QUOTE_STRING = "['][^']*[']" ;
 }
 
 grammar Dot  {
 
-    skip WHITESPACE = "\\s+" ;
-	skip SINGLE_LINE_COMMENT = "/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/" ;
+    skip WHITESPACE = "\s+" ;
+	skip SINGLE_LINE_COMMENT = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
 	skip MULTI_LINE_COMMENT = "//.*?$" ;
 	skip C_PREPROCESSOR = "#.*?$" ;
 
@@ -72,12 +63,12 @@ grammar Dot  {
     subgraph = ( SUBGRAPH ID? ) ? '{' stmt_list '}' ;
 
 
-	leaf STRICT = "[Ss][Tt][Rr][Ii][Cc][Tt]";
-	leaf GRAPH = "[Gg][Rr][Aa][Pp][Hh]" ;
-	leaf DIGRAPH = "[Dd][Ii][Gg][Rr][Aa][Pp][Hh]" ;
-	leaf SUBGRAPH = "[Ss][Uu][Bb][Gg][Rr][Aa][Pp][Hh]" ;
-	leaf NODE = "[Nn][Oo][Dd][Ee]" ;
-	leaf EDGE = "[Ee][Dd][Gg][Ee]" ;
+	STRICT = "[Ss][Tt][Rr][Ii][Cc][Tt]";
+	GRAPH = "[Gg][Rr][Aa][Pp][Hh]" ;
+	DIGRAPH = "[Dd][Ii][Gg][Rr][Aa][Pp][Hh]" ;
+	SUBGRAPH = "[Ss][Uu][Bb][Gg][Rr][Aa][Pp][Hh]" ;
+	NODE = "[Nn][Oo][Dd][Ee]" ;
+	EDGE = "[Ee][Dd][Gg][Ee]" ;
 
 	ID =
 	  ALPHABETIC_ID
@@ -86,47 +77,10 @@ grammar Dot  {
 	| HTML
 	;
 
-	leaf ALPHABETIC_ID = "[a-zA-Z_][a-zA-Z_0-9]*" ; //"[a-zA-Z\\200-\\377_][a-zA-Z\\200-\\377_0-9]*" ;
+	ALPHABETIC_ID = "[a-zA-Z_][a-zA-Z_0-9]*" ; //"[a-zA-Z\200-\377_][a-zA-Z\200-\377_0-9]*" ;
 
-	leaf NUMERAL = "[-+]?([0-9]*(.[0-9]+)?)" ;
-	leaf DOUBLE_QUOTE_STRING = "\\"(?:\\\\?.)*?\\"" ;
+	NUMERAL = "[-+]?([0-9]*(.[0-9]+)?)" ;
+	DOUBLE_QUOTE_STRING = "\"(?:\\?.)*?\"" ;
 	HTML = '<' Xml.elementContent '>' ;
 
 }
-
-`;
-const style = `
-STRICT {
-  color: purple;
-  font-weight: bold;
-}
-GRAPH {
-  color: purple;
-  font-weight: bold;
-}
-DIGRAPH {
-  color: purple;
-  font-weight: bold;
-}
-SUBGRAPH {
-  color: purple;
-  font-weight: bold;
-}
-NODE {
-  color: purple;
-  font-weight: bold;
-}
-EDGE {
-  color: purple;
-  font-weight: bold;
-}
-ALPHABETIC_ID {
-  color: red;
-  font-style: italic;
-}
-`;
-const format = `
-
-`;
-
-Examples.add(id, label, sentence, grammar, style, format);
