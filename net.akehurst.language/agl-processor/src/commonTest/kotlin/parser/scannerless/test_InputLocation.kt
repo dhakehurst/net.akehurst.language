@@ -184,13 +184,13 @@ class test_InputLocation_multiLine2 {
     @Test
     fun NLaNLbNLc() {
         val sp = ScannerlessParser(S)
-
-        val actual = sp.parse("S", """
+        val sentence = """
             
             aaa
             bbb
             ccc
-        """.trimIndent())
+        """.trimIndent()
+        val actual = sp.parse("S", sentence)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 12), actual.root.location)

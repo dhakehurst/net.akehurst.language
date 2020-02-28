@@ -90,14 +90,12 @@ class SyntaxAnalyserSimple : SyntaxAnalyser, SharedPackedParseTreeVisitor<AsmEle
                 RuntimeRuleItemKind.CHOICE -> {
                     val v = br.children[0].accept(this, arg)
                     val name = createPropertyName(br.runtimeRule)
-                    when {
-                       1 == v.properties.size -> {
-                           el.setProperty(name, v.properties[0].value)
-                       }
-                       else -> {
-                           el = v
-                       }
-                    }
+                    val allChoicesPrimitive = br.runtimeRule.rhs.items.all { it.kind==RuntimeRuleKind.TERMINAL }
+                   if (allChoicesPrimitive) {
+                       el = v
+                   } else {
+                       el.setProperty(name, v)
+                   }
 
                 }
                 RuntimeRuleItemKind.CONCATENATION -> {

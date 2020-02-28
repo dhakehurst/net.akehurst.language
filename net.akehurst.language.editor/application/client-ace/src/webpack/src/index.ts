@@ -1,20 +1,22 @@
 import './ace.css'
 import './index.css'
-import {TabView} from './TabView.js';
-import {AglEditorAce} from 'net.akehurst.language.editor-agl-ace'
+import * as kotlin_jsm from 'kotlin';
+import $kotlin = kotlin_jsm;
 import * as agl_js from 'net.akehurst.language-agl-processor';
-import * as kotlin_js from 'kotlin';
-import $kotlin = kotlin_js.kotlin;
 import agl = agl_js.net.akehurst.language;
+import {AglEditorAce} from 'net.akehurst.language.editor-agl-ace';
 import {TreeView} from "./TreeView";
+import {TabView} from './TabView.js';
 
 import './examples/classes';
 import './examples/agl-grammar';
 import './examples/embedded-dot';
 import {Examples} from './examples/examples';
 
-
 const Agl = agl.processor.Agl;
+const KList = ($kotlin as any).kotlin.collections.List;
+const Kotlin = ($kotlin as any);
+
 
 TabView.initialise();
 const editors = AglEditorAce.initialise();
@@ -181,6 +183,8 @@ sentenceEditor.element.addEventListener('processSuccess', e => {
                     } else if (n instanceof agl.api.analyser.AsmElementProperty) {
                         if (n.value instanceof agl.api.analyser.AsmElementSimple) {
                             return n.name + " : " + n.value.typeName;
+                        } else if (Kotlin.isType(n.value, KList)) {
+                            return n.name +' : List';
                         } else {
                             return n.name + ' = ' + n.value;
                         }
@@ -194,7 +198,7 @@ sentenceEditor.element.addEventListener('processSuccess', e => {
                     } else if (n instanceof agl.api.analyser.AsmElementProperty) {
                         if (n.value instanceof agl.api.analyser.AsmElementSimple) {
                             return true;
-                        } else if (n.value instanceof $kotlin.collections.List) {
+                        } else if (Kotlin.isType(n.value, KList)) {
                             return true
                         } else {
                             return false;
@@ -209,7 +213,7 @@ sentenceEditor.element.addEventListener('processSuccess', e => {
                     } else if (n instanceof agl.api.analyser.AsmElementProperty) {
                         if (n.value instanceof agl.api.analyser.AsmElementSimple) {
                             return n.value.properties.toArray();
-                        } else if (n.value instanceof $kotlin.collections.List) {
+                        } else if (Kotlin.isType(n.value, KList)) {
                             return n.value.toArray()
                         } else {
                             return [];

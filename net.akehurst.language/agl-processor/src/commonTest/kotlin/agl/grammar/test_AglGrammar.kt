@@ -463,7 +463,7 @@ class test_AglGrammar {
             grammar Outer {
                 S = A gB A ;
                 leaf A = 'A' ;
-                grammar gB = test.Inner ;
+                gB = test.Inner.B ;
             }
         """.trimIndent()
 

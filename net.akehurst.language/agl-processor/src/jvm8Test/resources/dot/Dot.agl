@@ -31,10 +31,10 @@ grammar Dot  {
 	skip C_PREPROCESSOR = "#.*?$" ;
 
 	graph =
-	  STRICT? type  ID? '{' stmt_list '}'
+	  STRICT? (type)? ID? '{' stmt_list '}'
 	;
-    type = GRAPH | DIGRAPH ? ;
-	stmt_list = ( stmt ';'? )* ;
+    type = GRAPH | DIGRAPH ;
+	stmt_list = ( stmt ';' ? ) * ;
 
 	stmt =
 	    node_stmt

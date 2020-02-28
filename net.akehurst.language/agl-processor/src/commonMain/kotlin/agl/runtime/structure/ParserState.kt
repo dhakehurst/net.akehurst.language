@@ -31,6 +31,8 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.collections.transitiveClosure
+
 data class ParentRelation(
         val rulePosition: RulePosition,
         val lookahead: Set<RuntimeRule>
@@ -39,6 +41,7 @@ data class ParentRelation(
 class ParserState(
         val number: StateNumber,
         val rulePosition: RulePosition,
+        val lookahead: Set<RuntimeRule>,
         val stateSet: ParserStateSet
 ) {
 
@@ -48,8 +51,16 @@ class ParserState(
 
     val parentRelations: Set<ParentRelation>
         get() {
-            return this._parentRelations
+            return this.parentRelations2
+            //return this._parentRelations
         }
+    val parentRelations2: Set<ParentRelation> by lazy {
+        if (rulePosition.runtimeRule.kind==RuntimeRuleKind.GOAL) {
+            emptySet()
+        } else {
+            this.stateSet.parentRelations[this.rulePosition.runtimeRule]
+        }
+    }
 
     val items: Set<RuntimeRule>
         inline get() {
@@ -73,14 +84,43 @@ class ParserState(
             return this.rulePosition.isAtEnd
         }
 
+    fun createClosure(parentLookahead: Set<RuntimeRule>): RulePositionClosure {
+        // create path from root down, it may include items from root up
+        val stateMap = this.stateSet
+        val firstParentLh = parentLookahead//parentRelation?.lookahead ?: emptySet()
+        val rootWlh = RulePositionWithLookahead(this.rulePosition, firstParentLh) //TODO: get real LH
+        val closureSet = setOf(rootWlh).transitiveClosure { parent ->
+            val parentRP = parent.rulePosition
+            val parentLh = parent.lookahead
+            parentRP.items.flatMap { rr ->
+                val childrenRP = rr.calcExpectedRulePositions(0)
+                childrenRP.map { childRP ->
+                    //TODO: uncomment this if createAll is not called
+                    val childRPEnd = childRP.atEnd() //childRP.runtimeRule, childRP.choice, RulePosition.END_OF_RULE)
+                    val elh = this.stateSet.runtimeRuleSet.calcLookahead(parent, childRPEnd, parentLh)
+                    val childEndState = stateMap.fetchOrCreateParseState(childRPEnd, elh)
+                    //TODO: add all parent relations, using the possibleParents!
+                    val pp = this.stateSet.parentPosition[childRPEnd.runtimeRule]
+                    childEndState.addParentRelation(ParentRelation(parentRP, elh))
+                    val lh = this.stateSet.runtimeRuleSet.calcLookahead(parent, childRP, parentLh)
+                    RulePositionWithLookahead(childRP, lh)
+                }
+            }.toSet()
+        }
+        return RulePositionClosure(ClosureNumber(-1), this.rulePosition, closureSet)
+    }
+
+
     fun transitions(runtimeRuleSet: RuntimeRuleSet, previous:RulePosition?): Set<Transition> {
+        //val filteredRelations = this.parentRelations.filter { pr -> runtimeRuleSet.canGrowInto(pr, previous) }
         val cache = this.transitions_cache[previous]
-        if (null==cache) {
+        return if (null==cache) {
+            //TODO: remove dependency on previous when calculating transitions! ?
             val transitions = runtimeRuleSet.calcTransitions(this, previous)
             this.transitions_cache[previous] = transitions
             return transitions
         } else {
-            return cache
+            cache
         }
     }
 
@@ -111,7 +151,7 @@ class ParserState(
     }
 
     override fun toString(): String {
-        return "State(${this.number.value}-${rulePosition})"
+        return "State(${this.number.value}-${rulePosition}${lookahead})"
     }
 
 }

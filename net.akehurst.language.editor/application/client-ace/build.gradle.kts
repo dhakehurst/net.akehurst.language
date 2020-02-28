@@ -1,5 +1,5 @@
 plugins {
-    id("net.akehurst.kotlin.kt2ts") version "1.5.0"
+    id("net.akehurst.kotlin.kt2ts") version "1.5.1"
 }
 
 val version_agl:String by project
@@ -21,7 +21,7 @@ kt2ts {
             if (project.hasProperty("prod")) {
                 listOf("webpack", "--output=${outDir.get()}/main.js")
             } else {
-                listOf("webpack", "--mode=development", "--output=${outDir.get()}/main.js")
+                listOf("webpack", "--mode=development", "--output=${outDir.get()}/main.js", "--display-modules")
             }
     )
 }

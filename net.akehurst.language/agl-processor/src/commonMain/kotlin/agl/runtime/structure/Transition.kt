@@ -24,7 +24,7 @@ class Transition(
         val action: ParseAction,
         val lookaheadGuard: Set<RuntimeRule>,
         val prevGuard : RulePosition?,
-        val runtimeGuard: Transition.(GrowingNode)->Boolean
+        val runtimeGuard: Transition.(current:GrowingNode, previous:RulePosition?)->Boolean
 //TODO: add previousGuard for use in graft
 ) {
     enum class ParseAction {

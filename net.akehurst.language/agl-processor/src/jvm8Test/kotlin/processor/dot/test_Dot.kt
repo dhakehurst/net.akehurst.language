@@ -40,15 +40,11 @@ class test_Dot(val data:Data) {
 
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl").readText()
         //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
-        var processor: LanguageProcessor = tgqlprocessor()
+        var processor: LanguageProcessor = Agl.processor(grammarStr)
 
         val validDirectory = "/dot/valid/"
         var validFiles = this::class.java.getResourceAsStream(validDirectory).use { if (null==it) emptyList<String>() else BufferedReader(InputStreamReader(it)).readLines() }
 
-        fun tgqlprocessor() : LanguageProcessor {
-            //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processor(grammarStr)
-         }
 
         @JvmStatic
         @Parameters(name = "{0}")

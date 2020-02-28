@@ -43,7 +43,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         val undefined = RuntimeRule(-5, "undefined", "", RuntimeRuleKind.TERMINAL, false, true)
         //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
         val input = InputFromCharSequence(inputText)
-        val terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.allNonSkipTerminals
+        val terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.nonSkipTerminals
         var result = mutableListOf<SPPTLeaf>()
 
         var position = 0
@@ -111,7 +111,12 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
             //          }
             seasons++
             maxNumHeads = max(maxNumHeads, graph.growingHead.size)
-        } while (rp.canGrow)
+//        } while (rp.canGrow)
+        } while (rp.canGrow && graph.goals.isEmpty())
+        //TODO: when parsing an ambiguous grammar,
+        // how to know we have found all goals? - keep going until cangrow is false
+        // but - stop .. some grammars don't stop if we don't do test for a goal!
+        // e.g. leftRecursive.test_aa
 
         val match = graph.longestMatch(seasons, maxNumHeads)
         return if (match!=null) {
@@ -201,7 +206,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
             nextExpected.add(rr)
         }
         // add skip rules at end
-        for (rr in this.runtimeRuleSet.allSkipRules) {
+        for (rr in this.runtimeRuleSet.skipRules) {
             nextExpected.add(rr)
         }
         return nextExpected

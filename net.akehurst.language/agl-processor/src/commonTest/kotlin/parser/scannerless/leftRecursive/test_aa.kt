@@ -40,7 +40,6 @@ class test_aa : test_ScannerlessParserAbstract() {
 
     @Test
     fun a() {
-        fail("this does not terminate")
         val rrb = this.S()
         val goal = "S"
         val sentence = "a"
@@ -54,13 +53,15 @@ class test_aa : test_ScannerlessParserAbstract() {
 
     @Test
     fun aa() {
-        fail("this does not terminate")
         val rrb = this.S()
         val goal = "S"
         val sentence = "aa"
 
         val expected = """
-            S { 'a' }
+            S { P { P1 {
+                P { S { 'a' } }
+                S { 'a' }
+            } } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)

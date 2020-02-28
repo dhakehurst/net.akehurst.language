@@ -17,14 +17,16 @@ package net.akehurst.language.processor.dot
 
 import net.akehurst.language.api.analyser.AsmElementSimple
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.processor.Agl
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class test_Dot_SyntaxAnalyser {
 
     companion object {
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl").readText()
-        var processor: LanguageProcessor = test_Dot.tgqlprocessor()
+        var processor: LanguageProcessor = Agl.processor(grammarStr)
     }
 
 
@@ -40,6 +42,10 @@ class test_Dot_SyntaxAnalyser {
         val actual = processor.process<AsmElementSimple>(sentence)
 
         assertNotNull(actual)
+        assertEquals(null,actual.getPropertyValue("STRICT"))
+        assertEquals("graph",actual.getPropertyValue("type"))
+        assertEquals(null,actual.getPropertyValue("STRICT"))
+        assertEquals(null,actual.getPropertyValue("STRICT"))
     }
 
     @Test

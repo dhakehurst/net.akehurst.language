@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.api.parser.ParserException
-import net.akehurst.language.collections.transitveClosure
+import net.akehurst.language.collections.transitiveClosure
 import net.akehurst.language.parser.scannerless.InputFromCharSequence
 
 class RuntimeRule(
@@ -118,18 +118,18 @@ class RuntimeRule(
                     }
                     RuntimeRuleItemKind.SEPARATED_LIST -> if (0 == rhs.multiMin) {
                         setOf(
-                                RulePosition(this, RuntimeRuleItem.SLIST__EMPTY_RULE, 0),
+                                RulePosition(this, RuntimeRuleItem.SLIST__EMPTY_RULE, RulePosition.START_OF_RULE),
                                 RulePosition(this, RuntimeRuleItem.SLIST__EMPTY_RULE, RulePosition.END_OF_RULE),
-                                RulePosition(this, RuntimeRuleItem.SLIST__SEPARATOR, 1),
-                                RulePosition(this, RuntimeRuleItem.SLIST__ITEM, 0),
-                                RulePosition(this, RuntimeRuleItem.SLIST__ITEM, 2),
+                                RulePosition(this, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_SEPARATOR_POSITION),
+                                RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.START_OF_RULE),
+                                RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.SLIST_ITEM_POSITION),
                                 RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
                         )
                     } else {
                         setOf(
-                                RulePosition(this, RuntimeRuleItem.SLIST__SEPARATOR, 1),
-                                RulePosition(this, RuntimeRuleItem.SLIST__ITEM, 0),
-                                RulePosition(this, RuntimeRuleItem.SLIST__ITEM, 2),
+                                RulePosition(this, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_SEPARATOR_POSITION),
+                                RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.START_OF_RULE),
+                                RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.SLIST_ITEM_POSITION),
                                 RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
                         )
                     }
@@ -247,7 +247,7 @@ class RuntimeRule(
 
     fun items(choice: Int, position: Int): Set<RuntimeRule> { //TODO: do we need to return a set here?
         return when (kind) {
-            RuntimeRuleKind.GOAL -> when(position) {
+            RuntimeRuleKind.GOAL -> when (position) {
                 0 -> setOf(rhs.items[position])
                 1 -> rhs.items.drop(1).toSet()
                 else -> error("Should not happen")
@@ -258,12 +258,43 @@ class RuntimeRule(
                 RuntimeRuleItemKind.CHOICE -> setOf(rhs.items[choice])
                 RuntimeRuleItemKind.CONCATENATION -> setOf(rhs.items[position])
                 RuntimeRuleItemKind.UNORDERED -> TODO() // will require a multiple items in the set
-                RuntimeRuleItemKind.MULTI -> setOf(rhs.items[choice])
-                RuntimeRuleItemKind.SEPARATED_LIST -> setOf(rhs.items[choice])
+                RuntimeRuleItemKind.MULTI -> when (choice) {
+                    RuntimeRuleItem.MULTI__ITEM -> when (position) {
+                        RulePosition.START_OF_RULE -> setOf(rhs.items[RuntimeRuleItem.MULTI__ITEM])
+                        RulePosition.MULIT_ITEM_POSITION -> setOf(rhs.items[RuntimeRuleItem.MULTI__ITEM])
+                        RulePosition.END_OF_RULE -> emptySet()
+                        else -> error("Should not happen")
+                    }
+                    RuntimeRuleItem.MULTI__EMPTY_RULE -> when (position) {
+                        RulePosition.START_OF_RULE -> setOf(rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE])
+                        RulePosition.END_OF_RULE -> emptySet()
+                        else -> error("Should not happen")
+                    }
+                    else -> error("Should not happen")
+                }
+                RuntimeRuleItemKind.SEPARATED_LIST -> when (choice) {
+                    RuntimeRuleItem.SLIST__ITEM -> when (position) {
+                        RulePosition.START_OF_RULE -> setOf(rhs.items[RuntimeRuleItem.SLIST__ITEM])
+                        RulePosition.SLIST_ITEM_POSITION -> setOf(rhs.items[RuntimeRuleItem.SLIST__ITEM])
+                        RulePosition.END_OF_RULE -> emptySet()
+                        else -> error("Should not happen")
+                    }
+                    RuntimeRuleItem.SLIST__SEPARATOR -> when (position) {
+                        RulePosition.SLIST_SEPARATOR_POSITION -> setOf(rhs.items[RuntimeRuleItem.SLIST__SEPARATOR])
+                        else -> error("Should not happen")
+                    }
+                    RuntimeRuleItem.SLIST__EMPTY_RULE -> when (position) {
+                        RulePosition.START_OF_RULE -> setOf(rhs.items[RuntimeRuleItem.SLIST__ITEM])
+                        RulePosition.END_OF_RULE -> emptySet()
+                        else -> error("Should not happen")
+                    }
+                    else -> error("Should not happen")
+
+                }
                 RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> TODO()
                 RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
             }
-            RuntimeRuleKind.EMBEDDED ->emptySet() //an embedded grammar is treated like a terminal, matches or not, so no 'items'
+            RuntimeRuleKind.EMBEDDED -> emptySet() //an embedded grammar is treated like a terminal, matches or not, so no 'items'
         }
     }
 
@@ -335,7 +366,7 @@ class RuntimeRule(
             }
             return result
             */
-            var result = setOf(this).transitveClosure { it.findAllNonTerminal() }
+            var result = setOf(this).transitiveClosure { it.findAllNonTerminal() }
             return result;
         }
     */
@@ -351,7 +382,7 @@ class RuntimeRule(
             }
         }
         */
-        var result = setOf(this).transitveClosure { it.findAllNonTerminalAt(n) + it.findTerminalAt(n) }
+        var result = setOf(this).transitiveClosure { it.findAllNonTerminalAt(n) + it.findTerminalAt(n) }
         return result
     }
 
@@ -545,28 +576,29 @@ class RuntimeRule(
             }
         }
     }
-/*
-    private fun canBeEmpty(checked: Set<RuntimeRule>): Boolean {
-        return when (kind) {
-            RuntimeRuleKind.GOAL -> false
-            RuntimeRuleKind.TERMINAL -> this.isEmptyRule
-            RuntimeRuleKind.NON_TERMINAL -> {
-                val newchecked = checked.toMutableSet()
-                newchecked.add(this)
-                when (this.rhs.kind) {
-                    RuntimeRuleItemKind.EMPTY -> return true
-                    RuntimeRuleItemKind.CHOICE -> return this.rhs.items.any { newchecked.contains(it) || it.canBeEmpty(newchecked) }
-                    RuntimeRuleItemKind.CONCATENATION -> return this.rhs.items.all { newchecked.contains(it) || it.canBeEmpty(newchecked) }
-                    RuntimeRuleItemKind.MULTI -> return 0 == this.rhs.multiMin
-                    RuntimeRuleItemKind.SEPARATED_LIST -> return 0 == this.rhs.multiMin
 
-                    else -> throw RuntimeException("Internal Error: Unknown RuleKind " + this.rhs.kind)
+    /*
+        private fun canBeEmpty(checked: Set<RuntimeRule>): Boolean {
+            return when (kind) {
+                RuntimeRuleKind.GOAL -> false
+                RuntimeRuleKind.TERMINAL -> this.isEmptyRule
+                RuntimeRuleKind.NON_TERMINAL -> {
+                    val newchecked = checked.toMutableSet()
+                    newchecked.add(this)
+                    when (this.rhs.kind) {
+                        RuntimeRuleItemKind.EMPTY -> return true
+                        RuntimeRuleItemKind.CHOICE -> return this.rhs.items.any { newchecked.contains(it) || it.canBeEmpty(newchecked) }
+                        RuntimeRuleItemKind.CONCATENATION -> return this.rhs.items.all { newchecked.contains(it) || it.canBeEmpty(newchecked) }
+                        RuntimeRuleItemKind.MULTI -> return 0 == this.rhs.multiMin
+                        RuntimeRuleItemKind.SEPARATED_LIST -> return 0 == this.rhs.multiMin
+
+                        else -> throw RuntimeException("Internal Error: Unknown RuleKind " + this.rhs.kind)
+                    }
                 }
+                RuntimeRuleKind.EMBEDDED -> TODO()
             }
-            RuntimeRuleKind.EMBEDDED -> TODO()
         }
-    }
-*/
+    */
     fun couldHaveChild(possibleChild: RuntimeRule, atPosition: Int): Boolean {
         return when (kind) {
             RuntimeRuleKind.GOAL -> TODO()

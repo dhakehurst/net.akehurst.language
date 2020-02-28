@@ -18,6 +18,7 @@ package net.akehurst.language.agl.runtime.structure
 
 inline class StateNumber(val value:Int)
 
+//TODO: how is this different to ParentRelation ?
 class RulePositionWithLookahead(
     val rulePosition: RulePosition,
     val lookahead: Set<RuntimeRule>

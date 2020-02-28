@@ -228,7 +228,10 @@ class RuntimeRuleItemsBuilder(
         } else {
             items
         }
-        val rItems = items2.map { ruleMap[it.tag] ?: error("Should never be null") }
+        val rItems = items2.map {
+            ruleMap[it.tag]
+                ?: error("Should never be null")
+        }
         val rhs = RuntimeRuleItem(this.kind, this.choiceKind, this.min, this.max, rItems.toTypedArray())
         return rhs
     }

@@ -14,31 +14,33 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.multi
+package net.akehurst.language.parser.scannerless.leftRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 import kotlin.test.fail
 
-class test_leftRecursive : test_ScannerlessParserAbstract() {
+class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
 
-    // S = P | 'a' ;
-    // P =  S+ ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_S = b.rule("S").build()
-        val r_P = b.rule("P").multi(1,-1,r_S)
-        b.rule(r_S).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r_P, r_a)
-        return b
-    }
+    // S  = S1 | 'a' ;
+    // S1 = S 'a' ;    // S*; try right recursive also
+    private val S = runtimeRuleSet {
+            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("S1")
+                literal("a")
+            }
+            concatenation("S1") {
+                ref("S")
+                literal("a")
+            }
+        }
 
     @Test
     fun a() {
-        //fail("this does not terminate if we parse until !canGrow, ok it parse until first goal found!")
-        val rrb = this.S()
+        val rrb = this.S
         val goal = "S"
         val sentence = "a"
 
@@ -49,11 +51,20 @@ class test_leftRecursive : test_ScannerlessParserAbstract() {
         super.test(rrb, goal, sentence, expected)
     }
 
-
     @Test
-    fun t() {
-        TODO()
-        fail("TODO")
+    fun aa() {
+        val rrb = this.S
+        val goal = "S"
+        val sentence = "aa"
+
+        val expected = """
+         S { S1 {
+            S { 'a' }
+            'a'
+          } }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected)
     }
 
 }
