@@ -135,7 +135,7 @@ class ParserStateSet(
         return this.states[rulePosition] ?: throw ParserException("should never be null")
     }
 
-    private fun calcLookahead(parent: ParentRelation, childRP: RulePosition): Set<RuntimeRule> {
+     fun calcLookahead(parent: ParentRelation, childRP: RulePosition): Set<RuntimeRule> {
         return when (childRP.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> parent.lookahead
             RuntimeRuleKind.EMBEDDED -> parent.lookahead

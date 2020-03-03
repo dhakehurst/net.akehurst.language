@@ -474,7 +474,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 setOf(Transition(from, to, action, lookaheadGuard, prevGuard) { _, _ -> true })
             } else {
                 to.parentRelations.map { toParent ->
-                    val lookaheadGuard = parentRelation.lookahead //this.calcLookahead(RulePositionWithLookahead(to.rulePosition, parentRelation.lookahead), from.rulePosition, parentRelation.lookahead)
+                    val lookaheadGuard = to.stateSet.calcLookahead(parentRelation,from.rulePosition) //parentRelation.lookahead //this.calcLookahead(RulePositionWithLookahead(to.rulePosition, parentRelation.lookahead), from.rulePosition, parentRelation.lookahead)
                     Transition(from, to, action, lookaheadGuard, prevGuard) { _, _ -> true }
                 }
             }
@@ -551,7 +551,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 setOf(Transition(from, to, action, lookaheadGuard, prevGuard, runtimeGuard))
             } else {
                 to.parentRelations.map { toParent ->
-                    val lookaheadGuard = toParent.lookahead //this.calcLookahead(RulePositionWithLookahead(toParent.rulePosition, toParent.lookahead), from.rulePosition, toParent.lookahead)
+                    val lookaheadGuard = to.stateSet.calcLookahead(parentRelation,from.rulePosition)  //this.calcLookahead(RulePositionWithLookahead(toParent.rulePosition, toParent.lookahead), from.rulePosition, toParent.lookahead)
                     Transition(from, to, action, lookaheadGuard, prevGuard, runtimeGuard)
                 }
             }
