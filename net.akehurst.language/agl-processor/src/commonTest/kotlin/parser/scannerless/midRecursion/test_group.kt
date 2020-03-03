@@ -65,7 +65,7 @@ class test_group : test_ScannerlessParserAbstract() {
 
     @Test
     fun bac() {
-        val sentence = "bac;"
+        val sentence = "r=(a);"
         val goal = "S"
         val expected = """
             S { Rs { R {
@@ -79,7 +79,7 @@ class test_group : test_ScannerlessParserAbstract() {
     }
     @Test
     fun bbacc() {
-        val sentence = "bbacc;"
+        val sentence = "r=((a));"
         val goal = "S"
         val expected = """
              S { Rs { R {
@@ -99,7 +99,7 @@ class test_group : test_ScannerlessParserAbstract() {
     }
     @Test
     fun aqaq() {
-        val sentence = "a?a?;"
+        val sentence = "r=a?a?;"
         val goal = "S"
         val expected = """
             S { I { G {
@@ -116,7 +116,7 @@ class test_group : test_ScannerlessParserAbstract() {
     }
     @Test
     fun aq_aq_aq() {
-        val sentence = "a?;a?;a?;"
+        val sentence = "r=a?;r=a?;r=a?;"
         val goal = "S"
         val expected = """
             S { I { G {
@@ -133,7 +133,7 @@ class test_group : test_ScannerlessParserAbstract() {
     }
     @Test
     fun aaq() {
-        val sentence = "aa?;"
+        val sentence = "r=aa?;"
         val goal = "S"
         val expected = """
             S { I { G {
@@ -150,7 +150,7 @@ class test_group : test_ScannerlessParserAbstract() {
     }
     @Test
     fun baaqc() {
-        val sentence = "baa?c;"
+        val sentence = "r=(aa?);"
         val goal = "S"
         val expected = """
             S { I { G {
