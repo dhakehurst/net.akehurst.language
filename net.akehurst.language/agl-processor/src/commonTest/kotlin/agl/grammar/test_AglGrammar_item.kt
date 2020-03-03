@@ -49,7 +49,7 @@ class test_AglGrammar_item {
             a
         """.trimIndent()
         val actual = parse("nonTerminal", text)
-TODO("what is 9166 ?")
+//TODO("what is 9166 ?")
         val expected = this.sppt("""
             nonTerminal {
                 SINGLE_LINE_COMMENT { "//.*?${'$'}" : '// a single line comment' }
@@ -69,7 +69,7 @@ TODO("what is 9166 ?")
             a
         """.trimIndent()
         val actual = parse("nonTerminal", text)
-        TODO("what is 9166 ?")
+        //TODO("what is 9166 ?")
         val expected = this.sppt("""
             nonTerminal {
                 MULTI_LINE_COMMENT { "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" : '/* a single line comment9166sfgh9166*/' } WHITESPACE { "\s+" : '9166' }

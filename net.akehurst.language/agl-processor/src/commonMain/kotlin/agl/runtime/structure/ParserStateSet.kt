@@ -132,9 +132,12 @@ class ParserStateSet(
         }
     */
     internal fun fetch(rulePosition: RulePosition): ParserState {
-        return this.states[rulePosition] ?: throw ParserException("should never be null")
+        return this.states[rulePosition]
+                ?: throw ParserException("should never be null")
     }
-
+    internal fun fetchOrNull(rulePosition: RulePosition): ParserState? {
+        return this.states[rulePosition]
+    }
      fun calcLookahead(parent: ParentRelation, childRP: RulePosition): Set<RuntimeRule> {
         return when (childRP.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> parent.lookahead

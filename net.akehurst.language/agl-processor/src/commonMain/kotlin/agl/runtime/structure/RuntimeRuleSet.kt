@@ -218,7 +218,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     fun fetchSkipStates(rulePosition: RulePosition): ParserState {
-        return this.skipStateSet.values.map { it.fetch(rulePosition) }.first() //TODO: maybe more than 1 !
+        return this.skipStateSet.values.mapNotNull { it.fetchOrNull(rulePosition) }.first() //TODO: maybe more than 1 !
     }
 
     /*
@@ -668,7 +668,6 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                         } else {
                             val height = parentRelation.rulePosition.isAtStart
                             val graft = parentRelation.rulePosition.isAtStart.not()
-//TODO("wrong height and graft guards getting created somehow!")
                             if (height) {
                                 heightTransitions += this.createHeightTransition(from, parentRelation)
                             }
