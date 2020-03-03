@@ -130,7 +130,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     // userGoalRule -> ParserStateSet
     private val states_cache = mutableMapOf<RuntimeRule, ParserStateSet>()
-    private val skipPaths = ParserStateSet(this, null, emptyList())
+    private val skipStateSet = mutableMapOf<RuntimeRule, ParserStateSet>()
 
     private val skipTransitions_cache = lazyMapNonNull<RuntimeRule, MutableMap<ParserState, Set<Transition>>> { userGoalRule ->
         mutableMapOf()
@@ -192,32 +192,33 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
     }
 
-    internal fun createAllSkipStates(userGoalRule: RuntimeRule) {
-        val stateMap = this.skipPaths
-        val startSet = this.skipRules.flatMap { skipRule ->
-            skipRule.rulePositions.map { rp ->
-                stateMap.fetchOrCreateParseState(rp, emptySet())
+    internal fun createAllSkipStates() {
+        this.skipRules.forEach { skipRule ->
+            val stateSet = ParserStateSet(this, skipRule, emptyList())
+            this.skipStateSet[skipRule] = stateSet
+            val startSet = skipRule.rulePositions.map { rp ->
+                stateSet.fetchOrCreateParseState(rp, emptySet())
                 RulePositionWithLookahead(rp, emptySet())
-            }
-        }.toSet()
-        startSet.transitiveClosure { parent ->
-            val parentRP = parent.rulePosition
-            parentRP.items.flatMap { rr ->
-                rr.rulePositions.mapNotNull { childRP ->
-                    val childRPEnd = RulePosition(childRP.runtimeRule, childRP.choice, RulePosition.END_OF_RULE)
-                    val elh = this.calcLookahead(parent, childRPEnd, parent.lookahead)
-                    val childEndState = stateMap.fetchOrCreateParseState(childRPEnd, elh)
-                    val lh = this.calcLookahead(parent, childRP, parent.lookahead)
-                    childEndState.addParentRelation(ParentRelation(parentRP, elh))
-                    RulePositionWithLookahead(childRP, lh)
-                    //TODO: this seems different to the other closures!
-                }
             }.toSet()
+            startSet.transitiveClosure { parent ->
+                val parentRP = parent.rulePosition
+                parentRP.items.flatMap { rr ->
+                    rr.rulePositions.mapNotNull { childRP ->
+                        val childRPEnd = RulePosition(childRP.runtimeRule, childRP.choice, RulePosition.END_OF_RULE)
+                        val elh = this.calcLookahead(parent, childRPEnd, parent.lookahead)
+                        val childEndState = stateSet.fetchOrCreateParseState(childRPEnd, elh)
+                        val lh = this.calcLookahead(parent, childRP, parent.lookahead)
+                        childEndState.addParentRelation(ParentRelation(parentRP, elh))
+                        RulePositionWithLookahead(childRP, lh)
+                        //TODO: this seems different to the other closures!
+                    }
+                }.toSet()
+            }
         }
     }
 
     fun fetchSkipStates(rulePosition: RulePosition): ParserState {
-        return this.skipPaths.fetch(rulePosition)
+        return this.skipStateSet.values.map { it.fetch(rulePosition) }.first() //TODO: maybe more than 1 !
     }
 
     /*
@@ -426,31 +427,32 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
         return RulePositionClosure(ClosureNumber(-1), rootRulePosition, closureSet)
     }
-/*
-    private fun createClosure(root: ParserState, parentLookahead: Set<RuntimeRule>): RulePositionClosure {
-        // create path from root down, it may include items from root up
-        val stateMap = root.stateSet
-        val firstParentLh = parentLookahead//parentRelation?.lookahead ?: emptySet()
-        val rootWlh = RulePositionWithLookahead(root.rulePosition, firstParentLh) //TODO: get real LH
-        val closureSet = setOf(rootWlh).transitiveClosure { parent ->
-            val parentRP = parent.rulePosition
-            val parentLh = parent.lookahead
-            parentRP.items.flatMap { rr ->
-                val childrenRP = rr.calcExpectedRulePositions(0)
-                childrenRP.map { childRP ->
-                    //TODO: uncomment this if createAll is not called
-                    val childRPEnd = childRP.atEnd() //childRP.runtimeRule, childRP.choice, RulePosition.END_OF_RULE)
-                    val elh = this.calcLookahead(parent, childRPEnd, parentLh)
-                    val childEndState = stateMap.fetchOrCreateParseState(childRPEnd, elh)
-                    childEndState.addParentRelation(ParentRelation(parentRP, elh))
-                    val lh = this.calcLookahead(parent, childRP, parentLh)
-                    RulePositionWithLookahead(childRP, lh)
-                }
-            }.toSet()
+
+    /*
+        private fun createClosure(root: ParserState, parentLookahead: Set<RuntimeRule>): RulePositionClosure {
+            // create path from root down, it may include items from root up
+            val stateMap = root.stateSet
+            val firstParentLh = parentLookahead//parentRelation?.lookahead ?: emptySet()
+            val rootWlh = RulePositionWithLookahead(root.rulePosition, firstParentLh) //TODO: get real LH
+            val closureSet = setOf(rootWlh).transitiveClosure { parent ->
+                val parentRP = parent.rulePosition
+                val parentLh = parent.lookahead
+                parentRP.items.flatMap { rr ->
+                    val childrenRP = rr.calcExpectedRulePositions(0)
+                    childrenRP.map { childRP ->
+                        //TODO: uncomment this if createAll is not called
+                        val childRPEnd = childRP.atEnd() //childRP.runtimeRule, childRP.choice, RulePosition.END_OF_RULE)
+                        val elh = this.calcLookahead(parent, childRPEnd, parentLh)
+                        val childEndState = stateMap.fetchOrCreateParseState(childRPEnd, elh)
+                        childEndState.addParentRelation(ParentRelation(parentRP, elh))
+                        val lh = this.calcLookahead(parent, childRP, parentLh)
+                        RulePositionWithLookahead(childRP, lh)
+                    }
+                }.toSet()
+            }
+            return RulePositionClosure(ClosureNumber(-1), root.rulePosition, closureSet)
         }
-        return RulePositionClosure(ClosureNumber(-1), root.rulePosition, closureSet)
-    }
-*/
+    */
     private fun createWidthTransition(from: ParserState, closureRPlh: RulePositionWithLookahead): Transition {
         val action = Transition.ParseAction.WIDTH
         val lookaheadGuard = closureRPlh.lookahead
@@ -467,13 +469,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val toSet = parentRP.next().map { from.stateSet.fetchOrCreateParseState(it, parentRelation.lookahead) }
         //val filteredToSet = toSet.filter { this.canGrowInto(it, previous) }
         return toSet.flatMap { to ->
-           TODO("new pr/lh is wrong here")
             if (to.parentRelations.isEmpty()) {
                 val lookaheadGuard = this.calcLookahead(null, from.rulePosition, parentRelation.lookahead)
                 setOf(Transition(from, to, action, lookaheadGuard, prevGuard) { _, _ -> true })
             } else {
                 to.parentRelations.map { toParent ->
-                    val lookaheadGuard = this.calcLookahead(RulePositionWithLookahead(toParent.rulePosition, toParent.lookahead), from.rulePosition, toParent.lookahead)
+                    val lookaheadGuard = parentRelation.lookahead //this.calcLookahead(RulePositionWithLookahead(to.rulePosition, parentRelation.lookahead), from.rulePosition, parentRelation.lookahead)
                     Transition(from, to, action, lookaheadGuard, prevGuard) { _, _ -> true }
                 }
             }
@@ -550,7 +551,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 setOf(Transition(from, to, action, lookaheadGuard, prevGuard, runtimeGuard))
             } else {
                 to.parentRelations.map { toParent ->
-                    val lookaheadGuard = this.calcLookahead(RulePositionWithLookahead(toParent.rulePosition, toParent.lookahead), from.rulePosition, toParent.lookahead)
+                    val lookaheadGuard = toParent.lookahead //this.calcLookahead(RulePositionWithLookahead(toParent.rulePosition, toParent.lookahead), from.rulePosition, toParent.lookahead)
                     Transition(from, to, action, lookaheadGuard, prevGuard, runtimeGuard)
                 }
             }
@@ -642,11 +643,24 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     val filteredRelations = from.parentRelations.filter { pr -> this.canGrowInto(pr, previous) }
                     for (parentRelation in filteredRelations) {
                         if (parentRelation.rulePosition.runtimeRule.kind == RuntimeRuleKind.GOAL) {
-                            graftTransitions += this.createGraftTransition(from, parentRelation)
+                            when {
+                                from.runtimeRule == END_OF_TEXT -> {
+                                    graftTransitions += this.createGraftTransition(from, parentRelation)
+                                }
+                                (parentRelation.lookahead.isEmpty()) -> {
+                                    // must be end of skip. TODO: can do something better than this!
+                                    val action = Transition.ParseAction.GOAL
+                                    val to = from
+                                    goalTransitions += Transition(from, to, action, emptySet(), null) { _, _ -> true }
+                                }
+                                else -> {
+                                    graftTransitions += this.createGraftTransition(from, parentRelation)
+                                }
+                            }
                         } else {
                             val height = parentRelation.rulePosition.isAtStart
                             val graft = parentRelation.rulePosition.isAtStart.not()
-
+//TODO("wrong height and graft guards getting created somehow!")
                             if (height) {
                                 heightTransitions += this.createHeightTransition(from, parentRelation)
                             }
@@ -656,9 +670,10 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                         }
                     }
                 }
-            } else { //from.isAtEnd.not()
+            } else {
+                //from.isAtEnd.not()
 //                val parentRelations = from.stateSet.fetch(from.rulePosition.atEnd()).parentRelations
-                val lhs = emptySet<RuntimeRule>() //TODO: what should the lhs be here ?
+                val lhs = emptySet<RuntimeRule>() //TODO: what should the lhs be here ? maybe not matter
                 val parentRelations = from.stateSet.fetchOrCreateParseState(from.rulePosition.atEnd(), lhs).parentRelations
                 if (parentRelations.isEmpty()) {
                     //TODO: is this only when from is 'GOAL' ?
@@ -733,8 +748,11 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     fun startingState(userGoalRule: RuntimeRule, possibleEndOfText: List<RuntimeRule> = listOf(RuntimeRuleSet.END_OF_TEXT)): ParserState {
-        val stateSet = ParserStateSet(this, userGoalRule, possibleEndOfText)
-        this.states_cache[userGoalRule] = stateSet
+        var stateSet = this.states_cache[userGoalRule]
+        if (null==stateSet) {
+            stateSet = ParserStateSet(this, userGoalRule, possibleEndOfText)
+            this.states_cache[userGoalRule] = stateSet
+        }
         return stateSet.startState
     }
 

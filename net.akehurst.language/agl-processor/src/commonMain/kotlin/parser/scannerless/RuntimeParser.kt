@@ -87,6 +87,7 @@ internal class RuntimeParser(
         }
 
     fun start(userGoalRule: RuntimeRule) {
+        this.runtimeRuleSet.createAllSkipStates()
         val gState = runtimeRuleSet.startingState(userGoalRule, listOf(RuntimeRuleSet.END_OF_TEXT))
         this.graph.start(gState)
     }
@@ -186,6 +187,7 @@ internal class RuntimeParser(
     private fun doHeight(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
         if (previous.node.currentState.rulePosition != transition.prevGuard) {
             val lh = transition.lookaheadGuard //TODO: do we actually need to lookahead here ? Add an explanation if so
+            //TODO("check old and new LH here")
             val hasLh = lh.any {
                 val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
                 null != l
@@ -243,6 +245,7 @@ internal class RuntimeParser(
 
     private fun growSkip(gn: GrowingNode, previous: PreviousInfo) {
         val rps = gn.currentState
+        //val trs = rps.transitions(this.runtimeRuleSet, previous.node.currentState.rulePosition)
         val transitions: Set<Transition> = this.runtimeRuleSet.skipTransitions(this.graph.userGoalRule, rps, previous.node.currentState.rulePosition)
 
         for (it in transitions) {

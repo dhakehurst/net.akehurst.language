@@ -21,18 +21,16 @@ import net.akehurst.language.collections.transitiveClosure
 
 class ParserStateSet(
         val runtimeRuleSet: RuntimeRuleSet,
-        val userGoalRule: RuntimeRule?, //null if skip state set TODO: improve this!
+        val userGoalRule: RuntimeRule, //null if skip state set TODO: improve this!
         val possibleEndOfText: List<RuntimeRule>
 ) {
 
     private var nextState = 0
 
     val startState: ParserState by lazy {
-        val goalRule = RuntimeRuleSet.createGoalRule(userGoalRule!!, this.possibleEndOfText)
+        val goalRule = RuntimeRuleSet.createGoalRule(userGoalRule, this.possibleEndOfText)
         val goalRP = RulePosition(goalRule, 0, 0)
-        //this.createAllParserStates(userGoalRule, goalRP)
-        this.runtimeRuleSet.createAllSkipStates(userGoalRule)
-        val startState = this.fetchOrCreateParseState(goalRP, emptySet())
+        val startState = this.fetchOrCreateParseState(goalRP, this.possibleEndOfText.toSet())
         startState
     }
 

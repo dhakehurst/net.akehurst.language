@@ -39,7 +39,7 @@ class test_leftRecursive_a : test_ScannerlessParserAbstract() {
 
     @Test
     fun WSaWS() {
-        val rrb = this.S()
+        val rrb = this.S().ruleSet()
         val goal = "S"
         val sentence = " a "
 
@@ -47,7 +47,7 @@ class test_leftRecursive_a : test_ScannerlessParserAbstract() {
             S { WS { "\s+" : ' ' } 'a' WS { "\s+" : ' ' } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrb, goal, sentence, expected)
     }
 
 
