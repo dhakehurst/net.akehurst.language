@@ -44,47 +44,78 @@ class ParserStateSet(
             }
             f
         }.toSet()
-        if (childRR==this.userGoalRule) {
+        if (childRR == this.userGoalRule) {
             s + this.startState.rulePosition
         } else {
             s
         }
     }
-    internal val ancestorPosition = lazyMapNonNull<RuntimeRule, Set<List<RulePosition>>> { childRR ->
+    internal val ancestorPosition = lazyMapNonNull<RuntimeRule, Set<List<RuntimeRule>>> { childRR ->
         if (possibleEndOfText.contains(childRR)) {
-            setOf(listOf(this.startState.rulePosition.next().first()))
+            setOf(listOf(this.startState.rulePosition.next().first().runtimeRule))
         } else {
-            val init: Set<List<RulePosition>> = parentPosition[childRR].map { listOf(it) }.toSet()
-            val x: Set<List<RulePosition>> = init.transitiveClosure(false) { list ->
-                val pp = parentPosition[list.last().runtimeRule]
+            val init: Set<List<RuntimeRule>> = parentPosition[childRR].map { listOf(it.runtimeRule) }.toSet()
+            val x: Set<List<RuntimeRule>> = init.transitiveClosure(false) { list ->
+                val pp = parentPosition[list.last()]
                 if (pp.isEmpty()) {
                     setOf(list)
                 } else {
                     pp.mapNotNull { rp ->
-                        val indexOfRp = list.indexOf(rp)
-                        when (indexOfRp) {
-                            -1 -> list + rp //not contained, so carry on
-                            0 -> list + rp //no parent, should never happen I think !
+                        val lastIndexOfRp = list.lastIndexOf(rp.runtimeRule)
+                        when (lastIndexOfRp) {
+                            -1 -> list + rp.runtimeRule
+                            0 -> list + rp.runtimeRule
                             else -> {
-                                null
+                                val firstIndexOfRp = list.indexOf(rp.runtimeRule)
+                                val front = list.subList(0, lastIndexOfRp)
+                                val repetition = list.subList(lastIndexOfRp + 1, list.size)
+                                when {
+                                    front.containsSubList( repetition ) -> null
+                                    else -> list + rp.runtimeRule
+                                }
                             }
                         }
-                    }.toSet()
-                }
+                    }
+                }.toSet()
             }.toSet()
             x
         }
     }
+
+    internal fun <T> List<T>.containsSubList(subList:List<T>): Boolean {
+        //TODO: speed up by finding indexes of first item in subList
+        val indexs = this.mapIndexedNotNull { index, t ->
+            if (t==subList[0]) index else null
+        }
+        indexs.forEach { i ->
+            val e = i+subList.size
+            if (e <= this.size) {
+                val x = this.subList(i, i + subList.size)
+                if (x == subList) return true
+            } else {
+                return false
+            }
+        }
+        return false
+    }
+
     internal val parentRelations = lazyMapNonNull<RuntimeRule, Set<ParentRelation>> { childRR ->
         if (possibleEndOfText.contains(childRR)) {
             setOf(ParentRelation(this.startState.rulePosition.next().first(), emptySet()))
         } else {
             val init = ancestorPosition[childRR]
-            val x = init.map { list ->
-                val d = list.dropLast(1) //don't need the goal from end, this is used as the initAcc
-                d.foldRight(ParentRelation(this.startState.rulePosition, possibleEndOfText.toSet())) { rp, acc ->
-                    val lh = this.calcLookahead(acc, rp)
-                    ParentRelation(rp, lh)
+            val x = init.flatMap { list ->
+                val d = listOf(childRR) + list.dropLast(2)//don't need the goal from end, this is used as the initAcc
+                val spr = setOf(ParentRelation(this.startState.rulePosition, possibleEndOfText.toSet()))
+                d.foldRight(spr) { rr, acc ->
+                    val rps = this.parentPosition[rr]//.filter { it.runtimeRule== }
+                    val nAcc = rps.flatMap { rp ->
+                        acc.map { pr ->
+                            val lh = this.calcLookahead(pr, rp)
+                            ParentRelation(rp, lh)
+                        }.toSet()
+                    }.toSet()
+                    nAcc
                 }
             }.toSet()
             x
@@ -135,10 +166,12 @@ class ParserStateSet(
         return this.states[rulePosition]
                 ?: throw ParserException("should never be null")
     }
+
     internal fun fetchOrNull(rulePosition: RulePosition): ParserState? {
         return this.states[rulePosition]
     }
-     fun calcLookahead(parent: ParentRelation, childRP: RulePosition): Set<RuntimeRule> {
+
+    fun calcLookahead(parent: ParentRelation, childRP: RulePosition): Set<RuntimeRule> {
         return when (childRP.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> parent.lookahead
             RuntimeRuleKind.EMBEDDED -> parent.lookahead

@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 
-class test_group : test_ScannerlessParserAbstract() {
+class test_rules : test_ScannerlessParserAbstract() {
 
     companion object {
         val S = runtimeRuleSet {
@@ -52,7 +52,7 @@ class test_group : test_ScannerlessParserAbstract() {
 
     @Test
     fun a() {
-        val sentence = "r = a;"
+        val sentence = "r=a;"
         val goal = "S"
         val expected = """
             S { Rs { R {

@@ -29,17 +29,19 @@ import kotlin.test.assertNotNull
 
 class test_AglGrammar_item {
 
-    private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(AglGrammarGrammar())
-    private val parser: Parser = ScannerlessParser(this.converterToRuntimeRules.transform())
-    private val completionProvider: CompletionProvider = CompletionProvider()
-    private val spptParser = SPPTParser(this.converterToRuntimeRules.builder.ruleSet())
+    companion object {
+        private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(AglGrammarGrammar())
+        private val parser: Parser = ScannerlessParser(converterToRuntimeRules.transform())
+    }
+
+    private val spptParser = SPPTParser(converterToRuntimeRules.builder.ruleSet())
 
     private fun parse(goalRule: String, inputText: CharSequence): SharedPackedParseTree {
-        return this.parser.parse(goalRule, inputText)
+        return parser.parse(goalRule, inputText)
     }
 
     private fun sppt(treeString: String): SharedPackedParseTree {
-        return this.spptParser.addTree(treeString)
+        return spptParser.addTree(treeString)
     }
 
     @Test

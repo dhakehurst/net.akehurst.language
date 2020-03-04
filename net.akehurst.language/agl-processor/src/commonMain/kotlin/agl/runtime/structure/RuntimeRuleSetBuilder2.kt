@@ -230,7 +230,7 @@ class RuntimeRuleItemsBuilder(
         }
         val rItems = items2.map {
             ruleMap[it.tag]
-                ?: error("Should never be null")
+                ?: error("Rule ${it.tag} not found")
         }
         val rhs = RuntimeRuleItem(this.kind, this.choiceKind, this.min, this.max, rItems.toTypedArray())
         return rhs
