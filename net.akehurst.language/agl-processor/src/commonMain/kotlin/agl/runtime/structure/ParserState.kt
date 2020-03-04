@@ -47,7 +47,7 @@ class ParserState(
 
     private var nextStates_cache: Set<ParserState>? = null
     private var _parentRelations: MutableSet<ParentRelation> = mutableSetOf()
-    internal var transitions_cache: MutableMap<RulePosition?,Set<Transition>?> = mutableMapOf()
+    internal var transitions_cache: MutableMap<ParserState?,Set<Transition>?> = mutableMapOf()
 
     val parentRelations: Set<ParentRelation>
         get() {
@@ -111,7 +111,7 @@ class ParserState(
     }
 
 
-    fun transitions(runtimeRuleSet: RuntimeRuleSet, previous:RulePosition?): Set<Transition> {
+    fun transitions(runtimeRuleSet: RuntimeRuleSet, previous:ParserState?): Set<Transition> {
         //val filteredRelations = this.parentRelations.filter { pr -> runtimeRuleSet.canGrowInto(pr, previous) }
         val cache = this.transitions_cache[previous]
         return if (null==cache) {

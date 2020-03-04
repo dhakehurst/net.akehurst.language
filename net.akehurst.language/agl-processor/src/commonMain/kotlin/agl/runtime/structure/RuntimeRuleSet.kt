@@ -576,13 +576,13 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return Transition(from, to, action, lookaheadGuard, null) { _, _ -> true }
     }
 
-    fun canGrowInto(pr: ParentRelation, prevRp: RulePosition?): Boolean {
+    fun canGrowInto(pr: ParentRelation, prevRp: ParserState?): Boolean {
         return when {
             null == prevRp -> true
             prevRp.isAtEnd -> false
-            pr.rulePosition == prevRp -> true
+            pr.rulePosition == prevRp.rulePosition -> true
             else -> {
-                val prevClosure = this.createClosure(prevRp, null)
+                val prevClosure = prevRp.createClosure(pr.lookahead) //this.createClosure(prevRp, null)
                 prevClosure.content.any {
                     it.runtimeRule == pr.rulePosition.runtimeRule //&& it.lookahead == pr.lookahead
                 }
@@ -628,7 +628,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
     */
 
-    internal fun calcTransitions(from: ParserState, previous: RulePosition?): Set<Transition> { //TODO: add previous in order to filter parent relations
+    internal fun calcTransitions(from: ParserState, previous: ParserState?): Set<Transition> { //TODO: add previous in order to filter parent relations
         val heightTransitions = mutableSetOf<Transition>()
         val graftTransitions = mutableSetOf<Transition>()
         val widthTransitions = mutableSetOf<Transition>()
@@ -648,7 +648,10 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                     val to = from
                     goalTransitions += Transition(from, to, action, emptySet(), null) { _, _ -> true }
                 } else {
-                    val filteredRelations = from.parentRelations.filter { pr -> this.canGrowInto(pr, previous) }
+                    val filteredRelations = when {
+                        null != previous -> from.parentRelations.filter { pr -> this.canGrowInto(pr, previous) } //nonskip
+                        else -> from.parentRelations //skip
+                    }
                     for (parentRelation in filteredRelations) {
                         if (parentRelation.rulePosition.runtimeRule.kind == RuntimeRuleKind.GOAL) {
                             when {
@@ -697,7 +700,10 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                         }
                     }
                 } else {
-                    val filteredRelations = parentRelations.filter { pr -> this.canGrowInto(pr, previous) }
+                    val filteredRelations = when {
+                        null != previous -> from.parentRelations.filter { pr -> this.canGrowInto(pr, previous) } //nonskip
+                        else -> from.parentRelations //skip
+                    }
                     for (parentRelation in filteredRelations) {
                         val closure = from.createClosure(parentRelation.lookahead)
                         for (closureRPlh in closure.content) {
@@ -756,7 +762,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     fun startingState(userGoalRule: RuntimeRule, possibleEndOfText: List<RuntimeRule> = listOf(RuntimeRuleSet.END_OF_TEXT)): ParserState {
         var stateSet = this.states_cache[userGoalRule]
-        if (null==stateSet) {
+        if (null == stateSet) {
             stateSet = ParserStateSet(this, userGoalRule, possibleEndOfText)
             this.states_cache[userGoalRule] = stateSet
         }
