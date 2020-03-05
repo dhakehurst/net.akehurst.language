@@ -281,7 +281,7 @@ class ParserStateSet(
     }
 
     fun calcLookahead1(childRP: RulePosition, done:Set<RuntimeRule>): Set<RuntimeRule> {
-        TODO("try and split this so we do different things depending on the 'rule type/position' multi/slist/mid/begining/etc")
+        //TODO("try and split this so we do different things depending on the 'rule type/position' multi/slist/mid/begining/etc")
         return when {
             done.contains(childRP.runtimeRule) -> emptySet()
             childRP.runtimeRule == this.startState.runtimeRule  -> {
