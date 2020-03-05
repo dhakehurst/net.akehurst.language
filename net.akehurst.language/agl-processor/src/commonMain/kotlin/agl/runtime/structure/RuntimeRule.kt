@@ -84,7 +84,9 @@ class RuntimeRule(
     val rulePositions: Set<RulePosition>
         get() {
             return when (kind) {
-                RuntimeRuleKind.GOAL -> TODO()
+                RuntimeRuleKind.GOAL -> rhs.items.mapIndexed { index, runtimeRule ->
+                    RulePosition(this, 0, index)
+                }.toSet() + RulePosition(this, 0, RulePosition.END_OF_RULE)
                 RuntimeRuleKind.TERMINAL -> setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
                 RuntimeRuleKind.NON_TERMINAL -> when (rhs.kind) {
                     RuntimeRuleItemKind.EMPTY -> setOf(

@@ -58,7 +58,7 @@ class ParserState(
         if (rulePosition.runtimeRule.kind==RuntimeRuleKind.GOAL) {
             emptySet()
         } else {
-            this.stateSet.parentRelations[this.rulePosition.runtimeRule]
+            this.stateSet.parentRelation(this.rulePosition.runtimeRule)
         }
     }
 

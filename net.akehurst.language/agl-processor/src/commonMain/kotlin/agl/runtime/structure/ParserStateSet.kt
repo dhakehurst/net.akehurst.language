@@ -27,6 +27,13 @@ class ParserStateSet(
 
     private var nextState = 0
 
+    /*
+     * A RulePosition with Lookahead identifies a set of Parser states.
+     * we index the map with RulePositionWithLookahead because that is what is used to create a new state,
+     * and thus it should give fast lookup
+     */
+    internal val states = mutableMapOf<RulePosition, ParserState>()
+
     val startState: ParserState by lazy {
         val goalRule = RuntimeRuleSet.createGoalRule(userGoalRule, this.possibleEndOfText)
         val goalRP = RulePosition(goalRule, 0, 0)
@@ -37,17 +44,21 @@ class ParserStateSet(
     // runtimeRule -> set of rulePositions where the rule is used
     internal val parentPosition = lazyMapNonNull<RuntimeRule, Set<RulePosition>> { childRR ->
         //TODO: possibly faster to pre cache this! and goal rules currently not included!
-        val s = this.runtimeRuleSet.runtimeRules.flatMap { rr ->
-            val rps = rr.rulePositions
-            val f = rps.filter { rp ->
-                rp.items.contains(childRR)
-            }
-            f
-        }.toSet()
-        if (childRR == this.userGoalRule) {
-            s + this.startState.rulePosition
+        if (childRR == RuntimeRuleSet.END_OF_TEXT) { //TODO: should this check for contains in possibleEndOfText, and what if something in endOfText is also valid mid text!
+            setOf(RulePosition(this.startState.runtimeRule,0,1))
         } else {
-            s
+            val s = this.runtimeRuleSet.runtimeRules.flatMap { rr ->
+                val rps = rr.rulePositions
+                val f = rps.filter { rp ->
+                    rp.items.contains(childRR)
+                }
+                f
+            }.toSet()
+            if (childRR == this.userGoalRule) {
+                s + this.startState.rulePosition
+            } else {
+                s
+            }
         }
     }
     internal val ancestorPosition = lazyMapNonNull<RuntimeRule, Set<List<RuntimeRule>>> { childRR ->
@@ -70,7 +81,7 @@ class ParserStateSet(
                                 val front = list.subList(0, lastIndexOfRp)
                                 val repetition = list.subList(lastIndexOfRp + 1, list.size)
                                 when {
-                                    front.containsSubList( repetition ) -> null
+                                    front.containsSubList(repetition) -> null
                                     else -> list + rp.runtimeRule
                                 }
                             }
@@ -82,13 +93,13 @@ class ParserStateSet(
         }
     }
 
-    internal fun <T> List<T>.containsSubList(subList:List<T>): Boolean {
+    internal fun <T> List<T>.containsSubList(subList: List<T>): Boolean {
         //TODO: speed up by finding indexes of first item in subList
         val indexs = this.mapIndexedNotNull { index, t ->
-            if (t==subList[0]) index else null
+            if (t == subList[0]) index else null
         }
         indexs.forEach { i ->
-            val e = i+subList.size
+            val e = i + subList.size
             if (e <= this.size) {
                 val x = this.subList(i, i + subList.size)
                 if (x == subList) return true
@@ -99,15 +110,30 @@ class ParserStateSet(
         return false
     }
 
+    internal val _parentRelations = mutableMapOf<RuntimeRule, Set<ParentRelation>>()
+    internal fun parentRelation(runtimeRule: RuntimeRule): Set<ParentRelation> {
+        var set = _parentRelations[runtimeRule]
+        return if (null == set) {
+            _parentRelations[runtimeRule] = emptySet() //add this to halt recursion
+            set = this.calcParentRelation(runtimeRule)
+            _parentRelations[runtimeRule] = set
+            set
+        } else {
+            set
+        }
+    }
+
+    //val parentRelations = this.calcParentRelations()
+    /*
     internal val parentRelations = lazyMapNonNull<RuntimeRule, Set<ParentRelation>> { childRR ->
         if (possibleEndOfText.contains(childRR)) {
             setOf(ParentRelation(this.startState.rulePosition.next().first(), emptySet()))
         } else {
-            val init = ancestorPosition[childRR]
+            val init = ancestorPaths[childRR]!!
             val x = init.flatMap { list ->
-                val d = listOf(childRR) + list.dropLast(2)//don't need the goal from end, this is used as the initAcc
+                val d = list.drop(1)//don't need the goal from end, this is used as the initAcc
                 val spr = setOf(ParentRelation(this.startState.rulePosition, possibleEndOfText.toSet()))
-                d.foldRight(spr) { rr, acc ->
+                d.fold(spr) { acc, rr ->
                     val rps = this.parentPosition[rr]//.filter { it.runtimeRule== }
                     val nAcc = rps.flatMap { rp ->
                         acc.map { pr ->
@@ -121,13 +147,88 @@ class ParserStateSet(
             x
         }
     }
-
-    /*
-     * A RulePosition with Lookahead identifies a set of Parser states.
-     * we index the map with RulePositionWithLookahead because that is what is used to create a new state,
-     * and thus it should give fast lookup
      */
-    internal val states = mutableMapOf<RulePosition, ParserState>()
+
+    private fun calcParentRelation(childRR: RuntimeRule): Set<ParentRelation> {
+        val x = this.parentPosition[childRR].map { rp ->
+            val lh = this.calcLookahead(rp)
+            ParentRelation(rp, lh)
+        }.toSet()
+        return x
+    }
+
+    private fun calcPaths(): Map<RuntimeRule, Set<List<RuntimeRule>>> {
+        val init = setOf(listOf(this.startState.runtimeRule))
+        val paths = init.transitiveClosure { list ->
+            val rr = list.last()
+            val rps = rr.rulePositions
+            val nls = rps.flatMap { rp ->
+                rp.items.mapNotNull { nr ->
+                    val lastIndexOf = list.lastIndexOf(nr)
+                    when (lastIndexOf) {
+                        -1 -> list + nr
+                        0 -> list + nr
+                        else -> {
+                            val firstIndexOfRp = list.indexOf(nr)
+                            val front = list.subList(0, lastIndexOf)
+                            val repetition = list.subList(lastIndexOf + 1, list.size)
+                            when {
+                                front.containsSubList(repetition) -> null
+                                else -> list + nr
+                            }
+                        }
+                    }
+                }
+            }.toSet()
+            nls
+        }
+        val ancestorPaths = mutableMapOf<RuntimeRule, Set<List<RuntimeRule>>>()
+        paths.forEach {
+            val rr = it.last()
+            var set = ancestorPaths[rr]
+            if (null == set) {
+                set = mutableSetOf()
+                ancestorPaths[rr] = set
+            }
+            (set as MutableSet).add(it)
+        }
+        return ancestorPaths
+    }
+
+    private fun calcParentRelations(): Map<RuntimeRule, Set<ParentRelation>> {
+        val ancestorPaths = this.calcPaths()
+        val parentRelations = mutableMapOf<RuntimeRule, Set<ParentRelation>>()
+        ancestorPaths.keys.forEach { childRR ->
+            if (possibleEndOfText.contains(childRR)) {
+                parentRelations[childRR] = setOf(ParentRelation(this.startState.rulePosition.next().first(), emptySet()))
+            } else {
+                val init = ancestorPaths[childRR]!!
+                val x = init.flatMap { list ->
+                    val d = list.drop(1)//don't need the goal from end, this is used as the initAcc
+                    val spr = setOf(ParentRelation(this.startState.rulePosition, possibleEndOfText.toSet()))
+                    d.fold(spr) { acc, rr ->
+                        val rps = this.parentPosition[rr]//.filter { it.runtimeRule== }
+                        val nAcc = rps.flatMap { rp ->
+                            acc.map { pr ->
+                                val lh = this.calcLookahead(pr, rp)
+                                ParentRelation(rp, lh)
+                            }.toSet()
+                        }.toSet()
+                        nAcc
+                    }
+                }.toSet()
+                parentRelations[childRR] = x
+            }
+        }
+        return parentRelations
+    }
+
+    private fun calcParentRelations2(): Map<RuntimeRule, Set<ParentRelation>> {
+        val parentRelations = mutableMapOf<RuntimeRule, Set<ParentRelation>>()
+        val init = setOf(listOf(this.startState.runtimeRule))
+
+        return parentRelations
+    }
 
     internal fun fetchOrCreateParseState(rulePosition: RulePosition, lookahead: Set<RuntimeRule>): ParserState { //
         val existing = this.states[rulePosition]
@@ -171,6 +272,45 @@ class ParserStateSet(
         return this.states[rulePosition]
     }
 
+    fun calcLookahead(childRP: RulePosition): Set<RuntimeRule> {
+        return when {
+            childRP.runtimeRule == this.startState.runtimeRule  -> {
+                if (childRP.isAtStart) {
+                    this.possibleEndOfText.toSet()
+                } else {
+                    emptySet()
+                }
+            }
+            childRP.runtimeRule==userGoalRule && childRP.isAtEnd -> {
+                this.possibleEndOfText.toSet()
+            }
+            childRP.isAtEnd -> { //use parent lookahead
+                val prs = this.parentRelation(childRP.runtimeRule)
+                prs.flatMap { parentRelation ->
+                    val lh = parentRelation.lookahead
+                    lh
+                }.toSet()
+            }
+            else -> { // use first of next
+                childRP.items.flatMap { fstChildItem ->
+                    val nextRPs = childRP.next() //nextRulePosition(childRP, fstChildItem)
+                    nextRPs.flatMap { nextChildRP ->
+                        if (nextChildRP.isAtEnd) {
+                            this.calcLookahead(nextChildRP)
+                        } else {
+                            val lh: Set<RuntimeRule> = this.runtimeRuleSet.firstTerminals2[nextChildRP] ?: throw ParserException("should never happen")
+                            if (lh.isEmpty()) {
+                                throw ParserException("should never happen")
+                            } else {
+                                lh
+                            }
+                        }
+                    }
+                }.toSet()
+            }
+        }
+    }
+
     fun calcLookahead(parent: ParentRelation, childRP: RulePosition): Set<RuntimeRule> {
         return when (childRP.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> parent.lookahead
@@ -193,11 +333,7 @@ class ParserStateSet(
                             val nextRPs = childRP.next() //nextRulePosition(childRP, fstChildItem)
                             nextRPs.flatMap { nextChildRP ->
                                 if (nextChildRP.isAtEnd) {
-                                    if (null == parent) {
-                                        TODO() //ifEmpty
-                                    } else {
-                                        this.calcLookahead(parent, nextChildRP)
-                                    }
+                                    this.calcLookahead(parent, nextChildRP)
                                 } else {
                                     val lh: Set<RuntimeRule> = this.runtimeRuleSet.firstTerminals2[nextChildRP] ?: throw ParserException("should never happen")
                                     if (lh.isEmpty()) {

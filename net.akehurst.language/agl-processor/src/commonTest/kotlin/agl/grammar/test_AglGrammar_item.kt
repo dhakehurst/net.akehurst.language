@@ -440,7 +440,7 @@ class test_AglGrammar_item {
     }
 
     @Test
-    fun x() {
+    fun HEX_FLOAT_LITERAL() {
         val sentence = """
             HEX_FLOAT_LITERAL =  '0' "[xX]" (HexDigits '.'? | HexDigits? '.' HexDigits) "[pP]" "[+-]"? Digits "[fFdD]"? ;
         """.trimIndent()
