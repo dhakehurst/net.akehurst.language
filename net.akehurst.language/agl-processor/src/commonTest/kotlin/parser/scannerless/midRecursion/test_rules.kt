@@ -55,10 +55,7 @@ class test_rules : test_ScannerlessParserAbstract() {
         val sentence = "r=a;"
         val goal = "S"
         val expected = """
-            S { Rs { R {
-                Is { I { V:'a' } }
-                ';'
-            } } }
+            S { W { "\s+" : ' ' } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }
@@ -68,12 +65,7 @@ class test_rules : test_ScannerlessParserAbstract() {
         val sentence = "r=(a);"
         val goal = "S"
         val expected = """
-            S { Rs { R {
-                Is { I { G {
-                    'b' I { 'a' } 'c'
-                } } }
-                ';'
-            } } }
+            S { W { "\s+" : ' ' } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }
@@ -82,18 +74,7 @@ class test_rules : test_ScannerlessParserAbstract() {
         val sentence = "r=((a));"
         val goal = "S"
         val expected = """
-             S { Rs { R {
-                  Is { I { G {
-                        'b'
-                        I { G {
-                            'b'
-                            I { V:'a' }
-                            'c'
-                          } }
-                        'c'
-                      } } }
-                  ';'
-                } } }
+             S { W { "\s+" : ' ' } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }
@@ -102,15 +83,7 @@ class test_rules : test_ScannerlessParserAbstract() {
         val sentence = "r=a?a?;"
         val goal = "S"
         val expected = """
-            S { I { G {
-              'b'
-              I { G {
-                  'b'
-                  I { V:'a' }
-                  'c'
-                } }
-              'c'
-            } } }
+            S { W { "\s+" : ' ' } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }
@@ -119,15 +92,7 @@ class test_rules : test_ScannerlessParserAbstract() {
         val sentence = "r=a?;r=a?;r=a?;"
         val goal = "S"
         val expected = """
-            S { I { G {
-              'b'
-              I { G {
-                  'b'
-                  I { V:'a' }
-                  'c'
-                } }
-              'c'
-            } } }
+            S { W { "\s+" : ' ' } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }
@@ -136,15 +101,7 @@ class test_rules : test_ScannerlessParserAbstract() {
         val sentence = "r=aa?;"
         val goal = "S"
         val expected = """
-            S { I { G {
-              'b'
-              I { G {
-                  'b'
-                  I { V:'a' }
-                  'c'
-                } }
-              'c'
-            } } }
+            S { W { "\s+" : ' ' } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }
@@ -153,15 +110,7 @@ class test_rules : test_ScannerlessParserAbstract() {
         val sentence = "r=(aa?);"
         val goal = "S"
         val expected = """
-            S { I { G {
-              'b'
-              I { G {
-                  'b'
-                  I { V:'a' }
-                  'c'
-                } }
-              'c'
-            } } }
+            S { W { "\s+" : ' ' } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }

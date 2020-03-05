@@ -286,7 +286,7 @@ class RuntimeRule(
                         else -> error("Should not happen")
                     }
                     RuntimeRuleItem.SLIST__EMPTY_RULE -> when (position) {
-                        RulePosition.START_OF_RULE -> setOf(rhs.items[RuntimeRuleItem.SLIST__ITEM])
+                        RulePosition.START_OF_RULE -> setOf(rhs.items[RuntimeRuleItem.SLIST__EMPTY_RULE])
                         RulePosition.END_OF_RULE -> emptySet()
                         else -> error("Should not happen")
                     }

@@ -107,7 +107,7 @@ class test_nonTerm_a0n : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "a,a,a"
 
-        val expected = "S {'a' sep:',' 'a' sep:',' 'a'}"
+        val expected = "S {'a' sep {','} 'a' sep {','} 'a'}"
 
         super.test(b, goal, sentence, expected)
     }
@@ -118,7 +118,7 @@ class test_nonTerm_a0n : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "a"+",a".repeat(99)
 
-        val expected = "S {'a'"+" sep:',' 'a'".repeat(99)+"}"
+        val expected = "S {'a'"+" sep {','} 'a'".repeat(99)+"}"
 
         super.test(b, goal, sentence, expected)
     }
