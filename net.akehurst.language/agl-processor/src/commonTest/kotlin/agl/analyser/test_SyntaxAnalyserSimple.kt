@@ -82,11 +82,11 @@ class test_SyntaxAnalyserSimple {
         val actual = proc.process<AsmElementSimple>(sentence)
 
         assertEquals("S", actual.typeName)
-        assertEquals(2, actual.properties.size)
+        assertEquals(3, actual.properties.size)
         assertEquals(true, actual.hasProperty("ID"))
         assertEquals("a", actual.getPropertyValue("ID"))
         assertEquals(true, actual.hasProperty("type"))
-        assertEquals("a", actual.getPropertyValue("A"))
+        assertEquals("A", actual.getPropertyValue("type"))
     }
 
 
