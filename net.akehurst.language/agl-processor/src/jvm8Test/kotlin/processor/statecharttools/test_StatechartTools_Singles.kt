@@ -33,7 +33,7 @@ class test_StatechartTools_Singles {
 
     @Test
     fun ConditionalExpression_integer() {
-        val goal = "ConditionalExpression"
+        val goal = "Expression"
         val sentence = "integer"
         val result = processor.parse(goal, sentence)
         Assert.assertNotNull(result)
@@ -43,7 +43,7 @@ class test_StatechartTools_Singles {
 
     @Test
     fun ConditionalExpression_97() {
-        val goal = "ConditionalExpression"
+        val goal = "Expression"
         val sentence = "97"
         val result = processor.parse(goal, sentence)
         Assert.assertNotNull(result)
@@ -53,7 +53,7 @@ class test_StatechartTools_Singles {
 
     @Test
     fun AssignmentExpression_integer_AS_97() {
-        val goal = "AssignmentExpression"
+        val goal = "Expression"
         val sentence = "integer = 97"
         val result = processor.parse(goal, sentence)
         Assert.assertNotNull(result)

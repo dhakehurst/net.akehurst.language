@@ -49,7 +49,7 @@ InternalScope = 'internal' ':' (ScopeDeclaration | LocalReaction)*;
 ImportScope = 'import' ':' STRING* ;
 
 Direction = 'in' | 'out' ;
-Annotation = '@' QID ('(' (ConditionalExpression (',' ConditionalExpression)*)? ')')?;
+Annotation = '@' QID ('(' (Expression (',' Expression)*)? ')')?;
 
 Parameter = ID ('...')? ':' TypeSpecifier;
 
@@ -79,7 +79,7 @@ EventSpec =	RegularEventSpec | TimeEventSpec | BuiltinEventSpec;
 RegularEventSpec = SimpleFeatureCall;
 SimpleFeatureCall = SimpleElementReferenceExpression (('.' | '.@') ID ('(' (Argument (',' Argument)*)? ')')?)*;
 SimpleElementReferenceExpression = ID ('(' (Argument (',' Argument)*)? ')')?;
-TimeEventSpec = TimeEventType ConditionalExpression TimeUnit;
+TimeEventSpec = TimeEventType Expression TimeUnit;
 TimeEventType =	'after' | 'every';
 BuiltinEventSpec = EntryEvent | ExitEvent | AlwaysEvent;
 EntryEvent= 'entry';

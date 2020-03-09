@@ -40,14 +40,30 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
         return this.builder.findRuleByName(value, true)
     }
 
+    private fun toRegEx(value:String) : String {
+        return Regex.escape(value)
+    }
+
     private fun compressRhs(rhs: RuleItem): CompressedItem {
         return when {
             rhs is Terminal -> when {
-                rhs.isPattern -> CompressedItem(rhs.value, true)
-                else -> CompressedItem(rhs.value, false)
+                rhs.isPattern -> CompressedItem("(${rhs.value})", true)
+                else -> CompressedItem("(${toRegEx(rhs.value)})", false)
             }
-            1 == rhs.allTerminal.size -> this.compressRhs(rhs.allTerminal.first())
-            else -> throw GrammarExeception("Compressing ${rhs::class} to leaf is not yet supported", null)
+            rhs is Concatenation -> {
+                if (1 == rhs.items.size) {
+                    this.compressRhs(rhs.items[0])
+                } else {
+                    throw GrammarExeception("Rule ${rhs.owningRule.name}, compressing ${rhs::class} to leaf is not yet supported", null)
+                }
+            }
+            rhs is Choice -> {
+                val ct = rhs.alternative.map { this.compressRhs(it) }
+                val pattern = ct.joinToString(separator = "|") { it.value }
+                CompressedItem(pattern, true)
+            }
+            rhs is NonTerminal -> this.compressRhs( rhs.referencedRule.rhs ) //TODO: need to catch the recursion before this
+            else -> throw GrammarExeception("Rule ${rhs.owningRule.name}, compressing ${rhs::class} to leaf is not yet supported", null)
         }
     }
 

@@ -1,42 +1,68 @@
 // Boolean Literal
-//# PrimitiveValueExpression
+//# Expression
 true
 false
 yes
 no
 
 // Int Literal
-//# PrimitiveValueExpression
+//# Expression
 0
 4
 42
 
 // Hex Literal
-//# PrimitiveValueExpression
+//# Expression
 0xFFB5C5
 0XFFB5C5
 
 // Binary Literal
-//# PrimitiveValueExpression
+//# Expression
 0b1101101
 0B1110001
 
 // Real Literal
-//# PrimitiveValueExpression
+//# Expression
 0.2f
 0.2F
 0.2d
 0.2D
 
 // String Literal
-//# PrimitiveValueExpression
+//# Expression
 'Hello World'
 "Hello World"
 ''
 
 // Null Literal
-//# PrimitiveValueExpression
+//# Expression
 null
+
+//FeatureCall
+//# Expression
+a.b
+a.b()
+a.b(c)
+a.b(c,c)
+b(c)
+b(c,d)
+b[1]
+b[1][2]
+a.b[1]
+a.b[1][2]
+
+//Logical Expression
+//# Expression
+! true
+true || false
+true && false
+! yes
+no && yes
+true || no
+
+//Assignment Expression
+//# Expression
+
 
 // Variable Definition
 //# ScopeDeclaration

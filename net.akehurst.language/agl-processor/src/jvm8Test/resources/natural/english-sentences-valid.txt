@@ -129,7 +129,7 @@ sentence | I want to drink water.
 sentence | John went shopping.
 
 sentence | John agreed to run for president.
-sentence | To write was his ambition.
+sentence | to write was his ambition.
 sentence | The man stopped to rest.
 sentence | Reading books in the train gives me a headache.
 sentence | Buildings constructed during the depression are substandard.

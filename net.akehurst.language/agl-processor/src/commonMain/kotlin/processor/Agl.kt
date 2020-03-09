@@ -98,7 +98,7 @@ object Agl {
         val prefix = "namespace temp grammar Temp { "
         val grammarStr = prefix + rules.joinToString(" ") + "}"
         try {
-            val grammar = grammarProcessor.process<Grammar>("grammarDefinition", grammarStr)
+            val grammar = grammarProcessor.process<List<Grammar>>("grammarDefinition", grammarStr)[0]
             return processor(grammar, syntaxAnalyser, formatter)
         } catch (e: ParseFailedException) {
             //TODO: better, different exception to detect which list item fails

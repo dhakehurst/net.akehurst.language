@@ -21,7 +21,16 @@ import kotlin.js.JsName
 class AsmElementProperty(
         val name: String,
         val value: Any?
-)
+) {
+
+    override fun toString(): String {
+        return when (value) {
+            is AsmElementSimple -> "$name = :${value.typeName}"
+            is List<*> -> "$name = [...]"
+            else -> "$name = ${value}"
+        }
+    }
+}
 
 class AsmElementSimple(
         val typeName: String
@@ -36,8 +45,12 @@ class AsmElementSimple(
     @JsName("getPropertyValue")
     fun getPropertyValue(name: String): Any? = _properties[name]?.value
 
-    @JsName("getPropertyAstItem")
-    fun getPropertyAstItem(name: String): AsmElementSimple = getPropertyValue(name) as AsmElementSimple
+    @JsName("getPropertyAsAsmElement")
+    fun getPropertyAsAsmElement(name: String): AsmElementSimple = getPropertyValue(name) as AsmElementSimple
+
+    @JsName("getPropertyAsList")
+    fun getPropertyAsList(name: String): List<Any> = getPropertyValue(name) as List<Any>
+
 
     @JsName("setProperty")
     fun setProperty(name: String, value: Any?) {

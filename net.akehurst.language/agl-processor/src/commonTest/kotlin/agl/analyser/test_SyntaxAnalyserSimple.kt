@@ -145,21 +145,21 @@ class test_SyntaxAnalyserSimple {
         assertEquals("S", actual1.typeName)
         assertEquals(2, actual1.properties.size)
         assertEquals("a", actual1.getPropertyValue("ID"))
-        assertEquals("A", actual1.getPropertyAstItem("item").typeName)
-        assertEquals("8", actual1.getPropertyAstItem("item").getPropertyValue("NUMBER"))
+        assertEquals("A", actual1.getPropertyAsAsmElement("item").typeName)
+        assertEquals("8", actual1.getPropertyAsAsmElement("item").getPropertyValue("NUMBER"))
 
         assertEquals("S", actual2.typeName)
         assertEquals(2, actual2.properties.size)
         assertEquals("a", actual2.getPropertyValue("ID"))
-        assertEquals("B", actual2.getPropertyAstItem("item").typeName)
-        assertEquals("fred", actual2.getPropertyAstItem("item").getPropertyValue("NAME"))
+        assertEquals("B", actual2.getPropertyAsAsmElement("item").typeName)
+        assertEquals("fred", actual2.getPropertyAsAsmElement("item").getPropertyValue("NAME"))
 
         assertEquals("S", actual3.typeName)
         assertEquals(2, actual3.properties.size)
         assertEquals("a", actual3.getPropertyValue("ID"))
-        assertEquals("C", actual3.getPropertyAstItem("item").typeName)
-        assertEquals("fred", actual3.getPropertyAstItem("item").getPropertyValue("NAME"))
-        assertEquals("8", actual3.getPropertyAstItem("item").getPropertyValue("NUMBER"))
+        assertEquals("C", actual3.getPropertyAsAsmElement("item").typeName)
+        assertEquals("fred", actual3.getPropertyAsAsmElement("item").getPropertyValue("NAME"))
+        assertEquals("8", actual3.getPropertyAsAsmElement("item").getPropertyValue("NUMBER"))
     }
 
     @Test

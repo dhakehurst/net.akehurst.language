@@ -41,12 +41,11 @@ data class ParentRelation(
 class ParserState(
         val number: StateNumber,
         val rulePosition: RulePosition,
-        val lookahead: Set<RuntimeRule>,
         val stateSet: ParserStateSet
 ) {
 
-    private var nextStates_cache: Set<ParserState>? = null
-    private var _parentRelations: MutableSet<ParentRelation> = mutableSetOf()
+    //private var nextStates_cache: Set<ParserState>? = null
+    //private var _parentRelations: MutableSet<ParentRelation> = mutableSetOf()
     internal var transitions_cache: MutableMap<ParserState?,Set<Transition>?> = mutableMapOf()
 
     val parentRelations: Set<ParentRelation>
@@ -96,12 +95,12 @@ class ParserState(
                 val childrenRP = rr.calcExpectedRulePositions(0)
                 childrenRP.map { childRP ->
                     //TODO: uncomment this if createAll is not called
-                    val childRPEnd = childRP.atEnd() //childRP.runtimeRule, childRP.choice, RulePosition.END_OF_RULE)
-                    val elh = this.stateSet.runtimeRuleSet.calcLookahead(parent, childRPEnd, parentLh)
-                    val childEndState = stateMap.fetchOrCreateParseState(childRPEnd, elh)
+                    //val childRPEnd = childRP.atEnd() //childRP.runtimeRule, childRP.choice, RulePosition.END_OF_RULE)
+                    //val elh = this.stateSet.runtimeRuleSet.calcLookahead(parent, childRPEnd, parentLh)
+                    //val childEndState = stateMap.fetchOrCreateParseState(childRPEnd, elh)
                     //TODO: add all parent relations, using the possibleParents!
-                    val pp = this.stateSet.parentPosition[childRPEnd.runtimeRule]
-                    childEndState.addParentRelation(ParentRelation(parentRP, elh))
+                    //val pp = this.stateSet.parentPosition[childRPEnd.runtimeRule]
+                    //childEndState.addParentRelation(ParentRelation(parentRP, elh))
                     val lh = this.stateSet.runtimeRuleSet.calcLookahead(parent, childRP, parentLh)
                     RulePositionWithLookahead(childRP, lh)
                 }
@@ -124,10 +123,13 @@ class ParserState(
         }
     }
 
+    /*
     fun addParentRelation(value:ParentRelation) {
         val modified = this._parentRelations.add(value)
         if (modified) this.transitions_cache.clear()
     }
+
+     */
 /*
     fun next(runtimeRuleSet: RuntimeRuleSet): Set<ParserState> {
         if (null == nextStates_cache) {
@@ -151,7 +153,7 @@ class ParserState(
     }
 
     override fun toString(): String {
-        return "State(${this.number.value}-${rulePosition}${lookahead})"
+        return "State(${this.number.value}-${rulePosition})"
     }
 
 }
