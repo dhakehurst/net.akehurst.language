@@ -14,10 +14,11 @@ class test_Java8(val data: Data) {
 
     companion object {
 
-        var java8Processor: LanguageProcessor = createJava8Processor()
+        var standardProcessor: LanguageProcessor = createJava8Processor("/java8/Java8_all.agl")
 
-        fun createJava8Processor() : LanguageProcessor {
-            val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()
+        fun createJava8Processor(path:String) : LanguageProcessor {
+//            val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()
+            val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processor(grammarStr)
             proc.build()
             return proc
@@ -108,11 +109,11 @@ class test_Java8(val data: Data) {
     }
 
     @Test(timeout=5000)
-    fun test() {
+    fun standard() {
         try {
             val queryStr = this.data.sentence
             val grammarRule = this.data.grammarRule
-            val tree = java8Processor.parse(grammarRule, queryStr)
+            val tree = standardProcessor.parse(grammarRule, queryStr)
             assertNotNull(tree)
             val resultStr = clean(tree.asString)
             assertEquals(queryStr, resultStr)
@@ -126,5 +127,6 @@ class test_Java8(val data: Data) {
         }
 
     }
+
 
 }

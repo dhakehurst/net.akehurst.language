@@ -136,6 +136,17 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         mutableMapOf()
     }
 
+    //called from ParserStateSet, which adds the Goal Rule bits
+    internal val parentPosition = lazyMapNonNull<RuntimeRule, Set<RulePosition>> { childRR ->
+        this.runtimeRules.flatMap { rr ->
+            val rps = rr.rulePositions
+            val f = rps.filter { rp ->
+                rp.items.contains(childRR)
+            }
+            f
+        }.toSet()
+    }
+
     init {
         for (rr in rules) {
             when (rr.kind) {
@@ -147,28 +158,29 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             }
         }
     }
-/*
-    fun fetchNextStates(state: ParserState): Set<ParserState> {
-        if (null == state.directParent) {
-            return state.rulePositionWlh.rulePosition.next().map { nextRP ->
-                val childRPS = RulePositionWithLookahead(nextRP, emptySet())
-                state.stateMap.fetchNextParseState(childRPS, null)
-            }.toSet()
-        } else {
-            val parentRPwl = state.directParent.rulePositionWlh
-            val possibleParents = state.stateMap.fetchAll(parentRPwl.rulePosition)
-            return state.rulePositionWlh.rulePosition.next().flatMap { nextRP ->
-                possibleParents.flatMap { posParentState ->
-                    val posParentRPwl = posParentState.rulePositionWlh
-                    val posParentLH = posParentRPwl.graftLookahead
-                    val lh = this.calcLookahead(posParentRPwl, nextRP, posParentLH)
-                    val childRPS = RulePositionWithLookahead(nextRP, lh)
-                    state.stateMap.fetchAll(childRPS)
-                }
-            }.toSet()
+
+    /*
+        fun fetchNextStates(state: ParserState): Set<ParserState> {
+            if (null == state.directParent) {
+                return state.rulePositionWlh.rulePosition.next().map { nextRP ->
+                    val childRPS = RulePositionWithLookahead(nextRP, emptySet())
+                    state.stateMap.fetchNextParseState(childRPS, null)
+                }.toSet()
+            } else {
+                val parentRPwl = state.directParent.rulePositionWlh
+                val possibleParents = state.stateMap.fetchAll(parentRPwl.rulePosition)
+                return state.rulePositionWlh.rulePosition.next().flatMap { nextRP ->
+                    possibleParents.flatMap { posParentState ->
+                        val posParentRPwl = posParentState.rulePositionWlh
+                        val posParentLH = posParentRPwl.graftLookahead
+                        val lh = this.calcLookahead(posParentRPwl, nextRP, posParentLH)
+                        val childRPS = RulePositionWithLookahead(nextRP, lh)
+                        state.stateMap.fetchAll(childRPS)
+                    }
+                }.toSet()
+            }
         }
-    }
-*/
+    */
 /*
     private fun createAllParserStates(userGoalRule: RuntimeRule, goalRP: RulePosition) {
         val stateMap = this.states_cache[userGoalRule]
@@ -590,43 +602,6 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
 
     }
-/*
-    fun calcCanGrowInto(childRule: RuntimeRule, ancesstorRule: RuntimeRule, ancesstorItemIndex: Int): Boolean {
-        return if (-1 == ancesstorItemIndex) {
-            false
-        } else {
-            //return canGrowIntoAt_cache[childRule.number][ancesstorRule.number][ancesstorItemIndex];
-            val index = IndexCanGrowIntoAt(childRule.number, ancesstorRule.number, ancesstorItemIndex)
-            var result = canGrowIntoAt_cache[index]
-            if (null==result) {
-                val nextExpectedForStacked = this.findNextExpectedItems(ancesstorRule, ancesstorItemIndex)
-                if (nextExpectedForStacked.contains(childRule)) {
-                    result = true
-                } else {
-                    result = false
-                    for (rr in nextExpectedForStacked) {
-                        if (rr.isNonTerminal) {
-                            // todo..can we reduce the possibles!
-                            val possibles = this.calcFirstSubRules(rr)
-                            if (possibles.contains(childRule)) {
-                                result =  true
-                                break
-                            }
-                        } else {
-                            val possibles = this.firstTerminals[rr.number]
-                            if (possibles.contains(childRule)) {
-                                result =  true
-                                break
-                            }
-                        }
-                    }
-                }
-                canGrowIntoAt_cache[index] = result ?: throw ParseException("Should never happen")
-            }
-            return result
-        }
-    }
-    */
 
     internal fun calcTransitions(from: ParserState, previous: ParserState?): Set<Transition> { //TODO: add previous in order to filter parent relations
         val heightTransitions = mutableSetOf<Transition>()

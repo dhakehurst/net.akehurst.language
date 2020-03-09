@@ -90,6 +90,39 @@ class test_AglGrammar {
     }
 
     @Test
+    fun leaf() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+               leaf a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
+    fun skip_leaf() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+               skip leaf a = 'a' ;
+               b = 'b' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+
+
+        assertNotNull(p)
+    }
+
+    @Test
     fun literal_concatenation() {
 
         val grammarStr = """

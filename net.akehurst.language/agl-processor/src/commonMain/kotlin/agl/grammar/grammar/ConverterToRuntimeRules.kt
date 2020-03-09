@@ -29,7 +29,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
 
     class CompressedItem(val value: String, val isPattern: Boolean)
 
-    private val map: MutableMap<RuntimeRule, RuleItem> = mutableMapOf()
+    private val originalRule: MutableMap<RuntimeRule, RuleItem> = mutableMapOf()
     val builder = RuntimeRuleSetBuilder()
 
     private fun findRule(name: String): RuntimeRule? {
@@ -48,13 +48,16 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
         return when {
             rhs is Terminal -> when {
                 rhs.isPattern -> CompressedItem("(${rhs.value})", true)
-                else -> CompressedItem("(${toRegEx(rhs.value)})", false)
+                else -> CompressedItem("(${toRegEx(rhs.value)})", true)
             }
             rhs is Concatenation -> {
                 if (1 == rhs.items.size) {
                     this.compressRhs(rhs.items[0])
                 } else {
-                    throw GrammarExeception("Rule ${rhs.owningRule.name}, compressing ${rhs::class} to leaf is not yet supported", null)
+                    val items = rhs.items.map { this.compressRhs(it) }
+                    val pattern = items.joinToString(separator = "") { it.value }
+                    CompressedItem(pattern, true)
+                    //throw GrammarExeception("Rule ${rhs.owningRule.name}, compressing ${rhs::class} to leaf is not yet supported", null)
                 }
             }
             rhs is Choice -> {
@@ -78,7 +81,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
     }
 
     fun originalRuleItemFor(rr: RuntimeRule): RuleItem {
-        return this.map.get(rr) ?: throw LanguageProcessorException("cannot find original item for " + rr, null)
+        return this.originalRule.get(rr) ?: throw LanguageProcessorException("cannot find original item for " + rr, null)
         /*
         val name = rr.name
         if (name.startsWith("§")) {
@@ -127,7 +130,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
                 target.isLeaf -> this.buildCompressedRule(target)
                 else -> {
                     val nrule = this.builder.rule(target.name).skip(target.isSkip).build()
-
+                    this.originalRule.put(nrule, target.rhs)
                     //need to get back RuntimeRuleItems here,
                     // then set the rhs accordingly
 
@@ -181,19 +184,19 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
     override fun visit(target: EmptyRule, arg: String): RuntimeRule {
         val ruleThatIsEmpty = this.findRule(arg) ?: throw ParserException("Internal Error: should not happen")
         val e = this.builder.empty(ruleThatIsEmpty)
-        this.map.put(e, target)
+        this.originalRule.put(e, target)
         return e
     }
 
     override fun visit(target: Terminal, arg: String): RuntimeRule {
-        val existing = this.findTerminal(target.value)
+        val existing = this.findTerminal("'${target.value}'")
         if (null == existing) {
             val terminalRule = if (target.isPattern) {
                 builder.pattern(target.value)
             } else {
                 builder.literal(target.value)
             }
-            this.map.put(terminalRule, target)
+            this.originalRule.put(terminalRule, target)
             return terminalRule
         } else {
             return existing
@@ -215,7 +218,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
                 it.accept(this, choiceRuleName) as RuntimeRule
             }
             val rr = builder.rule(choiceRuleName).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, *items.toTypedArray())
-            this.map.put(rr, target)
+            this.originalRule.put(rr, target)
             return rr
         }
     }
@@ -229,7 +232,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
                 it.accept(this, choiceRuleName) as RuntimeRule
             }
             val rr = builder.rule(choiceRuleName).choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, *items.toTypedArray())
-            this.map.put(rr, target)
+            this.originalRule.put(rr, target)
             return rr
         }
     }
@@ -241,7 +244,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
     override fun visit(target: Concatenation, arg: String): RuntimeRule {
         val items = target.items.map { it.accept(this, arg) as RuntimeRule }
         val rr = builder.rule(arg).concatenation(*items.toTypedArray())
-        this.map.put(rr, target)
+        this.originalRule.put(rr, target)
         return rr
     }
 
@@ -249,7 +252,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
         val groupRuleName = builder.createGroupRuleName(arg)
         val groupRuleItem = target.choice.accept(this, groupRuleName) as RuntimeRule
         val rr = builder.rule(groupRuleName).concatenation(groupRuleItem)
-        this.map.put(rr, target)
+        this.originalRule.put(rr, target)
         return rr
     }
 
@@ -257,7 +260,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
         val multiRuleName = builder.createMultiRuleName(arg)
         val multiRuleItem = target.item.accept(this, arg) as RuntimeRule
         val rr = builder.rule(multiRuleName).multi(target.min, target.max, multiRuleItem)
-        this.map.put(rr, target)
+        this.originalRule.put(rr, target)
         return rr
     }
 
@@ -266,7 +269,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
         val listRuleItem = target.item.accept(this, arg) as RuntimeRule
         val sepRule = target.separator.accept(this, arg) as RuntimeRule
         val rr = builder.rule(listRuleName).separatedList(target.min, target.max, sepRule, listRuleItem)
-        this.map.put(rr, target)
+        this.originalRule.put(rr, target)
         return rr
     }
 

@@ -46,22 +46,34 @@ grammar Expressions {
    	skip SINGLE_LINE_COMMENT = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
    	skip MULTI_LINE_COMMENT = "//.*?${'$'}" ;
 
-    Expression = AssignmentExpression;
-    AssignmentExpression = ConditionalExpression ( AssignmentOperator ConditionalExpression )* ;
-    ConditionalExpression = LogicalOrExpression ( '?' LogicalOrExpression ':' LogicalOrExpression )? ;
-    LogicalOrExpression  = LogicalAndExpression ( LogicalOrOperator LogicalAndExpression )* ;
-    LogicalAndExpression = LogicalNotExpression ( LogicalAndOperator LogicalNotExpression )* ;
-    LogicalNotExpression = BitwiseOrExpression | LogicalNotOperator BitwiseOrExpression ;
-    BitwiseOrExpression = BitwiseXorExpression ( BitwiseOrOperator BitwiseXorExpression )* ;
-    BitwiseXorExpression = BitwiseAndExpression ( BitwiseXOrOperator BitwiseAndExpression )* ;
-    BitwiseAndExpression = LogicalRelationExpression ( BitwiseAndOperator LogicalRelationExpression )* ;
-    LogicalRelationExpression = ShiftExpression ( RelationalOperator ShiftExpression )* ;
-    ShiftExpression = NumericalAddSubtractExpression ( ShiftOperator NumericalAddSubtractExpression )* ;
-    NumericalAddSubtractExpression = NumericalMultiplyDivideExpression ( AdditiveOperator NumericalMultiplyDivideExpression )* ;
-    NumericalMultiplyDivideExpression = NumericalUnaryExpression ( MultiplicativeOperator NumericalUnaryExpression )* ;
-    NumericalUnaryExpression = PostFixUnaryExpression | UnaryOperator PostFixUnaryExpression ;
-    PostFixUnaryExpression = TypeCastExpression ( PostFixOperator )* ;
-    TypeCastExpression = PrimaryExpression ( 'as' TypeSpecifier)* ;
+    Expression
+      = AssignmentExpression
+      | ConditionalExpression
+      | LogicalExpression
+      | InfixExpression
+      | PostFixUnaryExpression
+      | NumericalUnaryExpression
+      | TypeCastExpression
+      | PrimaryExpression
+      ;
+
+    AssignmentExpression = Expression AssignmentOperator Expression ;
+    LogicalExpression = InfixLogicalExpresion | NotLogicalExpresion ;
+    InfixLogicalExpresion = [ Expression / logicalOperator ]2+ ;
+    NotLogicalExpresion = LogicalNotOperator Expression ;
+    InfixExpression = [ Expression / operator ]2+ ;
+
+    logicalOperator = LogicalAndOperator | LogicalOrOperator ;
+    operator
+        = BitwiseOrOperator | BitwiseXOrOperator | BitwiseAndOperator
+        | RelationalOperator | ShiftOperator | AdditiveOperator | MultiplicativeOperator
+        ;
+
+
+    ConditionalExpression = Expression '?' Expression ':' Expression ;
+    NumericalUnaryExpression = UnaryOperator Expression ;
+    PostFixUnaryExpression = Expression PostFixOperator ;
+    TypeCastExpression = Expression 'as' TypeSpecifier ;
     PrimaryExpression
         = PrimitiveValueExpression
         | FeatureCall
@@ -70,21 +82,20 @@ grammar Expressions {
 
     PrimitiveValueExpression = Literal ;
     FeatureCall = ElementReferenceExpression (
-       ( '.' | '.@' ) ID (
-             '('(Argument (',' Argument)*)?')'
-		     |
-	         ('[' Expression ']') ('[' Expression ']')*
-	         )?
+       ( '.' | '.@' ) ID ( ArgumentList |  ArrayIndex+ )?
 	   )*
 	;
 
+    ArgumentList = '(' [Argument / ',']* ')' ;
+    ArrayIndex = '[' Expression ']' ;
+
     ElementReferenceExpression = ID	('('(Argument (',' Argument)*)?	')' | ('[' Expression ']')  ('[' Expression ']')* )?;
 
-Argument=(ID '=')?  ConditionalExpression ;
+    Argument=(ID '=')?  Expression ;
 
-ParenthesizedExpression = '(' Expression ')' ;
+    ParenthesizedExpression = '(' Expression ')' ;
 
-TypeSpecifier = QID ('<' (TypeSpecifier (',' TypeSpecifier)*)? '>')?;
+    TypeSpecifier = QID ('<' (TypeSpecifier (',' TypeSpecifier)*)? '>')?;
 
     Literal
       = BoolLiteral
@@ -106,19 +117,19 @@ TypeSpecifier = QID ('<' (TypeSpecifier (',' TypeSpecifier)*)? '>')?;
     StringLiteral =STRING;
     NullLiteral = 'null';
 
-    LogicalAndOperator = '&&';
-    LogicalOrOperator ='||';
-    LogicalNotOperator = '!';
-    BitwiseXOrOperator=	'^';
-    BitwiseOrOperator=	'|';
-    BitwiseAndOperator=	'&';
-    PostFixOperator='++' | '--';
-    AssignmentOperator = '=' | '*='	| '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ;
-    ShiftOperator = '<<' | '>>' ;
-    AdditiveOperator = '+' | '-' ;
-    MultiplicativeOperator = '*' | '/' | '%';
-    UnaryOperator = '+' | '-' | '~';
-    RelationalOperator = '<' | '<=' | '>' | '>=' | '==' | '!=' ;
+    leaf LogicalAndOperator = '&&' ;
+    leaf LogicalOrOperator  = '||' ;
+    leaf LogicalNotOperator = '!' ;
+    leaf BitwiseXOrOperator = '^' ;
+    leaf BitwiseOrOperator  = '|' ;
+    leaf BitwiseAndOperator = '&' ;
+    leaf PostFixOperator    = '++' | '--' ;
+    leaf AssignmentOperator = '=' | '*='	| '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ;
+    leaf ShiftOperator = '<<' | '>>' ;
+    leaf AdditiveOperator = '+' | '-' ;
+    leaf MultiplicativeOperator = '*' | '/' | '%';
+    leaf UnaryOperator = '+' | '-' | '~';
+    leaf RelationalOperator = '<' | '<=' | '>' | '>=' | '==' | '!=' ;
 
     leaf BOOL = "true|false|yes|no" ;
     leaf HEX  = "0(x|X)[0-9a-fA-F]+" ;
@@ -128,7 +139,7 @@ TypeSpecifier = QID ('<' (TypeSpecifier (',' TypeSpecifier)*)? '>')?;
     QID = ID ('.' ID)* ;
     leaf INT = "[0-9]+" ;
     leaf ID = "[a-zA-Z_][a-zA-Z_0-9]*" ;
-     STRING = DQ_STRING | SQ_STRING ;
+    leaf STRING = DQ_STRING | SQ_STRING ;
     leaf DQ_STRING = "\"(?:\\?.)*?\"";
     leaf SQ_STRING = "'(?:\\?.)*?'" ;
 }
@@ -185,7 +196,7 @@ InternalScope = 'internal' ':' (ScopeDeclaration | LocalReaction)*;
 ImportScope = 'import' ':' STRING* ;
 
 Direction = 'in' | 'out' ;
-Annotation = '@' QID ('(' (ConditionalExpression (',' ConditionalExpression)*)? ')')?;
+Annotation = '@' QID ('(' (Expression (',' Expression)*)? ')')?;
 
 Parameter = ID ('...')? ':' TypeSpecifier;
 
@@ -215,7 +226,7 @@ EventSpec =	RegularEventSpec | TimeEventSpec | BuiltinEventSpec;
 RegularEventSpec = SimpleFeatureCall;
 SimpleFeatureCall = SimpleElementReferenceExpression (('.' | '.@') ID ('(' (Argument (',' Argument)*)? ')')?)*;
 SimpleElementReferenceExpression = ID ('(' (Argument (',' Argument)*)? ')')?;
-TimeEventSpec = TimeEventType ConditionalExpression TimeUnit;
+TimeEventSpec = TimeEventType Expression TimeUnit;
 TimeEventType =	'after' | 'every';
 BuiltinEventSpec = EntryEvent | ExitEvent | AlwaysEvent;
 EntryEvent= 'entry';

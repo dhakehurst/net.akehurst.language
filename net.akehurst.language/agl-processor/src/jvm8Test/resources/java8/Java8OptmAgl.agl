@@ -62,134 +62,134 @@ grammar Java8Optm1 {
 
 // Keywords
 
-ABSTRACT=           'abstract';
-ASSERT=             'assert';
-BOOLEAN=            'boolean';
-BREAK=              'break';
-BYTE=               'byte';
-CASE=               'case';
-CATCH=              'catch';
-CHAR=               'char';
-CLASS=              'class';
-CONST=              'const';
-CONTINUE=           'continue';
-DEFAULT=            'default';
-DO=                 'do';
-DOUBLE=             'double';
-ELSE=               'else';
-ENUM=               'enum';
-EXTENDS=            'extends';
-FINAL=              'final';
-FINALLY=            'finally';
-FLOAT=              'float';
-FOR=                'for';
-IF=                 'if';
-GOTO=               'goto';
-IMPLEMENTS=         'implements';
-IMPORT=             'import';
-INSTANCEOF=         'instanceof';
-INT=                'int';
-INTERFACE=          'interface';
-LONG=               'long';
-NATIVE=             'native';
-NEW=                'new';
-PACKAGE=            'package';
-PRIVATE=            'private';
-PROTECTED=          'protected';
-PUBLIC=             'public';
-RETURN=             'return';
-SHORT=              'short';
-STATIC=             'static';
-STRICTFP=           'strictfp';
-SUPER=              'super';
-SWITCH=             'switch';
-SYNCHRONIZED=       'synchronized';
-THIS=               'this';
-THROW=              'throw';
-THROWS=             'throws';
-TRANSIENT=          'transient';
-TRY=                'try';
-VOID=               'void';
-VOLATILE=           'volatile';
-WHILE=              'while';
+leaf ABSTRACT=           'abstract';
+leaf ASSERT=             'assert';
+leaf BOOLEAN=            'boolean';
+leaf BREAK=              'break';
+leaf BYTE=               'byte';
+leaf CASE=               'case';
+leaf CATCH=              'catch';
+leaf CHAR=               'char';
+leaf CLASS=              'class';
+leaf CONST=              'const';
+leaf CONTINUE=           'continue';
+leaf DEFAULT=            'default';
+leaf DO=                 'do';
+leaf DOUBLE=             'double';
+leaf ELSE=               'else';
+leaf ENUM=               'enum';
+leaf EXTENDS=            'extends';
+leaf FINAL=              'final';
+leaf FINALLY=            'finally';
+leaf FLOAT=              'float';
+leaf FOR=                'for';
+leaf IF=                 'if';
+leaf GOTO=               'goto';
+leaf IMPLEMENTS=         'implements';
+leaf IMPORT=             'import';
+leaf INSTANCEOF=         'instanceof';
+leaf INT=                'int';
+leaf INTERFACE=          'interface';
+leaf LONG=               'long';
+leaf NATIVE=             'native';
+leaf NEW=                'new';
+leaf PACKAGE=            'package';
+leaf PRIVATE=            'private';
+leaf PROTECTED=          'protected';
+leaf PUBLIC=             'public';
+leaf RETURN=             'return';
+leaf SHORT=              'short';
+leaf STATIC=             'static';
+leaf STRICTFP=           'strictfp';
+leaf SUPER=              'super';
+leaf SWITCH=             'switch';
+leaf SYNCHRONIZED=       'synchronized';
+leaf THIS=               'this';
+leaf THROW=              'throw';
+leaf THROWS=             'throws';
+leaf TRANSIENT=          'transient';
+leaf TRY=                'try';
+leaf VOID=               'void';
+leaf VOLATILE=           'volatile';
+leaf WHILE=              'while';
 
 // Literals
 
-DECIMAL_LITERAL=    "(0|[1-9]([0-9_]*[0-9])?)";
-HEX_LITERAL=        "0[xX][0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?[lL]?";
-OCT_LITERAL=        "0_*[0-7]([0-7_]*[0-7])?[lL]?";
-BINARY_LITERAL=     "0[bB][01]([01_]*[01])?[lL]?";
-FLOAT_LITERAL=		"(((0|([1-9](0|[1-9])*)).(0|[1-9])*|.(0|[1-9])+ )([eE][+-]?(0|[1-9])+)?)|((0|N(0|[1-9]))([eE][+-]?(0|[1-9])+))";
+leaf DECIMAL_LITERAL=    "(0|[1-9]([0-9_]*[0-9])?)";
+leaf HEX_LITERAL=        "0[xX][0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?[lL]?";
+leaf OCT_LITERAL=        "0_*[0-7]([0-7_]*[0-7])?[lL]?";
+leaf BINARY_LITERAL=     "0[bB][01]([01_]*[01])?[lL]?";
+leaf FLOAT_LITERAL=		"(((0|([1-9](0|[1-9])*)).(0|[1-9])*|.(0|[1-9])+ )([eE][+-]?(0|[1-9])+)?)|((0|N(0|[1-9]))([eE][+-]?(0|[1-9])+))";
 
 HEX_FLOAT_LITERAL=  '0' "[xX]" (HexDigits '.'? | HexDigits? '.' HexDigits) "[pP]" "[+-]"? Digits "[fFdD]"?;
 
-BOOL_LITERAL=     	"true|false" ;
+leaf BOOL_LITERAL=     	"true|false" ;
 
 CHAR_LITERAL=       '\'' ("[^'\\\r\n]" | EscapeSequence) '\'';
 
-STRING_LITERAL=     "\"(?:\\?.)*?\"" ;
+leaf STRING_LITERAL=     "\"(?:\\?.)*?\"" ;
 
-NULL_LITERAL=       'null';
+leaf NULL_LITERAL=       'null';
 
 // Separators
 
-LPAREN=             '(';
-RPAREN=             ')';
-LBRACE=             '{';
-RBRACE=             '}';
-LBRACK=             '[';
-RBRACK=             ']';
-SEMI=               ';';
-COMMA=              ',';
-DOT=                '.';
+leaf LPAREN=             '(';
+leaf RPAREN=             ')';
+leaf LBRACE=             '{';
+leaf RBRACE=             '}';
+leaf LBRACK=             '[';
+leaf RBRACK=             ']';
+leaf SEMI=               ';';
+leaf COMMA=              ',';
+leaf DOT=                '.';
 
 // Operators
 
-ASSIGN=             '=';
-GT=                 '>';
-LT=                 '<';
-BANG=               '!';
-TILDE=              '~';
-QUESTION=           '?';
-COLON=              ':';
-EQUAL=              '==';
-LE=                 '<=';
-GE=                 '>=';
-NOTEQUAL=           '!=';
-AND=                '&&';
-OR=                 '||';
-INC=                '++';
-DEC=                '--';
-ADD=                '+';
-SUB=                '-';
-MUL=                '*';
-DIV=                '/';
-BITAND=             '&';
-BITOR=              '|';
-CARET=              '^';
-MOD=                '%';
+leaf ASSIGN=             '=';
+leaf GT=                 '>';
+leaf LT=                 '<';
+leaf BANG=               '!';
+leaf TILDE=              '~';
+leaf QUESTION=           '?';
+leaf COLON=              ':';
+leaf EQUAL=              '==';
+leaf LE=                 '<=';
+leaf GE=                 '>=';
+leaf NOTEQUAL=           '!=';
+leaf AND=                '&&';
+leaf OR=                 '||';
+leaf INC=                '++';
+leaf DEC=                '--';
+leaf ADD=                '+';
+leaf SUB=                '-';
+leaf MUL=                '*';
+leaf DIV=                '/';
+leaf BITAND=             '&';
+leaf BITOR=              '|';
+leaf CARET=              '^';
+leaf MOD=                '%';
 
-ADD_ASSIGN=         '+=';
-SUB_ASSIGN=         '-=';
-MUL_ASSIGN=         '*=';
-DIV_ASSIGN=         '/=';
-AND_ASSIGN=         '&=';
-OR_ASSIGN=          '|=';
-XOR_ASSIGN=         '^=';
-MOD_ASSIGN=         '%=';
-LSHIFT_ASSIGN=      '<<=';
-RSHIFT_ASSIGN=      '>>=';
-URSHIFT_ASSIGN=     '>>>=';
+leaf ADD_ASSIGN=         '+=';
+leaf SUB_ASSIGN=         '-=';
+leaf MUL_ASSIGN=         '*=';
+leaf DIV_ASSIGN=         '/=';
+leaf AND_ASSIGN=         '&=';
+leaf OR_ASSIGN=          '|=';
+leaf XOR_ASSIGN=         '^=';
+leaf MOD_ASSIGN=         '%=';
+leaf LSHIFT_ASSIGN=      '<<=';
+leaf RSHIFT_ASSIGN=      '>>=';
+leaf URSHIFT_ASSIGN=     '>>>=';
 
 // Java 8 tokens
 
-ARROW=              '->';
-COLONCOLON=         '::';
+leaf ARROW=              '->';
+leaf COLONCOLON=         '::';
 
 // Additional symbols not defined in the lexical specification
 
-AT=                 '@';
-ELLIPSIS=           '...';
+leaf AT=                 '@';
+leaf ELLIPSIS=           '...';
 
 // Whitespace and comments
 
@@ -199,7 +199,7 @@ skip LINE_COMMENT =   "//.*?$" ;
 
 // Identifiers
 
-IDENTIFIER=	"([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*" ;
+leaf IDENTIFIER=	"([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*" ;
 
 ExponentPart
     = "[eE]" "[+-]"? Digits
@@ -215,20 +215,18 @@ HexDigits
     = HexDigit ((HexDigit | '_')* HexDigit)?
     ;
 
-HexDigit
-    = "[0-9a-fA-F]"
-    ;
+leaf HexDigit = "[0-9a-fA-F]" ;
 
 Digits
     = "[0-9]" ("[0-9_]"* "[0-9]")?
     ;
 
-LetterOrDigit
+leaf LetterOrDigit
     = Letter
     | "[0-9]"
     ;
 
-Letter
+leaf Letter
     = "[a-zA-Z$_]" // these are the "java letters" below 0x7F
     | "[^\u0000-\u007F\uD800-\uDBFF]" // covers all characters above 0x7F which are not a surrogate
     | "[\uD800-\uDBFF]" "[\uDC00-\uDFFF]" // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
@@ -284,24 +282,20 @@ classDeclaration
     ;
 
 typeParameters
-    = '<' typeParameter (',' typeParameter)* '>'
+    = '<' [ typeParameter / ',' ]+ '>'
     ;
 
 typeParameter
     = annotation* IDENTIFIER (EXTENDS typeBound)?
     ;
 
-typeBound
-    = typeType ('&' typeType)*
-    ;
+typeBound = [ typeType / '&' ]+ ;
 
 enumDeclaration
     = ENUM IDENTIFIER (IMPLEMENTS typeList)? '{' enumConstants? ','? enumBodyDeclarations? '}'
     ;
 
-enumConstants
-    = enumConstant (',' enumConstant)*
-    ;
+enumConstants =  [ enumConstant  / ',' ]+ ;
 
 enumConstant
     = annotation* IDENTIFIER arguments? classBody?
@@ -394,7 +388,7 @@ interfaceMemberDeclaration
     ;
 
 constDeclaration
-    = typeType constantDeclarator (',' constantDeclarator)* ';'
+    = typeType  [ constantDeclarator / ',' ]+ ';'
     ;
 
 constantDeclarator
@@ -423,7 +417,7 @@ genericInterfaceMethodDeclaration
     ;
 
 variableDeclarators
-    = variableDeclarator (',' variableDeclarator)*
+    = [ variableDeclarator / ',' ]+
     ;
 
 variableDeclarator
@@ -440,7 +434,7 @@ variableInitializer
     ;
 
 arrayInitializer
-    = '{' (variableInitializer (',' variableInitializer)* (',')? )? '}'
+    = '{' ( [variableInitializer / ',' ]+ (',')? )? '}'
     ;
 
 classOrInterfaceType
@@ -452,16 +446,14 @@ typeArgument
     | '?' ((EXTENDS | SUPER) typeType)?
     ;
 
-qualifiedNameList
-    = qualifiedName (',' qualifiedName)*
-    ;
+qualifiedNameList =  [ qualifiedName / ',' ]+ ;
 
 formalParameters
     = '(' formalParameterList? ')'
     ;
 
 formalParameterList
-    = formalParameter (',' formalParameter)* (',' lastFormalParameter)?
+    =  [ formalParameter / ',' ]+ (',' lastFormalParameter)?
     | lastFormalParameter
     ;
 
@@ -504,9 +496,7 @@ annotation
     = '@' qualifiedName ('(' ( elementValuePairs | elementValue )? ')')?
     ;
 
-elementValuePairs
-    = elementValuePair (',' elementValuePair)*
-    ;
+elementValuePairs = [ elementValuePair / ',' ]+ ;
 
 elementValuePair
     = IDENTIFIER '=' elementValue
@@ -793,7 +783,7 @@ primitiveType
     ;
 
 typeArguments
-    = '<' typeArgument (',' typeArgument)* '>'
+    = '<' [ typeArgument / ',' ]+ '>'
     ;
 
 superSuffix

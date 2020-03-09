@@ -211,4 +211,8 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         }
         return nextExpected
     }
+
+    override fun expectedTerminalsAt(goalRuleName: String, inputText: CharSequence, position: Int): List<RuntimeRule> {
+        return this.expectedAt(goalRuleName,inputText,position).flatMap { it.itemsAt[0].toList() }
+    }
 }

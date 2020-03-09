@@ -51,9 +51,23 @@ class test_RuntimeParser {
 
         val actual = sp.expectedAt("S", "", 0)
 
-        val expected = listOf(r_a)
+        val expected = listOf(r_S)
 
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun expectedTerminalsAt() {
+        val rrb = RuntimeRuleSetBuilder()
+        val r_a = rrb.literal("a")
+        val r_S = rrb.rule("S").concatenation(r_a)
+
+        val sp = ScannerlessParser(rrb.ruleSet())
+
+        val actual = sp.expectedTerminalsAt("S", "", 0)
+
+        val expected = listOf(r_a)
+
+        assertEquals(expected, actual)
+    }
 }

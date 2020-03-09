@@ -140,9 +140,9 @@ grammar Query {
         | arithmeticOperator
         | comparisonOperator
         ;
-    arithmeticOperator =  '/' | '*' | '+' | '-' ;
-    comparisonOperator = '==' | '!=' | '<' | '>' | '<=' | '>=' ;
-    logicalOperator = 'AND' | 'OR' | 'XOR' ;
+    leaf arithmeticOperator =  '/' | '*' | '+' | '-' ;
+    leaf comparisonOperator = '==' | '!=' | '<' | '>' | '<=' | '>=' ;
+    leaf logicalOperator = 'AND' | 'OR' | 'XOR' ;
 
     conditionalExpression = expression '?' expression ':' expression ;
 
@@ -155,17 +155,17 @@ grammar Query {
 	ANY_LINK_TYPE = 'any' ;
 	linkTypeReference = NAME ;
 	aggregateFunctionName = NAME ;
-	STORED_QUERY_ID = "([a-zA-Z_][a-zA-Z0-9_]*)([.][a-zA-Z_][a-zA-Z0-9_]*)?" ; // project metricDef OR metricSet.metricDef
-	NAME = "[a-zA-Z_][a-zA-Z0-9_]*" ;
-	POSITIVE_INT = "[0-9]+" ;
-	UNLIMITED_POSITIVE_INT = "[0-9]+" | '*' ;
+	leaf STORED_QUERY_ID = "([a-zA-Z_][a-zA-Z0-9_]*)([.][a-zA-Z_][a-zA-Z0-9_]*)?" ; // project metricDef OR metricSet.metricDef
+	leaf NAME = "[a-zA-Z_][a-zA-Z0-9_]*" ;
+	leaf POSITIVE_INT = "[0-9]+" ;
+	leaf UNLIMITED_POSITIVE_INT = "[0-9]+" | '*' ;
 
     literalValue = BOOLEAN < SINGLE_QUOTE_STRING < INTEGER < REAL < NULL ;
-    BOOLEAN = 'true' | 'false' ;
-    SINGLE_QUOTE_STRING = "'(?:\\?.)*?'" ;
-    INTEGER = "[0-9]+" ;
-    REAL = "[0-9]+[.][0-9]+" ;
-    NULL = 'null' ;
+    leaf BOOLEAN = 'true' | 'false' ;
+    leaf SINGLE_QUOTE_STRING = "'(?:\\?.)*?'" ;
+    leaf INTEGER = "[0-9]+" ;
+    leaf REAL = "[0-9]+[.][0-9]+" ;
+    leaf NULL = 'null' ;
 
 }
         """.trimIndent()

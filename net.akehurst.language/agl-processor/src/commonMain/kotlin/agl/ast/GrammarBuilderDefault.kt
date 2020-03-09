@@ -16,80 +16,86 @@
 
 package net.akehurst.language.agl.ast
 
+import net.akehurst.language.agl.runtime.structure.lazyMapNonNull
 import net.akehurst.language.api.grammar.*
 
 class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
-	val grammar: GrammarDefault
+    private val _literals = lazyMapNonNull<String, Terminal>() {
+        TerminalDefault(it, false)
+    }
 
-	init {
-		this.grammar = GrammarDefault(namespace, name, mutableListOf<Rule>());
-	}
+    val grammar: GrammarDefault
 
-	fun rule(name: String): RuleBuilder {
-		return RuleBuilder(RuleDefault(grammar, name, false, false))
-	}
 
-	fun skip(name: String): RuleBuilder {
-		return RuleBuilder(RuleDefault(this.grammar, name, true, false))
-	}
+    init {
+        this.grammar = GrammarDefault(namespace, name, mutableListOf<Rule>());
+    }
 
-	fun leaf(name: String): RuleBuilder {
-		return RuleBuilder(RuleDefault(this.grammar, name, false, true))
-	}
+    fun rule(name: String): RuleBuilder {
+        return RuleBuilder(RuleDefault(grammar, name, false, false))
+    }
 
-	fun terminalLiteral(value: String): Terminal {
-		return TerminalDefault(value, false)
-	}
+    fun skip(name: String, isLeaf: Boolean = false): RuleBuilder {
+        return RuleBuilder(RuleDefault(this.grammar, name, true, isLeaf))
+    }
 
-	fun terminalPattern(value: String): Terminal {
-		return TerminalDefault(value, true)
-	}
+    fun leaf(name: String): RuleBuilder {
+        return RuleBuilder(RuleDefault(this.grammar, name, false, true))
+    }
 
-	fun nonTerminal(name: String): NonTerminal {
-		if (name.contains(".")) {
-			TODO()
-		} else {
-			return NonTerminalDefault(name, this.grammar)
-		}
-	}
+    fun terminalLiteral(value: String): Terminal {
+        return _literals[value]
+    }
 
-	fun concatenation(vararg sequence: ConcatenationItem): Concatenation {
-		return ConcatenationDefault(sequence.toList())
-	}
+    fun terminalPattern(value: String): Terminal {
+        return TerminalDefault(value, true)
+    }
 
-	class RuleBuilder(val rule: Rule) {
+    fun nonTerminal(name: String): NonTerminal {
+        if (name.contains(".")) {
+            TODO()
+        } else {
+            return NonTerminalDefault(name, this.grammar)
+        }
+    }
 
-		fun empty() {
+    fun concatenation(vararg sequence: ConcatenationItem): Concatenation {
+        return ConcatenationDefault(sequence.toList())
+    }
+
+    class RuleBuilder(val rule: Rule) {
+
+        fun empty() {
             this.rule.rhs = EmptyRuleDefault()
         }
 
-		fun concatenation(vararg sequence: ConcatenationItem) {
-			this.rule.rhs = ChoiceEqualDefault(listOf(ConcatenationDefault(sequence.toList())));
-		}
+        fun concatenation(vararg sequence: ConcatenationItem) {
+            this.rule.rhs = ChoiceEqualDefault(listOf(ConcatenationDefault(sequence.toList())));
+        }
 
-		fun choiceEqual(vararg alternative: Concatenation) {
-			//val alternativeConcats = alternative.map { ChoiceEqualDefault(listOf(it)) }
-			this.rule.rhs = ChoiceEqualDefault(alternative.asList());
-		}
+        fun choiceEqual(vararg alternative: Concatenation) {
+            //val alternativeConcats = alternative.map { ChoiceEqualDefault(listOf(it)) }
+            this.rule.rhs = ChoiceEqualDefault(alternative.asList());
+        }
 
-		fun choiceEqual(vararg alternative: ConcatenationItem) {
-			val alternativeConcats = alternative.map { ConcatenationDefault(listOf(it)) }
-			this.rule.rhs = ChoiceEqualDefault(alternativeConcats);
-		}
+        fun choiceEqual(vararg alternative: ConcatenationItem) {
+            val alternativeConcats = alternative.map { ConcatenationDefault(listOf(it)) }
+            this.rule.rhs = ChoiceEqualDefault(alternativeConcats);
+        }
 
-		fun choicePriority(vararg alternative: Concatenation) {
-			//val alternativeConcats = alternative.map { ChoicePriorityDefault(listOf(it)) }
-			this.rule.rhs = ChoicePriorityDefault(alternative.asList());
-		}
+        fun choicePriority(vararg alternative: Concatenation) {
+            //val alternativeConcats = alternative.map { ChoicePriorityDefault(listOf(it)) }
+            this.rule.rhs = ChoicePriorityDefault(alternative.asList());
+        }
 
-		fun multi(min: Int, max: Int, item: TangibleItem) {
-			this.rule.rhs = ChoiceEqualDefault(listOf(ConcatenationDefault(listOf(MultiDefault(min, max, item)))));
-		}
+        fun multi(min: Int, max: Int, item: TangibleItem) {
+            this.rule.rhs = ChoiceEqualDefault(listOf(ConcatenationDefault(listOf(MultiDefault(min, max, item)))));
+        }
 
-		//TODO: original only allows separator to be a TerminalLiteral here,  I think any Terminal is ok though!
-		fun separatedList(min: Int, max: Int, separator: Terminal, item: TangibleItem) {
-			this.rule.rhs = ChoiceEqualDefault(listOf(ConcatenationDefault(listOf(SeparatedListDefault(min, max, separator, item)))));
-		}
-	}
+        //TODO: original only allows separator to be a TerminalLiteral here,  I think any Terminal is ok though!
+        fun separatedList(min: Int, max: Int, separator: Terminal, item: TangibleItem) {
+            this.rule.rhs = ChoiceEqualDefault(listOf(ConcatenationDefault(listOf(SeparatedListDefault(min, max, separator, item)))));
+        }
+    }
 }

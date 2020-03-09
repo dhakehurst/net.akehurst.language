@@ -418,17 +418,17 @@ class test_AglGrammar_item {
         val expected = this.sppt("""
             normalRule {
                 IDENTIFIER : 'r' WHITESPACE { "\s+" : ' ' }
-                '='  WHITESPACE { "\s+" : ' ' }
+                '=' WHITESPACE { "\s+" : ' ' }
                 choice { priorityChoice { §priorityChoice§sList2 {
-                    concatenation { §concatenation§multi3 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                    concatenation { §concatenation§multi4 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
                         IDENTIFIER : 'a' WHITESPACE { "\s+" : ' ' }
                     } } } } } } }
                     '<' WHITESPACE { "\s+" : ' ' }
-                    concatenation { §concatenation§multi3 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                    concatenation { §concatenation§multi4 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
                         IDENTIFIER : 'b' WHITESPACE { "\s+" : ' ' }
                     } } } } } } }
-                    '<'  WHITESPACE { "\s+" : ' ' }
-                    concatenation { §concatenation§multi3 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                    '<' WHITESPACE { "\s+" : ' ' }
+                    concatenation { §concatenation§multi4 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
                         IDENTIFIER : 'c' WHITESPACE { "\s+" : ' ' }
                     } } } } } } }
                 } } }

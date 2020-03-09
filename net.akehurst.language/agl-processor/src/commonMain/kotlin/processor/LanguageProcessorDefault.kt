@@ -32,7 +32,7 @@ import net.akehurst.language.parser.scannerless.Parser
 import net.akehurst.language.parser.scannerless.ScannerlessParser
 
 internal class LanguageProcessorDefault(
-        val grammar: Grammar,
+        override val grammar: Grammar,
         val goalRuleName: String,
         val syntaxAnalyser: SyntaxAnalyser?,
         val formatter: Formatter?

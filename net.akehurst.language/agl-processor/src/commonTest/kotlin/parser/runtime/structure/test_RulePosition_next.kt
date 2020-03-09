@@ -18,6 +18,7 @@ package net.akehurst.language.agl.runtime.structure
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class test_RulePosition_next {
 
@@ -360,10 +361,12 @@ class test_RulePosition_next {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoalRule(r_S)
 
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 0).next()
-        val expected: Set<RulePosition> = setOf()
+        assertFailsWith(IllegalStateException::class) {
+            val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 0).next()
+            val expected: Set<RulePosition> = setOf()
 
-        assertEquals(expected, actual)
+            assertEquals(expected, actual)
+        }
     }
 
     @Test

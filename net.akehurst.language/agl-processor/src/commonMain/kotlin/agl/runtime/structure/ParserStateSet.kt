@@ -47,13 +47,7 @@ class ParserStateSet(
         if (childRR == RuntimeRuleSet.END_OF_TEXT) { //TODO: should this check for contains in possibleEndOfText, and what if something in endOfText is also valid mid text!
             setOf(RulePosition(this.startState.runtimeRule, 0, 1))
         } else {
-            val s = this.runtimeRuleSet.runtimeRules.flatMap { rr ->
-                val rps = rr.rulePositions
-                val f = rps.filter { rp ->
-                    rp.items.contains(childRR)
-                }
-                f
-            }.toSet()
+            val s = this.runtimeRuleSet.parentPosition[childRR]
             if (childRR == this.userGoalRule) {
                 s + this.startState.rulePosition
             } else {
@@ -66,7 +60,7 @@ class ParserStateSet(
     fun getLookahead(rp: RulePosition) : Set<RuntimeRule>{
         var set = this._lookahead[rp]
         if (null==set) {
-            set = this.calcLookahead1(rp, intArrayOf())
+            set = this.calcLookahead1(rp, BooleanArray(this.runtimeRuleSet.runtimeRules.size))
             this._lookahead[rp] = set
         }
         return set
@@ -117,10 +111,10 @@ class ParserStateSet(
         return this.states[rulePosition]
     }
 
-    fun calcLookahead1(rp: RulePosition, done: IntArray): Set<RuntimeRule> {
+    fun calcLookahead1(rp: RulePosition, done: BooleanArray): Set<RuntimeRule> {
         //TODO("try and split this so we do different things depending on the 'rule type/position' multi/slist/mid/begining/etc")
-        val lh = when {
-            done.contains(rp.runtimeRule.number) -> emptySet()
+        return when {
+            rp.runtimeRule.number >=0 && done[rp.runtimeRule.number] -> emptySet()
             rp.runtimeRule == this.startState.runtimeRule -> {
                 if (rp.isAtStart) {
                     this.possibleEndOfText.toSet()
@@ -131,7 +125,8 @@ class ParserStateSet(
             rp.isAtEnd -> { //use parent lookahead
                 val pps = this.parentPosition[rp.runtimeRule]
                 pps.flatMap { parentRp ->
-                    val newDone = done.including(rp.runtimeRule.number)
+                    val newDone = done //.copyOf() //TODO: do we need to copy?
+                    newDone[rp.runtimeRule.number] = true
                     val lh = this.calcLookahead1(parentRp, newDone)
                     lh
                 }.toSet()
@@ -154,8 +149,6 @@ class ParserStateSet(
                 }.toSet()
             }
         }
-        //this._lookahead[rp] = lh
-        return lh
     }
 
     /*

@@ -16,11 +16,14 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.js.JsName
 
 interface LanguageProcessor {
+
+    val grammar: Grammar
 
     /**
      * build the parser before use. Optional, but will speed up the first use of the parser.

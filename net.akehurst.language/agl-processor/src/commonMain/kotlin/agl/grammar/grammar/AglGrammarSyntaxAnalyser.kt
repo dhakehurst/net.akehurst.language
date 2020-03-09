@@ -40,10 +40,9 @@ class AglGrammarSyntaxAnalyser(
         this.register("grammar", this::grammar as BranchHandler<Grammar>)
         this.register("extends", this::extends as BranchHandler<List<Grammar>>)
         this.register("rules", this::rules as BranchHandler<List<Rule>>)
-        this.register("anyRule", this::anyRule as BranchHandler<Rule>)
-        this.register("normalRule", this::normalRule as BranchHandler<Rule>)
-        this.register("skipRule", this::skipRule as BranchHandler<Rule>)
-        this.register("leafRule", this::leafRule as BranchHandler<Rule>)
+        this.register("rule", this::rule as BranchHandler<Rule>)
+        this.register("ruleTypeLabels", this::ruleTypeLabels as BranchHandler<List<String>>)
+        // this.register("ruleType", this::ruleType as BranchHandler<Rule>)
         this.register("choice", this::choice as BranchHandler<RuleItem>)
         this.register("simpleChoice", this::simpleChoice as BranchHandler<RuleItem>)
         this.register("priorityChoice", this::priorityChoice as BranchHandler<RuleItem>)
@@ -125,39 +124,29 @@ class AglGrammarSyntaxAnalyser(
         }
     }
 
-    // anyRule : normalRule | skipRule | leafRule;
-    fun anyRule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Rule {
-        return this.transform<Rule>(children[0], arg)
-    }
-
-    // normalRule : IDENTIFIER ':' choice ';' ;
-    fun normalRule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Rule {
+    // rule : ruleTypeLabels IDENTIFIER ':' choice ';' ;
+    fun rule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Rule {
         val grammar = arg as GrammarDefault
-        val name = target.nonSkipChildren[0].nonSkipMatchedText
-        val result = RuleDefault(grammar, name, false, false)
-        val rhs = this.transform<RuleItem>(children[0], arg)
-        result.rhs = rhs
-        return result
-    }
-
-    // skipRule : 'skip' IDENTIFIER ':' choice ';' ;
-    fun skipRule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Rule {
-        val grammar = arg as GrammarDefault
+        val type = this.transform<List<String>>(children[0], arg)
+        val isSkip = type.contains("skip")
+        val isLeaf = type.contains("leaf")
         val name = target.nonSkipChildren[1].nonSkipMatchedText
-        val result = RuleDefault(grammar, name, true, false)
-        val rhs = this.transform<RuleItem>(children[0], arg)
+        val result = RuleDefault(grammar, name, isSkip, isLeaf)
+        val rhs = this.transform<RuleItem>(children[1], arg)
         result.rhs = rhs
         return result
     }
 
-    // leafRule : 'leaf' IDENTIFIER ':' choice ';' ;
-    fun leafRule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Rule {
-        val grammar = arg as GrammarDefault
-        val name = target.nonSkipChildren[1].nonSkipMatchedText
-        val result = RuleDefault(grammar, name, false, true)
-        val rhs = this.transform<RuleItem>(children[0], arg)
-        result.rhs = rhs
-        return result
+    // ruleTypeLabels : isSkip isLeaf ;
+    // isSkip = 'leaf' ? ;
+    // isLeaf = 'skip' ? ;
+    fun ruleTypeLabels(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<String> {
+        return children.mapNotNull {
+            when {
+                it.branchNonSkipChildren[0].nonSkipChildren[0].isEmptyLeaf -> null
+                else -> it.branchNonSkipChildren[0].nonSkipChildren[0].nonSkipMatchedText
+            }
+        }
     }
 
     // choice : simpleChoice < priorityChoice ;
@@ -173,7 +162,7 @@ class AglGrammarSyntaxAnalyser(
         }
         return if (alternative.isEmpty()) {
             EmptyRuleDefault()
-        } else  {
+        } else {
             ChoiceEqualDefault(alternative)
         }
     }
@@ -185,7 +174,7 @@ class AglGrammarSyntaxAnalyser(
         }
         return if (alternative.isEmpty()) {
             EmptyRuleDefault()
-        } else  {
+        } else {
             ChoicePriorityDefault(alternative)
         }
     }
@@ -225,7 +214,7 @@ class AglGrammarSyntaxAnalyser(
                     3 -> {
                         val min = multArgs[0].nonSkipMatchedText.toInt()
                         val max = multArgs[2].nonSkipMatchedText.toInt()
-                        Pair(min,max)
+                        Pair(min, max)
                     }
                     else -> throw SyntaxAnalyserException("cannot transform ${target}", null)
                 }
@@ -269,15 +258,15 @@ class AglGrammarSyntaxAnalyser(
             val embeddedGrammar = GrammarRegistryDefault.find(thisGrammar.namespace.qualifiedName, embeddedGrammarRef)
             NonTerminalDefault(embeddedStartRuleRef, embeddedGrammar)
         } else {
-             NonTerminalDefault(nonTerminalRef, thisGrammar)
+            NonTerminalDefault(nonTerminalRef, thisGrammar)
         }
     }
 
     // terminal : LITERAL | PATTERN ;
     fun terminal(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Terminal {
-        val isPattern = target.nonSkipChildren[0].name=="PATTERN"
+        val isPattern = target.nonSkipChildren[0].name == "PATTERN"
         val mt = target.nonSkipMatchedText
-        val value = mt.substring(1,mt.length-1)
+        val value = mt.substring(1, mt.length - 1)
         return TerminalDefault(value, isPattern)
     }
 

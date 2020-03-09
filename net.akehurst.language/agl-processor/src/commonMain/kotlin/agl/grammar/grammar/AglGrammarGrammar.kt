@@ -29,9 +29,9 @@ class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.languag
 
 private fun createRules(): List<Rule> {
     val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar");
-    b.skip("WHITESPACE").concatenation(b.terminalPattern("\\s+"));
-    b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/"));
-    b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//.*?$"));
+    b.skip("WHITESPACE", true).concatenation(b.terminalPattern("\\s+"));
+    b.skip("MULTI_LINE_COMMENT", true).concatenation(b.terminalPattern("/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/"));
+    b.skip("SINGLE_LINE_COMMENT", true).concatenation(b.terminalPattern("//.*?$"));
 
     b.rule("grammarDefinition").concatenation(b.nonTerminal("namespace"), b.nonTerminal("definitions"));
     b.rule("definitions").multi(1, -1, b.nonTerminal("grammar"))
@@ -41,13 +41,13 @@ private fun createRules(): List<Rule> {
     b.rule("extends").multi(0, 1, b.nonTerminal("extends1"));
     b.rule("extends1").concatenation(b.terminalLiteral("extends"), b.nonTerminal("extends2"));
     b.rule("extends2").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("qualifiedName"));
-    b.rule("rules").multi(1, -1, b.nonTerminal("anyRule"));
-    b.rule("anyRule").choiceEqual(b.concatenation(b.nonTerminal("skipRule")), b.concatenation(b.nonTerminal("leafRule")), b.concatenation(b.nonTerminal("normalRule")));
-    b.rule("skipRule").concatenation(b.terminalLiteral("skip"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("choice"), b.terminalLiteral(";"));
-    b.rule("leafRule").concatenation(b.terminalLiteral("leaf"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("choice"), b.terminalLiteral(";"));
+    b.rule("rules").multi(1, -1, b.nonTerminal("rule"));
+    b.rule("rule").concatenation(b.nonTerminal("ruleTypeLabels"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("choice"), b.terminalLiteral(";"));
+    b.rule("ruleTypeLabels").concatenation(b.nonTerminal("isSkip"), b.nonTerminal("isLeaf"));
+    b.rule("isSkip").multi(0,1,b.terminalLiteral("skip"));
+    b.rule("isLeaf").multi(0,1,b.terminalLiteral("leaf"));
     //TODO: choice has ambiguity, if resolved by priority, then wrong result with "a < b < c", it matches "choiceEqual { a }" as higher priority
     // make rule = choice | concatination, and choices must have multiple items
-    b.rule("normalRule").concatenation(b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("choice"), b.terminalLiteral(";"));
     b.rule("choice").choicePriority(b.concatenation(b.nonTerminal("priorityChoice")), b.concatenation(b.nonTerminal("simpleChoice")));
     b.rule("simpleChoice").separatedList(0, -1, b.terminalLiteral("|"), b.nonTerminal("concatenation"));
     b.rule("priorityChoice").separatedList(0, -1, b.terminalLiteral("<"), b.nonTerminal("concatenation"));
