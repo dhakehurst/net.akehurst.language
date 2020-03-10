@@ -62,11 +62,11 @@ class RuntimeRuleSetBuilder() {
         }
     }
 
-    fun literal(name: String, value: String): RuntimeRule {
+    fun literal(name: String, value: String, isSkip:Boolean = false): RuntimeRule {
         if (null != this.runtimeRuleSet) {
             throw ParserException("Must not add rules after creating the ruleSet")
         } else {
-            return RuntimeRuleTerminalBuilder(this).literal(name, value)
+            return RuntimeRuleTerminalBuilder(this).skip(isSkip).literal(name, value)
         }
     }
 

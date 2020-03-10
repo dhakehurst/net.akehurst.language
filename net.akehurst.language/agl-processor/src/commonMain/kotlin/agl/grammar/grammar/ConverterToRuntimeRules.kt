@@ -70,12 +70,12 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
         }
     }
 
-    private fun buildCompressedRule(target: Rule): RuntimeRule {
+    private fun buildCompressedRule(target: Rule, isSkip:Boolean): RuntimeRule {
         val ci = this.compressRhs(target.rhs)
         val rule = if (ci.isPattern) {
-            this.builder.pattern(target.name, ci.value)
+            this.builder.pattern(target.name, ci.value,isSkip)
         } else {
-            this.builder.literal(target.name, ci.value)
+            this.builder.literal(target.name, ci.value,isSkip)
         }
         return rule
     }
@@ -127,7 +127,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
         val rule = this.findRule(target.name)
         return if (null == rule) {
             when {
-                target.isLeaf -> this.buildCompressedRule(target)
+                target.isLeaf -> this.buildCompressedRule(target, target.isSkip)
                 else -> {
                     val nrule = this.builder.rule(target.name).skip(target.isSkip).build()
                     this.originalRule.put(nrule, target.rhs)

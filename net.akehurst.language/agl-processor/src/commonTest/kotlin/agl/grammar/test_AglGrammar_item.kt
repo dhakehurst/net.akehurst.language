@@ -54,8 +54,8 @@ class test_AglGrammar_item {
 //TODO("what is 9166 ?")
         val expected = this.sppt("""
             nonTerminal {
-                SINGLE_LINE_COMMENT { "//.*?${'$'}" : '// a single line comment' }
-                WHITESPACE { "\s+" : '9166' }
+                SINGLE_LINE_COMMENT : '// a single line comment' 
+                WHITESPACE : '9166' 
                 qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'a' } }
             }
         """)
@@ -74,7 +74,7 @@ class test_AglGrammar_item {
         //TODO("what is 9166 ?")
         val expected = this.sppt("""
             nonTerminal {
-                MULTI_LINE_COMMENT { "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" : '/* a single line comment9166sfgh9166*/' } WHITESPACE { "\s+" : '9166' }
+                MULTI_LINE_COMMENT  : '/* a single line comment9166sfgh9166*/'  WHITESPACE  : '9166' 
                 qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'a' } }
             }
         """)
@@ -284,7 +284,7 @@ class test_AglGrammar_item {
         val actual = parse("concatenation", "'a'")
         val expected = this.sppt("""
             concatenation {
-                §concatenation§multi3 { concatenationItem { simpleItem { terminal { LITERAL  : '\'a\''  } } } }
+                §concatenation§multi5 { concatenationItem { simpleItem { terminal { LITERAL  : '\'a\''  } } } }
             }
         """.trimIndent())
         assertNotNull(actual)
@@ -295,9 +295,9 @@ class test_AglGrammar_item {
     fun concatenation_literal_3() {
         val actual = parse("concatenation", "'a' 'b' 'c'")
         val expected = this.sppt("""
-            concatenation { §concatenation§multi3 {
-                concatenationItem { simpleItem { terminal { LITERAL  : '\'a\''  WHITESPACE { "\s+" : ' ' } } } }
-                concatenationItem { simpleItem { terminal { LITERAL  : '\'b\''  WHITESPACE { "\s+" : ' ' } } } }
+            concatenation { §concatenation§multi5 {
+                concatenationItem { simpleItem { terminal { LITERAL  : '\'a\''  WHITESPACE  : ' ' } } } 
+                concatenationItem { simpleItem { terminal { LITERAL  : '\'b\''  WHITESPACE  : ' ' } } } 
                 concatenationItem { simpleItem { terminal { LITERAL  : '\'c\''  } } 
             } } }
         """.trimIndent())
@@ -309,7 +309,7 @@ class test_AglGrammar_item {
     fun concatenation_nonTerminal_1() {
         val actual = parse("concatenation", "a")
         val expected = this.sppt("""
-             concatenation { §concatenation§multi3 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'a' } } } } } } }
+             concatenation { §concatenation§multi5 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'a' } } } } } } }
         """.trimIndent())
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
@@ -319,12 +319,12 @@ class test_AglGrammar_item {
     fun concatenation_nonTerminal_3() {
         val actual = parse("concatenation", "a b c")
         val expected = this.sppt("""
-            concatenation { §concatenation§multi3 {
+            concatenation { §concatenation§multi5 {
                 concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                    IDENTIFIER : 'a' WHITESPACE { "\s+" : ' ' }
+                    IDENTIFIER : 'a' WHITESPACE  : ' ' 
                 } } } } }
                 concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                    IDENTIFIER : 'b' WHITESPACE { "\s+" : ' ' }
+                    IDENTIFIER : 'b' WHITESPACE  : ' ' 
                 } } } } }
                 concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'c' } } } } }
             } }
@@ -338,15 +338,15 @@ class test_AglGrammar_item {
         val actual = parse("priorityChoice", "a < b < c")
         val expected = this.sppt("""
             priorityChoice { §priorityChoice§sList2 {
-                concatenation { §concatenation§multi3 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                    IDENTIFIER : 'a' WHITESPACE { "\s+" : ' ' }
+                concatenation { §concatenation§multi5 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                    IDENTIFIER : 'a' WHITESPACE  : ' ' 
                 } } } } } } }
-                '<' WHITESPACE { "\s+" : ' ' }
-                concatenation { §concatenation§multi3 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                    IDENTIFIER : 'b' WHITESPACE { "\s+" : ' ' }
+                '<' WHITESPACE  : ' ' 
+                concatenation { §concatenation§multi5 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                    IDENTIFIER : 'b' WHITESPACE  : ' ' 
                 } } } } } } }
-                '<' WHITESPACE { "\s+" : ' ' }
-                concatenation { §concatenation§multi3 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'c' } } } } } } }
+                '<' WHITESPACE  : ' ' 
+                concatenation { §concatenation§multi5 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'c' } } } } } } }
             } }
         """.trimIndent())
         assertNotNull(actual)
@@ -358,15 +358,15 @@ class test_AglGrammar_item {
         val actual = parse("simpleChoice", "a | b | c")
         val expected = this.sppt("""
             simpleChoice { §simpleChoice§sList3 {
-                concatenation { §concatenation§multi3 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                    IDENTIFIER : 'a' WHITESPACE { "\s+" : ' ' }
+                concatenation { §concatenation§multi5 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                    IDENTIFIER : 'a' WHITESPACE  : ' ' 
                 } } } } } } }
-                '|' WHITESPACE { "\s+" : ' ' }
-                concatenation { §concatenation§multi3 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                    IDENTIFIER : 'b' WHITESPACE { "\s+" : ' ' }
+                '|' WHITESPACE  : ' ' 
+                concatenation { §concatenation§multi5 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                    IDENTIFIER : 'b' WHITESPACE  : ' ' 
                 } } } } } } }
-                '|' WHITESPACE { "\s+" : ' ' }
-                concatenation { §concatenation§multi3 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'c' } } } } } } }
+                '|' WHITESPACE  : ' ' 
+                concatenation { §concatenation§multi5 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'c' } } } } } } }
             } }
         """.trimIndent())
         assertNotNull(actual)
@@ -378,15 +378,15 @@ class test_AglGrammar_item {
         val actual = parse("choice", "a < b < c")
         val expected = this.sppt("""
             choice { priorityChoice { §priorityChoice§sList2 {
-                concatenation { §concatenation§multi3 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                    IDENTIFIER : 'a' WHITESPACE { "\s+" : ' ' }
+                concatenation { §concatenation§multi5 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                    IDENTIFIER : 'a' WHITESPACE  : ' ' 
                 } } } } } } }
-                '<' WHITESPACE { "\s+" : ' ' }
-                concatenation { §concatenation§multi3 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                    IDENTIFIER : 'b' WHITESPACE { "\s+" : ' ' }
+                '<' WHITESPACE  : ' ' 
+                concatenation { §concatenation§multi5 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                    IDENTIFIER : 'b' WHITESPACE  : ' ' 
                 } } } } } } }
-                '<' WHITESPACE { "\s+" : ' ' }
-                concatenation { §concatenation§multi3 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'c' } } } } } } }
+                '<' WHITESPACE  : ' ' 
+                concatenation { §concatenation§multi5 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'c' } } } } } } }
             } } }
         """.trimIndent())
         assertNotNull(actual)
@@ -414,22 +414,26 @@ class test_AglGrammar_item {
 
     @Test
     fun normalRule_priorityChoice_nonTerminal_3() {
-        val actual = parse("normalRule", "r = a < b < c ;")
+        val actual = parse("rule", "r = a < b < c ;")
         val expected = this.sppt("""
-            normalRule {
-                IDENTIFIER : 'r' WHITESPACE { "\s+" : ' ' }
-                '=' WHITESPACE { "\s+" : ' ' }
+            rule {
+                ruleTypeLabels {
+                    isSkip { §isSkip§multi3 { §empty } }
+                    isLeaf { §isLeaf§multi4 { §empty } }
+                }
+                IDENTIFIER : 'r' WHITESPACE  : ' ' 
+                '=' WHITESPACE  : ' ' 
                 choice { priorityChoice { §priorityChoice§sList2 {
-                    concatenation { §concatenation§multi4 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                        IDENTIFIER : 'a' WHITESPACE { "\s+" : ' ' }
+                    concatenation { §concatenation§multi5 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                        IDENTIFIER : 'a' WHITESPACE  : ' ' 
                     } } } } } } }
-                    '<' WHITESPACE { "\s+" : ' ' }
-                    concatenation { §concatenation§multi4 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                        IDENTIFIER : 'b' WHITESPACE { "\s+" : ' ' }
+                    '<' WHITESPACE  : ' ' 
+                    concatenation { §concatenation§multi5 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                        IDENTIFIER : 'b' WHITESPACE  : ' ' 
                     } } } } } } }
-                    '<' WHITESPACE { "\s+" : ' ' }
-                    concatenation { §concatenation§multi4 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                        IDENTIFIER : 'c' WHITESPACE { "\s+" : ' ' }
+                    '<' WHITESPACE  : ' ' 
+                    concatenation { §concatenation§multi5 { concatenationItem { simpleItem { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                        IDENTIFIER : 'c' WHITESPACE  : ' ' 
                     } } } } } } }
                 } } }
                 ';'
@@ -444,7 +448,7 @@ class test_AglGrammar_item {
         val sentence = """
             HEX_FLOAT_LITERAL =  '0' "[xX]" (HexDigits '.'? | HexDigits? '.' HexDigits) "[pP]" "[+-]"? Digits "[fFdD]"? ;
         """.trimIndent()
-        val actual = parse("normalRule", "r = a < b < c ;")
+        val actual = parse("rule", "r = a < b < c ;")
 
         assertNotNull(actual)
 
