@@ -19,6 +19,7 @@ package net.akehurst.language.parser.scannerless
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.graph.GrowingNode
+import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
@@ -104,7 +105,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         //       }
 
         do {
-            rp.grow()
+            rp.grow(false)
 //            println("[$seasons] ")
 //            graph.growingHead.forEach {
             //               println("  $it")
@@ -171,18 +172,32 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         val matches = mutableListOf<GrowingNode>()
 
         do {
-            rp.grow()
+            rp.grow(false)
             seasons++
+        } while (rp.canGrow)
+        for (gn in rp.lastGrown) {
+            // may need to change this to finalInputPos!
+            if (input.isEnd(gn.nextInputPosition)) {
+                matches.add(gn)
+            }
+        }
+        // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
+        // try grow last leaf with no lookahead
+        for (gn in rp.lastGrownLinked) {
+            val gnindex = GrowingNodeIndex(gn.currentState, gn.startPosition, gn.nextInputPosition, gn.priority)
+            graph.growingHead[gnindex] = gn
+        }
+        do {
+            rp.grow(true)
             for (gn in rp.lastGrown) {
                 // may need to change this to finalInputPos!
                 if (input.isEnd(gn.nextInputPosition)) {
                     matches.add(gn)
                 }
             }
+            seasons++
         } while (rp.canGrow)
 
-        // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
-        // must reject the next expected
 
         val expected = mutableSetOf<RuntimeRule>()
         for (ep in matches) {
@@ -206,9 +221,9 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
             nextExpected.add(rr)
         }
         // add skip rules at end
-        for (rr in this.runtimeRuleSet.skipRules) {
-            nextExpected.add(rr)
-        }
+        //for (rr in this.runtimeRuleSet.skipRules) {
+        //    nextExpected.add(rr)
+        //}
         return nextExpected
     }
 

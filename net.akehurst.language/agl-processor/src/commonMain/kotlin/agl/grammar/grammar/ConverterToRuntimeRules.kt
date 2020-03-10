@@ -77,6 +77,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
         } else {
             this.builder.literal(target.name, ci.value,isSkip)
         }
+        this.originalRule.put(rule, target.rhs)
         return rule
     }
 

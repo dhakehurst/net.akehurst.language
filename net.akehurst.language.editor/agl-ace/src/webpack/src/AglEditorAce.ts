@@ -40,8 +40,9 @@ class AglComponents {
     tokenToClassMap = new Map<string, string>();
 
     processor: agl.api.processor.LanguageProcessor = null;
+    goalRule: string = null;
     sppt: agl.api.sppt.SharedPackedParseTree = null;
-    asm: agl.api.analyser.AstElementSimple = null;
+    asm: agl.api.analyser.AsmElementSimple = null;
 }
 
 export class AglEditorAce {
@@ -108,7 +109,7 @@ export class AglEditorAce {
         if (initialText) {
             this.editor.setValue(initialText, -1);
             this.editor.commands.addCommand(autocomplete.Autocomplete.startCommand);
-            this.editor.completers = [new AglCompleter()];
+            this.editor.completers = [new AglCompleter(this.languageId,this.agl)];
         }
 
         // delete the sppt if text is changed.
@@ -630,14 +631,31 @@ class AglTokenizer implements ace.Tokenizer {
 
 class AglCompleter {
 
+    constructor(
+        public languageId: string,
+        private agl: AglComponents
+    ) {
+    }
+
     getCompletions(editor, session, pos, prefix, callback) {
-        const wordList = ["foo", "bar", "baz"];
-        callback(null, wordList.map(function (word) {
+        const posn = session.doc.positionToIndex(pos, 0);
+        const wordList = this.getCompletionItems(editor, posn);
+        callback(null, wordList.map(function (ci) {
             return {
-                caption: word,
-                value: word,
-                meta: "static"
+                caption: ci.text,
+                value: ci.text,
+                meta: '(' +ci.rule.name +')'
             };
         }));
+    }
+
+    getCompletionItems(editor, pos) : agl.api.processor.CompletionItem[] {
+        if (this.agl.goalRule) {
+            const set = this.agl.processor.expectedAt(this.agl.goalRule, editor.getValue(), pos, 1);
+            return set.toArray()
+        } else {
+            const set = this.agl.processor.expectedAt(editor.getValue(), pos, 1);
+            return set.toArray()
+        }
     }
 }
