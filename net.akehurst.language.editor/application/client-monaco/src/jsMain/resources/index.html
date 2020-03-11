@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Agl Editor Demo (Monaco)</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+<main>
+    <header>
+        <div>
+            <label for="example">Please choose an example :</label>
+            <select id="example">
+            </select>
+        </div>
+        <div>
+            <label for="goal">Optionally choose a goal rule:</label>
+            <select id="goal">
+            </select>
+        </div>
+    </header>
+    <tabview>
+        <tab id="expression">
+            <section class="text">
+                <agl-monaco id="expression-text">
+                </agl-monaco>
+            </section>
+            <section class="trees">
+                <tabview>
+                    <tab id="asm">
+                        <treeview id="asm"></treeview>
+                    </tab>
+                    <tab id="parse">
+                        <treeview id="parse"></treeview>
+                    </tab>
+                </tabview>
+            </section>
+        </tab>
+        <tab id="language">
+            <section>
+                <tabview>
+                    <tab id="grammar">
+                        <section>
+                            <agl-monaco id="language-grammar">
+                            </agl-monaco>
+                        </section>
+                    </tab>
+                    <tab id="style">
+                        <section>
+                            <agl-monaco id="language-style">
+                            </agl-monaco>
+                        </section>
+                    </tab>
+                    <tab id="format">
+                        <section>
+                            <agl-monaco id="language-format"></agl-monaco>
+                        </section>
+                    </tab>
+                </tabview>
+            </section>
+        </tab>
+    </tabview>
+
+</main>
+
+
+<script src="application-client-monaco.js"></script>
+
+</body>
+
+</html>

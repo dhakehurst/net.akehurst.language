@@ -17,7 +17,6 @@ const Range = ace.require('ace/range').Range;
 
 declare var ace: any;
 
-
 function trimIndent(text: string): string {
     let lines = text.split('\n');
     let firstLine = lines.find(el => el.length > 0);

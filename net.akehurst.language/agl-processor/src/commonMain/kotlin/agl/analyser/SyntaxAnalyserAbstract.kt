@@ -37,29 +37,7 @@ abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVis
 
     private fun <T> findBranchHandler(branchName: String): BranchHandler<T> {
         var handler: BranchHandler<T>? = this.branchHandlers[branchName] as BranchHandler<T>?
-        if (null == handler) {
-            /*
-            try {
-                val m = Sppt2AstTransformerVisitorBasedAbstract::class.constructors.find {
-                    it.parameters[0].type == SPPTBranch::class
-                            && it.parameters[1].type == List::class
-                            && it.parameters[2].type == Any::class
-                }
-                val handler = {target:SPPTBranch, children:List<SPPTBranch>, arg:Any? ->
-                    try {
-                        m?.call(this, target, children, arg) as T
-                    } catch (e: Exception) {
-                        throw UnableToTransformSppt2AstExeception("Error invoking method named $branchName", e)
-                    }
-                }
-                this.register<T>(branchName, handler)
-            } catch (e: Exception) {
-            */
-                throw SyntaxAnalyserException("Cannot find sppt2ast method named $branchName", null)
-            //}
-
-        }
-        return handler ?: throw SyntaxAnalyserException("Cannot find sppt2ast method named $branchName", null)
+        return handler ?: throw SyntaxAnalyserException("Cannot find SyntaxAnalyser branch handler method named $branchName", null)
     }
 
     protected fun <T> transform(branch: SPPTBranch, arg: Any?): T {
@@ -83,18 +61,13 @@ abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVis
     override fun visit(target: SPPTBranch, arg: Any?): Any {
         val branchName = target.name
         val handler = this.findBranchHandler<Any>(branchName)
-        if (null == handler) {
-            throw SyntaxAnalyserException("Branch not handled in sppt2ast $branchName", null)
-        } else {
-            val branchChildren = target.branchNonSkipChildren// .stream().map(it -> it.getIsEmpty() ? null :
-            // it).collect(Collectors.toList());
-            try {
-                return handler.invoke(target, branchChildren, arg)
-            } catch (e: Exception) {
-                throw SyntaxAnalyserException("Exception trying to transform ${target}",e)
-            }
+        val branchChildren = target.branchNonSkipChildren// .stream().map(it -> it.getIsEmpty() ? null :
+        // it).collect(Collectors.toList());
+        try {
+            return handler.invoke(target, branchChildren, arg)
+        } catch (e: Exception) {
+            throw SyntaxAnalyserException("Exception trying to transform ${target}", e)
         }
-
     }
 
 }

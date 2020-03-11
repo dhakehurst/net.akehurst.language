@@ -1,3 +1,12 @@
+dependencies {
+
+    //jsMainImplementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.1")
+    jsMainImplementation(project(":technology-tabview"))
+    jsMainImplementation(project(":technology-agl-monaco"))
+}
+
+
+/*
 plugins {
     id("net.akehurst.kotlin.kt2ts") version "1.5.0"
 }
@@ -27,3 +36,4 @@ kt2ts {
             }
     )
 }
+ */
