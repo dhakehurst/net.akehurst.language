@@ -23,11 +23,21 @@ import org.w3c.dom.Element
 
 external interface IDisposable
 
+external object MarkerSeverity {
+    val Hint:MarkerSeverity = definedExternally
+    val Info:MarkerSeverity = definedExternally
+    val Warning:MarkerSeverity = definedExternally
+    val Error:MarkerSeverity = definedExternally
+}
+
 external object editor {
 
     fun create(element: Element, options: IStandaloneEditorConstructionOptions?, override: IEditorOverrideServices?): IStandaloneCodeEditor
 
     fun defineTheme(themeName: String, themeData: IStandaloneThemeData)
+
+    fun setModelMarkers(model: ITextModel, owner: String, markers: Array<IMarkerData>)
+
 
     enum class EndOfLinePreference {
         TextDefined,
@@ -66,6 +76,7 @@ external object editor {
     interface ITextModel {
         fun getValue(eol: EndOfLinePreference?= definedExternally, preserveBOM: Boolean?= definedExternally): String
         fun setValue(newValue: String)
+        fun resetTokenization()
     }
 
     interface ITokenThemeRule {
@@ -73,6 +84,19 @@ external object editor {
         val foreground: String?
         val background: String?
         val fontStyle: String?
+    }
+
+    interface IMarkerData {
+        val code: String?
+        val severity: MarkerSeverity;
+        val message: String
+        val source: String?
+        val startLineNumber: Int
+        val startColumn: Int
+        val endLineNumber: Int
+        val endColumn: Int
+        //val relatedInformation: Array<IRelatedInformation>?
+        //val tags: Array<MarkerTag>?
     }
 }
 

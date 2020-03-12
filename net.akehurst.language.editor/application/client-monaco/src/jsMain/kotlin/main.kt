@@ -16,11 +16,14 @@
 
 package net.akehurst.language.editor.application.client.monaco
 
+import net.akehurst.language.api.analyser.AsmElementProperty
+import net.akehurst.language.api.analyser.AsmElementSimple
+import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.editor.information.Examples
 import net.akehurst.language.editor.information.examples.Datatypes
 import kotlin.browser.*
 
-import net.akehurst.language.editor.technology.tabview.TabView
+import net.akehurst.language.editor.technology.gui.widgets.*
 import net.akehurst.language.editor.monaco.AglEditorMonaco
 import net.akehurst.language.processor.Agl
 import net.akehurst.language.processor.AglLanguage
@@ -41,6 +44,9 @@ fun main() {
     val exampleSelect = document.querySelector("select#example") as HTMLElement;
     initialiseExamples(exampleSelect)
     TabView.initialise(document)
+    val trees = TreeView.initialise(document)
+
+
     val editors = AglEditorMonaco.initialise(document)
 
     val sentenceEditor = editors["sentence-text"]!!
@@ -55,24 +61,97 @@ fun main() {
     grammarEditor.setStyle(AglLanguage.grammar.style)
     styleEditor.setStyle(AglLanguage.style.style)
 
-    grammarEditor.onChange {
-        try {
-            sentenceEditor.agl.processor = Agl.processor(grammarEditor.text)
-        } catch (t: Throwable) {
+    grammarEditor.onParse { event ->
+        if (event.success) {
+            try {
+                sentenceEditor.agl.processor = Agl.processor(grammarEditor.text)
+            } catch (t: Throwable) {
+                sentenceEditor.agl.processor = null
+                console.error(grammarEditor.editorId + ": " + t.message)
+            }
+        } else {
             sentenceEditor.agl.processor = null
-            console.error(grammarEditor.editorId + ": " + t.message)
+            console.error(grammarEditor.editorId + ": " + event.message)
         }
     }
 
-    styleEditor.onChange {
-        try {
-            sentenceEditor.setStyle(styleEditor.text)
-        } catch (t: Throwable) {
-            console.error(sentenceEditor.editorId + ": " + t.message)
+    styleEditor.onParse { event ->
+        if (event.success) {
+            try {
+                sentenceEditor.setStyle(styleEditor.text)
+            } catch (t: Throwable) {
+                console.error(sentenceEditor.editorId + ": " + t.message)
+            }
+        } else {
         }
     }
 
-    exampleSelect.addEventListener("change", { event ->
+    trees["parse"]!!.treeFunctions = TreeViewFunctions<SPPTNode>(
+            label = { it.name },
+            hasChildren = { it.isBranch },
+            children = { it.asBranch.children.toTypedArray() }
+    ) as TreeViewFunctions<Any>
+
+    sentenceEditor.onParse { event ->
+        if (event.success) {
+            trees["parse"]!!.root = event.sppt!!.root
+        } else {
+        }
+    }
+
+    trees["asm"]!!.treeFunctions = TreeViewFunctions<Any>(
+            label = {
+                when (it) {
+                    is AsmElementSimple -> ": " + it.typeName
+                    is AsmElementProperty -> {
+                        val v = it.value
+                        when (v) {
+                            is AsmElementSimple -> "${it.name} : ${v.typeName}"
+                            is List<*> -> "${it.name} : List"
+                            else -> "${it.name} = ${v}"
+                        }
+                    }
+                    else -> it.toString()
+                }
+            },
+            hasChildren = {
+                when (it) {
+                    is AsmElementSimple -> it.properties.isNotEmpty()
+                    is AsmElementProperty -> {
+                        val v = it.value
+                        when (v) {
+                            is AsmElementSimple -> true
+                            is List<*> -> true
+                            else -> false
+                        }
+                    }
+                    else -> false
+                }
+            },
+            children = {
+                when (it) {
+                    is AsmElementSimple -> it.properties.toTypedArray()
+                    is AsmElementProperty -> {
+                        val v = it.value
+                        when (v) {
+                            is AsmElementSimple -> v.properties.toTypedArray() as Array<Any>
+                            is List<*> -> v.toTypedArray() as Array<Any>
+                            else -> emptyArray()
+                        }
+                    }
+                    else -> emptyArray()
+                }
+            }
+    )
+
+    sentenceEditor.onProcess { event ->
+        if (event.success) {
+            trees["asm"]!!.root = event.asm
+        } else {
+        }
+    }
+
+    exampleSelect.addEventListener("change", { _ ->
         val egName = js("event.target.value") as String
         val eg = Examples[egName]
         grammarEditor.text = eg.grammar

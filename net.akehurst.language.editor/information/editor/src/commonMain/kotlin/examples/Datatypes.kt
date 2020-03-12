@@ -17,7 +17,6 @@
 package net.akehurst.language.editor.information.examples
 
 import net.akehurst.language.editor.information.Example
-import net.akehurst.language.editor.information.Examples
 
 object Datatypes {
     val id = "datatypes"
@@ -36,7 +35,7 @@ object Datatypes {
         namespace test
 
         grammar Test {
-            skip WS = "\\s+" ;
+            skip WS = "\s+" ;
 
             unit = declaration* ;
             declaration = 'class' ID '{' property* '}' ;

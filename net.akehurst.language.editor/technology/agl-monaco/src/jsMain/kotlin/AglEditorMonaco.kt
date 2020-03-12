@@ -16,9 +16,12 @@
 
 package net.akehurst.language.editor.monaco
 
+import monaco.MarkerSeverity
 import monaco.editor
 import monaco.editor.IStandaloneCodeEditor
 import monaco.languages
+import net.akehurst.language.api.analyser.SyntaxAnalyserException
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.style.AglStyleRule
@@ -32,14 +35,34 @@ import kotlin.browser.document
 class AglComponents(
         val aglEditor: AglEditorMonaco
 ) {
-    var processor: LanguageProcessor? = null
+    private var _processor: LanguageProcessor? = null
+    var processor: LanguageProcessor?
+        get() = this._processor
+        set(value) {
+            this._processor = value
+            this.aglEditor.doBackgroundTryParse()
+        }
     var sppt: SharedPackedParseTree? = null
+    var asm: Any? = null
 }
+
+class ParseEvent(
+        val success: Boolean,
+        val message: String,
+        val sppt: SharedPackedParseTree?
+)
+
+class ProcessEvent(
+        val success: Boolean,
+        val message: String,
+        val asm: Any?
+)
 
 class AglEditorMonaco(
         val element: Element,
         val editorId: String,
-        val languageId: String
+        val languageId: String,
+        val goalRule: String? = null
 ) {
 
     companion object {
@@ -51,6 +74,7 @@ class AglEditorMonaco(
                 }
             }
         """)
+
         // https://github.com/Microsoft/monaco-editor/issues/338
         // all editors on the same page must share the same theme!
         // hence we create a global theme and modify it as needed.
@@ -90,6 +114,8 @@ class AglEditorMonaco(
         }
 
     val _scanTokenProvider = AglTokenProvider(this.languageThemePrefix, this.agl)
+    private val _onParseHandler = mutableListOf<(ParseEvent) -> Unit>()
+    private val _onProcessHandler = mutableListOf<(ProcessEvent) -> Unit>()
 
     init {
         try {
@@ -116,6 +142,10 @@ class AglEditorMonaco(
             this.monacoEditor = monaco.editor.create(this.element, editorOptions, null)
             monaco.languages.setTokensProvider(this.languageId, this._scanTokenProvider);
 
+            this.onChange {
+                this.doBackgroundTryParse()
+            }
+
             val self = this
             val resizeObserver: dynamic = js("new ResizeObserver(function(entries) { self.onResize(entries) })")
             resizeObserver.observe(this.element)
@@ -131,6 +161,26 @@ class AglEditorMonaco(
         }
     }
 
+    fun onParse(handler: (ParseEvent) -> Unit) {
+        this._onParseHandler.add(handler)
+    }
+
+    fun notifyParse(event: ParseEvent) {
+        this._onParseHandler.forEach {
+            it.invoke(event)
+        }
+    }
+
+    fun onProcess(handler: (ProcessEvent) -> Unit) {
+        this._onProcessHandler.add(handler)
+    }
+
+    fun notifyProcess(event: ProcessEvent) {
+        this._onProcessHandler.forEach {
+            it.invoke(event)
+        }
+    }
+
     @JsName("onResize")
     private fun onResize(entries: Array<dynamic>) {
         entries.forEach { entry ->
@@ -140,8 +190,78 @@ class AglEditorMonaco(
         }
     }
 
-    private fun convertColor(value: String?) :String? {
-        if (null==value) {
+    fun doBackgroundTryParse() {
+        //TODO: background!
+        tryParse()
+    }
+
+    fun doBackgroundTryProcess() {
+        //TODO: background!
+        tryProcess()
+    }
+
+    private fun tryParse() {
+        val proc = this.agl.processor
+        if (null != proc) {
+            try {
+                monaco.editor.setModelMarkers(this.monacoEditor.getModel(), "", emptyArray())
+
+                if (null == this.goalRule) {
+                    this.agl.sppt = proc.parse(this.text)
+                } else {
+                    this.agl.sppt = proc.parse(this.goalRule, this.text)
+                }
+                this.monacoEditor.getModel().resetTokenization()
+                val event = ParseEvent(true, "OK", this.agl.sppt)
+                this.notifyParse(event)
+                this.doBackgroundTryProcess()
+            } catch (e: ParseFailedException) {
+                this.agl.sppt = null
+                // parse failed so re-tokenize from scan
+                this.monacoEditor.getModel().resetTokenization()
+                console.error("Error parsing text in " + this.editorId + " for language " + this.languageId, e.message);
+                val errors = mutableListOf<editor.IMarkerData>()
+                errors.add(object : editor.IMarkerData {
+                    override val code: String? = null
+                    override val severity = MarkerSeverity.Error
+                    override val startLineNumber = e.location.line
+                    override val startColumn = e.location.column
+                    override val endLineNumber: Int = e.location.line
+                    override val endColumn: Int = e.location.column
+                    override val message = e.message!!
+                    override val source: String? = null
+                })
+                monaco.editor.setModelMarkers(this.monacoEditor.getModel(), "", errors.toTypedArray())
+                val event = ParseEvent(false, e.message!!, this.agl.sppt)
+                this.notifyParse(event)
+            } catch (t: Throwable) {
+                console.error("Error parsing text in " + this.editorId + " for language " + this.languageId, t.message);
+            }
+        }
+    }
+
+    private fun tryProcess() {
+        val proc = this.agl.processor
+        val sppt = this.agl.sppt
+        if (null != proc && null != sppt) {
+            try {
+                this.agl.asm = proc.process(sppt)
+                val event = ProcessEvent(true, "OK", this.agl.asm)
+                this.notifyProcess(event)
+            } catch (e: SyntaxAnalyserException) {
+                this.agl.asm = null
+
+
+                val event = ProcessEvent(false, e.message!!, null)
+                this.notifyProcess(event)
+            } catch (t: Throwable) {
+                console.error("Error processing parse result in " + this.editorId + " for language " + this.languageId, t.message)
+            }
+        }
+    }
+
+    private fun convertColor(value: String?): String? {
+        if (null == value) {
             return null
         } else {
             val cvs = document.createElement("canvas")
@@ -211,8 +331,7 @@ class AglTokenProvider(
         if (null == this.agl.sppt) {
             return this.getLineTokensByScan(line, state)
         } else {
-            TODO()
-//            return this.getLineTokensByParse(line, state)
+            return this.getLineTokensByParse(line, state)
         }
     }
 
@@ -226,7 +345,7 @@ class AglTokenProvider(
             val tokens = leafs.map { leaf ->
                 object : languages.IToken {
                     override val scopes = tokenPrefix + leaf.name
-                    override val startIndex = leaf.startPosition
+                    override val startIndex = leaf.location.column - 1
                 }
             }
             val endState = if (leafs.isEmpty()) {
@@ -239,6 +358,52 @@ class AglTokenProvider(
             }
             return object : languages.ILineTokens {
                 override val endState = endState
+                override val tokens: Array<languages.IToken> = tokens.toTypedArray()
+            }
+        } else {
+            return object : languages.ILineTokens {
+                override val endState = ScanState(nextLineNumber, "")
+                override val tokens = arrayOf<languages.IToken>(
+                        object : languages.IToken {
+                            override val scopes = ""
+                            override val startIndex = 0
+                        }
+                )
+            }
+        }
+    }
+
+    private fun getLineTokensByParse(line: String, pState: languages.IState): languages.ILineTokens {
+        val state = pState as ScanState
+        val nextLineNumber = state.lineNumber + 1
+        val leafs = this.agl.sppt!!.tokensByLine[state.lineNumber]
+        if (null != leafs) {
+            val tokens = leafs.map { leaf ->
+                object : languages.IToken {
+                    override val scopes = tokenPrefix + leaf.name
+                    override val startIndex = leaf.location.column - 1
+                }
+            }
+            /*
+            let state = null;
+            //TODO: if last leaf span multiple lines, then next state (for getLineTokensByScan should contain the text)
+            const lastLeaf = leafArray[leafArray.length - 1];
+            if (lastLeaf) {
+                if (!lastLeaf.eolPositions.isEmpty()) {
+                    const eolIndex = lastLeaf.eolPositions.toArray()[0];
+                    const afterEOL = lastLeaf.matchedText.substring(eolIndex + 1);
+                    const cssClasses = this.mapToCssClasses(lastLeaf);
+                    state = new AglLineToken(
+                            cssClasses,
+                    afterEOL,
+                    1,
+                    lastLeaf.location.line + 1
+                    );
+                }
+            }
+             */
+            return object : languages.ILineTokens {
+                override val endState = ScanState(nextLineNumber, "")
                 override val tokens: Array<languages.IToken> = tokens.toTypedArray()
             }
         } else {

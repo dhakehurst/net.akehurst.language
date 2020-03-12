@@ -190,6 +190,7 @@ export class AglEditorMonaco implements api.AglEditor {
             }
         });
 
+        monaco.editor.setModelMarkers()
 
     }
 
