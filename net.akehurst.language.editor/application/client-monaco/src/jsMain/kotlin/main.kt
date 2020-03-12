@@ -141,7 +141,7 @@ fun main() {
                             else -> emptyArray()
                         }
                     }
-                    is List<*> -> v.toTypedArray() as Array<Any>
+                    is List<*> -> it.toTypedArray() as Array<Any>
                     else -> emptyArray()
                 }
             }
