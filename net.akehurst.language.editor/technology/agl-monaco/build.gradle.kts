@@ -1,8 +1,8 @@
 val version_agl:String by project
 dependencies {
 
-    jsMainImplementation(npm("monaco-editor", "0.19.3"))
-    jsMainImplementation("net.akehurst.language:agl-processor:$version_agl")
+    jsMainImplementation(npm("monaco-editor", "0.20.0"))
+    jsMainApi("net.akehurst.language:agl-processor:$version_agl")
 
     // for webpack
     jsMainImplementation(npm("monaco-editor-webpack-plugin", "1.8.2"))

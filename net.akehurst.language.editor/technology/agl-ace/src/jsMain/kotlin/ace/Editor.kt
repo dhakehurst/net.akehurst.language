@@ -6,7 +6,7 @@ package ace
 external class Editor(
         renderer: VirtualRenderer,
         session: EditSession,
-        options:Any
+        options:Any?
 )  {
 
 }

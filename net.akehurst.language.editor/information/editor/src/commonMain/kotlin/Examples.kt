@@ -16,8 +16,35 @@
 
 package net.akehurst.language.editor.information
 
-class UserSession(
-        val id: String
-) {
-    var username: String? = null
+object Examples {
+
+    val map = mutableMapOf<String, Example>()
+
+    operator fun get(key: String): Example {
+        return this.map[key]!!
+    }
+
+    fun add(eg:Example) {
+        this.map[eg.id] = eg
+    }
+
+    fun add(
+            id: String,
+            label: String,
+            sentence: String,
+            grammar: String,
+            style: String,
+            format: String
+    ) {
+        this.map[id] = Example(id, label, sentence, grammar, style, format)
+    }
 }
+
+class Example(
+        val id: String,
+        val label: String,
+        val sentence: String,
+        val grammar: String,
+        val style: String,
+        val format: String
+)

@@ -6,7 +6,8 @@ package ace
 @JsModule("ace-builds")
 external object Ace {
 
-    fun createEditSession(text: String): EditSession
+    fun <T: Any> require(moduleName: String): T = definedExternally
 
+    fun createEditSession(text: String): EditSession
 
 }

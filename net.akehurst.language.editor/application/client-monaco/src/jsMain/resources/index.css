@@ -128,7 +128,7 @@ section {
     border-bottom: 1px solid red;
 }
 
-tab#expression {
+tab#sentence {
     grid-template-columns: 5fr 4fr;
     grid-template-areas: "text trees";
 }
@@ -147,4 +147,9 @@ tab#parse {
 }
 tab#asm {
     background-color: bisque;
+}
+
+agl-editor {
+    display:grid;
+    grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
 }
