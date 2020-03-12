@@ -111,6 +111,7 @@ fun main() {
                             else -> "${it.name} = ${v}"
                         }
                     }
+                    is List<*> -> ": List"
                     else -> it.toString()
                 }
             },
@@ -125,6 +126,7 @@ fun main() {
                             else -> false
                         }
                     }
+                    is List<*> -> true
                     else -> false
                 }
             },
@@ -139,6 +141,7 @@ fun main() {
                             else -> emptyArray()
                         }
                     }
+                    is List<*> -> v.toTypedArray() as Array<Any>
                     else -> emptyArray()
                 }
             }
