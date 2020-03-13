@@ -18,9 +18,13 @@ package net.akehurst.language.editor.application.client.monaco
 
 import net.akehurst.language.api.analyser.AsmElementProperty
 import net.akehurst.language.api.analyser.AsmElementSimple
+import net.akehurst.language.api.sppt.SPPTBranch
+import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.editor.information.Examples
 import net.akehurst.language.editor.information.examples.Datatypes
+import net.akehurst.language.editor.information.examples.GraphvizDot
+import net.akehurst.language.editor.information.examples.SText
 import kotlin.browser.*
 
 import net.akehurst.language.editor.technology.gui.widgets.*
@@ -31,6 +35,9 @@ import org.w3c.dom.HTMLElement
 
 fun initialiseExamples(selectEl: HTMLElement) {
     Examples.add(Datatypes.example)
+    Examples.add(GraphvizDot.example)
+    Examples.add(SText.example)
+
     Examples.map.forEach { eg ->
         val option = document.createElement("option")
         selectEl.appendChild(option);
@@ -87,7 +94,13 @@ fun main() {
     }
 
     trees["parse"]!!.treeFunctions = TreeViewFunctions<SPPTNode>(
-            label = { it.name },
+            label = {
+                when (it) {
+                    is SPPTLeaf -> "${it.name} = ${it.nonSkipMatchedText}"
+                    is SPPTBranch -> it.name
+                    else -> it.name
+                }
+            },
             hasChildren = { it.isBranch },
             children = { it.asBranch.children.toTypedArray() }
     ) as TreeViewFunctions<Any>

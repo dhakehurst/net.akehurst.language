@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.sppt
+package net.akehurst.language.editor.information.examples
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.processor.Agl
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import net.akehurst.language.editor.information.Example
 
-
-class test_SText_tokensByLine {
-
-    companion object {
-        private val grammarStr1 = """
+object SText {
+    val id = "statechart-tools"
+    val label = "Statechart Tools - SText"
+    val sentence = """
+        @@statechart@@
+        namespace Traffic.Lights
+        
+        internal : every 10 ms / raise intEvent
+    """.trimIndent()
+    val grammar = """
 /**
  * Copyright (c) 2010 - 2018 committers of YAKINDU and others.
  * All rights reserved. This program and the accompanying materials
@@ -38,7 +38,7 @@ class test_SText_tokensByLine {
  * 	committers of YAKINDU - initial API and implementation
  *
  */
-namespace  org.yakindu.stext
+namespace org.yakindu.stext
 
 grammar Expressions {
 
@@ -143,19 +143,6 @@ grammar Expressions {
     leaf DQ_STRING = "\"(?:\\?.)*?\"";
     leaf SQ_STRING = "'(?:\\?.)*?'" ;
 }
-        """.trimIndent()
-        private val grammarStr2 = """
-/**
- * Copyright (c) 2010 - 2018 committers of YAKINDU and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * Contributors:
- * 	committers of YAKINDU - initial API and implementation
- *
- */
-namespace org.yakindu.stext
 
 grammar SText extends Expressions {
 
@@ -251,18 +238,29 @@ TimeUnit = 's' | 'ms' | 'us' | 'ns' ;
 FQN = ID ('.' ID)*;
 
 }
-        """.trimIndent()
+    """.trimIndent()
+    val style = """
+        '@@statechart@@' {
+            foreground: purple;
+            font-style: bold;
+        }
+        '@@state@@' {
+            foreground: purple;
+            font-style: bold;
+        }
+        '@@transition@@' {
+            foreground: purple;
+            font-style: bold;
+        }
+        ${'$'}keyword {
+            foreground: purple;
+            font-style: bold;
+        }
+    """.trimIndent()
+    val format = """
+        
+    """.trimIndent()
 
-        val exprProcessor = Agl.processor(grammarStr1)
-        var processor: LanguageProcessor = Agl.processor(grammarStr2)
-    }
-
-    @Test
-    fun t1() {
-        val sppt = processor.parse("StateScope", "after 10 s / raise ABC.intEvent")
-        val actual = sppt.tokensByLine(0)
-
-        assertEquals("after", actual[0].matchedText)
-    }
+    val example = Example(id, label, sentence, grammar, style, format)
 
 }

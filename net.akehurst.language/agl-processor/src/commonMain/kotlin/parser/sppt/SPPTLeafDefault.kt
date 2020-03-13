@@ -46,7 +46,7 @@ class SPPTLeafDefault(
 
     override val metaTags: List<String> by lazy { //TODO: make this configurable on the LanguageProcessor
         val map = mutableMapOf<String, String>(
-                "\$keyword" to "'[a-zA-Z][a-zA-Z0-9]*'"
+                "\$keyword" to "'[a-zA-Z_][a-zA-Z0-9_-]*'"
         )
         map.mapNotNull {
             when {

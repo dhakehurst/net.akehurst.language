@@ -31,6 +31,7 @@ class CompletionProvider {
         return when {
             done.contains(item) -> emptyList()
             else -> when (item) {
+                is EmptyRule -> emptyList()
                 is Choice -> item.alternative.flatMap { getText(it, desiredDepth, done + item) }
                 is Concatenation -> getText(item.items[0], desiredDepth, done + item)
                 is Terminal -> when {
@@ -41,6 +42,7 @@ class CompletionProvider {
                 is NonTerminal -> getText(item.referencedRule.rhs, desiredDepth - 1, done + item)
                 is SeparatedList -> getText(item.item, desiredDepth, done + item)
                 is Multi -> getText(item.item, desiredDepth, done + item)
+                is Group -> getText(item.choice, desiredDepth, done+item)
                 else -> error("not yet supported!")
             }
         }

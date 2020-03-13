@@ -41,9 +41,9 @@ class test_SharedPackedParseTree {
 
         val sut = proc.parse("a".trimIndent())
 
-        val actual = sut.tokensByLine
+        val actual = sut.tokensByLine(0)
 
-        assertEquals("a", actual[0][0].matchedText)
+        assertEquals("a", actual[0].matchedText)
     }
 
     @Test
@@ -65,7 +65,10 @@ class test_SharedPackedParseTree {
             + c
         """.trimIndent())
 
-        val actual = sut.tokensByLine
+        val actual = listOf(
+                sut.tokensByLine(0),
+                sut.tokensByLine(1)
+        )
 
         assertEquals("a + b\n", actual[0].map { it.matchedText }.joinToString(""))
         assertEquals(1, actual[0][0].location.line)
@@ -91,7 +94,10 @@ class test_SharedPackedParseTree {
               + c
         """.trimIndent())
 
-        val actual = sut.tokensByLine
+        val actual = listOf(
+                sut.tokensByLine(0),
+                sut.tokensByLine(1)
+        )
 
         assertEquals("a + b\n", actual[0].map { it.matchedText }.joinToString(""))
         assertEquals(1, actual[0][0].location.line)
@@ -128,7 +134,11 @@ class XXX {
         val text2 = text.trimStart()
         val sut = proc.parse(text2)
 
-        val actual = sut.tokensByLine
+        val actual = listOf(
+                sut.tokensByLine(0),
+                sut.tokensByLine(1),
+                sut.tokensByLine(2)
+        )
 
         assertEquals("class XXX {\n", actual[0].map { it.matchedText }.joinToString(""))
         assertEquals(1, actual[0][0].location.line)

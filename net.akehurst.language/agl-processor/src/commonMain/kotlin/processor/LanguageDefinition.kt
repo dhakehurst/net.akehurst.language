@@ -70,6 +70,10 @@ object AglLanguage {
                 
             """.trimIndent(),
             style = """
+                META_IDENTIFIER {
+                  foreground: orange;
+                  font-style: bold;
+                }
                 IDENTIFIER {
                   foreground: blue;
                   font-style: bold;

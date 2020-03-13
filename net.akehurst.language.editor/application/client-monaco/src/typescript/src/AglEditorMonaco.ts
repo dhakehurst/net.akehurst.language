@@ -190,8 +190,8 @@ export class AglEditorMonaco implements api.AglEditor {
             }
         });
 
-        monaco.editor.setModelMarkers()
-
+        this.monacoEditor.deltaDecorations()
+        monaco.languages.registerCompletionItemProvider()
     }
 
     private getTokensAtLine(model: monaco.editor.ITextModel, lineNumber: number): monaco.languages.IToken[] {

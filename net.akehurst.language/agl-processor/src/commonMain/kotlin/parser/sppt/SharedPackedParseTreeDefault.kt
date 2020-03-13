@@ -32,10 +32,19 @@ class SharedPackedParseTreeDefault(
         return this.root.contains(other.root)
     }
 
-    override val tokensByLine: List<List<SPPTLeaf>> by lazy {
+    private val _tokensByLine: List<List<SPPTLeaf>> by lazy {
         val visitor = TokensByLineVisitor()
         visitor.visit(this, emptyList())
         visitor.lines
+    }
+
+    override fun tokensByLine(line: Int): List<SPPTLeaf> {
+        val tbl = this._tokensByLine
+        return if (tbl.isEmpty() || line >= tbl.size) {
+            emptyList()
+        } else {
+            tbl[line]
+        }
     }
 
     override val asString: String by lazy {

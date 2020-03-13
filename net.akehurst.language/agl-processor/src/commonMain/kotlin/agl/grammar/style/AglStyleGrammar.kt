@@ -49,11 +49,11 @@ private fun createRules(): List<Rule> {
     b.leaf("LITERAL").concatenation(b.terminalPattern("'(?:\\\\?.)*?'"));
     b.leaf("PATTERN").concatenation(b.terminalPattern("\"(?:[^\"\\\\]|\\\\.)*?\""));
     b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
-    b.leaf("META_IDENTIFIER").concatenation(b.terminalPattern("[$][a-zA-Z_][a-zA-Z_0-9-]*"));
+    b.leaf("META_IDENTIFIER").concatenation(b.terminalPattern("[\\$][a-zA-Z_][a-zA-Z_0-9-]*"));
 
     b.rule("styleList").multi(0,-1,b.nonTerminal("style"))
     b.rule("style").concatenation(b.nonTerminal("STYLE_ID"), b.terminalLiteral(":"), b.nonTerminal("STYLE_VALUE"), b.terminalLiteral(";"))
-    b.leaf("STYLE_ID").concatenation(b.terminalPattern("[-a-zA-Z_][-a-zA-Z_0-9-]*(?=\\s*[:])"));
+    b.leaf("STYLE_ID").concatenation(b.terminalPattern("[-a-zA-Z@_$][-a-zA-Z_0-9@]*(?=\\s*[:])"));
     b.leaf("STYLE_VALUE").concatenation(b.terminalPattern("([^;:]*)(?=\\s*[;])"))
 
     return b.grammar.rule

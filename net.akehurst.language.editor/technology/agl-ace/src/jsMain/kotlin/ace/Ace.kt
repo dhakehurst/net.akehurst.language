@@ -4,6 +4,7 @@
 package ace
 
 @JsModule("ace-builds")
+@JsNonModule
 external object Ace {
 
     fun <T: Any> require(moduleName: String): T = definedExternally
