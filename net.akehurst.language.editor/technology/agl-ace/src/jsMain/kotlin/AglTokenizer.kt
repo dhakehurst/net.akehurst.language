@@ -45,7 +45,7 @@ class AglToken(
 }
 
 class AglLineTokens(
-        override val endState: LineState,
+        override val state: LineState,
         override val tokens: Array<Token>
 ) : ace.LineTokens {}
 
@@ -65,11 +65,11 @@ class AglTokenizer(
     }
 
     private fun mapTokenTypeToClass(tokenType: String): String {
-        var cssClass = this.agl.tokenToClassMap.get(tokenType);
+        var cssClass = this.agl.tokenToClassMap.get(tokenType)
         if (null == cssClass) {
             cssClass = "nostyle"
         }
-        return cssClass;
+        return cssClass
     }
 
     private fun mapToCssClasses(leaf: SPPTLeaf): List<String> {
@@ -80,7 +80,7 @@ class AglTokenizer(
             listOf(this.mapTokenTypeToClass(leaf.name))
         }
         val classes = metaTagClasses + otherClasses
-        return classes;
+        return classes.toSet().toList()
     }
 
     private fun transformToAceTokens(leafs: List<SPPTLeaf>): List<AglToken> {

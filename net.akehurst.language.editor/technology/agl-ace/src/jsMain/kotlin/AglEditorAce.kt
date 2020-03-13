@@ -18,6 +18,7 @@ package net.akehurst.language.editor.ace
 
 import net.akehurst.language.api.analyser.SyntaxAnalyserException
 import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.style.AglStyle
 import net.akehurst.language.api.style.AglStyleRule
 import net.akehurst.language.editor.api.*
 import net.akehurst.language.processor.Agl
@@ -101,6 +102,13 @@ class AglEditorAce(
         this.aceEditor.getSession().bgTokenizer = AglBackgroundTokenizer(AglTokenizer(this.agl), this.aceEditor)
         this.aceEditor.getSession().bgTokenizer.setDocument(this.aceEditor.getSession().getDocument());
         //this.aceEditor.commands.addCommand(autocomplete.Autocomplete.startCommand)
+
+        this.aceEditor.on("change") { event ->
+            this.agl.sppt = null
+        }
+        this.aceEditor.on("input") { event ->
+            this.doBackgroundTryParse()
+        }
     }
 
     private fun mapTokenTypeToClass(tokenType: String): String {
@@ -119,7 +127,19 @@ class AglEditorAce(
             rules.forEach { rule ->
                 val cssClass = '.' + this.languageId + ' ' + ".ace_" + this.mapTokenTypeToClass(rule.selector);
                 val mappedRule = AglStyleRule(cssClass)
-                mappedRule.styles = rule.styles;
+                mappedRule.styles = rule.styles.values.associate { oldStyle ->
+                    val style = when (oldStyle.name) {
+                        "foreground" -> AglStyle("color", oldStyle.value)
+                        "background" -> AglStyle("background-color", oldStyle.value)
+                        "font-style" -> when (oldStyle.value) {
+                            "bold" -> AglStyle("font-weight", oldStyle.value)
+                            "italic" -> AglStyle("font-style", oldStyle.value)
+                            else -> oldStyle
+                        }
+                        else -> oldStyle
+                    }
+                    Pair(style.name, style)
+                }.toMutableMap()
                 mappedCss = mappedCss + '\n' + mappedRule.toCss();
             }
             val module = js(" { cssClass: this.languageId, cssText: mappedCss, _v: Date.now() }") // _v:Date added in order to force use of new module definition
@@ -168,7 +188,7 @@ class AglEditorAce(
     }
 
     fun resetTokenization() {
-        //this.aceEditor.renderer.updateText();
+        this.aceEditor.renderer.updateText();
         this.aceEditor.getSession().bgTokenizer.start(0);
     }
 

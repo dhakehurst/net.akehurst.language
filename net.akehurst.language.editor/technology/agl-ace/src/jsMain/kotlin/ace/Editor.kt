@@ -10,9 +10,12 @@ external class Editor(
         session: EditSession,
         options:Any?
 )  {
+    val renderer: dynamic
+
     fun getValue(): String
     fun setValue(value: String, cursorPos: Int)
     fun getSession(): EditSession
     fun setOption(option: String, module: dynamic)
+    fun on(eventName: String, function: (dynamic) -> Unit)
 
 }

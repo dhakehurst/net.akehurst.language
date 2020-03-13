@@ -6,7 +6,7 @@ package ace
 import net.akehurst.language.editor.ace.AglTokenizer
 
 external interface LineTokens {
-    val endState: LineState
+    val state: LineState
     val tokens : Array<Token>
 }
 external interface LineState
