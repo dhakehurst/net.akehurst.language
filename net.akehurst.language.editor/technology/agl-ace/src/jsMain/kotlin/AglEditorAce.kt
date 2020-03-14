@@ -45,7 +45,6 @@ class AglErrorAnnotation(
     val row = line - 1
 }
 
-
 class AglEditorAce(
         val element: Element,
         val editorId: String,
@@ -109,6 +108,10 @@ class AglEditorAce(
         this.aceEditor.on("input") { event ->
             this.doBackgroundTryParse()
         }
+
+        val self = this
+        val resizeObserver: dynamic = js("new ResizeObserver(function(entries) { self.onResize(entries) })")
+        resizeObserver.observe(this.element)
     }
 
     private fun mapTokenTypeToClass(tokenType: String): String {
@@ -121,7 +124,7 @@ class AglEditorAce(
     }
 
     fun setStyle(css: String?) {
-        if (null != css) {
+        if (null != css && css.isNotEmpty()) {
             val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
             var mappedCss = ""
             rules.forEach { rule ->
@@ -140,12 +143,13 @@ class AglEditorAce(
                     }
                     Pair(style.name, style)
                 }.toMutableMap()
-                mappedCss = mappedCss + '\n' + mappedRule.toCss();
+                mappedCss = mappedCss + "\n" + mappedRule.toCss()
             }
-            val module = js(" { cssClass: this.languageId, cssText: mappedCss, _v: Date.now() }") // _v:Date added in order to force use of new module definition
+            val cssText:String = mappedCss
+            val module = js(" { cssClass: this.languageId, cssText: cssText, _v: Date.now() }") // _v:Date added in order to force use of new module definition
             // remove the current style element for 'languageId' (which is used as the theme name) from the container
             // else the theme css is not reapplied
-            val curStyle = this.element.querySelector("style#" + this.languageId)
+            val curStyle = this.element.ownerDocument?.querySelector("style#" + this.languageId)
             if (null!=curStyle) {
                 curStyle.parentElement?.removeChild(curStyle);
             }
@@ -154,6 +158,15 @@ class AglEditorAce(
             this.aceEditor.setOption("theme", module); //not sure but maybe this is better than setting on renderer direct
         } else {
 
+        }
+    }
+
+    @JsName("onResize")
+    private fun onResize(entries: Array<dynamic>) {
+        entries.forEach { entry ->
+            if (entry.target == this.element) {
+                this.aceEditor.resize(true)
+            }
         }
     }
 

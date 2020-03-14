@@ -58,29 +58,30 @@ class AglTokenizer(
         val sppt = this.agl.sppt
         val state = if (null == pState) AglLineState(0, "") else pState as AglLineState
         return if (null == sppt) {
-            this.getLineTokensByScan(line, state)
+            this.getLineTokensByScan(line, state, row)
         } else {
-            this.getLineTokensByParse(line, state)
+            this.getLineTokensByParse(line, state, row)
         }
     }
 
-    private fun mapTokenTypeToClass(tokenType: String): String {
+    private fun mapTokenTypeToClass(tokenType: String): String? {
         var cssClass = this.agl.tokenToClassMap.get(tokenType)
-        if (null == cssClass) {
-            cssClass = "nostyle"
-        }
         return cssClass
     }
 
     private fun mapToCssClasses(leaf: SPPTLeaf): List<String> {
-        val metaTagClasses = leaf.metaTags.map { this.mapTokenTypeToClass(it) }
+        val metaTagClasses = leaf.metaTags.mapNotNull { this.mapTokenTypeToClass(it) }
         val otherClasses = if (!leaf.tagList.isEmpty()) {
-            leaf.tagList.map { this.mapTokenTypeToClass(it) }
+            leaf.tagList.mapNotNull { this.mapTokenTypeToClass(it) }
         } else {
-            listOf(this.mapTokenTypeToClass(leaf.name))
+            listOf(this.mapTokenTypeToClass(leaf.name)).mapNotNull { it }
         }
         val classes = metaTagClasses + otherClasses
-        return classes.toSet().toList()
+        return if (classes.isEmpty()) {
+            listOf("nostyle")
+        } else {
+            classes.toSet().toList()
+        }
     }
 
     private fun transformToAceTokens(leafs: List<SPPTLeaf>): List<AglToken> {
@@ -95,49 +96,47 @@ class AglTokenizer(
             AglToken(
                     cssClasses,
                     beforeEOL,
-                    leaf.location.column,
-                    leaf.location.line
+                    leaf.location.line, //ace first line is 0
+                    leaf.location.column
             )
         }
     }
 
-    private fun getLineTokensByScan(line: String, state: AglLineState): ace.LineTokens {
+    private fun getLineTokensByScan(line: String, state: AglLineState, row:Int): ace.LineTokens {
         val proc = this.agl.processor
-        val nextLineNumber = state.lineNumber + 1
-        return if(null != proc) {
+        return if (null != proc) {
             val text = state.leftOverText + line
             val leafs = proc.scan(text);
             val tokens = transformToAceTokens(leafs)
             val endState = if (leafs.isEmpty()) {
-                AglLineState(nextLineNumber, "")
+                AglLineState(row, "")
             } else {
                 val lastLeaf = leafs.last()
                 val endOfLastLeaf = lastLeaf.location.column + lastLeaf.location.length
                 val leftOverText = line.substring(endOfLastLeaf, line.length)
-                AglLineState(nextLineNumber, leftOverText)
+                AglLineState(row, leftOverText)
             }
             AglLineTokens(
                     endState,
                     tokens.toTypedArray()
             )
         } else {
-            AglLineTokens(AglLineState(nextLineNumber, ""), emptyArray())
+            AglLineTokens(AglLineState(row, ""), emptyArray())
         }
     }
 
-    private fun getLineTokensByParse(line: String, state: AglLineState): ace.LineTokens {
-        val nextLineNumber = state.lineNumber + 1
+    private fun getLineTokensByParse(line: String, state: AglLineState, row:Int): ace.LineTokens {
         val sppt = this.agl.sppt!!
-        val leafs = sppt.tokensByLine(state.lineNumber)
+        val leafs = sppt.tokensByLine(row)
         return if (null != leafs) {
             val tokens = transformToAceTokens(leafs)
-            val endState = AglLineState(nextLineNumber, "")
+            val endState = AglLineState(row, "")
             return AglLineTokens(
                     endState,
                     tokens.toTypedArray()
             )
         } else {
-            AglLineTokens(AglLineState(nextLineNumber, ""), emptyArray())
+            AglLineTokens(AglLineState(row, ""), emptyArray())
         }
     }
 }

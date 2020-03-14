@@ -126,7 +126,7 @@ class AglEditorMonaco(
             val resizeObserver: dynamic = js("new ResizeObserver(function(entries) { self.onResize(entries) })")
             resizeObserver.observe(this.element)
         } catch (t: Throwable) {
-            println(t.message)
+            console.error(t.message)
         }
     }
 

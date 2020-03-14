@@ -17,5 +17,6 @@ external class Editor(
     fun getSession(): EditSession
     fun setOption(option: String, module: dynamic)
     fun on(eventName: String, function: (dynamic) -> Unit)
+    fun resize(force: Boolean)
 
 }

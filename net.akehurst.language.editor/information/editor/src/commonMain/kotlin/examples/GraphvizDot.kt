@@ -103,8 +103,8 @@ grammar Xml {
 grammar Dot  {
 
     skip leaf WHITESPACE = "\s+" ;
-	skip leaf SINGLE_LINE_COMMENT = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
-	skip leaf MULTI_LINE_COMMENT = "//.*?${'$'}" ;
+	skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
+	skip leaf SINGLE_LINE_COMMENT = "//.*?${'$'}" ;
 	skip leaf C_PREPROCESSOR = "#.*?${'$'}" ;
 
 	graph =
