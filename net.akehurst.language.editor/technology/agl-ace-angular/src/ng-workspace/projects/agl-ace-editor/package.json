@@ -2,11 +2,11 @@
   "name": "net.akehurst.language.editor-agl-ace-angular",
   "version": "0.0.1",
   "peerDependencies": {
-    "@angular/common": "^9.0.0-rc.12",
-    "@angular/core": "^9.0.0-rc.12",
+    "@angular/common": "9.0.6",
+    "@angular/core": "9.0.6",
     "tslib": "^1.10.0",
-    "kotlin": "1.3.61",
-    "net.akehurst.language-agl-processor": "file:/Users/akehurst/git/net.akehurst.language-github/net.akehurst.language/.gradle-build/agl-processor/libs/agl-processor-js-3.4.0",
-    "net.akehurst.language.editor-agl-ace": "file:/Users/akehurst/git/net.akehurst.language-github/net.akehurst.language.editor/.gradle-build/net.akehurst.language.editor-agl-ace/webpack"
+    "kotlin": "1.3.70",
+    "net.akehurst.language-agl-processor": "https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language-agl-processor/-/net.akehurst.language-agl-processor-3.4.0.tgz",
+    "net.akehurst.language.editor-agl-ace": "https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language.editor-agl-ace/-/net.akehurst.language.editor-agl-ace-1.0.0.tgz"
   }
 }

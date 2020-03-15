@@ -3,7 +3,8 @@ import {Component, Input, Output, EventEmitter, OnInit, ElementRef} from '@angul
 import * as agl_js from 'net.akehurst.language-agl-processor';
 import agl = agl_js.net.akehurst.language;
 
-import {AglEditorAce} from 'net.akehurst.language.editor-agl-ace';
+import * as agl_ace_js from 'net.akehurst.language.editor-agl-ace';
+import agl_ace = agl_ace_js.net.akehurst.language.editor.ace;
 
 @Component({
   selector: 'agl-ace-editor',
@@ -17,20 +18,32 @@ export class AglAceEditorComponent implements OnInit {
 
   @Input() goalRule: string;
 
-  @Input() text: string;
+  @Input() get text(): string {
+    return this.aglEditor.text;
+  }
+
+  private _text : string;
+
+  set text(value: string) {
+    this._text = value;  // setter called before ngOnInit
+    if (this.aglEditor) {
+      this.aglEditor.text = value;
+    }
+  }
+
   @Output() textChanged: EventEmitter<any> = new EventEmitter<any>();
 
   @Input() options: any; //Ace Options
 
-  private _processor: agl.api.processor.LanguageProcessor = null;
+  private _processor: agl.api.processor.LanguageProcessor;
   @Input() get processor(): agl.api.processor.LanguageProcessor {
-    return this._processor;
+    return this.aglEditor.agl.processor;
   }
 
   set processor(value: agl.api.processor.LanguageProcessor) {
-    this._processor = value;
+    this._processor = value; // setter called before ngOnInit
     if (this.aglEditor) {
-      this.aglEditor.processor = this._processor;
+      this.aglEditor.agl.processor = value;
     }
   }
 
@@ -38,9 +51,7 @@ export class AglAceEditorComponent implements OnInit {
 
   @Output() click: EventEmitter<any> = new EventEmitter<any>();
 
-
-  private aglEditor: AglEditorAce;
-
+  private aglEditor: agl_ace.AglEditorAce;
 
   constructor(
     private readonly elementRef: ElementRef
@@ -48,11 +59,13 @@ export class AglAceEditorComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.aglEditor = new AglEditorAce(this.elementRef.nativeElement, this.editorIdentity, this.languageIdentity, this.goalRule, this.text, this.options);
-    this.aglEditor.processor = this._processor;
-    this.aglEditor.setStyle( this.textStyle );
-    this.aglEditor.editor.on('input', (e: Event) => {
-      this.textChanged.emit( this.aglEditor.editor.getValue() )
+    this.aglEditor = new agl_ace.AglEditorAce(this.elementRef.nativeElement, this.editorIdentity, this.languageIdentity, this.goalRule, this.options);
+    this.aglEditor.setStyle(this.textStyle);
+    this.aglEditor.agl.processor = this._processor;
+    this.aglEditor.text = this._text;
+    this.aglEditor.aceEditor.on('input', (e: Event) => {
+      this._text = this.aglEditor.text;
+      this.textChanged.emit(this.aglEditor.text)
     });
   }
 

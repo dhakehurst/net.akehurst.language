@@ -123,6 +123,7 @@ class AglEditorAce(
         return cssClass
     }
 
+    @JsName("setStyle")
     fun setStyle(css: String?) {
         if (null != css && css.isNotEmpty()) {
             val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
