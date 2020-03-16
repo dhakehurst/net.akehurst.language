@@ -3,7 +3,7 @@
  */
 package ace
 
-@JsModule("ace-builds")
+@JsModule("ace-builds/src-noconflict/ace")
 @JsNonModule
 external object Ace {
 

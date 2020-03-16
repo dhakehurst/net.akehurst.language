@@ -6,7 +6,7 @@ package ace
 /**
  * https://ace.c9.io/#nav=api&api=edit_session
  */
-@JsModule("kotlin-ace-loader!?id=ace/edit_session&name=EditSession")
+@JsModule("net.akehurst.language.editor-kotlin-ace-loader!?id=ace/edit_session&name=EditSession")
 @JsNonModule
 external class EditSession {
     var bgTokenizer: BackgroundTokenizer
@@ -15,5 +15,5 @@ external class EditSession {
 
     fun removeMarker(id:Int)
     fun setAnnotations(errors: Any)
-    fun getDocument(): Any
+    fun getDocument(): dynamic
 }

@@ -3,13 +3,15 @@
  */
 package ace
 
-@JsModule("kotlin-ace-loader!?id=ace/editor&name=Editor")
+@JsModule("net.akehurst.language.editor-kotlin-ace-loader!?id=ace/editor&name=Editor")
 @JsNonModule
 external class Editor(
         renderer: VirtualRenderer,
         session: EditSession,
         options:Any?
 )  {
+    val commands: dynamic
+    var completers: Array<dynamic> //TODO:
     val renderer: dynamic
 
     fun getValue(): String
@@ -18,5 +20,6 @@ external class Editor(
     fun setOption(option: String, module: dynamic)
     fun on(eventName: String, function: (dynamic) -> Unit)
     fun resize(force: Boolean)
+    fun getSelection(): dynamic //TODO:
 
 }

@@ -1,0 +1,22 @@
+{
+  "name": "net.akehurst.language.editor-kotlin-ace-loader",
+  "author": {
+    "name": "Dr. David H. Akehurst",
+    "email": "dr.david.h@akehurst.net",
+    "url": "https://medium.com/@dr.david.h.akehurst"
+  },
+  "version": "1.0.4",
+  "license": "Apache-2.0",
+
+  "keywords": ["ace","webpack","loader"],
+  "homepage": "https://github.com/dhakehurst/net.akehurst.language",
+  "description:" : "Webpack loader for using Ace Editor with kotlin",
+
+  "main": "net.akehurst.language.editor-kotlin-ace-loader.js",
+
+  "peerDependencies": {
+
+  },
+
+  "scripts": { }
+}

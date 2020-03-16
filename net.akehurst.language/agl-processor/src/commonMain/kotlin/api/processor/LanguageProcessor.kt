@@ -51,14 +51,13 @@ interface LanguageProcessor {
     fun <T> process(sppt: SharedPackedParseTree): T
 
     @JsName("formatText")
-    fun <T> format(inputText: CharSequence): String
+    fun <T> formatText(inputText: CharSequence): String
 
     @JsName("formatTextForGoal")
-    fun <T> format(goalRuleName: String, inputText: CharSequence): String
-
+    fun <T> formatTextForGoal(goalRuleName: String, inputText: CharSequence): String
 
     @JsName("formatAsm")
-    fun <T> format(asm: T): String
+    fun <T> formatAsm(asm: T): String
 
 
     //fun <T> process(reader: Reader, goalRuleName: String, targetType: Class<T>): T

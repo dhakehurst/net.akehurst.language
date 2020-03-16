@@ -16,6 +16,7 @@
 
 package net.akehurst.language.editor.ace
 
+import net.akehurst.language.api.analyser.AsmElementSimple
 import net.akehurst.language.api.analyser.SyntaxAnalyserException
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.style.AglStyle
@@ -99,7 +100,9 @@ class AglEditorAce(
 
     init {
         this.aceEditor.getSession().bgTokenizer = AglBackgroundTokenizer(AglTokenizer(this.agl), this.aceEditor)
-        this.aceEditor.getSession().bgTokenizer.setDocument(this.aceEditor.getSession().getDocument());
+        this.aceEditor.getSession().bgTokenizer.setDocument(this.aceEditor.getSession().getDocument())
+        this.aceEditor.commands.addCommand(ace.ext.Autocomplete.startCommand)
+        this.aceEditor.completers = arrayOf(AglCodeCompleter(this.languageId,this.agl))
         //this.aceEditor.commands.addCommand(autocomplete.Autocomplete.startCommand)
 
         this.aceEditor.on("change") { event ->
@@ -112,6 +115,17 @@ class AglEditorAce(
         val self = this
         val resizeObserver: dynamic = js("new ResizeObserver(function(entries) { self.onResize(entries) })")
         resizeObserver.observe(this.element)
+    }
+
+    private fun setupCommands() {
+        /*
+        this.aceEditor.commands.addCommand({
+            name: 'format',
+            bindKey: {win: 'Ctrl-F', mac: 'Command-F'},
+            exec: (editor) => this.format(),
+            readOnly: false
+        })
+         */
     }
 
     private fun mapTokenTypeToClass(tokenType: String): String {
@@ -159,6 +173,16 @@ class AglEditorAce(
             this.aceEditor.setOption("theme", module); //not sure but maybe this is better than setting on renderer direct
         } else {
 
+        }
+    }
+
+    @JsName("format")
+    fun format() {
+        val proc = this.agl.processor
+        if (null!=proc) {
+            val pos = this.aceEditor.getSelection().getCursor();
+            val formattedText:String = proc.formatText<AsmElementSimple>(this.text as CharSequence);
+            this.aceEditor.setValue(formattedText, -1);
         }
     }
 

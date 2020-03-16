@@ -20,7 +20,7 @@ external interface Tokenizer {
     fun getLineTokens(line: String, state: LineState?, row: Int): LineTokens
 }
 
-@JsModule("kotlin-ace-loader!?id=ace/background_tokenizer&name=BackgroundTokenizer")
+@JsModule("net.akehurst.language.editor-kotlin-ace-loader!?id=ace/background_tokenizer&name=BackgroundTokenizer")
 @JsNonModule
 open external class BackgroundTokenizer(
         tok: AglTokenizer,
