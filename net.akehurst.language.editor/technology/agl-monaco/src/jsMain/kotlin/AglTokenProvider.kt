@@ -18,6 +18,7 @@ package net.akehurst.language.editor.monaco
 
 import monaco.languages
 import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.editor.api.AglComponents
 
 class AglTokenProvider(
         val tokenPrefix: String,

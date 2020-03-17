@@ -6,7 +6,7 @@ val version_agl:String by project
 val version_ace:String = "1.4.8"
 dependencies {
 
-    nodeKotlin("net.akehurst.language:agl-processor:$version_agl")
+    //nodeKotlin("net.akehurst.language:agl-processor:$version_agl")
 
 }
 

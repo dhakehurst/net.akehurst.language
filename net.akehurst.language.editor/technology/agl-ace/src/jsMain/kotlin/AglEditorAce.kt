@@ -28,9 +28,8 @@ import org.w3c.dom.Element
 import org.w3c.dom.asList
 
 class AglComponentsAce(
-        aglEditor: AglEditor,
-        goalRule: String?
-) : AglComponents(aglEditor, goalRule) {
+        aglEditor: AglEditor
+) : AglComponents(aglEditor) {
     var nextCssClassNum = 1
     val cssClassPrefix = "tok"
     val tokenToClassMap = mutableMapOf<String, String>();
@@ -50,7 +49,6 @@ class AglEditorAce(
         val element: Element,
         val editorId: String,
         val languageId: String,
-        goalRule: String?,
         options: dynamic //TODO: types for this
 ) : AglEditor {
 
@@ -60,7 +58,7 @@ class AglEditorAce(
             document.querySelectorAll(tag).asList().forEach { el ->
                 val element = el as Element
                 val id = element.getAttribute("id")!!
-                val editor = AglEditorAce(element, id, id, null, null)
+                val editor = AglEditorAce(element, id, id, null)
                 map[id] = editor
             }
             return map
@@ -76,7 +74,7 @@ class AglEditorAce(
             ace.Ace.createEditSession(""),
             options
     )
-    val agl = AglComponentsAce(this, goalRule)
+    val agl = AglComponentsAce(this)
 
     var text: String
         get() {
@@ -88,7 +86,7 @@ class AglEditorAce(
         }
         set(value) {
             try {
-                this.aceEditor.setValue(value, -1)
+                this.aceEditor.setValue(value,-1)
             } catch (t: Throwable) {
                 throw RuntimeException("Failed to set text in editor")
             }

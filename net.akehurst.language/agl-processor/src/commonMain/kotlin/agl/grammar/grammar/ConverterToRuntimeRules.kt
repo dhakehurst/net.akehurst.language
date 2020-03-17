@@ -82,7 +82,8 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
     }
 
     fun originalRuleItemFor(rr: RuntimeRule): RuleItem {
-        return this.originalRule.get(rr) ?: throw LanguageProcessorException("cannot find original item for " + rr, null)
+        return this.originalRule.get(rr)
+                ?: throw LanguageProcessorException("cannot find original item for " + rr, null)
         /*
         val name = rr.name
         if (name.startsWith("§")) {

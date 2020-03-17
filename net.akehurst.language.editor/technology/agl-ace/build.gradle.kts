@@ -12,3 +12,9 @@ dependencies {
     //jsMainImplementation(project(":technology-kotlin-ace-loader"))
     jsMainImplementation(npm("net.akehurst.language.editor-kotlin-ace-loader","https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language.editor-kotlin-ace-loader/-/net.akehurst.language.editor-kotlin-ace-loader-1.0.4.tgz"))
 }
+
+tasks.withType<ProcessResources>  {
+    filesMatching("**/package.json") {
+        expand(project.properties)
+    }
+}

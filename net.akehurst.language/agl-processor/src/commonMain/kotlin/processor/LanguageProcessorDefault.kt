@@ -19,6 +19,7 @@ package net.akehurst.language.processor
 import net.akehurst.language.agl.analyser.SyntaxAnalyserSimple
 import net.akehurst.language.agl.grammar.runtime.ConverterToRuntimeRules
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.processor.CompletionItem
@@ -93,7 +94,7 @@ internal class LanguageProcessorDefault(
     override fun expectedAt(inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem> = expectedAt(this.goalRuleName, inputText, position, desiredDepth)
     override fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem> {
         val parserExpected: List<RuntimeRule> = this.parser.expectedAt(goalRuleName, inputText, position);
-        val grammarExpected: List<RuleItem> = parserExpected.map { this.converterToRuntimeRules.originalRuleItemFor(it) }
+        val grammarExpected: List<RuleItem> = parserExpected.filter { it!== RuntimeRuleSet.END_OF_TEXT }.map { this.converterToRuntimeRules.originalRuleItemFor(it) }
         val expected = grammarExpected.flatMap { this.completionProvider.provideFor(it, desiredDepth) }
         return expected
     }

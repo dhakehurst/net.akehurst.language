@@ -69,7 +69,11 @@ subprojects {
         }
         js("js") {
             nodejs()
-            browser()
+            browser {
+                webpackTask {
+                    outputFileName = "${project.group}-${project.name}.js"
+                }
+            }
         }
         //macosX64("macosX64") {
         // uncomment stuff below too

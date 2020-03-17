@@ -3,8 +3,10 @@ import {Component, Input, Output, EventEmitter, OnInit, ElementRef} from '@angul
 import * as agl_js from 'net.akehurst.language-agl-processor';
 import agl = agl_js.net.akehurst.language;
 
-import * as agl_ace_js from 'net.akehurst.language.editor-agl-ace';
+import * as agl_ace_js from 'net.akehurst.language.editor-technology-agl-ace/net.akehurst.language.editor-technology-agl-ace.js';
 import agl_ace = agl_ace_js.net.akehurst.language.editor.ace;
+//import 'net.akehurst.language.editor-technology-agl-ace'
+//const agl_ace = window['net.akehurst.language.editor-technology-agl-ace'].net.akehurst.language.editor.ace;
 
 @Component({
   selector: 'agl-ace-editor',
@@ -25,9 +27,11 @@ export class AglAceEditorComponent implements OnInit {
   private _text : string;
 
   set text(value: string) {
-    this._text = value;  // setter called before ngOnInit
-    if (this.aglEditor) {
-      this.aglEditor.text = value;
+    if (this._text!=value) {
+      this._text = value;  // setter called before ngOnInit
+      if (this.aglEditor) {
+        this.aglEditor.text = value;
+      }
     }
   }
 
@@ -59,9 +63,10 @@ export class AglAceEditorComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.aglEditor = new agl_ace.AglEditorAce(this.elementRef.nativeElement, this.editorIdentity, this.languageIdentity, this.goalRule, this.options);
+    this.aglEditor = new agl_ace.AglEditorAce(this.elementRef.nativeElement, this.editorIdentity, this.languageIdentity, this.options);
     this.aglEditor.setStyle(this.textStyle);
     this.aglEditor.agl.processor = this._processor;
+    this.aglEditor.agl.goalRule = this.goalRule;
     this.aglEditor.text = this._text;
     this.aglEditor.aceEditor.on('input', (e: Event) => {
       this._text = this.aglEditor.text;

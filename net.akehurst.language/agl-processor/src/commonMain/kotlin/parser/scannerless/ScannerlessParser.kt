@@ -173,14 +173,15 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
 
         do {
             rp.grow(false)
+            for (gn in rp.lastGrown) {
+                // may need to change this to finalInputPos!
+                if (input.isEnd(gn.nextInputPosition)) {
+                    matches.add(gn)
+                }
+            }
             seasons++
         } while (rp.canGrow)
-        for (gn in rp.lastGrown) {
-            // may need to change this to finalInputPos!
-            if (input.isEnd(gn.nextInputPosition)) {
-                matches.add(gn)
-            }
-        }
+
         // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
         // try grow last leaf with no lookahead
         for (gn in rp.lastGrownLinked) {

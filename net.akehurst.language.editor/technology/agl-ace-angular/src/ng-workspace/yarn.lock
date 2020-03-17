@@ -5756,13 +5756,13 @@ neo-async@^2.5.0, neo-async@^2.6.1:
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.6.1.tgz#ac27ada66167fa8849a6addd837f6b189ad2081c"
   integrity sha512-iyam8fBuCUpWeKPGpaNMetEocMt364qkCsfL9JuhjXX6dRnguRVOfk2GZaDpPjcOKiiXCPINZC1GczQ7iTq3Zw==
 
-"net.akehurst.language-agl-processor@https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language-agl-processor/-/net.akehurst.language-agl-processor-3.4.0.tgz":
-  version "3.4.0"
-  resolved "https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language-agl-processor/-/net.akehurst.language-agl-processor-3.4.0.tgz#a11a1904f2b433ddaf5349f84a600e180b99077f"
+"net.akehurst.language-agl-processor@https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language-agl-processor/-/net.akehurst.language-agl-processor-3.4.1.tgz":
+  version "3.4.1"
+  resolved "https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language-agl-processor/-/net.akehurst.language-agl-processor-3.4.1.tgz#f8a46a7da4bf124b36b00f61723c27e0854eeaf7"
 
-"net.akehurst.language.editor-agl-ace@https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language.editor-agl-ace/-/net.akehurst.language.editor-agl-ace-1.0.0.tgz":
-  version "1.0.0"
-  resolved "https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language.editor-agl-ace/-/net.akehurst.language.editor-agl-ace-1.0.0.tgz#16472a168492fa88280fa4e88b6c2c31979308bb"
+"net.akehurst.language.editor-technology-agl-ace@https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language.editor-technology-agl-ace/-/net.akehurst.language.editor-technology-agl-ace-1.0.1.tgz":
+  version "1.0.1"
+  resolved "https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language.editor-technology-agl-ace/-/net.akehurst.language.editor-technology-agl-ace-1.0.1.tgz#e9a00f7a0fd29adb7b4b0310e9a09ab188bc5124"
 
 ng-packagr@^9.0.0-rc.7:
   version "9.0.3"

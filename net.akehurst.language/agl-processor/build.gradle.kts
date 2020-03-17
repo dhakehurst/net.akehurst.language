@@ -2,6 +2,11 @@ plugins {
     id("net.akehurst.kotlin.kt2ts") version "1.5.2"
 }
 
+tasks.withType<ProcessResources>  {
+    filesMatching("**/package.json") {
+        expand(project.properties)
+    }
+}
 
 kt2ts {
     jvmTargetName.set("jvm8")

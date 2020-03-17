@@ -7,7 +7,7 @@ import javafx.scene.input.KeyCombination
 import javafx.scene.input.KeyEvent
 import javafx.scene.text.TextFlow
 import javafx.stage.Popup
-import net.akehurst.language.api.api.style.AglStyleRule
+import net.akehurst.language.api.style.AglStyleRule
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.processor.Agl
 import org.fxmisc.richtext.LineNumberFactory

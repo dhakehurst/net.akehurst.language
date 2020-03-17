@@ -26,8 +26,7 @@ interface AglEditor {
 }
 
 open class AglComponents(
-        val aglEditor: AglEditor,
-        var goalRule: String?
+        val aglEditor: AglEditor
 ) {
     private var _processor: LanguageProcessor? = null
     var processor: LanguageProcessor?
@@ -36,6 +35,8 @@ open class AglComponents(
             this._processor = value
             this.aglEditor.doBackgroundTryParse()
         }
+
+    var goalRule: String? = null
     var sppt: SharedPackedParseTree? = null
     var asm: Any? = null
 }
