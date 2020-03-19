@@ -5760,9 +5760,9 @@ neo-async@^2.5.0, neo-async@^2.6.1:
   version "3.4.1"
   resolved "https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language-agl-processor/-/net.akehurst.language-agl-processor-3.4.1.tgz#f8a46a7da4bf124b36b00f61723c27e0854eeaf7"
 
-"net.akehurst.language.editor-technology-agl-ace@https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language.editor-technology-agl-ace/-/net.akehurst.language.editor-technology-agl-ace-1.0.1.tgz":
-  version "1.0.1"
-  resolved "https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language.editor-technology-agl-ace/-/net.akehurst.language.editor-technology-agl-ace-1.0.1.tgz#e9a00f7a0fd29adb7b4b0310e9a09ab188bc5124"
+"net.akehurst.language.editor-technology-agl-ace@https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language.editor-technology-agl-ace/-/net.akehurst.language.editor-technology-agl-ace-1.0.2.tgz":
+  version "1.0.2"
+  resolved "https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language.editor-technology-agl-ace/-/net.akehurst.language.editor-technology-agl-ace-1.0.2.tgz#da8500c4c3ed2efeb8e1dadc661fc1fe2671ef20"
 
 ng-packagr@^9.0.0-rc.7:
   version "9.0.3"
