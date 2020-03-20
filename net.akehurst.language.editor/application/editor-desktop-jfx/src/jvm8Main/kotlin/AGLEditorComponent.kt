@@ -84,7 +84,7 @@ class AGLEditorComponent(
             val rules = Agl.styleProcessor.process<List<AglStyleRule>>("rules", styleRules)
             rules.forEach { rule ->
                 val sel = rule.selector
-                styleMap[sel] = rule.styles.joinToString("") { it.toCss() }
+                styleMap[sel] = rule.styles.values.joinToString("") { it.toCss() }
             }
         } catch (t:Throwable) {
 
@@ -161,15 +161,16 @@ class AGLEditorComponent(
 
     fun codeComplete(event: KeyEvent) {
         try {
+            /*
             val inputText = this.text
             val position = this.caretPosition
             val expected = this.processor.expectedAt(inputText, position, 1)
 
-            val popup = contextMenu {
-                item {
-                    label("aaa")
-                }
-            }
+            //val popup = contextMenu {
+            //    item {
+            //        label("aaa")
+            //    }
+            //}
 
             val content = vbox {
                 label("aaa")
@@ -189,6 +190,8 @@ class AGLEditorComponent(
 
             val pos = this.caretBounds.get()
             popup.show(this, pos.centerX, pos.centerY + 10);
+
+             */
         } catch (t:Throwable) {
             t.printStackTrace()
         }
