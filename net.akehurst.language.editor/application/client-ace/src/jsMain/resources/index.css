@@ -86,36 +86,37 @@ tabview > tab:first-of-type {
     display: grid;
 }
 
-treeview tree-children {
+treeview treeview-children {
     margin: 0;
     padding: 0;
     margin-left: 10px;
     display: none;
 }
-treeview tree-leaf {
+treeview treeview-leaf {
     display: block;
 }
 
-treeview tree-branch {
+treeview treeview-branch {
     cursor: pointer;
     user-select: none;
     display: block;
 }
 
-treeview tree-branch:before {
+treeview treeview-branch:before {
     content: "\25B6";
     color: black;
     display: inline-block;
     margin-right: 6px;
 }
 
-treeview tree-branch[open]:before {
+treeview treeview-branch[open]:before {
     transform: rotate(90deg);
 }
 
-treeview tree-branch[open] > tree-children {
+treeview treeview-branch[open] > treeview-children {
     display: block;
 }
+
 
 section {
     display: grid;
