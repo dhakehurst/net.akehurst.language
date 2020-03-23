@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "noImplicitAny": false,
+    "strict": false,
+    "module": "es6",
+    "target": "es6",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "declaration": true
+  },
+  "exclude": ["node_modules", "**/__tests__/*"]
+}

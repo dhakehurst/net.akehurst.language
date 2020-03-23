@@ -1,0 +1,12 @@
+{
+  "name": "net.akehurst.language.editor-agl-ace-angular",
+  "version": "1.0.2",
+  "peerDependencies": {
+    "@angular/common": "9.0.6",
+    "@angular/core": "9.0.6",
+    "tslib": "1.10.0",
+    "kotlin": "1.3.70",
+    "net.akehurst.language-agl-processor": "https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language-agl-processor/-/net.akehurst.language-agl-processor-3.4.1.tgz",
+    "net.akehurst.language.editor-technology-agl-ace": "https://nexus-intern.itemis.de/nexus/repository/akehurst-npm/net.akehurst.language.editor-technology-agl-ace/-/net.akehurst.language.editor-technology-agl-ace-1.0.2.tgz"
+  }
+}
