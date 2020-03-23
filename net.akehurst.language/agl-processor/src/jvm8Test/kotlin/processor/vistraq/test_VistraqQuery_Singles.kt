@@ -141,7 +141,7 @@ grammar Query {
         | comparisonOperator
         ;
     leaf arithmeticOperator =  '/' | '*' | '+' | '-' ;
-    leaf comparisonOperator = '==' | '!=' | '<' | '>' | '<=' | '>=' ;
+    leaf comparisonOperator = '==' | '!=' | '<=' | '>=' | '<' | '>' ;
     leaf logicalOperator = 'AND' | 'OR' | 'XOR' ;
 
     conditionalExpression = expression '?' expression ':' expression ;
