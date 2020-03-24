@@ -30,11 +30,15 @@ import net.akehurst.language.parser.sppt.SPPTLeafDefault
 import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
 import kotlin.math.max
 
-class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
+class ScannerlessParser(
+        private val runtimeRuleSet: RuntimeRuleSet
+) : Parser {
 
-    //override val nodeTypes: Set<NodeType> by lazy {
-    //    emptySet<NodeType>() //TODO:
-    //}
+    private var runtimeParser:RuntimeParser?=null
+
+    override fun interrupt(message:String) {
+        this.runtimeParser?.interrupt(message)
+    }
 
     override fun build() {
         this.runtimeRuleSet.buildCaches()
@@ -95,6 +99,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         val input = InputFromCharSequence(inputText)
         val graph = ParseGraph(goalRule, input)
         val rp = RuntimeParser(this.runtimeRuleSet, graph)
+        this.runtimeParser = rp
 
         rp.start(goalRule)
         var seasons = 1
@@ -164,6 +169,7 @@ class ScannerlessParser(private val runtimeRuleSet: RuntimeRuleSet) : Parser {
         val input = InputFromCharSequence(usedText)
         val graph = ParseGraph(goalRule, input)
         val rp = RuntimeParser(this.runtimeRuleSet, graph)
+        this.runtimeParser = rp
 
         rp.start(goalRule)
         var seasons = 1

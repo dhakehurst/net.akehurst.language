@@ -16,6 +16,7 @@
 
 package net.akehurst.language.editor.monaco
 
+import kotlinx.coroutines.Job
 import monaco.MarkerSeverity
 import monaco.editor
 import monaco.editor.IStandaloneCodeEditor
@@ -24,6 +25,7 @@ import net.akehurst.language.api.analyser.SyntaxAnalyserException
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.editor.api.*
 import net.akehurst.language.api.style.AglStyleRule
+import net.akehurst.language.editor.common.AglComponents
 import net.akehurst.language.processor.Agl
 import org.w3c.dom.Document
 import org.w3c.dom.Element
@@ -70,7 +72,7 @@ class AglEditorMonaco(
 
     lateinit var monacoEditor: IStandaloneCodeEditor
     val languageThemePrefix = this.languageId + "-"
-    val agl = AglComponents(this)
+    val agl = AglComponents()
 
     var text: String
         get() {
@@ -91,6 +93,8 @@ class AglEditorMonaco(
     val _tokenProvider = AglTokenProvider(this.languageThemePrefix, this.agl)
     private val _onParseHandler = mutableListOf<(ParseEvent) -> Unit>()
     private val _onProcessHandler = mutableListOf<(ProcessEvent) -> Unit>()
+    var parseJob = Job()
+    var processJob= Job()
 
     init {
         try {
@@ -190,13 +194,21 @@ class AglEditorMonaco(
     }
 
     override fun doBackgroundTryParse() {
-        //TODO: background!
-        tryParse()
+        if (this.parseJob.isActive) {
+            this.parseJob.cancel()
+        }
+        this.parseJob.run {
+            tryParse()
+        }
     }
 
     fun doBackgroundTryProcess() {
-        //TODO: background!
-        tryProcess()
+        if (this.processJob.isActive) {
+            this.processJob.cancel()
+        }
+        this.processJob.run {
+            tryProcess()
+        }
     }
 
     private fun tryParse() {
@@ -211,7 +223,7 @@ class AglEditorMonaco(
                     this.agl.sppt = proc.parse(goalRule, this.text)
                 }
                 this.monacoEditor.getModel().resetTokenization()
-                val event = ParseEvent(true, "OK", this.agl.sppt)
+                val event = ParseEvent(true, "OK")
                 this.notifyParse(event)
                 this.doBackgroundTryProcess()
             } catch (e: ParseFailedException) {
@@ -231,7 +243,7 @@ class AglEditorMonaco(
                     override val source: String? = null
                 })
                 monaco.editor.setModelMarkers(this.monacoEditor.getModel(), "", errors.toTypedArray())
-                val event = ParseEvent(false, e.message!!, this.agl.sppt)
+                val event = ParseEvent(false, e.message!!)
                 this.notifyParse(event)
             } catch (t: Throwable) {
                 console.error("Error parsing text in " + this.editorId + " for language " + this.languageId, t.message);
@@ -245,13 +257,13 @@ class AglEditorMonaco(
         if (null != proc && null != sppt) {
             try {
                 this.agl.asm = proc.process(sppt)
-                val event = ProcessEvent(true, "OK", this.agl.asm)
+                val event = ProcessEvent(true, "OK")
                 this.notifyProcess(event)
             } catch (e: SyntaxAnalyserException) {
                 this.agl.asm = null
 
 
-                val event = ProcessEvent(false, e.message!!, null)
+                val event = ProcessEvent(false, e.message!!)
                 this.notifyProcess(event)
             } catch (t: Throwable) {
                 console.error("Error processing parse result in " + this.editorId + " for language " + this.languageId, t.message)

@@ -15,14 +15,21 @@
  */
 package net.akehurst.language.api.parser;
 
-import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-class ParseFailedException(
-		message: String,
-		val longestMatch: SharedPackedParseTree?,
-		val location: InputLocation
-)
-	: Exception(message + "(at: ${location})") {
+class ParserException(message: String) : RuntimeException(message) {
 
 }
 
+class ParserInterruptedException(message: String) : RuntimeException(message) {
+
+}
+
+class ParseFailedException(
+        message: String,
+        val longestMatch: SharedPackedParseTree?,
+        val location: InputLocation
+)
+    : RuntimeException(message + "(at: ${location})") {
+
+}

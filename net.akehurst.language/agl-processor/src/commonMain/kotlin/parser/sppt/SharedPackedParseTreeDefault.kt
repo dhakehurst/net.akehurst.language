@@ -38,6 +38,10 @@ class SharedPackedParseTreeDefault(
         visitor.lines
     }
 
+    override fun tokensByLineAll(): List<List<SPPTLeaf>> {
+        return this._tokensByLine
+    }
+
     override fun tokensByLine(line: Int): List<SPPTLeaf> {
         val tbl = this._tokensByLine
         return if (tbl.isEmpty() || line >= tbl.size) {

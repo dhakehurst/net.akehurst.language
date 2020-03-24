@@ -22,6 +22,7 @@ import net.akehurst.language.agl.runtime.graph.PreviousInfo
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserException
+import net.akehurst.language.api.parser.ParserInterruptedException
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.parser.sppt.SPPTBranchDefault
 import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
@@ -33,7 +34,8 @@ internal class RuntimeParser(
 ) {
     // copy of graph growing head for each iteration, cached to that we can find best match in case of error
     private var toGrow: List<GrowingNode> = listOf()
-    private var toGrowPrevious = mutableMapOf<GrowingNode,Set<PreviousInfo>>()
+    private var toGrowPrevious = mutableMapOf<GrowingNode, Set<PreviousInfo>>()
+    private var interruptedMessage: String? = null
 
     //needs to be public so that expectedAt can use it
     val lastGrown: Collection<GrowingNode>
@@ -42,7 +44,7 @@ internal class RuntimeParser(
         }
     val lastGrownLinked: Collection<GrowingNode>
         get() {
-            this.toGrow.forEach {gn->
+            this.toGrow.forEach { gn ->
                 this.toGrowPrevious[gn]!!.forEach {
                     gn.addPrevious(it)
                 }
@@ -106,12 +108,25 @@ internal class RuntimeParser(
         this.graph.start(gState, startLocation)
     }
 
+    fun interrupt(message: String) {
+        this.interruptedMessage = message
+    }
+
+    fun checkInterrupt() {
+        val m = this.interruptedMessage
+        if (null == m) {
+            //do nothing
+        } else {
+            throw ParserInterruptedException(m)
+        }
+    }
 
     fun grow(noLookahead: Boolean) {
         this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
         this.toGrowPrevious.clear()
         this.graph.growingHead.clear()
         for (gn in this.toGrow) {
+            checkInterrupt()
             val previous = this.graph.pop(gn)
             this.toGrowPrevious[gn] = previous
             this.growNode(gn, previous, noLookahead)
@@ -220,7 +235,7 @@ internal class RuntimeParser(
                     val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
                     null != l
                 }
-                if (noLookahead ||hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
+                if (noLookahead || hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
                     val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
                             ?: throw ParserException("Should never be null")
                     this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
@@ -262,8 +277,8 @@ internal class RuntimeParser(
         for (it in transitions) {
             when (it.action) {
                 Transition.ParseAction.WIDTH -> doWidth(gn, setOf(previous), it, false)
-                Transition.ParseAction.HEIGHT -> doHeight(gn, previous, it,false)
-                Transition.ParseAction.GRAFT -> doGraft(gn, previous, it,false)
+                Transition.ParseAction.HEIGHT -> doHeight(gn, previous, it, false)
+                Transition.ParseAction.GRAFT -> doGraft(gn, previous, it, false)
                 Transition.ParseAction.GOAL -> doGraftSkip(gn, previous, it)
                 Transition.ParseAction.EMBED -> TODO()
             }

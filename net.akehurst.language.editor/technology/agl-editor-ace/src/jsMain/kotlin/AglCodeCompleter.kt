@@ -1,11 +1,12 @@
 package net.akehurst.language.editor.ace
 
 import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.editor.common.AglComponents
 
 
 class AglCodeCompleter(
         val languageId: String,
-        val agl: AglComponentsAce
+        val agl: AglComponents
 ) {
 
     @JsName("getCompletions")

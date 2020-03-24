@@ -16,6 +16,7 @@
 
 package net.akehurst.language.processor
 
+import net.akehurst.language.api.analyser.AsmElementSimple
 import net.akehurst.language.api.parser.ParseFailedException
 import kotlin.test.*
 
@@ -97,7 +98,7 @@ internal class test_Agl {
         assertEquals(7, e.location.column)
     }
 
-    /*
+
     @Test
     fun process() {
         val grammarStr = """
@@ -109,9 +110,9 @@ internal class test_Agl {
               a:A = v="[a-z]" {this.value=v} ;
             }
         """.trimIndent()
-        val analyser = TestAstTransformer()
-        val lp = processor(grammarStr, analyser)
-        val a: A = lp.process("a", "a")
+        val sentence = "a"
+        val myProcessor = Agl.processor(grammarStr)
+        val asm = myProcessor.process<AsmElementSimple>(sentence)
     }
-*/
+
 }

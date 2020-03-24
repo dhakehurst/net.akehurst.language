@@ -1,21 +1,38 @@
+/**
+ * Copyright (C) 2020 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.akehurst.language.editor.application.client.web
+
 import net.akehurst.language.api.analyser.AsmElementProperty
 import net.akehurst.language.api.analyser.AsmElementSimple
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.editor.technology.gui.widgets.TabView
-import kotlin.browser.*
-
 import net.akehurst.language.editor.ace.AglEditorAce
 import net.akehurst.language.editor.information.Examples
 import net.akehurst.language.editor.information.examples.Datatypes
 import net.akehurst.language.editor.information.examples.GraphvizDot
 import net.akehurst.language.editor.information.examples.SText
+import net.akehurst.language.editor.technology.gui.widgets.TabView
 import net.akehurst.language.editor.technology.gui.widgets.TreeView
 import net.akehurst.language.editor.technology.gui.widgets.TreeViewFunctions
 import net.akehurst.language.processor.Agl
 import net.akehurst.language.processor.AglLanguage
 import org.w3c.dom.HTMLElement
+import kotlin.browser.document
 
 fun initialiseExamples(selectEl: HTMLElement) {
     Examples.add(Datatypes.example)
@@ -45,9 +62,10 @@ fun main() {
     val formatEditor = editors["language-format"]!!
 
 
-    grammarEditor.setProcessor(Agl.grammarProcessor)
-    styleEditor.setProcessor(Agl.styleProcessor)
-    formatEditor.setProcessor(Agl.formatProcessor)
+    grammarEditor.setProcessor("@Agl.grammarProcessor@")
+    styleEditor.setProcessor("@Agl.styleProcessor@")
+    formatEditor.setProcessor("@Agl.formatProcessor@")
+
 
     grammarEditor.setStyle(AglLanguage.grammar.style)
     styleEditor.setStyle(AglLanguage.style.style)
@@ -55,7 +73,7 @@ fun main() {
     grammarEditor.onParse { event ->
         if (event.success) {
             try {
-                sentenceEditor.setProcessor(Agl.processor(grammarEditor.text))
+                sentenceEditor.setProcessor(grammarEditor.text)
             } catch (t: Throwable) {
                 sentenceEditor.setProcessor(null)
                 console.error(grammarEditor.editorId + ": " + t.message)
@@ -91,7 +109,7 @@ fun main() {
 
     sentenceEditor.onParse { event ->
         if (event.success) {
-            trees["parse"]!!.root = event.sppt!!.root
+            //trees["parse"]!!.root = event.sppt!!.root
         } else {
         }
     }
@@ -146,7 +164,7 @@ fun main() {
 
     sentenceEditor.onProcess { event ->
         if (event.success) {
-            trees["asm"]!!.root = event.asm
+            //trees["asm"]!!.root = event.asm
         } else {
         }
     }

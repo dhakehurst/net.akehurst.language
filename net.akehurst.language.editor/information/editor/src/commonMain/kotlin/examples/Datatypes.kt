@@ -53,7 +53,7 @@ object Datatypes {
           font-style: bold;
         }
         ID {
-          foreground: red;
+          foreground: blue;
           font-style: italic;
         }
         '{' {
@@ -68,6 +68,7 @@ object Datatypes {
           background: lightgray;
         }
         typeReference {
+          foreground: green;
           background: lightblue;
         }
     """.trimIndent()

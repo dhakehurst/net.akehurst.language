@@ -25,30 +25,12 @@ interface AglEditor {
 
 }
 
-open class AglComponents(
-        val aglEditor: AglEditor
-) {
-    private var _processor: LanguageProcessor? = null
-    var processor: LanguageProcessor?
-        get() = this._processor
-        set(value) {
-            this._processor = value
-            this.aglEditor.doBackgroundTryParse()
-        }
-
-    var goalRule: String? = null
-    var sppt: SharedPackedParseTree? = null
-    var asm: Any? = null
-}
-
 class ParseEvent(
         val success: Boolean,
-        val message: String,
-        val sppt: SharedPackedParseTree?
+        val message: String
 )
 
 class ProcessEvent(
         val success: Boolean,
-        val message: String,
-        val asm: Any?
+        val message: String
 )

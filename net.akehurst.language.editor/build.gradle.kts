@@ -72,7 +72,7 @@ subprojects {
             nodejs()
             browser {
                 webpackTask {
-                    outputFileName = "${project.group}-${project.name}.js"
+                    //outputFileName = "${project.group}-${project.name}.js"
                 }
             }
         }

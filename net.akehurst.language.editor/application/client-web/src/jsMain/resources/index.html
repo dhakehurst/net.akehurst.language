@@ -11,6 +11,13 @@
 <main>
     <header>
         <div>
+            <label>Select underlying Editor Type: </label>
+            <input type="radio" id="editor-choice-ace" name="editor-choice" value="ace" />
+            <label for="editor-choice-ace">Ace</label>
+            <input type="radio" id="editor-choice-monaco" name="editor-choice" value="monaco" />
+            <label for="editor-choice-monaco">Monaco</label>
+        </div>
+        <div>
             <label for="example">Please choose an example :</label>
             <select id="example">
             </select>
@@ -66,7 +73,7 @@
 </main>
 
 
-<script src="./net.akehurst.language.editor-application-client-ace.js"></script>
+<script src="./application-client-web.js"></script>
 
 </body>
 

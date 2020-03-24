@@ -21,19 +21,13 @@ import net.akehurst.language.api.analyser.SyntaxAnalyserException
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.style.AglStyle
 import net.akehurst.language.api.style.AglStyleRule
-import net.akehurst.language.editor.api.*
+import net.akehurst.language.editor.api.AglEditor
+import net.akehurst.language.editor.api.ParseEvent
+import net.akehurst.language.editor.api.ProcessEvent
+import net.akehurst.language.editor.common.AglComponents
+import net.akehurst.language.editor.comon.AglWorkerClient
 import net.akehurst.language.processor.Agl
-import org.w3c.dom.Document
-import org.w3c.dom.Element
-import org.w3c.dom.asList
-
-class AglComponentsAce(
-        aglEditor: AglEditor
-) : AglComponents(aglEditor) {
-    var nextCssClassNum = 1
-    val cssClassPrefix = "tok"
-    val tokenToClassMap = mutableMapOf<String, String>();
-}
+import org.w3c.dom.*
 
 class AglErrorAnnotation(
         val line: Int,
@@ -74,7 +68,7 @@ class AglEditorAce(
             ace.Ace.createEditSession(""),
             options
     )
-    val agl = AglComponentsAce(this)
+    private val agl = AglComponents()
 
     var text: String
         get() {
@@ -86,7 +80,7 @@ class AglEditorAce(
         }
         set(value) {
             try {
-                this.aceEditor.setValue(value,-1)
+                this.aceEditor.setValue(value, -1)
             } catch (t: Throwable) {
                 throw RuntimeException("Failed to set text in editor")
             }
@@ -94,13 +88,15 @@ class AglEditorAce(
 
     private val _onParseHandler = mutableListOf<(ParseEvent) -> Unit>()
     private val _onProcessHandler = mutableListOf<(ProcessEvent) -> Unit>()
-
+    var aglWorker = AglWorkerClient()
+    lateinit var workerTokenizer:AglAceTokenizerByWorker
 
     init {
-        this.aceEditor.getSession().bgTokenizer = AglBackgroundTokenizer(AglTokenizer(this.agl), this.aceEditor)
+        this.workerTokenizer = AglAceTokenizerByWorker()
+        this.aceEditor.getSession().bgTokenizer = AglBackgroundTokenizer(this.workerTokenizer, this.aceEditor)
         this.aceEditor.getSession().bgTokenizer.setDocument(this.aceEditor.getSession().getDocument())
         this.aceEditor.commands.addCommand(ace.ext.Autocomplete.startCommand)
-        this.aceEditor.completers = arrayOf(AglCodeCompleter(this.languageId,this.agl))
+        this.aceEditor.completers = arrayOf(AglCodeCompleter(this.languageId, this.agl))
         //this.aceEditor.commands.addCommand(autocomplete.Autocomplete.startCommand)
 
         this.aceEditor.on("change") { event ->
@@ -113,26 +109,17 @@ class AglEditorAce(
         val self = this
         val resizeObserver: dynamic = js("new ResizeObserver(function(entries) { self.onResize(entries) })")
         resizeObserver.observe(this.element)
-    }
 
-    private fun setupCommands() {
-        /*
-        this.aceEditor.commands.addCommand({
-            name: 'format',
-            bindKey: {win: 'Ctrl-F', mac: 'Command-F'},
-            exec: (editor) => this.format(),
-            readOnly: false
-        })
-         */
-    }
-
-    private fun mapTokenTypeToClass(tokenType: String): String {
-        var cssClass = this.agl.tokenToClassMap.get(tokenType);
-        if (null == cssClass) {
-            cssClass = this.agl.cssClassPrefix + this.agl.nextCssClassNum++;
-            this.agl.tokenToClassMap.set(tokenType, cssClass);
+        this.aglWorker.initialise()
+        this.aglWorker.processorCreateSuccess = this::processorCreateSuccess
+        this.aglWorker.parseSuccess = this::parseSuccess
+        this.aglWorker.parseFailure = this::parseFailure
+        this.aglWorker.lineTokens  = {
+            it.forEachIndexed { index, tokens ->
+                this.workerTokenizer.tokensByLine[index] = tokens.toList()
+            }
+            this.resetTokenization()
         }
-        return cssClass
     }
 
     @JsName("setStyle")
@@ -158,12 +145,12 @@ class AglEditorAce(
                 }.toMutableMap()
                 mappedCss = mappedCss + "\n" + mappedRule.toCss()
             }
-            val cssText:String = mappedCss
+            val cssText: String = mappedCss
             val module = js(" { cssClass: this.languageId, cssText: cssText, _v: Date.now() }") // _v:Date added in order to force use of new module definition
             // remove the current style element for 'languageId' (which is used as the theme name) from the container
             // else the theme css is not reapplied
             val curStyle = this.element.ownerDocument?.querySelector("style#" + this.languageId)
-            if (null!=curStyle) {
+            if (null != curStyle) {
                 curStyle.parentElement?.removeChild(curStyle);
             }
 
@@ -177,11 +164,17 @@ class AglEditorAce(
     @JsName("format")
     fun format() {
         val proc = this.agl.processor
-        if (null!=proc) {
+        if (null != proc) {
             val pos = this.aceEditor.getSelection().getCursor();
-            val formattedText:String = proc.formatText<AsmElementSimple>(this.text as CharSequence);
+            val formattedText: String = proc.formatText<AsmElementSimple>(this.text as CharSequence);
             this.aceEditor.setValue(formattedText, -1);
         }
+    }
+
+    @JsName("setProcessor")
+    fun setProcessor(grammarStr: String?) {
+        this.aglWorker.createProcessor(grammarStr)
+        this.resetTokenization() //new processor so find new tokens
     }
 
     @JsName("onResize")
@@ -193,11 +186,31 @@ class AglEditorAce(
         }
     }
 
+    private fun setupCommands() {
+        /*
+        this.aceEditor.commands.addCommand({
+            name: 'format',
+            bindKey: {win: 'Ctrl-F', mac: 'Command-F'},
+            exec: (editor) => this.format(),
+            readOnly: false
+        })
+         */
+    }
+
+    private fun mapTokenTypeToClass(tokenType: String): String {
+        var cssClass = this.agl.tokenToClassMap.get(tokenType);
+        if (null == cssClass) {
+            cssClass = this.agl.cssClassPrefix + this.agl.nextCssClassNum++;
+            this.agl.tokenToClassMap.set(tokenType, cssClass);
+        }
+        return cssClass
+    }
+
     fun onParse(handler: (ParseEvent) -> Unit) {
         this._onParseHandler.add(handler)
     }
 
-    fun notifyParse(event: ParseEvent) {
+    private fun notifyParse(event: ParseEvent) {
         this._onParseHandler.forEach {
             it.invoke(event)
         }
@@ -207,20 +220,20 @@ class AglEditorAce(
         this._onProcessHandler.add(handler)
     }
 
-    fun notifyProcess(event: ProcessEvent) {
+    private fun notifyProcess(event: ProcessEvent) {
         this._onProcessHandler.forEach {
             it.invoke(event)
         }
     }
 
     override fun doBackgroundTryParse() {
-        //TODO: background!
-        tryParse()
+        this.aglWorker.interrupt()
+        this.aglWorker.tryParse(this.text)
     }
 
     fun doBackgroundTryProcess() {
-        //TODO: background!
-        tryProcess()
+        //this.worker.postMessage(MessageParserInterruptRequest("New parse request"))
+        //this.worker.postMessage(MessageParseRequest(this.text))
     }
 
     fun resetTokenization() {
@@ -228,44 +241,19 @@ class AglEditorAce(
         this.aceEditor.getSession().bgTokenizer.start(0);
     }
 
-    private fun tryParse() {
+    private fun foregroundParse() {
         val proc = this.agl.processor
         if (null != proc) {
             try {
-                this.aceEditor.getSession().clearAnnotations(); //assume there are no parse errors or there would be no sppt!
-                this.errorParseMarkerIds.forEach { id -> this.aceEditor.getSession().removeMarker(id) }
                 val goalRule = this.agl.goalRule
-                if (null == goalRule) {
-                    this.agl.sppt = proc.parse(this.text)
+                val sppt = if (null == goalRule) {
+                    proc.parse(this.text)
                 } else {
-                    this.agl.sppt = proc.parse(goalRule, this.text)
+                    proc.parse(goalRule, this.text)
                 }
-                this.resetTokenization()
-                val event = ParseEvent(true, "OK", this.agl.sppt)
-                this.notifyParse(event)
-                this.doBackgroundTryProcess()
+                this.parseSuccess()
             } catch (e: ParseFailedException) {
-                this.agl.sppt = null
-                // parse failed so re-tokenize from scan
-                this.resetTokenization()
-                console.error("Error parsing text in " + this.editorId + " for language " + this.languageId, e.message);
-                val errors = listOf(
-                        AglErrorAnnotation(
-                                e.location.line,
-                                e.location.column - 1,
-                                "Syntax Error",
-                                "error",
-                                e.message
-                        ))
-                this.aceEditor.getSession().setAnnotations(errors.toTypedArray())
-                errors.forEach { err ->
-                    val range = ace.Range(err.row, err.column, err.row, err.column+1)
-                    val cls = "ace_marker_text_error"
-                    val errMrkId = this.aceEditor.getSession().addMarker(range, cls, "text")
-                    this.errorParseMarkerIds.add(errMrkId)
-                }
-                val event = ParseEvent(false, e.message!!, this.agl.sppt)
-                this.notifyParse(event)
+                this.parseFailure(e)
             } catch (t: Throwable) {
                 console.error("Error parsing text in " + this.editorId + " for language " + this.languageId, t.message);
             }
@@ -278,13 +266,11 @@ class AglEditorAce(
         if (null != proc && null != sppt) {
             try {
                 this.agl.asm = proc.process(sppt)
-                val event = ProcessEvent(true, "OK", this.agl.asm)
+                val event = ProcessEvent(true, "OK")
                 this.notifyProcess(event)
             } catch (e: SyntaxAnalyserException) {
                 this.agl.asm = null
-
-
-                val event = ProcessEvent(false, e.message!!, null)
+                val event = ProcessEvent(false, e.message!!)
                 this.notifyProcess(event)
             } catch (t: Throwable) {
                 console.error("Error processing parse result in " + this.editorId + " for language " + this.languageId, t.message)
@@ -292,4 +278,51 @@ class AglEditorAce(
         }
     }
 
+    private fun processorCreateSuccess() {
+        this.resetTokenization()
+    }
+
+    private fun parseSuccess() {
+        this.aceEditor.getSession().clearAnnotations(); //assume there are no parse errors or there would be no sppt!
+        this.errorParseMarkerIds.forEach { id -> this.aceEditor.getSession().removeMarker(id) }
+        this.resetTokenization()
+        val event = ParseEvent(true, "OK")
+        this.notifyParse(event)
+        this.doBackgroundTryProcess()
+    }
+
+    private fun parseFailure(e: Throwable) {
+        console.error("Error parsing text in " + this.editorId + " for language " + this.languageId, e.message);
+
+        when (e) {
+            is ParseFailedException -> {
+                this.aceEditor.getSession().clearAnnotations(); //assume there are no parse errors or there would be no sppt!
+                this.errorParseMarkerIds.forEach { id -> this.aceEditor.getSession().removeMarker(id) }
+
+                this.agl.sppt = e.longestMatch
+                // parse failed so re-tokenize from scan
+                this.resetTokenization()
+                val errors = listOf(
+                        AglErrorAnnotation(
+                                e.location.line,
+                                e.location.column - 1,
+                                "Syntax Error",
+                                "error",
+                                e.message
+                        ))
+                this.aceEditor.getSession().setAnnotations(errors.toTypedArray())
+                errors.forEach { err ->
+                    val range = ace.Range(err.row, err.column, err.row, err.column + 1)
+                    val cls = "ace_marker_text_error"
+                    val errMrkId = this.aceEditor.getSession().addMarker(range, cls, "text")
+                    this.errorParseMarkerIds.add(errMrkId)
+                }
+                val event = ParseEvent(false, e.message!!)
+                this.notifyParse(event)
+            }
+            else -> {
+
+            }
+        }
+    }
 }

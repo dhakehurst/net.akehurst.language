@@ -24,49 +24,53 @@ import kotlin.js.JsName
  *
  * A traditional ParseTree would be a special case (sub type) of an SharedPackedParseForest that contains only one tree.
  */
- interface SharedPackedParseTree : SharedPackedParseTreeVisitable {
+interface SharedPackedParseTree : SharedPackedParseTreeVisitable {
 
-	/**
-	 * Diagnostic info.
-	 */
-	val seasons:Int
+    /**
+     * Diagnostic info.
+     */
+    val seasons: Int
 
-	/**
-	 * Diagnostic info. Indication of ambiguity if > 1
-	 */
-	val maxNumHeads:Int
+    /**
+     * Diagnostic info. Indication of ambiguity if > 1
+     */
+    val maxNumHeads: Int
 
-	/**
-	 * The root of the tree
-	 */
-	val root: SPPTNode
+    /**
+     * The root of the tree
+     */
+    val root: SPPTNode
 
-	/**
-	 * Determines if there is an equivalent tree in this forest for every tree in the other forest.
-	 *
-	 * @param other tree
-	 * @return true if this tree contains the other
-	 */
-	 fun contains(other: SharedPackedParseTree ): Boolean
+    /**
+     * Determines if there is an equivalent tree in this forest for every tree in the other forest.
+     *
+     * @param other tree
+     * @return true if this tree contains the other
+     */
+    fun contains(other: SharedPackedParseTree): Boolean
 
-	fun tokensByLine(line: Int): List<SPPTLeaf>
+	@JsName("tokensByLineAll")
+    fun tokensByLineAll(): List<List<SPPTLeaf>>
 
-	/**
-	 *  the original input text
-	 */
-	val asString: String
+	@JsName("tokensByLine")
+    fun tokensByLine(line: Int): List<SPPTLeaf>
 
-	/**
-	 * 
-	 *  count of the trees contained
-	 */
-	val countTrees: Int
+    /**
+     *  the original input text
+     */
+    val asString: String
 
-	/**
-	 *  a string representation of all contained parse trees
-	 */
-	val toStringAll: String
+    /**
+     *
+     *  count of the trees contained
+     */
+    val countTrees: Int
 
-	@JsName("toStringAllWithIndent")
-	fun toStringIndented(indentIncrement:String): String
+    /**
+     *  a string representation of all contained parse trees
+     */
+    val toStringAll: String
+
+    @JsName("toStringAllWithIndent")
+    fun toStringIndented(indentIncrement: String): String
 }
