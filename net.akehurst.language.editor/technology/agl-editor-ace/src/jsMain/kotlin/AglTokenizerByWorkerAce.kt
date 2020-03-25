@@ -22,7 +22,7 @@ import net.akehurst.language.editor.common.AglToken
 import net.akehurst.language.editor.common.AglTokenizer
 import net.akehurst.language.editor.comon.AglWorkerClient
 
-class AglAceTokenizerByWorker(
+class AglTokenizerByWorkerAce(
         val agl:AglComponents
 ) : ace.Tokenizer {
 

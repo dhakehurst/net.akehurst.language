@@ -22,25 +22,26 @@ import monaco.editor
 import monaco.editor.IStandaloneCodeEditor
 import monaco.languages
 import net.akehurst.language.api.analyser.SyntaxAnalyserException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.editor.api.*
 import net.akehurst.language.api.style.AglStyleRule
 import net.akehurst.language.editor.common.AglComponents
+import net.akehurst.language.editor.common.AglEditorAbstract
+import net.akehurst.language.editor.comon.AglWorkerClient
 import net.akehurst.language.processor.Agl
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.asList
 import kotlin.browser.document
 
-
-
 class AglEditorMonaco(
         val element: Element,
-        val editorId: String,
+        editorId: String,
         val languageId: String,
         goalRule: String? = null,
         options: dynamic //TODO: types for this
-) : AglEditor {
+) : AglEditorAbstract(editorId) {
 
     companion object {
         private val init = js("""
@@ -62,6 +63,10 @@ class AglEditorMonaco(
             val map = mutableMapOf<String, AglEditorMonaco>()
             document.querySelectorAll(tag).asList().forEach { el ->
                 val element = el as Element
+                //delete any current children of element
+                while (element.childElementCount != 0) {
+                    element.removeChild(element.firstChild!!)
+                }
                 val id = element.getAttribute("id")!!
                 val editor = AglEditorMonaco(element, id, id, null, null)
                 map[id] = editor
@@ -72,9 +77,8 @@ class AglEditorMonaco(
 
     lateinit var monacoEditor: IStandaloneCodeEditor
     val languageThemePrefix = this.languageId + "-"
-    val agl = AglComponents()
 
-    var text: String
+    override var text: String
         get() {
             try {
                 return this.monacoEditor.getModel().getValue()
@@ -91,13 +95,14 @@ class AglEditorMonaco(
         }
 
     val _tokenProvider = AglTokenProvider(this.languageThemePrefix, this.agl)
-    private val _onParseHandler = mutableListOf<(ParseEvent) -> Unit>()
-    private val _onProcessHandler = mutableListOf<(ProcessEvent) -> Unit>()
-    var parseJob = Job()
-    var processJob= Job()
+    var aglWorker = AglWorkerClient()
+    lateinit var workerTokenizer: AglTokenizerByWorkerMonaco
+    var parseTimeout: dynamic = null
 
     init {
         try {
+            this.workerTokenizer = AglTokenizerByWorkerMonaco(this.agl)
+
             val themeData = js("""
                 {
                     base: 'vs',
@@ -129,32 +134,70 @@ class AglEditorMonaco(
             val self = this
             val resizeObserver: dynamic = js("new ResizeObserver(function(entries) { self.onResize(entries) })")
             resizeObserver.observe(this.element)
+
+            this.aglWorker.initialise()
+            this.aglWorker.processorCreateSuccess = this::processorCreateSuccess
+            this.aglWorker.parseSuccess = this::parseSuccess
+            this.aglWorker.parseFailure = this::parseFailure
+            this.aglWorker.lineTokens = {
+                this.workerTokenizer.receiveTokens(it)
+                this.resetTokenization()
+            }
+
         } catch (t: Throwable) {
             console.error(t.message)
         }
     }
 
-    fun setStyle(css: String) {
-        // https://github.com/Microsoft/monaco-editor/issues/338
-        // all editors on the same page must share the same theme!
-        // hence we create a global theme and modify it as needed.
-        val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
-        rules.forEach {
-            val key = this.languageThemePrefix + it.selector;
-            val value = object : editor.ITokenThemeRule {
-                override val token = key
-                override val foreground = convertColor(it.getStyle("foreground")?.value)
-                override val background = convertColor(it.getStyle("background")?.value)
-                override val fontStyle = it.getStyle("font-style")?.value
+    override fun finalize() {
+        this.aglWorker.worker.terminate()
+    }
+
+    override fun setStyle(css: String?) {
+        if (null != css && css.isNotEmpty()) {
+            // https://github.com/Microsoft/monaco-editor/issues/338
+            // all editors on the same page must share the same theme!
+            // hence we create a global theme and modify it as needed.
+            val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
+            rules.forEach {
+                val key = this.languageThemePrefix + it.selector;
+                val value = object : editor.ITokenThemeRule {
+                    override val token = key
+                    override val foreground = convertColor(it.getStyle("foreground")?.value)
+                    override val background = convertColor(it.getStyle("background")?.value)
+                    override val fontStyle = it.getStyle("font-style")?.value
+                }
+                allAglGlobalThemeRules.set(key, value);
             }
-            allAglGlobalThemeRules.set(key, value);
+            // reset the theme with the new rules
+            monaco.editor.defineTheme(aglGlobalTheme, object : editor.IStandaloneThemeData {
+                override val base = "vs"
+                override val inherit = false
+                override val rules = allAglGlobalThemeRules.values.toTypedArray()
+            })
         }
-        // reset the theme with the new rules
-        monaco.editor.defineTheme(aglGlobalTheme, object : editor.IStandaloneThemeData {
-            override val base = "vs"
-            override val inherit = false
-            override val rules = allAglGlobalThemeRules.values.toTypedArray()
-        })
+    }
+
+    override fun setProcessor(grammarStr: String?) {
+        this.aglWorker.createProcessor(grammarStr)
+        if (null == grammarStr || grammarStr.trim().isEmpty()) {
+            this.agl.processor = null
+        } else {
+            try {
+                this.agl.processor = Agl.processor(grammarStr)
+            } catch (t: Throwable) {
+                this.agl.processor = null
+                console.error(t.message)
+            }
+        }
+        this.workerTokenizer.reset()
+        this.resetTokenization() //new processor so find new tokens
+        this.workerTokenizer.acceptingTokens = true
+        this.doBackgroundTryParse()
+    }
+
+    override fun clearErrorMarkers() {
+        monaco.editor.setModelMarkers(this.monacoEditor.getModel(), "", emptyArray())
     }
 
     fun onChange(handler: (String) -> Unit) {
@@ -164,24 +207,8 @@ class AglEditorMonaco(
         }
     }
 
-    fun onParse(handler: (ParseEvent) -> Unit) {
-        this._onParseHandler.add(handler)
-    }
-
-    fun notifyParse(event: ParseEvent) {
-        this._onParseHandler.forEach {
-            it.invoke(event)
-        }
-    }
-
-    fun onProcess(handler: (ProcessEvent) -> Unit) {
-        this._onProcessHandler.add(handler)
-    }
-
-    fun notifyProcess(event: ProcessEvent) {
-        this._onProcessHandler.forEach {
-            it.invoke(event)
-        }
+    fun resetTokenization() {
+        this.monacoEditor.getModel().resetTokenization()
     }
 
     @JsName("onResize")
@@ -193,43 +220,35 @@ class AglEditorMonaco(
         }
     }
 
-    override fun doBackgroundTryParse() {
-        if (this.parseJob.isActive) {
-            this.parseJob.cancel()
-        }
-        this.parseJob.run {
-            tryParse()
-        }
+    fun doBackgroundTryParse() {
+        this.clearErrorMarkers()
+        this.aglWorker.interrupt()
+        this.aglWorker.tryParse(this.text)
     }
 
     fun doBackgroundTryProcess() {
-        if (this.processJob.isActive) {
-            this.processJob.cancel()
-        }
-        this.processJob.run {
-            tryProcess()
-        }
+        tryProcess()
     }
 
     private fun tryParse() {
         val proc = this.agl.processor
         if (null != proc) {
             try {
-                monaco.editor.setModelMarkers(this.monacoEditor.getModel(), "", emptyArray())
+
                 val goalRule = this.agl.goalRule
                 if (null == goalRule) {
                     this.agl.sppt = proc.parse(this.text)
                 } else {
                     this.agl.sppt = proc.parse(goalRule, this.text)
                 }
-                this.monacoEditor.getModel().resetTokenization()
+                this.resetTokenization()
                 val event = ParseEvent(true, "OK")
                 this.notifyParse(event)
                 this.doBackgroundTryProcess()
             } catch (e: ParseFailedException) {
                 this.agl.sppt = null
                 // parse failed so re-tokenize from scan
-                this.monacoEditor.getModel().resetTokenization()
+                this.resetTokenization()
                 console.error("Error parsing text in " + this.editorId + " for language " + this.languageId, e.message);
                 val errors = mutableListOf<editor.IMarkerData>()
                 errors.add(object : editor.IMarkerData {
@@ -285,6 +304,42 @@ class AglEditorMonaco(
 
     private fun setupCommands() {
 
+    }
+
+    private fun processorCreateSuccess() {
+        this.resetTokenization()
+    }
+
+    private fun parseSuccess() {
+        this.resetTokenization()
+        val event = ParseEvent(true, "OK")
+        this.notifyParse(event)
+        this.doBackgroundTryProcess()
+    }
+
+    private fun parseFailure(message: String, location: InputLocation?) {
+        console.error("Error parsing text in " + this.editorId + " for language " + this.languageId, message);
+
+        if (null != location) {
+            // parse failed so re-tokenize from scan
+            this.resetTokenization()
+            console.error("Error parsing text in " + this.editorId + " for language " + this.languageId, message);
+            val errors = mutableListOf<editor.IMarkerData>()
+            errors.add(object : editor.IMarkerData {
+                override val code: String? = null
+                override val severity = MarkerSeverity.Error
+                override val startLineNumber = location.line
+                override val startColumn = location.column
+                override val endLineNumber: Int = location.line
+                override val endColumn: Int = location.column
+                override val message = message!!
+                override val source: String? = null
+            })
+            monaco.editor.setModelMarkers(this.monacoEditor.getModel(), "", errors.toTypedArray())
+            val event = ParseEvent(false, message!!)
+            this.notifyParse(event)
+
+        }
     }
 
 }

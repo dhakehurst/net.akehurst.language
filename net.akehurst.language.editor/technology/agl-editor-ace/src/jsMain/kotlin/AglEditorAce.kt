@@ -22,10 +22,9 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.style.AglStyle
 import net.akehurst.language.api.style.AglStyleRule
-import net.akehurst.language.editor.api.AglEditor
 import net.akehurst.language.editor.api.ParseEvent
 import net.akehurst.language.editor.api.ProcessEvent
-import net.akehurst.language.editor.common.AglComponents
+import net.akehurst.language.editor.common.AglEditorAbstract
 import net.akehurst.language.editor.comon.AglWorkerClient
 import net.akehurst.language.processor.Agl
 import org.w3c.dom.*
@@ -43,16 +42,20 @@ class AglErrorAnnotation(
 
 class AglEditorAce(
         val element: Element,
-        val editorId: String,
+        editorId: String,
         val languageId: String,
         options: dynamic //TODO: types for this
-) : AglEditor {
+) : AglEditorAbstract(editorId) {
 
     companion object {
         fun initialise(document: Document, tag: String = "agl-editor"): Map<String, AglEditorAce> {
             val map = mutableMapOf<String, AglEditorAce>()
             document.querySelectorAll(tag).asList().forEach { el ->
                 val element = el as Element
+                //delete any current children of element
+                while(element.childElementCount!=0) {
+                    element.removeChild(element.firstChild!!)
+                }
                 val id = element.getAttribute("id")!!
                 val editor = AglEditorAce(element, id, id, null)
                 map[id] = editor
@@ -70,9 +73,7 @@ class AglEditorAce(
             ace.Ace.createEditSession(""),
             options
     )
-    private val agl = AglComponents()
-
-    var text: String
+    override var text: String
         get() {
             try {
                 return this.aceEditor.getValue()
@@ -88,14 +89,13 @@ class AglEditorAce(
             }
         }
 
-    private val _onParseHandler = mutableListOf<(ParseEvent) -> Unit>()
-    private val _onProcessHandler = mutableListOf<(ProcessEvent) -> Unit>()
     var aglWorker = AglWorkerClient()
-    lateinit var workerTokenizer: AglAceTokenizerByWorker
+    lateinit var workerTokenizer: AglTokenizerByWorkerAce
     var parseTimeout: dynamic = null
 
     init {
-        this.workerTokenizer = AglAceTokenizerByWorker(this.agl)
+        this.workerTokenizer = AglTokenizerByWorkerAce(this.agl)
+
         this.aceEditor.getSession().bgTokenizer = AglBackgroundTokenizer(this.workerTokenizer, this.aceEditor)
         this.aceEditor.getSession().bgTokenizer.setDocument(this.aceEditor.getSession().getDocument())
         this.aceEditor.commands.addCommand(ace.ext.Autocomplete.startCommand)
@@ -128,8 +128,11 @@ class AglEditorAce(
         }
     }
 
-    @JsName("setStyle")
-    fun setStyle(css: String?) {
+    override fun finalize() {
+        this.aglWorker.worker.terminate()
+    }
+
+    override fun setStyle(css: String?) {
         if (null != css && css.isNotEmpty()) {
             val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
             var mappedCss = ""
@@ -178,8 +181,7 @@ class AglEditorAce(
         }
     }
 
-    @JsName("setProcessor")
-    fun setProcessor(grammarStr: String?) {
+    override fun setProcessor(grammarStr: String?) {
         this.aglWorker.createProcessor(grammarStr)
         if (null == grammarStr || grammarStr.trim().isEmpty()) {
             this.agl.processor = null
@@ -226,28 +228,8 @@ class AglEditorAce(
         return cssClass
     }
 
-    fun onParse(handler: (ParseEvent) -> Unit) {
-        this._onParseHandler.add(handler)
-    }
-
-    private fun notifyParse(event: ParseEvent) {
-        this._onParseHandler.forEach {
-            it.invoke(event)
-        }
-    }
-
-    fun onProcess(handler: (ProcessEvent) -> Unit) {
-        this._onProcessHandler.add(handler)
-    }
-
-    private fun notifyProcess(event: ProcessEvent) {
-        this._onProcessHandler.forEach {
-            it.invoke(event)
-        }
-    }
-
-    override fun doBackgroundTryParse() {
-        this.clearErrors()
+    fun doBackgroundTryParse() {
+        this.clearErrorMarkers()
         this.aglWorker.interrupt()
         this.aglWorker.tryParse(this.text)
     }
@@ -303,7 +285,7 @@ class AglEditorAce(
         this.resetTokenization()
     }
 
-    private fun clearErrors() {
+    override fun clearErrorMarkers() {
         this.aceEditor.getSession().clearAnnotations(); //assume there are no parse errors or there would be no sppt!
         this.errorParseMarkerIds.forEach { id -> this.aceEditor.getSession().removeMarker(id) }
     }
