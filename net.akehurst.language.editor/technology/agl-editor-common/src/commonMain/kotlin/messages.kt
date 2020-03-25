@@ -17,6 +17,7 @@
 package net.akehurst.language.editor.common
 
 import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -38,7 +39,8 @@ class MessageParseResponseSuccess(
 ) : AglWorkerMessage("MessageParseResponseSuccess")
 
 class MessageParseResponseFailure(
-        val exception: Throwable
+        val message: String,
+        val location: InputLocation?
 ) : AglWorkerMessage("MessageParseResponseFailure")
 
 class MessageParserInterruptRequest(
@@ -46,5 +48,9 @@ class MessageParserInterruptRequest(
 ) : AglWorkerMessage("MessageParserInterruptRequest")
 
 class MessageLineTokens(
-        val lineTokens:Array<Array<AglToken>>
+        val lineTokens: Array<Array<AglToken>>
 ) : AglWorkerMessage("MessageLineTokens")
+
+class MessageSetStyle(
+        val css: String
+) : AglWorkerMessage("MessageSetStyle")

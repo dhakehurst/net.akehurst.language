@@ -16,6 +16,7 @@
 
 package net.akehurst.language.editor.comon
 
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.editor.common.*
 import org.w3c.dom.MODULE
 import org.w3c.dom.Worker
@@ -28,8 +29,8 @@ class AglWorkerClient {
     var processorCreateSuccess: () -> Unit = {}
     var processorCreateFailure: () -> Unit = {}
     var parseSuccess: () -> Unit = {}
-    var parseFailure: (e:Throwable) -> Unit = {}
-    var lineTokens: (Array<Array<AglToken>>)->Unit = {  }
+    var parseFailure: (message: String, location: InputLocation?) -> Unit = { _, _ -> }
+    var lineTokens: (Array<Array<AglToken>>) -> Unit = { _ -> }
 
     fun initialise() {
         this.worker = Worker("./agl-worker.js", WorkerOptions(type = WorkerType.MODULE))
@@ -39,7 +40,7 @@ class AglWorkerClient {
                 "MessageProcessorCreateSuccess" -> this.processorCreateSuccess()
                 "MessageProcessorCreateFailure" -> this.processorCreateFailure()
                 "MessageParseResponseSuccess" -> this.parseSuccess()
-                "MessageParseResponseFailure" -> this.parseFailure(msg.exception)
+                "MessageParseResponseFailure" -> this.parseFailure(msg.message, msg.location)
                 "MessageLineTokens" -> this.lineTokens(msg.lineTokens)
                 else -> error("Unknown Message type")
             }
@@ -60,6 +61,10 @@ class AglWorkerClient {
 
     fun tryParse(sentence: String) {
         this.sendToWorker(MessageParseRequest(sentence))
+    }
+
+    fun setStyle(css: String) {
+        this.sendToWorker(MessageSetStyle(css))
     }
 
 }

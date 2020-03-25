@@ -15,6 +15,8 @@
  */
 
 import './technology-agl-editor-worker.js'
+//import './net.akehurst.language.editor-technology-agl-editor-worker.js'
+
 
 console.info("Worker says hello");
 

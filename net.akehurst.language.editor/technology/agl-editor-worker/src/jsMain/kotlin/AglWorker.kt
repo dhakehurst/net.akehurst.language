@@ -17,6 +17,8 @@
 package net.akehurst.language.editor.worker
 
 import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.style.AglStyle
+import net.akehurst.language.api.style.AglStyleRule
 import net.akehurst.language.editor.common.*
 import net.akehurst.language.processor.Agl
 import org.w3c.dom.DedicatedWorkerGlobalScope
@@ -35,6 +37,7 @@ class AglWorker {
                 "MessageProcessorCreate" -> this.createProcessor(msg.grammarStr)
                 "MessageParserInterruptRequest" -> this.interrupt(msg.reason)
                 "MessageParseRequest" -> this.parse(msg.text)
+                "MessageSetStyle" -> this.setStyle(msg.css)
             }
         }
     }
@@ -57,6 +60,17 @@ class AglWorker {
         this.agl.processor?.interrupt(reason)
     }
 
+    fun setStyle(css: String) {
+        val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
+        rules.forEach { rule ->
+            var cssClass = this.agl.tokenToClassMap.get(rule.selector)
+            if (null == cssClass) {
+                cssClass = this.agl.cssClassPrefix + this.agl.nextCssClassNum++
+                this.agl.tokenToClassMap.set(rule.selector, cssClass);
+            }
+        }
+    }
+
     fun parse(sentence: String) {
         try {
             this.agl.sppt = null
@@ -70,10 +84,10 @@ class AglWorker {
             }
         } catch (e: ParseFailedException) {
             this.agl.sppt = e.longestMatch
-            self.postMessage(MessageParseResponseFailure(e))
+            self.postMessage(MessageParseResponseFailure(e.message!!, e.location))
             this.sendScanLineTokens(sentence)
         } catch (t: Throwable) {
-            self.postMessage(MessageParseResponseFailure(t))
+            self.postMessage(MessageParseResponseFailure(t.message!!, null))
         }
     }
 
@@ -93,10 +107,10 @@ class AglWorker {
 
     fun sendParseLineTokens() {
         val sppt = this.agl.sppt
-        if (null==sppt) {
+        if (null == sppt) {
             //nothing
         } else {
-            val lineTokens =  sppt.tokensByLineAll().mapIndexed { lineNum, leaves ->
+            val lineTokens = sppt.tokensByLineAll().mapIndexed { lineNum, leaves ->
                 this.tokenizer.transformToTokens(leaves)
             }
             val lt = lineTokens.map {

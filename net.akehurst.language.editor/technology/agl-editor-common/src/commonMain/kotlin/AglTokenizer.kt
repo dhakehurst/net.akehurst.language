@@ -33,7 +33,7 @@ open class AglComponents() {
 class AglLineState(
         val lineNumber: Int,
         val leftOverText: String,
-        val tokens : List<AglToken>
+        val tokens: List<AglToken>
 ) {
 }
 
@@ -77,7 +77,7 @@ class AglTokenizer(
         }
     }
 
-     fun transformToTokens(leafs: List<SPPTLeaf>): List<AglToken> {
+    fun transformToTokens(leafs: List<SPPTLeaf>): List<AglToken> {
         return leafs.map { leaf ->
             val tokenType = leaf.name; //(it.isPattern) ? '"' + it.name + '"' : "'" + it.name + "'";
             val cssClasses = this.mapToCssClasses(leaf)
@@ -95,7 +95,7 @@ class AglTokenizer(
         }
     }
 
-    private fun getLineTokensByScan(lineText: String, state: AglLineState, row:Int): AglLineState {
+    fun getLineTokensByScan(lineText: String, state: AglLineState, row: Int): AglLineState {
         val proc = this.agl.processor
         return if (null != proc) {
             val text = state.leftOverText + lineText
@@ -111,11 +111,11 @@ class AglTokenizer(
             }
             return endState
         } else {
-            AglLineState(row, "", listOf(AglToken(emptyArray(), lineText, row,0)))
+            AglLineState(row, "", listOf(AglToken(emptyArray(), lineText, row, 0)))
         }
     }
 
-    private fun getLineTokensByParse(lineText: String, state: AglLineState, row:Int): AglLineState {
+    fun getLineTokensByParse(lineText: String, state: AglLineState, row: Int): AglLineState {
         val sppt = this.agl.sppt!!
         val leafs = sppt.tokensByLine(row)
         return if (null != leafs) {

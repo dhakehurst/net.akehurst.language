@@ -16,8 +16,6 @@
 
 package net.akehurst.language.editor.ace
 
-import ace.LineState
-import ace.Token
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.editor.common.AglComponents
 
@@ -44,8 +42,8 @@ class AglTokenAce(
 }
 
 class AglLineTokensAce(
-        override val state: LineState,
-        override val tokens: Array<Token>
+        override val state: ace.LineState,
+        override val tokens: Array<ace.Token>
 ) : ace.LineTokens {}
 
 class AglTokenizer(
