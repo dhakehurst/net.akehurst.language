@@ -136,30 +136,31 @@ class Demo(
     }
 
     fun connectTrees() {
-        trees["parse"]!!.treeFunctions = TreeViewFunctions<SPPTNode>(
+        trees["parse"]!!.treeFunctions = TreeViewFunctions<dynamic>(
                 label = {
-                    when (it) {
-                        is SPPTLeaf -> "${it.name} = ${it.nonSkipMatchedText}"
-                        is SPPTBranch -> it.name
-                        else -> it.name
+                    when (it.isBranch) {
+                        false -> "${it.name} = ${it.nonSkipMatchedText}"
+                        true -> it.name
+                        else -> error("error")
                     }
                 },
                 hasChildren = { it.isBranch },
-                children = { it.asBranch.children.toTypedArray() }
+                children = { it.children }
         ) as TreeViewFunctions<Any>
 
         sentenceEditor.onParse { event ->
             if (event.success) {
-                //trees["parse"]!!.root = event.sppt!!.root
+                trees["parse"]!!.root = event.tree
             } else {
             }
         }
 
-        trees["asm"]!!.treeFunctions = TreeViewFunctions<Any>(
+        trees["asm"]!!.treeFunctions = TreeViewFunctions<dynamic>(
                 label = {
-                    when (it) {
-                        is AsmElementSimple -> ": " + it.typeName
-                        is AsmElementProperty -> {
+                    when {
+                        it is Array<*> -> ": List"
+                        it.isAsmElementSimple -> ": " + it.typeName
+                        it.isAsmElementProperty -> {
                             val v = it.value
                             when (v) {
                                 is AsmElementSimple -> "${it.name} : ${v.typeName}"
@@ -167,46 +168,47 @@ class Demo(
                                 else -> "${it.name} = ${v}"
                             }
                         }
-                        is List<*> -> ": List"
                         else -> it.toString()
                     }
                 },
                 hasChildren = {
-                    when (it) {
-                        is AsmElementSimple -> it.properties.isNotEmpty()
-                        is AsmElementProperty -> {
+                    when {
+                        it is Array<*> -> true
+                        it.isAsmElementSimple -> it.properties.size != 0
+                        it.isAsmElementProperty -> {
                             val v = it.value
-                            when (v) {
-                                is AsmElementSimple -> true
-                                is List<*> -> true
+                            when {
+                                v is Array<*> -> true
+                                v.isAsmElementSimple -> true
                                 else -> false
                             }
                         }
-                        is List<*> -> true
                         else -> false
                     }
                 },
                 children = {
-                    when (it) {
-                        is AsmElementSimple -> it.properties.toTypedArray()
-                        is AsmElementProperty -> {
+                    when {
+                        it is Array<*> -> it
+                        it.isAsmElementSimple -> it.properties
+                        it.isAsmElementProperty -> {
                             val v = it.value
-                            when (v) {
-                                is AsmElementSimple -> v.properties.toTypedArray() as Array<Any>
-                                is List<*> -> v.toTypedArray() as Array<Any>
-                                else -> emptyArray()
+                            when {
+                                v is Array<*> -> v
+                                v.isAsmElementSimple -> v.properties
+                                else -> emptyArray<dynamic>()
                             }
                         }
-                        is List<*> -> it.toTypedArray() as Array<Any>
-                        else -> emptyArray()
+                        else -> emptyArray<dynamic>()
                     }
                 }
         )
 
         sentenceEditor.onProcess { event ->
             if (event.success) {
-                //trees["asm"]!!.root = event.asm
+                trees["asm"]!!.root = event.tree
             } else {
+                console.error(event.message)
+                trees["asm"]!!.root = event.tree
             }
         }
     }

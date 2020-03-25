@@ -34,14 +34,15 @@ class MessageParseRequest(
         val text: String
 ) : AglWorkerMessage("MessageParseRequest")
 
-class MessageParseResponseSuccess(
+class MessageParseSuccess(
+        val tree: Any
+) : AglWorkerMessage("MessageParseSuccess")
 
-) : AglWorkerMessage("MessageParseResponseSuccess")
-
-class MessageParseResponseFailure(
+class MessageParseFailure(
         val message: String,
-        val location: InputLocation?
-) : AglWorkerMessage("MessageParseResponseFailure")
+        val location: InputLocation?,
+        val tree: Any?
+) : AglWorkerMessage("MessageParseFailure")
 
 class MessageParserInterruptRequest(
         val reason: String
@@ -54,3 +55,11 @@ class MessageLineTokens(
 class MessageSetStyle(
         val css: String
 ) : AglWorkerMessage("MessageSetStyle")
+
+class MessageProcessSuccess(
+        val asm:Any
+) : AglWorkerMessage("MessageProcessSuccess")
+
+class MessageProcessFailure(
+        val message:String
+) : AglWorkerMessage("MessageProcessFailure")

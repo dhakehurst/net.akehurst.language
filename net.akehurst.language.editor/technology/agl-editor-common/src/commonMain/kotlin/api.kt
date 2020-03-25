@@ -46,10 +46,12 @@ interface AglEditor {
 
 class ParseEvent(
         val success: Boolean,
-        val message: String
+        val message: String,
+        val tree:Any?
 )
 
 class ProcessEvent(
         val success: Boolean,
-        val message: String
+        val message: String,
+        val tree:Any
 )

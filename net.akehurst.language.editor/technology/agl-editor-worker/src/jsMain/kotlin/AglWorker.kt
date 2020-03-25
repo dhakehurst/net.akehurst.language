@@ -16,8 +16,12 @@
 
 package net.akehurst.language.editor.worker
 
+import net.akehurst.language.api.analyser.AsmElementSimple
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.style.AglStyle
+import net.akehurst.language.api.sppt.SPPTBranch
+import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.api.sppt.SPPTNode
+import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.style.AglStyleRule
 import net.akehurst.language.editor.common.*
 import net.akehurst.language.processor.Agl
@@ -25,10 +29,16 @@ import org.w3c.dom.DedicatedWorkerGlobalScope
 
 external val self: DedicatedWorkerGlobalScope
 
+var worker = AglWorker()
+
 class AglWorker {
 
     val agl = AglComponents()
     val tokenizer = AglTokenizer(this.agl)
+
+    init {
+        start()
+    }
 
     fun start() {
         self.onmessage = {
@@ -78,16 +88,29 @@ class AglWorker {
             if (null == proc) {
                 //do nothing
             } else {
-                this.agl.sppt = proc.parse(sentence)
-                self.postMessage(MessageParseResponseSuccess())
-                this.sendParseLineTokens()
+                val sppt = proc.parse(sentence)
+                val tree = createParseTree(sppt.root)
+                self.postMessage(MessageParseSuccess(tree))
+                this.sendParseLineTokens(sppt)
+                this.process(sppt)
             }
         } catch (e: ParseFailedException) {
-            this.agl.sppt = e.longestMatch
-            self.postMessage(MessageParseResponseFailure(e.message!!, e.location))
+            val sppt = e.longestMatch
+            val tree = createParseTree(sppt!!.root)
+            self.postMessage(MessageParseFailure(e.message!!, e.location, tree))
             this.sendScanLineTokens(sentence)
         } catch (t: Throwable) {
-            self.postMessage(MessageParseResponseFailure(t.message!!, null))
+            self.postMessage(MessageParseFailure(t.message!!, null, null))
+        }
+    }
+
+    fun process(sppt:SharedPackedParseTree) {
+        try {
+            val asm = this.agl.processor!!.process<Any>(sppt)
+            val asmTree = createAsmTree(asm) ?: "No Asm"
+            self.postMessage(MessageProcessSuccess(asmTree))
+        } catch (t:Throwable) {
+            self.postMessage(MessageProcessFailure(t.message!!))
         }
     }
 
@@ -105,8 +128,7 @@ class AglWorker {
         self.postMessage(MessageLineTokens(lt))
     }
 
-    fun sendParseLineTokens() {
-        val sppt = this.agl.sppt
+    fun sendParseLineTokens(sppt: SharedPackedParseTree) {
         if (null == sppt) {
             //nothing
         } else {
@@ -117,6 +139,50 @@ class AglWorker {
                 it.toTypedArray()
             }.toTypedArray()
             self.postMessage(MessageLineTokens(lt))
+        }
+    }
+
+    fun createParseTree(spptNode: SPPTNode): Any {
+        return when (spptNode) {
+            is SPPTLeaf -> object : Any() {
+                val isBranch = false
+                val name = spptNode.name
+                val nonSkipMatchedText = spptNode.nonSkipMatchedText
+            }
+            is SPPTBranch -> object : Any() {
+                val isBranch = true
+                val name = spptNode.name
+                val children = spptNode.children.map {
+                    createParseTree(it)
+                }.toTypedArray()
+            }
+            else -> error("Not supported")
+        }
+    }
+
+    fun createAsmTree(asm: Any?): Any? {
+        return if (null==asm) {
+            null
+        } else {
+            when (asm) {
+                is AsmElementSimple -> {
+                    object : Any() {
+                        val isAsmElementSimple = true
+                        val typeName = asm.typeName
+                        val properties = asm.properties.map {
+                            object : Any() {
+                                val isAsmElementProperty = true
+                                val name = it.name
+                                val value = createAsmTree(it.value)
+                            }
+                        }.toTypedArray()
+                    }
+                }
+                is List<*> -> asm.map {
+                    createAsmTree(it)
+                }.toTypedArray()
+                else -> asm.toString()
+            }
         }
     }
 }

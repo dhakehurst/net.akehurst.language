@@ -28,20 +28,24 @@ class AglWorkerClient {
     lateinit var worker: Worker
     var processorCreateSuccess: () -> Unit = {}
     var processorCreateFailure: () -> Unit = {}
-    var parseSuccess: () -> Unit = {}
-    var parseFailure: (message: String, location: InputLocation?) -> Unit = { _, _ -> }
+    var parseSuccess: (tree: Any) -> Unit = { _ -> }
+    var parseFailure: (message: String, location: InputLocation?, tree: Any?) -> Unit = { _, _, _ -> }
     var lineTokens: (Array<Array<AglToken>>) -> Unit = { _ -> }
+    var processSuccess: (tree: Any) -> Unit = { _ -> }
+    var processFailure: (message: String) -> Unit = { _ -> }
 
     fun initialise() {
-        this.worker = Worker("./agl-worker.js", WorkerOptions(type = WorkerType.MODULE))
+        this.worker = Worker("./technology-agl-editor-worker.js", WorkerOptions(type = WorkerType.MODULE))
         worker.onmessage = {
             val msg = it.data.asDynamic()
             when (msg.action) {
                 "MessageProcessorCreateSuccess" -> this.processorCreateSuccess()
                 "MessageProcessorCreateFailure" -> this.processorCreateFailure()
-                "MessageParseResponseSuccess" -> this.parseSuccess()
-                "MessageParseResponseFailure" -> this.parseFailure(msg.message, msg.location)
+                "MessageParseSuccess" -> this.parseSuccess(msg.tree)
+                "MessageParseFailure" -> this.parseFailure(msg.message, msg.location, msg.tree)
                 "MessageLineTokens" -> this.lineTokens(msg.lineTokens)
+                "MessageProcessSuccess" -> this.processSuccess(msg.asm)
+                "MessageProcessFailure" -> this.processFailure(msg.message)
                 else -> error("Unknown Message type")
             }
         }

@@ -53,7 +53,7 @@ class AglEditorAce(
             document.querySelectorAll(tag).asList().forEach { el ->
                 val element = el as Element
                 //delete any current children of element
-                while(element.childElementCount!=0) {
+                while (element.childElementCount != 0) {
                     element.removeChild(element.firstChild!!)
                 }
                 val id = element.getAttribute("id")!!
@@ -104,7 +104,7 @@ class AglEditorAce(
 
         this.aceEditor.on("change") { event ->
             this.workerTokenizer.reset()
-            //need to pass css tokens to worker
+
         }
         this.aceEditor.on("input") { event ->
             window.clearTimeout(parseTimeout)
@@ -125,6 +125,12 @@ class AglEditorAce(
         this.aglWorker.lineTokens = {
             this.workerTokenizer.receiveTokens(it)
             this.resetTokenization()
+        }
+        this.aglWorker.processSuccess = { tree ->
+            this.notifyProcess(ProcessEvent(true, "OK", tree))
+        }
+        this.aglWorker.processFailure = { message ->
+            this.notifyProcess(ProcessEvent(false, message, "No Asm"))
         }
     }
 
@@ -166,8 +172,6 @@ class AglEditorAce(
             // the use of an object instead of a string is undocumented but seems to work
             this.aceEditor.setOption("theme", module); //not sure but maybe this is better than setting on renderer direct
             this.aglWorker.setStyle(css)
-        } else {
-
         }
     }
 
@@ -182,6 +186,7 @@ class AglEditorAce(
     }
 
     override fun setProcessor(grammarStr: String?) {
+        this.clearErrorMarkers()
         this.aglWorker.createProcessor(grammarStr)
         if (null == grammarStr || grammarStr.trim().isEmpty()) {
             this.agl.processor = null
@@ -254,9 +259,9 @@ class AglEditorAce(
                 } else {
                     proc.parse(goalRule, this.text)
                 }
-                this.parseSuccess()
+                this.parseSuccess(sppt)
             } catch (e: ParseFailedException) {
-                this.parseFailure(e.message!!, e.location)
+                this.parseFailure(e.message!!, e.location, e.longestMatch)
             } catch (t: Throwable) {
                 console.error("Error parsing text in " + this.editorId + " for language " + this.languageId, t.message);
             }
@@ -269,11 +274,11 @@ class AglEditorAce(
         if (null != proc && null != sppt) {
             try {
                 this.agl.asm = proc.process(sppt)
-                val event = ProcessEvent(true, "OK")
+                val event = ProcessEvent(true, "OK", this.agl.asm!!)
                 this.notifyProcess(event)
             } catch (e: SyntaxAnalyserException) {
                 this.agl.asm = null
-                val event = ProcessEvent(false, e.message!!)
+                val event = ProcessEvent(false, e.message!!, "No Asm")
                 this.notifyProcess(event)
             } catch (t: Throwable) {
                 console.error("Error processing parse result in " + this.editorId + " for language " + this.languageId, t.message)
@@ -290,14 +295,14 @@ class AglEditorAce(
         this.errorParseMarkerIds.forEach { id -> this.aceEditor.getSession().removeMarker(id) }
     }
 
-    private fun parseSuccess() {
+    private fun parseSuccess(tree: Any) {
         this.resetTokenization()
-        val event = ParseEvent(true, "OK")
+        val event = ParseEvent(true, "OK", tree)
         this.notifyParse(event)
         this.doBackgroundTryProcess()
     }
 
-    private fun parseFailure(message: String, location: InputLocation?) {
+    private fun parseFailure(message: String, location: InputLocation?, tree: Any?) {
         console.error("Error parsing text in " + this.editorId + " for language " + this.languageId, message);
 
         if (null != location) {
@@ -320,7 +325,7 @@ class AglEditorAce(
                 val errMrkId = this.aceEditor.getSession().addMarker(range, cls, "text")
                 this.errorParseMarkerIds.add(errMrkId)
             }
-            val event = ParseEvent(false, message!!)
+            val event = ParseEvent(false, message, tree)
             this.notifyParse(event)
         }
     }

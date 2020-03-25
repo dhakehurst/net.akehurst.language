@@ -23,22 +23,16 @@ dependencies {
 
 }
 
-//TODO: make this copy the 'distribution'
-/*
+
 val workerTask = tasks.register<Copy>("copyAglEditorWorkerJs") {
-    dependsOn(worker)
+    dependsOn(":technology-agl-editor-worker:jsBrowserDevelopmentWebpack")
     dependsOn("jsProcessResources")
-    worker.resolvedConfiguration.resolvedArtifacts.forEach { dep ->
-        //zipTree(it).forEach{
-        //    println(it)
-        //}
-        from(zipTree(dep.file)) {
-            include("net.akehurst.language.editor-technology-agl-editor-worker.js")
+        from("$buildDir/../technology-agl-editor-worker/distributions") {
+            include("technology-agl-editor-worker.js")
         }
         into(file("$buildDir/processedResources/js/main"))
-    }
+
 }
 
 tasks.getByName("jsBrowserDevelopmentWebpack").dependsOn(workerTask)
 tasks.getByName("jsBrowserDevelopmentRun").dependsOn(workerTask)
- */

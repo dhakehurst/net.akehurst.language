@@ -87,7 +87,7 @@ class AglTokenizer(
                 beforeEOL = leaf.matchedText.substring(0, eolIndex);
             }
             AglToken(
-                    cssClasses.toTypedArray(),
+                    cssClasses.toSet().toTypedArray(),
                     beforeEOL,
                     leaf.location.line, //ace first line is 0
                     leaf.location.column
