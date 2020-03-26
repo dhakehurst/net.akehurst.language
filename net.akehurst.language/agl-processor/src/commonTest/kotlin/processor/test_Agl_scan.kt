@@ -21,6 +21,42 @@ import kotlin.test.*
 internal class test_Agl_scan {
 
     @Test
+    fun scan_literal_empty_a() {
+        val sut = Agl.processor(listOf("a = '';"))
+        val tokens = sut.scan("ab")
+        val tokenStr = tokens.map { it.toString() }.joinToString(", ")
+        println("tokens = ${tokenStr}")
+
+        assertNotNull(tokens)
+        assertEquals(1, tokens.size)
+        assertTrue(tokens[0].isLiteral)
+        assertTrue(tokens[0].isLeaf)
+        assertEquals("a", tokens[0].matchedText)
+        assertEquals(1, tokens[0].identity.runtimeRuleNumber)
+        assertEquals(0, tokens[0].identity.startPosition)
+        assertEquals(1, tokens[0].matchedTextLength)
+
+    }
+
+    @Test
+    fun scan_pattern_empty_a() {
+        val sut = Agl.processor(listOf("a = \"[x]*\";"))
+        val tokens = sut.scan("ab")
+        val tokenStr = tokens.map { it.toString() }.joinToString(", ")
+        println("tokens = ${tokenStr}")
+
+        assertNotNull(tokens)
+        assertEquals(1, tokens.size)
+        assertTrue(tokens[0].isLiteral)
+        assertTrue(tokens[0].isLeaf)
+        assertEquals("a", tokens[0].matchedText)
+        assertEquals(1, tokens[0].identity.runtimeRuleNumber)
+        assertEquals(0, tokens[0].identity.startPosition)
+        assertEquals(1, tokens[0].matchedTextLength)
+
+    }
+
+    @Test
     fun scan_a_a() {
         val sut = Agl.processor(listOf("a = 'a';"))
         val tokens = sut.scan("a")

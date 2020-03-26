@@ -48,8 +48,13 @@ class ScannerlessParser(
         val undefined = RuntimeRule(-5, "undefined", "", RuntimeRuleKind.TERMINAL, false, true)
         //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
         val input = InputFromCharSequence(inputText)
-        val terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.nonSkipTerminals
+        var terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.nonSkipTerminals
         var result = mutableListOf<SPPTLeaf>()
+
+        //eliminate tokens that are empty matches
+        terminals = terminals.filter {
+            it.value.isNotEmpty()
+        }.toTypedArray()
 
         var position = 0
         var lastLocation = InputLocation(0, 1, 1, 0)
@@ -77,18 +82,21 @@ class ScannerlessParser(
                     }
                 }
             })
-            if (null == longest) {
-                //TODO: collate unscanned, rather than make a separate token for each char
-                val text = inputText[position].toString()
-                lastLocation = input.nextLocation(lastLocation, text.length)
-                val unscanned = SPPTLeafDefault(undefined, lastLocation, false, text, 0)
-                unscanned.eolPositions = input.eolPositions(text)
-                result.add(unscanned)
-                position++
-            } else {
-                result.add(longest)
-                position = longest.nextInputPosition
-                lastLocation = longest.location
+            when {
+                (null == longest || longest.matchedTextLength==0) -> {
+                    //TODO: collate unscanned, rather than make a separate token for each char
+                    val text = inputText[position].toString()
+                    lastLocation = input.nextLocation(lastLocation, text.length)
+                    val unscanned = SPPTLeafDefault(undefined, lastLocation, false, text, 0)
+                    unscanned.eolPositions = input.eolPositions(text)
+                    result.add(unscanned)
+                    position++
+                }
+                else -> {
+                    result.add(longest)
+                    position = longest.nextInputPosition
+                    lastLocation = longest.location
+                }
             }
         }
         return result
@@ -163,53 +171,54 @@ class ScannerlessParser(
 
     }
 
-    private fun findNextExpected() {
-        // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
-        // try grow last leaf with no lookahead
-        for (gn in rp.lastGrownLinked) {
-            val gnindex = GrowingNodeIndex(gn.currentState, gn.startPosition, gn.nextInputPosition, gn.priority)
-            graph.growingHead[gnindex] = gn
-        }
-        do {
-            rp.grow(true)
-            for (gn in rp.lastGrown) {
-                // may need to change this to finalInputPos!
-                if (input.isEnd(gn.nextInputPosition)) {
-                    matches.add(gn)
+    /*
+        private fun findNextExpected() {
+            // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
+            // try grow last leaf with no lookahead
+            for (gn in rp.lastGrownLinked) {
+                val gnindex = GrowingNodeIndex(gn.currentState, gn.startPosition, gn.nextInputPosition, gn.priority)
+                graph.growingHead[gnindex] = gn
+            }
+            do {
+                rp.grow(true)
+                for (gn in rp.lastGrown) {
+                    // may need to change this to finalInputPos!
+                    if (input.isEnd(gn.nextInputPosition)) {
+                        matches.add(gn)
+                    }
                 }
+                seasons++
+            } while (rp.canGrow)
+
+
+            val expected = mutableSetOf<RuntimeRule>()
+            for (ep in matches) {
+                var done = false
+                // while (!done) {
+                if (ep.canGrowWidth) {
+                    expected.addAll(ep.nextExpectedItems)
+                    done = true
+                    // TODO: sum from all parents
+                    // gn = gn.getPossibleParent().get(0).node;// .getNextExpectedItem();
+                } else {
+                    // if has height potential?
+                    // gn = gn.getPossibleParent().get(0).node;
+
+                }
+                // }
             }
-            seasons++
-        } while (rp.canGrow)
-
-
-        val expected = mutableSetOf<RuntimeRule>()
-        for (ep in matches) {
-            var done = false
-            // while (!done) {
-            if (ep.canGrowWidth) {
-                expected.addAll(ep.nextExpectedItems)
-                done = true
-                // TODO: sum from all parents
-                // gn = gn.getPossibleParent().get(0).node;// .getNextExpectedItem();
-            } else {
-                // if has height potential?
-                // gn = gn.getPossibleParent().get(0).node;
-
+            // final List<RuntimeRule> expected = longest.getNextExpectedItem();
+            val nextExpected = mutableListOf<RuntimeRule>()
+            for (rr in expected) {
+                nextExpected.add(rr)
             }
-            // }
+            // add skip rules at end
+            //for (rr in this.runtimeRuleSet.skipRules) {
+            //    nextExpected.add(rr)
+            //}
+            return nextExpected
         }
-        // final List<RuntimeRule> expected = longest.getNextExpectedItem();
-        val nextExpected = mutableListOf<RuntimeRule>()
-        for (rr in expected) {
-            nextExpected.add(rr)
-        }
-        // add skip rules at end
-        //for (rr in this.runtimeRuleSet.skipRules) {
-        //    nextExpected.add(rr)
-        //}
-        return nextExpected
-    }
-
+    */
     override fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int): List<RuntimeRule> {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val usedText = inputText.subSequence(0, position)

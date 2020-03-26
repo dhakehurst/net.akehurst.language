@@ -74,6 +74,22 @@ class test_AglGrammar {
     }
 
     @Test
+    fun literal_empty() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = '' 'a';
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+        assertNotNull(p)
+
+        p.parse("a")
+    }
+
+    @Test
     fun pattern() {
 
         val grammarStr = """
