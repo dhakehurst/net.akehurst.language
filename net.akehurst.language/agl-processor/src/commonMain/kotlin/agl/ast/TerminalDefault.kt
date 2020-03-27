@@ -24,41 +24,40 @@ import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.grammar.GrammarRuleItemNotFoundException
 
 class TerminalDefault(override val value: String, override val isPattern: Boolean) : RuleItemAbstract(), Terminal {
-
-	val pattern: Regex by lazy {
-		if (isPattern) Regex(value, RegexOption.MULTILINE) else throw GrammarRuleItemNotFoundException("${this} is not a pattern")
-	}
-
-	override val name : String by lazy {
-		value
-	}
-	
-	fun matches(value: String) : Boolean
-	{
-		return if (isPattern) this.pattern.matches(value) else value.equals(this.value);
-	}
-
+/*
+    fun pattern(): Regex {
+            return if (isPattern) Regex(value, RegexOption.MULTILINE) else throw GrammarRuleItemNotFoundException("${this} is not a pattern")
+        }
+*/
+    override val name: String by lazy {
+        value
+    }
+/*
+    fun matches(value: String): Boolean {
+        return if (isPattern) this.pattern().matches(value) else value.equals(this.value);
+    }
+*/
     override fun setOwningRule(rule: Rule, indices: List<Int>) {
-		this._owningRule = rule
-		this.index = indices
-	}
-	
-	override fun subItem(index: Int): RuleItem {
-		throw GrammarRuleItemNotFoundException("subitem ${index} not found")
-	}
-	
-	override val allTerminal: Set<Terminal> by lazy {
-		setOf(this)
-	}
+        this._owningRule = rule
+        this.index = indices
+    }
 
-	override val allNonTerminal: Set<NonTerminal> by lazy {
-		emptySet<NonTerminal>()
-	}
+    override fun subItem(index: Int): RuleItem {
+        throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+    }
 
-	// --- GrammarVisitable ---
+    override val allTerminal: Set<Terminal> by lazy {
+        setOf(this)
+    }
 
-	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
-		return visitor.visit(this, arg);
-	}
+    override val allNonTerminal: Set<NonTerminal> by lazy {
+        emptySet<NonTerminal>()
+    }
+
+    // --- GrammarVisitable ---
+
+    override fun <T, A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
+        return visitor.visit(this, arg);
+    }
 
 }

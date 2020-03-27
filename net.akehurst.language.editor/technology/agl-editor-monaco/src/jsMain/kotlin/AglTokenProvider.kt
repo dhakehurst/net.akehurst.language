@@ -18,43 +18,55 @@ package net.akehurst.language.editor.monaco
 
 import monaco.languages
 import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.editor.api.AglComponents
+import net.akehurst.language.editor.common.AglComponents
+import net.akehurst.language.editor.common.AglToken
+
+
+class AglLineStateMonaco(
+        val lineNumber: Int,
+        val leftOverText: String
+) : languages.IState {
+    override fun clone(): languages.IState {
+        return AglLineStateMonaco(lineNumber, leftOverText)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return when (other) {
+            is AglLineStateMonaco -> other.lineNumber == this.lineNumber
+            else -> false
+        }
+    }
+}
+
+class AglTokenMonaco(
+        style: String,
+        column: Int
+) : languages.IToken {
+    override val scopes: String = style
+    override val startIndex: Int = column - 1
+}
+
+class AglLineTokensMonaco(
+        override val endState: AglLineStateMonaco,
+        override val tokens: Array<languages.IToken>
+) : languages.ILineTokens {
+
+}
 
 class AglTokenProvider(
         val tokenPrefix: String,
         val agl: AglComponents
 ) : languages.TokensProvider {
 
-    class ScanState(
-            val lineNumber: Int,
-            val leftOverText: String
-    ) : languages.IState {
-        override fun clone(): languages.IState {
-            return ScanState(lineNumber, leftOverText)
-        }
-
-        override fun equals(other: Any?): Boolean {
-            return when (other) {
-                is ScanState -> other.lineNumber == this.lineNumber
-                else -> false
-            }
-        }
-    }
-
     companion object {
-        fun NO_TOKENS(nextLineNumber: Int) = object : languages.ILineTokens {
-            override val endState = ScanState(nextLineNumber, "")
-            override val tokens = arrayOf<languages.IToken>(
-                    object : languages.IToken {
-                        override val scopes = ""
-                        override val startIndex = 0
-                    }
-            )
-        }
+        fun NO_TOKENS(nextLineNumber: Int) = AglLineTokensMonaco(
+                AglLineStateMonaco(nextLineNumber, ""),
+                arrayOf(AglTokenMonaco("", 0))
+        )
     }
 
     override fun getInitialState(): languages.IState {
-        return ScanState(0, "")
+        return AglLineStateMonaco(0, "")
     }
 
     override fun tokenize(line: String, state: languages.IState): languages.ILineTokens {
@@ -66,12 +78,12 @@ class AglTokenProvider(
             }
         } catch (t: Throwable) {
             console.error(t.message)
-            return NO_TOKENS((state as ScanState).lineNumber + 1)
+            return NO_TOKENS((state as AglLineStateMonaco).lineNumber + 1)
         }
     }
 
     private fun getLineTokensByScan(line: String, pState: languages.IState): languages.ILineTokens {
-        val state = pState as ScanState
+        val state = pState as AglLineStateMonaco
         val proc = this.agl.processor
         val nextLineNumber = state.lineNumber + 1
         if (null != proc) {
@@ -79,17 +91,17 @@ class AglTokenProvider(
             val leafs = proc.scan(text);
             val tokens = leafs.map { leaf ->
                 object : languages.IToken {
-                    override val scopes = tokenPrefix+leaf.name //:FIXME: monaco doesn't support multiple classes on a token //mapToCssClasses(leaf).joinToString(separator = ".") { tokenPrefix+it }
+                    override val scopes = tokenPrefix + leaf.name //:FIXME: monaco doesn't support multiple classes on a token //mapToCssClasses(leaf).joinToString(separator = ".") { tokenPrefix+it }
                     override val startIndex = leaf.location.column - 1
                 }
             }
             val endState = if (leafs.isEmpty()) {
-                ScanState(nextLineNumber, text)
+                AglLineStateMonaco(nextLineNumber, text)
             } else {
                 val lastLeaf = leafs.last()
                 val endOfLastLeaf = lastLeaf.location.column + lastLeaf.location.length
                 val leftOverText = line.substring(endOfLastLeaf, line.length)
-                ScanState(nextLineNumber, leftOverText)
+                AglLineStateMonaco(nextLineNumber, leftOverText)
             }
             return object : languages.ILineTokens {
                 override val endState = endState
@@ -101,21 +113,21 @@ class AglTokenProvider(
     }
 
     private fun getLineTokensByParse(line: String, pState: languages.IState): languages.ILineTokens {
-        val state = pState as ScanState
+        val state = pState as AglLineStateMonaco
         val nextLineNumber = state.lineNumber + 1
         val sppt = this.agl.sppt!!
         val leafs = sppt.tokensByLine(state.lineNumber)
         if (null != leafs) {
             val tokens = leafs.map { leaf ->
-                object : languages.IToken {
-                    override val scopes = tokenPrefix+leaf.name //:FIXME: monaco doesn't support multiple classes on a token //mapToCssClasses(leaf).joinToString(separator = ".") { tokenPrefix+it }
-                    override val startIndex = leaf.location.column - 1
-                }
+                AglTokenMonaco(
+                        tokenPrefix + leaf.name, //:FIXME: monaco doesn't support multiple classes on a token //mapToCssClasses(leaf).joinToString(separator = ".") { tokenPrefix+it }
+                        leaf.location.column
+                )
             }
-            return object : languages.ILineTokens {
-                override val endState = ScanState(nextLineNumber, "")
-                override val tokens: Array<languages.IToken> = tokens.toTypedArray()
-            }
+            return AglLineTokensMonaco(
+                    AglLineStateMonaco(nextLineNumber, ""),
+                    tokens.toTypedArray()
+            )
         } else {
             return return NO_TOKENS(nextLineNumber)
         }

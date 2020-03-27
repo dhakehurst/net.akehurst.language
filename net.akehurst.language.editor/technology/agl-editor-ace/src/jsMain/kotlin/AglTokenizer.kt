@@ -16,25 +16,22 @@
 
 package net.akehurst.language.editor.ace
 
-import ace.LineState
-import ace.Token
 import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.editor.api.AglComponents
-import kotlin.js.RegExp
+import net.akehurst.language.editor.common.AglComponents
 
 class AglBackgroundTokenizer(
-        tok: AglTokenizer,
+        tok: ace.Tokenizer,
         ed: ace.Editor
 ) : ace.BackgroundTokenizer(tok, ed) {
 }
 
-class AglLineState(
+class AglLineStateAce(
         val lineNumber: Int,
         val leftOverText: String
 ) : ace.LineState {
 }
 
-class AglToken(
+class AglTokenAce(
         styles: Array<String>,
         override val value: String,
         override val line: Int,
@@ -44,19 +41,19 @@ class AglToken(
     override var start = column
 }
 
-class AglLineTokens(
-        override val state: LineState,
-        override val tokens: Array<Token>
+class AglLineTokensAce(
+        override val state: ace.LineState,
+        override val tokens: Array<ace.Token>
 ) : ace.LineTokens {}
 
 class AglTokenizer(
-        val agl: AglComponentsAce
+        val agl: AglComponents
 ) : ace.Tokenizer {
 
     // --- ace.Ace.Tokenizer ---
     override fun getLineTokens(line: String, pState: ace.LineState?, row: Int): ace.LineTokens {
         val sppt = this.agl.sppt
-        val state = if (null == pState) AglLineState(0, "") else pState as AglLineState
+        val state = if (null == pState) AglLineStateAce(0, "") else pState as AglLineStateAce
         return if (null == sppt) {
             this.getLineTokensByScan(line, state, row)
         } else {
@@ -84,7 +81,7 @@ class AglTokenizer(
         }
     }
 
-    private fun transformToAceTokens(leafs: List<SPPTLeaf>): List<AglToken> {
+    private fun transformToAceTokens(leafs: List<SPPTLeaf>): List<AglTokenAce> {
         return leafs.map { leaf ->
             val tokenType = leaf.name; //(it.isPattern) ? '"' + it.name + '"' : "'" + it.name + "'";
             val cssClasses = this.mapToCssClasses(leaf).toTypedArray()
@@ -93,7 +90,7 @@ class AglTokenizer(
             if (-1 !== eolIndex) {
                 beforeEOL = leaf.matchedText.substring(0, eolIndex);
             }
-            AglToken(
+            AglTokenAce(
                     cssClasses,
                     beforeEOL,
                     leaf.location.line, //ace first line is 0
@@ -102,41 +99,41 @@ class AglTokenizer(
         }
     }
 
-    private fun getLineTokensByScan(line: String, state: AglLineState, row:Int): ace.LineTokens {
+    private fun getLineTokensByScan(line: String, state: AglLineStateAce, row:Int): ace.LineTokens {
         val proc = this.agl.processor
         return if (null != proc) {
             val text = state.leftOverText + line
             val leafs = proc.scan(text);
             val tokens = transformToAceTokens(leafs)
             val endState = if (leafs.isEmpty()) {
-                AglLineState(row, "")
+                AglLineStateAce(row, "")
             } else {
                 val lastLeaf = leafs.last()
                 val endOfLastLeaf = lastLeaf.location.column + lastLeaf.location.length
                 val leftOverText = line.substring(endOfLastLeaf, line.length)
-                AglLineState(row, leftOverText)
+                AglLineStateAce(row, leftOverText)
             }
-            AglLineTokens(
+            AglLineTokensAce(
                     endState,
                     tokens.toTypedArray()
             )
         } else {
-            AglLineTokens(AglLineState(row, ""), emptyArray())
+            AglLineTokensAce(AglLineStateAce(row, ""), arrayOf(AglTokenAce(emptyArray(), line, row,0)))
         }
     }
 
-    private fun getLineTokensByParse(line: String, state: AglLineState, row:Int): ace.LineTokens {
+    private fun getLineTokensByParse(line: String, state: AglLineStateAce, row:Int): ace.LineTokens {
         val sppt = this.agl.sppt!!
         val leafs = sppt.tokensByLine(row)
         return if (null != leafs) {
             val tokens = transformToAceTokens(leafs)
-            val endState = AglLineState(row, "")
-            return AglLineTokens(
+            val endState = AglLineStateAce(row, "")
+            return AglLineTokensAce(
                     endState,
                     tokens.toTypedArray()
             )
         } else {
-            AglLineTokens(AglLineState(row, ""), emptyArray())
+            AglLineTokensAce(AglLineStateAce(row, ""), emptyArray())
         }
     }
 }

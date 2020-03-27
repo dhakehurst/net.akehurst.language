@@ -43,6 +43,10 @@ internal class LanguageProcessorDefault(
     private val parser: Parser = ScannerlessParser(this.converterToRuntimeRules.transform())
     private val completionProvider: CompletionProvider = CompletionProvider()
 
+    override fun interrupt(message: String) {
+        this.parser.interrupt(message)
+        //TODO: interrupt processor
+    }
     override fun build(): LanguageProcessor {
         this.parser.build()
         return this;

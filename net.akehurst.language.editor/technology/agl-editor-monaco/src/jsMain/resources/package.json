@@ -15,8 +15,8 @@
   "main": "./${group}-${name}.js",
 
   "peerDependencies": {
-    "kotlin": "1.3.70",
-    "net.akehurst.language-agl-processor": "3.4.1"
+    "kotlin": "1.3.71",
+    "net.akehurst.language-agl-processor": "3.4.2"
   },
 
   "scripts": { }

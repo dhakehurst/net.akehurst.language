@@ -44,9 +44,10 @@ fun main() {
     val styleEditor = editors["language-style"]!!
     val formatEditor = editors["language-format"]!!
 
-    grammarEditor.agl.processor = Agl.grammarProcessor
-    styleEditor.agl.processor = Agl.styleProcessor
-    formatEditor.agl.processor = Agl.formatProcessor
+
+    grammarEditor.setProcessor(Agl.grammarProcessor)
+    styleEditor.setProcessor(Agl.styleProcessor)
+    formatEditor.setProcessor(Agl.formatProcessor)
 
     grammarEditor.setStyle(AglLanguage.grammar.style)
     styleEditor.setStyle(AglLanguage.style.style)
@@ -54,13 +55,13 @@ fun main() {
     grammarEditor.onParse { event ->
         if (event.success) {
             try {
-                sentenceEditor.agl.processor = Agl.processor(grammarEditor.text)
+                sentenceEditor.setProcessor(Agl.processor(grammarEditor.text))
             } catch (t: Throwable) {
-                sentenceEditor.agl.processor = null
+                sentenceEditor.setProcessor(null)
                 console.error(grammarEditor.editorId + ": " + t.message)
             }
         } else {
-            sentenceEditor.agl.processor = null
+            sentenceEditor.setProcessor(null)
             console.error(grammarEditor.editorId + ": " + event.message)
         }
     }

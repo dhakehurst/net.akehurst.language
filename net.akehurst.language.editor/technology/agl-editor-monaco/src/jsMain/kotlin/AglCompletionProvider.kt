@@ -21,7 +21,7 @@ import monaco.Position
 import monaco.editor
 import monaco.languages
 import net.akehurst.language.api.processor.CompletionItem
-import net.akehurst.language.editor.api.AglComponents
+import net.akehurst.language.editor.common.AglComponents
 
 class AglCompletionProvider(
         val agl: AglComponents

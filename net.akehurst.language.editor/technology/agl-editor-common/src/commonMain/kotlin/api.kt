@@ -18,37 +18,40 @@ package net.akehurst.language.editor.api
 
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import kotlin.js.JsName
 
 interface AglEditor {
 
-    fun doBackgroundTryParse()
+    val editorId:String
+    var text:String
 
-}
+    @JsName("setProcessor")
+    fun setProcessor(grammarStr: String?)
 
-open class AglComponents(
-        val aglEditor: AglEditor
-) {
-    private var _processor: LanguageProcessor? = null
-    var processor: LanguageProcessor?
-        get() = this._processor
-        set(value) {
-            this._processor = value
-            this.aglEditor.doBackgroundTryParse()
-        }
+    @JsName("setStyle")
+    fun setStyle(css: String?)
 
-    var goalRule: String? = null
-    var sppt: SharedPackedParseTree? = null
-    var asm: Any? = null
+    @JsName("onParse")
+    fun onParse(function: (ParseEvent) -> Unit)
+
+    @JsName("onProcess")
+    fun onProcess(function: (ProcessEvent) -> Unit)
+
+    @JsName("clearErrorMarkers")
+    fun clearErrorMarkers()
+
+    @JsName("finalize")
+    fun finalize()
 }
 
 class ParseEvent(
         val success: Boolean,
         val message: String,
-        val sppt: SharedPackedParseTree?
+        val tree:Any?
 )
 
 class ProcessEvent(
         val success: Boolean,
         val message: String,
-        val asm: Any?
+        val tree:Any
 )

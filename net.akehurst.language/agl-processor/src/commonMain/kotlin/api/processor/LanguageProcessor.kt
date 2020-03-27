@@ -25,6 +25,9 @@ interface LanguageProcessor {
 
     val grammar: Grammar
 
+    @JsName("interrupt")
+    fun interrupt(message:String)
+
     /**
      * build the parser before use. Optional, but will speed up the first use of the parser.
      */

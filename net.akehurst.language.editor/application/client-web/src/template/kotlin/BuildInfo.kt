@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.api.parser;
 
-import net.akehurst.language.api.sppt.SharedPackedParseTree;
+package net.akehurst.language.editor.application.client.web
 
-class ParseFailedException(
-		message: String,
-		val longestMatch: SharedPackedParseTree?,
-		val location: InputLocation
-)
-	: Exception(message + "(at: ${location})") {
+object BuildInfo {
+
+    val version = "$version"
+    val buildDate = "$buildDate"
+    val buildTime = "$buildTime"
+    val buildStamp = "$buildStamp"
 
 }
-

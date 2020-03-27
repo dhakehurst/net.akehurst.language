@@ -23,7 +23,7 @@ external interface Tokenizer {
 @JsModule("net.akehurst.language.editor-kotlin-ace-loader!?id=ace/background_tokenizer&name=BackgroundTokenizer")
 @JsNonModule
 open external class BackgroundTokenizer(
-        tok: AglTokenizer,
+        tok: ace.Tokenizer,
         ed: ace.Editor
 ) {
     fun start(i: Int)

@@ -49,10 +49,19 @@ external interface IPosition {
      * line number (starts at 1)
      */
     val lineNumber: Int;
+
     /**
      * column (the first character in a line is between column 1 and column 2)
      */
     val column: Int;
+}
+
+external interface IRange {
+    val endColumn: Int
+    val endLineNumber: Int
+    val startColumn: Int
+    val startLineNumber: Int
+
 }
 
 external class Position(
@@ -79,6 +88,29 @@ external object editor {
         CRLF
     }
 
+    interface IModelDecorationOptions {
+        val afterContentClassName: String?
+        val beforeContentClassName: String?
+        val className: String?
+        val glyphMarginClassName: String?
+        val glyphMarginHoverMessage: dynamic  //IMarkdownString | IMarkdownString[] | null
+        val hoverMessage: dynamic  //IMarkdownString | IMarkdownString[] | null
+        val inlineClassName: String?
+        val inlineClassNameAffectsLetterSpacing: Boolean?
+        val isWholeLine: Boolean?
+        val linesDecorationsClassName: String?
+        val marginClassName: String?
+        val minimap: dynamic
+        val overviewRuler: dynamic
+        val stickiness: dynamic
+        val zindex: dynamic
+    }
+
+    interface IModelDeltaDecoration {
+        val range: IRange
+        val options: IModelDecorationOptions
+    }
+
     interface IEditor {
         fun layout(dimension: IDimension? = definedExternally)
     }
@@ -87,6 +119,8 @@ external object editor {
         fun getModel(): ITextModel
 
         fun onDidChangeModelContent(listener: (IModelContentChangedEvent) -> Unit): IDisposable
+        fun deltaDecorations(oldDecorations: Array<String>, newDecorations: Array<IModelDeltaDecoration>) : Array<String>
+        fun getLineDecorations(lineNum: Int): dynamic
     }
 
     interface IStandaloneCodeEditor : ICodeEditor
@@ -234,11 +268,13 @@ external object languages {
          * this completion.
          */
         val label: String
+
         /**
          * The kind of this completion item. Based on the kind
          * an icon is chosen by the editor.
          */
         val kind: CompletionItemKind
+
         /**
          * A string or snippet that should be inserted in a document when selecting
          * this completion.

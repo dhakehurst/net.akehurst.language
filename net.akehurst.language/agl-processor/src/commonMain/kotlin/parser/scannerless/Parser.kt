@@ -23,6 +23,8 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 interface Parser {
 
+    fun interrupt(message:String)
+
     /**
      * It is not necessary to call this method, but doing so will speed up future calls to parse as it will build the internal caches for the parser,
      */

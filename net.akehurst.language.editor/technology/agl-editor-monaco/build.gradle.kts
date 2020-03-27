@@ -1,11 +1,14 @@
 
-val version_agl:String by project
+val version_monaco:String = "0.20.0"
+val version_coroutines:String by project
 
 dependencies {
 
     jsMainApi(project(":technology-agl-editor-common"))
 
     jsMainImplementation(npm("monaco-editor", "0.20.0"))
+
+    commonMainApi("org.jetbrains.kotlinx:kotlinx-coroutines-core-native:$version_coroutines")
 
     // for webpack
     jsMainImplementation(npm("monaco-editor-webpack-plugin", "1.8.2"))
