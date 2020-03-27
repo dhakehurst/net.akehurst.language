@@ -165,33 +165,6 @@ class AglEditorMonaco(
         this.aglWorker.worker.terminate()
     }
 
-    /*
-        override fun setStyle(css: String?) {
-            if (null != css && css.isNotEmpty()) {
-                // https://github.com/Microsoft/monaco-editor/issues/338
-                // all editors on the same page must share the same theme!
-                // hence we create a global theme and modify it as needed.
-                val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
-                rules.forEach {
-                    val key = this.languageThemePrefix + it.selector;
-                    val value = object : editor.ITokenThemeRule {
-                        override val token = key
-                        override val foreground = convertColor(it.getStyle("foreground")?.value)
-                        override val background = convertColor(it.getStyle("background")?.value)
-                        override val fontStyle = it.getStyle("font-style")?.value
-                    }
-                    allAglGlobalThemeRules.set(key, value);
-                }
-                // reset the theme with the new rules
-                monaco.editor.defineTheme(aglGlobalTheme, object : editor.IStandaloneThemeData {
-                    override val base = "vs"
-                    override val inherit = false
-                    override val rules = allAglGlobalThemeRules.values.toTypedArray()
-                })
-                this.aglWorker.setStyle(css)
-            }
-        }
-    */
     override fun setStyle(css: String?) {
         if (null != css && css.isNotEmpty()) {
             val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)

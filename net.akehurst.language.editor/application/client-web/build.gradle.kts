@@ -24,7 +24,7 @@ dependencies {
 }
 
 
-val workerTask = tasks.register<Copy>("copyAglEditorWorkerJs") {
+val workerTaskDevelopment = tasks.register<Copy>("copyAglEditorWorkerJsDevelopment") {
     dependsOn(":technology-agl-editor-worker:jsBrowserDevelopmentWebpack")
     dependsOn("jsProcessResources")
         from("$buildDir/../technology-agl-editor-worker/distributions") {
@@ -34,5 +34,18 @@ val workerTask = tasks.register<Copy>("copyAglEditorWorkerJs") {
 
 }
 
-tasks.getByName("jsBrowserDevelopmentWebpack").dependsOn(workerTask)
-tasks.getByName("jsBrowserDevelopmentRun").dependsOn(workerTask)
+tasks.getByName("jsBrowserDevelopmentWebpack").dependsOn(workerTaskDevelopment)
+tasks.getByName("jsBrowserDevelopmentRun").dependsOn(workerTaskDevelopment)
+
+val workerTask = tasks.register<Copy>("copyAglEditorWorkerJs") {
+    dependsOn(":technology-agl-editor-worker:jsBrowserProductionWebpack")
+    dependsOn("jsProcessResources")
+    from("$buildDir/../technology-agl-editor-worker/distributions") {
+        include("technology-agl-editor-worker.js")
+    }
+    into(file("$buildDir/processedResources/js/main"))
+
+}
+
+tasks.getByName("jsBrowserProductionWebpack").dependsOn(workerTask)
+tasks.getByName("jsBrowserProductionRun").dependsOn(workerTask)
