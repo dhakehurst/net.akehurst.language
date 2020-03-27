@@ -29,8 +29,6 @@ import org.w3c.dom.DedicatedWorkerGlobalScope
 
 external val self: DedicatedWorkerGlobalScope
 
-var worker = AglWorker()
-
 class AglWorker {
 
     val agl = AglComponents()
