@@ -20,11 +20,29 @@ body {
 }
 
 main {
+    display: grid;
+    grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+div#agl-demo {
+    display: grid;
+    grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+article {
     /*layout-children*/
     display: grid;
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
     grid-template-rows: auto;
-    grid-template-areas: "header" "body";
+    grid-template-areas: "header" "section";
+}
+
+article > header {
+    grid-area: header;
+}
+
+article > section {
+    grid-area: section;
 }
 
 tabview {
@@ -92,6 +110,7 @@ treeview treeview-children {
     margin-left: 10px;
     display: none;
 }
+
 treeview treeview-leaf {
     display: block;
 }
@@ -144,14 +163,15 @@ section#trees {
 }
 
 tab#parse {
-     background-color: burlywood;
+    background-color: burlywood;
 }
-tab#asm {
+
+tab#ast {
     background-color: bisque;
 }
 
 agl-editor {
-    display:grid;
+    display: grid;
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
 }
 

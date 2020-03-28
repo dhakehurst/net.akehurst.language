@@ -44,11 +44,12 @@ class AglEditorAce(
         val element: Element,
         editorId: String,
         val languageId: String,
-        options: dynamic //TODO: types for this
+        options: dynamic, //TODO: types for this
+        workerScriptName:String
 ) : AglEditorAbstract(editorId) {
 
     companion object {
-        fun initialise(document: Document, tag: String = "agl-editor"): Map<String, AglEditorAce> {
+        fun initialise(document: Document, workerScriptName:String, tag: String = "agl-editor"): Map<String, AglEditorAce> {
             val map = mutableMapOf<String, AglEditorAce>()
             document.querySelectorAll(tag).asList().forEach { el ->
                 val element = el as Element
@@ -57,7 +58,7 @@ class AglEditorAce(
                     element.removeChild(element.firstChild!!)
                 }
                 val id = element.getAttribute("id")!!
-                val editor = AglEditorAce(element, id, id, null)
+                val editor = AglEditorAce(element, id, id, null, workerScriptName)
                 map[id] = editor
             }
             return map
@@ -89,7 +90,7 @@ class AglEditorAce(
             }
         }
 
-    var aglWorker = AglWorkerClient()
+    var aglWorker = AglWorkerClient(workerScriptName)
     lateinit var workerTokenizer: AglTokenizerByWorkerAce
     var parseTimeout: dynamic = null
 

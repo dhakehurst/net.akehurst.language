@@ -23,7 +23,9 @@ import org.w3c.dom.Worker
 import org.w3c.dom.WorkerOptions
 import org.w3c.dom.WorkerType
 
-class AglWorkerClient {
+class AglWorkerClient(
+        val workerScriptName:String
+) {
 
     lateinit var worker: Worker
     var processorCreateSuccess: () -> Unit = {}
@@ -35,7 +37,7 @@ class AglWorkerClient {
     var processFailure: (message: String) -> Unit = { _ -> }
 
     fun initialise() {
-        this.worker = Worker("./technology-agl-editor-worker.js", WorkerOptions(type = WorkerType.MODULE))
+        this.worker = Worker(workerScriptName, WorkerOptions(type = WorkerType.MODULE))
         worker.onmessage = {
             val msg = it.data.asDynamic()
             when (msg.action) {

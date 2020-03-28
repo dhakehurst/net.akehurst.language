@@ -70,7 +70,6 @@ fun createBaseDom(appDivSelector: String) {
                 radio {
                     attribute.id = "editor-choice-monaco"
                     attribute.value = "monaco"
-                    attribute.checked = "checked"
                 }
                 label { attribute.for_ = "editor-choice-monaco"; content = "Monaco" }
             }
@@ -121,7 +120,7 @@ fun createBaseDom(appDivSelector: String) {
                                 }
                             }
                             htmlElement("tab") {
-                                attribute.id = "grammar"
+                                attribute.id = "style"
                                 section {
                                     htmlElement("agl-editor") { attribute.id = "language-style" }
                                 }
@@ -155,9 +154,9 @@ fun createDemo(isAce: Boolean) {
         demo!!.finalize()
     }
     val editors = if (isAce) {
-        AglEditorAce.initialise(document)
+        AglEditorAce.initialise(document, "application-agl-editor-worker.js")
     } else {
-        AglEditorMonaco.initialise(document)
+        AglEditorMonaco.initialise(document, "application-agl-editor-worker.js")
     }
 
     demo = Demo(editors)
@@ -235,7 +234,7 @@ class Demo(
             }
         }
 
-        trees["asm"]!!.treeFunctions = TreeViewFunctions<dynamic>(
+        trees["ast"]!!.treeFunctions = TreeViewFunctions<dynamic>(
                 label = {
                     when {
                         it is Array<*> -> ": List"
@@ -285,10 +284,10 @@ class Demo(
 
         sentenceEditor.onProcess { event ->
             if (event.success) {
-                trees["asm"]!!.root = event.tree
+                trees["ast"]!!.root = event.tree
             } else {
                 console.error(event.message)
-                trees["asm"]!!.root = event.tree
+                trees["ast"]!!.root = event.tree
             }
         }
     }
