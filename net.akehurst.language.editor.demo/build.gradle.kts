@@ -53,6 +53,9 @@ subprojects {
         mavenLocal()
         mavenCentral()
         jcenter()
+        maven {
+            url = uri("https://dl.bintray.com/dhakehurst/maven")
+        }
     }
 
     configure<KotlinMultiplatformExtension> {
