@@ -42,7 +42,8 @@ class AglEditorMonaco(
         editorId: String,
         val languageId: String,
         goalRule: String? = null,
-        options: dynamic //TODO: types for this
+        options: dynamic, //TODO: types for this
+        workerScriptName:String
 ) : AglEditorAbstract(editorId) {
 
     companion object {
@@ -61,7 +62,7 @@ class AglEditorMonaco(
         private val aglGlobalTheme = "agl-theme"
         val allAglGlobalThemeRules = mutableMapOf<String, editor.ITokenThemeRule>()
 
-        fun initialise(document: Document, tag: String = "agl-editor"): Map<String, AglEditorMonaco> {
+        fun initialise(document: Document, workerScriptName:String, tag: String = "agl-editor"): Map<String, AglEditorMonaco> {
             val map = mutableMapOf<String, AglEditorMonaco>()
             document.querySelectorAll(tag).asList().forEach { el ->
                 val element = el as Element
@@ -70,7 +71,7 @@ class AglEditorMonaco(
                     element.removeChild(element.firstChild!!)
                 }
                 val id = element.getAttribute("id")!!
-                val editor = AglEditorMonaco(element, id, id, null, null)
+                val editor = AglEditorMonaco(element, id, id, null, null,workerScriptName)
                 map[id] = editor
             }
             return map
@@ -97,7 +98,7 @@ class AglEditorMonaco(
         }
 
     val _tokenProvider = AglTokenProvider(this.languageThemePrefix, this.agl)
-    var aglWorker = AglWorkerClient()
+    var aglWorker = AglWorkerClient(workerScriptName)
     lateinit var workerTokenizer: AglTokenizerByWorkerMonaco
     var parseTimeout: dynamic = null
 

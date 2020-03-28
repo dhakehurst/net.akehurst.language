@@ -11,15 +11,15 @@ val worker by configurations.creating {
 
 dependencies {
 
-    //jsMainImplementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.1")
     jsMainImplementation(project(":information-editor"))
     jsMainImplementation(project(":technology-gui-widgets"))
     jsMainImplementation(project(":technology-agl-editor-ace"))
     jsMainImplementation(project(":technology-agl-editor-monaco"))
 
-    //result of this must be copied into resources
+    jsMainImplementation("net.akehurst.kotlin.html5:html-builder:1.0.0")
+
+    //result of this will be copied into resources
     jsMainImplementation(project(":technology-agl-editor-worker"))
-    //worker(project(":technology-agl-editor-worker"))
 
 }
 

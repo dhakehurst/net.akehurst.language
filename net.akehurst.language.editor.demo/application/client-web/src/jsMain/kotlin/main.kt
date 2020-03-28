@@ -17,11 +17,7 @@
 package net.akehurst.language.editor.application.client.web
 
 import net.akehurst.kotlin.html5.create
-import net.akehurst.language.api.analyser.AsmElementProperty
 import net.akehurst.language.api.analyser.AsmElementSimple
-import net.akehurst.language.api.sppt.SPPTBranch
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.editor.ace.AglEditorAce
 import net.akehurst.language.editor.api.AglEditor
 import net.akehurst.language.editor.information.Examples
@@ -32,7 +28,6 @@ import net.akehurst.language.editor.monaco.AglEditorMonaco
 import net.akehurst.language.editor.technology.gui.widgets.TabView
 import net.akehurst.language.editor.technology.gui.widgets.TreeView
 import net.akehurst.language.editor.technology.gui.widgets.TreeViewFunctions
-import net.akehurst.language.processor.Agl
 import net.akehurst.language.processor.AglLanguage
 import org.w3c.dom.HTMLElement
 import kotlin.browser.document
@@ -59,10 +54,83 @@ fun main() {
 
 }
 
-fun createBaseDom(appDivSelector:String) {
+fun createBaseDom(appDivSelector: String) {
     val appDiv = document.querySelector(appDivSelector)!!
     appDiv.create().article {
+        header {
+            h1 { content = "AGL Editor Demo" }
+            div {
+                label { content = "Select underlying Editor Type: " }
+                radio {
+                    attribute.id = "editor-choice-ace"
+                    attribute.value = "ace"
+                    attribute.checked = "checked"
+                }
+                label { attribute.for_ = "editor-choice-ace"; content = "Ace" }
+                radio {
+                    attribute.id = "editor-choice-monaco"
+                    attribute.value = "monaco"
+                }
+                label { attribute.for_ = "editor-choice-monaco"; content = "Monaco" }
+            }
+            div {
+                select { attribute.id = "example" }
+                label { attribute.for_ = "example"; content = "Please choose an example :" }
+            }
 
+            /* TODO:
+            div {
+                select { attribute.id="goalRule" }
+                label { attribute.for_="goalRule"; content="Optionally choose a goal rule:" }
+            }
+             */
+        }
+
+        section {
+            htmlElement("tabview") {
+                htmlElement("tab") {
+                    attribute.id = "sentence"
+                    section {
+                        class_.add("text")
+                        htmlElement("agl-editor") { attribute.id = "sentence-text" }
+                    }
+                    section {
+                        class_.add("trees")
+                        htmlElement("tabview") {
+                            htmlElement("tab") {
+                                attribute.id = "ast"
+                                htmlElement("treeview") { attribute.id = "ast" }
+                            }
+                            htmlElement("tab") {
+                                attribute.id = "parse"
+                                htmlElement("treeview") { attribute.id = "parse" }
+                            }
+                        }
+                    }
+                }
+                htmlElement("tab") {
+                    attribute.id = "language"
+                    section {
+                        class_.add("language")
+                        htmlElement("tabview") {
+                            htmlElement("tab") {
+                                attribute.id = "grammar"
+                                section {
+                                    htmlElement("agl-editor") { attribute.id = "language-grammar" }
+                                }
+                            }
+                            htmlElement("tab") {
+                                attribute.id = "style"
+                                section {
+                                    htmlElement("agl-editor") { attribute.id = "language-style" }
+                                }
+                            }
+                            //TODO: format
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -82,13 +150,13 @@ fun initialiseExamples() {
 
 
 fun createDemo(isAce: Boolean) {
-    if(null!=demo) {
+    if (null != demo) {
         demo!!.finalize()
     }
     val editors = if (isAce) {
-        AglEditorAce.initialise(document)
+        AglEditorAce.initialise(document, "application-agl-editor-worker.js")
     } else {
-        AglEditorMonaco.initialise(document)
+        AglEditorMonaco.initialise(document, "application-agl-editor-worker.js")
     }
 
     demo = Demo(editors)
@@ -104,7 +172,7 @@ class Demo(
     val sentenceEditor = editors["sentence-text"]!!
     val grammarEditor = editors["language-grammar"]!!
     val styleEditor = editors["language-style"]!!
-    val formatEditor = editors["language-format"]!!
+    //val formatEditor = editors["language-format"]!!
 
     fun configure() {
         this.connectEditors()
@@ -115,7 +183,7 @@ class Demo(
     fun connectEditors() {
         grammarEditor.setProcessor("@Agl.grammarProcessor@")
         styleEditor.setProcessor("@Agl.styleProcessor@")
-        formatEditor.setProcessor("@Agl.formatProcessor@")
+        //formatEditor.setProcessor("@Agl.formatProcessor@")
 
         grammarEditor.setStyle(AglLanguage.grammar.style)
         styleEditor.setStyle(AglLanguage.style.style)
@@ -166,7 +234,7 @@ class Demo(
             }
         }
 
-        trees["asm"]!!.treeFunctions = TreeViewFunctions<dynamic>(
+        trees["ast"]!!.treeFunctions = TreeViewFunctions<dynamic>(
                 label = {
                     when {
                         it is Array<*> -> ": List"
@@ -216,10 +284,10 @@ class Demo(
 
         sentenceEditor.onProcess { event ->
             if (event.success) {
-                trees["asm"]!!.root = event.tree
+                trees["ast"]!!.root = event.tree
             } else {
                 console.error(event.message)
-                trees["asm"]!!.root = event.tree
+                trees["ast"]!!.root = event.tree
             }
         }
     }
@@ -230,14 +298,14 @@ class Demo(
             val eg = Examples[egName]
             grammarEditor.text = eg.grammar
             styleEditor.text = eg.style
-            formatEditor.text = eg.format
+            //formatEditor.text = eg.format
             sentenceEditor.text = eg.sentence
         })
         // select initial example
         val eg = Datatypes.example
         grammarEditor.text = eg.grammar
         styleEditor.text = eg.style
-        formatEditor.text = eg.format
+        //formatEditor.text = eg.format
         sentenceEditor.text = eg.sentence
     }
 

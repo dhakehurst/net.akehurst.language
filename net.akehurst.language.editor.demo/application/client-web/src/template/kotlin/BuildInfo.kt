@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2020 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-import './technology-agl-editor-worker.js'
-//import './net.akehurst.language.editor-technology-agl-editor-worker.js'
+package net.akehurst.language.editor.application.client.web
 
+object BuildInfo {
 
-console.info("Worker says hello");
+    val version = "$version"
+    val buildDate = "$buildDate"
+    val buildTime = "$buildTime"
+    val buildStamp = "$buildStamp"
 
-let aglWorker = new self['technology-agl-editor-worker'].net.akehurst.language.editor.worker.AglWorker();
-aglWorker.start();
+}

@@ -15,5 +15,5 @@ dependencies {
     jsMainImplementation(npm("css-loader", "3.4.2"))
     jsMainImplementation(npm("style-loader", "1.1.3"))
     jsMainImplementation(npm("ts-loader", "6.2.1"))
-    jsMainImplementation(npm("file-loader", "^5.0.2"))
+    jsMainImplementation(npm("file-loader", "5.0.2"))
 }

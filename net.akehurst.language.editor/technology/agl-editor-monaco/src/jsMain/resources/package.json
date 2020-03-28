@@ -14,10 +14,9 @@
 
   "main": "./${group}-${name}.js",
 
-  "peerDependencies": {
+  "dependencies": {
     "kotlin": "1.3.71",
-    "net.akehurst.language-agl-processor": "3.4.2"
-  },
-
-  "scripts": { }
+    "net.akehurst.language-agl-processor": "3.4.2",
+    "monaco-editor": "0.20.0"
+  }
 }
