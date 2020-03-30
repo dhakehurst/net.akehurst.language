@@ -58,26 +58,33 @@ fun createBaseDom(appDivSelector: String) {
     val appDiv = document.querySelector(appDivSelector)!!
     appDiv.create().article {
         header {
-            h1 { content = "AGL Editor Demo" }
-            div {
-                label { content = "Select underlying Editor Type: " }
-                radio {
-                    attribute.id = "editor-choice-ace"
-                    attribute.value = "ace"
-                    attribute.checked = "checked"
+            section {
+                class_.add("agl-menubar")
+                h2 { content = "Version ${BuildInfo.version}" }
+                nav {
+                    a { content="About" }
                 }
-                label { attribute.for_ = "editor-choice-ace"; content = "Ace" }
-                radio {
-                    attribute.id = "editor-choice-monaco"
-                    attribute.value = "monaco"
+            }
+            section {
+                div {
+                    label { content = "Select underlying Editor Type: " }
+                    radio {
+                        attribute.id = "editor-choice-ace"
+                        attribute.value = "ace"
+                        attribute.checked = "checked"
+                    }
+                    label { attribute.for_ = "editor-choice-ace"; content = "Ace" }
+                    radio {
+                        attribute.id = "editor-choice-monaco"
+                        attribute.value = "monaco"
+                    }
+                    label { attribute.for_ = "editor-choice-monaco"; content = "Monaco" }
                 }
-                label { attribute.for_ = "editor-choice-monaco"; content = "Monaco" }
+                div {
+                    label { attribute.for_ = "example"; content = "Please choose an example :" }
+                    select { attribute.id = "example" }
+                }
             }
-            div {
-                select { attribute.id = "example" }
-                label { attribute.for_ = "example"; content = "Please choose an example :" }
-            }
-
             /* TODO:
             div {
                 select { attribute.id="goalRule" }

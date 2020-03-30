@@ -18,13 +18,10 @@ package net.akehurst.language.editor.comon
 
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.editor.common.*
-import org.w3c.dom.MODULE
-import org.w3c.dom.Worker
-import org.w3c.dom.WorkerOptions
-import org.w3c.dom.WorkerType
+import org.w3c.dom.*
 
 class AglWorkerClient(
-        val workerScriptName:String
+        val workerScriptName: String
 ) {
 
     lateinit var worker: Worker
@@ -37,7 +34,12 @@ class AglWorkerClient(
     var processFailure: (message: String) -> Unit = { _ -> }
 
     fun initialise() {
-        this.worker = Worker(workerScriptName, WorkerOptions(type = WorkerType.MODULE))
+        // currently can't make SharedWorker work
+        //this.worker = SharedWorker(workerScriptName, options=WorkerOptions(type = WorkerType.MODULE))
+        this.worker = Worker(workerScriptName, options=WorkerOptions(type = WorkerType.MODULE))
+        this.worker.onerror = {
+            console.error(it)
+        }
         worker.onmessage = {
             val msg = it.data.asDynamic()
             when (msg.action) {
@@ -51,26 +53,28 @@ class AglWorkerClient(
                 else -> error("Unknown Message type")
             }
         }
+        //worker.port.onmessageerror
+        //worker.port.start()
     }
 
     fun sendToWorker(msg: Any, transferables: Array<dynamic> = emptyArray()) {
         this.worker.postMessage(msg, transferables)
     }
 
-    fun createProcessor(grammarStr: String?) {
-        this.sendToWorker(MessageProcessorCreate(grammarStr))
+    fun createProcessor(languageId: String, editorId: String, grammarStr: String?) {
+        this.sendToWorker(MessageProcessorCreate(languageId, editorId, grammarStr))
     }
 
-    fun interrupt() {
-        this.sendToWorker(MessageParserInterruptRequest("New parse request"))
+    fun interrupt(languageId: String, editorId: String) {
+        this.sendToWorker(MessageParserInterruptRequest(languageId, editorId, "New parse request"))
     }
 
-    fun tryParse(sentence: String) {
-        this.sendToWorker(MessageParseRequest(sentence))
+    fun tryParse(languageId: String, editorId: String, sentence: String) {
+        this.sendToWorker(MessageParseRequest(languageId, editorId, sentence))
     }
 
-    fun setStyle(css: String) {
-        this.sendToWorker(MessageSetStyle(css))
+    fun setStyle(languageId: String, editorId: String, css: String) {
+        this.sendToWorker(MessageSetStyle(languageId, editorId, css))
     }
 
 }

@@ -40,11 +40,11 @@ import kotlin.browser.window
 class AglEditorMonaco(
         val element: Element,
         editorId: String,
-        val languageId: String,
+        languageId: String,
         goalRule: String? = null,
         options: dynamic, //TODO: types for this
         workerScriptName:String
-) : AglEditorAbstract(editorId) {
+) : AglEditorAbstract(languageId, editorId) {
 
     companion object {
         private val init = js("""
@@ -171,7 +171,7 @@ class AglEditorMonaco(
             val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
             var mappedCss = ""
             rules.forEach { rule ->
-                val cssClass = '.' + this.languageId + ' ' + ".monaco_" + this.mapTokenTypeToClass(rule.selector);
+                val cssClass = '.' + this.languageId + ' ' + ".monaco_" + this.agl.styleHandler.getClass(rule.selector);
                 val mappedRule = AglStyleRule(cssClass)
                 mappedRule.styles = rule.styles.values.associate { oldStyle ->
                     val style = when (oldStyle.name) {
@@ -205,18 +205,23 @@ class AglEditorMonaco(
             )
             // the use of an object instead of a string is undocumented but seems to work
             //this.aceEditor.setOption("theme", module); //not sure but maybe this is better than setting on renderer direct
-            this.aglWorker.setStyle(css)
+            this.aglWorker.setStyle(languageId, editorId, css)
         }
     }
 
     override fun setProcessor(grammarStr: String?) {
         this.clearErrorMarkers()
-        this.aglWorker.createProcessor(grammarStr)
+        this.aglWorker.createProcessor(languageId, editorId,grammarStr)
         if (null == grammarStr || grammarStr.trim().isEmpty()) {
             this.agl.processor = null
         } else {
             try {
-                this.agl.processor = Agl.processor(grammarStr)
+                when (grammarStr) {
+                    "@Agl.grammarProcessor@" -> this.agl.processor  = Agl.grammarProcessor
+                    "@Agl.styleProcessor@" -> this.agl.processor =  Agl.styleProcessor
+                    "@Agl.formatProcessor@" -> this.agl.processor =  Agl.formatProcessor
+                    else -> this.agl.processor =  Agl.processor(grammarStr)
+                }
             } catch (t: Throwable) {
                 this.agl.processor = null
                 console.error(t.message)
@@ -252,19 +257,10 @@ class AglEditorMonaco(
         }
     }
 
-    private fun mapTokenTypeToClass(tokenType: String): String {
-        var cssClass = this.agl.tokenToClassMap.get(tokenType);
-        if (null == cssClass) {
-            cssClass = this.agl.cssClassPrefix + this.agl.nextCssClassNum++;
-            this.agl.tokenToClassMap.set(tokenType, cssClass);
-        }
-        return cssClass
-    }
-
     fun doBackgroundTryParse() {
         this.clearErrorMarkers()
-        this.aglWorker.interrupt()
-        this.aglWorker.tryParse(this.text)
+        this.aglWorker.interrupt(languageId, editorId)
+        this.aglWorker.tryParse(languageId, editorId,this.text)
     }
 
     fun doBackgroundTryProcess() {
