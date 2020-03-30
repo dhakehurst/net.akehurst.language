@@ -56,6 +56,9 @@ fun main() {
 
 fun createBaseDom(appDivSelector: String) {
     val appDiv = document.querySelector(appDivSelector)!!
+    while (null != appDiv.firstChild) {
+        appDiv.removeChild(appDiv.firstChild!!)
+    }
     appDiv.create().article {
         header {
             section {
@@ -66,21 +69,26 @@ fun createBaseDom(appDivSelector: String) {
                 }
             }
             section {
+                class_.add("agl-options")
                 div {
+                    class_.add("agl-options-editor")
                     label { content = "Select underlying Editor Type: " }
                     radio {
                         attribute.id = "editor-choice-ace"
+                        attribute.name = "editor-choice"
                         attribute.value = "ace"
                         attribute.checked = "checked"
                     }
                     label { attribute.for_ = "editor-choice-ace"; content = "Ace" }
                     radio {
                         attribute.id = "editor-choice-monaco"
+                        attribute.name = "editor-choice"
                         attribute.value = "monaco"
                     }
                     label { attribute.for_ = "editor-choice-monaco"; content = "Monaco" }
                 }
                 div {
+                    class_.add("agl-options-example")
                     label { attribute.for_ = "example"; content = "Please choose an example :" }
                     select { attribute.id = "example" }
                 }

@@ -143,7 +143,17 @@ div#agl-demo > article > header > section.agl-menubar > nav > a:hover {
 }
 
 div#agl-demo > article > header > section.agl-options {
+    display: flex;
+    flex-direction: column;
+}
 
+div#agl-demo > article > header > section.agl-options div {
+    display: flex;
+    flex-direction: row;
+}
+
+div#agl-demo > article > header > section.agl-options label {
+    white-space: nowrap;
 }
 
 div#agl-demo > article > section {
