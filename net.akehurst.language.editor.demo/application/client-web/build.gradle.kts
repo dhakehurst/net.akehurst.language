@@ -8,7 +8,7 @@ dependencies {
     jsMainImplementation("net.akehurst.language.editor:technology-agl-editor-ace:$version_agl_editor")
     jsMainImplementation("net.akehurst.language.editor:technology-agl-editor-monaco:$version_agl_editor")
 
-    jsMainImplementation("net.akehurst.kotlin.html5:html-builder:1.0.1")
+    jsMainImplementation("net.akehurst.kotlin.html5:html-builder:1.0.2")
 
     //result of this will be copied into resources
     //jsMainImplementation(project(":technology-agl-editor-worker"))
