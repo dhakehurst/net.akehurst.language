@@ -19,15 +19,14 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-open class AglComponents() {
+open class AglComponents(
+        val languageId: String
+) {
+    val styleHandler = AglStyleHandler(languageId)
     var processor: LanguageProcessor? = null
     var goalRule: String? = null
     var sppt: SharedPackedParseTree? = null
     var asm: Any? = null
-
-    var nextCssClassNum = 1
-    val cssClassPrefix = "tok"
-    val tokenToClassMap = mutableMapOf<String, String>()
 }
 
 class AglLineState(
@@ -58,7 +57,7 @@ class AglTokenizer(
     }
 
     private fun mapTokenTypeToClass(tokenType: String): String? {
-        var cssClass = this.agl.tokenToClassMap.get(tokenType)
+        var cssClass = this.agl.styleHandler.tokenToClassMap.get(tokenType)
         return cssClass
     }
 
@@ -79,7 +78,6 @@ class AglTokenizer(
 
     fun transformToTokens(leafs: List<SPPTLeaf>): List<AglToken> {
         return leafs.map { leaf ->
-            val tokenType = leaf.name; //(it.isPattern) ? '"' + it.name + '"' : "'" + it.name + "'";
             val cssClasses = this.mapToCssClasses(leaf)
             var beforeEOL = leaf.matchedText
             val eolIndex = leaf.matchedText.indexOf('\n');

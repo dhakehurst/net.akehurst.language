@@ -25,6 +25,7 @@ import net.akehurst.language.api.style.AglStyleRule
 import net.akehurst.language.editor.api.ParseEvent
 import net.akehurst.language.editor.api.ProcessEvent
 import net.akehurst.language.editor.common.AglEditorAbstract
+import net.akehurst.language.editor.common.AglStyleHandler
 import net.akehurst.language.editor.comon.AglWorkerClient
 import net.akehurst.language.processor.Agl
 import org.w3c.dom.*
@@ -42,11 +43,11 @@ class AglErrorAnnotation(
 
 class AglEditorAce(
         val element: Element,
+        languageId: String,
         editorId: String,
-        val languageId: String,
         options: dynamic, //TODO: types for this
         workerScriptName:String
-) : AglEditorAbstract(editorId) {
+) : AglEditorAbstract(languageId, editorId) {
 
     companion object {
         fun initialise(document: Document, workerScriptName:String, tag: String = "agl-editor"): Map<String, AglEditorAce> {
@@ -90,6 +91,7 @@ class AglEditorAce(
             }
         }
 
+    val aglStyleHandler = AglStyleHandler(languageId)
     var aglWorker = AglWorkerClient(workerScriptName)
     lateinit var workerTokenizer: AglTokenizerByWorkerAce
     var parseTimeout: dynamic = null
@@ -144,7 +146,7 @@ class AglEditorAce(
             val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
             var mappedCss = ""
             rules.forEach { rule ->
-                val cssClass = '.' + this.languageId + ' ' + ".ace_" + this.mapTokenTypeToClass(rule.selector);
+                val cssClass = '.' + this.languageId + ' ' + ".ace_" + this.aglStyleHandler.getClass(rule.selector);
                 val mappedRule = AglStyleRule(cssClass)
                 mappedRule.styles = rule.styles.values.associate { oldStyle ->
                     val style = when (oldStyle.name) {
@@ -228,15 +230,6 @@ class AglEditorAce(
             readOnly: false
         })
          */
-    }
-
-    private fun mapTokenTypeToClass(tokenType: String): String {
-        var cssClass = this.agl.tokenToClassMap.get(tokenType);
-        if (null == cssClass) {
-            cssClass = this.agl.cssClassPrefix + this.agl.nextCssClassNum++;
-            this.agl.tokenToClassMap.set(tokenType, cssClass);
-        }
-        return cssClass
     }
 
     fun doBackgroundTryParse() {

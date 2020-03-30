@@ -34,53 +34,8 @@ external val self: DedicatedWorkerGlobalScope
 
 class AglWorker {
 
-    class AglWorkerComponents(
-            val languageId: String,
-            val processor: LanguageProcessor
-    ) {
-        var nextCssClassNum = 1
-        val cssClassPrefix = "agl-${languageId}-"
-        val tokenToClassMap = mutableMapOf<String, String>()
-
-        private fun mapTokenTypeToClass(tokenType: String): String? {
-            var cssClass = this.tokenToClassMap.get(tokenType)
-            return cssClass
-        }
-
-        private fun mapToCssClasses(leaf: SPPTLeaf): List<String> {
-            val metaTagClasses = leaf.metaTags.mapNotNull { this.mapTokenTypeToClass(it) }
-            val otherClasses = if (!leaf.tagList.isEmpty()) {
-                leaf.tagList.mapNotNull { this.mapTokenTypeToClass(it) }
-            } else {
-                listOf(this.mapTokenTypeToClass(leaf.name)).mapNotNull { it }
-            }
-            val classes = metaTagClasses + otherClasses
-            return if (classes.isEmpty()) {
-                listOf("nostyle")
-            } else {
-                classes.toSet().toList()
-            }
-        }
-
-        fun transformToTokens(leafs: List<SPPTLeaf>): List<AglToken> {
-            return leafs.map { leaf ->
-                val cssClasses = this.mapToCssClasses(leaf)
-                var beforeEOL = leaf.matchedText
-                val eolIndex = leaf.matchedText.indexOf('\n');
-                if (-1 !== eolIndex) {
-                    beforeEOL = leaf.matchedText.substring(0, eolIndex);
-                }
-                AglToken(
-                        cssClasses.toSet().toTypedArray(),
-                        beforeEOL,
-                        leaf.location.line, //ace first line is 0
-                        leaf.location.column
-                )
-            }
-        }
-    }
-
-    val processors = mutableMapOf<String, AglWorkerComponents>()
+    var processor: LanguageProcessor? = null
+    var styleHandler: AglStyleHandler? = null
 
     init {
         start()
@@ -116,39 +71,43 @@ class AglWorker {
 
     fun createProcessor(port: dynamic, languageId: String, editorId: String, grammarStr: String?) {
         if (null == grammarStr) {
-            this.processors.remove(languageId)
+            this.styleHandler = null
+            this.processor = null
         } else {
 
             //cheet because I don't want to serialise grammars
             when (grammarStr) {
-                "@Agl.grammarProcessor@" -> this.processors[languageId] = AglWorkerComponents(languageId, Agl.grammarProcessor)
-                "@Agl.styleProcessor@" -> this.processors[languageId] = AglWorkerComponents(languageId, Agl.styleProcessor)
-                "@Agl.formatProcessor@" -> this.processors[languageId] = AglWorkerComponents(languageId, Agl.formatProcessor)
-                else -> this.processors[languageId] = AglWorkerComponents(languageId, Agl.processor(grammarStr))
+                "@Agl.grammarProcessor@" -> createAgl(languageId, Agl.grammarProcessor)
+                "@Agl.styleProcessor@" -> createAgl(languageId, Agl.styleProcessor)
+                "@Agl.formatProcessor@" -> createAgl(languageId, Agl.formatProcessor)
+                else -> createAgl(languageId, Agl.processor(grammarStr))
             }
         }
     }
 
+    fun createAgl(langId: String, proc: LanguageProcessor) {
+        this.processor = proc
+    }
+
     fun interrupt(port: dynamic, languageId: String, editorId: String, reason: String) {
-        val proc = this.processors[languageId]?.processor ?: throw RuntimeException("Processor with languageId $languageId not found")
-        proc.interrupt(reason)
+        val proc = this.processor
+        if (proc != null) {
+            proc.interrupt(reason)
+        }
     }
 
     fun setStyle(port: dynamic, languageId: String, editorId: String, css: String) {
-        val cmps = this.processors[languageId] ?: throw RuntimeException("Processor with languageId $languageId not found")
+        val style = AglStyleHandler(languageId)
+        this.styleHandler = style
         val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
         rules.forEach { rule ->
-            var cssClass = cmps.tokenToClassMap.get(rule.selector)
-            if (null == cssClass) {
-                cssClass = cmps.cssClassPrefix + cmps.nextCssClassNum++
-                cmps.tokenToClassMap.set(rule.selector, cssClass);
-            }
+            var cssClass = style.getClass(rule.selector)
         }
     }
 
     fun parse(port: dynamic, languageId: String, editorId: String, sentence: String) {
         try {
-            val proc = this.processors[languageId]?.processor ?: throw RuntimeException("Processor with languageId $languageId not found")
+            val proc = this.processor ?: throw RuntimeException("Processor with languageId $languageId not found")
             if (null == proc) {
                 //do nothing
             } else {
@@ -169,7 +128,7 @@ class AglWorker {
 
     fun process(port: dynamic, languageId: String, editorId: String, sppt: SharedPackedParseTree) {
         try {
-            val proc = this.processors[languageId]?.processor ?: throw RuntimeException("Processor with languageId $languageId not found")
+            val proc = this.processor ?: throw RuntimeException("Processor with languageId $languageId not found")
             val asm = proc.process<Any>(sppt)
             val asmTree = createAsmTree(asm) ?: "No Asm"
             port.postMessage(MessageProcessSuccess(languageId, editorId, asmTree))
@@ -182,9 +141,9 @@ class AglWorker {
         if (null == sppt) {
             //nothing
         } else {
-            val cmps = this.processors[languageId] ?: throw RuntimeException("Processor with languageId $languageId not found")
+            val style = this.styleHandler ?: throw RuntimeException("Processor with languageId $languageId not found")
             val lineTokens = sppt.tokensByLineAll().mapIndexed { lineNum, leaves ->
-                cmps.transformToTokens(leaves)
+                style.transformToTokens(leaves)
             }
             val lt = lineTokens.map {
                 it.toTypedArray()

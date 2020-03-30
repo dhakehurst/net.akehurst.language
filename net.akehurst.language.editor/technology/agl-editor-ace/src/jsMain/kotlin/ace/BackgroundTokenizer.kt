@@ -3,8 +3,6 @@
  */
 package ace
 
-import net.akehurst.language.editor.ace.AglTokenizer
-
 external interface LineTokens {
     val state: LineState
     val tokens : Array<Token>
