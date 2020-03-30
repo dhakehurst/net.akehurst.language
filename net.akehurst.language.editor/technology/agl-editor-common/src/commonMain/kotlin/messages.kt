@@ -27,39 +27,57 @@ open class AglWorkerMessage(
 )
 
 class MessageProcessorCreate(
+        val languageId:String,
+        val editorId:String,
         val grammarStr: String?
 ) : AglWorkerMessage("MessageProcessorCreate")
 
 class MessageParseRequest(
+        val languageId:String,
+        val editorId:String,
         val text: String
 ) : AglWorkerMessage("MessageParseRequest")
 
 class MessageParseSuccess(
+        val languageId:String,
+        val editorId:String,
         val tree: Any
 ) : AglWorkerMessage("MessageParseSuccess")
 
 class MessageParseFailure(
+        val languageId:String,
+        val editorId:String,
         val message: String,
         val location: InputLocation?,
         val tree: Any?
 ) : AglWorkerMessage("MessageParseFailure")
 
 class MessageParserInterruptRequest(
+        val languageId:String,
+        val editorId:String,
         val reason: String
 ) : AglWorkerMessage("MessageParserInterruptRequest")
 
 class MessageLineTokens(
+        val languageId:String,
+        val editorId:String,
         val lineTokens: Array<Array<AglToken>>
 ) : AglWorkerMessage("MessageLineTokens")
 
 class MessageSetStyle(
+        val languageId:String,
+        val editorId:String,
         val css: String
 ) : AglWorkerMessage("MessageSetStyle")
 
 class MessageProcessSuccess(
+        val languageId:String,
+        val editorId:String,
         val asm:Any
 ) : AglWorkerMessage("MessageProcessSuccess")
 
 class MessageProcessFailure(
+        val languageId:String,
+        val editorId:String,
         val message:String
 ) : AglWorkerMessage("MessageProcessFailure")
