@@ -32,6 +32,18 @@ class MessageProcessorCreate(
         val grammarStr: String?
 ) : AglWorkerMessage("MessageProcessorCreate")
 
+class MessageProcessorCreateSuccess(
+        val languageId:String,
+        val editorId:String,
+        val message: String
+) : AglWorkerMessage("MessageProcessorCreateSuccess")
+
+class MessageProcessorCreateFailure(
+        val languageId:String,
+        val editorId:String,
+        val message: String
+) : AglWorkerMessage("MessageProcessorCreateFailure")
+
 class MessageParseRequest(
         val languageId:String,
         val editorId:String,
@@ -69,6 +81,13 @@ class MessageSetStyle(
         val editorId:String,
         val css: String
 ) : AglWorkerMessage("MessageSetStyle")
+
+class MessageSetStyleResult(
+        val languageId:String,
+        val editorId:String,
+        val success: Boolean,
+        val message: String
+) : AglWorkerMessage("MessageSetStyleResult")
 
 class MessageProcessSuccess(
         val languageId:String,

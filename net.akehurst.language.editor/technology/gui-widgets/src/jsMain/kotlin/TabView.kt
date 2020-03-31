@@ -36,8 +36,10 @@ class TabView(
     val document: Document get() = element.ownerDocument!!
 
     init {
-        val nav = document.createElement("tab-nav");
-        element.insertBefore(nav, element.firstElementChild);
+        val nav = document.createElement("tab-nav")
+        element.insertBefore(nav, element.firstElementChild)
+        var firstHeader:Element? = null
+        var firstTab:Element? = null
         element.querySelectorAll(":scope > tab").asList().filterIsInstance<Element>().forEach { tab ->
             val header = document.createElement("tab-header")
             nav.appendChild(header)
@@ -45,6 +47,13 @@ class TabView(
             header.addEventListener("click", { e: Event ->
                 this.tabSelect(header, tab)
             })
+            if (null==firstHeader) {
+                firstHeader = header
+                firstTab = tab
+            }
+        }
+        if (null!=firstHeader) {
+            tabSelect(firstHeader!!, firstTab!!)
         }
     }
 

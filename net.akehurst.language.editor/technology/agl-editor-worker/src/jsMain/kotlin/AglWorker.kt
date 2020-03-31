@@ -71,16 +71,20 @@ class AglWorker {
 
     fun createProcessor(port: dynamic, languageId: String, editorId: String, grammarStr: String?) {
         if (null == grammarStr) {
-            this.styleHandler = null
             this.processor = null
+            port.postMessage(MessageProcessorCreateSuccess(languageId, editorId, "reset"))
         } else {
-
-            //cheet because I don't want to serialise grammars
-            when (grammarStr) {
-                "@Agl.grammarProcessor@" -> createAgl(languageId, Agl.grammarProcessor)
-                "@Agl.styleProcessor@" -> createAgl(languageId, Agl.styleProcessor)
-                "@Agl.formatProcessor@" -> createAgl(languageId, Agl.formatProcessor)
-                else -> createAgl(languageId, Agl.processor(grammarStr))
+            try {
+                //cheet because I don't want to serialise grammars
+                when (grammarStr) {
+                    "@Agl.grammarProcessor@" -> createAgl(languageId, Agl.grammarProcessor)
+                    "@Agl.styleProcessor@" -> createAgl(languageId, Agl.styleProcessor)
+                    "@Agl.formatProcessor@" -> createAgl(languageId, Agl.formatProcessor)
+                    else -> createAgl(languageId, Agl.processor(grammarStr))
+                }
+                port.postMessage(MessageProcessorCreateSuccess(languageId, editorId, "OK"))
+            } catch (t:Throwable) {
+                port.postMessage(MessageProcessorCreateFailure(languageId, editorId, t.message!!))
             }
         }
     }
@@ -97,17 +101,22 @@ class AglWorker {
     }
 
     fun setStyle(port: dynamic, languageId: String, editorId: String, css: String) {
-        val style = AglStyleHandler(languageId)
-        this.styleHandler = style
-        val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
-        rules.forEach { rule ->
-            var cssClass = style.getClass(rule.selector)
+        try {
+            val style = AglStyleHandler(languageId)
+            this.styleHandler = style
+            val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
+            rules.forEach { rule ->
+                style.mapClass(rule.selector)
+            }
+            port.postMessage(MessageSetStyleResult(languageId, editorId, true, "OK"))
+        } catch (t:Throwable) {
+            port.postMessage(MessageSetStyleResult(languageId, editorId, false, t.message!!))
         }
     }
 
     fun parse(port: dynamic, languageId: String, editorId: String, sentence: String) {
         try {
-            val proc = this.processor ?: throw RuntimeException("Processor with languageId $languageId not found")
+            val proc = this.processor ?: throw RuntimeException("Processor for $languageId not found")
             if (null == proc) {
                 //do nothing
             } else {
@@ -128,7 +137,7 @@ class AglWorker {
 
     fun process(port: dynamic, languageId: String, editorId: String, sppt: SharedPackedParseTree) {
         try {
-            val proc = this.processor ?: throw RuntimeException("Processor with languageId $languageId not found")
+            val proc = this.processor ?: throw RuntimeException("Processor for $languageId not found")
             val asm = proc.process<Any>(sppt)
             val asmTree = createAsmTree(asm) ?: "No Asm"
             port.postMessage(MessageProcessSuccess(languageId, editorId, asmTree))
@@ -141,7 +150,7 @@ class AglWorker {
         if (null == sppt) {
             //nothing
         } else {
-            val style = this.styleHandler ?: throw RuntimeException("Processor with languageId $languageId not found")
+            val style = this.styleHandler ?: throw RuntimeException("StyleHandler for $languageId not found")
             val lineTokens = sppt.tokensByLineAll().mapIndexed { lineNum, leaves ->
                 style.transformToTokens(leaves)
             }

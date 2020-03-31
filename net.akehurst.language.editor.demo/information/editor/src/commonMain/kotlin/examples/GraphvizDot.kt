@@ -111,8 +111,9 @@ grammar Dot  {
 	  STRICT? type ID? '{' stmt_list '}'
 	;
     type = GRAPH | DIGRAPH ;
-	stmt_list = ( stmt ';' ? ) * ;
 
+	stmt_list = stmt1 * ;
+    stmt1 = stmt  ';'? ;
 	stmt =
 	    node_stmt
       | edge_stmt
@@ -121,23 +122,29 @@ grammar Dot  {
       | subgraph
       ;
 
-    node_stmt = node_id attr_list? ;
+    node_stmt = node_id attr_lists? ;
     node_id = ID port? ;
     port =
         ':' ID (':' compass_pt)?
       | ':' compass_pt
       ;
-    compass_pt	=	('n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw' | 'c' | '_') ;
+    leaf compass_pt	= 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw' | 'c' | '_' ;
 
-    edge_stmt =	(node_id | subgraph) edgeRHS attr_list? ;
-    edgeRHS = ( EDGEOP (node_id | subgraph) )+ ;
-    EDGEOP = '--' | '->' ;
+    edge_stmt =	edge_list attr_lists? ;
+    edge_list = [edge_end / EDGEOP ]2+ ;
+    edge_end = node_id | subgraph ;
+    leaf EDGEOP = '--' | '->' ;
 
-    attr_stmt = (GRAPH | NODE | EDGE) attr_list ;
-    attr_list = ( '[' a_list? ']' )+ ;
-    a_list = ID '=' ID (';' | ',')? a_list? ;
+    attr_stmt = attr_type attr_lists ;
+    attr_type = GRAPH | NODE | EDGE ;
+    attr_lists = attr_list+ ;
+    attr_list = '[' a_list? ']' ;
+    a_list = a  a_list? ;
+    a = ID '=' ID a_list_sep? ;
+    a_list_sep = ';' | ',' ;
 
-    subgraph = ( SUBGRAPH ID? ) ? '{' stmt_list '}' ;
+    subgraph = subgraph_id? '{' stmt_list '}' ;
+    subgraph_id = SUBGRAPH ID? ;
 
 
 	leaf STRICT = "[Ss][Tt][Rr][Ii][Cc][Tt]";
