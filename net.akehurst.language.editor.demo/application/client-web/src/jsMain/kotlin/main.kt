@@ -30,9 +30,10 @@ import net.akehurst.language.editor.technology.gui.widgets.TreeView
 import net.akehurst.language.editor.technology.gui.widgets.TreeViewFunctions
 import net.akehurst.language.processor.AglLanguage
 import org.w3c.dom.HTMLElement
+import org.w3c.dom.HTMLSelectElement
 import kotlin.browser.document
 
-external var aglScriptBasePath:dynamic = definedExternally
+external var aglScriptBasePath: dynamic = definedExternally
 
 var demo: Demo? = null
 fun main() {
@@ -67,7 +68,7 @@ fun createBaseDom(appDivSelector: String) {
                 class_.add("agl-menubar")
                 h2 { content = "Version ${BuildInfo.version}" }
                 nav {
-                    a { content="About" }
+                    a { content = "About" }
                 }
             }
             section {
@@ -261,7 +262,7 @@ class Demo(
                         it.isAsmElementProperty -> {
                             val v = it.value
                             when {
-                                null==v -> "${it.name} = null"
+                                null == v -> "${it.name} = null"
                                 v is Array<*> -> "${it.name} : List"
                                 v.isAsmElementSimple -> "${it.name} : ${v.typeName}"
                                 else -> "${it.name} = ${v}"
@@ -277,7 +278,7 @@ class Demo(
                         it.isAsmElementProperty -> {
                             val v = it.value
                             when {
-                                null==v -> false
+                                null == v -> false
                                 v is Array<*> -> true
                                 v.isAsmElementSimple -> true
                                 else -> false
@@ -324,8 +325,10 @@ class Demo(
             //formatEditor.text = eg.format
             sentenceEditor.text = eg.sentence
         })
+
         // select initial example
         val eg = Datatypes.example
+        (exampleSelect as HTMLSelectElement).value = eg.id
         grammarEditor.text = eg.grammar
         sentenceEditor.setProcessor(grammarEditor.text) // set this before setting the sentence text
         styleEditor.text = eg.style
