@@ -168,10 +168,11 @@ fun createDemo(isAce: Boolean) {
     if (null != demo) {
         demo!!.finalize()
     }
+    val thisLocation = document.location!!.pathname
     val editors = if (isAce) {
-        AglEditorAce.initialise(document, "application-agl-editor-worker.js")
+        AglEditorAce.initialise(document, "./application-agl-editor-worker.js")
     } else {
-        AglEditorMonaco.initialise(document, "application-agl-editor-worker.js")
+        AglEditorMonaco.initialise(document, "./application-agl-editor-worker.js")
     }
 
     demo = Demo(editors)
@@ -206,6 +207,7 @@ class Demo(
         grammarEditor.onParse { event ->
             if (event.success) {
                 try {
+                    console.log("Grammar parse success, resetting sentence processor")
                     sentenceEditor.setProcessor(grammarEditor.text)
                 } catch (t: Throwable) {
                     sentenceEditor.setProcessor(null)
@@ -220,6 +222,7 @@ class Demo(
         styleEditor.onParse { event ->
             if (event.success) {
                 try {
+                    console.log("Style parse success, resetting sentence style")
                     sentenceEditor.setStyle(styleEditor.text)
                 } catch (t: Throwable) {
                     console.error(sentenceEditor.editorId + ": " + t.message)
