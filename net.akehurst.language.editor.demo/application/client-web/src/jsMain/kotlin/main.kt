@@ -208,7 +208,7 @@ class Demo(
         grammarEditor.onParse { event ->
             if (event.success) {
                 try {
-                    console.asDynamic().debug("Grammar parse success, resetting sentence processor")
+                    console.asDynamic().debug("Debug: Grammar parse success, resetting sentence processor")
                     sentenceEditor.setProcessor(grammarEditor.text)
                 } catch (t: Throwable) {
                     sentenceEditor.setProcessor(null)
@@ -223,7 +223,7 @@ class Demo(
         styleEditor.onParse { event ->
             if (event.success) {
                 try {
-                    console.asDynamic().debug("Style parse success, resetting sentence style")
+                    console.asDynamic().debug("Debug: Style parse success, resetting sentence style")
                     sentenceEditor.setStyle(styleEditor.text)
                 } catch (t: Throwable) {
                     console.error(sentenceEditor.editorId + ": " + t.message)
@@ -260,9 +260,10 @@ class Demo(
                         it.isAsmElementSimple -> ": " + it.typeName
                         it.isAsmElementProperty -> {
                             val v = it.value
-                            when (v) {
-                                is AsmElementSimple -> "${it.name} : ${v.typeName}"
-                                is List<*> -> "${it.name} : List"
+                            when {
+                                null==v -> "${it.name} = null"
+                                v is Array<*> -> "${it.name} : List"
+                                v.isAsmElementSimple -> "${it.name} : ${v.typeName}"
                                 else -> "${it.name} = ${v}"
                             }
                         }
@@ -276,6 +277,7 @@ class Demo(
                         it.isAsmElementProperty -> {
                             val v = it.value
                             when {
+                                null==v -> false
                                 v is Array<*> -> true
                                 v.isAsmElementSimple -> true
                                 else -> false

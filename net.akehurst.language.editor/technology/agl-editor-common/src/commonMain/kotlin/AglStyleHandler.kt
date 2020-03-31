@@ -64,6 +64,7 @@ class AglStyleHandler(
 
     fun reset() {
         this.tokenToClassMap.clear()
+        nextCssClassNum = 1
     }
 
     fun mapClass(aglSelector:String) : String {

@@ -33,3 +33,5 @@ val workerTask = tasks.register<Copy>("copyAglEditorWorkerJs") {
 }
 
 tasks.getByName("jsBrowserDistributeResources").dependsOn(workerTask)
+tasks.getByName("jsBrowserDevelopmentRun").dependsOn(workerTask)
+tasks.getByName("jsBrowserProductionRun").dependsOn(workerTask)

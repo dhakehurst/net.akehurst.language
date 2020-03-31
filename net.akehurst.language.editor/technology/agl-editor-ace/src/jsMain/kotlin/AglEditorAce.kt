@@ -46,11 +46,11 @@ class AglEditorAce(
         languageId: String,
         editorId: String,
         options: dynamic, //TODO: types for this
-        workerScriptName:String
+        workerScriptName: String
 ) : AglEditorAbstract(languageId, editorId) {
 
     companion object {
-        fun initialise(document: Document, workerScriptName:String, tag: String = "agl-editor"): Map<String, AglEditorAce> {
+        fun initialise(document: Document, workerScriptName: String, tag: String = "agl-editor"): Map<String, AglEditorAce> {
             val map = mutableMapOf<String, AglEditorAce>()
             document.querySelectorAll(tag).asList().forEach { el ->
                 val element = el as Element
@@ -106,9 +106,6 @@ class AglEditorAce(
 
         this.aceEditor.on("change") { event ->
             this.workerTokenizer.reset()
-
-        }
-        this.aceEditor.on("input") { event ->
             window.clearTimeout(parseTimeout)
             this.parseTimeout = window.setTimeout({
                 this.workerTokenizer.acceptingTokens = true
@@ -121,11 +118,19 @@ class AglEditorAce(
         resizeObserver.observe(this.element)
 
         this.aglWorker.initialise()
+        this.aglWorker.setStyleResult = { success, message ->
+            if (success) {
+                this.resetTokenization()
+            } else {
+                console.error("Error: $message")
+            }
+        }
         this.aglWorker.processorCreateSuccess = this::processorCreateSuccess
+        this.aglWorker.processorCreateFailure = { msg -> console.error("Failed to create processor $msg") }
         this.aglWorker.parseSuccess = this::parseSuccess
         this.aglWorker.parseFailure = this::parseFailure
         this.aglWorker.lineTokens = {
-            console.asDynamic().debug("new line tokens from successful parse")
+            console.asDynamic().debug("Debug: new line tokens from successful parse of ${editorId}")
             this.workerTokenizer.receiveTokens(it)
             this.resetTokenization()
         }
@@ -175,7 +180,7 @@ class AglEditorAce(
 
             // the use of an object instead of a string is undocumented but seems to work
             this.aceEditor.setOption("theme", module); //not sure but maybe this is better than setting on renderer direct
-            this.aglWorker.setStyle(languageId, editorId,css)
+            this.aglWorker.setStyle(languageId, editorId, css)
         }
     }
 
@@ -191,16 +196,16 @@ class AglEditorAce(
 
     override fun setProcessor(grammarStr: String?) {
         this.clearErrorMarkers()
-        this.aglWorker.createProcessor(languageId, editorId,grammarStr)
+        this.aglWorker.createProcessor(languageId, editorId, grammarStr)
         if (null == grammarStr || grammarStr.trim().isEmpty()) {
             this.agl.processor = null
         } else {
             try {
                 when (grammarStr) {
-                    "@Agl.grammarProcessor@" -> this.agl.processor  = Agl.grammarProcessor
-                    "@Agl.styleProcessor@" -> this.agl.processor =  Agl.styleProcessor
-                    "@Agl.formatProcessor@" -> this.agl.processor =  Agl.formatProcessor
-                    else -> this.agl.processor =  Agl.processor(grammarStr)
+                    "@Agl.grammarProcessor@" -> this.agl.processor = Agl.grammarProcessor
+                    "@Agl.styleProcessor@" -> this.agl.processor = Agl.styleProcessor
+                    "@Agl.formatProcessor@" -> this.agl.processor = Agl.formatProcessor
+                    else -> this.agl.processor = Agl.processor(grammarStr)
                 }
             } catch (t: Throwable) {
                 this.agl.processor = null
@@ -208,9 +213,24 @@ class AglEditorAce(
             }
         }
         this.workerTokenizer.reset()
-        this.resetTokenization() //new processor so find new tokens
-        this.workerTokenizer.acceptingTokens = true
-        this.doBackgroundTryParse()
+        this.resetTokenization() //new processor so find new tokens, first by scan
+    }
+
+    private fun processorCreateSuccess(message: String) {
+        when (message) {
+            "OK" -> {
+                console.asDynamic().debug("Debug: New Processor created for ${editorId}")
+                this.workerTokenizer.acceptingTokens = true
+                this.doBackgroundTryParse()
+                this.resetTokenization()
+            }
+            "reset" -> {
+                console.asDynamic().debug("Debug: reset Processor for ${editorId}")
+            }
+            else -> {
+                console.error("Error: unknown result message from create Processor for ${editorId}: $message")
+            }
+        }
     }
 
     @JsName("onResize")
@@ -233,20 +253,15 @@ class AglEditorAce(
          */
     }
 
-    fun doBackgroundTryParse() {
-        this.clearErrorMarkers()
-        this.aglWorker.interrupt(languageId, editorId)
-        this.aglWorker.tryParse(languageId, editorId,this.text)
-    }
-
-    fun doBackgroundTryProcess() {
-        //this.worker.postMessage(MessageParserInterruptRequest("New parse request"))
-        //this.worker.postMessage(MessageParseRequest(this.text))
-    }
-
     fun resetTokenization() {
         this.aceEditor.renderer.updateText();
         this.aceEditor.getSession().bgTokenizer.start(0);
+    }
+
+    fun doBackgroundTryParse() {
+        this.clearErrorMarkers()
+        this.aglWorker.interrupt(languageId, editorId)
+        this.aglWorker.tryParse(languageId, editorId, this.text)
     }
 
     private fun foregroundParse() {
@@ -286,10 +301,6 @@ class AglEditorAce(
         }
     }
 
-    private fun processorCreateSuccess() {
-        this.resetTokenization()
-    }
-
     override fun clearErrorMarkers() {
         this.aceEditor.getSession().clearAnnotations(); //assume there are no parse errors or there would be no sppt!
         this.errorParseMarkerIds.forEach { id -> this.aceEditor.getSession().removeMarker(id) }
@@ -303,13 +314,12 @@ class AglEditorAce(
     }
 
     private fun parseFailure(message: String, location: InputLocation?, tree: Any?) {
-        console.error("Error parsing text in " + this.editorId + " for language " + this.languageId, message);
+        console.error("Error parsing text in ${this.editorId}: $message")
+        // parse failed so re-tokenize from scan
+        this.workerTokenizer.reset()
+        this.resetTokenization()
 
         if (null != location) {
-            //this.agl.sppt = e.longestMatch
-            // parse failed so re-tokenize from scan
-            this.workerTokenizer.reset()
-            this.resetTokenization()
             val errors = listOf(
                     AglErrorAnnotation(
                             location.line,

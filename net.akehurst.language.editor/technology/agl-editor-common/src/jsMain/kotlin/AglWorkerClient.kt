@@ -25,8 +25,9 @@ class AglWorkerClient(
 ) {
 
     lateinit var worker: Worker
-    var processorCreateSuccess: () -> Unit = {}
-    var processorCreateFailure: () -> Unit = {}
+    var setStyleResult: (success: Boolean, message: String) -> Unit = { _, _ -> }
+    var processorCreateSuccess: (message: String) -> Unit = { _ -> }
+    var processorCreateFailure: (message: String) -> Unit = { _ -> }
     var parseSuccess: (tree: Any) -> Unit = { _ -> }
     var parseFailure: (message: String, location: InputLocation?, tree: Any?) -> Unit = { _, _, _ -> }
     var lineTokens: (Array<Array<AglToken>>) -> Unit = { _ -> }
@@ -36,15 +37,16 @@ class AglWorkerClient(
     fun initialise() {
         // currently can't make SharedWorker work
         //this.worker = SharedWorker(workerScriptName, options=WorkerOptions(type = WorkerType.MODULE))
-        this.worker = Worker(workerScriptName, options=WorkerOptions(type = WorkerType.MODULE))
+        this.worker = Worker(workerScriptName, options = WorkerOptions(type = WorkerType.MODULE))
         this.worker.onerror = {
             console.error(it)
         }
         worker.onmessage = {
             val msg = it.data.asDynamic()
             when (msg.action) {
-                "MessageProcessorCreateSuccess" -> this.processorCreateSuccess()
-                "MessageProcessorCreateFailure" -> this.processorCreateFailure()
+                "MessageSetStyleResult" -> this.setStyleResult(msg.success, msg.message)
+                "MessageProcessorCreateSuccess" -> this.processorCreateSuccess(msg.message)
+                "MessageProcessorCreateFailure" -> this.processorCreateFailure(msg.message)
                 "MessageParseSuccess" -> this.parseSuccess(msg.tree)
                 "MessageParseFailure" -> this.parseFailure(msg.message, msg.location, msg.tree)
                 "MessageLineTokens" -> this.lineTokens(msg.lineTokens)

@@ -51,7 +51,6 @@ div#agl-demo tabview > tab {
     display: none;
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
     /* style */
-    background-color: red;
 }
 
 div#agl-demo tabview > tab:first-of-type {

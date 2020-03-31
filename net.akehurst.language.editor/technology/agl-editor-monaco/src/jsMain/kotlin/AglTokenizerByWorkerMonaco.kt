@@ -75,7 +75,7 @@ class AglTokenizerByWorkerMonaco(
     override fun tokenize(line: String, pState: languages.IState): languages.ILineTokens {
         val mcState = pState as AglLineStateMonaco
         val row = mcState.lineNumber+1
-        val tokens = this.tokensByLine[row]
+        val tokens = this.tokensByLine[row-1]
         return if (null == tokens) {
             // no tokens received from worker, try local scan
             val stateAgl = AglLineState(mcState.lineNumber, mcState.leftOverText, emptyList()) //not really emptyList, but its not needed as input so ok to use
