@@ -32,6 +32,8 @@ import net.akehurst.language.processor.AglLanguage
 import org.w3c.dom.HTMLElement
 import kotlin.browser.document
 
+external var aglScriptBasePath:dynamic = definedExternally
+
 var demo: Demo? = null
 fun main() {
 
@@ -168,11 +170,10 @@ fun createDemo(isAce: Boolean) {
     if (null != demo) {
         demo!!.finalize()
     }
-    val thisLocation = document.location!!.pathname
     val editors = if (isAce) {
-        AglEditorAce.initialise(document, "./application-agl-editor-worker.js")
+        AglEditorAce.initialise(document, "${aglScriptBasePath}/application-agl-editor-worker.js")
     } else {
-        AglEditorMonaco.initialise(document, "./application-agl-editor-worker.js")
+        AglEditorMonaco.initialise(document, "${aglScriptBasePath}/application-agl-editor-worker.js")
     }
 
     demo = Demo(editors)
