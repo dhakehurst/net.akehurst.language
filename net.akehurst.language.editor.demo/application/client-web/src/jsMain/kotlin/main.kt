@@ -106,9 +106,9 @@ fun createBaseDom(appDivSelector: String) {
         section {
             htmlElement("tabview") {
                 htmlElement("tab") {
-                    attribute.id = "sentence"
+                    attribute.id = "Sentence"
                     section {
-                        class_.add("text")
+                        class_.add("sentence")
                         htmlElement("agl-editor") { attribute.id = "sentence-text" }
                     }
                     section {
@@ -126,7 +126,7 @@ fun createBaseDom(appDivSelector: String) {
                     }
                 }
                 htmlElement("tab") {
-                    attribute.id = "language"
+                    attribute.id = "Language"
                     section {
                         class_.add("language")
                         htmlElement("tabview") {
@@ -208,7 +208,7 @@ class Demo(
         grammarEditor.onParse { event ->
             if (event.success) {
                 try {
-                    console.log("Grammar parse success, resetting sentence processor")
+                    console.asDynamic().debug("Grammar parse success, resetting sentence processor")
                     sentenceEditor.setProcessor(grammarEditor.text)
                 } catch (t: Throwable) {
                     sentenceEditor.setProcessor(null)
@@ -223,7 +223,7 @@ class Demo(
         styleEditor.onParse { event ->
             if (event.success) {
                 try {
-                    console.log("Style parse success, resetting sentence style")
+                    console.asDynamic().debug("Style parse success, resetting sentence style")
                     sentenceEditor.setStyle(styleEditor.text)
                 } catch (t: Throwable) {
                     console.error(sentenceEditor.editorId + ": " + t.message)
@@ -316,14 +316,18 @@ class Demo(
             val egName = js("event.target.value") as String
             val eg = Examples[egName]
             grammarEditor.text = eg.grammar
+            sentenceEditor.setProcessor(grammarEditor.text) // set this before setting the sentence text
             styleEditor.text = eg.style
+            sentenceEditor.setStyle(styleEditor.text)  // set this before setting the sentence text
             //formatEditor.text = eg.format
             sentenceEditor.text = eg.sentence
         })
         // select initial example
         val eg = Datatypes.example
         grammarEditor.text = eg.grammar
+        sentenceEditor.setProcessor(grammarEditor.text) // set this before setting the sentence text
         styleEditor.text = eg.style
+        sentenceEditor.setStyle(styleEditor.text)  // set this before setting the sentence text
         //formatEditor.text = eg.format
         sentenceEditor.text = eg.sentence
     }

@@ -168,10 +168,11 @@ class AglEditorMonaco(
 
     override fun setStyle(css: String?) {
         if (null != css && css.isNotEmpty()) {
+            this.agl.styleHandler.reset()
             val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
             var mappedCss = ""
             rules.forEach { rule ->
-                val cssClass = '.' + this.languageId + ' ' + ".monaco_" + this.agl.styleHandler.getClass(rule.selector);
+                val cssClass = '.' + this.languageId + ' ' + ".monaco_" + this.agl.styleHandler.mapClass(rule.selector);
                 val mappedRule = AglStyleRule(cssClass)
                 mappedRule.styles = rule.styles.values.associate { oldStyle ->
                     val style = when (oldStyle.name) {

@@ -62,7 +62,11 @@ class AglStyleHandler(
         }
     }
 
-    fun getClass(aglSelector:String) : String {
+    fun reset() {
+        this.tokenToClassMap.clear()
+    }
+
+    fun mapClass(aglSelector:String) : String {
         var cssClass = this.tokenToClassMap.get(aglSelector)
         if (null == cssClass) {
             cssClass = this.cssClassPrefix + this.nextCssClassNum++

@@ -101,7 +101,7 @@ class AglWorker {
         this.styleHandler = style
         val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
         rules.forEach { rule ->
-            var cssClass = style.getClass(rule.selector)
+            style.mapClass(rule.selector)
         }
     }
 

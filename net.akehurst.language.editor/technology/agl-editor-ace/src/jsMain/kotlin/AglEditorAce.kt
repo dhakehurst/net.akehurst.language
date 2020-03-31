@@ -91,7 +91,6 @@ class AglEditorAce(
             }
         }
 
-    val aglStyleHandler = AglStyleHandler(languageId)
     var aglWorker = AglWorkerClient(workerScriptName)
     lateinit var workerTokenizer: AglTokenizerByWorkerAce
     var parseTimeout: dynamic = null
@@ -126,6 +125,7 @@ class AglEditorAce(
         this.aglWorker.parseSuccess = this::parseSuccess
         this.aglWorker.parseFailure = this::parseFailure
         this.aglWorker.lineTokens = {
+            console.asDynamic().debug("new line tokens from successful parse")
             this.workerTokenizer.receiveTokens(it)
             this.resetTokenization()
         }
@@ -143,10 +143,11 @@ class AglEditorAce(
 
     override fun setStyle(css: String?) {
         if (null != css && css.isNotEmpty()) {
+            this.agl.styleHandler.reset()
             val rules: List<AglStyleRule> = Agl.styleProcessor.process(css)
             var mappedCss = ""
             rules.forEach { rule ->
-                val cssClass = '.' + this.languageId + ' ' + ".ace_" + this.aglStyleHandler.getClass(rule.selector);
+                val cssClass = '.' + this.languageId + ' ' + ".ace_" + this.agl.styleHandler.mapClass(rule.selector);
                 val mappedRule = AglStyleRule(cssClass)
                 mappedRule.styles = rule.styles.values.associate { oldStyle ->
                     val style = when (oldStyle.name) {

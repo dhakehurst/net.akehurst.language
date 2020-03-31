@@ -152,6 +152,15 @@ div#agl-demo > article > header > section.agl-options div {
     flex-direction: row;
 }
 
+div#agl-demo > article > header > section.agl-options select {
+    height: inherit;
+    padding: 5px;
+}
+
+div#agl-demo > article > header > section.agl-options div * {
+    margin: 5px;
+}
+
 div#agl-demo > article > header > section.agl-options label {
     white-space: nowrap;
 }
@@ -165,13 +174,13 @@ div#agl-demo section {
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
 }
 
-div#agl-demo tab#sentence {
+div#agl-demo tab#Sentence {
     grid-template-columns: 5fr 4fr;
-    grid-template-areas: "text trees";
+    grid-template-areas: "sentence trees";
 }
 
-div#agl-demo section#text {
-    grid-area: text;
+div#agl-demo section#sentence {
+    grid-area: sentence;
 }
 
 div#agl-demo section#trees {
