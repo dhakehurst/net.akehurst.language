@@ -31,7 +31,7 @@ div#agl-demo tabview > tab-nav > tab-header {
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
     padding: 5px;
-    background-color: #f0f0f0;
+    background-color: #e0e0e0;
 }
 
 div#agl-demo tabview > tab-nav > tab-header:hover {
@@ -39,7 +39,7 @@ div#agl-demo tabview > tab-nav > tab-header:hover {
 }
 
 div#agl-demo tabview > tab-nav > tab-header.tab-active {
-    background-color: white;
+    background-color: #f0f0f0;
     border-bottom: none;
 }
 
@@ -50,7 +50,7 @@ div#agl-demo tabview > tab {
     grid-column-end: span all;
     display: none;
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
-    /* style */
+    background-color: #f0f0f0;
 }
 
 div#agl-demo tabview > tab:first-of-type {
@@ -188,11 +188,11 @@ div#agl-demo section#trees {
 }
 
 div#agl-demo tab#parse {
-    background-color: burlywood;
+    background-color: #f0f0f0;;
 }
 
 div#agl-demo tab#ast {
-    background-color: bisque;
+    background-color: #f0f0f0;;
 }
 
 div#agl-demo agl-editor {

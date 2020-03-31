@@ -310,7 +310,6 @@ class AglEditorAce(
         this.resetTokenization()
         val event = ParseEvent(true, "OK", tree)
         this.notifyParse(event)
-        this.doBackgroundTryProcess()
     }
 
     private fun parseFailure(message: String, location: InputLocation?, tree: Any?) {
