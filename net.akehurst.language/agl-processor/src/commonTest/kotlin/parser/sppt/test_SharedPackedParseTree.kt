@@ -18,7 +18,7 @@ package net.akehurst.language.parser.sppt
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.processor.Agl
+import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

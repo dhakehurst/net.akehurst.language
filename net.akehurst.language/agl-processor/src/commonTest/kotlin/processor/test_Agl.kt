@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.processor
+package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.analyser.AsmElementSimple
 import net.akehurst.language.api.parser.ParseFailedException

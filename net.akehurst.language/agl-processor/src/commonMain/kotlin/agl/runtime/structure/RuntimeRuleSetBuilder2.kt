@@ -100,20 +100,20 @@ class RuntimeRuleSetBuilder2() {
         this.ruleBuilders.add(rb)
     }
 
-    fun literal(tag: String, value: String) {
+    fun literal(tag: String, value: String, isSkip: Boolean = false) {
         val existing = this.findRuleBuilderByTag(tag)
         if (null == existing) {
-            val rb = RuntimeRuleBuilder(this, tag, value, RuntimeRuleKind.TERMINAL, false, false)
+            val rb = RuntimeRuleBuilder(this, tag, value, RuntimeRuleKind.TERMINAL, false, isSkip)
             this.ruleBuilders.add(rb)
         } else {
             //do nothing // throw RuntimeException("Already got a rule with tag = $name")
         }
     }
 
-    fun pattern(tag: String, pattern: String) {
+    fun pattern(tag: String, pattern: String, isSkip: Boolean = false) {
         val existing = this.findRuleBuilderByTag(tag)
         if (null == existing) {
-            val rb = RuntimeRuleBuilder(this, tag, pattern, RuntimeRuleKind.TERMINAL, true, false)
+            val rb = RuntimeRuleBuilder(this, tag, pattern, RuntimeRuleKind.TERMINAL, true, isSkip)
             this.ruleBuilders.add(rb)
         } else {
             //do nothing //throw RuntimeException("Already got a rule with tag = $name")
@@ -133,18 +133,19 @@ class RuntimeRuleSetBuilder2() {
 
     fun concatenation(name: String, init: RuntimeRuleItemsBuilder.() -> Unit): RuntimeRuleBuilder = _rule(name, RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, init)
     fun choice(name: String, choiceKind: RuntimeRuleChoiceKind, init: RuntimeRuleItemsBuilder.() -> Unit): RuntimeRuleBuilder = _rule(name, RuntimeRuleItemKind.CHOICE, choiceKind, -1, 0, init)
-    fun multi(name: String, min: Int, max: Int, itemRef:String): RuntimeRuleBuilder {
+    fun multi(name: String, min: Int, max: Int, itemRef: String): RuntimeRuleBuilder {
         return _rule(name, RuntimeRuleItemKind.MULTI, RuntimeRuleChoiceKind.NONE, min, max) {
             ref(itemRef)
             empty()
         }
     }
-    fun sList(name: String, min: Int, max: Int, itemRef:String, sepRef:String): RuntimeRuleBuilder {
-       return _rule(name, RuntimeRuleItemKind.SEPARATED_LIST, RuntimeRuleChoiceKind.NONE, min, max) {
-           ref(itemRef)
-           ref(sepRef)
-           empty()
-       }
+
+    fun sList(name: String, min: Int, max: Int, itemRef: String, sepRef: String): RuntimeRuleBuilder {
+        return _rule(name, RuntimeRuleItemKind.SEPARATED_LIST, RuntimeRuleChoiceKind.NONE, min, max) {
+            ref(itemRef)
+            ref(sepRef)
+            empty()
+        }
     }
 
     fun embedded(tag: String, embeddedRuleSet: RuntimeRuleSet, startRule: RuntimeRule): RuntimeRuleBuilder {
@@ -153,7 +154,6 @@ class RuntimeRuleSetBuilder2() {
         return rb
     }
 }
-
 
 
 class RuntimeRuleBuilder(
@@ -222,7 +222,7 @@ class RuntimeRuleItemsBuilder(
             val er = this.rrsb.empty(rr)
             val nextRuleNumber = ruleMap.size
             val r = er.buildRule(nextRuleNumber)
-            r.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.EMPTY, RuntimeRuleChoiceKind.NONE, -1,0, arrayOf(rr))
+            r.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.EMPTY, RuntimeRuleChoiceKind.NONE, -1, 0, arrayOf(rr))
             ruleMap[r.tag] = r
             items + RuntimeRuleRef(er.tag)
         } else {
@@ -230,7 +230,7 @@ class RuntimeRuleItemsBuilder(
         }
         val rItems = items2.map {
             ruleMap[it.tag]
-                ?: error("Rule ${it.tag} not found")
+                    ?: error("Rule ${it.tag} not found")
         }
         val rhs = RuntimeRuleItem(this.kind, this.choiceKind, this.min, this.max, rItems.toTypedArray())
         return rhs

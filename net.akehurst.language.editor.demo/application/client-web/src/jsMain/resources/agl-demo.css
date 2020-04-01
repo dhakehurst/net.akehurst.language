@@ -102,6 +102,14 @@ div#agl-demo {
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
 }
 
+div#agl-demo dialog {
+    z-index: 99;
+}
+
+div#agl-demo dialog::backdrop {
+    background-color: #e0e0e099;
+}
+
 div#agl-demo > article {
     /*layout-children*/
     display: grid;

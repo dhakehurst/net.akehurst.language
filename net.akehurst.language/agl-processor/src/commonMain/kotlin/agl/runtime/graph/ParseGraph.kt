@@ -78,7 +78,19 @@ internal class ParseGraph(
                     firstSkipNodes.isEmpty() -> userGoalNode.location.length
                     else -> firstSkipNodes.last().startPosition + firstSkipNodes.last().location.length + userGoalNode.location.length
                 }
-                val location = InputLocation(userGoalNode.location.position, userGoalNode.location.column, userGoalNode.location.line, length)
+                val position = when {
+                    firstSkipNodes.isEmpty() -> userGoalNode.location.position
+                    else -> firstSkipNodes.first().location.position
+                }
+                val column = when {
+                    firstSkipNodes.isEmpty() -> userGoalNode.location.column
+                    else -> firstSkipNodes.first().location.column
+                }
+                val line = when {
+                    firstSkipNodes.isEmpty() -> userGoalNode.location.line
+                    else -> firstSkipNodes.first().location.line
+                }
+                val location = InputLocation(position, column, line, length)
                 val r = if (userGoalNode is SPPTBranch) {
                     val r = SPPTBranchDefault(this.userGoalRule, location, userGoalNode.nextInputPosition, userGoalNode.priority)
                     for (alt in userGoalNode.childrenAlternatives) {

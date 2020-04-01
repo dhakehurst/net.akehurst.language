@@ -21,7 +21,7 @@ import net.akehurst.language.agl.grammar.runtime.ConverterToRuntimeRules
 import net.akehurst.language.parser.scannerless.Parser
 import net.akehurst.language.parser.scannerless.ScannerlessParser
 import net.akehurst.language.parser.sppt.SPPTParser
-import net.akehurst.language.processor.CompletionProvider
+import net.akehurst.language.agl.processor.CompletionProvider
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

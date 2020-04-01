@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.processor
+package net.akehurst.language.agl.processor
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

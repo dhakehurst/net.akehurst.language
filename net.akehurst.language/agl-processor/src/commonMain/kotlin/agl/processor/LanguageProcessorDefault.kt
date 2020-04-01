@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.processor
+package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.analyser.SyntaxAnalyserSimple
 import net.akehurst.language.agl.grammar.runtime.ConverterToRuntimeRules
