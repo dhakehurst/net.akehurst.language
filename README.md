@@ -18,7 +18,7 @@ My Requirements:
  - Simple grammar for defining a language with no restrictions
  -- i.e. should support left & right recursive rules,
  - Useable in Java and Javascript (other platforms/languages a bonus but not essential)
- - Scanner-less, i.e. no need to worry about keyword/identifier clashes
+ - No need to worry about keyword/identifier clashes
  - Interpreted at runtime, i.e. no generate parser step.
  - Supports families of languages, i.e. grammar composition/extension
  - 
@@ -28,7 +28,5 @@ My Requirements:
 
 lots:
  - performance improvements
- - grammar composition
- - support for AST creation (rather than just PT) within the grammar definition
  - PT is not always what one expects
  
