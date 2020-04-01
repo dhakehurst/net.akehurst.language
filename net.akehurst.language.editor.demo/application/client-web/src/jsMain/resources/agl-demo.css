@@ -20,6 +20,7 @@ div#agl-demo tabview > tab-nav {
 div#agl-demo tab {
     display: grid;
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
+    overflow: hidden;
 }
 
 div#agl-demo tabview > tab-nav > tab-header {
@@ -61,6 +62,7 @@ div#agl-demo tabview > tab:first-of-type {
 div#agl-demo treeview {
     font-size: 1em;
     line-height: 1.4em;
+    overflow: auto;
 }
 div#agl-demo treeview treeview-children {
     margin: 0;
@@ -175,6 +177,7 @@ div#agl-demo > article > section {
 div#agl-demo section {
     display: grid;
     grid: auto-flow minmax(0, 1fr) / minmax(0, 1fr);
+    overflow: hidden;
 }
 
 div#agl-demo tab#Sentence {
