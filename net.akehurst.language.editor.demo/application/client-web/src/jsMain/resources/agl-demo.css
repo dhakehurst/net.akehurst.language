@@ -59,9 +59,8 @@ div#agl-demo tabview > tab:first-of-type {
 
 /* ----------  treeview ---------- */
 div#agl-demo treeview {
-    font-size: 0.7em;
+    font-size: 1em;
     line-height: 1.4em;
-    font-family: serif;
 }
 div#agl-demo treeview treeview-children {
     margin: 0;
