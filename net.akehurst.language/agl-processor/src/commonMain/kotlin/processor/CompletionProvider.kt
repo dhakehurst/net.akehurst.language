@@ -26,7 +26,7 @@ class CompletionProvider {
     fun provideFor(item: RuleItem, desiredDepth: Int): List<CompletionItem> {
         val rule = item.owningRule
         val cis = getItems(item, desiredDepth, emptySet())
-        return cis.mapNotNull { it }//.map { CompletionItem(item.owningRule, it.text) }
+        return cis.mapNotNull { it }.toSet().toList()//.map { CompletionItem(item.owningRule, it.text) }
     }
 
     // uses null to indicate that there is an empty item

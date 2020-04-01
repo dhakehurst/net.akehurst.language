@@ -100,7 +100,7 @@ internal class LanguageProcessorDefault(
         val parserExpected: List<RuntimeRule> = this.parser.expectedAt(goalRuleName, inputText, position);
         val grammarExpected: List<RuleItem> = parserExpected.filter { it!== RuntimeRuleSet.END_OF_TEXT }.map { this.converterToRuntimeRules.originalRuleItemFor(it) }
         val expected = grammarExpected.flatMap { this.completionProvider.provideFor(it, desiredDepth) }
-        return expected
+        return expected.toSet().toList()
     }
 
 }
