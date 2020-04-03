@@ -28,7 +28,9 @@ import net.akehurst.language.editor.monaco.AglEditorMonaco
 import net.akehurst.language.editor.technology.gui.widgets.TabView
 import net.akehurst.language.editor.technology.gui.widgets.TreeView
 import net.akehurst.language.editor.technology.gui.widgets.TreeViewFunctions
+import net.akehurst.language.processor.Agl
 import net.akehurst.language.processor.AglLanguage
+import org.w3c.dom.HTMLDialogElement
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.HTMLSelectElement
 import kotlin.browser.document
@@ -62,13 +64,40 @@ fun createBaseDom(appDivSelector: String) {
     while (null != appDiv.firstChild) {
         appDiv.removeChild(appDiv.firstChild!!)
     }
+    val aglEditorVersion = net.akehurst.language.editor.ace.
     appDiv.create().article {
         header {
             section {
                 class_.add("agl-menubar")
                 h2 { content = "Version ${BuildInfo.version}" }
                 nav {
-                    a { content = "About" }
+                    val about = dialog {
+                        val thisDialog = this.element as HTMLDialogElement
+                        on.click {
+                            (it.target as HTMLDialogElement).close()
+                        }
+                        article {
+                            header { h2 { content="About" } }
+                            section {
+                                p { content = "Ace version 1.4.8, Licence BSD" }
+                                p { content = "Monaco version 1.4.8, Licence MIT" }
+                                p { content = "AGL version ${Agl.version}, Licence Apache 2.0" }
+                                p { content = "Kotlin version 1.3.71, Licence Apache 2.0" }
+                            }
+                            footer {
+                                button {
+                                    content = "Close"
+                                    on.click { thisDialog.close() }
+                                }
+                            }
+                        }
+                    }
+                    a {
+                        content = "About"
+                        on.click {
+                            (about as HTMLDialogElement).showModal()
+                        }
+                    }
                 }
             }
             section {

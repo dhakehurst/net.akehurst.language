@@ -2,7 +2,7 @@ package net.akehurst.language.processor
 
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.processor.Agl
+import net.akehurst.language.agl.processor.Agl
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized

@@ -61,10 +61,10 @@ grammar Dot  {
     attr_stmt = attr_type attr_lists ;
     attr_type = GRAPH | NODE | EDGE ;
     attr_lists = attr_list+ ;
-    attr_list = '[' a_list? ']' ;
-    a_list = a  a_list? ;
-    a = ID '=' ID a_list_sep? ;
-    a_list_sep = ';' | ',' ;
+    attr_list = '[' attr_list_content ']' ;
+    attr_list_content = [ attr / a_list_sep ]* ;
+    attr = ID '=' ID ;
+    a_list_sep = (';' | ',')? ;
 
     subgraph = subgraph_id? '{' stmt_list '}' ;
     subgraph_id = SUBGRAPH ID? ;

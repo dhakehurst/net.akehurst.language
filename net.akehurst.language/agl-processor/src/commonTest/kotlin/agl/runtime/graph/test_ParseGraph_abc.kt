@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.parser.scannerless.InputFromCharSequence
+import net.akehurst.language.agl.parser.InputFromCharSequence
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

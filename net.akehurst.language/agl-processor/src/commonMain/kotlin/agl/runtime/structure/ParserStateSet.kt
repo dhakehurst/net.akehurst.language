@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.api.parser.ParserException
-import net.akehurst.language.collections.including
+import net.akehurst.language.collections.lazyMapNonNull
 
 class ParserStateSet(
         val runtimeRuleSet: RuntimeRuleSet,

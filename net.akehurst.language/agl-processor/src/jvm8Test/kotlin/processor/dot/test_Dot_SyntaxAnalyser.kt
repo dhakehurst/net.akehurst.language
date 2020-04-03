@@ -17,7 +17,7 @@ package net.akehurst.language.processor.dot
 
 import net.akehurst.language.api.analyser.AsmElementSimple
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.processor.Agl
+import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

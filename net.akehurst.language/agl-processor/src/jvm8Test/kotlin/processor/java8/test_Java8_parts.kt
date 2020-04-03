@@ -19,7 +19,7 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.async.runBlockingNoSuspensions
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.processor.Agl
+import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
 
 class test_Java8_parts {

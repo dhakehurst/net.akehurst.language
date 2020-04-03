@@ -16,15 +16,14 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import net.akehurst.language.agl.parser.InputFromCharSequence
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SPPTBranch
-import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SPPTNodeIdentity
-import net.akehurst.language.parser.scannerless.InputFromCharSequence
-import net.akehurst.language.parser.sppt.*
+import net.akehurst.language.agl.sppt.*
 
 internal class ParseGraph(
         val userGoalRule: RuntimeRule,
@@ -78,7 +77,19 @@ internal class ParseGraph(
                     firstSkipNodes.isEmpty() -> userGoalNode.location.length
                     else -> firstSkipNodes.last().startPosition + firstSkipNodes.last().location.length + userGoalNode.location.length
                 }
-                val location = InputLocation(userGoalNode.location.position, userGoalNode.location.column, userGoalNode.location.line, length)
+                val position = when {
+                    firstSkipNodes.isEmpty() -> userGoalNode.location.position
+                    else -> firstSkipNodes.first().location.position
+                }
+                val column = when {
+                    firstSkipNodes.isEmpty() -> userGoalNode.location.column
+                    else -> firstSkipNodes.first().location.column
+                }
+                val line = when {
+                    firstSkipNodes.isEmpty() -> userGoalNode.location.line
+                    else -> firstSkipNodes.first().location.line
+                }
+                val location = InputLocation(position, column, line, length)
                 val r = if (userGoalNode is SPPTBranch) {
                     val r = SPPTBranchDefault(this.userGoalRule, location, userGoalNode.nextInputPosition, userGoalNode.priority)
                     for (alt in userGoalNode.childrenAlternatives) {
@@ -157,21 +168,23 @@ internal class ParseGraph(
         }
     }
 
-    private fun addGrowing(gn: GrowingNode, previous: Set<PreviousInfo>) {
+    private fun addGrowing(gn: GrowingNode, previous: Set<PreviousInfo>) : GrowingNode {
         val startPosition = gn.startPosition
         val nextInputPosition = gn.nextInputPosition
         val gnindex = GrowingNodeIndex(gn.currentState, startPosition, nextInputPosition, gn.priority)
         val existing = this.growing[gnindex]
-        if (null == existing) {
+        return if (null == existing) {
             for (info in previous) {
                 gn.addPrevious(info)
             }
             this.growing[gnindex] = gn
+            gn
         } else {
             // merge
             for (info in previous) {
                 existing.addPrevious(info)
             }
+            existing
         }
     }
 
@@ -223,7 +236,7 @@ internal class ParseGraph(
  */
     //TODO: combine next 3 methods!
     private fun findOrCreateGrowingNode(isSkipGrowth: Boolean, curRp: ParserState, location: InputLocation, nextInputPosition: Int, children: List<SPPTNode>, oldHead: GrowingNode, previous: Set<PreviousInfo>)  {
-        this.addGrowing(oldHead, previous)
+        val oldOrExistingHead = this.addGrowing(oldHead, previous)
         // TODO: remove, this is for test
         for (info in previous) {
             this.addGrowing(info.node)
@@ -232,10 +245,10 @@ internal class ParseGraph(
         val existing = this.growing[gnindex]
         if (null == existing) {
             val nn = GrowingNode(isSkipGrowth, curRp, location, nextInputPosition, 0, children, 0)
-            nn.addPrevious(oldHead)
+            nn.addPrevious(oldOrExistingHead)
             this.addGrowingHead(gnindex, nn)
         } else {
-            existing.addPrevious(oldHead)
+            existing.addPrevious(oldOrExistingHead)
             this.addGrowingHead(gnindex, existing)
         }
     }

@@ -1,5 +1,6 @@
-package net.akehurst.language.processor
+package net.akehurst.language.agl.processor.java8
 
+import net.akehurst.language.agl.processor.Agl
 import org.junit.Test
 import java.nio.file.Files
 import java.nio.file.Paths

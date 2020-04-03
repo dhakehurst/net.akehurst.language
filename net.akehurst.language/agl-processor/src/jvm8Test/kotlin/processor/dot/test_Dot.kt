@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.processor.dot
+package net.akehurst.language.agl.processor.dot
 
 //import com.soywiz.korio.async.runBlockingNoSuspensions
 //import com.soywiz.korio.file.std.resourcesVfs
@@ -28,7 +28,7 @@ import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.processor.Agl
+import net.akehurst.language.agl.processor.Agl
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
