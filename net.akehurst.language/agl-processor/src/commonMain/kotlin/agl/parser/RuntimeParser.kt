@@ -24,8 +24,8 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.api.parser.ParserInterruptedException
 import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.parser.sppt.SPPTBranchDefault
-import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
+import net.akehurst.language.agl.sppt.SPPTBranchDefault
+import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
 import kotlin.math.max
 
 internal class RuntimeParser(

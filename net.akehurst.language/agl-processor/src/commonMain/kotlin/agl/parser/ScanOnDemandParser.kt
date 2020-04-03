@@ -26,8 +26,8 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.sppt.SPPTLeafDefault
-import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
+import net.akehurst.language.agl.sppt.SPPTLeafDefault
+import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
 import kotlin.math.max
 
 class ScanOnDemandParser(

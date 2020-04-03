@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.sppt
+package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.api.sppt.SPPTNodeIdentity
 

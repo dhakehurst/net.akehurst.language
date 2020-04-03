@@ -20,7 +20,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.grammar.runtime.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.parser.sppt.SPPTParser
+import net.akehurst.language.agl.sppt.SPPTParser
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

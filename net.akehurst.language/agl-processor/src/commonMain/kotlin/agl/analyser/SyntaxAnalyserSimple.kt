@@ -24,8 +24,8 @@ import net.akehurst.language.api.analyser.AsmElementSimple
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyserException
 import net.akehurst.language.api.sppt.*
-import net.akehurst.language.parser.sppt.SPPTBranchDefault
-import net.akehurst.language.parser.sppt.SPPTLeafDefault
+import net.akehurst.language.agl.sppt.SPPTBranchDefault
+import net.akehurst.language.agl.sppt.SPPTLeafDefault
 
 
 class SyntaxAnalyserSimple : SyntaxAnalyser {

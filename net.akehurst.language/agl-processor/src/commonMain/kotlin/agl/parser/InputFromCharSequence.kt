@@ -18,7 +18,7 @@ package net.akehurst.language.agl.parser
 
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.parser.sppt.SPPTLeafDefault
+import net.akehurst.language.agl.sppt.SPPTLeafDefault
 
 internal class InputFromCharSequence(val text: CharSequence) {
 

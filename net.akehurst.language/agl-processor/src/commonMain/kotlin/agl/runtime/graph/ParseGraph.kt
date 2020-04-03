@@ -23,7 +23,7 @@ import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SPPTNodeIdentity
-import net.akehurst.language.parser.sppt.*
+import net.akehurst.language.agl.sppt.*
 
 internal class ParseGraph(
         val userGoalRule: RuntimeRule,
