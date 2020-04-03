@@ -28,12 +28,15 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-class test_literal_a0n_optSep : test_ScannerlessParserAbstract() {
+class test_sList_a_WS_optSep_fromDot : test_ScannerlessParserAbstract() {
 
-    // S = [a / sep]*
-    // sep = ','?
-    // a = 'a'
+    //stmt_list = stmt1 * ;
+    //stmt1 = stmt  ';'? ;
+    //stmt = attr_stmt
+
+    ;
     private val S = runtimeRuleSet {
+        pattern("WS", "\\s+", true)
         sList("S", 0, -1, "'a'", "sep")
         literal("'a'", "a")
         multi("sep",0,1,"','")
@@ -85,12 +88,34 @@ class test_literal_a0n_optSep : test_ScannerlessParserAbstract() {
     }
 
     @Test
+    fun a_a() {
+        val rrs = this.S
+        val goal = "S"
+        val sentence = "a a"
+
+        val expected = "S {'a' WS : ' ' sep { §empty } 'a'}"
+
+        super.test(rrs, goal, sentence, expected)
+    }
+
+    @Test
     fun acaa() {
         val rrs = this.S
         val goal = "S"
         val sentence = "a,aa"
 
         val expected = "S {'a' sep { ',' } 'a' sep { §empty } 'a'}"
+
+        super.test(rrs, goal, sentence, expected)
+    }
+
+    @Test
+    fun aca_a() {
+        val rrs = this.S
+        val goal = "S"
+        val sentence = "a,a a"
+
+        val expected = "S {'a' sep { ',' } 'a' WS : ' ' sep { §empty } 'a'}"
 
         super.test(rrs, goal, sentence, expected)
     }
