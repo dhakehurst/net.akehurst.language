@@ -74,8 +74,9 @@ class test_RuntimeParser_parse_concatenation {
         val ex = assertFailsWith(ParseFailedException::class) {
             test_parse(sp, goalRuleName, inputText)
         }
+        println(ex)
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(1, ex.location.column, "column is wrong")
+        assertEquals(2, ex.location.column, "column is wrong")
     }
 
     @Test
@@ -87,8 +88,9 @@ class test_RuntimeParser_parse_concatenation {
         val ex = assertFailsWith(ParseFailedException::class) {
             test_parse(sp, goalRuleName, inputText)
         }
+        println(ex)
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(2, ex.location.column, "column is wrong")
+        assertEquals(3, ex.location.column, "column is wrong")
     }
 
     @Test
@@ -100,8 +102,9 @@ class test_RuntimeParser_parse_concatenation {
         val ex = assertFailsWith(ParseFailedException::class) {
             test_parse(sp, goalRuleName, inputText)
         }
+        println(ex)
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(3, ex.location.column, "column is wrong")
+        assertEquals(4, ex.location.column, "column is wrong")
     }
 
     // S = a b c;

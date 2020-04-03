@@ -122,7 +122,7 @@ class test_Java8(val data: Data) {
 
         } catch (ex: ParseFailedException) {
             println(ex.message)
-            println(ex.longestMatch)
+            println(ex.longestMatch?.toStringAll)
             throw ex
         }
 

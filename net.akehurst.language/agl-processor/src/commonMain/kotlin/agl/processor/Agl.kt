@@ -75,7 +75,7 @@ object Agl {
             return processor(grammar, syntaxAnalyser, formatter)
         } catch (e: ParseFailedException) {
             //TODO: better, different exception to detect which list item fails
-            throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
+            throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location, e.expected)
         }
     }
 
@@ -89,7 +89,7 @@ object Agl {
             return processor(grammar, goalRuleName, syntaxAnalyser, formatter)
         } catch (e: ParseFailedException) {
             //TODO: better, different exception to detect which list item fails
-            throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location)
+            throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location, e.expected)
         }
     }
 
@@ -104,7 +104,7 @@ object Agl {
             //TODO: better, different exception to detect which list item fails
             val newCol = e.location.column.minus(prefix.length)
             val location = InputLocation(newCol, 1, 1,0)
-            throw ParseFailedException("Unable to parse list of rules", e.longestMatch, location)
+            throw ParseFailedException("Unable to parse list of rules", e.longestMatch, location, e.expected)
         }
     }
 

@@ -46,7 +46,7 @@ class test_Dot_Singles {
 
     @Test
     fun a_list__from_Data_Structures() {
-        val goal = "a_list"
+        val goal = "attr_list_content"
         val sentence =  """
         label = "<f0> 0x10ba8| <f1>"
         shape = "record"

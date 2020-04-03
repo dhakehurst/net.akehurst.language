@@ -83,7 +83,7 @@ class ScanOnDemandParser(
                 }
             })
             when {
-                (null == longest || longest.matchedTextLength==0) -> {
+                (null == longest || longest.matchedTextLength == 0) -> {
                     //TODO: collate unscanned, rather than make a separate token for each char
                     val text = inputText[position].toString()
                     lastLocation = input.nextLocation(lastLocation, text.length)
@@ -136,89 +136,89 @@ class ScanOnDemandParser(
         return if (match != null) {
             SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
         } else {
-            throwError(graph, rp, seasons, maxNumHeads)
+            val lg = rp.lastGrown.toList()
+            val nextExpected = this.findNextExpectedAfterError(rp, graph, input, lg) //this possibly modifies rp and hence may change the longestLastGrown
+            throwError(graph, rp, nextExpected, seasons, maxNumHeads)
         }
     }
 
-    private fun throwError(graph: ParseGraph, rp: RuntimeParser, seasons: Int, maxNumHeads: Int): SharedPackedParseTreeDefault {
-        val llg = rp.longestLastGrown ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0))
-        val possibleNextLeaf: SPPTLeafDefault? = null//graph.leaves.values.filter { it.startPosition == llg.nextInputPosition }.firstOrNull()
-        if (null != possibleNextLeaf) {
-            val errorPos = possibleNextLeaf.location.position + possibleNextLeaf.location.length
-            val lastEolPos = possibleNextLeaf.matchedText.lastIndexOf('\n')
-            val errorLine = possibleNextLeaf.location.line + possibleNextLeaf.numberOfLines
-            val errorColumn = when {
-                possibleNextLeaf.lastLocation.position == 0 && possibleNextLeaf.lastLocation.length == 0 -> errorPos + 1
-                -1 == lastEolPos -> errorPos + 1
-                else -> possibleNextLeaf.matchedTextLength - lastEolPos
-            }
-            val errorLength = 1
-            val location = InputLocation(errorPos, errorColumn, errorLine, errorLength)
-            throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location)
+    private fun throwError(graph: ParseGraph, rp: RuntimeParser, nextExpected: Pair<GrowingNode, List<RuntimeRule>>, seasons: Int, maxNumHeads: Int): SharedPackedParseTreeDefault {
+        val llg = rp.longestLastGrown
+                ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0), emptySet())
+
+        val gn = nextExpected.first
+        val exp = nextExpected.second
+        val expected = exp
+                .filter { it.number >= 0 && it.isEmptyRule.not() }
+                .map { this.runtimeRuleSet.firstTerminals[it.number] }
+                .flatMap { it.map { it.value } }
+                .toSet()
+        val errorPos = gn.lastLocation.position + gn.lastLocation.length
+        val lastEolPos = llg.matchedText.lastIndexOf('\n')
+        val errorLine = llg.location.line + llg.numberOfLines
+        val errorColumn = when {
+            llg.lastLocation.position == 0 && llg.lastLocation.length == 0 -> errorPos + 1
+            -1 == lastEolPos -> llg.lastLocation.column + llg.lastLocation.length
+            else -> llg.matchedTextLength - lastEolPos
+        }
+        val errorLength = 1
+        val location = InputLocation(errorPos, errorColumn, errorLine, errorLength)
+        throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location, expected)
+
+    }
+
+    private fun findNextExpectedAfterError(rp: RuntimeParser, graph: ParseGraph, input: InputFromCharSequence, gns: List<GrowingNode>): Pair<GrowingNode, List<RuntimeRule>> {
+        // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
+
+        val matches = gns.toMutableList()
+        // try grow last leaf with no lookahead
+        for (gn in rp.lastGrownLinked) {
+            val gnindex = GrowingNodeIndex(gn.currentState, gn.startPosition, gn.nextInputPosition, gn.priority)
+            graph.growingHead[gnindex] = gn
+        }
+        rp.tryGrowWidthOnceThenHightOrGraftUntilFail()
+        val lg = rp.lastGrown.maxWith(Comparator<GrowingNode> { a, b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
+        return if (null == lg) {
+            TODO()
         } else {
-            val errorPos = llg.lastLocation.position + llg.lastLocation.length
-            val lastEolPos = llg.matchedText.lastIndexOf('\n')
-            val errorLine = llg.location.line + llg.numberOfLines
-            val errorColumn = when {
-                llg.lastLocation.position == 0 && llg.lastLocation.length == 0 -> errorPos + 1
-                -1 == lastEolPos -> llg.lastLocation.column + llg.lastLocation.length
-                else -> llg.matchedTextLength - lastEolPos
+            // compute next expected item/RuntimeRule
+            TODO("how to get transitions, because lg has no previous!")
+            val exp = lg.previous.values.flatMap { prev ->
+                lg.currentState.transitions(this.runtimeRuleSet, prev.node.currentState)
+            }.flatMap {
+                it.to.rulePosition.items
             }
-            val errorLength = 1
-            val location = InputLocation(errorPos, errorColumn, errorLine, errorLength)//this.input.calcLineAndColumn(llg.nextInputPosition)
-            throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location)
+            Pair(lg, exp)
         }
-
     }
 
-    /*
-        private fun findNextExpected() {
-            // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
-            // try grow last leaf with no lookahead
-            for (gn in rp.lastGrownLinked) {
-                val gnindex = GrowingNodeIndex(gn.currentState, gn.startPosition, gn.nextInputPosition, gn.priority)
-                graph.growingHead[gnindex] = gn
-            }
-            do {
-                rp.grow(true)
-                for (gn in rp.lastGrown) {
-                    // may need to change this to finalInputPos!
-                    if (input.isEnd(gn.nextInputPosition)) {
-                        matches.add(gn)
-                    }
-                }
-                seasons++
-            } while (rp.canGrow)
+    private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromCharSequence, gns: List<GrowingNode>): List<RuntimeRule> {
+        // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
 
-
-            val expected = mutableSetOf<RuntimeRule>()
-            for (ep in matches) {
-                var done = false
-                // while (!done) {
-                if (ep.canGrowWidth) {
-                    expected.addAll(ep.nextExpectedItems)
-                    done = true
-                    // TODO: sum from all parents
-                    // gn = gn.getPossibleParent().get(0).node;// .getNextExpectedItem();
-                } else {
-                    // if has height potential?
-                    // gn = gn.getPossibleParent().get(0).node;
-
-                }
-                // }
-            }
-            // final List<RuntimeRule> expected = longest.getNextExpectedItem();
-            val nextExpected = mutableListOf<RuntimeRule>()
-            for (rr in expected) {
-                nextExpected.add(rr)
-            }
-            // add skip rules at end
-            //for (rr in this.runtimeRuleSet.skipRules) {
-            //    nextExpected.add(rr)
-            //}
-            return nextExpected
+        val matches = gns.toMutableList()
+        // try grow last leaf with no lookahead
+        for (gn in rp.lastGrownLinked) {
+            val gnindex = GrowingNodeIndex(gn.currentState, gn.startPosition, gn.nextInputPosition, gn.priority)
+            graph.growingHead[gnindex] = gn
         }
-    */
+        do {
+            rp.grow(true)
+            for (gn in rp.lastGrown) {
+                // may need to change this to finalInputPos!
+                if (input.isEnd(gn.nextInputPosition)) {
+                    matches.add(gn)
+                }
+            }
+        } while (rp.canGrow && graph.goals.isEmpty())
+
+        val expected = matches.filter { it.canGrowWidth }.flatMap { it.nextExpectedItems }
+        val nextExpected = mutableListOf<RuntimeRule>()
+        for (rr in expected) {
+            nextExpected.add(rr)
+        }
+        return nextExpected
+    }
+
     override fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int): List<RuntimeRule> {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val usedText = inputText.subSequence(0, position)
@@ -243,7 +243,9 @@ class ScanOnDemandParser(
             }
             seasons++
         } while (rp.canGrow)
-
+        val nextExpected = this.findNextExpected(rp, graph, input, matches)
+        return nextExpected
+        /*
         // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
         // try grow last leaf with no lookahead
         for (gn in rp.lastGrownLinked) {
@@ -261,33 +263,13 @@ class ScanOnDemandParser(
             seasons++
         } while (rp.canGrow)
 
-
-        val expected = mutableSetOf<RuntimeRule>()
-        for (ep in matches) {
-            var done = false
-            // while (!done) {
-            if (ep.canGrowWidth) {
-                expected.addAll(ep.nextExpectedItems)
-                done = true
-                // TODO: sum from all parents
-                // gn = gn.getPossibleParent().get(0).node;// .getNextExpectedItem();
-            } else {
-                // if has height potential?
-                // gn = gn.getPossibleParent().get(0).node;
-
-            }
-            // }
-        }
-        // final List<RuntimeRule> expected = longest.getNextExpectedItem();
+        val expected = matches.flatMap { it.nextExpectedItems }
         val nextExpected = mutableListOf<RuntimeRule>()
         for (rr in expected) {
             nextExpected.add(rr)
         }
-        // add skip rules at end
-        //for (rr in this.runtimeRuleSet.skipRules) {
-        //    nextExpected.add(rr)
-        //}
         return nextExpected
+         */
     }
 
     override fun expectedTerminalsAt(goalRuleName: String, inputText: CharSequence, position: Int): List<RuntimeRule> {

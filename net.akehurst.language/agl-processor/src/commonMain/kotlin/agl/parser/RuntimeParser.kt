@@ -121,6 +121,73 @@ internal class RuntimeParser(
         }
     }
 
+    //to find error locations
+    fun tryGrowWidthOnceThenHightOrGraftUntilFail() {
+        this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
+        this.toGrowPrevious.clear()
+        this.graph.growingHead.clear()
+        // try grow width
+        for (gn in this.toGrow) {
+            checkInterrupt()
+            val previous = this.graph.pop(gn)
+            this.toGrowPrevious[gn] = previous
+            this.growWidthOnly(gn, previous)
+        }
+
+        // try height or graft
+        while ((this.canGrow && this.graph.goals.isEmpty())) {
+            this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
+            this.toGrowPrevious.clear()
+            this.graph.growingHead.clear()
+            // try grow width
+            for (gn in this.toGrow) {
+                checkInterrupt()
+                val previous = this.graph.pop(gn)
+                this.toGrowPrevious[gn] = previous
+                this.growHeightOrGraftOnly(gn, previous)
+            }
+        }
+    }
+
+    internal fun growWidthOnly(gn: GrowingNode, previous: Set<PreviousInfo>) {
+        when (gn.runtimeRule.kind) {
+            RuntimeRuleKind.GOAL -> {
+                val rps = gn.currentState
+                val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, null)
+                for (it in transitions) {
+                    when (it.action) {
+                        Transition.ParseAction.WIDTH -> doWidth(gn, emptySet(), it, true)
+                    }
+                }
+            }
+            else -> {
+                for (prev in previous) {
+                    val rps = gn.currentState
+                    val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, prev.node.currentState)
+                    for (it in transitions) {
+                        when (it.action) {
+                            Transition.ParseAction.WIDTH -> doWidth(gn, setOf(prev), it, true)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    internal fun growHeightOrGraftOnly(gn: GrowingNode, previous: Set<PreviousInfo>) {
+        //should never be a GOAL
+        for (prev in previous) {
+            val rps = gn.currentState
+            val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, prev.node.currentState)
+            for (it in transitions) {
+                when (it.action) {
+                    Transition.ParseAction.HEIGHT -> doHeight(gn, prev, it, true)
+                    Transition.ParseAction.GRAFT -> doGraft(gn, prev, it, true)
+                }
+            }
+        }
+    }
+
     fun grow(noLookahead: Boolean) {
         this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
         this.toGrowPrevious.clear()
