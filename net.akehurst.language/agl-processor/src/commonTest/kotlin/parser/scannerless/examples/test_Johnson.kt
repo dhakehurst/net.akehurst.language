@@ -16,12 +16,12 @@
 
 package net.akehurst.language.parser.scannerless.examples
 
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.ScannerlessParser
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -158,7 +158,7 @@ class test_Johnson : test_ScannerlessParserAbstract() {
 
 
        // super.testStringResult(rrb, goal, sentence, expected1)
-        val p = ScannerlessParser(rrb.ruleSet())
+        val p = ScanOnDemandParser(rrb.ruleSet())
         p.parse(goal, sentence)
         val sm = rrb.ruleSet().printAutomaton(goal)
         println(sm)
@@ -168,7 +168,7 @@ class test_Johnson : test_ScannerlessParserAbstract() {
     @ExperimentalTime
     @Test
     fun time() {
-        val parser = ScannerlessParser(this.S().ruleSet())
+        val parser = ScanOnDemandParser(this.S().ruleSet())
         val times = mutableListOf<Duration>()
         val goal = "S"
 

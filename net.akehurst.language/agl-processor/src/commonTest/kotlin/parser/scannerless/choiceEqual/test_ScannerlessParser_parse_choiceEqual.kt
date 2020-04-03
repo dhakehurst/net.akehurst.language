@@ -16,11 +16,11 @@
 
 package net.akehurst.language.parser.scannerless.choiceEqual
 
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.ScannerlessParser
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -28,7 +28,7 @@ import kotlin.test.assertNotNull
 
 class test_ScannerlessParser_parse_choiceEqual {
 
-    private fun test_parse(sp: ScannerlessParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
+    private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
         return sp.parse(goalRuleName, inputText)
     }
 
@@ -36,13 +36,13 @@ class test_ScannerlessParser_parse_choiceEqual {
     // a = 'a' ;
     // b = 'b' ;
     // c = 'c' ;
-    private fun aObOcLiteral(): ScannerlessParser {
+    private fun aObOcLiteral(): ScanOnDemandParser {
         val b = RuntimeRuleSetBuilder()
         val r1 = b.rule("a").concatenation(b.literal("a"))
         val r2 = b.rule("b").concatenation(b.literal("b"))
         val r3 = b.rule("c").concatenation(b.literal("c"))
         b.rule("r").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r1, r2, r3)
-        val sp = ScannerlessParser(b.ruleSet())
+        val sp = ScanOnDemandParser(b.ruleSet())
         return sp
     }
 
@@ -123,14 +123,14 @@ class test_ScannerlessParser_parse_choiceEqual {
     // a = 'a' ;
     // b = 'b' ;
     // c = 'c' ;
-    private fun abOcLiteral(): ScannerlessParser {
+    private fun abOcLiteral(): ScanOnDemandParser {
         val b = RuntimeRuleSetBuilder()
         val ra = b.rule("a").concatenation(b.literal("a"))
         val rb = b.rule("b").concatenation(b.literal("b"))
         val rc = b.rule("c").concatenation(b.literal("c"))
         val rab = b.rule("ab").concatenation(ra, rb)
         b.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, rab, rc)
-        val sp = ScannerlessParser(b.ruleSet())
+        val sp = ScanOnDemandParser(b.ruleSet())
         return sp
     }
 
@@ -199,14 +199,14 @@ class test_ScannerlessParser_parse_choiceEqual {
     // a = 'a' ;
     // b = 'b' ;
     // c = 'c' ;
-    private fun aObcLiteral(): ScannerlessParser {
+    private fun aObcLiteral(): ScanOnDemandParser {
         val b = RuntimeRuleSetBuilder()
         val ra = b.rule("a").concatenation(b.literal("a"))
         val rb = b.rule("b").concatenation(b.literal("b"))
         val rc = b.rule("c").concatenation(b.literal("c"))
         val rbc = b.rule("bc").concatenation(rb, rc)
         b.rule("r").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, ra, rbc)
-        val sp = ScannerlessParser(b.ruleSet())
+        val sp = ScanOnDemandParser(b.ruleSet())
         return sp
     }
 

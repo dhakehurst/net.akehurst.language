@@ -16,7 +16,7 @@
 
 package net.akehurst.language.parser.scannerless
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.parser.InputFromCharSequence
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

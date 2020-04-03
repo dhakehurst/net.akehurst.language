@@ -16,10 +16,10 @@
 
 package net.akehurst.language.parser.scannerless.concatenation
 
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.ScannerlessParser
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -27,16 +27,16 @@ import kotlin.test.assertNotNull
 
 class test_RuntimeParser_parse_concatenation {
 
-    private fun test_parse(sp: ScannerlessParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
+    private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
         return sp.parse(goalRuleName, inputText)
     }
 
 
     // S = 'a' 'b' 'c' ;
-    private fun abc1(): ScannerlessParser {
+    private fun abc1(): ScanOnDemandParser {
         val b = RuntimeRuleSetBuilder()
         b.rule("S").concatenation(b.literal("a"), b.literal("b"), b.literal("c"))
-        val sp = ScannerlessParser(b.ruleSet())
+        val sp = ScanOnDemandParser(b.ruleSet())
         return sp
     }
 
@@ -108,13 +108,13 @@ class test_RuntimeParser_parse_concatenation {
     // a = 'a' ;
     // b = 'b' ;
     // c = 'c' ;
-    private fun abc2(): ScannerlessParser {
+    private fun abc2(): ScanOnDemandParser {
         val b = RuntimeRuleSetBuilder()
         val r1 = b.rule("a").concatenation(b.literal("a"))
         val r2 = b.rule("b").concatenation(b.literal("b"))
         val r3 = b.rule("c").concatenation(b.literal("c"))
         b.rule("S").concatenation(r1, r2, r3)
-        val sp = ScannerlessParser(b.ruleSet())
+        val sp = ScanOnDemandParser(b.ruleSet())
         return sp
     }
 
@@ -180,12 +180,12 @@ class test_RuntimeParser_parse_concatenation {
     // S = ab c;
     // ab = 'a' 'b' ;
     // c = 'c' ;
-    private fun ab_c(): ScannerlessParser {
+    private fun ab_c(): ScanOnDemandParser {
         val b = RuntimeRuleSetBuilder()
         val r_ab = b.rule("ab").concatenation(b.literal("a"),b.literal("b"))
         val r_c = b.rule("c").concatenation(b.literal("c"))
         b.rule("S").concatenation(r_ab, r_c)
-        val sp = ScannerlessParser(b.ruleSet())
+        val sp = ScanOnDemandParser(b.ruleSet())
         return sp
     }
 

@@ -16,8 +16,8 @@
 
 package net.akehurst.language.agl.ast
 
-import net.akehurst.language.agl.runtime.structure.lazyMapNonNull
 import net.akehurst.language.api.grammar.*
+import net.akehurst.language.collections.lazyMapNonNull
 
 class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless
+package net.akehurst.language.agl.parser
 
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.agl.runtime.structure.RuntimeRule

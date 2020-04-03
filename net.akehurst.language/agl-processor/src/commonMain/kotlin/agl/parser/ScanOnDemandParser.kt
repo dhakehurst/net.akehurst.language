@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless
+package net.akehurst.language.agl.parser
 
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -30,7 +30,7 @@ import net.akehurst.language.parser.sppt.SPPTLeafDefault
 import net.akehurst.language.parser.sppt.SharedPackedParseTreeDefault
 import kotlin.math.max
 
-class ScannerlessParser(
+class ScanOnDemandParser(
         private val runtimeRuleSet: RuntimeRuleSet
 ) : Parser {
 

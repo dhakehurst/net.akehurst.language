@@ -16,11 +16,13 @@
 
 package net.akehurst.language.parser.scannerless
 
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.time.*
+import kotlin.time.ExperimentalTime
+import kotlin.time.MonoClock
+import kotlin.time.measureTimedValue
 
 class test_Character_vs_RegEx : test_ScannerlessParserAbstract() {
 
@@ -39,11 +41,11 @@ class test_Character_vs_RegEx : test_ScannerlessParserAbstract() {
             }
         """;
 
-        val regExParser = ScannerlessParser(
+        val regExParser = ScanOnDemandParser(
                 runtimeRuleSet {
                     pattern("S", "[a]*")
                 })
-        val charParser = ScannerlessParser(
+        val charParser = ScanOnDemandParser(
                 runtimeRuleSet {
                     multi("S", 0, -1,"'a'")
                     literal("'a'","a")

@@ -16,10 +16,10 @@
 
 package net.akehurst.language.parser.scannerless.listSeparated
 
+import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.ScannerlessParser
 import net.akehurst.language.parser.sppt.SPPTParser
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -30,16 +30,16 @@ class test_sList {
 
     val rrb = RuntimeRuleSetBuilder()
 
-    private fun test_parse(sp: ScannerlessParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
+    private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
         return sp.parse(goalRuleName, inputText)
     }
 
     // r = [a / ',']+
     // a = 'a'
-    private fun literal_a1n(): ScannerlessParser {
+    private fun literal_a1n(): ScanOnDemandParser {
         val r0 = rrb.literal("a")
         val r1 = rrb.rule("r").separatedList(1, -1, rrb.literal(","), r0)
-        return ScannerlessParser(rrb.ruleSet())
+        return ScanOnDemandParser(rrb.ruleSet())
     }
 
     @Test
@@ -120,10 +120,10 @@ class test_sList {
 
     // r = [a / 'b'][2..5]
     // a = 'a'
-    private fun literal_ab25(): ScannerlessParser {
+    private fun literal_ab25(): ScanOnDemandParser {
         val r0 = rrb.literal("a")
         val r1 = rrb.rule("r").separatedList(2, 5, rrb.literal("b"), r0)
-        return ScannerlessParser(rrb.ruleSet())
+        return ScanOnDemandParser(rrb.ruleSet())
     }
 
     @Test

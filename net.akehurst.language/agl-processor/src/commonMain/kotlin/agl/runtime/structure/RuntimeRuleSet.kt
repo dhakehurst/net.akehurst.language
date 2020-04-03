@@ -16,10 +16,13 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.parser.InputFromCharSequence
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.api.parser.ParserException
+import net.akehurst.language.collections.lazyMap
+import net.akehurst.language.collections.lazyMapNonNull
 import net.akehurst.language.collections.transitiveClosure
-import net.akehurst.language.parser.scannerless.InputFromCharSequence
+
 
 class RuntimeRuleSet(rules: List<RuntimeRule>) {
 

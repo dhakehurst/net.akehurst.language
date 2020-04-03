@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless
 
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
 import kotlin.test.Test
@@ -35,7 +36,7 @@ class test_InputLocation_singleLine {
 
     @Test
     fun abc() {
-        val sp = ScannerlessParser(S)
+        val sp = ScanOnDemandParser(S)
 
         val actual = sp.parse("S", "abc")
 
@@ -63,7 +64,7 @@ class test_InputLocation_multiLine {
 
     @Test
     fun abc() {
-        val sp = ScannerlessParser(S)
+        val sp = ScanOnDemandParser(S)
 
         val actual = sp.parse("S", "abc")
 
@@ -76,7 +77,7 @@ class test_InputLocation_multiLine {
 
     @Test
     fun a_b_c() {
-        val sp = ScannerlessParser(S)
+        val sp = ScanOnDemandParser(S)
 
         val actual = sp.parse("S", "a b c")
 
@@ -92,7 +93,7 @@ class test_InputLocation_multiLine {
 
     @Test
     fun aNLbNLc() {
-        val sp = ScannerlessParser(S)
+        val sp = ScanOnDemandParser(S)
 
         val actual = sp.parse("S", """
             a
@@ -130,7 +131,7 @@ class test_InputLocation_multiLine2 {
 
     @Test
     fun abc() {
-        val sp = ScannerlessParser(S)
+        val sp = ScanOnDemandParser(S)
 
         val actual = sp.parse("S", "aaabbbccc")
 
@@ -143,7 +144,7 @@ class test_InputLocation_multiLine2 {
 
     @Test
     fun a_b_c() {
-        val sp = ScannerlessParser(S)
+        val sp = ScanOnDemandParser(S)
 
         val actual = sp.parse("S", "aaa bbb ccc")
 
@@ -159,7 +160,7 @@ class test_InputLocation_multiLine2 {
 
     @Test
     fun aNLbNLc() {
-        val sp = ScannerlessParser(S)
+        val sp = ScanOnDemandParser(S)
 
         val actual = sp.parse("S", """
             aaa
@@ -183,7 +184,7 @@ class test_InputLocation_multiLine2 {
 
     @Test
     fun NLaNLbNLc() {
-        val sp = ScannerlessParser(S)
+        val sp = ScanOnDemandParser(S)
         val sentence = """
             
             aaa

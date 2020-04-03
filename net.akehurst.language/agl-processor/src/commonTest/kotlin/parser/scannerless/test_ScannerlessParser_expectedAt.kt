@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless
 
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -25,7 +26,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.fail
 
-class test_ScannerlessParser_expectedAt {
+class test_ScanOnDemandParser_expectedAt {
 
     fun concat_a() : RuntimeRuleSet {
         val rrb = RuntimeRuleSetBuilder()
@@ -37,7 +38,7 @@ class test_ScannerlessParser_expectedAt {
     @Test
     fun concat_a_empty_0() {
         val rs = concat_a()
-        val sp = ScannerlessParser(rs)
+        val sp = ScanOnDemandParser(rs)
 
         val actual =  sp.expectedAt("S","",0)
         assertNotNull(actual)
@@ -50,7 +51,7 @@ class test_ScannerlessParser_expectedAt {
     @Test
     fun concat_a_a_0() {
         val rs = concat_a()
-        val sp = ScannerlessParser(rs)
+        val sp = ScanOnDemandParser(rs)
 
         val actual =  sp.expectedAt("S","a",0)
         assertNotNull(actual)
@@ -63,7 +64,7 @@ class test_ScannerlessParser_expectedAt {
     @Test
     fun concat_a_a_1() {
         val rs = concat_a()
-        val sp = ScannerlessParser(rs)
+        val sp = ScanOnDemandParser(rs)
 
         val actual =  sp.expectedAt("S","a",1)
         assertNotNull(actual)
@@ -82,7 +83,7 @@ class test_ScannerlessParser_expectedAt {
     @Test
     fun concat_ab_empty_0() {
         val rs = concat_ab()
-        val sp = ScannerlessParser(rs)
+        val sp = ScanOnDemandParser(rs)
 
         val actual =  sp.expectedAt("S","",0)
         assertNotNull(actual)
@@ -95,7 +96,7 @@ class test_ScannerlessParser_expectedAt {
     @Test
     fun concat_ab_a_0() {
         val rs = concat_ab()
-        val sp = ScannerlessParser(rs)
+        val sp = ScanOnDemandParser(rs)
 
         val actual =  sp.expectedAt("S","a",0)
         assertNotNull(actual)
@@ -108,7 +109,7 @@ class test_ScannerlessParser_expectedAt {
     @Test
     fun concat_ab_a_1() {
         val rs = concat_ab()
-        val sp = ScannerlessParser(rs)
+        val sp = ScanOnDemandParser(rs)
 
         val actual =  sp.expectedAt("S","a",1)
         assertNotNull(actual)
@@ -121,7 +122,7 @@ class test_ScannerlessParser_expectedAt {
     @Test
     fun concat_ab_ab_1() {
         val rs = concat_ab()
-        val sp = ScannerlessParser(rs)
+        val sp = ScanOnDemandParser(rs)
 
         val actual =  sp.expectedAt("S","ab",1)
         assertNotNull(actual)
@@ -133,7 +134,7 @@ class test_ScannerlessParser_expectedAt {
     @Test
     fun concat_ab_ab_2() {
         val rs = concat_ab()
-        val sp = ScannerlessParser(rs)
+        val sp = ScanOnDemandParser(rs)
 
         val actual =  sp.expectedAt("S","ab",2)
         assertNotNull(actual)
@@ -152,7 +153,7 @@ class test_ScannerlessParser_expectedAt {
     @Test
     fun choiceEqual_ab_empty_0() {
         val rs = choiceEqual_ab()
-        val sp = ScannerlessParser(rs)
+        val sp = ScanOnDemandParser(rs)
 
         val actual =  sp.expectedAt("S","",0)
         assertNotNull(actual)
@@ -167,7 +168,7 @@ class test_ScannerlessParser_expectedAt {
     @Test
     fun choiceEqual_ab_a_1() {
         val rs = choiceEqual_ab()
-        val sp = ScannerlessParser(rs)
+        val sp = ScanOnDemandParser(rs)
 
         val actual =  sp.expectedAt("S","a",1)
         assertNotNull(actual)
@@ -178,7 +179,7 @@ class test_ScannerlessParser_expectedAt {
     @Test
     fun choiceEqual_ab_b_1() {
         val rs = choiceEqual_ab()
-        val sp = ScannerlessParser(rs)
+        val sp = ScanOnDemandParser(rs)
 
         val actual =  sp.expectedAt("S","b",1)
         assertNotNull(actual)

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless
 
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -25,15 +26,15 @@ import kotlin.test.*
 
 class test_RuntimeParser_parse_empty {
 
-    private fun test_parse(sp: ScannerlessParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
+    private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
         return sp.parse(goalRuleName, inputText)
     }
 
     //  R = <empty>
-    private fun empty(): ScannerlessParser {
+    private fun empty(): ScanOnDemandParser {
         val rrb = RuntimeRuleSetBuilder()
         rrb.rule("R").empty()
-        return ScannerlessParser(rrb.ruleSet())
+        return ScanOnDemandParser(rrb.ruleSet())
     }
 
     @Test
@@ -62,12 +63,12 @@ class test_RuntimeParser_parse_empty {
 
     //  R = 'a' | e
     //  e = <empty>
-    private fun choiceRempty(): ScannerlessParser {
+    private fun choiceRempty(): ScanOnDemandParser {
         val rrb = RuntimeRuleSetBuilder()
         val e = rrb.rule("e").empty()
         val a = rrb.literal("a")
         rrb.rule("R").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,a, e)
-        return ScannerlessParser(rrb.ruleSet())
+        return ScanOnDemandParser(rrb.ruleSet())
     }
 
     @Test

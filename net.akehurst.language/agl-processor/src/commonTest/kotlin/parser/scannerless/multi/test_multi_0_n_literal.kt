@@ -16,16 +16,9 @@
 
 package net.akehurst.language.parser.scannerless.multi
 
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.ScannerlessParser
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
-import net.akehurst.language.parser.sppt.SPPTParser
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
 
 class test_multi_0_n_literal : test_ScannerlessParserAbstract() {
 

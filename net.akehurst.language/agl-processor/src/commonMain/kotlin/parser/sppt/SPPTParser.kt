@@ -16,11 +16,11 @@
 
 package net.akehurst.language.parser.sppt
 
+import net.akehurst.language.agl.parser.InputFromCharSequence
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.api.sppt.*
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.parser.scannerless.InputFromCharSequence
+import net.akehurst.language.api.sppt.*
 
 class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
     constructor(rrsb: RuntimeRuleSetBuilder) : this(rrsb.ruleSet())

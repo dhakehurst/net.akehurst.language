@@ -16,25 +16,28 @@
 
 package net.akehurst.language.parser.scannerless
 
+import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 
 class test_pattern {
 
-    private fun test_parse(sp: ScannerlessParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
+    private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
         return sp.parse(goalRuleName, inputText)
     }
 
     // pattern
     // a = "a"
-    private fun pattern_a(): ScannerlessParser {
+    private fun pattern_a(): ScanOnDemandParser {
         val rrb = RuntimeRuleSetBuilder()
         val r0 = rrb.pattern("a")
         val r1 = rrb.rule("a").concatenation(r0)
-        return ScannerlessParser(rrb.ruleSet())
+        return ScanOnDemandParser(rrb.ruleSet())
     }
 
     @Test
@@ -62,11 +65,11 @@ class test_pattern {
     }
 
     // a = "[a-c]"
-    private fun pattern_a2c(): ScannerlessParser {
+    private fun pattern_a2c(): ScanOnDemandParser {
         val rrb = RuntimeRuleSetBuilder()
         val r0 = rrb.pattern("[a-c]")
         val r1 = rrb.rule("a").concatenation(r0)
-        return ScannerlessParser(rrb.ruleSet())
+        return ScanOnDemandParser(rrb.ruleSet())
     }
 
     @Test

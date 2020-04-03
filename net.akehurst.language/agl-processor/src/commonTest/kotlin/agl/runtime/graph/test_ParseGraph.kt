@@ -16,8 +16,10 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.parser.scannerless.InputFromCharSequence
+import net.akehurst.language.agl.parser.InputFromCharSequence
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

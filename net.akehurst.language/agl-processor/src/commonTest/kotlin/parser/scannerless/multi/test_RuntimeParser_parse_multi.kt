@@ -16,10 +16,10 @@
 
 package net.akehurst.language.parser.scannerless.multi
 
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.ScannerlessParser
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import net.akehurst.language.parser.sppt.SPPTParser
 import kotlin.test.Test
@@ -31,17 +31,17 @@ class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
 
     val rrb = RuntimeRuleSetBuilder()
 
-    private fun test_parse(sp: ScannerlessParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
+    private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
         return sp.parse(goalRuleName, inputText)
     }
 
 
     // r = a[2..5]
     // a = 'a'
-    private fun multi_2_5_a(): ScannerlessParser {
+    private fun multi_2_5_a(): ScanOnDemandParser {
         val r0 = rrb.literal("a")
         val r1 = rrb.rule("r").multi(2, 5, r0)
-        return ScannerlessParser(rrb.ruleSet())
+        return ScanOnDemandParser(rrb.ruleSet())
     }
 
     @Test
@@ -154,13 +154,13 @@ class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
     // m = a b? a
     // a = 'a'
     // b = 'b'
-    private fun rmab01a(): ScannerlessParser {
+    private fun rmab01a(): ScanOnDemandParser {
         val ra = rrb.literal("a")
         val rb = rrb.literal("b")
         val rbm = rrb.rule("bm").multi(0, 1, rb)
         val rm = rrb.rule("m").concatenation(ra, rbm, ra)
         val rr = rrb.rule("r").concatenation(rm)
-        return ScannerlessParser(rrb.ruleSet())
+        return ScanOnDemandParser(rrb.ruleSet())
     }
 
     @Test

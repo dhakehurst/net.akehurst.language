@@ -18,6 +18,8 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.analyser.SyntaxAnalyserSimple
 import net.akehurst.language.agl.grammar.runtime.ConverterToRuntimeRules
+import net.akehurst.language.agl.parser.Parser
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.grammar.Grammar
@@ -28,9 +30,6 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyserException
-import net.akehurst.language.parser.scannerless.Parser
-import net.akehurst.language.parser.scannerless.ScannerlessParser
 
 internal class LanguageProcessorDefault(
         override val grammar: Grammar,
@@ -40,7 +39,7 @@ internal class LanguageProcessorDefault(
 ) : LanguageProcessor {
 
     private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(this.grammar)
-    private val parser: Parser = ScannerlessParser(this.converterToRuntimeRules.transform())
+    private val parser: Parser = ScanOnDemandParser(this.converterToRuntimeRules.transform())
     private val completionProvider: CompletionProvider = CompletionProvider()
 
     override fun interrupt(message: String) {
