@@ -50,6 +50,7 @@ class test_aObOcLiteral : test_ScannerlessParserAbstract() {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
+        assertEquals(setOf("'a'","'b'","'c'"),ex.expected)
     }
 
     @Test

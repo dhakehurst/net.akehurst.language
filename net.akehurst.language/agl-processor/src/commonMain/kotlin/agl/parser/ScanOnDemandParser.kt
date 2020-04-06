@@ -112,47 +112,38 @@ class ScanOnDemandParser(
         rp.start(goalRule)
         var seasons = 1
         var maxNumHeads = graph.growingHead.size
-        //       println("[$seasons] ")
-        //       graph.growingHead.forEach {
-        //           println("  $it")
-        //       }
 
         do {
             rp.grow(false)
-//            println("[$seasons] ")
-//            graph.growingHead.forEach {
-            //               println("  $it")
-            //          }
             seasons++
             maxNumHeads = max(maxNumHeads, graph.growingHead.size)
-//        } while (rp.canGrow)
         } while (rp.canGrow && graph.goals.isEmpty())
         //TODO: when parsing an ambiguous grammar,
         // how to know we have found all goals? - keep going until cangrow is false
-        // but - stop .. some grammars don't stop if we don't do test for a goal!
+        // but - how to stop .. some grammars don't stop if we don't do test for a goal!
         // e.g. leftRecursive.test_aa
 
         val match = graph.longestMatch(seasons, maxNumHeads)
         return if (match != null) {
             SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
         } else {
-            val lg = rp.lastGrown.toList()
-            val nextExpected = this.findNextExpectedAfterError(rp, graph, input, lg) //this possibly modifies rp and hence may change the longestLastGrown
+            val nextExpected = this.findNextExpectedAfterError(rp, graph, input) //this possibly modifies rp and hence may change the longestLastGrown
             throwError(graph, rp, nextExpected, seasons, maxNumHeads)
         }
     }
 
-    private fun throwError(graph: ParseGraph, rp: RuntimeParser, nextExpected: Pair<GrowingNode, List<RuntimeRule>>, seasons: Int, maxNumHeads: Int): SharedPackedParseTreeDefault {
+    private fun throwError(graph: ParseGraph, rp: RuntimeParser, nextExpected: Pair<GrowingNode, Set<RuntimeRule>>, seasons: Int, maxNumHeads: Int): SharedPackedParseTreeDefault {
         val llg = rp.longestLastGrown
                 ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0), emptySet())
 
         val gn = nextExpected.first
         val exp = nextExpected.second
-        val expected = exp
-                .filter { it.number >= 0 && it.isEmptyRule.not() }
-                .map { this.runtimeRuleSet.firstTerminals[it.number] }
-                .flatMap { it.map { it.value } }
-                .toSet()
+        //val expected = exp
+        //        .filter { it.number >= 0 && it.isEmptyRule.not() }
+        //        .map { this.runtimeRuleSet.firstTerminals[it.number] }
+        //        .flatMap { it.map { it.value } }
+        //        .toSet()
+        val expected = exp.map{ it.tag }.toSet()
         val errorPos = gn.lastLocation.position + gn.lastLocation.length
         val lastEolPos = llg.matchedText.lastIndexOf('\n')
         val errorLine = llg.location.line + llg.numberOfLines
@@ -167,28 +158,47 @@ class ScanOnDemandParser(
 
     }
 
-    private fun findNextExpectedAfterError(rp: RuntimeParser, graph: ParseGraph, input: InputFromCharSequence, gns: List<GrowingNode>): Pair<GrowingNode, List<RuntimeRule>> {
-        // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
+    private fun findNextExpectedAfterError(rp: RuntimeParser, graph: ParseGraph, input: InputFromCharSequence): Pair<GrowingNode, Set<RuntimeRule>> {
+        //If there is an error, it is because parsing has stopped before finding a goal.
+        // parsing could have stopped because
+        //  - no more input and we have not reached a goal
+        //  - no new growing-head because no action/transition taken, because
+        //  -- lookahead is wrong when doing an action
+        //  -- other guards eliminate the transition
+        //  - action causes no change (I think this should never happen)
+        // if it stopped because of lookahead...it maybe that we can parse one more leaf,
+        //
 
-        val matches = gns.toMutableList()
-        // try grow last leaf with no lookahead
-        for (gn in rp.lastGrownLinked) {
-            val gnindex = GrowingNodeIndex(gn.currentState, gn.startPosition, gn.nextInputPosition, gn.priority)
-            graph.growingHead[gnindex] = gn
+        rp.resetGraphToLastGrown()
+        rp.tryGrowWidthOnce()
+        if (graph.canGrow) {
+            rp.tryGrowHeightOrGraft()
+        } else {
+            rp.resetGraphToLastGrown()
+            rp.tryGrowHeightOrGraft()
         }
-        rp.tryGrowWidthOnceThenHightOrGraftUntilFail()
-        val lg = rp.lastGrown.maxWith(Comparator<GrowingNode> { a, b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
+        val lg = rp.lastGrownLinked.maxWith(Comparator<GrowingNode> { a, b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
         return if (null == lg) {
             TODO()
         } else {
             // compute next expected item/RuntimeRule
-            TODO("how to get transitions, because lg has no previous!")
-            val exp = lg.previous.values.flatMap { prev ->
-                lg.currentState.transitions(this.runtimeRuleSet, prev.node.currentState)
-            }.flatMap {
-                it.to.rulePosition.items
+            when (lg.runtimeRule.kind) {
+                RuntimeRuleKind.GOAL -> {
+                    val exp = lg.currentState.transitions(this.runtimeRuleSet, null)
+                    .map {
+                        it.to.runtimeRule
+                    }.toSet()
+                    Pair(lg, exp)
+                }
+                else ->{
+                    val exp = lg.previous.values.flatMap { prev ->
+                        lg.currentState.transitions(this.runtimeRuleSet, prev.node.currentState)
+                    }.map {
+                        it.to.runtimeRule
+                    }.toSet()
+                    Pair(lg, exp)
+                }
             }
-            Pair(lg, exp)
         }
     }
 

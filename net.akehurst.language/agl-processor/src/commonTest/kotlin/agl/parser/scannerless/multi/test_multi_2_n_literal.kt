@@ -48,7 +48,7 @@ class test_multi_2_n_literal : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun a() {
+    fun a_fails() {
         val rrb = S()
         val goal = "S"
         val sentence = "a"

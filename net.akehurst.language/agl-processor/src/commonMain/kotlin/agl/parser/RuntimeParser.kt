@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.runtime.graph.GrowingNode
+import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.PreviousInfo
 import net.akehurst.language.agl.runtime.structure.*
@@ -49,7 +50,7 @@ internal class RuntimeParser(
                     gn.addPrevious(it)
                 }
             }
-            return setOf<GrowingNode>().union(this.graph.growing.values).union(this.toGrow)
+            return this.toGrow
         }
     val longestLastGrown: SPPTNode?
         get() {
@@ -121,8 +122,15 @@ internal class RuntimeParser(
         }
     }
 
+    fun resetGraphToLastGrown() {
+        for (gn in this.lastGrownLinked) {
+            val gnindex = GrowingNodeIndex(gn.currentState, gn.startPosition, gn.nextInputPosition, gn.priority)
+            this.graph.growingHead[gnindex] = gn
+        }
+    }
+
     //to find error locations
-    fun tryGrowWidthOnceThenHightOrGraftUntilFail() {
+    fun tryGrowWidthOnce() {
         this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
         this.toGrowPrevious.clear()
         this.graph.growingHead.clear()
@@ -133,13 +141,15 @@ internal class RuntimeParser(
             this.toGrowPrevious[gn] = previous
             this.growWidthOnly(gn, previous)
         }
+    }
 
+    fun tryGrowHeightOrGraft() {
         // try height or graft
         while ((this.canGrow && this.graph.goals.isEmpty())) {
             this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
             this.toGrowPrevious.clear()
             this.graph.growingHead.clear()
-            // try grow width
+            // try grow height or graft
             for (gn in this.toGrow) {
                 checkInterrupt()
                 val previous = this.graph.pop(gn)
@@ -176,13 +186,23 @@ internal class RuntimeParser(
 
     internal fun growHeightOrGraftOnly(gn: GrowingNode, previous: Set<PreviousInfo>) {
         //should never be a GOAL
-        for (prev in previous) {
-            val rps = gn.currentState
-            val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, prev.node.currentState)
-            for (it in transitions) {
-                when (it.action) {
-                    Transition.ParseAction.HEIGHT -> doHeight(gn, prev, it, true)
-                    Transition.ParseAction.GRAFT -> doGraft(gn, prev, it, true)
+        val didSkipNode = this.tryGrowWidthWithSkipRules(gn, previous)
+        if (didSkipNode) {
+            return
+        } else {
+
+            for (prev in previous) {
+                if (gn.isSkipGrowth) {
+                    this.growSkip(gn, prev)
+                } else {
+                    val rps = gn.currentState
+                    val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, prev.node.currentState)
+                    for (it in transitions) {
+                        when (it.action) {
+                            Transition.ParseAction.HEIGHT -> doHeight(gn, prev, it, true)
+                            Transition.ParseAction.GRAFT -> doGraft(gn, prev, it, true)
+                        }
+                    }
                 }
             }
         }

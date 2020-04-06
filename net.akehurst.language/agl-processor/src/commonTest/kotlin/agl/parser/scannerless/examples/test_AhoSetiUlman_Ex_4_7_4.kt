@@ -63,6 +63,7 @@ class test_AhoSetiUlman_Ex_4_7_4 : test_ScannerlessParserAbstract() {
         }
         assertEquals(1, ex.location.line, "line is wrong")
         assertEquals(1, ex.location.column, "column is wrong")
+        assertEquals(setOf("'b'", "'d'"), ex.expected)
     }
 
     @Test
@@ -75,7 +76,8 @@ class test_AhoSetiUlman_Ex_4_7_4 : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(1, ex.location.column, "column is wrong")
+        assertEquals(2, ex.location.column, "column is wrong")
+        assertEquals(setOf("'c'", "'a'"), ex.expected)
     }
 
     @Test

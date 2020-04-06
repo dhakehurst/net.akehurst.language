@@ -42,7 +42,8 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        assertEquals(2, ex.location.column)
+        assertEquals(setOf("'b'"), ex.expected)
     }
 
     @Test
@@ -84,6 +85,7 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
+        assertEquals(setOf("'a'"), ex.expected)
     }
 
     @Test
@@ -97,6 +99,7 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
+        assertEquals(setOf("'a'"), ex.expected)
     }
 
     @Test
@@ -109,7 +112,8 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        assertEquals(2, ex.location.column)
+        assertEquals(setOf("'b'"), ex.expected)
     }
 
     @Test
@@ -118,11 +122,12 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "ab"
 
-        //val ex = assertFailsWith(ParseFailedException::class) {
+        val ex = assertFailsWith(ParseFailedException::class) {
             super.test(rrb, goal, sentence)
-        //}
-       // assertEquals(1, ex.location.line)
-       // assertEquals(1, ex.location.column)
+        }
+        assertEquals(1, ex.location.line)
+        assertEquals(3, ex.location.column)
+        assertEquals(setOf("'a'"), ex.expected)
     }
 
     @Test
