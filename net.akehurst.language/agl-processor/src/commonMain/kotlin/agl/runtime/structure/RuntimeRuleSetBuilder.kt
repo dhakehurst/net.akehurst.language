@@ -114,6 +114,6 @@ class RuntimeRuleSetBuilder() {
         if (null == this.runtimeRuleSet) {
             this.runtimeRuleSet = RuntimeRuleSet(this.rules)
         }
-        return this.runtimeRuleSet ?: throw ParserException("Should never happen")
+        return this.runtimeRuleSet ?: error("Should never happen")
     }
 }

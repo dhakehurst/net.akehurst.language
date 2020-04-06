@@ -21,12 +21,10 @@ import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.PreviousInfo
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.sppt.SPPTBranchDefault
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.api.parser.ParserInterruptedException
 import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.agl.sppt.SPPTBranchDefault
-import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
 import kotlin.math.max
 
 internal class RuntimeParser(
@@ -242,8 +240,8 @@ internal class RuntimeParser(
         for (it in transitions) {
             when (it.action) {
                 Transition.ParseAction.WIDTH -> doWidth(gn, emptySet(), it, noLookahead)
-                Transition.ParseAction.HEIGHT -> throw ParserException("Should never happen")
-                Transition.ParseAction.GRAFT -> throw ParserException("Should never happen")
+                Transition.ParseAction.HEIGHT -> error("Should never happen")
+                Transition.ParseAction.GRAFT -> error("Should never happen")
                 Transition.ParseAction.GOAL -> doGoal(gn)
                 Transition.ParseAction.EMBED -> TODO()
             }
@@ -269,7 +267,7 @@ internal class RuntimeParser(
                 Transition.ParseAction.WIDTH -> doWidth(gn, setOf(previous), it, noLookahead)
                 Transition.ParseAction.HEIGHT -> doHeight(gn, previous, it, noLookahead)
                 Transition.ParseAction.GRAFT -> doGraft(gn, previous, it, noLookahead)
-                Transition.ParseAction.GOAL -> throw ParserException("Should never happen")
+                Transition.ParseAction.GOAL -> error("Should never happen")
                 Transition.ParseAction.EMBED -> doEmbedded(gn, setOf(previous), it)
             }
         }
@@ -277,7 +275,7 @@ internal class RuntimeParser(
 
     private fun doGoal(gn: GrowingNode) {
         val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
-                ?: throw ParserException("Should never be null")
+                ?: error("Should never be null")
         this.graph.recordGoal(complete)
     }
 
@@ -307,7 +305,7 @@ internal class RuntimeParser(
             }
             if (noLookahead || hasLh || lh.isEmpty()) {
                 val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
-                        ?: throw ParserException("Should never be null")
+                        ?: error("Should never be null")
                 this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, complete, setOf(previous), gn.skipNodes)
                 //               println(transition)
             }
@@ -324,7 +322,7 @@ internal class RuntimeParser(
                 }
                 if (noLookahead || hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
                     val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
-                            ?: throw ParserException("Should never be null")
+                            ?: error("Should never be null")
                     this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
                     //                   println(transition)
                 }
@@ -374,7 +372,7 @@ internal class RuntimeParser(
 
     private fun doGraftSkip(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
         val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
-                ?: throw ParserException("Should never be null")
+                ?: error("Should never be null")
         this.graph.growNextSkipChild(previous.node, complete)
         //       println(transition)
     }

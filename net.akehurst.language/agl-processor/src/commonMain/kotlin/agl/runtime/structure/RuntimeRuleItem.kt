@@ -107,7 +107,7 @@ class RuntimeRuleItem(
             RuntimeRuleItemKind.MULTI -> "MULTI"
             RuntimeRuleItemKind.SEPARATED_LIST -> "SLIST"
             RuntimeRuleItemKind.EMPTY -> "EMPTY"
-            else -> throw ParserException("Unsupported at present")
+            else -> TODO("Unsupported at present")
         }
         val itemsStr = items.map { "[${it.number}]" }.joinToString(" ")
         return "(${kindStr}) ${itemsStr}"

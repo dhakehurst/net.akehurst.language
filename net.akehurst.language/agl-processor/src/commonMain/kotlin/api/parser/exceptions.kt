@@ -31,6 +31,6 @@ class ParseFailedException(
         val location: InputLocation,
         val expected:Set<String>
 )
-    : RuntimeException(message + "at: ${location}. expected $expected )") {
+    : RuntimeException(message) {
 
 }

@@ -17,6 +17,7 @@
 package net.akehurst.language.parser.scannerless.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
@@ -109,6 +110,7 @@ class test_aObOcLiteral : test_ScannerlessParserAbstract() {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
+        assertEquals(setOf("'a'","'b'","'c'"),ex.expected)
     }
 
     @Test
@@ -121,7 +123,8 @@ class test_aObOcLiteral : test_ScannerlessParserAbstract() {
             super.test(rrb, goal, sentence)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        assertEquals(2, ex.location.column)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag),ex.expected)
     }
 
 }
