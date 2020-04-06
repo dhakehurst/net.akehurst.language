@@ -26,7 +26,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.fail
 
-class test_ScanOnDemandParser_expectedAt {
+class test_expectedTerminalsAt {
 
     fun concat_a() : RuntimeRuleSet {
         val rrb = RuntimeRuleSetBuilder()
@@ -40,7 +40,7 @@ class test_ScanOnDemandParser_expectedAt {
         val rs = concat_a()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedAt("S","",0)
+        val actual =  sp.expectedTerminalsAt("S","",0).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
@@ -53,7 +53,7 @@ class test_ScanOnDemandParser_expectedAt {
         val rs = concat_a()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedAt("S","a",0)
+        val actual =  sp.expectedTerminalsAt("S","a",0).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
@@ -66,10 +66,10 @@ class test_ScanOnDemandParser_expectedAt {
         val rs = concat_a()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedAt("S","a",1)
+        val actual =  sp.expectedTerminalsAt("S","a",1)
         assertNotNull(actual)
 
-        assertEquals(0, actual.size)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
     }
 
     fun concat_ab() : RuntimeRuleSet {
@@ -85,7 +85,7 @@ class test_ScanOnDemandParser_expectedAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedAt("S","",0)
+        val actual =  sp.expectedTerminalsAt("S","",0).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
@@ -98,7 +98,7 @@ class test_ScanOnDemandParser_expectedAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedAt("S","a",0)
+        val actual =  sp.expectedTerminalsAt("S","a",0).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
@@ -111,7 +111,7 @@ class test_ScanOnDemandParser_expectedAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedAt("S","a",1)
+        val actual =  sp.expectedTerminalsAt("S","a",1).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
@@ -124,7 +124,7 @@ class test_ScanOnDemandParser_expectedAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedAt("S","ab",1)
+        val actual =  sp.expectedTerminalsAt("S","ab",1).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
@@ -136,10 +136,10 @@ class test_ScanOnDemandParser_expectedAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedAt("S","ab",2)
+        val actual =  sp.expectedTerminalsAt("S","ab",2)
         assertNotNull(actual)
 
-        assertEquals(0, actual.size)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
     }
 
     fun choiceEqual_ab() : RuntimeRuleSet {
@@ -155,7 +155,7 @@ class test_ScanOnDemandParser_expectedAt {
         val rs = choiceEqual_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedAt("S","",0)
+        val actual =  sp.expectedTerminalsAt("S","",0).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(2, actual.size)
@@ -170,10 +170,10 @@ class test_ScanOnDemandParser_expectedAt {
         val rs = choiceEqual_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedAt("S","a",1)
+        val actual =  sp.expectedTerminalsAt("S","a",1)
         assertNotNull(actual)
 
-        assertEquals(0, actual.size)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
     }
 
     @Test
@@ -181,9 +181,9 @@ class test_ScanOnDemandParser_expectedAt {
         val rs = choiceEqual_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedAt("S","b",1)
+        val actual =  sp.expectedTerminalsAt("S","b",1)
         assertNotNull(actual)
 
-        assertEquals(0, actual.size)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
     }
 }

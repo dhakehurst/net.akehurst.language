@@ -63,12 +63,12 @@ interface Parser {
      * @throws ParseTreeException
      * @throws GrammarRuleNotFoundException
      **/
-    fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int): List<RuntimeRule>
+    fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int): Set<RuntimeRule>
 
     /*
      * List of terminal rules expected at the position
      */
-    fun expectedTerminalsAt(goalRuleName: String, inputText: CharSequence, position: Int): List<RuntimeRule>
+    fun expectedTerminalsAt(goalRuleName: String, inputText: CharSequence, position: Int): Set<RuntimeRule>
 
     //fun expectedAt(goalRuleName: String, inputText: Reader, position: Long): List<RuleItem>
 }
