@@ -22,4 +22,5 @@ data class InputLocation(
         val length: Int
 ) {
 
+    val endPosition get() = position+length
 }

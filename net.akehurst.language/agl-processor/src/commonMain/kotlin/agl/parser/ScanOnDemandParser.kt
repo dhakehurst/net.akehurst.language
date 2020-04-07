@@ -132,19 +132,19 @@ class ScanOnDemandParser(
         }
     }
 
-    private fun throwError(graph: ParseGraph, rp: RuntimeParser, nextExpected: Pair<GrowingNode, Set<RuntimeRule>>, seasons: Int, maxNumHeads: Int): SharedPackedParseTreeDefault {
+    private fun throwError(graph: ParseGraph, rp: RuntimeParser, nextExpected: Pair<InputLocation, Set<RuntimeRule>>, seasons: Int, maxNumHeads: Int): SharedPackedParseTreeDefault {
         val llg = rp.longestLastGrown
                 ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0), emptySet())
 
-        val gn = nextExpected.first
+        val lastLocation = nextExpected.first
         val exp = nextExpected.second
         //val expected = exp
         //        .filter { it.number >= 0 && it.isEmptyRule.not() }
         //        .map { this.runtimeRuleSet.firstTerminals[it.number] }
         //        .flatMap { it.map { it.value } }
         //        .toSet()
-        val expected = exp.map{ it.tag }.toSet()
-        val errorPos = gn.lastLocation.position + gn.lastLocation.length
+        val expected = exp.map { it.tag }.toSet()
+        val errorPos = lastLocation.position + lastLocation.length
         val lastEolPos = llg.matchedText.lastIndexOf('\n')
         val errorLine = llg.location.line + llg.numberOfLines
         val errorColumn = when {
@@ -158,7 +158,7 @@ class ScanOnDemandParser(
 
     }
 
-    private fun findNextExpectedAfterError(rp: RuntimeParser, graph: ParseGraph, input: InputFromCharSequence): Pair<GrowingNode, Set<RuntimeRule>> {
+    private fun findNextExpectedAfterError(rp: RuntimeParser, graph: ParseGraph, input: InputFromCharSequence): Pair<InputLocation, Set<RuntimeRule>> {
         //If there is an error, it is because parsing has stopped before finding a goal.
         // parsing could have stopped because
         //  - no more input and we have not reached a goal
@@ -171,35 +171,45 @@ class ScanOnDemandParser(
 
         rp.resetGraphToLastGrown()
         rp.tryGrowWidthOnce()
-        if (graph.canGrow) {
+        val poss = if (graph.canGrow) {
             rp.tryGrowHeightOrGraft()
         } else {
             rp.resetGraphToLastGrown()
             rp.tryGrowHeightOrGraft()
         }
-        val lg = rp.lastGrownLinked.maxWith(Comparator<GrowingNode> { a, b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
-        return if (null == lg) {
-            TODO()
-        } else {
+        val r = poss.map { lg ->
             // compute next expected item/RuntimeRule
             when (lg.runtimeRule.kind) {
                 RuntimeRuleKind.GOAL -> {
                     val exp = lg.currentState.transitions(this.runtimeRuleSet, null)
-                    .map {
-                        it.to.runtimeRule
-                    }.toSet()
+                            .map {
+                                it.to.rulePosition
+                            }.toSet()
                     Pair(lg, exp)
                 }
-                else ->{
+                else -> {
                     val exp = lg.previous.values.flatMap { prev ->
                         lg.currentState.transitions(this.runtimeRuleSet, prev.node.currentState)
                     }.map {
-                        it.to.runtimeRule
+                        it.to.rulePosition
                     }.toSet()
                     Pair(lg, exp)
                 }
             }
         }
+        val maxLastLocation:InputLocation = r.map { it.first.lastLocation }.maxBy { it.endPosition }
+                ?: error("Internal error")
+        val res = r.filter { it.first.lastLocation.endPosition == maxLastLocation.endPosition }
+                .flatMap {
+                    it.second.mapNotNull {
+                        if (it.runtimeRule.kind == RuntimeRuleKind.TERMINAL) {
+                            setOf(it.runtimeRule)
+                        } else {
+                            this.runtimeRuleSet.firstTerminals2[it]
+                        }
+                    }.flatten()
+                }.toSet()
+        return Pair(maxLastLocation, res)
     }
 
     private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromCharSequence, gns: List<GrowingNode>): Set<RuntimeRule> {
@@ -256,7 +266,7 @@ class ScanOnDemandParser(
     override fun expectedTerminalsAt(goalRuleName: String, inputText: CharSequence, position: Int): Set<RuntimeRule> {
         return this.expectedAt(goalRuleName, inputText, position)
                 .flatMap {
-                    when(it.kind) {
+                    when (it.kind) {
                         RuntimeRuleKind.TERMINAL -> listOf(it)
                         RuntimeRuleKind.NON_TERMINAL -> this.runtimeRuleSet.firstTerminals[it.number]
                         else -> TODO()

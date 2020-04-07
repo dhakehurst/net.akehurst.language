@@ -17,6 +17,7 @@
 package net.akehurst.language.parser.scannerless.multi
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
@@ -56,6 +57,7 @@ class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
+        assertEquals(setOf("'a'"), e.expected)
     }
 
     @Test
@@ -69,7 +71,8 @@ class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        assertEquals(2, e.location.column)
+        assertEquals(setOf("'a'"), e.expected)
     }
 
     @Test
@@ -147,7 +150,8 @@ class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(5, e.location.column)
+        assertEquals(6, e.location.column)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
     }
 
     // r = m

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.multi
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
@@ -58,7 +59,8 @@ class test_multi_2_n_literal : test_ScannerlessParserAbstract() {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        assertEquals(2, e.location.column)
+        assertEquals(setOf("'a'"), e.expected)
     }
 
     @Test

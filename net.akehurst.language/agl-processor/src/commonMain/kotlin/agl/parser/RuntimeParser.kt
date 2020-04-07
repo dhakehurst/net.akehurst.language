@@ -141,7 +141,8 @@ internal class RuntimeParser(
         }
     }
 
-    fun tryGrowHeightOrGraft() {
+    fun tryGrowHeightOrGraft() : Set<GrowingNode> {
+        val poss = mutableSetOf<GrowingNode>()
         // try height or graft
         while ((this.canGrow && this.graph.goals.isEmpty())) {
             this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
@@ -154,7 +155,9 @@ internal class RuntimeParser(
                 this.toGrowPrevious[gn] = previous
                 this.growHeightOrGraftOnly(gn, previous)
             }
+            poss.addAll(this.lastGrownLinked)
         }
+        return poss
     }
 
     internal fun growWidthOnly(gn: GrowingNode, previous: Set<PreviousInfo>) {

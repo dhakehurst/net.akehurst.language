@@ -24,6 +24,16 @@ import kotlin.test.Test
 class test_group_concat : test_ScannerlessParserAbstract() {
 
     companion object {
+        /*
+            skip WS = "\s+" ;
+            S = rules ;
+            rules = normalRule* ;
+            normalRule = ID '=' concat ';' ;
+            concat = concatItem+ ;
+            concatItem = ID | group ;
+            group = '(' concat ')' ;
+            ID = "[a-zA-Z]+" ;
+         */
         val S = runtimeRuleSet {
             skip("W") { pattern("\\s+") }
             concatenation("S") { ref("rules") }
