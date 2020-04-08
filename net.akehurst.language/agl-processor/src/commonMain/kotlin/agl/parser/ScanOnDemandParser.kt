@@ -24,6 +24,7 @@ import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.Transition
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.sppt.SPPTLeafDefault
@@ -189,7 +190,26 @@ class ScanOnDemandParser(
                 }
                 else -> {
                     val exp = lg.previous.values.flatMap { prev ->
-                        lg.currentState.transitions(this.runtimeRuleSet, prev.node.currentState)
+                        lg.currentState.transitions(this.runtimeRuleSet, prev.node.currentState).filter {
+                            when (it.action) {
+                                Transition.ParseAction.WIDTH -> {
+                                    true
+                                }
+                                Transition.ParseAction.GRAFT -> {
+                                    prev.node.currentState.rulePosition == it.prevGuard &&
+                                            it.runtimeGuard(it, prev.node, prev.node.currentState.rulePosition)
+                                }
+                                Transition.ParseAction.HEIGHT -> {
+                                    prev.node.currentState.rulePosition != it.prevGuard
+                                }
+                                Transition.ParseAction.EMBED -> {
+                                    TODO()
+                                }
+                                Transition.ParseAction.GOAL -> {
+                                    TODO()
+                                }
+                            }
+                        }
                     }.map {
                         it.to.rulePosition
                     }.toSet()
@@ -197,18 +217,17 @@ class ScanOnDemandParser(
                 }
             }
         }
-        val maxLastLocation:InputLocation = r.map { it.first.lastLocation }.maxBy { it.endPosition }
+        val maxLastLocation: InputLocation = r.map { it.first.lastLocation }.maxBy { it.endPosition }
                 ?: error("Internal error")
-        val res = r.filter { it.first.lastLocation.endPosition == maxLastLocation.endPosition }
-                .flatMap {
-                    it.second.mapNotNull {
-                        if (it.runtimeRule.kind == RuntimeRuleKind.TERMINAL) {
-                            setOf(it.runtimeRule)
-                        } else {
-                            this.runtimeRuleSet.firstTerminals2[it]
-                        }
-                    }.flatten()
-                }.toSet()
+        val fr = r.filter { it.first.lastLocation.endPosition == maxLastLocation.endPosition }
+        val res = fr.flatMap {
+            it.second.mapNotNull {
+                when {
+                    it.runtimeRule.kind == RuntimeRuleKind.TERMINAL -> listOf(it.runtimeRule)
+                    else -> this.runtimeRuleSet.firstTerminals2[it]
+                }
+            }.flatten()
+        }.toSet()
         return Pair(maxLastLocation, res)
     }
 

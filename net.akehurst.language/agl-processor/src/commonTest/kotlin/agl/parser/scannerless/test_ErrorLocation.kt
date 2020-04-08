@@ -154,6 +154,25 @@ class test_ErrorLocation : test_ScannerlessParserAbstract() {
             literal("'a'", "a")
         }
         val goal = "S"
+        val sentence = ""
+
+        val e = assertFailsWith(ParseFailedException::class) {
+            super.test(rrs, goal, sentence)
+        }
+
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
+        assertEquals(setOf("'a'"), e.expected)
+    }
+
+    @Test
+    fun multi2n_a_fail() {
+        val rrs = runtimeRuleSet {
+            concatenation("S") { ref("as") }
+            multi("as", 2, -1, "'a'")
+            literal("'a'", "a")
+        }
+        val goal = "S"
         val sentence = "a"
 
         val e = assertFailsWith(ParseFailedException::class) {
@@ -166,7 +185,7 @@ class test_ErrorLocation : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun multi25_empty_fail() {
+    fun multi25_a6_fail() {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("as") }
             multi("as", 2, 5, "'a'")

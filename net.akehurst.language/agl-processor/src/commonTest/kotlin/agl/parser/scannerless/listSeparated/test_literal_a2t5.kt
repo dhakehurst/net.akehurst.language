@@ -89,56 +89,37 @@ class test_literal_a2t5 : test_ScannerlessParserAbstract() {
     fun literal_ab25__r__aba() {
         val inputText = "aba"
 
-        val actual = test(sp, goalRuleName, inputText)
+        val expected = "S {'a' 'b' 'a'}"
 
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'b' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
+        super.test(sp, goalRuleName, inputText, expected)
     }
 
     @Test
     fun literal_ab25__r__ababa() {
         val inputText = "ababa"
 
-        val actual = test(sp, goalRuleName, inputText)
+        val expected = "S {'a' 'b' 'a' 'b' 'a'}"
 
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'b' 'a' 'b' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
+        super.test(sp, goalRuleName, inputText, expected)
     }
 
     @Test
     fun literal_ab25__r__abababa() {
         val inputText = "abababa"
 
-        val actual = test(sp, goalRuleName, inputText)
+        val expected = "S {'a' 'b' 'a' 'b' 'a' 'b' 'a'}"
 
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'b' 'a' 'b' 'a' 'b' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
+        super.test(sp, goalRuleName, inputText, expected)
     }
 
     @Test
     fun literal_ab25__r__ababababa() {
         val inputText = "ababababa"
 
-        val actual = test(sp, goalRuleName, inputText)
+        val expected = "S {'a' 'b' 'a' 'b' 'a' 'b' 'a' 'b' 'a'}"
 
-        assertNotNull(actual)
+        super.test(sp, goalRuleName, inputText, expected)
 
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'b' 'a' 'b' 'a' 'b' 'a' 'b' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
