@@ -58,7 +58,7 @@ internal class ParseGraph(
             }
             if (!this.input.isEnd(lt.nextInputPosition + 1)) {
                 val location = lt.lastLocation //this.input.calcLineAndColumn(llg.nextInputPosition)
-                throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(lt, seasons, maxNumHeads), location)
+                throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(lt, seasons, maxNumHeads), location, emptySet())
             } else {
                 // need to re-write top of the tree so that any initial skip nodes come under the userGoal node
                 val alternatives = mutableListOf<List<SPPTNode>>()

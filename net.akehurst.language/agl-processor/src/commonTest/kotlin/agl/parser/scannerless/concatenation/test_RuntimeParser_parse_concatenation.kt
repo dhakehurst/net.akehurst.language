@@ -17,6 +17,8 @@
 package net.akehurst.language.parser.scannerless.concatenation
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
@@ -63,6 +65,7 @@ class test_RuntimeParser_parse_concatenation {
         }
         assertEquals(1, ex.location.line, "line is wrong")
         assertEquals(1, ex.location.column, "column is wrong")
+        assertEquals(setOf("'a'"), ex.expected)
     }
 
     @Test
@@ -75,7 +78,8 @@ class test_RuntimeParser_parse_concatenation {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(1, ex.location.column, "column is wrong")
+        assertEquals(2, ex.location.column, "column is wrong")
+        assertEquals(setOf("'b'"), ex.expected)
     }
 
     @Test
@@ -88,7 +92,8 @@ class test_RuntimeParser_parse_concatenation {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(2, ex.location.column, "column is wrong")
+        assertEquals(3, ex.location.column, "column is wrong")
+        assertEquals(setOf("'c'"), ex.expected)
     }
 
     @Test
@@ -101,7 +106,8 @@ class test_RuntimeParser_parse_concatenation {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(3, ex.location.column, "column is wrong")
+        assertEquals(4, ex.location.column, "column is wrong")
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
     }
 
     // S = a b c;
@@ -129,6 +135,7 @@ class test_RuntimeParser_parse_concatenation {
         }
         assertEquals(1, ex.location.line, "line is wrong")
         assertEquals(1, ex.location.column, "column is wrong")
+        assertEquals(setOf("'a'"), ex.expected)
     }
     @Test
     fun abc2_S_a_fails() {
@@ -140,7 +147,8 @@ class test_RuntimeParser_parse_concatenation {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(1, ex.location.column, "column is wrong")
+        assertEquals(2, ex.location.column, "column is wrong")
+        assertEquals(setOf("'b'"), ex.expected)
     }
     @Test
     fun abc2_S_ab_fails() {
@@ -152,7 +160,8 @@ class test_RuntimeParser_parse_concatenation {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(2, ex.location.column, "column is wrong")
+        assertEquals(3, ex.location.column, "column is wrong")
+        assertEquals(setOf("'c'"), ex.expected)
     }
     @Test
     fun abc2_S_abc() {
@@ -174,7 +183,8 @@ class test_RuntimeParser_parse_concatenation {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(3, ex.location.column, "column is wrong")
+        assertEquals(4, ex.location.column, "column is wrong")
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
     }
 
     // S = ab c;

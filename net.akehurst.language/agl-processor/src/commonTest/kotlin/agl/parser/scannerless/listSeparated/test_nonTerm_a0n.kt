@@ -63,12 +63,9 @@ class test_nonTerm_a0n : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "aa"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(b, goal, sentence)
-        }
+        val expected = "S {'a' sep {§empty} 'a'}"
 
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
+        super.test(b, goal, sentence, expected)
     }
 
     @Test
@@ -88,12 +85,9 @@ class test_nonTerm_a0n : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "a,aa"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(b, goal, sentence)
-        }
+        val expected = "S {'a' sep {','} 'a' sep {§empty} 'a'}"
 
-        assertEquals(1, e.location.line)
-        assertEquals(4, e.location.column)
+        super.test(b, goal, sentence, expected)
     }
 
     @Test

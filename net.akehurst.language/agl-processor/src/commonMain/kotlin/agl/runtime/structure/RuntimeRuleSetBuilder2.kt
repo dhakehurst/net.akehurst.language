@@ -75,7 +75,7 @@ class RuntimeRuleSetBuilder2() {
             }
             this.runtimeRuleSet = RuntimeRuleSet(ruleMap.values.toList())
         }
-        return this.runtimeRuleSet ?: throw ParserException("Should never happen")
+        return this.runtimeRuleSet ?: error("Should never happen")
     }
 
     fun skip(tag: String, init: RuntimeRuleItemsBuilder.() -> Unit) {

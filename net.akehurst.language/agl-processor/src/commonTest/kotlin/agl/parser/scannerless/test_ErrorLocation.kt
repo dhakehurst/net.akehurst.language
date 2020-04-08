@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import kotlin.test.Test
@@ -48,13 +49,13 @@ class test_ErrorLocation : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
+        val ex = assertFailsWith(ParseFailedException::class) {
             super.test(rrs, goal, sentence)
         }
 
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
-
+        assertEquals(1, ex.location.line)
+        assertEquals(1, ex.location.column)
+        assertEquals(setOf("'a'"), ex.expected)
     }
 
     @Test
@@ -65,13 +66,13 @@ class test_ErrorLocation : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "b"
 
-        val e = assertFailsWith(ParseFailedException::class) {
+        val ex = assertFailsWith(ParseFailedException::class) {
             super.test(rrs, goal, sentence)
         }
 
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
-
+        assertEquals(1, ex.location.line)
+        assertEquals(1, ex.location.column)
+        assertEquals(setOf("'a'"), ex.expected)
     }
 
     @Test
@@ -88,7 +89,7 @@ class test_ErrorLocation : test_ScannerlessParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(2, e.location.column)
-
+        assertEquals(setOf("'b'"), e.expected)
     }
 
     @Test
@@ -105,9 +106,8 @@ class test_ErrorLocation : test_ScannerlessParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(3, e.location.column)
-
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
     }
-
 
     @Test
     fun concatenation_afterSecondLiteral_WS_fail() {
@@ -124,16 +124,15 @@ class test_ErrorLocation : test_ScannerlessParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(9, e.location.column)
-
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
     }
-
 
     @Test
     fun multi1n_empty_fail() {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("as") }
             multi("as", 1, -1, "'a'")
-            literal("'a'","a")
+            literal("'a'", "a")
         }
         val goal = "S"
         val sentence = ""
@@ -144,15 +143,34 @@ class test_ErrorLocation : test_ScannerlessParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
-
+        assertEquals(setOf("'a'"), e.expected)
     }
 
     @Test
     fun multi2n_empty_fail() {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("as") }
-            multi("as", 2, -1,"'a'")
-            literal("'a'","a")
+            multi("as", 2, -1, "'a'")
+            literal("'a'", "a")
+        }
+        val goal = "S"
+        val sentence = ""
+
+        val e = assertFailsWith(ParseFailedException::class) {
+            super.test(rrs, goal, sentence)
+        }
+
+        assertEquals(1, e.location.line)
+        assertEquals(1, e.location.column)
+        assertEquals(setOf("'a'"), e.expected)
+    }
+
+    @Test
+    fun multi2n_a_fail() {
+        val rrs = runtimeRuleSet {
+            concatenation("S") { ref("as") }
+            multi("as", 2, -1, "'a'")
+            literal("'a'", "a")
         }
         val goal = "S"
         val sentence = "a"
@@ -163,15 +181,15 @@ class test_ErrorLocation : test_ScannerlessParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(2, e.location.column)
-
+        assertEquals(setOf("'a'"), e.expected)
     }
 
     @Test
-    fun multi25_empty_fail() {
+    fun multi25_a6_fail() {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("as") }
-            multi("as", 2, 5,"'a'")
-            literal("'a'","a")
+            multi("as", 2, 5, "'a'")
+            literal("'a'", "a")
         }
         val goal = "S"
         val sentence = "aaaaaa"
@@ -182,6 +200,6 @@ class test_ErrorLocation : test_ScannerlessParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(6, e.location.column)
-
+        assertEquals(setOf("'a'"), e.expected)
     }
 }

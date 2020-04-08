@@ -39,7 +39,7 @@ class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val name: S
             this.rule = rr
             return rr
         } else {
-            return this.rule ?: throw ParserException("Should not happen")
+            return this.rule ?: error("Should not happen")
         }
     }
 

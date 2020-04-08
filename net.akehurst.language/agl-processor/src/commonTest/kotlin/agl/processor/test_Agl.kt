@@ -104,10 +104,8 @@ internal class test_Agl {
         val grammarStr = """
             namespace test
 
-            import test.A
-
             grammar test {
-              a:A = v="[a-z]" {this.value=v} ;
+              a = "[a-z]" ;
             }
         """.trimIndent()
         val sentence = "a"

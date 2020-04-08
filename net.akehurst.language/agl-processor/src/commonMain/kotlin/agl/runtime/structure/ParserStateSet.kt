@@ -104,7 +104,7 @@ class ParserStateSet(
 
     internal fun fetch(rulePosition: RulePosition): ParserState {
         return this.states[rulePosition]
-                ?: throw ParserException("should never be null")
+                ?: error("should never be null")
     }
 
     internal fun fetchOrNull(rulePosition: RulePosition): ParserState? {
@@ -138,9 +138,10 @@ class ParserStateSet(
                         if (nextChildRP.isAtEnd) {
                             this.calcLookahead1(nextChildRP, done)
                         } else {
-                            val lh: Set<RuntimeRule> = this.runtimeRuleSet.firstTerminals2[nextChildRP] ?: throw ParserException("should never happen")
+                            val lh: Set<RuntimeRule> = this.runtimeRuleSet.firstTerminals2[nextChildRP]
+                                    ?: error("should never happen")
                             if (lh.isEmpty()) {
-                                throw ParserException("should never happen")
+                                error("should never happen")
                             } else {
                                 lh
                             }
@@ -217,7 +218,7 @@ class ParserStateSet(
                                 } else {
                                     val lh: Set<RuntimeRule> = this.runtimeRuleSet.firstTerminals2[nextChildRP] ?: throw ParserException("should never happen")
                                     if (lh.isEmpty()) {
-                                        throw ParserException("should never happen")
+                                        error("should never happen")
                                     } else {
                                         lh
                                     }

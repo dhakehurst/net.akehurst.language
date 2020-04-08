@@ -19,7 +19,6 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.ArrayList
 
-import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -27,6 +26,10 @@ import org.junit.runners.Parameterized.Parameters
 
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.parser.ParseFailedException
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.fail
 
 
 @RunWith(Parameterized::class)
@@ -84,10 +87,16 @@ class test_NaturalLanguage(val data:Data) {
 
     @Test
     fun test() {
-        val result = processor.parse(this.data.goal, this.data.sentence)
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(this.data.sentence, resultStr)
+        try {
+            val result = processor.parse(this.data.goal, this.data.sentence)
+            assertNotNull(result)
+            val resultStr = result.asString
+            assertEquals(this.data.sentence, resultStr)
+        } catch (e:ParseFailedException) {
+            println("${e.message} at ${e.location}")
+            println("expecting one of: ${e.expected}")
+            fail(e.message)
+        }
     }
 
 }

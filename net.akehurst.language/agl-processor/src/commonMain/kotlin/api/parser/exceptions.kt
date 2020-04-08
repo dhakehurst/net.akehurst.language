@@ -28,8 +28,9 @@ class ParserInterruptedException(message: String) : RuntimeException(message) {
 class ParseFailedException(
         message: String,
         val longestMatch: SharedPackedParseTree?,
-        val location: InputLocation
+        val location: InputLocation,
+        val expected:Set<String>
 )
-    : RuntimeException(message + "(at: ${location})") {
+    : RuntimeException(message) {
 
 }

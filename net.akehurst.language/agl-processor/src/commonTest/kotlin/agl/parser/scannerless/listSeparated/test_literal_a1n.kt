@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scannerless.listSeparated
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
@@ -35,7 +36,7 @@ class test_literal_a1n : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun empty() {
+    fun empty_fails() {
         val b = S()
         val goal = "S"
         val sentence = ""
@@ -46,6 +47,7 @@ class test_literal_a1n : test_ScannerlessParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
+        assertEquals(setOf("'a'"), e.expected)
     }
 
     @Test
@@ -70,7 +72,8 @@ class test_literal_a1n : test_ScannerlessParserAbstract() {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        assertEquals(2, e.location.column)
+        assertEquals(setOf("','", RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
     }
 
     @Test
@@ -95,7 +98,8 @@ class test_literal_a1n : test_ScannerlessParserAbstract() {
         }
 
         assertEquals(1, e.location.line)
-        assertEquals(3, e.location.column)
+        assertEquals(4, e.location.column)
+        assertEquals(setOf("','", RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
     }
 
     @Test

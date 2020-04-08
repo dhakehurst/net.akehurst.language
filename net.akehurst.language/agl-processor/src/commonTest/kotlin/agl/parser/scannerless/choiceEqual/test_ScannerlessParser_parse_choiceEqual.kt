@@ -18,6 +18,7 @@ package net.akehurst.language.parser.scannerless.choiceEqual
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
@@ -57,6 +58,7 @@ class test_ScannerlessParser_parse_choiceEqual {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
+        assertEquals(setOf("'a'","'b'", "'c'"), ex.expected)
     }
 
     @Test
@@ -103,6 +105,7 @@ class test_ScannerlessParser_parse_choiceEqual {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
+        assertEquals(setOf("'a'","'b'", "'c'"), ex.expected)
     }
 
     @Test
@@ -115,7 +118,8 @@ class test_ScannerlessParser_parse_choiceEqual {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        assertEquals(2, ex.location.column)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
     }
 
     // S = ab | c;
@@ -145,6 +149,7 @@ class test_ScannerlessParser_parse_choiceEqual {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
+        assertEquals(setOf("'a'", "'c'"), ex.expected)
     }
 
     @Test
@@ -157,7 +162,8 @@ class test_ScannerlessParser_parse_choiceEqual {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        assertEquals(2, ex.location.column)
+        assertEquals(setOf("'b'"), ex.expected)
     }
 
     @Test
@@ -181,7 +187,8 @@ class test_ScannerlessParser_parse_choiceEqual {
             test_parse(sp, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(2, ex.location.column)
+        assertEquals(3, ex.location.column)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
     }
 
     @Test
@@ -221,6 +228,7 @@ class test_ScannerlessParser_parse_choiceEqual {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
+        assertEquals(setOf("'a'","'b'"), ex.expected)
     }
 
     @Test
@@ -245,6 +253,7 @@ class test_ScannerlessParser_parse_choiceEqual {
         }
         assertEquals(1, ex.location.line)
         assertEquals(2, ex.location.column)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
     }
 
     @Test
@@ -258,6 +267,7 @@ class test_ScannerlessParser_parse_choiceEqual {
         }
         assertEquals(1, ex.location.line)
         assertEquals(2, ex.location.column)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
     }
 
     @Test
