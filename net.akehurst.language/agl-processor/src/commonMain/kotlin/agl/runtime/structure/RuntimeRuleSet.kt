@@ -303,7 +303,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             }
         }
     }
-
+/*
     private fun createClosure(rootRulePosition: RulePosition, parentRelation: ParentRelation?): RulePositionClosure {
         // create path from root down, it may include items from root up
         val firstParentLh = parentRelation?.lookahead ?: emptySet()
@@ -321,7 +321,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
         return RulePositionClosure(ClosureNumber(-1), rootRulePosition, closureSet)
     }
-
+*/
     private fun createWidthTransition(from: ParserState, closureRPlh: RulePositionWithLookahead): Transition {
         val action = Transition.ParseAction.WIDTH
         val lookaheadGuard = closureRPlh.lookahead
