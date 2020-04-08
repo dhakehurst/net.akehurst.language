@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/dhakehurst/net.akehurst.language.svg?branch=master)](https://travisci.org/dhakehurst/net.akehurst.language)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.akehurst.language/agl-processor/badge.svg)](https://maven-badges.herokuapp.com/maven-central/language/agl-processor)
 [ ![Bintray](https://api.bintray.com/packages/dhakehurst/maven/net.akehurst.language/images/download.svg) ](https://bintray.com/dhakehurst/maven/net.akehurst.language/_latestVersion)
-[custom badges]: https://img.shields.io/badge/Kotlin-v1.3.71-green
+[![Generic badge](https://img.shields.io/badge/Kotlin-v1.3.71-green)]
 
 # AGL: A Grammar Language (or maybe Akehurst Grammar Language!)
 ### net.akehurst.language
