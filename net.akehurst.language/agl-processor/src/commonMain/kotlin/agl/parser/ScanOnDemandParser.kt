@@ -190,26 +190,7 @@ class ScanOnDemandParser(
                 }
                 else -> {
                     val exp = lg.previous.values.flatMap { prev ->
-                        lg.currentState.transitions(this.runtimeRuleSet, prev.node.currentState).filter {
-                            when (it.action) {
-                                Transition.ParseAction.WIDTH -> {
-                                    true
-                                }
-                                Transition.ParseAction.GRAFT -> {
-                                    prev.node.currentState.rulePosition == it.prevGuard &&
-                                            it.runtimeGuard(it, prev.node, prev.node.currentState.rulePosition)
-                                }
-                                Transition.ParseAction.HEIGHT -> {
-                                    prev.node.currentState.rulePosition != it.prevGuard
-                                }
-                                Transition.ParseAction.EMBED -> {
-                                    TODO()
-                                }
-                                Transition.ParseAction.GOAL -> {
-                                    TODO()
-                                }
-                            }
-                        }
+                        rp.fetchFilteredTransitions(lg, prev.node)
                     }.map {
                         it.to.rulePosition
                     }.toSet()
