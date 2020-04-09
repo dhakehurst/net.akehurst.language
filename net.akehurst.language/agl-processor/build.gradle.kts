@@ -17,7 +17,21 @@ kt2ts {
             "net.akehurst.language.api.processor.*",
             "net.akehurst.language.api.sppt.*",
             "net.akehurst.language.api.style.*",
-            "net.akehurst.language.processor.Agl"
+            "net.akehurst.language.agl.processor.Agl"
     ))
 }
-
+/*
+tasks {
+    val dokkaJavadoc by creating(org.jetbrains.dokka.gradle.DokkaTask::class) {
+        outputFormat = "javadoc"
+        outputDirectory = "$buildDir/dokka"
+        multiplatform {
+            val jvm8 by creating {
+                targets = listOf("JVM")
+                platform = "jvm"
+                jdkVersion = 8
+                noJdkLink = true
+            }
+        }
+    }
+}*/
