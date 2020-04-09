@@ -15,15 +15,14 @@
  */
 package net.akehurst.language.examples.simple;
 
-import static org.junit.Assert.assertEquals;
-
 import net.akehurst.language.api.analyser.AsmElementSimple;
 import net.akehurst.language.api.sppt.SPPTLeaf;
 import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import org.junit.Test;
 
-import java.time.Clock;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class test_SimpleExample {
     static final String EOL = "\n";
