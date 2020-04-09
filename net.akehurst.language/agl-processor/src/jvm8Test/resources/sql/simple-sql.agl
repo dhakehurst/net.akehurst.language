@@ -1,0 +1,47 @@
+namespace net.akehurst.language
+
+grammar SQL {
+    skip WS = "\s+" ;
+
+    statementList = terminated-statement+ ;
+
+    terminated-statement = statement ';' ;
+    statement
+        = select
+        | update
+        | delete
+        | insert
+        ;
+
+    select = SELECT columns FROM table-id ;
+    update = UPDATE table-id SET column-values ;
+    delete = DELETE FROM table-id  ;
+    insert = INSERT INTO table-id '(' columns ')' VALUES '(' values ')' ;
+
+
+    columns = [column-id / ',']+ ;
+    column-values = [column-value/ ',']+ ;
+    column-value = column-id '=' value ;
+
+    values = [value /',']+ ;
+    value
+        = INTEGER
+        | STRING
+        ;
+
+    table-id = ID ;
+    column-id = '*' | ID ;
+
+    leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
+    leaf INTEGER = "[0-9]+" ;
+    leaf STRING = "'[^']*'";
+
+    leaf SELECT = "select|SELECT" ;
+    leaf UPDATE = "update|UPDATE" ;
+    leaf DELETE = "delete|DELETE" ;
+    leaf INSERT = "insert|INSERT" ;
+    leaf INTO   = "into|INTO"   ;
+    leaf SET    = "set|SET"   ;
+    leaf FROM   = "from|FROM"   ;
+    leaf VALUES = "values|VALUES"   ;
+}

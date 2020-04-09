@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "kotlin": "1.3.71",
+    "net.akehurst.language-agl-processor": "file:../../../net.akehurst.language/.gradle-build/agl-processor/libs/agl-processor-js-3.5.0"
+  }
+}
