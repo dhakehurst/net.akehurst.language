@@ -683,13 +683,35 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return rr
     }
 
-    internal fun printAutomaton(goalRuleName: String): String {
+    internal fun printUsedAutomaton(goalRuleName: String): String {
+        val b = StringBuilder()
+        val gr = this.findRuntimeRule(goalRuleName)
+
+        val states = this.states_cache[gr]!!.states.values
+        val transitions = states.flatMap { it.transitions_cache.values.flatMap { it ?: emptySet() }.toSet() }.toSet()
+
+        states.forEach {
+            b.append(it).append("\n")
+        }
+        transitions.forEach {
+            b.append(it).append("\n")
+        }
+
+
+        return b.toString()
+    }
+
+    internal fun printFullAutomaton(goalRuleName: String): String {
         val b = StringBuilder()
         val gr = this.findRuntimeRule(goalRuleName)
 
         val s0 = this.startingState(gr, listOf(RuntimeRuleSet.END_OF_TEXT))
 
-        val states = this.states_cache[gr]!!.states.values
+        val states = setOf(s0).transitiveClosure {
+            val trans = it.transitions(this,null)
+            trans.map { it.to }.toSet()
+        }
+
         val transitions = states.flatMap { it.transitions_cache.values.flatMap { it ?: emptySet() }.toSet() }.toSet()
 
 

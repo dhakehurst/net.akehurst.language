@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.processor.sql
+package net.akehurst.language.agl.processor.dot
 
-import java.io.BufferedReader
-import java.io.InputStreamReader
+//import com.soywiz.korio.async.runBlockingNoSuspensions
+//import com.soywiz.korio.file.std.resourcesVfs
+//import java.io.BufferedReader
+//import java.io.InputStreamReader
 import java.util.ArrayList
 
 import org.junit.Assert
@@ -27,26 +29,28 @@ import org.junit.runners.Parameterized.Parameters
 
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.processor.sql.test_SQLValid
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 
 @RunWith(Parameterized::class)
-class test_SQLValid(val data:Data) {
+class test_AnsiC(val data:Data) {
 
     companion object {
 
-        private val grammarStr = test_SQLValid::class.java.getResource("/sql/simple-sql.agl").readText()
+        private val grammarStr = this::class.java.getResource("/ansiC/ansiC.agl").readText()
         val processor : LanguageProcessor by lazy {
             Agl.processor(grammarStr)
         }
-
-        var sourceFiles = arrayOf("/sql/valid.txt")
+        var sourceFiles = arrayOf("/ansiC/expression-valid.txt")
 
         @JvmStatic
         @Parameters(name = "{0}")
         fun data(): Collection<Array<Any>> {
             val col = ArrayList<Array<Any>>()
             for (sourceFile in sourceFiles) {
-                val inps = test_SQLValid::class.java.getResourceAsStream(sourceFile)
+                val inps = test_AnsiC::class.java.getResourceAsStream(sourceFile)
 
                 val br = BufferedReader(InputStreamReader(inps))
                 var line: String? = br.readLine()
@@ -68,23 +72,20 @@ class test_SQLValid(val data:Data) {
         }
     }
 
-    class Data(val sourceFile: String, val queryStr: String) {
+    class Data(val file: String, val text: String) {
 
         // --- Object ---
         override fun toString(): String {
-            return this.sourceFile + ": " + this.queryStr
+            return "${this.file} | ${this.text}"
         }
     }
 
-    @Test(timeout=1000)
+    @Test
     fun test() {
-        val queryStr = this.data.queryStr
-        val result = processor.parse("terminated-statement", queryStr)
+        val result = processor.parse("expression", this.data.text)
         Assert.assertNotNull(result)
         val resultStr = result.asString
-        Assert.assertEquals(queryStr, resultStr)
+        Assert.assertEquals(this.data.text, resultStr)
     }
-
-
 
 }

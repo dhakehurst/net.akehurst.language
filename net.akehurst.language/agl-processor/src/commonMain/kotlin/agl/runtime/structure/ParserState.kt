@@ -103,7 +103,7 @@ class ParserState(
             //TODO: remove dependency on previous when calculating transitions! ?
             val transitions = runtimeRuleSet.calcTransitions(this, previous)
             this.transitions_cache[previous] = transitions
-            return transitions
+            transitions
         } else {
             cache
         }
