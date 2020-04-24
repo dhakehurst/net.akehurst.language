@@ -55,14 +55,14 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
                     this.compressRhs(rhs.items[0])
                 } else {
                     val items = rhs.items.map { this.compressRhs(it) }
-                    val pattern = items.joinToString(separator = "") { it.value }
+                    val pattern = items.joinToString(separator = "") { "(${it.value})" }
                     CompressedItem(pattern, true)
                     //throw GrammarExeception("Rule ${rhs.owningRule.name}, compressing ${rhs::class} to leaf is not yet supported", null)
                 }
             }
             rhs is Choice -> {
                 val ct = rhs.alternative.map { this.compressRhs(it) }
-                val pattern = ct.joinToString(separator = "|") { it.value }
+                val pattern = ct.joinToString(separator = "|") { "${it.value}" }
                 CompressedItem(pattern, true)
             }
             rhs is Multi -> {

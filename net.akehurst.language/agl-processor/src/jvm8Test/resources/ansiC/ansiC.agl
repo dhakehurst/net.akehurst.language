@@ -42,7 +42,7 @@ grammar C_Expression {
 
     leaf BOOLEAN = 'true' | 'false' ;
     leaf INTEGER_SUFFIX = INTEGER INT_SUFFIX? ;
-    INT_SUFFIX = "[uU]" "[lL]"? | "[uU]" "ll|LL" | "[lL]" "[uU]"? | "ll|LL" "[uU]"? ;
+    INT_SUFFIX = "[uU]" "ll|LL" | "[uU]" "[lL]"? |  "ll|LL" "[uU]"? | "[lL]" "[uU]"?  ;
     INTEGER = DECIMAL | HEX | OCTAL | BINARY ;
     DECIMAL = "[1-9][0-9]*" ;
     OCTAL = "0[0-7]*" ;
