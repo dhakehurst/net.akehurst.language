@@ -1,0 +1,106 @@
+/**
+ * Copyright (C) 2020 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package net.akehurst.language.comparisons.common
+
+import org.apache.poi.openxml4j.util.ZipSecureFile
+import org.apache.poi.ss.usermodel.IndexedColors
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.Workbook
+import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.time.Duration
+
+object Results {
+    var resultsFile = Paths.get("../results/results.xlsx")
+
+    @Synchronized
+    fun log(success: Boolean, col: String?, item: String?, value: Duration) {
+        println("Result: $col, $value | $item")
+        ZipSecureFile.setMinInflateRatio(0.00009)
+        var wb: Workbook? = null
+        try {
+            wb = if (resultsFile.toFile().exists()) {
+                WorkbookFactory.create(Files.newInputStream(resultsFile))
+            } else {
+                XSSFWorkbook()
+            }
+            var sheet: Sheet? = null
+            if (0 == wb!!.numberOfSheets) {
+                sheet = wb.createSheet()
+            }
+            sheet = wb.getSheetAt(0)
+            val headerFont = wb.createFont()
+            headerFont.bold = true
+            headerFont.fontHeightInPoints = 14.toShort()
+            headerFont.color = IndexedColors.BLUE.getIndex()
+            val headerCellStyle = wb.createCellStyle()
+            headerCellStyle.setFont(headerFont)
+            val errorFont = wb.createFont()
+            headerFont.bold = false
+            headerFont.color = IndexedColors.RED.getIndex()
+            val errorCellStyle = wb.createCellStyle()
+            headerCellStyle.setFont(errorFont)
+            var headerRow = sheet.getRow(0)
+            if (null == headerRow) {
+                headerRow = sheet.createRow(0)
+            }
+            val itemCol = headerRow!!.getCell(0)
+            if (null == itemCol) {
+                val cell = headerRow.createCell(0)
+                cell.setCellValue("Item")
+                cell.cellStyle = headerCellStyle
+            }
+            var colNum = -1
+            for (c in headerRow) {
+                if (col == c.stringCellValue) {
+                    colNum = c.columnIndex
+                }
+            }
+            if (-1 == colNum) {
+                val cell = headerRow.createCell(headerRow.lastCellNum.toInt())
+                cell.setCellValue(col)
+                cell.cellStyle = headerCellStyle
+                colNum = cell.columnIndex
+            }
+            var rowNum = -1
+            for (row in sheet) {
+                if (item == row.getCell(0).stringCellValue) {
+                    rowNum = row.rowNum
+                }
+            }
+            if (-1 == rowNum) {
+                val row = sheet.createRow(sheet.lastRowNum + 1)
+                val c = row.createCell(0)
+                c.setCellValue(item)
+                rowNum = row.rowNum
+            }
+            val valueRow = sheet.getRow(rowNum)
+            var valueCell = valueRow.getCell(colNum)
+            if (null == valueCell) {
+                valueCell = valueRow.createCell(colNum)
+            }
+            valueCell!!.setCellValue(value.toMillis().toDouble())
+            if (!success) {
+                valueCell.cellStyle = errorCellStyle
+            }
+            Files.newOutputStream(resultsFile).use { fileOut -> wb.write(fileOut) }
+        } catch (ex: Exception) {
+            throw RuntimeException("Error logging results", ex)
+        }
+    }
+}

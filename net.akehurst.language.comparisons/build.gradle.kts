@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2020 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,27 @@
  * limitations under the License.
  */
 
+
+allprojects {
+
+	val version_project: String by project
+	val group_project = "${rootProject.name}"
+
+	group = group_project
+	version = version_project
+
+	buildDir = File(rootProject.projectDir, ".gradle-build/${project.name}")
+
+}
+
 subprojects {
-
-	apply plugin: 'java-library'
-	apply plugin: 'maven-publish'
-
-
-	group 'net.akehurst.language.comparisons'
-	version "$version_project"
-
-	sourceCompatibility = '1.8'
-	targetCompatibility = '1.8'
 
     repositories {
         mavenLocal()
         mavenCentral()
         jcenter()
     }
+
+
 
 }

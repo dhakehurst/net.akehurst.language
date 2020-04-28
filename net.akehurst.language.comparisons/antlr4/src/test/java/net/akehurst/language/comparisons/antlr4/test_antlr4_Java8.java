@@ -36,7 +36,7 @@ public class test_antlr4_Java8 {
 
     @Parameterized.Parameters(name = "{index}: {0}")
     public static Collection<Object[]> getFiles() {
-        return Java8TestFiles.getFiles();
+        return Java8TestFiles.INSTANCE.getFiles();
     }
 
     static antlr4.spec.Java8Parser.CompilationUnitContext parseWithAntlr4Spec(final Path file) {

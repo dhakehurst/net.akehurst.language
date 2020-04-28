@@ -1,4 +1,5 @@
 apply plugin: 'antlr'
+apply plugin: 'java-library'
 
 dependencies {
     antlr 'org.antlr:antlr4:4.7'
