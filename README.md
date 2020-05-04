@@ -6,7 +6,6 @@
 [![Generic badge](https://img.shields.io/badge/Kotlin-v1.3.71-green)](https://kotlinlang.org/)
 
 # AGL: A Grammar Language (or maybe Akehurst Grammar Language!)
-### net.akehurst.language
 
 Generic Language (DSL) support for kotlin multiplatform (parser, syntax-analyser, formatter, processor, etc)
 
@@ -25,6 +24,9 @@ My Requirements:
  - Interpreted at runtime, i.e. no generate parser step.
  - Supports families of languages, i.e. grammar composition/extension
  - 
+ 
+# Other
+ - [Editor Integration and Demo](https://github.com/dhakehurst/net.akehurst.language.editor)
 
 # Articles
 
