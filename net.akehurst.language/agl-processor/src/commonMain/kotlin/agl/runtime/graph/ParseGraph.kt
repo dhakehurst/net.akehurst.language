@@ -47,7 +47,6 @@ internal class ParseGraph(
 
     val longestCompleteNodeFromStart: SPPTNode? get() = this.completeNodes.values.filter { it.startPosition == 0 }.sortedBy { it.matchedTextLength }.lastOrNull()
 
-
     fun longestMatch(seasons: Int, maxNumHeads: Int): SPPTNode? {
         if (!this.goals.isEmpty() && this.goals.size >= 1) {
             var lt = this.goals.iterator().next()

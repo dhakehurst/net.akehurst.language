@@ -20,18 +20,26 @@ import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.*
 
+data class FileData(
+        val index: Int,
+        val path: Path,
+        val size: Long
+)
+
 object Java8TestFiles {
     var javaTestFiles = "../javaTestFiles/javac"
-    val files: Collection<Array<Any>>
+
+    val files: Collection<FileData>
         get() {
-            val params = ArrayList<Array<Any>>()
+            val params = mutableListOf<Pair<Path, Long>>()
             try {
                 val matcher = FileSystems.getDefault().getPathMatcher("glob:**/*.java")
                 Files.walkFileTree(Paths.get(javaTestFiles), object : SimpleFileVisitor<Path>() {
                     @Throws(IOException::class)
                     override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
                         if (attrs.isRegularFile && matcher.matches(file)) {
-                            params.add(arrayOf(file))
+                            val size = attrs.size()
+                            params.add(Pair(file, size))
                         }
                         return FileVisitResult.CONTINUE
                     }
@@ -39,6 +47,8 @@ object Java8TestFiles {
             } catch (e: IOException) {
                 throw RuntimeException("Error getting files", e)
             }
-            return params
+            params.sortBy { it.second }
+            var index = 0
+            return params.map { FileData(index++, it.first, it.second) }
         }
 }

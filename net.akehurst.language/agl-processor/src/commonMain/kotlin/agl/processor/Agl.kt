@@ -29,6 +29,7 @@ import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.processor.LanguageProcessorException
 import kotlin.js.JsName
 
 object Agl {
@@ -74,22 +75,35 @@ object Agl {
             val grammar = grammarProcessor.process<List<Grammar>>("grammarDefinition", grammarDefinitionStr).last()
             return processor(grammar, syntaxAnalyser, formatter)
         } catch (e: ParseFailedException) {
-            //TODO: better, different exception to detect which list item fails
-            throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location, e.expected)
+            throw LanguageProcessorException("Unable to parse grammarDefinitionStr at line: ${e.location.line} column: ${e.location.column} expected one of: ${e.expected}", e)
         }
     }
 
     /**
      * Create a LanguageProcessor from a grammar definition string
+     *
+     * grammarDefinitionStr may contain multiple grammars
+     *
+     * when {
+     *   goalRuleName.contains(".") use before '.' to choose the grammar
+     *   else use the last grammar in the grammarDefinitionStr
+     * }
      */
     @JsName("processorFromStringForGoal")
     fun processor(grammarDefinitionStr: String, goalRuleName:String, syntaxAnalyser: SyntaxAnalyser?=null, formatter: Formatter?=null): LanguageProcessor {
         try {
-            val grammar = grammarProcessor.process<Grammar>("grammarDefinition", grammarDefinitionStr)
-            return processor(grammar, goalRuleName, syntaxAnalyser, formatter)
+            val grammars = grammarProcessor.process<List<Grammar>>("grammarDefinition", grammarDefinitionStr)
+            return when {
+                goalRuleName.contains(".") -> {
+                    val grammarName = goalRuleName.substringBefore(".")
+                    val grammar = grammars.find { it.name==grammarName } ?: throw LanguageProcessorException("Grammar with name $grammarName not found", null)
+                    val goalName = goalRuleName.substringAfter(".")
+                    processor(grammar, goalName, syntaxAnalyser, formatter)
+                }
+                else -> processor(grammars.last(), goalRuleName, syntaxAnalyser, formatter)
+            }
         } catch (e: ParseFailedException) {
-            //TODO: better, different exception to detect which list item fails
-            throw ParseFailedException("Unable to parse grammarDefinitionStr ", e.longestMatch, e.location, e.expected)
+            throw LanguageProcessorException("Unable to parse grammarDefinitionStr at line: ${e.location.line} column: ${e.location.column} expected one of: ${e.expected}", e)
         }
     }
 

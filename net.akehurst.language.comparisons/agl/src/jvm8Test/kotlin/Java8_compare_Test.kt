@@ -16,8 +16,10 @@
 package net.akehurst.language.comparisons.agl
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.comparisons.common.FileData
 import net.akehurst.language.comparisons.common.Java8TestFiles
 import net.akehurst.language.comparisons.common.TimeLogger
 import org.junit.Assert
@@ -26,20 +28,21 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.IOException
-import java.nio.file.*
-import java.nio.file.attribute.BasicFileAttributes
-import java.util.ArrayList
+import java.nio.file.Files
+import java.nio.file.Path
 
 @RunWith(Parameterized::class)
-class Java8_compare_Test(val file: Path) {
+class Java8_compare_Test(val file: FileData) {
 
     companion object {
         val javaTestFiles = "../javaTestFiles/javac"
 
         @JvmStatic
         @Parameterized.Parameters(name = "{index}: {0}")
-        fun files(): Collection<Array<Any>> {
-            return Java8TestFiles.files
+        fun files(): Collection<FileData> {
+            val f = Java8TestFiles.files
+            println("Number of files to test against: ${f.size}")
+            return f
         }
 
         fun createAndBuildProcessor(aglFile: String): LanguageProcessor {
@@ -56,40 +59,49 @@ class Java8_compare_Test(val file: Path) {
 
         var input: String? = null
 
-        fun parseWithJava8Spec(file: Path): SharedPackedParseTree? {
+        fun parseWithJava8Spec(file: FileData): SharedPackedParseTree? {
             try {
-                TimeLogger("agl_spec", file.toString()).use { timer ->
+                TimeLogger("agl_spec", file).use { timer ->
                     val tree = specJava8Processor.parse("compilationUnit", input!!)
                     timer.success()
                     return tree
                 }
-            } catch (e: Exception) {
+            } catch (e: ParseFailedException) {
+                println("Parse Failed at line:${e.location.line} column:${e.location.column} expected one of: ${e.expected}")
+                return null
+            } catch (e: Throwable) {
                 e.printStackTrace()
                 return null
             }
         }
 
-        fun parseWithJava8OptmAntlr(file: Path): SharedPackedParseTree? {
+        fun parseWithJava8OptmAntlr(file: FileData): SharedPackedParseTree? {
             try {
-                TimeLogger("agl_optmAntlr", file.toString()).use { timer ->
+                TimeLogger("agl_optmAntlr", file).use { timer ->
                     val tree = optmAntlrJava8Processor.parse("compilationUnit", input!!)
                     timer.success()
                     return tree
                 }
-            } catch (e: Exception) {
+            } catch (e: ParseFailedException) {
+                println("Parse Failed at line:${e.location.line} column:${e.location.column} expected one of: ${e.expected}")
+                return null
+            } catch (e: Throwable) {
                 e.printStackTrace()
                 return null
             }
         }
 
-        fun parseWithJava8Optm1(file: Path): SharedPackedParseTree? {
+        fun parseWithJava8Optm1(file: FileData): SharedPackedParseTree? {
             try {
-                TimeLogger("agl_optm1", file.toString()).use { timer ->
+                TimeLogger("agl_optm1", file).use { timer ->
                     val tree = optm1Java8Processor.parse("compilationUnit", input!!)
                     timer.success()
                     return tree
                 }
-            } catch (e: Exception) {
+            } catch (e: ParseFailedException) {
+                println("Parse Failed at line:${e.location.line} column:${e.location.column} expected one of: ${e.expected}")
+                return null
+            } catch (e: Throwable) {
                 e.printStackTrace()
                 return null
             }
@@ -100,7 +112,7 @@ class Java8_compare_Test(val file: Path) {
     @Before
     fun setUp() {
         try {
-            input = String(Files.readAllBytes(file))
+            input = String(Files.readAllBytes(file.path))
         } catch (e: IOException) {
             e.printStackTrace()
             Assert.fail(e.message)
@@ -108,19 +120,19 @@ class Java8_compare_Test(val file: Path) {
     }
 
     @Test
-    fun ogl_spec_compilationUnit() {
+    fun spec_compilationUnit() {
         val tree = parseWithJava8Spec(file)
         Assert.assertNotNull("Failed to Parse", tree)
     }
 
     @Test
-    fun ogl_optmAntlr_compilationUnit() {
+    fun optmAntlr_compilationUnit() {
         val tree = parseWithJava8OptmAntlr(file)
         Assert.assertNotNull("Failed to Parse", tree)
     }
 
     @Test
-    fun ogl_optm1_compilationUnit() {
+    fun optm1_compilationUnit() {
         val tree = parseWithJava8Optm1(file)
         Assert.assertNotNull("Failed to Parse", tree)
     }

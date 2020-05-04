@@ -29,8 +29,8 @@ object Results {
     var resultsFile = Paths.get("../results/results.xlsx")
 
     @Synchronized
-    fun log(success: Boolean, col: String?, item: String?, value: Duration) {
-        println("Result: $col, $value | $item")
+    fun log(success: Boolean, col: String, fileData: FileData, value: Duration) {
+        println("Result: $col, $value | $fileData")
         ZipSecureFile.setMinInflateRatio(0.00009)
         var wb: Workbook? = null
         try {
@@ -62,8 +62,11 @@ object Results {
             val itemCol = headerRow!!.getCell(0)
             if (null == itemCol) {
                 val cell = headerRow.createCell(0)
-                cell.setCellValue("Item")
+                cell.setCellValue("File")
                 cell.cellStyle = headerCellStyle
+                val cell2 = headerRow.createCell(1)
+                cell2.setCellValue("Size")
+                cell2.cellStyle = headerCellStyle
             }
             var colNum = -1
             for (c in headerRow) {
@@ -77,16 +80,13 @@ object Results {
                 cell.cellStyle = headerCellStyle
                 colNum = cell.columnIndex
             }
-            var rowNum = -1
-            for (row in sheet) {
-                if (item == row.getCell(0).stringCellValue) {
-                    rowNum = row.rowNum
-                }
-            }
-            if (-1 == rowNum) {
+            var rowNum = fileData.index + 1 //+1 for headings
+            if (sheet.lastRowNum < rowNum) {
                 val row = sheet.createRow(sheet.lastRowNum + 1)
                 val c = row.createCell(0)
-                c.setCellValue(item)
+                c.setCellValue(fileData.path.toString())
+                val c2 = row.createCell(1)
+                c2.setCellValue(fileData.size.toDouble())
                 rowNum = row.rowNum
             }
             val valueRow = sheet.getRow(rowNum)
@@ -97,6 +97,7 @@ object Results {
             valueCell!!.setCellValue(value.toMillis().toDouble())
             if (!success) {
                 valueCell.cellStyle = errorCellStyle
+                valueCell.setCellValue("error")
             }
             Files.newOutputStream(resultsFile).use { fileOut -> wb.write(fileOut) }
         } catch (ex: Exception) {

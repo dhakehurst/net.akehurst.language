@@ -18,7 +18,7 @@ package net.akehurst.language.comparisons.common
 import java.time.Duration
 import java.time.Instant
 
-class TimeLogger(private val col: String, private val item: String) : AutoCloseable {
+class TimeLogger(private val col: String, private val fileData: FileData) : AutoCloseable {
     private val start: Instant
     private var success: Boolean
     fun success() {
@@ -28,7 +28,7 @@ class TimeLogger(private val col: String, private val item: String) : AutoClosea
     override fun close() {
         val end = Instant.now()
         val d = Duration.between(start, end)
-        Results.log(success, col, item, d)
+        Results.log(success, col, fileData, d)
     }
 
     init {

@@ -239,11 +239,11 @@ compilationUnit
     ;
 
 packageDeclaration
-    = annotation* 'package' qualifiedName ';'
+    = annotation* PACKAGE qualifiedName ';'
     ;
 
 importDeclaration
-    = 'import' 'static'? qualifiedName ('.' '*')? ';'
+    = IMPORT STATIC? qualifiedName ('.' '*')? ';'
     ;
 
 typeDeclaration
@@ -254,49 +254,53 @@ typeDeclaration
 
 modifier
     = classOrInterfaceModifier
-    | 'native'
-    | 'synchronized'
-    | 'transient'
-    | 'volatile'
+    | NATIVE
+    | SYNCHRONIZED
+    | TRANSIENT
+    | VOLATILE
     ;
 
 classOrInterfaceModifier
     = annotation
-    | 'public'
-    | 'protected'
-    | 'private'
-    | 'static'
-    | 'abstract'
-    | 'final'    // FINAL for class only -- does not apply to interfaces
-    | 'strictfp'
+    | PUBLIC
+    | PROTECTED
+    | PRIVATE
+    | STATIC
+    | ABSTRACT
+    | FINAL    // FINAL for class only -- does not apply to interfaces
+    | STRICTFP
     ;
 
 variableModifier
-    = 'final'
+    = FINAL
     | annotation
     ;
 
 classDeclaration
-    = 'class' IDENTIFIER typeParameters?
-      ('extends' typeType)?
-      ('implements' typeList)?
+    = CLASS IDENTIFIER typeParameters?
+      (EXTENDS typeType)?
+      (IMPLEMENTS typeList)?
       classBody
     ;
 
 typeParameters
-    = '<' [typeParameter / ',']+ '>'
+    = '<' typeParameter (',' typeParameter)* '>'
     ;
 
 typeParameter
-    = annotation* IDENTIFIER ('extends' [typeType / '&']+)?
+    = annotation* IDENTIFIER (EXTENDS typeBound)?
+    ;
+
+typeBound
+    = typeType ('&' typeType)*
     ;
 
 enumDeclaration
-    = 'enum' IDENTIFIER ('implements' typeList)? '{' enumConstants? ','? enumBodyDeclarations? '}'
+    = ENUM IDENTIFIER (IMPLEMENTS typeList)? '{' enumConstants? ','? enumBodyDeclarations? '}'
     ;
 
 enumConstants
-    = [enumConstant / ',']+
+    = enumConstant (',' enumConstant)*
     ;
 
 enumConstant
@@ -308,7 +312,7 @@ enumBodyDeclarations
     ;
 
 interfaceDeclaration
-    = 'interface' IDENTIFIER typeParameters? ('extends' typeList)? interfaceBody
+    = INTERFACE IDENTIFIER typeParameters? (EXTENDS typeList)? interfaceBody
     ;
 
 classBody
@@ -321,7 +325,7 @@ interfaceBody
 
 classBodyDeclaration
     = ';'
-    | 'static'? block
+    | STATIC? block
     | modifier* memberDeclaration
     ;
 
@@ -344,7 +348,7 @@ memberDeclaration
  */
 methodDeclaration
     = typeTypeOrVoid IDENTIFIER formalParameters ('[' ']')*
-      ('throws' qualifiedNameList)?
+      (THROWS qualifiedNameList)?
       methodBody
     ;
 
@@ -355,7 +359,7 @@ methodBody
 
 typeTypeOrVoid
     = typeType
-    | 'void'
+    | VOID
     ;
 
 genericMethodDeclaration
@@ -367,7 +371,7 @@ genericConstructorDeclaration
     ;
 
 constructorDeclaration
-    = IDENTIFIER formalParameters ('throws' qualifiedNameList)? block /*constructorBody*/
+    = IDENTIFIER formalParameters (THROWS qualifiedNameList)? block /*constructorBody*/
     ;
 
 fieldDeclaration
@@ -390,7 +394,7 @@ interfaceMemberDeclaration
     ;
 
 constDeclaration
-    = typeType [constantDeclarator / ',']+ ';'
+    = typeType constantDeclarator (',' constantDeclarator)* ';'
     ;
 
 constantDeclarator
@@ -401,17 +405,17 @@ constantDeclarator
 // methodBody from Java8
 interfaceMethodDeclaration
     = interfaceMethodModifier* (typeTypeOrVoid | typeParameters annotation* typeTypeOrVoid)
-      IDENTIFIER formalParameters ('[' ']')* ('throws' qualifiedNameList)? methodBody
+      IDENTIFIER formalParameters ('[' ']')* (THROWS qualifiedNameList)? methodBody
     ;
 
 // Java8
 interfaceMethodModifier
     = annotation
-    | 'public'
-    | 'abstract'
-    | 'default'
-    | 'static'
-    | 'strictfp'
+    | PUBLIC
+    | ABSTRACT
+    | DEFAULT
+    | STATIC
+    | STRICTFP
     ;
 
 genericInterfaceMethodDeclaration
@@ -419,7 +423,7 @@ genericInterfaceMethodDeclaration
     ;
 
 variableDeclarators
-    = [variableDeclarator / ',']+
+    = variableDeclarator (',' variableDeclarator)*
     ;
 
 variableDeclarator
@@ -436,20 +440,20 @@ variableInitializer
     ;
 
 arrayInitializer
-    = '{' ( [variableInitializer / ',']+ (',')? )? '}'
+    = '{' (variableInitializer (',' variableInitializer)* (',')? )? '}'
     ;
 
 classOrInterfaceType
-    = [ (IDENTIFIER typeArguments?) / '.']+
+    = IDENTIFIER typeArguments? ('.' IDENTIFIER typeArguments?)*
     ;
 
 typeArgument
     = typeType
-    | '?' (('extends' | 'super') typeType)?
+    | '?' ((EXTENDS | SUPER) typeType)?
     ;
 
 qualifiedNameList
-    = [qualifiedName / ',']+
+    = qualifiedName (',' qualifiedName)*
     ;
 
 formalParameters
@@ -457,7 +461,7 @@ formalParameters
     ;
 
 formalParameterList
-    = [formalParameter  / ',']+ (',' lastFormalParameter)?
+    = formalParameter (',' formalParameter)* (',' lastFormalParameter)?
     | lastFormalParameter
     ;
 
@@ -470,7 +474,7 @@ lastFormalParameter
     ;
 
 qualifiedName
-    = [IDENTIFIER / '.']+
+    = IDENTIFIER ('.' IDENTIFIER)*
     ;
 
 literal
@@ -501,7 +505,7 @@ annotation
     ;
 
 elementValuePairs
-    = [elementValuePair / ',' ]+
+    = elementValuePair (',' elementValuePair)*
     ;
 
 elementValuePair
@@ -515,11 +519,11 @@ elementValue
     ;
 
 elementValueArrayInitializer
-    = '{' ([elementValue / ',' ]+)? (',')? '}'
+    = '{' (elementValue (',' elementValue)*)? (',')? '}'
     ;
 
 annotationTypeDeclaration
-    = '@' 'interface' IDENTIFIER annotationTypeBody
+    = '@' INTERFACE IDENTIFIER annotationTypeBody
     ;
 
 annotationTypeBody
@@ -553,7 +557,7 @@ annotationConstantRest
     ;
 
 defaultValue
-    = 'default' elementValue
+    = DEFAULT elementValue
     ;
 
 // STATEMENTS / BLOCKS
@@ -580,26 +584,26 @@ localTypeDeclaration
 
 statement
     = block
-    | 'assert' expression (':' expression)? ';'
-    | 'if' parExpression statement ('else' statement)?
-    | 'for' '(' forControl ')' statement
-    | 'while' parExpression statement
-    | 'do' statement 'while' parExpression ';'
-    | 'try' block (catchClause+ finallyBlock? | finallyBlock)
-    | 'try' resourceSpecification block catchClause* finallyBlock?
-    | 'switch' parExpression '{' switchBlockStatementGroup* switchLabel* '}'
-    | 'synchronized' parExpression block
-    | 'return' expression? ';'
-    | 'throw' expression ';'
-    | 'break' IDENTIFIER? ';'
-    | 'continue' IDENTIFIER? ';'
-    | ';'
+    | ASSERT expression (':' expression)? ';'
+    | IF parExpression statement (ELSE statement)?
+    | FOR '(' forControl ')' statement
+    | WHILE parExpression statement
+    | DO statement WHILE parExpression ';'
+    | TRY block (catchClause+ finallyBlock? | finallyBlock)
+    | TRY resourceSpecification block catchClause* finallyBlock?
+    | SWITCH parExpression '{' switchBlockStatementGroup* switchLabel* '}'
+    | SYNCHRONIZED parExpression block
+    | RETURN expression? ';'
+    | THROW expression ';'
+    | BREAK IDENTIFIER? ';'
+    | CONTINUE IDENTIFIER? ';'
+    | SEMI
     | expression ';'
     | IDENTIFIER ':' statement
     ;
 
 catchClause
-    = 'catch' '(' variableModifier* catchType IDENTIFIER ')' block
+    = CATCH '(' variableModifier* catchType IDENTIFIER ')' block
     ;
 
 catchType
@@ -607,7 +611,7 @@ catchType
     ;
 
 finallyBlock
-    = 'finally' block
+    = FINALLY block
     ;
 
 resourceSpecification
@@ -631,7 +635,7 @@ switchBlockStatementGroup
 
 switchLabel
     = CASE (expression | IDENTIFIER) ':'
-    | 'default' ':'
+    | DEFAULT ':'
     ;
 
 forControl
@@ -662,14 +666,14 @@ expression
     = primary
     | expression '.'
       (IDENTIFIER
-      | 'this'
-      | 'new' nonWildcardTypeArguments? innerCreator
-      | 'super' superSuffix
+      | THIS
+      | NEW nonWildcardTypeArguments? innerCreator
+      | SUPER superSuffix
       | explicitGenericInvocation
       )
     | expression '[' expression ']'
     | expression '(' expressionList? ')'
-    | 'new' creator
+    | NEW creator
     | '(' typeType ')' expression
     | expression ('++' | '--')
     | ('+'|'-'|'++'|'--') expression
@@ -678,7 +682,7 @@ expression
     | expression ('+'|'-') expression
     | expression ('<' '<' | '>' '>' '>' | '>' '>') expression
     | expression ('<=' | '>=' | '>' | '<') expression
-    | expression 'instanceof' typeType
+    | expression INSTANCEOF typeType
     | expression ('==' | '!=') expression
     | expression '&' expression
     | expression '^' expression
@@ -693,8 +697,8 @@ expression
 
     // Java 8 methodReference
     | expression '::' typeArguments? IDENTIFIER
-    | typeType '::' (typeArguments? IDENTIFIER | 'new')
-    | classType '::' typeArguments? 'new'
+    | typeType '::' (typeArguments? IDENTIFIER | NEW)
+    | classType '::' typeArguments? NEW
     ;
 
 // Java8
@@ -706,7 +710,7 @@ lambdaExpression
 lambdaParameters
     = IDENTIFIER
     | '(' formalParameterList? ')'
-    | '(' [IDENTIFIER / ',']+ ')'
+    | '(' IDENTIFIER (',' IDENTIFIER)* ')'
     ;
 
 // Java8
@@ -717,12 +721,12 @@ lambdaBody
 
 primary
     = '(' expression ')'
-    | 'this'
-    | 'super'
+    | THIS
+    | SUPER
     | literal
     | IDENTIFIER
-    | typeTypeOrVoid '.' 'class'
-    | nonWildcardTypeArguments (explicitGenericInvocationSuffix | 'this' arguments)
+    | typeTypeOrVoid '.' CLASS
+    | nonWildcardTypeArguments (explicitGenericInvocationSuffix | THIS arguments)
     ;
 
 classType
@@ -735,7 +739,7 @@ creator
     ;
 
 createdName
-    = [(IDENTIFIER typeArgumentsOrDiamond?) / '.']+
+    = IDENTIFIER typeArgumentsOrDiamond? ('.' IDENTIFIER typeArgumentsOrDiamond?)*
     | primitiveType
     ;
 
@@ -770,7 +774,7 @@ nonWildcardTypeArguments
     ;
 
 typeList
-    = [typeType / ',' ]+
+    = typeType (',' typeType)*
     ;
 
 typeType
@@ -778,18 +782,18 @@ typeType
     ;
 
 primitiveType
-    = 'boolean'
-    | 'char'
-    | 'byte'
-    | 'short'
-    | 'int'
-    | 'long'
-    | 'float'
-    | 'double'
+    = BOOLEAN
+    | CHAR
+    | BYTE
+    | SHORT
+    | INT
+    | LONG
+    | FLOAT
+    | DOUBLE
     ;
 
 typeArguments
-    = '<' [typeArgument / ',']+ '>'
+    = '<' typeArgument (',' typeArgument)* '>'
     ;
 
 superSuffix
@@ -798,7 +802,7 @@ superSuffix
     ;
 
 explicitGenericInvocationSuffix
-    = 'super' superSuffix
+    = SUPER superSuffix
     | IDENTIFIER arguments
     ;
 

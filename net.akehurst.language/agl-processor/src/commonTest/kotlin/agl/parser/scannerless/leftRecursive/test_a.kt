@@ -99,7 +99,11 @@ class  test_a : test_ScannerlessParserAbstract() {
         val expected = "S { S1 { ".repeat(49) + "S { 'a' }" + "'a' } }".repeat(49)
 
         val actual = super.test(rrb, goal, sentence, expected)
+
+        println(rrb.ruleSet().printUsedAutomaton("S"))
+
         assertEquals(1, actual.maxNumHeads)
+
     }
 
     @Test

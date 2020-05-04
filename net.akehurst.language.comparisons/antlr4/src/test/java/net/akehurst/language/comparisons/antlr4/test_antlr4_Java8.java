@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.comparisons.antlr4;
 
+import net.akehurst.language.comparisons.common.FileData;
 import net.akehurst.language.comparisons.common.TimeLogger;
 import org.antlr.v4.runtime.*;
 import org.junit.Assert;
@@ -35,50 +36,50 @@ public class test_antlr4_Java8 {
     static CharStream input;
 
     @Parameterized.Parameters(name = "{index}: {0}")
-    public static Collection<Object[]> getFiles() {
+    public static Collection<FileData> getFiles() {
         return Java8TestFiles.INSTANCE.getFiles();
     }
 
-    static antlr4.spec.Java8Parser.CompilationUnitContext parseWithAntlr4Spec(final Path file) {
+    static antlr4.spec.Java8Parser.CompilationUnitContext parseWithAntlr4Spec(final FileData file) {
 
         final Lexer lexer = new antlr4.spec.Java8Lexer(input);
         final CommonTokenStream tokens = new CommonTokenStream(lexer);
         final antlr4.spec.Java8Parser p = new antlr4.spec.Java8Parser(tokens);
         p.setErrorHandler(new BailErrorStrategy());
-        try (TimeLogger timer = new TimeLogger("antlr4_spec", file.toString());) {
-            antlr4.spec.Java8Parser.CompilationUnitContext r = p.compilationUnit();
-            timer.success();
-            return r;
-        } catch (final Exception e) {
-            return null;
-        }
+
+            try (TimeLogger timer = new TimeLogger("antlr4_spec", file)) {
+                antlr4.spec.Java8Parser.CompilationUnitContext r = p.compilationUnit();
+                timer.success();
+                return r;
+            }
+
     }
 
-    static antlr4.optm.Java8Parser.CompilationUnitContext parseWithAntlr4Optm(final Path file) {
+    static antlr4.optm.Java8Parser.CompilationUnitContext parseWithAntlr4Optm(final FileData file) {
 
         final Lexer lexer = new antlr4.optm.Java8Lexer(input);
         final CommonTokenStream tokens = new CommonTokenStream(lexer);
         final antlr4.optm.Java8Parser p = new antlr4.optm.Java8Parser(tokens);
         p.setErrorHandler(new BailErrorStrategy());
-        try (TimeLogger timer = new TimeLogger("antlr4_optm", file.toString());) {
-            antlr4.optm.Java8Parser.CompilationUnitContext r = p.compilationUnit();
-            timer.success();
-            return r;
-        } catch (final Exception e) {
-            return null;
-        }
+
+            try (TimeLogger timer = new TimeLogger("antlr4_optm", file)) {
+                antlr4.optm.Java8Parser.CompilationUnitContext r = p.compilationUnit();
+                timer.success();
+                return r;
+            }
+
     }
 
-    final Path file;
+    final FileData file;
 
-    public test_antlr4_Java8(final Path file) {
+    public test_antlr4_Java8(final FileData file) {
         this.file = file;
     }
 
     @Before
     public void setUp() {
         try {
-            input = CharStreams.fromPath(this.file);
+            input = CharStreams.fromPath(this.file.getPath());
         } catch (final IOException e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());

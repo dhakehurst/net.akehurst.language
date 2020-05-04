@@ -26,6 +26,6 @@ dependencies {
     "jvm8MainImplementation"(kotlin("stdlib-jdk8"))
     "jvm8TestImplementation"(kotlin("test-junit"))
 
-    "jvm8MainImplementation"("org.apache.poi:poi:4.0.0")
-    "jvm8MainImplementation"("org.apache.poi:poi-ooxml:4.0.0")
+    "jvm8MainImplementation"("org.apache.poi:poi:4.1.2")
+    "jvm8MainImplementation"("org.apache.poi:poi-ooxml:4.1.2")
 }
