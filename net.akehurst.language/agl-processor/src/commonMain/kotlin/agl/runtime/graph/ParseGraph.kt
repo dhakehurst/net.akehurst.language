@@ -47,7 +47,6 @@ internal class ParseGraph(
 
     val longestCompleteNodeFromStart: SPPTNode? get() = this.completeNodes.values.filter { it.startPosition == 0 }.sortedBy { it.matchedTextLength }.lastOrNull()
 
-
     fun longestMatch(seasons: Int, maxNumHeads: Int): SPPTNode? {
         if (!this.goals.isEmpty() && this.goals.size >= 1) {
             var lt = this.goals.iterator().next()
@@ -127,8 +126,8 @@ internal class ParseGraph(
         }
     }
 
-    fun findOrTryCreateLeaf(terminalRuntimeRule: RuntimeRule, nextInputPosition: Int, lastLocation: InputLocation): SPPTLeafDefault? {
-        val index = LeafIndex(terminalRuntimeRule.number, nextInputPosition)
+    fun findOrTryCreateLeaf(terminalRuntimeRule: RuntimeRule, inputPosition: Int, lastLocation: InputLocation): SPPTLeafDefault? {
+        val index = LeafIndex(terminalRuntimeRule.number, inputPosition)
         return this.leaves[index] ?: this.tryCreateLeaf(terminalRuntimeRule, index, lastLocation)
     }
 
@@ -215,25 +214,6 @@ internal class ParseGraph(
         }
     }
 
-/*
-    private fun findOrCreateGrowingLeaf(isSkipGrowth: Boolean, curRp: ParserState, location: InputLocation, nextInputPosition: Int, oldHead: GrowingNode, previous: Set<PreviousInfo>) {
-        this.addGrowing(oldHead, previous)
-        // TODO: remove, this is for test
-        for (info in previous) {
-            this.addGrowing(info.node)
-        }
-        val gnindex = GrowingNodeIndex(curRp, location.position, nextInputPosition, 0) //leafs don't have priority
-        val existing = this.growing[gnindex]
-        if (null == existing) {
-            val nn = GrowingNode(isSkipGrowth, curRp, location, nextInputPosition, 0, emptyList(), 0)
-            nn.addPrevious(oldHead)
-            this.addGrowingHead(gnindex, nn)
-        } else {
-            existing.addPrevious(oldHead)
-            this.addGrowingHead(gnindex, existing)
-        }
-    }
- */
     //TODO: combine next 3 methods!
     private fun findOrCreateGrowingNode(isSkipGrowth: Boolean, curRp: ParserState, location: InputLocation, nextInputPosition: Int, children: List<SPPTNode>, oldHead: GrowingNode, previous: Set<PreviousInfo>)  {
         val oldOrExistingHead = this.addGrowing(oldHead, previous)

@@ -162,10 +162,10 @@ internal class RuntimeParser(
 
     internal fun fetchFilteredTransitions(gn: GrowingNode, prev: GrowingNode?): Set<Transition> {
         return if (null==prev) {
-            val transitions: Set<Transition> = gn.currentState.transitions(this.runtimeRuleSet, null)
+            val transitions: Set<Transition> = gn.currentState.transitions(null)
             transitions
         } else {
-            val transitions: Set<Transition> = gn.currentState.transitions(this.runtimeRuleSet, prev?.currentState)
+            val transitions: Set<Transition> = gn.currentState.transitions(prev.currentState)
             val filtered = transitions.filter {
                 when (it.action) {
                     Transition.ParseAction.WIDTH -> {

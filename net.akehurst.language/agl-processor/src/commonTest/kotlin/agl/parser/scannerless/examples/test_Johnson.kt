@@ -75,7 +75,7 @@ class test_Johnson : test_ScannerlessParserAbstract() {
 
         super.test(rrb.ruleSet(), goal, sentence, expected1)
 
-        val sm = rrb.ruleSet().printAutomaton(goal)
+        val sm = rrb.ruleSet().printUsedAutomaton(goal)
         println(sm)
     }
 
@@ -160,7 +160,7 @@ class test_Johnson : test_ScannerlessParserAbstract() {
        // super.testStringResult(rrb, goal, sentence, expected1)
         val p = ScanOnDemandParser(rrb.ruleSet())
         p.parse(goal, sentence)
-        val sm = rrb.ruleSet().printAutomaton(goal)
+        val sm = rrb.ruleSet().printUsedAutomaton(goal)
         println(sm)
 
     }

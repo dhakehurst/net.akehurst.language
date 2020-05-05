@@ -1,0 +1,48 @@
+compilationUnit ::= packageDecl? declaration*
+
+packageDeclaration ::= 'package' qualifiedName
+
+declaration
+  ::= classDeclaration
+
+classDeclaration ::= 'class' IDENTIFIER
+
+
+literal
+  ::= IntegerLiteral
+  | FloatingPointLiteral
+  | BOOLEAN_LITERAL
+  | CharacterLiteral
+  | StringLiteral
+  | NULL_LITERAL
+
+IntegerLiteral
+  ::= DecimalIntegerLiteral
+  | HexIntegerLiteral
+  | OctalIntegerLiteral
+  | BinaryIntegerLiteral
+
+DecimalIntegerLiteral ::= DECIMAL_NUMERAL INTEGER_TYPE_SUFFIX?
+
+@Layout
+l ::= WS | SINGLE_LINE_COMMENT | MULTI_LINE_COMMENT
+
+regex {
+  NULL_LITERAL ::= 'null'
+  BOOLEAN_LITERAL ::= 'true' | 'false'
+
+  DECIMAL_NUMERAL ::= '0' | [1-9] ([0-9_]* [1-9])?
+  HEX_NUMERAL     ::= '0' [xX] [0-9a-fA-F] ([0-9a-fA-F_]*[0-9a-fA-F])?
+  OCT_NUMERAL     ::= '0' '_'* [0-7] ([0-7_]* [0-7])?
+  BINARY_NUMERAL  ::= '0' [bB] [01] ([01_]* [01])?
+  FLOAT_LITERAL   ::= ((('0'|([1-9]('0'|[1-9])*))'.'('0'|[1-9])*|'.'('0'|[1-9])+)([eE][+-]?('0'|[1-9])+)?)|(('0'|'N'('0'|[1-9]))([eE][+-]?('0'|[1-9])+))
+
+  INTEGER_TYPE_SUFFIX ::= 'l' | 'L'
+
+  IDENTIFIER ::= [a-zA-Z_] [0-9a-zA-Z_]*
+  HEX_DIGIT ::= [0-9a-fA-F]
+
+  MULTI_LINE_COMMENT ::= '/' '*' [.]* '*' '/'
+  SINGLE_LINE_COMMENT ::= '//' [^$]* [$]
+  WS ::= [\n\r\t\f\ ]*
+}

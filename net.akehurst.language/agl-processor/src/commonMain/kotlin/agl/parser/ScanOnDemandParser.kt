@@ -182,7 +182,7 @@ class ScanOnDemandParser(
             // compute next expected item/RuntimeRule
             when (lg.runtimeRule.kind) {
                 RuntimeRuleKind.GOAL -> {
-                    val exp = lg.currentState.transitions(this.runtimeRuleSet, null)
+                    val exp = lg.currentState.transitions(null)
                             .map {
                                 it.to.rulePosition
                             }.toSet()

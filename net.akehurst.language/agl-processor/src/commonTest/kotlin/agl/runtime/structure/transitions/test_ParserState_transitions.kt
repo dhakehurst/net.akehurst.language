@@ -31,7 +31,7 @@ class test_ParserState_transitions {
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf(
                 Transition(s0, s0.stateSet.fetch(RulePosition(r_S.emptyRuleItem, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true }
         )
@@ -51,7 +51,7 @@ class test_ParserState_transitions {
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf(
                 Transition(s0, s0.stateSet.fetch(RulePosition(r_a, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true },
                 Transition(s0, s0.stateSet.fetch(RulePosition(r_b, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true },
@@ -70,11 +70,11 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_a, r_b, r_c)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
-        s0.transitions(rrs, null)
+        s0.transitions(null)
         val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S, 0, 0))
         //s1.addParentRelation(ParentRelation(s0.rulePosition, setOf(RuntimeRuleSet.END_OF_TEXT)))
 
-        val actual = s1.transitions(rrs, null)
+        val actual = s1.transitions(null)
         val expected = setOf(
                 Transition(s1, s0.stateSet.fetch(RulePosition(r_a, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true }
         )
@@ -92,10 +92,10 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_a, r_b, r_c)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
-        s0.transitions(rrs, null)
+        s0.transitions(null)
         val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S, 1, 0))
 
-        val actual = s1.transitions(rrs, null)
+        val actual = s1.transitions(null)
         val expected = setOf<Transition>(
                 Transition(s1, s0.stateSet.fetch(RulePosition(r_b, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true }
         )
@@ -113,10 +113,10 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_a, r_b, r_c)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
-        s0.transitions(rrs, null)
+        s0.transitions(null)
         val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S, 2, 0))
 
-        val actual = s1.transitions(rrs, null)
+        val actual = s1.transitions(null)
         val expected = setOf<Transition>(
                 Transition(s1, s0.stateSet.fetch(RulePosition(r_c, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true }
         )
@@ -139,7 +139,7 @@ class test_ParserState_transitions {
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
                 Transition(s0, s0.stateSet.fetch(RulePosition(r_a, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true },
                 Transition(s0, s0.stateSet.fetch(RulePosition(r_S.emptyRuleItem, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true }
@@ -155,10 +155,10 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
-        s0.transitions(rrs, null)
+        s0.transitions(null)
         val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S.emptyRuleItem, 0, RulePosition.END_OF_RULE))
 
-        val actual = s1.transitions(rrs, s0)
+        val actual = s1.transitions(s0)
         val expected = setOf<Transition>(
                 Transition(s1, s0.stateSet.fetch(RulePosition(r_S, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE)), Transition.ParseAction.HEIGHT, setOf(RuntimeRuleSet.END_OF_TEXT), RulePosition(r_S, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.START_OF_RULE)) { _, _ -> true }
         )
@@ -173,12 +173,12 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
-        s0.transitions(rrs, null)
+        s0.transitions(null)
         val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S.emptyRuleItem, 0, RulePosition.END_OF_RULE))
-        s1.transitions(rrs, s0)
+        s1.transitions(s0)
         val s2 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE))
 
-        val actual = s2.transitions(rrs, s0)
+        val actual = s2.transitions(s0)
         val expected = setOf<Transition>(
                 Transition(s2, s0.stateSet.fetchOrCreateParseState(RulePosition(s0.runtimeRule, 0, 1)), Transition.ParseAction.GRAFT, setOf(RuntimeRuleSet.END_OF_TEXT), s0.rulePosition) { _, _ -> true }
         )
@@ -193,10 +193,10 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
-        s0.transitions(rrs, null)
+        s0.transitions(null)
         val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S, RuntimeRuleItem.MULTI__ITEM, RulePosition.START_OF_RULE))
 
-        val actual = s1.transitions(rrs, null)
+        val actual = s1.transitions(null)
         val expected = setOf<Transition>(
                 Transition(s1, s0.stateSet.fetch(RulePosition(r_a, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true }
         )
@@ -211,11 +211,11 @@ class test_ParserState_transitions {
         val r_S = rb.rule("S").multi(0, 1, r_a)
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
-        s0.transitions(rrs, null)
+        s0.transitions(null)
         val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S, RuntimeRuleItem.MULTI__ITEM, RulePosition.MULIT_ITEM_POSITION))
-TODO()
-//        val actual = s1.transitions(rrs, RulePosition(r_S, RuntimeRuleItem.MULTI__ITEM, RulePosition.START_OF_RULE))
- //       val expected = setOf<Transition>(
+        TODO()
+//        val actual = s1.transitions(RulePosition(r_S, RuntimeRuleItem.MULTI__ITEM, RulePosition.START_OF_RULE))
+        //       val expected = setOf<Transition>(
 //                Transition(s1, s0.stateSet.fetch(RulePosition(r_a, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true }
 //        )
 
@@ -230,7 +230,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -250,7 +250,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
                 Transition(s0, s0.stateSet.fetch(RulePosition(r_a, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(r_c, RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true },
                 Transition(s0, s0.stateSet.fetch(RulePosition(r_S.emptyRuleItem, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true }
@@ -269,7 +269,7 @@ TODO()
         val s0 = rrs.startingState(r_S)
         val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE))
 
-        val actual = s1.transitions(rrs, null)
+        val actual = s1.transitions(null)
         val expected = setOf<Transition>(
                 Transition(s1, s1, Transition.ParseAction.GOAL, emptySet(), null) { _, _ -> true }
         )
@@ -286,7 +286,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -303,7 +303,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -320,7 +320,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -337,7 +337,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -354,7 +354,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -371,7 +371,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -388,7 +388,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -405,7 +405,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -422,7 +422,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -439,7 +439,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -456,7 +456,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -473,7 +473,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -490,7 +490,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -507,7 +507,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -524,7 +524,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -541,7 +541,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -558,7 +558,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -575,7 +575,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -592,7 +592,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -609,7 +609,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
@@ -626,7 +626,7 @@ TODO()
         val rrs = rb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        val actual = s0.transitions(rrs, null)
+        val actual = s0.transitions(null)
         val expected = setOf<Transition>(
 
         )
