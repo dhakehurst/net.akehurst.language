@@ -49,6 +49,6 @@ object Java8TestFiles {
             }
             params.sortBy { it.second }
             var index = 0
-            return params.map { FileData(index++, it.first, it.second) }
+            return params.take(1000).map { FileData(index++, it.first, it.second) }
         }
 }

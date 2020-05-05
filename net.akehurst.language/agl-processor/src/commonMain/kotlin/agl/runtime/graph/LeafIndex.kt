@@ -21,4 +21,8 @@ data class LeafIndex(
         val startPosition: Int
 ) {
 
+    override fun hashCode(): Int {
+        return (ruleNumber*31) + startPosition
+    }
+
 }

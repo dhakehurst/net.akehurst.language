@@ -26,10 +26,10 @@ import java.nio.file.Paths
 import java.time.Duration
 
 object Results {
-    var resultsFile = Paths.get("../results/results.xlsx")
 
     @Synchronized
     fun log(success: Boolean, col: String, fileData: FileData, value: Duration) {
+        val resultsFile = Paths.get("../results/results.xlsx")
         println("Result: $col, $value | $fileData")
         ZipSecureFile.setMinInflateRatio(0.00009)
         var wb: Workbook? = null

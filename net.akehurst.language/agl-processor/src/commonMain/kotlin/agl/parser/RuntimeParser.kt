@@ -165,7 +165,7 @@ internal class RuntimeParser(
             val transitions: Set<Transition> = gn.currentState.transitions(null)
             transitions
         } else {
-            val transitions: Set<Transition> = gn.currentState.transitions(prev?.currentState)
+            val transitions: Set<Transition> = gn.currentState.transitions(prev.currentState)
             val filtered = transitions.filter {
                 when (it.action) {
                     Transition.ParseAction.WIDTH -> {

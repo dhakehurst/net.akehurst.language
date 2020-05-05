@@ -84,7 +84,7 @@ class test_Java8_Types(val data:Data) {
     @Test
     fun test() {
         val p = processor
-        val result = p.parse("Literal", this.data.text)
+        val result = p.parse("Type", this.data.text)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(this.data.text, resultStr)

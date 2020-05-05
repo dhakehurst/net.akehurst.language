@@ -38,7 +38,7 @@ abstract class SPPTNodeAbstract(
             //this.nextInputPosition - this.startPosition
     )
 
-    override val name: String = this.runtimeRule.tag
+    override val name: String get() = this.runtimeRule.tag
 
     override val startPosition get() = location.position
 
@@ -46,7 +46,7 @@ abstract class SPPTNodeAbstract(
 
     override val matchedTextLength: Int get() { return this.nextInputPosition - this.startPosition}//this.identity.matchedTextLength }
 
-    override val isSkip: Boolean = runtimeRule.isSkip
+    override val isSkip: Boolean get() = runtimeRule.isSkip
 
     override val isEmptyMatch: Boolean get() {
         // match empty if start and next-input positions are the same
