@@ -16,19 +16,18 @@
 
 package net.akehurst.language.agl.parser
 
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.runtime.structure.Transition
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.sppt.SPPTLeafDefault
 import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.math.max
 
 class ScanOnDemandParser(
@@ -218,7 +217,7 @@ class ScanOnDemandParser(
         val matches = gns.toMutableList()
         // try grow last leaf with no lookahead
         for (gn in rp.lastGrownLinked) {
-            val gnindex = GrowingNodeIndex(gn.currentState, gn.startPosition, gn.nextInputPosition, gn.priority)
+            val gnindex = GrowingNodeIndex(gn.currentState.number, gn.startPosition)//, gn.nextInputPosition, gn.priority)
             graph.growingHead[gnindex] = gn
         }
         do {

@@ -49,7 +49,12 @@ class test_group_choice : test_ScannerlessParserAbstract() {
         val sentence = "r=a;"
         val goal = "S"
         val expected = """
-            S { W { "\s+" : ' ' } }
+ S { rules { normalRule {
+      ID : 'r'
+      '='
+      choice { longestChoice { concatItem { ID : 'a' } } }
+      ';'
+    } } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }

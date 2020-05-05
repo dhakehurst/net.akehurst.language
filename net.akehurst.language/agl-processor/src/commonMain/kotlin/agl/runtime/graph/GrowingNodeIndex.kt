@@ -17,16 +17,17 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.ParserState
+import net.akehurst.language.agl.runtime.structure.StateNumber
 
 data class GrowingNodeIndex(
-        val currentRulePosition: ParserState,
-        val startPosition: Int,
-        val nextInputPosition: Int,
-        val priority: Int
+        val stateNumber: StateNumber,
+        val startPosition: Int
+//        val nextInputPosition: Int,
+//        val priority: Int
 ) {
 
 
     override fun toString(): String {
-        return "(${currentRulePosition},${startPosition})"
+        return "(${stateNumber},${startPosition})"
     }
 }

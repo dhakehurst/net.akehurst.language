@@ -92,14 +92,14 @@ class GrowingNode(
     }
 
     fun addPrevious(info: PreviousInfo) {
-        val gi = GrowingNodeIndex(info.node.currentState, info.node.startPosition, info.node.nextInputPosition, info.node.priority)
+        val gi = GrowingNodeIndex(info.node.currentState.number, info.node.startPosition)//, info.node.nextInputPosition, info.node.priority)
         this.previous.put(gi, info)
         info.node.addNext(this)
     }
 
     fun addPrevious(previousNode: GrowingNode) {
         val info = PreviousInfo(previousNode)
-        val gi = GrowingNodeIndex(previousNode.currentState, previousNode.startPosition, previousNode.nextInputPosition, previousNode.priority)
+        val gi = GrowingNodeIndex(previousNode.currentState.number, previousNode.startPosition)//, previousNode.nextInputPosition, previousNode.priority)
         this.previous.put(gi, info)
         previousNode.addNext(this)
     }
