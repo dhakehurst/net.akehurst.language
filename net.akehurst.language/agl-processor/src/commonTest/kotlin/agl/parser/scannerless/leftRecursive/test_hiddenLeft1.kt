@@ -19,24 +19,39 @@ package net.akehurst.language.parser.scannerless.leftRecursive
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.fail
 
 class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
 
-    // S  = S1 | 'a' ;
-    // S1 = S 'a' ;    // S*; try right recursive also
+    // S  = S1 | 'a'
+    // S1 = E S 'a'    // S*; try right recursive also
+    // E = empty
     private val S = runtimeRuleSet {
-            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                ref("S1")
-                literal("a")
-            }
-            concatenation("S1") {
-                ref("S")
-                literal("a")
-            }
+        choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            ref("S1")
+            literal("a")
         }
+        concatenation("S1") { ref("E"); ref("S"); literal("a") }
+        concatenation("E") { empty() }
+    }
+
+    @Test
+    fun empty_fails() {
+        val rrb = this.S
+        val goal = "S"
+        val sentence = ""
+
+        val ex = assertFailsWith(ParseFailedException::class) {
+            super.test(rrb, goal, sentence)
+        }
+        assertEquals(1, ex.location.line)
+        assertEquals(1, ex.location.column)
+    }
 
     @Test
     fun a() {
@@ -59,6 +74,7 @@ class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
 
         val expected = """
          S { S1 {
+            E { §empty }
             S { 'a' }
             'a'
           } }
@@ -67,4 +83,20 @@ class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
         super.test(rrb, goal, sentence, expected)
     }
 
+    @Test
+    fun aaa() {
+        val rrb = this.S
+        val goal = "S"
+        val sentence = "aaa"
+
+        val expected = """
+         S { S1 {
+            E { §empty }
+            S { 'a' }
+            'a'
+          } }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected)
+    }
 }

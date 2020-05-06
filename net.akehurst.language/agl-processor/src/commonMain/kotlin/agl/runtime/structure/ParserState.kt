@@ -441,19 +441,19 @@ class ParserState(
     // --- Any ---
 
     override fun hashCode(): Int {
-        return this.number.hashCode()
+        return this.number.value + this.stateSet.number*31
     }
 
     override fun equals(other: Any?): Boolean {
         return if (other is ParserState) {
-            this.number.value == other.number.value
+            this.stateSet.number==other.stateSet.number && this.number.value == other.number.value
         } else {
             false
         }
     }
 
     override fun toString(): String {
-        return "State(${this.number.value}-${rulePosition})"
+        return "State(${this.number.value}/${this.stateSet.number}-${rulePosition})"
     }
 
 }

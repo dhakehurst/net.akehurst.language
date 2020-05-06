@@ -122,7 +122,7 @@ internal class RuntimeParser(
 
     fun resetGraphToLastGrown() {
         for (gn in this.lastGrownLinked) {
-            val gnindex = GrowingNodeIndex(gn.currentState.number, gn.startPosition)//, gn.nextInputPosition, gn.priority)
+            val gnindex = GrowingNode.index(gn.currentState, gn.startPosition, gn.children)//, gn.nextInputPosition, gn.priority)
             this.graph.growingHead[gnindex] = gn
         }
     }

@@ -58,11 +58,11 @@ class test_BillotLang_UBDA : test_ScannerlessParserAbstract() {
     @Test
     fun a() {
         val rrb = this.S
-        val goal = "S"
+        val goal = "A"
         val sentence = "a"
 
         val expected1 = """
-            S { 'a' }
+            A { 'a' }
         """.trimIndent()
 
         super.test(rrb, goal, sentence, expected1)
@@ -71,11 +71,11 @@ class test_BillotLang_UBDA : test_ScannerlessParserAbstract() {
     @Test
     fun aa() {
         val rrb = this.S
-        val goal = "S"
+        val goal = "A"
         val sentence = "aa"
 
         val expected1 = """
-            S {
+            A {
               S2 {
                 S { 'a' }
                 S { 'a' }
@@ -89,12 +89,12 @@ class test_BillotLang_UBDA : test_ScannerlessParserAbstract() {
     @Test
     fun aaa() {
         val rrb = this.S
-        val goal = "S"
+        val goal = "A"
         val sentence = "aaa"
 
         val expected1 = """
-            S {
-              S1 {
+            A {
+              A1 {
                 S { 'a' }
                 S { 'a' }
                 S { 'a' }
@@ -109,11 +109,11 @@ class test_BillotLang_UBDA : test_ScannerlessParserAbstract() {
     @Test
     fun aaaa() {
         val rrb = this.S
-        val goal = "S"
+        val goal = "A"
         val sentence = "aaaa"
 
         val expected1 = """
-         S { S2 {
+         A { S2 {
             S { S2 {
                 S { 'a' }
                 S { 'a' }
@@ -132,11 +132,11 @@ class test_BillotLang_UBDA : test_ScannerlessParserAbstract() {
     @Test
     fun a10() {
         val rrb = this.S
-        val goal = "S"
+        val goal = "A"
         val sentence = "a".repeat(10)
 
         val expected1 = """
-            S {
+            A {
               S1 {
                 S { 'a' }
                 S { 'a' }

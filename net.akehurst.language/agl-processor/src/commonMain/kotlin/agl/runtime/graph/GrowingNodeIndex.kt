@@ -20,14 +20,15 @@ import net.akehurst.language.agl.runtime.structure.ParserState
 import net.akehurst.language.agl.runtime.structure.StateNumber
 
 data class GrowingNodeIndex(
-        val stateNumber: StateNumber,
-        val startPosition: Int
+        val state: ParserState,
+        val startPosition: Int,
+        val listSize:Int //for use with MULTI and SEPARATED_LIST
 //        val nextInputPosition: Int,
 //        val priority: Int
 ) {
 
 
     override fun toString(): String {
-        return "(${stateNumber},${startPosition})"
+        return "(${state},${startPosition})"
     }
 }

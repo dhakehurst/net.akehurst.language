@@ -371,20 +371,20 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
                   '('
                     expr {
                       add {
-                        expr { var { "[a-zA-Z]+" : 'a' } }
+                        expr { root{var { "[a-zA-Z]+" : 'a' } }}
                         '+'
-                        expr { var { "[a-zA-Z]+" : 'b' } }
+                        expr { root{var { "[a-zA-Z]+" : 'b' } }}
                       }
                     }
                   ')'
                 }
               }
               '*'
-              expr { var { "[a-zA-Z]+" : 'c' } }
+              expr { root{var { "[a-zA-Z]+" : 'c' } }}
             } } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.testStringResult(rrb, goal, sentence, expected)
     }
 
 }

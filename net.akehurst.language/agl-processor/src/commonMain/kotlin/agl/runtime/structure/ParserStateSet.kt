@@ -20,6 +20,7 @@ import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.collections.lazyMapNonNull
 
 class ParserStateSet(
+        val number:Int,
         val runtimeRuleSet: RuntimeRuleSet,
         val userGoalRule: RuntimeRule, //null if skip state set TODO: improve this!
         val possibleEndOfText: List<RuntimeRule>
@@ -231,4 +232,10 @@ class ParserStateSet(
         }
     }
 
+    override fun hashCode(): Int = this.number
+    override fun equals(other: Any?): Boolean = when(other) {
+        is ParserStateSet -> this.number == other.number
+        else -> false
+    }
+    override fun toString(): String = "ParserStateSet{$number}"
 }

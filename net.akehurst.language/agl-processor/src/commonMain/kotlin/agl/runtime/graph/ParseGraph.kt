@@ -155,7 +155,7 @@ internal class ParseGraph(
     private fun addGrowing(gn: GrowingNode) {
         val startPosition = gn.startPosition
         val nextInputPosition = gn.nextInputPosition
-        val gnindex = GrowingNodeIndex(gn.currentState.number, startPosition)//, nextInputPosition, gn.priority)
+        val gnindex = GrowingNode.index(gn.currentState, startPosition, gn.listSize)//, nextInputPosition, gn.priority)
         val existing = this.growing[gnindex]
         return if (null == existing) {
             this.growing[gnindex] = gn
@@ -168,9 +168,9 @@ internal class ParseGraph(
     }
 
     private fun addGrowing(gn: GrowingNode, previous: Set<PreviousInfo>) : GrowingNode {
-        val startPosition = gn.startPosition
-        val nextInputPosition = gn.nextInputPosition
-        val gnindex = GrowingNodeIndex(gn.currentState.number, startPosition)//, nextInputPosition, gn.priority)
+        //val startPosition = gn.startPosition
+        //val nextInputPosition = gn.nextInputPosition
+        val gnindex = GrowingNode.index(gn.currentState, gn.startPosition, gn.listSize)//, nextInputPosition, gn.priority)
         val existing = this.growing[gnindex]
         return if (null == existing) {
             for (info in previous) {
@@ -188,9 +188,9 @@ internal class ParseGraph(
     }
 
     private fun removeGrowing(gn: GrowingNode) {
-        val startPosition = gn.startPosition
-        val nextInputPosition = gn.nextInputPosition
-        val gnindex = GrowingNodeIndex(gn.currentState.number, startPosition)//, nextInputPosition, gn.priority)
+        //val startPosition = gn.startPosition
+        //val nextInputPosition = gn.nextInputPosition
+        val gnindex = GrowingNode.index(gn.currentState, gn.startPosition, gn.listSize)//, nextInputPosition, gn.priority)
         this.growing.remove(gnindex)
     }
 
@@ -221,7 +221,7 @@ internal class ParseGraph(
         for (info in previous) {
             this.addGrowing(info.node)
         }
-        val gnindex = GrowingNodeIndex(curRp.number, location.position)//, nextInputPosition, 0) //leafs don't have priority
+        val gnindex = GrowingNode.index(curRp, location.position, children)//, nextInputPosition, 0) //leafs don't have priority
         val existing = this.growing[gnindex]
         if (null == existing) {
             val nn = GrowingNode(isSkipGrowth, curRp, location, nextInputPosition, 0, children, 0)
@@ -238,7 +238,8 @@ internal class ParseGraph(
         for (info in previous) {
             this.addGrowing(info.node)
         }
-        val gnindex = GrowingNodeIndex(curRp.number, location.position)//, nextInputPosition, 0) //leafs don't have priority //TODO: not sure we need both tgt and cur for leaves
+        val listSize = 0 // must be 0 if this is a leaf
+        val gnindex = GrowingNode.index(curRp, location.position, listSize)//, nextInputPosition, 0) //leafs don't have priority //TODO: not sure we need both tgt and cur for leaves
         val existing = this.growing[gnindex]
         if (null == existing) {
             val nn = GrowingNode(isSkipGrowth, curRp, location, nextInputPosition, 0, emptyList(), 0)
@@ -253,7 +254,7 @@ internal class ParseGraph(
     }
 
     private fun findOrCreateGrowingNode(isSkipGrowth: Boolean, newRp: ParserState, location: InputLocation, nextInputPosition: Int, priority: Int, children: List<SPPTNode>, numNonSkipChildren: Int, previous: Set<PreviousInfo>): GrowingNode {
-        val gnindex = GrowingNodeIndex(newRp.number, location.position)//, nextInputPosition, priority)
+        val gnindex = GrowingNode.index(newRp, location.position, children)//, nextInputPosition, priority)
         var existing = this.growing[gnindex]
         return if (null == existing) {
             var nn = GrowingNode(isSkipGrowth, newRp, location, nextInputPosition, priority, children, numNonSkipChildren)
@@ -267,12 +268,32 @@ internal class ParseGraph(
             }
             nn
         } else {
-            for (info in previous) {
-                existing.addPrevious(info)
-                this.addGrowing(info.node)
-            }
-            existing = this.addGrowingHead(gnindex, existing)
-            existing
+            /*
+            this seems to slow things down!
+            but is needed or wrong thing if there is an empty match!
+
+            if (nextInputPosition > existing.nextInputPosition) {
+                var nn = GrowingNode(isSkipGrowth, newRp, location, nextInputPosition, priority, children, numNonSkipChildren)
+                for (info in previous) {
+                    nn.addPrevious(info)
+                    this.addGrowing(info.node)
+                }
+                //TODO: what do we do with existing?
+                this.growing.remove(gnindex)
+                nn = this.addGrowingHead(gnindex, nn)
+                if (nn.hasCompleteChildren) {
+                    this.complete(nn)
+                }
+                nn
+            } else {
+             */
+                for (info in previous) {
+                    existing.addPrevious(info)
+                    this.addGrowing(info.node)
+                }
+                existing = this.addGrowingHead(gnindex, existing)
+                existing
+            //}
         }
     }
 
@@ -534,7 +555,7 @@ internal class ParseGraph(
     fun start(goalState: ParserState, startLocation: InputLocation) {
         val startPosition = startLocation.position
         val goalGN = GrowingNode(false, goalState, startLocation, startPosition, 0, emptyList<SPPTNode>(), 0)
-        val gi = GrowingNodeIndex(goalState.number, startPosition)//, startPosition, 0)
+        val gi = GrowingNode.index(goalState, startPosition,0)//, startPosition, 0)
         this.addGrowingHead(gi, goalGN)
     }
 

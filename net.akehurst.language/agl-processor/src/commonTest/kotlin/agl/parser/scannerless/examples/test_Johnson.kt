@@ -172,7 +172,7 @@ class test_Johnson : test_ScannerlessParserAbstract() {
         val times = mutableListOf<Duration>()
         val goal = "S"
 
-        for (i in 1..100) {
+        for (i in 1..50) {
             val text = "a".repeat(i)
             //warm up
             parser.parse(goal, text)
