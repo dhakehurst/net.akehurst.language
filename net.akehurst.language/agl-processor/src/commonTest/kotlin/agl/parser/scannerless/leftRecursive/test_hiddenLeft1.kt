@@ -19,24 +19,47 @@ package net.akehurst.language.parser.scannerless.leftRecursive
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.fail
 
 class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
 
-    // S  = S1 | 'a' ;
-    // S1 = S 'a' ;    // S*; try right recursive also
+    // S = B S 'c' | 'a'
+    // B = 'b' | <empty>
+
+    // S = S1 | 'a'
+    // S1 = B S 'c'
+    // B = 'b' | Be
+    // Be = <empty>
     private val S = runtimeRuleSet {
-            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                ref("S1")
-                literal("a")
-            }
-            concatenation("S1") {
-                ref("S")
-                literal("a")
-            }
+        choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            ref("S1")
+            literal("a")
         }
+        concatenation("S1") { ref("B"); ref("S"); literal("c") }
+        choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            literal("b")
+            ref("Be")
+        }
+        concatenation("Be") { empty() }
+    }
+
+    @Test
+    fun empty_fails() {
+        val rrb = this.S
+        val goal = "S"
+        val sentence = ""
+
+        val ex = assertFailsWith(ParseFailedException::class) {
+            super.test(rrb, goal, sentence)
+        }
+        assertEquals(1, ex.location.line)
+        assertEquals(1, ex.location.column)
+    }
 
     @Test
     fun a() {
@@ -52,19 +75,57 @@ class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun aa() {
+    fun bac() {
         val rrb = this.S
         val goal = "S"
-        val sentence = "aa"
+        val sentence = "bac"
 
         val expected = """
          S { S1 {
+            B { 'b' }
             S { 'a' }
-            'a'
+            'c'
           } }
         """.trimIndent()
 
         super.test(rrb, goal, sentence, expected)
     }
 
+    @Test
+    fun ac() {
+        val rrb = this.S
+        val goal = "S"
+        val sentence = "ac"
+
+        val expected = """
+         S { S1 {
+            B { Be { §empty } }
+            S { 'a' }
+            'c'
+          } }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected)
+    }
+
+    @Test
+    fun bacc() {
+        val rrb = this.S
+        val goal = "S"
+        val sentence = "bacc"
+
+        val expected = """
+         S { S1 {
+            B { 'b' }
+            S { S1 {
+                B { Be { §empty } }
+                S { 'a' }
+                'c'
+              } }
+            'c'
+          } }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected)
+    }
 }
