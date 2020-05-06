@@ -28,6 +28,7 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
     private val WS = Regex("(\\s)+")
     private val EMPTY = Regex("§empty")
     private val NAME = Regex("[a-zA-Z_§][a-zA-Z_0-9§]*")
+    private val OPTION = Regex("[|][0-9]+")
     private val LITERAL = Regex("'(?:\\\\?.)*?'")
     private val PATTERN = Regex("\"(?:\\\\?.)*?\"")
     private val COLON = Regex("[:]")
@@ -46,6 +47,7 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
 
     private data class NodeStart(
             val name: String,
+            val option:Int,
             val location: InputLocation
     ) {
 
@@ -131,7 +133,14 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
                 }
                 scanner.hasNext(NAME) -> {
                     val name = scanner.next(NAME)
-                    nodeNamesStack.push(NodeStart(name, sentenceLocation))
+                    val option = if (scanner.hasNext(OPTION)) {
+                        val optionStr = scanner.next(OPTION)
+                        val num = optionStr.substring(1).toInt()
+                        num
+                    } else {
+                        0
+                    }
+                    nodeNamesStack.push(NodeStart(name, option, sentenceLocation))
                 }
                 scanner.hasNext(CHILDREN_START) -> {
                     scanner.next(CHILDREN_START)
@@ -206,10 +215,13 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
                     val lastNodeStart = nodeNamesStack.pop()
 
                     val children = childrenStack.pop()
-                    val node = this.branch(lastNodeStart.name, children)
+                    val node = this.branch(lastNodeStart.name, lastNodeStart.option, children)
                     childrenStack.peek().add(node)
                 }
-                else -> throw RuntimeException("Tree String invalid at position " + scanner.position)
+                else -> {
+                    val seg = treeString.substring(scanner.position-5,scanner.position) + "^" +treeString.substring(scanner.position,scanner.position+5)
+                    throw RuntimeException("Tree String invalid at position ${scanner.position}, ...$seg...")
+                }
             }
         }
         this.root = childrenStack.pop()[0]
@@ -241,14 +253,14 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
         return existing
     }
 
-    fun branch(ruleName: String, children: List<SPPTNode>): SPPTBranch {
+    fun branch(ruleName: String, option:Int, children: List<SPPTNode>): SPPTBranch {
         val rr = this.runtimeRuleSet.findRuntimeRule(ruleName)
         val firstLocation = children.first().location
         val lastLocation = children.last().location
         val length = (lastLocation.position - firstLocation.position) + lastLocation.length
         val location = InputLocation(firstLocation.position, firstLocation.column, firstLocation.line, length)
         val nextInputPosition = location.position + location.length
-        val n = SPPTBranchDefault(rr, location, nextInputPosition, 0)
+        val n = SPPTBranchDefault(rr, option, location, nextInputPosition, 0)
         n.childrenAlternatives.add(children)
 
         var existing: SPPTBranch? = this.findBranch(n.identity, n.matchedTextLength)

@@ -70,7 +70,7 @@ internal class RuntimeParser(
                     val lastChild = children.last()
                     val length = (lastChild.location.position - firstChild.location.position) + lastChild.location.length
                     val location = InputLocation(firstChild.location.position, firstChild.location.column, firstChild.location.line, length)
-                    val branch = SPPTBranchDefault(llg.runtimeRule, location, llg.skipNodes.last().nextInputPosition, llg.priority)
+                    val branch = SPPTBranchDefault(llg.runtimeRule, llg.currentState.rulePosition.choice, location, llg.skipNodes.last().nextInputPosition, llg.priority)
                     branch.childrenAlternatives.add(children)
                     branch
                 }
@@ -85,7 +85,7 @@ internal class RuntimeParser(
                 }
 
                  */
-                val cn = SPPTBranchDefault(llg.runtimeRule, llg.location, llg.nextInputPosition, llg.priority)
+                val cn = SPPTBranchDefault(llg.runtimeRule, llg.currentState.rulePosition.choice, llg.location, llg.nextInputPosition, llg.priority)
                 cn.childrenAlternatives.add(llg.children)
                 cn
             }
@@ -311,7 +311,7 @@ internal class RuntimeParser(
     }
 
     private fun doGoal(gn: GrowingNode) {
-        val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
+        val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
                 ?: error("Should never be null")
         this.graph.recordGoal(complete)
     }
@@ -340,7 +340,7 @@ internal class RuntimeParser(
                 null != l
             }
             if (noLookahead || hasLh || lh.isEmpty()) {
-                val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
+                val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
                         ?: error("Should never be null")
                 this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, complete, setOf(previous), gn.skipNodes)
                 //               println(transition)
@@ -357,7 +357,7 @@ internal class RuntimeParser(
                     null != l
                 }
                 if (noLookahead || hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
-                    val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
+                    val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
                             ?: error("Should never be null")
                     this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
                     //                   println(transition)
@@ -408,7 +408,7 @@ internal class RuntimeParser(
     }
 
     private fun doGraftSkip(gn: GrowingNode, previous: PreviousInfo, transition: Transition) {
-        val complete = this.graph.findCompleteNode(gn.runtimeRule, gn.startPosition, gn.matchedTextLength)
+        val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
                 ?: error("Should never be null")
         this.graph.growNextSkipChild(previous.node, complete)
         //       println(transition)

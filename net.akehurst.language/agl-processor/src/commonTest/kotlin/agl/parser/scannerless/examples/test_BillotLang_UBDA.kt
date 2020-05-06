@@ -62,7 +62,7 @@ class test_BillotLang_UBDA : test_ScannerlessParserAbstract() {
         val sentence = "a"
 
         val expected1 = """
-            A { 'a' }
+            A|1 { 'a' }
         """.trimIndent()
 
         super.test(rrb, goal, sentence, expected1)
@@ -76,9 +76,9 @@ class test_BillotLang_UBDA : test_ScannerlessParserAbstract() {
 
         val expected1 = """
             A {
-              S2 {
-                S { 'a' }
-                S { 'a' }
+              A1 {
+                A|1 { 'a' }
+                A|1 { 'a' }
               }
             }
         """.trimIndent()
@@ -93,13 +93,13 @@ class test_BillotLang_UBDA : test_ScannerlessParserAbstract() {
         val sentence = "aaa"
 
         val expected1 = """
-            A {
-              A1 {
-                S { 'a' }
-                S { 'a' }
-                S { 'a' }
-              }
-            }
+         A { A1 {
+            A { A1 {
+                A|1 { 'a' }
+                A|1 { 'a' }
+              } }
+            A|1 { 'a' }
+          } }
         """.trimIndent()
 
 

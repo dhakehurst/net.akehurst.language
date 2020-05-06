@@ -66,10 +66,10 @@ class test_expessions_bodmas2_Longest : test_ScannerlessParserAbstract() {
         val sentence = "v+v"
 
         val expected = """
-         S { E { I {
+         S { E|1 { I {
               E { var { "[a-z]+" : 'v' } }
               I1 { I2 {
-                  op { '+' }
+                  op|2 { '+' }
                   E { var { "[a-z]+" : 'v' } }
                 } }
             } } }

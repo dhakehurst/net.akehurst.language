@@ -56,15 +56,15 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
-                conditional {
+              expr|1 {
+                conditional|1 {
                     ifthenelse {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr { var { 'X' } }
+                      expr { var|1 { 'X' } }
                       'else'
-                      expr { var { 'Y' } }
+                      expr { var|2 { 'Y' } }
                     }
                 }
               }
@@ -73,7 +73,7 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
 
         //NOTE: season 35, long expression is dropped in favour of the shorter one!
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrb.ruleSet(), goal, sentence, expected)
     }
 
     @Test
@@ -84,13 +84,13 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
-                conditional {
+              expr|1 {
+                conditional|0 {
                     ifthen {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr { var { 'X' } }
+                      expr { var|1 { 'X' } }
                     }
                 }
               }
@@ -108,21 +108,21 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
-                conditional {
+              expr|1 {
+                conditional|1 {
                     ifthenelse {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr { var { 'X' } }
+                      expr { var|1 { 'X' } }
                       'else'
-                      expr {
+                      expr|1 {
                         conditional {
                             ifthen {
                               'if'
-                              expr { var { 'Y'} }
+                              expr { var|2 { 'Y'} }
                               'then'
-                              expr { var { 'Z' } }
+                              expr { var|3 { 'Z' } }
                             }
                         }
                       }
@@ -142,18 +142,18 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
         val sentence = "ifWthenifXthenYelseZ"
 
         val expected1 = """
-         S { expr { conditional { ifthenelse {
+         S { expr|1 { conditional|1 { ifthenelse {
                 'if'
                 expr { var { 'W' } }
                 'then'
-                expr { conditional { ifthen {
+                expr|1 { conditional { ifthen {
                       'if'
-                      expr { var { 'X' } }
+                      expr { var|1 { 'X' } }
                       'then'
-                      expr { var { 'Y' } }
+                      expr { var|2 { 'Y' } }
                     } } }
                 'else'
-                expr { var { 'Z' } }
+                expr { var|3 { 'Z' } }
               } } } }
         """.trimIndent()
 

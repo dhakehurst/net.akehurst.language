@@ -39,6 +39,7 @@ interface SPPTNode : SharedPackedParseTreeVisitable {
 	 *  the rule number from the runtime grammar that caused this node to be constructed, derived from identity
 	 */
 	val runtimeRuleNumber: Int
+	val option:Int
 
 	val location: InputLocation
 	val lastLocation: InputLocation

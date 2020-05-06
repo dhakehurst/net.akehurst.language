@@ -25,6 +25,7 @@ import net.akehurst.language.api.parser.InputLocation
 
 abstract class SPPTNodeAbstract(
         val runtimeRule: RuntimeRule,
+        override val option: Int,
         override val location: InputLocation,
         override val nextInputPosition: Int,
         override val priority: Int                      //not needed as part of the SPPTNode, but needed for the parsing algorithm

@@ -41,7 +41,7 @@ class test_multi01 : test_ScannerlessParserAbstract() {
         val sentence = ""
 
         val expected = """
-            S { §empty }
+            S|1 { §empty }
         """.trimIndent()
 
         val actual = super.testStringResult(rrb, goal, sentence, expected)

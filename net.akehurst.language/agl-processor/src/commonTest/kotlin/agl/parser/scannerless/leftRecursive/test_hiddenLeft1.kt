@@ -28,16 +28,24 @@ import kotlin.test.fail
 
 class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
 
-    // S  = S1 | 'a'
-    // S1 = E S 'a'    // S*; try right recursive also
-    // E = empty
+    // S = B S 'c' | 'a'
+    // B = 'b' | <empty>
+
+    // S = S1 | 'a'
+    // S1 = B S 'c'
+    // B = 'b' | Be
+    // Be = <empty>
     private val S = runtimeRuleSet {
         choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
             ref("S1")
             literal("a")
         }
-        concatenation("S1") { ref("E"); ref("S"); literal("a") }
-        concatenation("E") { empty() }
+        concatenation("S1") { ref("B"); ref("S"); literal("c") }
+        choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            literal("b")
+            ref("Be")
+        }
+        concatenation("Be") { empty() }
     }
 
     @Test
@@ -60,23 +68,23 @@ class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S { 'a' }
+            S|1 { 'a' }
         """.trimIndent()
 
         super.test(rrb, goal, sentence, expected)
     }
 
     @Test
-    fun aa() {
+    fun bac() {
         val rrb = this.S
         val goal = "S"
-        val sentence = "aa"
+        val sentence = "bac"
 
         val expected = """
          S { S1 {
-            E { §empty }
-            S { 'a' }
-            'a'
+            B { 'b' }
+            S|1 { 'a' }
+            'c'
           } }
         """.trimIndent()
 
@@ -84,16 +92,37 @@ class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun aaa() {
+    fun ac() {
         val rrb = this.S
         val goal = "S"
-        val sentence = "aaa"
+        val sentence = "ac"
 
         val expected = """
          S { S1 {
-            E { §empty }
-            S { 'a' }
-            'a'
+            B|1 { Be { §empty } }
+            S|1 { 'a' }
+            'c'
+          } }
+        """.trimIndent()
+
+        super.test(rrb, goal, sentence, expected)
+    }
+
+    @Test
+    fun bacc() {
+        val rrb = this.S
+        val goal = "S"
+        val sentence = "bacc"
+
+        val expected = """
+         S { S1 {
+            B { 'b' }
+            S { S1 {
+                B|1 { Be { §empty } }
+                S|1 { 'a' }
+                'c'
+              } }
+            'c'
           } }
         """.trimIndent()
 

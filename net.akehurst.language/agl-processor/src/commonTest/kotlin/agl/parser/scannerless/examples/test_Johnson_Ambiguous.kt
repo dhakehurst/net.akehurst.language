@@ -28,12 +28,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.time.*
 
-class test_Johnson : test_ScannerlessParserAbstract() {
+class test_Johnson_Ambiguous : test_ScannerlessParserAbstract() {
     /**
-     * S = S S S | S S | 'a' ;
+     * S = S S S || S S || 'a' ;
      */
     /**
-     * S = S1 | S2 | 'a' ;
+     * S = S1 || S2 || 'a' ;
      * S1 = S S S ;
      * S2 = S S ;
      */
@@ -43,7 +43,7 @@ class test_Johnson : test_ScannerlessParserAbstract() {
         val rS = rrb.rule("S").build()
         val rS1 = rrb.rule("S1").concatenation(rS, rS, rS)
         val rS2 = rrb.rule("S2").concatenation(rS, rS)
-        rS.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(rS1, rS2, ra))
+        rS.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.AMBIGUOUS, -1, 0, arrayOf(rS1, rS2, ra))
         return rrb
     }
 

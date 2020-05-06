@@ -108,7 +108,7 @@ class test_abOcLiteral : test_ScannerlessParserAbstract() {
         val sentence = "c"
 
         val expected = """
-            S {
+            S|1 {
               c { 'c' }
             }
         """.trimIndent()

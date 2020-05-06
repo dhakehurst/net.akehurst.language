@@ -22,11 +22,13 @@ import net.akehurst.language.api.parser.InputLocation
 
 class SPPTBranchDefault(
         runtimeRule: RuntimeRule,
+        option: Int,
         location: InputLocation,                     // can't use children.first.startPosition, there may not be any children
         nextInputPosition: Int,                 // dont't use children.sumBy { it.matchedTextLength }, it requires unwanted iteration
         priority: Int
 ) : SPPTNodeAbstract(
         runtimeRule,
+        option,
         location,
         nextInputPosition,
         priority

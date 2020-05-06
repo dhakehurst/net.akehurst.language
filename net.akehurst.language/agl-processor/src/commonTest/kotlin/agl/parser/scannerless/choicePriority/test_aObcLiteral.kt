@@ -101,7 +101,7 @@ class test_aObcLiteral : test_ScannerlessParserAbstract() {
         val sentence = "bc"
 
         val expected = """
-            S {
+            S|1 {
               bc {
                 b { 'b' }
                 c { 'c' }

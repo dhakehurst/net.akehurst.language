@@ -57,7 +57,7 @@ class test_a1bOa2 : test_ScannerlessParserAbstract() {
         val sentence = "a"
 
         val expected1 = """
-            S {
+            S|1 {
               'a'
             }
         """.trimIndent()
@@ -69,7 +69,7 @@ class test_a1bOa2 : test_ScannerlessParserAbstract() {
           } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected1, expected2)
+        super.test(rrb.ruleSet(), goal, sentence, expected1, expected2)
 
     }
 
@@ -122,7 +122,7 @@ class test_a1bOa2 : test_ScannerlessParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S {
+            S|1 {
               'a'
             }
         """.trimIndent()

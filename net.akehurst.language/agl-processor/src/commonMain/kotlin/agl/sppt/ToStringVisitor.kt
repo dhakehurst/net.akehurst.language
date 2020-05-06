@@ -57,6 +57,9 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
         for (children in target.childrenAlternatives) {
             var s = if (arg.onlyChild) " " else arg.text
             s += target.name
+            if (target.option!=0) {
+                s+="|${target.option}"
+            }
             s += if (target.childrenAlternatives.size > 1) "*" else ""
             s += " {"
             if (children.isEmpty()) {

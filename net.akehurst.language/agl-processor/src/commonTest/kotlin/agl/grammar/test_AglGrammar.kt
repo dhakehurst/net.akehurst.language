@@ -40,7 +40,6 @@ class test_AglGrammar {
         assertNotNull(p)
     }
 
-
     @Test
     fun empty() {
 

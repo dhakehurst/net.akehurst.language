@@ -49,7 +49,7 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              type {
+              type|1 {
                 builtIn { 'int' WS : ' '  }
               }
               name {
@@ -69,7 +69,7 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              type {
+              type|1 {
                 builtIn { 'bool' WS  : ' '  }
               }
               name {
@@ -109,7 +109,7 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              type {
+              type|1 {
                 builtIn { 'int' WS:' ' }
               }
               name {

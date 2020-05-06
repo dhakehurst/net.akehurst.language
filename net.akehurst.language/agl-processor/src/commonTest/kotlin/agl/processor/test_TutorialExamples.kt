@@ -93,7 +93,7 @@ class test_TutorialExamples {
         assertNotNull(sppt)
 
         val expected = """
-                typeReference { builtInType { 'boolean' } }
+                typeReference|1 { builtInType { 'boolean' } }
         """.trimIndent()
 
         assertEquals(expected, actual)
@@ -117,7 +117,7 @@ class test_TutorialExamples {
         assertNotNull(sppt)
 
         val expected = """
-                typeReference { builtInType { 'int' } }
+                typeReference|1 { builtInType { 'int' } }
         """.trimIndent()
 
         assertEquals(expected, actual)

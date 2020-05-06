@@ -79,8 +79,8 @@ class test_ifThenElse_Priority : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
-                conditional {
+              expr|1 {
+                conditional|1 {
                     ifthenelse {
                       'if' WS  : ' ' 
                       expr { var { "[a-zA-Z]+" : 'a' WS  : ' '  } }
@@ -107,7 +107,7 @@ class test_ifThenElse_Priority : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|1 {
                 conditional {
                     ifthen {
                       'if' WS : ' '
@@ -131,15 +131,15 @@ class test_ifThenElse_Priority : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
-                conditional {
+              expr|1 {
+                conditional|1 {
                     ifthenelse {
                       'if' WS  : ' ' 
                       expr { var { "[a-zA-Z]+" : 'a' WS  : ' '  } }
                       'then' WS  : ' ' 
                       expr { var { "[a-zA-Z]+" : 'b' WS : ' '  } }
                       'else' WS : ' ' 
-                      expr {
+                      expr|1 {
                         conditional {
                             ifthen {
                               'if' WS  : ' ' 
@@ -166,14 +166,14 @@ class test_ifThenElse_Priority : test_ScannerlessParserAbstract() {
 
         val expected1 = """
             S {
-              expr {
+              expr|1 {
                 conditional {
                     ifthen {
                       'if' WS:' '
                       expr { var { "[a-zA-Z]+" : 'a' WS:' ' } }
                       'then' WS:' '
                       expr {
-                        conditional {
+                        conditional|1 {
                             ifthenelse {
                               'if' WS:' '
                               expr { var { "[a-zA-Z]+" : 'b' WS:' ' } }

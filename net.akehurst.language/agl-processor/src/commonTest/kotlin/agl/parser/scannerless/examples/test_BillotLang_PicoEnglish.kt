@@ -73,13 +73,19 @@ class test_BillotLang_PicoEnglish : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun n() {
+    fun nvn() {
         val rrb = this.S
         val goal = "S"
-        val sentence = "n"
+        val sentence = "nvn"
 
         val expected1 = """
-            S{ S1{ NP{ NP1{'n'} } } }
+         S { S1 {
+            NP { NP1 { 'n' } }
+            VP {
+              'v'
+              NP { NP1 { 'n' } }
+            }
+          } }
         """.trimIndent()
 
         super.test(rrb, goal, sentence, expected1)

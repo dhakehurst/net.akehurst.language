@@ -76,7 +76,7 @@ class test_aObOcLiteral : test_ScannerlessParserAbstract() {
         val sentence = "b"
 
         val expected = """
-            S {
+            S|1 {
               b { 'b' }
             }
         """.trimIndent()
@@ -91,7 +91,7 @@ class test_aObOcLiteral : test_ScannerlessParserAbstract() {
         val sentence = "c"
 
         val expected = """
-            S {
+            S|2 {
               c { 'c' }
             }
         """.trimIndent()

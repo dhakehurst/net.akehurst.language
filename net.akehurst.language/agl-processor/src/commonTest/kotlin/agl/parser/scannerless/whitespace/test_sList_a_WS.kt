@@ -42,7 +42,7 @@ class test_sList_a_WS : test_ScannerlessParserAbstract() {
         val sentence = ""
 
         val expected = """
-            S { §empty }
+            S|1 { §empty }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, expected)

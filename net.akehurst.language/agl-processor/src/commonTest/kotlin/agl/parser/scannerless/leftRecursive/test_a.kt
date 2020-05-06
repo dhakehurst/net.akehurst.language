@@ -59,7 +59,7 @@ class  test_a : test_ScannerlessParserAbstract() {
         val sentence = "aa"
 
         val expected = """
-            S { S1 { S { 'a' } 'a' } }
+            S|1 { S1 { S { 'a' } 'a' } }
         """.trimIndent()
 
         val actual = super.testStringResult(rrb, goal, sentence, expected)
@@ -73,9 +73,9 @@ class  test_a : test_ScannerlessParserAbstract() {
         val sentence = "aaa"
 
         val expected = """
-            S {
+            S|1 {
                 S1 {
-                    S {
+                    S|1 {
                         S1 {
                             S { 'a' }
                             'a'
@@ -96,7 +96,7 @@ class  test_a : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "a".repeat(50)
 
-        val expected = "S { S1 { ".repeat(49) + "S { 'a' }" + "'a' } }".repeat(49)
+        val expected = "S|1 { S1 { ".repeat(49) + "S { 'a' }" + "'a' } }".repeat(49)
 
         val actual = super.test(rrb, goal, sentence, expected)
 
@@ -112,7 +112,7 @@ class  test_a : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "a".repeat(150)
 
-        val expected = "S { S1 { ".repeat(149) + "S { 'a' }" + "'a' } }".repeat(149)
+        val expected = "S|1 { S1 { ".repeat(149) + "S { 'a' }" + "'a' } }".repeat(149)
 
         val actual = super.test(rrb, goal, sentence, expected)
         assertEquals(1, actual.maxNumHeads)
@@ -124,7 +124,7 @@ class  test_a : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "a".repeat(500)
 
-        val expected = "S { S1 { ".repeat(499) + "S { 'a' }" + "'a' } }".repeat(499)
+        val expected = "S|1 { S1 { ".repeat(499) + "S { 'a' }" + "'a' } }".repeat(499)
 
         val actual = super.test(rrb, goal, sentence, expected)
         assertEquals(1, actual.maxNumHeads)
@@ -136,7 +136,7 @@ class  test_a : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "a".repeat(2000)
 
-        val expected = "S { S1 { ".repeat(1999) + "S { 'a' }" + "'a' } }".repeat(1999)
+        val expected = "S|1 { S1 { ".repeat(1999) + "S { 'a' }" + "'a' } }".repeat(1999)
 
         val actual = super.test(rrb, goal, sentence, expected)
         assertEquals(1, actual.maxNumHeads)

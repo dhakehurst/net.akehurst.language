@@ -43,7 +43,7 @@ class test_leftRecursive : test_ScannerlessParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S { 'a' }
+            S|1 { 'a' }
         """.trimIndent()
 
         super.test(rrb, goal, sentence, expected)

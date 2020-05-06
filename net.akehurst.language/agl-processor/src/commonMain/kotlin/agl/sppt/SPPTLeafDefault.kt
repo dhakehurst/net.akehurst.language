@@ -29,6 +29,7 @@ class SPPTLeafDefault(
         priority: Int
 ) : SPPTNodeAbstract(
         terminalRule,
+        0, //no option for terminal rules
         location,
         location.position+matchedText.length,
         priority
