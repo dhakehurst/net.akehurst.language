@@ -62,9 +62,10 @@ internal class InputFromCharSequence(val text: CharSequence) {
     }
 
     private fun matchRegEx(position: Int, patternText: String): Match? {
+
         val pattern = Regex(patternText, setOf(RegexOption.MULTILINE))
         val m = pattern.find(this.text, position)
-        val lookingAt = (m?.range?.start == position)
+        val lookingAt = if (null==m) false else pattern.matches(m.value) //FIXME: inefficient, must match regex twice
         val matchedText = if (lookingAt) m?.value else null
         return if (null == matchedText) {
             null
@@ -87,7 +88,7 @@ internal class InputFromCharSequence(val text: CharSequence) {
         val lastText = this.text.substring(lastLocation.position, lastLocation.position + lastLocation.length)
         var linesInText = 0
         var lastEolInText = -1
-        lastText.forEachIndexed { index, ch ->
+        lastText.forEachIndexed { index, ch -> //FIXME: inefficient having to parse text again
             if (ch == '\n') {
                 linesInText++
                 lastEolInText = index

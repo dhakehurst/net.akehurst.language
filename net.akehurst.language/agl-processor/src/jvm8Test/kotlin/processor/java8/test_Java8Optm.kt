@@ -38,7 +38,7 @@ class test_Java8Optm(val data: Data) {
 //            val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()
             val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processor(grammarStr)
-            proc.build()
+            proc.buildFor("compilationUnit")
             return proc
         }
 

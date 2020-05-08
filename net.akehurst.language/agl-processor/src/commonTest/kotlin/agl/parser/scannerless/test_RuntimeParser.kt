@@ -18,6 +18,7 @@ package net.akehurst.language.parser.scannerless
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -34,9 +35,11 @@ class test_RuntimeParser {
 
     @Test
     fun build() {
-        val rrb = RuntimeRuleSetBuilder()
-        val sp = ScanOnDemandParser(rrb.ruleSet())
-        sp.build()
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a") }
+        }
+        val sp = ScanOnDemandParser(rrs)
+        sp.buildFor("S")
 
         //TODO: how to test if build worked!
     }

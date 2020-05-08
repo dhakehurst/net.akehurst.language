@@ -31,8 +31,8 @@ interface LanguageProcessor {
     /**
      * build the parser before use. Optional, but will speed up the first use of the parser.
      */
-    @JsName("build")
-    fun build(): LanguageProcessor;
+    @JsName("buildFor")
+    fun buildFor(goalRuleName: String): LanguageProcessor;
 
     @JsName("scan")
     fun scan(inputText: CharSequence): List<SPPTLeaf>

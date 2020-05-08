@@ -31,7 +31,7 @@ class test_Java8_Singles {
         fun createJava8Processor(): LanguageProcessor {
             val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()//runBlockingNoSuspensions { resourcesVfs["/java8/Java8_all.agl"].readString() }
             val proc = Agl.processor(grammarStr)
-            proc.build()
+            proc.buildFor("block")
             return proc
         }
     }

@@ -46,9 +46,9 @@ internal class LanguageProcessorDefault(
         this.parser.interrupt(message)
         //TODO: interrupt processor
     }
-    override fun build(): LanguageProcessor {
-        this.parser.build()
-        return this;
+    override fun buildFor(goalRuleName: String): LanguageProcessor {
+        this.parser.buildFor(goalRuleName)
+        return this
     }
 
     override fun scan(inputText: CharSequence): List<SPPTLeaf> {

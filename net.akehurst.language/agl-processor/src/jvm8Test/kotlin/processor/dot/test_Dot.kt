@@ -40,7 +40,7 @@ class test_Dot(val data:Data) {
 
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl").readText()
         //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
-        var processor: LanguageProcessor = Agl.processor(grammarStr)
+        var processor: LanguageProcessor = Agl.processor(grammarStr).buildFor("graph")
 
         val validDirectory = "/dot/valid/"
         var validFiles = this::class.java.getResourceAsStream(validDirectory).use { if (null==it) emptyList<String>() else BufferedReader(InputStreamReader(it)).readLines() }

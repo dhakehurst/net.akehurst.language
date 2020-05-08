@@ -28,7 +28,7 @@ interface Parser {
     /**
      * It is not necessary to call this method, but doing so will speed up future calls to parse as it will build the internal caches for the parser,
      */
-    fun build();
+    fun buildFor(goalRuleName: String)
 
     /**
      * get a list of the types of node (is this useful!)

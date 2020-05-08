@@ -28,7 +28,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.time.*
 
-class test_Johnson : test_ScannerlessParserAbstract() {
+class test_Johnson_Longest : test_ScannerlessParserAbstract() {
     /**
      * S = S S S | S S | 'a' ;
      */

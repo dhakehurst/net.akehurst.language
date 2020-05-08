@@ -21,6 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
+import net.akehurst.language.collections.Stack
 
 class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
     constructor(rrsb: RuntimeRuleSetBuilder) : this(rrsb.ruleSet())
@@ -53,20 +54,7 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
 
     }
 
-    private class Stack<T>() {
-        private val list = mutableListOf<T>()
-        fun push(item: T) {
-            list.add(item)
-        }
 
-        fun peek(): T {
-            return list.last();
-        }
-
-        fun pop(): T {
-            return list.removeAt(list.size - 1)
-        }
-    }
 
     class SPPTParserException(message: String) : Exception(message) {}
 

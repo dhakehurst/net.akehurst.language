@@ -161,7 +161,7 @@ internal class RuntimeParser(
     }
 
     internal fun fetchFilteredTransitions(gn: GrowingNode, prev: GrowingNode?): Set<Transition> {
-        return if (null==prev) {
+        return if (null == prev) {
             val transitions: Set<Transition> = gn.currentState.transitions(null)
             transitions
         } else {
@@ -296,7 +296,7 @@ internal class RuntimeParser(
     }
 
     private fun growWithPrev(gn: GrowingNode, previous: PreviousInfo, noLookahead: Boolean) {
-       // val rps = gn.currentState
+        // val rps = gn.currentState
         //val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, previous.node.currentState)
         val transitions = this.fetchFilteredTransitions(gn, previous.node)
         for (it in transitions) {
@@ -327,43 +327,34 @@ internal class RuntimeParser(
             }
             if (noLookahead || hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
                 this.graph.pushToStackOf(false, transition.to, l, gn, previousSet, emptySet())
-                //               println(transition)
             }
         }
     }
 
     private fun doHeight(gn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
-        //if (previous.node.currentState.rulePosition != transition.prevGuard) {
-            val lh = transition.lookaheadGuard //TODO: do we actually need to lookahead here ? Add an explanation if so
-            val hasLh = lh.any {
-                val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
-                null != l
-            }
-            if (noLookahead || hasLh || lh.isEmpty()) {
-                val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
-                        ?: error("Should never be null")
-                this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, complete, setOf(previous), gn.skipNodes)
-                //               println(transition)
-            }
-        //}
+        val lh = transition.lookaheadGuard //TODO: do we actually need to lookahead here ? Add an explanation if so
+        val hasLh = lh.any {
+            val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
+            null != l
+        }
+        if (noLookahead || hasLh || lh.isEmpty()) {
+            val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
+                    ?: error("Should never be null")
+            this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, complete, setOf(previous), gn.skipNodes)
+        }
     }
 
     private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
-        //if (previous.node.currentState.rulePosition == transition.prevGuard) {
-        //    if (transition.runtimeGuard(transition, previous.node, previous.node.currentState.rulePosition)) {
-                val lh = transition.lookaheadGuard //TODO: do we actually need to lookahead here ? Add an explanation if so
-                val hasLh = lh.any {
-                    val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
-                    null != l
-                }
-                if (noLookahead || hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
-                    val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
-                            ?: error("Should never be null")
-                    this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
-                    //                   println(transition)
-                }
-       //     }
-       // }
+        val lh = transition.lookaheadGuard //TODO: do we actually need to lookahead here ? Add an explanation if so
+        val hasLh = lh.any {
+            val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
+            null != l
+        }
+        if (noLookahead || hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
+            val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
+                    ?: error("Should never be null")
+            this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
+        }
     }
 
     private fun tryGrowWidthWithSkipRules(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {

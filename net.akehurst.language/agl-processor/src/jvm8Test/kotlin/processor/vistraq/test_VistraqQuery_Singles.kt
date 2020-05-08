@@ -188,7 +188,7 @@ grammar Query {
 
         fun tgqlprocessor() : LanguageProcessor {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processor(grammarStr).build()
+            return Agl.processor(grammarStr).buildFor("query")
          }
 
     }

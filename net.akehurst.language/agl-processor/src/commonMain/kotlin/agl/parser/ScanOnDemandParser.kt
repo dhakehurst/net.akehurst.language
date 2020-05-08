@@ -40,8 +40,8 @@ class ScanOnDemandParser(
         this.runtimeParser?.interrupt(message)
     }
 
-    override fun build() {
-        this.runtimeRuleSet.buildCaches()
+    override fun buildFor(goalRuleName: String) {
+        this.runtimeRuleSet.buildFor(goalRuleName)
     }
 
     override fun scan(inputText: CharSequence, includeSkipRules: Boolean): List<SPPTLeaf> {
