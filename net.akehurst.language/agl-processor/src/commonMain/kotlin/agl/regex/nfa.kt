@@ -18,7 +18,7 @@ package net.akehurst.language.agl.regex
 
 class State(
         val number: Int,
-        val isSplit:Boolean
+        val isSplit: Boolean
 ) {
     val outgoing = mutableListOf<Transition>()
 
@@ -29,6 +29,7 @@ class State(
             else -> false
         }
     }
+
     override fun toString(): String = "State{$number}"
 }
 
@@ -37,27 +38,54 @@ class Fragment(
         val outgoing: List<Transition>
 )
 
+interface CharacterMatcher {
+    fun matches(input: Char): Boolean
+}
+
+class CharacterNegated(val matcher:CharacterMatcher):CharacterMatcher {
+    override fun matches(input: Char): Boolean = this.matcher.matches(input).not()
+}
+
+class CharacterSingle(val value:Char) : CharacterMatcher {
+    override fun matches(input: Char): Boolean = input == value
+}
+class CharacterOneOf(val options:List<CharacterMatcher>) : CharacterMatcher {
+    constructor(value:String) : this(value.map { CharacterSingle(it) })
+    override fun matches(input: Char): Boolean = this.options.any { it.matches(input) }
+}
+
+class CharacterRange(
+        val min: Char, val max: Char
+) : CharacterMatcher {
+    override fun matches(input: Char): Boolean = input in min..max
+}
+
 interface Transition {
     var to: State?
     fun match(input: Char): Boolean
 }
 
 class TransitionLiteral(val value: Char) : Transition {
-    override var to: State?=null
+    override var to: State? = null
     override fun match(input: Char): Boolean = input == value
 }
 
-class TransitionRange( val min: Char, val max: Char) : Transition {
-    override var to: State?=null
-    override fun match(input: Char): Boolean = input >= min && input <= max
+class TransitionSingle(val value: CharacterMatcher) : Transition {
+    override var to: State? = null
+    override fun match(input: Char): Boolean = value.matches(input)
+}
+
+class TransitionRange(val options: List<CharacterMatcher>) : Transition {
+    override var to: State? = null
+    override fun match(input: Char): Boolean = options.any { it.matches(input) }
 }
 
 class TransitionAny() : Transition {
-    override var to: State?=null
+    override var to: State? = null
     override fun match(input: Char): Boolean = true //TODO: maybe exclude \n
 }
 
 class TransitionEmpty : Transition {
-    override var to: State?=null
+    override var to: State? = null
     override fun match(input: Char): Boolean = true
 }

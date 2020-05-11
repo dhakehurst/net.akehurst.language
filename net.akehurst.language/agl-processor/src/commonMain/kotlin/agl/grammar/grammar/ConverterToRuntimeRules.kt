@@ -96,30 +96,6 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
     fun originalRuleItemFor(rr: RuntimeRule): RuleItem {
         return this.originalRule.get(rr)
                 ?: throw LanguageProcessorException("cannot find original item for " + rr, null)
-        /*
-        val name = rr.name
-        if (name.startsWith("§")) {
-            // decode it (see Converter) and RuleItem.setOwningRule
-            val split = name.split("[.]".toRegex()).dropLastWhile({ it.isEmpty() }).toTypedArray()
-            val ruleName = split[0].substring(1)
-            val rhs = grammar.findAllRule(ruleName).rhs
-            val type = split[1]
-            val index = IntArray(split.size - 3)
-            for (i in 3 until split.size) {
-                val ix = split[i].toInt()
-                index[i - 3] = ix
-            }
-            var item = rhs
-            for (i in index) {
-                item = item.subItem(i)
-            }
-
-            return item
-        } else {
-            // find grammar rule
-            return NonTerminalRuleReference(grammar, name)
-        }
-        */
     }
 
     fun transform(): RuntimeRuleSet {

@@ -35,7 +35,7 @@ internal class ParseGraph(
             val startPosition: Int
     )
 
-    internal val leaves: MutableMap<LeafIndex, SPPTLeafDefault> = mutableMapOf()
+    internal val leaves: MutableMap<LeafIndex, SPPTLeafDefault?> = mutableMapOf()
     internal val completeNodes: MutableMap<CompleteNodeIndex, SPPTNode> = mutableMapOf()
     internal val growing: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
     internal val _goals: MutableList<SPPTNode> = mutableListOf()
@@ -122,7 +122,7 @@ internal class ParseGraph(
             this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
             leaf
         } else {
-            val match = this.input.tryMatchText(index.startPosition, terminalRuntimeRule.value, terminalRuntimeRule.isPattern) ?: return null
+            val match = this.input.tryMatchText(index.startPosition, terminalRuntimeRule.value, terminalRuntimeRule.pattern) ?: return null
             val location = this.input.nextLocation(lastLocation, match.matchedText.length)
             val leaf = SPPTLeafDefault(terminalRuntimeRule, location, false, match.matchedText, 0)
             leaf.eolPositions = match.eolPositions
@@ -135,7 +135,13 @@ internal class ParseGraph(
 
     fun findOrTryCreateLeaf(terminalRuntimeRule: RuntimeRule, inputPosition: Int, lastLocation: InputLocation): SPPTLeafDefault? {
         val index = LeafIndex(terminalRuntimeRule.number, inputPosition)
-        return this.leaves[index] ?: this.tryCreateLeaf(terminalRuntimeRule, index, lastLocation)
+        return if (this.leaves.containsKey(index)) {
+            this.leaves[index]
+        } else {
+            val l = this.tryCreateLeaf(terminalRuntimeRule, index, lastLocation)
+            this.leaves[index] = l
+            l
+        }
     }
 
     fun createBranchNoChildren(runtimeRule: RuntimeRule, option: Int, priority: Int, location: InputLocation, nextInputPosition: Int): SPPTBranchDefault {

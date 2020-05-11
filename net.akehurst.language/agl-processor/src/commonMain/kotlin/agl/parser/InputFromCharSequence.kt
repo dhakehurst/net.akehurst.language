@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.parser
 
+import net.akehurst.language.agl.regex.RegexMatcher
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.sppt.SPPTLeafDefault
@@ -50,14 +51,14 @@ internal class InputFromCharSequence(val text: CharSequence) {
         return regex.findAll(text).toList().map { it.range.first }
     }
 
-    private fun matchLiteral(position: Int, patternText: String): Match? {
+    private fun matchLiteral(position: Int, patternText: String): RegexMatcher.MatchResult? {
         val match = this.text.regionMatches(position, patternText, 0, patternText.length, false)
         val matchedText = if (match) patternText else null
         return if (null == matchedText) {
             null
         } else {
             val eolPositions = this.eolPositions(matchedText)
-            Match(matchedText, eolPositions)
+            RegexMatcher.MatchResult(matchedText, eolPositions)
         }
     }
 
@@ -75,11 +76,11 @@ internal class InputFromCharSequence(val text: CharSequence) {
         }
     }
 
-    internal fun tryMatchText(position: Int, patternText: String, isPattern: Boolean): Match? {
+    internal fun tryMatchText(position: Int, patternText: String, pattern: RegexMatcher?): RegexMatcher.MatchResult? {
         val matched = when {
-            (position >= this.text.length) -> if (patternText == END_OF_TEXT) Match(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
-            (!isPattern) -> this.matchLiteral(position, patternText)
-            else -> this.matchRegEx(position, patternText)
+            (position >= this.text.length) -> if (patternText == END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
+            (null==pattern) -> this.matchLiteral(position, patternText)
+            else -> pattern.match(this.text, position)
         }
         return matched
     }

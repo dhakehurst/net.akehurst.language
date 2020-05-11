@@ -25,11 +25,12 @@ class RegexMatcher(
 
     data class MatchResult(
             val matchedText: String,
-            val countOfNewLines: Int
+            val eolPositions: List<Int>
     )
 
     companion object {
         val MATCH_STATE = State(-1, false)
+        val ERROR_STATE = State(-2, false)
     }
 
     fun match(text: CharSequence, startPosition: Int = 0): MatchResult? {
@@ -38,16 +39,18 @@ class RegexMatcher(
         this.addNextStates(currentStates, this.start)
         var nextStates = mutableListOf<State>()
         var matched = false
-        var count = 0
-        while (!matched && currentStates.isNotEmpty() && pos < text.length) {
+        var maxMatchedPos = -1
+        var eolPositions = mutableListOf<Int>()
+        while (currentStates.isNotEmpty() && pos < text.length) {
             var c = text[pos++]
-            if (c=='\n') count++
+            if (c=='\n') eolPositions.add(pos)
             for (state in currentStates) {
                 state.outgoing.forEach { trans ->
                     if (trans.match(c)) {
-                        if (trans.to == MATCH_STATE)
-                            matched = true
-                        addNextStates(nextStates, trans.to)
+                            matched = addNextStates(nextStates, trans.to)
+                        if(matched) {
+                            maxMatchedPos = maxOf(maxMatchedPos, pos)
+                        }
                     }
                 }
             }
@@ -56,21 +59,24 @@ class RegexMatcher(
             nextStates = t
             nextStates.clear()
         }
-        return if (currentStates.contains(MATCH_STATE)) {
-            val matchedText = text.substring(startPosition, pos)
-            MatchResult(matchedText, count)
+        return if (maxMatchedPos!=-1) {
+            val matchedText = text.substring(startPosition, maxMatchedPos)
+            MatchResult(matchedText, eolPositions)
         } else {
             null
         }
     }
 
-    private fun addNextStates(nextStates:MutableList<State>, next:State?) {
-        if (null==next) {
+    private fun addNextStates(nextStates:MutableList<State>, next:State?) :Boolean {
+        //TODO: don't add duplicate states
+        return if (null==next) {
+            false
         } else {
             if (next.isSplit) {
-                next.outgoing.forEach { addNextStates(nextStates, it.to) }
+                next.outgoing.any { addNextStates(nextStates, it.to) }
             } else {
                 nextStates.add(next)
+                next == MATCH_STATE
             }
         }
     }

@@ -75,7 +75,7 @@ object Agl {
             val grammar = grammarProcessor.process<List<Grammar>>("grammarDefinition", grammarDefinitionStr).last()
             return processor(grammar, syntaxAnalyser, formatter)
         } catch (e: ParseFailedException) {
-            throw LanguageProcessorException("Unable to parse grammarDefinitionStr at line: ${e.location.line} column: ${e.location.column} expected one of: ${e.expected}", e)
+            throw LanguageProcessorException("Unable to parse grammarDefinitionStr at line: ${e.location.line} column: ${e.location.column} (position:${e.location.position}) expected one of: ${e.expected}", e)
         }
     }
 

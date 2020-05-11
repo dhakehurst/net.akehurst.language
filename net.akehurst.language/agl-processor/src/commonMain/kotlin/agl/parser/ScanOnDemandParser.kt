@@ -60,7 +60,7 @@ class ScanOnDemandParser(
         var lastLocation = InputLocation(0, 1, 1, 0)
         while (!input.isEnd(position)) {
             val matches: List<SPPTLeaf> = terminals.mapNotNull {
-                val match = input.tryMatchText(position, it.value, it.isPattern)
+                val match = input.tryMatchText(position, it.value, it.pattern)
                 if (null == match) {
                     null
                 } else {

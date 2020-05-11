@@ -17,6 +17,7 @@
 package net.akehurst.language.parser.scannerless
 
 import net.akehurst.language.agl.parser.InputFromCharSequence
+import net.akehurst.language.agl.regex.regexMatcher
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -176,7 +177,7 @@ class test_InputFromCharSequence {
         val inputText = ""
         val sut = InputFromCharSequence(inputText)
 
-        val actual = sut.tryMatchText(0, "", false)
+        val actual = sut.tryMatchText(0, "", null)
 
         assertEquals(null, actual)
     }
@@ -186,7 +187,7 @@ class test_InputFromCharSequence {
         val inputText = ""
         val sut = InputFromCharSequence(inputText)
 
-        val actual = sut.tryMatchText(0, "abc", false)
+        val actual = sut.tryMatchText(0, "abc", null)
 
         assertEquals(null, actual)
     }
@@ -196,7 +197,7 @@ class test_InputFromCharSequence {
         val inputText = ""
         val sut = InputFromCharSequence(inputText)
 
-        val actual = sut.tryMatchText(0, "", true)
+        val actual = sut.tryMatchText(0, "", regexMatcher(""))
 
         assertEquals(null, actual)
     }
@@ -206,7 +207,7 @@ class test_InputFromCharSequence {
         val inputText = ""
         val sut = InputFromCharSequence(inputText)
 
-        val actual = sut.tryMatchText(0, "abc", true)
+        val actual = sut.tryMatchText(0, "abc", regexMatcher("abc"))
 
         assertEquals(null, actual)
     }
@@ -216,7 +217,7 @@ class test_InputFromCharSequence {
         val inputText = ""
         val sut = InputFromCharSequence(inputText)
 
-        val actual = sut.tryMatchText(0, "[a-c]", true)
+        val actual = sut.tryMatchText(0, "[a-c]", regexMatcher("[a-c]"))
 
         assertEquals(null, actual)
     }
