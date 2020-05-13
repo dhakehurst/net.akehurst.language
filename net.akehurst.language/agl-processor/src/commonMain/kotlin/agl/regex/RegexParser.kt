@@ -18,157 +18,13 @@ package net.akehurst.language.agl.regex
 
 import net.akehurst.language.collections.Stack
 
-class RegexMatcherBuilder {
-
-    companion object {
-
-    }
-
-    // List[StateNumber] -> Map<Unicode-Int, List<StateNumber>>
-    val nfa = mutableListOf<State>()
-    var nextStateNumber = 0
-    var stack = Stack<Fragment>()
-    var start: State = RegexMatcher.ERROR_STATE
-
-    // return state number of new state
-    private fun createState(isSplit: Boolean): State {
-        val state = State(this.nextStateNumber, isSplit)
-        this.nextStateNumber++
-        this.nfa.add(state)
-        return state
-    }
-
-    fun start() {
-        val state = this.createState(true)
-        state.outgoing.add(TransitionEmpty())
-        this.stack.push(Fragment(state, state.outgoing))
-        this.start = state
-    }
-
-    fun matchAny() {
-        val state = this.createState(false)
-        val trans = TransitionAny()
-        state.outgoing.add(trans)
-        val frag = Fragment(state, state.outgoing)
-        this.stack.push(frag)
-    }
-
-    fun character(input: Char) {
-        val state = this.createState(false)
-        val trans = TransitionLiteral(input)
-        state.outgoing.add(trans)
-        val frag = Fragment(state, state.outgoing)
-        this.stack.push(frag)
-    }
-
-    fun characterClass(options: List<CharacterMatcher>) {
-        val state = this.createState(false)
-        val trans = TransitionRange(options)
-        state.outgoing.add(trans)
-        val frag = Fragment(state, state.outgoing)
-        this.stack.push(frag)
-    }
-
-    fun concatenate() {
-        when (this.stack.size) {
-            0 -> {
-            }
-            1 -> {
-                //this.start = this.stack.peek().start
-            }
-            else -> {
-                val f2 = this.stack.pop()
-                val f1 = this.stack.pop()
-                f1.outgoing.forEach { it.to = f2.start }
-                val frag = Fragment(f1.start, f2.outgoing)
-                this.stack.push(frag)
-                //this.start = f1.start
-            }
-        }
-    }
-
-    fun choice() {
-        val f2 = this.stack.pop()
-        val f1 = this.stack.pop()
-        val split = this.createState(true)
-        val t1 = TransitionEmpty()
-        t1.to = f1.start
-        val t2 = TransitionEmpty()
-        t2.to = f2.start
-        split.outgoing.add(t1)
-        split.outgoing.add(t2)
-        val frag = Fragment(split, f1.outgoing + f2.outgoing)
-        this.stack.push(frag)
-        //this.start = split
-    }
-
-    fun multi01() {
-        val f1 = this.stack.pop()
-        val split = this.createState(true)
-        val t1 = TransitionEmpty()
-        t1.to = f1.start
-        val t2 = TransitionEmpty()
-        split.outgoing.add(t1)
-        split.outgoing.add(t2)
-        val frag = Fragment(split, f1.outgoing + t2)
-        this.stack.push(frag)
-        //this.start = split
-    }
-
-    fun multi1n() {
-        val f1 = this.stack.pop()
-        val split = this.createState(true)
-        f1.outgoing.forEach { it.to = split }
-        val t1 = TransitionEmpty()
-        t1.to = f1.start
-        val t2 = TransitionEmpty()
-        split.outgoing.add(t1)
-        split.outgoing.add(t2)
-        val frag = Fragment(f1.start, listOf(t2))
-        this.stack.push(frag)
-        //this.start = f1.start
-    }
-
-    fun multi0n() {
-        val f1 = this.stack.pop()
-        val split = this.createState(true)
-        val t1 = TransitionEmpty()
-        t1.to = f1.start
-        val t2 = TransitionEmpty()
-        split.outgoing.add(t1)
-        split.outgoing.add(t2)
-        f1.outgoing.forEach { it.to = split }
-        val frag = Fragment(split, listOf(t2))
-        this.stack.push(frag)
-        //this.start = split
-    }
-
-    fun startGroup() {
-    }
-
-    fun finishGroup() {
-    }
-
-    fun build(): RegexMatcher {
-        return RegexMatcher(this.start, this.nfa)
-    }
-
-    fun concatenateGoal() {
-        if (this.stack.isEmpty) {
-            //don't add goal
-        } else {
-            val f1 = this.stack.pop()
-            f1.outgoing.forEach { it.to = RegexMatcher.MATCH_STATE }
-            this.start = f1.start
-        }
-    }
-}
-
 class RegexParserException(msg: String) : RuntimeException(msg)
 
 class RegexParser(
         val pattern: String
 ) {
+
+    enum class EscapeKind { SINGLE, OPTIONS, LITERAL }
 
     companion object {
         val PREC_GROUP_OPEN = 1
@@ -177,22 +33,27 @@ class RegexParser(
         val PREC_MULTI_01 = 3
         val PREC_MULTI_0n = 4
         val PREC_MULTI_1n = 5
-        val PREC_CONCAT = 6
-        val PREC_CHOICE = 7
+        val PREC_REP = 6
+        val PREC_CONCAT = 7
+        val PREC_CHOICE = 8
 
-        val PREDEFINED_DIGIT = CharacterRange('0', '9')
-        val PREDEFINED_DIGIT_NEGATED = CharacterNegated(CharacterRange('0', '9'))
+        val PREDEFINED_DIGIT = Pair(EscapeKind.SINGLE, (CharacterRange('0', '9')))
+        val PREDEFINED_DIGIT_NEGATED = Pair(EscapeKind.SINGLE, (CharacterNegated(CharacterRange('0', '9'))))
+        val PREDEFINED_WHITESPACE = Pair(EscapeKind.SINGLE, (CharacterOneOf(listOf(
+                CharacterRange('a', 'z'),
+                CharacterRange('A', 'Z'),
+                CharacterSingle('_'),
+                CharacterRange('0', '9')))
+                ))
+        val PREDEFINED_WHITESPACE_NEGATED = Pair(EscapeKind.SINGLE, (CharacterNegated(CharacterOneOf(listOf(
+                CharacterRange('a', 'z'),
+                CharacterRange('A', 'Z'),
+                CharacterSingle('_'),
+                CharacterRange('0', '9'))))
+                ))
     }
 
-    interface PatternSegment {
-
-        class MatchAny : PatternSegment {
-        }
-
-        class MatchOneOf(options: List<Char>) : PatternSegment {
-        }
-    }
-
+    val patternX = pattern + 0.toChar().toString() // add something to the end of the string, saves doing an if (> length) in fun next()
     var pp = 0
     val matcherBuilder = RegexMatcherBuilder()
 
@@ -202,7 +63,7 @@ class RegexParser(
     }
 
     private fun next(): Char {
-        val c = this.pattern[pp]
+        val c = this.patternX[pp]
         this.pp++
         return c
     }
@@ -211,183 +72,267 @@ class RegexParser(
         //this.matcherBuilder.start()
         val postfix = Stack<Pair<Int, () -> Unit>>()
         val opStack = Stack<Pair<Int, () -> Unit>>()
-        var needConcat = false
-        var c = this.next()
-        while (pp < pattern.length) {
-            when (c) {
-                '\\' -> {
-                    val escaped_char = this.parsePatternEscape()
-                    postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.characterClass(escaped_char) }))
-                    if (needConcat) {
-                        while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
-                            postfix.push(opStack.pop())
-                        }
-                        opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
-                    }
-                    needConcat = true
-                    c = this.next()
-                }
-                '.' -> {
-                    postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.matchAny() }))
-                    if (needConcat) {
-                        while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
-                            postfix.push(opStack.pop())
-                        }
-                        opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
-                    }
-                    needConcat = true
-                    c = this.next()
-                }
-                '[' -> {
-                    val options = this.parseCharacterClass()
-                    postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.characterClass(options) }))
-                    if (needConcat) {
-                        while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
-                            postfix.push(opStack.pop())
-                        }
-                        opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
-                    }
-                    c = this.next()
-                }
-                '(' -> {
-                    needConcat = false
-//                    opStack.push(Pair(PREC_GROUP_OPEN, { this.matcherBuilder.startGroup() }))
-                    c = this.next()
-                    when (c) {
-                        '?' -> {
-                            //ignore 'non capturing group' indicator, as this doesn't handle groups anyhow
-                            c = this.next()
-                            when (c) {
-                                ':' -> { c = this.next()
+        var needConcat = Stack<Boolean>()
+        needConcat.push(false)
+        if (pattern.length > 0) {
+            var c = this.next()
+            while (pp <= pattern.length) {
+                when (c) {
+                    '\\' -> {
+                        val escaped_matchers = this.parsePatternEscape()
+                        when (escaped_matchers.first) {
+                            EscapeKind.SINGLE -> {
+                                val matcher = escaped_matchers.second as CharacterMatcher
+                                postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.characterClass(matcher) }))
+                                if (needConcat.pop()) {
+                                    while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                                        postfix.push(opStack.pop())
+                                    }
+                                    opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
                                 }
-                                '=' -> { c = this.next()
-                                }
-                                '!' -> { c = this.next()
-                                }
-                                '>' -> { c = this.next()
-                                }
-                                '<' -> {
-                                    TODO()
-                                }
-                                //TODO: idmsuxU !
-                                //TODO: idmsux !
-                                else -> { /* continue */
+                                needConcat.push(true)
+                            }
+                            EscapeKind.LITERAL -> {
+                                val literal = escaped_matchers.second as CharSequence
+                                if (literal.length > 0) {
+                                    val cc = literal[0]
+                                    postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.character(cc) }))
+                                    if (needConcat.pop()) {
+                                        while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                                            postfix.push(opStack.pop())
+                                        }
+                                        opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                                    }
+                                    var i = 1
+                                    while (i < literal.length) {
+                                        val d = literal[i]
+                                        postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.character(d) }))
+                                        opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                                        i++
+                                    }
+                                    needConcat.push(true)
                                 }
                             }
                         }
-                        else -> { /* continue */
+                        c = this.next()
+                    }
+                    '.' -> {
+                        postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.matchAny() }))
+                        if (needConcat.pop()) {
+                            while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                                postfix.push(opStack.pop())
+                            }
+                            opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                        }
+                        needConcat.push(true)
+                        c = this.next()
+                    }
+                    '[' -> {
+                        val options = this.parseCharacterClass()
+                        postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.characterClass(options) }))
+                        if (needConcat.pop()) {
+                            while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                                postfix.push(opStack.pop())
+                            }
+                            opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                        }
+                        needConcat.push(true)
+                        c = this.next()
+                    }
+                    '(' -> {
+                        needConcat.push(false)
+                        opStack.push(Pair(PREC_GROUP_OPEN, {  }))
+                        c = this.next()
+                        when (c) {
+                            '?' -> {
+                                TODO(pattern)
+                                //ignore 'non capturing group' indicator, as this doesn't handle groups anyhow
+                                c = this.next()
+                                when (c) {
+                                    ':' -> {
+                                        c = this.next()
+                                    }
+                                    '=' -> {
+                                        c = this.next()
+                                    }
+                                    '!' -> {
+                                        c = this.next()
+                                    }
+                                    '>' -> {
+                                        c = this.next()
+                                    }
+                                    '<' -> {
+                                        TODO(pattern)
+                                    }
+                                    //TODO: idmsuxU !
+                                    //TODO: idmsux !
+                                    else -> { /* continue */
+                                    }
+                                }
+                            }
+                            else -> { /* continue */
+                            }
                         }
                     }
-                }
-                '|' -> {
-                    while (opStack.isEmpty.not() && opStack.peek().first < PREC_CHOICE) {
-                        postfix.push(opStack.pop())
-                    }
-                    opStack.push(Pair(PREC_CHOICE, { this.matcherBuilder.choice() }))
-                    needConcat = false
-                    c = this.next()
-                }
-                '?' -> {
-                    postfix.push(Pair(PREC_MULTI_01, { this.matcherBuilder.multi01() }))
-                    c = this.next()
-                    when (c) {
-                        '?' -> { /*TODO: relectant */ }
-                        '+' -> { /*TODO: posesive */ }
-                        else -> { /* continue */ }
-                    }
-                }
-                '+' -> {
-                    postfix.push(Pair(PREC_MULTI_1n, { this.matcherBuilder.multi1n() }))
-                    c = this.next()
-                    when (c) {
-                        '?' -> { /*TODO: relectant */ }
-                        '+' -> { /*TODO: posesive */ }
-                        else -> { /* continue */ }
-                    }
-                }
-                '*' -> {
-                    postfix.push(Pair(PREC_MULTI_0n, { this.matcherBuilder.multi0n() }))
-                    c = this.next()
-                    when (c) {
-                        '?' -> { /*TODO: relectant */ }
-                        '+' -> { /*TODO: posesive */ }
-                        else -> { /* continue */ }
-                    }
-                }
-                '{' -> {
-                    TODO()
-                }
-                ')' -> {
-                    while (opStack.isEmpty.not()) {
-                        postfix.push(opStack.pop())
-                    }
-                    if (needConcat) {
-                        while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                    '|' -> {
+                        while (opStack.isEmpty.not() && opStack.peek().first < PREC_CHOICE) {
                             postfix.push(opStack.pop())
                         }
-                        opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                        opStack.push(Pair(PREC_CHOICE, { this.matcherBuilder.choice() }))
+                        needConcat.pop()
+                        needConcat.push(false)
+                        c = this.next()
                     }
-                    needConcat = true
-                    //postfix.push(Pair(PREC_GROUP_CLOSE, { this.matcherBuilder.finishGroup() }))
-                    c = this.next()
-                }
-                else -> {
-                    postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.character(c) }))
-                    if (needConcat) {
-                        while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                    '?' -> {
+                        postfix.push(Pair(PREC_MULTI_01, { this.matcherBuilder.multi01() }))
+                        c = this.next()
+                        when (c) {
+                            '?' -> {
+                                TODO()
+                            }
+                            '+' -> {
+                                TODO()
+                            }
+                            else -> { /* continue */
+                            }
+                        }
+                    }
+                    '+' -> {
+                        postfix.push(Pair(PREC_MULTI_1n, { this.matcherBuilder.multi1n() }))
+                        c = this.next()
+                        when (c) {
+                            '?' -> {
+                                TODO(pattern)
+                            }
+                            '+' -> {
+                                TODO(pattern)
+                            }
+                            else -> { /* continue */
+                            }
+                        }
+                    }
+                    '*' -> {
+                        postfix.push(Pair(PREC_MULTI_0n, { this.matcherBuilder.multi0n() }))
+                        c = this.next()
+                        when (c) {
+                            '?' -> {
+                                TODO(pattern)
+                            }
+                            '+' -> {
+                                TODO(pattern)
+                            }
+                            else -> { /* continue */
+                            }
+                        }
+                    }
+                    '{' -> {
+                        val nb = StringBuilder()
+                        c = this.next()
+                        while (c in '0'..'9') {
+                            nb.append(c)
+                            c = this.next()
+                        }
+                        val n = nb.toString().toIntOrNull(10)
+                                ?: throw RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                        when (c) {
+                            '}' -> {
+                                postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, n) }))
+                                c = this.next()
+                            }
+                            ',' -> {
+                                c = this.next()
+                                when (c) {
+                                    '}' -> {
+                                        postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, -1) }))
+                                        c = this.next()
+                                    }
+                                    else -> {
+                                        val mb = StringBuilder()
+                                        mb.append(c)
+                                        c = this.next()
+                                        while (c in '0'..'9') {
+                                            mb.append(c)
+                                            c = this.next()
+                                        }
+                                        val m = mb.toString().toIntOrNull(10)
+                                                ?: throw RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                                        when(c) {
+                                            '}' -> {
+                                                postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, m) }))
+                                                c = this.next()
+                                            }
+                                            else -> throw RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                                        }
+                                    }
+                                }
+                            }
+                            else -> RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                        }
+                    }
+                    ')' -> {
+                        while (opStack.isEmpty.not() && opStack.peek().first!=PREC_GROUP_OPEN) {
                             postfix.push(opStack.pop())
                         }
-                        opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                        if (opStack.isEmpty.not() && opStack.peek().first==PREC_GROUP_OPEN) opStack.pop()
+                        needConcat.pop()
+                        if (needConcat.pop()) {
+                            while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                                postfix.push(opStack.pop())
+                            }
+                            opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                        }
+                        needConcat.push(true)
+                        //postfix.push(Pair(PREC_GROUP_CLOSE, { this.matcherBuilder.finishGroup() }))
+                        c = this.next()
                     }
-                    needConcat = true
-                    c = this.next()
+                    else -> {
+                        val cc = c
+                        postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.character(cc) }))
+                        if (needConcat.pop()) {
+                            while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                                postfix.push(opStack.pop())
+                            }
+                            opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                        }
+                        needConcat.push(true)
+                        c = this.next()
+                    }
                 }
             }
-        }
-        while (opStack.isEmpty.not()) {
-            postfix.push(opStack.pop())
-        }
-        postfix.elements.forEach {
-            it.second.invoke()
+            while (opStack.isEmpty.not()) {
+                postfix.push(opStack.pop())
+            }
+            postfix.elements.forEach {
+                it.second.invoke()
+            }
         }
         this.matcherBuilder.concatenateGoal()
     }
 
-    private fun parsePatternEscape(): List<CharacterMatcher> {
-        val c = this.next()
-        val options = mutableListOf<CharacterMatcher>()
-        when (c) {
-            '\\' -> options.add(CharacterSingle(c))
-            '(' -> options.add(CharacterSingle(c))
-            '|' -> options.add(CharacterSingle(c))
-            '[' -> options.add(CharacterSingle(c))
-            '.' -> options.add(CharacterSingle(c))
-            '?' -> options.add(CharacterSingle(c))
-            '+' -> options.add(CharacterSingle(c))
-            '*' -> options.add(CharacterSingle(c))
-            't' -> options.add(CharacterSingle('\t'))
-            'n' -> options.add(CharacterSingle('\n'))
-            'r' -> options.add(CharacterSingle('\r'))
-            'f' -> options.add(CharacterSingle('\u000C'))
-            'a' -> options.add(CharacterSingle('\u0007'))
-            'e' -> options.add(CharacterSingle('\u001B'))
+    private fun parsePatternEscape(): Pair<EscapeKind, Any> {
+        var c = this.next()
+        return when (c) {
+            '\\' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
+            '(' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
+            '|' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
+            '[' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
+            '.' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
+            '?' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
+            '+' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
+            '*' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
+            't' -> Pair(EscapeKind.SINGLE, (CharacterSingle('\t')))
+            'n' -> Pair(EscapeKind.SINGLE, (CharacterSingle('\n')))
+            'r' -> Pair(EscapeKind.SINGLE, (CharacterSingle('\r')))
+            'f' -> Pair(EscapeKind.SINGLE, (CharacterSingle('\u000C')))
+            'a' -> Pair(EscapeKind.SINGLE, (CharacterSingle('\u0007')))
+            'e' -> Pair(EscapeKind.SINGLE, (CharacterSingle('\u001B')))
             'c' -> TODO("Control char")
-            'd' -> options.add(PREDEFINED_DIGIT)
-            'D' -> options.add(PREDEFINED_DIGIT_NEGATED)
-            's' -> options.add(CharacterOneOf(" \t\n\u000B\u000C\r"))
-            'S' -> options.add(CharacterNegated(CharacterOneOf(" \t\n\u000B\u000C\r")))
-            'w' -> options.add(CharacterOneOf(listOf(
-                    CharacterRange('a', 'z'),
-                    CharacterRange('A', 'Z'),
-                    CharacterSingle('_'),
-                    CharacterRange('0', '9')))
-            )
-            'W' -> options.add(CharacterNegated(CharacterOneOf(listOf(
-                    CharacterRange('a', 'z'),
-                    CharacterRange('A', 'Z'),
-                    CharacterSingle('_'),
-                    CharacterRange('0', '9'))))
-            )
+            'd' -> PREDEFINED_DIGIT
+            'D' -> PREDEFINED_DIGIT_NEGATED
+            's' -> Pair(EscapeKind.SINGLE, (CharacterOneOf(" \t\n\u000B\u000C\r")))
+            'S' -> Pair(EscapeKind.SINGLE, (CharacterNegated(CharacterOneOf(" \t\n\u000B\u000C\r"))))
+            'w' -> PREDEFINED_WHITESPACE
+            'W' -> PREDEFINED_WHITESPACE_NEGATED
             '0' -> {
                 TODO("Octal value")
             }
@@ -397,14 +342,43 @@ class RegexParser(
             'u' -> {
                 TODO("unicode hex value")
             }
-            else -> TODO()
+            'Q' -> { // quote, literal value until \E
+                val sb = StringBuilder()
+                var end = false
+                c = this.next()
+                while (!end) {
+                    when (c) {
+                        '\\' -> {
+                            c = this.next()
+                            if ('E' == c) {
+                                end = true
+                            } else {
+                                sb.append('\\')
+                                sb.append(c)
+                                c = this.next()
+                            }
+                        }
+                        else -> {
+                            sb.append(c)
+                            c = this.next()
+                        }
+                    }
+                }
+                Pair(EscapeKind.LITERAL, sb.toString())
+            }
+            else -> TODO("$c at $pp in $pattern")
         }
-        return options
     }
 
-    private fun parseCharacterClass(): List<CharacterMatcher> {
+    private fun parseCharacterClass(): CharacterMatcher {
         val options = mutableListOf<CharacterMatcher>()
         var c = this.parseNextCharOrEscape()
+        val negated = if ('^' == c) {
+            c = this.parseNextCharOrEscape()
+            true
+        } else {
+            false
+        }
         var f = c
         while (c != ']') {
             c = this.parseNextCharOrEscape()
@@ -428,7 +402,11 @@ class RegexParser(
                 }
             }
         }
-        return options
+        return if (negated) {
+            CharacterNegated(CharacterOneOf(options))
+        } else {
+            CharacterOneOf(options)
+        }
     }
 
     private fun parseNextCharOrEscape(): Char {
@@ -440,25 +418,42 @@ class RegexParser(
     }
 
     private fun parseCharacterClassEscape(): Char {
-        val c = this.next()
+        var c = this.next()
         return when (c) {
+            '\\' -> '\\'
+            't' -> '\t'
+            'n' -> '\n'
+            'r' -> '\r'
+            'f' -> '\u000C'
+            'a' -> '\u0007'
+            'e' -> '\u001B'
+            'c' -> TODO("Control char")
             'u' -> {
                 var unicodeChar = parseUnicode()
                 unicodeChar
             }
-            else -> throw RegexParserException("Unknown escape code in character class, at position ${this.pp}")
+            'x' -> {
+                this.parseHex()
+            }
+            else -> throw RegexParserException("Unknown escape code '$c' in character class, at position ${this.pp} in ${pattern}, ")
         }
     }
 
+    private fun parseHex(): Char {
+        var hex = this.toHexInt(this.next(), 16) ?: throw RegexParserException("Cannot parse Hex, at position ${this.pp}")
+        hex += this.toHexInt(this.next(), 1) ?: throw RegexParserException("Cannot parse Hex, at position ${this.pp}")
+        return hex.toChar()
+    }
+
     private fun parseUnicode(): Char {
-        var unicode = this.toInt(this.next(), 4096) ?: throw RegexParserException("Cannot parse Unicode, at position ${this.pp}")
-        unicode += this.toInt(this.next(), 256) ?: throw RegexParserException("Cannot parse Unicode, at position ${this.pp}")
-        unicode += this.toInt(this.next(), 16) ?: throw RegexParserException("Cannot parse Unicode, at position ${this.pp}")
-        unicode += this.toInt(this.next(), 1) ?: throw RegexParserException("Cannot parse Unicode, at position ${this.pp}")
+        var unicode = this.toHexInt(this.next(), 4096) ?: throw RegexParserException("Cannot parse Unicode, at position ${this.pp}")
+        unicode += this.toHexInt(this.next(), 256) ?: throw RegexParserException("Cannot parse Unicode, at position ${this.pp}")
+        unicode += this.toHexInt(this.next(), 16) ?: throw RegexParserException("Cannot parse Unicode, at position ${this.pp}")
+        unicode += this.toHexInt(this.next(), 1) ?: throw RegexParserException("Cannot parse Unicode, at position ${this.pp}")
         return unicode.toChar()
     }
 
-    private fun toInt(c: Char, power: Int): Int? {
+    private fun toHexInt(c: Char, power: Int): Int? {
         val v = c.toString().toIntOrNull(16)
         return if (null == v) null else v * power
     }

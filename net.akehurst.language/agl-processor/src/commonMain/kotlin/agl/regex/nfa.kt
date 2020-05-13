@@ -36,56 +36,56 @@ class State(
 class Fragment(
         val start: State,
         val outgoing: List<Transition>
-)
-
-interface CharacterMatcher {
-    fun matches(input: Char): Boolean
+) {
 }
 
-class CharacterNegated(val matcher:CharacterMatcher):CharacterMatcher {
+sealed class CharacterMatcher {
+    abstract fun matches(input: Char): Boolean
+}
+
+class CharacterNegated(val matcher:CharacterMatcher):CharacterMatcher() {
     override fun matches(input: Char): Boolean = this.matcher.matches(input).not()
+    override fun toString(): String = "!($matcher)"
 }
 
-class CharacterSingle(val value:Char) : CharacterMatcher {
+class CharacterSingle(val value:Char) : CharacterMatcher() {
     override fun matches(input: Char): Boolean = input == value
+    override fun toString(): String = "$value"
 }
-class CharacterOneOf(val options:List<CharacterMatcher>) : CharacterMatcher {
+class CharacterOneOf(val options:List<CharacterMatcher>) : CharacterMatcher() {
     constructor(value:String) : this(value.map { CharacterSingle(it) })
     override fun matches(input: Char): Boolean = this.options.any { it.matches(input) }
+    override fun toString(): String = "${options.joinToString("|")}"
 }
 
 class CharacterRange(
         val min: Char, val max: Char
-) : CharacterMatcher {
+) : CharacterMatcher() {
     override fun matches(input: Char): Boolean = input in min..max
+    override fun toString(): String = "[$min-$max]"
 }
 
-interface Transition {
-    var to: State?
-    fun match(input: Char): Boolean
+sealed class Transition {
+    var to: State? = null
+    abstract fun match(input: Char): Boolean
 }
 
-class TransitionLiteral(val value: Char) : Transition {
-    override var to: State? = null
+class TransitionLiteral(val value: Char) : Transition() {
     override fun match(input: Char): Boolean = input == value
+    override fun toString(): String = "-/$value/->(${to?.number})"
 }
 
-class TransitionSingle(val value: CharacterMatcher) : Transition {
-    override var to: State? = null
+class TransitionMatcher(val value: CharacterMatcher) : Transition() {
     override fun match(input: Char): Boolean = value.matches(input)
+    override fun toString(): String = "-/$value/->(${to?.number})"
 }
 
-class TransitionRange(val options: List<CharacterMatcher>) : Transition {
-    override var to: State? = null
-    override fun match(input: Char): Boolean = options.any { it.matches(input) }
-}
-
-class TransitionAny() : Transition {
-    override var to: State? = null
+class TransitionAny() : Transition() {
     override fun match(input: Char): Boolean = true //TODO: maybe exclude \n
+    override fun toString(): String = "-any->(${to?.number})"
 }
 
-class TransitionEmpty : Transition {
-    override var to: State? = null
+class TransitionEmpty : Transition() {
     override fun match(input: Char): Boolean = true
+    override fun toString(): String = "-empty->(${to?.number})"
 }

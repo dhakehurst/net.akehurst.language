@@ -29,8 +29,10 @@ import org.junit.runners.Parameterized.Parameters
 
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.parser.ParseFailedException
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import kotlin.test.fail
 
 
 class test_Dot_Singles {
@@ -240,7 +242,11 @@ class test_Dot_Singles {
             "027" -> "marr0017" [dir=none,weight=1] ;
             "marr0017" -> "028" [dir=none, weight=2] ;
         """.trimIndent()
-        processor.parse(goal, sentence)
+        try {
+            processor.parse(goal, sentence)
+        } catch (e:ParseFailedException) {
+            fail("${e.message} at ${e.location} expected ${e.expected}")
+        }
     }
 
     @Test

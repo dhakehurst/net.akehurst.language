@@ -37,13 +37,13 @@ grammar Literals {
      ;
 
     leaf BOOLEAN_LITERAL   = 'true' | 'false' ;
-    leaf CHARACTER_LITERAL = "'" ("[^'\r\n\\]" | ESCAPE_SEQUENCE) "'" ;
+    leaf CHARACTER_LITERAL = "'" ("[^'\\r\\n\\\\]" | ESCAPE_SEQUENCE) "'" ;
     leaf ESCAPE_SEQUENCE
-        = "\\" "[btnfr\x27\\]"
-        | "\\" ("[0-3]"? "[0-7]")? "[0-7]"
-        | "\\" 'u'+ "[0-9a-fA-F]{4}"
+        = "\\\\" "[btnfr\\x27\\\\]"
+        | "\\\\" ("[0-3]"? "[0-7]")? "[0-7]"
+        | "\\\\" 'u'+ "[0-9a-fA-F]{4}"
         ;
-    leaf STRING_LITERAL    = "\"(?:\\?.)*?\"" ;
+    leaf STRING_LITERAL    = "\"([^\"\\\\]|\\.)*\"" ;
     leaf NULL_LITERAL      = 'null' ;
 
 }

@@ -21,344 +21,56 @@ import kotlin.test.assertEquals
 
 class test_RegexMatcher {
 
-    @Test
-    fun character() {
-        val m = regexMatcher("a")
-        val actual = m.match("a", 0)
-        val expected = RegexMatcher.MatchResult("a", emptyList())
-        assertEquals(expected, actual)
-    }
 
     @Test
-    fun character_fails() {
-        val m = regexMatcher("a")
-        val actual = m.match("b", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun concatenation() {
-        val m = regexMatcher("ab")
-        val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun concatenation_fails() {
-        val m = regexMatcher("ab")
-        val actual = m.match("ac", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun choice_1() {
-        val m = regexMatcher("a|b")
-        val actual = m.match("a", 0)
-        val expected = RegexMatcher.MatchResult("a", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun choice_2() {
-        val m = regexMatcher("a|b")
-        val actual = m.match("b", 0)
-        val expected = RegexMatcher.MatchResult("b", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun choice_fails() {
-        val m = regexMatcher("c")
-        val actual = m.match("ac", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group_1() {
-        val m = regexMatcher("(a)")
-        val actual = m.match("a", 0)
-        val expected = RegexMatcher.MatchResult("a", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group_2() {
-        val m = regexMatcher("(a)(b)")
-        val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group_3() {
-        val m = regexMatcher("(a)|(b)")
-
-        val actual = m.match("a", 0)
-        val expected = RegexMatcher.MatchResult("a", emptyList())
-        assertEquals(expected, actual)
-
-        val actual2 = m.match("b", 0)
-        val expected2 = RegexMatcher.MatchResult("b", emptyList())
-        assertEquals(expected2, actual2)
-
-    }
-
-    @Test
-    fun group1_1() {
-        val m = regexMatcher("ab|c")
-        val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group1_2() {
-        val m = regexMatcher("ab|c")
-        val actual = m.match("c", 0)
-        val expected = RegexMatcher.MatchResult("c", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group1_1_fails() {
-        val m = regexMatcher("ab|c")
-        val actual = m.match("ac", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group1_2_fails() {
-        val m = regexMatcher("ab|c")
-        val actual = m.match("b", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group2_1() {
-        val m = regexMatcher("(ab)|c")
-        val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group2_2() {
-        val m = regexMatcher("(ab)|c")
-        val actual = m.match("c", 0)
-        val expected = RegexMatcher.MatchResult("c", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group2_1_fails() {
-        val m = regexMatcher("(ab)|c")
-        val actual = m.match("ac", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group2_2_fails() {
-        val m = regexMatcher("(ab)|c")
-        val actual = m.match("b", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group3_1() {
-        val m = regexMatcher("a(b|c)")
-        val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group3_2() {
-        val m = regexMatcher("a(b|c)")
-        val actual = m.match("ac", 0)
-        val expected = RegexMatcher.MatchResult("ac", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group3_1_fails() {
-        val m = regexMatcher("a(b|c)")
-        val actual = m.match("a", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group3_2_fails() {
-        val m = regexMatcher("a(b|c)")
-        val actual = m.match("b", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group3_3_fails() {
-        val m = regexMatcher("a(b|c)")
-        val actual = m.match("c", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun group3_4_fails() {
-        val m = regexMatcher("a(b|c)")
-        val actual = m.match("ad", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun multi01_1() {
-        val m = regexMatcher("a?b")
-        val actual = m.match("b", 0)
-        val expected = RegexMatcher.MatchResult("b", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun multi01_2() {
-        val m = regexMatcher("a?b")
-        val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun multi01_fails_1() {
-        val m = regexMatcher("a?b")
-        val actual = m.match("c", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun multi01_fails_2() {
-        val m = regexMatcher("a?b")
-        val actual = m.match("ac", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun multi0n_1() {
-        val m = regexMatcher("a*b")
-        val actual = m.match("b", 0)
-        val expected = RegexMatcher.MatchResult("b", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun multi0n_2() {
-        val m = regexMatcher("a*b")
-        val actual = m.match("ab", 0)
-        val expected = RegexMatcher.MatchResult("ab", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun multi0n_3() {
-        val m = regexMatcher("a*b")
-        val actual = m.match("aaaaaab", 0)
-        val expected = RegexMatcher.MatchResult("aaaaaab", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun multi0n_fails_1() {
-        val m = regexMatcher("a*b")
-        val actual = m.match("c", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun multi0n_fails_2() {
-        val m = regexMatcher("a*b")
-        val actual = m.match("ac", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun multi0n_fails_3() {
-        val m = regexMatcher("a*b")
-        val actual = m.match("aaaaaaac", 0)
-        val expected = null
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun characterClass_abcd() {
-        val m = regexMatcher("[abcd]")
-        for (c in 'a'..'d') {
-            val actual = m.match("$c", 0)
-            val expected = RegexMatcher.MatchResult("$c", emptyList())
-            assertEquals(expected, actual)
-        }
-    }
-
-    @Test
-    fun characterClass_abcd_fails() {
-        val m = regexMatcher("[abcd]")
-        for (c in 'a'..'d') {
-            val actual = m.match("$c", 0)
-            val expected = RegexMatcher.MatchResult("$c", emptyList())
-            assertEquals(expected, actual)
-        }
-        for (c in 'e'..'h') {
-            val actual = m.match("$c", 0)
-            val expected = null
-            assertEquals(expected, actual)
-        }
-    }
-
-    @Test
-    fun characterClass_Range() {
-        val m = regexMatcher("[a-z]")
-        for (c in 'a'..'z') {
-            val actual = m.match("$c", 0)
-            val expected = RegexMatcher.MatchResult("$c", emptyList())
-            assertEquals(expected, actual)
-        }
-    }
-
-    @Test
-    fun characterClass_Range_fails() {
-        val m = regexMatcher("[a-z]")
-        for (c in 'A'..'Z') {
-            val actual = m.match("$c", 0)
-            val expected = null
-            assertEquals(expected, actual)
-        }
-    }
-
-    @Test
-    fun characterClass_many() {
-        val m = regexMatcher("([a-zA-Z_][a-zA-Z_0-9-]*)")
-        val actual = m.match("Ba2-dF9", 0)
-        val expected = RegexMatcher.MatchResult("Ba2-dF9", emptyList())
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun noncapturinggroup_double_quote_string() {
-        val m = regexMatcher("(\"(?:\\?.)*?\")")
+    fun double_quote_string() {
+        val m = regexMatcher("\"[^\"]*\"")
         val actual = m.match("\"Ba2-dF9\"", 0)
         val expected = RegexMatcher.MatchResult("\"Ba2-dF9\"", emptyList())
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun double_quote_string_2() {
+        val m = regexMatcher("\"([^\"\\\\]|\\\\.)*\"")
+        val actual = m.match("\"Ba2\\\"F9\"", 0)
+        val expected = RegexMatcher.MatchResult("\"Ba2\\\"F9\"", emptyList())
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun double_quote_string_3() {
+        val m = regexMatcher("\"([^\"\\\\]|\\\\.)*\"")
+        val actual = m.match("\"\\\"([^\\\"\\\\]|\\\\.)*\\\"\"", 0)
+        val expected = RegexMatcher.MatchResult("\"\\\"([^\\\"\\\\]|\\\\.)*\\\"\"", emptyList())
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun t() {
+        val m = regexMatcher("abc*d+(ef*g+)*h")
+        val actual = m.match("abcccdddefffgggh", 0)
+        val expected = RegexMatcher.MatchResult("abcccdddefffgggh", emptyList())
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun multiline_comment() {
+        val m = regexMatcher("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/")
+        val actual = m.match("/* fgh /*sdf dfgj */", 0)
+        val expected = RegexMatcher.MatchResult("/* fgh /*sdf dfgj */", emptyList())
+        assertEquals(expected, actual)
+    }
+
+
+    @Test
+    fun integer() {
+        //val m = regexMatcher("((0[xX][0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?))(((l)|(L)){0,1})|((0_*[0-7]([0-7_]*[0-7])?))(((l)|(L)){0,1})|((0[bB][01]([01_]*[01])?))(((l)|(L)){0,1})|(((0|[1-9]([0-9_]*[0-9])?)))(((l)|(L)){0,1})")
+        val m = regexMatcher("(0|1(2*3)?)")
+        val text = "1"
+        val actual = m.match(text, 0)
+        val expected = RegexMatcher.MatchResult(text, emptyList())
+        assertEquals(expected, actual)
+    }
 
 }

@@ -266,7 +266,8 @@ class AglGrammarSyntaxAnalyser(
     fun terminal(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Terminal {
         val isPattern = target.nonSkipChildren[0].name == "PATTERN"
         val mt = target.nonSkipMatchedText
-        val value = mt.substring(1, mt.length - 1)
+        val escaped = mt.substring(1, mt.length - 1)
+        val value = escaped.replace("\\\"","\"").replace("\\'","'").replace("\\\\", "\\")
         return TerminalDefault(value, isPattern)
     }
 
