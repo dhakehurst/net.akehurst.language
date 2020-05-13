@@ -85,7 +85,7 @@ class RegexParser(
                                 val matcher = escaped_matchers.second as CharacterMatcher
                                 postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.characterClass(matcher) }))
                                 if (needConcat.pop()) {
-                                    while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                                    while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
                                         postfix.push(opStack.pop())
                                     }
                                     opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
@@ -98,7 +98,7 @@ class RegexParser(
                                     val cc = literal[0]
                                     postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.character(cc) }))
                                     if (needConcat.pop()) {
-                                        while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                                        while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
                                             postfix.push(opStack.pop())
                                         }
                                         opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
@@ -119,7 +119,7 @@ class RegexParser(
                     '.' -> {
                         postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.matchAny() }))
                         if (needConcat.pop()) {
-                            while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                            while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
                                 postfix.push(opStack.pop())
                             }
                             opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
@@ -131,7 +131,7 @@ class RegexParser(
                         val options = this.parseCharacterClass()
                         postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.characterClass(options) }))
                         if (needConcat.pop()) {
-                            while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                            while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
                                 postfix.push(opStack.pop())
                             }
                             opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
@@ -141,7 +141,7 @@ class RegexParser(
                     }
                     '(' -> {
                         needConcat.push(false)
-                        opStack.push(Pair(PREC_GROUP_OPEN, {  }))
+                        opStack.push(Pair(PREC_GROUP_OPEN, { }))
                         c = this.next()
                         when (c) {
                             '?' -> {
@@ -175,7 +175,7 @@ class RegexParser(
                         }
                     }
                     '|' -> {
-                        while (opStack.isEmpty.not() && opStack.peek().first < PREC_CHOICE) {
+                        while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CHOICE) {
                             postfix.push(opStack.pop())
                         }
                         opStack.push(Pair(PREC_CHOICE, { this.matcherBuilder.choice() }))
@@ -256,7 +256,7 @@ class RegexParser(
                                         }
                                         val m = mb.toString().toIntOrNull(10)
                                                 ?: throw RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
-                                        when(c) {
+                                        when (c) {
                                             '}' -> {
                                                 postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, m) }))
                                                 c = this.next()
@@ -270,13 +270,13 @@ class RegexParser(
                         }
                     }
                     ')' -> {
-                        while (opStack.isEmpty.not() && opStack.peek().first!=PREC_GROUP_OPEN) {
+                        while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN) {
                             postfix.push(opStack.pop())
                         }
-                        if (opStack.isEmpty.not() && opStack.peek().first==PREC_GROUP_OPEN) opStack.pop()
+                        if (opStack.isEmpty.not() && opStack.peek().first == PREC_GROUP_OPEN) opStack.pop()
                         needConcat.pop()
                         if (needConcat.pop()) {
-                            while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                            while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
                                 postfix.push(opStack.pop())
                             }
                             opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
@@ -289,7 +289,7 @@ class RegexParser(
                         val cc = c
                         postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.character(cc) }))
                         if (needConcat.pop()) {
-                            while (opStack.isEmpty.not() && opStack.peek().first < PREC_CONCAT) {
+                            while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
                                 postfix.push(opStack.pop())
                             }
                             opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
