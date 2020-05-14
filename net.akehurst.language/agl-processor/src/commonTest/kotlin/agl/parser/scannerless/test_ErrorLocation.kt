@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless
+package net.akehurst.language.parser.scanondemand
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -24,7 +24,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 
-class test_ErrorLocation : test_ScannerlessParserAbstract() {
+class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
 
 
     @Test

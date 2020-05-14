@@ -18,6 +18,7 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.api.parser.ParserException
 
+@Deprecated("Use runtimeRuleSet { ... }")
 class RuntimeRuleSetBuilder() {
 
     private var runtimeRuleSet: RuntimeRuleSet? = null

@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.multi
+package net.akehurst.language.parser.scanondemand.multi
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_multi_2_n_literal : test_ScannerlessParserAbstract() {
+class test_multi_2_n_literal : test_ScanOnDemandParserAbstract() {
 
     // S = 'a'2+
     private fun S(): RuntimeRuleSetBuilder {

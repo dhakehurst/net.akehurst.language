@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.examples
+package net.akehurst.language.parser.scanondemand.examples
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_AhoSetiUlman_Ex_4_7_5 : test_ScannerlessParserAbstract() {
+class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
 
     // This grammar is LR(1) but not LALR(1)
 
@@ -113,7 +112,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_ScannerlessParserAbstract() {
         val sentence = "bdc"
 
         val expected = """
-            S { S2 { 'b' A { 'd' } 'c' } }
+            S|1 { S2 { 'b' A { 'd' } 'c' } }
         """.trimIndent()
 
         val tree = super.testStringResult(rrb, goal, sentence, expected)
@@ -128,7 +127,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_ScannerlessParserAbstract() {
         val sentence = "dc"
 
         val expected = """
-            S { S3 { B { 'd' } 'c' } }
+            S|2 { S3 { B { 'd' } 'c' } }
         """.trimIndent()
 
         val tree = super.testStringResult(rrb, goal, sentence, expected)
@@ -142,7 +141,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_ScannerlessParserAbstract() {
         val sentence = "bda"
 
         val expected = """
-            S { S4 { 'b' B { 'd' } 'a' } }
+            S|3 { S4 { 'b' B { 'd' } 'a' } }
         """.trimIndent()
 
         val tree = super.testStringResult(rrb, goal, sentence, expected)

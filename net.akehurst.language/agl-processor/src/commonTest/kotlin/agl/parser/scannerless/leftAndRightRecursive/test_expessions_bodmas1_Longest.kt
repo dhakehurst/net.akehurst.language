@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.leftAndRightRecursive
+package net.akehurst.language.parser.scanondemand.leftAndRightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
-import kotlin.test.fail
 
-class test_expessions_bodmas1_Longest : test_ScannerlessParserAbstract() {
+class test_expessions_bodmas1_Longest : test_ScanOnDemandParserAbstract() {
 
     // S = E
     // E = var | I | '(' E ')'

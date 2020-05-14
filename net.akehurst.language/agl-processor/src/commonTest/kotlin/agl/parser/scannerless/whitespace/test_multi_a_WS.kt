@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.whitespace
+package net.akehurst.language.parser.scanondemand.whitespace
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
-import kotlin.test.fail
 
-class test_multi_a_WS : test_ScannerlessParserAbstract() {
+class test_multi_a_WS : test_ScanOnDemandParserAbstract() {
 
     // skip WS = "\s+" ;
     // S = a* ;

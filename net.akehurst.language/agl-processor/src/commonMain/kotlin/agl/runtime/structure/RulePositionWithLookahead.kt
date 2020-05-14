@@ -26,7 +26,7 @@ class RulePositionWithLookahead(
 
     val items:Set<RuntimeRule> get() { return this.rulePosition.items }
     val runtimeRule:RuntimeRule get() { return this.rulePosition.runtimeRule }
-    val choice:Int get() { return this.rulePosition.choice }
+    val choice:Int get() { return this.rulePosition.option }
     val position:Int get() { return this.rulePosition.position }
 
     val isAtStart: Boolean get() { return this.rulePosition.isAtStart }

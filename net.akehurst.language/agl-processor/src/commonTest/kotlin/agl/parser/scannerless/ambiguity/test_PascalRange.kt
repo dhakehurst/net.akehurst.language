@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.ambiguity
+package net.akehurst.language.parser.scanondemand.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_PascalRange : test_ScannerlessParserAbstract() {
+class test_PascalRange : test_ScanOnDemandParserAbstract() {
 
     /*
      * expr : range | real ;

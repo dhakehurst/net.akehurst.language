@@ -33,22 +33,29 @@ class RegexMatcher(
         val ERROR_STATE = State(-2, false)
     }
 
+    val startStates:MutableList<State> by lazy {
+        val ns = mutableListOf<State>()
+        addNextStates(ns, this.start)
+        ns
+    }
+
     fun match(text: CharSequence, startPosition: Int = 0): MatchResult? {
         var pos = startPosition
         var currentStates = mutableListOf<State>()
-        this.addNextStates(currentStates, this.start)
+        currentStates.addAll(this.startStates)
         var nextStates = mutableListOf<State>()
-        var matched = false
+        var reachedGoal = false
         var maxMatchedPos = -1
         var eolPositions = mutableListOf<Int>()
         while (currentStates.isNotEmpty() && pos < text.length) {
             var c = text[pos++]
             if (c=='\n') eolPositions.add(pos)
             for (state in currentStates) {
-                state.outgoing.forEach { trans ->
+                for( trans in state.outgoing) {
                     if (trans.match(c)) {
-                            matched = addNextStates(nextStates, trans.to)
-                        if(matched) {
+                        //must call trans.nextStates before trans.isToGoal
+                        nextStates.addAll(trans.nextStates)
+                        if(trans.isToGoal) {
                             maxMatchedPos = maxOf(maxMatchedPos, pos)
                         }
                     }
@@ -67,18 +74,6 @@ class RegexMatcher(
         }
     }
 
-    private fun addNextStates(nextStates:MutableList<State>, next:State?) :Boolean {
-        //TODO: don't add duplicate states
-        return if (null==next) {
-            false
-        } else {
-            if (next.isSplit) {
-                next.outgoing.any { addNextStates(nextStates, it.to) }
-            } else {
-                nextStates.add(next)
-                next == MATCH_STATE
-            }
-        }
-    }
+
 
 }

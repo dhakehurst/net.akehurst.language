@@ -113,7 +113,7 @@ class ParserState(
         }
     val choice: Int
         inline get() {
-            return this.rulePosition.choice
+            return this.rulePosition.option
         }
     val position: Int
         inline get() {

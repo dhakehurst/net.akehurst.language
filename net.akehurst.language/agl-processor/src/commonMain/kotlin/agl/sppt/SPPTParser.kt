@@ -17,6 +17,8 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromCharSequence
+import net.akehurst.language.agl.regex.RegexMatcher
+import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.InputLocation
@@ -26,15 +28,15 @@ import net.akehurst.language.collections.Stack
 class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
     constructor(rrsb: RuntimeRuleSetBuilder) : this(rrsb.ruleSet())
 
-    private val WS = Regex("(\\s)+")
-    private val EMPTY = Regex("§empty")
-    private val NAME = Regex("[a-zA-Z_§][a-zA-Z_0-9§]*")
-    private val OPTION = Regex("[|][0-9]+")
-    private val LITERAL = Regex("'(?:\\\\?.)*?'")
-    private val PATTERN = Regex("\"(?:\\\\?.)*?\"")
-    private val COLON = Regex("[:]")
-    private val CHILDREN_START = Regex("[{]")
-    private val CHILDREN_END = Regex("[}]")
+    private val WS = regexMatcher("\\s+")
+    private val EMPTY = regexMatcher("§empty")
+    private val NAME = regexMatcher("[a-zA-Z_§][a-zA-Z_0-9§]*")
+    private val OPTION = regexMatcher("[|][0-9]+")
+    private val LITERAL = regexMatcher("'([^']|\\\\.)*'")
+    private val PATTERN = regexMatcher("\"([^\"]|\\\\.)*\"")
+    private val COLON = regexMatcher("[:]")
+    private val CHILDREN_START = regexMatcher("[{]")
+    private val CHILDREN_END = regexMatcher("[}]")
 
     private val node_cache: MutableMap<Pair<SPPTNodeIdentity, Int>, SPPTNode> = mutableMapOf()
 
@@ -65,18 +67,17 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
             return this.position < this.input.length
         }
 
-        fun hasNext(pattern: Regex): Boolean {
-            val lookingAt = pattern.find(this.input, this.position)?.range?.start == this.position
+        fun hasNext(pattern: RegexMatcher): Boolean {
+            val lookingAt = pattern.match(this.input, this.position) != null
             return lookingAt
         }
 
-        fun next(pattern: Regex): String {
-            val m = pattern.find(this.input, this.position)
-            val lookingAt = (m?.range?.start == this.position)
-            if (lookingAt) {
-                val match = m?.value ?: throw SPPTParserException("Should never happen")
-                this.position += m.value.length
-                return match
+        fun next(pattern: RegexMatcher): String {
+            val match = pattern.match(this.input, this.position)
+            if (null!=match) {
+                val matchStr = match.matchedText
+                this.position += matchStr.length
+                return matchStr
             } else {
                 throw SPPTParserException("Error scanning for pattern ${pattern} at Position ${this.position}")
             }
@@ -191,8 +192,8 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
                     }
                     val name = nodeNamesStack.pop().name
                     val newText = scanner.next(LITERAL)
-                    val newText2 = newText.replace("\\'", "'")
-                    val newText3 = newText2.substring(1, newText2.length - 1)
+                    val newText2 = newText.substring(1, newText.length - 1) // remove ' from begin and end
+                    val newText3 = newText2.replace("\\'", "'") // substitute excape chars
                     val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, newText3.length)
                     val leaf = this.leaf(name, newText3, location)
                     sentenceLocation = input.nextLocation(location, leaf.matchedText.length)
@@ -207,7 +208,9 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
                     childrenStack.peek().add(node)
                 }
                 else -> {
-                    val seg = treeString.substring(scanner.position-5,scanner.position) + "^" +treeString.substring(scanner.position,scanner.position+5)
+                    val before = treeString.substring(maxOf(0,scanner.position-5),scanner.position)
+                    val after = treeString.substring(scanner.position,minOf(treeString.length, scanner.position+5))
+                    val seg =  "${before}^${after}"
                     throw RuntimeException("Tree String invalid at position ${scanner.position}, ...$seg...")
                 }
             }

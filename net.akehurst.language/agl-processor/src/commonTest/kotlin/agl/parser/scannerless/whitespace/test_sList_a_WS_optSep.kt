@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.listSeparated
+package net.akehurst.language.parser.scanondemand.listSeparated
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_sList_a_WS_optSep : test_ScannerlessParserAbstract() {
+class test_sList_a_WS_optSep : test_ScanOnDemandParserAbstract() {
 
     // S = [a / sep]*
     // sep = ','?

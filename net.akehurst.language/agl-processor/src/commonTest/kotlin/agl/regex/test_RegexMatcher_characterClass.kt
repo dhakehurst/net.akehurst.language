@@ -57,6 +57,42 @@ class test_RegexMatcher_characterClass {
     }
 
     @Test
+    fun characterClass_minus() {
+        val m = regexMatcher("[-]")
+        for (c in listOf('-')) {
+            val actual = m.match("$c", 0)
+            val expected = RegexMatcher.MatchResult("$c", emptyList())
+            assertEquals(expected, actual,"testing '$c',")
+        }
+    }
+    @Test
+    fun characterClass_X_minus() {
+        val m = regexMatcher("[+-]")
+        for (c in listOf('-','+')) {
+            val actual = m.match("$c", 0)
+            val expected = RegexMatcher.MatchResult("$c", emptyList())
+            assertEquals(expected, actual,"testing '$c',")
+        }
+    }
+    @Test
+    fun characterClass_minus_X() {
+        val m = regexMatcher("[-+]")
+        for (c in listOf('-','+')) {
+            val actual = m.match("$c", 0)
+            val expected = RegexMatcher.MatchResult("$c", emptyList())
+            assertEquals(expected, actual,"testing '$c',")
+        }
+    }
+    @Test
+    fun characterClass_range_minus() {
+        val m = regexMatcher("[a-b-]")
+        for (c in listOf('a','b','-')) {
+            val actual = m.match("$c", 0)
+            val expected = RegexMatcher.MatchResult("$c", emptyList())
+            assertEquals(expected, actual,"testing '$c',")
+        }
+    }
+    @Test
     fun characterClass_Range_fails() {
         val m = regexMatcher("[a-z]")
         for (c in 'A'..'Z') {

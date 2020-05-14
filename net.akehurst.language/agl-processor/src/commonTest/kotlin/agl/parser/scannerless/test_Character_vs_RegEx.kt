@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless
+package net.akehurst.language.parser.scanondemand
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -24,7 +24,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
 import kotlin.time.measureTimedValue
 
-class test_Character_vs_RegEx : test_ScannerlessParserAbstract() {
+class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
 
 
     companion object {

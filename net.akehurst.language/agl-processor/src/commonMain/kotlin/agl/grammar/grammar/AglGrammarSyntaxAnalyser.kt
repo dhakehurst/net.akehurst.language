@@ -267,8 +267,12 @@ class AglGrammarSyntaxAnalyser(
         val isPattern = target.nonSkipChildren[0].name == "PATTERN"
         val mt = target.nonSkipMatchedText
         val escaped = mt.substring(1, mt.length - 1)
-        val value = escaped.replace("\\\"","\"").replace("\\'","'").replace("\\\\", "\\")
-        return TerminalDefault(value, isPattern)
+        val value =if (isPattern) {
+             escaped.replace("\\\"", "\"").replace("\\\\", "\\")
+        } else {
+            escaped.replace("\\'", "'")
+        }
+            return TerminalDefault(value, isPattern)
     }
 
     // qualifiedName : (IDENTIFIER / '.')+ ;

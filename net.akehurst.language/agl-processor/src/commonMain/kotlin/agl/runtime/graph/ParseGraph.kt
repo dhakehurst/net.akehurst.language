@@ -22,7 +22,6 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.api.sppt.SPPTNodeIdentity
 import net.akehurst.language.agl.sppt.*
 
 internal class ParseGraph(
@@ -31,7 +30,7 @@ internal class ParseGraph(
 ) {
     data class CompleteNodeIndex(
             val runtimeRuleNumber: Int,
-            val option: Int,
+            //val option: Int,
             val startPosition: Int
     )
 
@@ -118,7 +117,7 @@ internal class ParseGraph(
             val location = this.input.nextLocation(lastLocation, 0)
             val leaf = SPPTLeafDefault(terminalRuntimeRule, location, true, "", 0)
             this.leaves[index] = leaf
-            val cindex = CompleteNodeIndex(index.ruleNumber, 0, index.startPosition)//, matchedTextLength)
+            val cindex = CompleteNodeIndex(index.ruleNumber, index.startPosition)//0, index.startPosition)
             this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
             leaf
         } else {
@@ -127,7 +126,7 @@ internal class ParseGraph(
             val leaf = SPPTLeafDefault(terminalRuntimeRule, location, false, match.matchedText, 0)
             leaf.eolPositions = match.eolPositions
             this.leaves[index] = leaf
-            val cindex = CompleteNodeIndex(index.ruleNumber, 0, index.startPosition)//, matchedTextLength)
+            val cindex = CompleteNodeIndex(index.ruleNumber, index.startPosition)//0, index.startPosition)
             this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
             leaf
         }
@@ -146,23 +145,23 @@ internal class ParseGraph(
 
     fun createBranchNoChildren(runtimeRule: RuntimeRule, option: Int, priority: Int, location: InputLocation, nextInputPosition: Int): SPPTBranchDefault {
         val cn = SPPTBranchDefault(runtimeRule, option, location, nextInputPosition, priority)
-        val cindex = CompleteNodeIndex(runtimeRule.number, option, location.position)
+        val cindex = CompleteNodeIndex(runtimeRule.number, location.position)//option, location.position)
         this.completeNodes[cindex] = cn
         return cn
     }
 
     fun findCompleteNode(rulePosition: RulePosition, startPosition: Int, matchedTextLength: Int): SPPTNode? {
         val rr = rulePosition.runtimeRule
-        val option = rulePosition.choice
+        val option = rulePosition.option
         return when (rulePosition.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> this.leaves[LeafIndex(rr.number, startPosition)]
             RuntimeRuleKind.GOAL,
             RuntimeRuleKind.NON_TERMINAL -> {
-                val index = CompleteNodeIndex(rr.number, option, startPosition)//, matchedTextLength)
+                val index = CompleteNodeIndex(rr.number, startPosition)//option, startPosition)
                 return this.completeNodes[index]
             }
             RuntimeRuleKind.EMBEDDED -> {
-                val index = CompleteNodeIndex(rr.number, option, startPosition)//, matchedTextLength)
+                val index = CompleteNodeIndex(rr.number, startPosition)//option, startPosition)
                 return this.completeNodes[index]
             }
         }
@@ -443,7 +442,7 @@ internal class ParseGraph(
     private fun complete(gn: GrowingNode): SPPTNode? {
         if (gn.hasCompleteChildren) {
             val runtimeRule = gn.runtimeRule
-            val option = gn.currentState.rulePosition.choice
+            val option = gn.currentState.rulePosition.option
             val priority = gn.priority
             val location = gn.location
             val matchedTextLength = gn.matchedTextLength
@@ -518,7 +517,7 @@ internal class ParseGraph(
         return when {
             (gnLength > existingLength) -> {
                 //replace existing with new node
-                val longest = this.createBranchNoChildren(newNode.runtimeRule, newNode.currentState.rulePosition.choice, newNode.priority, newNode.location, newNode.nextInputPosition)
+                val longest = this.createBranchNoChildren(newNode.runtimeRule, newNode.currentState.rulePosition.option, newNode.priority, newNode.location, newNode.nextInputPosition)
                 longest.childrenAlternatives.add(newNode.children)
                 longest
             }
@@ -538,7 +537,7 @@ internal class ParseGraph(
             (newPriority > existingPriority) -> {
                 // replace existing with new
                 //cn.childrenAlternatives.clear()
-                val highest = this.createBranchNoChildren(newNode.runtimeRule, newNode.currentState.rulePosition.choice, newNode.priority, newNode.location, newNode.nextInputPosition)
+                val highest = this.createBranchNoChildren(newNode.runtimeRule, newNode.currentState.rulePosition.option, newNode.priority, newNode.location, newNode.nextInputPosition)
                 highest.childrenAlternatives.add(newNode.children)
                 highest
             }
@@ -613,7 +612,7 @@ internal class ParseGraph(
         val nextInputPosition = embeddedNode.nextInputPosition
         val children = listOf(embeddedNode)
         this.findOrCreateGrowingLeafOrEmbeddedNode(isSkipGrowth, newRp, location, nextInputPosition, children, oldHead, previous)
-        val id = CompleteNodeIndex(newRp.runtimeRule.number, newRp.choice, embeddedNode.startPosition)
+        val id = CompleteNodeIndex(newRp.runtimeRule.number, embeddedNode.startPosition)//newRp.choice, embeddedNode.startPosition)
         this.completeNodes[id] = embeddedNode
     }
 

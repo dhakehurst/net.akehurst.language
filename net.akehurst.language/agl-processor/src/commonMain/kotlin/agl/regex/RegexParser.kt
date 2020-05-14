@@ -389,6 +389,7 @@ class RegexParser(
                 '-' -> {
                     c = this.parseNextCharOrEscape()
                     if (c == ']') {
+                        options.add(CharacterSingle(f))
                         options.add(CharacterSingle('-'))
                     } else {
                         options.add(CharacterRange(f, c))

@@ -132,6 +132,23 @@ class test_SPPTParser {
     }
 
     @Test
+    fun parse_leaf_literal_backslash() {
+        val rrb = RuntimeRuleSetBuilder()
+        rrb.literal("BS","\\\\")
+
+        val sut = SPPTParser(rrb)
+
+        val treeString = """
+            BS : '\'
+        """.trimIndent()
+
+        val actual = sut.addTree(treeString)
+
+        assertNotNull(actual)
+        assertEquals(" '\\'", actual.toStringAll)
+    }
+
+    @Test
     fun parse_leaf_pattern() {
         val rrb = RuntimeRuleSetBuilder()
         rrb.pattern("[a-z]")

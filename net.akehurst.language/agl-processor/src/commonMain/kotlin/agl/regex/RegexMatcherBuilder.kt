@@ -28,7 +28,7 @@ class RegexMatcherBuilder {
     val nfa = mutableListOf<State>()
     var nextStateNumber = 0
     var stack = Stack<Fragment>()
-    var start: State = RegexMatcher.ERROR_STATE
+    var startState: State = RegexMatcher.ERROR_STATE
 
     // return state number of new state
     private fun createState(isSplit: Boolean): State {
@@ -79,7 +79,7 @@ class RegexMatcherBuilder {
         val state = this.createState(true)
         state.outgoing.add(TransitionEmpty())
         this.stack.push(Fragment(state, state.outgoing))
-        this.start = state
+        this.startState = state
     }
 
     fun matchAny() {
@@ -235,7 +235,7 @@ class RegexMatcherBuilder {
     }
 
     fun build(): RegexMatcher {
-        return RegexMatcher(this.start, this.nfa)
+        return RegexMatcher(this.startState, this.nfa)
     }
 
     fun concatenateGoal() {
@@ -244,7 +244,7 @@ class RegexMatcherBuilder {
         } else {
             val f1 = this.stack.pop()
             f1.outgoing.forEach { it.to = RegexMatcher.MATCH_STATE }
-            this.start = f1.start
+            this.startState = f1.start
         }
     }
 }

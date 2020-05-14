@@ -1617,7 +1617,7 @@ StringCharacters = "[^\x22\\\r\n]+" ;
 
 
 EscapeSequence
-	=	'\\' "[btnfr\x22'\\]"
+	=	'\\' "[btnfr\\x22'\\\\]"
 	|	OctalEscape
     |   UnicodeEscape // This is not in the spec but prevents having to preprocess the input
 	;

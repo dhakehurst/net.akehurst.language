@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.parser.InputFromCharSequence
-import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.collections.lazyMap
 import net.akehurst.language.collections.lazyMapNonNull
@@ -154,7 +153,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 val parentRP = parent.rulePosition
                 parentRP.items.flatMap { rr ->
                     rr.rulePositions.mapNotNull { childRP ->
-                        val childRPEnd = RulePosition(childRP.runtimeRule, childRP.choice, RulePosition.END_OF_RULE)
+                        val childRPEnd = RulePosition(childRP.runtimeRule, childRP.option, RulePosition.END_OF_RULE)
                         //val elh = this.calcLookahead(parent, childRPEnd, parent.lookahead)
                         val childEndState = stateSet.fetchOrCreateParseState(childRPEnd) // create state!
                         val lh = this.calcLookahead(parent, childRP, parent.lookahead)
@@ -283,7 +282,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 when (rp.runtimeRule.kind) {
                     RuntimeRuleKind.TERMINAL -> emptySet<RulePosition>()
                     RuntimeRuleKind.GOAL,
-                    RuntimeRuleKind.NON_TERMINAL -> rp.runtimeRule.items(rp.choice, rp.position).flatMap {
+                    RuntimeRuleKind.NON_TERMINAL -> rp.runtimeRule.items(rp.option, rp.position).flatMap {
                         when (it.kind) {
                             RuntimeRuleKind.GOAL -> TODO()
                             RuntimeRuleKind.TERMINAL -> setOf(rp)

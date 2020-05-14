@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.embedded
+package net.akehurst.language.parser.scanondemand.embedded
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_embedded1 : test_ScannerlessParserAbstract() {
+class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
     val Sn = runtimeRuleSet {
         concatenation("S") { literal("a"); ref("B"); literal("a"); }
@@ -140,7 +138,7 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
         val expected = """
             S {
               'a'
-              B { 'b' }
+              gb { B.B { 'b' } }
               'a'
             }
         """.trimIndent()

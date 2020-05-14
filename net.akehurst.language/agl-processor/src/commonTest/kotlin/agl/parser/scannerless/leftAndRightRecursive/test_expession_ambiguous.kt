@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.rightRecursive
+package net.akehurst.language.parser.scanondemand.rightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.fail
 
-class test_expession_ambiguous : test_ScannerlessParserAbstract() {
+class test_expession_ambiguous : test_ScanOnDemandParserAbstract() {
 
     // S =  I < P < n ;      //  infix < propertyCall < name
     // n = 'a' ;             // "[a-z]+"

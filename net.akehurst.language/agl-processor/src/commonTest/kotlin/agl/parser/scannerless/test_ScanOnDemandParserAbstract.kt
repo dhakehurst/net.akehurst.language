@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless
+package net.akehurst.language.parser.scanondemand
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -23,7 +23,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.sppt.SPPTParser
 import kotlin.test.assertEquals
 
-abstract class test_ScannerlessParserAbstract {
+abstract class test_ScanOnDemandParserAbstract {
 
     fun test(rrs:RuntimeRuleSet, goal:String, sentence:String, vararg expectedTrees:String) : SharedPackedParseTree {
         val parser = ScanOnDemandParser(rrs)

@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.rightRecursive
+package net.akehurst.language.parser.scanondemand.rightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_a : test_ScannerlessParserAbstract() {
+class test_a : test_ScanOnDemandParserAbstract() {
 
     // S =  'a' | S1 ;
     // S1 = 'a' S ;
@@ -59,7 +59,7 @@ class test_a : test_ScannerlessParserAbstract() {
         val sentence = "aa"
 
         val expected = """
-            S { S1 { 'a' S { 'a' } } }
+            S|1 { S1 { 'a' S { 'a' } } }
         """.trimIndent()
 
         val actual = super.testStringResult(rrb, goal, sentence, expected)
@@ -73,10 +73,10 @@ class test_a : test_ScannerlessParserAbstract() {
         val sentence = "aaa"
 
         val expected = """
-            S {
+            S|1 {
                 S1 {
                     'a'
-                    S {
+                    S|1 {
                         S1 {
                             'a'
                             S { 'a' }

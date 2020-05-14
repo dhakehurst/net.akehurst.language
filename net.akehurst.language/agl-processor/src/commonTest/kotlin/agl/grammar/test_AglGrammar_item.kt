@@ -98,6 +98,14 @@ class test_AglGrammar_item {
     }
 
     @Test
+    fun LITERAL_backslash() {
+        val actual = parse("LITERAL", "'\\'")
+        val expected = this.sppt("LITERAL  : '\\'\\\\'' ")
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
+    @Test
     fun PATTERN() {
         val actual = parse("PATTERN", "\"[a-c]\"")
         val expected = this.sppt("PATTERN  : '\"[a-c]\"' ")

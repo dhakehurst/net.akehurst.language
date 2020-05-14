@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.runtime.graph.GrowingNode
-import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.PreviousInfo
 import net.akehurst.language.agl.runtime.structure.*
@@ -70,7 +69,7 @@ internal class RuntimeParser(
                     val lastChild = children.last()
                     val length = (lastChild.location.position - firstChild.location.position) + lastChild.location.length
                     val location = InputLocation(firstChild.location.position, firstChild.location.column, firstChild.location.line, length)
-                    val branch = SPPTBranchDefault(llg.runtimeRule, llg.currentState.rulePosition.choice, location, llg.skipNodes.last().nextInputPosition, llg.priority)
+                    val branch = SPPTBranchDefault(llg.runtimeRule, llg.currentState.rulePosition.option, location, llg.skipNodes.last().nextInputPosition, llg.priority)
                     branch.childrenAlternatives.add(children)
                     branch
                 }
@@ -85,7 +84,7 @@ internal class RuntimeParser(
                 }
 
                  */
-                val cn = SPPTBranchDefault(llg.runtimeRule, llg.currentState.rulePosition.choice, llg.location, llg.nextInputPosition, llg.priority)
+                val cn = SPPTBranchDefault(llg.runtimeRule, llg.currentState.rulePosition.option, llg.location, llg.nextInputPosition, llg.priority)
                 cn.childrenAlternatives.add(llg.children)
                 cn
             }

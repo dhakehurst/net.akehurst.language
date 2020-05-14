@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.regex
 
+import kotlin.properties.Delegates
+
 class State(
         val number: Int,
         val isSplit: Boolean
@@ -65,8 +67,32 @@ class CharacterRange(
     override fun toString(): String = "[$min-$max]"
 }
 
+internal fun addNextStates(nextStates:MutableList<State>, next:State?) :Boolean {
+    //TODO: don't add duplicate states
+    return if (null==next) {
+        false
+    } else {
+        if (next.isSplit) {
+            next.outgoing.any { addNextStates(nextStates, it.to) }
+        } else {
+            nextStates.add(next)
+            next == RegexMatcher.MATCH_STATE
+        }
+    }
+}
+
 sealed class Transition {
     var to: State? = null
+
+    // will get reassigned when nextStates is called
+    var isToGoal = false
+
+    val nextStates:List<State> by lazy {
+        val ns = mutableListOf<State>()
+        this.isToGoal = addNextStates(ns, this.to)
+        ns
+    }
+
     abstract fun match(input: Char): Boolean
 }
 

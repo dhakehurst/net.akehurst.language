@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.group
+package net.akehurst.language.parser.scanondemand.group
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_group : test_ScannerlessParserAbstract() {
+class test_group : test_ScanOnDemandParserAbstract() {
 
 
     val S = runtimeRuleSet {

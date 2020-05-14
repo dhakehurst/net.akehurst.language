@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.choiceEqual
+package net.akehurst.language.parser.scanondemand.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
+class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // expr = root | group | div | mul | add | sub ;

@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.leftRecursive
+package net.akehurst.language.parser.scanondemand.leftRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.fail
 
-class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
+class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
 
     // S = B S 'c' | 'a'
     // B = 'b' | <empty>

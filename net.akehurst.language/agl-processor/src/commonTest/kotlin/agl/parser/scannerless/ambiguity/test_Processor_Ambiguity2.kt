@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.ambiguity
+package net.akehurst.language.parser.scanondemand.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_Processor_Ambiguity2 : test_ScannerlessParserAbstract() {
+class test_Processor_Ambiguity2 : test_ScanOnDemandParserAbstract() {
     /**
-     * S = S S | 'a' ;
+     * S = 'a' | S S ;
      */
     /**
-     * S = S1 | 'a' ;
+     * S = 'a' | S1 ;
      * S1 = S S ;
      */
     private fun S(): RuntimeRuleSetBuilder {
@@ -39,7 +39,7 @@ class test_Processor_Ambiguity2 : test_ScannerlessParserAbstract() {
         val ra = rrb.literal("a")
         val rS = rrb.rule("S").build()
         val rS1 = rrb.rule("S1").concatenation(rS, rS)
-        rS.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(rS1, ra))
+        rS.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(ra, rS1))
         return rrb
     }
 
@@ -94,9 +94,9 @@ class test_Processor_Ambiguity2 : test_ScannerlessParserAbstract() {
         val sentence = "aaa"
 
         val expected1 = """
-            S {
+            S|1 {
               S1 {
-                S {
+                S|1 {
                   S1 {
                     S { 'a' }
                     S { 'a' }
@@ -109,9 +109,9 @@ class test_Processor_Ambiguity2 : test_ScannerlessParserAbstract() {
 
         val expected2 = """
             S {
-              S1 {
+              S1|1 {
                 S { 'a' }
-                S {
+                S|1 {
                   S1 {
                     S { 'a' }
                     S { 'a' }

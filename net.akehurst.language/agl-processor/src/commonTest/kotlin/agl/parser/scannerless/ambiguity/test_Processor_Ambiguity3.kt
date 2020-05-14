@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.ambiguity
+package net.akehurst.language.parser.scanondemand.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
+class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
     /**
      * From [https://pdfs.semanticscholar.org/eeac/392e02671b0edcd81ae080a5117e5f9584f5.pdf]
      * Generalised Parsing: Some Costs. Adrian Johnstone, Elizabeth Scott, and Giorgios Economopoulos
@@ -96,7 +94,7 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
 
         val expected1 = """
             S { S1 {
-                P { 'a' }
+                P|2 { 'a' }
                 'b'
             } }
         """.trimIndent()
@@ -111,8 +109,8 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
         val sentence = "ac"
 
         val expected1 = """
-            S { S2 {
-                Q { 'a' }
+            S|1 { S2 {
+                Q|1 { 'a' }
                 'c'
             } }
         """.trimIndent()
@@ -128,16 +126,16 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
 
         val expected1 = """
          S { S1 {
-            P { P2 {
-                P { P2 {
-                    P { P2 {
-                        P { P2 {
-                            P { P2 {
-                                P { P2 {
-                                    P { P2 {
-                                        P { P2 {
-                                            P { P2 {
-                                                P { 'a' }
+            P|1 { P2 {
+                P|1 { P2 {
+                    P|1 { P2 {
+                        P|1 { P2 {
+                            P|1 { P2 {
+                                P|1 { P2 {
+                                    P|1 { P2 {
+                                        P|1 { P2 {
+                                            P|1 { P2 {
+                                                P|2 { 'a' }
                                                 'a'
                                               } }
                                             'a'
@@ -169,7 +167,7 @@ class test_Processor_Ambiguity3 : test_ScannerlessParserAbstract() {
         val goal = "S"
         val sentence = "a".repeat(50) + "b"
 
-        val expected1 = "S { S1 {" + "P { P2 {".repeat(49) + "P{'a'}" + "'a' } }".repeat(49) + "'b'} }"
+        val expected1 = "S { S1 {" + "P|1 { P2 {".repeat(49) + "P|2 {'a'}" + "'a' } }".repeat(49) + "'b'} }"
 
         super.testStringResult(rrb, goal, sentence, expected1)
     }

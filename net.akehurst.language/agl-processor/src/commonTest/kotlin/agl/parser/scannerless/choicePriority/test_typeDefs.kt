@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.choicePriority
+package net.akehurst.language.parser.scanondemand.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_typeDefs : test_ScannerlessParserAbstract() {
+class test_typeDefs : test_ScanOnDemandParserAbstract() {
 
     // S = type name ;
     // type = userDefined < builtIn;
@@ -41,9 +42,26 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
         return b
     }
 
+    val S = runtimeRuleSet {
+        concatenation("S") { ref("type"); ref("name") }
+        choice("type",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            ref("userDefined")
+            ref("builtIn")
+        }
+        choice("builtIn", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            literal("int")
+            literal("bool")
+        }
+        concatenation("userDefined") { ref("ID") }
+        concatenation("name") { ref("ID") }
+        pattern("ID", "[a-zA-Z]+")
+        pattern("WS", "\\s+", true)
+    }
+
+
     @Test
     fun int_a() {
-        val rrb = this.typeDefs()
+        val rrb = this.S
         val goal = "S"
         val sentence = "int a"
 
@@ -53,7 +71,7 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
                 builtIn { 'int' WS : ' '  }
               }
               name {
-                "[a-zA-Z]+" : 'a'
+                ID : 'a'
               }
             }
         """.trimIndent()
@@ -63,17 +81,17 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
 
     @Test
     fun bool_a() {
-        val rrb = this.typeDefs()
+        val rrb = this.S
         val goal = "S"
         val sentence = "bool a"
 
         val expected = """
             S {
               type|1 {
-                builtIn { 'bool' WS  : ' '  }
+                builtIn|1 { 'bool' WS  : ' '  }
               }
               name {
-                "[a-zA-Z]+" : 'a'
+                ID : 'a'
               }
             }
         """.trimIndent()
@@ -83,17 +101,17 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
 
     @Test
     fun A_a() {
-        val rrb = this.typeDefs()
+        val rrb = this.S
         val goal = "S"
         val sentence = "A a"
 
         val expected = """
             S {
               type {
-                userDefined { "[a-zA-Z]+" : 'A' WS : ' '  }
+                userDefined { ID : 'A' WS : ' '  }
               }
               name {
-                "[a-zA-Z]+" : 'a'
+                ID : 'a'
               }
             }
         """.trimIndent()
@@ -103,7 +121,7 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
 
     @Test
     fun int_int() {
-        val rrb = this.typeDefs()
+        val rrb = this.S
         val goal = "S"
         val sentence = "int int"
 
@@ -113,7 +131,7 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
                 builtIn { 'int' WS:' ' }
               }
               name {
-                "[a-zA-Z]+" : 'int'
+                ID : 'int'
               }
             }
         """.trimIndent()
@@ -124,17 +142,17 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
 
     @Test
     fun A_int() {
-        val rrb = this.typeDefs()
+        val rrb = this.S
         val goal = "S"
         val sentence = "A int"
 
         val expected = """
             S {
               type {
-                userDefined { "[a-zA-Z]+" : 'A' WS:' ' }
+                userDefined { ID : 'A' WS:' ' }
               }
               name {
-                "[a-zA-Z]+" : 'int'
+                ID : 'int'
               }
             }
         """.trimIndent()

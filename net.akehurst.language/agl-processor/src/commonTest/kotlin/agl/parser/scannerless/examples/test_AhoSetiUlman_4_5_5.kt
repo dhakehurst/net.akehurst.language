@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.examples
+package net.akehurst.language.parser.scanondemand.examples
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_AhoSetiUlman_4_5_5 : test_ScannerlessParserAbstract() {
+class test_AhoSetiUlman_4_5_5 : test_ScanOnDemandParserAbstract() {
 
     // S = CC ;
     // C = cC | d ;
@@ -75,7 +75,7 @@ class test_AhoSetiUlman_4_5_5 : test_ScannerlessParserAbstract() {
         val sentence = "dd"
 
         val expected = """
-            S { C { 'd' } C { 'd' } }
+            S { C|1 { 'd' } C|1 { 'd' } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)

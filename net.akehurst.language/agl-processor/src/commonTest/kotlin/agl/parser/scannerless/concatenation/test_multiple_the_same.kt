@@ -1,15 +1,14 @@
 package parser.scannerless.concatenation
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-class test_multiple_the_same : test_ScannerlessParserAbstract() {
+class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
 
     val S = runtimeRuleSet {
         skip("WS") { literal("\\s+") }
@@ -41,7 +40,7 @@ class test_multiple_the_same : test_ScannerlessParserAbstract() {
         val sentence = "x"
 
         val expected = """
-            S { X:'x' Ls { §empty } }
+            S { X:'x' Ls|1 { §empty } }
         """.trimIndent()
         val actual = super.test(rrb, goal, sentence, expected)
 
