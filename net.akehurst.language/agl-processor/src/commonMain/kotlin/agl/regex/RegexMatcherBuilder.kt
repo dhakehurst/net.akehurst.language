@@ -196,21 +196,34 @@ class RegexMatcherBuilder {
                 mRepetitions.add(nextFrag)
             }
         }
+        var needConcat = false //first one doesn't need a concat
         for(r in 0 until n) {
             val nextFrag = nRepetitions[r]
             this.stack.push(nextFrag)
-            this.concatenate()
+            if (needConcat) {
+                this.concatenate()
+            } else {
+                needConcat = true
+            }
         }
         if (-1==m) {
             this.stack.push(mRepetitions[0])
             this.multi0n()
-            this.concatenate()
+            if (needConcat) {
+                this.concatenate()
+            } else {
+                needConcat = true
+            }
         }else {
             for(r in n until m) {
                 val nextFrag = mRepetitions[r-n]
                 this.stack.push(nextFrag)
                 this.multi01()
-                this.concatenate()
+                if (needConcat) {
+                    this.concatenate()
+                } else {
+                    needConcat = true
+                }
             }
         }
     }

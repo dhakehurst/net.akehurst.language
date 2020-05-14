@@ -163,4 +163,13 @@ class test_RegexMatcher_group {
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun group4() {
+        val m = regexMatcher("c|d(e|f){0,1}")
+        val text = "d"
+        val actual = m.match(text, 0)
+        val expected = RegexMatcher.MatchResult(text, emptyList())
+        assertEquals(expected, actual)
+    }
+
 }

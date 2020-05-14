@@ -66,8 +66,8 @@ class test_RegexMatcher {
     @Test
     fun integer() {
         val m = regexMatcher("((0[xX][0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?))(((l)|(L)){0,1})|((0_*[0-7]([0-7_]*[0-7])?))(((l)|(L)){0,1})|((0[bB][01]([01_]*[01])?))(((l)|(L)){0,1})|(((0|[1-9]([0-9_]*[0-9])?)))(((l)|(L)){0,1})")
-        //val m = regexMatcher("(0|1(2*3)?)")
-        val text = "123"
+        //val m = regexMatcher("c|d(e|f){0,1}")
+        val text = "1"
         val actual = m.match(text, 0)
         val expected = RegexMatcher.MatchResult(text, emptyList())
         assertEquals(expected, actual)
