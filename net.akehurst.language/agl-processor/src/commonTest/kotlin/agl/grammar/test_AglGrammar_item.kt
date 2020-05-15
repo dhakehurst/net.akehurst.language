@@ -99,7 +99,10 @@ class test_AglGrammar_item {
 
     @Test
     fun LITERAL_backslash() {
-        val actual = parse("LITERAL", "'\\'")
+        val text = """
+            '\\'
+            """.trimIndent()
+        val actual = parse("LITERAL", text)
         val expected = this.sppt("LITERAL  : '\\'\\\\'' ")
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)

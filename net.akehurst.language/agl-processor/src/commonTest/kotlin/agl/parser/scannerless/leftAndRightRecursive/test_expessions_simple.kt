@@ -57,7 +57,7 @@ class test_expessions_simple : test_ScanOnDemandParserAbstract() {
         val sentence = "aoa"
 
         val expected = """
-            S { E{I { E{'a'} 'o' E{'a'} } }}
+            S { E|1 { I { E{'a'} 'o' E{'a'} } }}
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
@@ -71,8 +71,8 @@ class test_expessions_simple : test_ScanOnDemandParserAbstract() {
 
         //think this should be excluded because of priority I < 'a'
         val expected1 = """
-            S { E { I {
-                E { I {
+            S { E|1 { I {
+                E|1 { I {
                     E { 'a' }
                     'o'
                     E { 'a' }
@@ -93,9 +93,9 @@ class test_expessions_simple : test_ScanOnDemandParserAbstract() {
         val sentence = "aoaoaoa"
 
         val expected = """
-             S { E { I {
-                  E { I {
-                      E { I {
+             S { E|1 { I {
+                  E|1 { I {
+                      E|1 { I {
                           E { 'a' }
                           'o'
                           E { 'a' }

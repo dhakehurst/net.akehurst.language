@@ -72,7 +72,7 @@ class test_sList_a_WS_optSep : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "aa"
 
-        val expected = "S {'a' sep { §empty } 'a'}"
+        val expected = "S {'a' sep|1 { §empty } 'a'}"
 
         super.test(rrs, goal, sentence, expected)
     }
@@ -83,7 +83,7 @@ class test_sList_a_WS_optSep : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a a"
 
-        val expected = "S {'a' WS : ' ' sep { §empty } 'a'}"
+        val expected = "S {'a' WS : ' ' sep|1 { §empty } 'a'}"
 
         super.test(rrs, goal, sentence, expected)
     }
@@ -94,7 +94,7 @@ class test_sList_a_WS_optSep : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a,aa"
 
-        val expected = "S {'a' sep { ',' } 'a' sep { §empty } 'a'}"
+        val expected = "S {'a' sep { ',' } 'a' sep|1 { §empty } 'a'}"
 
         super.test(rrs, goal, sentence, expected)
     }
@@ -105,7 +105,7 @@ class test_sList_a_WS_optSep : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a,a a"
 
-        val expected = "S {'a' sep { ',' } 'a' WS : ' ' sep { §empty } 'a'}"
+        val expected = "S {'a' sep { ',' } 'a' WS : ' ' sep|1 { §empty } 'a'}"
 
         super.test(rrs, goal, sentence, expected)
     }

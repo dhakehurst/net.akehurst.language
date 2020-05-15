@@ -17,12 +17,11 @@
 package net.akehurst.language.parser.scanondemand
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.time.ExperimentalTime
-import kotlin.time.MonoClock
-import kotlin.time.measureTimedValue
+import kotlin.time.*
 
 class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
 
@@ -41,14 +40,17 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
             }
         """;
 
+        val kotlinRegEx = Regex("a*")
+        val aglRegex = regexMatcher("a*")
+
         val regExParser = ScanOnDemandParser(
                 runtimeRuleSet {
-                    pattern("S", "[a]*")
+                    pattern("S", "a*")
                 })
         val charParser = ScanOnDemandParser(
                 runtimeRuleSet {
-                    multi("S", 0, -1,"'a'")
-                    literal("'a'","a")
+                    multi("S", 0, -1, "'a'")
+                    literal("'a'", "a")
                 })
     }
 
@@ -139,21 +141,54 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         val text = "a".repeat(10000)
 
         // warm up the processors
-        regExParser.parse(goal, text)
-        charParser.parse(goal, text)
-
-        val timeRegEx = MonoClock.measureTimedValue {
+        print("warmup")
+        for (i in 0 until 20) {
+            kotlinRegEx.matches(text)
+            aglRegex.match(text, 0)
             regExParser.parse(goal, text)
-        }
-        val timeChar = MonoClock.measureTimedValue {
             charParser.parse(goal, text)
+            print(".")
         }
+        println()
 
-        assertEquals("S", timeRegEx.value.root.name)
-        assertEquals("S", timeChar.value.root.name)
+        val timeRegExKotlinList = mutableListOf<Duration>()
+        val timeRegExAglList = mutableListOf<Duration>()
+        val timeRegExParserList = mutableListOf<Duration>()
+        val timeCharParserList = mutableListOf<Duration>()
+        val count = 1
+        print("measure")
+        for (i in 0 until count) {
+            val timeRegExKotlin = TimeSource.Monotonic.measureTimedValue {
+                kotlinRegEx.matches(text)
+            }
+            val timeRegExAgl = TimeSource.Monotonic.measureTimedValue {
+                aglRegex.match(text, 0)
+            }
+            val timeRegExParser = TimeSource.Monotonic.measureTimedValue {
+                regExParser.parse(goal, text)
+            }
+            val timeCharParser = TimeSource.Monotonic.measureTimedValue {
+                charParser.parse(goal, text)
+            }
+            assertEquals("S", timeRegExParser.value.root.name)
+            assertEquals("S", timeCharParser.value.root.name)
+            timeRegExKotlinList.add(timeRegExKotlin.duration)
+            timeRegExAglList.add(timeRegExAgl.duration)
+            timeRegExParserList.add(timeRegExParser.duration)
+            timeCharParserList.add(timeCharParser.duration)
+            print(".")
+        }
+        println()
 
         println("- 10000 -")
-        println("regEx = ${timeRegEx.duration}")
-        println("char = ${timeChar.duration}")
+        println("regExKotlinList = ${timeRegExKotlinList}")
+        println("regExAglList = ${timeRegExAglList}")
+        println("regExParser = ${timeRegExParserList}")
+        println("charParser = ${timeCharParserList}")
+
+        println("regExKotlin = ${timeRegExKotlinList.sumBy { it.toInt(DurationUnit.MICROSECONDS) }/count}")
+        println("regExAgl = ${timeRegExAglList.sumBy { it.toInt(DurationUnit.MICROSECONDS) }/count}")
+        println("regExParser = ${timeRegExParserList.sumBy { it.toInt(DurationUnit.MICROSECONDS) }/count}")
+        println("charParser = ${timeCharParserList.sumBy { it.toInt(DurationUnit.MICROSECONDS) }/count}")
     }
 }

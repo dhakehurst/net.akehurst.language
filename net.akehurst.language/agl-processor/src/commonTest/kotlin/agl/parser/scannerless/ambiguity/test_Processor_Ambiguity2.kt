@@ -107,20 +107,6 @@ class test_Processor_Ambiguity2 : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val expected2 = """
-            S {
-              S1|1 {
-                S { 'a' }
-                S|1 {
-                  S1 {
-                    S { 'a' }
-                    S { 'a' }
-                  }
-                }
-              }
-            }
-        """.trimIndent()
-
         super.testStringResult(rrb, goal, sentence, expected1)//, expected2)
     }
 

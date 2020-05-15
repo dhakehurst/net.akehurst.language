@@ -46,7 +46,7 @@ class test_rules : test_ScanOnDemandParserAbstract() {
                 literal("*")
             }
             concatenation("group") { literal("("); ref("choice"); literal(")") }
-            pattern("ID","[a-zA-Z]+")
+            pattern("ID","[a-zA-Z]")
         }
     }
 
@@ -55,7 +55,12 @@ class test_rules : test_ScanOnDemandParserAbstract() {
         val sentence = "r=a;"
         val goal = "S"
         val expected = """
-            S { W { "\s+" : ' ' } }
+ S { rules { normalRule {
+      ID : 'r'
+      '='
+      choice { concat { concatItem { simpleItem { ID : 'a' } } } }
+      ';'
+    } } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }

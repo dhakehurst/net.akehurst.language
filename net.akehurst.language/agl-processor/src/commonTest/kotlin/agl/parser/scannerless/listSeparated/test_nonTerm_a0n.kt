@@ -38,7 +38,7 @@ class test_nonTerm_a0n : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = ""
 
-        val expected = "S { §empty }"
+        val expected = "S|2 { §empty }"
 
         super.test(rrs, goal, sentence, expected)
     }
@@ -60,7 +60,7 @@ class test_nonTerm_a0n : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "aa"
 
-        val expected = "S {'a' sep {§empty} 'a'}"
+        val expected = "S {'a' sep|1 {§empty} 'a'}"
 
         super.test(b, goal, sentence, expected)
     }
@@ -82,7 +82,7 @@ class test_nonTerm_a0n : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a,aa"
 
-        val expected = "S {'a' sep {','} 'a' sep {§empty} 'a'}"
+        val expected = "S {'a' sep {','} 'a' sep|1 {§empty} 'a'}"
 
         super.test(b, goal, sentence, expected)
     }

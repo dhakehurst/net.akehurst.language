@@ -54,7 +54,12 @@ class test_group_concat : test_ScanOnDemandParserAbstract() {
         val sentence = "r=a;"
         val goal = "S"
         val expected = """
-            S { W { "\s+" : ' ' } }
+         S { rules { normalRule {
+              ID : 'r'
+              '='
+              concat { concatItem { ID : 'a' } }
+              ';'
+            } } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }
@@ -64,7 +69,16 @@ class test_group_concat : test_ScanOnDemandParserAbstract() {
         val sentence = "r=(a);"
         val goal = "S"
         val expected = """
-            S { W { "\s+" : ' ' } }
+         S { rules { normalRule {
+              ID : 'r'
+              '='
+              concat { concatItem|1 { group {
+                    '('
+                    concat { concatItem { ID : 'a' } }
+                    ')'
+                  } } }
+              ';'
+            } } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }
@@ -73,7 +87,20 @@ class test_group_concat : test_ScanOnDemandParserAbstract() {
         val sentence = "r=((a));"
         val goal = "S"
         val expected = """
-             S { W { "\s+" : ' ' } }
+         S { rules { normalRule {
+              ID : 'r'
+              '='
+              concat { concatItem|1 { group {
+                    '('
+                    concat { concatItem|1 { group {
+                          '('
+                          concat { concatItem { ID : 'a' } }
+                          ')'
+                        } } }
+                    ')'
+                  } } }
+              ';'
+            } } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }

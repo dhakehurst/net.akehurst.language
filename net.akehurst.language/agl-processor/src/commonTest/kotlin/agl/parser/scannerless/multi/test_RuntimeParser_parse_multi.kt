@@ -88,7 +88,7 @@ class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract() {
         assertNotNull(actual)
 
         val p = SPPTParser(rrb)
-        val expected = p.addTree("r { m { 'a' bm { §empty } 'a' } }")
+        val expected = p.addTree("r { m { 'a' bm|1 { §empty } 'a' } }")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }

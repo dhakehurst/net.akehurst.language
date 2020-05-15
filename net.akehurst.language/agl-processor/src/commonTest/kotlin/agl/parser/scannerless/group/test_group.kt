@@ -38,7 +38,7 @@ class test_group : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             R {
-              grp { A:'A' Am { §empty } }
+              grp { A:'A' Am|1 { §empty } }
             }
         """.trimIndent()
 

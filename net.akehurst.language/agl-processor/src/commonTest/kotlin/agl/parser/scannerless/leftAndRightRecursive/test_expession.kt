@@ -23,7 +23,7 @@ import kotlin.test.Test
 
 class test_expession : test_ScanOnDemandParserAbstract() {
 
-    // S =  I < P < n ;      //  infix < propertyCall < name
+    // S =  n < P < I ;      //  infix < propertyCall < name
     // n = 'a' ;             // "[a-z]+"
     // P = S 'p' n ;         // S '.' name
     // I = [S / 'o']2+ ;         // [S / '+']2+
@@ -57,7 +57,7 @@ class test_expession : test_ScanOnDemandParserAbstract() {
         val sentence = "apa"
 
         val expected = """
-            S { P { S { 'a' } 'p' 'a' } }
+            S|1 { P { S { 'a' } 'p' 'a' } }
         """.trimIndent()
 
         super.test(rrb, goal, sentence, expected)
@@ -70,7 +70,7 @@ class test_expession : test_ScanOnDemandParserAbstract() {
         val sentence = "aoa"
 
         val expected = """
-            S { I { S{'a'} 'o' S{'a'} } }
+            S|2 { I { S{'a'} 'o' S{'a'} } }
         """.trimIndent()
 
         super.test(rrb, goal, sentence, expected)
@@ -83,7 +83,7 @@ class test_expession : test_ScanOnDemandParserAbstract() {
         val sentence = "aoaoa"
 
         val expected = """
-            S { I { S{'a'} 'o' S{'a'} 'o' S{'a'} } }
+            S|2 { I { S{'a'} 'o' S{'a'} 'o' S{'a'} } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
@@ -97,8 +97,8 @@ class test_expession : test_ScanOnDemandParserAbstract() {
         val sentence = "apaoa"
 
         val expected = """
-             S { I {
-                S { P {
+             S|2 { I {
+                S|1 { P {
                     S { 'a' }
                     'p'
                     'a'
@@ -119,10 +119,10 @@ class test_expession : test_ScanOnDemandParserAbstract() {
         val sentence = "aoapa"
 
         val expected = """
-             S { I {
+             S|2 { I {
                   S { 'a' }
                   'o'
-                  S { P {
+                  S|1 { P {
                     S { 'a' }
                     'p'
                     'a'
@@ -141,20 +141,20 @@ class test_expession : test_ScanOnDemandParserAbstract() {
         val sentence = "apaoapaoapa"
 
         val expected = """
-             S { I {
-                S { P {
+             S|2 { I {
+                S|1 { P {
                     S { 'a' }
                     'p'
                     'a'
                   } }
                 'o'
-                S { P {
+                S|1 { P {
                     S { 'a' }
                     'p'
                     'a'
                   } }
                 'o'
-                S { P {
+                S|1 { P {
                     S { 'a' }
                     'p'
                     'a'

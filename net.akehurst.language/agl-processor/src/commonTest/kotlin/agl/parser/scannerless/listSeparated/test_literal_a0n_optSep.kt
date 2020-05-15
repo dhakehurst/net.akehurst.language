@@ -71,7 +71,7 @@ class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "aa"
 
-        val expected = "S {'a' sep { §empty } 'a'}"
+        val expected = "S {'a' sep|1 { §empty } 'a'}"
 
         super.test(rrs, goal, sentence, expected)
     }
@@ -82,7 +82,7 @@ class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a,aa"
 
-        val expected = "S {'a' sep { ',' } 'a' sep { §empty } 'a'}"
+        val expected = "S {'a' sep { ',' } 'a' sep|1 { §empty } 'a'}"
 
         super.test(rrs, goal, sentence, expected)
     }
