@@ -65,7 +65,7 @@ class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
         val expected2 = """
          S { S1 {
             'a'
-            bOpt { §empty }
+            bOpt|1 { §empty }
           } }
         """.trimIndent()
 

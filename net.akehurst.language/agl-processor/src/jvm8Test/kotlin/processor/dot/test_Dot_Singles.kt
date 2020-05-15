@@ -47,6 +47,16 @@ class test_Dot_Singles {
     }
 
     @Test
+    fun SINGLE_LINE_COMMENT() {
+        val goal = "SINGLE_LINE_COMMENT"
+        val sentence = """
+          // a comment
+          
+        """.trimIndent()
+        processor.parse(goal, sentence)
+    }
+
+    @Test
     fun a_list__from_Data_Structures() {
         val goal = "attr_list_content"
         val sentence = """

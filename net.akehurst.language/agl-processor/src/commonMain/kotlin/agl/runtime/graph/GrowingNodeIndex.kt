@@ -19,11 +19,19 @@ package net.akehurst.language.agl.runtime.graph
 import net.akehurst.language.agl.runtime.structure.ParserState
 import net.akehurst.language.agl.runtime.structure.StateNumber
 
+/*
+ A node that is still growing is identified by
+  - the state (and state set)
+  - position in the input where it starts
+  - position in the input where the node stops (i.e. its length)
+    length/nextInputPosition is necessary because ?
+  - size of a list ( only relevant for MULTI and SEPARATED_LIST)
+ */
 data class GrowingNodeIndex(
         val state: ParserState,
         val startPosition: Int,
+        val nextInputPosition: Int,
         val listSize:Int //for use with MULTI and SEPARATED_LIST
-//        val nextInputPosition: Int,
 //        val priority: Int
 ) {
 

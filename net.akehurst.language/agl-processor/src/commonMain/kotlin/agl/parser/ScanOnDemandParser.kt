@@ -217,7 +217,7 @@ class ScanOnDemandParser(
         val matches = gns.toMutableList()
         // try grow last leaf with no lookahead
         for (gn in rp.lastGrownLinked) {
-            val gnindex = GrowingNode.index(gn.currentState, gn.startPosition, gn.listSize)//, gn.nextInputPosition, gn.priority)
+            val gnindex = GrowingNode.index(gn.currentState, gn.startPosition, gn.nextInputPosition,gn.listSize)//, gn.nextInputPosition, gn.priority)
             graph.growingHead[gnindex] = gn
         }
         do {

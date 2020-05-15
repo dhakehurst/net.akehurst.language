@@ -31,12 +31,12 @@ class GrowingNode(
 ) {
 
     companion object {
-        fun index(state:ParserState, startPosition:Int, children: List<SPPTNode>) :GrowingNodeIndex {
+        fun index(state:ParserState, startPosition:Int, nextInputPosition: Int, children: List<SPPTNode>) :GrowingNodeIndex {
             val listSize = listSize(state.runtimeRule, children.size)
-            return GrowingNodeIndex(state, startPosition, listSize)
+            return GrowingNodeIndex(state, startPosition, nextInputPosition,listSize)
         }
-        fun index(state:ParserState, startPosition:Int, listSize:Int) :GrowingNodeIndex {
-            return GrowingNodeIndex(state, startPosition, listSize)
+        fun index(state:ParserState, startPosition:Int, nextInputPosition: Int, listSize:Int) :GrowingNodeIndex {
+            return GrowingNodeIndex(state, startPosition, nextInputPosition, listSize)
         }
         fun listSize(runtimeRule: RuntimeRule, childrenSize:Int) : Int = when (runtimeRule.kind) {
             RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.kind) {
@@ -122,14 +122,14 @@ class GrowingNode(
 
     fun addPrevious(info: PreviousInfo) {
         val gn = info.node
-        val gi = GrowingNode.index(gn.currentState, gn.startPosition, gn.listSize)//, info.node.nextInputPosition, info.node.priority)
+        val gi = GrowingNode.index(gn.currentState, gn.startPosition, gn.nextInputPosition, gn.listSize)//, info.node.nextInputPosition, info.node.priority)
         this.previous.put(gi, info)
         info.node.addNext(this)
     }
 
     fun addPrevious(previousNode: GrowingNode) {
         val info = PreviousInfo(previousNode)
-        val gi = GrowingNode.index(previousNode.currentState, previousNode.startPosition, previousNode.listSize)//, previousNode.nextInputPosition, previousNode.priority)
+        val gi = GrowingNode.index(previousNode.currentState, previousNode.startPosition, previousNode.nextInputPosition,  previousNode.listSize)//, previousNode.nextInputPosition, previousNode.priority)
         this.previous.put(gi, info)
         previousNode.addNext(this)
     }

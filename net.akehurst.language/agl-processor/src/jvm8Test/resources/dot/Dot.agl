@@ -25,10 +25,10 @@ grammar Xml {
 
 grammar Dot  {
 
-    skip leaf WHITESPACE = "\s+" ;
-	skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
-	skip leaf SINGLE_LINE_COMMENT = "//[^\n]*\n" ;
-	skip leaf C_PREPROCESSOR = "#[\n]*\n" ;
+    skip leaf WHITESPACE = "\\s+" ;
+	skip leaf MULTI_LINE_COMMENT = "/\\*[^*]*\\*+([^*/][^*]*\\*+)*/" ;
+	skip leaf SINGLE_LINE_COMMENT = "//[^\\n]*\\n" ;
+	skip leaf C_PREPROCESSOR = "#[\\n]*\\n" ;
 
 	graph =
 	  STRICT? type ID? '{' stmt_list '}'

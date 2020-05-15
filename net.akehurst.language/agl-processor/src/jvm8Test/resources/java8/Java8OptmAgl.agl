@@ -125,9 +125,9 @@ HEX_FLOAT_LITERAL=  '0' "[xX]" (HexDigits '.'? | HexDigits? '.' HexDigits) "[pP]
 
 leaf BOOL_LITERAL=     	"true|false" ;
 
-CHAR_LITERAL=       '\'' ("[^'\\\r\n]" | EscapeSequence) '\'';
+CHAR_LITERAL=       '\'' ("[^'\\\\r\\n]" | EscapeSequence) '\'';
 
-leaf STRING_LITERAL=     "\"(?:\\?.)*?\"" ;
+leaf STRING_LITERAL=     "\"([^\"\\\\]|\\\\.)*\"" ;
 
 leaf NULL_LITERAL=       'null';
 
@@ -193,20 +193,20 @@ leaf ELLIPSIS=           '...';
 
 // Whitespace and comments
 
-skip WS  =  "[ \t\r\n\u000C]+";
-skip COMMENT =   "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
-skip LINE_COMMENT =   "//.*?$" ;
+skip WS  =  "[ \\t\\r\\n\\u000C]+";
+skip COMMENT =   "/\\*[^*]*\\*+([^*/][^*]*\\*+)*/" ;
+skip LINE_COMMENT =   "//.*$" ;
 
 // Identifiers
 
-leaf IDENTIFIER=	"([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*" ;
+leaf IDENTIFIER=	"([a-zA-Z$_]|[^\\u0000-\\u00FF\\uD800-\\uDBFF]|([\\uD800-\\uDBFF][\\uDC00-\\uDFFF]))([a-zA-Z0-9$_]|[^\\u0000-\\u00FF\\uD800-\\uDBFF]|([\\uD800-\\uDBFF][\\uDC00-\\uDFFF]))*" ;
 
 ExponentPart
     = "[eE]" "[+-]"? Digits
     ;
 
 EscapeSequence
-    = '\\' "[btnfr\x22'\\]"
+    = '\\' "[btnfr\\x22'\\\\]"
     | '\\' ("[0-3]"? "[0-7]")? "[0-7]"
     | '\\' 'u'+ HexDigit HexDigit HexDigit HexDigit
     ;
@@ -228,8 +228,8 @@ leaf LetterOrDigit
 
 leaf Letter
     = "[a-zA-Z$_]" // these are the "java letters" below 0x7F
-    | "[^\u0000-\u007F\uD800-\uDBFF]" // covers all characters above 0x7F which are not a surrogate
-    | "[\uD800-\uDBFF]" "[\uDC00-\uDFFF]" // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
+    | "[^\\u0000-\\u007F\\uD800-\\uDBFF]" // covers all characters above 0x7F which are not a surrogate
+    | "[\\uD800-\\uDBFF]" "[\\uDC00-\\uDFFF]" // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
     ;
 
 compilationUnit

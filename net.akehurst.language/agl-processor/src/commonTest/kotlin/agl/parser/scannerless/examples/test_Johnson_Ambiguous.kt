@@ -110,8 +110,17 @@ class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
+        val expected2 = """
+             S|1 { S2 {
+                S|2 { 'a' }
+                S|1 { S2 {
+                    S|2 { 'a' }
+                    S|2 { 'a' }
+                  } }
+              } }
+        """
 
-        super.testStringResult(rrb, goal, sentence, expected1)
+        super.test(rrb.ruleSet(), goal, sentence, expected1, expected2)
     }
 
     @Test
@@ -154,12 +163,12 @@ class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
 
-       // super.testStringResult(rrb, goal, sentence, expected1)
+        // super.testStringResult(rrb, goal, sentence, expected1)
         val p = ScanOnDemandParser(rrb.ruleSet())
-        p.parse(goal, sentence)
+        val sppt = p.parse(goal, sentence)
         val sm = rrb.ruleSet().printUsedAutomaton(goal)
         println(sm)
-
+        println(sppt.toStringIndented(" "))
     }
 
     @ExperimentalTime
@@ -169,7 +178,7 @@ class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
         val times = mutableListOf<Duration>()
         val goal = "S"
 
-        for (i in 1..25) {
+        for (i in 1..5) {
             val text = "a".repeat(i)
             //warm up
             parser.parse(goal, text)
