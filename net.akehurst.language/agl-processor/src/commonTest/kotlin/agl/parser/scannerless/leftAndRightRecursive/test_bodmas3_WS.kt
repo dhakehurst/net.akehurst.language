@@ -304,7 +304,7 @@ class test_bodmas3_WS : test_ScanOnDemandParserAbstract() {
         val sentence = "a+b+c+d+e+f"
 
         val expected = """
-         S { expr { infix {
+         S { expr|2 { infix {
               expr { root { var { "[a-zA-Z]+" : 'a' } } }
               op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'b' } } }

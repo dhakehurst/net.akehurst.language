@@ -155,21 +155,21 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
 
         val expected1 = """
             S {
-              expr {
-                conditional {
+              expr|1 {
+                conditional|1 {
                     ifthen {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr {
+                      expr|1 {
                         conditional {
                             ifthenelse {
                               'if'
-                              expr { var { 'X' } }
+                              expr { var|1 { 'X' } }
                               'then'
-                              expr { var { 'Y' } }
+                              expr { var|2 { 'Y' } }
                               'else'
-                              expr { var { 'Z' } }
+                              expr { var|3 { 'Z' } }
                             }
                         }
                       }

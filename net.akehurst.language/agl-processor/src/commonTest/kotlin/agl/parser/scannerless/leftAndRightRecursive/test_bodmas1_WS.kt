@@ -91,7 +91,7 @@ class test_OperatorPrecedence : test_ScanOnDemandParserAbstract() {
         val sentence = "true"
 
         val expected = """
-              expr { root {
+              expr { root|1 {
                 bool { 'true' }
               } }
         """.trimIndent()
@@ -107,7 +107,7 @@ class test_OperatorPrecedence : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr { root {
+              expr { root|1 {
                 bool { 'true' }
               } }
             }
@@ -141,7 +141,7 @@ class test_OperatorPrecedence : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|1 {
                 group {
                   '('
                   expr { root { var { "[a-zA-Z]+" : 'a' } } }
@@ -163,7 +163,7 @@ class test_OperatorPrecedence : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|2 {
                 div {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
                   '/' WS { "\s+" : ' ' }
@@ -185,7 +185,7 @@ class test_OperatorPrecedence : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|3 {
                 mul {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
                   '*' WS { "\s+" : ' ' }
@@ -251,11 +251,11 @@ class test_OperatorPrecedence : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-             expr {
+             expr|4 {
               add {
                 expr { root { var { "[a-zA-Z]+" : 'a' } } }
                 '+'
-                expr {
+                expr|3 {
                   mul {
                     expr { root { var { "[a-zA-Z]+" : 'b' } } }
                     '*'
@@ -278,9 +278,9 @@ class test_OperatorPrecedence : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-             expr {
+             expr|4 {
               add {
-                expr {
+                expr|3 {
                   mul {
                     expr { root { var { "[a-zA-Z]+" : 'a' } } }
                     '*'

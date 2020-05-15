@@ -56,12 +56,7 @@ class RegexMatcherBuilder {
     }
 
     fun cloneTransition(orig:Transition, nullTransitions:MutableList<Transition>, map:MutableMap<State,State>): Transition {
-        val clone = when(orig) {
-            is TransitionEmpty -> TransitionEmpty()
-            is TransitionAny -> TransitionAny()
-            is TransitionLiteral -> TransitionLiteral(orig.value)
-            is TransitionMatcher -> TransitionMatcher(orig.value)
-        }
+        val clone = Transition(orig.kind, orig.matcher)
         clone.to = this.cloneState(orig.to, nullTransitions, map)
         if (null==clone.to) {
             nullTransitions.add(clone)
@@ -77,22 +72,30 @@ class RegexMatcherBuilder {
 
     fun start() {
         val state = this.createState(true)
-        state.outgoing.add(TransitionEmpty())
+        state.outgoing.add(Transition(TransitionKind.EMPTY,CharacterMatcher.EMPTY))
         this.stack.push(Fragment(state, state.outgoing))
         this.startState = state
     }
 
     fun matchAny() {
         val state = this.createState(false)
-        val trans = TransitionAny()
+        val trans = Transition(TransitionKind.MATCHER,CharacterMatcher.ANY)
         state.outgoing.add(trans)
         val frag = Fragment(state, state.outgoing)
         this.stack.push(frag)
     }
 
-    fun character(input: Char) {
+    fun matchEndOfLineOrInput() {
         val state = this.createState(false)
-        val trans = TransitionLiteral(input)
+        val trans = Transition(TransitionKind.MATCHER,CharacterMatcher.END_OF_LINE_OR_INPUT)
+        state.outgoing.add(trans)
+        val frag = Fragment(state, state.outgoing)
+        this.stack.push(frag)
+    }
+
+    fun character(value: Char) {
+        val state = this.createState(false)
+        val trans = Transition(TransitionKind.MATCHER, CharacterMatcher(MatcherKind.LITERAL, value))
         state.outgoing.add(trans)
         val frag = Fragment(state, state.outgoing)
         this.stack.push(frag)
@@ -100,7 +103,7 @@ class RegexMatcherBuilder {
 
     fun characterClass(matcher: CharacterMatcher) {
         val state = this.createState(false)
-        val trans = TransitionMatcher(matcher)
+        val trans = Transition(TransitionKind.MATCHER,matcher)
         state.outgoing.add(trans)
         val frag = Fragment(state, state.outgoing)
         this.stack.push(frag)
@@ -128,9 +131,9 @@ class RegexMatcherBuilder {
         val f2 = this.stack.pop()
         val f1 = this.stack.pop()
         val split = this.createState(true)
-        val t1 = TransitionEmpty()
+        val t1 = Transition(TransitionKind.EMPTY,CharacterMatcher.EMPTY)
         t1.to = f1.start
-        val t2 = TransitionEmpty()
+        val t2 = Transition(TransitionKind.EMPTY,CharacterMatcher.EMPTY)
         t2.to = f2.start
         split.outgoing.add(t1)
         split.outgoing.add(t2)
@@ -142,9 +145,9 @@ class RegexMatcherBuilder {
     fun multi01() {
         val f1 = this.stack.pop()
         val split = this.createState(true)
-        val t1 = TransitionEmpty()
+        val t1 = Transition(TransitionKind.EMPTY,CharacterMatcher.EMPTY)
         t1.to = f1.start
-        val t2 = TransitionEmpty()
+        val t2 = Transition(TransitionKind.EMPTY,CharacterMatcher.EMPTY)
         split.outgoing.add(t1)
         split.outgoing.add(t2)
         val frag = Fragment(split, f1.outgoing + t2)
@@ -156,9 +159,9 @@ class RegexMatcherBuilder {
         val f1 = this.stack.pop()
         val split = this.createState(true)
         f1.outgoing.forEach { it.to = split }
-        val t1 = TransitionEmpty()
+        val t1 = Transition(TransitionKind.EMPTY,CharacterMatcher.EMPTY)
         t1.to = f1.start
-        val t2 = TransitionEmpty()
+        val t2 = Transition(TransitionKind.EMPTY,CharacterMatcher.EMPTY)
         split.outgoing.add(t1)
         split.outgoing.add(t2)
         val frag = Fragment(f1.start, listOf(t2))
@@ -169,9 +172,9 @@ class RegexMatcherBuilder {
     fun multi0n() {
         val f1 = this.stack.pop()
         val split = this.createState(true)
-        val t1 = TransitionEmpty()
+        val t1 = Transition(TransitionKind.EMPTY,CharacterMatcher.EMPTY)
         t1.to = f1.start
-        val t2 = TransitionEmpty()
+        val t2 = Transition(TransitionKind.EMPTY,CharacterMatcher.EMPTY)
         split.outgoing.add(t1)
         split.outgoing.add(t2)
         f1.outgoing.forEach { it.to = split }

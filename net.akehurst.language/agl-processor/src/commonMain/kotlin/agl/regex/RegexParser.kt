@@ -37,20 +37,49 @@ class RegexParser(
         val PREC_CONCAT = 7
         val PREC_CHOICE = 8
 
-        val PREDEFINED_DIGIT = Pair(EscapeKind.SINGLE, (CharacterRange('0', '9')))
-        val PREDEFINED_DIGIT_NEGATED = Pair(EscapeKind.SINGLE, (CharacterNegated(CharacterRange('0', '9'))))
-        val PREDEFINED_WHITESPACE = Pair(EscapeKind.SINGLE, (CharacterOneOf(listOf(
-                CharacterRange('a', 'z'),
-                CharacterRange('A', 'Z'),
-                CharacterSingle('_'),
-                CharacterRange('0', '9')))
+        val PREDEFINED_DIGIT = Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.RANGE, '0', '9')))
+        val PREDEFINED_DIGIT_NEGATED = Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.NEGATED, options = arrayOf(CharacterMatcher(MatcherKind.RANGE, '0', '9')))))
+        val PREDEFINED_UNICODE_LINEBREAK = Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.ONE_OF, options = arrayOf(
+                CharacterMatcher(MatcherKind.LITERAL, '\u000A'),
+                CharacterMatcher(MatcherKind.LITERAL, '\u000B'),
+                CharacterMatcher(MatcherKind.LITERAL, '\u000C'),
+                CharacterMatcher(MatcherKind.LITERAL, '\u000D'),
+                CharacterMatcher(MatcherKind.LITERAL, '\u0085'),
+                CharacterMatcher(MatcherKind.LITERAL, '\u2029')
+//TODO:                CharacterSequence(listOf('\u000D','\u000A'))
+        ))))
+        val PREDEFINED_WHITESPACE = Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.ONE_OF, options = arrayOf(
+                CharacterMatcher(MatcherKind.LITERAL, ' '),
+                CharacterMatcher(MatcherKind.LITERAL, '\t'),
+                CharacterMatcher(MatcherKind.LITERAL, '\n'),
+                CharacterMatcher(MatcherKind.LITERAL, '\u000B'),
+                CharacterMatcher(MatcherKind.LITERAL, '\u000C'),
+                CharacterMatcher(MatcherKind.LITERAL, '\r')
+        ))))
+        val PREDEFINED_WHITESPACE_NEGATED = Pair(EscapeKind.SINGLE, CharacterMatcher(MatcherKind.NEGATED, options = arrayOf(
+                CharacterMatcher(MatcherKind.ONE_OF, options = arrayOf(
+                        CharacterMatcher(MatcherKind.LITERAL, ' '),
+                        CharacterMatcher(MatcherKind.LITERAL, '\t'),
+                        CharacterMatcher(MatcherKind.LITERAL, '\n'),
+                        CharacterMatcher(MatcherKind.LITERAL, '\u000B'),
+                        CharacterMatcher(MatcherKind.LITERAL, '\u000C'),
+                        CharacterMatcher(MatcherKind.LITERAL, '\r')
                 ))
-        val PREDEFINED_WHITESPACE_NEGATED = Pair(EscapeKind.SINGLE, (CharacterNegated(CharacterOneOf(listOf(
-                CharacterRange('a', 'z'),
-                CharacterRange('A', 'Z'),
-                CharacterSingle('_'),
-                CharacterRange('0', '9'))))
+        )))
+        val PREDEFINED_WORD = Pair(EscapeKind.SINGLE, CharacterMatcher(MatcherKind.ONE_OF, options = arrayOf(
+                CharacterMatcher(MatcherKind.RANGE, 'a', 'z'),
+                CharacterMatcher(MatcherKind.RANGE, 'A', 'Z'),
+                CharacterMatcher(MatcherKind.LITERAL, '_'),
+                CharacterMatcher(MatcherKind.RANGE, '0', '9')
+        )))
+        val PREDEFINED_WORD_NEGATED = Pair(EscapeKind.SINGLE, CharacterMatcher(MatcherKind.NEGATED, options = arrayOf(
+                CharacterMatcher(MatcherKind.ONE_OF, options = arrayOf(
+                        CharacterMatcher(MatcherKind.RANGE, 'a', 'z'),
+                        CharacterMatcher(MatcherKind.RANGE, 'A', 'Z'),
+                        CharacterMatcher(MatcherKind.LITERAL, '_'),
+                        CharacterMatcher(MatcherKind.RANGE, '0', '9')
                 ))
+        )))
     }
 
     val patternX = pattern + 0.toChar().toString() // add something to the end of the string, saves doing an if (> length) in fun next()
@@ -118,6 +147,17 @@ class RegexParser(
                     }
                     '.' -> {
                         postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.matchAny() }))
+                        if (needConcat.pop()) {
+                            while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
+                                postfix.push(opStack.pop())
+                            }
+                            opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                        }
+                        needConcat.push(true)
+                        c = this.next()
+                    }
+                    '$' -> {
+                        postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.matchEndOfLineOrInput() }))
                         if (needConcat.pop()) {
                             while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
                                 postfix.push(opStack.pop())
@@ -312,27 +352,28 @@ class RegexParser(
     private fun parsePatternEscape(): Pair<EscapeKind, Any> {
         var c = this.next()
         return when (c) {
-            '\\' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
-            '(' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
-            '|' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
-            '[' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
-            '.' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
-            '?' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
-            '+' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
-            '*' -> Pair(EscapeKind.SINGLE, (CharacterSingle(c)))
-            't' -> Pair(EscapeKind.SINGLE, (CharacterSingle('\t')))
-            'n' -> Pair(EscapeKind.SINGLE, (CharacterSingle('\n')))
-            'r' -> Pair(EscapeKind.SINGLE, (CharacterSingle('\r')))
-            'f' -> Pair(EscapeKind.SINGLE, (CharacterSingle('\u000C')))
-            'a' -> Pair(EscapeKind.SINGLE, (CharacterSingle('\u0007')))
-            'e' -> Pair(EscapeKind.SINGLE, (CharacterSingle('\u001B')))
+            '\\' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
+            '(' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
+            '|' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
+            '[' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
+            '.' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
+            '?' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
+            '+' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
+            '*' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
+            't' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, '\t')))
+            'n' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, '\n')))
+            'r' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, '\r')))
+            'f' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, '\u000C')))
+            'a' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, '\u0007')))
+            'e' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, '\u001B')))
             'c' -> TODO("Control char")
             'd' -> PREDEFINED_DIGIT
             'D' -> PREDEFINED_DIGIT_NEGATED
-            's' -> Pair(EscapeKind.SINGLE, (CharacterOneOf(" \t\n\u000B\u000C\r")))
-            'S' -> Pair(EscapeKind.SINGLE, (CharacterNegated(CharacterOneOf(" \t\n\u000B\u000C\r"))))
-            'w' -> PREDEFINED_WHITESPACE
-            'W' -> PREDEFINED_WHITESPACE_NEGATED
+            'R' -> PREDEFINED_UNICODE_LINEBREAK
+            's' -> PREDEFINED_WHITESPACE
+            'S' -> PREDEFINED_WHITESPACE_NEGATED
+            'w' -> PREDEFINED_WORD
+            'W' -> PREDEFINED_WORD_NEGATED
             '0' -> {
                 TODO("Octal value")
             }
@@ -384,29 +425,29 @@ class RegexParser(
             c = this.parseNextCharOrEscape()
             when (c) {
                 ']' -> {
-                    options.add(CharacterSingle(f))
+                    options.add(CharacterMatcher(MatcherKind.LITERAL, f))
                 }
                 '-' -> {
                     c = this.parseNextCharOrEscape()
                     if (c == ']') {
-                        options.add(CharacterSingle(f))
-                        options.add(CharacterSingle('-'))
+                        options.add(CharacterMatcher(MatcherKind.LITERAL, f))
+                        options.add(CharacterMatcher(MatcherKind.LITERAL, '-'))
                     } else {
-                        options.add(CharacterRange(f, c))
+                        options.add(CharacterMatcher(MatcherKind.RANGE, f, c))
                         c = this.parseNextCharOrEscape()
                         f = c
                     }
                 }
                 else -> {
-                    options.add(CharacterSingle(f))
+                    options.add(CharacterMatcher(MatcherKind.LITERAL, f))
                     f = c
                 }
             }
         }
         return if (negated) {
-            CharacterNegated(CharacterOneOf(options))
+            CharacterMatcher(MatcherKind.NEGATED, options = arrayOf(CharacterMatcher(MatcherKind.ONE_OF, options = options.toTypedArray())))
         } else {
-            CharacterOneOf(options)
+            CharacterMatcher(MatcherKind.ONE_OF, options = options.toTypedArray())
         }
     }
 

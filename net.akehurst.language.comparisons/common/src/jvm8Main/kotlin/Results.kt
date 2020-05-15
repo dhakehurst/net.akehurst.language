@@ -94,7 +94,7 @@ object Results {
             if (null == valueCell) {
                 valueCell = valueRow.createCell(colNum)
             }
-            valueCell!!.setCellValue(value.toMillis().toDouble())
+            valueCell!!.setCellValue(value.toNanos().div(1000).toDouble()) //micro seconds
             if (!success) {
                 valueCell.cellStyle = errorCellStyle
                 valueCell.setCellValue("error")

@@ -25,14 +25,14 @@ import kotlin.test.assertFailsWith
 
 class test_BillotLang_UBDA : test_ScanOnDemandParserAbstract() {
     /**
-     * A = AA | 'a'
+     * A = 'a' | AA
      */
     /**
-     * A = A1 | 'a' ;
+     * A = 'a' | A1 ;
      * A1 = A A ;
      */
     private val S = runtimeRuleSet {
-        choice("A", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("A1"); literal("a") }
+        choice("A", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); ref("A1") }
         concatenation("A1") { ref("A"); ref("A"); }
     }
 
@@ -107,14 +107,14 @@ class test_BillotLang_UBDA : test_ScanOnDemandParserAbstract() {
         val sentence = "aaaa"
 
         val expected1 = """
-         A { S2 {
-            S { S2 {
-                S { 'a' }
-                S { 'a' }
+         A { A2 {
+            A { A2 {
+                A { 'a' }
+                A { 'a' }
               } }
-            S { S2 {
-                S { 'a' }
-                S { 'a' }
+            A { A2 {
+                A { 'a' }
+                A { 'a' }
               } }
           } }
         """.trimIndent()
@@ -131,15 +131,15 @@ class test_BillotLang_UBDA : test_ScanOnDemandParserAbstract() {
 
         val expected1 = """
             A {
-              S1 {
-                S { 'a' }
-                S { 'a' }
-                S { 'a' }
+              A1 {
+                A { 'a' }
+                A { 'a' }
+                A { 'a' }
               }
             }
         """.trimIndent()
 
 
-       super.test(rrb, goal, sentence, expected1)
+        super.test(rrb, goal, sentence, expected1)
     }
 }

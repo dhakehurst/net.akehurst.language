@@ -115,7 +115,22 @@ class test_rules : test_ScanOnDemandParserAbstract() {
         val sentence = "r=(aa?);"
         val goal = "S"
         val expected = """
-            S { W { "\s+" : ' ' } }
+ S { rules { normalRule {
+      ID : 'r'
+      '='
+      choice { concat { concatItem { simpleItem|1 { group {
+                '('
+                choice { concat {
+                    concatItem { simpleItem { ID : 'a' } }
+                    concatItem|1 { multi {
+                        simpleItem { ID : 'a' }
+                        N { '?' }
+                      } }
+                  } }
+                ')'
+              } } } } }
+      ';'
+    } } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }

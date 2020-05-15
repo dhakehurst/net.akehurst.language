@@ -49,6 +49,19 @@ object Java8TestFiles {
             }
             params.sortBy { it.second }
             var index = 0
-            return params.take(1000).map { FileData(index++, it.first, it.second) }
+            // remove files with errors
+            val noerrors = params.filter {
+                val path = it.first
+                val outFilePath = path.parent.resolve( path.fileName.toFile().nameWithoutExtension+".out"  )
+                if (outFilePath.toFile().exists()) {
+                    val txt = outFilePath.toFile().readText()
+                    //TODO: could make this test for errors better
+                    txt.contains(Regex("errors|error")).not()
+                } else {
+                    true
+                }
+            }
+
+            return noerrors.take(1000).map { FileData(index++, it.first, it.second) }
         }
 }

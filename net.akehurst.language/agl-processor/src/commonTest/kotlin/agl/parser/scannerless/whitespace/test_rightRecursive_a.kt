@@ -59,7 +59,7 @@ class test_rightRecursive_a : test_ScanOnDemandParserAbstract() {
         val sentence = " a a "
 
         val expected = """
-            S { WS { "\s+" : ' ' } S1 { 'a' WS { "\s+" : ' ' } S { 'a' WS { "\s+" : ' ' } } } }
+            S|1 { WS { "\s+" : ' ' } S1 { 'a' WS { "\s+" : ' ' } S { 'a' WS { "\s+" : ' ' } } } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)

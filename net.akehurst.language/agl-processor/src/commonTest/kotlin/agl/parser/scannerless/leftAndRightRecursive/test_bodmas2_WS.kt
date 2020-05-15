@@ -100,7 +100,7 @@ class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
         val sentence = "true"
 
         val expected = """
-              expr { root {
+              expr { root|1 {
                 bool { 'true' }
               } }
         """.trimIndent()
@@ -116,7 +116,7 @@ class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr { root {
+              expr { root|1 {
                 bool { 'true' }
               } }
             }
@@ -150,7 +150,7 @@ class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|1 {
                 group {
                   '('
                   expr { root { var { "[a-zA-Z]+" : 'a' } } }
@@ -172,7 +172,7 @@ class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|2 {
                 div {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
                   '/' WS { "\s+" : ' ' }
@@ -194,7 +194,7 @@ class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|3 {
                 mul {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
                   '*' WS { "\s+" : ' ' }
@@ -260,11 +260,11 @@ class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-             expr {
+             expr|4 {
               add {
                 expr { root { var { "[a-zA-Z]+" : 'a' } } }
                 '+'
-                expr {
+                expr|3 {
                   mul {
                     expr { root { var { "[a-zA-Z]+" : 'b' } } }
                     '*'
@@ -287,9 +287,9 @@ class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-             expr {
+             expr|4 {
               add {
-                expr {
+                expr|3 {
                   mul {
                     expr { root { var { "[a-zA-Z]+" : 'a' } } }
                     '*'
@@ -313,7 +313,7 @@ class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
         val sentence = "a+b+c+d"
 
         val expected = """
-             S { expr { add {
+             S { expr|4 { add {
                   expr { root { var { "[a-zA-Z]+" : 'a' } } }
                   '+'
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
@@ -334,7 +334,7 @@ class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
         val sentence = "a+b+c+d+e+f"
 
         val expected = """
-         S { expr { add {
+         S { expr|4 { add {
               expr { root { var { "[a-zA-Z]+" : 'a' } } }
               '+'
               expr { root { var { "[a-zA-Z]+" : 'b' } } }
@@ -386,11 +386,11 @@ class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
         val sentence = "(a+b)*c"
 
         val expected = """
-            S { expr { mul {
-              expr {
+            S { expr|3 { mul {
+              expr|1 {
                 group {
                   '('
-                    expr {
+                    expr|4 {
                       add {
                         expr { root { var { "[a-zA-Z]+" : 'a' } } }
                         '+'

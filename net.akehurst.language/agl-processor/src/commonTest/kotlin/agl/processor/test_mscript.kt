@@ -32,7 +32,7 @@ namespace com.yakindu.modelviewer.parser
 grammar Mscript {
 
     skip WHITESPACE = "[ \t\x0B\f]+" ;
-    skip LINE_CONTINUATION =  "[.][.][.](?:.*)\R" ;
+    skip LINE_CONTINUATION =  "[.][.][.](.*)\R" ;
     skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
          MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
          SINGLE_LINE_COMMENT = "%(?:[^{].*?)?$" ;
@@ -101,8 +101,8 @@ grammar Mscript {
     BOOLEAN             = 'true' | 'false' ;
     INTEGER             = "([+]|[-])?[0-9]+" ;
     REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
-    SINGLE_QUOTE_STRING = "'(?:\\?.)*?'" ;
-    DOUBLE_QUOTE_STRING = "\"(?:\\?.)*?\"" ;
+    SINGLE_QUOTE_STRING = "'(\\?.)*?'" ;
+    DOUBLE_QUOTE_STRING = "\"(\\\\?.)*?\"" ;
 }
     """.trimIndent()
         val sut = Agl.processor(grammarStr)

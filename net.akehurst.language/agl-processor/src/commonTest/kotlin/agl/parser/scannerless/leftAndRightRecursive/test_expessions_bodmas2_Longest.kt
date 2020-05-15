@@ -83,15 +83,15 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
 
         //think this should be excluded because of priority I < 'a'
         val expected1 = """
-         S { E { I {
+         S { E|1 { I {
               E { var { "[a-z]+" : 'v' } }
               I1 {
                 I2 {
-                  op { '+' }
+                  op|2 { '+' }
                   E { var { "[a-z]+" : 'v' } }
                 }
                 I2 {
-                  op { '+' }
+                  op|2 { '+' }
                   E { var { "[a-z]+" : 'v' } }
                 }
               }
@@ -109,19 +109,19 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
         val sentence = "v+v+v+v"
 
         val expected = """
-         S { E { I {
+         S { E|1 { I {
               E { var { "[a-z]+" : 'v' } }
               I1 {
                 I2 {
-                  op { '+' }
+                  op|2 { '+' }
                   E { var { "[a-z]+" : 'v' } }
                 }
                 I2 {
-                  op { '+' }
+                  op|2 { '+' }
                   E { var { "[a-z]+" : 'v' } }
                 }
                 I2 {
-                  op { '+' }
+                  op|2 { '+' }
                   E { var { "[a-z]+" : 'v' } }
                 }
               }
@@ -139,19 +139,19 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
         val sentence = "v+v+v+v+v"
 
         val expected = """
-         S { E { I {
+         S { E|1 { I {
               E { var { "[a-z]+" : 'v' } }
               I1 {
                 I2 {
-                  op { '+' }
+                  op|2 { '+' }
                   E { var { "[a-z]+" : 'v' } }
                 }
                 I2 {
-                  op { '+' }
+                  op|2 { '+' }
                   E { var { "[a-z]+" : 'v' } }
                 }
                 I2 {
-                  op { '+' }
+                  op|2 { '+' }
                   E { var { "[a-z]+" : 'v' } }
                 }
               }
@@ -169,19 +169,19 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
         val sentence = "v/v*v+v-v"
 
         val expected = """
-         S { E { I {
+         S { E|1 { I {
               E { var { "[a-z]+" : 'v' } }
               I1 {
                 I2 {
-                  op { '+' }
+                  op|2 { '+' }
                   E { var { "[a-z]+" : 'v' } }
                 }
                 I2 {
-                  op { '+' }
+                  op|2 { '+' }
                   E { var { "[a-z]+" : 'v' } }
                 }
                 I2 {
-                  op { '+' }
+                  op|2 { '+' }
                   E { var { "[a-z]+" : 'v' } }
                 }
               }

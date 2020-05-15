@@ -49,7 +49,7 @@ class Java8_compare_Test_antlrOptm(val file: FileData) {
             val bytes = Java8_compare_Test_antlrOptm::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
             val proc = Agl.processor(javaGrammarStr)
-            proc.build()
+            proc.buildFor("compilationUnit")
             return proc
         }
 

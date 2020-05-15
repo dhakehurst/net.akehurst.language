@@ -18,6 +18,8 @@ package net.akehurst.language.agl.regex
 
 fun regexMatcher(pattern:String) = RegexParser(pattern).parse()
 
+// nfa is Array of States, each state is element in array
+// Array<Int,
 class RegexMatcher(
         val start:State,
         val nfa: List<State>
@@ -39,20 +41,37 @@ class RegexMatcher(
         ns
     }
 
+    fun matches( matcher:CharacterMatcher, text:CharSequence, pos:Int): Boolean {
+        return when(matcher.kind) {
+            MatcherKind.EMPTY -> error("should not happen")
+            MatcherKind.ANY -> true
+            MatcherKind.END_OF_LINE_OR_INPUT -> TODO()
+            MatcherKind.NEGATED -> this.matches(matcher.matcher, text, pos).not()
+            MatcherKind.LITERAL -> text[pos] == matcher.literal
+            MatcherKind.ONE_OF -> {
+                for(m in matcher.options) {
+                    if (this.matches(m, text, pos)) {
+                        return true
+                    }
+                }
+                return false
+            }
+            MatcherKind.RANGE -> text[pos] in matcher.min .. matcher.max
+        }
+    }
+
     fun match(text: CharSequence, startPosition: Int = 0): MatchResult? {
         var pos = startPosition
         var currentStates = mutableListOf<State>()
         currentStates.addAll(this.startStates)
         var nextStates = mutableListOf<State>()
-        var reachedGoal = false
         var maxMatchedPos = -1
         var eolPositions = mutableListOf<Int>()
         while (currentStates.isNotEmpty() && pos < text.length) {
-            var c = text[pos++]
-            if (c=='\n') eolPositions.add(pos)
+            if (text[pos]=='\n') eolPositions.add(pos)
             for (state in currentStates) {
                 for( trans in state.outgoing) {
-                    if (trans.match(c)) {
+                    if (this.matches(trans.matcher,text, pos)) {
                         //must call trans.nextStates before trans.isToGoal
                         nextStates.addAll(trans.nextStates)
                         if(trans.isToGoal) {
@@ -65,9 +84,10 @@ class RegexMatcher(
             currentStates = nextStates
             nextStates = t
             nextStates.clear()
+            pos++
         }
         return if (maxMatchedPos!=-1) {
-            val matchedText = text.substring(startPosition, maxMatchedPos)
+            val matchedText = text.substring(startPosition, maxMatchedPos+1)
             MatchResult(matchedText, eolPositions)
         } else {
             null

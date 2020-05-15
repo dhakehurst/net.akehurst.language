@@ -63,7 +63,7 @@ class test_expessions_bodmas1_Longest : test_ScanOnDemandParserAbstract() {
         val expected = """
             S { E|1 { I {
               E { var { "[a-z]+":'v' } }
-              op { '+' }
+              op|2 { '+' }
               E { var { "[a-z]+":'v' } }
             } } }
         """.trimIndent()

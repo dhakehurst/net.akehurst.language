@@ -141,22 +141,20 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         val text = "a".repeat(10000)
 
         // warm up the processors
-        print("warmup")
+        println("warmup")
         for (i in 0 until 20) {
             kotlinRegEx.matches(text)
             aglRegex.match(text, 0)
             regExParser.parse(goal, text)
             charParser.parse(goal, text)
-            print(".")
         }
-        println()
 
         val timeRegExKotlinList = mutableListOf<Duration>()
         val timeRegExAglList = mutableListOf<Duration>()
         val timeRegExParserList = mutableListOf<Duration>()
         val timeCharParserList = mutableListOf<Duration>()
-        val count = 1
-        print("measure")
+        val count = 50
+        println("measure")
         for (i in 0 until count) {
             val timeRegExKotlin = TimeSource.Monotonic.measureTimedValue {
                 kotlinRegEx.matches(text)
@@ -176,9 +174,7 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
             timeRegExAglList.add(timeRegExAgl.duration)
             timeRegExParserList.add(timeRegExParser.duration)
             timeCharParserList.add(timeCharParser.duration)
-            print(".")
         }
-        println()
 
         println("- 10000 -")
         println("regExKotlinList = ${timeRegExKotlinList}")

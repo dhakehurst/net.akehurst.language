@@ -58,7 +58,7 @@ class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
         val sentence = "a a"
 
         val expected = """
-            S { S1 { S { 'a' WS { "\s+" : ' ' } } 'a' } }
+            S|1 { S1 { S { 'a' WS { "\s+" : ' ' } } 'a' } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
@@ -94,9 +94,9 @@ class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
         val sentence = " a a a "
 
         val expected = """
-            S { WS { "\s+" : ' ' }
+            S|1 { WS { "\s+" : ' ' }
                 S1 {
-                    S {
+                    S|1 {
                         S1 {
                             S { 'a' WS { "\s+" : ' ' } }
                             'a' WS { "\s+" : ' ' }

@@ -39,7 +39,7 @@ class test_sList_a_WS : test_ScanOnDemandParserAbstract() {
         val sentence = ""
 
         val expected = """
-            S|1 { §empty }
+            S|2 { §empty }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, expected)

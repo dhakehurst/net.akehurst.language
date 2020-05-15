@@ -46,6 +46,7 @@ class AglGrammarSyntaxAnalyser(
         this.register("choice", this::choice as BranchHandler<RuleItem>)
         this.register("simpleChoice", this::simpleChoice as BranchHandler<RuleItem>)
         this.register("priorityChoice", this::priorityChoice as BranchHandler<RuleItem>)
+        this.register("ambiguousChoice", this::ambiguousChoice as BranchHandler<RuleItem>)
         this.register("concatenation", this::concatenation as BranchHandler<Concatenation>)
         this.register("concatenationItem", this::concatenationItem as BranchHandler<ConcatenationItem>)
         this.register("simpleItem", this::simpleItem as BranchHandler<SimpleItem>)
@@ -178,7 +179,17 @@ class AglGrammarSyntaxAnalyser(
             ChoicePriorityDefault(alternative)
         }
     }
-
+    // ambiguousChoice : [concatenation / '<']* ;
+    fun ambiguousChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
+        val alternative = children[0].branchNonSkipChildren.mapIndexed { index, it ->
+            this.transform<Concatenation>(it, arg)
+        }
+        return if (alternative.isEmpty()) {
+            EmptyRuleDefault()
+        } else {
+            ChoiceAmbiguousDefault(alternative)
+        }
+    }
     // concatenation : concatenationItem+ ;
     fun concatenation(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Concatenation {
         val items = children[0].branchNonSkipChildren.mapIndexed { index, it ->
