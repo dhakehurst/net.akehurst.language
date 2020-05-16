@@ -131,14 +131,14 @@ enum class TransitionKind {
 class Transition(val kind: TransitionKind, val matcher: CharacterMatcher) {
 
     var to: State? = null
-
+    lateinit var nextStates: Array<State>
     // will get reassigned when nextStates is called
     var isToGoal = false
 
-    val nextStates: List<State> by lazy {
+    fun init() {
         val ns = mutableListOf<State>()
         this.isToGoal = addNextStates(ns, this.to)
-        ns
+        this.nextStates = ns.toTypedArray()
     }
 
     //fun match(text: CharSequence, pos: Int): Boolean = value.matches(text, pos)

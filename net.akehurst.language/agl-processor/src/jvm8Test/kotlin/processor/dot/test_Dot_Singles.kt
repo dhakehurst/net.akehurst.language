@@ -150,6 +150,45 @@ class test_Dot_Singles {
     }
 
     @Test
+    fun LionShare__node_id() {
+        val goal = "node_id"
+        val sentence = """
+            "001"
+        """.trimIndent()
+        try {
+            processor.parse(goal, sentence)
+        } catch (e:ParseFailedException) {
+            fail("${e.message} at ${e.location} expected ${e.expected}")
+        }
+    }
+
+    @Test
+    fun LionShare__attr_list() {
+        val goal = "attr_list"
+        val sentence = """
+            [shape=box     , regular=1,style=filled,fillcolor=white   ]
+        """.trimIndent()
+        try {
+            processor.parse(goal, sentence)
+        } catch (e:ParseFailedException) {
+            fail("${e.message} at ${e.location} expected ${e.expected}")
+        }
+    }
+
+    @Test
+    fun LionShare__node_stmt() {
+        val goal = "node_stmt"
+        val sentence = """
+            "001" [shape=box     , regular=1,style=filled,fillcolor=white   ]
+        """.trimIndent()
+        try {
+            processor.parse(goal, sentence)
+        } catch (e:ParseFailedException) {
+            fail("${e.message} at ${e.location} expected ${e.expected}")
+        }
+    }
+
+    @Test
     fun LionShare__stmt_list() {
         val goal = "stmt_list"
         val sentence = """

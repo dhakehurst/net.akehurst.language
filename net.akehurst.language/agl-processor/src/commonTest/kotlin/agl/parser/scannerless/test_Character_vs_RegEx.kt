@@ -27,18 +27,6 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
 
 
     companion object {
-        val regExGrammarStr = """
-            namespace test
-            grammar regEx {
-               S = "[a]*" ;
-            }
-        """;
-        val charGrammarStr = """
-            namespace test
-            grammar regEx {
-               S = 'a'* ;
-            }
-        """;
 
         val kotlinRegEx = Regex("a*")
         val aglRegex = regexMatcher("a*")
@@ -52,6 +40,13 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
                     multi("S", 0, -1, "'a'")
                     literal("'a'", "a")
                 })
+    }
+
+
+    @Test
+    fun forProfiling() {
+        val text = "a".repeat(100000)
+        aglRegex.match(text)
     }
 
     @ExperimentalTime

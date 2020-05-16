@@ -2,7 +2,7 @@ namespace com.itemis.typedgraph.query
 
 grammar Query {
 
-    skip WHITE_SPACE = "\s+" ;
+    skip WHITE_SPACE = "\\s+" ;
 	skip SINGLE_LINE_COMMENT = "/\\*[^*]*\\*+([^*/][^*]*\\*+)*/" ;
 	skip MULTI_LINE_COMMENT = "//[^\\n]*$" ;
 

@@ -154,6 +154,10 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
                   op|2 { '+' }
                   E { var { "[a-z]+" : 'v' } }
                 }
+                I2 {
+                  op|2 { '+' }
+                  E { var { "[a-z]+" : 'v' } }
+                }
               }
             } } }
         """.trimIndent()
@@ -173,7 +177,11 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
               E { var { "[a-z]+" : 'v' } }
               I1 {
                 I2 {
-                  op|2 { '+' }
+                  op { '/' }
+                  E { var { "[a-z]+" : 'v' } }
+                }
+                I2 {
+                  op|1 { '*' }
                   E { var { "[a-z]+" : 'v' } }
                 }
                 I2 {
@@ -181,7 +189,7 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
                   E { var { "[a-z]+" : 'v' } }
                 }
                 I2 {
-                  op|2 { '+' }
+                  op|3 { '-' }
                   E { var { "[a-z]+" : 'v' } }
                 }
               }

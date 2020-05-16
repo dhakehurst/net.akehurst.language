@@ -157,6 +157,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
                 val choiceKind = when (target) {
                     is ChoiceEqual -> RuntimeRuleChoiceKind.LONGEST_PRIORITY
                     is ChoicePriority -> RuntimeRuleChoiceKind.PRIORITY_LONGEST
+                    is ChoiceAmbiguous -> RuntimeRuleChoiceKind.AMBIGUOUS
                     else -> throw RuntimeException("unsupported")
                 }
                 RuntimeRuleItem(kind, choiceKind, -1, 0, items.toTypedArray())

@@ -70,7 +70,16 @@ class test_rules : test_ScanOnDemandParserAbstract() {
         val sentence = "r=(a);"
         val goal = "S"
         val expected = """
-            S { W { "\s+" : ' ' } }
+         S { rules { normalRule {
+              ID : 'r'
+              '='
+              choice { concat { concatItem { simpleItem|1 { group {
+                        '('
+                        choice { concat { concatItem { simpleItem { ID : 'a' } } } }
+                        ')'
+                      } } } } }
+              ';'
+            } } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }
@@ -79,7 +88,20 @@ class test_rules : test_ScanOnDemandParserAbstract() {
         val sentence = "r=((a));"
         val goal = "S"
         val expected = """
-             S { W { "\s+" : ' ' } }
+         S { rules { normalRule {
+              ID : 'r'
+              '='
+              choice { concat { concatItem { simpleItem|1 { group {
+                        '('
+                        choice { concat { concatItem { simpleItem|1 { group {
+                                  '('
+                                  choice { concat { concatItem { simpleItem { ID : 'a' } } } }
+                                  ')'
+                                } } } } }
+                        ')'
+                      } } } } }
+              ';'
+            } } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }
@@ -88,7 +110,21 @@ class test_rules : test_ScanOnDemandParserAbstract() {
         val sentence = "r=a?a?;"
         val goal = "S"
         val expected = """
-            S { W { "\s+" : ' ' } }
+         S { rules { normalRule {
+              ID : 'r'
+              '='
+              choice { concat {
+                  concatItem|1 { multi {
+                      simpleItem { ID : 'a' }
+                      N { '?' }
+                    } }
+                  concatItem|1 { multi {
+                      simpleItem { ID : 'a' }
+                      N { '?' }
+                    } }
+                } }
+              ';'
+            } } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }
@@ -97,7 +133,35 @@ class test_rules : test_ScanOnDemandParserAbstract() {
         val sentence = "r=a?;r=a?;r=a?;"
         val goal = "S"
         val expected = """
-            S { W { "\s+" : ' ' } }
+         S { rules {
+            normalRule {
+              ID : 'r'
+              '='
+              choice { concat { concatItem|1 { multi {
+                      simpleItem { ID : 'a' }
+                      N { '?' }
+                    } } } }
+              ';'
+            }
+            normalRule {
+              ID : 'r'
+              '='
+              choice { concat { concatItem|1 { multi {
+                      simpleItem { ID : 'a' }
+                      N { '?' }
+                    } } } }
+              ';'
+            }
+            normalRule {
+              ID : 'r'
+              '='
+              choice { concat { concatItem|1 { multi {
+                      simpleItem { ID : 'a' }
+                      N { '?' }
+                    } } } }
+              ';'
+            }
+          } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }
@@ -106,7 +170,18 @@ class test_rules : test_ScanOnDemandParserAbstract() {
         val sentence = "r=aa?;"
         val goal = "S"
         val expected = """
-            S { W { "\s+" : ' ' } }
+        S { rules { normalRule {
+              ID : 'r'
+              '='
+              choice { concat {
+                  concatItem { simpleItem { ID : 'a' } }
+                  concatItem|1 { multi {
+                      simpleItem { ID : 'a' }
+                      N { '?' }
+                    } }
+                } }
+              ';'
+            } } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }
@@ -143,7 +218,53 @@ class test_rules : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
         val goal = "S"
         val expected = """
-            S { W { "\s+" : ' ' } }
+         S { rules {
+            normalRule {
+              ID : 'r'
+              '='
+              choice { concat { concatItem|1 { multi {
+                      simpleItem { ID : 'e' }
+                      N { '?' }
+                    } } } }
+              ';'
+              W { "\s+" : '9166' }
+            }
+            normalRule {
+              ID : 'e'
+              '='
+              choice { concat {
+                  concatItem|1 { multi {
+                      simpleItem { ID : 'w' }
+                      N { '?' }
+                    } }
+                  concatItem|1 { multi {
+                      simpleItem { ID : 'a' }
+                      N|1 { '*' }
+                    } }
+                } }
+              ';'
+              W { "\s+" : '9166' }
+            }
+            normalRule {
+              ID : 's'
+              '='
+              choice { concat { concatItem { simpleItem|1 { group {
+                        '('
+                        choice { concat {
+                            concatItem { simpleItem {
+                                ID : 's'
+                                W { "\s+" : ' ' }
+                              } }
+                            concatItem|1 { multi {
+                                simpleItem { ID : 'i' }
+                                N { '?' }
+                              } }
+                          } }
+                        ')'
+                      } } } } }
+              ';'
+            }
+          } }
         """.trimIndent()
         super.test(S,goal,sentence,expected)
     }

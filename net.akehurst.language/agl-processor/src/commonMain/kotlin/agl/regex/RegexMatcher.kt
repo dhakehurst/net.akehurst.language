@@ -35,10 +35,17 @@ class RegexMatcher(
         val ERROR_STATE = State(-2, false)
     }
 
-    val startStates:MutableList<State> by lazy {
+    val startStates:Array<State>
+
+    init {
         val ns = mutableListOf<State>()
         addNextStates(ns, this.start)
-        ns
+        this.startStates = ns.toTypedArray()
+        nfa.forEach {
+            it.outgoing.forEach {
+                it.init()
+            }
+        }
     }
 
     fun matches( matcher:CharacterMatcher, text:CharSequence, pos:Int): Boolean {
@@ -49,8 +56,9 @@ class RegexMatcher(
             MatcherKind.NEGATED -> this.matches(matcher.matcher, text, pos).not()
             MatcherKind.LITERAL -> text[pos] == matcher.literal
             MatcherKind.ONE_OF -> {
-                for(m in matcher.options) {
-                    if (this.matches(m, text, pos)) {
+                val opts = matcher.options
+                for(i in 0 until opts.size) {
+                    if (this.matches(opts[i], text, pos)) {
                         return true
                     }
                 }
@@ -60,22 +68,31 @@ class RegexMatcher(
         }
     }
 
+    // these should really be local to match, allocated here to speed up the match function
+    private var currentStates = ArrayList<Array<State>>(10)
+    private var nextStates = ArrayList<Array<State>>(10)
+    private var eolPositions = ArrayList<Int>(10)
     fun match(text: CharSequence, startPosition: Int = 0): MatchResult? {
         var pos = startPosition
-        var currentStates = mutableListOf<State>()
-        currentStates.addAll(this.startStates)
-        var nextStates = mutableListOf<State>()
+        this.currentStates.clear()
+        this.nextStates.clear()
+        currentStates.add(this.startStates)
         var maxMatchedPos = -1
-        var eolPositions = mutableListOf<Int>()
         while (currentStates.isNotEmpty() && pos < text.length) {
-            if (text[pos]=='\n') eolPositions.add(pos)
-            for (state in currentStates) {
-                for( trans in state.outgoing) {
-                    if (this.matches(trans.matcher,text, pos)) {
-                        //must call trans.nextStates before trans.isToGoal
-                        nextStates.addAll(trans.nextStates)
-                        if(trans.isToGoal) {
-                            maxMatchedPos = maxOf(maxMatchedPos, pos)
+            if (text[pos]=='\n') this.eolPositions.add(pos)
+            for (ss in 0 until currentStates.size) {
+                val states = currentStates[ss]
+                for(s in 0 until states.size) {
+                    val state = states[s]
+                    val outgoing = state.outgoing
+                    for (t in 0 until outgoing.size) { //TODO: use array and counter here
+                        val trans = outgoing[t]
+                        if (this.matches(trans.matcher, text, pos)) {
+                            //must call trans.nextStates before trans.isToGoal
+                            nextStates.add(trans.nextStates)
+                            if (trans.isToGoal) {
+                                maxMatchedPos = maxOf(maxMatchedPos, pos)
+                            }
                         }
                     }
                 }

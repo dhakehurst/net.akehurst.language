@@ -31,11 +31,11 @@ namespace com.yakindu.modelviewer.parser
 
 grammar Mscript {
 
-    skip WHITESPACE = "[ \t\x0B\f]+" ;
-    skip LINE_CONTINUATION =  "[.][.][.](.*)\R" ;
+    skip WHITESPACE = "[ \\t\\x0B\\f]+" ;
+    skip LINE_CONTINUATION =  "[.][.][.](.*)\\R" ;
     skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
-         MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
-         SINGLE_LINE_COMMENT = "%(?:[^{].*?)?$" ;
+         MULTI_LINE_COMMENT = "%[{]([^%]|\\n)*%[}]" ;
+         SINGLE_LINE_COMMENT = "%([^{].*)?$" ;
 
     script = statementList ;
     statementList = [line / "\R"]* ;

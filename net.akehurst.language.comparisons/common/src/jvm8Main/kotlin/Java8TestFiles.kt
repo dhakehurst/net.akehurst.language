@@ -62,6 +62,6 @@ object Java8TestFiles {
                 }
             }
 
-            return noerrors.take(1000).map { FileData(index++, it.first, it.second) }
+            return noerrors.take(2000).map { FileData(index++, it.first, it.second) }
         }
 }
