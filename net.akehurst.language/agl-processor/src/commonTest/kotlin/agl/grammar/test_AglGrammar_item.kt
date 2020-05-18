@@ -50,17 +50,33 @@ class test_AglGrammar_item {
             a
         """.trimIndent()
         val actual = parse("nonTerminal", text)
-//TODO("what is 9166 ?")
         val expected = this.sppt("""
             nonTerminal {
-                SINGLE_LINE_COMMENT : '// a single line comment' 
-                WHITESPACE : '9166' 
+                SINGLE_LINE_COMMENT : '// a single line comment⏎'
                 qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'a' } }
             }
         """)
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
+
+    @Test
+    fun SINGLE_LINE_COMMENT_EMPTY() {
+        val text = """
+            //
+            a
+        """.trimIndent()
+        val actual = parse("nonTerminal", text)
+        val expected = this.sppt("""
+            nonTerminal {
+                SINGLE_LINE_COMMENT : '//⏎'
+                qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'a' } }
+            }
+        """)
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
     @Test
     fun MULTI_LINE_COMMENT() {
         val text = """
@@ -73,7 +89,8 @@ class test_AglGrammar_item {
         //TODO("what is 9166 ?")
         val expected = this.sppt("""
             nonTerminal {
-                MULTI_LINE_COMMENT  : '/* a single line comment9166sfgh9166*/'  WHITESPACE  : '9166' 
+                MULTI_LINE_COMMENT : '/* a single line comment⏎sfgh⏎*/'
+                WHITESPACE : '⏎'
                 qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'a' } }
             }
         """)
@@ -103,7 +120,10 @@ class test_AglGrammar_item {
             '\\'
             """.trimIndent()
         val actual = parse("LITERAL", text)
-        val expected = this.sppt("LITERAL  : '\\'\\\\'' ")
+        val expected = this.sppt("""
+            LITERAL  : '\'\\\''
+        """.trimIndent())
+        //converted to single backslash by SyntaxAnalyser
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
@@ -115,6 +135,7 @@ class test_AglGrammar_item {
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
+
     @Test
     fun PATTERN2() {
         val actual = parse("PATTERN", "\"([^\\\"\\]|\\.)*\"")
@@ -122,6 +143,18 @@ class test_AglGrammar_item {
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
+
+    @Test
+    fun PATTERN3() {
+        val text = """
+            "[\\]"
+        """.trimIndent()
+        val actual = parse("PATTERN", text)
+        val expected = this.sppt("PATTERN  : '\"[\\\\]\"' ")
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+    }
+
     @Test
     fun terminal_literal() {
         val actual = parse("terminal", "'a'")
@@ -373,15 +406,19 @@ class test_AglGrammar_item {
     fun simpleChoice_nonTerminal_3() {
         val actual = parse("simpleChoice", "a | b | c")
         val expected = this.sppt("""
-            simpleChoice { §simpleChoice§sList3 {
+             simpleChoice { §simpleChoice§sList4 {
                 concatenation { §concatenation§multi5 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                    IDENTIFIER : 'a' WHITESPACE  : ' ' 
+                IDENTIFIER : 'a'
+                WHITESPACE : ' '
                 } } } } } } }
-                '|' WHITESPACE  : ' ' 
+                '|'
+                WHITESPACE : ' '
                 concatenation { §concatenation§multi5 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                    IDENTIFIER : 'b' WHITESPACE  : ' ' 
+                IDENTIFIER : 'b'
+                WHITESPACE : ' '
                 } } } } } } }
-                '|' WHITESPACE  : ' ' 
+                '|'
+                WHITESPACE : ' '
                 concatenation { §concatenation§multi5 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'c' } } } } } } }
             } }
         """.trimIndent())

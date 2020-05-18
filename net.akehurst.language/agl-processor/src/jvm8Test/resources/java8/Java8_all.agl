@@ -1604,18 +1604,18 @@ CharacterLiteral
 	;
 
 
-SingleCharacter = "[^'\\\\]" ;
+SingleCharacter = "[^'\\]" ;
 
 // §3.10.5 String Literals
 
 StringLiteral =	'"' StringCharacters? '"';
-StringCharacters = "[^\\x22\\\\\\r\\n]+" ;
+StringCharacters = "[^\x22\r\n\\]+" ;
 
 // §3.10.6 Escape Sequences for Character and String Literals
 
 
 EscapeSequence
-	=	'\\' "[btnfr\\x22'\\\\]"
+	=	'\\' "[btnfr\"'\\]"
 	|	OctalEscape
     |   UnicodeEscape // This is not in the spec but prevents having to preprocess the input
 	;
@@ -1698,7 +1698,7 @@ URSHIFT_ASSIGN = '>>>=';
 
 // §3.8 Identifiers (must appear after all keywords in the grammar)
 
-Identifier=	"([a-zA-Z$_]|[^\\u0000-\\u00FF\\uD800-\\uDBFF]|([\\uD800-\\uDBFF][\\uDC00-\\uDFFF]))([a-zA-Z0-9$_]|[^\\u0000-\\u00FF\\uD800-\\uDBFF]|([\\uD800-\\uDBFF][\\uDC00-\\uDFFF]))*" ;
+Identifier=	"([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*" ;
 
 //
 // Additional symbols not defined in the lexical specification
@@ -1712,16 +1712,16 @@ ELLIPSIS = '...';
 //
 
 skip
-WS  =  "[ \\t\\r\\n\\u000C]+"
+WS  =  "[ \t\r\n\u000C]+"
     ;
 
 skip
 COMMENT
-    =   "/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"
+    =   "/\*[^*]*\*+([^*/][^*]*\*+)*/"
     ;
 
 skip
 LINE_COMMENT
-    =   "//.*$"
+    =   "//[^\n]*$"
     ;
 }

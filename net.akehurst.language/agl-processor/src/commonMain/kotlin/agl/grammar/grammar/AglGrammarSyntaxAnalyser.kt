@@ -279,9 +279,9 @@ class AglGrammarSyntaxAnalyser(
         val mt = target.nonSkipMatchedText
         val escaped = mt.substring(1, mt.length - 1)
         val value = if (isPattern) {
-            escaped.replace("\\\"", "\"").replace("\\\\", "\\")
+            escaped.replace("\\\"", "\"")
         } else {
-            escaped.replace("\\'", "'").replace("\\\\", "\\")
+            escaped.replace("\\'", "'").replace("\\\\","\\")
         }
         return TerminalDefault(value, isPattern)
     }

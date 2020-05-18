@@ -69,10 +69,10 @@ class CharacterMatcher(
         MatcherKind.EMPTY -> error("should not happen")
         MatcherKind.ANY -> "ANY"
         MatcherKind.END_OF_LINE_OR_INPUT -> "$"
-        MatcherKind.NEGATED -> "!()"
-        MatcherKind.LITERAL -> "''"
-        MatcherKind.ONE_OF -> "{}"
-        MatcherKind.RANGE -> "[]"
+        MatcherKind.NEGATED -> "!($matcher)"
+        MatcherKind.LITERAL -> "'$literal'"
+        MatcherKind.ONE_OF -> "{${options.joinToString(",")}}"
+        MatcherKind.RANGE -> "[$min-$max]"
     }
 }
 /*

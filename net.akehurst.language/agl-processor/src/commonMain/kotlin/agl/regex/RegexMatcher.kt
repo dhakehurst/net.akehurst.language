@@ -52,7 +52,10 @@ class RegexMatcher(
         return when(matcher.kind) {
             MatcherKind.EMPTY -> error("should not happen")
             MatcherKind.ANY -> true
-            MatcherKind.END_OF_LINE_OR_INPUT -> TODO()
+            MatcherKind.END_OF_LINE_OR_INPUT -> {
+                val nextPos = pos+1
+                nextPos == text.length || text[pos] == '\n'
+            }
             MatcherKind.NEGATED -> this.matches(matcher.matcher, text, pos).not()
             MatcherKind.LITERAL -> text[pos] == matcher.literal
             MatcherKind.ONE_OF -> {

@@ -31,7 +31,7 @@ private fun createRules(): List<Rule> {
     val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar")
     b.skip("WHITESPACE", true).concatenation(b.terminalPattern("\\s+"))
     b.skip("MULTI_LINE_COMMENT", true).concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"))
-    b.skip("SINGLE_LINE_COMMENT", true).concatenation(b.terminalPattern("//[^\\n]*\\n"))
+    b.skip("SINGLE_LINE_COMMENT", true).concatenation(b.terminalPattern("//[^\\n]*$"))
 
     b.rule("grammarDefinition").concatenation(b.nonTerminal("namespace"), b.nonTerminal("definitions"))
     b.rule("definitions").multi(1, -1, b.nonTerminal("grammar"))
@@ -73,8 +73,8 @@ private fun createRules(): List<Rule> {
     b.rule("nonTerminal").choiceEqual(b.concatenation(b.nonTerminal("qualifiedName")))
     b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
     b.rule("terminal").choiceEqual(b.concatenation(b.nonTerminal("LITERAL")), b.concatenation(b.nonTerminal("PATTERN")))
-    b.leaf("LITERAL").concatenation(b.terminalPattern("'([^'\\\\]|\\\\.)*'"))
-    b.leaf("PATTERN").concatenation(b.terminalPattern("\"([^\"\\\\]|\\\\.)*\""))
+    b.leaf("LITERAL").concatenation(b.terminalPattern("'([^'\\\\]|\\\\'|\\\\\\\\)*'"))
+    b.leaf("PATTERN").concatenation(b.terminalPattern("\"([^\"]|\\\\\")*\""))
     b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"))
     b.leaf("POSITIVE_INTEGER").concatenation(b.terminalPattern("[0-9]+"))
     return b.grammar.rule

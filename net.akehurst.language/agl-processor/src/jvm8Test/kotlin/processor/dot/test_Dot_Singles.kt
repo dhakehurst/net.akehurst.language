@@ -48,10 +48,10 @@ class test_Dot_Singles {
 
     @Test
     fun SINGLE_LINE_COMMENT() {
-        val goal = "SINGLE_LINE_COMMENT"
+        val goal = "graph"
         val sentence = """
           // a comment
-          
+          graph { }
         """.trimIndent()
         processor.parse(goal, sentence)
     }

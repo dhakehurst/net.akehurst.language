@@ -125,7 +125,7 @@ leaf HEX_FLOAT_LITERAL=  '0' "[xX]" (HexDigits '.'? | HexDigits? '.' HexDigits) 
 
 leaf BOOL_LITERAL=       'true' | 'false' ;
 
-leaf CHAR_LITERAL=       '\'' ("[^'\\\\\\r\\n]" | EscapeSequence) '\'';
+leaf CHAR_LITERAL=       '\'' ("[^'\r\n\\]" | EscapeSequence) '\'';
 
 leaf STRING_LITERAL=     "\"(\\?.)*\"" ;
 
@@ -193,17 +193,17 @@ leaf ELLIPSIS=           '...';
 
 // Whitespace and comments
 
-skip WS  =  "[ \\t\\r\\n\\u000C]+";
-skip COMMENT =   "/\\*[^*]*\\*+([^*/][^*]*\\*+)*/" ;
-skip LINE_COMMENT =   "//[^\\n]*$" ;
+skip WS  =  "[ \t\r\n\u000C]+";
+skip COMMENT =   "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+skip LINE_COMMENT =   "//[^\n]*$" ;
 
 // Identifiers
 
-leaf IDENTIFIER=	"([a-zA-Z$_]|[^\\u0000-\\u00FF\\uD800-\\uDBFF]|([\\uD800-\\uDBFF][\\uDC00-\\uDFFF]))([a-zA-Z0-9$_]|[^\\u0000-\\u00FF\\uD800-\\uDBFF]|([\\uD800-\\uDBFF][\\uDC00-\\uDFFF]))*" ;
+leaf IDENTIFIER=	"([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*" ;
 
 // Fragment rules
 EscapeSequence
-    = '\\' "[btnfr\\x22'\\\\]"
+    = '\\' "[btnfr\x22'\\]"
     | '\\' ("[0-3]"? "[0-7]")? "[0-7]"
     | '\\' 'u'+ HexDigit HexDigit HexDigit HexDigit
     ;

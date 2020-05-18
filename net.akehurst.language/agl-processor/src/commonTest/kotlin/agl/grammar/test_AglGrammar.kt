@@ -87,6 +87,21 @@ class test_AglGrammar {
 
         p.parse("a")
     }
+    @Test
+    fun escapeSequence() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                EscapeSequence = '\\' "[btnfr'\\]" ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processor(grammarStr)
+        assertNotNull(p)
+
+        p.parse("\\b")
+    }
 
     @Test
     fun pattern() {

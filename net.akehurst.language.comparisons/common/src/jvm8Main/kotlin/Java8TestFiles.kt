@@ -48,9 +48,13 @@ object Java8TestFiles {
                 throw RuntimeException("Error getting files", e)
             }
             params.sortBy { it.second }
-            var index = 0
+            val firstNFiles = params.take(2000)
+            // remove diagnostic files
+            val f1 = firstNFiles.filter {
+                !it.first.startsWith("diags")
+            }
             // remove files with errors
-            val noerrors = params.filter {
+            val f2 = f1.filter {
                 val path = it.first
                 val outFilePath = path.parent.resolve( path.fileName.toFile().nameWithoutExtension+".out"  )
                 if (outFilePath.toFile().exists()) {
@@ -61,7 +65,10 @@ object Java8TestFiles {
                     true
                 }
             }
+            var index = 0
 
-            return noerrors.take(2000).map { FileData(index++, it.first, it.second) }
+            val fin = f2
+
+            return fin.map { FileData(index++, it.first, it.second) }
         }
 }

@@ -357,6 +357,7 @@ class RegexParser(
             '|' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
             '[' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
             '.' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
+            '$' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
             '?' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
             '+' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
             '*' -> Pair(EscapeKind.SINGLE, (CharacterMatcher(MatcherKind.LITERAL, c)))
@@ -463,6 +464,7 @@ class RegexParser(
         var c = this.next()
         return when (c) {
             '\\' -> '\\'
+            '$' -> '$'
             't' -> '\t'
             'n' -> '\n'
             'r' -> '\r'
