@@ -93,7 +93,7 @@ class ParserState(
         }
     }
 
-    internal var transitions_cache: MutableMap<ParserState?, Set<Transition>?> = mutableMapOf()
+    internal var transitions_cache: MutableMap<ParserState?, List<Transition>?> = mutableMapOf()
 
     val parentRelations: List<ParentRelation> by lazy {
         if (rulePosition.runtimeRule.kind == RuntimeRuleKind.GOAL) {
@@ -145,6 +145,7 @@ class ParserState(
     }
 
     fun createClosure(parentLookahead: Set<RuntimeRule>): RulePositionClosure {
+        //FIXME: fins a faster way to do this....this is a performance issue point
         // create closure from this.rulePosition (root of the state) down
         val stateMap = this.stateSet
         val firstParentLh = parentLookahead//parentRelation?.lookahead ?: emptySet()
@@ -163,11 +164,11 @@ class ParserState(
         return RulePositionClosure(ClosureNumber(-1), this.rulePosition, closureSet)
     }
 
-    fun transitions(previous: ParserState?): Set<Transition> {
+    fun transitions(previous: ParserState?): List<Transition> {
         val cache = this.transitions_cache[previous]
         val trans = if (null == cache) {
             //TODO: remove dependency on previous when calculating transitions! ?
-            val transitions = this.calcTransitions(previous)
+            val transitions = this.calcTransitions(previous).toList()
             this.transitions_cache[previous] = transitions
             transitions
         } else {
@@ -177,51 +178,58 @@ class ParserState(
         return trans
     }
 
+    private val __heightTransitions = mutableSetOf<Transition>()
+    private val __graftTransitions = mutableSetOf<Transition>()
+    private val __widthTransitions = mutableSetOf<Transition>()
+    private val __goalTransitions = mutableSetOf<Transition>()
+    private val __embeddedTransitions = mutableSetOf<Transition>()
+    private val __transitions = mutableSetOf<Transition>()
     private fun calcTransitions(previous: ParserState?): Set<Transition> { //TODO: add previous in order to filter parent relations
-        val heightTransitions = mutableSetOf<Transition>()
-        val graftTransitions = mutableSetOf<Transition>()
-        val widthTransitions = mutableSetOf<Transition>()
-        val goalTransitions = mutableSetOf<Transition>()
-        val embeddedTransitions = mutableSetOf<Transition>()
+        __heightTransitions.clear()
+        __graftTransitions.clear()
+        __widthTransitions.clear()
+        __goalTransitions.clear()
+        __embeddedTransitions.clear()
+        __transitions.clear()
 
         val goal = this.runtimeRule.kind == RuntimeRuleKind.GOAL && this.isAtEnd //from.rulePosition.position==1//from.isAtEnd
         if (goal) {
             val action = Transition.ParseAction.GOAL
             val to = this
-            goalTransitions += Transition(this, to, action, emptySet(), null) { _, _ -> true }
+            __goalTransitions.add( Transition(this, to, action, emptySet(), null) { _, _ -> true } )
         } else {
             if (this.isAtEnd) {
                 if (this.parentRelations.isEmpty()) {
                     //end of skip
                     val action = Transition.ParseAction.GOAL
                     val to = this
-                    goalTransitions += Transition(this, to, action, emptySet(), null) { _, _ -> true }
+                    __goalTransitions.add( Transition(this, to, action, emptySet(), null) { _, _ -> true } )
                 } else {
                     val filteredRelations = this.growsInto(previous)
                     for (parentRelation in filteredRelations) {
                         if (parentRelation.rulePosition.runtimeRule.kind == RuntimeRuleKind.GOAL) {
                             when {
                                 this.runtimeRule == RuntimeRuleSet.END_OF_TEXT -> {
-                                    graftTransitions += this.createGraftTransition(parentRelation)
+                                    __graftTransitions.addAll( this.createGraftTransition(parentRelation) )
                                 }
                                 (parentRelation.lookahead.isEmpty()) -> {
                                     // must be end of skip. TODO: can do something better than this!
                                     val action = Transition.ParseAction.GOAL
                                     val to = this
-                                    goalTransitions += Transition(this, to, action, emptySet(), null) { _, _ -> true }
+                                    __goalTransitions.add( Transition(this, to, action, emptySet(), null) { _, _ -> true } )
                                 }
                                 else -> {
-                                    graftTransitions += this.createGraftTransition(parentRelation)
+                                    __graftTransitions.addAll( this.createGraftTransition(parentRelation) )
                                 }
                             }
                         } else {
                             val height = parentRelation.rulePosition.isAtStart
                             val graft = parentRelation.rulePosition.isAtStart.not()
                             if (height) {
-                                heightTransitions += this.createHeightTransition(parentRelation)
+                                __heightTransitions.addAll( this.createHeightTransition(parentRelation) )
                             }
                             if (graft) {
-                                graftTransitions += this.createGraftTransition(parentRelation)
+                                __graftTransitions.addAll(this.createGraftTransition(parentRelation))
                             }
                         }
                     }
@@ -236,8 +244,8 @@ class ParserState(
                     val closure = this.createClosure(prLh)
                     for (closureRPlh in closure.content) {
                         when (closureRPlh.runtimeRule.kind) {
-                            RuntimeRuleKind.TERMINAL -> widthTransitions += this.createWidthTransition(closureRPlh)
-                            RuntimeRuleKind.EMBEDDED -> embeddedTransitions += this.createEmbeddedTransition(closureRPlh)
+                            RuntimeRuleKind.TERMINAL -> __widthTransitions.add( this.createWidthTransition(closureRPlh) )
+                            RuntimeRuleKind.EMBEDDED -> __embeddedTransitions.add( this.createEmbeddedTransition(closureRPlh) )
                         }
                     }
                 } else {
@@ -246,8 +254,8 @@ class ParserState(
                         val closure = this.createClosure(parentRelation.lookahead)
                         for (closureRPlh in closure.content) {
                             when (closureRPlh.runtimeRule.kind) {
-                                RuntimeRuleKind.TERMINAL -> widthTransitions += this.createWidthTransition(closureRPlh)
-                                RuntimeRuleKind.EMBEDDED -> embeddedTransitions += this.createEmbeddedTransition(closureRPlh)
+                                RuntimeRuleKind.TERMINAL -> __widthTransitions.add( this.createWidthTransition(closureRPlh) )
+                                RuntimeRuleKind.EMBEDDED -> __embeddedTransitions.add( this.createEmbeddedTransition(closureRPlh) )
                             }
                         }
                     }
@@ -257,10 +265,10 @@ class ParserState(
 
         //TODO: merge transitions with everything duplicate except lookahead (merge lookaheads)
         //not sure if this should be before or after the h/g conflict test.
-
+/*
         val conflictHeightTransitionPairs = mutableSetOf<Pair<Transition, Transition>>()
-        for (trh in heightTransitions) {
-            for (trg in graftTransitions) {
+        for (trh in __heightTransitions) {
+            for (trg in __graftTransitions) {
                 if (trg.lookaheadGuard.containsAll(trh.lookaheadGuard)) {
                     val newTr = Transition(trh.from, trh.to, trh.action, trh.lookaheadGuard, trg.prevGuard, trh.runtimeGuard)
                     conflictHeightTransitionPairs.add(Pair(trh, trg))
@@ -276,9 +284,9 @@ class ParserState(
         //Note: need to do the conflict stuff to make multi work, at present!
 
         //val newHeightTransitions = (heightTransitions - conflictHeightTransitionPairs.map { it.first }) + conflictHeightTransitions
-
-        val newHeightTransitions = heightTransitions
-        val mergedWidthTransitions = widthTransitions.groupBy { it.to }.map {
+*/
+        val newHeightTransitions = __heightTransitions
+        val mergedWidthTransitions = __widthTransitions.groupBy { it.to }.map {
             Transition(this, it.key, Transition.ParseAction.WIDTH, it.value.flatMap { it.lookaheadGuard }.toSet(), null) { _, _ -> true }
         }
 
@@ -286,12 +294,16 @@ class ParserState(
             Transition(this, it.key.first, Transition.ParseAction.HEIGHT, it.value.flatMap { it.lookaheadGuard }.toSet(), it.key.second) { _, _ -> true }
         }
 
-        val mergedGraftTransitions = graftTransitions.groupBy { Pair(it.to, it.prevGuard) }.map {
+        val mergedGraftTransitions = __graftTransitions.groupBy { Pair(it.to, it.prevGuard) }.map {
             Transition(this, it.key.first, Transition.ParseAction.GRAFT, it.value.flatMap { it.lookaheadGuard }.toSet(), it.key.second, it.value[0].runtimeGuard)
         }
 
-        val transitions = mergedHeightTransitions + mergedGraftTransitions + mergedWidthTransitions + goalTransitions + embeddedTransitions
-        return transitions.toSet()
+        __transitions.addAll(mergedHeightTransitions)
+        __transitions.addAll(mergedGraftTransitions)
+        __transitions.addAll(mergedWidthTransitions)
+        __transitions.addAll(__goalTransitions)
+        __transitions.addAll(__embeddedTransitions)
+        return __transitions.toSet()
     }
 
     private fun createWidthTransition(closureRPlh: RulePositionWithLookahead): Transition {

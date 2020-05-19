@@ -32,7 +32,6 @@ import net.akehurst.language.agl.processor.Agl
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-
 @RunWith(Parameterized::class)
 class test_Dot(val data:Data) {
 

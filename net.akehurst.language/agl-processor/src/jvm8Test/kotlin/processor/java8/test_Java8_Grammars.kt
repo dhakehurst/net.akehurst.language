@@ -24,10 +24,17 @@ import kotlin.test.assertNotNull
 
 class test_Java8_Grammars {
 
+    @Test(timeout=5000)
+    fun Java8Agl() {
+        val grammarStr = this::class.java.getResource("/java8/Java8.agl").readText()
+        val actual = Agl.processor(grammarStr)
+        assertNotNull(actual)
+    }
 
     @Test(timeout=5000)
-    fun Java8() {
-        val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()
+    fun Java8SpecAntlr() {
+        //val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()
+        val grammarStr = this::class.java.getResource("/java8/Java8SpecAntlr.agl").readText()
         val actual = Agl.processor(grammarStr)
         assertNotNull(actual)
     }

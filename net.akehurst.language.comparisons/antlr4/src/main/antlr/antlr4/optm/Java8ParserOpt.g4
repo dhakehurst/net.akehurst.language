@@ -27,13 +27,12 @@
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-parser grammar Java8Parser;
-
+parser grammar Java8ParserOpt;
 @header {
-package antlr4.optm;
+    package antlr4.optm;
 }
 
-options { tokenVocab='antlr4/optm/Java8Lexer'; }
+options { tokenVocab='antlr4/optm/Java8LexerOpt'; }
 
 compilationUnit
     : packageDeclaration? importDeclaration* typeDeclaration* EOF
@@ -463,17 +462,24 @@ expressionList
     : expression (',' expression)*
     ;
 
+methodCall
+    : IDENTIFIER '(' expressionList? ')'
+    | THIS '(' expressionList? ')'
+    | SUPER '(' expressionList? ')'
+    ;
+
 expression
     : primary
     | expression bop='.'
-      (IDENTIFIER
+      ( IDENTIFIER
+      | methodCall
       | THIS
       | NEW nonWildcardTypeArguments? innerCreator
       | SUPER superSuffix
       | explicitGenericInvocation
       )
     | expression '[' expression ']'
-    | expression '(' expressionList? ')'
+    | methodCall
     | NEW creator
     | '(' typeType ')' expression
     | expression postfix=('++' | '--')
@@ -490,7 +496,7 @@ expression
     | expression bop='|' expression
     | expression bop='&&' expression
     | expression bop='||' expression
-    | expression bop='?' expression ':' expression
+    | <assoc=right> expression bop='?' expression ':' expression
     | <assoc=right> expression
       bop=('=' | '+=' | '-=' | '*=' | '/=' | '&=' | '|=' | '^=' | '>>=' | '>>>=' | '<<=' | '%=')
       expression

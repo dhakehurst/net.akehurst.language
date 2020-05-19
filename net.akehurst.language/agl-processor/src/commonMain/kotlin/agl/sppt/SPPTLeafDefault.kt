@@ -43,7 +43,7 @@ class SPPTLeafDefault(
 
     override val tagList = mutableListOf<String>()
 
-    override var eolPositions: List<Int> = emptyList()
+    override lateinit var eolPositions: List<Int> // = emptyList()
 
     override val metaTags: List<String> by lazy { //TODO: make this configurable on the LanguageProcessor
         val map = mutableMapOf<String, String>(
@@ -58,7 +58,7 @@ class SPPTLeafDefault(
     }
     // --- SPPTNode ---
 
-    override val nonSkipMatchedText: String = if (isSkip) "" else this.matchedText
+    override val nonSkipMatchedText: String get() = if (isSkip) "" else this.matchedText
 
     override fun contains(other: SPPTNode): Boolean {
         return this.identity == other.identity

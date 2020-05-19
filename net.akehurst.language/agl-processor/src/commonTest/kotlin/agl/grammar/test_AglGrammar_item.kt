@@ -138,8 +138,8 @@ class test_AglGrammar_item {
 
     @Test
     fun PATTERN2() {
-        val actual = parse("PATTERN", "\"([^\\\"\\]|\\.)*\"")
-        val expected = this.sppt("PATTERN  : '\"([^\\\"\\]|\\.)*\"' ")
+        val actual = parse("PATTERN", "\"([^\\\"\\\\]|\\.)*\"")
+        val expected = this.sppt("PATTERN  : '\"([^\\\"\\\\]|\\.)*\"' ")
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }

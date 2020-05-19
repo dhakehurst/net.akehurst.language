@@ -48,10 +48,12 @@ object Java8TestFiles {
                 throw RuntimeException("Error getting files", e)
             }
             params.sortBy { it.second }
-            val firstNFiles = params.take(2000)
+            val f = params.filter{
+                it.second < 3000
+            }
             // remove diagnostic files
-            val f1 = firstNFiles.filter {
-                !it.first.startsWith("diags")
+            val f1 = f.filter {
+                it.first.toString().contains("/diags/").not()
             }
             // remove files with errors
             val f2 = f1.filter {

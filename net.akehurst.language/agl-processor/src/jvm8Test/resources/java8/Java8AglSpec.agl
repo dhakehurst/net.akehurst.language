@@ -43,21 +43,19 @@ grammar Literals {
         | '\\' ("[0-3]"? "[0-7]")? "[0-7]"
         | '\\' 'u'+ "[0-9a-fA-F]{4}"
         ;
-    leaf STRING_LITERAL    = "\"([^\"\]|\.)*\"" ;
+    leaf STRING_LITERAL    = "\"([^\"\\]|\\.)*\"" ;
     leaf NULL_LITERAL      = 'null' ;
 
 }
 
-grammar Types {
+grammar Types extends Base {
 
     Type = PrimitiveType | ReferenceType ;
 
-    PrimitiveType = Annotation* BuiltInType ;
-    BuiltInType
-      = 'byte' | 'short' | 'int' | 'long' | 'char'
-      | 'float' | 'double'
-      | 'boolean'
-      ;
+    PrimitiveType = Annotation* NumericType | Annotation* 'boolean' ;
+    NumericType = IntegralType | FloatingPointType ;
+    IntegralType = 'byte' | 'short' | 'int' | 'long' | 'char' ;
+    FloatingPointType = 'float' | 'double' ;
 
     ReferenceType = QualifiedClassOrInterfaceType | TypeVariable | ArrayType ;
     QualifiedClassOrInterfaceType = [ClassOrInterfaceType / '.']+ ;

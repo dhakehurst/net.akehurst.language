@@ -19,20 +19,21 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.agl.grammar.runtime.ConverterToRuntimeRules
 import net.akehurst.language.agl.sppt.SPPTParser
+import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.assertEquals
 
 abstract class test_ProcessorAbstract {
 
-    fun test(grammar:Grammar, goal:String, sentence:String, vararg expectedTrees:String) {
-        val processor = Agl.processor(grammar)
+    fun test(processor:LanguageProcessor, goal:String, sentence:String, vararg expectedTrees:String) {
         val actual = processor.parse(goal, sentence)
 
-        val converter = ConverterToRuntimeRules(grammar)
+        val converter = ConverterToRuntimeRules(processor.grammar)
         converter.transform()
         val rrb = converter.builder
         val sppt = SPPTParser(rrb)
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
+
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 

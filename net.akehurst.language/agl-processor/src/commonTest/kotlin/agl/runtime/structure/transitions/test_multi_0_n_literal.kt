@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
 
 class test_multi_0_n_literal {
 
-    private fun check(actual: Set<Transition>, expected: Set<Transition>) {
+    private fun check(actual: List<Transition>, expected: List<Transition>) {
         assertEquals(expected, actual)
     }
 
@@ -35,18 +35,18 @@ class test_multi_0_n_literal {
         val rrs = rrb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        this.check(s0.transitions(null), setOf(
+        this.check(s0.transitions(null), listOf(
                 Transition(s0, s0.stateSet.fetch(RulePosition(r_a, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(r_a,RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true },
                 Transition(s0, s0.stateSet.fetch(RulePosition(r_S.emptyRuleItem, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true }
         ))
 
         val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S.emptyRuleItem, 0, RulePosition.END_OF_RULE))
-        this.check(s1.transitions(s0), setOf(
+        this.check(s1.transitions(s0), listOf(
                 Transition(s1, s0.stateSet.fetch(RulePosition(r_S, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE)), Transition.ParseAction.HEIGHT, setOf(RuntimeRuleSet.END_OF_TEXT), RulePosition(r_S, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.START_OF_RULE)) { _, _ -> true }
         ))
 
         val s2 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE))
-        this.check(s2.transitions(s0), setOf(
+        this.check(s2.transitions(s0), listOf(
                 Transition(s2, s0.stateSet.fetch(RulePosition(s0.runtimeRule, 0, 1)), Transition.ParseAction.GRAFT, setOf(RuntimeRuleSet.END_OF_TEXT), RulePosition(s0.runtimeRule, 0, 0)) { _, _ -> true }
         ))
     }
@@ -59,19 +59,19 @@ class test_multi_0_n_literal {
         val rrs = rrb.ruleSet()
         val s0 = rrs.startingState(r_S)
 
-        this.check(s0.transitions(null), setOf(
+        this.check(s0.transitions(null), listOf(
                 Transition(s0, s0.stateSet.fetch(RulePosition(r_a, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(r_a,RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true },
                 Transition(s0, s0.stateSet.fetch(RulePosition(r_S.emptyRuleItem, 0, RulePosition.END_OF_RULE)), Transition.ParseAction.WIDTH, setOf(RuntimeRuleSet.END_OF_TEXT), null) { _, _ -> true }
         ))
 
         val s1 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_a, 0, RulePosition.END_OF_RULE))
-        this.check(s1.transitions(s0), setOf(
+        this.check(s1.transitions(s0), listOf(
                 Transition(s1, s0.stateSet.fetch(RulePosition(r_S, RuntimeRuleItem.MULTI__ITEM, RulePosition.MULIT_ITEM_POSITION)), Transition.ParseAction.HEIGHT, setOf(r_a, RuntimeRuleSet.END_OF_TEXT), RulePosition(r_S, RuntimeRuleItem.MULTI__ITEM, RulePosition.START_OF_RULE)){ _, _ -> true },
                 Transition(s1, s0.stateSet.fetch(RulePosition(r_S, RuntimeRuleItem.MULTI__ITEM, RulePosition.END_OF_RULE)), Transition.ParseAction.HEIGHT, setOf(RuntimeRuleSet.END_OF_TEXT), RulePosition(r_S, RuntimeRuleItem.MULTI__ITEM, RulePosition.START_OF_RULE)) { _, _ -> true }
         ))
 
         val s2 = s0.stateSet.fetchOrCreateParseState(RulePosition(r_S, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE))
-        this.check(s2.transitions(s0), setOf(
+        this.check(s2.transitions(s0), listOf(
                 Transition(s2, s0.stateSet.fetch(RulePosition(s0.runtimeRule, 0, 1)), Transition.ParseAction.GRAFT, setOf(RuntimeRuleSet.END_OF_TEXT), RulePosition(s0.runtimeRule, 0, 0)) { _, _ -> true }
         ))
     }

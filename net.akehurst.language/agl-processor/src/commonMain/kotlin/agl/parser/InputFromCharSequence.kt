@@ -25,6 +25,7 @@ internal class InputFromCharSequence(val text: CharSequence) {
 
     companion object {
         val END_OF_TEXT = 3.toChar().toString()
+        val EOL_PATTERN = Regex("\n", setOf(RegexOption.MULTILINE))
     }
 
     // private var lastlocationCachePosition = -1
@@ -46,28 +47,13 @@ internal class InputFromCharSequence(val text: CharSequence) {
     }
 
     //TODO: write a scanner that counts eols as it goes, rather than scanning the text twice
-     fun eolPositions(text: String): List<Int> {
-        val regex = Regex("\n", setOf(RegexOption.MULTILINE))
-        return regex.findAll(text).toList().map { it.range.first }
+    fun eolPositions(text: String): List<Int> {
+        return EOL_PATTERN.findAll(text).toList().map { it.range.first }
     }
 
-    private fun matchLiteral(position: Int, patternText: String): RegexMatcher.MatchResult? {
+    private fun matchLiteral(position: Int, patternText: String): Match? {
         val match = this.text.regionMatches(position, patternText, 0, patternText.length, false)
         val matchedText = if (match) patternText else null
-        return if (null == matchedText) {
-            null
-        } else {
-            val eolPositions = this.eolPositions(matchedText)
-            RegexMatcher.MatchResult(matchedText, eolPositions)
-        }
-    }
-
-    private fun matchRegEx(position: Int, patternText: String): Match? {
-
-        val pattern = Regex(patternText, setOf(RegexOption.MULTILINE))
-        val m = pattern.find(this.text, position)
-        val lookingAt = if (null==m) false else pattern.matches(m.value) //FIXME: inefficient, must match regex twice
-        val matchedText = if (lookingAt) m?.value else null
         return if (null == matchedText) {
             null
         } else {
@@ -76,11 +62,27 @@ internal class InputFromCharSequence(val text: CharSequence) {
         }
     }
 
-    internal fun tryMatchText(position: Int, patternText: String, pattern: RegexMatcher?): RegexMatcher.MatchResult? {
+    private fun matchRegEx(position: Int, regex: Regex): Match? {
+        val m = regex.find(this.text, position)
+        return if (null == m)
+            null
+        else {
+            val matchedText = m.value
+            val x = this.text.substring(position, position+matchedText.length)
+            if (x == matchedText) {
+                val eolPositions = this.eolPositions(matchedText)
+                Match(matchedText, eolPositions)
+            } else {
+                null
+            }
+        }
+    }
+
+    internal fun tryMatchText(position: Int, patternText: String, pattern: Regex?): Match? {
         val matched = when {
-            (position >= this.text.length) -> if (patternText == END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
-            (null==pattern) -> this.matchLiteral(position, patternText)
-            else -> pattern.match(this.text, position)
+            (position >= this.text.length) -> if (patternText == END_OF_TEXT) Match(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
+            (null == pattern) -> this.matchLiteral(position, patternText)
+            else -> this.matchRegEx(position, pattern)//pattern.match(this.text, position)
         }
         return matched
     }

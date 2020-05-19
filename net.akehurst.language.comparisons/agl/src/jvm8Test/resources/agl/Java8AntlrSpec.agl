@@ -1,5 +1,5 @@
 /**
- * Modified from Antlr v4 Java8.v4 file.
+ * Modified from Antlr v4 Java8 grammar [https://github.com/antlr/grammars-v4/tree/master/java/java8]
  */
 
 /*
@@ -55,14 +55,10 @@
 /Users/parrt/antlr/code/grammars-v4/java8/./Test.java
 Total lexer+parser time 30844ms.
  */
- 
-namespace test
- 
-grammar Java8 {
 
-/*
- * Productions from §3 (Lexical Structure)
- */
+namespace java8.antlr.spec
+
+grammar Java8ParserSpec {
 
 literal
 	=	IntegerLiteral
@@ -76,11 +72,6 @@ literal
 /*
  * Productions from §4 (Types, Values, and Variables)
  */
-
-type
-	=	primitiveType
-	<	referenceType
-	;
 
 primitiveType
 	=	annotation* numericType
@@ -240,7 +231,7 @@ compilationUnit
 	;
 
 packageDeclaration
-	=	packageModifier* 'package' Identifier ('.' Identifier)* ';'
+	=	packageModifier* 'package' packageName ';'
 	;
 
 packageModifier
@@ -463,13 +454,14 @@ methodDeclarator
 	;
 
 formalParameterList
-	=	formalParameters ',' lastFormalParameter
+	=	receiverParameter
+	|	formalParameters ',' lastFormalParameter
 	|	lastFormalParameter
 	;
 
 formalParameters
 	=	formalParameter (',' formalParameter)*
-	<	receiverParameter (',' formalParameter)*
+	|	receiverParameter (',' formalParameter)*
 	;
 
 formalParameter
@@ -724,7 +716,7 @@ block
 	;
 
 blockStatements
-	=	blockStatement blockStatement*
+	=	blockStatement+
 	;
 
 blockStatement
@@ -1348,206 +1340,152 @@ castExpression
 	|	'(' referenceType additionalBound* ')' lambdaExpression
 	;
 
-// LEXER
-
-// §3.9 Keywords
-
-ABSTRACT = 'abstract';
-ASSERT = 'assert';
-BOOLEAN = 'boolean';
-BREAK = 'break';
-BYTE = 'byte';
-CASE = 'case';
-CATCH = 'catch';
-CHAR = 'char';
-CLASS = 'class';
-CONST = 'const';
-CONTINUE = 'continue';
-DEFAULT = 'default';
-DO = 'do';
-DOUBLE = 'double';
-ELSE = 'else';
-ENUM = 'enum';
-EXTENDS = 'extends';
-FINAL = 'final';
-FINALLY = 'finally';
-FLOAT = 'float';
-FOR = 'for';
-IF = 'if';
-GOTO = 'goto';
-IMPLEMENTS = 'implements';
-IMPORT = 'import';
-INSTANCEOF = 'instanceof';
-INT = 'int';
-INTERFACE = 'interface';
-LONG = 'long';
-NATIVE = 'native';
-NEW = 'new';
-PACKAGE = 'package';
-PRIVATE = 'private';
-PROTECTED = 'protected';
-PUBLIC = 'public';
-RETURN = 'return';
-SHORT = 'short';
-STATIC = 'static';
-STRICTFP = 'strictfp';
-SUPER = 'super';
-SWITCH = 'switch';
-SYNCHRONIZED = 'synchronized';
-THIS = 'this';
-THROW = 'throw';
-THROWS = 'throws';
-TRANSIENT = 'transient';
-TRY = 'try';
-VOID = 'void';
-VOLATILE = 'volatile';
-WHILE = 'while';
+// Lexer
 
 // §3.10.1 Integer Literals
-
-IntegerLiteral
+leaf IntegerLiteral
 	=	DecimalIntegerLiteral
 	|	HexIntegerLiteral
 	|	OctalIntegerLiteral
 	|	BinaryIntegerLiteral
 	;
 
-
+leaf
 DecimalIntegerLiteral
 	=	DecimalNumeral IntegerTypeSuffix?
 	;
 
-
+leaf
 HexIntegerLiteral
 	=	HexNumeral IntegerTypeSuffix?
 	;
 
-
+leaf
 OctalIntegerLiteral
 	=	OctalNumeral IntegerTypeSuffix?
 	;
 
-
+leaf
 BinaryIntegerLiteral
 	=	BinaryNumeral IntegerTypeSuffix?
 	;
 
-
+leaf
 IntegerTypeSuffix
 	=	"[lL]"
 	;
 
-
+leaf
 DecimalNumeral
 	=	'0'
 	|	NonZeroDigit (Digits? | Underscores Digits)
 	;
 
-
+leaf
 Digits
 	=	Digit (DigitsAndUnderscores? Digit)?
 	;
 
-
+leaf
 Digit
 	=	'0'
 	|	NonZeroDigit
 	;
 
-
+leaf
 NonZeroDigit
 	=	"[1-9]"
 	;
 
-
+leaf
 DigitsAndUnderscores
 	=	DigitOrUnderscore+
 	;
 
-
+leaf
 DigitOrUnderscore
 	=	Digit
 	|	'_'
 	;
 
-
+leaf
 Underscores
 	=	'_'+
 	;
 
-
+leaf
 HexNumeral
 	=	'0' "[xX]" HexDigits
 	;
 
-
+leaf
 HexDigits
 	=	HexDigit (HexDigitsAndUnderscores? HexDigit)?
 	;
 
-
+leaf
 HexDigit
 	=	"[0-9a-fA-F]"
 	;
 
-
+leaf
 HexDigitsAndUnderscores
 	=	HexDigitOrUnderscore+
 	;
 
-
+leaf
 HexDigitOrUnderscore
 	=	HexDigit
 	|	'_'
 	;
 
-
+leaf
 OctalNumeral
 	=	'0' Underscores? OctalDigits
 	;
 
-
+leaf
 OctalDigits
 	=	OctalDigit (OctalDigitsAndUnderscores? OctalDigit)?
 	;
 
-
+leaf
 OctalDigit
 	=	"[0-7]"
 	;
 
-
+leaf
 OctalDigitsAndUnderscores
 	=	OctalDigitOrUnderscore+
 	;
 
-
+leaf
 OctalDigitOrUnderscore
 	=	OctalDigit
 	|	'_'
 	;
 
-
+leaf
 BinaryNumeral
 	=	'0' "[bB]" BinaryDigits
 	;
 
-
+leaf
 BinaryDigits
 	=	BinaryDigit (BinaryDigitsAndUnderscores? BinaryDigit)?
 	;
 
-
+leaf
 BinaryDigit
 	=	"[01]"
 	;
 
-
+leaf
 BinaryDigitsAndUnderscores
 	=	BinaryDigitOrUnderscore+
 	;
 
-
+leaf
 BinaryDigitOrUnderscore
 	=	BinaryDigit
 	|	'_'
@@ -1555,12 +1493,12 @@ BinaryDigitOrUnderscore
 
 // §3.10.2 Floating-Point Literals
 
-FloatingPointLiteral
+leaf FloatingPointLiteral
 	=	DecimalFloatingPointLiteral
 	|	HexadecimalFloatingPointLiteral
 	;
 
-
+leaf
 DecimalFloatingPointLiteral
 	=	Digits '.' Digits? ExponentPart? FloatTypeSuffix?
 	|	'.' Digits ExponentPart? FloatTypeSuffix?
@@ -1568,217 +1506,161 @@ DecimalFloatingPointLiteral
 	|	Digits FloatTypeSuffix
 	;
 
-
+leaf
 ExponentPart
 	=	ExponentIndicator SignedInteger
 	;
 
-
+leaf
 ExponentIndicator
 	=	"[eE]"
 	;
 
-
+leaf
 SignedInteger
 	=	Sign? Digits
 	;
 
-
+leaf
 Sign
 	=	"[+-]"
 	;
 
-
+leaf
 FloatTypeSuffix
 	=	"[fFdD]"
 	;
 
-
+leaf
 HexadecimalFloatingPointLiteral
 	=	HexSignificand BinaryExponent FloatTypeSuffix?
 	;
 
-
+leaf
 HexSignificand
 	=	HexNumeral '.'?
 	|	'0' "[xX]" HexDigits? '.' HexDigits
 	;
 
-
+leaf
 BinaryExponent
 	=	BinaryExponentIndicator SignedInteger
 	;
 
-
+leaf
 BinaryExponentIndicator
 	=	"[pP]"
 	;
 
 // §3.10.3 Boolean Literals
 
-BooleanLiteral
+leaf BooleanLiteral
 	=	'true'
 	|	'false'
 	;
 
 // §3.10.4 Character Literals
 
-CharacterLiteral
+leaf CharacterLiteral
 	=	'\'' SingleCharacter '\''
 	|	'\'' EscapeSequence '\''
 	;
 
-
+leaf
 SingleCharacter
-	=	"[^'\\]"
+	=	"[^'\\\r\n]"
 	;
 
 // §3.10.5 String Literals
 
-StringLiteral
+leaf StringLiteral
 	=	'"' StringCharacters? '"'
 	;
 
-
+leaf
 StringCharacters
 	=	StringCharacter+
 	;
 
-
+leaf
 StringCharacter
-	=	"[^\x22\\]"
+	=	"[^\"\\\r\n]"
 	|	EscapeSequence
 	;
 
 // §3.10.6 Escape Sequences for Character and String Literals
 
-
+leaf
 EscapeSequence
-	=	'\\' "[btnfr\x22'\\]"
+	=	'\\' "[btnfr\"'\\]"
 	|	OctalEscape
     |   UnicodeEscape // This is not in the spec but prevents having to preprocess the input
 	;
 
-
+leaf
 OctalEscape
 	=	'\\' OctalDigit
 	|	'\\' OctalDigit OctalDigit
 	|	'\\' ZeroToThree OctalDigit OctalDigit
 	;
 
-
+leaf
 ZeroToThree
 	=	"[0-3]"
 	;
 
 // This is not in the spec but prevents having to preprocess the input
-
+leaf
 UnicodeEscape
-    =   '\\' 'u' HexDigit HexDigit HexDigit HexDigit
+    =   '\\' 'u'+  HexDigit HexDigit HexDigit HexDigit
     ;
 
 // §3.10.7 The Null Literal
 
-NullLiteral
+leaf NullLiteral
 	=	'null'
 	;
 
-// §3.11 Separators
-
-LPAREN = '(';
-RPAREN = ')';
-LBRACE = '{';
-RBRACE = '}';
-LBRACK = '[';
-RBRACK = ']';
-SEMI = ';';
-COMMA = ',';
-DOT = '.';
-
-// §3.12 Operators
-
-ASSIGN = '=';
-GT = '>';
-LT = '<';
-BANG = '!';
-TILDE = '~';
-QUESTION = '?';
-COLON = '=';
-EQUAL = '==';
-LE = '<=';
-GE = '>=';
-NOTEQUAL = '!=';
-AND = '&&';
-OR = '||';
-INC = '++';
-DEC = '--';
-ADD = '+';
-SUB = '-';
-MUL = '*';
-DIV = '/';
-BITAND = '&';
-BITOR = '|';
-CARET = '^';
-MOD = '%';
-ARROW = '->';
-COLONCOLON = '::';
-
-ADD_ASSIGN = '+=';
-SUB_ASSIGN = '-=';
-MUL_ASSIGN = '*=';
-DIV_ASSIGN = '/=';
-AND_ASSIGN = '&=';
-OR_ASSIGN = '|=';
-XOR_ASSIGN = '^=';
-MOD_ASSIGN = '%=';
-LSHIFT_ASSIGN = '<<=';
-RSHIFT_ASSIGN = '>>=';
-URSHIFT_ASSIGN = '>>>=';
-
 // §3.8 Identifiers (must appear after all keywords in the grammar)
 
-Identifier
-	=	"([a-zA-Z$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))([a-zA-Z0-9$_]|[^\u0000-\u00FF\uD800-\uDBFF]|([\uD800-\uDBFF][\uDC00-\uDFFF]))*"   //JavaLetter JavaLetterOrDigit*
+leaf Identifier
+	=	JavaLetter JavaLetterOrDigit*
 	;
-/*
+
+leaf
 JavaLetter
-	=	"[a-zA-Z$_]" // these are the "java letters" below 0xFF
-	|	// covers all characters above 0xFF which are not a surrogate
-		"[^\u0000-\u00FF\uD800-\uDBFF]"
+	=	"[a-zA-Z$_]" // these are the "java letters" below 0x7F
+	|	// covers all characters above 0x7F which are not a surrogate
+		"[^\u0000-\u007F\uD800-\uDBFF]"
 	|	// covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
-		"[\uD800-\uDBFF] [\uDC00-\uDFFF]"
+		"[\uD800-\uDBFF] [\uDC00-\uDFFF] "
 	;
 
+leaf
 JavaLetterOrDigit
-	=	"[a-zA-Z0-9$_]" // these are the "java letters or digits" below 0xFF
-	|	// covers all characters above 0xFF which are not a surrogate
-		"[^\u0000-\u00FF\uD800-\uDBFF]"
+	=	"[a-zA-Z0-9$_]" // these are the "java letters or digits" below 0x7F
+	|	// covers all characters above 0x7F which are not a surrogate
+		"[^\u0000-\u007F\uD800-\uDBFF]"
 	|	// covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
 		"[\uD800-\uDBFF] [\uDC00-\uDFFF]"
-	;
-*/
-//
-// Additional symbols not defined in the lexical specification
-//
-
-AT = '@';
-ELLIPSIS = '...';
+    ;
 
 //
 // Whitespace and comments
 //
 
-skip
+skip leaf
 WS  =  "[ \t\r\n\u000C]+"
     ;
 
-skip
+skip leaf
 COMMENT
-    =   "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/"
+    =  "/\*[^*]*\*+([^*/][^*]*\*+)*/"
     ;
 
-skip
+skip leaf
 LINE_COMMENT
-    =   "//[^\n]*$"
+    =   '//' "[^\r\n]*"
     ;
+
 }

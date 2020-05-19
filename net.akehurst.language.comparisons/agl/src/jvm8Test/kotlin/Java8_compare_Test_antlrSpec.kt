@@ -21,10 +21,9 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.comparisons.common.FileData
 import net.akehurst.language.comparisons.common.Java8TestFiles
+import net.akehurst.language.comparisons.common.Results
 import net.akehurst.language.comparisons.common.TimeLogger
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.*
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.IOException
@@ -53,17 +52,29 @@ class Java8_compare_Test_antlrSpec(val file: FileData) {
             return proc
         }
 
-        val specJava8Processor = createAndBuildProcessor("/agl/Java8Spec.agl")
+        val specJava8Processor = createAndBuildProcessor("/agl/Java8AntlrSpec.agl")
 
         var input: String? = null
 
         fun parseWithJava8Spec(file: FileData): SharedPackedParseTree? {
             val tree = specJava8Processor.parse("compilationUnit", input!!)
-            TimeLogger("agl_spec", file).use { timer ->
+            TimeLogger("agl_antlr_spec", file).use { timer ->
                 val tree = specJava8Processor.parse("compilationUnit", input!!)
                 timer.success()
                 return tree
             }
+        }
+
+        @BeforeClass
+        @JvmStatic
+        fun init() {
+            Results.reset()
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun end() {
+            Results.write()
         }
     }
 

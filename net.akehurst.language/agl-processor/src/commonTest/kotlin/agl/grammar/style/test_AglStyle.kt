@@ -90,7 +90,7 @@ class test_AglStyle {
     @Test
     fun regexWithQuotes() {
         val text = """
-            "\\\"(?:\\\\?.)*?\\\"" {
+            "\"(\\?.)*\"" {
               font-family: "Courier New";
               color: darkblue;
             }

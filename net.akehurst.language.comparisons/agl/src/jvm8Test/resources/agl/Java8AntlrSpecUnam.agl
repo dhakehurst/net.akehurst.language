@@ -1,3 +1,7 @@
+/**
+ * Modified from Antlr v4 Java8 grammar [https://github.com/antlr/grammars-v4/tree/master/java/java8]
+ */
+
 /*
  * [The "BSD license"]
  *  Copyright (c) 2014 Terence Parr
@@ -51,18 +55,13 @@
 /Users/parrt/antlr/code/grammars-v4/java8/./Test.java
 Total lexer+parser time 30844ms.
  */
-grammar Java8;
 
-@header {
-package antlr4.spec;
-}
+namespace java8.antlr.spec
 
-/*
- * Productions from §3 (Lexical Structure)
- */
+grammar Java8ParserSpecUnam {
 
 literal
-	:	IntegerLiteral
+	=	IntegerLiteral
 	|	FloatingPointLiteral
 	|	BooleanLiteral
 	|	CharacterLiteral
@@ -74,23 +73,18 @@ literal
  * Productions from §4 (Types, Values, and Variables)
  */
 
-type
-	:	primitiveType
-	|	referenceType
-	;
-
 primitiveType
-	:	annotation* numericType
+	=	annotation* numericType
 	|	annotation* 'boolean'
 	;
 
 numericType
-	:	integralType
+	=	integralType
 	|	floatingPointType
 	;
 
 integralType
-	:	'byte'
+	=	'byte'
 	|	'short'
 	|	'int'
 	|	'long'
@@ -98,18 +92,18 @@ integralType
 	;
 
 floatingPointType
-	:	'float'
+	=	'float'
 	|	'double'
 	;
 
 referenceType
-	:	classOrInterfaceType
+	=	classOrInterfaceType
 	|	typeVariable
 	|	arrayType
 	;
 
 classOrInterfaceType
-	:	(	classType_lfno_classOrInterfaceType
+	=	(	classType_lfno_classOrInterfaceType
 		|	interfaceType_lfno_classOrInterfaceType
 		)
 		(	classType_lf_classOrInterfaceType
@@ -118,80 +112,80 @@ classOrInterfaceType
 	;
 
 classType
-	:	annotation* Identifier typeArguments?
+	=	annotation* Identifier typeArguments?
 	|	classOrInterfaceType '.' annotation* Identifier typeArguments?
 	;
 
 classType_lf_classOrInterfaceType
-	:	'.' annotation* Identifier typeArguments?
+	=	'.' annotation* Identifier typeArguments?
 	;
 
 classType_lfno_classOrInterfaceType
-	:	annotation* Identifier typeArguments?
+	=	annotation* Identifier typeArguments?
 	;
 
 interfaceType
-	:	classType
+	=	classType
 	;
 
 interfaceType_lf_classOrInterfaceType
-	:	classType_lf_classOrInterfaceType
+	=	classType_lf_classOrInterfaceType
 	;
 
 interfaceType_lfno_classOrInterfaceType
-	:	classType_lfno_classOrInterfaceType
+	=	classType_lfno_classOrInterfaceType
 	;
 
 typeVariable
-	:	annotation* Identifier
+	=	annotation* Identifier
 	;
 
 arrayType
-	:	primitiveType dims
+	=	primitiveType dims
 	|	classOrInterfaceType dims
 	|	typeVariable dims
 	;
 
 dims
-	:	annotation* '[' ']' (annotation* '[' ']')*
+	=	annotation* '[' ']' (annotation* '[' ']')*
 	;
 
 typeParameter
-	:	typeParameterModifier* Identifier typeBound?
+	=	typeParameterModifier* Identifier typeBound?
 	;
 
 typeParameterModifier
-	:	annotation
+	=	annotation
 	;
 
 typeBound
-	:	'extends' typeVariable
+	=	'extends' typeVariable
 	|	'extends' classOrInterfaceType additionalBound*
 	;
 
 additionalBound
-	:	'&' interfaceType
+	=	'&' interfaceType
 	;
 
 typeArguments
-	:	'<' typeArgumentList '>'
+	=	'<' typeArgumentList '>'
 	;
 
 typeArgumentList
-	:	typeArgument (',' typeArgument)*
+	=	typeArgument (',' typeArgument)*
 	;
 
 typeArgument
-	:	referenceType
+	=	referenceType
 	|	wildcard
 	;
 
 wildcard
-	:	annotation* '?' wildcardBounds?
+	=	annotation* '?' wildcardBounds?
 	;
 
 wildcardBounds
-	:	'extends' referenceType
+	=	'extends' referenceType
 	|	'super' referenceType
 	;
 
@@ -200,31 +194,31 @@ wildcardBounds
  */
 
 packageName
-	:	Identifier
+	=	Identifier
 	|	packageName '.' Identifier
 	;
 
 typeName
-	:	Identifier
+	=	Identifier
 	|	packageOrTypeName '.' Identifier
 	;
 
 packageOrTypeName
-	:	Identifier
+	=	Identifier
 	|	packageOrTypeName '.' Identifier
 	;
 
 expressionName
-	:	Identifier
+	=	Identifier
 	|	ambiguousName '.' Identifier
 	;
 
 methodName
-	:	Identifier
+	=	Identifier
 	;
 
 ambiguousName
-	:	Identifier
+	=	Identifier
 	|	ambiguousName '.' Identifier
 	;
 
@@ -233,42 +227,42 @@ ambiguousName
  */
 
 compilationUnit
-	:	packageDeclaration? importDeclaration* typeDeclaration* EOF
+	=	packageDeclaration? importDeclaration* typeDeclaration*
 	;
 
 packageDeclaration
-	:	packageModifier* 'package' packageName ';'
+	=	packageModifier* 'package' packageName ';'
 	;
 
 packageModifier
-	:	annotation
+	=	annotation
 	;
 
 importDeclaration
-	:	singleTypeImportDeclaration
+	=	singleTypeImportDeclaration
 	|	typeImportOnDemandDeclaration
 	|	singleStaticImportDeclaration
 	|	staticImportOnDemandDeclaration
 	;
 
 singleTypeImportDeclaration
-	:	'import' typeName ';'
+	=	'import' typeName ';'
 	;
 
 typeImportOnDemandDeclaration
-	:	'import' packageOrTypeName '.' '*' ';'
+	=	'import' packageOrTypeName '.' '*' ';'
 	;
 
 singleStaticImportDeclaration
-	:	'import' 'static' typeName '.' Identifier ';'
+	=	'import' 'static' typeName '.' Identifier ';'
 	;
 
 staticImportOnDemandDeclaration
-	:	'import' 'static' typeName '.' '*' ';'
+	=	'import' 'static' typeName '.' '*' ';'
 	;
 
 typeDeclaration
-	:	classDeclaration
+	=	classDeclaration
 	|	interfaceDeclaration
 	|	';'
 	;
@@ -278,16 +272,16 @@ typeDeclaration
  */
 
 classDeclaration
-	:	normalClassDeclaration
+	=	normalClassDeclaration
 	|	enumDeclaration
 	;
 
 normalClassDeclaration
-	:	classModifier* 'class' Identifier typeParameters? superclass? superinterfaces? classBody
+	=	classModifier* 'class' Identifier typeParameters? superclass? superinterfaces? classBody
 	;
 
 classModifier
-	:	annotation
+	=	annotation
 	|	'public'
 	|	'protected'
 	|	'private'
@@ -298,38 +292,38 @@ classModifier
 	;
 
 typeParameters
-	:	'<' typeParameterList '>'
+	=	'<' typeParameterList '>'
 	;
 
 typeParameterList
-	:	typeParameter (',' typeParameter)*
+	=	typeParameter (',' typeParameter)*
 	;
 
 superclass
-	:	'extends' classType
+	=	'extends' classType
 	;
 
 superinterfaces
-	:	'implements' interfaceTypeList
+	=	'implements' interfaceTypeList
 	;
 
 interfaceTypeList
-	:	interfaceType (',' interfaceType)*
+	=	interfaceType (',' interfaceType)*
 	;
 
 classBody
-	:	'{' classBodyDeclaration* '}'
+	=	'{' classBodyDeclaration* '}'
 	;
 
 classBodyDeclaration
-	:	classMemberDeclaration
+	=	classMemberDeclaration
 	|	instanceInitializer
 	|	staticInitializer
 	|	constructorDeclaration
 	;
 
 classMemberDeclaration
-	:	fieldDeclaration
+	=	fieldDeclaration
 	|	methodDeclaration
 	|	classDeclaration
 	|	interfaceDeclaration
@@ -337,11 +331,11 @@ classMemberDeclaration
 	;
 
 fieldDeclaration
-	:	fieldModifier* unannType variableDeclaratorList ';'
+	=	fieldModifier* unannType variableDeclaratorList ';'
 	;
 
 fieldModifier
-	:	annotation
+	=	annotation
 	|	'public'
 	|	'protected'
 	|	'private'
@@ -352,40 +346,41 @@ fieldModifier
 	;
 
 variableDeclaratorList
-	:	variableDeclarator (',' variableDeclarator)*
+	=	variableDeclarator (',' variableDeclarator)*
 	;
 
 variableDeclarator
-	:	variableDeclaratorId ('=' variableInitializer)?
+	=	variableDeclaratorId ('=' variableInitializer)?
 	;
 
 variableDeclaratorId
-	:	Identifier dims?
+	=	Identifier dims?
 	;
 
 variableInitializer
-	:	expression
+	=	expression
 	|	arrayInitializer
 	;
 
+// change order wrt antrl-spec version
 unannType
-	:	unannPrimitiveType
-	|	unannReferenceType
+	=	unannReferenceType
+	|	unannPrimitiveType
 	;
 
 unannPrimitiveType
-	:	numericType
+	=	numericType
 	|	'boolean'
 	;
 
 unannReferenceType
-	:	unannClassOrInterfaceType
+	=	unannClassOrInterfaceType
 	|	unannTypeVariable
 	|	unannArrayType
 	;
 
 unannClassOrInterfaceType
-	:	(	unannClassType_lfno_unannClassOrInterfaceType
+	=	(	unannClassType_lfno_unannClassOrInterfaceType
 		|	unannInterfaceType_lfno_unannClassOrInterfaceType
 		)
 		(	unannClassType_lf_unannClassOrInterfaceType
@@ -394,46 +389,46 @@ unannClassOrInterfaceType
 	;
 
 unannClassType
-	:	Identifier typeArguments?
+	=	Identifier typeArguments?
 	|	unannClassOrInterfaceType '.' annotation* Identifier typeArguments?
 	;
 
 unannClassType_lf_unannClassOrInterfaceType
-	:	'.' annotation* Identifier typeArguments?
+	=	'.' annotation* Identifier typeArguments?
 	;
 
 unannClassType_lfno_unannClassOrInterfaceType
-	:	Identifier typeArguments?
+	=	Identifier typeArguments?
 	;
 
 unannInterfaceType
-	:	unannClassType
+	=	unannClassType
 	;
 
 unannInterfaceType_lf_unannClassOrInterfaceType
-	:	unannClassType_lf_unannClassOrInterfaceType
+	=	unannClassType_lf_unannClassOrInterfaceType
 	;
 
 unannInterfaceType_lfno_unannClassOrInterfaceType
-	:	unannClassType_lfno_unannClassOrInterfaceType
+	=	unannClassType_lfno_unannClassOrInterfaceType
 	;
 
 unannTypeVariable
-	:	Identifier
+	=	Identifier
 	;
 
 unannArrayType
-	:	unannPrimitiveType dims
+	=	unannPrimitiveType dims
 	|	unannClassOrInterfaceType dims
 	|	unannTypeVariable dims
 	;
 
 methodDeclaration
-	:	methodModifier* methodHeader methodBody
+	=	methodModifier* methodHeader methodBody
 	;
 
 methodModifier
-	:	annotation
+	=	annotation
 	|	'public'
 	|	'protected'
 	|	'private'
@@ -446,125 +441,126 @@ methodModifier
 	;
 
 methodHeader
-	:	result methodDeclarator throws_?
+	=	result methodDeclarator throws_?
 	|	typeParameters annotation* result methodDeclarator throws_?
 	;
 
 result
-	:	unannType
+	=	unannType
 	|	'void'
 	;
 
 methodDeclarator
-	:	Identifier '(' formalParameterList? ')' dims?
+	=	Identifier '(' formalParameterList? ')' dims?
 	;
 
 formalParameterList
-	:	formalParameters ',' lastFormalParameter
+	=	receiverParameter
+	|	formalParameters ',' lastFormalParameter
 	|	lastFormalParameter
 	;
 
 formalParameters
-	:	formalParameter (',' formalParameter)*
+	=	formalParameter (',' formalParameter)*
 	|	receiverParameter (',' formalParameter)*
 	;
 
 formalParameter
-	:	variableModifier* unannType variableDeclaratorId
+	=	variableModifier* unannType variableDeclaratorId
 	;
 
 variableModifier
-	:	annotation
+	=	annotation
 	|	'final'
 	;
 
 lastFormalParameter
-	:	variableModifier* unannType annotation* '...' variableDeclaratorId
+	=	variableModifier* unannType annotation* '...' variableDeclaratorId
 	|	formalParameter
 	;
 
 receiverParameter
-	:	annotation* unannType (Identifier '.')? 'this'
+	=	annotation* unannType (Identifier '.')? 'this'
 	;
 
 throws_
-	:	'throws' exceptionTypeList
+	=	'throws' exceptionTypeList
 	;
 
 exceptionTypeList
-	:	exceptionType (',' exceptionType)*
+	=	exceptionType (',' exceptionType)*
 	;
 
 exceptionType
-	:	classType
+	=	classType
 	|	typeVariable
 	;
 
 methodBody
-	:	block
+	=	block
 	|	';'
 	;
 
 instanceInitializer
-	:	block
+	=	block
 	;
 
 staticInitializer
-	:	'static' block
+	=	'static' block
 	;
 
 constructorDeclaration
-	:	constructorModifier* constructorDeclarator throws_? constructorBody
+	=	constructorModifier* constructorDeclarator throws_? constructorBody
 	;
 
 constructorModifier
-	:	annotation
+	=	annotation
 	|	'public'
 	|	'protected'
 	|	'private'
 	;
 
 constructorDeclarator
-	:	typeParameters? simpleTypeName '(' formalParameterList? ')'
+	=	typeParameters? simpleTypeName '(' formalParameterList? ')'
 	;
 
 simpleTypeName
-	:	Identifier
+	=	Identifier
 	;
 
 constructorBody
-	:	'{' explicitConstructorInvocation? blockStatements? '}'
+	=	'{' explicitConstructorInvocation? blockStatements? '}'
 	;
 
 explicitConstructorInvocation
-	:	typeArguments? 'this' '(' argumentList? ')' ';'
+	=	typeArguments? 'this' '(' argumentList? ')' ';'
 	|	typeArguments? 'super' '(' argumentList? ')' ';'
 	|	expressionName '.' typeArguments? 'super' '(' argumentList? ')' ';'
 	|	primary '.' typeArguments? 'super' '(' argumentList? ')' ';'
 	;
 
 enumDeclaration
-	:	classModifier* 'enum' Identifier superinterfaces? enumBody
+	=	classModifier* 'enum' Identifier superinterfaces? enumBody
 	;
 
 enumBody
-	:	'{' enumConstantList? ','? enumBodyDeclarations? '}'
+	=	'{' enumConstantList? ','? enumBodyDeclarations? '}'
 	;
 
 enumConstantList
-	:	enumConstant (',' enumConstant)*
+	=	enumConstant (',' enumConstant)*
 	;
 
 enumConstant
-	:	enumConstantModifier* Identifier ('(' argumentList? ')')? classBody?
+	=	enumConstantModifier* Identifier ('(' argumentList? ')')? classBody?
 	;
 
 enumConstantModifier
-	:	annotation
+	=	annotation
 	;
 
 enumBodyDeclarations
-	:	';' classBodyDeclaration*
+	=	';' classBodyDeclaration*
 	;
 
 /*
@@ -572,16 +568,16 @@ enumBodyDeclarations
  */
 
 interfaceDeclaration
-	:	normalInterfaceDeclaration
+	=	normalInterfaceDeclaration
 	|	annotationTypeDeclaration
 	;
 
 normalInterfaceDeclaration
-	:	interfaceModifier* 'interface' Identifier typeParameters? extendsInterfaces? interfaceBody
+	=	interfaceModifier* 'interface' Identifier typeParameters? extendsInterfaces? interfaceBody
 	;
 
 interfaceModifier
-	:	annotation
+	=	annotation
 	|	'public'
 	|	'protected'
 	|	'private'
@@ -591,15 +587,15 @@ interfaceModifier
 	;
 
 extendsInterfaces
-	:	'extends' interfaceTypeList
+	=	'extends' interfaceTypeList
 	;
 
 interfaceBody
-	:	'{' interfaceMemberDeclaration* '}'
+	=	'{' interfaceMemberDeclaration* '}'
 	;
 
 interfaceMemberDeclaration
-	:	constantDeclaration
+	=	constantDeclaration
 	|	interfaceMethodDeclaration
 	|	classDeclaration
 	|	interfaceDeclaration
@@ -607,22 +603,22 @@ interfaceMemberDeclaration
 	;
 
 constantDeclaration
-	:	constantModifier* unannType variableDeclaratorList ';'
+	=	constantModifier* unannType variableDeclaratorList ';'
 	;
 
 constantModifier
-	:	annotation
+	=	annotation
 	|	'public'
 	|	'static'
 	|	'final'
 	;
 
 interfaceMethodDeclaration
-	:	interfaceMethodModifier* methodHeader methodBody
+	=	interfaceMethodModifier* methodHeader methodBody
 	;
 
 interfaceMethodModifier
-	:	annotation
+	=	annotation
 	|	'public'
 	|	'abstract'
 	|	'default'
@@ -631,15 +627,15 @@ interfaceMethodModifier
 	;
 
 annotationTypeDeclaration
-	:	interfaceModifier* '@' 'interface' Identifier annotationTypeBody
+	=	interfaceModifier* '@' 'interface' Identifier annotationTypeBody
 	;
 
 annotationTypeBody
-	:	'{' annotationTypeMemberDeclaration* '}'
+	=	'{' annotationTypeMemberDeclaration* '}'
 	;
 
 annotationTypeMemberDeclaration
-	:	annotationTypeElementDeclaration
+	=	annotationTypeElementDeclaration
 	|	constantDeclaration
 	|	classDeclaration
 	|	interfaceDeclaration
@@ -647,57 +643,57 @@ annotationTypeMemberDeclaration
 	;
 
 annotationTypeElementDeclaration
-	:	annotationTypeElementModifier* unannType Identifier '(' ')' dims? defaultValue? ';'
+	=	annotationTypeElementModifier* unannType Identifier '(' ')' dims? defaultValue? ';'
 	;
 
 annotationTypeElementModifier
-	:	annotation
+	=	annotation
 	|	'public'
 	|	'abstract'
 	;
 
 defaultValue
-	:	'default' elementValue
+	=	'default' elementValue
 	;
 
 annotation
-	:	normalAnnotation
+	=	normalAnnotation
 	|	markerAnnotation
 	|	singleElementAnnotation
 	;
 
 normalAnnotation
-	:	'@' typeName '(' elementValuePairList? ')'
+	=	'@' typeName '(' elementValuePairList? ')'
 	;
 
 elementValuePairList
-	:	elementValuePair (',' elementValuePair)*
+	=	elementValuePair (',' elementValuePair)*
 	;
 
 elementValuePair
-	:	Identifier '=' elementValue
+	=	Identifier '=' elementValue
 	;
 
 elementValue
-	:	conditionalExpression
+	=	conditionalExpression
 	|	elementValueArrayInitializer
 	|	annotation
 	;
 
 elementValueArrayInitializer
-	:	'{' elementValueList? ','? '}'
+	=	'{' elementValueList? ','? '}'
 	;
 
 elementValueList
-	:	elementValue (',' elementValue)*
+	=	elementValue (',' elementValue)*
 	;
 
 markerAnnotation
-	:	'@' typeName
+	=	'@' typeName
 	;
 
 singleElementAnnotation
-	:	'@' typeName '(' elementValue ')'
+	=	'@' typeName '(' elementValue ')'
 	;
 
 /*
@@ -705,11 +701,11 @@ singleElementAnnotation
  */
 
 arrayInitializer
-	:	'{' variableInitializerList? ','? '}'
+	=	'{' variableInitializerList? ','? '}'
 	;
 
 variableInitializerList
-	:	variableInitializer (',' variableInitializer)*
+	=	variableInitializer (',' variableInitializer)*
 	;
 
 /*
@@ -717,29 +713,29 @@ variableInitializerList
  */
 
 block
-	:	'{' blockStatements? '}'
+	=	'{' blockStatements? '}'
 	;
 
 blockStatements
-	:	blockStatement+
+	=	blockStatement+
 	;
 
 blockStatement
-	:	localVariableDeclarationStatement
+	=	localVariableDeclarationStatement
 	|	classDeclaration
 	|	statement
 	;
 
 localVariableDeclarationStatement
-	:	localVariableDeclaration ';'
+	=	localVariableDeclaration ';'
 	;
 
 localVariableDeclaration
-	:	variableModifier* unannType variableDeclaratorList
+	=	variableModifier* unannType variableDeclaratorList
 	;
 
 statement
-	:	statementWithoutTrailingSubstatement
+	=	statementWithoutTrailingSubstatement
 	|	labeledStatement
 	|	ifThenStatement
 	|	ifThenElseStatement
@@ -748,7 +744,7 @@ statement
 	;
 
 statementNoShortIf
-	:	statementWithoutTrailingSubstatement
+	=	statementWithoutTrailingSubstatement
 	|	labeledStatementNoShortIf
 	|	ifThenElseStatementNoShortIf
 	|	whileStatementNoShortIf
@@ -756,7 +752,7 @@ statementNoShortIf
 	;
 
 statementWithoutTrailingSubstatement
-	:	block
+	=	block
 	|	emptyStatement
 	|	expressionStatement
 	|	assertStatement
@@ -771,23 +767,23 @@ statementWithoutTrailingSubstatement
 	;
 
 emptyStatement
-	:	';'
+	=	';'
 	;
 
 labeledStatement
-	:	Identifier ':' statement
+	=	Identifier ':' statement
 	;
 
 labeledStatementNoShortIf
-	:	Identifier ':' statementNoShortIf
+	=	Identifier ':' statementNoShortIf
 	;
 
 expressionStatement
-	:	statementExpression ';'
+	=	statementExpression ';'
 	;
 
 statementExpression
-	:	assignment
+	=	assignment
 	|	preIncrementExpression
 	|	preDecrementExpression
 	|	postIncrementExpression
@@ -797,159 +793,159 @@ statementExpression
 	;
 
 ifThenStatement
-	:	'if' '(' expression ')' statement
+	=	'if' '(' expression ')' statement
 	;
 
 ifThenElseStatement
-	:	'if' '(' expression ')' statementNoShortIf 'else' statement
+	=	'if' '(' expression ')' statementNoShortIf 'else' statement
 	;
 
 ifThenElseStatementNoShortIf
-	:	'if' '(' expression ')' statementNoShortIf 'else' statementNoShortIf
+	=	'if' '(' expression ')' statementNoShortIf 'else' statementNoShortIf
 	;
 
 assertStatement
-	:	'assert' expression ';'
+	=	'assert' expression ';'
 	|	'assert' expression ':' expression ';'
 	;
 
 switchStatement
-	:	'switch' '(' expression ')' switchBlock
+	=	'switch' '(' expression ')' switchBlock
 	;
 
 switchBlock
-	:	'{' switchBlockStatementGroup* switchLabel* '}'
+	=	'{' switchBlockStatementGroup* switchLabel* '}'
 	;
 
 switchBlockStatementGroup
-	:	switchLabels blockStatements
+	=	switchLabels blockStatements
 	;
 
 switchLabels
-	:	switchLabel switchLabel*
+	=	switchLabel switchLabel*
 	;
 
 switchLabel
-	:	'case' constantExpression ':'
+	=	'case' constantExpression ':'
 	|	'case' enumConstantName ':'
 	|	'default' ':'
 	;
 
 enumConstantName
-	:	Identifier
+	=	Identifier
 	;
 
 whileStatement
-	:	'while' '(' expression ')' statement
+	=	'while' '(' expression ')' statement
 	;
 
 whileStatementNoShortIf
-	:	'while' '(' expression ')' statementNoShortIf
+	=	'while' '(' expression ')' statementNoShortIf
 	;
 
 doStatement
-	:	'do' statement 'while' '(' expression ')' ';'
+	=	'do' statement 'while' '(' expression ')' ';'
 	;
 
 forStatement
-	:	basicForStatement
+	=	basicForStatement
 	|	enhancedForStatement
 	;
 
 forStatementNoShortIf
-	:	basicForStatementNoShortIf
+	=	basicForStatementNoShortIf
 	|	enhancedForStatementNoShortIf
 	;
 
 basicForStatement
-	:	'for' '(' forInit? ';' expression? ';' forUpdate? ')' statement
+	=	'for' '(' forInit? ';' expression? ';' forUpdate? ')' statement
 	;
 
 basicForStatementNoShortIf
-	:	'for' '(' forInit? ';' expression? ';' forUpdate? ')' statementNoShortIf
+	=	'for' '(' forInit? ';' expression? ';' forUpdate? ')' statementNoShortIf
 	;
 
 forInit
-	:	statementExpressionList
+	=	statementExpressionList
 	|	localVariableDeclaration
 	;
 
 forUpdate
-	:	statementExpressionList
+	=	statementExpressionList
 	;
 
 statementExpressionList
-	:	statementExpression (',' statementExpression)*
+	=	statementExpression (',' statementExpression)*
 	;
 
 enhancedForStatement
-	:	'for' '(' variableModifier* unannType variableDeclaratorId ':' expression ')' statement
+	=	'for' '(' variableModifier* unannType variableDeclaratorId ':' expression ')' statement
 	;
 
 enhancedForStatementNoShortIf
-	:	'for' '(' variableModifier* unannType variableDeclaratorId ':' expression ')' statementNoShortIf
+	=	'for' '(' variableModifier* unannType variableDeclaratorId ':' expression ')' statementNoShortIf
 	;
 
 breakStatement
-	:	'break' Identifier? ';'
+	=	'break' Identifier? ';'
 	;
 
 continueStatement
-	:	'continue' Identifier? ';'
+	=	'continue' Identifier? ';'
 	;
 
 returnStatement
-	:	'return' expression? ';'
+	=	'return' expression? ';'
 	;
 
 throwStatement
-	:	'throw' expression ';'
+	=	'throw' expression ';'
 	;
 
 synchronizedStatement
-	:	'synchronized' '(' expression ')' block
+	=	'synchronized' '(' expression ')' block
 	;
 
 tryStatement
-	:	'try' block catches
+	=	'try' block catches
 	|	'try' block catches? finally_
 	|	tryWithResourcesStatement
 	;
 
 catches
-	:	catchClause catchClause*
+	=	catchClause catchClause*
 	;
 
 catchClause
-	:	'catch' '(' catchFormalParameter ')' block
+	=	'catch' '(' catchFormalParameter ')' block
 	;
 
 catchFormalParameter
-	:	variableModifier* catchType variableDeclaratorId
+	=	variableModifier* catchType variableDeclaratorId
 	;
 
 catchType
-	:	unannClassType ('|' classType)*
+	=	unannClassType ('|' classType)*
 	;
 
 finally_
-	:	'finally' block
+	=	'finally' block
 	;
 
 tryWithResourcesStatement
-	:	'try' resourceSpecification block catches? finally_?
+	=	'try' resourceSpecification block catches? finally_?
 	;
 
 resourceSpecification
-	:	'(' resourceList ';'? ')'
+	=	'(' resourceList ';'? ')'
 	;
 
 resourceList
-	:	resource (';' resource)*
+	=	resource (';' resource)*
 	;
 
 resource
-	:	variableModifier* unannType variableDeclaratorId '=' expression
+	=	variableModifier* unannType variableDeclaratorId '=' expression
 	;
 
 /*
@@ -957,7 +953,7 @@ resource
  */
 
 primary
-	:	(	primaryNoNewArray_lfno_primary
+	=	(	primaryNoNewArray_lfno_primary
 		|	arrayCreationExpression
 		)
 		(	primaryNoNewArray_lf_primary
@@ -965,7 +961,7 @@ primary
 	;
 
 primaryNoNewArray
-	:	literal
+	=	literal
 	|	typeName ('[' ']')* '.' 'class'
 	|	'void' '.' 'class'
 	|	'this'
@@ -979,11 +975,11 @@ primaryNoNewArray
 	;
 
 primaryNoNewArray_lf_arrayAccess
-	:
+	=
 	;
 
 primaryNoNewArray_lfno_arrayAccess
-	:	literal
+	=	literal
 	|	typeName ('[' ']')* '.' 'class'
 	|	'void' '.' 'class'
 	|	'this'
@@ -996,7 +992,7 @@ primaryNoNewArray_lfno_arrayAccess
 	;
 
 primaryNoNewArray_lf_primary
-	:	classInstanceCreationExpression_lf_primary
+	=	classInstanceCreationExpression_lf_primary
 	|	fieldAccess_lf_primary
 	|	arrayAccess_lf_primary
 	|	methodInvocation_lf_primary
@@ -1004,18 +1000,18 @@ primaryNoNewArray_lf_primary
 	;
 
 primaryNoNewArray_lf_primary_lf_arrayAccess_lf_primary
-	:
+	=
 	;
 
 primaryNoNewArray_lf_primary_lfno_arrayAccess_lf_primary
-	:	classInstanceCreationExpression_lf_primary
+	=	classInstanceCreationExpression_lf_primary
 	|	fieldAccess_lf_primary
 	|	methodInvocation_lf_primary
 	|	methodReference_lf_primary
 	;
 
 primaryNoNewArray_lfno_primary
-	:	literal
+	=	literal
 	|	typeName ('[' ']')* '.' 'class'
 	|	unannPrimitiveType ('[' ']')* '.' 'class'
 	|	'void' '.' 'class'
@@ -1030,11 +1026,11 @@ primaryNoNewArray_lfno_primary
 	;
 
 primaryNoNewArray_lfno_primary_lf_arrayAccess_lfno_primary
-	:
+	=
 	;
 
 primaryNoNewArray_lfno_primary_lfno_arrayAccess_lfno_primary
-	:	literal
+	=	literal
 	|	typeName ('[' ']')* '.' 'class'
 	|	unannPrimitiveType ('[' ']')* '.' 'class'
 	|	'void' '.' 'class'
@@ -1048,42 +1044,42 @@ primaryNoNewArray_lfno_primary_lfno_arrayAccess_lfno_primary
 	;
 
 classInstanceCreationExpression
-	:	'new' typeArguments? annotation* Identifier ('.' annotation* Identifier)* typeArgumentsOrDiamond? '(' argumentList? ')' classBody?
+	=	'new' typeArguments? annotation* Identifier ('.' annotation* Identifier)* typeArgumentsOrDiamond? '(' argumentList? ')' classBody?
 	|	expressionName '.' 'new' typeArguments? annotation* Identifier typeArgumentsOrDiamond? '(' argumentList? ')' classBody?
 	|	primary '.' 'new' typeArguments? annotation* Identifier typeArgumentsOrDiamond? '(' argumentList? ')' classBody?
 	;
 
 classInstanceCreationExpression_lf_primary
-	:	'.' 'new' typeArguments? annotation* Identifier typeArgumentsOrDiamond? '(' argumentList? ')' classBody?
+	=	'.' 'new' typeArguments? annotation* Identifier typeArgumentsOrDiamond? '(' argumentList? ')' classBody?
 	;
 
 classInstanceCreationExpression_lfno_primary
-	:	'new' typeArguments? annotation* Identifier ('.' annotation* Identifier)* typeArgumentsOrDiamond? '(' argumentList? ')' classBody?
+	=	'new' typeArguments? annotation* Identifier ('.' annotation* Identifier)* typeArgumentsOrDiamond? '(' argumentList? ')' classBody?
 	|	expressionName '.' 'new' typeArguments? annotation* Identifier typeArgumentsOrDiamond? '(' argumentList? ')' classBody?
 	;
 
 typeArgumentsOrDiamond
-	:	typeArguments
+	=	typeArguments
 	|	'<' '>'
 	;
 
 fieldAccess
-	:	primary '.' Identifier
+	=	primary '.' Identifier
 	|	'super' '.' Identifier
 	|	typeName '.' 'super' '.' Identifier
 	;
 
 fieldAccess_lf_primary
-	:	'.' Identifier
+	=	'.' Identifier
 	;
 
 fieldAccess_lfno_primary
-	:	'super' '.' Identifier
+	=	'super' '.' Identifier
 	|	typeName '.' 'super' '.' Identifier
 	;
 
 arrayAccess
-	:	(	expressionName '[' expression ']'
+	=	(	expressionName '[' expression ']'
 		|	primaryNoNewArray_lfno_arrayAccess '[' expression ']'
 		)
 		(	primaryNoNewArray_lf_arrayAccess '[' expression ']'
@@ -1091,14 +1087,14 @@ arrayAccess
 	;
 
 arrayAccess_lf_primary
-	:	(	primaryNoNewArray_lf_primary_lfno_arrayAccess_lf_primary '[' expression ']'
+	=	(	primaryNoNewArray_lf_primary_lfno_arrayAccess_lf_primary '[' expression ']'
 		)
 		(	primaryNoNewArray_lf_primary_lf_arrayAccess_lf_primary '[' expression ']'
 		)*
 	;
 
 arrayAccess_lfno_primary
-	:	(	expressionName '[' expression ']'
+	=	(	expressionName '[' expression ']'
 		|	primaryNoNewArray_lfno_primary_lfno_arrayAccess_lfno_primary '[' expression ']'
 		)
 		(	primaryNoNewArray_lfno_primary_lf_arrayAccess_lfno_primary '[' expression ']'
@@ -1106,7 +1102,7 @@ arrayAccess_lfno_primary
 	;
 
 methodInvocation
-	:	methodName '(' argumentList? ')'
+	=	methodName '(' argumentList? ')'
 	|	typeName '.' typeArguments? Identifier '(' argumentList? ')'
 	|	expressionName '.' typeArguments? Identifier '(' argumentList? ')'
 	|	primary '.' typeArguments? Identifier '(' argumentList? ')'
@@ -1115,11 +1111,11 @@ methodInvocation
 	;
 
 methodInvocation_lf_primary
-	:	'.' typeArguments? Identifier '(' argumentList? ')'
+	=	'.' typeArguments? Identifier '(' argumentList? ')'
 	;
 
 methodInvocation_lfno_primary
-	:	methodName '(' argumentList? ')'
+	=	methodName '(' argumentList? ')'
 	|	typeName '.' typeArguments? Identifier '(' argumentList? ')'
 	|	expressionName '.' typeArguments? Identifier '(' argumentList? ')'
 	|	'super' '.' typeArguments? Identifier '(' argumentList? ')'
@@ -1127,11 +1123,11 @@ methodInvocation_lfno_primary
 	;
 
 argumentList
-	:	expression (',' expression)*
+	=	expression (',' expression)*
 	;
 
 methodReference
-	:	expressionName '::' typeArguments? Identifier
+	=	expressionName '::' typeArguments? Identifier
 	|	referenceType '::' typeArguments? Identifier
 	|	primary '::' typeArguments? Identifier
 	|	'super' '::' typeArguments? Identifier
@@ -1141,11 +1137,11 @@ methodReference
 	;
 
 methodReference_lf_primary
-	:	'::' typeArguments? Identifier
+	=	'::' typeArguments? Identifier
 	;
 
 methodReference_lfno_primary
-	:	expressionName '::' typeArguments? Identifier
+	=	expressionName '::' typeArguments? Identifier
 	|	referenceType '::' typeArguments? Identifier
 	|	'super' '::' typeArguments? Identifier
 	|	typeName '.' 'super' '::' typeArguments? Identifier
@@ -1154,65 +1150,65 @@ methodReference_lfno_primary
 	;
 
 arrayCreationExpression
-	:	'new' primitiveType dimExprs dims?
+	=	'new' primitiveType dimExprs dims?
 	|	'new' classOrInterfaceType dimExprs dims?
 	|	'new' primitiveType dims arrayInitializer
 	|	'new' classOrInterfaceType dims arrayInitializer
 	;
 
 dimExprs
-	:	dimExpr dimExpr*
+	=	dimExpr dimExpr*
 	;
 
 dimExpr
-	:	annotation* '[' expression ']'
+	=	annotation* '[' expression ']'
 	;
 
 constantExpression
-	:	expression
+	=	expression
 	;
 
 expression
-	:	lambdaExpression
+	=	lambdaExpression
 	|	assignmentExpression
 	;
 
 lambdaExpression
-	:	lambdaParameters '->' lambdaBody
+	=	lambdaParameters '->' lambdaBody
 	;
 
 lambdaParameters
-	:	Identifier
+	=	Identifier
 	|	'(' formalParameterList? ')'
 	|	'(' inferredFormalParameterList ')'
 	;
 
 inferredFormalParameterList
-	:	Identifier (',' Identifier)*
+	=	Identifier (',' Identifier)*
 	;
 
 lambdaBody
-	:	expression
+	=	expression
 	|	block
 	;
 
 assignmentExpression
-	:	conditionalExpression
+	=	conditionalExpression
 	|	assignment
 	;
 
 assignment
-	:	leftHandSide assignmentOperator expression
+	=	leftHandSide assignmentOperator expression
 	;
 
 leftHandSide
-	:	expressionName
+	=	expressionName
 	|	fieldAccess
 	|	arrayAccess
 	;
 
 assignmentOperator
-	:	'='
+	=	'='
 	|	'*='
 	|	'/='
 	|	'%='
@@ -1227,43 +1223,43 @@ assignmentOperator
 	;
 
 conditionalExpression
-	:	conditionalOrExpression
+	=	conditionalOrExpression
 	|	conditionalOrExpression '?' expression ':' conditionalExpression
 	;
 
 conditionalOrExpression
-	:	conditionalAndExpression
+	=	conditionalAndExpression
 	|	conditionalOrExpression '||' conditionalAndExpression
 	;
 
 conditionalAndExpression
-	:	inclusiveOrExpression
+	=	inclusiveOrExpression
 	|	conditionalAndExpression '&&' inclusiveOrExpression
 	;
 
 inclusiveOrExpression
-	:	exclusiveOrExpression
+	=	exclusiveOrExpression
 	|	inclusiveOrExpression '|' exclusiveOrExpression
 	;
 
 exclusiveOrExpression
-	:	andExpression
+	=	andExpression
 	|	exclusiveOrExpression '^' andExpression
 	;
 
 andExpression
-	:	equalityExpression
+	=	equalityExpression
 	|	andExpression '&' equalityExpression
 	;
 
 equalityExpression
-	:	relationalExpression
+	=	relationalExpression
 	|	equalityExpression '==' relationalExpression
 	|	equalityExpression '!=' relationalExpression
 	;
 
 relationalExpression
-	:	shiftExpression
+	=	shiftExpression
 	|	relationalExpression '<' shiftExpression
 	|	relationalExpression '>' shiftExpression
 	|	relationalExpression '<=' shiftExpression
@@ -1272,27 +1268,27 @@ relationalExpression
 	;
 
 shiftExpression
-	:	additiveExpression
+	=	additiveExpression
 	|	shiftExpression '<' '<' additiveExpression
 	|	shiftExpression '>' '>' additiveExpression
 	|	shiftExpression '>' '>' '>' additiveExpression
 	;
 
 additiveExpression
-	:	multiplicativeExpression
+	=	multiplicativeExpression
 	|	additiveExpression '+' multiplicativeExpression
 	|	additiveExpression '-' multiplicativeExpression
 	;
 
 multiplicativeExpression
-	:	unaryExpression
+	=	unaryExpression
 	|	multiplicativeExpression '*' unaryExpression
 	|	multiplicativeExpression '/' unaryExpression
 	|	multiplicativeExpression '%' unaryExpression
 	;
 
 unaryExpression
-	:	preIncrementExpression
+	=	preIncrementExpression
 	|	preDecrementExpression
 	|	'+' unaryExpression
 	|	'-' unaryExpression
@@ -1300,22 +1296,22 @@ unaryExpression
 	;
 
 preIncrementExpression
-	:	'++' unaryExpression
+	=	'++' unaryExpression
 	;
 
 preDecrementExpression
-	:	'--' unaryExpression
+	=	'--' unaryExpression
 	;
 
 unaryExpressionNotPlusMinus
-	:	postfixExpression
+	=	postfixExpression
 	|	'~' unaryExpression
 	|	'!' unaryExpression
 	|	castExpression
 	;
 
 postfixExpression
-	:	(	primary
+	=	(	primary
 		|	expressionName
 		)
 		(	postIncrementExpression_lf_postfixExpression
@@ -1324,460 +1320,354 @@ postfixExpression
 	;
 
 postIncrementExpression
-	:	postfixExpression '++'
+	=	postfixExpression '++'
 	;
 
 postIncrementExpression_lf_postfixExpression
-	:	'++'
+	=	'++'
 	;
 
 postDecrementExpression
-	:	postfixExpression '--'
+	=	postfixExpression '--'
 	;
 
 postDecrementExpression_lf_postfixExpression
-	:	'--'
+	=	'--'
 	;
 
 castExpression
-	:	'(' primitiveType ')' unaryExpression
+	=	'(' primitiveType ')' unaryExpression
 	|	'(' referenceType additionalBound* ')' unaryExpressionNotPlusMinus
 	|	'(' referenceType additionalBound* ')' lambdaExpression
 	;
 
-// LEXER
-
-// §3.9 Keywords
-
-ABSTRACT : 'abstract';
-ASSERT : 'assert';
-BOOLEAN : 'boolean';
-BREAK : 'break';
-BYTE : 'byte';
-CASE : 'case';
-CATCH : 'catch';
-CHAR : 'char';
-CLASS : 'class';
-CONST : 'const';
-CONTINUE : 'continue';
-DEFAULT : 'default';
-DO : 'do';
-DOUBLE : 'double';
-ELSE : 'else';
-ENUM : 'enum';
-EXTENDS : 'extends';
-FINAL : 'final';
-FINALLY : 'finally';
-FLOAT : 'float';
-FOR : 'for';
-IF : 'if';
-GOTO : 'goto';
-IMPLEMENTS : 'implements';
-IMPORT : 'import';
-INSTANCEOF : 'instanceof';
-INT : 'int';
-INTERFACE : 'interface';
-LONG : 'long';
-NATIVE : 'native';
-NEW : 'new';
-PACKAGE : 'package';
-PRIVATE : 'private';
-PROTECTED : 'protected';
-PUBLIC : 'public';
-RETURN : 'return';
-SHORT : 'short';
-STATIC : 'static';
-STRICTFP : 'strictfp';
-SUPER : 'super';
-SWITCH : 'switch';
-SYNCHRONIZED : 'synchronized';
-THIS : 'this';
-THROW : 'throw';
-THROWS : 'throws';
-TRANSIENT : 'transient';
-TRY : 'try';
-VOID : 'void';
-VOLATILE : 'volatile';
-WHILE : 'while';
+// Lexer
 
 // §3.10.1 Integer Literals
-
-IntegerLiteral
-	:	DecimalIntegerLiteral
+leaf IntegerLiteral
+	=	DecimalIntegerLiteral
 	|	HexIntegerLiteral
 	|	OctalIntegerLiteral
 	|	BinaryIntegerLiteral
 	;
 
-fragment
+leaf
 DecimalIntegerLiteral
-	:	DecimalNumeral IntegerTypeSuffix?
+	=	DecimalNumeral IntegerTypeSuffix?
 	;
 
-fragment
+leaf
 HexIntegerLiteral
-	:	HexNumeral IntegerTypeSuffix?
+	=	HexNumeral IntegerTypeSuffix?
 	;
 
-fragment
+leaf
 OctalIntegerLiteral
-	:	OctalNumeral IntegerTypeSuffix?
+	=	OctalNumeral IntegerTypeSuffix?
 	;
 
-fragment
+leaf
 BinaryIntegerLiteral
-	:	BinaryNumeral IntegerTypeSuffix?
+	=	BinaryNumeral IntegerTypeSuffix?
 	;
 
-fragment
+leaf
 IntegerTypeSuffix
-	:	[lL]
+	=	"[lL]"
 	;
 
-fragment
+leaf
 DecimalNumeral
-	:	'0'
+	=	'0'
 	|	NonZeroDigit (Digits? | Underscores Digits)
 	;
 
-fragment
+leaf
 Digits
-	:	Digit (DigitsAndUnderscores? Digit)?
+	=	Digit (DigitsAndUnderscores? Digit)?
 	;
 
-fragment
+leaf
 Digit
-	:	'0'
+	=	'0'
 	|	NonZeroDigit
 	;
 
-fragment
+leaf
 NonZeroDigit
-	:	[1-9]
+	=	"[1-9]"
 	;
 
-fragment
+leaf
 DigitsAndUnderscores
-	:	DigitOrUnderscore+
+	=	DigitOrUnderscore+
 	;
 
-fragment
+leaf
 DigitOrUnderscore
-	:	Digit
+	=	Digit
 	|	'_'
 	;
 
-fragment
+leaf
 Underscores
-	:	'_'+
+	=	'_'+
 	;
 
-fragment
+leaf
 HexNumeral
-	:	'0' [xX] HexDigits
+	=	'0' "[xX]" HexDigits
 	;
 
-fragment
+leaf
 HexDigits
-	:	HexDigit (HexDigitsAndUnderscores? HexDigit)?
+	=	HexDigit (HexDigitsAndUnderscores? HexDigit)?
 	;
 
-fragment
+leaf
 HexDigit
-	:	[0-9a-fA-F]
+	=	"[0-9a-fA-F]"
 	;
 
-fragment
+leaf
 HexDigitsAndUnderscores
-	:	HexDigitOrUnderscore+
+	=	HexDigitOrUnderscore+
 	;
 
-fragment
+leaf
 HexDigitOrUnderscore
-	:	HexDigit
+	=	HexDigit
 	|	'_'
 	;
 
-fragment
+leaf
 OctalNumeral
-	:	'0' Underscores? OctalDigits
+	=	'0' Underscores? OctalDigits
 	;
 
-fragment
+leaf
 OctalDigits
-	:	OctalDigit (OctalDigitsAndUnderscores? OctalDigit)?
+	=	OctalDigit (OctalDigitsAndUnderscores? OctalDigit)?
 	;
 
-fragment
+leaf
 OctalDigit
-	:	[0-7]
+	=	"[0-7]"
 	;
 
-fragment
+leaf
 OctalDigitsAndUnderscores
-	:	OctalDigitOrUnderscore+
+	=	OctalDigitOrUnderscore+
 	;
 
-fragment
+leaf
 OctalDigitOrUnderscore
-	:	OctalDigit
+	=	OctalDigit
 	|	'_'
 	;
 
-fragment
+leaf
 BinaryNumeral
-	:	'0' [bB] BinaryDigits
+	=	'0' "[bB]" BinaryDigits
 	;
 
-fragment
+leaf
 BinaryDigits
-	:	BinaryDigit (BinaryDigitsAndUnderscores? BinaryDigit)?
+	=	BinaryDigit (BinaryDigitsAndUnderscores? BinaryDigit)?
 	;
 
-fragment
+leaf
 BinaryDigit
-	:	[01]
+	=	"[01]"
 	;
 
-fragment
+leaf
 BinaryDigitsAndUnderscores
-	:	BinaryDigitOrUnderscore+
+	=	BinaryDigitOrUnderscore+
 	;
 
-fragment
+leaf
 BinaryDigitOrUnderscore
-	:	BinaryDigit
+	=	BinaryDigit
 	|	'_'
 	;
 
 // §3.10.2 Floating-Point Literals
 
+leaf
 FloatingPointLiteral
-	:	DecimalFloatingPointLiteral
+	=	DecimalFloatingPointLiteral
 	|	HexadecimalFloatingPointLiteral
 	;
 
-fragment
+leaf
 DecimalFloatingPointLiteral
-	:	Digits '.' Digits? ExponentPart? FloatTypeSuffix?
+	=	Digits '.' Digits? ExponentPart? FloatTypeSuffix?
 	|	'.' Digits ExponentPart? FloatTypeSuffix?
 	|	Digits ExponentPart FloatTypeSuffix?
 	|	Digits FloatTypeSuffix
 	;
 
-fragment
+leaf
 ExponentPart
-	:	ExponentIndicator SignedInteger
+	=	ExponentIndicator SignedInteger
 	;
 
-fragment
+leaf
 ExponentIndicator
-	:	[eE]
+	=	"[eE]"
 	;
 
-fragment
+leaf
 SignedInteger
-	:	Sign? Digits
+	=	Sign? Digits
 	;
 
-fragment
+leaf
 Sign
-	:	[+-]
+	=	"[+-]"
 	;
 
-fragment
+leaf
 FloatTypeSuffix
-	:	[fFdD]
+	=	"[fFdD]"
 	;
 
-fragment
+leaf
 HexadecimalFloatingPointLiteral
-	:	HexSignificand BinaryExponent FloatTypeSuffix?
+	=	HexSignificand BinaryExponent FloatTypeSuffix?
 	;
 
-fragment
+leaf
 HexSignificand
-	:	HexNumeral '.'?
-	|	'0' [xX] HexDigits? '.' HexDigits
+	=	HexNumeral '.'?
+	|	'0' "[xX]" HexDigits? '.' HexDigits
 	;
 
-fragment
+leaf
 BinaryExponent
-	:	BinaryExponentIndicator SignedInteger
+	=	BinaryExponentIndicator SignedInteger
 	;
 
-fragment
+leaf
 BinaryExponentIndicator
-	:	[pP]
+	=	"[pP]"
 	;
 
 // §3.10.3 Boolean Literals
 
+leaf
 BooleanLiteral
-	:	'true'
+	=	'true'
 	|	'false'
 	;
 
 // §3.10.4 Character Literals
 
+leaf
 CharacterLiteral
-	:	'\'' SingleCharacter '\''
+	=	'\'' SingleCharacter '\''
 	|	'\'' EscapeSequence '\''
 	;
 
-fragment
+leaf
 SingleCharacter
-	:	~['\\\r\n]
+	=	"[^'\\\r\n]"
 	;
 
 // §3.10.5 String Literals
 
+leaf
 StringLiteral
-	:	'"' StringCharacters? '"'
+	=	'"' StringCharacters? '"'
 	;
 
-fragment
+leaf
 StringCharacters
-	:	StringCharacter+
+	=	StringCharacter+
 	;
 
-fragment
+leaf
 StringCharacter
-	:	~["\\\r\n]
+	=	"[^\"\\\r\n]"
 	|	EscapeSequence
 	;
 
 // §3.10.6 Escape Sequences for Character and String Literals
 
-fragment
+leaf
 EscapeSequence
-	:	'\\' [btnfr"'\\]
+	=	'\\' "[btnfr\"'\\]"
 	|	OctalEscape
     |   UnicodeEscape // This is not in the spec but prevents having to preprocess the input
 	;
 
-fragment
+leaf
 OctalEscape
-	:	'\\' OctalDigit
+	=	'\\' OctalDigit
 	|	'\\' OctalDigit OctalDigit
 	|	'\\' ZeroToThree OctalDigit OctalDigit
 	;
 
-fragment
+leaf
 ZeroToThree
-	:	[0-3]
+	=	"[0-3]"
 	;
 
 // This is not in the spec but prevents having to preprocess the input
-fragment
+leaf
 UnicodeEscape
-    :   '\\' 'u'+  HexDigit HexDigit HexDigit HexDigit
+    =   '\\' 'u'+  HexDigit HexDigit HexDigit HexDigit
     ;
 
 // §3.10.7 The Null Literal
 
+leaf
 NullLiteral
-	:	'null'
+	=	'null'
 	;
-
-// §3.11 Separators
-
-LPAREN : '(';
-RPAREN : ')';
-LBRACE : '{';
-RBRACE : '}';
-LBRACK : '[';
-RBRACK : ']';
-SEMI : ';';
-COMMA : ',';
-DOT : '.';
-
-// §3.12 Operators
-
-ASSIGN : '=';
-GT : '>';
-LT : '<';
-BANG : '!';
-TILDE : '~';
-QUESTION : '?';
-COLON : ':';
-EQUAL : '==';
-LE : '<=';
-GE : '>=';
-NOTEQUAL : '!=';
-AND : '&&';
-OR : '||';
-INC : '++';
-DEC : '--';
-ADD : '+';
-SUB : '-';
-MUL : '*';
-DIV : '/';
-BITAND : '&';
-BITOR : '|';
-CARET : '^';
-MOD : '%';
-ARROW : '->';
-COLONCOLON : '::';
-
-ADD_ASSIGN : '+=';
-SUB_ASSIGN : '-=';
-MUL_ASSIGN : '*=';
-DIV_ASSIGN : '/=';
-AND_ASSIGN : '&=';
-OR_ASSIGN : '|=';
-XOR_ASSIGN : '^=';
-MOD_ASSIGN : '%=';
-LSHIFT_ASSIGN : '<<=';
-RSHIFT_ASSIGN : '>>=';
-URSHIFT_ASSIGN : '>>>=';
 
 // §3.8 Identifiers (must appear after all keywords in the grammar)
 
+leaf
 Identifier
-	:	JavaLetter JavaLetterOrDigit*
+	=	JavaLetter JavaLetterOrDigit*
 	;
 
-fragment
+leaf
 JavaLetter
-	:	[a-zA-Z$_] // these are the "java letters" below 0x7F
+	=	"[a-zA-Z$_]" // these are the "java letters" below 0x7F
 	|	// covers all characters above 0x7F which are not a surrogate
-		~[\u0000-\u007F\uD800-\uDBFF]
-		{Character.isJavaIdentifierStart(_input.LA(-1))}?
+		"[^\u0000-\u007F\uD800-\uDBFF]"
 	|	// covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
-		[\uD800-\uDBFF] [\uDC00-\uDFFF]
-		{Character.isJavaIdentifierStart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+		"[\uD800-\uDBFF] [\uDC00-\uDFFF] "
 	;
 
-fragment
+leaf
 JavaLetterOrDigit
-	:	[a-zA-Z0-9$_] // these are the "java letters or digits" below 0x7F
+	=	"[a-zA-Z0-9$_]" // these are the "java letters or digits" below 0x7F
 	|	// covers all characters above 0x7F which are not a surrogate
-		~[\u0000-\u007F\uD800-\uDBFF]
-		{Character.isJavaIdentifierPart(_input.LA(-1))}?
+		"[^\u0000-\u007F\uD800-\uDBFF]"
 	|	// covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
-		[\uD800-\uDBFF] [\uDC00-\uDFFF]
-		{Character.isJavaIdentifierPart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
-	;
-
-//
-// Additional symbols not defined in the lexical specification
-//
-
-AT : '@';
-ELLIPSIS : '...';
+		"[\uD800-\uDBFF] [\uDC00-\uDFFF]"
+    ;
 
 //
 // Whitespace and comments
 //
 
-WS  :  [ \t\r\n\u000C]+ -> skip
+skip leaf
+WS  =  "[ \t\r\n\u000C]+"
     ;
 
+skip leaf
 COMMENT
-    :   '/*' .*? '*/' -> skip
+    =  "/\*[^*]*\*+([^*/][^*]*\*+)*/"
     ;
 
+skip leaf
 LINE_COMMENT
-    :   '//' ~[\r\n]* -> skip
+    =   '//' "[^\r\n]*"
     ;
+
+}

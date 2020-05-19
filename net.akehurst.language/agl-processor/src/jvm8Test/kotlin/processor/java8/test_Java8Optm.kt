@@ -28,14 +28,35 @@ import kotlin.test.assertNotNull
 @RunWith(Parameterized::class)
 class test_Java8Optm(val data: Data) {
 
+    class Data(
+            val title: String?,
+            val grammarRule: String,
+            val sentence: String
+    ) {
+
+        constructor( title: String, grammarRule: String, sentence: () -> String)
+                : this(title, grammarRule, sentence.invoke()) {
+        }
+
+        // --- Object ---
+        override fun toString(): String {
+            return if (null == this.title || this.title.isEmpty()) {
+                this.grammarRule + " : " + this.sentence
+            } else {
+                this.grammarRule + " : " + this.title
+            }
+        }
+    }
+
     companion object {
 
-        var standardProcessor: LanguageProcessor = createJava8Processor("/java8/Java8_all.agl")
-        var antlrOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8OptmAntlr.agl")
-        var aglOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8OptmAgl.agl")
+        var aglSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglSpec.agl")
+        var aglOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglOptm.agl")
+
+        var antlrSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrSpec.agl")
+        var antlrOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrOptm.agl")
 
         fun createJava8Processor(path: String): LanguageProcessor {
-//            val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()
             val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processor(grammarStr)
             proc.buildFor("compilationUnit")
@@ -100,32 +121,11 @@ class test_Java8Optm(val data: Data) {
         return res
     }
 
-    class Data(
-            val title: String?,
-            val grammarRule: String,
-            val sentence: String
-    ) {
-
-        constructor( title: String, grammarRule: String, sentence: () -> String)
-                : this(title, grammarRule, sentence.invoke()) {
-        }
-
-        // --- Object ---
-        override fun toString(): String {
-            return if (null == this.title || this.title.isEmpty()) {
-                this.grammarRule + " : " + this.sentence
-            } else {
-                this.grammarRule + " : " + this.title
-            }
-        }
-    }
-
-    @Test(timeout = 5000)
-    fun standard() {
+    private fun testParse(proc:LanguageProcessor) {
         try {
             val queryStr = this.data.sentence
             val grammarRule = this.data.grammarRule
-            val tree = standardProcessor.parse(grammarRule, queryStr)
+            val tree = proc.parse(grammarRule, queryStr)
             assertNotNull(tree)
             val resultStr = clean(tree.asString)
             assertEquals(queryStr, resultStr)
@@ -134,41 +134,25 @@ class test_Java8Optm(val data: Data) {
             println(ex.longestMatch)
             throw ex
         }
-
     }
 
     @Test(timeout = 5000)
-    fun antlr() {
-        try {
-            val queryStr = this.data.sentence
-            val grammarRule = this.data.grammarRule
-            val tree = antlrOptmProcessor.parse(grammarRule, queryStr)
-            assertNotNull(tree)
-            val resultStr = clean(tree.asString)
-            assertEquals(queryStr, resultStr)
-        } catch (ex: ParseFailedException) {
-            println(ex.message)
-            println(ex.longestMatch)
-            throw ex
-        }
-
+    fun aglSpec() {
+        this.testParse(aglSpecProcessor)
     }
 
     @Test(timeout = 5000)
-    fun agl() {
-        try {
-            val queryStr = this.data.sentence
-            val grammarRule = this.data.grammarRule
-            val tree = aglOptmProcessor.parse(grammarRule, queryStr)
-            assertNotNull(tree)
-            val resultStr = clean(tree.asString)
-            assertEquals(queryStr, resultStr)
-        } catch (ex: ParseFailedException) {
-            println(ex.message)
-            println(ex.longestMatch)
-            throw ex
-        }
-
+    fun aglOptm() {
+        this.testParse(aglOptmProcessor)
     }
 
+    @Test(timeout = 5000)
+    fun antlrSpec() {
+        this.testParse(antlrSpecProcessor)
+    }
+
+    @Test(timeout = 5000)
+    fun antlrOptm() {
+        this.testParse(antlrOptmProcessor)
+    }
 }

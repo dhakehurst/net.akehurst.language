@@ -16,11 +16,10 @@
 package net.akehurst.language.comparisons.antlr4;
 
 import net.akehurst.language.comparisons.common.FileData;
+import net.akehurst.language.comparisons.common.Results;
 import net.akehurst.language.comparisons.common.TimeLogger;
 import org.antlr.v4.runtime.*;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -40,20 +39,21 @@ public class test_antlr4_Java8_optm {
         return Java8TestFiles.INSTANCE.getFiles();
     }
 
-    static antlr4.optm.Java8Parser.CompilationUnitContext parseWithAntlr4Optm(final FileData file) {
+    static antlr4.optm.Java8ParserOpt.CompilationUnitContext parseWithAntlr4Optm(final FileData file) {
 
-        final Lexer lexer = new antlr4.optm.Java8Lexer(input);
+        final Lexer lexer = new antlr4.optm.Java8LexerOpt(input);
         final CommonTokenStream tokens = new CommonTokenStream(lexer);
 
         //pre cache
-        final antlr4.optm.Java8Parser p1 = new antlr4.optm.Java8Parser(tokens);
+        final antlr4.optm.Java8ParserOpt p1 = new antlr4.optm.Java8ParserOpt(tokens);
         p1.setErrorHandler(new BailErrorStrategy());
         p1.compilationUnit();
 
-        final antlr4.optm.Java8Parser p = new antlr4.optm.Java8Parser(tokens);
+        tokens.seek(0);
+        final antlr4.optm.Java8ParserOpt p = new antlr4.optm.Java8ParserOpt(tokens);
         p.setErrorHandler(new BailErrorStrategy());
         try (TimeLogger timer = new TimeLogger("antlr4_optm", file)) {
-            antlr4.optm.Java8Parser.CompilationUnitContext r = p.compilationUnit();
+            antlr4.optm.Java8ParserOpt.CompilationUnitContext r = p.compilationUnit();
             timer.success();
             return r;
         }
@@ -63,6 +63,11 @@ public class test_antlr4_Java8_optm {
 
     public test_antlr4_Java8_optm(final FileData file) {
         this.file = file;
+    }
+
+    @BeforeClass
+    public static void init() {
+        Results.INSTANCE.reset();
     }
 
     @Before
@@ -77,8 +82,12 @@ public class test_antlr4_Java8_optm {
 
     @Test
     public void antlr4_optm_compilationUnit1() {
-        final antlr4.optm.Java8Parser.CompilationUnitContext tree = parseWithAntlr4Optm(this.file);
+        final antlr4.optm.Java8ParserOpt.CompilationUnitContext tree = parseWithAntlr4Optm(this.file);
         Assert.assertNotNull("Failed to Parse", tree);
     }
 
+    @AfterClass
+    public static void end() {
+        Results.INSTANCE.write();
+    }
 }

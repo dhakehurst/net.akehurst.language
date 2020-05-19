@@ -22,7 +22,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
-class test_ScannerlessParser {
+class test_ScanOnDemandParser {
 
     @Test
     fun construct() {

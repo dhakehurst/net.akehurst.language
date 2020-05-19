@@ -159,23 +159,25 @@ internal class RuntimeParser(
         return poss
     }
 
-    internal fun fetchFilteredTransitions(gn: GrowingNode, prev: GrowingNode?): Set<Transition> {
+    private val __filteredTransitions = ArrayList<Transition>(10)
+    internal fun fetchFilteredTransitions(gn: GrowingNode, prev: GrowingNode?): List<Transition> {
         return if (null == prev) {
-            val transitions: Set<Transition> = gn.currentState.transitions(null)
+            val transitions: List<Transition> = gn.currentState.transitions(null)
             transitions
         } else {
-            val transitions: Set<Transition> = gn.currentState.transitions(prev.currentState)
-            val filtered = transitions.filter {
-                when (it.action) {
+            __filteredTransitions.clear()
+            val transitions: List<Transition> = gn.currentState.transitions(prev.currentState)
+            for(t in transitions) {
+                val filter = when (t.action) {
                     Transition.ParseAction.WIDTH -> {
                         true
                     }
                     Transition.ParseAction.GRAFT -> {
-                        prev.currentState.rulePosition == it.prevGuard &&
-                                it.runtimeGuard(it, prev, prev.currentState.rulePosition)
+                        prev.currentState.rulePosition == t.prevGuard &&
+                                t.runtimeGuard(t, prev, prev.currentState.rulePosition)
                     }
                     Transition.ParseAction.HEIGHT -> {
-                        prev.currentState.rulePosition != it.prevGuard
+                        prev.currentState.rulePosition != t.prevGuard
                     }
                     Transition.ParseAction.EMBED -> {
                         true
@@ -184,8 +186,9 @@ internal class RuntimeParser(
                         true
                     }
                 }
+                if (filter) __filteredTransitions.add(t)
             }
-            filtered.toSet()
+            __filteredTransitions
         }
     }
 

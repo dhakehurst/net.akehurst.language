@@ -332,7 +332,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val gr = this.findRuntimeRule(goalRuleName)
 
         val states = this.states_cache[gr]!!.states.values
-        val transitions = states.flatMap { it.transitions_cache.values.flatMap { it ?: emptySet() }.toSet() }.toSet()
+        val transitions = states.flatMap { it.transitions_cache.values.flatMap { it ?: emptyList() }.toSet() }.toSet()
 
         states.forEach {
             b.append(it).append("\n")
@@ -356,7 +356,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             trans.map { it.to }.toSet()
         }
 
-        val transitions = states.flatMap { it.transitions_cache.values.flatMap { it ?: emptySet() }.toSet() }.toSet()
+        val transitions = states.flatMap { it.transitions_cache.values.flatMap { it ?: emptyList() }.toSet() }.toSet()
 
         states.forEach {
             b.append(it).append("\n")

@@ -21,10 +21,9 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.comparisons.common.FileData
 import net.akehurst.language.comparisons.common.Java8TestFiles
+import net.akehurst.language.comparisons.common.Results
 import net.akehurst.language.comparisons.common.TimeLogger
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.*
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.IOException
@@ -61,11 +60,23 @@ class Java8_compare_Test_antlrOptm(val file: FileData) {
         fun parseWithJava8OptmAntlr(file: FileData): SharedPackedParseTree? {
             // pre cache stuff
             val tree = optmAntlrJava8Processor.parse("compilationUnit", input!!)
-            TimeLogger("agl_optmAntlr", file).use { timer ->
+            TimeLogger("agl_antlr_optm", file).use { timer ->
                 val tree = optmAntlrJava8Processor.parse("compilationUnit", input!!)
                 timer.success()
                 return tree
             }
+        }
+
+        @BeforeClass
+        @JvmStatic
+        fun init() {
+            Results.reset()
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun end() {
+            Results.write()
         }
     }
 

@@ -22,6 +22,7 @@ import org.junit.Assert
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.fail
 
 class test_VistraqQuery_Singles {
 
@@ -277,9 +278,13 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
    RETURN TABLE COLUMN Percent CONTAINING (Met / Due)* 100
         """.trimIndent()
 
-        val result = processor.parse("query", queryStr)
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(queryStr, resultStr)
+        try {
+            val result = processor.parse("query", queryStr)
+            Assert.assertNotNull(result)
+            val resultStr = result.asString
+            Assert.assertEquals(queryStr, resultStr)
+        } catch (e:ParseFailedException) {
+            fail("${e.message}, at ${e.location}, expected ${e.expected}")
+        }
     }
 }

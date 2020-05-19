@@ -56,7 +56,12 @@ class RuntimeRule(
             return this.kind == RuntimeRuleKind.TERMINAL && null != this.rhsOpt && this.rhs.kind == RuntimeRuleItemKind.EMPTY
         }
 
-    val pattern = if (this.isPattern) regexMatcher(this.value) else null
+    val pattern = if (this.isPattern) {
+        Regex(this.value, setOf(RegexOption.MULTILINE))
+        //regexMatcher(this.value)
+    } else {
+        null
+    }
 
     val ruleThatIsEmpty: RuntimeRule
         get() {
