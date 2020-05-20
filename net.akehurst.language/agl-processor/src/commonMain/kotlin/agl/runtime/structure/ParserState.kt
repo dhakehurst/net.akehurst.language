@@ -34,10 +34,21 @@ package net.akehurst.language.agl.runtime.structure
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.collections.transitiveClosure
 
-data class ParentRelation(
+class ParentRelation(
+        val stateSet: ParserStateSet,
+        val number:Int,
         val rulePosition: RulePosition,
         val lookahead: Set<RuntimeRule>
-)
+) {
+
+    override fun hashCode(): Int = stateSet.number + (31*number)
+    override fun equals(other: Any?): Boolean = when(other) {
+        is ParentRelation -> this.stateSet.number==other.stateSet.number && this.number==other.number
+        else -> false
+    }
+
+    override fun toString(): String = "ParentRelation{ $rulePosition | $lookahead }"
+}
 
 class ParserState(
         val number: StateNumber,
@@ -93,6 +104,9 @@ class ParserState(
         }
     }
 
+    //FIXME: this could be memory hungry! maybe should not cache them
+    //private var closureCache:MutableMap<ParentRelation,RulePositionClosure> = mutableMapOf()
+
     internal var transitions_cache: MutableMap<ParserState?, List<Transition>?> = mutableMapOf()
 
     val parentRelations: List<ParentRelation> by lazy {
@@ -134,7 +148,7 @@ class ParserState(
                 when {
                     pr.rulePosition == prevRp.rulePosition -> true
                     else -> {
-                        val prevClosure = prevRp.createClosure(pr.lookahead) //this.createClosure(prevRp, null)
+                        val prevClosure = prevRp.createClosure(pr) //this.createClosure(prevRp, null)
                         prevClosure.content.any {
                             it.runtimeRule == pr.rulePosition.runtimeRule //&& it.lookahead == pr.lookahead
                         }
@@ -144,24 +158,51 @@ class ParserState(
         }
     }
 
-    fun createClosure(parentLookahead: Set<RuntimeRule>): RulePositionClosure {
-        //FIXME: fins a faster way to do this....this is a performance issue point
-        // create closure from this.rulePosition (root of the state) down
-        val stateMap = this.stateSet
-        val firstParentLh = parentLookahead//parentRelation?.lookahead ?: emptySet()
-        val rootWlh = RulePositionWithLookahead(this.rulePosition, firstParentLh) //TODO: get real LH
-        val closureSet = setOf(rootWlh).transitiveClosure { parent ->
-            val parentRP = parent.rulePosition
-            val parentLh = parent.lookahead
-            parentRP.items.flatMap { rr ->
-                val childrenRP = rr.calcExpectedRulePositions(0)
-                childrenRP.map { childRP ->
-                    val lh = this.calcLookahead(parent, childRP, parentLh)
-                    RulePositionWithLookahead(childRP, lh)
-                }
-            }.toSet()
+    fun createClosurePart(parent: RulePositionWithLookahead, acc:Set<RulePositionWithLookahead>): Set<RulePositionWithLookahead> {
+        return when {
+            acc.contains(parent) -> {
+                acc
+            }
+            else ->{
+                val parentRP = parent.rulePosition
+                val parentLh = parent.lookahead
+                parentRP.items.flatMap { rr ->
+                    val childrenRP = rr.calcExpectedRulePositions(0)
+                    childrenRP.map { childRP ->
+                        val lh = this.calcLookahead(parent, childRP, parentLh)
+                        RulePositionWithLookahead(childRP, lh)
+                    }
+                }.toSet()
+            }
         }
-        return RulePositionClosure(ClosureNumber(-1), this.rulePosition, closureSet)
+    }
+
+    fun createClosure(parent: ParentRelation): RulePositionClosure {
+     //   val closure = this.closureCache[parent]
+     //   return if (null==closure) {
+            val parentLookahead = parent.lookahead
+            //FIXME: fins a faster way to do this....this is a performance issue point
+            // create closure from this.rulePosition (root of the state) down
+            val stateMap = this.stateSet
+            val firstParentLh = parentLookahead//parentRelation?.lookahead ?: emptySet()
+            val rootWlh = RulePositionWithLookahead(this.rulePosition, firstParentLh) //TODO: get real LH
+            val closureSet = setOf(rootWlh).transitiveClosure { parent ->
+                val parentRP = parent.rulePosition
+                val parentLh = parent.lookahead
+                parentRP.items.flatMap { rr ->
+                    val childrenRP = rr.calcExpectedRulePositions(0)
+                    childrenRP.map { childRP ->
+                        val lh = this.calcLookahead(parent, childRP, parentLh)
+                        RulePositionWithLookahead(childRP, lh)
+                    }
+                }.toSet()
+            }
+            val cl = RulePositionClosure(ClosureNumber(-1), this.rulePosition, closureSet)
+     //       this.closureCache[parent] = cl
+      return      cl
+    //    }else {
+    //        closure
+    //    }
     }
 
     fun transitions(previous: ParserState?): List<Transition> {
@@ -241,7 +282,7 @@ class ParserState(
                         RuntimeRuleKind.GOAL -> this.rulePosition.next().flatMap { it.items }.toSet()
                         else -> emptySet<RuntimeRule>()
                     }
-                    val closure = this.createClosure(prLh)
+                    val closure = this.createClosure(ParentRelation(this.stateSet, -1, this.rulePosition, prLh)) //TODO: this is maybe a wrong hack!
                     for (closureRPlh in closure.content) {
                         when (closureRPlh.runtimeRule.kind) {
                             RuntimeRuleKind.TERMINAL -> __widthTransitions.add( this.createWidthTransition(closureRPlh) )
@@ -251,7 +292,7 @@ class ParserState(
                 } else {
                     val filteredRelations = this.growsInto(previous)
                     for (parentRelation in filteredRelations) {
-                        val closure = this.createClosure(parentRelation.lookahead)
+                        val closure = this.createClosure(parentRelation)
                         for (closureRPlh in closure.content) {
                             when (closureRPlh.runtimeRule.kind) {
                                 RuntimeRuleKind.TERMINAL -> __widthTransitions.add( this.createWidthTransition(closureRPlh) )

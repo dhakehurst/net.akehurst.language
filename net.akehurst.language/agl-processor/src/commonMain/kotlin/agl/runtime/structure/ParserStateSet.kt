@@ -27,6 +27,7 @@ class ParserStateSet(
 ) {
 
     private var nextState = 0
+    private var nextParentRelation = 0
 
     /*
      * A RulePosition identifies a Parser state.
@@ -40,6 +41,10 @@ class ParserStateSet(
         val goalRP = RulePosition(goalRule, 0, 0)
         val startState = this.fetchOrCreateParseState(goalRP)
         startState
+    }
+
+    private val userGoalParentRelation : ParentRelation by lazy {
+        ParentRelation(this, this.nextParentRelation++, this.startState.rulePosition, possibleEndOfText.toSet())
     }
 
     // runtimeRule -> set of rulePositions where the rule is used
@@ -72,7 +77,7 @@ class ParserStateSet(
         var set = _parentRelations[runtimeRule]
         return if (null == set) {
             val t = if (runtimeRule == this.userGoalRule) {
-                setOf(ParentRelation(this.startState.rulePosition, possibleEndOfText.toSet()))
+                setOf(this.userGoalParentRelation)
             } else {
                 emptySet()
             }
@@ -87,7 +92,7 @@ class ParserStateSet(
     private fun calcParentRelation(childRR: RuntimeRule): Set<ParentRelation> {
         val x = this.parentPosition[childRR].map { rp ->
             val lh = getLookahead(rp)
-            ParentRelation(rp, lh)
+            ParentRelation(this, this.nextParentRelation++, rp, lh)
         }.toSet()
         return x
     }

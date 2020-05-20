@@ -40,7 +40,7 @@ class test_Java8_Types(val data:Data) {
 
     companion object {
 
-        private val grammarStr = this::class.java.getResource("/java8/Java8.agl").readText()
+        private val grammarStr = this::class.java.getResource("/java8/Java8AglSpec.agl").readText()
         val processor : LanguageProcessor by lazy {
             Agl.processor(grammarStr, "Types.Type")
         }

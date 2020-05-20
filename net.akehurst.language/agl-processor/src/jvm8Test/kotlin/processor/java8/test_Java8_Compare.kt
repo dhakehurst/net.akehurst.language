@@ -26,7 +26,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 @RunWith(Parameterized::class)
-class test_Java8Optm(val data: Data) {
+class test_Java8_Compare(val data: Data) {
 
     class Data(
             val title: String?,
@@ -76,6 +76,7 @@ class test_Java8Optm(val data: Data) {
             col.add(arrayOf(Data("", "annotation", "@AnAnnotation(1)")))
             col.add(arrayOf(Data("", "annotation", "@AnAnnotation(@AnAnnotation2)")))
             col.add(arrayOf(Data("", "annotation", "@CompilerAnnotationTest(@CompilerAnnotationTest2(name=\"test\",name2=\"test2\"))")))
+            col.add(arrayOf(Data("", "typeDeclaration", "@CAT(@CAT2(name=\"test\",name2=\"test2\")) @interface CAT { }")))
             col.add(arrayOf(Data("", "typeDeclaration", "@CAT(@CAT2(name=\"test\",name2=\"test2\")) @interface CAT { CAT2[] value(); }")))
             col.add(arrayOf(Data("", "compilationUnit", "interface An {  }")))
             col.add(arrayOf(Data("", "typeDeclaration", "@An interface An {  }")))

@@ -19,7 +19,7 @@ package net.akehurst.language.agl.runtime.structure
 inline class StateNumber(val value:Int)
 
 //TODO: how is this different to ParentRelation ?
-class RulePositionWithLookahead(
+data class RulePositionWithLookahead(
     val rulePosition: RulePosition,
     val lookahead: Set<RuntimeRule>
 ) {
@@ -33,7 +33,7 @@ class RulePositionWithLookahead(
     val isAtEnd: Boolean get() { return this.rulePosition.isAtEnd }
 
     // --- Any ---
-
+/*
     override fun hashCode(): Int {
         return rulePosition.hashCode()
     }
@@ -50,5 +50,5 @@ class RulePositionWithLookahead(
     override fun toString(): String {
         return "(${rulePosition},${lookahead})"
     }
-
+*/
 }

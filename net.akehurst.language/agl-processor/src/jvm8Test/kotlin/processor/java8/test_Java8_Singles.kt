@@ -26,14 +26,26 @@ class test_Java8_Singles {
 
     companion object {
 
-        var java8Processor: LanguageProcessor = createJava8Processor()
+        var aglSpecProcessor: LanguageProcessor = test_Java8_Compare.createJava8Processor("/java8/Java8AglSpec.agl")
+        var aglOptmProcessor: LanguageProcessor = test_Java8_Compare.createJava8Processor("/java8/Java8AglOptm.agl")
 
-        fun createJava8Processor(): LanguageProcessor {
-            val grammarStr = this::class.java.getResource("/java8/Java8AntlrSpec.agl").readText()//runBlockingNoSuspensions { resourcesVfs["/java8/Java8_all.agl"].readString() }
+        var antlrSpecProcessor: LanguageProcessor = test_Java8_Compare.createJava8Processor("/java8/Java8AntlrSpec.agl")
+        var antlrOptmProcessor: LanguageProcessor = test_Java8_Compare.createJava8Processor("/java8/Java8AntlrOptm.agl")
+
+        fun createJava8Processor(path: String): LanguageProcessor {
+            val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processor(grammarStr)
-            proc.buildFor("block")
+            proc.buildFor("compilationUnit")
             return proc
         }
+    }
+
+    @Test
+    fun literal() {
+        val sentence = "8"
+        val goal = "literal"
+
+        val t = antlrOptmProcessor.parse(goal, sentence)
     }
 
     @Test(timeout = 5000)
@@ -83,7 +95,7 @@ class test_Java8_Singles {
         """.trimIndent()
         val goal = "block"
 
-        val t = java8Processor.parse(goal, sentence)
+        val t = antlrSpecProcessor.parse(goal, sentence)
 
         // println( t.toStringAll )
     }

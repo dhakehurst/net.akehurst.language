@@ -227,7 +227,7 @@ class test_rules : test_ScanOnDemandParserAbstract() {
                       N { '?' }
                     } } } }
               ';'
-              W { "\s+" : '9166' }
+              W { "\s+" : '⏎' }
             }
             normalRule {
               ID : 'e'
@@ -243,7 +243,7 @@ class test_rules : test_ScanOnDemandParserAbstract() {
                     } }
                 } }
               ';'
-              W { "\s+" : '9166' }
+              W { "\s+" : '⏎' }
             }
             normalRule {
               ID : 's'

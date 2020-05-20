@@ -172,7 +172,7 @@ genericConstructorDeclaration
     ;
 
 constructorDeclaration
-    = IDENTIFIER formalParameters (THROWS qualifiedNameList)? constructorBody=block
+    = IDENTIFIER formalParameters (THROWS qualifiedNameList)? block
     ;
 
 fieldDeclaration
@@ -384,7 +384,7 @@ localTypeDeclaration
     ;
 
 statement
-    = blockLabel=block
+    = block
     | ASSERT expression (':' expression)? ';'
     | IF parExpression statement (ELSE statement)?
     | FOR '(' forControl ')' statement
@@ -399,8 +399,8 @@ statement
     | BREAK IDENTIFIER? ';'
     | CONTINUE IDENTIFIER? ';'
     | SEMI
-    | statementExpression=expression ';'
-    | identifierLabel=IDENTIFIER ':' statement
+    | expression ';'
+    | IDENTIFIER ':' statement
     ;
 
 catchClause
@@ -435,13 +435,13 @@ switchBlockStatementGroup
     ;
 
 switchLabel
-    = CASE (constantExpression=expression | enumConstantName=IDENTIFIER) ':'
+    = CASE (expression | IDENTIFIER) ':'
     | DEFAULT ':'
     ;
 
 forControl
     = enhancedForControl
-    | forInit? ';' expression? ';' forUpdate=expressionList?
+    | forInit? ';' expression? ';' expressionList?
     ;
 
 forInit
@@ -471,7 +471,7 @@ methodCall
 
 expression
     = primary
-    | expression bop='.'
+    | expression '.'
       ( IDENTIFIER
       | methodCall
       | THIS
@@ -483,23 +483,23 @@ expression
     | methodCall
     | NEW creator
     | '(' typeType ')' expression
-    | expression postfix=('++' | '--')
-    | prefix=('+'|'-'|'++'|'--') expression
-    | prefix=('~'|'!') expression
-    | expression bop=('*'|'/'|'%') expression
-    | expression bop=('+'|'-') expression
+    | expression ('++' | '--')
+    | ('+'|'-'|'++'|'--') expression
+    | ('~'|'!') expression
+    | expression ('*'|'/'|'%') expression
+    | expression ('+'|'-') expression
     | expression ('<' '<' | '>' '>' '>' | '>' '>') expression
-    | expression bop=('<=' | '>=' | '>' | '<') expression
-    | expression bop=INSTANCEOF typeType
-    | expression bop=('==' | '!=') expression
-    | expression bop='&' expression
-    | expression bop='^' expression
-    | expression bop='|' expression
-    | expression bop='&&' expression
-    | expression bop='||' expression
-    | <assoc=right> expression bop='?' expression ':' expression
-    | <assoc=right> expression
-      bop=('=' | '+=' | '-=' | '*=' | '/=' | '&=' | '|=' | '^=' | '>>=' | '>>>=' | '<<=' | '%=')
+    | expression ('<=' | '>=' | '>' | '<') expression
+    | expression INSTANCEOF typeType
+    | expression ('==' | '!=') expression
+    | expression '&' expression
+    | expression '^' expression
+    | expression '|' expression
+    | expression '&&' expression
+    | expression '||' expression
+    | expression '?' expression ':' expression
+    | expression
+      ('=' | '+=' | '-=' | '*=' | '/=' | '&=' | '|=' | '^=' | '>>=' | '>>>=' | '<<=' | '%=')
       expression
     | lambdaExpression // Java8
 
@@ -651,12 +651,12 @@ leaf IDENTIFIER = Letter LetterOrDigit* ;
 // leaf rules
 
 leaf ExponentPart
-    = [eE] [+-]? Digits
+    = "[eE]" "[+-]?" Digits
     ;
 
 leaf EscapeSequence
-    = '\\' [btnfr"'\\]
-    | '\\' ([0-3]? [0-7])? [0-7]
+    = '\\' "[btnfr\"'\\]"
+    | '\\' ("[0-3]?" "[0-7]")? "[0-7]"
     | '\\' 'u'+ HexDigit HexDigit HexDigit HexDigit
     ;
 
@@ -669,7 +669,7 @@ leaf HexDigit
     ;
 
 leaf Digits
-    = "[0-9] ([0-9_]* [0-9])?"
+    = "[0-9]" ("[0-9_]*" "[0-9]")?
     ;
 
 leaf LetterOrDigit
@@ -735,6 +735,8 @@ leaf TRY=                'try';
 leaf VOID=               'void';
 leaf VOLATILE=           'volatile';
 leaf WHILE=              'while';
+
+leaf SEMI= ';' ;
 
 // Whitespace and comments
 
