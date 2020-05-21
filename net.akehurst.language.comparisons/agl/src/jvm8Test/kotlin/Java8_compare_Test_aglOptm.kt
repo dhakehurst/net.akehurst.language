@@ -16,7 +16,6 @@
 package net.akehurst.language.comparisons.agl
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.comparisons.common.FileData
@@ -28,10 +27,9 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.IOException
 import java.nio.file.Files
-import java.nio.file.Path
 
 @RunWith(Parameterized::class)
-class Java8_compare_Test_antlrOptm(val file: FileData) {
+class Java8_compare_Test_aglOptm(val file: FileData) {
 
     companion object {
         val javaTestFiles = "../javaTestFiles/javac"
@@ -45,23 +43,21 @@ class Java8_compare_Test_antlrOptm(val file: FileData) {
         }
 
         fun createAndBuildProcessor(aglFile: String): LanguageProcessor {
-            val bytes = Java8_compare_Test_antlrOptm::class.java.getResourceAsStream(aglFile).readBytes()
+            val bytes = Java8_compare_Test_aglOptm::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
             val proc = Agl.processor(javaGrammarStr)
             proc.buildFor("compilationUnit")
             return proc
         }
 
-        val optmAntlrJava8Processor = createAndBuildProcessor("/agl/Java8AntlrOptm.agl")
+        val aglProcessor = createAndBuildProcessor("/agl/Java8AglOptm.agl")
 
         var input: String? = null
 
-
-        fun parseWithJava8OptmAntlr(file: FileData): SharedPackedParseTree? {
-            // pre cache stuff
-            val tree = optmAntlrJava8Processor.parse("compilationUnit", input!!)
-            TimeLogger("agl_antlr_optm", file).use { timer ->
-                val tree = optmAntlrJava8Processor.parse("compilationUnit", input!!)
+        fun parseWithJava8Agl(file: FileData): SharedPackedParseTree? {
+            val tree = aglProcessor.parse("compilationUnit", input!!)
+            TimeLogger("agl_optm1", file).use { timer ->
+                val tree = aglProcessor.parse("compilationUnit", input!!)
                 timer.success()
                 return tree
             }
@@ -80,6 +76,8 @@ class Java8_compare_Test_antlrOptm(val file: FileData) {
         }
     }
 
+
+
     @Before
     fun setUp() {
         try {
@@ -90,11 +88,11 @@ class Java8_compare_Test_antlrOptm(val file: FileData) {
         }
     }
 
-
     @Test
-    fun optmAntlr_compilationUnit() {
-        val tree = parseWithJava8OptmAntlr(file)
+    fun agl_compilationUnit() {
+        val tree = parseWithJava8Agl(file)
         Assert.assertNotNull("Failed to Parse", tree)
     }
+
 
 }

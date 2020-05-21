@@ -50,6 +50,8 @@ internal class ParseGraph(
             return this._goals
         }
 
+    var goalMatchedAll = true
+
     val longestCompleteNodeFromStart: SPPTNode? get() = this.completeNodes.values.filter { it.startPosition == 0 }.sortedBy { it.matchedTextLength }.lastOrNull()
 
     fun longestMatch(seasons: Int, maxNumHeads: Int): SPPTNode? {
@@ -330,6 +332,7 @@ internal class ParseGraph(
 
     fun recordGoal(completeNode: SPPTNode) {
         this._goals.add(completeNode)
+        this.goalMatchedAll = this.input.isEnd(completeNode.nextInputPosition)
     }
 
     /*

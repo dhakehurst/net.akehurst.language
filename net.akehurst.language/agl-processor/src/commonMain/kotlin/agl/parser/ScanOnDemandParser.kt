@@ -117,7 +117,7 @@ class ScanOnDemandParser(
             rp.grow(false)
             seasons++
             maxNumHeads = max(maxNumHeads, graph.growingHead.size)
-        } while (rp.canGrow && graph.goals.isEmpty())
+        } while (graph.canGrow && (graph.goals.isEmpty() || graph.goalMatchedAll.not()))
         //TODO: when parsing an ambiguous grammar,
         // how to know we have found all goals? - keep going until cangrow is false
         // but - how to stop .. some grammars don't stop if we don't do test for a goal!

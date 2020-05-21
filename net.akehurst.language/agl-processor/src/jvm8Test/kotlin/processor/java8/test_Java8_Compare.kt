@@ -50,16 +50,17 @@ class test_Java8_Compare(val data: Data) {
 
     companion object {
 
-        var aglSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglSpec.agl")
+        var aglSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglSpec.agl", true)
         var aglOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglOptm.agl")
 
         var antlrSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrSpec.agl")
         var antlrOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrOptm.agl")
 
-        fun createJava8Processor(path: String): LanguageProcessor {
+        fun createJava8Processor(path: String, toUpper:Boolean=false): LanguageProcessor {
             val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processor(grammarStr)
-            proc.buildFor("compilationUnit")
+            val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
+            proc.buildFor(forRule)
             return proc
         }
 
@@ -122,10 +123,10 @@ class test_Java8_Compare(val data: Data) {
         return res
     }
 
-    private fun testParse(proc:LanguageProcessor) {
+    private fun testParse(proc:LanguageProcessor, toUpper:Boolean=false) {
         try {
             val queryStr = this.data.sentence
-            val grammarRule = this.data.grammarRule
+            val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
             val tree = proc.parse(grammarRule, queryStr)
             assertNotNull(tree)
             val resultStr = clean(tree.asString)
@@ -139,7 +140,7 @@ class test_Java8_Compare(val data: Data) {
 
     @Test(timeout = 5000)
     fun aglSpec() {
-        this.testParse(aglSpecProcessor)
+        this.testParse(aglSpecProcessor, true)
     }
 
     @Test(timeout = 5000)

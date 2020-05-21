@@ -46,7 +46,7 @@ object GrammarRegistryDefault : GrammarRegistry {
         return if (null == regNs) {
             throw GrammarExeception("Grammar ${qualifiedName} not found in GrammarRegistry", null)
         } else {
-            regNs[ns_name.second] ?: throw GrammarExeception("Grammar ${qualifiedName} not found in GrammarRegistry", null)
+            regNs[ns_name.second] ?: throw GrammarExeception("Grammar '${qualifiedName}' not found in GrammarRegistry", null)
         }
 
     }

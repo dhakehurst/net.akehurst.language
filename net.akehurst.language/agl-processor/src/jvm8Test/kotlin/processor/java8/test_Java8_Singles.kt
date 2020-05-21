@@ -26,16 +26,17 @@ class test_Java8_Singles {
 
     companion object {
 
-        var aglSpecProcessor: LanguageProcessor = test_Java8_Compare.createJava8Processor("/java8/Java8AglSpec.agl")
-        var aglOptmProcessor: LanguageProcessor = test_Java8_Compare.createJava8Processor("/java8/Java8AglOptm.agl")
+        var aglSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglSpec.agl", true)
+        //var aglOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglOptm.agl")
 
-        var antlrSpecProcessor: LanguageProcessor = test_Java8_Compare.createJava8Processor("/java8/Java8AntlrSpec.agl")
-        var antlrOptmProcessor: LanguageProcessor = test_Java8_Compare.createJava8Processor("/java8/Java8AntlrOptm.agl")
+        //var antlrSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrSpec.agl")
+        //var antlrOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrOptm.agl")
 
-        fun createJava8Processor(path: String): LanguageProcessor {
+        fun createJava8Processor(path: String, toUpper:Boolean=false): LanguageProcessor {
             val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processor(grammarStr)
-            proc.buildFor("compilationUnit")
+            val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
+            proc.buildFor(forRule)
             return proc
         }
     }
@@ -43,10 +44,20 @@ class test_Java8_Singles {
     @Test
     fun literal() {
         val sentence = "8"
-        val goal = "literal"
+        val goal = "Literal"
 
-        val t = antlrOptmProcessor.parse(goal, sentence)
+        val t = aglSpecProcessor.parse(goal, sentence)
     }
+
+    @Test
+    fun t1() {
+        //val sentence = "import x; @An() interface An {  }"
+        val sentence = "import x; @An() interface An {  }"
+        val goal = "CompilationUnit"
+
+        val t = aglSpecProcessor.parse(goal, sentence)
+    }
+
 
     @Test(timeout = 5000)
     fun long_concatenation() {
@@ -93,9 +104,9 @@ class test_Java8_Singles {
                     + "a" + "b" + "c" + "d" + "e" + "a" + "b" + "c" + "d" + "e" + "a" + "b" + "c" + "d" + "e" + "a" + "b" + "c" + "d" + "e" + "a" + "b" + "c" + "d" + "e" ;
           }
         """.trimIndent()
-        val goal = "block"
+        val goal = "Block"
 
-        val t = antlrSpecProcessor.parse(goal, sentence)
+        val t = aglSpecProcessor.parse(goal, sentence)
 
         // println( t.toStringAll )
     }

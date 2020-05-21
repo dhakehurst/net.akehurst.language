@@ -30,28 +30,27 @@ import org.junit.runners.Parameterized.Parameters
 
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.sql.test_SQLValid
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 
 @RunWith(Parameterized::class)
-class test_Java8_Types(val data:Data) {
+class test_Java8Agl_Literals(val data:Data) {
 
     companion object {
 
-        private val grammarStr = this::class.java.getResource("/java8/Java8AglSpec.agl").readText()
+        private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
         val processor : LanguageProcessor by lazy {
-            Agl.processor(grammarStr, "Types.Type")
+            Agl.processor(grammarStr, "Literals.Literal")
         }
-        var sourceFiles = arrayOf("/java8/sentences/valid-types.txt")
+        var sourceFiles = arrayOf("/java8/sentences/valid-literals.txt")
 
         @JvmStatic
         @Parameters(name = "{0}")
         fun data(): Collection<Array<Any>> {
             val col = ArrayList<Array<Any>>()
             for (sourceFile in sourceFiles) {
-                val inps = test_Java8_Types::class.java.getResourceAsStream(sourceFile)
+                val inps = test_Java8Agl_Literals::class.java.getResourceAsStream(sourceFile)
 
                 val br = BufferedReader(InputStreamReader(inps))
                 var line: String? = br.readLine()
@@ -83,8 +82,7 @@ class test_Java8_Types(val data:Data) {
 
     @Test
     fun test() {
-        val p = processor
-        val result = p.parse("Type", this.data.text)
+        val result = processor.parse("Literal", this.data.text)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(this.data.text, resultStr)

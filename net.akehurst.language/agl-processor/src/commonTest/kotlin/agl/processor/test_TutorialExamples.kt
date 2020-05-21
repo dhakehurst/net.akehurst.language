@@ -69,7 +69,7 @@ class test_TutorialExamples {
         assertNotNull(sppt)
 
         val expected = """
-                typeReference|1 { userDefinedType { NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xxx' } } }
+                typeReference { userDefinedType { NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xxx' } } }
         """.trimIndent()
 
         assertEquals(expected, actual)
@@ -93,7 +93,7 @@ class test_TutorialExamples {
         assertNotNull(sppt)
 
         val expected = """
-                typeReference|1 { builtInType { 'boolean' } }
+                typeReference|1 { builtInType|1 { 'boolean' } }
         """.trimIndent()
 
         assertEquals(expected, actual)

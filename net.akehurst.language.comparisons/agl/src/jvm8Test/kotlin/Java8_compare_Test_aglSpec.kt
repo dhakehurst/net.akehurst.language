@@ -16,7 +16,6 @@
 package net.akehurst.language.comparisons.agl
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.comparisons.common.FileData
@@ -28,13 +27,9 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.IOException
 import java.nio.file.Files
-import java.nio.file.Path
-import kotlin.time.TestTimeSource
-import kotlin.time.TimeSource
-import kotlin.time.measureTime
 
 @RunWith(Parameterized::class)
-class Java8_compare_Test_agl(val file: FileData) {
+class Java8_compare_Test_aglSpec(val file: FileData) {
 
     companion object {
         val javaTestFiles = "../javaTestFiles/javac"
@@ -48,14 +43,14 @@ class Java8_compare_Test_agl(val file: FileData) {
         }
 
         fun createAndBuildProcessor(aglFile: String): LanguageProcessor {
-            val bytes = Java8_compare_Test_agl::class.java.getResourceAsStream(aglFile).readBytes()
+            val bytes = Java8_compare_Test_aglSpec::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
             val proc = Agl.processor(javaGrammarStr)
             proc.buildFor("compilationUnit")
             return proc
         }
 
-        val aglProcessor = createAndBuildProcessor("/agl/Java8Optm1.agl")
+        val aglProcessor = createAndBuildProcessor("/agl/Java8AglSpec.agl")
 
         var input: String? = null
 
