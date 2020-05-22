@@ -197,7 +197,7 @@ class test_InputFromCharSequence {
         val inputText = ""
         val sut = InputFromCharSequence(inputText)
 
-        val actual = sut.tryMatchText(0, "", Regex(""))
+        val actual = sut.tryMatchText(0, "", regexMatcher(""))
 
         assertEquals(null, actual)
     }
@@ -207,7 +207,7 @@ class test_InputFromCharSequence {
         val inputText = ""
         val sut = InputFromCharSequence(inputText)
 
-        val actual = sut.tryMatchText(0, "abc", Regex("abc"))
+        val actual = sut.tryMatchText(0, "abc", regexMatcher("abc"))
 
         assertEquals(null, actual)
     }
@@ -217,7 +217,7 @@ class test_InputFromCharSequence {
         val inputText = ""
         val sut = InputFromCharSequence(inputText)
 
-        val actual = sut.tryMatchText(0, "[a-c]", Regex("[a-c]"))
+        val actual = sut.tryMatchText(0, "[a-c]", regexMatcher("[a-c]"))
 
         assertEquals(null, actual)
     }

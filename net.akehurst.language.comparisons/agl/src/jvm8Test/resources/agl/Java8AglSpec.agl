@@ -6,7 +6,7 @@ namespace net.akehurst.language.java8
 grammar Java8AglSpec {
     skip leaf WHITESPACE = "\s+" ;
     skip leaf COMMENT_SINGLE_LINE = "//[^\n]*$" ;
-    skip leaf COMMENT_MULTI_LINE = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
+    skip leaf COMMENT_MULTI_LINE = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
 
     // --- Packages ---
     CompilationUnit = PackageDeclaration? ImportDeclaration* TypeDeclaration* ;

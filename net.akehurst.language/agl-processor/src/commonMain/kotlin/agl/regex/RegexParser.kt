@@ -105,239 +105,246 @@ class RegexParser(
         needConcat.push(false)
         if (pattern.length > 0) {
             var c = this.next()
-            while (pp <= pattern.length) {
-                when (c) {
-                    '\\' -> {
-                        val escaped_matchers = this.parsePatternEscape()
-                        when (escaped_matchers.first) {
-                            EscapeKind.SINGLE -> {
-                                val matcher = escaped_matchers.second as CharacterMatcher
-                                postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.characterClass(matcher) }))
-                                if (needConcat.pop()) {
-                                    while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
-                                        postfix.push(opStack.pop())
-                                    }
-                                    opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
-                                }
-                                needConcat.push(true)
-                            }
-                            EscapeKind.LITERAL -> {
-                                val literal = escaped_matchers.second as CharSequence
-                                if (literal.length > 0) {
-                                    val cc = literal[0]
-                                    postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.character(cc) }))
+            try {
+                while (pp <= pattern.length) {
+                    when (c) {
+                        '\\' -> {
+                            val escaped_matchers = this.parsePatternEscape()
+                            when (escaped_matchers.first) {
+                                EscapeKind.SINGLE -> {
+                                    val matcher = escaped_matchers.second as CharacterMatcher
+                                    postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.characterClass(matcher) }))
                                     if (needConcat.pop()) {
                                         while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
                                             postfix.push(opStack.pop())
                                         }
                                         opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
                                     }
-                                    var i = 1
-                                    while (i < literal.length) {
-                                        val d = literal[i]
-                                        postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.character(d) }))
-                                        opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
-                                        i++
-                                    }
                                     needConcat.push(true)
                                 }
-                            }
-                        }
-                        c = this.next()
-                    }
-                    '.' -> {
-                        postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.matchAny() }))
-                        if (needConcat.pop()) {
-                            while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
-                                postfix.push(opStack.pop())
-                            }
-                            opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
-                        }
-                        needConcat.push(true)
-                        c = this.next()
-                    }
-                    '$' -> {
-                        postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.matchEndOfLineOrInput() }))
-                        if (needConcat.pop()) {
-                            while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
-                                postfix.push(opStack.pop())
-                            }
-                            opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
-                        }
-                        needConcat.push(true)
-                        c = this.next()
-                    }
-                    '[' -> {
-                        val options = this.parseCharacterClass()
-                        postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.characterClass(options) }))
-                        if (needConcat.pop()) {
-                            while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
-                                postfix.push(opStack.pop())
-                            }
-                            opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
-                        }
-                        needConcat.push(true)
-                        c = this.next()
-                    }
-                    '(' -> {
-                        needConcat.push(false)
-                        opStack.push(Pair(PREC_GROUP_OPEN, { }))
-                        c = this.next()
-                        when (c) {
-                            '?' -> {
-                                TODO(pattern)
-                                //ignore 'non capturing group' indicator, as this doesn't handle groups anyhow
-                                c = this.next()
-                                when (c) {
-                                    ':' -> {
-                                        c = this.next()
-                                    }
-                                    '=' -> {
-                                        c = this.next()
-                                    }
-                                    '!' -> {
-                                        c = this.next()
-                                    }
-                                    '>' -> {
-                                        c = this.next()
-                                    }
-                                    '<' -> {
-                                        TODO(pattern)
-                                    }
-                                    //TODO: idmsuxU !
-                                    //TODO: idmsux !
-                                    else -> { /* continue */
+                                EscapeKind.LITERAL -> {
+                                    val literal = escaped_matchers.second as CharSequence
+                                    if (literal.length > 0) {
+                                        val cc = literal[0]
+                                        postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.character(cc) }))
+                                        if (needConcat.pop()) {
+                                            while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
+                                                postfix.push(opStack.pop())
+                                            }
+                                            opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                                        }
+                                        var i = 1
+                                        while (i < literal.length) {
+                                            val d = literal[i]
+                                            postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.character(d) }))
+                                            opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                                            i++
+                                        }
+                                        needConcat.push(true)
                                     }
                                 }
                             }
-                            else -> { /* continue */
-                            }
-                        }
-                    }
-                    '|' -> {
-                        while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CHOICE) {
-                            postfix.push(opStack.pop())
-                        }
-                        opStack.push(Pair(PREC_CHOICE, { this.matcherBuilder.choice() }))
-                        needConcat.pop()
-                        needConcat.push(false)
-                        c = this.next()
-                    }
-                    '?' -> {
-                        postfix.push(Pair(PREC_MULTI_01, { this.matcherBuilder.multi01() }))
-                        c = this.next()
-                        when (c) {
-                            '?' -> {
-                                TODO()
-                            }
-                            '+' -> {
-                                TODO()
-                            }
-                            else -> { /* continue */
-                            }
-                        }
-                    }
-                    '+' -> {
-                        postfix.push(Pair(PREC_MULTI_1n, { this.matcherBuilder.multi1n() }))
-                        c = this.next()
-                        when (c) {
-                            '?' -> {
-                                TODO(pattern)
-                            }
-                            '+' -> {
-                                TODO(pattern)
-                            }
-                            else -> { /* continue */
-                            }
-                        }
-                    }
-                    '*' -> {
-                        postfix.push(Pair(PREC_MULTI_0n, { this.matcherBuilder.multi0n() }))
-                        c = this.next()
-                        when (c) {
-                            '?' -> {
-                                TODO(pattern)
-                            }
-                            '+' -> {
-                                TODO(pattern)
-                            }
-                            else -> { /* continue */
-                            }
-                        }
-                    }
-                    '{' -> {
-                        val nb = StringBuilder()
-                        c = this.next()
-                        while (c in '0'..'9') {
-                            nb.append(c)
                             c = this.next()
                         }
-                        val n = nb.toString().toIntOrNull(10)
-                                ?: throw RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
-                        when (c) {
-                            '}' -> {
-                                postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, n) }))
-                                c = this.next()
+                        '.' -> {
+                            postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.matchAny() }))
+                            if (needConcat.pop()) {
+                                while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
+                                    postfix.push(opStack.pop())
+                                }
+                                opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
                             }
-                            ',' -> {
-                                c = this.next()
-                                when (c) {
-                                    '}' -> {
-                                        postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, -1) }))
-                                        c = this.next()
-                                    }
-                                    else -> {
-                                        val mb = StringBuilder()
-                                        mb.append(c)
-                                        c = this.next()
-                                        while (c in '0'..'9') {
-                                            mb.append(c)
+                            needConcat.push(true)
+                            c = this.next()
+                        }
+                        '$' -> {
+                            postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.matchEndOfLineOrInput() }))
+                            if (needConcat.pop()) {
+                                while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
+                                    postfix.push(opStack.pop())
+                                }
+                                opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                            }
+                            needConcat.push(true)
+                            c = this.next()
+                        }
+                        '[' -> {
+                            val options = this.parseCharacterClass()
+                            postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.characterClass(options) }))
+                            if (needConcat.pop()) {
+                                while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
+                                    postfix.push(opStack.pop())
+                                }
+                                opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                            }
+                            needConcat.push(true)
+                            c = this.next()
+                        }
+                        '(' -> {
+                            needConcat.push(false)
+                            opStack.push(Pair(PREC_GROUP_OPEN, { }))
+                            c = this.next()
+                            when (c) {
+                                '?' -> {
+                                    TODO(pattern)
+                                    //ignore 'non capturing group' indicator, as this doesn't handle groups anyhow
+                                    c = this.next()
+                                    when (c) {
+                                        ':' -> {
                                             c = this.next()
                                         }
-                                        val m = mb.toString().toIntOrNull(10)
-                                                ?: throw RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
-                                        when (c) {
-                                            '}' -> {
-                                                postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, m) }))
-                                                c = this.next()
-                                            }
-                                            else -> throw RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                                        '=' -> {
+                                            c = this.next()
+                                        }
+                                        '!' -> {
+                                            c = this.next()
+                                        }
+                                        '>' -> {
+                                            c = this.next()
+                                        }
+                                        '<' -> {
+                                            TODO(pattern)
+                                        }
+                                        //TODO: idmsuxU !
+                                        //TODO: idmsux !
+                                        else -> { /* continue */
                                         }
                                     }
                                 }
+                                else -> { /* continue */
+                                }
                             }
-                            else -> RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
                         }
-                    }
-                    ')' -> {
-                        while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN) {
-                            postfix.push(opStack.pop())
-                        }
-                        if (opStack.isEmpty.not() && opStack.peek().first == PREC_GROUP_OPEN) opStack.pop()
-                        needConcat.pop()
-                        if (needConcat.pop()) {
-                            while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
+                        '|' -> {
+                            while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CHOICE) {
                                 postfix.push(opStack.pop())
                             }
-                            opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                            opStack.push(Pair(PREC_CHOICE, { this.matcherBuilder.choice() }))
+                            needConcat.pop()
+                            needConcat.push(false)
+                            c = this.next()
                         }
-                        needConcat.push(true)
-                        //postfix.push(Pair(PREC_GROUP_CLOSE, { this.matcherBuilder.finishGroup() }))
-                        c = this.next()
-                    }
-                    else -> {
-                        val cc = c
-                        postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.character(cc) }))
-                        if (needConcat.pop()) {
-                            while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
+                        '?' -> {
+                            postfix.push(Pair(PREC_MULTI_01, { this.matcherBuilder.multi01() }))
+                            c = this.next()
+                            when (c) {
+                                '?' -> {
+                                    TODO()
+                                }
+                                '+' -> {
+                                    TODO()
+                                }
+                                else -> { /* continue */
+                                }
+                            }
+                        }
+                        '+' -> {
+                            postfix.push(Pair(PREC_MULTI_1n, { this.matcherBuilder.multi1n() }))
+                            c = this.next()
+                            when (c) {
+                                '?' -> {
+                                    TODO(pattern)
+                                }
+                                '+' -> {
+                                    TODO(pattern)
+                                }
+                                else -> { /* continue */
+                                }
+                            }
+                        }
+                        '*' -> {
+                            postfix.push(Pair(PREC_MULTI_0n, { this.matcherBuilder.multi0n() }))
+                            c = this.next()
+                            when (c) {
+                                '?' -> {
+                                    TODO(pattern)
+                                }
+                                '+' -> {
+                                    TODO(pattern)
+                                }
+                                else -> { /* continue */
+                                }
+                            }
+                        }
+                        '{' -> {
+                            val nb = StringBuilder()
+                            c = this.next()
+                            while (c in '0'..'9') {
+                                nb.append(c)
+                                c = this.next()
+                            }
+                            val n = nb.toString().toIntOrNull(10)
+                                    ?: throw RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                            when (c) {
+                                '}' -> {
+                                    postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, n) }))
+                                    c = this.next()
+                                }
+                                ',' -> {
+                                    c = this.next()
+                                    when (c) {
+                                        '}' -> {
+                                            postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, -1) }))
+                                            c = this.next()
+                                        }
+                                        else -> {
+                                            val mb = StringBuilder()
+                                            mb.append(c)
+                                            c = this.next()
+                                            while (c in '0'..'9') {
+                                                mb.append(c)
+                                                c = this.next()
+                                            }
+                                            val m = mb.toString().toIntOrNull(10)
+                                                    ?: throw RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                                            when (c) {
+                                                '}' -> {
+                                                    postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, m) }))
+                                                    c = this.next()
+                                                }
+                                                else -> throw RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                                            }
+                                        }
+                                    }
+                                }
+                                else -> RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                            }
+                        }
+                        ')' -> {
+                            while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN) {
                                 postfix.push(opStack.pop())
                             }
-                            opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                            if (opStack.isEmpty.not() && opStack.peek().first == PREC_GROUP_OPEN) opStack.pop()
+                            needConcat.pop()
+                            if (needConcat.pop()) {
+                                while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
+                                    postfix.push(opStack.pop())
+                                }
+                                opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                            }
+                            needConcat.push(true)
+                            //postfix.push(Pair(PREC_GROUP_CLOSE, { this.matcherBuilder.finishGroup() }))
+                            c = this.next()
                         }
-                        needConcat.push(true)
-                        c = this.next()
+                        else -> {
+                            val cc = c
+                            postfix.push(Pair(PREC_LITERAL, { this.matcherBuilder.character(cc) }))
+                            if (needConcat.pop()) {
+                                while (opStack.isEmpty.not() && opStack.peek().first != PREC_GROUP_OPEN && opStack.peek().first < PREC_CONCAT) {
+                                    postfix.push(opStack.pop())
+                                }
+                                opStack.push(Pair(PREC_CONCAT, { this.matcherBuilder.concatenate() }))
+                            }
+                            needConcat.push(true)
+                            c = this.next()
+                        }
                     }
                 }
+            } catch(t:Throwable) {
+                val before = this.pattern.substring(maxOf(0,this.pp-5),minOf(this.pattern.length,this.pp))
+                val after = this.pattern.substring(maxOf(this.pattern.length,this.pp-5), minOf(this.pattern.length,this.pp+5))
+                val posStr = "$before^$after"
+                throw RegexParserException("Failed to parse regex \"${this.pattern}\" at position ${this.pp}, \"$posStr\", "+t.message)
             }
             while (opStack.isEmpty.not()) {
                 postfix.push(opStack.pop())
@@ -395,9 +402,9 @@ class RegexParser(
                             if ('E' == c) {
                                 end = true
                             } else {
-                                sb.append('\\')
+                                //sb.append('\\')
                                 sb.append(c)
-                                c = this.next()
+                                //c = this.next()
                             }
                         }
                         else -> {

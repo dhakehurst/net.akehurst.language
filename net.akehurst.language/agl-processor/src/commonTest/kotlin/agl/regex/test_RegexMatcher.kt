@@ -73,4 +73,17 @@ class test_RegexMatcher {
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun ex() {
+        val ex = """
+        (\Q\\E)
+        """.trimIndent()
+        val m = regexMatcher(ex)
+        val text = "\\"
+        val actual = m.match(text, 0)
+        val expected = RegexMatcher.MatchResult(text, emptyList())
+        assertEquals(expected, actual)
+    }
+
+
 }
