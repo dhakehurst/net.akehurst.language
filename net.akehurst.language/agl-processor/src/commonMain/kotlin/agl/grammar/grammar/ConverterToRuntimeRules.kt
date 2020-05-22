@@ -25,12 +25,14 @@ import net.akehurst.language.api.analyser.GrammarExeception
 /**
  * arg: String =
  */
-class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String> {
+class ConverterToRuntimeRules(
+        val grammar: Grammar,
+        val builder: RuntimeRuleSetBuilder = RuntimeRuleSetBuilder()
+) : GrammarVisitor<Any, String> {
 
     class CompressedItem(val value: String, val isPattern: Boolean)
 
     private val originalRule: MutableMap<RuntimeRule, RuleItem> = mutableMapOf()
-    val builder = RuntimeRuleSetBuilder()
 
     private fun findRule(name: String): RuntimeRule? {
         return this.builder.findRuleByName(name, false)
@@ -68,7 +70,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
             rhs is Multi -> {
                 val ct = this.compressRhs(rhs.item)
                 val min = rhs.min
-                val max = if (-1==rhs.max) "" else rhs.max
+                val max = if (-1 == rhs.max) "" else rhs.max
                 val pattern = "(${ct.value}){${min},${max}}"
                 CompressedItem(pattern, true)
             }
@@ -77,7 +79,11 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
                 val pattern = "(${ct.value})"
                 CompressedItem(pattern, true)
             }
-            rhs is NonTerminal -> this.compressRhs(rhs.referencedRule.rhs) //TODO: need to catch the recursion before this
+            rhs is NonTerminal -> {
+                //TODO: handle overridden vs embedded rules!
+                //TODO: need to catch the recursion before this
+                this.compressRhs(rhs.referencedRule.rhs)
+            }
             else -> throw GrammarExeception("Rule ${rhs.owningRule.name}, compressing ${rhs::class} to leaf is not yet supported", null)
         }
     }
@@ -195,9 +201,19 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
     }
 
     override fun visit(target: NonTerminal, arg: String): RuntimeRule {
-        val nonTerminalRule = this.findRule(target.referencedRule.name)
-                ?: target.referencedRule.accept(this, arg) as RuntimeRule
-        return nonTerminalRule
+        val refName = target.name
+        val nonTerminalRule = this.findRule(refName)
+        return if (null == nonTerminalRule) {
+            if (target.embedded) {
+                val embeddedGrammar = target.referencedRule.grammar
+                val embeddedConverter = ConverterToRuntimeRules(embeddedGrammar, this.builder)
+                embeddedConverter.visit(target.referencedRule, arg)
+            } else {
+                this.grammar.findAllRule(refName).accept(this, arg) as RuntimeRule
+            }
+        } else {
+            nonTerminalRule
+        }
     }
 
     override fun visit(target: ChoiceEqual, arg: String): RuntimeRule {

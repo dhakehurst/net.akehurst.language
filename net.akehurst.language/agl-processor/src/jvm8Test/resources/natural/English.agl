@@ -4,6 +4,8 @@ namespace net.akehurst.language.natural
 
 grammar English {
 
+    skip WHITESPACE = "\s+" ;
+
     sentence
         = simple-sentence
         || compound-sentence
@@ -49,7 +51,7 @@ grammar English {
 
     declarative-sentence = subject predicate ;
 
-    subject = simple-subject compound-subject ;
+    subject = simple-subject | compound-subject ;
 
     simple-subject = noun-phrase | NOMINATIVE_PERSONAL_PRONOUN ;
 
@@ -67,7 +69,7 @@ grammar English {
     compound-noun = noun prepositional-phrase* ;
     prepositional-phrase = PREPOSITION object ;
 
-    compound-adjective = adjective ('and' | 'or') adjective ;
+    compound-adjective = [adjective / ('and' | 'or') ]+ ;
 
     compound-subject
         = simple-subject ('and' | 'or') simple-subject
@@ -162,18 +164,18 @@ grammar English {
 
 
     //TODO: these should come from a dictionary not be listed here
-    PROPER_NOUN = 'John' | 'America' | 'Dr. Allen' | 'State Street' ;
+    PROPER_NOUN = 'John' | 'America' | 'Dr. Allen' | 'State Street' | 'Mary' ;
     PROPER_NOUN_PLURAL = 'Johns' | 'Americas' ;
     PROPER_NOUN_POSSESSIVE = 'John\'s' | 'America\'s' | 'Dr. Allen\'s' ;
     SPECIFIC_PROPER_NOUN = 'Atlantic Ocean' | 'Sahara' ;
 
-    COMMON_NOUN = 'mouse' | 'cat' | 'book' | 'tree' ;
-    COMMON_NOUN_PLURAL = 'cats' | 'books' | 'trees' ;
+    COMMON_NOUN = 'mouse' | 'cat' | 'book' | 'tree' | 'name' ;
+    COMMON_NOUN_PLURAL = 'cats' | 'books' | 'trees' | 'sentences' | 'statements' ;
     COMMON_NOUN_POSSESSIVE = 'cat\'s' | 'book\'s' | 'tree\'s' ;
 
 
     //TODO: these should come from a dictionary not be listed here
-    ADJECTIVE_POSITIVE = 'new' | 'yellow' | 'pretty' | 'useful' ;
+    ADJECTIVE_POSITIVE = 'new' | 'yellow' | 'pretty' | 'useful' | 'declarative' ;
     ADJECTIVE_COMPARATIVE = 'newer' | 'yellower' | 'prettier' ;
     ADJECTIVE_SUPERLATIVE = 'newest' | 'yellowest' | 'prettiest' ;
     ARTICLE = 'a' | 'an' | 'the' ; //TODO: definite or indefinite
@@ -186,7 +188,7 @@ grammar English {
     LINKING_VERB = 'be' | 'am' | 'are' | 'is' | 'was' | 'were' | 'look' | 'looks' | 'looked' | 'become' | 'became' | 'become' ;
 
     //TODO: these should come from a dictionary not be listed here
-    VERB_INFINITIVE         = 'be'    | 'start'    ;
+    VERB_INFINITIVE         = 'be'    | 'start'    | 'form' ;
     VERB_PRESENT_PARTICIPLE = 'being' | 'starting' ;
     VERB_PAST_PARTICIPLE    = 'been'  | 'started'  ;
     VERB_1s_PRESENT         = 'am'    | 'start'    ;
@@ -200,7 +202,7 @@ grammar English {
     VERB_3s_PAST            = 'was'   | 'started'  ;
     VERB_1p_PAST            = 'were'  | 'started'  ;
     VERB_2p_PAST            = 'were'  | 'started'  ;
-    VERB_3p_PAST            = 'were'  | 'started'  ;
+    VERB_3p_PAST            = 'were'  | 'started' | 'used' ;
 
 
     NOMINATIVE_PERSONAL_PRONOUN = 'I' | 'you' | 'he' | 'she' | 'it' | 'we' | 'they' ;

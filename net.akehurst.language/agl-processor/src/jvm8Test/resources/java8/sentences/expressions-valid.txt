@@ -1,0 +1,13 @@
+A.class
+int.class
+boolean.class
+void.class
+A[][].class
+boolean[].class
+this
+A.this
+( 1 )
+( A.class )
+new A()
+new A<>()
+new A<S,T>()

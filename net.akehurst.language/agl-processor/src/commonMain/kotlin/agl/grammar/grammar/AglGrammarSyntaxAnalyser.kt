@@ -129,16 +129,18 @@ class AglGrammarSyntaxAnalyser(
     fun rule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Rule {
         val grammar = arg as GrammarDefault
         val type = this.transform<List<String>>(children[0], arg)
+        val isOverride = type.contains("override")
         val isSkip = type.contains("skip")
         val isLeaf = type.contains("leaf")
         val name = target.nonSkipChildren[1].nonSkipMatchedText
-        val result = RuleDefault(grammar, name, isSkip, isLeaf)
+        val result = RuleDefault(grammar, name, isOverride, isSkip, isLeaf)
         val rhs = this.transform<RuleItem>(children[1], arg)
         result.rhs = rhs
         return result
     }
 
     // ruleTypeLabels : isSkip isLeaf ;
+    // isOverride = 'override' ? ;
     // isSkip = 'leaf' ? ;
     // isLeaf = 'skip' ? ;
     fun ruleTypeLabels(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<String> {
@@ -267,9 +269,9 @@ class AglGrammarSyntaxAnalyser(
             val embeddedGrammarRef = nonTerminalRef.substringBeforeLast(".")
             val embeddedStartRuleRef = nonTerminalRef.substringAfterLast(".")
             val embeddedGrammar = GrammarRegistryDefault.find(thisGrammar.namespace.qualifiedName, embeddedGrammarRef)
-            NonTerminalDefault(embeddedStartRuleRef, embeddedGrammar)
+            NonTerminalDefault(embeddedStartRuleRef, embeddedGrammar, true)
         } else {
-            NonTerminalDefault(nonTerminalRef, thisGrammar)
+            NonTerminalDefault(nonTerminalRef, thisGrammar, false)
         }
     }
 

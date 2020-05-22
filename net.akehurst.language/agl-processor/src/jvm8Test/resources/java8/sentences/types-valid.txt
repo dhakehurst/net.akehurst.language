@@ -6,8 +6,8 @@ int
 long
 float
 double
-
-
+@A int
+@B boolean
 
 $
 _
@@ -21,5 +21,5 @@ a1b2b3
 _abc
 a_c_d
 a_1_2_3
-
 ™
+@A(1) A

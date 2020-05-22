@@ -35,16 +35,16 @@ import java.io.InputStreamReader
 
 
 @RunWith(Parameterized::class)
-class test_Java8Agl_Types(val data:Data) {
+class test_Java8Agl_Packages(val data:Data) {
 
     companion object {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
         val processor : LanguageProcessor by lazy {
-            Agl.processor(grammarStr, "Types.Type")
+            Agl.processor(grammarStr, "Packages.CompilationUnit")
         }
         var sourceFiles = arrayOf(
-                "/java8/sentences/types-valid.txt"
+                "/java8/sentences/packages-valid.txt"
         )
 
         @JvmStatic
@@ -52,7 +52,7 @@ class test_Java8Agl_Types(val data:Data) {
         fun data(): Collection<Array<Any>> {
             val col = ArrayList<Array<Any>>()
             for (sourceFile in sourceFiles) {
-                val inps = test_Java8Agl_Types::class.java.getResourceAsStream(sourceFile)
+                val inps = test_Java8Agl_Packages::class.java.getResourceAsStream(sourceFile)
 
                 val br = BufferedReader(InputStreamReader(inps))
                 var line: String? = br.readLine()

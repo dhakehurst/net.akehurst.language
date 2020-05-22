@@ -1,6 +1,6 @@
-subject | My name
+subject | my name
 predicate | is Mary
-subject | Declarative Sentences
+subject | declarative sentences
 predicate | are used to form statements
 
 noun-phrase | the Atlantic Ocean

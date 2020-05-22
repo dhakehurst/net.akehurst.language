@@ -35,15 +35,18 @@ import java.io.InputStreamReader
 
 
 @RunWith(Parameterized::class)
-class test_Java8Agl_Expressions(val data:Data) {
+class test_Java8Agl_Expressions(val data: Data) {
 
     companion object {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
-        val processor : LanguageProcessor by lazy {
-            Agl.processor(grammarStr, "Expressions.expression")
+        val processor: LanguageProcessor by lazy {
+            Agl.processor(grammarStr, "Expressions.Expression")
         }
-        var sourceFiles = arrayOf("/java8/sentences/valid-literals.txt")
+        var sourceFiles = arrayOf(
+                "/java8/sentences/literals-valid.txt",
+                "/java8/sentences/expressions-valid.txt"
+        )
 
         @JvmStatic
         @Parameters(name = "{0}")
@@ -82,7 +85,7 @@ class test_Java8Agl_Expressions(val data:Data) {
 
     @Test
     fun test() {
-        val result = processor.parse("Literal", this.data.text)
+        val result = processor.parse(this.data.text)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(this.data.text, resultStr)

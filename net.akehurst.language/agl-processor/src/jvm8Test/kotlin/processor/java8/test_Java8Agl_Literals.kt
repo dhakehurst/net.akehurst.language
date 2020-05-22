@@ -43,7 +43,7 @@ class test_Java8Agl_Literals(val data:Data) {
         val processor : LanguageProcessor by lazy {
             Agl.processor(grammarStr, "Literals.Literal")
         }
-        var sourceFiles = arrayOf("/java8/sentences/valid-literals.txt")
+        var sourceFiles = arrayOf("/java8/sentences/literals-valid.txt")
 
         @JvmStatic
         @Parameters(name = "{0}")
@@ -82,7 +82,7 @@ class test_Java8Agl_Literals(val data:Data) {
 
     @Test
     fun test() {
-        val result = processor.parse("Literal", this.data.text)
+        val result = processor.parse( this.data.text)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(this.data.text, resultStr)

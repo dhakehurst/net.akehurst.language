@@ -19,33 +19,37 @@ package net.akehurst.language.agl.ast
 import net.akehurst.language.api.grammar.*
 import kotlin.text.Regex
 
-class NonTerminalDefault(override val name: String, val owningGrammar:Grammar) : RuleItemAbstract(), NonTerminal {
+class NonTerminalDefault(
+        override val name: String,
+        val owningGrammar: Grammar,
+        override val embedded: Boolean
+) : RuleItemAbstract(), NonTerminal {
 
-	override val referencedRule : Rule by lazy {
-		this.owningGrammar.findAllRule(this.name)
-	}
+    override val referencedRule: Rule by lazy {
+        this.owningGrammar.findAllRule(this.name)
+    }
 
     override fun setOwningRule(rule: Rule, indices: List<Int>) {
-		this._owningRule = rule
-		this.index = indices
-	}
-	
-	override fun subItem(index: Int): RuleItem {
-		throw GrammarRuleItemNotFoundException("subitem ${index} not found")
-	}
-	
-	override val allTerminal: Set<Terminal> by lazy {
-		emptySet<Terminal>()
-	}
+        this._owningRule = rule
+        this.index = indices
+    }
 
-	override val allNonTerminal: Set<NonTerminal> by lazy {
-		setOf(this)
-	}
+    override fun subItem(index: Int): RuleItem {
+        throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+    }
 
-	// --- GrammarVisitable ---
+    override val allTerminal: Set<Terminal> by lazy {
+        emptySet<Terminal>()
+    }
 
-	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
-		return visitor.visit(this, arg);
-	}
+    override val allNonTerminal: Set<NonTerminal> by lazy {
+        setOf(this)
+    }
+
+    // --- GrammarVisitable ---
+
+    override fun <T, A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
+        return visitor.visit(this, arg);
+    }
 
 }

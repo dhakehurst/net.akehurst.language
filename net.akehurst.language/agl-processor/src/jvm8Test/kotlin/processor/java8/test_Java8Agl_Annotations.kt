@@ -41,9 +41,9 @@ class test_Java8Agl_Annotations(val data:Data) {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
         val processor : LanguageProcessor by lazy {
-            Agl.processor(grammarStr, "Literals.Literal")
+            Agl.processor(grammarStr, "Annotations.Annotation")
         }
-        var sourceFiles = arrayOf("/java8/sentences/valid-literals.txt")
+        var sourceFiles = arrayOf("/java8/sentences/annotations-valid.txt")
 
         @JvmStatic
         @Parameters(name = "{0}")
@@ -82,7 +82,7 @@ class test_Java8Agl_Annotations(val data:Data) {
 
     @Test
     fun test() {
-        val result = processor.parse("Literal", this.data.text)
+        val result = processor.parse(this.data.text)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(this.data.text, resultStr)

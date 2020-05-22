@@ -40,7 +40,7 @@ internal class LanguageProcessorDefault(
 
     private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(this.grammar)
     private val parser: Parser = ScanOnDemandParser(this.converterToRuntimeRules.transform())
-    private val completionProvider: CompletionProvider = CompletionProvider()
+    private val completionProvider: CompletionProvider = CompletionProvider(this.grammar)
 
     override fun interrupt(message: String) {
         this.parser.interrupt(message)

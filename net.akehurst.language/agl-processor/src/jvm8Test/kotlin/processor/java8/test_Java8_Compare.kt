@@ -51,7 +51,7 @@ class test_Java8_Compare(val data: Data) {
     companion object {
 
         var aglSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglSpec.agl", true)
-        var aglOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglOptm.agl")
+        var aglOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglOptm.agl", true)
 
         var antlrSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrSpec.agl")
         var antlrOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrOptm.agl")
@@ -145,7 +145,7 @@ class test_Java8_Compare(val data: Data) {
 
     @Test(timeout = 5000)
     fun aglOptm() {
-        this.testParse(aglOptmProcessor)
+        this.testParse(aglOptmProcessor, true)
     }
 
     @Test(timeout = 5000)

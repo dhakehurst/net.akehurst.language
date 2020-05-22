@@ -18,6 +18,8 @@ package net.akehurst.language.api.grammar
 
 interface NonTerminal : TangibleItem {
 
-	 val referencedRule: Rule
+    val embedded:Boolean
+
+    val referencedRule: Rule
 
 }

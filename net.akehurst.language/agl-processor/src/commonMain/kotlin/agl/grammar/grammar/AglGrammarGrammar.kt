@@ -43,7 +43,8 @@ private fun createRules(): List<Rule> {
     b.rule("extends2").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("qualifiedName"))
     b.rule("rules").multi(1, -1, b.nonTerminal("rule"))
     b.rule("rule").concatenation(b.nonTerminal("ruleTypeLabels"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("choice"), b.terminalLiteral(";"))
-    b.rule("ruleTypeLabels").concatenation(b.nonTerminal("isSkip"), b.nonTerminal("isLeaf"))
+    b.rule("ruleTypeLabels").concatenation(b.nonTerminal("isOverride"), b.nonTerminal("isSkip"), b.nonTerminal("isLeaf"))
+    b.rule("isOverride").multi(0,1,b.terminalLiteral("override"))
     b.rule("isSkip").multi(0,1,b.terminalLiteral("skip"))
     b.rule("isLeaf").multi(0,1,b.terminalLiteral("leaf"))
     //TODO: choice has ambiguity, if resolved by priority, then wrong result with "a < b < c", it matches "choiceEqual { a }" as higher priority

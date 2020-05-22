@@ -46,7 +46,7 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
             val bytes = Java8_compare_Test_aglOptm::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
             val proc = Agl.processor(javaGrammarStr)
-            proc.buildFor("compilationUnit")
+            proc.buildFor("CompilationUnit")
             return proc
         }
 
@@ -55,9 +55,9 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
         var input: String? = null
 
         fun parseWithJava8Agl(file: FileData): SharedPackedParseTree? {
-            val tree = aglProcessor.parse("compilationUnit", input!!)
-            TimeLogger("agl_optm1", file).use { timer ->
-                val tree = aglProcessor.parse("compilationUnit", input!!)
+            val tree = aglProcessor.parse("CompilationUnit", input!!)
+            TimeLogger("agl_optm", file).use { timer ->
+                val tree = aglProcessor.parse("CompilationUnit", input!!)
                 timer.success()
                 return tree
             }

@@ -1,0 +1,11 @@
+{ }
+{ ; }
+{ int i; }
+{ final int i; }
+{ @Ann final int i; }
+{ @Ann final int i=1, j=2, k=3; }
+{ int i; boolean b; char c; }
+
+{ if (b) return 1; }
+{ if (i==1) return 1; }
+{ if (i==1) return 1; if (i==1) return 1; }

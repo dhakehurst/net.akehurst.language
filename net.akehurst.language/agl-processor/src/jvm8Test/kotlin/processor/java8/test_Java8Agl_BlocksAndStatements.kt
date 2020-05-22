@@ -35,16 +35,16 @@ import java.io.InputStreamReader
 
 
 @RunWith(Parameterized::class)
-class test_Java8Agl_Types(val data:Data) {
+class test_Java8Agl_BlocksAndStatements(val data: Data) {
 
     companion object {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
-        val processor : LanguageProcessor by lazy {
-            Agl.processor(grammarStr, "Types.Type")
+        val processor: LanguageProcessor by lazy {
+            Agl.processor(grammarStr, "BlocksAndStatements.Block")
         }
         var sourceFiles = arrayOf(
-                "/java8/sentences/types-valid.txt"
+                "/java8/sentences/blocks-valid.txt"
         )
 
         @JvmStatic
@@ -52,7 +52,7 @@ class test_Java8Agl_Types(val data:Data) {
         fun data(): Collection<Array<Any>> {
             val col = ArrayList<Array<Any>>()
             for (sourceFile in sourceFiles) {
-                val inps = test_Java8Agl_Types::class.java.getResourceAsStream(sourceFile)
+                val inps = test_Java8Agl_BlocksAndStatements::class.java.getResourceAsStream(sourceFile)
 
                 val br = BufferedReader(InputStreamReader(inps))
                 var line: String? = br.readLine()
@@ -84,8 +84,7 @@ class test_Java8Agl_Types(val data:Data) {
 
     @Test
     fun test() {
-        val p = processor
-        val result = p.parse(this.data.text)
+        val result = processor.parse(this.data.text)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(this.data.text, resultStr)

@@ -33,15 +33,15 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
     }
 
     fun rule(name: String): RuleBuilder {
-        return RuleBuilder(RuleDefault(grammar, name, false, false))
+        return RuleBuilder(RuleDefault(grammar, name, false, false, false))
     }
 
     fun skip(name: String, isLeaf: Boolean = false): RuleBuilder {
-        return RuleBuilder(RuleDefault(this.grammar, name, true, isLeaf))
+        return RuleBuilder(RuleDefault(this.grammar, name, false, true, isLeaf))
     }
 
     fun leaf(name: String): RuleBuilder {
-        return RuleBuilder(RuleDefault(this.grammar, name, false, true))
+        return RuleBuilder(RuleDefault(this.grammar, name, false, false, true))
     }
 
     fun terminalLiteral(value: String): Terminal {
@@ -56,7 +56,7 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         if (name.contains(".")) {
             TODO()
         } else {
-            return NonTerminalDefault(name, this.grammar)
+            return NonTerminalDefault(name, this.grammar, false)
         }
     }
 
