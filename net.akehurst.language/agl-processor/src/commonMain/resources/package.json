@@ -16,7 +16,7 @@
   "types": "./net.akehurst.language-agl-processor.d.ts",
 
   "peerDependencies": {
-    "kotlin": "1.3.71"
+    "kotlin": "1.3.72"
   },
 
   "scripts": { }

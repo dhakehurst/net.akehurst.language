@@ -1,5 +1,5 @@
 plugins {
-    id("net.akehurst.kotlin.kt2ts") version "1.5.2"
+    id("net.akehurst.kotlin.kt2ts") version "1.5.3"
 }
 
 tasks.withType<ProcessResources>  {

@@ -68,7 +68,7 @@ abstract class GrammarAbstract(
         return when {
             all.isEmpty() -> throw GrammarRuleNotFoundException("${ruleName} in Grammar(${this.name}).findAllRule")
             all.size > 1 -> {
-                throw GrammarRuleNotFoundException("More than one rule named ${ruleName} in Grammar(${this.name}).findAllRule")
+                throw GrammarRuleNotFoundException("More than one rule named ${ruleName} in grammar ${this.name}, have you remembered the 'override' modifier")
             }
             else -> all.first()
         }

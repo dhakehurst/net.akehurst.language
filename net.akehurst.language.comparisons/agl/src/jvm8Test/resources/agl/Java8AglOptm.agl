@@ -68,7 +68,6 @@ grammar Annotations extends Base, Literals {
     NormalAnnotation = '@' TypeName '(' ElementValuePairList ')' ;
     ElementValuePairList = [ ElementValuePair / ',' ]* ;
     ElementValuePair = IDENTIFIER '=' ElementValue ;
-    //ElementValue = ConditionalExpression | ElementValueArrayInitializer | Annotation ;
     // overridden in expressions
     ElementValue = Literal | ElementValueArrayInitializer | Annotation ;
     ElementValueArrayInitializer = '{' ElementValueList ','? '}' ;
@@ -78,7 +77,7 @@ grammar Annotations extends Base, Literals {
 }
 
 grammar Types extends Annotations {
-    Type = PrimitiveType | ReferenceType ;
+    Type = ReferenceType < PrimitiveType ;
     PrimitiveType = Annotation* NumericType | Annotation* 'boolean' ;
     NumericType = IntegralType | FloatingPointType ;
     IntegralType = 'byte' | 'short' | 'int' | 'long' | 'char' ;

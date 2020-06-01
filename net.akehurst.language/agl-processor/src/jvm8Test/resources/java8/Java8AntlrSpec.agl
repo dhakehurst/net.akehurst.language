@@ -1623,7 +1623,7 @@ NullLiteral
 
 // §3.8 Identifiers (must appear after all keywords in the grammar)
 
-Identifier
+leaf Identifier
 	=	JavaLetter JavaLetterOrDigit*
 	;
 

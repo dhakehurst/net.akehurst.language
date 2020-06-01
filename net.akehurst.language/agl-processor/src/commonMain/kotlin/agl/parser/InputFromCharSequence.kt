@@ -62,7 +62,7 @@ internal class InputFromCharSequence(val text: CharSequence) {
         }
     }
 
-    private fun matchRegEx(position: Int, regex: Regex): Match? {
+    private fun matchRegEx(position: Int, regex: Regex): RegexMatcher.MatchResult? {
         val m = regex.find(this.text, position)
         return if (null == m)
             null
@@ -71,19 +71,19 @@ internal class InputFromCharSequence(val text: CharSequence) {
             val x = this.text.substring(position, position+matchedText.length)
             if (x == matchedText) {
                 val eolPositions = this.eolPositions(matchedText)
-                Match(matchedText, eolPositions)
+                RegexMatcher.MatchResult(matchedText, eolPositions)
             } else {
                 null
             }
         }
     }
 
-    internal fun tryMatchText(position: Int, patternText: String, pattern: RegexMatcher?): RegexMatcher.MatchResult? {
+    internal fun tryMatchText(position: Int, patternText: String, pattern: Regex?): RegexMatcher.MatchResult? {
         val matched = when {
             (position >= this.text.length) -> if (patternText == END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
             (null == pattern) -> this.matchLiteral(position, patternText)
-            //else -> this.matchRegEx(position, pattern)
-            else ->pattern.match(this.text, position)
+            else -> this.matchRegEx(position, pattern)
+            //else ->pattern.match(this.text, position)
         }
         return matched
     }

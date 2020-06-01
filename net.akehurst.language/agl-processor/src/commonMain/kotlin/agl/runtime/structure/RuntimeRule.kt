@@ -57,8 +57,8 @@ class RuntimeRule(
         }
 
     val pattern = if (this.isPattern) {
-        //Regex(this.value, setOf(RegexOption.MULTILINE))
-        regexMatcher(this.value)
+        Regex(this.value, setOf(RegexOption.MULTILINE))
+        //regexMatcher(this.value)
     } else {
         null
     }

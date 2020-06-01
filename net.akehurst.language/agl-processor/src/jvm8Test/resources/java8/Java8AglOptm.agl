@@ -78,7 +78,7 @@ grammar Annotations extends Base, Literals {
 }
 
 grammar Types extends Annotations {
-    Type = PrimitiveType | ReferenceType ;
+    Type = ReferenceType < PrimitiveType ;
     PrimitiveType = Annotation* NumericType | Annotation* 'boolean' ;
     NumericType = IntegralType | FloatingPointType ;
     IntegralType = 'byte' | 'short' | 'int' | 'long' | 'char' ;
