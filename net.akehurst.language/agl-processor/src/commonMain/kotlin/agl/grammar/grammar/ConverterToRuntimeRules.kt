@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar.runtime
+package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.ParserException

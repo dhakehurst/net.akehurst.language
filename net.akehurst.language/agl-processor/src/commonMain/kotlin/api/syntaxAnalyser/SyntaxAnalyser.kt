@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.analyser
+package net.akehurst.language.api.syntaxAnalyser
 
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-class SyntaxAnalyserException(message: String, cause: Throwable?) : Exception(message, cause) {
-
-}
+class SyntaxAnalyserException(message: String, cause: Throwable?) : Exception(message, cause)
 
 /**
  *
@@ -30,6 +29,8 @@ class SyntaxAnalyserException(message: String, cause: Throwable?) : Exception(me
  *
  */
 interface SyntaxAnalyser {
+
+	val locationMap: Map<Any, InputLocation>
 
 	/**
 	 * reset the sppt2ast, clearing any cached values

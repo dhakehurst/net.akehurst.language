@@ -39,6 +39,12 @@ class test_Java8_Grammars {
         //val grammarStr = String(bytes)
         val actual = Agl.processor(grammarStr)
         assertNotNull(actual)
+
+        val res = Agl.grammarProcessor.analyseText(List::class, grammarStr)
+        assertNotNull(actual)
+        res.forEach {
+            println(it)
+        }
     }
 
     @Test(timeout=5000)

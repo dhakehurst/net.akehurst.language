@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.analyser
+package net.akehurst.language.api.syntaxAnalyser
 
 import kotlin.js.JsName
 

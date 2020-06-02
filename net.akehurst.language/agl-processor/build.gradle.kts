@@ -1,5 +1,5 @@
 plugins {
-    id("net.akehurst.kotlin.kt2ts") version "1.5.3"
+    id("net.akehurst.kotlin.kt2ts") version "1.5.4"
 }
 
 tasks.withType<ProcessResources>  {
@@ -11,7 +11,8 @@ tasks.withType<ProcessResources>  {
 kt2ts {
     jvmTargetName.set("jvm8")
     classPatterns.set(listOf(
-            "net.akehurst.language.api.analyser.*",
+            "net.akehurst.language.api.syntaxAnalyser.*",
+            "net.akehurst.language.api.semanticAnalyser.*",
             "net.akehurst.language.api.grammar.*",
             "net.akehurst.language.api.parser.*",
             "net.akehurst.language.api.processor.*",

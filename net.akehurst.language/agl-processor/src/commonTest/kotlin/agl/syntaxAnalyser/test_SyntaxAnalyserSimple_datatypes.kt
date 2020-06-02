@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.analyser
+package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.api.analyser.AsmElementSimple
+import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
 import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -50,7 +50,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             datatype A { }
         """.trimIndent()
 
-        val actual = processor.process<List<AsmElementSimple>>(sentence)
+        val actual = processor.process<List<AsmElementSimple>>(List::class,sentence)
 
         assertEquals(1, actual.size)
         assertEquals(0, actual[0].getPropertyAsList("property").size)
@@ -63,7 +63,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             datatype B { }
         """.trimIndent()
 
-        val actual = processor.process<List<AsmElementSimple>>(sentence)
+        val actual = processor.process<List<AsmElementSimple>>(List::class,sentence)
 
         assertEquals(2, actual.size)
         assertEquals(0, actual[0].getPropertyAsList("property").size)
@@ -77,7 +77,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         """.trimIndent()
 
-        val actual = processor.process<List<AsmElementSimple>>(sentence)
+        val actual = processor.process<List<AsmElementSimple>>(List::class,sentence)
 
         assertEquals(1, actual.size)
         val actualDeclaration1 = actual[0]

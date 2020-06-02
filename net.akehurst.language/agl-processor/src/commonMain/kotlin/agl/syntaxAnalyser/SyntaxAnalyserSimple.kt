@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.analyser
+package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.api.analyser.AsmElementSimple
-import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyserException
+import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyserException
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.agl.sppt.SPPTBranchDefault
 import net.akehurst.language.agl.sppt.SPPTLeafDefault
+import net.akehurst.language.api.parser.InputLocation
 
 
 class SyntaxAnalyserSimple : SyntaxAnalyser {
-
+    override val locationMap = mutableMapOf<Any, InputLocation>()
 
     override fun clear() {
         TODO("not implemented")
@@ -101,10 +102,10 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
                             el.setProperty(name, value)
                         }
                     }
-                    if (br.runtimeRule.rhs.items.size==1) {
-                        if (br.runtimeRule.rhs.items[0].kind==RuntimeRuleKind.NON_TERMINAL
-                                && (br.runtimeRule.rhs.items[0].rhs.kind==RuntimeRuleItemKind.MULTI
-                                        || br.runtimeRule.rhs.items[0].rhs.kind==RuntimeRuleItemKind.SEPARATED_LIST)
+                    if (br.runtimeRule.rhs.items.size == 1) {
+                        if (br.runtimeRule.rhs.items[0].kind == RuntimeRuleKind.NON_TERMINAL
+                                && (br.runtimeRule.rhs.items[0].rhs.kind == RuntimeRuleItemKind.MULTI
+                                        || br.runtimeRule.rhs.items[0].rhs.kind == RuntimeRuleItemKind.SEPARATED_LIST)
                         ) {
                             el.properties[0].value
                         } else {

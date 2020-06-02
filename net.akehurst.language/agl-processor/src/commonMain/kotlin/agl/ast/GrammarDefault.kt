@@ -66,9 +66,9 @@ abstract class GrammarAbstract(
     override fun findAllRule(ruleName: String): Rule {
         val all = this.allRule.filter { it.name == ruleName }
         return when {
-            all.isEmpty() -> throw GrammarRuleNotFoundException("${ruleName} in Grammar(${this.name}).findAllRule")
+            all.isEmpty() -> throw GrammarRuleNotFoundException("Rule '${ruleName}' not found in grammar '${this.name}'")
             all.size > 1 -> {
-                throw GrammarRuleNotFoundException("More than one rule named ${ruleName} in grammar ${this.name}, have you remembered the 'override' modifier")
+                throw GrammarRuleNotFoundException("More than one rule named '${ruleName}' in grammar '${this.name}', have you remembered the 'override' modifier")
             }
             else -> all.first()
         }

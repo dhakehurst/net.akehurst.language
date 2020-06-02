@@ -16,12 +16,10 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.api.analyser.AsmElementSimple
-import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.CompletionItem
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 class test_AglGrammar_expectedAt {
 

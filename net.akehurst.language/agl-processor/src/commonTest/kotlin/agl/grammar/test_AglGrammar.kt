@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.api.analyser.AsmElementSimple
+import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
 import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -554,6 +554,6 @@ class test_AglGrammar {
         val p = Agl.processor(grammarStr)
         assertNotNull(p)
 
-        val actual:AsmElementSimple = p.process("aca")
+        val actual:AsmElementSimple = p.process(AsmElementSimple::class,"aca")
     }
 }

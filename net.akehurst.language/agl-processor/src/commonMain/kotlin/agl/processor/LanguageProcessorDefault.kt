@@ -16,26 +16,32 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.analyser.SyntaxAnalyserSimple
-import net.akehurst.language.agl.grammar.runtime.ConverterToRuntimeRules
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
+import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserException
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItem
+import kotlin.reflect.KClass
 
 internal class LanguageProcessorDefault(
         override val grammar: Grammar,
         val goalRuleName: String,
         val syntaxAnalyser: SyntaxAnalyser?,
-        val formatter: Formatter?
+        val formatter: Formatter?,
+        val semanticAnalyser: SemanticAnalyser?
 ) : LanguageProcessor {
 
     private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(this.grammar)
@@ -46,6 +52,7 @@ internal class LanguageProcessorDefault(
         this.parser.interrupt(message)
         //TODO: interrupt processor
     }
+
     override fun buildFor(goalRuleName: String): LanguageProcessor {
         this.parser.buildFor(goalRuleName)
         return this
@@ -62,31 +69,27 @@ internal class LanguageProcessorDefault(
         return sppt
     }
 
-    override fun <T> process(inputText: CharSequence): T = this.process(this.goalRuleName, inputText)
-    override fun <T> process(goalRuleName: String, inputText: CharSequence): T {
+
+    private fun <T : Any> _process(sppt: SharedPackedParseTree, asmType: KClass<in T> = Any::class): Pair<T, SyntaxAnalyser> {
+        val sa = this.syntaxAnalyser ?: SyntaxAnalyserSimple()
+        val asm: T = sa.transform(sppt)
+        return Pair(asm, sa)
+    }
+
+    override fun <T : Any> process(asmType: KClass<in T>, sppt: SharedPackedParseTree): T = this._process(sppt, asmType).first
+    override fun <T : Any> process(asmType: KClass<in T>, inputText: CharSequence): T = this.process(asmType, this.goalRuleName, inputText)
+    override fun <T : Any> process(asmType: KClass<in T>, goalRuleName: String, inputText: CharSequence): T {
         val sppt: SharedPackedParseTree = this.parse(goalRuleName, inputText)
-        return this.process(sppt)
+        return this.process(asmType, sppt)
     }
 
-    override fun <T> process(sppt: SharedPackedParseTree): T {
-        val sa = if (null == this.syntaxAnalyser) {
-            // No SyntaxAnalyser supplied, using SyntaxAnalyserSimple TODO: warning!
-            SyntaxAnalyserSimple()
-        } else {
-            this.syntaxAnalyser
-        }
-        val t: T = sa.transform(sppt);
-
-        return t;
+    override fun <T : Any> formatText(asmType: KClass<in T>, inputText: CharSequence): String = formatTextForGoal<T>(asmType, this.goalRuleName, inputText)
+    override fun <T : Any> formatTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: CharSequence): String {
+        val asm = this.process<T>(asmType, goalRuleName, inputText)
+        return this.formatAsm(asmType, asm)
     }
 
-    override fun <T> formatText(inputText: CharSequence): String = formatTextForGoal<T>(this.goalRuleName, inputText)
-    override fun <T> formatTextForGoal(goalRuleName: String, inputText: CharSequence): String {
-        val asm = this.process<T>(goalRuleName, inputText)
-        return this.formatAsm(asm)
-    }
-
-    override fun <T> formatAsm(asm: T): String {
+    override fun <T : Any> formatAsm(asmType: KClass<in T>, asm: T): String {
         return if (null != formatter) {
             this.formatter.format(asm)
         } else {
@@ -97,9 +100,27 @@ internal class LanguageProcessorDefault(
     override fun expectedAt(inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem> = expectedAt(this.goalRuleName, inputText, position, desiredDepth)
     override fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem> {
         val parserExpected: Set<RuntimeRule> = this.parser.expectedAt(goalRuleName, inputText, position);
-        val grammarExpected: List<RuleItem> = parserExpected.filter { it!== RuntimeRuleSet.END_OF_TEXT }.map { this.converterToRuntimeRules.originalRuleItemFor(it) }
+        val grammarExpected: List<RuleItem> = parserExpected.filter { it !== RuntimeRuleSet.END_OF_TEXT }.map { this.converterToRuntimeRules.originalRuleItemFor(it) }
         val expected = grammarExpected.flatMap { this.completionProvider.provideFor(it, desiredDepth) }
         return expected.toSet().toList()
+    }
+
+    override fun <T : Any> analyseText(asmType: KClass<in T>, inputText: CharSequence): List<SemanticAnalyserItem> {
+        return this.analyseTextForGoal(asmType, this.goalRuleName, inputText)
+    }
+
+    override fun <T : Any> analyseTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: CharSequence): List<SemanticAnalyserItem> {
+        val sppt: SharedPackedParseTree = this.parse(goalRuleName, inputText)
+        val p = this._process(sppt, asmType)
+        val asm = p.first
+        val sa = p.second
+        return this.analyseAsm(asmType, asm, sa.locationMap)
+    }
+
+    override fun <T : Any> analyseAsm(asmType: KClass<in T>, asm: T, locationMap: Map<Any, InputLocation>): List<SemanticAnalyserItem> {
+        val semAnalyser = this.semanticAnalyser ?: throw SemanticAnalyserException("No semantic analyser was supplied to the language processor", null)
+        semAnalyser.clear()
+        return semAnalyser.analyse(asm, locationMap)
     }
 
 }

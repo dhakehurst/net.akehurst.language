@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.analyser
+package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.test.Test

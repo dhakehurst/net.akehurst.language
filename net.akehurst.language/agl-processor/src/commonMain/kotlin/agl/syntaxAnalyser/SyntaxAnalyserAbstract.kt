@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.analyser
+package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.api.analyser.GrammarLoader
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.syntaxAnalyser.GrammarLoader
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
-import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyserException
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyserException
 
 typealias BranchHandler<T> = (SPPTBranch, List<SPPTBranch>, Any?) -> T
 
@@ -31,12 +32,14 @@ abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVis
     private var grammarLoader: GrammarLoader? = null
     private val branchHandlers: MutableMap<String, BranchHandler<*>> = mutableMapOf()
 
+    override val locationMap = mutableMapOf<Any, InputLocation>()
+
     protected fun <T> register(branchName: String, handler: BranchHandler<T>) {
         this.branchHandlers[branchName] = handler
     }
 
     private fun <T> findBranchHandler(branchName: String): BranchHandler<T> {
-        var handler: BranchHandler<T>? = this.branchHandlers[branchName] as BranchHandler<T>?
+        val handler: BranchHandler<T>? = this.branchHandlers[branchName] as BranchHandler<T>?
         return handler ?: throw SyntaxAnalyserException("Cannot find SyntaxAnalyser branch handler method named $branchName", null)
     }
 
@@ -45,7 +48,13 @@ abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVis
     }
 
     protected fun <T> transformOpt(branch: SPPTBranch?, arg: Any?): T? {
-        return if (null == branch) null else branch.accept(this, arg) as T
+        return if (null == branch){
+            null
+        }else {
+            val asm = branch.accept(this, arg) as T
+            this.locationMap[asm as Any] = branch.location
+            asm
+        }
     }
 
     // --- IParseTreeVisitor ---

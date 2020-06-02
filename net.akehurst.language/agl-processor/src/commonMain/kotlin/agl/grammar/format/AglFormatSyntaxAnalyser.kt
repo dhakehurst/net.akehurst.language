@@ -15,10 +15,13 @@
  */
 package net.akehurst.language.agl.grammar.format
 
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 class AglFormatSyntaxAnalyser : SyntaxAnalyser {
+    override val locationMap = mutableMapOf<Any, InputLocation>()
+
     override fun clear() {
         TODO("not implemented")
     }

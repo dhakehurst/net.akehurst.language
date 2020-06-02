@@ -14,12 +14,27 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.analyser
+package net.akehurst.language.api.semanticAnalyser
 
-import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.parser.InputLocation
 
-interface GrammarLoader {
+class SemanticAnalyserException(message: String, cause: Throwable?) : Exception(message, cause)
 
-	fun resolve(vararg qualifiedGrammarNames: String): List<Grammar>
+/**
+ *
+ * A Semantic Analyser, language specific functionality
+ *
+ */
+interface SemanticAnalyser {
 
+    fun clear()
+
+    fun <T> analyse(asm: T, locationMap: Map<Any,InputLocation> = emptyMap()): List<SemanticAnalyserItem>
 }
+
+enum class SemanticAnalyserItemKind { ERROR, WARNING }
+data class SemanticAnalyserItem (
+    val kind: SemanticAnalyserItemKind,
+    val location:InputLocation?,
+    val message: String
+)

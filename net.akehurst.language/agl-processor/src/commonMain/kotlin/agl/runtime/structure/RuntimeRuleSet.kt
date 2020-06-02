@@ -141,6 +141,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
     }
 
+    fun automatonFor(goalRuleName: String): ParserStateSet {
+        this.buildFor(goalRuleName)
+        val gr = this.findRuntimeRule(goalRuleName)
+        return this.states_cache[gr]!! //findRuntimeRule would throw exception if not exist
+    }
+
     internal fun createAllSkipStates() {
         this.skipRules.forEach { skipRule ->
             val stateSet = ParserStateSet(nextStateSetNumber++, this, skipRule, emptyList())
@@ -261,7 +267,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     fun findRuntimeRule(ruleName: String): RuntimeRule {
         val number = this.nonTerminalRuleNumber[ruleName]
                 ?: this.terminalRuleNumber[ruleName]
-                ?: throw ParserException("NonTerminal RuntimeRule '${ruleName}' not found")
+                ?: throw ParserException("RuntimeRule '${ruleName}' not found")
         return this.runtimeRules[number]
     }
 

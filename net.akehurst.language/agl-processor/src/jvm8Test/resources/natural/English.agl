@@ -6,6 +6,8 @@ grammar English {
 
     skip WHITESPACE = "\s+" ;
 
+    text = sentence* ;
+
     sentence
         = simple-sentence
         || compound-sentence

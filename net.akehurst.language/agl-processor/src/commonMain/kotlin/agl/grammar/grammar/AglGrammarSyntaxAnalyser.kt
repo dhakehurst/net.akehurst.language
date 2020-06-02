@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.sppt2ast
+package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.analyser.BranchHandler
-import net.akehurst.language.agl.analyser.SyntaxAnalyserAbstract
-import net.akehurst.language.api.analyser.GrammarLoader
+import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserAbstract
+import net.akehurst.language.api.syntaxAnalyser.GrammarLoader
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.analyser.SyntaxAnalyserException
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyserException
 import net.akehurst.language.agl.ast.*
 import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 

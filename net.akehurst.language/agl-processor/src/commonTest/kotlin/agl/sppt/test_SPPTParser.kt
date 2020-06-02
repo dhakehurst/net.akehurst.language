@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.agl.grammar.runtime.ConverterToRuntimeRules
+import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.ast.GrammarBuilderDefault
 import net.akehurst.language.agl.ast.NamespaceDefault
