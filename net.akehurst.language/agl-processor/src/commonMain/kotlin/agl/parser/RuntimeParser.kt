@@ -424,7 +424,7 @@ internal class RuntimeParser(
             rp.grow(false)
             seasons++
             maxNumHeads = max(maxNumHeads, graph.growingHead.size)
-        } while (rp.canGrow)
+        } while (graph.canGrow && (graph.goals.isEmpty() || graph.goalMatchedAll.not()))
         val match = graph.longestMatch(seasons, maxNumHeads)
         if (match != null) {
             this.graph.pushToStackOf(false, transition.to, match, gn, previousSet, emptySet())
