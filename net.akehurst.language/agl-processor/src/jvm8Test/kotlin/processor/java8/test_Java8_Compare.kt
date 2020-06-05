@@ -96,6 +96,7 @@ class test_Java8_Compare(val data: Data) {
             col.add(arrayOf(Data("", "compilationUnit", "package x; @CAT(@CAT2(name=\"test\",name2=\"test2\")) @interface CAT { CAT2[] value(); }")))
             col.add(arrayOf(Data("", "compilationUnit", "package x; @interface CAT { CAT2[] value(); }")))
             col.add(arrayOf(Data("", "compilationUnit", "public class ConstructorAccess { class Inner { private Inner() { if (x.i != 42 || x.c != 'x') { } } } }")))
+            col.add(arrayOf(Data("", "block", "{ Map.@An Entry<Object,Object> x; }")))
             col.add(arrayOf(Data("", "block", "{ (a)=(b)=1; }")))
             col.add(arrayOf(Data("", "block", "{ (a) = (b) = 1; }")))
             col.add(arrayOf(Data("", "block", "{ ls.add(\"Smalltalk rules!\"); }")))

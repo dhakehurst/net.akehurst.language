@@ -22,4 +22,15 @@ _abc
 a_c_d
 a_1_2_3
 ™
-@A(1) A
+@An C
+@An(1) C
+
+C<>
+C<T>
+C<T,U,V>
+@An C<T,U,V>
+P.C
+P.@An C
+P.C<T,U,V>
+P.@An C<T,U,V>
+@An1 P.@An2 C<T,U,V>

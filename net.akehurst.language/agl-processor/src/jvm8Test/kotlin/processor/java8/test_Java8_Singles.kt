@@ -26,7 +26,7 @@ class test_Java8_Singles {
 
     companion object {
 
-        var aglSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglSpec.agl", true)
+        var aglSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglOptm.agl", true)
         //var aglOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglOptm.agl")
 
         //var antlrSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrSpec.agl")
@@ -43,7 +43,7 @@ class test_Java8_Singles {
 
     @Test
     fun literal() {
-        val sentence = "8"
+        val sentence = "0"
         val goal = "Literal"
 
         val t = aglSpecProcessor.parse(goal, sentence)
@@ -58,6 +58,12 @@ class test_Java8_Singles {
         val t = aglSpecProcessor.parse(goal, sentence)
     }
 
+    @Test
+    fun UnannQualifiedTypeReference() {
+        val sentence = "{ Map.@An Entry<Object,Object> x; }"
+        val goal = "Block"
+        val t = aglSpecProcessor.parse(goal, sentence)
+    }
 
     @Test(timeout = 5000)
     fun long_concatenation() {

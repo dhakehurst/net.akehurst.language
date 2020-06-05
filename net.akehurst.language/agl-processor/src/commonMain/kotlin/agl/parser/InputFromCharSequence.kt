@@ -98,6 +98,7 @@ internal class InputFromCharSequence(val text: CharSequence) {
                 lastEolInText = index
             }
         }
+
         val position = lastLocation.position + lastLocation.length
         val line = lastLocation.line + linesInText
         val column = when {

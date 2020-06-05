@@ -88,7 +88,7 @@ class SPPTBranchDefault(
                             for (i in 0 until thisChildren.size) {
                                 val thisChildrenNode = thisChildren.get(i)
                                 val otherChildrenNode = otherChildren.get(i)
-                                thisMatch = thisMatch and thisChildrenNode.contains(otherChildrenNode)
+                                thisMatch = thisMatch && thisChildrenNode.contains(otherChildrenNode)
                             }
                             if (thisMatch) {
                                 foundContainMatch = true
@@ -102,7 +102,7 @@ class SPPTBranchDefault(
                             continue
                         }
                     }
-                    allOthersAreContained = allOthersAreContained and foundContainMatch
+                    allOthersAreContained = allOthersAreContained && foundContainMatch
                 }
                 return allOthersAreContained
             } else {

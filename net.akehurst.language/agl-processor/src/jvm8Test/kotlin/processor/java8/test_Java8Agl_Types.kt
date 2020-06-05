@@ -32,6 +32,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import kotlin.test.assertEquals
 
 
 @RunWith(Parameterized::class)
@@ -89,6 +90,7 @@ class test_Java8Agl_Types(val data:Data) {
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(this.data.text, resultStr)
+        assertEquals(1, result.maxNumHeads)
     }
 
 }
