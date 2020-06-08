@@ -198,10 +198,10 @@ class ParserStateSet(
             }
         }
     */
-    fun calcLookahead(parent: ParentRelation, childRP: RulePosition): Set<RuntimeRule> {
+    fun calcLookahead(parentLh: Set<RuntimeRule>, childRP: RulePosition): Set<RuntimeRule> {
         return when (childRP.runtimeRule.kind) {
-            RuntimeRuleKind.TERMINAL -> parent.lookahead
-            RuntimeRuleKind.EMBEDDED -> parent.lookahead
+            RuntimeRuleKind.TERMINAL -> parentLh
+            RuntimeRuleKind.EMBEDDED -> parentLh
             //val rr = childRP.runtimeRule
             //rr.embeddedRuntimeRuleSet!!.firstTerminals[rr.embeddedStartRule!!.number]
             //}
@@ -211,7 +211,7 @@ class ParserStateSet(
             }
             RuntimeRuleKind.NON_TERMINAL -> {
                 when {
-                    childRP.isAtEnd -> parent.lookahead
+                    childRP.isAtEnd -> parentLh
                     else -> {
                         //this childRP will not itself be applied to Height or GRAFT,
                         // however it should carry the FIRST of next in the child,
@@ -220,7 +220,7 @@ class ParserStateSet(
                             val nextRPs = childRP.next() //nextRulePosition(childRP, fstChildItem)
                             nextRPs.flatMap { nextChildRP ->
                                 if (nextChildRP.isAtEnd) {
-                                    this.calcLookahead(parent, nextChildRP)
+                                    this.calcLookahead(parentLh, nextChildRP)
                                 } else {
                                     val lh: Set<RuntimeRule> = this.runtimeRuleSet.firstTerminals2[nextChildRP] ?: throw ParserException("should never happen")
                                     if (lh.isEmpty()) {

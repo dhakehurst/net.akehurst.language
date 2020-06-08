@@ -64,7 +64,9 @@ object Java8TestFiles {
                     //TODO: could make this test for errors better
                     txt.contains(Regex("errors|error")).not()
                 } else {
-                    true
+                    val txt = path.toFile().readText()
+                    //TODO: could make this test for errors better
+                    txt.contains(Regex("errors|error")).not()
                 }
             }
             var index = 0

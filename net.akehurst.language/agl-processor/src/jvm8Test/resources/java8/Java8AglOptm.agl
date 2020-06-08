@@ -73,7 +73,7 @@ grammar Annotations extends Base, Literals {
 }
 
 grammar Types extends Annotations {
-    Type = ReferenceType < PrimitiveType ;
+    Type = Annotation* UnannType ;
     PrimitiveType = Annotation* UnannPrimitiveType ;
     leaf UnannPrimitiveType = NumericType | 'boolean' ;
     leaf NumericType = IntegralType | FloatingPointType ;
@@ -96,11 +96,11 @@ grammar Types extends Annotations {
     Wildcard = Annotation* '?' WildcardBounds? ;
     WildcardBounds = 'extends' ReferenceType | 'super' ReferenceType ;
 
-    UnannType = UnannReferenceType < UnannPrimitiveType;
-    UnannReferenceType = UnannQualifiedTypeReference | UnannArrayType ;
+    UnannType = UnannTypeNonArray Dims? ;
+    UnannTypeNonArray = UnannReferenceType < UnannPrimitiveType ;
+    UnannReferenceType = UnannQualifiedTypeReference ;
     UnannQualifiedTypeReference = UnannTypeReference ( '.' [ TypeReference / '.' ]+ )? ;
     UnannTypeReference = IDENTIFIER TypeArguments? ;
-    UnannArrayType = (UnannPrimitiveType | UnannTypeReference) Dims ;
 }
 
 grammar Expressions extends Types {
@@ -116,10 +116,18 @@ grammar Expressions extends Types {
      | Prefix
      | Postfix
      | CastExpression
-     | ArrayAccess
-     | FieldAccess
-     | Primary
+     | Navigations
      ;
+
+    Navigations = Primary ('.' [ NavigableExpression  / '.' ]+)? ;
+    NavigableExpression
+      = IDENTIFIER
+      | MethodReference
+      | GenericMethodInvocation
+      | ArrayAccess
+      | 'this'
+      | 'super'
+      ;
 
     Primary = PrimaryNoNewArray | ArrayCreationExpression ;
     // overridden in classes
@@ -132,19 +140,21 @@ grammar Expressions extends Types {
       | 'this'
       | 'super'
       | GroupedExpression
-      | QualifiedName '.' 'this'
       | ClassInstanceCreationExpression
-      | MethodInvocation
-      | MethodReference
       ;
 
-    MethodInvocation
-      = IDENTIFIER ArgumentList
-      | QualifiedName '.' TypeArguments? IDENTIFIER  ArgumentList
-      | Primary '.' TypeArguments? IDENTIFIER  ArgumentList
-      | 'super' '.' TypeArguments? IDENTIFIER  ArgumentList
-      | QualifiedName '.' 'super' '.' TypeArguments? IDENTIFIER ArgumentList
+    MethodReference
+      = QualifiedName '::' TypeArguments? IDENTIFIER
+      | ReferenceType '::' TypeArguments? IDENTIFIER
+      | Primary '::' TypeArguments? IDENTIFIER
+      | 'super' '::' TypeArguments? IDENTIFIER
+      | QualifiedName '.' 'super' '::' TypeArguments? IDENTIFIER
+      | QualifiedTypeReference '::' TypeArguments? 'new'
+      | ArrayType '::' 'new'
       ;
+
+    GenericMethodInvocation = TypeArguments? MethodInvocation ;
+    MethodInvocation = IDENTIFIER ArgumentList ;
     ArgumentList = '(' Arguments ')' ;
     Arguments = [ Expression / ',' ]* ;
 
@@ -156,6 +166,18 @@ grammar Expressions extends Types {
       ;
 
     GroupedExpression = '(' Expression ')' ;
+
+    ClassInstanceCreationExpression
+      = UnqualifiedClassInstanceCreationExpression
+      | QualifiedName '.' UnqualifiedClassInstanceCreationExpression
+      | Primary '.' UnqualifiedClassInstanceCreationExpression
+      ;
+    UnqualifiedClassInstanceCreationExpression
+      = 'new' TypeArguments? ClassOrInterfaceTypeToInstantiate  ArgumentList ClassBody? ;
+    // overridden in Classes
+    ClassBody = '{' '}' ;
+    ClassOrInterfaceTypeToInstantiate = Annotation* IDENTIFIER ('.' Annotation* IDENTIFIER)* TypeArgumentsOrDiamond? ;
+
 
     TernaryIf = Expression '?' Expression ':' Expression ;
 
@@ -184,37 +206,9 @@ grammar Expressions extends Types {
           | '(' ReferenceType AdditionalBound* ')' Expression
           ;
 
-
-    ClassInstanceCreationExpression
-      = UnqualifiedClassInstanceCreationExpression
-      | QualifiedName '.' UnqualifiedClassInstanceCreationExpression
-      | Primary '.' UnqualifiedClassInstanceCreationExpression
-      ;
-    UnqualifiedClassInstanceCreationExpression
-      = 'new' TypeArguments? ClassOrInterfaceTypeToInstantiate  ArgumentList ClassBody? ;
-    // overridden in Classes
-    ClassBody = '{' '}' ;
-    ClassOrInterfaceTypeToInstantiate = Annotation* IDENTIFIER ('.' Annotation* IDENTIFIER)* TypeArgumentsOrDiamond? ;
     TypeArgumentsOrDiamond = TypeArguments | '<>' ;
-    FieldAccess
-      = Primary '.' IDENTIFIER
-      | 'super' '.' IDENTIFIER
-      | QualifiedName '.' 'super' '.' IDENTIFIER
-      ;
-    ArrayAccess
-      = QualifiedName '[' Expression ']'
-      | PrimaryNoNewArray '[' Expression ']'
-      ;
 
-    MethodReference
-      = QualifiedName '::' TypeArguments? IDENTIFIER
-      | ReferenceType '::' TypeArguments? IDENTIFIER
-      | Primary '::' TypeArguments? IDENTIFIER
-      | 'super' '::' TypeArguments? IDENTIFIER
-      | QualifiedName '.' 'super' '::' TypeArguments? IDENTIFIER
-      | QualifiedTypeReference '::' TypeArguments? 'new'
-      | ArrayType '::' 'new'
-      ;
+    ArrayAccess = Expression '[' Expression ']' ;
 
     ArrayCreationExpression
       = 'new' PrimitiveType DimExprs Dims?
@@ -479,5 +473,5 @@ grammar Packages extends Interfaces {
     TypeImportOnDemandDeclaration = 'import' QualifiedName '.' '*' ';' ;
     SingleStaticImportDeclaration = 'import' 'static' QualifiedName '.' IDENTIFIER ';' ;
     StaticImportOnDemandDeclaration = 'import' 'static' QualifiedName '.' '*' ';' ;
-    TypeDeclaration = ClassDeclaration | InterfaceDeclaration ;
+    TypeDeclaration = ClassDeclaration | InterfaceDeclaration | ';' ;
 }

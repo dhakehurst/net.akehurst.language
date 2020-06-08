@@ -32,23 +32,4 @@ data class RulePositionWithLookahead(
     val isAtStart: Boolean get() { return this.rulePosition.isAtStart }
     val isAtEnd: Boolean get() { return this.rulePosition.isAtEnd }
 
-    // --- Any ---
-/*
-    override fun hashCode(): Int {
-        return rulePosition.hashCode()
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return if (other is RulePositionWithLookahead) {
-            other.rulePosition == this.rulePosition
-                && this.lookahead == other.lookahead
-        } else {
-            false
-        }
-    }
-
-    override fun toString(): String {
-        return "(${rulePosition},${lookahead})"
-    }
-*/
 }

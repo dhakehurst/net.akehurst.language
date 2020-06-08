@@ -36,14 +36,27 @@ import net.akehurst.language.collections.transitiveClosure
 
 class ParentRelation(
         val stateSet: ParserStateSet,
-        val number:Int,
+        val number: Int,
         val rulePosition: RulePosition,
         val lookahead: Set<RuntimeRule>
 ) {
-
-    override fun hashCode(): Int = stateSet.number + (31*number)
-    override fun equals(other: Any?): Boolean = when(other) {
-        is ParentRelation -> this.stateSet.number==other.stateSet.number && this.number==other.number
+/*
+    fun growsInto(possibleAncestor:RulePosition, done:Set<ParentRelation> = emptySet()) : Boolean {
+        return when {
+            done.contains(this) -> false
+            this.rulePosition == possibleAncestor -> true
+            else -> {
+                val pp = stateSet.parentRelation(this.rulePosition.runtimeRule)
+                pp.any {
+                    it.growsInto(possibleAncestor, done+this)
+                }
+            }
+        }
+    }
+*/
+    override fun hashCode(): Int = stateSet.number + (31 * number)
+    override fun equals(other: Any?): Boolean = when (other) {
+        is ParentRelation -> this.stateSet.number == other.stateSet.number && this.number == other.number
         else -> false
     }
 
@@ -109,6 +122,8 @@ class ParserState(
 
     internal var transitions_cache: MutableMap<ParserState?, List<Transition>?> = mutableMapOf()
 
+    val parentPositions get() = this.stateSet.parentPosition[this.runtimeRule]
+
     val parentRelations: List<ParentRelation> by lazy {
         if (rulePosition.runtimeRule.kind == RuntimeRuleKind.GOAL) {
             emptyList()
@@ -139,18 +154,19 @@ class ParserState(
             return this.rulePosition.isAtEnd
         }
 
-    fun growsInto(prevRp: ParserState?): List<ParentRelation> {
+    fun growsInto(prevState: ParserState?): List<ParentRelation> {
         //handles the up part of the closure.
         return when {
-            null == prevRp -> this.parentRelations
-            prevRp.isAtEnd -> emptyList()
+            null == prevState -> this.parentRelations
+            prevState.isAtEnd -> emptyList()
             else -> this.parentRelations.filter { pr ->
                 when {
-                    pr.rulePosition == prevRp.rulePosition -> true
+                    pr.rulePosition == prevState.rulePosition -> true
                     else -> {
-                        val prevClosure = prevRp.createClosure(pr) //this.createClosure(prevRp, null)
-                        prevClosure.content.any {
-                            it.runtimeRule == pr.rulePosition.runtimeRule //&& it.lookahead == pr.lookahead
+                        //pr.growsInto(prevState.rulePosition)
+                        val prevClosure = prevState.createClosure(pr.lookahead)
+                        prevClosure.any {
+                            it.rulePosition.runtimeRule == pr.rulePosition.runtimeRule //&& it.lookahead == pr.lookahead
                         }
                     }
                 }
@@ -158,12 +174,27 @@ class ParserState(
         }
     }
 
-    fun createClosurePart(parent: RulePositionWithLookahead, acc:Set<RulePositionWithLookahead>): Set<RulePositionWithLookahead> {
+    fun growsInto2(prevState: ParserState?): List<RulePositionWithLookahead> {
+        //handles the up part of the closure.
+        return when {
+            null == prevState -> this.parentPositions.map { RulePositionWithLookahead(it, emptySet()) }
+            prevState.isAtEnd -> emptyList()
+            else -> {
+                val pps = this.stateSet.parentPosition[this.runtimeRule]
+                val cl = prevState.createClosure(emptySet())
+                cl.filter {
+                    pps.contains(it.rulePosition)
+                }
+            }
+        }
+    }
+
+    fun createClosurePart(parent: RulePositionWithLookahead, acc: Set<RulePositionWithLookahead>): Set<RulePositionWithLookahead> {
         return when {
             acc.contains(parent) -> {
                 acc
             }
-            else ->{
+            else -> {
                 val parentRP = parent.rulePosition
                 val parentLh = parent.lookahead
                 parentRP.items.flatMap { rr ->
@@ -177,32 +208,23 @@ class ParserState(
         }
     }
 
-    fun createClosure(parent: ParentRelation): RulePositionClosure {
-     //   val closure = this.closureCache[parent]
-     //   return if (null==closure) {
-            val parentLookahead = parent.lookahead
-            //FIXME: fins a faster way to do this....this is a performance issue point
-            // create closure from this.rulePosition (root of the state) down
-            val stateMap = this.stateSet
-            val firstParentLh = parentLookahead//parentRelation?.lookahead ?: emptySet()
-            val rootWlh = RulePositionWithLookahead(this.rulePosition, firstParentLh) //TODO: get real LH
-            val closureSet = setOf(rootWlh).transitiveClosure { parent ->
-                val parentRP = parent.rulePosition
-                val parentLh = parent.lookahead
-                parentRP.items.flatMap { rr ->
-                    val childrenRP = rr.calcExpectedRulePositions(0)
-                    childrenRP.map { childRP ->
-                        val lh = this.calcLookahead(parent, childRP, parentLh)
-                        RulePositionWithLookahead(childRP, lh)
-                    }
-                }.toSet()
-            }
-            val cl = RulePositionClosure(ClosureNumber(-1), this.rulePosition, closureSet)
-     //       this.closureCache[parent] = cl
-      return      cl
-    //    }else {
-    //        closure
-    //    }
+    internal fun createClosure(parentLookahead: Set<RuntimeRule>): Set<RulePositionWithLookahead> {
+        //FIXME: find a faster way to do this....this is a performance issue point
+        // create closure from this.rulePosition (root of the state) down
+        val rootWlh = RulePositionWithLookahead(this.rulePosition, parentLookahead)
+        val closureSet = setOf(rootWlh).transitiveClosure { prnt ->
+            val parentRP = prnt.rulePosition
+            val parentLh = prnt.lookahead
+            parentRP.items.flatMap { rr ->
+                val childrenRP = rr.calcExpectedRulePositions(0)
+                childrenRP.map { childRP ->
+                    val lh = this.calcLookahead(prnt, childRP, parentLh)
+                    //val lh = this.stateSet.getLookahead(childRP)
+                    RulePositionWithLookahead(childRP, lh)
+                }
+            }.toSet()
+        }
+        return closureSet
     }
 
     fun transitions(previous: ParserState?): List<Transition> {
@@ -215,7 +237,7 @@ class ParserState(
         } else {
             cache
         }
-       // val filtered = this.growsInto(previous)
+        // val filtered = this.growsInto(previous)
         return trans
     }
 
@@ -237,66 +259,69 @@ class ParserState(
         if (goal) {
             val action = Transition.ParseAction.GOAL
             val to = this
-            __goalTransitions.add( Transition(this, to, action, emptySet(), null) { _, _ -> true } )
+            __goalTransitions.add(Transition(this, to, action, emptySet(), null) { _, _ -> true })
         } else {
             if (this.isAtEnd) {
                 if (this.parentRelations.isEmpty()) {
                     //end of skip
                     val action = Transition.ParseAction.GOAL
                     val to = this
-                    __goalTransitions.add( Transition(this, to, action, emptySet(), null) { _, _ -> true } )
+                    __goalTransitions.add(Transition(this, to, action, emptySet(), null) { _, _ -> true })
                 } else {
                     val filteredRelations = this.growsInto(previous)
                     for (parentRelation in filteredRelations) {
+                        val parentRp = parentRelation.rulePosition
+                        val parentLh = parentRelation.lookahead
                         if (parentRelation.rulePosition.runtimeRule.kind == RuntimeRuleKind.GOAL) {
                             when {
                                 this.runtimeRule == RuntimeRuleSet.END_OF_TEXT -> {
-                                    __graftTransitions.addAll( this.createGraftTransition(parentRelation) )
+                                    __graftTransitions.addAll(this.createGraftTransition(parentRp, parentLh))
                                 }
                                 (parentRelation.lookahead.isEmpty()) -> {
                                     // must be end of skip. TODO: can do something better than this!
                                     val action = Transition.ParseAction.GOAL
                                     val to = this
-                                    __goalTransitions.add( Transition(this, to, action, emptySet(), null) { _, _ -> true } )
+                                    __goalTransitions.add(Transition(this, to, action, emptySet(), null) { _, _ -> true })
                                 }
                                 else -> {
-                                    __graftTransitions.addAll( this.createGraftTransition(parentRelation) )
+                                    __graftTransitions.addAll(this.createGraftTransition(parentRp, parentLh))
                                 }
                             }
                         } else {
                             val height = parentRelation.rulePosition.isAtStart
                             val graft = parentRelation.rulePosition.isAtStart.not()
                             if (height) {
-                                __heightTransitions.addAll( this.createHeightTransition(parentRelation) )
+                                __heightTransitions.addAll(this.createHeightTransition(parentRp, parentLh))
                             }
                             if (graft) {
-                                __graftTransitions.addAll(this.createGraftTransition(parentRelation))
+                                __graftTransitions.addAll(this.createGraftTransition(parentRp, parentLh))
                             }
                         }
                     }
                 }
             } else {
-                val parentRelations = this.stateSet.fetchOrCreateParseState(this.rulePosition.atEnd()).parentRelations
+                val endState = this.stateSet.fetchOrCreateParseState(this.rulePosition.atEnd())
+                val parentRelations = endState.parentRelations
                 if (parentRelations.isEmpty()) {
                     val prLh = when (this.runtimeRule.kind) {
                         RuntimeRuleKind.GOAL -> this.rulePosition.next().flatMap { it.items }.toSet()
                         else -> emptySet<RuntimeRule>()
                     }
-                    val closure = this.createClosure(ParentRelation(this.stateSet, -1, this.rulePosition, prLh)) //TODO: this is maybe a wrong hack!
-                    for (closureRPlh in closure.content) {
-                        when (closureRPlh.runtimeRule.kind) {
-                            RuntimeRuleKind.TERMINAL -> __widthTransitions.add( this.createWidthTransition(closureRPlh) )
-                            RuntimeRuleKind.EMBEDDED -> __embeddedTransitions.add( this.createEmbeddedTransition(closureRPlh) )
+                    val closure = this.createClosure(prLh) //TODO: this is maybe a wrong hack!
+                    for (closureRPlh in closure) {
+                        when (closureRPlh.rulePosition.runtimeRule.kind) {
+                            RuntimeRuleKind.TERMINAL -> __widthTransitions.add(this.createWidthTransition(closureRPlh))
+                            RuntimeRuleKind.EMBEDDED -> __embeddedTransitions.add(this.createEmbeddedTransition(closureRPlh))
                         }
                     }
                 } else {
                     val filteredRelations = this.growsInto(previous)
                     for (parentRelation in filteredRelations) {
-                        val closure = this.createClosure(parentRelation)
-                        for (closureRPlh in closure.content) {
-                            when (closureRPlh.runtimeRule.kind) {
-                                RuntimeRuleKind.TERMINAL -> __widthTransitions.add( this.createWidthTransition(closureRPlh) )
-                                RuntimeRuleKind.EMBEDDED -> __embeddedTransitions.add( this.createEmbeddedTransition(closureRPlh) )
+                        val closure = this.createClosure(parentRelation.lookahead)
+                        for (closureRPlh in closure) {
+                            when (closureRPlh.rulePosition.runtimeRule.kind) {
+                                RuntimeRuleKind.TERMINAL -> __widthTransitions.add(this.createWidthTransition(closureRPlh))
+                                RuntimeRuleKind.EMBEDDED -> __embeddedTransitions.add(this.createEmbeddedTransition(closureRPlh))
                             }
                         }
                     }
@@ -350,13 +375,12 @@ class ParserState(
     private fun createWidthTransition(closureRPlh: RulePositionWithLookahead): Transition {
         val action = Transition.ParseAction.WIDTH
         val lookaheadGuard = closureRPlh.lookahead
-        val toRP = RulePosition(closureRPlh.runtimeRule, closureRPlh.choice, RulePosition.END_OF_RULE)
+        val toRP = RulePosition(closureRPlh.rulePosition.runtimeRule, closureRPlh.rulePosition.option, RulePosition.END_OF_RULE)
         val to = this.stateSet.fetchOrCreateParseState(toRP) //TODO: state also depends on lh (or parentRels!)
         return Transition(this, to, action, lookaheadGuard, null) { _, _ -> true }
     }
 
-    private fun createHeightTransition(parentRelation: ParentRelation): Set<Transition> {
-        val parentRP = parentRelation.rulePosition
+    private fun createHeightTransition(parentRP:RulePosition, parentLh:Set<RuntimeRule>): Set<Transition> {
         val prevGuard = parentRP //for height, previous must not match prevGuard
         val action = Transition.ParseAction.HEIGHT
 
@@ -364,13 +388,13 @@ class ParserState(
         //val filteredToSet = toSet.filter { this.canGrowInto(it, previous) }
         return toSet.flatMap { to ->
             if (to.parentRelations.isEmpty()) {
-                val lookaheadGuard = this.calcLookahead(null, this.rulePosition, parentRelation.lookahead)
+                val lookaheadGuard = this.calcLookahead(null, this.rulePosition, parentLh)
                 setOf(Transition(this, to, action, lookaheadGuard, prevGuard) { _, _ -> true })
             } else {
                 to.parentRelations.map { toParent ->
                     val lh = when {
                         to.isAtEnd -> toParent.lookahead
-                        else -> to.stateSet.calcLookahead(parentRelation, this.rulePosition)
+                        else -> to.stateSet.calcLookahead(parentLh, this.rulePosition)
                     }
                     val lookaheadGuard = lh //parentRelation.lookahead //to.stateSet.calcLookahead(toParent,from.rulePosition) //parentRelation.lookahead //this.calcLookahead(RulePositionWithLookahead(to.rulePosition, parentRelation.lookahead), from.rulePosition, parentRelation.lookahead)
                     Transition(this, to, action, lookaheadGuard, prevGuard) { _, _ -> true }
@@ -380,8 +404,7 @@ class ParserState(
         }.toSet()
     }
 
-    private fun createGraftTransition(parentRelation: ParentRelation): Set<Transition> {
-        val parentRP = parentRelation.rulePosition
+    private fun createGraftTransition(parentRP:RulePosition, parentLh:Set<RuntimeRule>): Set<Transition> {
         val prevGuard = parentRP //for graft, previous must match prevGuard
         val action = Transition.ParseAction.GRAFT
         val toSet = parentRP.next().map { this.stateSet.fetchOrCreateParseState(it) }
@@ -399,13 +422,13 @@ class ParserState(
         }
         return toSet.flatMap { to ->
             if (to.parentRelations.isEmpty()) {
-                val lookaheadGuard = this.calcLookahead(null, this.rulePosition, parentRelation.lookahead)
+                val lookaheadGuard = this.calcLookahead(null, this.rulePosition, parentLh)
                 setOf(Transition(this, to, action, lookaheadGuard, prevGuard, runtimeGuard))
             } else {
                 to.parentRelations.map { toParent ->
                     val lh = when {
                         to.isAtEnd -> toParent.lookahead
-                        else -> to.stateSet.calcLookahead(parentRelation, this.rulePosition)
+                        else -> to.stateSet.calcLookahead(parentLh, this.rulePosition)
                     }
                     val lookaheadGuard = lh //toParent.lookahead //to.stateSet.calcLookahead(toParent,from.rulePosition)  //this.calcLookahead(RulePositionWithLookahead(toParent.rulePosition, toParent.lookahead), from.rulePosition, toParent.lookahead)
                     Transition(this, to, action, lookaheadGuard, prevGuard, runtimeGuard)
@@ -418,7 +441,7 @@ class ParserState(
     private fun createEmbeddedTransition(closureRPlh: RulePositionWithLookahead): Transition {
         val action = Transition.ParseAction.EMBED
         val lookaheadGuard = closureRPlh.lookahead
-        val toRP = RulePosition(closureRPlh.runtimeRule, closureRPlh.choice, RulePosition.END_OF_RULE)
+        val toRP = RulePosition(closureRPlh.rulePosition.runtimeRule, closureRPlh.rulePosition.option, RulePosition.END_OF_RULE)
         val to = this.stateSet.fetchOrCreateParseState(toRP)
         return Transition(this, to, action, lookaheadGuard, null) { _, _ -> true }
     }
@@ -477,7 +500,7 @@ class ParserState(
                 val nextRPs = parent.rulePosition.next()//nextRulePosition(parent.rulePosition, childRP.runtimeRule)
                 nextRPs.flatMap { nextRP ->
                     if (nextRP.isAtEnd) {
-                        calcLookahead(null, parent.rulePosition, parent.lookahead)
+                        calcLookahead(null, parent.rulePosition, parent.lookahead) //TODO: why not simply parent.lookahead ?
                     } else {
                         val lh: Set<RuntimeRule> = this.stateSet.runtimeRuleSet.firstTerminals2[nextRP] ?: error("should never happen")
                         if (lh.isEmpty()) {
@@ -494,12 +517,12 @@ class ParserState(
     // --- Any ---
 
     override fun hashCode(): Int {
-        return this.number.value + this.stateSet.number*31
+        return this.number.value + this.stateSet.number * 31
     }
 
     override fun equals(other: Any?): Boolean {
         return if (other is ParserState) {
-            this.stateSet.number==other.stateSet.number && this.number.value == other.number.value
+            this.stateSet.number == other.stateSet.number && this.number.value == other.number.value
         } else {
             false
         }

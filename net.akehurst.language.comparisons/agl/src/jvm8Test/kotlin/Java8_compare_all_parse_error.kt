@@ -27,10 +27,11 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.IOException
 import java.nio.file.Files
+import kotlin.test.assertTrue
 import kotlin.time.*
 
 @RunWith(Parameterized::class)
-class Java8_compare_Test_aglOptm_perf(val file: FileData) {
+class Java8_compare_all_parse_error(val file: FileData) {
 
     companion object {
         val javaTestFiles = "../javaTestFiles/javac"
@@ -43,40 +44,32 @@ class Java8_compare_Test_aglOptm_perf(val file: FileData) {
             return f
         }
 
-        fun createAndBuildProcessor(aglFile: String): LanguageProcessor {
-            val bytes = Java8_compare_Test_aglOptm_perf::class.java.getResourceAsStream(aglFile).readBytes()
+        fun createAndBuildProcessor(aglFile: String, goalRuleName: String): LanguageProcessor {
+            val bytes = Java8_compare_all_parse_error::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
             val proc = Agl.processor(javaGrammarStr)
-            proc.buildFor("CompilationUnit")
+            proc.buildFor(goalRuleName)
             return proc
         }
 
-        val agl1 = createAndBuildProcessor("/agl/Java8AglSpec.agl")
-        val agl2 = createAndBuildProcessor("/agl/Java8AglOptm1.agl")
+        val aglSpec = createAndBuildProcessor("/agl/Java8AglSpec.agl", "CompilationUnit")
+        val aglOptm = createAndBuildProcessor("/agl/Java8AglOptm.agl", "CompilationUnit")
+        val antlrSpec = createAndBuildProcessor("/agl/Java8AntlrSpec.agl", "compilationUnit")
+        val antlrOptm = createAndBuildProcessor("/agl/Java8AntlrOptm.agl", "compilationUnit")
 
         var input: String? = null
 
         @ExperimentalTime
-        fun parse(file: FileData, proc:LanguageProcessor): TimedValue<SharedPackedParseTree> {
-            val tree = proc.parse("CompilationUnit", input!!)
+        fun parse(file: FileData, proc: LanguageProcessor, goalRuleName: String): TimedValue<SharedPackedParseTree?> {
             return TimeSource.Monotonic.measureTimedValue {
-                val tree = proc.parse("CompilationUnit", input!!)
-                tree
+                try {
+                    val tree = proc.parse(goalRuleName, input!!)
+                    tree
+                } catch (t: Throwable) {
+                    null
+                }
             }
         }
-/*
-        @BeforeClass
-        @JvmStatic
-        fun init() {
-            Results.reset()
-        }
-
-        @AfterClass
-        @JvmStatic
-        fun end() {
-            Results.write()
-        }
- */
     }
 
     @Before
@@ -91,11 +84,22 @@ class Java8_compare_Test_aglOptm_perf(val file: FileData) {
 
     @ExperimentalTime
     @Test
-    fun agl_compilationUnit() {
-        val t1 = parse(file, agl1)
-        val t2 = parse(file, agl2)
-        Assert.assertTrue("${t1.value.maxNumHeads} >= ${t2.value.maxNumHeads}", t1.value.maxNumHeads >= t2.value.maxNumHeads)
-        //Assert.assertTrue("${t1.duration} >= ${t2.duration} ?", t1.duration >= t2.duration)
+    fun compare() {
+        val t1 = parse(file, aglSpec, "CompilationUnit")
+        val t2 = parse(file, aglOptm, "CompilationUnit")
+        val t3 = parse(file, antlrSpec, "compilationUnit")
+        val t4 = parse(file, antlrOptm, "compilationUnit")
+
+        val all = listOf(t1,t2,t3,t4)
+        val same = all.all { null==it.value } || all.all{ null!=it.value }
+        if (!same) {
+            println("aglSpec = ${ if (null==t1.value) "fail" else "pass" }")
+            println("aglOptm = ${ if (null==t2.value) "fail" else "pass" }")
+            println("antlrSpec = ${ if (null==t3.value) "fail" else "pass" }")
+            println("antlrOptm = ${ if (null==t4.value) "fail" else "pass" }")
+        }
+        assertTrue(same)
+
     }
 
 

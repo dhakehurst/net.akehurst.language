@@ -26,13 +26,15 @@ class test_Java8_Singles {
 
     companion object {
 
-        var aglSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglOptm.agl", true)
-        //var aglOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglOptm.agl")
+        val aglSpecProcessor: LanguageProcessor by lazy { createJava8Processor("/java8/Java8AglSpec.agl", true) }
+        val aglOptmProcessor: LanguageProcessor by lazy { createJava8Processor("/java8/Java8AglOptm.agl", true) }
 
-        //var antlrSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrSpec.agl")
-        //var antlrOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrOptm.agl")
+        val antlrSpecProcessor: LanguageProcessor by lazy { createJava8Processor("/java8/Java8AntlrSpec.agl") }
+        val antlrOptmProcessor: LanguageProcessor by lazy { createJava8Processor("/java8/Java8AntlrOptm.agl") }
 
-        fun createJava8Processor(path: String, toUpper:Boolean=false): LanguageProcessor {
+        val proc = aglOptmProcessor
+
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor {
             val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processor(grammarStr)
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
@@ -46,7 +48,7 @@ class test_Java8_Singles {
         val sentence = "0"
         val goal = "Literal"
 
-        val t = aglSpecProcessor.parse(goal, sentence)
+        val t = proc.parse(goal, sentence)
     }
 
     @Test
@@ -55,14 +57,21 @@ class test_Java8_Singles {
         val sentence = "import x; @An() interface An {  }"
         val goal = "CompilationUnit"
 
-        val t = aglSpecProcessor.parse(goal, sentence)
+        val t = proc.parse(goal, sentence)
+    }
+
+    @Test
+    fun t() {
+        val sentence = "a[0].b"
+        val goal = "Expression"
+        val t = proc.parse(goal, sentence)
     }
 
     @Test
     fun UnannQualifiedTypeReference() {
         val sentence = "{ Map.@An Entry<Object,Object> x; }"
         val goal = "Block"
-        val t = aglSpecProcessor.parse(goal, sentence)
+        val t = proc.parse(goal, sentence)
     }
 
     @Test(timeout = 5000)
@@ -112,7 +121,7 @@ class test_Java8_Singles {
         """.trimIndent()
         val goal = "Block"
 
-        val t = aglSpecProcessor.parse(goal, sentence)
+        val t = proc.parse(goal, sentence)
 
         // println( t.toStringAll )
     }

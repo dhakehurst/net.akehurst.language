@@ -29,6 +29,7 @@ import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.math.max
+import kotlin.properties.Delegates
 
 class ScanOnDemandParser(
         private val runtimeRuleSet: RuntimeRuleSet

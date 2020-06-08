@@ -22,7 +22,7 @@ grammar Java8AglSpec {
     TypeImportOnDemandDeclaration = 'import' PackageOrTypeName '.' '*' ';' ;
     SingleStaticImportDeclaration = 'import' 'static' TypeName '.' IDENTIFIER ';' ;
     StaticImportOnDemandDeclaration = 'import' 'static' TypeName '.' '*' ';' ;
-    TypeDeclaration = ClassDeclaration | InterfaceDeclaration ;
+    TypeDeclaration = ClassDeclaration | InterfaceDeclaration | ';' ;
 
     // --- Identifiers ---
     leaf IDENTIFIER = JAVA_LETTER JAVA_LETTER_OR_DIGIT* ;
@@ -55,8 +55,9 @@ grammar Java8AglSpec {
     leaf INTEGER_TYPE_SUFFIX = 'l' | 'L' ;
 
     leaf FLOATING_POINT_LITERAL
-     = "[0-9]([eE][+-]?[0-9]+)?" "[fdFD]"
-     | "[0-9]*.[0-9]*" "[eE][+-]?(0|[1-9])+"? "[fdFD]"?
+     = "[0-9]+" "[fdFD]"
+     | "[0-9]+[eE][+-]?[0-9]+" "[fdFD]"?
+     | "[0-9]*[.][0-9]*" "[eE][+-]?(0|[1-9])+"? "[fdFD]"?
      ;
 
     leaf BOOLEAN_LITERAL   = 'true' | 'false' ;
