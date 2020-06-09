@@ -31,7 +31,7 @@ class test_Java8_Grammars {
         assertNotNull(actual)
     }
 
-    @Test(timeout=50000)
+    @Test//(timeout=50000)
     fun aglOptm() {
         val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
         //val grammarFile = Paths.get("src/jvm8Test/resources/java8/Java8OptmAgl.agl")

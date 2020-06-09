@@ -247,9 +247,10 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     fun buildFor(goalRuleName: String) {
         val gr = this.findRuntimeRule(goalRuleName)
         val s0 = this.startingState(gr, listOf(RuntimeRuleSet.END_OF_TEXT))
-        setOf(s0).transitiveClosure {
-            val trans = it.transitions(null)
-            trans.map { it.to }.toSet()
+        val trans = s0.transitions(null, LookaheadSet.EMPTY)
+        trans.transitiveClosure {
+            val trans = it.to.transitions(it.from, it.lookaheadGuard)  //TODO: not correct!
+            trans
         }
     }
 
@@ -357,10 +358,12 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
         val s0 = this.startingState(gr, listOf(RuntimeRuleSet.END_OF_TEXT))
 
-        val states = setOf(s0).transitiveClosure {
-            val trans = it.transitions(null)
-            trans.map { it.to }.toSet()
+        val trans0 = s0.transitions(null, LookaheadSet.EMPTY)
+        trans0.transitiveClosure {
+            val trans = it.to.transitions(it.from, it.lookaheadGuard) //TODO: not correct!
+            trans
         }
+        val states = s0.stateSet.states.values
 
         val transitions = states.flatMap { it.transitions_cache.values.flatMap { it ?: emptyList() }.toSet() }.toSet()
 

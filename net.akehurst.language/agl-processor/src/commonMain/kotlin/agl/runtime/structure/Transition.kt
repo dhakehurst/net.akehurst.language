@@ -22,7 +22,7 @@ class Transition(
         val from: ParserState,
         val to: ParserState,
         val action: ParseAction,
-        val lookaheadGuard: Set<RuntimeRule>,
+        val lookaheadGuard: LookaheadSet,
         val prevGuard : RulePosition?,
         val runtimeGuard: Transition.(current:GrowingNode, previous:RulePosition?)->Boolean
 //TODO: add previousGuard for use in graft
@@ -58,7 +58,7 @@ class Transition(
     }
 
     override fun toString(): String {
-        val lh = this.lookaheadGuard.map { it.tag }
+        val lh = this.lookaheadGuard.content.map { it.tag }
         return "Transition { $from -- $action$lh[$prevGuard] --> $to }"
     }
 }

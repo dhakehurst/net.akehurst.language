@@ -16,8 +16,7 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -100,15 +99,16 @@ class AglGrammarSemanticAnalyser(
         //TODO: pass in goalRuleName
         val goalRuleName = grammar.rule.first { it.isSkip.not() }.name
         val automaton = rrs.automatonFor(goalRuleName)
+
         automaton.states.values.forEach {state ->
-            val trans = state.transitions(null) //TODO: need to check with non null arg
+            val trans = state.transitions(null, LookaheadSet.EMPTY) //TODO: need to check with non null arg
             if (trans.size > 1) {
                 trans.forEach { tr1 ->
                     trans.forEach {tr2 ->
                         //TODO: should we compare actions here? prob not
                         if (tr1 !== tr2 && tr1.action==tr2.action) {
-                            val lhi = tr1.lookaheadGuard.intersect(tr2.lookaheadGuard)
-                            if (lhi.isNotEmpty() || (tr1.lookaheadGuard.isEmpty() && tr2.lookaheadGuard.isEmpty())) {
+                            val lhi = tr1.lookaheadGuard.content.intersect(tr2.lookaheadGuard.content.toList())
+                            if (lhi.isNotEmpty() || (tr1.lookaheadGuard.content.isEmpty() && tr2.lookaheadGuard.content.isEmpty())) {
                                 val ori1 = conv.originalRuleItemFor(tr1.to.runtimeRule)
                                 val ori2 = conv.originalRuleItemFor(tr2.to.runtimeRule)
                                 val or1 = ori1.owningRule

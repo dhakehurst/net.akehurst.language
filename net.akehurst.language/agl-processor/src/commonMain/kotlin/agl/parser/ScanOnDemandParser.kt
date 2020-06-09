@@ -19,6 +19,7 @@ package net.akehurst.language.agl.parser
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -188,7 +189,7 @@ class ScanOnDemandParser(
             // compute next expected item/RuntimeRule
             when (lg.runtimeRule.kind) {
                 RuntimeRuleKind.GOAL -> {
-                    val exp = lg.currentState.transitions(null)
+                    val exp = lg.currentState.transitions(null, LookaheadSet.EMPTY)
                             .map {
                                 it.to.rulePosition
                             }.toSet()

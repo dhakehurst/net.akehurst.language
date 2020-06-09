@@ -162,11 +162,11 @@ internal class RuntimeParser(
     private val __filteredTransitions = ArrayList<Transition>(10)
     internal fun fetchFilteredTransitions(gn: GrowingNode, prev: GrowingNode?): List<Transition> {
         return if (null == prev) {
-            val transitions: List<Transition> = gn.currentState.transitions(null)
+            val transitions: List<Transition> = gn.currentState.transitions(null, LookaheadSet.EMPTY)
             transitions
         } else {
             __filteredTransitions.clear()
-            val transitions: List<Transition> = gn.currentState.transitions(prev.currentState)
+            val transitions: List<Transition> = gn.currentState.transitions(prev.currentState, prev.lookaheadSet)
             for(t in transitions) {
                 val filter = when (t.action) {
                     Transition.ParseAction.WIDTH -> {
@@ -322,19 +322,19 @@ internal class RuntimeParser(
         val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, gn.nextInputPosition, gn.lastLocation)
         if (null != l) {
             //TODO: find a better way to look past skip terminals, this means wrong matches can be made...though they will be dropped on H or G!
-            val lh = transition.lookaheadGuard + this.runtimeRuleSet.firstSkipTerminals
+            val lh = transition.lookaheadGuard.content + this.runtimeRuleSet.firstSkipTerminals
             val hasLh = lh.any {
                 val lhLeaf = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition, l.location)
                 null != lhLeaf
             }
-            if (noLookahead || hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
+            if (noLookahead || hasLh || transition.lookaheadGuard.content.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
                 this.graph.pushToStackOf(false, transition.to, l, gn, previousSet, emptySet())
             }
         }
     }
 
     private fun doHeight(gn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
-        val lh = transition.lookaheadGuard //TODO: do we actually need to lookahead here ? Add an explanation if so
+        val lh = transition.lookaheadGuard.content //TODO: do we actually need to lookahead here ? Add an explanation if so
         val hasLh = lh.any {
             val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
             null != l
@@ -347,12 +347,12 @@ internal class RuntimeParser(
     }
 
     private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
-        val lh = transition.lookaheadGuard //TODO: do we actually need to lookahead here ? Add an explanation if so
+        val lh = transition.lookaheadGuard.content //TODO: do we actually need to lookahead here ? Add an explanation if so
         val hasLh = lh.any {
             val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
             null != l
         }
-        if (noLookahead || hasLh || transition.lookaheadGuard.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
+        if (noLookahead || hasLh || lh.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
             val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
                     ?: error("Should never be null")
             this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
@@ -387,7 +387,7 @@ internal class RuntimeParser(
         val rps = gn.currentState
         //val transitions = rps.transitions(this.runtimeRuleSet, null)//previous.node.currentState)
         // val transitions: Set<Transition> = this.runtimeRuleSet.skipTransitions(this.graph.userGoalRule, rps, previous.node.currentState.rulePosition)
-        val transitions = this.fetchFilteredTransitions(gn, null)
+        val transitions = this.fetchFilteredTransitions(gn, previous.node)
 
         for (it in transitions) {
             when (it.action) {
@@ -416,7 +416,7 @@ internal class RuntimeParser(
         val rp = RuntimeParser(embeddedRuntimeRuleSet, graph)
         val startPosition = gn.lastLocation.position + gn.lastLocation.length
         val startLocation = InputLocation(startPosition, gn.lastLocation.column, gn.lastLocation.line, 0) //TODO: compute correct line and column
-        val endingLookahead = transition.lookaheadGuard.toList()
+        val endingLookahead = transition.lookaheadGuard.content.toList()
         rp.start(embeddedStartRule, startLocation, endingLookahead)
         var seasons = 1
         var maxNumHeads = graph.growingHead.size
