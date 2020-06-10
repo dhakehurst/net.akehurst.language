@@ -21,7 +21,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class test_ParserState_transitions {
-
+    @Test
+    fun t() {
+        TODO()
+    }
+/*
     //empty
     // S =  ;
     @Test
@@ -633,4 +637,6 @@ class test_ParserState_transitions {
 
         assertEquals(expected, actual)
     }
+
+ */
 }

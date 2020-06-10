@@ -26,6 +26,13 @@ class test_multi_0_n_literal {
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun t() {
+        TODO()
+    }
+
+    /*
+
     // S = 'a'*
     @Test
     fun empty() {
@@ -76,5 +83,5 @@ class test_multi_0_n_literal {
         ))
     }
 
-
+*/
 }

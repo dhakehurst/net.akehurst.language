@@ -69,25 +69,78 @@ class test_LR1_States {
         val s0 = rrs.startingState(S)
         val actual = s0.closureLR0
 
-        val expected = setOf<RulePosition>(
-                RulePosition(s0.runtimeRule, 0, 0),
-                RulePosition(S, 0, 0),
-                RulePosition(S, 1, 0),
-                RulePosition(S, 2, 0),
-                RulePosition(S, 3, 0),
-                RulePosition(S1, 0, 0),
-                RulePosition(S2, 0, 0),
-                RulePosition(S3, 0, 0),
-                RulePosition(S4, 0, 0),
-                RulePosition(rA, 0, 0),
-                RulePosition(rB, 0, 0),
-                RulePosition(b, 0, 0),
-                RulePosition(d, 0, 0),
-                RulePosition(d, 0, 0)
+        val i0 = LR0ClosureItem(null, RulePosition(s0.runtimeRule, 0, 0))
+        val i01 = LR0ClosureItem(i0, RulePosition(S, 0, 0))
+        val i02 = LR0ClosureItem(i0, RulePosition(S, 1, 0))
+        val i03 = LR0ClosureItem(i0, RulePosition(S, 2, 0))
+        val i04 = LR0ClosureItem(i0, RulePosition(S, 3, 0))
+        val i011 = LR0ClosureItem(i01, RulePosition(S1, 0, 0))
+        val i021 = LR0ClosureItem(i02, RulePosition(S2, 0, 0))
+        val i031 = LR0ClosureItem(i03, RulePosition(S3, 0, 0))
+        val i041 = LR0ClosureItem(i04, RulePosition(S4, 0, 0))
+        val i0111 = LR0ClosureItem(i011, RulePosition(rA, 0, 0))
+        val i0311 = LR0ClosureItem(i031, RulePosition(rB, 0, 0))
+        val i0211 = LR0ClosureItem(i021, RulePosition(b, 0, 0))
+        val i0411 = LR0ClosureItem(i041, RulePosition(b, 0, 0))
+        val i01111 = LR0ClosureItem(i0111, RulePosition(d, 0, 0))
+        val i03111 = LR0ClosureItem(i0311, RulePosition(d, 0, 0))
+
+        val expected = setOf<LR0ClosureItem>(
+                i0, i01, i011, i0111, i01111,
+                i02, i021, i0211,
+                i03, i031, i0311, i03111,
+                i04, i041, i0411
         )
 
         assertEquals(expected, actual)
     }
+
+    @Test
+    fun s0_lookaheadSet() {
+        val s0 = rrs.startingState(S)
+
+        val iAd = s0.closureLR0.first { it.rulePosition == RulePosition(d, 0, 0) && it.parentItem?.rulePosition?.runtimeRule == rA }
+        val iBd = s0.closureLR0.first { it.rulePosition == RulePosition(d, 0, 0) && it.parentItem?.rulePosition?.runtimeRule == rB }
+        val iS2b = s0.closureLR0.first { it.rulePosition == RulePosition(b, 0, 0) && it.parentItem?.rulePosition?.runtimeRule == S2 }
+        val iS4b = s0.closureLR0.first { it.rulePosition == RulePosition(b, 0, 0) && it.parentItem?.rulePosition?.runtimeRule == S4 }
+
+        val actual_iAd = s0.lookaheadSet(iAd, LookaheadSet.EMPTY)
+        val expected_iAd = LookaheadSet(0, s0, arrayOf(a))
+        assertEquals(expected_iAd, actual_iAd)
+        assertEquals(expected_iAd.content.toList(), actual_iAd.content.toList())
+
+        val actual_iBd = s0.lookaheadSet(iBd, LookaheadSet.EMPTY)
+        val expected_iBd = LookaheadSet(1, s0, arrayOf(c))
+        assertEquals(expected_iBd, actual_iBd)
+        assertEquals(expected_iBd.content.toList(), actual_iBd.content.toList())
+
+        val actual_iS2b = s0.lookaheadSet(iS2b, LookaheadSet.EMPTY)
+        val expected_iS2b = LookaheadSet(2, s0, arrayOf(d))
+        assertEquals(expected_iS2b, actual_iS2b)
+        assertEquals(expected_iS2b.content.toList(), actual_iS2b.content.toList())
+
+        val actual_iS4b = s0.lookaheadSet(iS4b, LookaheadSet.EMPTY)
+        val expected_iS4b = LookaheadSet(3, s0, arrayOf(d))
+        assertEquals(expected_iS4b, actual_iS4b)
+        assertEquals(expected_iS4b.content.toList(), actual_iS4b.content.toList())
+    }
+
+    @Test
+    fun s0_transitions() {
+        val s0 = rrs.startingState(S)
+
+        val actual_s0 = s0.transitions(null, LookaheadSet.EMPTY)
+
+        val s2 = s0.stateSet.fetch(RulePosition(b, 0, RulePosition.END_OF_RULE))
+        val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
+        val expected_s0 = listOf<Transition>(
+                Transition(s0, s1, Transition.ParseAction.WIDTH, LookaheadSet(0, s0, arrayOf(a)), null, { _, _ -> true }),
+                Transition(s0, s2, Transition.ParseAction.WIDTH, LookaheadSet(4, s0, arrayOf(d)), null, { _, _ -> true }),
+                Transition(s0, s1, Transition.ParseAction.WIDTH, LookaheadSet(2, s0, arrayOf(c)), null, { _, _ -> true })
+        )
+        assertEquals(expected_s0, actual_s0)
+    }
+
 
     @Test
     fun s0_createClosure() {
@@ -115,21 +168,42 @@ class test_LR1_States {
     }
 
     @Test
-    fun s2_growsInto() {
+    fun s1_growsInto() {
         // G
         val s0 = rrs.startingState(S)
-        s0.transitions(null)
+        val trans_s0 = s0.transitions(null, LookaheadSet.EMPTY)
+        val tr_a_d = trans_s0.first { it.lookaheadGuard.content.contains(a) }
+        val tr_d_b = trans_s0.first { it.lookaheadGuard.content.contains(d) }
+        val tr_c_d = trans_s0.first { it.lookaheadGuard.content.contains(c) }
         // - WIDTH -> d
-        val s2 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
-        val actual = s2.growsInto2(s0, emptySet())
+        val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
+        val actual = s1.growsInto(s0, tr_a_d.lookaheadGuard)
         assertNotNull(actual)
-        //val expected = listOf<ParentRelation>(
-        //val expected = listOf<RulePositionWithLookahead>(
-        //)
+        val expected = listOf<Pair<RulePosition, LookaheadSet>>(
+                Pair(RulePosition(rA, 0, 0), LookaheadSet(5, s0, arrayOf(a))),
+                Pair(RulePosition(rB, 0, 0), LookaheadSet(6, s0, arrayOf(c)))
+        )
 
-        //assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
+    @Test
+    fun s1_transitions() {
+        val s0 = rrs.startingState(S)
+        val s0_trans = s0.transitions(null, LookaheadSet.EMPTY)
+        val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
+        val tr_a_d = s0_trans.first { it.lookaheadGuard.content.contains(a) }
+
+        val actual = s1.transitions(s0, tr_a_d.lookaheadGuard)
+        val s3 = s0.stateSet.fetch(RulePosition(S2, 0, 1))
+        val s4 = s0.stateSet.fetch(RulePosition(S4, 0, 1))
+        val expected = listOf<Transition>(
+                Transition(s0, s1, Transition.ParseAction.WIDTH, LookaheadSet(0, s0, arrayOf(a)), null, { _, _ -> true }),
+                Transition(s0, s1, Transition.ParseAction.WIDTH, LookaheadSet(4, s0, arrayOf(d)), null, { _, _ -> true }),
+                Transition(s0, s1, Transition.ParseAction.WIDTH, LookaheadSet(2, s0, arrayOf(c)), null, { _, _ -> true })
+        )
+    }
+/*
     @Test
     fun transitions() {
         // G(s0) -*-> ?
@@ -186,6 +260,6 @@ class test_LR1_States {
         assertEquals(expected_s4_s2, actual_s4_s2)
 
     }
-
+*/
 
 }
