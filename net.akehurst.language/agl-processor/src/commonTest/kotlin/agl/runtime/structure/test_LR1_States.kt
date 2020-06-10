@@ -134,7 +134,7 @@ class test_LR1_States {
     fun transitions() {
         // G(s0) -*-> ?
         val s0 = rrs.startingState(S)
-        val actual_s0 = s0.transitions(null)
+        val actual_s0 = s0.transitions(null, LookaheadSet.EMPTY)
 
         val s1 = s0.stateSet.fetch(RulePosition(b, 0, RulePosition.END_OF_RULE))
         val s2 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))

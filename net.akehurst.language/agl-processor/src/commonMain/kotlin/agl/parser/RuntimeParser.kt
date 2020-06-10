@@ -162,11 +162,11 @@ internal class RuntimeParser(
     private val __filteredTransitions = ArrayList<Transition>(10)
     internal fun fetchFilteredTransitions(gn: GrowingNode, prev: GrowingNode?): List<Transition> {
         return if (null == prev) {
-            val transitions: List<Transition> = gn.currentState.transitions(null, LookaheadSet.EMPTY)
+            val transitions: List<Transition> = gn.currentState.transitions(null, gn.lookaheadSet)
             transitions
         } else {
             __filteredTransitions.clear()
-            val transitions: List<Transition> = gn.currentState.transitions(prev.currentState, prev.lookaheadSet)
+            val transitions: List<Transition> = gn.currentState.transitions(prev.currentState, gn.lookaheadSet)
             for(t in transitions) {
                 val filter = when (t.action) {
                     Transition.ParseAction.WIDTH -> {
@@ -328,7 +328,7 @@ internal class RuntimeParser(
                 null != lhLeaf
             }
             if (noLookahead || hasLh || transition.lookaheadGuard.content.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
-                this.graph.pushToStackOf(false, transition.to, l, gn, previousSet, emptySet())
+                this.graph.pushToStackOf(false, transition.to, transition.lookaheadGuard, l, gn, previousSet, emptySet())
             }
         }
     }
@@ -342,7 +342,7 @@ internal class RuntimeParser(
         if (noLookahead || hasLh || lh.isEmpty()) {
             val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
                     ?: error("Should never be null")
-            this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, complete, setOf(previous), gn.skipNodes)
+            this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, transition.lookaheadGuard, complete, setOf(previous), gn.skipNodes)
         }
     }
 
@@ -355,7 +355,7 @@ internal class RuntimeParser(
         if (noLookahead || hasLh || lh.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
             val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
                     ?: error("Should never be null")
-            this.graph.growNextChild(false, transition.to, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
+            this.graph.growNextChild(false, transition.to, transition.lookaheadGuard, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
         }
     }
 
@@ -374,7 +374,7 @@ internal class RuntimeParser(
                 if (null != l) {
                     val leafRp = RulePosition(rr, 0, -1)
                     val skipState = this.runtimeRuleSet.fetchSkipStates(leafRp)
-                    this.graph.pushToStackOf(true, skipState, l, gn, previous, emptySet())
+                    this.graph.pushToStackOf(true, skipState, gn.lookaheadSet, l, gn, previous, emptySet())
                     modified = true
                 }
             }
@@ -427,7 +427,7 @@ internal class RuntimeParser(
         } while (graph.canGrow && (graph.goals.isEmpty() || graph.goalMatchedAll.not()))
         val match = graph.longestMatch(seasons, maxNumHeads)
         if (match != null) {
-            this.graph.pushToStackOf(false, transition.to, match, gn, previousSet, emptySet())
+            this.graph.pushToStackOf(false, transition.to, transition.lookaheadGuard, match, gn, previousSet, emptySet())
             //SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
         } else {
             TODO()
