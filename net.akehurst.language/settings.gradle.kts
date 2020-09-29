@@ -27,6 +27,3 @@ rootProject.name = file(".").name
 
 include( "agl-processor")
 
-enableFeaturePreview("GRADLE_METADATA")
-
-

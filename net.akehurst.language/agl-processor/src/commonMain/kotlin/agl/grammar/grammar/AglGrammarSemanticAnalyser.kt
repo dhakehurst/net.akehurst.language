@@ -107,7 +107,7 @@ class AglGrammarSemanticAnalyser(
                     trans.forEach {tr2 ->
                         //TODO: should we compare actions here? prob not
                         if (tr1 !== tr2 && tr1.action==tr2.action) {
-                            val lhi = tr1.lookaheadGuard.content.intersect(tr2.lookaheadGuard.content.toList())
+                            val lhi = tr1.lookaheadGuard.content.intersect(tr2.lookaheadGuard.content)
                             if (lhi.isNotEmpty() || (tr1.lookaheadGuard.content.isEmpty() && tr2.lookaheadGuard.content.isEmpty())) {
                                 val ori1 = conv.originalRuleItemFor(tr1.to.runtimeRule)
                                 val ori2 = conv.originalRuleItemFor(tr2.to.runtimeRule)

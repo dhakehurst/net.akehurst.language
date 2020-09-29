@@ -225,135 +225,8 @@ class test_RulePosition_next {
 
         assertEquals(expected, actual)
     }
-
     @Test
-    fun sList0n__S_I_0__a() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
-
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 0).next()
-        val expected: Set<RulePosition> = setOf(
-                RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 1),
-                RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
-        )
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun sList0n__S_I_0__c() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
-
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 0).next()
-        val expected: Set<RulePosition> = setOf()
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun sList0n__S_I_1__E() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
-
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 1).next()
-        val expected: Set<RulePosition> = setOf()
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun sList0n__S_I_1__a() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
-
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 1).next()
-        val expected: Set<RulePosition> = setOf()
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun sList0n__S_I_1__c() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
-
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 1).next()
-        val expected: Set<RulePosition> = setOf()
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun sList0n__S_I_2__E() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
-
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 2).next()
-        val expected: Set<RulePosition> = setOf()
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun sList0n__S_I_2__a() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
-
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 2).next()
-        val expected: Set<RulePosition> = setOf(
-                RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 1),
-                RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
-        )
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun sList0n__S_I_2__c() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
-
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 2).next()
-        val expected: Set<RulePosition> = setOf()
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun sList0n__S_P_0__E() {
+    fun sList0n__S_Item_sep() {
         val rb = RuntimeRuleSetBuilder()
         val r_a = rb.literal("a")
         val r_c = rb.literal(",")
@@ -362,15 +235,12 @@ class test_RulePosition_next {
         val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         assertFailsWith(IllegalStateException::class) {
-            val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 0).next()
-            val expected: Set<RulePosition> = setOf()
-
-            assertEquals(expected, actual)
+            val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, RulePosition.SLIST_SEPARATOR_POSITION).next()
         }
     }
 
     @Test
-    fun sList0n__S_P_0__a() {
+    fun sList0n__S_Sep_sep() {
         val rb = RuntimeRuleSetBuilder()
         val r_a = rb.literal("a")
         val r_c = rb.literal(",")
@@ -378,76 +248,16 @@ class test_RulePosition_next {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoalRule(r_S)
 
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 0).next()
-        val expected: Set<RulePosition> = setOf()
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun sList0n__S_P_0__c() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
-
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 0).next()
-        val expected: Set<RulePosition> = setOf()
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun sList0n__S_P_1__E() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
-
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 1).next()
-        val expected: Set<RulePosition> = setOf()
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun sList0n__S_P_1__a() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
-
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 1).next()
-        val expected: Set<RulePosition> = setOf()
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun sList0n__S_P_1__c() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
-
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 1).next()
+        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_SEPARATOR_POSITION).next()
         val expected: Set<RulePosition> = setOf(
-                RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, 2)
+                RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, RulePosition.SLIST_ITEM_POSITION)
         )
 
         assertEquals(expected, actual)
     }
 
     @Test
-    fun sList0n__S_P_2__E() {
+    fun sList0n__Sep_item() {
         val rb = RuntimeRuleSetBuilder()
         val r_a = rb.literal("a")
         val r_c = rb.literal(",")
@@ -455,14 +265,28 @@ class test_RulePosition_next {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoalRule(r_S)
 
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 2).next()
+        assertFailsWith(IllegalStateException::class) {
+            val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_ITEM_POSITION).next()
+        }
+    }
+
+    @Test
+    fun sList0n__S_Item_end() {
+        val rb = RuntimeRuleSetBuilder()
+        val r_a = rb.literal("a")
+        val r_c = rb.literal(",")
+        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
+        val sut = rb.ruleSet()
+        val gr = RuntimeRuleSet.createGoalRule(r_S)
+
+        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE).next()
         val expected: Set<RulePosition> = setOf()
 
         assertEquals(expected, actual)
     }
 
     @Test
-    fun sList0n__S_P_2__a() {
+    fun sList0n__S_Sep_end() {
         val rb = RuntimeRuleSetBuilder()
         val r_a = rb.literal("a")
         val r_c = rb.literal(",")
@@ -470,24 +294,10 @@ class test_RulePosition_next {
         val sut = rb.ruleSet()
         val gr = RuntimeRuleSet.createGoalRule(r_S)
 
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 2).next()
+        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.END_OF_RULE).next()
         val expected: Set<RulePosition> = setOf()
-
+//TODO: shoud this throw IllegalState ?
         assertEquals(expected, actual)
     }
 
-    @Test
-    fun sList0n__S_P_2__c() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
-
-        val actual: Set<RulePosition> = RulePosition(r_S, RuntimeRuleItem.SLIST__SEPARATOR, 2).next()
-        val expected: Set<RulePosition> = setOf()
-
-        assertEquals(expected, actual)
-    }
 }

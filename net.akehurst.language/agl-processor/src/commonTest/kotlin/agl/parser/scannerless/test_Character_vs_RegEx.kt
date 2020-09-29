@@ -61,10 +61,10 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         charParser.parse(goal, text)
 
         // measure
-        val timeRegEx = MonoClock.measureTimedValue {
+        val timeRegEx = TimeSource.Monotonic.measureTimedValue {
             regExParser.parse(goal, text)
         }
-        val timeChar = MonoClock.measureTimedValue {
+        val timeChar = TimeSource.Monotonic.measureTimedValue {
             charParser.parse(goal, text)
         }
 
@@ -87,10 +87,10 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         regExParser.parse(goal, text)
         charParser.parse(goal, text)
 
-        val timeRegEx = MonoClock.measureTimedValue {
+        val timeRegEx = TimeSource.Monotonic.measureTimedValue {
             regExParser.parse(goal, text)
         }
-        val timeChar = MonoClock.measureTimedValue {
+        val timeChar = TimeSource.Monotonic.measureTimedValue {
             charParser.parse(goal, text)
         }
 
@@ -113,10 +113,10 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         regExParser.parse(goal, text)
         charParser.parse(goal, text)
 
-        val timeRegEx = MonoClock.measureTimedValue {
+        val timeRegEx = TimeSource.Monotonic.measureTimedValue {
             regExParser.parse(goal, text)
         }
-        val timeChar = MonoClock.measureTimedValue {
+        val timeChar = TimeSource.Monotonic.measureTimedValue {
             charParser.parse(goal, text)
         }
 

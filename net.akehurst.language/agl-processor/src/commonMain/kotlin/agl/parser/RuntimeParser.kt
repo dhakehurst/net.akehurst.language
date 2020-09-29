@@ -162,7 +162,7 @@ internal class RuntimeParser(
     private val __filteredTransitions = ArrayList<Transition>(10)
     internal fun fetchFilteredTransitions(gn: GrowingNode, prev: GrowingNode?): List<Transition> {
         return if (null == prev) {
-            val transitions: List<Transition> = gn.currentState.transitions(null, gn.lookaheadSet)
+            val transitions: List<Transition> = gn.currentState.transitions(null, LookaheadSet.EMPTY)
             transitions
         } else {
             __filteredTransitions.clear()
@@ -342,6 +342,7 @@ internal class RuntimeParser(
         if (noLookahead || hasLh || lh.isEmpty()) {
             val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
                     ?: error("Should never be null")
+            val nextLh = transition.lookaheadGuard
             this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, transition.lookaheadGuard, complete, setOf(previous), gn.skipNodes)
         }
     }
@@ -416,7 +417,7 @@ internal class RuntimeParser(
         val rp = RuntimeParser(embeddedRuntimeRuleSet, graph)
         val startPosition = gn.lastLocation.position + gn.lastLocation.length
         val startLocation = InputLocation(startPosition, gn.lastLocation.column, gn.lastLocation.line, 0) //TODO: compute correct line and column
-        val endingLookahead = transition.lookaheadGuard.content.toList()
+        val endingLookahead = transition.lookaheadGuard.content
         rp.start(embeddedStartRule, startLocation, endingLookahead)
         var seasons = 1
         var maxNumHeads = graph.growingHead.size

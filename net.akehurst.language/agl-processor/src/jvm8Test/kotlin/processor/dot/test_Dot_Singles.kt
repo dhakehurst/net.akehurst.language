@@ -40,8 +40,6 @@ class test_Dot_Singles {
     companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl").readText()
-
-        //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
         var processor: LanguageProcessor = Agl.processor(grammarStr)
 
     }

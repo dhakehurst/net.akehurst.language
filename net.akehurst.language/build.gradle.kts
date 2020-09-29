@@ -18,22 +18,20 @@ import com.jfrog.bintray.gradle.BintrayExtension
 import com.jfrog.bintray.gradle.tasks.BintrayUploadTask
 import org.gradle.api.publish.maven.internal.artifact.FileBasedMavenArtifact
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import org.jetbrains.dokka.gradle.DokkaTask
 
 plugins {
-    kotlin("multiplatform") version("1.3.72") apply false
-    id("com.jfrog.bintray") version("1.8.5") apply false
-    id("org.jetbrains.dokka") version("0.10.1") apply false
+    kotlin("multiplatform") version ("1.4.10") apply false
+    id("com.jfrog.bintray") version ("1.8.5") apply false
+    id("org.jetbrains.dokka") version ("0.10.1") apply false
 }
 
 allprojects {
 
     val version_project: String by project
-    val group_project = "${rootProject.name}"
+    val group_project = rootProject.name
 
     group = group_project
     version = version_project
@@ -47,7 +45,7 @@ fun getProjectProperty(s: String) = project.findProperty(s) as String?
 
 subprojects {
 
-    apply(plugin="org.jetbrains.kotlin.multiplatform")
+    apply(plugin = "org.jetbrains.kotlin.multiplatform")
     apply(plugin = "maven-publish")
     apply(plugin = "com.jfrog.bintray")
     apply(plugin = "org.jetbrains.dokka")
@@ -89,14 +87,15 @@ subprojects {
     }
 
 
-
     val now = Instant.now()
     fun fBbuildStamp(): String {
         return DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneId.of("UTC")).format(now)
     }
+
     fun fBuildDate(): String {
         return DateTimeFormatter.ofPattern("yyyy-MMM-dd").withZone(ZoneId.of("UTC")).format(now)
     }
+
     fun fBuildTime(): String {
         return DateTimeFormatter.ofPattern("HH:mm:ss z").withZone(ZoneId.of("UTC")).format(now)
     }
@@ -112,6 +111,8 @@ subprojects {
         into("$buildDir/generated/kotlin")
         expand(templateContext)
     }
+
+
     tasks.getByName("compileKotlinMetadata") {
         dependsOn("generateFromTemplates")
     }
@@ -121,18 +122,21 @@ subprojects {
     tasks.getByName("compileKotlinJs") {
         dependsOn("generateFromTemplates")
     }
+    /*
+    tasks.getByName("compileKotlinJsIr") {
+        dependsOn("generateFromTemplates")
+    }
+    tasks.getByName("compileKotlinJsLegacy") {
+        dependsOn("generateFromTemplates")
+    }
+*/
 //    tasks.getByName("compileKotlinMacosX64") {
 //        dependsOn("generateFromTemplates")
 //    }
     dependencies {
-        "commonMainImplementation"(kotlin("stdlib"))
         "commonTestImplementation"(kotlin("test"))
         "commonTestImplementation"(kotlin("test-annotations-common"))
-
-        "jvm8MainImplementation"(kotlin("stdlib-jdk8"))
         "jvm8TestImplementation"(kotlin("test-junit"))
-
-        "jsMainImplementation"(kotlin("stdlib-js"))
         "jsTestImplementation"(kotlin("test-js"))
     }
 
@@ -141,7 +145,7 @@ subprojects {
         key = getProjectProperty("bintrayApiKey")
         publish = true
         override = true
-        setPublications("kotlinMultiplatform","metadata","js","jvm8")
+        setPublications("kotlinMultiplatform", "metadata", "js", "jvm8")
         pkg(delegateClosureOf<BintrayExtension.PackageConfig> {
             repo = "maven"
             name = "${rootProject.name}"
