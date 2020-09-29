@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.regex
 
-import net.akehurst.language.collections.Stack
+import net.akehurst.language.collections.MutableStack
 
 class RegexParserException(msg: String) : RuntimeException(msg)
 
@@ -99,9 +99,9 @@ class RegexParser(
 
     private fun parsePattern() {
         //this.matcherBuilder.start()
-        val postfix = Stack<Pair<Int, () -> Unit>>()
-        val opStack = Stack<Pair<Int, () -> Unit>>()
-        var needConcat = Stack<Boolean>()
+        val postfix = MutableStack<Pair<Int, () -> Unit>>()
+        val opStack = MutableStack<Pair<Int, () -> Unit>>()
+        var needConcat = MutableStack<Boolean>()
         needConcat.push(false)
         if (pattern.length > 0) {
             var c = this.next()

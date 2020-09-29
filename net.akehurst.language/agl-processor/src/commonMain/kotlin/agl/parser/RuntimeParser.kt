@@ -166,8 +166,8 @@ internal class RuntimeParser(
             transitions
         } else {
             __filteredTransitions.clear()
-            val transitions: List<Transition> = gn.currentState.transitions(prev.currentState, gn.lookaheadSet)
-            for(t in transitions) {
+            val transitions: List<Transition> = gn.currentState.transitions(prev.currentState, gn.lookaheadStack.peek())
+            for (t in transitions) {
                 val filter = when (t.action) {
                     Transition.ParseAction.WIDTH -> {
                         true
@@ -322,19 +322,20 @@ internal class RuntimeParser(
         val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, gn.nextInputPosition, gn.lastLocation)
         if (null != l) {
             //TODO: find a better way to look past skip terminals, this means wrong matches can be made...though they will be dropped on H or G!
-            val lh = transition.lookaheadGuard.content + this.runtimeRuleSet.firstSkipTerminals
+            val lh = gn.lookaheadStack.peek().content + this.runtimeRuleSet.firstSkipTerminals// transition.lookaheadGuard.content + this.runtimeRuleSet.firstSkipTerminals
             val hasLh = lh.any {
                 val lhLeaf = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition, l.location)
                 null != lhLeaf
             }
-            if (noLookahead || hasLh || transition.lookaheadGuard.content.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
-                this.graph.pushToStackOf(false, transition.to, transition.lookaheadGuard, l, gn, previousSet, emptySet())
+            if (noLookahead || hasLh || gn.lookaheadStack.isEmpty || gn.lookaheadStack.peek().content.isEmpty()) { //transition.lookaheadGuard.content.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
+                val newLh = gn.lookaheadStack.pushAll(transition.additionalLookaheads)
+                this.graph.pushToStackOf(false, transition.to, newLh, l, gn, previousSet, emptySet())
             }
         }
     }
 
     private fun doHeight(gn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
-        val lh = transition.lookaheadGuard.content //TODO: do we actually need to lookahead here ? Add an explanation if so
+        val lh = gn.lookaheadStack.peek().content//transition.lookaheadGuard.content //TODO: do we actually need to lookahead here ? Add an explanation if so
         val hasLh = lh.any {
             val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
             null != l
@@ -342,13 +343,13 @@ internal class RuntimeParser(
         if (noLookahead || hasLh || lh.isEmpty()) {
             val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
                     ?: error("Should never be null")
-            val nextLh = transition.lookaheadGuard
-            this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, transition.lookaheadGuard, complete, setOf(previous), gn.skipNodes)
+            val popRes = gn.lookaheadStack.pop()
+            this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, popRes.stack, complete, setOf(previous), gn.skipNodes)
         }
     }
 
     private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
-        val lh = transition.lookaheadGuard.content //TODO: do we actually need to lookahead here ? Add an explanation if so
+        val lh = gn.lookaheadStack.peek().content//transition.lookaheadGuard.content //TODO: do we actually need to lookahead here ? Add an explanation if so
         val hasLh = lh.any {
             val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
             null != l
@@ -356,7 +357,8 @@ internal class RuntimeParser(
         if (noLookahead || hasLh || lh.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
             val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
                     ?: error("Should never be null")
-            this.graph.growNextChild(false, transition.to, transition.lookaheadGuard, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
+            val popRes = gn.lookaheadStack.pop()
+            this.graph.growNextChild(false, transition.to, popRes.stack, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
         }
     }
 
@@ -375,7 +377,7 @@ internal class RuntimeParser(
                 if (null != l) {
                     val leafRp = RulePosition(rr, 0, -1)
                     val skipState = this.runtimeRuleSet.fetchSkipStates(leafRp)
-                    this.graph.pushToStackOf(true, skipState, gn.lookaheadSet, l, gn, previous, emptySet())
+                    this.graph.pushToStackOf(true, skipState, gn.lookaheadStack, l, gn, previous, emptySet())
                     modified = true
                 }
             }
@@ -417,7 +419,7 @@ internal class RuntimeParser(
         val rp = RuntimeParser(embeddedRuntimeRuleSet, graph)
         val startPosition = gn.lastLocation.position + gn.lastLocation.length
         val startLocation = InputLocation(startPosition, gn.lastLocation.column, gn.lastLocation.line, 0) //TODO: compute correct line and column
-        val endingLookahead = transition.lookaheadGuard.content
+        val endingLookahead = gn.lookaheadStack.peek().content //transition.lookaheadGuard.content
         rp.start(embeddedStartRule, startLocation, endingLookahead)
         var seasons = 1
         var maxNumHeads = graph.growingHead.size
@@ -428,7 +430,8 @@ internal class RuntimeParser(
         } while (graph.canGrow && (graph.goals.isEmpty() || graph.goalMatchedAll.not()))
         val match = graph.longestMatch(seasons, maxNumHeads)
         if (match != null) {
-            this.graph.pushToStackOf(false, transition.to, transition.lookaheadGuard, match, gn, previousSet, emptySet())
+            val newLh = gn.lookaheadStack.pushAll(transition.additionalLookaheads)
+            this.graph.pushToStackOf(false, transition.to, newLh, match, gn, previousSet, emptySet())
             //SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
         } else {
             TODO()

@@ -17,13 +17,15 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.runtime.graph.GrowingNode
+import net.akehurst.language.collections.Stack
 
 class Transition(
         val from: ParserState,
         val to: ParserState,
         val action: ParseAction,
+        val additionalLookaheads: List<LookaheadSet>,
         val lookaheadGuard: LookaheadSet,
-        val prevGuard : RulePosition?,
+        val prevGuard: RulePosition?,
         val runtimeGuard: Transition.(current:GrowingNode, previous:RulePosition?)->Boolean
 //TODO: add previousGuard for use in graft
 ) {

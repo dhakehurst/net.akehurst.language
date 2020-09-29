@@ -16,7 +16,27 @@
 
 package net.akehurst.language.collections
 
-class Stack<T>() {
+class Stack<T>(
+        val items : List<T> = emptyList()
+) {
+
+    class PopResult<T>(
+            val item : T,
+            val stack: Stack<T>
+    )
+
+    val size: Int get() = this.items.size
+    val isEmpty:Boolean get() = this.items.size ==0
+    val elements:List<T> get() = this.items
+
+    fun push(item: T) : Stack<T>  = Stack( items + item )
+    fun pushAll(items:List<T>) : Stack<T> = Stack(this.items + items)
+    fun peek(): T = items.last()
+    fun pop(): PopResult<T> = PopResult(this.peek(), Stack( items.subList(0,size-1) ))
+
+}
+
+class MutableStack<T>() {
     private val list = mutableListOf<T>()
 
     val size: Int get() = this.list.size
@@ -26,7 +46,8 @@ class Stack<T>() {
     fun push(item: T) {
         list.add(item)
     }
-    fun peek(): T = list.last();
+    fun peek(): T = list.last()
     fun pop(): T = list.removeAt(list.size - 1)
 
 }
+

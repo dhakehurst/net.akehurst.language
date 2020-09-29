@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.regex
 
-import net.akehurst.language.collections.Stack
+import net.akehurst.language.collections.MutableStack
 
 class RegexMatcherBuilder {
 
@@ -27,7 +27,7 @@ class RegexMatcherBuilder {
     // List[StateNumber] -> Map<Unicode-Int, List<StateNumber>>
     val nfa = mutableListOf<State>()
     var nextStateNumber = 0
-    var stack = Stack<Fragment>()
+    var stack = MutableStack<Fragment>()
     var startState: State = RegexMatcher.ERROR_STATE
 
     // return state number of new state

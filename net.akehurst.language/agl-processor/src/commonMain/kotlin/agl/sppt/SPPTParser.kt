@@ -23,7 +23,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
-import net.akehurst.language.collections.Stack
+import net.akehurst.language.collections.MutableStack
 
 class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
     constructor(rrsb: RuntimeRuleSetBuilder) : this(rrsb.ruleSet())
@@ -105,8 +105,8 @@ class SPPTParser(val runtimeRuleSet: RuntimeRuleSet) {
     private fun parse(treeString: String) {
         val input = InputFromCharSequence(treeString) //TODO: not sure we should reuse this here? maybe ok
         val scanner = SimpleScanner(treeString)
-        val nodeNamesStack = Stack<NodeStart>()
-        val childrenStack = Stack<MutableList<SPPTNode>>()
+        val nodeNamesStack = MutableStack<NodeStart>()
+        val childrenStack = MutableStack<MutableList<SPPTNode>>()
         // add rootList
         childrenStack.push(mutableListOf<SPPTNode>())
         var sentenceLocation = InputLocation(0, 1, 1, 0)
