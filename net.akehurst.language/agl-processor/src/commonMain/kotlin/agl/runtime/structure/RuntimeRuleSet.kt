@@ -31,10 +31,10 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val END_OF_TEXT = RuntimeRule(EOT_RULE_NUMBER, "<EOT>", InputFromCharSequence.END_OF_TEXT, RuntimeRuleKind.TERMINAL, false, false)
 
         fun createGoalRule(userGoalRule: RuntimeRule): RuntimeRule {
-            return createGoalRule(userGoalRule, listOf(END_OF_TEXT))
+            return createGoalRule(userGoalRule, setOf(END_OF_TEXT))
         }
 
-        fun createGoalRule(userGoalRule: RuntimeRule, possibleEndOfText: List<RuntimeRule>): RuntimeRule {
+        fun createGoalRule(userGoalRule: RuntimeRule, possibleEndOfText: Set<RuntimeRule>): RuntimeRule {
             val gr = RuntimeRule(GOAL_RULE_NUMBER, "<GOAL>", "", RuntimeRuleKind.GOAL, false, false)
             val items = listOf(userGoalRule) + possibleEndOfText
             gr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, items.toTypedArray())
@@ -149,7 +149,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     internal fun createAllSkipStates() {
         this.skipRules.forEach { skipRule ->
-            val stateSet = ParserStateSet(nextStateSetNumber++, this, skipRule, emptyList())
+            val stateSet = ParserStateSet(nextStateSetNumber++, this, skipRule, emptySet())
             this.skipStateSet[skipRule] = stateSet
             val startSet = skipRule.rulePositions.map { rp ->
                 stateSet.fetchOrCreateParseState(rp)
@@ -246,7 +246,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     fun buildFor(goalRuleName: String) {
         val gr = this.findRuntimeRule(goalRuleName)
-        val s0 = this.startingState(gr, listOf(RuntimeRuleSet.END_OF_TEXT))
+        val s0 = this.startingState(gr, setOf(RuntimeRuleSet.END_OF_TEXT))
         val trans = s0.transitions(null, LookaheadSet.EMPTY)
         trans.transitiveClosure {
             val trans = it.to.transitions(it.from, it.lookaheadGuard)  //TODO: not correct!
@@ -254,7 +254,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
     }
 
-    fun startingState(userGoalRule: RuntimeRule, possibleEndOfText: List<RuntimeRule> = listOf(RuntimeRuleSet.END_OF_TEXT)): ParserState {
+    fun startingState(userGoalRule: RuntimeRule, possibleEndOfText: Set<RuntimeRule> = setOf(RuntimeRuleSet.END_OF_TEXT)): ParserState {
         var stateSet = this.states_cache[userGoalRule]
         if (null == stateSet) {
             stateSet = ParserStateSet(nextStateSetNumber++, this, userGoalRule, possibleEndOfText)
@@ -356,7 +356,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val b = StringBuilder()
         val gr = this.findRuntimeRule(goalRuleName)
 
-        val s0 = this.startingState(gr, listOf(RuntimeRuleSet.END_OF_TEXT))
+        val s0 = this.startingState(gr, setOf(RuntimeRuleSet.END_OF_TEXT))
 
         val trans0 = s0.transitions(null, LookaheadSet.EMPTY)
         trans0.transitiveClosure {

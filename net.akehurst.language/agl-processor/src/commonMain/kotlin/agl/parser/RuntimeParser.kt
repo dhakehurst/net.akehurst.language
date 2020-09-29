@@ -97,11 +97,11 @@ internal class RuntimeParser(
 
     fun start(userGoalRule: RuntimeRule) {
         this.runtimeRuleSet.createAllSkipStates()
-        val gState = runtimeRuleSet.startingState(userGoalRule, listOf(RuntimeRuleSet.END_OF_TEXT))
+        val gState = runtimeRuleSet.startingState(userGoalRule, setOf(RuntimeRuleSet.END_OF_TEXT))
         this.graph.start(gState)
     }
 
-    fun start(userGoalRule: RuntimeRule, startLocation: InputLocation, possibleEndOfText: List<RuntimeRule>) {
+    fun start(userGoalRule: RuntimeRule, startLocation: InputLocation, possibleEndOfText: Set<RuntimeRule>) {
         val gState = runtimeRuleSet.startingState(userGoalRule, possibleEndOfText)
         this.graph.start(gState, startLocation)
     }
@@ -322,7 +322,8 @@ internal class RuntimeParser(
         val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, gn.nextInputPosition, gn.lastLocation)
         if (null != l) {
             //TODO: find a better way to look past skip terminals, this means wrong matches can be made...though they will be dropped on H or G!
-            val lh = gn.lookaheadStack.peek().content + this.runtimeRuleSet.firstSkipTerminals// transition.lookaheadGuard.content + this.runtimeRuleSet.firstSkipTerminals
+            val lh1 = transition.lookaheadGuard.content
+            val lh = lh1 + this.runtimeRuleSet.firstSkipTerminals// transition.lookaheadGuard.content + this.runtimeRuleSet.firstSkipTerminals
             val hasLh = lh.any {
                 val lhLeaf = this.graph.findOrTryCreateLeaf(it, l.nextInputPosition, l.location)
                 null != lhLeaf

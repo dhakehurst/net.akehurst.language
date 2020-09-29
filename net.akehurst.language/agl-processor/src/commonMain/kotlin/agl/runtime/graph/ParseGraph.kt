@@ -631,7 +631,7 @@ internal class ParseGraph(
         val goalGN = GrowingNode(
                 false,
                 goalState,
-                Stack(),
+                Stack(),//listOf(goalState.createLookaheadSet(setOf(RuntimeRuleSet.END_OF_TEXT)))),
                 startLocation,
                 startPosition,
                 0,

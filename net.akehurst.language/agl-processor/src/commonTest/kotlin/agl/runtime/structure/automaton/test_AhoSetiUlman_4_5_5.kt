@@ -42,6 +42,28 @@ class test_AhoSetiUlman_4_5_5 {
 
     @Test
     fun s0_closureLR0() {
-        TODO()
+        //given
+        val s0 = rrs.startingState(S)
+
+        //when
+        val actual = s0.calcClosureLR0().toList()
+
+        //then
+        val lhs0 = LookaheadSet(0, s0, setOf(RuntimeRuleSet.END_OF_TEXT))
+        val lhs1 = LookaheadSet(1, s0, setOf(dT, cT))
+        val expected = setOf<ClosureItemWithLookaheadList>(
+                ClosureItemWithLookaheadList(RulePosition(G, 0, 0), listOf(lhs0)),
+                ClosureItemWithLookaheadList(RulePosition(S, 0, 0), listOf(lhs0, lhs1)),
+                ClosureItemWithLookaheadList(RulePosition(C, 0, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY)),
+                ClosureItemWithLookaheadList(RulePosition(C1, 0, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY, lhs1)),
+                ClosureItemWithLookaheadList(RulePosition(cT, 0, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY, lhs1, LookaheadSet.EMPTY)),
+                ClosureItemWithLookaheadList(RulePosition(C, 1, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY)),
+                ClosureItemWithLookaheadList(RulePosition(dT, 0, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY, LookaheadSet.EMPTY))
+        ).toList()
+
+        assertEquals(expected.size, actual.size)
+        for (i in actual.indices) {
+            assertEquals(expected[i], actual[i])
+        }
     }
 }

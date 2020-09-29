@@ -24,7 +24,7 @@ class Transition(
         val to: ParserState,
         val action: ParseAction,
         val additionalLookaheads: List<LookaheadSet>,
-        val lookaheadGuard: LookaheadSet,
+        val lookaheadGuard: LookaheadSet, //TODO: is this needed as we have the additionalLookaheads now?
         val prevGuard: RulePosition?,
         val runtimeGuard: Transition.(current:GrowingNode, previous:RulePosition?)->Boolean
 //TODO: add previousGuard for use in graft

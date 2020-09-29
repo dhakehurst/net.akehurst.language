@@ -23,7 +23,7 @@ class ParserStateSet(
         val number:Int,
         val runtimeRuleSet: RuntimeRuleSet,
         val userGoalRule: RuntimeRule, //null if skip state set TODO: improve this!
-        val possibleEndOfText: List<RuntimeRule>
+        val possibleEndOfText: Set<RuntimeRule>
 ) {
 
     private var nextState = 0
