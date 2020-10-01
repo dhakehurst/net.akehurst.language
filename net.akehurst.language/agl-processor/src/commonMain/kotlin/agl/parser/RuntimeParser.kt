@@ -320,8 +320,8 @@ internal class RuntimeParser(
     }
 
     private fun Stack<LookaheadSet>.lookahead() : Set<RuntimeRule> {
-        return this.items.last { it !== LookaheadSet.EMPTY }.content
-        //return this.items.lastOrNull()?.content ?: emptySet()
+        //return this.items.last { it !== LookaheadSet.EMPTY }.content
+        return this.items.lastOrNull()?.content ?: emptySet()
     }
 
     private fun doWidth(gn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition, noLookahead: Boolean) {
@@ -329,8 +329,8 @@ internal class RuntimeParser(
         if (null != l) {
             //TODO: find a better way to look past skip terminals, this means wrong matches can be made...though they will be dropped on H or G!
             val lh1 = transition.lookaheadGuard.content
-            pop here if can
-            val newLh = gn.lookaheadStack.pushAll(transition.additionalLookaheads)
+            val lhs = if(gn.lookaheadStack.isEmpty) gn.lookaheadStack else gn.lookaheadStack.pop().stack
+            val newLh = lhs.pushAll(transition.additionalLookaheads)
             val lhn = newLh.lookahead()
             val lh = lhn + this.runtimeRuleSet.firstSkipTerminals// transition.lookaheadGuard.content + this.runtimeRuleSet.firstSkipTerminals
             val hasLh = lh.any {
