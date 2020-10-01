@@ -69,9 +69,9 @@ class test_LR1_States {
 
         val actual = s0.widthInto(LookaheadSet.EMPTY)
         val expected = listOf(
-                Pair(RulePosition(d, 0, 0), LookaheadSet(0, s0, setOf(a))),
-                Pair(RulePosition(b, 0, 0), LookaheadSet(1, s0, setOf(d))),
-                Pair(RulePosition(d, 0, 0), LookaheadSet(2, s0, setOf(c)))
+                Pair(RulePosition(d, 0, 0), LookaheadSet(0, setOf(a))),
+                Pair(RulePosition(b, 0, 0), LookaheadSet(1, setOf(d))),
+                Pair(RulePosition(d, 0, 0), LookaheadSet(2, setOf(c)))
         )
         assertEquals(expected, actual)
         for(i in 0 until actual.size) {
@@ -84,14 +84,14 @@ class test_LR1_States {
     fun s0_transitions() {
         val s0 = rrs.startingState(S)
 
-        val actual = s0.transitions(null, LookaheadSet.EMPTY)
+        val actual = s0.transitions(null)
 
         val s2 = s0.stateSet.fetch(RulePosition(b, 0, RulePosition.END_OF_RULE))
         val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, emptyList(), LookaheadSet(0, s0, setOf(a)), null) { _, _ -> true },
-                Transition(s0, s2, Transition.ParseAction.WIDTH, emptyList(), LookaheadSet(1, s0, setOf(d)), null) { _, _ -> true },
-                Transition(s0, s1, Transition.ParseAction.WIDTH, emptyList(), LookaheadSet(2, s0, setOf(c)), null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH, emptyList(), LookaheadSet(0, setOf(a)), null) { _, _ -> true },
+                Transition(s0, s2, Transition.ParseAction.WIDTH, emptyList(), LookaheadSet(1,  setOf(d)), null) { _, _ -> true },
+                Transition(s0, s1, Transition.ParseAction.WIDTH, emptyList(), LookaheadSet(2,  setOf(c)), null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for(i in 0 until actual.size) {
@@ -128,7 +128,7 @@ class test_LR1_States {
     fun s1_heightOrGraftInto() {
         // G
         val s0 = rrs.startingState(S)
-        val trans_s0 = s0.transitions(null, LookaheadSet.EMPTY)
+        val trans_s0 = s0.transitions(null)
         val tr_a_d = trans_s0.first { it.lookaheadGuard.content.contains(a) }
         val tr_d_b = trans_s0.first { it.lookaheadGuard.content.contains(d) }
         val tr_c_d = trans_s0.first { it.lookaheadGuard.content.contains(c) }
@@ -137,8 +137,8 @@ class test_LR1_States {
         val actual = s1.heightOrGraftInto(s0, tr_a_d.lookaheadGuard)
         assertNotNull(actual)
         val expected = listOf<Pair<RulePosition, LookaheadSet>>(
-                Pair(RulePosition(rA, 0, 0), LookaheadSet(0, s1, setOf(a))),
-                Pair(RulePosition(rB, 0, 0), LookaheadSet(1, s1, setOf(c)))
+                Pair(RulePosition(rA, 0, 0), LookaheadSet(0,  setOf(a))),
+                Pair(RulePosition(rB, 0, 0), LookaheadSet(1,  setOf(c)))
         )
 
         assertEquals(expected, actual)
@@ -147,16 +147,16 @@ class test_LR1_States {
     @Test
     fun s1_transitions() {
         val s0 = rrs.startingState(S)
-        val s0_trans = s0.transitions(null, LookaheadSet.EMPTY)
+        val s0_trans = s0.transitions(null)
         val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
         val tr_a_d = s0_trans.first { it.lookaheadGuard.content.contains(a) }
 
-        val actual = s1.transitions(s0, tr_a_d.lookaheadGuard)
+        val actual = s1.transitions(s0)
         val s3 = s0.stateSet.fetch(RulePosition(rA, 0, RulePosition.END_OF_RULE))
         val s4 = s0.stateSet.fetch(RulePosition(rB, 0, RulePosition.END_OF_RULE))
         val expected = listOf<Transition>(
-                Transition(s1, s3, Transition.ParseAction.HEIGHT, emptyList(), LookaheadSet(0, s1, setOf(a)), null) { _, _ -> true },
-                Transition(s1, s4, Transition.ParseAction.HEIGHT, emptyList(), LookaheadSet(1, s1, setOf(c)), null) { _, _ -> true }
+                Transition(s1, s3, Transition.ParseAction.HEIGHT, emptyList(), LookaheadSet(0,  setOf(a)), null) { _, _ -> true },
+                Transition(s1, s4, Transition.ParseAction.HEIGHT, emptyList(), LookaheadSet(1,  setOf(c)), null) { _, _ -> true }
         )
     }
 /*

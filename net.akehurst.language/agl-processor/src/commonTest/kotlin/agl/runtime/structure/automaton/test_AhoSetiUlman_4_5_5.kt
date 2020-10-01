@@ -22,8 +22,12 @@ import kotlin.test.assertEquals
 class test_AhoSetiUlman_4_5_5 {
 
     companion object {
-        // S = CC ;
-        // C = cC | d ;
+        // S = C C ;
+        // C = c C | d ;
+        //
+        // S = C C ;
+        // C = C1 | d ;
+        // C1 = c C ;
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("C"); ref("C") }
             choice("C", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
@@ -38,27 +42,32 @@ class test_AhoSetiUlman_4_5_5 {
         val cT = rrs.findRuntimeRule("'c'")
         val dT = rrs.findRuntimeRule("'d'")
         val G = rrs.startingState(S).runtimeRule
+
+        val s0 = rrs.startingState(S)
+
+        val lhs0 = LookaheadSet(0, setOf(RuntimeRuleSet.END_OF_TEXT))
+        val lhs1 = LookaheadSet(1, setOf(dT, cT))
     }
 
     @Test
     fun s0_closureLR0() {
         //given
-        val s0 = rrs.startingState(S)
 
         //when
         val actual = s0.calcClosureLR0().toList()
 
         //then
-        val lhs0 = LookaheadSet(0, s0, setOf(RuntimeRuleSet.END_OF_TEXT))
-        val lhs1 = LookaheadSet(1, s0, setOf(dT, cT))
+        val cl_G = ClosureItemWithLookaheadList(null, RulePosition(G, 0, 0), listOf(lhs0))
+        val cl_G_S = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 0, 0), listOf(lhs0, lhs1))
+        val cl_G_S_C0 = ClosureItemWithLookaheadList(cl_G_S, RulePosition(C, 0, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY))
+        val cl_G_S_C0_C1 = ClosureItemWithLookaheadList(cl_G_S_C0, RulePosition(C1, 0, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY, lhs1))
+        val cl_G_S_C0_C1_c = ClosureItemWithLookaheadList(cl_G_S_C0_C1, RulePosition(cT, 0, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY, lhs1, LookaheadSet.EMPTY))
+        val cl_G_S_C1 = ClosureItemWithLookaheadList(cl_G_S, RulePosition(C, 1, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY))
+        val cl_G_S_C1_d = ClosureItemWithLookaheadList(cl_G_S_C1, RulePosition(dT, 0, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY, LookaheadSet.EMPTY))
+
         val expected = setOf<ClosureItemWithLookaheadList>(
-                ClosureItemWithLookaheadList(RulePosition(G, 0, 0), listOf(lhs0)),
-                ClosureItemWithLookaheadList(RulePosition(S, 0, 0), listOf(lhs0, lhs1)),
-                ClosureItemWithLookaheadList(RulePosition(C, 0, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY)),
-                ClosureItemWithLookaheadList(RulePosition(C1, 0, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY, lhs1)),
-                ClosureItemWithLookaheadList(RulePosition(cT, 0, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY, lhs1, LookaheadSet.EMPTY)),
-                ClosureItemWithLookaheadList(RulePosition(C, 1, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY)),
-                ClosureItemWithLookaheadList(RulePosition(dT, 0, 0), listOf(lhs0, lhs1, LookaheadSet.EMPTY, LookaheadSet.EMPTY))
+                cl_G, cl_G_S, cl_G_S_C0, cl_G_S_C0_C1, cl_G_S_C0_C1_c,
+                              cl_G_S_C1, cl_G_S_C1_d
         ).toList()
 
         assertEquals(expected.size, actual.size)

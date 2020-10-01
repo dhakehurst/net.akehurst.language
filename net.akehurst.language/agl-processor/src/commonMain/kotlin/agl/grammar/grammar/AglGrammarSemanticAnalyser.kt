@@ -101,7 +101,7 @@ class AglGrammarSemanticAnalyser(
         val automaton = rrs.automatonFor(goalRuleName)
 
         automaton.states.values.forEach {state ->
-            val trans = state.transitions(null, LookaheadSet.EMPTY) //TODO: need to check with non null arg
+            val trans = state.transitions(null) //TODO: need to check with non null arg
             if (trans.size > 1) {
                 trans.forEach { tr1 ->
                     trans.forEach {tr2 ->

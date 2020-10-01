@@ -22,6 +22,22 @@ import net.akehurst.language.collections.lazyMap
 import net.akehurst.language.collections.lazyMapNonNull
 import net.akehurst.language.collections.transitiveClosure
 
+class LookaheadSet(
+        val number: Int,
+        val content: Set<RuntimeRule>
+) {
+    companion object {
+        val EMPTY = LookaheadSet(-1, emptySet())
+    }
+
+    override fun hashCode(): Int = number * 31
+    override fun equals(other: Any?): Boolean = when {
+        other is LookaheadSet -> this.number == other.number
+        else -> false
+    }
+
+    override fun toString(): String = "LookaheadSet{$number,${content}}"
+}
 
 class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
@@ -46,6 +62,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
     private val terminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
     private val embeddedRuleNumber: MutableMap<String, Int> = mutableMapOf()
+
+    private var nextLookaheadSetId = 0
+    private val lookaheadSets = mutableListOf<LookaheadSet>()
 
     //TODO: are Arrays faster than Lists?
     val runtimeRules: Array<out RuntimeRule> by lazy {
@@ -247,9 +266,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     fun buildFor(goalRuleName: String) {
         val gr = this.findRuntimeRule(goalRuleName)
         val s0 = this.startingState(gr, setOf(RuntimeRuleSet.END_OF_TEXT))
-        val trans = s0.transitions(null, LookaheadSet.EMPTY)
+        val trans = s0.transitions(null)
         trans.transitiveClosure {
-            val trans = it.to.transitions(it.from, it.lookaheadGuard)  //TODO: not correct!
+            val trans = it.to.transitions(it.from)  //TODO: not correct!
             trans
         }
     }
@@ -334,6 +353,23 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return rr
     }
 
+    internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
+        return when {
+            content.isEmpty() -> LookaheadSet.EMPTY
+            else -> {
+                val existing = this.lookaheadSets.firstOrNull { it.content == content }
+                if (null == existing) {
+                    val num = this.nextLookaheadSetId++
+                    val lhs = LookaheadSet(num, content)
+                    this.lookaheadSets.add(lhs)
+                    lhs
+                } else {
+                    existing
+                }
+            }
+        }
+    }
+
     internal fun printUsedAutomaton(goalRuleName: String): String {
         val b = StringBuilder()
         val gr = this.findRuntimeRule(goalRuleName)
@@ -358,9 +394,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
         val s0 = this.startingState(gr, setOf(RuntimeRuleSet.END_OF_TEXT))
 
-        val trans0 = s0.transitions(null, LookaheadSet.EMPTY)
+        val trans0 = s0.transitions(null)
         trans0.transitiveClosure {
-            val trans = it.to.transitions(it.from, it.lookaheadGuard) //TODO: not correct!
+            val trans = it.to.transitions(it.from) //TODO: not correct!
             trans
         }
         val states = s0.stateSet.states.values

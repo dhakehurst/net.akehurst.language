@@ -42,11 +42,11 @@ class test_ParserState_closureLR0_leftRecursive {
         val s0 = rrs.startingState(S)
         val actual = s0.calcClosureLR0().toList()
 
-        val i0 = ClosureItemWithLookaheadList(RulePosition(G, 0, 0), emptyList())
-        val i01 = ClosureItemWithLookaheadList(RulePosition(S, 0, 0), emptyList())
-        val i011 = ClosureItemWithLookaheadList(RulePosition(a, 0, 0), emptyList())
-        val i02 = ClosureItemWithLookaheadList( RulePosition(S, 1, 0), emptyList())
-        val i021 = ClosureItemWithLookaheadList( RulePosition(S1, 0, 0), emptyList())
+        val i0 = ClosureItemWithLookaheadList(null, RulePosition(G, 0, 0), emptyList())
+        val i01 = ClosureItemWithLookaheadList(i0, RulePosition(S, 0, 0), emptyList())
+        val i011 = ClosureItemWithLookaheadList(i01, RulePosition(a, 0, 0), emptyList())
+        val i02 = ClosureItemWithLookaheadList(i0, RulePosition(S, 1, 0), emptyList())
+        val i021 = ClosureItemWithLookaheadList(i02, RulePosition(S1, 0, 0), emptyList())
 
         val expected = setOf<ClosureItemWithLookaheadList>(
                 i0, i01, i011,
@@ -54,8 +54,8 @@ class test_ParserState_closureLR0_leftRecursive {
         ).toList()
 
         assertEquals(expected.size, actual.size)
-        for(i in actual.indices) {
-            assertEquals(expected[i],actual[i])
+        for (i in actual.indices) {
+            assertEquals(expected[i], actual[i])
         }
     }
 

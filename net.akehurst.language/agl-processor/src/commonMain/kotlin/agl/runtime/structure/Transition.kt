@@ -38,7 +38,7 @@ class Transition(
     }
 
     private val hashCode_cache:Int by lazy {
-        arrayListOf<Any>(from, to, action, lookaheadGuard).hashCode()
+        arrayListOf<Any>(from, to, action, additionalLookaheads).hashCode()
     }
 
 
@@ -52,7 +52,7 @@ class Transition(
                 if (this.from!=other.from) return false
                 if (this.to!=other.to) return false
                 if (this.action!=other.action) return false
-                if (this.lookaheadGuard!=other.lookaheadGuard) return false
+                if (this.additionalLookaheads!=other.additionalLookaheads) return false
                 return true
             }
             else -> return false
@@ -60,7 +60,8 @@ class Transition(
     }
 
     override fun toString(): String {
-        val lh = " "+this.lookaheadGuard.number.toString()+":"+this.lookaheadGuard.content.map { it.tag }
-        return "Transition { $from -- $action$lh[$prevGuard] --> $to }"
+        //val lh = " "+this.lookaheadGuard.number.toString()+":"+this.lookaheadGuard.content.map { it.tag }
+        val lh = additionalLookaheads
+        return "Transition { $from -- $action$lh --> $to }"
     }
 }

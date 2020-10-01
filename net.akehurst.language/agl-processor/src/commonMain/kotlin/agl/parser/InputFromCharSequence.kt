@@ -20,6 +20,7 @@ import net.akehurst.language.agl.regex.RegexMatcher
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.sppt.SPPTLeafDefault
+import kotlin.math.min
 
 internal class InputFromCharSequence(val text: CharSequence) {
 
@@ -89,7 +90,8 @@ internal class InputFromCharSequence(val text: CharSequence) {
     }
 
     fun nextLocation(lastLocation: InputLocation, newLength: Int): InputLocation {
-        val lastText = this.text.substring(lastLocation.position, lastLocation.position + lastLocation.length)
+        val endIndex = min(this.text.length, lastLocation.position + lastLocation.length)
+        val lastText = this.text.substring(lastLocation.position, endIndex)
         var linesInText = 0
         var lastEolInText = -1
         lastText.forEachIndexed { index, ch -> //FIXME: inefficient having to parse text again
