@@ -182,7 +182,7 @@ class test_leftRecursive {
 
         val actual = s4.transitions(s0)
         val expected = listOf<Transition>(
-                Transition(s4, s1, Transition.ParseAction.WIDTH, listOf(lhsE, lhsE), lhs1, null) { _, _ -> true }
+                Transition(s4, s1, Transition.ParseAction.WIDTH, listOf(lhsE), lhs1, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {

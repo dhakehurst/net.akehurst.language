@@ -22,8 +22,9 @@ import net.akehurst.language.collections.lazyMapNonNull
 class ParserStateSet(
         val number:Int,
         val runtimeRuleSet: RuntimeRuleSet,
-        val userGoalRule: RuntimeRule, //null if skip state set TODO: improve this!
-        val possibleEndOfText: Set<RuntimeRule>
+        val userGoalRule: RuntimeRule,
+        val possibleEndOfText: Set<RuntimeRule>,
+        val isSkip:Boolean
 ) {
 
     private var nextState = 0

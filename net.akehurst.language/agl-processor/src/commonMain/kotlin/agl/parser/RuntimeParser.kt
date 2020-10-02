@@ -354,8 +354,7 @@ internal class RuntimeParser(
             null != l
         }
         if (noLookahead || hasLh || lh.isEmpty()) {
-            val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
-                    ?: error("Should never be null")
+            val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength) ?: error("Should never be null")
             //val popRes = newLh.pop()
             val lhs = newLh//popRes.stack
             this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, lhs, complete, setOf(previous), gn.skipNodes)
@@ -371,8 +370,7 @@ internal class RuntimeParser(
             null != l
         }
         if (noLookahead || hasLh || lh.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
-            val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
-                    ?: error("Should never be null")
+            val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength) ?: error("Should never be null")
             //val popRes = newLh.pop()
             val lhs = newLh//popRes.stack
             this.graph.growNextChild(false, transition.to, lhs, previous.node, complete, previous.node.currentState.position, gn.skipNodes)

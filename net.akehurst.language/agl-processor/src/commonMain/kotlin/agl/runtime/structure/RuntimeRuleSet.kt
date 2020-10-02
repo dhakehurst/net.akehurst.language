@@ -168,7 +168,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     internal fun createAllSkipStates() {
         this.skipRules.forEach { skipRule ->
-            val stateSet = ParserStateSet(nextStateSetNumber++, this, skipRule, emptySet())
+            val stateSet = ParserStateSet(nextStateSetNumber++, this, skipRule, emptySet(), true)
             this.skipStateSet[skipRule] = stateSet
             val startSet = skipRule.rulePositions.map { rp ->
                 stateSet.fetchOrCreateParseState(rp)
@@ -276,7 +276,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     fun startingState(userGoalRule: RuntimeRule, possibleEndOfText: Set<RuntimeRule> = setOf(RuntimeRuleSet.END_OF_TEXT)): ParserState {
         var stateSet = this.states_cache[userGoalRule]
         if (null == stateSet) {
-            stateSet = ParserStateSet(nextStateSetNumber++, this, userGoalRule, possibleEndOfText)
+            stateSet = ParserStateSet(nextStateSetNumber++, this, userGoalRule, possibleEndOfText, false)
             this.states_cache[userGoalRule] = stateSet
         }
         return stateSet.startState
