@@ -119,7 +119,7 @@ class test_ScannerlessParser_parse_choiceEqual {
         }
         assertEquals(1, ex.location.line)
         assertEquals(2, ex.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), ex.expected)
     }
 
     // S = ab | c;
@@ -188,7 +188,7 @@ class test_ScannerlessParser_parse_choiceEqual {
         }
         assertEquals(1, ex.location.line)
         assertEquals(3, ex.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), ex.expected)
     }
 
     @Test
@@ -253,7 +253,7 @@ class test_ScannerlessParser_parse_choiceEqual {
         }
         assertEquals(1, ex.location.line)
         assertEquals(2, ex.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), ex.expected)
     }
 
     @Test
@@ -267,7 +267,7 @@ class test_ScannerlessParser_parse_choiceEqual {
         }
         assertEquals(1, ex.location.line)
         assertEquals(2, ex.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), ex.expected)
     }
 
     @Test

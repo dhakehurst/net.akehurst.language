@@ -24,6 +24,7 @@ import net.akehurst.language.collections.lazyMapNonNull
 import net.akehurst.language.collections.transitiveClosure
 
 class RuntimeRule(
+        val runtimeRuleSet: RuntimeRuleSet,
         val number: Int,
         val tag: String,
         val value: String,
@@ -545,12 +546,12 @@ class RuntimeRule(
     // --- Any ---
 
     override fun hashCode(): Int {
-        return this.number
+        return (31*this.runtimeRuleSet.hashCode())+this.number
     }
 
     override fun equals(other: Any?): Boolean {
         if (other is RuntimeRule) {
-            return this.number == other.number
+            return this.number == other.number && this.runtimeRuleSet==other.runtimeRuleSet
         } else {
             return false
         }

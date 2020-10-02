@@ -79,7 +79,7 @@ class SPPTLeafDefault(
 
     override fun toString(): String {
         val name = when {
-            this.runtimeRule == RuntimeRuleSet.END_OF_TEXT -> "EOT"
+            this.runtimeRule == this.runtimeRule.runtimeRuleSet.END_OF_TEXT -> RuntimeRuleSet.END_OF_TEXT_TAG
             this.isLiteral -> "'${this.runtimeRule.value}'"
             this.isPattern -> "\"${this.runtimeRule.value}\""
             else -> this.name //shouldn't happen!

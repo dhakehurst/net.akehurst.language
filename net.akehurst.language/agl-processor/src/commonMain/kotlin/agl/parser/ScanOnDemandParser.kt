@@ -47,7 +47,7 @@ class ScanOnDemandParser(
     }
 
     override fun scan(inputText: CharSequence, includeSkipRules: Boolean): List<SPPTLeaf> {
-        val undefined = RuntimeRule(-5, "undefined", "", RuntimeRuleKind.TERMINAL, false, true)
+        val undefined = RuntimeRule(runtimeRuleSet, -5, "undefined", "", RuntimeRuleKind.TERMINAL, false, true)
         //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
         val input = InputFromCharSequence(inputText)
         var terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.nonSkipTerminals

@@ -28,21 +28,23 @@ class test_ParseGraph {
 
     @Test
     fun construct() {
-        val goalRule = RuntimeRule(0,"a", "", RuntimeRuleKind.TERMINAL, false, false)
+        val rrs = RuntimeRuleSet()
+        val goalRule = RuntimeRule(rrs, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
         val text = ""
         val input = InputFromCharSequence(text)
 
-        val sut = ParseGraph(goalRule,input)
+        val sut = ParseGraph(goalRule, input)
 
         assertNotNull(sut)
     }
 
     @Test
     fun canGrow_empty() {
-        val goalRule = RuntimeRule(0,"a", "", RuntimeRuleKind.TERMINAL, false, false)
+        val rrs = RuntimeRuleSet()
+        val goalRule = RuntimeRule(rrs, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
         val text = ""
         val input = InputFromCharSequence(text)
-        val sut = ParseGraph(goalRule,input)
+        val sut = ParseGraph(goalRule, input)
 
         val actual = sut.canGrow
 
@@ -51,12 +53,12 @@ class test_ParseGraph {
 
     @Test
     fun start() {
-        val rrs = RuntimeRuleSet(listOf())
+        val rrs = RuntimeRuleSet()
 
-        val userGoalRule = RuntimeRule(0,"a", "", RuntimeRuleKind.TERMINAL, false, false)
+        val userGoalRule = RuntimeRule(rrs, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"
         val input = InputFromCharSequence(text)
-        val sut = ParseGraph(userGoalRule,input)
+        val sut = ParseGraph(userGoalRule, input)
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
         val startState = rrs.startingState(userGoalRule)

@@ -98,7 +98,7 @@ class test_abOcLiteral : test_ScanOnDemandParserAbstract() {
         }
         assertEquals(1, ex.location.line)
         assertEquals(3, ex.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), ex.expected)
     }
 
     @Test

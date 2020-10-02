@@ -45,7 +45,7 @@ class test_AhoSetiUlman_4_5_5 {
 
         val s0 = rrs.startingState(S)
 
-        val lhs0 = LookaheadSet(0, setOf(RuntimeRuleSet.END_OF_TEXT))
+        val lhs0 = LookaheadSet(0, setOf(rrs.END_OF_TEXT))
         val lhs1 = LookaheadSet(1, setOf(dT, cT))
     }
 

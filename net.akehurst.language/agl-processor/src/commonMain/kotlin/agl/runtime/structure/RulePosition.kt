@@ -59,10 +59,13 @@ data class RulePosition(
             when (this.runtimeRule.kind) {
                 RuntimeRuleKind.TERMINAL -> TODO() // possibly these never happen!
                 RuntimeRuleKind.EMBEDDED -> TODO()
-                RuntimeRuleKind.GOAL -> when (this.position) {
-                    0 -> setOf(RulePosition(this.runtimeRule, 0, 1))
-                    1 -> setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE))
-                    else -> error("Should never happen")
+                RuntimeRuleKind.GOAL -> when {
+                    itemRule.isSkip -> setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE))
+                    else -> when (this.position) {
+                        0 -> setOf(RulePosition(this.runtimeRule, 0, 1))
+                        1 -> setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE))
+                        else -> error("Should never happen")
+                    }
                 }
                 RuntimeRuleKind.NON_TERMINAL -> when (this.runtimeRule.rhs.kind) {
                     RuntimeRuleItemKind.EMPTY -> error("This should never happen!")
@@ -153,7 +156,7 @@ data class RulePosition(
 
     override fun toString(): String {
         val r = when {
-            runtimeRule == RuntimeRuleSet.END_OF_TEXT -> "EOT"
+            runtimeRule == this.runtimeRule.runtimeRuleSet.END_OF_TEXT -> RuntimeRuleSet.END_OF_TEXT_TAG
             //runtimeRule.isTerminal -> if (runtimeRule.isPattern) "\"${runtimeRule.name}\"" else "'${runtimeRule.name}'"
             else -> runtimeRule.tag
         }

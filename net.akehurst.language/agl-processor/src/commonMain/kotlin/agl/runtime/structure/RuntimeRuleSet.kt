@@ -39,25 +39,36 @@ class LookaheadSet(
     override fun toString(): String = "LookaheadSet{$number,${content}}"
 }
 
-class RuntimeRuleSet(rules: List<RuntimeRule>) {
+class RuntimeRuleSet(
+        // rules: List<RuntimeRule>
+) {
 
     companion object {
+        var nextRuntimeRuleSetNumber = 0
+
         val GOAL_RULE_NUMBER = -1;
         val EOT_RULE_NUMBER = -2;
-        val END_OF_TEXT = RuntimeRule(EOT_RULE_NUMBER, "<EOT>", InputFromCharSequence.END_OF_TEXT, RuntimeRuleKind.TERMINAL, false, false)
+        val SKIP_RULE_NUMBER = -3;
+        val END_OF_TEXT_TAG = "<EOT>"
+        val GOAL_TAG = "<GOAL>"
+        val SKIP_RULE_TAG = "<SKIP>"
 
         fun createGoalRule(userGoalRule: RuntimeRule): RuntimeRule {
-            return createGoalRule(userGoalRule, setOf(END_OF_TEXT))
+            return createGoalRule(userGoalRule, setOf(userGoalRule.runtimeRuleSet.END_OF_TEXT))
         }
 
         fun createGoalRule(userGoalRule: RuntimeRule, possibleEndOfText: Set<RuntimeRule>): RuntimeRule {
-            val gr = RuntimeRule(GOAL_RULE_NUMBER, "<GOAL>", "", RuntimeRuleKind.GOAL, false, false)
+            val gr = RuntimeRule(userGoalRule.runtimeRuleSet, GOAL_RULE_NUMBER, GOAL_TAG, "", RuntimeRuleKind.GOAL, false, false)
             val items = listOf(userGoalRule) + possibleEndOfText
             gr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, items.toTypedArray())
             return gr
         }
 
     }
+
+    val END_OF_TEXT = RuntimeRule(this, EOT_RULE_NUMBER, END_OF_TEXT_TAG, InputFromCharSequence.END_OF_TEXT, RuntimeRuleKind.TERMINAL, false, false)
+
+    val number: Int = nextRuntimeRuleSetNumber++
 
     private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
     private val terminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
@@ -67,9 +78,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     private val lookaheadSets = mutableListOf<LookaheadSet>()
 
     //TODO: are Arrays faster than Lists?
-    val runtimeRules: Array<out RuntimeRule> by lazy {
-        rules.sortedBy { it.number }.toTypedArray()
-    }
+    var runtimeRules: List<RuntimeRule> = emptyList()
 
     val skipRules: Array<RuntimeRule> by lazy {
         this.runtimeRules.filter { it.isSkip }.toTypedArray()
@@ -135,6 +144,15 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     private val states_cache = mutableMapOf<RuntimeRule, ParserStateSet>()
     private val skipStateSet = mutableMapOf<RuntimeRule, ParserStateSet>()
 
+    val skipParserStateSet: ParserStateSet by lazy {
+        val possibleEndOfText = emptySet<RuntimeRule>()
+        val skipGoalRule = RuntimeRule(this, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
+        skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
+        val ss = ParserStateSet(nextStateSetNumber++, this, skipGoalRule, possibleEndOfText, true)
+        this.states_cache[skipGoalRule] = ss
+        ss
+    }
+
     //called from ParserStateSet, which adds the Goal Rule bits
     internal val parentPosition = lazyMapNonNull<RuntimeRule, Set<RulePosition>> { childRR ->
         this.runtimeRules.flatMap { rr ->
@@ -148,7 +166,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     private var nextStateSetNumber = 0
 
-    init {
+    fun setRules(rules: List<RuntimeRule>) {
         for (rr in rules) {
             when (rr.kind) {
                 RuntimeRuleKind.GOAL -> { /*do nothing*/
@@ -158,6 +176,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 RuntimeRuleKind.EMBEDDED -> this.embeddedRuleNumber[rr.tag] = rr.number
             }
         }
+        this.runtimeRules = rules.sortedBy { it.number }
     }
 
     fun automatonFor(goalRuleName: String): ParserStateSet {
@@ -265,7 +284,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     fun buildFor(goalRuleName: String) {
         val gr = this.findRuntimeRule(goalRuleName)
-        val s0 = this.startingState(gr, setOf(RuntimeRuleSet.END_OF_TEXT))
+        val s0 = this.startingState(gr, setOf(this.END_OF_TEXT))
         val trans = s0.transitions(null)
         trans.transitiveClosure {
             val trans = it.to.transitions(it.from)  //TODO: not correct!
@@ -273,7 +292,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }
     }
 
-    fun startingState(userGoalRule: RuntimeRule, possibleEndOfText: Set<RuntimeRule> = setOf(RuntimeRuleSet.END_OF_TEXT)): ParserState {
+    fun startingState(userGoalRule: RuntimeRule, possibleEndOfText: Set<RuntimeRule> = setOf(this.END_OF_TEXT)): ParserState {
         var stateSet = this.states_cache[userGoalRule]
         if (null == stateSet) {
             stateSet = ParserStateSet(nextStateSetNumber++, this, userGoalRule, possibleEndOfText, false)
@@ -392,7 +411,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         val b = StringBuilder()
         val gr = this.findRuntimeRule(goalRuleName)
 
-        val s0 = this.startingState(gr, setOf(RuntimeRuleSet.END_OF_TEXT))
+        val s0 = this.startingState(gr, setOf(this.END_OF_TEXT))
 
         val trans0 = s0.transitions(null)
         trans0.transitiveClosure {
@@ -431,5 +450,11 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 ${rulesStr}
             }
         """.trimIndent()
+    }
+
+    override fun hashCode(): Int = number
+    override fun equals(other: Any?): Boolean = when {
+        other is RuntimeRuleSet -> this.number == other.number
+        else -> false
     }
 }

@@ -106,10 +106,10 @@ class test_LR1_States {
 
         val expected = setOf<RulePositionWithLookahead>(
                 RulePositionWithLookahead(RulePosition(s0.runtimeRule, 0, 0), setOf()),
-                RulePositionWithLookahead(RulePosition(S, 0, 0), setOf(RuntimeRuleSet.END_OF_TEXT)),
-                RulePositionWithLookahead(RulePosition(S, 1, 0), setOf(RuntimeRuleSet.END_OF_TEXT)),
-                RulePositionWithLookahead(RulePosition(S, 2, 0), setOf(RuntimeRuleSet.END_OF_TEXT)),
-                RulePositionWithLookahead(RulePosition(S, 3, 0), setOf(RuntimeRuleSet.END_OF_TEXT)),
+                RulePositionWithLookahead(RulePosition(S, 0, 0), setOf(rrs.END_OF_TEXT)),
+                RulePositionWithLookahead(RulePosition(S, 1, 0), setOf(rrs.END_OF_TEXT)),
+                RulePositionWithLookahead(RulePosition(S, 2, 0), setOf(rrs.END_OF_TEXT)),
+                RulePositionWithLookahead(RulePosition(S, 3, 0), setOf(rrs.END_OF_TEXT)),
                 RulePositionWithLookahead(RulePosition(S1, 0, 0), setOf(a)),
                 RulePositionWithLookahead(RulePosition(S2, 0, 0), setOf(d)),
                 RulePositionWithLookahead(RulePosition(S3, 0, 0), setOf(c)),

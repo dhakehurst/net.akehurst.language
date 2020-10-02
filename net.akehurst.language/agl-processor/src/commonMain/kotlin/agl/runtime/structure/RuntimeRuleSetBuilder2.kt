@@ -26,7 +26,7 @@ fun runtimeRuleSet(init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
 
 class RuntimeRuleSetBuilder2() {
 
-    private var runtimeRuleSet: RuntimeRuleSet? = null
+    var runtimeRuleSet=RuntimeRuleSet()
 
     val ruleBuilders: MutableList<RuntimeRuleBuilder> = mutableListOf()
 
@@ -37,7 +37,7 @@ class RuntimeRuleSetBuilder2() {
     }
 
     fun ruleSet(): RuntimeRuleSet {
-        if (null == this.runtimeRuleSet) {
+        if (this.runtimeRuleSet.runtimeRules.isEmpty()) {
             //build and validate
             val rules = this.ruleBuilders.mapIndexed { index, rb ->
                 rb.buildRule(index)
@@ -73,9 +73,9 @@ class RuntimeRuleSetBuilder2() {
                     }
                 }
             }
-            this.runtimeRuleSet = RuntimeRuleSet(ruleMap.values.toList())
+            this.runtimeRuleSet.setRules(ruleMap.values.toList())
         }
-        return this.runtimeRuleSet ?: error("Should never happen")
+        return this.runtimeRuleSet
     }
 
     fun skip(tag: String, init: RuntimeRuleItemsBuilder.() -> Unit) {
@@ -171,7 +171,7 @@ class RuntimeRuleBuilder(
 
     fun buildRule(number: Int): RuntimeRule {
         if (null == this.rule) {
-            this.rule = RuntimeRule(number, tag, value, kind, isPattern, isSkip, embeddedRuleSet, startRule)
+            this.rule = RuntimeRule(this.rrsb.runtimeRuleSet, number, tag, value, kind, isPattern, isSkip, embeddedRuleSet, startRule)
         }
         return this.rule!!
     }

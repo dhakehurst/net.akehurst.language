@@ -21,7 +21,7 @@ import net.akehurst.language.api.parser.ParserException
 @Deprecated("Use runtimeRuleSet { ... }")
 class RuntimeRuleSetBuilder() {
 
-    private var runtimeRuleSet: RuntimeRuleSet? = null
+    val runtimeRuleSet = RuntimeRuleSet()
     private var nextGroupNumber: Int = 0
     private var nextChoiceNumber: Int = 0
     private var nextMultiNumber: Int = 0
@@ -56,7 +56,7 @@ class RuntimeRuleSetBuilder() {
     }
 
     fun literal(value: String): RuntimeRule {
-        if (null != this.runtimeRuleSet) {
+        if (this.runtimeRuleSet.runtimeRules.isNotEmpty()) {
             throw ParserException("Must not add rules after creating the ruleSet")
         } else {
             return RuntimeRuleTerminalBuilder(this).literal(value)
@@ -64,7 +64,7 @@ class RuntimeRuleSetBuilder() {
     }
 
     fun literal(name: String, value: String, isSkip:Boolean = false): RuntimeRule {
-        if (null != this.runtimeRuleSet) {
+        if (this.runtimeRuleSet.runtimeRules.isNotEmpty()) {
             throw ParserException("Must not add rules after creating the ruleSet")
         } else {
             return RuntimeRuleTerminalBuilder(this).skip(isSkip).literal(name, value)
@@ -72,7 +72,7 @@ class RuntimeRuleSetBuilder() {
     }
 
     fun pattern(pattern: String): RuntimeRule {
-        if (null != this.runtimeRuleSet) {
+        if (this.runtimeRuleSet.runtimeRules.isNotEmpty()) {
             throw ParserException("Must not add rules after creating the ruleSet")
         } else {
             return RuntimeRuleTerminalBuilder(this).pattern(pattern)
@@ -80,7 +80,7 @@ class RuntimeRuleSetBuilder() {
     }
 
     fun pattern(name: String, pattern: String, isSkip:Boolean = false): RuntimeRule {
-        if (null != this.runtimeRuleSet) {
+        if (this.runtimeRuleSet.runtimeRules.isNotEmpty()) {
             throw ParserException("Must not add rules after creating the ruleSet")
         } else {
             return RuntimeRuleTerminalBuilder(this).skip(isSkip).pattern(name, pattern)
@@ -88,7 +88,7 @@ class RuntimeRuleSetBuilder() {
     }
 
     fun empty(ruleThatIsEmpty: RuntimeRule): RuntimeRule {
-        if (null != this.runtimeRuleSet) {
+        if (this.runtimeRuleSet.runtimeRules.isNotEmpty()) {
             throw ParserException("Must not add rules after creating the ruleSet")
         } else {
             return RuntimeRuleTerminalBuilder(this).empty(ruleThatIsEmpty)
@@ -96,7 +96,7 @@ class RuntimeRuleSetBuilder() {
     }
 
     fun rule(name: String): RuntimeRuleNonTerminalBuilder {
-        if (null != this.runtimeRuleSet) {
+        if (this.runtimeRuleSet.runtimeRules.isNotEmpty()) {
             throw ParserException("Must not add rules after creating the ruleSet")
         } else {
             return RuntimeRuleNonTerminalBuilder(this, name)
@@ -104,7 +104,7 @@ class RuntimeRuleSetBuilder() {
     }
 
     fun rule(rule: RuntimeRule): RuntimeRuleExtender {
-        if (null != this.runtimeRuleSet) {
+        if (this.runtimeRuleSet.runtimeRules.isNotEmpty()) {
             throw ParserException("Must not add rules after creating the ruleSet")
         } else {
             return RuntimeRuleExtender(this, this.rules.first { it == rule })
@@ -112,9 +112,7 @@ class RuntimeRuleSetBuilder() {
     }
 
     fun ruleSet(): RuntimeRuleSet {
-        if (null == this.runtimeRuleSet) {
-            this.runtimeRuleSet = RuntimeRuleSet(this.rules)
-        }
-        return this.runtimeRuleSet ?: error("Should never happen")
+        this.runtimeRuleSet.setRules(this.rules)
+        return this.runtimeRuleSet
     }
 }

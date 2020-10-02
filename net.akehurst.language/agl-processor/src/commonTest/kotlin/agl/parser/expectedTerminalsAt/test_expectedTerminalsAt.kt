@@ -68,7 +68,7 @@ class test_expectedTerminalsAt {
         val actual =  sp.expectedTerminalsAt("S","a",1)
         assertNotNull(actual)
 
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
+        assertEquals(setOf(rs.END_OF_TEXT), actual)
     }
 
     fun concat_ab() : RuntimeRuleSet {
@@ -138,7 +138,7 @@ class test_expectedTerminalsAt {
         val actual =  sp.expectedTerminalsAt("S","ab",2)
         assertNotNull(actual)
 
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
+        assertEquals(setOf(rs.END_OF_TEXT), actual)
     }
 
     fun choiceEqual_ab() : RuntimeRuleSet {
@@ -172,7 +172,7 @@ class test_expectedTerminalsAt {
         val actual =  sp.expectedTerminalsAt("S","a",1)
         assertNotNull(actual)
 
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
+        assertEquals(setOf(rs.END_OF_TEXT), actual)
     }
 
     @Test
@@ -183,6 +183,6 @@ class test_expectedTerminalsAt {
         val actual =  sp.expectedTerminalsAt("S","b",1)
         assertNotNull(actual)
 
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
+        assertEquals(setOf(rs.END_OF_TEXT), actual)
     }
 }

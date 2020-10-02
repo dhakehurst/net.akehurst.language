@@ -68,7 +68,7 @@ class test_RuntimeRuleSetBuilder {
     @Test
     fun empty() {
         val sut = RuntimeRuleSetBuilder()
-        val ruleThatIsEmpty = RuntimeRule(0, "a", "", RuntimeRuleKind.NON_TERMINAL, false, false)
+        val ruleThatIsEmpty = RuntimeRule(sut.runtimeRuleSet,0, "a", "", RuntimeRuleKind.NON_TERMINAL, false, false)
         sut.rules.add(ruleThatIsEmpty)
         sut.empty(ruleThatIsEmpty)
 

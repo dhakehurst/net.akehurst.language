@@ -134,7 +134,7 @@ class test_embedded1 : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "aba"
 
-        TODO("how should we express embedded rules in the following string ?")
+        //TODO("how should we express embedded rules in the following string ?")
         val expected = """
             S {
               'a'

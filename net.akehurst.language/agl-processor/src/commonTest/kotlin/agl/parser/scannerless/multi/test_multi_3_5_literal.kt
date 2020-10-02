@@ -126,6 +126,6 @@ class test_multi_3_5_literal : test_ScanOnDemandParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(6, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
     }
 }

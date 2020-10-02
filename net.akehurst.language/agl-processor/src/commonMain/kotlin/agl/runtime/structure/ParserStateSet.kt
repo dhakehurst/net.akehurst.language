@@ -51,14 +51,27 @@ class ParserStateSet(
     // runtimeRule -> set of rulePositions where the rule is used
     internal val parentPosition = lazyMapNonNull<RuntimeRule, Set<RulePosition>> { childRR ->
         //TODO: possibly faster to pre cache this! and goal rules currently not included!
-        if (childRR == RuntimeRuleSet.END_OF_TEXT) { //TODO: should this check for contains in possibleEndOfText, and what if something in endOfText is also valid mid text!
-            setOf(RulePosition(this.startState.runtimeRule, 0, 1))
-        } else {
-            val s = this.runtimeRuleSet.parentPosition[childRR]
-            if (childRR == this.userGoalRule) {
-                s + this.startState.rulePosition
-            } else {
-                s
+        when {
+            (childRR === this.runtimeRuleSet.END_OF_TEXT) -> { //TODO: should this check for contains in possibleEndOfText, and what if something in endOfText is also valid mid text!
+                setOf(RulePosition(this.startState.runtimeRule, 0, 1))
+            }
+            childRR.isSkip -> when {
+                //this must be the skipParserStateSet, could test this.isSkip to be sure!
+                childRR.number==RuntimeRuleSet.SKIP_RULE_NUMBER -> {
+                    setOf(this.startState.rulePosition)
+                }
+                else -> {
+                    val option = this.userGoalRule.rhs.items.indexOf(childRR)
+                    setOf(RulePosition(this.userGoalRule, option, 0))
+                }
+            }
+            else -> {
+                val s = this.runtimeRuleSet.parentPosition[childRR]
+                if (childRR == this.userGoalRule) {
+                    s + this.startState.rulePosition
+                } else {
+                    s
+                }
             }
         }
     }

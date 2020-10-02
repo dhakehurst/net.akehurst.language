@@ -68,7 +68,7 @@ class test_literal_a01 : test_ScanOnDemandParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(2, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
     }
 
     @Test
@@ -83,7 +83,7 @@ class test_literal_a01 : test_ScanOnDemandParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(2, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
 
     }
 
@@ -99,7 +99,7 @@ class test_literal_a01 : test_ScanOnDemandParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(2, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
 
     }
 

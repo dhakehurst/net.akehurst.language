@@ -106,7 +106,7 @@ class test_RuntimeParser_parse_concatenation {
         }
         assertEquals(1, ex.location.line, "line is wrong")
         assertEquals(4, ex.location.column, "column is wrong")
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), ex.expected)
     }
 
     // S = a b c;
@@ -183,7 +183,7 @@ class test_RuntimeParser_parse_concatenation {
         }
         assertEquals(1, ex.location.line, "line is wrong")
         assertEquals(4, ex.location.column, "column is wrong")
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), ex.expected)
     }
 
     // S = ab c;

@@ -39,7 +39,7 @@ class test_leftRecursive {
         val s0 = rrs.startingState(S)
 
         val lhsE = LookaheadSet.EMPTY
-        val lhs0 = LookaheadSet(0, setOf(RuntimeRuleSet.END_OF_TEXT))
+        val lhs0 = LookaheadSet(0, setOf(rrs.END_OF_TEXT))
         val lhs1 = LookaheadSet(1, setOf(a))
     }
 
