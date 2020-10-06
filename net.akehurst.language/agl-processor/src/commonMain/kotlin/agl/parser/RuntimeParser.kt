@@ -337,7 +337,7 @@ internal class RuntimeParser(
         this.graph.recordGoal(complete)
     }
 
-    private val Stack<LookaheadSet>.peekContent get() = this.items.lastOrNull()?.content ?: emptySet()
+    private val Stack<LookaheadSet>.peekContent get() = this.items.lastOrNull{it!= LookaheadSet.EMPTY}?.content ?: emptySet()
 
     private fun doWidth(curGn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition, noLookahead: Boolean) {
         val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, curGn.nextInputPosition, curGn.lastLocation)
@@ -345,52 +345,45 @@ internal class RuntimeParser(
             val skipNode = this.tryParseSkip(curGn, l.location) //TODO: does the result get reused?
             val nextInput = if (null==skipNode) l.nextInputPosition else skipNode.nextInputPosition
             val lastLocation = if (null==skipNode) l.location else skipNode.location
-
-            val lhs = if (curGn.lookaheadStack.isEmpty) curGn.lookaheadStack else curGn.lookaheadStack.pop().stack
-            val newLh = lhs.pushAll(transition.additionalLookaheads)
-            val lhn = newLh.peekContent
-            val lh = lhn// + this.runtimeRuleSet.firstSkipTerminals// transition.lookaheadGuard.content + this.runtimeRuleSet.firstSkipTerminals
+            val trLh = transition.additionalLookaheads.last()
+            val lh = if (trLh=== LookaheadSet.EMPTY) curGn.lookaheadStack.peekContent else trLh.content
             val hasLh = lh.any {
                 val lhLeaf = this.graph.findOrTryCreateLeaf(it, nextInput, lastLocation)
                 null != lhLeaf
             }
-            if (noLookahead || hasLh || lhn.isEmpty()) { //transition.lookaheadGuard.content.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
+            if (noLookahead || hasLh || lh.isEmpty()) { //transition.lookaheadGuard.content.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
                 //val popRes = newLh.pop()
-                val lhs = newLh//popRes.stack
+                val lhs = curGn.lookaheadStack.pushAll(transition.additionalLookaheads)
                 //TODO: pass/attach skipNode
                 this.graph.pushToStackOf(false, transition.to, lhs, l, curGn, previousSet, skipNode)
             }
         }
     }
 
-    private fun doHeight(gn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
-        //val lh = gn.lookaheadStack.items.last { it !== LookaheadSet.EMPTY }.content//transition.lookaheadGuard.content //TODO: do we actually need to lookahead here ? Add an explanation if so
-        val newLh = gn.lookaheadStack//.pushAll(transition.additionalLookaheads)
-        val lh = newLh.peekContent
+    private fun doHeight(curGn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
+        val trLh = transition.additionalLookaheads.last()
+        val lh = if (trLh=== LookaheadSet.EMPTY) curGn.lookaheadStack.peekContent else trLh.content
         val hasLh = lh.any {
-            val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
+            val l = this.graph.findOrTryCreateLeaf(it, curGn.nextInputPosition, curGn.lastLocation)
             null != l
         }
         if (noLookahead || hasLh || lh.isEmpty()) {
-            val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength) ?: error("Should never be null")
-            //val popRes = newLh.pop()
-            val lhs = newLh//popRes.stack
-            this.graph.createWithFirstChild(gn.isSkipGrowth, transition.to, lhs, complete, setOf(previous), gn.skipNodes)
+            val complete = this.graph.findCompleteNode(curGn.currentState.rulePosition, curGn.startPosition, curGn.matchedTextLength) ?: error("Should never be null")
+             val lhs = curGn.lookaheadStack.pushAll(emptyList())//transition.additionalLookaheads)
+            this.graph.createWithFirstChild(curGn.isSkipGrowth, transition.to, lhs, complete, setOf(previous), curGn.skipNodes)
         }
     }
 
     private fun doGraft(gn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
-        //val lh = gn.lookaheadStack.peek().content//transition.lookaheadGuard.content //TODO: do we actually need to lookahead here ? Add an explanation if so
-        val newLh = gn.lookaheadStack//.pushAll(transition.additionalLookaheads)
-        val lh = newLh.peekContent
+        val trLh = transition.additionalLookaheads.last()
+        val lh = if (trLh=== LookaheadSet.EMPTY) gn.lookaheadStack.peekContent else trLh.content
         val hasLh = lh.any {
             val l = this.graph.findOrTryCreateLeaf(it, gn.nextInputPosition, gn.lastLocation)
             null != l
         }
         if (noLookahead || hasLh || lh.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
             val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength) ?: error("Should never be null")
-            //val popRes = newLh.pop()
-            val lhs = newLh//popRes.stack
+            val lhs = gn.lookaheadStack.pushAll(emptyList())//transition.additionalLookaheads)
             this.graph.growNextChild(false, transition.to, lhs, previous.node, complete, previous.node.currentState.position, gn.skipNodes)
         }
     }

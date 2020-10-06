@@ -735,7 +735,9 @@ class ParserState(
         val toSet = parentRP.next().map { this.stateSet.fetchOrCreateParseState(it) }
         //val filteredToSet = toSet.filter { this.canGrowInto(it, previous) }
         return toSet.flatMap { to ->
-            val lhcs = to.calcLookaheadSetContent(to.rulePosition)
+            //val lhcs = to.calcLookaheadSetContent(to.rulePosition)
+            val fsts = this.stateSet.runtimeRuleSet.firstTerminals2[to.rulePosition]
+            val lhcs = if (null==fsts) setOf(emptySet()) else setOf(fsts)
             lhcs.flatMap { lhc ->
                 val addLh = listOf(to.createLookaheadSet(lhc))
                 val parentLh = LookaheadSet.EMPTY //TODO: remove
@@ -795,7 +797,9 @@ class ParserState(
         val action = Transition.ParseAction.GRAFT
         val toSet = parentRp.next().map { this.stateSet.fetchOrCreateParseState(it) }
         return toSet.flatMap { to ->
-            val lhcs = to.calcLookaheadSetContent(to.rulePosition)
+            //val lhcs = to.calcLookaheadSetContent(to.rulePosition)
+            val fsts = this.stateSet.runtimeRuleSet.firstTerminals2[to.rulePosition]
+            val lhcs = if (null==fsts) setOf(emptySet()) else setOf(fsts)
             lhcs.flatMap { lhc ->
                 val addLh = listOf(to.createLookaheadSet(lhc))
                 val parentLh = LookaheadSet.EMPTY //TODO: remove

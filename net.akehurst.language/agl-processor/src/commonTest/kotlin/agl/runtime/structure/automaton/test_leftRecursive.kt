@@ -46,6 +46,7 @@ class test_leftRecursive {
     @Test
     fun s0_calcClosureLR0() {
 
+        val actual1 = s0.calcClosureLR1(LookaheadSet.EMPTY).toList()
         val actual = s0.calcClosureLR0().toList()
 
         val cl_G = ClosureItemWithLookaheadList(null, RulePosition(G, 0, 0), listOf(lhs0))
