@@ -105,8 +105,12 @@ class ParserStateSet(
 
     private fun calcParentRelation(childRR: RuntimeRule): Set<ParentRelation> {
         val x = this.parentPosition[childRR].map { rp ->
-            val lh = getLookahead(rp)
-            ParentRelation(this, this.nextParentRelation++, rp, lh)
+            if (rp==this.startState.rulePosition) {
+                this.userGoalParentRelation
+            } else {
+                val lh = getLookahead(rp)
+                ParentRelation(this, this.nextParentRelation++, rp, lh)
+            }
         }.toSet()
         return x
     }
@@ -123,8 +127,7 @@ class ParserStateSet(
     }
 
     internal fun fetch(rulePosition: RulePosition): ParserState {
-        return this.states[rulePosition]
-                ?: error("should never be null")
+        return this.states[rulePosition] ?: error("should never be null")
     }
 
     internal fun fetchOrNull(rulePosition: RulePosition): ParserState? {
@@ -134,7 +137,7 @@ class ParserStateSet(
     fun calcLookahead1(rp: RulePosition, done: BooleanArray): Set<RuntimeRule> {
         //TODO("try and split this so we do different things depending on the 'rule type/position' multi/slist/mid/begining/etc")
         return when {
-            rp.runtimeRule.number >=0 && done[rp.runtimeRule.number] -> emptySet()
+            rp.runtimeRule.number >=0 && done[rp.runtimeRule.number] -> this.runtimeRuleSet.firstTerminals2[rp]?: emptySet()//emptySet()
             rp.runtimeRule == this.startState.runtimeRule -> {
                 if (rp.isAtStart) {
                     this.possibleEndOfText.toSet()
