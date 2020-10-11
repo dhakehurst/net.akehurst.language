@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.runtime.graph.GrowingNode
+import net.akehurst.language.api.grammar.Rule
 import net.akehurst.language.collections.transitiveClosure
 
 class ParentRelation(
@@ -385,7 +386,24 @@ class ParserState(
         }.distinct()
     }
 
+    fun widthInto1(): List<ClosureItemWithLookaheadList> {
+        // this does not work because it created H and G transitions with no way to distinguish
+        // we need the prev RulePosition to see if this.rulePosition will, ever, grow into it.
+        val prs = this.parentRelations
+        val cls = when {
+            prs.isEmpty() -> calcClosureLR0()
+            else -> prs.flatMap {
+                //val lhs = createLookaheadSet(it.lookahead)
+                this.calcClosureLR0()
+            }
+        }
+        val terms = cls.filter { it.rulePosition.runtimeRule.kind == RuntimeRuleKind.TERMINAL }
+        return terms.distinct()
+    }
+
     fun widthInto2(): List<ClosureItemWithLookaheadList> {
+        // this does not work because it created H and G transitions with no way to distinguish
+        // we need the prev RulePosition to see if this.rulePosition will, ever, grow into it.
         val prs = this.parentRelations
         val cls = when {
             prs.isEmpty() -> calcClosure(LookaheadSet.EMPTY)
@@ -396,6 +414,24 @@ class ParserState(
         }
         val terms = cls.filter { it.rulePosition.runtimeRule.kind == RuntimeRuleKind.TERMINAL }
         return terms.distinct()
+    }
+    fun widthInto3(prevRp:ParserState): Set<ParentRelation> {
+        //handles the up part of the closure.
+        return when {
+            null == prevRp -> this.parentRelations
+            prevRp.isAtEnd -> emptySet()
+            else -> this.parentRelations.filter { pr ->
+                when {
+                    pr.rulePosition == prevRp.rulePosition -> true
+                    else -> {
+                        val prevClosure = prevRp.createClosure(pr.lookahead) //this.createClosure(prevRp, null)
+                        prevClosure.any {
+                            it.rulePosition.runtimeRule == pr.rulePosition.runtimeRule //&& it.lookahead == pr.lookahead
+                        }
+                    }
+                }
+            }.toSet()
+        }
     }
 
     fun heightOrGraftInto(prevState: ParserState): List<ParentRelation> {
@@ -495,6 +531,13 @@ class ParserState(
         return closureSet
     }
 
+    fun growsInto(ancestor:ParserState) :Boolean {
+        val thisStart = RulePosition(this.rulePosition.runtimeRule, this.rulePosition.option, 0)
+        return ancestor.calcClosureLR0().any {
+            it.rulePosition == thisStart
+        }
+    }
+
     fun transitions(previousState: ParserState?): List<Transition> {
         val cache = this.transitions_cache[previousState]
         val trans = if (null == cache) {
@@ -588,7 +631,7 @@ class ParserState(
             } else {
                 when {
                     (this.runtimeRule.kind == RuntimeRuleKind.GOAL) -> {
-                        //val widthInto = this.widthInto(lookaheadSet)
+                        //val widthInto = this.widthInto(LookaheadSet.EMPTY)
                         //val cl = this.calcClosureLR0().filter {it.rulePosition.runtimeRule.kind===RuntimeRuleKind.TERMINAL }
                         val widthInto = this.widthInto2()
                         for (p in widthInto) {

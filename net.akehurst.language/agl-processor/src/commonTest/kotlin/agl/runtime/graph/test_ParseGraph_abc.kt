@@ -18,6 +18,8 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.parser.InputFromCharSequence
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.collections.Stack
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -51,7 +53,10 @@ class test_ParseGraph_abc {
 
         val gr = RuntimeRuleSet.createGoalRule(r_S)
         val startState = rrs.startingState(r_S)
-        sut.start(startState)
+        val startLocation = InputLocation(0, 0, 1, 0)
+        val lookaheadStack = Stack<LookaheadSet>()
+        val eot = startState.createLookaheadSet(startState.stateSet.possibleEndOfText)
+        sut.start(startState,startLocation,lookaheadStack)
 
         assertEquals(RuntimeRuleKind.GOAL, gr.kind)
         assertEquals(true, sut.canGrow)

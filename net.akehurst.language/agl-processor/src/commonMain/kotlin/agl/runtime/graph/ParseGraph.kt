@@ -625,18 +625,12 @@ internal class ParseGraph(
         }
     }
 
-    //TODO: addPrevious! goalrule growing node, maybe
-    fun start(goalState: ParserState) {
-        val startLocation = InputLocation(0, 0, 1, 0)
-        this.start(goalState, startLocation)
-    }
-
-    fun start(goalState: ParserState, startLocation: InputLocation) {
+    fun start(goalState: ParserState, startLocation: InputLocation, lookaheadStack: Stack<LookaheadSet>) {
         val startPosition = startLocation.position
         val goalGN = GrowingNode(
                 false,
                 goalState,
-                Stack(),//listOf(goalState.createLookaheadSet(setOf(RuntimeRuleSet.END_OF_TEXT)))),
+                lookaheadStack,
                 startLocation,
                 startPosition,
                 0,

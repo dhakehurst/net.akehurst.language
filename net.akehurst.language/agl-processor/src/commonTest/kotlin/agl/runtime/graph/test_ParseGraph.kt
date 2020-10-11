@@ -17,9 +17,12 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.parser.InputFromCharSequence
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.collections.Stack
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -62,7 +65,10 @@ class test_ParseGraph {
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
         val startState = rrs.startingState(userGoalRule)
-        sut.start(startState)
+        val startLocation = InputLocation(0, 0, 1, 0)
+        val lookaheadStack = Stack<LookaheadSet>()
+        val eot = startState.createLookaheadSet(startState.stateSet.possibleEndOfText)
+        sut.start(startState,startLocation,lookaheadStack)
 
         val actual = sut.canGrow
 
