@@ -87,7 +87,7 @@ class ParserStateSet(
     }
 
     internal val _next = mutableMapOf<RulePosition, Set<RuntimeRule>>()
-    fun fetchOrCreateNext(rp:RulePosition): Set<RuntimeRule> {
+    fun fetchOrCreateNext(rp: RulePosition): Set<RuntimeRule> {
         var set = this._next[rp]
         if (null == set) {
             set = this.calcFirstAt(rp, BooleanArray(this.runtimeRuleSet.runtimeRules.size))
@@ -157,7 +157,7 @@ class ParserStateSet(
             rp.runtimeRule.number >= 0 && done[rp.runtimeRule.number] -> {
                 val nextRPs = rp.next()
                 nextRPs.flatMap { nrp ->
-                    when{
+                    when {
                         nrp.isAtEnd -> emptySet()
                         else -> this.runtimeRuleSet.firstTerminals2[rp] ?: emptySet()
                     }
@@ -202,15 +202,15 @@ class ParserStateSet(
         //TODO("try and split this so we do different things depending on the 'rule type/position' multi/slist/mid/begining/etc")
         return when {
             rp.runtimeRule.number < 0 -> { //must be GOAL or SKIP-GOAL
-                if (rp.isAtStart) {
-                    this.possibleEndOfText.toSet()
-                } else {
-                    emptySet()
+                when {
+                    rp.isAtStart -> this.runtimeRuleSet.firstTerminals[this.userGoalRule.number] ?: emptySet()
+                    rp.isAtEnd -> emptySet()
+                    else -> this.possibleEndOfText.toSet()
                 }
             }
             rp.runtimeRule.number >= 0 && done[rp.runtimeRule.number] -> {
                 val ns = rp.next().flatMap { nrp ->
-                    when{
+                    when {
                         nrp.isAtEnd -> emptySet()
                         else -> this.runtimeRuleSet.firstTerminals2[rp] ?: emptySet()
                     }
@@ -232,8 +232,9 @@ class ParserStateSet(
                 val ns = rp.items.flatMap {
                     when {
                         it.kind === RuntimeRuleKind.NON_TERMINAL -> {
-                            val frp = RulePosition(it, 0, 0)
-                            this.calcFirstAt(frp, done)
+                            //val frp = RulePosition(it, 0, 0)
+                            //this.calcFirstAt(frp, done)
+                            this.runtimeRuleSet.firstTerminals[it.number]
                         }
                         else -> setOf(it)
                     }

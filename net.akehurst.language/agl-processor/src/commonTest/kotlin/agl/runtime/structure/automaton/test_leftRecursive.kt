@@ -171,6 +171,33 @@ class test_leftRecursive {
         }
     }
 
+
+    @Test
+    fun S_parentPositions() {
+        val actual = s0.stateSet.parentPosition[S]
+        val expected = setOf(
+                RulePosition(G, 0, 0),
+                RulePosition(S1, 0, 0)
+        )
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun G_0_1_fetchOrCreateNext() {
+        val rp = RulePosition(G, 0, 1)
+        val actual = s0.stateSet.fetchOrCreateNext(rp)
+        val expected = setOf(rrs.END_OF_TEXT)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun S1_0_1_fetchOrCreateNext() {
+        val rp = RulePosition(S1, 0, 1)
+        val actual = s0.stateSet.fetchOrCreateNext(rp)
+        val expected = setOf(a)
+        assertEquals(expected, actual)
+    }
+
     @Test
     fun s2_heightOrGraftInto() {
         s0.transitions(null)
@@ -215,7 +242,7 @@ class test_leftRecursive {
         val s4 = s0.stateSet.fetch(RulePosition(S1, 0, 1))
         val expected = listOf<Transition>(
                 Transition(s2, s4, Transition.ParseAction.HEIGHT, listOf(lhs_a), lhs_a, null) { _, _ -> true },
-                Transition(s2, s5, Transition.ParseAction.GRAFT, listOf(lhs_E), lhs_T, null) { _, _ -> true }
+                Transition(s2, s5, Transition.ParseAction.GRAFT, listOf(lhs_T), lhs_T, null) { _, _ -> true }
         )
         assertEquals(expected, actual)
     }

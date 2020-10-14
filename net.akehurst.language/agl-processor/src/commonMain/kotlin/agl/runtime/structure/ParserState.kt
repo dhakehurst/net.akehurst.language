@@ -623,7 +623,7 @@ class ParserState(
                                 when {
                                     this.runtimeRule == this.stateSet.runtimeRuleSet.END_OF_TEXT -> {
                                         pp.next().forEach { nrp ->
-                                            val ts = this.createGraftTransition3(nrp)
+                                            val ts = this.createGraftTransition3(nrp,pp)
                                             __graftTransitions.addAll(ts)//, addLh, parentLh))
                                         }
                                     }
@@ -635,7 +635,7 @@ class ParserState(
                                     }
                                     else -> {
                                         pp.next().forEach { nrp ->
-                                            val ts = this.createGraftTransition3(nrp)
+                                            val ts = this.createGraftTransition3(nrp,pp)
                                             __graftTransitions.addAll(ts)//, addLh, parentLh))
                                         }
                                     }
@@ -644,13 +644,13 @@ class ParserState(
                                 when (pp.isAtStart) {
                                     true -> {
                                         pp.next().forEach { nrp ->
-                                            val ts = this.createHeightTransition3(nrp)
+                                            val ts = this.createHeightTransition3(nrp,pp)
                                             __heightTransitions.addAll(ts)
                                         }
                                     }
                                     false -> {
                                         pp.next().forEach { nrp ->
-                                            val ts = this.createGraftTransition3(nrp)
+                                            val ts = this.createGraftTransition3(nrp,pp)
                                             __graftTransitions.addAll(ts)
                                         }
                                     }
@@ -816,8 +816,8 @@ class ParserState(
         }.toSet()
     }
 
-    private fun createHeightTransition3(toRp: RulePosition): Set<Transition> {
-        val prevGuard = toRp//rulePosition //for height, previous must not match prevGuard
+    private fun createHeightTransition3(toRp: RulePosition, prevGuard:RulePosition): Set<Transition> {
+        //val prevGuard = toRp//rulePosition //for height, previous must not match prevGuard
         val action = Transition.ParseAction.HEIGHT
         val to = this.stateSet.fetchOrCreateParseState(toRp)
         val lhcs = this.stateSet.fetchOrCreateNext(toRp)
@@ -889,8 +889,8 @@ class ParserState(
         }.toSet()
     }
 
-    private fun createGraftTransition3(toRp: RulePosition): Set<Transition> {
-        val prevGuard = toRp//rulePosition //TODO: Parent RP //for graft, previous must match prevGuard
+    private fun createGraftTransition3(toRp: RulePosition, prevGuard:RulePosition): Set<Transition> {
+        //val prevGuard = toRp//rulePosition //TODO: Parent RP //for graft, previous must match prevGuard
         val runtimeGuard: Transition.(GrowingNode, RulePosition?) -> Boolean = { gn, previous ->
             if (null == previous) {
                 true
