@@ -38,10 +38,10 @@ class test_leftRecursive {
 
         val s0 = rrs.startingState(S)
 
-        val lhsE = LookaheadSet.EMPTY
+        val lhs_E = LookaheadSet.EMPTY
         val lhs_T = LookaheadSet(0, setOf(rrs.END_OF_TEXT))
         val lhs_a = LookaheadSet(1, setOf(a))
-        val lhs_aT = LookaheadSet(2, setOf(a,rrs.END_OF_TEXT))
+        val lhs_aT = LookaheadSet(2, setOf(a, rrs.END_OF_TEXT))
     }
 
     @Test
@@ -54,8 +54,8 @@ class test_leftRecursive {
         val cl_G_S0 = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 0, 0), listOf(lhs_T))
         val cl_G_S0_a = ClosureItemWithLookaheadList(cl_G_S0, RulePosition(a, 0, 0), listOf(lhs_T))
         val cl_G_S1 = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 1, 0), listOf(lhs_T))
-        val cl_G_S1_S1 = ClosureItemWithLookaheadList(cl_G_S1, RulePosition(S1, 0, 0), listOf(lhs_T,  lhs_a))
-        val cl_G_S1_S1_S0 = ClosureItemWithLookaheadList(cl_G_S1_S1, RulePosition(S, 0, 0), listOf(lhs_T,  lhs_a))
+        val cl_G_S1_S1 = ClosureItemWithLookaheadList(cl_G_S1, RulePosition(S1, 0, 0), listOf(lhs_T, lhs_a))
+        val cl_G_S1_S1_S0 = ClosureItemWithLookaheadList(cl_G_S1_S1, RulePosition(S, 0, 0), listOf(lhs_T, lhs_a))
         val cl_G_S1_S1_S0_a = ClosureItemWithLookaheadList(cl_G_S1_S1_S0, RulePosition(a, 0, 0), listOf(lhs_T, lhs_a))
 
 
@@ -78,8 +78,8 @@ class test_leftRecursive {
         val cl_G_S0 = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 0, 0), listOf(lhs_T))
         val cl_G_S0_a = ClosureItemWithLookaheadList(cl_G_S0, RulePosition(a, 0, 0), listOf(lhs_T))
         val cl_G_S1 = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 1, 0), listOf(lhs_T))
-        val cl_G_S1_S1 = ClosureItemWithLookaheadList(cl_G_S1, RulePosition(S1, 0, 0), listOf(lhs_T,  lhs_a))
-        val cl_G_S1_S1_S0 = ClosureItemWithLookaheadList(cl_G_S1_S1, RulePosition(S, 0, 0), listOf(lhs_T,  lhs_a))
+        val cl_G_S1_S1 = ClosureItemWithLookaheadList(cl_G_S1, RulePosition(S1, 0, 0), listOf(lhs_T, lhs_a))
+        val cl_G_S1_S1_S0 = ClosureItemWithLookaheadList(cl_G_S1_S1, RulePosition(S, 0, 0), listOf(lhs_T, lhs_a))
         val cl_G_S1_S1_S0_a = ClosureItemWithLookaheadList(cl_G_S1_S1_S0, RulePosition(a, 0, 0), listOf(lhs_T, lhs_a))
 
         val expected = listOf(
@@ -107,25 +107,47 @@ class test_leftRecursive {
     }
 
     @Test
-    fun s1_calcLookahead() {
-        val rp = RulePosition(S1,0,1)
-        val actual = s0.stateSet.calcLookahead1(rp, BooleanArray(rrs.runtimeRules.size))
-        val expected = setOf<RuntimeRule>(a,rrs.END_OF_TEXT)
+    fun a_parentPositions() {
+        val actual = s0.stateSet.parentPosition[a]
+        val expected = setOf(
+                RulePosition(S, 0, 0),
+                RulePosition(S1, 0, 1)
+        )
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun S_0_E_fetchOrCreateNext() {
+        val rp = RulePosition(S, 0, RulePosition.END_OF_RULE)
+        val actual = s0.stateSet.fetchOrCreateNext(rp)
+        val expected = setOf(a, rrs.END_OF_TEXT)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun S1_0_E_fetchOrCreateNext() {
+        val rp = RulePosition(S1, 0, RulePosition.END_OF_RULE)
+        val actual = s0.stateSet.fetchOrCreateNext(rp)
+        val expected = setOf(a, rrs.END_OF_TEXT)
         assertEquals(expected, actual)
     }
 
     @Test
     fun s1_heightOrGraftInto() {
+
         s0.transitions(null)
         val s1 = s0.stateSet.fetch(RulePosition(a, 0, RulePosition.END_OF_RULE))
 
+        val actual5 = s1.heightOrGraftInto5().toList()
+
         val actual1 = s1.heightOrGraftInto(s0).toList()
         val actual2 = s1.stateSet.parentRelation(s1.rulePosition.runtimeRule).toList()
-        val actual = s1.heightOrGraftInto3().toList()
+        val actual = s1.heightOrGraftInto4().toList()
+
 
         val expected = listOf(
-                RulePosition(S, 0, 0),
-                RulePosition(S1, 0, 1)
+                Pair(RulePosition(S, 0, 0), setOf(a, rrs.END_OF_TEXT)),
+                Pair(RulePosition(S1, 0, 1), setOf(a, rrs.END_OF_TEXT))
         )
         assertEquals(expected, actual)
 
@@ -193,7 +215,7 @@ class test_leftRecursive {
         val s4 = s0.stateSet.fetch(RulePosition(S1, 0, 1))
         val expected = listOf<Transition>(
                 Transition(s2, s4, Transition.ParseAction.HEIGHT, listOf(lhs_a), lhs_a, null) { _, _ -> true },
-                Transition(s2, s5, Transition.ParseAction.GRAFT, listOf(lhs_T), lhs_T, null) { _, _ -> true }
+                Transition(s2, s5, Transition.ParseAction.GRAFT, listOf(lhs_E), lhs_T, null) { _, _ -> true }
         )
         assertEquals(expected, actual)
     }

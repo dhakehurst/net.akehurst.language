@@ -20,11 +20,11 @@ import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.collections.lazyMapNonNull
 
 class ParserStateSet(
-        val number:Int,
+        val number: Int,
         val runtimeRuleSet: RuntimeRuleSet,
         val userGoalRule: RuntimeRule,
         val possibleEndOfText: Set<RuntimeRule>,
-        val isSkip:Boolean
+        val isSkip: Boolean
 ) {
 
     private var nextState = 0
@@ -44,7 +44,7 @@ class ParserStateSet(
         startState
     }
 
-    private val userGoalParentRelation : ParentRelation by lazy {
+    private val userGoalParentRelation: ParentRelation by lazy {
         ParentRelation(this, this.nextParentRelation++, this.startState.rulePosition, possibleEndOfText.toSet())
     }
 
@@ -57,7 +57,7 @@ class ParserStateSet(
             }
             childRR.isSkip -> when {
                 //this must be the skipParserStateSet, could test this.isSkip to be sure!
-                childRR.number==RuntimeRuleSet.SKIP_RULE_NUMBER -> {
+                childRR.number == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
                     setOf(this.startState.rulePosition)
                 }
                 else -> {
@@ -77,11 +77,21 @@ class ParserStateSet(
     }
 
     internal val _lookahead = mutableMapOf<RulePosition, Set<RuntimeRule>>()
-    fun getLookahead(rp: RulePosition) : Set<RuntimeRule>{
+    fun fetchOrCreateLookahead(rp: RulePosition): Set<RuntimeRule> {
         var set = this._lookahead[rp]
-        if (null==set) {
+        if (null == set) {
             set = this.calcLookahead1(rp, BooleanArray(this.runtimeRuleSet.runtimeRules.size))
             this._lookahead[rp] = set
+        }
+        return set
+    }
+
+    internal val _next = mutableMapOf<RulePosition, Set<RuntimeRule>>()
+    fun fetchOrCreateNext(rp:RulePosition): Set<RuntimeRule> {
+        var set = this._next[rp]
+        if (null == set) {
+            set = this.calcFirstAt(rp, BooleanArray(this.runtimeRuleSet.runtimeRules.size))
+            this._next[rp] = set
         }
         return set
     }
@@ -103,12 +113,12 @@ class ParserStateSet(
         }
     }
 
-    private fun calcParentRelation(childRR: RuntimeRule): Set<ParentRelation> {
+    internal fun calcParentRelation(childRR: RuntimeRule): Set<ParentRelation> {
         val x = this.parentPosition[childRR].map { rp ->
-            if (rp==this.startState.rulePosition) {
+            if (rp == this.startState.rulePosition) {
                 this.userGoalParentRelation
             } else {
-                val lh = getLookahead(rp)
+                val lh = fetchOrCreateLookahead(rp)
                 ParentRelation(this, this.nextParentRelation++, rp, lh)
             }
         }.toSet()
@@ -137,7 +147,22 @@ class ParserStateSet(
     fun calcLookahead1(rp: RulePosition, done: BooleanArray): Set<RuntimeRule> {
         //TODO("try and split this so we do different things depending on the 'rule type/position' multi/slist/mid/begining/etc")
         return when {
-            rp.runtimeRule.number >=0 && done[rp.runtimeRule.number] -> this.runtimeRuleSet.firstTerminals2[rp]?: emptySet()//emptySet()
+            rp.runtimeRule.number < 0 -> { //must be GOAL or SKIP-GOAL
+                if (rp.isAtStart) {
+                    this.possibleEndOfText.toSet()
+                } else {
+                    emptySet()
+                }
+            }
+            rp.runtimeRule.number >= 0 && done[rp.runtimeRule.number] -> {
+                val nextRPs = rp.next()
+                nextRPs.flatMap { nrp ->
+                    when{
+                        nrp.isAtEnd -> emptySet()
+                        else -> this.runtimeRuleSet.firstTerminals2[rp] ?: emptySet()
+                    }
+                }.toSet()
+            }
             rp.runtimeRule == this.startState.runtimeRule -> {
                 if (rp.isAtStart) {
                     this.possibleEndOfText.toSet()
@@ -155,22 +180,65 @@ class ParserStateSet(
                 }.toSet()
             }
             else -> { // use first of next
-                rp.items.flatMap { fstChildItem ->
-                    val nextRPs = rp.next() //nextRulePosition(childRP, fstChildItem)
-                    nextRPs.flatMap { nextChildRP ->
-                        if (nextChildRP.isAtEnd) {
-                            this.calcLookahead1(nextChildRP, done)
+                val nextRPs = rp.next() //nextRulePosition(childRP, fstChildItem)
+                nextRPs.flatMap { nextChildRP ->
+                    if (nextChildRP.isAtEnd) {
+                        this.calcLookahead1(nextChildRP, done)
+                    } else {
+                        val lh: Set<RuntimeRule> = this.runtimeRuleSet.firstTerminals2[nextChildRP]
+                                ?: error("should never happen")
+                        if (lh.isEmpty()) {
+                            error("should never happen")
                         } else {
-                            val lh: Set<RuntimeRule> = this.runtimeRuleSet.firstTerminals2[nextChildRP]
-                                    ?: error("should never happen")
-                            if (lh.isEmpty()) {
-                                error("should never happen")
-                            } else {
-                                lh
-                            }
+                            lh
                         }
                     }
                 }.toSet()
+            }
+        }
+    }
+
+    fun calcFirstAt(rp: RulePosition, done: BooleanArray): Set<RuntimeRule> {
+        //TODO("try and split this so we do different things depending on the 'rule type/position' multi/slist/mid/begining/etc")
+        return when {
+            rp.runtimeRule.number < 0 -> { //must be GOAL or SKIP-GOAL
+                if (rp.isAtStart) {
+                    this.possibleEndOfText.toSet()
+                } else {
+                    emptySet()
+                }
+            }
+            rp.runtimeRule.number >= 0 && done[rp.runtimeRule.number] -> {
+                val ns = rp.next().flatMap { nrp ->
+                    when{
+                        nrp.isAtEnd -> emptySet()
+                        else -> this.runtimeRuleSet.firstTerminals2[rp] ?: emptySet()
+                    }
+                }.toSet()
+                ns
+            }
+            rp.isAtEnd -> { //use first of parent next
+                val pps = this.parentPosition[rp.runtimeRule]
+                pps.flatMap { parentRp ->
+                    val newDone = done //.copyOf() //TODO: do we need to copy?
+                    newDone[rp.runtimeRule.number] = true
+                    val ns = parentRp.next().flatMap { nprp ->
+                        this.calcLookahead1(parentRp, newDone)
+                    }
+                    ns
+                }.toSet()
+            }
+            else -> { // use first of next
+                val ns = rp.items.flatMap {
+                    when {
+                        it.kind === RuntimeRuleKind.NON_TERMINAL -> {
+                            val frp = RulePosition(it, 0, 0)
+                            this.calcFirstAt(frp, done)
+                        }
+                        else -> setOf(it)
+                    }
+                }.toSet()
+                ns
             }
         }
     }
@@ -255,9 +323,10 @@ class ParserStateSet(
     }
 
     override fun hashCode(): Int = this.number
-    override fun equals(other: Any?): Boolean = when(other) {
+    override fun equals(other: Any?): Boolean = when (other) {
         is ParserStateSet -> this.number == other.number
         else -> false
     }
+
     override fun toString(): String = "ParserStateSet{$number}"
 }

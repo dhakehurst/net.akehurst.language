@@ -41,7 +41,7 @@ class test_rightRecursive {
         val lhsE = LookaheadSet.EMPTY
         val lhs_T = LookaheadSet(0, setOf(rrs.END_OF_TEXT))
         val lhs_a = LookaheadSet(1, setOf(a))
-        val lhs_aT = LookaheadSet(2, setOf(a,rrs.END_OF_TEXT))
+        val lhs_aT = LookaheadSet(2, setOf(a, rrs.END_OF_TEXT))
     }
 
     @Test
@@ -54,7 +54,7 @@ class test_rightRecursive {
         val cl_G_S0 = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 0, 0), listOf(lhs_T))
         val cl_G_S0_a = ClosureItemWithLookaheadList(cl_G_S0, RulePosition(a, 0, 0), listOf(lhs_T))
         val cl_G_S1 = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 1, 0), listOf(lhs_T))
-        val cl_G_S1_S1 = ClosureItemWithLookaheadList(cl_G_S1, RulePosition(S1, 0, 0), listOf(lhs_T,  lhs_a))
+        val cl_G_S1_S1 = ClosureItemWithLookaheadList(cl_G_S1, RulePosition(S1, 0, 0), listOf(lhs_T, lhs_a))
         val cl_G_S1_S1_a = ClosureItemWithLookaheadList(cl_G_S1_S1, RulePosition(a, 0, 0), listOf(lhs_T, lhs_a))
 
 
@@ -77,7 +77,7 @@ class test_rightRecursive {
         val cl_G_S0 = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 0, 0), listOf(lhs_T))
         val cl_G_S0_a = ClosureItemWithLookaheadList(cl_G_S0, RulePosition(a, 0, 0), listOf(lhs_T))
         val cl_G_S1 = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 1, 0), listOf(lhs_T))
-        val cl_G_S1_S1 = ClosureItemWithLookaheadList(cl_G_S1, RulePosition(S1, 0, 0), listOf(lhs_T,  lhs_a))
+        val cl_G_S1_S1 = ClosureItemWithLookaheadList(cl_G_S1, RulePosition(S1, 0, 0), listOf(lhs_T, lhs_a))
         val cl_G_S1_S1_a = ClosureItemWithLookaheadList(cl_G_S1_S1, RulePosition(a, 0, 0), listOf(lhs_T, lhs_a))
 
         val expected = listOf(
@@ -105,25 +105,36 @@ class test_rightRecursive {
     }
 
     @Test
-    fun s1_calcLookahead() {
+    fun S_0_E_fetchOrCreateNext() {
+        val rp = RulePosition(S, 0, RulePosition.END_OF_RULE)
+        val actual = s0.stateSet.fetchOrCreateNext(rp)
+        val expected = setOf<RuntimeRule>(rrs.END_OF_TEXT)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun S1_0_1_fetchOrCreateNext() {
         val rp = RulePosition(S1,0,1)
-        val actual = s0.stateSet.calcLookahead1(rp, BooleanArray(rrs.runtimeRules.size))
-        val expected = setOf<RuntimeRule>(a,rrs.END_OF_TEXT)
+        val actual = s0.stateSet.fetchOrCreateNext(rp)
+        val expected = setOf(a)
         assertEquals(expected, actual)
     }
 
     @Test
     fun s1_heightOrGraftInto() {
-        s0.transitions(null)
+        val s0_trans = s0.transitions(null)
         val s1 = s0.stateSet.fetch(RulePosition(a, 0, RulePosition.END_OF_RULE))
 
+        val actual = s1.heightOrGraftInto5().toList()
+        val actual0 = s1.heightOrGraftInto(s0, s0_trans[0].additionalLookaheads.last()).toList()
         val actual1 = s1.heightOrGraftInto(s0).toList()
         val actual2 = s1.stateSet.parentRelation(s1.rulePosition.runtimeRule).toList()
-        val actual = s1.heightOrGraftInto3().toList()
+        val actual3 = s1.heightOrGraftInto3().toList()
+        val actual4 = s1.heightOrGraftInto4().toList()
 
         val expected = listOf(
-                RulePosition(S, 0, 0),
-                RulePosition(S1, 0, 1)
+                Pair(RulePosition(S, 0, 0), setOf(rrs.END_OF_TEXT)),
+                Pair(RulePosition(S1, 0, 1), setOf(a))
         )
         assertEquals(expected, actual)
 
@@ -136,10 +147,10 @@ class test_rightRecursive {
 
         val actual = s1.transitions(s0)
         val s2 = s0.stateSet.fetch(RulePosition(S, 0, RulePosition.END_OF_RULE))
-        val s3 = s0.stateSet.fetch(RulePosition(S1, 0, RulePosition.END_OF_RULE))
+        val s3 = s0.stateSet.fetch(RulePosition(S1, 0, 1))
         val expected = listOf<Transition>(
-                Transition(s1, s2, Transition.ParseAction.HEIGHT, listOf(lhs_aT), lhs_aT, null) { _, _ -> true },
-                Transition(s1, s3, Transition.ParseAction.GRAFT, listOf(lhs_aT), lhs_a, null) { _, _ -> true }
+                Transition(s1, s2, Transition.ParseAction.HEIGHT, listOf(lhs_T), lhs_aT, null) { _, _ -> true },
+                Transition(s1, s3, Transition.ParseAction.HEIGHT, listOf(lhs_a), lhs_a, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
