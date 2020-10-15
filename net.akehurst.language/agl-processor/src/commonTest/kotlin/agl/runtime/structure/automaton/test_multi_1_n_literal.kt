@@ -42,7 +42,7 @@ class test_multi_1_n_literal {
     fun s0_calcClosureLR0() {
 
         val actual1 = s0.calcClosureLR1(lhsE)
-        val actual = s0.calcClosureLR0().toList()
+        val actual = s0.calcClosureLR0_1().toList()
 
         val cl_G = ClosureItemWithLookaheadList(null, RulePosition(G, 0, 0), listOf(lhs0))
         val cl_G_S = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 0, 0), listOf(lhs0, lhs1))

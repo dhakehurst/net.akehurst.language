@@ -450,7 +450,7 @@ internal class RuntimeParser(
                     graph.goals.isEmpty() -> null
                     else -> {
                         val match = graph.goals.first()
-                        val skipNode = match.asBranch.children[0].asBranch.children[0]
+                        val skipNode = match.asBranch.children[0].asBranch.children[0].asBranch.children[0]
                         skipNode
                     }
                 }

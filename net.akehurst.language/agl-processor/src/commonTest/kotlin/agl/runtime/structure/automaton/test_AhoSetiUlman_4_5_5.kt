@@ -54,7 +54,7 @@ class test_AhoSetiUlman_4_5_5 {
         //given
 
         //when
-        val actual = s0.calcClosureLR0().toList()
+        val actual = s0.calcClosureLR0_1().toList()
 
         //then
         val cl_G = ClosureItemWithLookaheadList(null, RulePosition(G, 0, 0), listOf(lhs0))

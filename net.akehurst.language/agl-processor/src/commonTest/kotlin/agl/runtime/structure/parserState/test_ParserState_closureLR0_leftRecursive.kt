@@ -40,7 +40,7 @@ class test_ParserState_closureLR0_leftRecursive {
     @Test
     fun s0_closureLR0() {
         val s0 = rrs.startingState(S)
-        val actual = s0.calcClosureLR0().toList()
+        val actual = s0.calcClosureLR0_1().toList()
 
         val i0 = ClosureItemWithLookaheadList(null, RulePosition(G, 0, 0), emptyList())
         val i01 = ClosureItemWithLookaheadList(i0, RulePosition(S, 0, 0), emptyList())

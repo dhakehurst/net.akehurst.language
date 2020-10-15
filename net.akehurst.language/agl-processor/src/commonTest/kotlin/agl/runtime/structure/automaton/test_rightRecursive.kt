@@ -48,7 +48,7 @@ class test_rightRecursive {
     fun s0_calcClosureLR0() {
 
         val actual1 = s0.calcClosure(LookaheadSet.EMPTY).toList()
-        val actual = s0.calcClosureLR0().toList()
+        val actual = s0.calcClosureLR0_1().toList()
 
         val cl_G = ClosureItemWithLookaheadList(null, RulePosition(G, 0, 0), listOf(lhs_T))
         val cl_G_S0 = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 0, 0), listOf(lhs_T))
@@ -107,7 +107,7 @@ class test_rightRecursive {
     @Test
     fun S_0_E_fetchOrCreateNext() {
         val rp = RulePosition(S, 0, RulePosition.END_OF_RULE)
-        val actual = s0.stateSet.fetchOrCreateNext(rp)
+        val actual = s0.stateSet.fetchOrCreateFirstAt(rp)
         val expected = setOf<RuntimeRule>(rrs.END_OF_TEXT)
         assertEquals(expected, actual)
     }
@@ -115,7 +115,7 @@ class test_rightRecursive {
     @Test
     fun S1_0_1_fetchOrCreateNext() {
         val rp = RulePosition(S1,0,1)
-        val actual = s0.stateSet.fetchOrCreateNext(rp)
+        val actual = s0.stateSet.fetchOrCreateFirstAt(rp)
         val expected = setOf(a)
         assertEquals(expected, actual)
     }

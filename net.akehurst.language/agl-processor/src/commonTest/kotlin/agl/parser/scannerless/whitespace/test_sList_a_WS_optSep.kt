@@ -22,6 +22,7 @@ import kotlin.test.Test
 
 class test_sList_a_WS_optSep : test_ScanOnDemandParserAbstract() {
 
+    // skip WS = "\s+" ;
     // S = [a / sep]*
     // sep = ','?
     // a = 'a'

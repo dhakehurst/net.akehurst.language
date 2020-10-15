@@ -65,7 +65,7 @@ class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(2, e.location.column)
-        assertEquals(setOf("','"), e.expected)
+        assertEquals(setOf("'b'"), e.expected)
     }
 
     @Test

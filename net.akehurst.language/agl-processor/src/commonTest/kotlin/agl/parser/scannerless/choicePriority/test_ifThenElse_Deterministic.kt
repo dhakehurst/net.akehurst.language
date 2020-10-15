@@ -166,8 +166,8 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
 
         val expected1 = """
             S {
-              expr|1 {
-                conditional {
+              expr {
+                conditional|1 {
                     ifthen {
                       'if' WS:' '
                       expr { var { "[a-zA-Z]+" : 'a' WS:' ' } }
