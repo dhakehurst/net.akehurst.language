@@ -125,16 +125,12 @@ class test_rightRecursive {
         val s0_trans = s0.transitions(null)
         val s1 = s0.stateSet.fetch(RulePosition(a, 0, RulePosition.END_OF_RULE))
 
-        val actual = s1.heightOrGraftInto5().toList()
-        val actual0 = s1.heightOrGraftInto(s0, s0_trans[0].additionalLookaheads.last()).toList()
-        val actual1 = s1.heightOrGraftInto(s0).toList()
-        val actual2 = s1.stateSet.parentRelation(s1.rulePosition.runtimeRule).toList()
-        val actual3 = s1.heightOrGraftInto3().toList()
-        val actual4 = s1.heightOrGraftInto4().toList()
+        val actual = s1.heightOrGraftInto3().toList()
+
 
         val expected = listOf(
-                Pair(RulePosition(S, 0, 0), setOf(rrs.END_OF_TEXT)),
-                Pair(RulePosition(S1, 0, 1), setOf(a))
+                RulePosition(S, 0, 0),
+                RulePosition(S1, 0, 1)
         )
         assertEquals(expected, actual)
 

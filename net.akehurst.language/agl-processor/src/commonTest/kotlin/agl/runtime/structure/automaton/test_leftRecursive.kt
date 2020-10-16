@@ -146,10 +146,6 @@ class test_leftRecursive {
         s0.transitions(null)
         val s1 = s0.stateSet.fetch(RulePosition(a, 0, RulePosition.END_OF_RULE))
 
-        val actual5 = s1.heightOrGraftInto5().toList()
-
-        val actual1 = s1.heightOrGraftInto(s0).toList()
-        val actual2 = s1.stateSet.parentRelation(s1.rulePosition.runtimeRule).toList()
         val actual = s1.heightOrGraftInto3().toList()
 
 

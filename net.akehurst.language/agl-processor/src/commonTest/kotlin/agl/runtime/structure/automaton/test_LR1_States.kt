@@ -100,31 +100,6 @@ class test_LR1_States {
     }
 
     @Test
-    fun s0_createClosure() {
-        val s0 = rrs.startingState(S)
-        val actual = s0.createClosure(emptySet())
-
-        val expected = setOf<RulePositionWithLookahead>(
-                RulePositionWithLookahead(RulePosition(s0.runtimeRule, 0, 0), setOf()),
-                RulePositionWithLookahead(RulePosition(S, 0, 0), setOf(rrs.END_OF_TEXT)),
-                RulePositionWithLookahead(RulePosition(S, 1, 0), setOf(rrs.END_OF_TEXT)),
-                RulePositionWithLookahead(RulePosition(S, 2, 0), setOf(rrs.END_OF_TEXT)),
-                RulePositionWithLookahead(RulePosition(S, 3, 0), setOf(rrs.END_OF_TEXT)),
-                RulePositionWithLookahead(RulePosition(S1, 0, 0), setOf(a)),
-                RulePositionWithLookahead(RulePosition(S2, 0, 0), setOf(d)),
-                RulePositionWithLookahead(RulePosition(S3, 0, 0), setOf(c)),
-                RulePositionWithLookahead(RulePosition(S4, 0, 0), setOf(d)),
-                RulePositionWithLookahead(RulePosition(rA, 0, 0), setOf(a)), //NOT c, because the A in S2 is not at pos 0
-                RulePositionWithLookahead(RulePosition(rB, 0, 0), setOf(c)), //NOT a, because the B in S4 is not at pos 0
-                RulePositionWithLookahead(RulePosition(b, 0, 0), setOf(d)),
-                RulePositionWithLookahead(RulePosition(d, 0, 0), setOf(a)),
-                RulePositionWithLookahead(RulePosition(d, 0, 0), setOf(c))
-        )
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
     fun s1_heightOrGraftInto() {
         // G
         val s0 = rrs.startingState(S)
