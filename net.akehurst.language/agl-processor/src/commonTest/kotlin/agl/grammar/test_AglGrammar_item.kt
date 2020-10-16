@@ -515,17 +515,18 @@ class test_AglGrammar_item {
         val expected = this.sppt("""
             rule {
                 ruleTypeLabels {
-                    isSkip { §isSkip§multi3 {
+                    isOverride { §isOverride§multi3|1 { §empty } }
+                    isSkip { §isSkip§multi4 {
                         'skip'
                         WHITESPACE : ' '
                     } }
-                    isLeaf { §isLeaf§multi4|1 { §empty } }
+                    isLeaf { §isLeaf§multi5|1 { §empty } }
                 }
                 IDENTIFIER : 'r'
                 WHITESPACE : ' '
                 '='
                 WHITESPACE : ' '
-                choice|2 { simpleChoice { §simpleChoice§sList4 { concatenation { §concatenation§multi5 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                choice|2 { simpleChoice { §simpleChoice§sList4 { concatenation { §concatenation§multi6 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 {
                     IDENTIFIER : 'a'
                     WHITESPACE : ' '
                 } } } } } } } } } }

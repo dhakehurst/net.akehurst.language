@@ -228,6 +228,7 @@ class ParserState(
         return cl.toSet()
     }
 
+
     private fun calcClosureLR0(rp: RulePosition,items: MutableSet<RulePosition> = mutableSetOf()): Set<RulePosition> {
         return when {
             items.contains(rp) -> {
@@ -639,10 +640,7 @@ class ParserState(
     }
 
     fun growsInto(ancestor: ParserState): Boolean {
-        val thisStart = this.rulePosition.runtimeRule.rulePositionsAt[0]
-        return ancestor.calcClosureLR0().any {
-            thisStart.contains(it)
-        }
+       return this.stateSet.growsInto(ancestor.rulePosition,this.rulePosition)
     }
 
     fun transitions(previousState: ParserState?): List<Transition> {

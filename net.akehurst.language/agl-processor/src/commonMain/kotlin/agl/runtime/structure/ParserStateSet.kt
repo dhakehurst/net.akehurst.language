@@ -62,7 +62,7 @@ class ParserStateSet(
                 }
                 childRR.number == RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER -> {
                     val option = this.runtimeRuleSet.skipRules.indexOf(childRR)
-                    setOf(RulePosition(this.userGoalRule, 0, 0),RulePosition(this.userGoalRule, 0, RulePosition.MULIT_ITEM_POSITION))
+                    setOf(RulePosition(this.userGoalRule, 0, 0), RulePosition(this.userGoalRule, 0, RulePosition.MULIT_ITEM_POSITION))
                 }
                 else -> {
                     val option = this.runtimeRuleSet.skipRules.indexOf(childRR)
@@ -196,10 +196,10 @@ class ParserStateSet(
                     emptySet()
                 }
             }
-            else -> when{
+            else -> when {
                 rp.isAtEnd -> {
                     val pps = this.parentPosition[rp.runtimeRule]
-                    pps.flatMap {parentRp->
+                    pps.flatMap { parentRp ->
                         val nextRPs = parentRp.next()
                         nextRPs.flatMap { this.fetchOrCreateFirstAt(it) }
                     }.toSet()
@@ -227,9 +227,9 @@ class ParserStateSet(
                 nextRPs.flatMap { nrp ->
                     when {
                         nrp.isAtEnd -> emptySet()
-                        else -> when(rp.runtimeRule.kind) {
+                        else -> when (rp.runtimeRule.kind) {
                             RuntimeRuleKind.EMBEDDED -> rp.runtimeRule.embeddedRuntimeRuleSet!!.firstTerminals[rp.runtimeRule.embeddedStartRule!!.number]
-                           else -> this.runtimeRuleSet.firstTerminals2[rp] ?: emptySet()
+                            else -> this.runtimeRuleSet.firstTerminals2[rp] ?: emptySet()
                         }
                     }
                 }.toSet()
@@ -256,7 +256,7 @@ class ParserStateSet(
                     if (nextChildRP.isAtEnd) {
                         this.calcLookahead1(nextChildRP, done)
                     } else {
-                        val lh: Set<RuntimeRule> = when(nextChildRP.runtimeRule.kind) {
+                        val lh: Set<RuntimeRule> = when (nextChildRP.runtimeRule.kind) {
                             RuntimeRuleKind.EMBEDDED -> nextChildRP.runtimeRule.embeddedRuntimeRuleSet!!.firstTerminals[nextChildRP.runtimeRule.embeddedStartRule!!.number]
                             else -> this.runtimeRuleSet.firstTerminals2[nextChildRP] ?: emptySet()
                         }
@@ -408,6 +408,49 @@ class ParserStateSet(
                         }.toSet()
                     }
                 }
+            }
+        }
+    }
+
+
+    private val _growsInto = mutableMapOf<Pair<RulePosition, RulePosition>, Boolean>()
+    fun growsInto(ancestor: RulePosition, descendant: RulePosition): Boolean {
+        val p = Pair(ancestor, descendant)
+        var r = _growsInto[p]
+        if (null == r) {
+            val thisStart = descendant.runtimeRule.rulePositionsAt[0]
+            r = calcClosureLR0(ancestor).any {
+                thisStart.contains(it)
+            }
+            _growsInto[p] = r
+        }
+        return r
+    }
+
+    private val _calcClosureLR0 = mutableMapOf<RulePosition, Set<RulePosition>>()
+    private fun calcClosureLR0(rp: RulePosition): Set<RulePosition> {
+        var cl = _calcClosureLR0[rp]
+        if (null == cl) {
+            cl = calcClosureLR0(rp, mutableSetOf())
+            _calcClosureLR0[rp] = cl
+        }
+        return cl
+    }
+
+    private fun calcClosureLR0(rp: RulePosition, items: MutableSet<RulePosition>): Set<RulePosition> {
+        return when {
+            items.contains(rp) -> {
+                items
+            }
+            else -> {
+                items.add(rp)
+                val itemRps = rp.items.flatMap {
+                    it.rulePositionsAt[0]
+                }.toSet()
+                itemRps.forEach { childRp ->
+                    calcClosureLR0(childRp, items)
+                }
+                items
             }
         }
     }
