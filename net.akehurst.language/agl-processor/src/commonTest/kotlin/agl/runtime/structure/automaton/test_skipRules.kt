@@ -19,7 +19,7 @@ package net.akehurst.language.agl.runtime.structure
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_skipRules{
+class test_skipRules {
 
     companion object {
         // skip WS = "\s+" ;
@@ -61,7 +61,8 @@ class test_skipRules{
 
         actual = skipSS.parentPosition[skC]
         expected = setOf(
-                RulePosition(skS, 0, 0)
+                RulePosition(skS, 0, 0),
+                RulePosition(skS, 0, RulePosition.MULIT_ITEM_POSITION)
         )
         assertEquals(expected, actual)
 
@@ -80,7 +81,7 @@ class test_skipRules{
 
     @Test
     fun firstTerminals() {
-        var actual = skipSS.firstTerminals[RulePosition(skG,0,0)]
+        var actual = skipSS.firstTerminals[RulePosition(skG, 0, 0)]
         var expected = setOf(skWS, skCM)
         assertEquals(expected, actual)
 
@@ -88,11 +89,11 @@ class test_skipRules{
         expected = setOf(skWS, skCM)
         assertEquals(expected, actual)
 
-        actual = skipSS.firstTerminals[RulePosition(skC,0,0)]
+        actual = skipSS.firstTerminals[RulePosition(skC, 0, 0)]
         expected = setOf(skWS)
         assertEquals(expected, actual)
 
-        actual = skipSS.firstTerminals[RulePosition(skC,1,0)]
+        actual = skipSS.firstTerminals[RulePosition(skC, 1, 0)]
         expected = setOf(skCM)
         assertEquals(expected, actual)
 
@@ -101,28 +102,26 @@ class test_skipRules{
     @Test
     fun calcFirstAt() {
 
-        var actual = s0.stateSet.calcFirstAt(RulePosition(G,0,0),BooleanArray(rrs.runtimeRules.size))
+        var actual = s0.stateSet.calcFirstAt(RulePosition(G, 0, 0), BooleanArray(rrs.runtimeRules.size))
         var expected = setOf(a)
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(G,0,1),BooleanArray(rrs.runtimeRules.size))
+        actual = s0.stateSet.calcFirstAt(RulePosition(G, 0, 1), BooleanArray(rrs.runtimeRules.size))
         expected = setOf(rrs.END_OF_TEXT)
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(G,0,RulePosition.END_OF_RULE),BooleanArray(rrs.runtimeRules.size))
+        actual = s0.stateSet.calcFirstAt(RulePosition(G, 0, RulePosition.END_OF_RULE), BooleanArray(rrs.runtimeRules.size))
         expected = setOf()
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
 
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(S,1,0),BooleanArray(rrs.runtimeRules.size))
+        actual = s0.stateSet.calcFirstAt(RulePosition(S, 1, 0), BooleanArray(rrs.runtimeRules.size))
         expected = setOf(a)
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(S,1,0),BooleanArray(rrs.runtimeRules.size))
+        actual = s0.stateSet.calcFirstAt(RulePosition(S, 1, 0), BooleanArray(rrs.runtimeRules.size))
         expected = setOf(a)
-        assertEquals(expected,actual)
-
-
+        assertEquals(expected, actual)
 
 
     }

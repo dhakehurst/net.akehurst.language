@@ -62,7 +62,7 @@ class ParserStateSet(
                 }
                 childRR.number == RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER -> {
                     val option = this.runtimeRuleSet.skipRules.indexOf(childRR)
-                    setOf(RulePosition(this.userGoalRule, 0, 0))
+                    setOf(RulePosition(this.userGoalRule, 0, 0),RulePosition(this.userGoalRule, 0, RulePosition.MULIT_ITEM_POSITION))
                 }
                 else -> {
                     val option = this.runtimeRuleSet.skipRules.indexOf(childRR)

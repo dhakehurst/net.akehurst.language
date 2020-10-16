@@ -67,7 +67,11 @@ class test_abc : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val expected = """
-            S { COMMENT : '// comment⏎' 'a' }
+            S {
+                COMMENT : '// comment'
+                WS : '⏎'
+                'a'
+            }
         """.trimIndent()
 
         super.test(S, goal, sentence, expected)
@@ -79,7 +83,7 @@ class test_abc : test_ScanOnDemandParserAbstract() {
         val sentence = "a "
 
         val expected = """
-            S { 'a' WS { "\s+" : ' ' } }
+            S { 'a' WS : ' ' }
         """.trimIndent()
 
         super.test(S, goal, sentence, expected)
@@ -91,7 +95,7 @@ class test_abc : test_ScanOnDemandParserAbstract() {
         val sentence = " a "
 
         val expected = """
-            S { WS { "\s+" : ' ' } 'a' WS { "\s+" : ' ' } }
+            S { WS : ' '  'a' WS : ' ' }
         """.trimIndent()
 
         super.test(S, goal, sentence, expected)

@@ -619,6 +619,9 @@ class ParserState(
     }
 
     fun growsInto(ancestor: ParserState): Boolean {
+
+
+
         val thisStart = this.rulePosition.runtimeRule.rulePositionsAt[0]
         return ancestor.calcClosureLR0().any {
             thisStart.contains(it)
