@@ -207,7 +207,7 @@ class RuntimeRule(
                 }
                 return firstItems
             }
-            RuntimeRuleKind.EMBEDDED -> TODO()
+            RuntimeRuleKind.EMBEDDED -> setOf(this) //this.embeddedRuntimeRuleSet!!.firstTerminals[this.embeddedStartRule!!.number]
         }
     }
 
@@ -315,7 +315,7 @@ class RuntimeRule(
                     RuntimeRuleItemKind.UNORDERED -> TODO()
                 }
             }
-            RuntimeRuleKind.EMBEDDED -> TODO()
+            RuntimeRuleKind.EMBEDDED -> emptySet<RuntimeRule>()
         }
     }
 
@@ -392,7 +392,7 @@ class RuntimeRule(
             position == RulePosition.END_OF_RULE -> emptySet()
             else -> when (kind) {
                 RuntimeRuleKind.GOAL -> TODO()
-                RuntimeRuleKind.TERMINAL -> setOf(RulePosition(this, 0, position))
+                RuntimeRuleKind.TERMINAL -> setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
                 RuntimeRuleKind.NON_TERMINAL -> when (this.rhs.kind) {
                     RuntimeRuleItemKind.EMPTY -> {
                         emptySet()

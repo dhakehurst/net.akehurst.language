@@ -313,6 +313,7 @@ class RuntimeRuleSet(
     fun findRuntimeRule(ruleName: String): RuntimeRule {
         val number = this.nonTerminalRuleNumber[ruleName]
                 ?: this.terminalRuleNumber[ruleName]
+                ?: this.embeddedRuleNumber[ruleName]
                 ?: throw ParserException("RuntimeRule '${ruleName}' not found")
         return this.runtimeRules[number]
     }

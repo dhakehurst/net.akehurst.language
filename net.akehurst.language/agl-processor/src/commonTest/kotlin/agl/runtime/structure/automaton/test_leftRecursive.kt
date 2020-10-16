@@ -106,8 +106,7 @@ class test_leftRecursive {
         val s1 = s0.stateSet.fetch(RulePosition(a, 0, RulePosition.END_OF_RULE))
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, listOf(lhs_T), lhs_T, null) { _, _ -> true },
-                Transition(s0, s1, Transition.ParseAction.WIDTH, listOf(lhs_T, lhs_a), lhs_a, null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH, listOf(lhs_aT), lhs_a, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -151,12 +150,12 @@ class test_leftRecursive {
 
         val actual1 = s1.heightOrGraftInto(s0).toList()
         val actual2 = s1.stateSet.parentRelation(s1.rulePosition.runtimeRule).toList()
-        val actual = s1.heightOrGraftInto4().toList()
+        val actual = s1.heightOrGraftInto3().toList()
 
 
         val expected = listOf(
-                Pair(RulePosition(S, 0, 0), setOf(a, rrs.END_OF_TEXT)),
-                Pair(RulePosition(S1, 0, 1), setOf(a, rrs.END_OF_TEXT))
+                RulePosition(S, 0, 0),
+                RulePosition(S1, 0, 1)
         )
         assertEquals(expected, actual)
 

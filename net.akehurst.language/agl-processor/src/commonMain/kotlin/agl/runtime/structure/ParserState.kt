@@ -228,18 +228,37 @@ class ParserState(
         return cl.toSet()
     }
 
-    private fun calcClosureLR0(item: RulePosition, path: Set<RulePosition> = mutableSetOf(), items: MutableSet<RulePosition> = mutableSetOf()): Set<RulePosition> {
+    private fun calcClosureLR0(rp: RulePosition,items: MutableSet<RulePosition> = mutableSetOf()): Set<RulePosition> {
+        return when {
+            items.contains(rp) -> {
+                items
+            }
+            else -> {
+                items.add(rp)
+                val itemRps = rp.items.flatMap {
+                    it.rulePositionsAt[0]
+                }.toSet()
+                itemRps.forEach { childRp ->
+                    calcClosureLR0(childRp, items)
+                }
+                items
+            }
+        }
+    }
+
+
+    private fun calcClosureLR0_2(item: RulePosition, path: Set<RulePosition> = mutableSetOf(), items: MutableSet<RulePosition> = mutableSetOf()): Set<RulePosition> {
         return when {
             path.contains(item) -> items
             else -> {
                 items.add(item)
                 val np = path + item
                 val itemRps = item.items.flatMap {
-                    it.calcExpectedRulePositions(0)
+                    it.rulePositionsAt[0]
                 }.toSet()
                 val new = itemRps.flatMap { rp ->
                     val child = rp
-                    calcClosureLR0(child, np, items)
+                    calcClosureLR0_2(child, np, items)
                 }
                 items
             }
@@ -462,6 +481,7 @@ class ParserState(
         val fsts = this.stateSet.firstTerminals[this.rulePosition]
         return fsts.flatMap { it.rulePositionsAt[0] }.toSet()
     }
+
     fun widthInto4_old(): Set<RulePosition> {
         return when (this.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL,
@@ -619,9 +639,6 @@ class ParserState(
     }
 
     fun growsInto(ancestor: ParserState): Boolean {
-
-
-
         val thisStart = this.rulePosition.runtimeRule.rulePositionsAt[0]
         return ancestor.calcClosureLR0().any {
             thisStart.contains(it)
@@ -892,7 +909,6 @@ class ParserState(
         val trs = setOf(Transition(this, to, action, addLh, parentLh, prevGuard) { _, _ -> true })
         return trs
     }
-
 
     private fun createHeightTransition(parentRP: RulePosition, addLh: List<LookaheadSet>, parentLh: LookaheadSet): Set<Transition> {
         val prevGuard = parentRP //for height, previous must not match prevGuard

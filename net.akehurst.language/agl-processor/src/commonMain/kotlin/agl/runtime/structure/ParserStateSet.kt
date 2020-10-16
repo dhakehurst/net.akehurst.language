@@ -123,7 +123,7 @@ class ParserStateSet(
     fun fetchOrCreateLookahead(rp: RulePosition): Set<RuntimeRule> {
         var set = this._lookahead[rp]
         if (null == set) {
-            set = this.calcLookahead1(rp, BooleanArray(this.runtimeRuleSet.runtimeRules.size))
+            set = this.calcLookahead2(rp) //this.calcLookahead1(rp, BooleanArray(this.runtimeRuleSet.runtimeRules.size))
             this._lookahead[rp] = set
         }
         return set
@@ -187,6 +187,31 @@ class ParserStateSet(
         return this.states[rulePosition]
     }
 
+    fun calcLookahead2(rp: RulePosition): Set<RuntimeRule> {
+        return when {
+            rp.runtimeRule.number < 0 -> { //must be GOAL or SKIP-GOAL
+                if (rp.isAtStart) {
+                    this.possibleEndOfText.toSet()
+                } else {
+                    emptySet()
+                }
+            }
+            else -> when{
+                rp.isAtEnd -> {
+                    val pps = this.parentPosition[rp.runtimeRule]
+                    pps.flatMap {parentRp->
+                        val nextRPs = parentRp.next()
+                        nextRPs.flatMap { this.fetchOrCreateFirstAt(it) }
+                    }.toSet()
+                }
+                else -> {
+                    val nextRPs = rp.next()
+                    nextRPs.flatMap { this.fetchOrCreateFirstAt(it) }.toSet()
+                }
+            }
+        }
+    }
+
     fun calcLookahead1(rp: RulePosition, done: BooleanArray): Set<RuntimeRule> {
         //TODO("try and split this so we do different things depending on the 'rule type/position' multi/slist/mid/begining/etc")
         return when {
@@ -202,7 +227,10 @@ class ParserStateSet(
                 nextRPs.flatMap { nrp ->
                     when {
                         nrp.isAtEnd -> emptySet()
-                        else -> this.runtimeRuleSet.firstTerminals2[rp] ?: emptySet()
+                        else -> when(rp.runtimeRule.kind) {
+                            RuntimeRuleKind.EMBEDDED -> rp.runtimeRule.embeddedRuntimeRuleSet!!.firstTerminals[rp.runtimeRule.embeddedStartRule!!.number]
+                           else -> this.runtimeRuleSet.firstTerminals2[rp] ?: emptySet()
+                        }
                     }
                 }.toSet()
             }
@@ -228,8 +256,10 @@ class ParserStateSet(
                     if (nextChildRP.isAtEnd) {
                         this.calcLookahead1(nextChildRP, done)
                     } else {
-                        val lh: Set<RuntimeRule> = this.runtimeRuleSet.firstTerminals2[nextChildRP]
-                                ?: error("should never happen")
+                        val lh: Set<RuntimeRule> = when(nextChildRP.runtimeRule.kind) {
+                            RuntimeRuleKind.EMBEDDED -> nextChildRP.runtimeRule.embeddedRuntimeRuleSet!!.firstTerminals[nextChildRP.runtimeRule.embeddedStartRule!!.number]
+                            else -> this.runtimeRuleSet.firstTerminals2[nextChildRP] ?: emptySet()
+                        }
                         if (lh.isEmpty()) {
                             error("should never happen")
                         } else {
@@ -261,7 +291,8 @@ class ParserStateSet(
                                 RuntimeRuleKind.NON_TERMINAL -> {
                                     this.runtimeRuleSet.firstTerminals[it.number] ?: emptySet()
                                 }
-                                else -> setOf(it)
+                                RuntimeRuleKind.EMBEDDED -> it.embeddedRuntimeRuleSet!!.firstTerminals[it.embeddedStartRule!!.number]
+                                else -> TODO()
                             }
                         }.toSet()
                         ns
@@ -293,7 +324,8 @@ class ParserStateSet(
                                 calcFirstAt(it, done)
                             }
                         }
-                        else -> setOf(it)
+                        RuntimeRuleKind.EMBEDDED -> it.embeddedRuntimeRuleSet!!.firstTerminals[it.embeddedStartRule!!.number]
+                        else -> TODO()
                     }
                 }.toSet()
                 ns

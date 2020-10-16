@@ -50,7 +50,8 @@ class test_AglGrammar_item {
         val actual = parse("nonTerminal", text)
         val expected = this.sppt("""
             nonTerminal {
-                SINGLE_LINE_COMMENT : '// a single line comment⏎'
+                SINGLE_LINE_COMMENT : '// a single line comment'
+                WHITESPACE : '⏎'
                 qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'a' } }
             }
         """)
@@ -67,7 +68,8 @@ class test_AglGrammar_item {
         val actual = parse("nonTerminal", text)
         val expected = this.sppt("""
             nonTerminal {
-                SINGLE_LINE_COMMENT : '//⏎'
+                SINGLE_LINE_COMMENT : '//'
+                WHITESPACE : '⏎'
                 qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'a' } }
             }
         """)
