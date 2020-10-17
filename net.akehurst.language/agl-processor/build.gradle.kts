@@ -7,7 +7,7 @@ tasks.withType<ProcessResources>  {
         expand(project.properties)
     }
 }
-
+/*
 kt2ts {
     jvmTargetName.set("jvm8")
     jsTargetName.set("js")
@@ -22,7 +22,7 @@ kt2ts {
             "net.akehurst.language.agl.processor.Agl"
     ))
 }
-
+*/
 /*
 tasks {
     val dokkaJavadoc by creating(org.jetbrains.dokka.gradle.DokkaTask::class) {

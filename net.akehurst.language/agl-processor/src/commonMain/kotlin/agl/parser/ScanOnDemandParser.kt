@@ -197,7 +197,7 @@ class ScanOnDemandParser(
                 }
                 else -> {
                     val exp = lg.previous.values.flatMap { prev ->
-                        rp.fetchFilteredTransitions(lg, prev.node)
+                        lg.currentState.transitions( prev.node.currentState)//TODO: do we need to filter graft by runtimeGuard here?
                     }.map {
                         it.to.rulePosition
                     }.toSet()

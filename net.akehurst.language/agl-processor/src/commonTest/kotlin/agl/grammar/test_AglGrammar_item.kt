@@ -333,7 +333,7 @@ class test_AglGrammar_item {
         val actual = parse("concatenation", "'a'")
         val expected = this.sppt("""
             concatenation {
-                §concatenation§multi5 { concatenationItem { simpleItem { terminal { LITERAL  : '\'a\''  } } } }
+                §concatenation§multi6 { concatenationItem { simpleItem { terminal { LITERAL  : '\'a\''  } } } }
             }
         """.trimIndent())
         assertNotNull(actual)
@@ -344,7 +344,7 @@ class test_AglGrammar_item {
     fun concatenation_literal_3() {
         val actual = parse("concatenation", "'a' 'b' 'c'")
         val expected = this.sppt("""
-            concatenation { §concatenation§multi5 {
+            concatenation { §concatenation§multi6 {
                 concatenationItem { simpleItem { terminal { LITERAL  : '\'a\''  WHITESPACE  : ' ' } } } 
                 concatenationItem { simpleItem { terminal { LITERAL  : '\'b\''  WHITESPACE  : ' ' } } } 
                 concatenationItem { simpleItem { terminal { LITERAL  : '\'c\''  } } 
@@ -431,15 +431,15 @@ class test_AglGrammar_item {
         val actual = parse("choice", "a < b < c")
         val expected = this.sppt("""
             choice { priorityChoice { §priorityChoice§sList2 {
-                concatenation { §concatenation§multi5 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                concatenation { §concatenation§multi6 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 {
                     IDENTIFIER : 'a' WHITESPACE  : ' ' 
                 } } } } } } }
                 '<' WHITESPACE  : ' ' 
-                concatenation { §concatenation§multi5 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                concatenation { §concatenation§multi6 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 {
                     IDENTIFIER : 'b' WHITESPACE  : ' ' 
                 } } } } } } }
                 '<' WHITESPACE  : ' ' 
-                concatenation { §concatenation§multi5 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'c' } } } } } } }
+                concatenation { §concatenation§multi6 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 { IDENTIFIER : 'c' } } } } } } }
             } } }
         """.trimIndent())
         assertNotNull(actual)

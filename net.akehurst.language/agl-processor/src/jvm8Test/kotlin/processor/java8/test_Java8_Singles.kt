@@ -20,13 +20,15 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.processor.java8.test_Java8Agl_Types
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class test_Java8_Singles {
 
     companion object {
 
-        val aglSpecProcessor: LanguageProcessor by lazy { createJava8Processor("/java8/Java8AglSpec.agl", true) }
+        val aglSpecProcessor: LanguageProcessor by lazy { createJava8Processor("/java8/Java8AglSpec.agl", true ) }
         val aglOptmProcessor: LanguageProcessor by lazy { createJava8Processor("/java8/Java8AglOptm.agl", true) }
 
         val antlrSpecProcessor: LanguageProcessor by lazy { createJava8Processor("/java8/Java8AntlrSpec.agl") }
@@ -49,6 +51,15 @@ class test_Java8_Singles {
         val goal = "Literal"
 
         val t = proc.parse(goal, sentence)
+    }
+
+    @Test
+    fun _int() {
+        val sentence = "int"
+        val goal = "Type"
+        val t = proc.parse(goal, sentence)
+
+        assertEquals(1, t.maxNumHeads)
     }
 
     @Test

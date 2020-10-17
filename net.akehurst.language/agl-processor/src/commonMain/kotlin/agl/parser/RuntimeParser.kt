@@ -167,46 +167,13 @@ internal class RuntimeParser(
         return poss
     }
 
-    private val __filteredTransitions = ArrayList<Transition>(10)
-    internal fun fetchFilteredTransitions(gn: GrowingNode, prev: GrowingNode?): List<Transition> {
-        return if (null == prev) {
-            val transitions: List<Transition> = gn.currentState.transitions(null)
-            transitions
-        } else {
-            __filteredTransitions.clear()
-            val transitions: List<Transition> = gn.currentState.transitions(prev.currentState)//, gn.lookaheadStack.peek())
-            for (t in transitions) {
-                val filter = when (t.action) {
-                    Transition.ParseAction.WIDTH -> {
-                        true
-                    }
-                    Transition.ParseAction.GRAFT -> {
-                        prev.currentState.rulePosition == t.prevGuard &&
-                                t.runtimeGuard(t, prev, prev.currentState.rulePosition)
-                    }
-                    Transition.ParseAction.HEIGHT -> {
-                        t.to.growsInto(prev.currentState) &&
-                                prev.currentState.rulePosition != t.prevGuard
-                    }
-                    Transition.ParseAction.EMBED -> {
-                        true
-                    }
-                    Transition.ParseAction.GOAL -> {
-                        true
-                    }
-                }
-                if (filter) __filteredTransitions.add(t)
-            }
-            __filteredTransitions
-        }
-    }
 
     internal fun growWidthOnly(gn: GrowingNode, previous: Set<PreviousInfo>) {
         when (gn.runtimeRule.kind) {
             RuntimeRuleKind.GOAL -> {
                 //val rps = gn.currentState
                 //val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, null)
-                val transitions = this.fetchFilteredTransitions(gn, null)
+                val transitions = gn.currentState.transitions(null)
                 for (it in transitions) {
                     when (it.action) {
                         Transition.ParseAction.WIDTH -> doWidth(gn, emptySet(), it, true)
@@ -217,7 +184,7 @@ internal class RuntimeParser(
                 for (prev in previous) {
                     //val rps = gn.currentState
                     //val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, prev.node.currentState)
-                    val transitions = this.fetchFilteredTransitions(gn, prev.node)
+                    val transitions = gn.currentState.transitions(prev.node.currentState)
                     for (it in transitions) {
                         when (it.action) {
                             Transition.ParseAction.WIDTH -> doWidth(gn, setOf(prev), it, true)
@@ -241,11 +208,15 @@ internal class RuntimeParser(
             //} else {
             //val rps = gn.currentState
             //val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, prev.node.currentState)
-            val transitions = this.fetchFilteredTransitions(gn, prev.node)
-            for (it in transitions) {
-                when (it.action) {
-                    Transition.ParseAction.HEIGHT -> doHeight(gn, prev, it, true)
-                    Transition.ParseAction.GRAFT -> doGraft(gn, prev, it, true)
+            val transitions = gn.currentState.transitions(prev.node.currentState)
+            for (transition in transitions) {
+                when (transition.action) {
+                    Transition.ParseAction.HEIGHT -> doHeight(gn, prev, transition, true)
+                    Transition.ParseAction.GRAFT -> {
+                        if (transition.runtimeGuard(transition, prev.node, prev.node.currentState.rulePosition)) {
+                            doGraft(gn, prev, transition, true)
+                        }
+                    }
                 }
             }
             //}
@@ -300,7 +271,7 @@ internal class RuntimeParser(
         //no previous, so gn must be the Goal node
         //val rps = gn.currentState
         //val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, null)
-        val transitions = this.fetchFilteredTransitions(gn, null)
+        val transitions = gn.currentState.transitions( null)
 
         for (it in transitions) {
             when (it.action) {
@@ -326,7 +297,7 @@ internal class RuntimeParser(
     private fun growWithPrev(gn: GrowingNode, previous: PreviousInfo, noLookahead: Boolean) {
         // val rps = gn.currentState
         //val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, previous.node.currentState)
-        val transitions = this.fetchFilteredTransitions(gn, previous.node)
+        val transitions = gn.currentState.transitions(previous.node.currentState)
         for (it in transitions) {
             when (it.action) {
                 Transition.ParseAction.WIDTH -> doWidth(gn, setOf(previous), it, noLookahead)
@@ -382,46 +353,50 @@ internal class RuntimeParser(
     }
 
     private fun doGraft(curGn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
-        val popRes = curGn.lookaheadStack.pop()
-        val lhs = if (transition.to.rulePosition.isAtEnd) curGn.lookaheadStack.pushAll(emptyList()) else curGn.lookaheadStack.pop().stack
-        val trLh = transition.additionalLookaheads.last()
-        val lh = if (trLh === LookaheadSet.EMPTY) curGn.lookaheadStack.peekContent else trLh.content
+        val prev = previous.node
+        if (transition.runtimeGuard(transition, prev, prev.currentState.rulePosition)) {
+            val popRes = curGn.lookaheadStack.pop()
+            val lhs = if (transition.to.rulePosition.isAtEnd) curGn.lookaheadStack.pushAll(emptyList()) else curGn.lookaheadStack.pop().stack
+            val trLh = transition.additionalLookaheads.last()
+            val lh = if (trLh === LookaheadSet.EMPTY) curGn.lookaheadStack.peekContent else trLh.content
 
-        val hasLh = lh.any {
-            val l = this.graph.findOrTryCreateLeaf(it, curGn.nextInputPosition, curGn.lastLocation)
-            null != l
-        }
-        if (noLookahead || hasLh || lh.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
-            val complete = this.graph.findCompleteNode(curGn.currentState.rulePosition, curGn.startPosition, curGn.matchedTextLength) ?: error("Should never be null")
-            this.graph.growNextChild(false, transition.to, lhs, previous.node, complete, previous.node.currentState.position, curGn.skipNodes)
-        }
-    }
-/*
-    private fun tryGrowWidthWithSkipRules(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
-        //TODO: make skip rule parsing essentially be a separate parser, with root rule $skip = all | marked | skip | rules
-        // so we always get the longest possible skip match
-        if (gn.isSkipGrowth) {
-            return false //dont grow more skip if currently doing a skip
-        } else {
-            var modified = false
-            val rps = this.runtimeRuleSet.firstSkipRuleTerminalPositions //TODO: get skipStates here, probably be better/faster
-            //for (rp in rps) {
-            //for (rr in rp.runtimeRule.itemsAt[rp.position]) {
-            for (rr in rps) {
-                val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition, gn.lastLocation)
-                if (null != l) {
-                    val leafRp = RulePosition(rr, 0, -1)
-                    val skipState = this.runtimeRuleSet.fetchSkipStates(leafRp)
-                    //this.graph.pushToStackOf(true, skipState, gn.lookaheadStack, l, gn, previous, emptySet())
-                    this.graph.pushToStackOf(true, skipState, Stack(), l, gn, previous, null)
-                    modified = true
-                }
+            val hasLh = lh.any {
+                val l = this.graph.findOrTryCreateLeaf(it, curGn.nextInputPosition, curGn.lastLocation)
+                null != l
             }
-            //}
-            return modified
+            if (noLookahead || hasLh || lh.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
+                val complete = this.graph.findCompleteNode(curGn.currentState.rulePosition, curGn.startPosition, curGn.matchedTextLength) ?: error("Should never be null")
+                this.graph.growNextChild(false, transition.to, lhs, previous.node, complete, previous.node.currentState.position, curGn.skipNodes)
+            }
         }
     }
-*/
+
+    /*
+        private fun tryGrowWidthWithSkipRules(gn: GrowingNode, previous: Set<PreviousInfo>): Boolean {
+            //TODO: make skip rule parsing essentially be a separate parser, with root rule $skip = all | marked | skip | rules
+            // so we always get the longest possible skip match
+            if (gn.isSkipGrowth) {
+                return false //dont grow more skip if currently doing a skip
+            } else {
+                var modified = false
+                val rps = this.runtimeRuleSet.firstSkipRuleTerminalPositions //TODO: get skipStates here, probably be better/faster
+                //for (rp in rps) {
+                //for (rr in rp.runtimeRule.itemsAt[rp.position]) {
+                for (rr in rps) {
+                    val l = this.graph.findOrTryCreateLeaf(rr, gn.nextInputPosition, gn.lastLocation)
+                    if (null != l) {
+                        val leafRp = RulePosition(rr, 0, -1)
+                        val skipState = this.runtimeRuleSet.fetchSkipStates(leafRp)
+                        //this.graph.pushToStackOf(true, skipState, gn.lookaheadStack, l, gn, previous, emptySet())
+                        this.graph.pushToStackOf(true, skipState, Stack(), l, gn, previous, null)
+                        modified = true
+                    }
+                }
+                //}
+                return modified
+            }
+        }
+    */
     private fun tryParseSkip(curGn: GrowingNode, lastLocation: InputLocation): List<SPPTNode> {
         return when {
             this.runtimeRuleSet.skipRules.isEmpty() -> emptyList<SPPTNode>()
@@ -450,7 +425,7 @@ internal class RuntimeParser(
                     graph.goals.isEmpty() -> emptyList<SPPTNode>()
                     else -> {
                         val match = graph.goals.sortedBy { it.matchedTextLength }.last()
-                        val skipNodes = match.asBranch.children[0].asBranch.children.map{ it.asBranch.children[0] }
+                        val skipNodes = match.asBranch.children[0].asBranch.children.map { it.asBranch.children[0] }
                         skipNodes
                     }
                 }
@@ -462,7 +437,7 @@ internal class RuntimeParser(
         val rps = gn.currentState
         //val transitions = rps.transitions(this.runtimeRuleSet, null)//previous.node.currentState)
         // val transitions: Set<Transition> = this.runtimeRuleSet.skipTransitions(this.graph.userGoalRule, rps, previous.node.currentState.rulePosition)
-        val transitions = this.fetchFilteredTransitions(gn, previous.node)
+        val transitions = gn.currentState.transitions(previous.node.currentState)
 
         for (it in transitions) {
             when (it.action) {

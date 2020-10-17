@@ -158,12 +158,13 @@ class ParserState(
        return this.stateSet.growsInto(ancestor.rulePosition,this.rulePosition)
     }
 
+
     fun transitions(previousState: ParserState?): List<Transition> {
         val cache = this.transitions_cache[previousState]
         val trans = if (null == cache) {
             //TODO: remove dependency on previous when calculating transitions! ?
             //val transitions = this.calcTransitions(previousState, lookaheadSet).toList()
-            val transitions = this.calcTransitions(previousState).toList()
+            val transitions = this.calcFilteredTransitions(previousState).toList()
             this.transitions_cache[previousState] = transitions
             transitions
         } else {
@@ -173,13 +174,46 @@ class ParserState(
         return trans
     }
 
+    private val __filteredTransitions = mutableSetOf<Transition>()
+    internal fun calcFilteredTransitions(previousState: ParserState?): Set<Transition> {
+        return if (null == previousState) {
+            val transitions = this.calcTransitions()
+            transitions
+        } else {
+            __filteredTransitions.clear()
+            val transitions = this.calcTransitions()//, gn.lookaheadStack.peek())
+            for (t in transitions) {
+                val filter = when (t.action) {
+                    Transition.ParseAction.WIDTH -> {
+                        true
+                    }
+                    Transition.ParseAction.GRAFT -> {
+                        previousState.rulePosition == t.prevGuard
+                    }
+                    Transition.ParseAction.HEIGHT -> {
+                        t.to.growsInto(previousState) &&
+                                previousState.rulePosition != t.prevGuard
+                    }
+                    Transition.ParseAction.EMBED -> {
+                        true
+                    }
+                    Transition.ParseAction.GOAL -> {
+                        true
+                    }
+                }
+                if (filter) __filteredTransitions.add(t)
+            }
+            __filteredTransitions
+        }
+    }
+
     private val __heightTransitions = mutableSetOf<Transition>()
     private val __graftTransitions = mutableSetOf<Transition>()
     private val __widthTransitions = mutableSetOf<Transition>()
     private val __goalTransitions = mutableSetOf<Transition>()
     private val __embeddedTransitions = mutableSetOf<Transition>()
     private val __transitions = mutableSetOf<Transition>()
-    private fun calcTransitions(previousState: ParserState?): Set<Transition> {//, lookaheadSet: LookaheadSet): Set<Transition> { //TODO: add previous in order to filter parent relations
+    internal fun calcTransitions(): Set<Transition> {//TODO: add previous in order to filter parent relations
         __heightTransitions.clear()
         __graftTransitions.clear()
         __widthTransitions.clear()
@@ -202,7 +236,7 @@ class ParserState(
                         val to = this
                         __goalTransitions.add(Transition(this, to, action, emptyList(), LookaheadSet.EMPTY, null) { _, _ -> true })
                     }
-                    previousState != null -> {
+                   else -> {
                         val heightOrGraftInto = this.heightOrGraftInto3()
                         for (pp in heightOrGraftInto) {
                             if (pp.runtimeRule.kind == RuntimeRuleKind.GOAL) {
@@ -244,7 +278,6 @@ class ParserState(
                             }
                         }
                     }
-                    else -> error("Internal error")
                 }
             } else {
                 when {
@@ -263,12 +296,7 @@ class ParserState(
                             }
                         }
                     }
-                    previousState != null -> {
-                        when {
-                            this.stateSet.number != previousState.stateSet.number -> {
-                                TODO()
-                            }
-                            else -> {
+                    else ->{
                                 val widthInto = this.widthInto4()
                                 for (p in widthInto) {
                                     val rp = p//.rulePosition
@@ -284,10 +312,8 @@ class ParserState(
                                         }
                                     }
                                 }
-                            }
+
                         }
-                    }
-                    else -> error("Internal error")
                 }
             }
         }

@@ -56,6 +56,7 @@ subprojects {
     }
 
     configure<KotlinMultiplatformExtension> {
+
         jvm("jvm8") {
             val main by compilations.getting {
                 kotlinOptions {
@@ -89,7 +90,6 @@ subprojects {
             }
         }
     }
-
 
     val now = Instant.now()
     fun fBbuildStamp(): String {
