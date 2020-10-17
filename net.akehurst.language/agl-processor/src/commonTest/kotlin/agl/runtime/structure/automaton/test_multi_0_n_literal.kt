@@ -38,20 +38,8 @@ class test_multi_0_n_literal {
         val lhs1 = LookaheadSet(1, setOf(a))
     }
 
-    @Test
-    fun s0_calcClosureLR0() {
-
-        val actual1 = s0.calcClosureLR1(lhsE)
-        val actual = s0.calcClosureLR0_1().toList()
-
-        val cl_G = ClosureItemWithLookaheadList(null, RulePosition(G, 0, 0), listOf(lhs0))
-
-
-
-        val expected = listOf(
-                cl_G
-        )
-        assertEquals(expected, actual)
+    fun s0_widthInto() {
+        TODO()
     }
 
 

@@ -45,33 +45,9 @@ class test_rightRecursive {
     }
 
     @Test
-    fun s0_calcClosureLR0() {
-
-        val actual1 = s0.calcClosure(LookaheadSet.EMPTY).toList()
-        val actual = s0.calcClosureLR0_1().toList()
-
-        val cl_G = ClosureItemWithLookaheadList(null, RulePosition(G, 0, 0), listOf(lhs_T))
-        val cl_G_S0 = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 0, 0), listOf(lhs_T))
-        val cl_G_S0_a = ClosureItemWithLookaheadList(cl_G_S0, RulePosition(a, 0, 0), listOf(lhs_T))
-        val cl_G_S1 = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 1, 0), listOf(lhs_T))
-        val cl_G_S1_S1 = ClosureItemWithLookaheadList(cl_G_S1, RulePosition(S1, 0, 0), listOf(lhs_T, lhs_a))
-        val cl_G_S1_S1_a = ClosureItemWithLookaheadList(cl_G_S1_S1, RulePosition(a, 0, 0), listOf(lhs_T, lhs_a))
-
-
-        val expected = listOf(
-                cl_G, cl_G_S0, cl_G_S0_a,
-                cl_G_S1, cl_G_S1_S1, cl_G_S1_S1_a
-        )
-        assertEquals(expected, actual)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i].lookaheadSetList, actual[i].lookaheadSetList)
-        }
-    }
-
-    @Test
     fun s0_widthInto() {
 
-        val actual = s0.widthInto1()
+        val actual = s0.widthInto4()
 
         val cl_G = ClosureItemWithLookaheadList(null, RulePosition(G, 0, 0), listOf(lhs_T))
         val cl_G_S0 = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 0, 0), listOf(lhs_T))
@@ -80,13 +56,11 @@ class test_rightRecursive {
         val cl_G_S1_S1 = ClosureItemWithLookaheadList(cl_G_S1, RulePosition(S1, 0, 0), listOf(lhs_T, lhs_a))
         val cl_G_S1_S1_a = ClosureItemWithLookaheadList(cl_G_S1_S1, RulePosition(a, 0, 0), listOf(lhs_T, lhs_a))
 
-        val expected = listOf(
-                cl_G_S0_a, cl_G_S1_S1_a
+        val expected = setOf(
+                RulePosition(a, 0, 0)
         )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i].lookaheadSetList, actual[i].lookaheadSetList)
-        }
+        assertEquals(expected, actual)
+
     }
 
     @Test
@@ -213,16 +187,14 @@ class test_rightRecursive {
         val s4 = s0.stateSet.fetch(RulePosition(S1, 0, 1))
         val s5 = s0.stateSet.fetch(RulePosition(G, 0, 1))
 
-        val actual = s4.widthInto2()
+        val actual = s4.widthInto4()
 
         val cl_G = ClosureItemWithLookaheadList(null, RulePosition(G, 0, 0), listOf(lhs_T))
-        val expected = listOf(
-                cl_G
+        val expected = setOf(
+                RulePosition(G, 0, 0)
         )
-        assertEquals(expected.size, actual.size)
-        for (i in actual.indices) {
-            assertEquals(expected[i], actual[i])
-        }
+        assertEquals(expected, actual)
+
     }
 
     @Test

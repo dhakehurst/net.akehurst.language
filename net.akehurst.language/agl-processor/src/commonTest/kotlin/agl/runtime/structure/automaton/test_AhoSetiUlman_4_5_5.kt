@@ -50,29 +50,7 @@ class test_AhoSetiUlman_4_5_5 {
     }
 
     @Test
-    fun s0_closureLR0() {
-        //given
-
-        //when
-        val actual = s0.calcClosureLR0_1().toList()
-
-        //then
-        val cl_G = ClosureItemWithLookaheadList(null, RulePosition(G, 0, 0), listOf(lhs0))
-        val cl_G_S = ClosureItemWithLookaheadList(cl_G, RulePosition(S, 0, 0), listOf(lhs0, lhs1))
-        val cl_G_S_C0 = ClosureItemWithLookaheadList(cl_G_S, RulePosition(C, 0, 0), listOf(lhs0, lhs1))
-        val cl_G_S_C0_C1 = ClosureItemWithLookaheadList(cl_G_S_C0, RulePosition(C1, 0, 0), listOf(lhs0, lhs1, lhs1))
-        val cl_G_S_C0_C1_c = ClosureItemWithLookaheadList(cl_G_S_C0_C1, RulePosition(cT, 0, 0), listOf(lhs0, lhs1,  lhs1))
-        val cl_G_S_C1 = ClosureItemWithLookaheadList(cl_G_S, RulePosition(C, 1, 0), listOf(lhs0, lhs1))
-        val cl_G_S_C1_d = ClosureItemWithLookaheadList(cl_G_S_C1, RulePosition(dT, 0, 0), listOf(lhs0, lhs1))
-
-        val expected = setOf<ClosureItemWithLookaheadList>(
-                cl_G, cl_G_S, cl_G_S_C0, cl_G_S_C0_C1, cl_G_S_C0_C1_c,
-                              cl_G_S_C1, cl_G_S_C1_d
-        ).toList()
-
-        assertEquals(expected.size, actual.size)
-        for (i in actual.indices) {
-            assertEquals(expected[i], actual[i])
-        }
+    fun s0_widthInto() {
+TODO()
     }
 }

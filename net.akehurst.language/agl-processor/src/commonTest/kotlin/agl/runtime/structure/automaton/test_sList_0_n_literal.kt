@@ -43,7 +43,6 @@ class test_sList_0_n_literal {
     @Test
     fun s0_widthInto() {
 
-        val actual1 = test_leftRecursive.s0.widthInto2()
         val actual = test_leftRecursive.s0.widthInto4().toList()
 
         val cl_G = ClosureItemWithLookaheadList(null, RulePosition(test_leftRecursive.G, 0, 0), listOf(test_leftRecursive.lhs_T))

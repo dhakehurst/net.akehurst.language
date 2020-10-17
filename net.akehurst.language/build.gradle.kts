@@ -23,7 +23,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 plugins {
-    kotlin("multiplatform") version ("1.4.10") apply false
+    kotlin("multiplatform") version "1.4.10" apply false
     id("com.jfrog.bintray") version ("1.8.5") apply false
     id("org.jetbrains.dokka") version ("0.10.1") apply false
 }
@@ -59,11 +59,15 @@ subprojects {
         jvm("jvm8") {
             val main by compilations.getting {
                 kotlinOptions {
+                    languageVersion = "1.4"
+                    apiVersion = "1.4"
                     jvmTarget = JavaVersion.VERSION_1_8.toString()
                 }
             }
             val test by compilations.getting {
                 kotlinOptions {
+                    languageVersion = "1.4"
+                    apiVersion = "1.4"
                     jvmTarget = JavaVersion.VERSION_1_8.toString()
                 }
             }

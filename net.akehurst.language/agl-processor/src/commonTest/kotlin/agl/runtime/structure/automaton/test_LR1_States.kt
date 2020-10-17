@@ -67,17 +67,13 @@ class test_LR1_States {
     fun s0_widthInto() {
         val s0 = rrs.startingState(S)
 
-        val actual = s0.widthInto(LookaheadSet.EMPTY)
-        val expected = listOf(
-                Pair(RulePosition(d, 0, 0), LookaheadSet(0, setOf(a))),
-                Pair(RulePosition(b, 0, 0), LookaheadSet(1, setOf(d))),
-                Pair(RulePosition(d, 0, 0), LookaheadSet(2, setOf(c)))
+        val actual = s0.widthInto4()
+        val expected = setOf(
+                RulePosition(d, 0, 0),
+                RulePosition(b, 0, 0),
+                RulePosition(d, 0, 0)
         )
         assertEquals(expected, actual)
-        for(i in 0 until actual.size) {
-            assertEquals(expected[i].second.content, actual[i].second.content)
-        }
-
     }
 
     @Test
@@ -109,11 +105,11 @@ class test_LR1_States {
         val tr_c_d = trans_s0.first { it.lookaheadGuard.content.contains(c) }
         // - WIDTH -> d
         val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
-        val actual = s1.heightOrGraftInto(s0, tr_a_d.lookaheadGuard)
+        val actual = s1.heightOrGraftInto3()
         assertNotNull(actual)
-        val expected = listOf<Pair<RulePosition, LookaheadSet>>(
-                Pair(RulePosition(rA, 0, 0), LookaheadSet(0,  setOf(a))),
-                Pair(RulePosition(rB, 0, 0), LookaheadSet(1,  setOf(c)))
+        val expected = setOf(
+                RulePosition(rA, 0, 0),
+                RulePosition(rB, 0, 0)
         )
 
         assertEquals(expected, actual)
