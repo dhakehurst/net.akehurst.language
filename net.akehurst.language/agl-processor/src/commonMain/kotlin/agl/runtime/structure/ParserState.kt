@@ -137,7 +137,8 @@ class ParserState(
         }
 
     internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
-        return this.stateSet.runtimeRuleSet.createLookaheadSet(content)
+        val f = content.filter { it.isEmptyRule.not() }
+        return this.stateSet.runtimeRuleSet.createLookaheadSet(f)
     }
 
     fun widthInto4(): Set<RulePosition> {
