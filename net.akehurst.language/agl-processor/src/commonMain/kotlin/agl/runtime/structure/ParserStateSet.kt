@@ -206,7 +206,9 @@ class ParserStateSet(
                 }
                 else -> {
                     val nextRPs = rp.next()
-                    nextRPs.flatMap { this.fetchOrCreateFirstAt(it) }.toSet()
+                    nextRPs.flatMap {
+                        this.fetchOrCreateFirstAt(it)
+                    }.toSet()
                 }
             }
         }
@@ -227,13 +229,18 @@ class ParserStateSet(
                     rp.isAtEnd -> emptySet()
                     else -> {
                         val ns = rp.items.flatMap {
-                            when (it.kind) {
-                                RuntimeRuleKind.TERMINAL -> setOf(it)
-                                RuntimeRuleKind.NON_TERMINAL -> {
-                                    this.runtimeRuleSet.firstTerminals[it.number] ?: emptySet()
+                            when {
+                                it.isEmptyRule -> {
+                                    rp.next().flatMap { calcFirstAt(it,done) }
                                 }
-                                RuntimeRuleKind.EMBEDDED -> it.embeddedRuntimeRuleSet!!.firstTerminals[it.embeddedStartRule!!.number]
-                                else -> TODO()
+                                else -> when (it.kind) {
+                                    RuntimeRuleKind.TERMINAL -> setOf(it)
+                                    RuntimeRuleKind.NON_TERMINAL -> {
+                                            this.runtimeRuleSet.firstTerminals[it.number]
+                                    }
+                                    RuntimeRuleKind.EMBEDDED -> it.embeddedRuntimeRuleSet!!.firstTerminals[it.embeddedStartRule!!.number]
+                                    else -> TODO()
+                                }
                             }
                         }.toSet()
                         ns
@@ -255,18 +262,27 @@ class ParserStateSet(
             }
             else -> { // use first of next
                 val ns = rp.items.flatMap {
-                    when (it.kind) {
-                        RuntimeRuleKind.TERMINAL -> setOf(it)
-                        RuntimeRuleKind.NON_TERMINAL -> {
-                            val fsts = it.rulePositionsAt[0]
-                            fsts.flatMap {
-                                val newDone = done //.copyOf() //TODO: do we need to copy?
-                                newDone[it.runtimeRule.number] = true
-                                calcFirstAt(it, done)
-                            }
+                    when {
+                        it.isEmptyRule -> {
+                            rp.next().flatMap { calcFirstAt(it,done) }
                         }
-                        RuntimeRuleKind.EMBEDDED -> it.embeddedRuntimeRuleSet!!.firstTerminals[it.embeddedStartRule!!.number]
-                        else -> TODO()
+                        else -> when (it.kind) {
+                            RuntimeRuleKind.TERMINAL -> setOf(it)
+                            RuntimeRuleKind.NON_TERMINAL -> {
+                                val fsts = it.rulePositionsAt[0]
+                                fsts.flatMap {
+                                    val newDone = done //.copyOf() //TODO: do we need to copy?
+                                    newDone[it.runtimeRule.number] = true
+                                    if (it.items.size==1 && it.items.first().isEmptyRule) {
+                                        rp.next().flatMap { calcFirstAt(it,done) }
+                                    } else {
+                                        calcFirstAt(it, done)
+                                    }
+                                }
+                            }
+                            RuntimeRuleKind.EMBEDDED -> it.embeddedRuntimeRuleSet!!.firstTerminals[it.embeddedStartRule!!.number]
+                            else -> TODO()
+                        }
                     }
                 }.toSet()
                 ns

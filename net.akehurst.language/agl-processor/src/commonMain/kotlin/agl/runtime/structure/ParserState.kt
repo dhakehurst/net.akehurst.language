@@ -137,8 +137,7 @@ class ParserState(
         }
 
     internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
-        val f = content.filter { it.isEmptyRule.not() }
-        return this.stateSet.runtimeRuleSet.createLookaheadSet(f)
+        return this.stateSet.runtimeRuleSet.createLookaheadSet(content)
     }
 
     fun widthInto4(): Set<RulePosition> {
@@ -382,7 +381,7 @@ class ParserState(
         val to = this.stateSet.fetchOrCreateParseState(toRp)
         val lhcs = this.stateSet.fetchOrCreateFirstAt(toRp)
         val addLh = listOf(to.createLookaheadSet(lhcs))
-        val parentLh = LookaheadSet.EMPTY //TODO: remove
+        val parentLh = addLh.lastOrNull { it != LookaheadSet.EMPTY } ?: LookaheadSet.EMPTY
         val trs = setOf(Transition(this, to, action, addLh, parentLh, prevGuard) { _, _ -> true })
         return trs
     }
@@ -404,7 +403,7 @@ class ParserState(
         val to = this.stateSet.fetchOrCreateParseState(toRp)
         val lhcs = this.stateSet.fetchOrCreateFirstAt(toRp)
         val addLh = listOf(to.createLookaheadSet(lhcs))
-        val parentLh = LookaheadSet.EMPTY //TODO: remove
+        val parentLh = addLh.lastOrNull { it != LookaheadSet.EMPTY } ?: LookaheadSet.EMPTY
         val trs = setOf(Transition(this, to, action, addLh, parentLh, prevGuard, runtimeGuard))
         return trs
     }

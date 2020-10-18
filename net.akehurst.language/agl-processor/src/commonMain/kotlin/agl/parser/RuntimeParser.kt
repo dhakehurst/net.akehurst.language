@@ -31,6 +31,10 @@ internal class RuntimeParser(
         private val runtimeRuleSet: RuntimeRuleSet,
         private val graph: ParseGraph
 ) {
+    companion object{
+        val lhs = Stack<LookaheadSet>() //TODO: temp
+    }
+
     // copy of graph growing head for each iteration, cached to that we can find best match in case of error
     private var toGrow: List<GrowingNode> = listOf()
     private var toGrowPrevious = mutableMapOf<GrowingNode, Set<PreviousInfo>>()
@@ -315,15 +319,15 @@ internal class RuntimeParser(
         this.graph.recordGoal(complete)
     }
 
-    private val Stack<LookaheadSet>.peekContent get() = this.items.lastOrNull { it != LookaheadSet.EMPTY }?.content ?: emptySet()
+    //private val Stack<LookaheadSet>.peekContent get() = this.items.lastOrNull { it != LookaheadSet.EMPTY }?.content ?: emptySet()
 
     private fun doWidth(curGn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition, noLookahead: Boolean) {
         val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, curGn.nextInputPosition, curGn.lastLocation)
         if (null != l) {
-            val lhs = curGn.lookaheadStack.pushAll(transition.additionalLookaheads)
-            val lh = lhs.peekContent
+           // val lhs = curGn.lookaheadStack.pushAll(transition.additionalLookaheads)
+            val lh = transition.lookaheadGuard.content//lhs.peekContent
 
-            val skipNodes = this.tryParseSkip(curGn, l.location) //TODO: does the result get reused?
+            val skipNodes = this.tryParseSkip(curGn, l.location)//, lh) //TODO: does the result get reused?
             val nextInput = skipNodes.lastOrNull()?.nextInputPosition ?: l.nextInputPosition
             val lastLocation = skipNodes.lastOrNull()?.location ?: l.location
 
@@ -338,8 +342,8 @@ internal class RuntimeParser(
     }
 
     private fun doHeight(curGn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
-        val trLh = transition.additionalLookaheads.last()
-        val lh = if (trLh === LookaheadSet.EMPTY) curGn.lookaheadStack.peekContent else trLh.content
+        //val trLh = transition.additionalLookaheads.last()
+        val lh = transition.lookaheadGuard.content//if (trLh === LookaheadSet.EMPTY) curGn.lookaheadStack.peekContent else trLh.content
 
         val hasLh = lh.any {
             val l = this.graph.findOrTryCreateLeaf(it, curGn.nextInputPosition, curGn.lastLocation)
@@ -347,7 +351,7 @@ internal class RuntimeParser(
         }
         if (noLookahead || hasLh || lh.isEmpty()) {
             val complete = this.graph.findCompleteNode(curGn.currentState.rulePosition, curGn.startPosition, curGn.matchedTextLength) ?: error("Should never be null")
-            val lhs = if (transition.to.rulePosition.isAtEnd) curGn.lookaheadStack.pushAll(emptyList()) else curGn.lookaheadStack.pop().stack
+            //val lhs = if (transition.to.rulePosition.isAtEnd) curGn.lookaheadStack.pushAll(emptyList()) else curGn.lookaheadStack.pop().stack
             this.graph.createWithFirstChild(curGn.isSkipGrowth, transition.to, lhs, complete, setOf(previous), curGn.skipNodes)
         }
     }
@@ -355,10 +359,10 @@ internal class RuntimeParser(
     private fun doGraft(curGn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
         val prev = previous.node
         if (transition.runtimeGuard(transition, prev, prev.currentState.rulePosition)) {
-            val popRes = curGn.lookaheadStack.pop()
-            val lhs = if (transition.to.rulePosition.isAtEnd) curGn.lookaheadStack.pushAll(emptyList()) else curGn.lookaheadStack.pop().stack
-            val trLh = transition.additionalLookaheads.last()
-            val lh = if (trLh === LookaheadSet.EMPTY) curGn.lookaheadStack.peekContent else trLh.content
+            //val popRes = curGn.lookaheadStack.pop()
+            //val lhs = if (transition.to.rulePosition.isAtEnd) curGn.lookaheadStack.pushAll(emptyList()) else curGn.lookaheadStack.pop().stack
+            //val trLh = transition.additionalLookaheads.last()
+            val lh = transition.lookaheadGuard.content//if (trLh === LookaheadSet.EMPTY) curGn.lookaheadStack.peekContent else trLh.content
 
             val hasLh = lh.any {
                 val l = this.graph.findOrTryCreateLeaf(it, curGn.nextInputPosition, curGn.lastLocation)
@@ -397,13 +401,13 @@ internal class RuntimeParser(
             }
         }
     */
-    private fun tryParseSkip(curGn: GrowingNode, lastLocation: InputLocation): List<SPPTNode> {
+    private fun tryParseSkip(curGn: GrowingNode, lastLocation: InputLocation): List<SPPTNode> {//, lh:Set<RuntimeRule>): List<SPPTNode> {
         return when {
             this.runtimeRuleSet.skipRules.isEmpty() -> emptyList<SPPTNode>()
             curGn.currentState.stateSet.isSkip -> emptyList<SPPTNode>()
             //TODO: if already parsing skip
             else -> {
-                val endingLookahead = curGn.lookaheadStack.peekContent
+                val endingLookahead = emptySet<RuntimeRule>()//lh//curGn.lookaheadStack.peekContent
                 val stateSet = this.runtimeRuleSet.skipParserStateSet
                 val graph = ParseGraph(stateSet.userGoalRule, this.graph.input)
                 val rp = RuntimeParser(stateSet.runtimeRuleSet, graph)

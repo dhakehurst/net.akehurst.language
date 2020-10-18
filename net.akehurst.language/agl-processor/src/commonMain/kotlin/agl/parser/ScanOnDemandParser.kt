@@ -114,11 +114,13 @@ class ScanOnDemandParser(
         rp.start(goalRule)
         var seasons = 1
         var maxNumHeads = graph.growingHead.size
+        var totalWork = maxNumHeads
 
         do {
             rp.grow(false)
             seasons++
             maxNumHeads = max(maxNumHeads, graph.growingHead.size)
+            totalWork += graph.growingHead.size
             //if (maxNumHeads > 10) {
             //    println("WARN: Lots of ambiguity detected at runtime")
             //    graph.growingHead.values.forEach {

@@ -237,7 +237,7 @@ EventRaisingExpression = 'raise' FeatureCall (':' Expression)?;
 EventValueReferenceExpression = 'valueof' '(' FeatureCall ')';
 ActiveStateReferenceExpression = 'active' '(' FQN ')';
 
-PrimaryExpression
+override PrimaryExpression
     = PrimitiveValueExpression
     | FeatureCall
     | ActiveStateReferenceExpression

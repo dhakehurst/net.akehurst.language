@@ -24,22 +24,54 @@ class test_multi_0_n_literal {
     companion object {
         // S =  'a'* ;
         val rrs = runtimeRuleSet {
-            multi("S",0,-1,"'a'")
-            literal("'a'","a")
+            multi("S", 0, -1, "'a'")
+            literal("'a'", "a")
         }
         val S = rrs.findRuntimeRule("S")
+        val eS = S.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
         val a = rrs.findRuntimeRule("'a'")
         val G = rrs.startingState(S).runtimeRule
 
         val s0 = rrs.startingState(S)
 
-        val lhsE = LookaheadSet.EMPTY
-        val lhs0 = LookaheadSet(0, setOf(rrs.END_OF_TEXT))
-        val lhs1 = LookaheadSet(1, setOf(a))
+        val lhs_E = LookaheadSet.EMPTY
+        val lhs_T = LookaheadSet(1, setOf(rrs.END_OF_TEXT))
+        val lhs_a = LookaheadSet(0, setOf(a))
+        val lhs_aT = LookaheadSet(1, setOf(a, rrs.END_OF_TEXT))
     }
 
+    @Test
+    fun parentPosition() {
+
+    }
+
+    @Test
+    fun fetchOrCreateFirstAt() {
+
+    }
+
+    fun lookahead() {
+
+    }
+
+    @Test
     fun s0_widthInto() {
-        TODO()
+    }
+
+    @Test
+    fun s0_transitions() {
+        val actual = s0.transitions(null)
+        val s1 = s0.stateSet.fetch(RulePosition(a, 0, RulePosition.END_OF_RULE))
+        val s2 = s0.stateSet.fetch(RulePosition(eS,0,RulePosition.END_OF_RULE))
+
+        val expected = listOf(
+                Transition(s0, s1, Transition.ParseAction.WIDTH, listOf(lhs_a), lhs_a, null) { _, _ -> true },
+                Transition(s0, s2, Transition.ParseAction.WIDTH, listOf(lhs_T), lhs_a, null) { _, _ -> true }
+        ).toList()
+        assertEquals(expected.size, actual.size)
+        for (i in actual.indices) {
+            assertEquals(expected[i], actual[i])
+        }
     }
 
 

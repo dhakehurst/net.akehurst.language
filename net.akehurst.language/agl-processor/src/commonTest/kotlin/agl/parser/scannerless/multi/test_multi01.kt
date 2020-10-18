@@ -58,7 +58,8 @@ class test_multi01 : test_ScanOnDemandParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual =  super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
 

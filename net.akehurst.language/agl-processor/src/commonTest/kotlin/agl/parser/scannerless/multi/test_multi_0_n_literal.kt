@@ -19,6 +19,7 @@ package net.akehurst.language.parser.scanondemand.multi
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
 
@@ -40,7 +41,9 @@ class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
             S|1 { §empty }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
+
     }
 
     @Test
@@ -53,7 +56,8 @@ class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -66,7 +70,8 @@ class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
             S { 'a' 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -79,7 +84,8 @@ class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
             S { 'a' 'a' 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -90,7 +96,8 @@ class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
 
         val expected = "S { "+"'a' ".repeat(50)+" }"
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -101,7 +108,8 @@ class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
 
         val expected = "S { "+"'a' ".repeat(500)+" }"
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -112,6 +120,7 @@ class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
 
         val expected = "S { "+"'a' ".repeat(2000)+" }"
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 }
