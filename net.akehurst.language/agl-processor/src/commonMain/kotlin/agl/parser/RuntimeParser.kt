@@ -37,7 +37,7 @@ internal class RuntimeParser(
 
     // copy of graph growing head for each iteration, cached to that we can find best match in case of error
     private var toGrow: List<GrowingNode> = listOf()
-    private var toGrowPrevious = mutableMapOf<GrowingNode, Set<PreviousInfo>>()
+    private var toGrowPrevious = mutableMapOf<GrowingNode, Collection<PreviousInfo>>()
     private var interruptedMessage: String? = null
 
     //needs to be public so that expectedAt can use it
@@ -172,7 +172,7 @@ internal class RuntimeParser(
     }
 
 
-    internal fun growWidthOnly(gn: GrowingNode, previous: Set<PreviousInfo>) {
+    internal fun growWidthOnly(gn: GrowingNode, previous: Collection<PreviousInfo>) {
         when (gn.runtimeRule.kind) {
             RuntimeRuleKind.GOAL -> {
                 //val rps = gn.currentState
@@ -199,7 +199,7 @@ internal class RuntimeParser(
         }
     }
 
-    internal fun growHeightOrGraftOnly(gn: GrowingNode, previous: Set<PreviousInfo>) {
+    internal fun growHeightOrGraftOnly(gn: GrowingNode, previous: Collection<PreviousInfo>) {
         //should never be a GOAL
         //val didSkipNode = this.tryGrowWidthWithSkipRules(gn, previous)
         //if (didSkipNode) {
@@ -257,7 +257,7 @@ internal class RuntimeParser(
         }
     }
 
-    internal fun growNode(gn: GrowingNode, previous: Set<PreviousInfo>, noLookahead: Boolean) {
+    internal fun growNode(gn: GrowingNode, previous: Collection<PreviousInfo>, noLookahead: Boolean) {
         //val didSkipNode = this.tryGrowWidthWithSkipRules(gn, previous)
         //if (didSkipNode) {
         //    return
@@ -288,7 +288,7 @@ internal class RuntimeParser(
         }
     }
 
-    private fun growNormal(gn: GrowingNode, previous: Set<PreviousInfo>, noLookahead: Boolean) {
+    private fun growNormal(gn: GrowingNode, previous: Collection<PreviousInfo>, noLookahead: Boolean) {
         for (prev in previous) {
             //if (gn.isSkipGrowth) {
             //    this.growSkip(gn, prev)
@@ -314,8 +314,7 @@ internal class RuntimeParser(
     }
 
     private fun doGoal(gn: GrowingNode) {
-        val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength)
-                ?: error("Should never be null")
+        val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength) ?: error("Should never be null")
         this.graph.recordGoal(complete)
     }
 

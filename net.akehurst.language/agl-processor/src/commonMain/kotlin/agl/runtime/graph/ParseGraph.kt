@@ -641,14 +641,14 @@ internal class ParseGraph(
         this.addGrowingHead(gi, goalGN)
     }
 
-    fun pop(gn: GrowingNode): Set<PreviousInfo> {
+    fun pop(gn: GrowingNode): Collection<PreviousInfo> {
         for (pi in gn.previous.values) {
             pi.node.removeNext(gn)
             this.removeGrowing(pi.node)
         }
         val previous = gn.previous
         gn.newPrevious()
-        return previous.values.toSet() //FIXME: don't convert to set
+        return previous.values
     }
 
     fun pushToStackOf(isSkipGrowth: Boolean, newRp: ParserState, lookaheadStack:Stack<LookaheadSet>, leafNode: SPPTLeafDefault, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes:List<SPPTNode>) {
