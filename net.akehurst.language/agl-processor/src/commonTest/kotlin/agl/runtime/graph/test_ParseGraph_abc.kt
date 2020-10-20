@@ -54,9 +54,7 @@ class test_ParseGraph_abc {
         val gr = RuntimeRuleSet.createGoalRule(r_S)
         val startState = rrs.startingState(r_S)
         val startLocation = InputLocation(0, 0, 1, 0)
-        val lookaheadStack = Stack<LookaheadSet>()
-        val eot = startState.createLookaheadSet(startState.stateSet.possibleEndOfText)
-        sut.start(startState,startLocation,lookaheadStack)
+        sut.start(startState,startLocation)
 
         assertEquals(RuntimeRuleKind.GOAL, gr.kind)
         assertEquals(true, sut.canGrow)

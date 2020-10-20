@@ -16,6 +16,7 @@
 package net.akehurst.language.comparisons.agl
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.comparisons.common.FileData
@@ -26,13 +27,13 @@ import org.junit.*
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.IOException
-import java.nio.file.Files
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
 class Java8_compare_Test_aglOptm(val file: FileData) {
 
     companion object {
-        val javaTestFiles = "../javaTestFiles/javac"
+        const val col = "agl_optm"
 
         @JvmStatic
         @Parameterized.Parameters(name = "{index}: {0}")
@@ -55,11 +56,17 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
         var input: String? = null
 
         fun parseWithJava8Agl(file: FileData): SharedPackedParseTree? {
-            val tree = aglProcessor.parse("CompilationUnit", input!!)
-            TimeLogger("agl_optm", file).use { timer ->
-                val tree = aglProcessor.parse("CompilationUnit", input!!)
-                timer.success()
-                return tree
+            return try {
+                aglProcessor.parse("CompilationUnit", input!!)
+                TimeLogger(col, file).use { timer ->
+                    val tree = aglProcessor.parse("CompilationUnit", input!!)
+                    timer.success()
+                    tree
+                }
+            } catch (e: ParseFailedException) {
+                Results.logError(col, file)
+                assertTrue(file.isError)
+                null
             }
         }
 
@@ -76,12 +83,10 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
         }
     }
 
-
-
     @Before
     fun setUp() {
         try {
-            input = String(Files.readAllBytes(file.path))
+            input = file.path.toFile().readText()
         } catch (e: IOException) {
             e.printStackTrace()
             Assert.fail(e.message)
@@ -89,10 +94,8 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
     }
 
     @Test
-    fun agl_compilationUnit() {
-        val tree = parseWithJava8Agl(file)
-        Assert.assertNotNull("Failed to Parse", tree)
+    fun agl_optm_compilationUnit() {
+        parseWithJava8Agl(file)
     }
-
 
 }

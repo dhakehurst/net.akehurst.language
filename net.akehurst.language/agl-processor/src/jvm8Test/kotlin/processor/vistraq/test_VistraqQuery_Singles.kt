@@ -245,7 +245,7 @@ class test_VistraqQuery_Singles {
         Assert.assertEquals(queryStr, resultStr)
     }
 
-    @Test(timeout = 5000)
+    @Test//(timeout = 5000)
     fun fromBlog() {
         val queryStr = """
 FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month

@@ -18,18 +18,18 @@ package net.akehurst.language.comparisons.common
 import java.io.IOException
 import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
-import java.util.*
 
 data class FileData(
         val index: Int,
         val path: Path,
-        val size: Long
+        val chars: Int,
+        val isError: Boolean
 )
 
 object Java8TestFiles {
     var javaTestFiles = "../javaTestFiles/javac"
 
-    val files: Collection<FileData>
+    val files: List<FileData>
         get() {
             val params = mutableListOf<Pair<Path, Long>>()
             try {
@@ -47,32 +47,33 @@ object Java8TestFiles {
             } catch (e: IOException) {
                 throw RuntimeException("Error getting files", e)
             }
-            params.sortBy { it.second }
-            val f = params.filter{
-                it.second < 3000
+
+
+            val data = params.map {
+                val chars = countChars(it.first)
+                val isError = containsError(it.first)
+                FileData(0, it.first, chars, isError)
             }
-            // remove diagnostic files
-            val f1 = f.filter {
-                it.first.toString().contains("/diags/").not()
-            }
-            // remove files with errors
-            val f2 = f1.filter {
-                val path = it.first
-                val outFilePath = path.parent.resolve( path.fileName.toFile().nameWithoutExtension+".out"  )
-                if (outFilePath.toFile().exists()) {
-                    val txt = outFilePath.toFile().readText()
-                    //TODO: could make this test for errors better
-                    txt.contains(Regex("errors|error")).not()
-                } else {
-                    val txt = path.toFile().readText()
-                    //TODO: could make this test for errors better
-                    txt.contains(Regex("errors|error")).not()
-                }
-            }
+            var sorted = data.sortedBy { it.chars }
             var index = 0
-
-            val fin = f2
-
-            return fin.map { FileData(index++, it.first, it.second) }
+            return sorted.map {
+                FileData(index++, it.path, it.chars, it.isError)
+            }
         }
+
+    fun countChars(path:Path) : Int = path.toFile().readText().length
+
+
+    fun containsError(path: Path): Boolean {
+        val outFilePath = path.parent.resolve(path.fileName.toFile().nameWithoutExtension + ".out")
+        return if (outFilePath.toFile().exists()) {
+            val txt = outFilePath.toFile().readText()
+            //TODO: could make this test for errors better
+            txt.contains(Regex("errors|error"))
+        } else {
+            val txt = path.toFile().readText()
+            //TODO: could make this test for errors better
+            txt.contains(Regex("errors|error"))
+        }
+    }
 }

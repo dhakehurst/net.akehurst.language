@@ -23,7 +23,6 @@ class Transition(
         val from: ParserState,
         val to: ParserState,
         val action: ParseAction,
-        val additionalLookaheads: List<LookaheadSet>,
         val lookaheadGuard: LookaheadSet, //TODO: is this needed as we have the additionalLookaheads now?
         val prevGuard: RulePosition?,
         val runtimeGuard: Transition.(current:GrowingNode, previous:RulePosition?)->Boolean
@@ -38,7 +37,7 @@ class Transition(
     }
 
     private val hashCode_cache:Int by lazy {
-        arrayListOf<Any>(from, to, action, additionalLookaheads).hashCode()
+        arrayListOf<Any>(from, to, action, lookaheadGuard).hashCode()
     }
 
 
@@ -52,7 +51,7 @@ class Transition(
                 if (this.from!=other.from) return false
                 if (this.to!=other.to) return false
                 if (this.action!=other.action) return false
-                if (this.additionalLookaheads!=other.additionalLookaheads) return false
+                if (this.lookaheadGuard!=other.lookaheadGuard) return false
                 return true
             }
             else -> return false
@@ -61,7 +60,7 @@ class Transition(
 
     override fun toString(): String {
         //val lh = " "+this.lookaheadGuard.number.toString()+":"+this.lookaheadGuard.content.map { it.tag }
-        val lh = additionalLookaheads
+        val lh = lookaheadGuard
         return "Transition { $from -- $action$lh --> $to }"
     }
 }

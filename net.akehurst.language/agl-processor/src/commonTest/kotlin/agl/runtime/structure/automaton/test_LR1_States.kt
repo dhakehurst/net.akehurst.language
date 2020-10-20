@@ -85,9 +85,9 @@ class test_LR1_States {
         val s2 = s0.stateSet.fetch(RulePosition(b, 0, RulePosition.END_OF_RULE))
         val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, emptyList(), LookaheadSet(0, setOf(a)), null) { _, _ -> true },
-                Transition(s0, s2, Transition.ParseAction.WIDTH, emptyList(), LookaheadSet(1,  setOf(d)), null) { _, _ -> true },
-                Transition(s0, s1, Transition.ParseAction.WIDTH, emptyList(), LookaheadSet(2,  setOf(c)), null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH,  LookaheadSet(0, setOf(a)), null) { _, _ -> true },
+                Transition(s0, s2, Transition.ParseAction.WIDTH,  LookaheadSet(1,  setOf(d)), null) { _, _ -> true },
+                Transition(s0, s1, Transition.ParseAction.WIDTH,  LookaheadSet(2,  setOf(c)), null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for(i in 0 until actual.size) {
@@ -126,8 +126,8 @@ class test_LR1_States {
         val s3 = s0.stateSet.fetch(RulePosition(rA, 0, RulePosition.END_OF_RULE))
         val s4 = s0.stateSet.fetch(RulePosition(rB, 0, RulePosition.END_OF_RULE))
         val expected = listOf<Transition>(
-                Transition(s1, s3, Transition.ParseAction.HEIGHT, emptyList(), LookaheadSet(0,  setOf(a)), null) { _, _ -> true },
-                Transition(s1, s4, Transition.ParseAction.HEIGHT, emptyList(), LookaheadSet(1,  setOf(c)), null) { _, _ -> true }
+                Transition(s1, s3, Transition.ParseAction.HEIGHT,  LookaheadSet(0,  setOf(a)), null) { _, _ -> true },
+                Transition(s1, s4, Transition.ParseAction.HEIGHT,  LookaheadSet(1,  setOf(c)), null) { _, _ -> true }
         )
     }
 /*

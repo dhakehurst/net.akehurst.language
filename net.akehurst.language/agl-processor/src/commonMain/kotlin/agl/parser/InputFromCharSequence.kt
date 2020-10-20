@@ -17,9 +17,8 @@
 package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.regex.RegexMatcher
+import net.akehurst.language.agl.regex.matchAtStart
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.sppt.SPPTLeafDefault
 import kotlin.math.min
 
 internal class InputFromCharSequence(val text: CharSequence) {
@@ -79,11 +78,22 @@ internal class InputFromCharSequence(val text: CharSequence) {
         }
     }
 
+    private fun matchRegEx2(position: Int, regex: Regex): RegexMatcher.MatchResult? {
+        val text = this.text.substring(position)
+        val matchedText = regex.matchAtStart(text)
+        return if (null == matchedText)
+            null
+        else {
+            val eolPositions = this.eolPositions(matchedText)
+            RegexMatcher.MatchResult(matchedText, eolPositions)
+        }
+    }
+
     internal fun tryMatchText(position: Int, patternText: String, pattern: Regex?): RegexMatcher.MatchResult? {
         val matched = when {
             (position >= this.text.length) -> if (patternText == END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
             (null == pattern) -> this.matchLiteral(position, patternText)
-            else -> this.matchRegEx(position, pattern)
+            else -> this.matchRegEx2(position, pattern)
             //else ->pattern.match(this.text, position)
         }
         return matched

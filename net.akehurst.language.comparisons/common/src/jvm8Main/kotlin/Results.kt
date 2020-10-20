@@ -46,6 +46,12 @@ object Results {
         this.results[fileData.index] = res
     }
 
+    @Synchronized
+    fun logError(col: String, fileData: FileData) {
+        val res = Result(false, col, fileData, Duration.ZERO)
+        this.results[fileData.index] = res
+    }
+
     fun write() {
         try {
             val resultsFile = Paths.get("../results/results.xlsx")
@@ -116,7 +122,7 @@ object Results {
             val c = row.createCell(0)
             c.setCellValue(fileData.path.toString())
             val c2 = row.createCell(1)
-            c2.setCellValue(fileData.size.toDouble())
+            c2.setCellValue(fileData.chars.toDouble())
             rowNum = row.rowNum
         }
         val valueRow = sheet.getRow(rowNum)

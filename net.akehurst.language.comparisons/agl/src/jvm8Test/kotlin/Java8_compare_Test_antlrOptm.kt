@@ -28,13 +28,13 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.IOException
 import java.nio.file.Files
-import java.nio.file.Path
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
 class Java8_compare_Test_antlrOptm(val file: FileData) {
 
     companion object {
-        val javaTestFiles = "../javaTestFiles/javac"
+        const val col = "agl_antlr_optm"
 
         @JvmStatic
         @Parameterized.Parameters(name = "{index}: {0}")
@@ -56,14 +56,18 @@ class Java8_compare_Test_antlrOptm(val file: FileData) {
 
         var input: String? = null
 
-
         fun parseWithJava8OptmAntlr(file: FileData): SharedPackedParseTree? {
-            // pre cache stuff
-            val tree = optmAntlrJava8Processor.parse("compilationUnit", input!!)
-            TimeLogger("agl_antlr_optm", file).use { timer ->
-                val tree = optmAntlrJava8Processor.parse("compilationUnit", input!!)
-                timer.success()
-                return tree
+            return try {
+                optmAntlrJava8Processor.parse("compilationUnit", input!!)
+                TimeLogger(col, file).use { timer ->
+                    val tree = optmAntlrJava8Processor.parse("compilationUnit", input!!)
+                    timer.success()
+                    tree
+                }
+            } catch (e: ParseFailedException) {
+                Results.logError(col, file)
+                assertTrue(file.isError)
+                null
             }
         }
 
@@ -90,11 +94,9 @@ class Java8_compare_Test_antlrOptm(val file: FileData) {
         }
     }
 
-
     @Test
-    fun optmAntlr_compilationUnit() {
-        val tree = parseWithJava8OptmAntlr(file)
-        Assert.assertNotNull("Failed to Parse", tree)
+    fun agl_antlr_optm_compilationUnit() {
+        parseWithJava8OptmAntlr(file)
     }
 
 }

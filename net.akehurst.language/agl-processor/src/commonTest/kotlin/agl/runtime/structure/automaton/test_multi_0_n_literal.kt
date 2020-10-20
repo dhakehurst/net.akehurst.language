@@ -65,8 +65,8 @@ class test_multi_0_n_literal {
         val s2 = s0.stateSet.fetch(RulePosition(eS,0,RulePosition.END_OF_RULE))
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, listOf(lhs_a), lhs_a, null) { _, _ -> true },
-                Transition(s0, s2, Transition.ParseAction.WIDTH, listOf(lhs_T), lhs_a, null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH,  lhs_a, null) { _, _ -> true },
+                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_a, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {

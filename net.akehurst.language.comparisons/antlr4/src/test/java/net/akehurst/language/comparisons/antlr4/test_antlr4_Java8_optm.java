@@ -16,6 +16,7 @@
 package net.akehurst.language.comparisons.antlr4;
 
 import net.akehurst.language.comparisons.common.FileData;
+import net.akehurst.language.comparisons.common.Java8TestFiles;
 import net.akehurst.language.comparisons.common.Results;
 import net.akehurst.language.comparisons.common.TimeLogger;
 import org.antlr.v4.runtime.*;
@@ -24,38 +25,43 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
-import java.nio.file.*;
 import java.util.Collection;
-
-import net.akehurst.language.comparisons.common.Java8TestFiles;
 
 @RunWith(Parameterized.class)
 public class test_antlr4_Java8_optm {
 
+    static int totalFiles;
     static CharStream input;
 
     @Parameterized.Parameters(name = "{index}: {0}")
     public static Collection<FileData> getFiles() {
-        return Java8TestFiles.INSTANCE.getFiles();
+        var files = Java8TestFiles.INSTANCE.getFiles();
+        totalFiles = files.size();
+        return files;
     }
 
     static antlr4.optm.Java8ParserOpt.CompilationUnitContext parseWithAntlr4Optm(final FileData file) {
+        try {
+            final Lexer lexer = new antlr4.optm.Java8LexerOpt(input);
+            final CommonTokenStream tokens = new CommonTokenStream(lexer);
 
-        final Lexer lexer = new antlr4.optm.Java8LexerOpt(input);
-        final CommonTokenStream tokens = new CommonTokenStream(lexer);
+            //pre cache
+            final antlr4.optm.Java8ParserOpt p1 = new antlr4.optm.Java8ParserOpt(tokens);
+            p1.setErrorHandler(new BailErrorStrategy());
+            p1.compilationUnit();
 
-        //pre cache
-        final antlr4.optm.Java8ParserOpt p1 = new antlr4.optm.Java8ParserOpt(tokens);
-        p1.setErrorHandler(new BailErrorStrategy());
-        p1.compilationUnit();
-
-        tokens.seek(0);
-        final antlr4.optm.Java8ParserOpt p = new antlr4.optm.Java8ParserOpt(tokens);
-        p.setErrorHandler(new BailErrorStrategy());
-        try (TimeLogger timer = new TimeLogger("antlr4_optm", file)) {
-            antlr4.optm.Java8ParserOpt.CompilationUnitContext r = p.compilationUnit();
-            timer.success();
-            return r;
+            tokens.seek(0);
+            final antlr4.optm.Java8ParserOpt p = new antlr4.optm.Java8ParserOpt(tokens);
+            p.setErrorHandler(new BailErrorStrategy());
+            try (TimeLogger timer = new TimeLogger("antlr4_optm", file)) {
+                antlr4.optm.Java8ParserOpt.CompilationUnitContext r = p.compilationUnit();
+                timer.success();
+                return r;
+            }
+        } catch (RecognitionException e) {
+            Results.INSTANCE.logError("antlr4_optm", file);
+            Assert.assertTrue(file.isError());
+            return null;
         }
     }
 
@@ -82,6 +88,7 @@ public class test_antlr4_Java8_optm {
 
     @Test
     public void antlr4_optm_compilationUnit1() {
+        System.out.println("" + file.getIndex() + " of " + totalFiles);
         final antlr4.optm.Java8ParserOpt.CompilationUnitContext tree = parseWithAntlr4Optm(this.file);
         Assert.assertNotNull("Failed to Parse", tree);
     }

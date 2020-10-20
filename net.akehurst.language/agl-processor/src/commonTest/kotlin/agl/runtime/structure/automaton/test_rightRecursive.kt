@@ -69,8 +69,8 @@ class test_rightRecursive {
         val s1 = s0.stateSet.fetch(RulePosition(a, 0, RulePosition.END_OF_RULE))
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, listOf(lhs_T), lhs_T, null) { _, _ -> true },
-                Transition(s0, s1, Transition.ParseAction.WIDTH, listOf(lhs_T, lhs_a), lhs_a, null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH,  lhs_T, null) { _, _ -> true },
+                Transition(s0, s1, Transition.ParseAction.WIDTH,  lhs_a, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -119,8 +119,8 @@ class test_rightRecursive {
         val s2 = s0.stateSet.fetch(RulePosition(S, 0, RulePosition.END_OF_RULE))
         val s3 = s0.stateSet.fetch(RulePosition(S1, 0, 1))
         val expected = listOf<Transition>(
-                Transition(s1, s2, Transition.ParseAction.HEIGHT, listOf(lhs_T), lhs_aT, null) { _, _ -> true },
-                Transition(s1, s3, Transition.ParseAction.HEIGHT, listOf(lhs_a), lhs_a, null) { _, _ -> true }
+                Transition(s1, s2, Transition.ParseAction.HEIGHT,  lhs_aT, null) { _, _ -> true },
+                Transition(s1, s3, Transition.ParseAction.HEIGHT,  lhs_a, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -171,8 +171,8 @@ class test_rightRecursive {
         val s5 = s0.stateSet.fetch(RulePosition(G, 0, 1))
         val s4 = s0.stateSet.fetch(RulePosition(S1, 0, 1))
         val expected = listOf<Transition>(
-                Transition(s2, s4, Transition.ParseAction.HEIGHT, listOf(lhs_a), lhs_a, null) { _, _ -> true },
-                Transition(s2, s5, Transition.ParseAction.GRAFT, listOf(lhs_T), lhs_T, null) { _, _ -> true }
+                Transition(s2, s4, Transition.ParseAction.HEIGHT,  lhs_a, null) { _, _ -> true },
+                Transition(s2, s5, Transition.ParseAction.GRAFT,  lhs_T, null) { _, _ -> true }
         )
         assertEquals(expected, actual)
     }
@@ -209,7 +209,7 @@ class test_rightRecursive {
 
         val actual = s4.transitions(s0)
         val expected = listOf<Transition>(
-                Transition(s4, s1, Transition.ParseAction.WIDTH, listOf(lhs_aT), lhs_a, null) { _, _ -> true }
+                Transition(s4, s1, Transition.ParseAction.WIDTH, lhs_a, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -231,7 +231,7 @@ class test_rightRecursive {
         val actual = s3.transitions(s0)
         val s6 = s0.stateSet.fetch(RulePosition(S, 1, RulePosition.END_OF_RULE))
         val expected = listOf<Transition>(
-                Transition(s3, s6, Transition.ParseAction.HEIGHT, listOf(lhs_aT), lhs_a, null) { _, _ -> true }
+                Transition(s3, s6, Transition.ParseAction.HEIGHT, lhs_a, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -255,8 +255,8 @@ class test_rightRecursive {
         val actual = s6.transitions(s0)
 
         val expected = listOf<Transition>(
-                Transition(s6, s4, Transition.ParseAction.HEIGHT, listOf(lhs_a), lhs_a, null) { _, _ -> true },
-                Transition(s6, s5, Transition.ParseAction.GRAFT, listOf(lhs_T), lhs_a, null) { _, _ -> true }
+                Transition(s6, s4, Transition.ParseAction.HEIGHT,  lhs_a, null) { _, _ -> true },
+                Transition(s6, s5, Transition.ParseAction.GRAFT,  lhs_a, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
