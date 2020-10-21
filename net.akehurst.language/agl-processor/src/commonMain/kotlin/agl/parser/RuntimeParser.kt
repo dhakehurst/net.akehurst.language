@@ -232,7 +232,7 @@ internal class RuntimeParser(
         for (gn in this.toGrow) {
             checkInterrupt()
             val lastLocation = gn.location
-            val skipNodes = this.tryParseSkip(gn, lastLocation)
+            val skipNodes = this.tryParseSkipUntilNone(gn, lastLocation)
             if (skipNodes.isNotEmpty()) {
                 graph.growSkipChildren(gn, skipNodes)
             } else {
@@ -316,10 +316,9 @@ internal class RuntimeParser(
     private fun doWidth(curGn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition, noLookahead: Boolean) {
         val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, curGn.nextInputPosition, curGn.lastLocation)
         if (null != l) {
-           // val lhs = curGn.lookaheadStack.pushAll(transition.additionalLookaheads)
             val lh = transition.lookaheadGuard.content//lhs.peekContent
 
-            val skipNodes = this.tryParseSkip(curGn, l.location)//, lh) //TODO: does the result get reused?
+            val skipNodes = this.tryParseSkipUntilNone(curGn, l.location)//, lh) //TODO: does the result get reused?
             val nextInput = skipNodes.lastOrNull()?.nextInputPosition ?: l.nextInputPosition
             val lastLocation = skipNodes.lastOrNull()?.location ?: l.location
 
@@ -393,26 +392,30 @@ internal class RuntimeParser(
             }
         }
     */
-/*
+
     val __skipNodes = mutableListOf<SPPTNode>()
     private fun tryParseSkipUntilNone(curGn: GrowingNode, location: InputLocation): List<SPPTNode> {
         __skipNodes.clear()
         var lastLocation = location
         do {
             val skipNode = tryParseSkip(curGn, lastLocation)
-            lastLocation = skipNodes.lastOrNull()?.location ?: l.location
-        } while(skipNodes.isEmpty())
+            if (null!=skipNode) {
+                __skipNodes.add(skipNode)
+                lastLocation = skipNode.location
+            }
+        } while(null!=skipNode)
+        return __skipNodes
     }
-    */
-    private fun tryParseSkip(curGn: GrowingNode, lastLocation: InputLocation): List<SPPTNode> {//, lh:Set<RuntimeRule>): List<SPPTNode> {
+
+    private fun tryParseSkip(curGn: GrowingNode, lastLocation: InputLocation): SPPTNode? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
         return when {
-            this.runtimeRuleSet.skipRules.isEmpty() -> emptyList<SPPTNode>()
-            curGn.currentState.stateSet.isSkip -> emptyList<SPPTNode>()
+            this.runtimeRuleSet.skipRules.isEmpty() -> null
+            curGn.currentState.stateSet.isSkip -> null
             //TODO: if already parsing skip
             else -> {
                 val endingLookahead = emptySet<RuntimeRule>()//lh//curGn.lookaheadStack.peekContent
                 val stateSet = this.runtimeRuleSet.skipParserStateSet
-                val graph = ParseGraph(stateSet.userGoalRule, this.graph.input)
+                val graph = ParseGraph(stateSet.userGoalRule, this.graph.input, 10)
                 val rp = RuntimeParser(stateSet.runtimeRuleSet, graph)
                 val startPosition = lastLocation.position + lastLocation.length
                 val startLocation = InputLocation(startPosition, lastLocation.column, lastLocation.line, 0) //TODO: compute correct line and column
@@ -429,10 +432,10 @@ internal class RuntimeParser(
                 //TODO: get longest skip match
                 when {
                     //null == match -> curGn
-                    graph.goals.isEmpty() -> emptyList<SPPTNode>()
+                    graph.goals.isEmpty() -> null
                     else -> {
                         val match = graph.goals.sortedBy { it.matchedTextLength }.last()
-                        val skipNodes = match.asBranch.children[0].asBranch.children.map { it.asBranch.children[0] }
+                        val skipNodes = match.asBranch.children[0].asBranch.children[0]
                         skipNodes
                     }
                 }
@@ -468,7 +471,7 @@ internal class RuntimeParser(
 
         val embeddedRuntimeRuleSet = embeddedRule.embeddedRuntimeRuleSet ?: error("Should never be null")
         val embeddedStartRule = embeddedRule.embeddedStartRule ?: error("Should never be null")
-        val graph = ParseGraph(embeddedStartRule, this.graph.input)
+        val graph = ParseGraph(embeddedStartRule, this.graph.input, embeddedRule.embeddedRuntimeRuleSet.runtimeRules.size)
         val rp = RuntimeParser(embeddedRuntimeRuleSet, graph)
         val startPosition = gn.lastLocation.position + gn.lastLocation.length
         val startLocation = InputLocation(startPosition, gn.lastLocation.column, gn.lastLocation.line, 0) //TODO: compute correct line and column

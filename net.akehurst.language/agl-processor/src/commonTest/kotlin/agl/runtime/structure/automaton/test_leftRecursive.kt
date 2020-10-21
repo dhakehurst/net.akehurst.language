@@ -67,7 +67,7 @@ class test_leftRecursive {
         val cl_G_S1_S1_S0_a = ClosureItemWithLookaheadList(cl_G_S1_S1_S0, RulePosition(a, 0, 0), listOf(lhs_T, lhs_a))
 
         val expected = listOf(
-                RulePosition(a, 0, 0)
+                RulePosition(a, 0, RulePosition.END_OF_RULE)
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {

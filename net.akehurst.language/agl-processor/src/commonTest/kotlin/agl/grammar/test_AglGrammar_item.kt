@@ -505,8 +505,9 @@ class test_AglGrammar_item {
         val expected = this.sppt("""
             rule {
                 ruleTypeLabels {
-                    isSkip { §isSkip§multi3|1 { §empty } }
-                    isLeaf { §isLeaf§multi4|1 { §empty } }
+                    isOverride { §isOverride§multi3|1 { §empty } }
+                    isSkip { §isSkip§multi4|1 { §empty } }
+                    isLeaf { §isLeaf§multi5|1 { §empty } }
                 }
                 IDENTIFIER : 'r' WHITESPACE  : ' ' 
                 '=' WHITESPACE  : ' ' 

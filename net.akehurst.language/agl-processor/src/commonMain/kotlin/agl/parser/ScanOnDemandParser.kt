@@ -107,7 +107,7 @@ class ScanOnDemandParser(
     override fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val input = InputFromCharSequence(inputText)
-        val graph = ParseGraph(goalRule, input)
+        val graph = ParseGraph(goalRule, input,this.runtimeRuleSet.runtimeRules.size)
         val rp = RuntimeParser(this.runtimeRuleSet, graph)
         this.runtimeParser = rp
 
@@ -245,7 +245,7 @@ class ScanOnDemandParser(
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val usedText = inputText.subSequence(0, position)
         val input = InputFromCharSequence(usedText)
-        val graph = ParseGraph(goalRule, input)
+        val graph = ParseGraph(goalRule, input,this.runtimeRuleSet.runtimeRules.size)
         val rp = RuntimeParser(this.runtimeRuleSet, graph)
         this.runtimeParser = rp
 

@@ -393,6 +393,7 @@ class RuntimeRule(
             else -> when (kind) {
                 RuntimeRuleKind.GOAL -> TODO()
                 RuntimeRuleKind.TERMINAL -> setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
+                RuntimeRuleKind.EMBEDDED -> setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
                 RuntimeRuleKind.NON_TERMINAL -> when (this.rhs.kind) {
                     RuntimeRuleItemKind.EMPTY -> {
                         emptySet()
@@ -446,7 +447,6 @@ class RuntimeRule(
                     RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
                     else -> throw RuntimeException("Internal Error: rule kind not recognised")
                 }
-                RuntimeRuleKind.EMBEDDED -> setOf(RulePosition(this, 0, position))
             }
         }
     }

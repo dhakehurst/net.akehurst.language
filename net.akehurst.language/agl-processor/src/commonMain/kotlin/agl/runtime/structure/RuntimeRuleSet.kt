@@ -53,7 +53,7 @@ class RuntimeRuleSet(
         val SKIP_CHOICE_RULE_NUMBER = -4;
         val END_OF_TEXT_TAG = "<EOT>"
         val GOAL_TAG = "<GOAL>"
-        val SKIP_RULE_TAG = "<SKIP-MULTI>"
+        val SKIP_RULE_TAG = "<SKIP-GOAL>"
         val SKIP_CHOICE_RULE_TAG = "<SKIP-CHOICE>"
 
         fun createGoalRule(userGoalRule: RuntimeRule): RuntimeRule {
@@ -62,7 +62,7 @@ class RuntimeRuleSet(
 
         fun createGoalRule(userGoalRule: RuntimeRule, possibleEndOfText: Set<RuntimeRule>): RuntimeRule {
             val gr = RuntimeRule(userGoalRule.runtimeRuleSet, GOAL_RULE_NUMBER, GOAL_TAG, "", RuntimeRuleKind.GOAL, false, false)
-            val items = listOf(userGoalRule) + possibleEndOfText
+            val items = listOf(userGoalRule) //+ possibleEndOfText
             gr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, items.toTypedArray())
             return gr
         }
@@ -151,10 +151,14 @@ class RuntimeRuleSet(
         val possibleEndOfText = emptySet<RuntimeRule>()
 
 
-        val skipChoiceRule = RuntimeRule(this, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
-        skipChoiceRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
+//        val skipChoiceRule = RuntimeRule(this, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
+//        skipChoiceRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
+//        val skipGoalRule = RuntimeRule(this, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
+ //       skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.MULTI, RuntimeRuleChoiceKind.NONE, 1, -1, arrayOf(skipChoiceRule))
+
         val skipGoalRule = RuntimeRule(this, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
-        skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.MULTI, RuntimeRuleChoiceKind.NONE, 1, -1, arrayOf(skipChoiceRule))
+        skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
+
 
         val ss = ParserStateSet(nextStateSetNumber++, this, skipGoalRule, possibleEndOfText, true)
         this.states_cache[skipGoalRule] = ss

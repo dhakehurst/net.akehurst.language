@@ -35,6 +35,73 @@ class SPPTLeafDefault(
         priority
 ), SPPTLeaf
 {
+    companion object {
+        val NONE = object : SPPTLeaf {
+            override val isPattern: Boolean
+                get() = TODO("not implemented")
+            override val isLiteral: Boolean
+                get() = TODO("not implemented")
+            override val tagList: List<String>
+                get() = TODO("not implemented")
+            override val eolPositions: List<Int>
+                get() = TODO("not implemented")
+            override val metaTags: List<String>
+                get() = TODO("not implemented")
+            override val identity: SPPTNodeIdentity
+                get() = TODO("not implemented")
+            override val name: String
+                get() = TODO("not implemented")
+            override val runtimeRuleNumber: Int
+                get() = TODO("not implemented")
+            override val option: Int
+                get() = TODO("not implemented")
+            override val location: InputLocation
+                get() = TODO("not implemented")
+            override val lastLocation: InputLocation
+                get() = TODO("not implemented")
+            override val startPosition: Int
+                get() = TODO("not implemented")
+            override val matchedTextLength: Int
+                get() = TODO("not implemented")
+            override val nextInputPosition: Int
+                get() = TODO("not implemented")
+            override val priority: Int
+                get() = TODO("not implemented")
+            override val matchedText: String
+                get() = TODO("not implemented")
+            override val nonSkipMatchedText: String
+                get() = TODO("not implemented")
+            override val numberOfLines: Int
+                get() = TODO("not implemented")
+            override val isEmptyLeaf: Boolean
+                get() = TODO("not implemented")
+            override val isEmptyMatch: Boolean
+                get() = TODO("not implemented")
+            override val isLeaf: Boolean
+                get() = true
+            override val isBranch: Boolean
+                get() = false
+            override val isSkip: Boolean
+                get() = TODO("not implemented")
+            override val asLeaf: SPPTLeaf
+                get() = TODO("not implemented")
+            override val asBranch: SPPTBranch
+                get() = TODO("not implemented")
+            override var parent: SPPTBranch?
+                get() = TODO("not implemented")
+                set(value) {TODO("not implemented")}
+
+            override fun contains(other: SPPTNode): Boolean {
+                TODO("not implemented")
+            }
+
+            override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
+                TODO("not implemented")
+            }
+
+        }
+    }
+
 
     // --- SPPTLeaf ---
 

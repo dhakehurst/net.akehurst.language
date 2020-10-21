@@ -40,9 +40,9 @@ class test_skipRules {
 
         val skipSS = rrs.skipParserStateSet
         val sk0 = skipSS.startState
-        val skG = sk0.runtimeRule
-        val skS = skG.rhs.items[0]
-        val skC = skS.rhs.items[RuntimeRuleItem.MULTI__ITEM]
+        val skG = sk0.runtimeRule                          // G = skS ;
+        val skS = skG.rhs.items[0]                         // skS = WS | CM
+        //val skC = skS.rhs.items[RuntimeRuleItem.MULTI__ITEM]
         val skWS = rrs.findRuntimeRule("WS")
         val skCM = rrs.findRuntimeRule("COMMENT")
     }
@@ -59,22 +59,24 @@ class test_skipRules {
         )
         assertEquals(expected, actual)
 
+        /*
         actual = skipSS.parentPosition[skC]
         expected = setOf(
                 RulePosition(skS, 0, 0),
                 RulePosition(skS, 0, RulePosition.MULIT_ITEM_POSITION)
         )
         assertEquals(expected, actual)
+*/
 
         actual = skipSS.parentPosition[skWS]
         expected = setOf(
-                RulePosition(skC, 0, 0)
+                RulePosition(skS, 0, 0)
         )
         assertEquals(expected, actual)
 
         actual = skipSS.parentPosition[skCM]
         expected = setOf(
-                RulePosition(skC, 1, 0)
+                RulePosition(skS, 1, 0)
         )
         assertEquals(expected, actual)
     }
@@ -82,20 +84,18 @@ class test_skipRules {
     @Test
     fun firstTerminals() {
         var actual = skipSS.firstTerminals[RulePosition(skG, 0, 0)]
-        var expected = setOf(skWS, skCM)
+        var expected = setOf(skWS,skCM)
         assertEquals(expected, actual)
 
         actual = skipSS.firstTerminals[RulePosition(skS, 0, 0)]
-        expected = setOf(skWS, skCM)
-        assertEquals(expected, actual)
-
-        actual = skipSS.firstTerminals[RulePosition(skC, 0, 0)]
         expected = setOf(skWS)
         assertEquals(expected, actual)
 
-        actual = skipSS.firstTerminals[RulePosition(skC, 1, 0)]
-        expected = setOf(skCM)
+        actual = skipSS.firstTerminals[RulePosition(skS, 1, 0)]
+        expected = setOf( skCM)
         assertEquals(expected, actual)
+
+
 
     }
 

@@ -62,8 +62,8 @@ data class RulePosition(
                 RuntimeRuleKind.GOAL -> when {
                     itemRule.isSkip -> setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE))
                     else -> when (this.position) {
-                        0 -> setOf(RulePosition(this.runtimeRule, 0, 1))
-                        1 -> setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE))
+                        //0 -> setOf(RulePosition(this.runtimeRule, 0, 1))
+                        0 -> setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE))
                         else -> error("Should never happen")
                     }
                 }

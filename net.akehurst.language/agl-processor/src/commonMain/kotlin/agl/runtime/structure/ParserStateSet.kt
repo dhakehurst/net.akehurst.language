@@ -64,13 +64,13 @@ class ParserStateSet(
                 childRR.number == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
                     setOf(this.startState.rulePosition)
                 }
-                childRR.number == RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER -> {
-                    val option = this.runtimeRuleSet.skipRules.indexOf(childRR)
-                    setOf(RulePosition(this.userGoalRule, 0, 0), RulePosition(this.userGoalRule, 0, RulePosition.MULIT_ITEM_POSITION))
-                }
+                //childRR.number == RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER -> {
+                //    val option = this.runtimeRuleSet.skipRules.indexOf(childRR)
+                //    setOf(RulePosition(this.userGoalRule, 0, 0), RulePosition(this.userGoalRule, 0, RulePosition.MULIT_ITEM_POSITION))
+                //}
                 else -> {
                     val option = this.runtimeRuleSet.skipRules.indexOf(childRR)
-                    setOf(RulePosition(this.userGoalRule.rhs.items[RuntimeRuleItem.MULTI__ITEM], option, 0))
+                    setOf(RulePosition(this.userGoalRule, option, 0))
                 }
             }
             else -> {
@@ -100,7 +100,7 @@ class ParserStateSet(
                     else -> this.runtimeRuleSet.firstTerminals[this.userGoalRule.number].toSet()
                 }
                 rp.isAtEnd -> emptySet()
-                else -> this.possibleEndOfText
+                else -> emptySet()//this.possibleEndOfText
             }
             RuntimeRuleKind.NON_TERMINAL -> {
                 rp.items.flatMap {
@@ -111,9 +111,9 @@ class ParserStateSet(
                             RuntimeRuleSet.SKIP_RULE_NUMBER -> this.runtimeRuleSet.skipRules.flatMap {
                                 this.runtimeRuleSet.firstTerminals[it.number]
                             }.toSet()
-                            RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER -> it.rhs.items.flatMap {
-                                this.runtimeRuleSet.firstTerminals[it.number]
-                            }.toSet()
+                           // RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER -> it.rhs.items.flatMap {
+                           //     this.runtimeRuleSet.firstTerminals[it.number]
+                           // }.toSet()
                             else -> error("should not happen")
                         }
                     }
@@ -226,7 +226,7 @@ class ParserStateSet(
             rp.runtimeRule.number < 0 -> { //must be GOAL or SKIP-GOAL
                 when {
                     rp.isAtStart -> this.runtimeRuleSet.firstTerminals[this.userGoalRule.number] ?: emptySet()
-                    rp.isAtEnd -> emptySet()
+                    rp.isAtEnd -> this.possibleEndOfText.toSet()//emptySet()
                     else -> this.possibleEndOfText.toSet()
                 }
             }
