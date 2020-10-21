@@ -106,6 +106,8 @@ class ParserState(
 
     internal var transitions_cache: MutableMap<ParserState?, List<Transition>?> = mutableMapOf()
 
+    val allBuiltTransitions : Set<Transition> get() = transitions_cache.values.filterNotNull().flatten().toSet()
+
     val parentRelations: Set<ParentRelation> by lazy {
         if (rulePosition.runtimeRule.kind == RuntimeRuleKind.GOAL) {
             emptySet()
@@ -368,8 +370,8 @@ class ParserState(
 
     private fun createWidthTransition(rp: RulePosition, lookaheadSet: LookaheadSet): Transition {
         val action = Transition.ParseAction.WIDTH
-        val toRP = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE) //assumes rp is a terminal
-        val to = this.stateSet.fetchOrCreateParseState(toRP) //TODO: state also depends on lh (or parentRels!)
+        val toRp = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE) //assumes rp is a terminal
+        val to = this.stateSet.states[toRp]
         val lh = lookaheadSet
         return Transition(this, to, action, lh, null) { _, _ -> true }
     }
@@ -377,7 +379,7 @@ class ParserState(
     private fun createHeightTransition3(toRp: RulePosition, prevGuard: RulePosition): Set<Transition> {
         //val prevGuard = toRp//rulePosition //for height, previous must not match prevGuard
         val action = Transition.ParseAction.HEIGHT
-        val to = this.stateSet.fetchOrCreateParseState(toRp)
+        val to = this.stateSet.states[toRp]
         val lhcs = this.stateSet.fetchOrCreateFirstAt(toRp)
         val parentLh = to.createLookaheadSet(lhcs)
         val trs = setOf(Transition(this, to, action, parentLh, prevGuard) { _, _ -> true })
@@ -398,7 +400,7 @@ class ParserState(
             }
         }
         val action = Transition.ParseAction.GRAFT
-        val to = this.stateSet.fetchOrCreateParseState(toRp)
+        val to = this.stateSet.states[toRp]
         val lhcs = this.stateSet.fetchOrCreateFirstAt(toRp)
         val parentLh = to.createLookaheadSet(lhcs)
         val trs = setOf(Transition(this, to, action, parentLh, prevGuard, runtimeGuard))
@@ -407,8 +409,8 @@ class ParserState(
 
     private fun createEmbeddedTransition(rp: RulePosition, lookaheadSet: LookaheadSet): Transition {
         val action = Transition.ParseAction.EMBED
-        val toRP = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE)
-        val to = this.stateSet.fetchOrCreateParseState(toRP)
+        val toRp = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE)
+        val to = this.stateSet.states[toRp]
         val lh = lookaheadSet
         return Transition(this, to, action, lh, null) { _, _ -> true }
     }

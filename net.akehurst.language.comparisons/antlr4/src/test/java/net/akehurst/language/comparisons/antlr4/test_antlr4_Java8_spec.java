@@ -20,6 +20,7 @@ import net.akehurst.language.comparisons.common.Java8TestFiles;
 import net.akehurst.language.comparisons.common.Results;
 import net.akehurst.language.comparisons.common.TimeLogger;
 import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -59,7 +60,7 @@ public class test_antlr4_Java8_spec {
                 timer.success();
                 return r;
             }
-        } catch (RecognitionException e) {
+        } catch (ParseCancellationException | RecognitionException e) {
             Results.INSTANCE.logError("antlr4_spec", file);
             Assert.assertTrue(file.isError());
             return null;
@@ -90,7 +91,7 @@ public class test_antlr4_Java8_spec {
     @Test
     public void antlr4_spec_compilationUnit() {
         System.out.println("" + file.getIndex() + " of " + totalFiles);
-        final antlr4.spec.Java8ParserSpec.CompilationUnitContext tree = parseWithAntlr4Spec(this.file);
+        parseWithAntlr4Spec(this.file);
     }
 
     @AfterClass

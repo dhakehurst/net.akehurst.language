@@ -296,8 +296,6 @@ internal class RuntimeParser(
     }
 
     private fun growWithPrev(gn: GrowingNode, previous: PreviousInfo, noLookahead: Boolean) {
-        // val rps = gn.currentState
-        //val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, previous.node.currentState)
         val transitions = gn.currentState.transitions(previous.node.currentState)
         for (it in transitions) {
             when (it.action) {
@@ -314,8 +312,6 @@ internal class RuntimeParser(
         val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength) ?: error("Should never be null")
         this.graph.recordGoal(complete)
     }
-
-    //private val Stack<LookaheadSet>.peekContent get() = this.items.lastOrNull { it != LookaheadSet.EMPTY }?.content ?: emptySet()
 
     private fun doWidth(curGn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition, noLookahead: Boolean) {
         val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, curGn.nextInputPosition, curGn.lastLocation)
@@ -396,6 +392,17 @@ internal class RuntimeParser(
                 return modified
             }
         }
+    */
+/*
+    val __skipNodes = mutableListOf<SPPTNode>()
+    private fun tryParseSkipUntilNone(curGn: GrowingNode, location: InputLocation): List<SPPTNode> {
+        __skipNodes.clear()
+        var lastLocation = location
+        do {
+            val skipNode = tryParseSkip(curGn, lastLocation)
+            lastLocation = skipNodes.lastOrNull()?.location ?: l.location
+        } while(skipNodes.isEmpty())
+    }
     */
     private fun tryParseSkip(curGn: GrowingNode, lastLocation: InputLocation): List<SPPTNode> {//, lh:Set<RuntimeRule>): List<SPPTNode> {
         return when {

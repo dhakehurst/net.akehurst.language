@@ -32,6 +32,7 @@ class Stack<T>(
     fun push(item: T) : Stack<T>  = Stack( items + item )
     fun pushAll(items:List<T>) : Stack<T> = Stack(this.items + items)
     fun peek(): T = items.last()
+    fun peekOrNull(): T? = items.lastOrNull()
     fun pop(): PopResult<T> = PopResult(this.peek(), Stack( items.subList(0,size-1) ))
 
 }

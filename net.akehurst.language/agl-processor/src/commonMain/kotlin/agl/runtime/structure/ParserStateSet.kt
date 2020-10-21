@@ -35,12 +35,16 @@ class ParserStateSet(
      * LR(0) states
      * The parentRelation can be used to determine the LR(1) related lookahead
      */
-    internal val states = mutableMapOf<RulePosition, ParserState>()
+     val states = lazyMapNonNull<RulePosition, ParserState>() {
+        ParserState(StateNumber(this.nextState++), it, this)
+    }
+
+    val allBuiltTransitions: Set<Transition> get() = states.values.flatMap { it.allBuiltTransitions }.toSet()
 
     val startState: ParserState by lazy {
         val goalRule = RuntimeRuleSet.createGoalRule(userGoalRule, this.possibleEndOfText)
         val goalRP = RulePosition(goalRule, 0, 0)
-        val startState = this.fetchOrCreateParseState(goalRP)
+        val startState = this.states[goalRP]
         startState
     }
 
@@ -168,6 +172,7 @@ class ParserStateSet(
         return x
     }
 
+    /*
     internal fun fetchOrCreateParseState(rulePosition: RulePosition): ParserState { //
         val existing = this.states[rulePosition]
         return if (null == existing) {
@@ -178,9 +183,10 @@ class ParserStateSet(
             existing
         }
     }
+*/
 
     internal fun fetch(rulePosition: RulePosition): ParserState {
-        return this.states[rulePosition] ?: error("should never be null")
+        return this.states[rulePosition]
     }
 
     internal fun fetchOrNull(rulePosition: RulePosition): ParserState? {

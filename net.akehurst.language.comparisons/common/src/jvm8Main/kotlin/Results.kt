@@ -68,7 +68,7 @@ object Results {
             sheet = wb.getSheetAt(0)
 
             for (result in this.results.values.sortedBy { it.fileData.index }) {
-                write(wb,sheet,result.success, result.col, result.fileData, result.value)
+                write(wb, sheet, result.success, result.col, result.fileData, result.value)
             }
 
             Files.newOutputStream(resultsFile).use { fileOut -> wb.write(fileOut) }
@@ -78,63 +78,75 @@ object Results {
         }
     }
 
-    fun write(wb:Workbook, sheet:Sheet, success: Boolean, col: String, fileData: FileData, value: Duration) {
-        val headerFont = wb.createFont()
-        headerFont.bold = true
-        headerFont.fontHeightInPoints = 14.toShort()
-        headerFont.color = IndexedColors.BLUE.getIndex()
-        val headerCellStyle = wb.createCellStyle()
-        headerCellStyle.setFont(headerFont)
-        val errorFont = wb.createFont()
-        headerFont.bold = false
-        headerFont.color = IndexedColors.RED.getIndex()
-        val errorCellStyle = wb.createCellStyle()
-        headerCellStyle.setFont(errorFont)
+    fun write(wb: Workbook, sheet: Sheet, success: Boolean, col: String, fileData: FileData, value: Duration) {
+        try {
+            val headerFont = wb.createFont()
+            headerFont.bold = true
+            headerFont.fontHeightInPoints = 14.toShort()
+            headerFont.color = IndexedColors.BLUE.getIndex()
+            val headerCellStyle = wb.createCellStyle()
+            headerCellStyle.setFont(headerFont)
+            val errorFont = wb.createFont()
+            headerFont.bold = false
+            headerFont.color = IndexedColors.RED.getIndex()
+            val errorCellStyle = wb.createCellStyle()
+            headerCellStyle.setFont(errorFont)
 
-        var headerRow = sheet.getRow(0)
-        if (null == headerRow) {
-            headerRow = sheet.createRow(0)
-        }
-        val itemCol = headerRow!!.getCell(0)
-        if (null == itemCol) {
-            val cell = headerRow.createCell(0)
-            cell.setCellValue("File")
-            cell.cellStyle = headerCellStyle
-            val cell2 = headerRow.createCell(1)
-            cell2.setCellValue("Size")
-            cell2.cellStyle = headerCellStyle
-        }
-        var colNum = -1
-        for (c in headerRow) {
-            if (col == c.stringCellValue) {
-                colNum = c.columnIndex
+            var headerRow = sheet.getRow(0)
+            if (null == headerRow) {
+                headerRow = sheet.createRow(0)
             }
-        }
-        if (-1 == colNum) {
-            val cell = headerRow.createCell(headerRow.lastCellNum.toInt())
-            cell.setCellValue(col)
-            cell.cellStyle = headerCellStyle
-            colNum = cell.columnIndex
-        }
-        var rowNum = fileData.index + 1 //+1 for headings
-        if (sheet.lastRowNum < rowNum) {
-            val row = sheet.createRow(sheet.lastRowNum + 1)
-            val c = row.createCell(0)
-            c.setCellValue(fileData.path.toString())
-            val c2 = row.createCell(1)
-            c2.setCellValue(fileData.chars.toDouble())
-            rowNum = row.rowNum
-        }
-        val valueRow = sheet.getRow(rowNum)
-        var valueCell = valueRow.getCell(colNum)
-        if (null == valueCell) {
-            valueCell = valueRow.createCell(colNum)
-        }
-        if (success) {
-            valueCell!!.setCellValue(value.toNanos().div(1000).toDouble()) //micro seconds
-        } else {
-            valueCell.cellStyle = errorCellStyle
-            valueCell.setCellValue("error")
+            val itemCol = headerRow!!.getCell(0)
+            if (null == itemCol) {
+                val cell = headerRow.createCell(0)
+                cell.setCellValue("File")
+                cell.cellStyle = headerCellStyle
+                val cell2 = headerRow.createCell(1)
+                cell2.setCellValue("Size")
+                cell2.cellStyle = headerCellStyle
+            }
+            var colNum = -1
+            for (c in headerRow) {
+                if (col == c.stringCellValue) {
+                    colNum = c.columnIndex
+                }
+            }
+            if (-1 == colNum) {
+                val cell = headerRow.createCell(headerRow.lastCellNum.toInt())
+                cell.setCellValue(col)
+                cell.cellStyle = headerCellStyle
+                colNum = cell.columnIndex
+            }
+            var rowNum = fileData.index + 1 //+1 for headings
+            //if (sheet.lastRowNum < rowNum) {
+            //    val row = sheet.createRow(sheet.lastRowNum + 1)
+            //    val c = row.createCell(0)
+            //    c.setCellValue(fileData.path.toString())
+            //    val c2 = row.createCell(1)
+            //    c2.setCellValue(fileData.chars.toDouble())
+            //    rowNum = row.rowNum
+            //}
+            var valueRow = sheet.getRow(rowNum)
+            if (null==valueRow) {
+                valueRow = sheet.createRow(rowNum)
+                val c = valueRow.createCell(0)
+                c.setCellValue(fileData.path.toString())
+                val c2 = valueRow.createCell(1)
+                c2.setCellValue(fileData.chars.toDouble())
+                rowNum = valueRow.rowNum
+            }
+            var valueCell = valueRow.getCell(colNum)
+            if (null == valueCell) {
+                valueCell = valueRow.createCell(colNum)
+            }
+            if (success) {
+                valueCell!!.setCellValue(value.toNanos().div(1000).toDouble()) //micro seconds
+            } else {
+                valueCell.cellStyle = errorCellStyle
+                valueCell.setBlank()
+            }
+        } catch (ex: Exception) {
+            throw RuntimeException("Error writing $fileData", ex)
         }
     }
 

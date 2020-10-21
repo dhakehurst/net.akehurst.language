@@ -35,11 +35,13 @@ class Java8_compare_Test_antlrSpec(val file: FileData) {
 
     companion object {
         const val col = "agl_antlr_spec"
+        var totalFiles = 0
 
         @JvmStatic
         @Parameterized.Parameters(name = "{index}: {0}")
         fun files(): Collection<FileData> {
-            val f = Java8TestFiles.files.subList(0,3550) // after 3550 we get java.lang.OutOfMemoryError: Java heap space
+            val f = Java8TestFiles.files.subList(0, 3376) // after 3376 we get java.lang.OutOfMemoryError: Java heap space
+            totalFiles = f.size
             println("Number of files to test against: ${f.size}")
             return f
         }
@@ -97,7 +99,8 @@ class Java8_compare_Test_antlrSpec(val file: FileData) {
 
     @Test
     fun agl_antlr_spec_compilationUnit() {
-       parseWithJava8Spec(file)
+        println("${file.index} of ${totalFiles}")
+        parseWithJava8Spec(file)
     }
 
 }

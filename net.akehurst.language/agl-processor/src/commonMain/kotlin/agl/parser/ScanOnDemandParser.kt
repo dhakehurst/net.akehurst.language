@@ -121,12 +121,6 @@ class ScanOnDemandParser(
             seasons++
             maxNumHeads = max(maxNumHeads, graph.growingHead.size)
             totalWork += graph.growingHead.size
-            //if (maxNumHeads > 10) {
-            //    println("WARN: Lots of ambiguity detected at runtime")
-            //    graph.growingHead.values.forEach {
-            //        print(it.currentState)
-            //    }
-            //}
         } while (graph.canGrow && (graph.goals.isEmpty() || graph.goalMatchedAll.not()))
         //TODO: when parsing an ambiguous grammar,
         // how to know we have found all goals? - keep going until cangrow is false

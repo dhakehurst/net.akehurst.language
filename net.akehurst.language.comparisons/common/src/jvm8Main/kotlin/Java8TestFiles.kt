@@ -23,6 +23,7 @@ data class FileData(
         val index: Int,
         val path: Path,
         val chars: Int,
+        val charsNoComments:Int,
         val isError: Boolean
 )
 
@@ -52,17 +53,22 @@ object Java8TestFiles {
             val data = params.map {
                 val chars = countChars(it.first)
                 val isError = containsError(it.first)
-                FileData(0, it.first, chars, isError)
+                FileData(0, it.first, chars.first,chars.second, isError)
             }
             var sorted = data.sortedBy { it.chars }
             var index = 0
             return sorted.map {
-                FileData(index++, it.path, it.chars, it.isError)
+                FileData(index++, it.path, it.chars,it.charsNoComments, it.isError)
             }
         }
 
-    fun countChars(path:Path) : Int = path.toFile().readText().length
-
+    fun countChars(path:Path) : Pair<Int,Int> {
+        val text = path.toFile().readText()
+        //remove comments
+        val rem = text.replace(Regex("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"),"")
+        val rem2 = rem.replace(Regex("//[^\n]*$"),"")
+        return Pair(text.length,rem2.length)
+    }
 
     fun containsError(path: Path): Boolean {
         val outFilePath = path.parent.resolve(path.fileName.toFile().nameWithoutExtension + ".out")

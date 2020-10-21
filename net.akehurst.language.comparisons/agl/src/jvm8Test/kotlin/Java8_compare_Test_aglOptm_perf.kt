@@ -89,6 +89,7 @@ class Java8_compare_Test_aglOptm_perf(val file: FileData) {
         }
     }
 
+    @Ignore
     @ExperimentalTime
     @Test
     fun agl_compilationUnit() {

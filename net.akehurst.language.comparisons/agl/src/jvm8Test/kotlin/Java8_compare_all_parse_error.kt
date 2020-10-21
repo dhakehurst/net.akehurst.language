@@ -82,6 +82,7 @@ class Java8_compare_all_parse_error(val file: FileData) {
         }
     }
 
+    @Ignore
     @ExperimentalTime
     @Test
     fun compare() {

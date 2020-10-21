@@ -18,6 +18,7 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.parser.InputFromCharSequence
 import net.akehurst.language.api.parser.ParserException
+import net.akehurst.language.collections.Stack
 import net.akehurst.language.collections.lazyMap
 import net.akehurst.language.collections.lazyMapNonNull
 import net.akehurst.language.collections.transitiveClosure
@@ -197,7 +198,7 @@ class RuntimeRuleSet(
             val stateSet = ParserStateSet(nextStateSetNumber++, this, skipRule, emptySet(), true)
             this.skipStateSet[skipRule] = stateSet
             val startSet = skipRule.rulePositions.map { rp ->
-                stateSet.fetchOrCreateParseState(rp)
+                stateSet.states[rp]
                 RulePositionWithLookahead(rp, emptySet())
             }.toSet()
             startSet.transitiveClosure { parent ->
@@ -206,7 +207,7 @@ class RuntimeRuleSet(
                     rr.rulePositions.mapNotNull { childRP ->
                         val childRPEnd = RulePosition(childRP.runtimeRule, childRP.option, RulePosition.END_OF_RULE)
                         //val elh = this.calcLookahead(parent, childRPEnd, parent.lookahead)
-                        val childEndState = stateSet.fetchOrCreateParseState(childRPEnd) // create state!
+                        val childEndState = stateSet.states[childRPEnd] // create state!
                         val lh = this.calcLookahead(parent, childRP, parent.lookahead)
                         //childEndState.addParentRelation(ParentRelation(parentRP, elh))
                         RulePositionWithLookahead(childRP, lh)
@@ -289,13 +290,36 @@ class RuntimeRuleSet(
         }
     }
 
-    fun buildFor(goalRuleName: String) {
+    fun buildFor(goalRuleName: String): ParserStateSet {
         val gr = this.findRuntimeRule(goalRuleName)
         val s0 = this.startingState(gr, setOf(this.END_OF_TEXT))
         val trans = s0.transitions(null)
-        trans.transitiveClosure {
-            val trans = it.to.transitions(it.from)  //TODO: not correct!
-            trans
+        val done = mutableSetOf<Pair<ParserState, ParserState?>>(Pair(s0, null))
+        val prevStack = Stack<ParserState>().push(s0)
+        for (nt in trans) {
+            buildAndTraverse(nt, prevStack, done)
+        }
+        return s0.stateSet
+    }
+
+    fun buildAndTraverse(transition: Transition, prevStack: Stack<ParserState>, done: MutableSet<Pair<ParserState, ParserState?>>) {
+        val prev = prevStack.peekOrNull()
+        val state = transition.to
+        val trans = state.transitions(prev)
+        val dp = Pair(state, prev)
+        if (done.contains(dp)) {
+            //do nothing more
+        } else {
+            done.add(dp)
+            for (nt in trans) {
+                when (nt.action) {
+                    Transition.ParseAction.WIDTH -> buildAndTraverse(nt, prevStack.push(state), done)
+                    Transition.ParseAction.EMBED -> buildAndTraverse(nt, prevStack.push(state), done)
+                    Transition.ParseAction.HEIGHT -> buildAndTraverse(nt, prevStack, done)
+                    Transition.ParseAction.GRAFT -> buildAndTraverse(nt, prevStack.pop().stack, done)
+                    Transition.ParseAction.GOAL -> buildAndTraverse(nt, prevStack, done)
+                }
+            }
         }
     }
 
