@@ -29,16 +29,14 @@ import kotlin.math.max
 
 internal class RuntimeParser(
         private val runtimeRuleSet: RuntimeRuleSet,
-        private val graph: ParseGraph
+        private val goalRule:RuntimeRule,
+        private val input : InputFromCharSequence
 ) {
     companion object{
         val startLocation = InputLocation(0, 0, 1, 0)
     }
 
-    // copy of graph growing head for each iteration, cached to that we can find best match in case of error
-    private var toGrow: List<GrowingNode> = listOf()
-    private var toGrowPrevious = mutableMapOf<GrowingNode, Collection<PreviousInfo>>()
-    private var interruptedMessage: String? = null
+    val graph = ParseGraph(goalRule, input,this.runtimeRuleSet.runtimeRules.size)
 
     //needs to be public so that expectedAt can use it
     val lastGrown: Collection<GrowingNode>
@@ -99,6 +97,18 @@ internal class RuntimeParser(
         get() {
             return this.graph.canGrow
         }
+
+
+    // copy of graph growing head for each iteration, cached to that we can find best match in case of error
+    private var toGrow: List<GrowingNode> = listOf()
+    private var toGrowPrevious = mutableMapOf<GrowingNode, Collection<PreviousInfo>>()
+    private var interruptedMessage: String? = null
+
+
+    fun reset() {
+        this.graph.reset()
+
+    }
 
     fun start(userGoalRule: RuntimeRule) {
         this.runtimeRuleSet.createAllSkipStates()
@@ -413,28 +423,29 @@ internal class RuntimeParser(
             curGn.currentState.stateSet.isSkip -> null
             //TODO: if already parsing skip
             else -> {
+                val skipParser =         RuntimeParser(this.runtimeRuleSet.skipParserStateSet.runtimeRuleSet, this.runtimeRuleSet.skipParserStateSet.userGoalRule, this.input)
+
                 val endingLookahead = emptySet<RuntimeRule>()//lh//curGn.lookaheadStack.peekContent
                 val stateSet = this.runtimeRuleSet.skipParserStateSet
-                val graph = ParseGraph(stateSet.userGoalRule, this.graph.input, 10)
-                val rp = RuntimeParser(stateSet.runtimeRuleSet, graph)
+
                 val startPosition = lastLocation.position + lastLocation.length
                 val startLocation = InputLocation(startPosition, lastLocation.column, lastLocation.line, 0) //TODO: compute correct line and column
                 //val endingLookahead = gn.lookaheadStack.peek().content //transition.lookaheadGuard.content
-                rp.start(stateSet.userGoalRule, startLocation, endingLookahead)
+                skipParser.start(stateSet.userGoalRule, startLocation, endingLookahead)
                 var seasons = 1
-                var maxNumHeads = graph.growingHead.size
+                var maxNumHeads = skipParser.graph.growingHead.size
                 do {
-                    rp.grow(false)
+                    skipParser.grow(false)
                     seasons++
-                    maxNumHeads = max(maxNumHeads, graph.growingHead.size)
-                } while (graph.canGrow && (graph.goals.isEmpty() || graph.goalMatchedAll.not()))
-                //val match = graph.longestMatch(seasons, maxNumHeads)
+                    maxNumHeads = max(maxNumHeads, skipParser.graph.growingHead.size)
+                } while (skipParser.graph.canGrow && (skipParser.graph.goals.isEmpty() || skipParser.graph.goalMatchedAll.not()))
+                //val match = skipGraph.longestMatch(seasons, maxNumHeads)
                 //TODO: get longest skip match
                 when {
                     //null == match -> curGn
-                    graph.goals.isEmpty() -> null
+                    skipParser.graph.goals.isEmpty() -> null
                     else -> {
-                        val match = graph.goals.sortedBy { it.matchedTextLength }.last()
+                        val match = skipParser.graph.goals.sortedBy { it.matchedTextLength }.last()
                         val skipNodes = match.asBranch.children[0].asBranch.children[0]
                         skipNodes
                     }
@@ -471,27 +482,26 @@ internal class RuntimeParser(
 
         val embeddedRuntimeRuleSet = embeddedRule.embeddedRuntimeRuleSet ?: error("Should never be null")
         val embeddedStartRule = embeddedRule.embeddedStartRule ?: error("Should never be null")
-        val graph = ParseGraph(embeddedStartRule, this.graph.input, embeddedRule.embeddedRuntimeRuleSet.runtimeRules.size)
-        val rp = RuntimeParser(embeddedRuntimeRuleSet, graph)
+        val embeddedParser = RuntimeParser(embeddedRuntimeRuleSet, embeddedStartRule,this.input)
         val startPosition = gn.lastLocation.position + gn.lastLocation.length
         val startLocation = InputLocation(startPosition, gn.lastLocation.column, gn.lastLocation.line, 0) //TODO: compute correct line and column
         val endingLookahead = transition.lookaheadGuard.content
-        rp.start(embeddedStartRule, startLocation, endingLookahead)
+        embeddedParser.start(embeddedStartRule, startLocation, endingLookahead)
         var seasons = 1
-        var maxNumHeads = graph.growingHead.size
+        var maxNumHeads = embeddedParser.graph.growingHead.size
         do {
-            rp.grow(false)
+            embeddedParser.grow(false)
             seasons++
-            maxNumHeads = max(maxNumHeads, graph.growingHead.size)
-        } while (graph.canGrow && (graph.goals.isEmpty() || graph.goalMatchedAll.not()))
-        val match = graph.longestMatch(seasons, maxNumHeads)
+            maxNumHeads = max(maxNumHeads, embeddedParser.graph.growingHead.size)
+        } while (embeddedParser.graph.canGrow && (embeddedParser.graph.goals.isEmpty() || embeddedParser.graph.goalMatchedAll.not()))
+        val match = embeddedParser.graph.longestMatch(seasons, maxNumHeads)
         if (match != null) {
             //TODO: parse skipNodes
 
             this.graph.pushToStackOf(false, transition.to, match, gn, previousSet, emptyList())
             //SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
         } else {
-            TODO()
+//            TODO()
 //            throwError(graph, rp, seasons, maxNumHeads)
         }
 //        println(transition)

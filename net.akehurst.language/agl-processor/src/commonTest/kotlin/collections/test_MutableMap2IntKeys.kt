@@ -61,8 +61,8 @@ class test_MutableMap2IntKeys {
     @Test
     fun t2() {
         val map = MutableMap2IntKeys<String>(100,100)
-        for(i in 0 until 99) {
-            for (j in 0 until 99) {
+        for(i in 0 until 100) {
+            for (j in 0 until 100) {
                 map[i, j] = "index $i $j"
             }
         }

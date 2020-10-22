@@ -17,9 +17,7 @@
 package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.runtime.graph.GrowingNode
-import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -30,7 +28,6 @@ import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.math.max
-import kotlin.properties.Delegates
 
 class ScanOnDemandParser(
         private val runtimeRuleSet: RuntimeRuleSet
@@ -107,32 +104,31 @@ class ScanOnDemandParser(
     override fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val input = InputFromCharSequence(inputText)
-        val graph = ParseGraph(goalRule, input,this.runtimeRuleSet.runtimeRules.size)
-        val rp = RuntimeParser(this.runtimeRuleSet, graph)
+        val rp = RuntimeParser(this.runtimeRuleSet, goalRule, input)
         this.runtimeParser = rp
 
         rp.start(goalRule)
         var seasons = 1
-        var maxNumHeads = graph.growingHead.size
+        var maxNumHeads = rp.graph.growingHead.size
         var totalWork = maxNumHeads
 
         do {
             rp.grow(false)
             seasons++
-            maxNumHeads = max(maxNumHeads, graph.growingHead.size)
-            totalWork += graph.growingHead.size
-        } while (graph.canGrow && (graph.goals.isEmpty() || graph.goalMatchedAll.not()))
+            maxNumHeads = max(maxNumHeads, rp.graph.growingHead.size)
+            totalWork += rp.graph.growingHead.size
+        } while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not()))
         //TODO: when parsing an ambiguous grammar,
         // how to know we have found all goals? - keep going until cangrow is false
         // but - how to stop .. some grammars don't stop if we don't do test for a goal!
         // e.g. leftRecursive.test_aa
 
-        val match = graph.longestMatch(seasons, maxNumHeads)
+        val match = rp.graph.longestMatch(seasons, maxNumHeads)
         return if (match != null) {
             SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
         } else {
-            val nextExpected = this.findNextExpectedAfterError(rp, graph, input) //this possibly modifies rp and hence may change the longestLastGrown
-            throwError(graph, rp, nextExpected, seasons, maxNumHeads)
+            val nextExpected = this.findNextExpectedAfterError(rp, rp.graph, input) //this possibly modifies rp and hence may change the longestLastGrown
+            throwError(rp.graph, rp, nextExpected, seasons, maxNumHeads)
         }
     }
 
@@ -193,7 +189,7 @@ class ScanOnDemandParser(
                 }
                 else -> {
                     val exp = lg.previous.values.flatMap { prev ->
-                        lg.currentState.transitions( prev.node.currentState)//TODO: do we need to filter graft by runtimeGuard here?
+                        lg.currentState.transitions(prev.node.currentState)//TODO: do we need to filter graft by runtimeGuard here?
                     }.map {
                         it.to.rulePosition
                     }.toSet()
@@ -221,7 +217,7 @@ class ScanOnDemandParser(
         val matches = gns.toMutableList()
         // try grow last leaf with no lookahead
         for (gn in rp.lastGrownLinked) {
-            val gnindex = GrowingNode.index(gn.currentState, gn.startPosition, gn.nextInputPosition,gn.listSize)//, gn.nextInputPosition, gn.priority)
+            val gnindex = GrowingNode.index(gn.currentState, gn.startPosition, gn.nextInputPosition, gn.listSize)//, gn.nextInputPosition, gn.priority)
             graph.growingHead[gnindex] = gn
         }
         do {
@@ -245,8 +241,7 @@ class ScanOnDemandParser(
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val usedText = inputText.subSequence(0, position)
         val input = InputFromCharSequence(usedText)
-        val graph = ParseGraph(goalRule, input,this.runtimeRuleSet.runtimeRules.size)
-        val rp = RuntimeParser(this.runtimeRuleSet, graph)
+        val rp = RuntimeParser(this.runtimeRuleSet, goalRule,input)
         this.runtimeParser = rp
 
         rp.start(goalRule)
@@ -261,8 +256,8 @@ class ScanOnDemandParser(
                 }
             }
             seasons++
-        } while (rp.canGrow && graph.goals.isEmpty())
-        val nextExpected = this.findNextExpected(rp, graph, input, matches)
+        } while (rp.canGrow && rp.graph.goals.isEmpty())
+        val nextExpected = this.findNextExpected(rp, rp.graph, input, matches)
         return nextExpected
     }
 
