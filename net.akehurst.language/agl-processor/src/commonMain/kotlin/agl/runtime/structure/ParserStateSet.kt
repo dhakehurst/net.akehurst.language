@@ -174,38 +174,42 @@ class ParserStateSet(
 
     fun build(): ParserStateSet {
         val s0 = this.startState
-        val trans = s0.transitions(null)
-        val done = mutableSetOf<Pair<ParserState, ParserState?>>(Pair(s0, null))
-        val prevStack = Stack<ParserState>().push(s0)
-        for (nt in trans) {
-            buildAndTraverse(nt, prevStack, done)
-        }
+        //val sG = this.states[s0.rulePosition.atEnd()]
+        //val trans = s0.transitions(null) //+ sG.transitions(null)
+        val done = mutableSetOf<Pair<RuntimeRule, ParserState?>>()//Pair(s0, null))
+        val prevStack = Stack<ParserState>()//.push()
+        buildAndTraverse(s0, prevStack, done)
         preBuilt = true
         return s0.stateSet
     }
 
-    private fun buildAndTraverse(transition: Transition, prevStack: Stack<ParserState>, done: MutableSet<Pair<ParserState, ParserState?>>) {
+    private fun buildAndTraverse(curState: ParserState, prevStack: Stack<ParserState>, done: MutableSet<Pair<RuntimeRule, ParserState?>>) {
         //TODO: using done here does not work, as the pair (state,prev) does not identify the path to each state, could have alternative 'prev-->prev...'
         // prob need to take the closure of each state first or something, like traditional LR SM build
         // see grammar in test_Java8_Singles.Expressions_Type__int
+        //for(prev in prevStack.elements) {
         val prev = prevStack.peekOrNull()
-        val state = transition.to
-        val trans = state.transitions(prev)
-        val dp = Pair(state, prev)
+        val dp = Pair(curState.runtimeRule, prev)
         if (done.contains(dp)) {
             //do nothing more
         } else {
-            done.add(dp)
-            for (nt in trans) {
-                when (nt.action) {
-                    Transition.ParseAction.WIDTH -> buildAndTraverse(nt, prevStack.push(state), done)
-                    Transition.ParseAction.EMBED -> buildAndTraverse(nt, prevStack.push(state), done)
-                    Transition.ParseAction.HEIGHT -> buildAndTraverse(nt, prevStack, done)
-                    Transition.ParseAction.GRAFT -> buildAndTraverse(nt, prevStack.pop().stack, done)
-                    Transition.ParseAction.GOAL -> buildAndTraverse(nt, prevStack, done)
+            for (rp in curState.runtimeRule.rulePositions) {
+                val state = this.fetch(rp)
+                done.add(dp)
+                val trans = state.transitions(prev)
+                for (nt in trans) {
+                    val nextState = nt.to
+                    when (nt.action) {
+                        Transition.ParseAction.WIDTH -> buildAndTraverse(nextState, prevStack.push(state), done)
+                        Transition.ParseAction.EMBED -> buildAndTraverse(nextState, prevStack.push(state), done)
+                        Transition.ParseAction.HEIGHT -> buildAndTraverse(nextState, prevStack, done)
+                        Transition.ParseAction.GRAFT -> buildAndTraverse(nextState, prevStack.pop().stack, done)
+                        Transition.ParseAction.GOAL -> null;//buildAndTraverse(nextState, prevStack, done)
+                    }
                 }
             }
         }
+        // }
     }
 
     internal fun calcParentRelation(childRR: RuntimeRule): Set<ParentRelation> {

@@ -286,17 +286,17 @@ internal class ParseGraph(
     }
 
     //TODO: combine next 3 methods!
-    private fun findOrCreateGrowingLeafOrEmbeddedNode(isSkipGrowth: Boolean, curRp: ParserState, location: InputLocation, nextInputPosition: Int, children: List<SPPTNode>, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
+    private fun findOrCreateGrowingLeafOrEmbeddedNode(isSkipGrowth: Boolean, newState: ParserState, location: InputLocation, nextInputPosition: Int, children: List<SPPTNode>, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
         val oldOrExistingHead = this.addGrowing(oldHead, previous)
         for (info in previous) {
             this.addGrowing(info.node)
         }
-        val gnindex = GrowingNode.index(curRp, location.position, nextInputPosition, children)//, nextInputPosition, 0) //leafs don't have priority
+        val gnindex = GrowingNode.index(newState, location.position, nextInputPosition, children)//, nextInputPosition, 0) //leafs don't have priority
         val existing = this.growing[gnindex]
         val gn = if (null == existing) {
             val nn = GrowingNode(
                     isSkipGrowth,
-                    curRp,
+                    newState,
                     location,
                     nextInputPosition,
                     0,
@@ -669,8 +669,8 @@ internal class ParseGraph(
         return previous.values
     }
 
-    fun pushToStackOf(isSkipGrowth: Boolean, newRp: ParserState, leafNode: SPPTLeaf, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
-        this.findOrCreateGrowingLeafOrEmbeddedNode(isSkipGrowth, newRp, leafNode.location, leafNode.nextInputPosition, emptyList(), oldHead, previous, skipNodes)
+    fun pushToStackOf(isSkipGrowth: Boolean, newState: ParserState, leafNode: SPPTLeaf, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
+        this.findOrCreateGrowingLeafOrEmbeddedNode(isSkipGrowth, newState, leafNode.location, leafNode.nextInputPosition, emptyList(), oldHead, previous, skipNodes)
     }
 
     // for embedded segments
