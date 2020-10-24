@@ -33,7 +33,8 @@ import net.akehurst.language.collections.MutableMap2IntKeys
 internal class ParseGraph(
         val userGoalRule: RuntimeRule,
         val input: InputFromCharSequence,
-        val numRules: Int
+        numTerminalRules: Int,
+        numNonTerminalRules:Int
 ) {
     data class CompleteNodeIndex(
             val runtimeRuleNumber: Int,
@@ -43,8 +44,8 @@ internal class ParseGraph(
 
     //internal val leaves: MutableMap<LeafIndex, SPPTLeafDefault?> = mutableMapOf()
     // leaves[runtimeRule, position]
-    //internal val leaves: MutableMap2IntKeys<SPPTLeaf> = MutableMap2IntKeys(numRules,input.text.length) //TODO: should we multiply by number of TerminalRules
-    internal val completeNodes = CompletedNodesStore(numRules, input.text.length + 1)
+    internal val leaves= CompletedNodesStore<SPPTLeaf>(numTerminalRules, input.text.length + 1) //TODO: should we multiply by number of TerminalRules
+    internal val completeNodes = CompletedNodesStore<SPPTBranch>(numNonTerminalRules, input.text.length + 1)
     internal val growing: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
     internal val _goals: MutableList<SPPTNode> = mutableListOf()
     val growingHead: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
@@ -132,20 +133,20 @@ internal class ParseGraph(
         return if (terminalRuntimeRule.isEmptyRule) {
             val location = this.input.nextLocation(lastLocation, 0)
             val leaf = SPPTLeafDefault(terminalRuntimeRule, location, true, "", 0)
-            this.completeNodes[terminalRuntimeRule, inputPosition] = leaf
+            this.leaves[terminalRuntimeRule, inputPosition] = leaf
             //val cindex = CompleteNodeIndex(terminalRuntimeRule.number, inputPosition)//0, index.startPosition)
             //this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
             leaf
         } else {
             val match = this.input.tryMatchText(inputPosition, terminalRuntimeRule.value, terminalRuntimeRule.pattern)
             if (null == match) {
-                this.completeNodes[terminalRuntimeRule, inputPosition] = SPPTLeafDefault.NONE
+                this.leaves[terminalRuntimeRule, inputPosition] = SPPTLeafDefault.NONE
                 SPPTLeafDefault.NONE
             } else {
-                val location = this.input.nextLocation(lastLocation, match.matchedText.length)
-                val leaf = SPPTLeafDefault(terminalRuntimeRule, location, false, match.matchedText, 0)
-                leaf.eolPositions = match.eolPositions
-                this.completeNodes[terminalRuntimeRule, inputPosition] = leaf
+                val location = this.input.nextLocation(lastLocation, match.length)//match.matchedText.length)
+                val leaf = SPPTLeafDefault(terminalRuntimeRule, location, false, match,0)//.matchedText, 0)
+                //leaf.eolPositions = match.eolPositions
+                this.leaves[terminalRuntimeRule, inputPosition] = leaf
                 //val cindex = CompleteNodeIndex(terminalRuntimeRule.number, inputPosition)//0, index.startPosition)
                 //this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
                 leaf
@@ -155,7 +156,7 @@ internal class ParseGraph(
 
     fun findOrTryCreateLeaf(terminalRuntimeRule: RuntimeRule, inputPosition: Int, lastLocation: InputLocation): SPPTLeaf? {
         //val index = LeafIndex(terminalRuntimeRule.number, inputPosition)
-        var existing = this.completeNodes[terminalRuntimeRule, inputPosition]
+        var existing = this.leaves[terminalRuntimeRule, inputPosition]
         if (null == existing) {
             existing = this.tryCreateLeaf(terminalRuntimeRule, inputPosition, lastLocation)
             //this.leaves[index] = l
@@ -179,7 +180,7 @@ internal class ParseGraph(
         val rr = rulePosition.runtimeRule
         // val option = rulePosition.option
         return when (rulePosition.runtimeRule.kind) {
-            RuntimeRuleKind.TERMINAL -> this.completeNodes[rr, startPosition]
+            RuntimeRuleKind.TERMINAL -> this.leaves[rr, startPosition]
             RuntimeRuleKind.GOAL,
             RuntimeRuleKind.NON_TERMINAL -> {
                 //val index = CompleteNodeIndex(rr.number, startPosition)//option, startPosition)
@@ -668,12 +669,12 @@ internal class ParseGraph(
         return previous.values
     }
 
-    fun pushToStackOf(isSkipGrowth: Boolean, newRp: ParserState, leafNode: SPPTLeafDefault, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
+    fun pushToStackOf(isSkipGrowth: Boolean, newRp: ParserState, leafNode: SPPTLeaf, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
         this.findOrCreateGrowingLeafOrEmbeddedNode(isSkipGrowth, newRp, leafNode.location, leafNode.nextInputPosition, emptyList(), oldHead, previous, skipNodes)
     }
 
     // for embedded segments
-    fun pushToStackOf(isSkipGrowth: Boolean, newRp: ParserState, embeddedNode: SPPTNode, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
+    fun pushToStackOf(isSkipGrowth: Boolean, newRp: ParserState, embeddedNode: SPPTBranch, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
         (embeddedNode as SPPTNodeAbstract).embeddedIn = newRp.runtimeRule.tag
         val location = embeddedNode.location
         val nextInputPosition = embeddedNode.nextInputPosition

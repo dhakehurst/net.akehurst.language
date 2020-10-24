@@ -31,9 +31,9 @@ class test_sList_0_n_literal {
         val S = rrs.findRuntimeRule("S")
         val a = rrs.findRuntimeRule("'a'")
         val _c = rrs.findRuntimeRule("','")
-        val G = rrs.startingState(S).runtimeRule
+        val G = rrs.startingState(S, emptySet()).runtimeRule
 
-        val s0 = rrs.startingState(S)
+        val s0 = rrs.startingState(S, emptySet())
 
         val lhsE = LookaheadSet.EMPTY
         val lhs_T = LookaheadSet(0, setOf(rrs.END_OF_TEXT))

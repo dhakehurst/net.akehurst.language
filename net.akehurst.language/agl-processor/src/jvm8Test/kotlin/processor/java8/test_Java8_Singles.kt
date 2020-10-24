@@ -54,10 +54,41 @@ class test_Java8_Singles {
     }
 
     @Test
-    fun _int() {
+    fun Types_Type__int() {
+
+        val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
+        val goal = "Types.Type"
+        val p = Agl.processor(grammarStr,goal)
+
         val sentence = "int"
-        val goal = "Type"
-        val t = proc.parse(goal, sentence)
+        val t = p.buildFor("Type").parse("Type", sentence)
+
+        assertEquals(1, t.maxNumHeads)
+    }
+
+    @Test
+    fun Expressions_Type__int(){
+        val grammarStr = """
+            namespace test
+
+            grammar Expressions {
+                leaf ID = "[A-Za-z]"+ ;
+                leaf UPT = 'int' ;
+
+                UType = UTypeNonArray Dims? ;
+                UTypeNonArray = UTypeReference | UPT ;
+                UTypeReference = ID TypeArguments? ;
+                TypeArguments = '<' ReferenceType '>' ;
+                ReferenceType = Annotation* UTypeReference ;
+                Annotation = ID  TypeArguments?  ;
+                Dims = Annotation '[' ']' ;
+            }
+        """.trimIndent()
+        val goal = "UType"
+        val p = Agl.processor(grammarStr,goal)
+
+        val sentence = "int"
+        val t = p.buildFor(goal).parse(goal, sentence)
 
         assertEquals(1, t.maxNumHeads)
     }

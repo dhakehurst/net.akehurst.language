@@ -16,7 +16,10 @@
 
 package net.akehurst.language.collections
 
-class MapIntTo<V>(initialCapacity: Int=20, val loadFactor: Double=0.75) {
+import kotlin.math.pow
+
+class MapIntTo<V> private constructor( val loadFactor: Double, initialCapacity: Int, val initialiser:(()->V)?=null) {
+    constructor(initialCapacityPower:Int=5, loadFactor: Double=0.75, initialiser:(()->V)? = null) : this(loadFactor, (2.0).pow(initialCapacityPower).toInt(), initialiser)
 
     companion object {
         const val EMPTY = 0
@@ -25,16 +28,30 @@ class MapIntTo<V>(initialCapacity: Int=20, val loadFactor: Double=0.75) {
         //fun newHashFactor() = PRIMES[PRIMES.indices.random()]
     }
 
+    var isInitialised = false
+        private set
     val size: Int get() = this._size
+
+    fun setToInitialised(key: Int) {
+        if (0 == key) {
+            _zeroIsEmpty = false
+        } else {
+            this._growIfNeeded()
+            val index = this._calcIndex(key)
+            this._keys[index] = key
+            // initialised value already in _values
+            this._size++
+        }
+    }
 
     operator fun get(key: Int): V? {
         return if (0 == key) {
-            _zeroValue
+            if (_zeroIsEmpty) null else _zeroValue
         } else {
             val index = _calcIndex(key)
              when {
                 index < 0 -> null
-                else -> _values[index] as V
+                else -> if (_keys[index]== EMPTY) null else _values[index] as V
             }
         }
     }
@@ -42,6 +59,7 @@ class MapIntTo<V>(initialCapacity: Int=20, val loadFactor: Double=0.75) {
     operator fun set(key: Int, value: V) {
         if (0 == key) {
             _zeroValue = value
+            _zeroIsEmpty = false
         } else {
             this._growIfNeeded()
             val index = _calcIndex(key)
@@ -54,6 +72,7 @@ class MapIntTo<V>(initialCapacity: Int=20, val loadFactor: Double=0.75) {
     fun clear() {
         _size = 0
         _zeroValue = null
+        _zeroIsEmpty = true
         _keys = IntArray(_currentCapacity)
         _values = arrayOfNulls<Any>(_currentCapacity)
     }
@@ -62,9 +81,16 @@ class MapIntTo<V>(initialCapacity: Int=20, val loadFactor: Double=0.75) {
     private var _mask: Int = _currentCapacity - 1
     private var _maxBeforeResize = (_currentCapacity * loadFactor).toInt()
     private var _size: Int = 0
+    private var _zeroIsEmpty = true
     private var _zeroValue: V? = null
     private var _keys = IntArray(_currentCapacity)
     private var _values = arrayOfNulls<Any>(_currentCapacity)
+
+    init{
+        if(null!=initialiser) {
+            this._initialise(initialiser)
+        }
+    }
 
     private fun _hash(key: Int) = key and _mask
     private fun _calcIndex(key: Int): Int {
@@ -72,10 +98,18 @@ class MapIntTo<V>(initialCapacity: Int=20, val loadFactor: Double=0.75) {
         var keyIndex = _keys[index]
         while (keyIndex != key && keyIndex != EMPTY) {
             index++
-            if (index == _currentCapacity) index = 1
+            if (index == _currentCapacity) index = 0
             keyIndex = _keys[index]
         }
         return index
+    }
+
+    private fun _initialise(initialiser:()->V) {
+        _zeroValue = initialiser()
+        for(i in _values.indices) {
+            _values[i] = initialiser()
+        }
+        this.isInitialised = true
     }
 
     private fun _growIfNeeded() {
@@ -85,8 +119,8 @@ class MapIntTo<V>(initialCapacity: Int=20, val loadFactor: Double=0.75) {
     }
 
     private fun _grow() {
-        val newMap = MapIntTo<V>(this._currentCapacity * 2, loadFactor)
-        for (i in _values.indices) {
+        val newMap = MapIntTo<V>(loadFactor, this._currentCapacity shl 2, this.initialiser)
+        for (i in _keys.indices) {
             val key = _keys[i]
             if (EMPTY != key) {
                 val value = _values[i] as V

@@ -65,7 +65,7 @@ class test_LR1_States {
     }
     @Test
     fun s0_widthInto() {
-        val s0 = rrs.startingState(S)
+        val s0 = rrs.startingState(S, emptySet())
 
         val actual = s0.widthInto4()
         val expected = setOf(
@@ -78,7 +78,7 @@ class test_LR1_States {
 
     @Test
     fun s0_transitions() {
-        val s0 = rrs.startingState(S)
+        val s0 = rrs.startingState(S, emptySet())
 
         val actual = s0.transitions(null)
 
@@ -98,7 +98,7 @@ class test_LR1_States {
     @Test
     fun s1_heightOrGraftInto() {
         // G
-        val s0 = rrs.startingState(S)
+        val s0 = rrs.startingState(S, emptySet())
         val trans_s0 = s0.transitions(null)
         val tr_a_d = trans_s0.first { it.lookaheadGuard.content.contains(a) }
         val tr_d_b = trans_s0.first { it.lookaheadGuard.content.contains(d) }
@@ -117,7 +117,7 @@ class test_LR1_States {
 
     @Test
     fun s1_transitions() {
-        val s0 = rrs.startingState(S)
+        val s0 = rrs.startingState(S, emptySet())
         val s0_trans = s0.transitions(null)
         val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
         val tr_a_d = s0_trans.first { it.lookaheadGuard.content.contains(a) }

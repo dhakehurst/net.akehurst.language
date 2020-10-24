@@ -37,4 +37,26 @@ class test_buildFor {
         assertEquals(12, actual.allBuiltTransitions.size)
         //TODO: expected Transitions
     }
+
+    @Test
+    fun nested() {
+        val rrs = runtimeRuleSet {
+            concatenation("S") { ref("S1") }
+            concatenation("S1") { ref("M"); ref("S2")}
+            multi("M",0,-1,"'b'")
+            concatenation("S2") { ref("S3")}
+            concatenation("S3") { literal("a") }
+            literal("'b'","b")
+        }
+
+        val actual = rrs.buildFor("S")
+
+        val parser = ScanOnDemandParser(rrs)
+        parser.parse("S", "ba")
+        parser.parse("S", "a")
+
+        assertEquals(9,actual.states.values.size)
+        assertEquals(12, actual.allBuiltTransitions.size)
+        //TODO: expected Transitions
+    }
 }

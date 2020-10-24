@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.api.parser.ParserException
+import net.akehurst.language.collections.Stack
 import net.akehurst.language.collections.lazyMapNonNull
 
 class ParserStateSet(
@@ -29,13 +29,24 @@ class ParserStateSet(
 
     private var nextState = 0
     private var nextParentRelation = 0
+    var preBuilt = false; private set
+
+    val usedRules: Set<RuntimeRule> by lazy {
+        calcUsedRules(this.startState.runtimeRule)
+    }
+    val usedTerminalRules: Set<RuntimeRule> by lazy {
+        this.usedRules.filter { it.kind === RuntimeRuleKind.TERMINAL }.toSet()
+    }
+    val usedNonTerminalRules: Set<RuntimeRule> by lazy {
+        this.usedRules.filter { it.kind !== RuntimeRuleKind.TERMINAL }.toSet()
+    }
 
     /*
      * A RulePosition identifies a Parser state.
      * LR(0) states
      * The parentRelation can be used to determine the LR(1) related lookahead
      */
-     val states = lazyMapNonNull<RulePosition, ParserState>() {
+    val states = lazyMapNonNull<RulePosition, ParserState>() {
         ParserState(StateNumber(this.nextState++), it, this)
     }
 
@@ -47,6 +58,7 @@ class ParserStateSet(
         val startState = this.states[goalRP]
         startState
     }
+
 
     private val userGoalParentRelation: ParentRelation by lazy {
         ParentRelation(this, this.nextParentRelation++, this.startState.rulePosition, possibleEndOfText.toSet())
@@ -74,7 +86,7 @@ class ParserStateSet(
                 }
             }
             else -> {
-                val s = this.runtimeRuleSet.parentPosition[childRR]
+                val s = this.runtimeRuleSet.parentPosition[childRR].filter { this.usedNonTerminalRules.contains(it.runtimeRule) }.toSet()
                 if (childRR == this.userGoalRule) {
                     s + this.startState.rulePosition
                 } else {
@@ -94,10 +106,10 @@ class ParserStateSet(
                 rp.isAtStart -> when {
                     this.isSkip -> {
                         this.runtimeRuleSet.skipRules.flatMap {
-                            this.runtimeRuleSet.firstTerminals[it.number]
+                            this.runtimeRuleSet.firstTerminals[it.number].filter { this.usedTerminalRules.contains(it) }
                         }.toSet()
                     }
-                    else -> this.runtimeRuleSet.firstTerminals[this.userGoalRule.number].toSet()
+                    else -> this.runtimeRuleSet.firstTerminals[this.userGoalRule.number].filter { this.usedTerminalRules.contains(it) }.toSet()
                 }
                 rp.isAtEnd -> emptySet()
                 else -> emptySet()//this.possibleEndOfText
@@ -105,15 +117,15 @@ class ParserStateSet(
             RuntimeRuleKind.NON_TERMINAL -> {
                 rp.items.flatMap {
                     when {
-                        it.number >= 0 -> this.runtimeRuleSet.firstTerminals[it.number]
+                        it.number >= 0 -> this.runtimeRuleSet.firstTerminals[it.number].filter { this.usedTerminalRules.contains(it) }
                         else -> when (it.number) {
                             RuntimeRuleSet.GOAL_RULE_NUMBER -> TODO()
                             RuntimeRuleSet.SKIP_RULE_NUMBER -> this.runtimeRuleSet.skipRules.flatMap {
-                                this.runtimeRuleSet.firstTerminals[it.number]
+                                this.runtimeRuleSet.firstTerminals[it.number].filter { this.usedTerminalRules.contains(it) }
                             }.toSet()
-                           // RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER -> it.rhs.items.flatMap {
-                           //     this.runtimeRuleSet.firstTerminals[it.number]
-                           // }.toSet()
+                            // RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER -> it.rhs.items.flatMap {
+                            //     this.runtimeRuleSet.firstTerminals[it.number]
+                            // }.toSet()
                             else -> error("should not happen")
                         }
                     }
@@ -121,7 +133,6 @@ class ParserStateSet(
             }
         }
     }
-
 
     internal val _lookahead = mutableMapOf<RulePosition, Set<RuntimeRule>>()
     fun fetchOrCreateLookahead(rp: RulePosition): Set<RuntimeRule> {
@@ -137,7 +148,7 @@ class ParserStateSet(
     fun fetchOrCreateFirstAt(rp: RulePosition): Set<RuntimeRule> {
         var set = this._next[rp]
         if (null == set) {
-            set = this.calcFirstAt(rp, BooleanArray(this.runtimeRuleSet.runtimeRules.size))
+            set = this.calcFirstAt(rp, BooleanArray(this.runtimeRuleSet.runtimeRules.size)) //TODO: use usedRules.size!
             this._next[rp] = set
         }
         return set
@@ -157,6 +168,43 @@ class ParserStateSet(
             set
         } else {
             set
+        }
+    }
+
+
+    fun build(): ParserStateSet {
+        val s0 = this.startState
+        val trans = s0.transitions(null)
+        val done = mutableSetOf<Pair<ParserState, ParserState?>>(Pair(s0, null))
+        val prevStack = Stack<ParserState>().push(s0)
+        for (nt in trans) {
+            buildAndTraverse(nt, prevStack, done)
+        }
+        preBuilt = true
+        return s0.stateSet
+    }
+
+    private fun buildAndTraverse(transition: Transition, prevStack: Stack<ParserState>, done: MutableSet<Pair<ParserState, ParserState?>>) {
+        //TODO: using done here does not work, as the pair (state,prev) does not identify the path to each state, could have alternative 'prev-->prev...'
+        // prob need to take the closure of each state first or something, like traditional LR SM build
+        // see grammar in test_Java8_Singles.Expressions_Type__int
+        val prev = prevStack.peekOrNull()
+        val state = transition.to
+        val trans = state.transitions(prev)
+        val dp = Pair(state, prev)
+        if (done.contains(dp)) {
+            //do nothing more
+        } else {
+            done.add(dp)
+            for (nt in trans) {
+                when (nt.action) {
+                    Transition.ParseAction.WIDTH -> buildAndTraverse(nt, prevStack.push(state), done)
+                    Transition.ParseAction.EMBED -> buildAndTraverse(nt, prevStack.push(state), done)
+                    Transition.ParseAction.HEIGHT -> buildAndTraverse(nt, prevStack, done)
+                    Transition.ParseAction.GRAFT -> buildAndTraverse(nt, prevStack.pop().stack, done)
+                    Transition.ParseAction.GOAL -> buildAndTraverse(nt, prevStack, done)
+                }
+            }
         }
     }
 
@@ -194,6 +242,7 @@ class ParserStateSet(
     }
 
     fun calcLookahead2(rp: RulePosition): Set<RuntimeRule> {
+        //TODO: still getting empty terminals in LH set!!
         return when {
             rp.runtimeRule.number < 0 -> { //must be GOAL or SKIP-GOAL
                 if (rp.isAtStart) {
@@ -225,7 +274,7 @@ class ParserStateSet(
         return when {
             rp.runtimeRule.number < 0 -> { //must be GOAL or SKIP-GOAL
                 when {
-                    rp.isAtStart -> this.runtimeRuleSet.firstTerminals[this.userGoalRule.number] ?: emptySet()
+                    rp.isAtStart -> this.runtimeRuleSet.firstTerminals[this.userGoalRule.number].filter { this.usedTerminalRules.contains(it) }.toSet()
                     rp.isAtEnd -> this.possibleEndOfText.toSet()//emptySet()
                     else -> this.possibleEndOfText.toSet()
                 }
@@ -237,14 +286,14 @@ class ParserStateSet(
                         val ns = rp.items.flatMap {
                             when {
                                 it.isEmptyRule -> {
-                                    rp.next().flatMap { calcFirstAt(it,done) }
+                                    rp.next().flatMap { calcFirstAt(it, done) }
                                 }
                                 else -> when (it.kind) {
                                     RuntimeRuleKind.TERMINAL -> setOf(it)
                                     RuntimeRuleKind.NON_TERMINAL -> {
-                                            this.runtimeRuleSet.firstTerminals[it.number]
+                                        this.runtimeRuleSet.firstTerminals[it.number].filter { this.usedTerminalRules.contains(it) }
                                     }
-                                    RuntimeRuleKind.EMBEDDED -> it.embeddedRuntimeRuleSet!!.firstTerminals[it.embeddedStartRule!!.number]
+                                    RuntimeRuleKind.EMBEDDED -> it.embeddedRuntimeRuleSet!!.firstTerminals[it.embeddedStartRule!!.number] //TODO: filter this by used things
                                     else -> TODO()
                                 }
                             }
@@ -270,7 +319,7 @@ class ParserStateSet(
                 val ns = rp.items.flatMap {
                     when {
                         it.isEmptyRule -> {
-                            rp.next().flatMap { calcFirstAt(it,done) }
+                            rp.next().flatMap { calcFirstAt(it, done) }
                         }
                         else -> when (it.kind) {
                             RuntimeRuleKind.TERMINAL -> setOf(it)
@@ -279,14 +328,14 @@ class ParserStateSet(
                                 fsts.flatMap {
                                     val newDone = done //.copyOf() //TODO: do we need to copy?
                                     newDone[it.runtimeRule.number] = true
-                                    if (it.items.size==1 && it.items.first().isEmptyRule) {
-                                        rp.next().flatMap { calcFirstAt(it,done) }
+                                    if (it.items.size == 1 && it.items.first().isEmptyRule) {
+                                        rp.next().flatMap { calcFirstAt(it, done) }
                                     } else {
                                         calcFirstAt(it, done)
                                     }
                                 }
                             }
-                            RuntimeRuleKind.EMBEDDED -> it.embeddedRuntimeRuleSet!!.firstTerminals[it.embeddedStartRule!!.number]
+                            RuntimeRuleKind.EMBEDDED -> it.embeddedRuntimeRuleSet!!.firstTerminals[it.embeddedStartRule!!.number] //TODO: filter this by used things
                             else -> TODO()
                         }
                     }
@@ -298,6 +347,7 @@ class ParserStateSet(
 
     private val _growsInto = mutableMapOf<Pair<RulePosition, RulePosition>, Boolean>()
     fun growsInto(ancestor: RulePosition, descendant: RulePosition): Boolean {
+        //TODO: can we do this faster somehow? the closure is potentially slow!
         val p = Pair(ancestor, descendant)
         var r = _growsInto[p]
         if (null == r) {
@@ -334,6 +384,34 @@ class ParserStateSet(
                     calcClosureLR0(childRp, items)
                 }
                 items
+            }
+        }
+    }
+
+    private fun calcUsedRules(rule: RuntimeRule, used: MutableSet<RuntimeRule> = mutableSetOf(), done: BooleanArray = BooleanArray(this.runtimeRuleSet.runtimeRules.size)): Set<RuntimeRule> {
+        return when {
+            0 > rule.number -> {
+                used.add(rule)
+                for (sr in rule.rhs.items) {
+                    calcUsedRules(sr, used, done)
+                }
+                used
+            }
+            done[rule.number] -> used
+            else -> when {
+                rule.kind === RuntimeRuleKind.NON_TERMINAL -> {
+                    used.add(rule)
+                    done[rule.number] = true
+                    for (sr in rule.rhs.items) {
+                        calcUsedRules(sr, used, done)
+                    }
+                    used
+                }
+                else -> {
+                    used.add(rule)
+                    done[rule.number] = true
+                    used
+                }
             }
         }
     }

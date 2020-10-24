@@ -36,7 +36,7 @@ class test_ParseGraph {
         val text = ""
         val input = InputFromCharSequence(text)
 
-        val sut = ParseGraph(goalRule, input, 10)
+        val sut = ParseGraph(goalRule, input, 10,10)
 
         assertNotNull(sut)
     }
@@ -47,7 +47,7 @@ class test_ParseGraph {
         val goalRule = RuntimeRule(rrs, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
         val text = ""
         val input = InputFromCharSequence(text)
-        val sut = ParseGraph(goalRule, input, 10)
+        val sut = ParseGraph(goalRule, input, 10,10)
 
         val actual = sut.canGrow
 
@@ -61,10 +61,10 @@ class test_ParseGraph {
         val userGoalRule = RuntimeRule(rrs, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"
         val input = InputFromCharSequence(text)
-        val sut = ParseGraph(userGoalRule, input, 10)
+        val sut = ParseGraph(userGoalRule, input, 10,10)
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
-        val startState = rrs.startingState(userGoalRule)
+        val startState = rrs.startingState(userGoalRule, emptySet())
         val startLocation = InputLocation(0, 0, 1, 0)
         sut.start(startState,startLocation)
 

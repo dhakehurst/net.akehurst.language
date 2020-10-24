@@ -23,14 +23,25 @@ class test_MapIntTo {
 
     @Test
     fun map_0() {
-        val map = MapIntTo<String>(6)
+        val map = MapIntTo<String>(3)
         map[0] = "hello"
         assertEquals("hello", map[0])
     }
 
     @Test
+    fun map_0_clash() {
+        val map = MapIntTo<String>(3)
+        map[0] = "index 0"
+        map[8] = "index 8"
+        map[16] = "index 16"
+        assertEquals("index 0", map[0])
+        assertEquals("index 8", map[8])
+        assertEquals("index 16", map[16])
+    }
+
+    @Test
     fun map_1_to_4_does_not_grow() {
-        val map = MapIntTo<String>(6)
+        val map = MapIntTo<String>(3)
         for(i in 1 until 4) {
             map[i] = "index $i"
             assertEquals(i, map.size)
@@ -42,7 +53,7 @@ class test_MapIntTo {
 
     @Test
     fun map_1_to_9_does_grow() {
-        val map = MapIntTo<String>(6)
+        val map = MapIntTo<String>(3)
         for(i in 1 until 9) {
             map[i] = "index $i"
             assertEquals(i, map.size)
@@ -50,6 +61,17 @@ class test_MapIntTo {
         for(i in 1 until 9) {
             assertEquals("index $i", map[i])
         }
+    }
+
+    @Test
+    fun map_key_clash() {
+        val map = MapIntTo<String>(3)
+
+        map[1] = "index 1"
+        map[9] = "index 9"
+
+        assertEquals("index 1", map[1])
+        assertEquals("index 9", map[9])
     }
 
     //TODO: test performance ?

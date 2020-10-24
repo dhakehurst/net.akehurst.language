@@ -44,9 +44,9 @@ class test_aABCc{
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
-        val G = rrs.startingState(S).runtimeRule
+        val G = rrs.startingState(S, emptySet()).runtimeRule
 
-        val s0 = rrs.startingState(S)
+        val s0 = rrs.startingState(S, emptySet())
     }
 
 

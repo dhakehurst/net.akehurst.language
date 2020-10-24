@@ -34,11 +34,11 @@ class test_skipRules {
 
         val S = rrs.findRuntimeRule("S")
         val a = rrs.findRuntimeRule("'a'")
-        val G = rrs.startingState(S).runtimeRule
+        val G = rrs.startingState(S, emptySet()).runtimeRule
 
-        val s0 = rrs.startingState(S)
+        val s0 = rrs.startingState(S, emptySet())
 
-        val skipSS = rrs.skipParserStateSet
+        val skipSS = rrs.skipParserStateSet!!
         val sk0 = skipSS.startState
         val skG = sk0.runtimeRule                          // G = skS ;
         val skS = skG.rhs.items[0]                         // skS = WS | CM

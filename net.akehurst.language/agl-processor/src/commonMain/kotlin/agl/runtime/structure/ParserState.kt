@@ -139,7 +139,7 @@ class ParserState(
         }
 
     internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
-        return this.stateSet.runtimeRuleSet.createLookaheadSet(content)
+        return this.stateSet.runtimeRuleSet.createLookaheadSet(content) //TODO:Not sure lookahead sets are needed
     }
 
     fun widthInto4(): Set<RulePosition> {
@@ -164,6 +164,7 @@ class ParserState(
     fun transitions(previousState: ParserState?): List<Transition> {
         val cache = this.transitions_cache[previousState]
         val trans = if (null == cache) {
+            check(this.stateSet.preBuilt.not(),{"Transitions not built for $this --> $previousState"})
             //TODO: remove dependency on previous when calculating transitions! ?
             //val transitions = this.calcTransitions(previousState, lookaheadSet).toList()
             val transitions = this.calcFilteredTransitions(previousState).toList()
@@ -243,7 +244,8 @@ class ParserState(
                         for (pp in heightOrGraftInto) {
                             if (pp.runtimeRule.kind == RuntimeRuleKind.GOAL) {
                                 when {
-                                    this.runtimeRule == this.stateSet.runtimeRuleSet.END_OF_TEXT -> {
+                                    //this.runtimeRule == this.stateSet.runtimeRuleSet.END_OF_TEXT -> {
+                                    this.stateSet.possibleEndOfText.contains(this.runtimeRule) ->{
                                         pp.next().forEach { nrp ->
                                             val ts = this.createGraftTransition3(nrp, pp)
                                             __graftTransitions.addAll(ts)//, addLh, parentLh))

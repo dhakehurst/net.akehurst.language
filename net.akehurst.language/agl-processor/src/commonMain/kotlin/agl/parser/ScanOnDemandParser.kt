@@ -63,9 +63,9 @@ class ScanOnDemandParser(
                 if (null == match) {
                     null
                 } else {
-                    val location = input.nextLocation(lastLocation, match.matchedText.length)
-                    val leaf = SPPTLeafDefault(it, location, false, match.matchedText, (if (it.isPattern) 0 else 1))
-                    leaf.eolPositions = match.eolPositions
+                    val location = input.nextLocation(lastLocation, match.length)//matchedText.length)
+                    val leaf = SPPTLeafDefault(it, location, false, match, (if (it.isPattern) 0 else 1))
+                    //leaf.eolPositions = match.eolPositions
                     leaf
                 }
             }
@@ -87,7 +87,7 @@ class ScanOnDemandParser(
                     val text = inputText[position].toString()
                     lastLocation = input.nextLocation(lastLocation, text.length)
                     val unscanned = SPPTLeafDefault(undefined, lastLocation, false, text, 0)
-                    unscanned.eolPositions = input.eolPositions(text)
+                    //unscanned.eolPositions = input.eolPositions(text)
                     result.add(unscanned)
                     position++
                 }
@@ -104,10 +104,12 @@ class ScanOnDemandParser(
     override fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val input = InputFromCharSequence(inputText)
-        val rp = RuntimeParser(this.runtimeRuleSet, goalRule, input)
+        val s0 = runtimeRuleSet.startingState(goalRule, setOf(this.runtimeRuleSet.END_OF_TEXT))
+        val skipStateSet = runtimeRuleSet.skipParserStateSet
+        val rp = RuntimeParser(s0.stateSet,skipStateSet, goalRule, input)
         this.runtimeParser = rp
 
-        rp.start(goalRule)
+        rp.start()
         var seasons = 1
         var maxNumHeads = rp.graph.growingHead.size
         var totalWork = maxNumHeads
@@ -241,10 +243,12 @@ class ScanOnDemandParser(
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val usedText = inputText.subSequence(0, position)
         val input = InputFromCharSequence(usedText)
-        val rp = RuntimeParser(this.runtimeRuleSet, goalRule,input)
+        val s0 = runtimeRuleSet.startingState(goalRule, setOf(this.runtimeRuleSet.END_OF_TEXT))
+        val skipStateSet = runtimeRuleSet.skipParserStateSet
+        val rp = RuntimeParser(s0.stateSet,skipStateSet, goalRule,input)
         this.runtimeParser = rp
 
-        rp.start(goalRule)
+        rp.start()
         var seasons = 1
 
         val matches = mutableListOf<GrowingNode>()

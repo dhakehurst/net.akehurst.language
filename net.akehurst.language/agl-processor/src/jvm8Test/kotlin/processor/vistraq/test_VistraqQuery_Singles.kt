@@ -279,6 +279,7 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
         """.trimIndent()
 
         try {
+            println("parse")
             val result = processor.parse("query", queryStr)
             Assert.assertNotNull(result)
             val resultStr = result.asString

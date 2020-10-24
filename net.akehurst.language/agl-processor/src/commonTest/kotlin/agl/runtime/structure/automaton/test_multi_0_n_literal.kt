@@ -30,9 +30,9 @@ class test_multi_0_n_literal {
         val S = rrs.findRuntimeRule("S")
         val eS = S.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
         val a = rrs.findRuntimeRule("'a'")
-        val G = rrs.startingState(S).runtimeRule
+        val G = rrs.startingState(S, emptySet()).runtimeRule
 
-        val s0 = rrs.startingState(S)
+        val s0 = rrs.startingState(S, emptySet())
 
         val lhs_E = LookaheadSet.EMPTY
         val lhs_T = LookaheadSet(1, setOf(rrs.END_OF_TEXT))

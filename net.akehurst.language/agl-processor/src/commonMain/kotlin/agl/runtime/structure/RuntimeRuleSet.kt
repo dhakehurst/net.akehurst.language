@@ -147,22 +147,24 @@ class RuntimeRuleSet(
     private val states_cache = mutableMapOf<RuntimeRule, ParserStateSet>()
     private val skipStateSet = mutableMapOf<RuntimeRule, ParserStateSet>()
 
-    val skipParserStateSet: ParserStateSet by lazy {
-        val possibleEndOfText = emptySet<RuntimeRule>()
-
+    val skipParserStateSet: ParserStateSet? by lazy {
+        if (skipRules.isEmpty()) {
+            null
+        } else {
+            val possibleEndOfText = emptySet<RuntimeRule>()
 
 //        val skipChoiceRule = RuntimeRule(this, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
 //        skipChoiceRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
 //        val skipGoalRule = RuntimeRule(this, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
- //       skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.MULTI, RuntimeRuleChoiceKind.NONE, 1, -1, arrayOf(skipChoiceRule))
+            //       skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.MULTI, RuntimeRuleChoiceKind.NONE, 1, -1, arrayOf(skipChoiceRule))
 
-        val skipGoalRule = RuntimeRule(this, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
-        skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
+            val skipGoalRule = RuntimeRule(this, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
+            skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
 
-
-        val ss = ParserStateSet(nextStateSetNumber++, this, skipGoalRule, possibleEndOfText, true)
-        this.states_cache[skipGoalRule] = ss
-        ss
+            val ss = ParserStateSet(nextStateSetNumber++, this, skipGoalRule, possibleEndOfText, true)
+            //this.states_cache[skipGoalRule] = ss
+            ss
+        }
     }
 
     //called from ParserStateSet, which adds the Goal Rule bits
@@ -297,37 +299,11 @@ class RuntimeRuleSet(
     fun buildFor(goalRuleName: String): ParserStateSet {
         val gr = this.findRuntimeRule(goalRuleName)
         val s0 = this.startingState(gr, setOf(this.END_OF_TEXT))
-        val trans = s0.transitions(null)
-        val done = mutableSetOf<Pair<ParserState, ParserState?>>(Pair(s0, null))
-        val prevStack = Stack<ParserState>().push(s0)
-        for (nt in trans) {
-            buildAndTraverse(nt, prevStack, done)
-        }
-        return s0.stateSet
+        return s0.stateSet.build()
     }
 
-    fun buildAndTraverse(transition: Transition, prevStack: Stack<ParserState>, done: MutableSet<Pair<ParserState, ParserState?>>) {
-        val prev = prevStack.peekOrNull()
-        val state = transition.to
-        val trans = state.transitions(prev)
-        val dp = Pair(state, prev)
-        if (done.contains(dp)) {
-            //do nothing more
-        } else {
-            done.add(dp)
-            for (nt in trans) {
-                when (nt.action) {
-                    Transition.ParseAction.WIDTH -> buildAndTraverse(nt, prevStack.push(state), done)
-                    Transition.ParseAction.EMBED -> buildAndTraverse(nt, prevStack.push(state), done)
-                    Transition.ParseAction.HEIGHT -> buildAndTraverse(nt, prevStack, done)
-                    Transition.ParseAction.GRAFT -> buildAndTraverse(nt, prevStack.pop().stack, done)
-                    Transition.ParseAction.GOAL -> buildAndTraverse(nt, prevStack, done)
-                }
-            }
-        }
-    }
 
-    fun startingState(userGoalRule: RuntimeRule, possibleEndOfText: Set<RuntimeRule> = setOf(this.END_OF_TEXT)): ParserState {
+    fun startingState(userGoalRule: RuntimeRule, possibleEndOfText: Set<RuntimeRule>): ParserState {
         var stateSet = this.states_cache[userGoalRule]
         if (null == stateSet) {
             stateSet = ParserStateSet(nextStateSetNumber++, this, userGoalRule, possibleEndOfText, false)

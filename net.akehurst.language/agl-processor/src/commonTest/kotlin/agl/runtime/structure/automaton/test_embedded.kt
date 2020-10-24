@@ -42,12 +42,12 @@ class test_embedded{
         val S = rrs.findRuntimeRule("S")
         val gB = rrs.findRuntimeRule("gB")
         val a = rrs.findRuntimeRule("'a'")
-        val G = rrs.startingState(S).runtimeRule
+        val G = rrs.startingState(S, emptySet()).runtimeRule
 
         val B = rrsB.findRuntimeRule("B")
         val bT = rrsB.findRuntimeRule("'b'")
 
-        val s0 = rrs.startingState(S)
+        val s0 = rrs.startingState(S, emptySet())
         val psm = s0.stateSet
         val psmB = rrsB.startingState(B, setOf(a)).stateSet
     }
