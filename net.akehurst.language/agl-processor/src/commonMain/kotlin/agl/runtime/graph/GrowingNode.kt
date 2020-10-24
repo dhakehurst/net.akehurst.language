@@ -77,7 +77,7 @@ class GrowingNode(
 
 
     var previous: MutableMap<GrowingNodeIndex, PreviousInfo> = mutableMapOf()
-    val next: MutableList<GrowingNode> = mutableListOf()
+    val next: MutableSet<GrowingNode> = mutableSetOf() //TODO: do we actually need this?
     val hasCompleteChildren: Boolean get() = this.currentState.isAtEnd //this.runtimeRule.isCompleteChildren(currentState.position, numNonSkipChildren, children)
     val isLeaf: Boolean
         get() {
