@@ -2,6 +2,7 @@ package net.akehurst.language.agl.runtime.runtimeRuleSet
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -76,7 +77,7 @@ class test_buildFor {
 
         val parser = ScanOnDemandParser(rrs)
         val gr = rrs.findRuntimeRule("S")
-        val s0 = rrs.startingState(gr, setOf(rrs.END_OF_TEXT))
+        val s0 = rrs.startingState(gr)
         s0.stateSet.build()
         parser.parse("S", "abcx")
         parser.parse("S", "x")

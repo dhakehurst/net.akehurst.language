@@ -171,7 +171,7 @@ class RuntimeRuleBuilder(
 
     fun buildRule(number: Int): RuntimeRule {
         if (null == this.rule) {
-            this.rule = RuntimeRule(this.rrsb.runtimeRuleSet, number, tag, value, kind, isPattern, isSkip, embeddedRuleSet, startRule)
+            this.rule = RuntimeRule(this.rrsb.runtimeRuleSet.number, number, tag, value, kind, isPattern, isSkip, embeddedRuleSet, startRule)
         }
         return this.rule!!
     }

@@ -44,61 +44,97 @@ class test_aABCc{
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
-        val G = rrs.startingState(S, emptySet()).runtimeRule
+        val G = rrs.startingState(S).runtimeRule
 
-        val s0 = rrs.startingState(S, emptySet())
+        val s0 = rrs.startingState(S)
     }
 
 
     @Test
-    fun calcFirstAt() {
+    fun firstOf() {
 
-        var actual = s0.stateSet.calcFirstAt(RulePosition(G,0,0),BooleanArray(rrs.runtimeRules.size))
+        var actual = s0.stateSet.firstOf(RulePosition(G,0,0),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         var expected = setOf(b, a)
         assertEquals(expected,actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(G,0,1),BooleanArray(rrs.runtimeRules.size))
-        expected = setOf(rrs.END_OF_TEXT)
+        actual = s0.stateSet.firstOf(RulePosition(G,0,RulePosition.END_OF_RULE),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected,actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(G,0,RulePosition.END_OF_RULE),BooleanArray(rrs.runtimeRules.size))
-        expected = setOf()
-        assertEquals(expected,actual)
-
-        actual = s0.stateSet.calcFirstAt(RulePosition(S,0,0),BooleanArray(rrs.runtimeRules.size))
+        actual = s0.stateSet.firstOf(RulePosition(S,0,0),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(b)
         assertEquals(expected,actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(S,0,RulePosition.END_OF_RULE),BooleanArray(rrs.runtimeRules.size))
-        expected = setOf(c, rrs.END_OF_TEXT)
+        actual = s0.stateSet.firstOf(RulePosition(S,0,RulePosition.END_OF_RULE),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected,actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(S,1,0),BooleanArray(rrs.runtimeRules.size))
+        actual = s0.stateSet.firstOf(RulePosition(S,1,0),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(a)
         assertEquals(expected,actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(S,1,0),BooleanArray(rrs.runtimeRules.size))
+        actual = s0.stateSet.firstOf(RulePosition(S,1,RulePosition.END_OF_RULE),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        assertEquals(expected,actual)
+
+        actual = s0.stateSet.firstOf(RulePosition(S1,0,0),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(a)
         assertEquals(expected,actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(S,1,RulePosition.END_OF_RULE),BooleanArray(rrs.runtimeRules.size))
-        expected = setOf(c, rrs.END_OF_TEXT)
-        assertEquals(expected,actual)
-
-        actual = s0.stateSet.calcFirstAt(RulePosition(S1,0,0),BooleanArray(rrs.runtimeRules.size))
-        expected = setOf(a)
-        assertEquals(expected,actual)
-
-        actual = s0.stateSet.calcFirstAt(RulePosition(S1,0,1),BooleanArray(rrs.runtimeRules.size))
+        actual = s0.stateSet.firstOf(RulePosition(S1,0,1),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(b, a)
         assertEquals(expected,actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(S1,0,2),BooleanArray(rrs.runtimeRules.size))
+        actual = s0.stateSet.firstOf(RulePosition(S1,0,2),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(c)
         assertEquals(expected,actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(S1,0,RulePosition.END_OF_RULE),BooleanArray(rrs.runtimeRules.size))
-        expected = setOf(c, rrs.END_OF_TEXT)
+        actual = s0.stateSet.firstOf(RulePosition(S1,0,RulePosition.END_OF_RULE),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        assertEquals(expected,actual)
+    }
+
+    @Test
+    fun calcLookahead() {
+
+        var actual = s0.stateSet.calcLookahead(RulePosition(G,0,0),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        var expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        assertEquals(expected,actual)
+
+        actual = s0.stateSet.calcLookahead(RulePosition(G,0,RulePosition.END_OF_RULE),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = emptySet()
+        assertEquals(expected,actual)
+
+        actual = s0.stateSet.calcLookahead(RulePosition(S,0,0),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        assertEquals(expected,actual)
+
+        actual = s0.stateSet.calcLookahead(RulePosition(S,0,RulePosition.END_OF_RULE),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        assertEquals(expected,actual)
+
+        actual = s0.stateSet.calcLookahead(RulePosition(S,1,0),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        assertEquals(expected,actual)
+
+        actual = s0.stateSet.calcLookahead(RulePosition(S,1,RulePosition.END_OF_RULE),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        assertEquals(expected,actual)
+
+        actual = s0.stateSet.calcLookahead(RulePosition(S1,0,0),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(a, b)
+        assertEquals(expected,actual)
+
+        actual = s0.stateSet.calcLookahead(RulePosition(S1,0,1),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(c)
+        assertEquals(expected,actual)
+
+        actual = s0.stateSet.calcLookahead(RulePosition(S1,0,2),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        assertEquals(expected,actual)
+
+        actual = s0.stateSet.calcLookahead(RulePosition(S1,0,RulePosition.END_OF_RULE),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected,actual)
     }
 

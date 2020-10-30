@@ -16,9 +16,9 @@
 
 package net.akehurst.language.processor.java8
 
+import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.agl.processor.Agl
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -34,7 +34,7 @@ class test_Java8_Compare(val data: Data) {
             val sentence: String
     ) {
 
-        constructor( title: String, grammarRule: String, sentence: () -> String)
+        constructor(title: String, grammarRule: String, sentence: () -> String)
                 : this(title, grammarRule, sentence.invoke()) {
         }
 
@@ -56,7 +56,7 @@ class test_Java8_Compare(val data: Data) {
         var antlrSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrSpec.agl")
         var antlrOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrOptm.agl")
 
-        fun createJava8Processor(path: String, toUpper:Boolean=false): LanguageProcessor {
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor {
             val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processor(grammarStr)
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
@@ -101,8 +101,9 @@ class test_Java8_Compare(val data: Data) {
             col.add(arrayOf(Data("", "block", "{ (a) = (b) = 1; }")))
             col.add(arrayOf(Data("", "block", "{ ls.add(\"Smalltalk rules!\"); }")))
             col.add(arrayOf(Data("", "block", "{ this.j = i; this.b = true; this.c = c; ConstructorAccess.this.i = i; }")))
+            col.add(arrayOf(Data("", "expression","args[0]")))
 
-            col.add(arrayOf(Data( "'many ifthen'", "compilationUnit", {
+            col.add(arrayOf(Data("'many ifthen'", "compilationUnit", {
                 var input = "class Test {"
                 input += "void test() {"
                 for (i in 0..9) {
@@ -112,6 +113,7 @@ class test_Java8_Compare(val data: Data) {
                 input += "}"
                 input
             })))
+
 
             return col
         }
@@ -124,7 +126,7 @@ class test_Java8_Compare(val data: Data) {
         return res
     }
 
-    private fun testParse(proc:LanguageProcessor, toUpper:Boolean=false) {
+    private fun testParse(proc: LanguageProcessor, toUpper: Boolean = false) {
         try {
             val queryStr = this.data.sentence
             val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule

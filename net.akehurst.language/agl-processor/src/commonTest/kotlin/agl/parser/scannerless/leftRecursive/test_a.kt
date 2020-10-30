@@ -59,7 +59,7 @@ class  test_a : test_ScanOnDemandParserAbstract() {
             S|1 { S1 { S { 'a' } 'a' } }
         """.trimIndent()
 
-        println(rrs.printFullAutomaton("S", true))
+        //println(rrs.printFullAutomaton("S", true))
 
         val actual = super.test(rrs, goal, sentence, expected)
         assertEquals(1, actual.maxNumHeads)

@@ -34,9 +34,9 @@ class test_skipRules {
 
         val S = rrs.findRuntimeRule("S")
         val a = rrs.findRuntimeRule("'a'")
-        val G = rrs.startingState(S, emptySet()).runtimeRule
+        val G = rrs.startingState(S).runtimeRule
 
-        val s0 = rrs.startingState(S, emptySet())
+        val s0 = rrs.startingState(S)
 
         val skipSS = rrs.skipParserStateSet!!
         val sk0 = skipSS.startState
@@ -100,26 +100,26 @@ class test_skipRules {
     }
 
     @Test
-    fun calcFirstAt() {
+    fun firstOf() {
 
-        var actual = s0.stateSet.calcFirstAt(RulePosition(G, 0, 0), BooleanArray(rrs.runtimeRules.size))
+        var actual = s0.stateSet.firstOf(RulePosition(G, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         var expected = setOf(a)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(G, 0, 1), BooleanArray(rrs.runtimeRules.size))
-        expected = setOf(rrs.END_OF_TEXT)
+        actual = s0.stateSet.firstOf(RulePosition(G, 0, 1), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(RuntimeRuleSet.END_OF_TEXT)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(G, 0, RulePosition.END_OF_RULE), BooleanArray(rrs.runtimeRules.size))
+        actual = s0.stateSet.firstOf(RulePosition(G, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf()
         assertEquals(expected, actual)
 
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(S, 1, 0), BooleanArray(rrs.runtimeRules.size))
+        actual = s0.stateSet.firstOf(RulePosition(S, 1, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(a)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcFirstAt(RulePosition(S, 1, 0), BooleanArray(rrs.runtimeRules.size))
+        actual = s0.stateSet.firstOf(RulePosition(S, 1, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(a)
         assertEquals(expected, actual)
 

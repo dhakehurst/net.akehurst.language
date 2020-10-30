@@ -18,7 +18,6 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.parser.InputFromCharSequence
 import net.akehurst.language.api.parser.ParserException
-import net.akehurst.language.collections.Stack
 import net.akehurst.language.collections.lazyMap
 import net.akehurst.language.collections.lazyMapNonNull
 import net.akehurst.language.collections.transitiveClosure
@@ -29,6 +28,8 @@ class LookaheadSet(
 ) {
     companion object {
         val EMPTY = LookaheadSet(-1, emptySet())
+        val EOT = LookaheadSet(-2, setOf(RuntimeRuleSet.END_OF_TEXT))
+        val UP = LookaheadSet(-3, setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
     }
 
     override fun hashCode(): Int = number * 31
@@ -38,6 +39,17 @@ class LookaheadSet(
     }
 
     override fun toString(): String = "LookaheadSet{$number,${content}}"
+    fun createWithParent(parentLookahead: LookaheadSet): LookaheadSet {
+        val newContent = mutableSetOf<RuntimeRule>()
+        for (rr in this.content) {
+            if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
+                newContent.addAll(parentLookahead.content)
+            } else {
+                newContent.add(rr)
+            }
+        }
+        return LookaheadSet(-1, newContent) //TODO: create this from runtimeRuleset, maybe!
+    }
 }
 
 class RuntimeRuleSet(
@@ -51,25 +63,24 @@ class RuntimeRuleSet(
         val EOT_RULE_NUMBER = -2;
         val SKIP_RULE_NUMBER = -3;
         val SKIP_CHOICE_RULE_NUMBER = -4;
+        val USE_PARENT_LOOKAHEAD_RULE_NUMBER = -5;
         val END_OF_TEXT_TAG = "<EOT>"
         val GOAL_TAG = "<GOAL>"
         val SKIP_RULE_TAG = "<SKIP-GOAL>"
         val SKIP_CHOICE_RULE_TAG = "<SKIP-CHOICE>"
+        val USE_PARENT_LOOKAHEAD_RULE_TAG = "<USE-PARENT-LOOKAHEAD>";
+
+        val END_OF_TEXT = RuntimeRule(-1, EOT_RULE_NUMBER, END_OF_TEXT_TAG, InputFromCharSequence.END_OF_TEXT, RuntimeRuleKind.TERMINAL, false, false)
+        val USE_PARENT_LOOKAHEAD = RuntimeRule(-1, USE_PARENT_LOOKAHEAD_RULE_NUMBER, USE_PARENT_LOOKAHEAD_RULE_TAG, 0.toChar().toString(), RuntimeRuleKind.TERMINAL, false, false)
 
         fun createGoalRule(userGoalRule: RuntimeRule): RuntimeRule {
-            return createGoalRule(userGoalRule, setOf(userGoalRule.runtimeRuleSet.END_OF_TEXT))
-        }
-
-        fun createGoalRule(userGoalRule: RuntimeRule, possibleEndOfText: Set<RuntimeRule>): RuntimeRule {
-            val gr = RuntimeRule(userGoalRule.runtimeRuleSet, GOAL_RULE_NUMBER, GOAL_TAG, "", RuntimeRuleKind.GOAL, false, false)
+            val gr = RuntimeRule(userGoalRule.runtimeRuleSetNumber, GOAL_RULE_NUMBER, GOAL_TAG, "", RuntimeRuleKind.GOAL, false, false)
             val items = listOf(userGoalRule) //+ possibleEndOfText
             gr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, items.toTypedArray())
             return gr
         }
 
     }
-
-    val END_OF_TEXT = RuntimeRule(this, EOT_RULE_NUMBER, END_OF_TEXT_TAG, InputFromCharSequence.END_OF_TEXT, RuntimeRuleKind.TERMINAL, false, false)
 
     val number: Int = nextRuntimeRuleSetNumber++
 
@@ -138,7 +149,7 @@ class RuntimeRuleSet(
     }
 
     // used when calculating lookahead
-    val firstTerminals2 = lazyMap<RulePosition, Set<RuntimeRule>> {
+    val firstTerminals2 = lazyMapNonNull<RulePosition, Set<RuntimeRule>> {
         val trps = expectedTerminalRulePositions[it] ?: arrayOf()
         trps.flatMap { it.items }.toSet()
     }
@@ -158,10 +169,10 @@ class RuntimeRuleSet(
 //        val skipGoalRule = RuntimeRule(this, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
             //       skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.MULTI, RuntimeRuleChoiceKind.NONE, 1, -1, arrayOf(skipChoiceRule))
 
-            val skipGoalRule = RuntimeRule(this, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
+            val skipGoalRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
             skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
 
-            val ss = ParserStateSet(nextStateSetNumber++, this, skipGoalRule, possibleEndOfText, true)
+            val ss = ParserStateSet(nextStateSetNumber++, this, skipGoalRule, true)
             //this.states_cache[skipGoalRule] = ss
             ss
         }
@@ -198,7 +209,7 @@ class RuntimeRuleSet(
         val gr = this.findRuntimeRule(goalRuleName)
         return this.states_cache[gr]!! //findRuntimeRule would throw exception if not exist
     }
-
+/*
     internal fun createAllSkipStates() {
         this.skipRules.forEach { skipRule ->
             val stateSet = ParserStateSet(nextStateSetNumber++, this, skipRule, emptySet(), true)
@@ -227,7 +238,7 @@ class RuntimeRuleSet(
     fun fetchSkipStates(rulePosition: RulePosition): ParserState {
         return this.skipStateSet.values.mapNotNull { it.fetchOrNull(rulePosition) }.first() //TODO: maybe more than 1 !
     }
-
+*/
     internal fun calcLookahead(parent: RulePositionWithLookahead?, childRP: RulePosition, ifEmpty: Set<RuntimeRule>): Set<RuntimeRule> {
         return when (childRP.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> useParentLH(parent, ifEmpty)
@@ -298,17 +309,22 @@ class RuntimeRuleSet(
 
     fun buildFor(goalRuleName: String): ParserStateSet {
         val gr = this.findRuntimeRule(goalRuleName)
-        val s0 = this.startingState(gr, setOf(this.END_OF_TEXT))
+        val s0 = this.startingState(gr)
         return s0.stateSet.build()
     }
 
-
-    fun startingState(userGoalRule: RuntimeRule, possibleEndOfText: Set<RuntimeRule>): ParserState {
+    fun fetchStateSetFor(userGoalRule: RuntimeRule):ParserStateSet {
+        //TODO: need to cache by possibleEndOfText also
         var stateSet = this.states_cache[userGoalRule]
         if (null == stateSet) {
-            stateSet = ParserStateSet(nextStateSetNumber++, this, userGoalRule, possibleEndOfText, false)
+            stateSet = ParserStateSet(nextStateSetNumber++, this, userGoalRule, false)
             this.states_cache[userGoalRule] = stateSet
         }
+        return stateSet
+    }
+
+    fun startingState(userGoalRule: RuntimeRule): ParserState {
+        var stateSet = fetchStateSetFor(userGoalRule)
         return stateSet.startState
     }
 
@@ -387,6 +403,8 @@ class RuntimeRuleSet(
     internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
         return when {
             content.isEmpty() -> LookaheadSet.EMPTY
+            LookaheadSet.EOT.content==content -> LookaheadSet.EOT
+            LookaheadSet.UP.content==content -> LookaheadSet.UP
             else -> {
                 val existing = this.lookaheadSets.firstOrNull { it.content == content }
                 if (null == existing) {
@@ -423,7 +441,7 @@ class RuntimeRuleSet(
         val b = StringBuilder()
         val gr = this.findRuntimeRule(goalRuleName)
 
-        val s0 = this.startingState(gr, setOf(this.END_OF_TEXT))
+        val s0 = this.startingState(gr)
 
         val trans0 = s0.transitions(null)
         trans0.transitiveClosure {

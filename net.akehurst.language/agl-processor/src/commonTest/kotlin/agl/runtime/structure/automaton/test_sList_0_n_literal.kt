@@ -31,22 +31,22 @@ class test_sList_0_n_literal {
         val S = rrs.findRuntimeRule("S")
         val a = rrs.findRuntimeRule("'a'")
         val _c = rrs.findRuntimeRule("','")
-        val G = rrs.startingState(S, emptySet()).runtimeRule
+        val G = rrs.startingState(S).runtimeRule
 
-        val s0 = rrs.startingState(S, emptySet())
+        val s0 = rrs.startingState(S)
 
         val lhsE = LookaheadSet.EMPTY
-        val lhs_T = LookaheadSet(0, setOf(rrs.END_OF_TEXT))
+        val lhs_T = LookaheadSet(0, setOf(RuntimeRuleSet.END_OF_TEXT))
         val lhs_a = LookaheadSet(1, setOf(a))
     }
 
     @Test
     fun s0_widthInto() {
 
-        val actual =s0.widthInto4().toList()
+        val actual =s0.widthInto(null).toList()
 
         val expected = listOf(
-                RulePosition(a, 0, 0)
+                ClosureItem(null,RulePosition(a, 0, 0),lhs_T)
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {

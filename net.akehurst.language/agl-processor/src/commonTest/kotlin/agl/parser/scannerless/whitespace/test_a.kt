@@ -82,8 +82,7 @@ class test_a : test_ScanOnDemandParserAbstract() {
 
         super.testStringResult(rrb, goal, sentence, expected)
     }
-
-
+    
     // skip WS = "\s+" ;
     // S = 'a' 'b' ;
     private fun Sab(): RuntimeRuleSetBuilder {

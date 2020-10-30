@@ -1343,6 +1343,7 @@ castExpression
 // Lexer
 
 // §3.10.1 Integer Literals
+leaf
 IntegerLiteral
 	=	DecimalIntegerLiteral
 	|	HexIntegerLiteral
@@ -1492,7 +1493,7 @@ BinaryDigitOrUnderscore
 	;
 
 // §3.10.2 Floating-Point Literals
-
+leaf
 FloatingPointLiteral
 	=	DecimalFloatingPointLiteral
 	|	HexadecimalFloatingPointLiteral
@@ -1553,14 +1554,14 @@ BinaryExponentIndicator
 	;
 
 // §3.10.3 Boolean Literals
-
+leaf
 BooleanLiteral
 	=	'true'
 	|	'false'
 	;
 
 // §3.10.4 Character Literals
-
+leaf
 CharacterLiteral
 	=	'\'' SingleCharacter '\''
 	|	'\'' EscapeSequence '\''
@@ -1572,7 +1573,7 @@ SingleCharacter
 	;
 
 // §3.10.5 String Literals
-
+leaf
 StringLiteral
 	=	'"' StringCharacters? '"'
 	;
@@ -1589,7 +1590,6 @@ StringCharacter
 	;
 
 // §3.10.6 Escape Sequences for Character and String Literals
-
 leaf
 EscapeSequence
 	=	'\\' "[btnfr\"'\\]"
@@ -1617,12 +1617,14 @@ UnicodeEscape
 
 // §3.10.7 The Null Literal
 
+leaf
 NullLiteral
 	=	'null'
 	;
 
 // §3.8 Identifiers (must appear after all keywords in the grammar)
 
+leaf
 Identifier
 	=	JavaLetter JavaLetterOrDigit*
 	;

@@ -116,35 +116,46 @@ grammar Expressions extends Types {
      | Prefix
      | Postfix
      | CastExpression
-     | ArrayAccess
-     | FieldAccess
-     | Primary
+     | Navigations
      ;
 
+    Navigations = Primary ('.' [ NavigableExpression  / '.' ]+)? ;
+    NavigableExpression
+      = IDENTIFIER
+      | MethodReference
+      | GenericMethodInvocation
+      | ArrayAccess
+      | 'this'
+      | 'super'
+      ;
+
     Primary = PrimaryNoNewArray | ArrayCreationExpression ;
-    // overridden in classes
+
     PrimaryNoNewArray
       = IDENTIFIER
       | Literal
       | MethodReference
       | MethodInvocation
+      | ArrayAccess
       | ClassLiteral
       | 'this'
       | 'super'
       | GroupedExpression
-      | QualifiedName '.' 'this'
       | ClassInstanceCreationExpression
-      | MethodInvocation
-      | MethodReference
       ;
 
-    MethodInvocation
-      = IDENTIFIER ArgumentList
-      | QualifiedName '.' TypeArguments? IDENTIFIER  ArgumentList
-      | Primary '.' TypeArguments? IDENTIFIER  ArgumentList
-      | 'super' '.' TypeArguments? IDENTIFIER  ArgumentList
-      | QualifiedName '.' 'super' '.' TypeArguments? IDENTIFIER ArgumentList
+    MethodReference
+      = QualifiedName '::' TypeArguments? IDENTIFIER
+      | ReferenceType '::' TypeArguments? IDENTIFIER
+      | Primary '::' TypeArguments? IDENTIFIER
+      | 'super' '::' TypeArguments? IDENTIFIER
+      | QualifiedName '.' 'super' '::' TypeArguments? IDENTIFIER
+      | QualifiedTypeReference '::' TypeArguments? 'new'
+      | ArrayType '::' 'new'
       ;
+
+    GenericMethodInvocation = TypeArguments? MethodInvocation ;
+    MethodInvocation = IDENTIFIER ArgumentList ;
     ArgumentList = '(' Arguments ')' ;
     Arguments = [ Expression / ',' ]* ;
 
@@ -156,6 +167,18 @@ grammar Expressions extends Types {
       ;
 
     GroupedExpression = '(' Expression ')' ;
+
+    ClassInstanceCreationExpression
+      = UnqualifiedClassInstanceCreationExpression
+      | QualifiedName '.' UnqualifiedClassInstanceCreationExpression
+      | Primary '.' UnqualifiedClassInstanceCreationExpression
+      ;
+    UnqualifiedClassInstanceCreationExpression
+      = 'new' TypeArguments? ClassOrInterfaceTypeToInstantiate  ArgumentList ClassBody? ;
+    // overridden in Classes
+    ClassBody = '{' '}' ;
+    ClassOrInterfaceTypeToInstantiate = Annotation* IDENTIFIER ('.' Annotation* IDENTIFIER)* TypeArgumentsOrDiamond? ;
+
 
     TernaryIf = Expression '?' Expression ':' Expression ;
 
@@ -184,37 +207,9 @@ grammar Expressions extends Types {
           | '(' ReferenceType AdditionalBound* ')' Expression
           ;
 
-
-    ClassInstanceCreationExpression
-      = UnqualifiedClassInstanceCreationExpression
-      | QualifiedName '.' UnqualifiedClassInstanceCreationExpression
-      | Primary '.' UnqualifiedClassInstanceCreationExpression
-      ;
-    UnqualifiedClassInstanceCreationExpression
-      = 'new' TypeArguments? ClassOrInterfaceTypeToInstantiate  ArgumentList ClassBody? ;
-    // overridden in Classes
-    ClassBody = '{' '}' ;
-    ClassOrInterfaceTypeToInstantiate = Annotation* IDENTIFIER ('.' Annotation* IDENTIFIER)* TypeArgumentsOrDiamond? ;
     TypeArgumentsOrDiamond = TypeArguments | '<>' ;
-    FieldAccess
-      = Primary '.' IDENTIFIER
-      | 'super' '.' IDENTIFIER
-      | QualifiedName '.' 'super' '.' IDENTIFIER
-      ;
-    ArrayAccess
-      = QualifiedName '[' Expression ']'
-      | PrimaryNoNewArray '[' Expression ']'
-      ;
 
-    MethodReference
-      = QualifiedName '::' TypeArguments? IDENTIFIER
-      | ReferenceType '::' TypeArguments? IDENTIFIER
-      | Primary '::' TypeArguments? IDENTIFIER
-      | 'super' '::' TypeArguments? IDENTIFIER
-      | QualifiedName '.' 'super' '::' TypeArguments? IDENTIFIER
-      | QualifiedTypeReference '::' TypeArguments? 'new'
-      | ArrayType '::' 'new'
-      ;
+    ArrayAccess = Expression '[' Expression ']' ;
 
     ArrayCreationExpression
       = 'new' PrimitiveType DimExprs Dims?
@@ -236,11 +231,11 @@ grammar Expressions extends Types {
       | '(' FormalParameterList? ')'
       | '(' InferredFormalParameterList ')'
       ;
-    InferredFormalParameterList = IDENTIFIER (',' IDENTIFIER)* ;
+    InferredFormalParameterList = [IDENTIFIER / ',']+ ;
 
     FormalParameterList = ReceiverParameter | FormalParameters ',' LastFormalParameter | LastFormalParameter ;
     FormalParameters
-      = FormalParameter (',' FormalParameter)*
+      = [FormalParameter / ',']+
       | ReceiverParameter (',' FormalParameter)*
       ;
     FormalParameter = VariableModifier* UnannType VariableDeclaratorId ;
@@ -316,7 +311,7 @@ grammar BlocksAndStatements extends Expressions {
     SwitchStatement = 'switch' '(' Expression ')' SwitchBlock ;
     SwitchBlock = '{' SwitchBlockStatementGroup* SwitchLabel* '}' ;
     SwitchBlockStatementGroup = SwitchLabels BlockStatements ;
-    SwitchLabels = SwitchLabel SwitchLabel* ;
+    SwitchLabels = SwitchLabel+ ;
     SwitchLabel
       = 'case' ConstantExpression ':'
       | 'case' EnumConstantName ':'
@@ -332,7 +327,7 @@ grammar BlocksAndStatements extends Expressions {
     BasicForStatementNoShortIf = 'for' '(' ForInit? ';' Expression? ';' ForUpdate? ')' StatementNoShortIf ;
     ForInit = StatementExpressionList | LocalVariableDeclaration ;
     ForUpdate = StatementExpressionList ;
-    StatementExpressionList = StatementExpression (',' StatementExpression)* ;
+    StatementExpressionList = [StatementExpression /',' ]+ ;
     EnhancedForStatement = 'for' '(' VariableModifier* UnannType VariableDeclaratorId ':' Expression ')' Statement ;
     EnhancedForStatementNoShortIf = 'for' '(' VariableModifier* UnannType VariableDeclaratorId ':' Expression ')' StatementNoShortIf ;
     BreakStatement = 'break' IDENTIFIER? ';' ;
@@ -365,7 +360,8 @@ grammar Classes extends BlocksAndStatements {
 
     ClassDeclaration = NormalClassDeclaration | EnumDeclaration ;
     NormalClassDeclaration = ClassModifier* 'class' IDENTIFIER TypeParameters? Superclass? Superinterfaces? ClassBody ;
-    ClassModifier = Annotation | 'public' | 'protected' | 'private' | 'abstract' | 'static' | 'final' | 'strictfp' ;
+    ClassModifier = Annotation | CLASS_MODIFIER ;
+    leaf CLASS_MODIFIER = 'public' | 'protected' | 'private' | 'abstract' | 'static' | 'final' | 'strictfp' ;
     TypeParameters = '<' TypeParameterList '>' ;
     TypeParameterList = [ TypeParameter / ',' ]+ ;
     Superclass = 'extends' QualifiedTypeReference ;
@@ -386,11 +382,12 @@ grammar Classes extends BlocksAndStatements {
        | ';'
        ;
     FieldDeclaration = FieldModifier* UnannType VariableDeclaratorList ';' ;
-    FieldModifier = Annotation | 'public' | 'protected' | 'private' | 'static' | 'final' | 'transient' | 'volatile' ;
+    FieldModifier = Annotation | FIELD_MODIFIER ;
+    leaf FIELD_MODIFIER = 'public' | 'protected' | 'private' | 'static' | 'final' | 'transient' | 'volatile' ;
 
     MethodDeclaration = MethodModifier* MethodHeader MethodBody ;
-    MethodModifier
-      = Annotation | 'public' | 'protected' | 'private' | 'abstract'
+    MethodModifier  = Annotation | METHOD_MODIFIER ;
+    leaf METHOD_MODIFIER = 'public' | 'protected' | 'private' | 'abstract'
       | 'static' | 'final' | 'synchronized' | 'native' | 'strictfp'
       ;
     MethodHeader
@@ -407,7 +404,8 @@ grammar Classes extends BlocksAndStatements {
     InstanceInitializer = Block ;
     StaticInitializer = 'static' Block ;
     ConstructorDeclaration = ConstructorModifier* ConstructorDeclarator Throws? ConstructorBody ;
-    ConstructorModifier = Annotation | 'public' | 'protected' | 'private' ;
+    ConstructorModifier = Annotation | CONSTRUCTOR_MODIFIER ;
+    leaf CONSTRUCTOR_MODIFIER = 'public' | 'protected' | 'private' ;
     ConstructorDeclarator = TypeParameters? SimpleTypeName '(' FormalParameterList? ')' ;
     SimpleTypeName = IDENTIFIER ;
     ConstructorBody = '{' ExplicitConstructorInvocation? BlockStatements? '}' ;
@@ -437,7 +435,8 @@ grammar Interfaces extends Classes {
 
     InterfaceDeclaration = NormalInterfaceDeclaration | AnnotationTypeDeclaration ;
     NormalInterfaceDeclaration = InterfaceModifier* 'interface' IDENTIFIER TypeParameters? ExtendsInterfaces? InterfaceBody ;
-    InterfaceModifier = Annotation | 'public' | 'protected' | 'private' | 'abstract' | 'static' | 'strictfp' ;
+    InterfaceModifier = Annotation | INTERFACE_MODIFIER ;
+    leaf INTERFACE_MODIFIER = 'public' | 'protected' | 'private' | 'abstract' | 'static' | 'strictfp' ;
     ExtendsInterfaces = 'extends' InterfaceTypeList ;
     InterfaceBody = '{' InterfaceMemberDeclaration* '}' ;
     InterfaceMemberDeclaration
@@ -448,7 +447,8 @@ grammar Interfaces extends Classes {
       | ';'
       ;
     ConstantDeclaration = ConstantModifier* UnannType VariableDeclaratorList ;
-    ConstantModifier = Annotation | 'public' | 'static' | 'final' ;
+    ConstantModifier = Annotation | CONSTANT_MODIFIER ;
+    leaf CONSTANT_MODIFIER = 'public' | 'static' | 'final' ;
     InterfaceMethodDeclaration = InterfaceMethodModifier* MethodHeader MethodBody ;
     InterfaceMethodModifier =  Annotation | 'public' | 'abstract' | 'default' | 'static' | 'strictfp' ;
     AnnotationTypeDeclaration = InterfaceModifier* '@' 'interface' IDENTIFIER AnnotationTypeBody ;
@@ -461,7 +461,8 @@ grammar Interfaces extends Classes {
       | ';'
       ;
     AnnotationTypeElementDeclaration = AnnotationTypeElementModifier* UnannType IDENTIFIER '(' ')' Dims? DefaultValue? ';' ;
-    AnnotationTypeElementModifier = Annotation | 'public' | 'abstract' ;
+    AnnotationTypeElementModifier = Annotation | ANNOTATION_MODIFIER ;
+    leaf ANNOTATION_MODIFIER = 'public' | 'abstract' ;
     DefaultValue = 'default' ElementValue ;
 }
 
@@ -469,15 +470,6 @@ grammar Packages extends Interfaces {
     CompilationUnit = PackageDeclaration? ImportDeclaration* TypeDeclaration* ;
     PackageDeclaration = PackageModifier* 'package' [IDENTIFIER / '.']+ ';' ;
     PackageModifier = Annotation ;
-    ImportDeclaration
-      = SingleTypeImportDeclaration
-      | TypeImportOnDemandDeclaration
-      | SingleStaticImportDeclaration
-      | StaticImportOnDemandDeclaration
-      ;
-    SingleTypeImportDeclaration = 'import' QualifiedName ';' ;
-    TypeImportOnDemandDeclaration = 'import' QualifiedName '.' '*' ';' ;
-    SingleStaticImportDeclaration = 'import' 'static' QualifiedName '.' IDENTIFIER ';' ;
-    StaticImportOnDemandDeclaration = 'import' 'static' QualifiedName '.' '*' ';' ;
+    ImportDeclaration = 'import' 'static'? QualifiedName ( '.' '*' )? ';' ;
     TypeDeclaration = ClassDeclaration | InterfaceDeclaration | ';' ;
 }

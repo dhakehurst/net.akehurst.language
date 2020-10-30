@@ -63,6 +63,7 @@ internal class ParseGraph(
     var goalMatchedAll = true
 
     fun reset() {
+        this.leaves.clear()
         this.completeNodes.clear()
         this.growing.clear()
         this._goals.clear()
@@ -286,7 +287,7 @@ internal class ParseGraph(
     }
 
     //TODO: combine next 3 methods!
-    private fun findOrCreateGrowingLeafOrEmbeddedNode(isSkipGrowth: Boolean, newState: ParserState, location: InputLocation, nextInputPosition: Int, children: List<SPPTNode>, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
+    private fun findOrCreateGrowingLeafOrEmbeddedNode(isSkipGrowth: Boolean, newState: ParserState, lookahead: LookaheadSet, location: InputLocation, nextInputPosition: Int, children: List<SPPTNode>, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
         val oldOrExistingHead = this.addGrowing(oldHead, previous)
         for (info in previous) {
             this.addGrowing(info.node)
@@ -297,6 +298,7 @@ internal class ParseGraph(
             val nn = GrowingNode(
                     isSkipGrowth,
                     newState,
+                    lookahead,
                     location,
                     nextInputPosition,
                     0,
@@ -316,7 +318,7 @@ internal class ParseGraph(
         }
     }
 
-    private fun findOrCreateGrowingLeafForSkip(isSkipGrowth: Boolean, curRp: ParserState, location: InputLocation, nextInputPosition: Int, previous: Set<PreviousInfo>, skipChildren: List<SPPTNode>) {
+    private fun findOrCreateGrowingLeafForSkip(isSkipGrowth: Boolean, curRp: ParserState, lookahead: LookaheadSet, location: InputLocation, nextInputPosition: Int, previous: Set<PreviousInfo>, skipChildren: List<SPPTNode>) {
         // TODO: remove, this is for test
         for (info in previous) {
             this.addGrowing(info.node)
@@ -328,6 +330,7 @@ internal class ParseGraph(
             val nn = GrowingNode(
                     isSkipGrowth,
                     curRp,
+                    lookahead,
                     location,
                     nextInputPosition,
                     0,
@@ -344,13 +347,14 @@ internal class ParseGraph(
         }
     }
 
-    private fun findOrCreateGrowingNode(isSkipGrowth: Boolean, newRp: ParserState, location: InputLocation, nextInputPosition: Int, priority: Int, children: List<SPPTNode>, numNonSkipChildren: Int, previous: Set<PreviousInfo>): GrowingNode {
+    private fun findOrCreateGrowingNode(isSkipGrowth: Boolean, newRp: ParserState, lookahead: LookaheadSet, location: InputLocation, nextInputPosition: Int, priority: Int, children: List<SPPTNode>, numNonSkipChildren: Int, previous: Set<PreviousInfo>): GrowingNode {
         val gnindex = GrowingNode.index(newRp, location.position, nextInputPosition, children)//, nextInputPosition, priority)
         var existing = this.growing[gnindex]
         return if (null == existing) {
             var nn = GrowingNode(
                     isSkipGrowth,
                     newRp,
+                    lookahead,
                     location,
                     nextInputPosition,
                     priority,
@@ -369,6 +373,7 @@ internal class ParseGraph(
                 var nn = GrowingNode(
                         isSkipGrowth,
                         newRp,
+                        lookahead,
                         location,
                         nextInputPosition,
                         priority,
@@ -618,7 +623,7 @@ internal class ParseGraph(
         }
     }
 
-    private fun growNextChildAt(isSkipGrowth: Boolean, nextRp: ParserState, parent: GrowingNode, priority: Int, nextChild: SPPTNode, skipChildren: List<SPPTNode>) {
+    private fun growNextChildAt(isSkipGrowth: Boolean, nextRp: ParserState, lookahead:LookaheadSet, parent: GrowingNode, priority: Int, nextChild: SPPTNode, skipChildren: List<SPPTNode>) {
         val nextInputPosition = if (skipChildren.isEmpty()) {
             nextChild.nextInputPosition
         } else {
@@ -638,17 +643,18 @@ internal class ParseGraph(
         val lastChild = children.last()
         val length = (lastChild.location.position - firstChild.location.position) + lastChild.location.length
         val location = InputLocation(firstChild.location.position, firstChild.location.column, firstChild.location.line, length)
-        this.findOrCreateGrowingNode(isSkipGrowth, nextRp, location, nextInputPosition, priority, children, numNonSkipChildren, previous.values.toSet()) //FIXME: don't convert to set
+        this.findOrCreateGrowingNode(isSkipGrowth, nextRp, lookahead, location, nextInputPosition, priority, children, numNonSkipChildren, previous.values.toSet()) //FIXME: don't convert to set
         if (parent.next.isEmpty()) {
             this.removeGrowing(parent)
         }
     }
 
-    fun start(goalState: ParserState, startLocation: InputLocation) {
+    fun start(goalState: ParserState, startLocation: InputLocation, lookahead : LookaheadSet) {
         val startPosition = startLocation.position
         val goalGN = GrowingNode(
                 false,
                 goalState,
+                lookahead,
                 startLocation,
                 startPosition,
                 0,
@@ -669,22 +675,22 @@ internal class ParseGraph(
         return previous.values
     }
 
-    fun pushToStackOf(isSkipGrowth: Boolean, newState: ParserState, leafNode: SPPTLeaf, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
-        this.findOrCreateGrowingLeafOrEmbeddedNode(isSkipGrowth, newState, leafNode.location, leafNode.nextInputPosition, emptyList(), oldHead, previous, skipNodes)
+    fun pushToStackOf(isSkipGrowth: Boolean, newState: ParserState, lookahead:LookaheadSet, leafNode: SPPTLeaf, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
+        this.findOrCreateGrowingLeafOrEmbeddedNode(isSkipGrowth, newState, lookahead, leafNode.location, leafNode.nextInputPosition, emptyList(), oldHead, previous, skipNodes)
     }
 
     // for embedded segments
-    fun pushToStackOf(isSkipGrowth: Boolean, newRp: ParserState, embeddedNode: SPPTBranch, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
+    fun pushToStackOf(isSkipGrowth: Boolean, newRp: ParserState, lookahead:LookaheadSet, embeddedNode: SPPTBranch, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
         (embeddedNode as SPPTNodeAbstract).embeddedIn = newRp.runtimeRule.tag
         val location = embeddedNode.location
         val nextInputPosition = embeddedNode.nextInputPosition
         val children = listOf(embeddedNode)
-        this.findOrCreateGrowingLeafOrEmbeddedNode(isSkipGrowth, newRp, location, nextInputPosition, children, oldHead, previous, skipNodes)
+        this.findOrCreateGrowingLeafOrEmbeddedNode(isSkipGrowth, newRp, lookahead, location, nextInputPosition, children, oldHead, previous, skipNodes)
         //val id = CompleteNodeIndex(newRp.runtimeRule.number, embeddedNode.startPosition)//newRp.choice, embeddedNode.startPosition)
         this.completeNodes[newRp.runtimeRule, embeddedNode.startPosition] = embeddedNode
     }
 
-    fun growNextChild(isSkipGrowth: Boolean, nextRp: ParserState, parent: GrowingNode, nextChild: SPPTNode, position: Int, skipChildren: List<SPPTNode>) {
+    fun growNextChild(isSkipGrowth: Boolean, nextRp: ParserState, lookahead:LookaheadSet, parent: GrowingNode, nextChild: SPPTNode, position: Int, skipChildren: List<SPPTNode>) {
         if (0 != position && parent.runtimeRule.rhs.kind == RuntimeRuleItemKind.MULTI) {
             val prev = parent.children[position - 1]
             if (prev === nextChild) {
@@ -700,7 +706,7 @@ internal class ParseGraph(
         } else {
             parent.priority
         }
-        this.growNextChildAt(isSkipGrowth, nextRp, parent, priority, nextChild, skipChildren)
+        this.growNextChildAt(isSkipGrowth, nextRp,lookahead, parent, priority, nextChild, skipChildren)
     }
 
     fun growNextSkipChild(parent: GrowingNode, skipNode: SPPTNode) {
@@ -708,6 +714,7 @@ internal class ParseGraph(
             RuntimeRuleKind.GOAL -> this.growNextChildAt(
                     false,
                     parent.currentState,
+                    parent.lookahead,
                     parent,
                     parent.priority,
                     skipNode,
@@ -720,6 +727,7 @@ internal class ParseGraph(
                 this.findOrCreateGrowingLeafForSkip(
                         false,
                         nextRp,
+                        parent.lookahead,
                         location,
                         nextInputPosition,
                         parent.previous.values.toSet(),  //FIXME: don't convert to set
@@ -732,6 +740,7 @@ internal class ParseGraph(
             RuntimeRuleKind.NON_TERMINAL -> this.growNextChildAt(
                     false,
                     parent.currentState,
+                    parent.lookahead,
                     parent,
                     parent.priority,
                     skipNode,
@@ -751,15 +760,15 @@ internal class ParseGraph(
                 val location = InputLocation(firstChild.location.position, firstChild.location.column, firstChild.location.line, length)
                 val nextInputPosition = skipNodes.last().nextInputPosition
                 val numNonSkipChildren = parent.numNonSkipChildren + skipNodes.size
-                this.findOrCreateGrowingNode(true, parent.currentState, location, nextInputPosition, parent.priority, children, numNonSkipChildren, parent.previous.values.toSet()) //FIXME: don't convert to set
+                this.findOrCreateGrowingNode(true, parent.currentState, parent.lookahead, location, nextInputPosition, parent.priority, children, numNonSkipChildren, parent.previous.values.toSet()) //FIXME: don't convert to set
             }
             RuntimeRuleKind.TERMINAL -> {
-                val nextRp = parent.currentState
                 val nextInputPosition = parent.nextInputPosition + skipNodes.sumBy { it.matchedTextLength }
                 val location = parent.location
                 this.findOrCreateGrowingLeafForSkip(
                         false,
-                        nextRp,
+                        parent.currentState,
+                        parent.lookahead,
                         location,
                         nextInputPosition,
                         parent.previous.values.toSet(),  //FIXME: don't convert to set
@@ -774,7 +783,7 @@ internal class ParseGraph(
         }
     }
 
-    fun createWithFirstChild(isSkipGrowth: Boolean, newRp: ParserState, firstChild: SPPTNode, previous: Set<PreviousInfo>, skipChildren: List<SPPTNode>) {
+    fun createWithFirstChild(isSkipGrowth: Boolean, newRp: ParserState, lookahead:LookaheadSet, firstChild: SPPTNode, previous: Set<PreviousInfo>, skipChildren: List<SPPTNode>) {
         val nextInputPosition = if (skipChildren.isEmpty()) {
             firstChild.nextInputPosition
         } else {
@@ -791,6 +800,21 @@ internal class ParseGraph(
         val lastChild = children.last()
         val length = (lastChild.location.position - firstChild.location.position) + lastChild.location.length
         val location = InputLocation(firstChild.location.position, firstChild.location.column, firstChild.location.line, length)
-        this.findOrCreateGrowingNode(isSkipGrowth, newRp, location, nextInputPosition, priority, children, numNonSkipChildren, previous)
+        this.findOrCreateGrowingNode(isSkipGrowth, newRp, lookahead, location, nextInputPosition, priority, children, numNonSkipChildren, previous)
+    }
+
+    fun isLookingAt(lookaheadGuard: LookaheadSet, prevLookahead:LookaheadSet?, nextInputPosition: Int, lastLocation: InputLocation): Boolean {
+        var result = false
+        for( rr in lookaheadGuard.content) {
+            if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD==rr && null!=prevLookahead) {
+                if ( isLookingAt(prevLookahead, null, nextInputPosition, lastLocation) ) {
+                    return true
+                }
+            } else {
+                val l = this.findOrTryCreateLeaf(rr, nextInputPosition, lastLocation)
+                if (null != l) return true
+            }
+        }
+        return result
     }
 }

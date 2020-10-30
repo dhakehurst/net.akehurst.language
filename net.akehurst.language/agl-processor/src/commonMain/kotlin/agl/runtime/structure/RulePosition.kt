@@ -34,14 +34,21 @@ data class RulePosition(
     val isAtStart = position == START_OF_RULE
     val isAtEnd = position == END_OF_RULE
 
-    val items: Set<RuntimeRule>
+    val items: List<RuntimeRule>
         get() {
             return if (END_OF_RULE == position) {
-                emptySet()
+                emptyList()
             } else {
                 runtimeRule.items(option, position)
             }
         }
+
+    val item : RuntimeRule? get() {
+        return when {
+            END_OF_RULE==this.position -> null
+            else -> runtimeRule.item(option, position)
+        }
+    }
 
     fun atEnd() = RulePosition(this.runtimeRule, this.option, END_OF_RULE)
 
@@ -54,7 +61,7 @@ data class RulePosition(
      */
     private fun next(itemRule: RuntimeRule): Set<RulePosition> { //TODO: cache this
         return if (RulePosition.END_OF_RULE == this.position) {
-            emptySet() //TODO: use goal rule to find next position? maybe
+            emptySet()
         } else {
             when (this.runtimeRule.kind) {
                 RuntimeRuleKind.TERMINAL -> TODO() // possibly these never happen!
@@ -156,7 +163,7 @@ data class RulePosition(
 
     override fun toString(): String {
         val r = when {
-            runtimeRule == this.runtimeRule.runtimeRuleSet.END_OF_TEXT -> RuntimeRuleSet.END_OF_TEXT_TAG
+            runtimeRule == RuntimeRuleSet.END_OF_TEXT -> RuntimeRuleSet.END_OF_TEXT_TAG
             //runtimeRule.isTerminal -> if (runtimeRule.isPattern) "\"${runtimeRule.name}\"" else "'${runtimeRule.name}'"
             else -> runtimeRule.tag
         }

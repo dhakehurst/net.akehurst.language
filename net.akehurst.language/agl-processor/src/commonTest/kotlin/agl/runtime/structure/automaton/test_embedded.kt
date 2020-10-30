@@ -42,14 +42,14 @@ class test_embedded{
         val S = rrs.findRuntimeRule("S")
         val gB = rrs.findRuntimeRule("gB")
         val a = rrs.findRuntimeRule("'a'")
-        val G = rrs.startingState(S, emptySet()).runtimeRule
+        val G = rrs.startingState(S).runtimeRule
 
         val B = rrsB.findRuntimeRule("B")
         val bT = rrsB.findRuntimeRule("'b'")
 
-        val s0 = rrs.startingState(S, emptySet())
+        val s0 = rrs.startingState(S)
         val psm = s0.stateSet
-        val psmB = rrsB.startingState(B, setOf(a)).stateSet
+        val psmB = rrsB.startingState(B).stateSet
     }
 
     @Test
@@ -86,42 +86,42 @@ class test_embedded{
     }
 
     @Test
-    fun calcFirstAt() {
+    fun firstOf() {
 
-        var actual = psm.calcFirstAt(RulePosition(G,0,0),BooleanArray(rrs.runtimeRules.size))
+        var actual = psm.firstOf(RulePosition(G,0,0),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         var expected = setOf(a)
         assertEquals(expected,actual)
 
-        actual = psm.calcFirstAt(RulePosition(G,0,1),BooleanArray(rrs.runtimeRules.size))
-        expected = setOf(rrs.END_OF_TEXT)
+        actual = psm.firstOf(RulePosition(G,0,1),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(RuntimeRuleSet.END_OF_TEXT)
         assertEquals(expected,actual)
 
-        actual = psm.calcFirstAt(RulePosition(G,0,RulePosition.END_OF_RULE),BooleanArray(rrs.runtimeRules.size))
+        actual = psm.firstOf(RulePosition(G,0,RulePosition.END_OF_RULE),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf()
         assertEquals(expected,actual)
 
-        actual = psm.calcFirstAt(RulePosition(S,0,0),BooleanArray(rrs.runtimeRules.size))
+        actual = psm.firstOf(RulePosition(S,0,0),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(a)
         assertEquals(expected,actual)
 
-        actual = psm.calcFirstAt(RulePosition(S,0,1),BooleanArray(rrs.runtimeRules.size))
+        actual = psm.firstOf(RulePosition(S,0,1),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(bT)
         assertEquals(expected,actual)
 
-        actual = psm.calcFirstAt(RulePosition(S,0,2),BooleanArray(rrs.runtimeRules.size))
+        actual = psm.firstOf(RulePosition(S,0,2),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(a)
         assertEquals(expected,actual)
 
-        actual = psm.calcFirstAt(RulePosition(S,0,RulePosition.END_OF_RULE),BooleanArray(rrs.runtimeRules.size))
-        expected = setOf(rrs.END_OF_TEXT)
+        actual = psm.firstOf(RulePosition(S,0,RulePosition.END_OF_RULE),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(RuntimeRuleSet.END_OF_TEXT)
         assertEquals(expected,actual)
 
-        actual = psm.calcFirstAt(RulePosition(gB,0,RulePosition.END_OF_RULE),BooleanArray(rrs.runtimeRules.size))
+        actual = psm.firstOf(RulePosition(gB,0,RulePosition.END_OF_RULE),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(a)
         assertEquals(expected,actual)
 
 
-        actual = psmB.calcFirstAt(RulePosition(bT,0,RulePosition.END_OF_RULE),BooleanArray(rrsB.runtimeRules.size))
+        actual = psmB.firstOf(RulePosition(bT,0,RulePosition.END_OF_RULE),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(a)
         assertEquals(expected,actual)
     }

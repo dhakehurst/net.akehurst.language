@@ -62,23 +62,25 @@ class test_LR1_States {
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
         val d = rrs.findRuntimeRule("'d'")
+
+        val lhs_T = test_aObOcO.rrs.createLookaheadSet(setOf(RuntimeRuleSet.END_OF_TEXT))
     }
     @Test
     fun s0_widthInto() {
-        val s0 = rrs.startingState(S, emptySet())
+        val s0 = rrs.startingState(S)
 
-        val actual = s0.widthInto4()
+        val actual = s0.widthInto(null)
         val expected = setOf(
-                RulePosition(d, 0, 0),
-                RulePosition(b, 0, 0),
-                RulePosition(d, 0, 0)
+                ClosureItem(null,RulePosition(d, 0, 0), lhs_T)
+//                RulePosition(b, 0, 0),
+//                RulePosition(d, 0, 0)
         )
         assertEquals(expected, actual)
     }
 
     @Test
     fun s0_transitions() {
-        val s0 = rrs.startingState(S, emptySet())
+        val s0 = rrs.startingState(S)
 
         val actual = s0.transitions(null)
 
@@ -98,26 +100,23 @@ class test_LR1_States {
     @Test
     fun s1_heightOrGraftInto() {
         // G
-        val s0 = rrs.startingState(S, emptySet())
+        val s0 = rrs.startingState(S)
         val trans_s0 = s0.transitions(null)
         val tr_a_d = trans_s0.first { it.lookaheadGuard.content.contains(a) }
         val tr_d_b = trans_s0.first { it.lookaheadGuard.content.contains(d) }
         val tr_c_d = trans_s0.first { it.lookaheadGuard.content.contains(c) }
         // - WIDTH -> d
         val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
-        val actual = s1.heightOrGraftInto3()
+        val actual = s1.heightOrGraftInto(s1.rulePosition)
         assertNotNull(actual)
-        val expected = setOf(
-                RulePosition(rA, 0, 0),
-                RulePosition(rB, 0, 0)
-        )
+        val expected = emptySet<ClosureItem>()
 
         assertEquals(expected, actual)
     }
 
     @Test
     fun s1_transitions() {
-        val s0 = rrs.startingState(S, emptySet())
+        val s0 = rrs.startingState(S)
         val s0_trans = s0.transitions(null)
         val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
         val tr_a_d = s0_trans.first { it.lookaheadGuard.content.contains(a) }

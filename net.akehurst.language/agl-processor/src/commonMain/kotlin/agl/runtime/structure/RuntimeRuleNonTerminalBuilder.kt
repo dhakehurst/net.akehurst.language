@@ -34,7 +34,7 @@ class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val name: S
 
     internal fun build(): RuntimeRule {
         if (null == this.rule) {
-            val rr = RuntimeRule(this.rrsb.runtimeRuleSet, this.rrsb.rules.size, name, "", kind, isPattern, isSkip)
+            val rr = RuntimeRule(this.rrsb.runtimeRuleSet.number, this.rrsb.rules.size, name, "", kind, isPattern, isSkip)
             this.rrsb.rules.add(rr)
             this.rule = rr
             return rr

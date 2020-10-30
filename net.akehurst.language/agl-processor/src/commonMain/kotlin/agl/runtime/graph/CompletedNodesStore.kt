@@ -97,6 +97,9 @@ class CompletedNodesStore<T>(val num: Int, val inputLength: Int) {
 
     fun clear() {
         this._map.clear()
+        this._goal = null
+        this._eot.clear()
+        this._skip = null
     }
 
     operator fun set(runtimeRule: RuntimeRule, inputPosition: Int, value: T) {

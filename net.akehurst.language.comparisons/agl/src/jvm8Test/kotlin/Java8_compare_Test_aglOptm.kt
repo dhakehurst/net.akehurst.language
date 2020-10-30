@@ -49,28 +49,13 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
             val bytes = Java8_compare_Test_aglOptm::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
             val proc = Agl.processor(javaGrammarStr)
-            proc.buildFor("CompilationUnit")
+            // no need to build because, sentence is parsed twice in the test
             return proc
         }
 
-        val aglProcessor = createAndBuildProcessor("/agl/Java8AglOptm.agl")
 
         var input: String? = null
 
-        fun parseWithJava8Agl(file: FileData): SharedPackedParseTree? {
-            return try {
-                aglProcessor.parse("CompilationUnit", input!!)
-                TimeLogger(col, file).use { timer ->
-                    val tree = aglProcessor.parse("CompilationUnit", input!!)
-                    timer.success()
-                    tree
-                }
-            } catch (e: ParseFailedException) {
-                Results.logError(col, file)
-                assertTrue(file.isError)
-                null
-            }
-        }
 
         @BeforeClass
         @JvmStatic
@@ -82,6 +67,22 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
         @JvmStatic
         fun end() {
             Results.write()
+        }
+    }
+
+    val aglProcessor = createAndBuildProcessor("/agl/Java8AglOptm.agl")
+    fun parseWithJava8Agl(file: FileData): SharedPackedParseTree? {
+        return try {
+            aglProcessor.parse("CompilationUnit", input!!)
+            TimeLogger(col, file).use { timer ->
+                val tree = aglProcessor.parse("CompilationUnit", input!!)
+                timer.success()
+                tree
+            }
+        } catch (e: ParseFailedException) {
+            Results.logError(col, file)
+            assertTrue(file.isError)
+            null
         }
     }
 

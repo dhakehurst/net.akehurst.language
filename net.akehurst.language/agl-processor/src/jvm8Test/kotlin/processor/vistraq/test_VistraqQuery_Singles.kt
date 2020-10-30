@@ -23,6 +23,9 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.fail
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
+import kotlin.time.measureTimedValue
 
 class test_VistraqQuery_Singles {
 
@@ -245,6 +248,7 @@ class test_VistraqQuery_Singles {
         Assert.assertEquals(queryStr, resultStr)
     }
 
+    @ExperimentalTime
     @Test//(timeout = 5000)
     fun fromBlog() {
         val queryStr = """
@@ -280,7 +284,11 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
 
         try {
             println("parse")
-            val result = processor.parse("query", queryStr)
+            val v = measureTimedValue {
+                processor.parse("query", queryStr)
+            }
+            println(v.duration)
+            val result = v.value
             Assert.assertNotNull(result)
             val resultStr = result.asString
             Assert.assertEquals(queryStr, resultStr)

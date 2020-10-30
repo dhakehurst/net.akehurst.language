@@ -18,6 +18,7 @@ package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.ParseGraph
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -30,7 +31,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.math.max
 
 class ScanOnDemandParser(
-        private val runtimeRuleSet: RuntimeRuleSet
+        internal val runtimeRuleSet: RuntimeRuleSet
 ) : Parser {
 
     private var runtimeParser: RuntimeParser? = null
@@ -44,7 +45,7 @@ class ScanOnDemandParser(
     }
 
     override fun scan(inputText: CharSequence, includeSkipRules: Boolean): List<SPPTLeaf> {
-        val undefined = RuntimeRule(runtimeRuleSet, -5, "undefined", "", RuntimeRuleKind.TERMINAL, false, true)
+        val undefined = RuntimeRule(-1, -5, "undefined", "", RuntimeRuleKind.TERMINAL, false, true)
         //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
         val input = InputFromCharSequence(inputText)
         var terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.nonSkipTerminals
@@ -104,12 +105,12 @@ class ScanOnDemandParser(
     override fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val input = InputFromCharSequence(inputText)
-        val s0 = runtimeRuleSet.startingState(goalRule, setOf(this.runtimeRuleSet.END_OF_TEXT))
+        val s0 = runtimeRuleSet.startingState(goalRule)
         val skipStateSet = runtimeRuleSet.skipParserStateSet
-        val rp = RuntimeParser(s0.stateSet,skipStateSet, goalRule, input)
+        val rp = RuntimeParser(s0.stateSet,skipStateSet, goalRule, LookaheadSet.EOT, input)
         this.runtimeParser = rp
 
-        rp.start()
+        rp.start(RuntimeParser.defaultStartLocation,setOf(RuntimeRuleSet.END_OF_TEXT))
         var seasons = 1
         var maxNumHeads = rp.graph.growingHead.size
         var totalWork = maxNumHeads
@@ -243,12 +244,12 @@ class ScanOnDemandParser(
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val usedText = inputText.subSequence(0, position)
         val input = InputFromCharSequence(usedText)
-        val s0 = runtimeRuleSet.startingState(goalRule, setOf(this.runtimeRuleSet.END_OF_TEXT))
+        val ss = runtimeRuleSet.fetchStateSetFor(goalRule)
         val skipStateSet = runtimeRuleSet.skipParserStateSet
-        val rp = RuntimeParser(s0.stateSet,skipStateSet, goalRule,input)
+        val rp = RuntimeParser(ss,skipStateSet, goalRule, LookaheadSet.EOT, input)
         this.runtimeParser = rp
 
-        rp.start()
+        rp.start(RuntimeParser.defaultStartLocation,setOf(RuntimeRuleSet.END_OF_TEXT))
         var seasons = 1
 
         val matches = mutableListOf<GrowingNode>()
