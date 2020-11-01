@@ -180,6 +180,7 @@ class RuntimeRuleSet(
 
     //called from ParserStateSet, which adds the Goal Rule bits
     internal val parentPosition = lazyMapNonNull<RuntimeRule, Set<RulePosition>> { childRR ->
+        //TODO: this is slow, is there a better way?
         this.runtimeRules.flatMap { rr ->
             val rps = rr.rulePositions
             val f = rps.filter { rp ->

@@ -21,52 +21,78 @@ import kotlin.test.assertEquals
 
 class test_multi_0_n_literal {
 
+    // S =  'a'* ;
+
     companion object {
-        // S =  'a'* ;
         val rrs = runtimeRuleSet {
             multi("S", 0, -1, "'a'")
             literal("'a'", "a")
         }
+
         val S = rrs.findRuntimeRule("S")
+        val SM = rrs.fetchStateSetFor(S)
+        val G = SM.startState.runtimeRule
         val eS = S.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
         val a = rrs.findRuntimeRule("'a'")
-        val G = rrs.startingState(S).runtimeRule
+        val EOT = RuntimeRuleSet.END_OF_TEXT
+        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
-        val s0 = rrs.startingState(S)
+        val s0 = SM.startState
+        val s1 = SM.states[RulePosition(a, 0, RulePosition.END_OF_RULE)]
+        val s2 = SM.states[RulePosition(eS, 0, RulePosition.END_OF_RULE)]
+        val s3 = SM.states[RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION)]
+        val s4 = SM.states[RulePosition(S, 0, RulePosition.END_OF_RULE)]
 
         val lhs_E = LookaheadSet.EMPTY
-        val lhs_T = LookaheadSet(1, setOf(RuntimeRuleSet.END_OF_TEXT))
-        val lhs_a = LookaheadSet(0, setOf(a))
-        val lhs_aT = LookaheadSet(1, setOf(a, RuntimeRuleSet.END_OF_TEXT))
+        val lhs_U = LookaheadSet.UP
+        val lhs_T = LookaheadSet.EOT
+        val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
+        val lhs_aU = SM.runtimeRuleSet.createLookaheadSet(setOf(a, UP))
+        val lhs_aT = SM.runtimeRuleSet.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
     }
 
     @Test
-    fun parentPosition() {
+    fun firstOf() {
+        val rulePositions = listOf(
+                Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a, UP)), // G = . S
+                Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
+                Triple(RulePosition(S, 1, RulePosition.START_OF_RULE), lhs_U, setOf(UP)), // S = . (a.empty)
+                Triple(RulePosition(S, 1, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // S = (a.empty) .
+                Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_a, setOf(a)), // S = . a*
+                Triple(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION), lhs_a, setOf(a)), // S = a . a*
+                Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)) // S = a* .
+        )
 
-    }
 
-    @Test
-    fun fetchOrCreateFirstAt() {
+        for (t in rulePositions) {
+            val rp = t.first
+            val lhs = t.second
+            val expected = t.third
 
-    }
+            val actual = SM.firstOf(rp, lhs.content)
 
-    fun lookahead() {
-
+            assertEquals(expected, actual, "failed $rp")
+        }
     }
 
     @Test
     fun s0_widthInto() {
+        val actual = s0.widthInto(null).toList()
+
+        val expected = listOf(
+                Pair(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_aU),
+                Pair(RulePosition(eS, 0, RulePosition.END_OF_RULE), lhs_U)
+        )
+        assertEquals(expected, actual)
     }
 
     @Test
     fun s0_transitions() {
         val actual = s0.transitions(null)
-        val s1 = s0.stateSet.fetch(RulePosition(a, 0, RulePosition.END_OF_RULE))
-        val s2 = s0.stateSet.fetch(RulePosition(eS,0,RulePosition.END_OF_RULE))
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH,  lhs_a, null) { _, _ -> true },
-                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_a, null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_aU, null) { _, _ -> true },
+                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_U, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -74,5 +100,31 @@ class test_multi_0_n_literal {
         }
     }
 
+    @Test
+    fun s1_heightOrGraftInto_s0() {
+
+        val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
+
+        val expected = listOf(
+                HeightGraft(RulePosition(S, 0, RulePosition.START_OF_RULE),RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION), lhs_a),
+                HeightGraft(RulePosition(S, 0, RulePosition.START_OF_RULE),RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U)
+        )
+        assertEquals(expected, actual)
+
+    }
+
+    @Test
+    fun s1_transitions_s0() {
+        val actual = s1.transitions(s0)
+
+        val expected = listOf<Transition>(
+                Transition(s1, s3, Transition.ParseAction.HEIGHT, lhs_a, null) { _, _ -> true },
+                Transition(s1, s4, Transition.ParseAction.HEIGHT, lhs_U, null) { _, _ -> true }
+        )
+        assertEquals(expected.size, actual.size)
+        for (i in actual.indices) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
 
 }

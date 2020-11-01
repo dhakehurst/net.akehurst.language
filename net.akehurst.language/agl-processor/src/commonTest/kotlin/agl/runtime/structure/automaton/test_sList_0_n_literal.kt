@@ -46,7 +46,7 @@ class test_sList_0_n_literal {
         val actual =s0.widthInto(null).toList()
 
         val expected = listOf(
-                ClosureItem(null,RulePosition(a, 0, 0),lhs_T)
+                Pair(RulePosition(a, 0, 0),lhs_T)
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {

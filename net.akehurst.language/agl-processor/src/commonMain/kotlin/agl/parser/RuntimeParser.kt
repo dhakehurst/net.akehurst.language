@@ -114,10 +114,9 @@ internal class RuntimeParser(
         this.possibleEndOfText = possibleEndOfText
     }
 
-    fun start(startLocation: InputLocation, possibleEndOfText: Set<RuntimeRule>) {
+    fun start(startLocation: InputLocation) {
         val gState = stateSet.startState
-        val lookahead = this.stateSet.runtimeRuleSet.createLookaheadSet(possibleEndOfText)
-        this.graph.start(gState, startLocation, lookahead)
+        this.graph.start(gState, startLocation, LookaheadSet.EMPTY) //TODO: remove LH
         if (this.stateSet.isSkip) {
         } else {
             this.tryGrowInitialSkip()
@@ -241,7 +240,9 @@ internal class RuntimeParser(
         for (gn in this.toGrow) {
             checkInterrupt()
             val lastLocation = gn.location
-            val skipNodes = this.tryParseSkipUntilNone(gn, lastLocation)
+            val skipLhc = this.stateSet.firstTerminals[gn.currentState.rulePosition]
+            val skipLh = this.stateSet.createLookaheadSet(skipLhc)
+            val skipNodes = this.tryParseSkipUntilNone(skipLh, lastLocation)
             if (skipNodes.isNotEmpty()) {
                 graph.growSkipChildren(gn, skipNodes)
             } else {
@@ -326,7 +327,8 @@ internal class RuntimeParser(
         val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, curGn.nextInputPosition, curGn.lastLocation)
         if (null != l) {
 
-            val skipNodes = this.tryParseSkipUntilNone(curGn, l.location)//, lh) //TODO: does the result get reused?
+            val skipLh = transition.lookaheadGuard.createWithParent(this.possibleEndOfText)
+            val skipNodes = this.tryParseSkipUntilNone(skipLh, l.location)//, lh) //TODO: does the result get reused?
             val nextInput = skipNodes.lastOrNull()?.nextInputPosition ?: l.nextInputPosition
             val lastLocation = skipNodes.lastOrNull()?.location ?: l.location
 
@@ -390,15 +392,15 @@ internal class RuntimeParser(
     */
 
     val __skipNodes = mutableListOf<SPPTNode>()
-    private fun tryParseSkipUntilNone(curGn: GrowingNode, location: InputLocation): List<SPPTNode> {
+    private fun tryParseSkipUntilNone(lookaheadSet: LookaheadSet, location: InputLocation): List<SPPTNode> {
         when {
             null == skipParser -> null
-            curGn.currentState.stateSet.isSkip -> null
+            //curGn.currentState.stateSet.isSkip -> null
             else -> {
                 __skipNodes.clear()
                 var lastLocation = location
                 do {
-                    val skipNode = tryParseSkip(curGn, lastLocation)
+                    val skipNode = tryParseSkip(lookaheadSet, lastLocation)
                     if (null != skipNode) {
                         __skipNodes.add(skipNode)
                         //TODO:handle eols lines in skip
@@ -411,12 +413,12 @@ internal class RuntimeParser(
     }
 
     private val skipParser = skipStateSet?.let { RuntimeParser(it, null, skipStateSet.userGoalRule, LookaheadSet.EMPTY, this.input) }
-    private fun tryParseSkip(curGn: GrowingNode, lastLocation: InputLocation): SPPTNode? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
+    private fun tryParseSkip(lookaheadSet: LookaheadSet, lastLocation: InputLocation): SPPTNode? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
         //TODO: need to make use of an EOT marker really, but it would change the skipParser statemachine ?!!
-        skipParser!!.reset(LookaheadSet.EMPTY)
+        skipParser!!.reset(lookaheadSet)
         val startPosition = lastLocation.position + lastLocation.length
         val startLocation = InputLocation(startPosition, lastLocation.column, lastLocation.line, 0) //TODO: compute correct line and column
-        skipParser.start(startLocation, curGn.lookahead.content)
+        skipParser.start(startLocation)
         var seasons = 1
         var maxNumHeads = skipParser.graph.growingHead.size
         do {
@@ -471,7 +473,7 @@ internal class RuntimeParser(
         val startPosition = gn.lastLocation.position + gn.lastLocation.length
         val startLocation = InputLocation(startPosition, gn.lastLocation.column, gn.lastLocation.line, 0) //TODO: compute correct line and column
 
-        embeddedParser.start(startLocation, gn.lookahead.content)
+        embeddedParser.start(startLocation)
         var seasons = 1
         var maxNumHeads = embeddedParser.graph.growingHead.size
         do {

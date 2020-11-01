@@ -20,10 +20,10 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class test_leftRecursive {
-
+    // S =  'a' | S1 ;
+    // S1 = S 'a' ;
     companion object {
-        // S =  'a' | S1 ;
-        // S1 = S 'a' ;
+
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")
@@ -126,7 +126,8 @@ class test_leftRecursive {
         val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
 
         val expected = listOf(
-                Pair(RulePosition(S, 0, 0), lhs_aU)
+                HeightGraft(RulePosition(S, 0, 0), RulePosition(S, 0, RulePosition.END_OF_RULE),lhs_aU),
+                HeightGraft(RulePosition(S1, 0, 1), RulePosition(S1, 0, RulePosition.END_OF_RULE),lhs_aU)
         )
         assertEquals(expected, actual)
 
@@ -138,6 +139,7 @@ class test_leftRecursive {
 
         val expected = listOf<Transition>(
                 Transition(s1, s2, Transition.ParseAction.HEIGHT, lhs_aU, null) { _, _ -> true }
+//                Transition(s1, s3, Transition.ParseAction.GRAFT, lhs_aU, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -150,8 +152,8 @@ class test_leftRecursive {
         val actual = s2.heightOrGraftInto(s0.rulePosition)
 
         val expected = setOf(
-                Pair(RulePosition(G, 0, 0), lhs_U),
-                Pair(RulePosition(S1, 0, 0), lhs_a)
+                HeightGraft(RulePosition(G, 0, 0), RulePosition(G, 0, RulePosition.END_OF_RULE),lhs_U),
+                HeightGraft(RulePosition(S1, 0, 0), RulePosition(S1, 0, 1),lhs_a)
         )
         assertEquals(expected, actual)
     }
@@ -193,12 +195,13 @@ class test_leftRecursive {
         }
     }
 
+
     @Test
     fun s1_transitions_s4() {
 
         val actual = s1.transitions(s4)
         val expected = listOf<Transition>(
-                Transition(s1, s3, Transition.ParseAction.GRAFT, lhs_U, null) { _, _ -> true }
+                Transition(s1, s3, Transition.ParseAction.GRAFT, lhs_aU, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {

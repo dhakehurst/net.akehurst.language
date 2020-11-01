@@ -110,7 +110,7 @@ class ScanOnDemandParser(
         val rp = RuntimeParser(s0.stateSet,skipStateSet, goalRule, LookaheadSet.EOT, input)
         this.runtimeParser = rp
 
-        rp.start(RuntimeParser.defaultStartLocation,setOf(RuntimeRuleSet.END_OF_TEXT))
+        rp.start(RuntimeParser.defaultStartLocation)
         var seasons = 1
         var maxNumHeads = rp.graph.growingHead.size
         var totalWork = maxNumHeads
@@ -249,7 +249,7 @@ class ScanOnDemandParser(
         val rp = RuntimeParser(ss,skipStateSet, goalRule, LookaheadSet.EOT, input)
         this.runtimeParser = rp
 
-        rp.start(RuntimeParser.defaultStartLocation,setOf(RuntimeRuleSet.END_OF_TEXT))
+        rp.start(RuntimeParser.defaultStartLocation)
         var seasons = 1
 
         val matches = mutableListOf<GrowingNode>()

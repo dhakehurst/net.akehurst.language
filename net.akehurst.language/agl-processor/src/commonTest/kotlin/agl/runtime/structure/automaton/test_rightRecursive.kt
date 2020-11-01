@@ -135,12 +135,9 @@ class test_rightRecursive {
 
     @Test
     fun s1_transitions() {
-        s0.transitions(null) // create transitions and to-states
-        val s1 = s0.stateSet.fetch(RulePosition(a, 0, RulePosition.END_OF_RULE))
 
         val actual = s1.transitions(s0)
-        val s2 = s0.stateSet.fetch(RulePosition(S, 0, RulePosition.END_OF_RULE))
-        val s3 = s0.stateSet.fetch(RulePosition(S1, 0, 1))
+
         val expected = listOf<Transition>(
                 Transition(s1, s2, Transition.ParseAction.HEIGHT, lhs_aU, null) { _, _ -> true },
                 Transition(s1, s3, Transition.ParseAction.HEIGHT, lhs_a, null) { _, _ -> true }

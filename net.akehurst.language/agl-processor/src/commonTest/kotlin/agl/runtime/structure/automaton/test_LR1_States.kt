@@ -71,7 +71,7 @@ class test_LR1_States {
 
         val actual = s0.widthInto(null)
         val expected = setOf(
-                ClosureItem(null,RulePosition(d, 0, 0), lhs_T)
+                Pair(RulePosition(d, 0, 0), lhs_T)
 //                RulePosition(b, 0, 0),
 //                RulePosition(d, 0, 0)
         )
@@ -109,7 +109,7 @@ class test_LR1_States {
         val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
         val actual = s1.heightOrGraftInto(s1.rulePosition)
         assertNotNull(actual)
-        val expected = emptySet<ClosureItem>()
+        val expected = emptySet<HeightGraft>()
 
         assertEquals(expected, actual)
     }

@@ -87,7 +87,7 @@ class RuntimeRule(
         }
     }
 
-    val rulePositions: Set<RulePosition>
+    val rulePositions: Set<RulePosition> //TODO: make constants where possible for these sets
         get() {
             return when (kind) {
                 RuntimeRuleKind.GOAL -> rhs.items.mapIndexed { index, runtimeRule ->
@@ -110,29 +110,47 @@ class RuntimeRule(
                     }.toSet() + RulePosition(this, 0, RulePosition.END_OF_RULE)
                     RuntimeRuleItemKind.UNORDERED -> TODO()
                     RuntimeRuleItemKind.MULTI -> if (0 == rhs.multiMin) {
+                        if (rhs.multiMax ==1 ||rhs.multiMax ==0) {
+                            setOf(
+                                    RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE),
+                                    RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.END_OF_RULE)
+                            )
+                        } else {
+                            setOf(
+                                    RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE),
+                                    RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.MULIT_ITEM_POSITION),
+                                    RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.END_OF_RULE)
+                            )
+                        }
+                    } else {
                         setOf(
-                                RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.START_OF_RULE),
-                                RulePosition(this, RuntimeRuleItem.MULTI__EMPTY_RULE, RulePosition.END_OF_RULE),
                                 RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.START_OF_RULE),
                                 RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.MULIT_ITEM_POSITION),
                                 RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.END_OF_RULE)
                         )
-                    } else {
-                        setOf(
-                                RulePosition(this, RuntimeRuleItem.MULTI__ITEM, 0),
-                                RulePosition(this, RuntimeRuleItem.MULTI__ITEM, 1),
-                                RulePosition(this, RuntimeRuleItem.MULTI__ITEM, RulePosition.END_OF_RULE)
-                        )
                     }
                     RuntimeRuleItemKind.SEPARATED_LIST -> if (0 == rhs.multiMin) {
-                        setOf(
-                                RulePosition(this, RuntimeRuleItem.SLIST__EMPTY_RULE, RulePosition.START_OF_RULE),
-                                RulePosition(this, RuntimeRuleItem.SLIST__EMPTY_RULE, RulePosition.END_OF_RULE),
-                                RulePosition(this, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_SEPARATOR_POSITION),
-                                RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.START_OF_RULE),
-                                RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.SLIST_ITEM_POSITION),
-                                RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
-                        )
+                        if (rhs.multiMax <=1) { //TODO: doesn't really make sense, make sure we cant have this
+                            setOf(
+                                    RulePosition(this, RuntimeRuleItem.SLIST__EMPTY_RULE, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RuntimeRuleItem.SLIST__EMPTY_RULE, RulePosition.END_OF_RULE),
+                                    RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
+                            )
+                        } else {
+                            setOf(
+                                    RulePosition(this, RuntimeRuleItem.SLIST__EMPTY_RULE, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RuntimeRuleItem.SLIST__EMPTY_RULE, RulePosition.END_OF_RULE),
+                                    RulePosition(this, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_SEPARATOR_POSITION),
+                                    RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.SLIST_ITEM_POSITION),
+                                    RulePosition(this, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
+                            )
+                        }
                     } else {
                         setOf(
                                 RulePosition(this, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_SEPARATOR_POSITION),
