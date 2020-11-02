@@ -155,26 +155,41 @@ class ParserState(
                 Pair(rp, it.lookaheadSet)
             }
         }.toSet()
-        return terms
+        val grouped = terms.groupBy { it.first }.map {
+            val lhsc = it.value.flatMap { it.second.content }.toSet()
+            val lhs = this.createLookaheadSet(lhsc)
+            Pair(it.key, lhs)
+        }.toSet()
+        return grouped
     }
 
     //for graft, previous must match prevGuard, for height must not match
     fun heightOrGraftInto(topRp: RulePosition): Set<HeightGraft> {
-        val pp = this.stateSet.parentPosition[this.runtimeRule]
-        return pp.flatMap { pp ->
-            val ppns = pp.next()
-            ppns.map { ppn ->
-                val fstOfPpn = this.stateSet.expectedAfter(ppn)
-                val lhs = this.stateSet.createLookaheadSet(fstOfPpn)
-                HeightGraft(pp, ppn, lhs)
+        // have to ensure somehow that this grows into prev
+        //have to do closure down from prev,
+        //or we have to check this grows into prev after
+        //can we havce a situation where this grows into prev, but not into prev.prev
+
+        val cls = this.stateSet.calcClosure(ClosureItem(null, topRp, LookaheadSet.UP))
+        val filt = cls.filter {
+                it.rulePosition.item == this.runtimeRule
+        }
+        val res = filt.flatMap{
+            val parent = it.rulePosition
+            val pns = parent.next()
+            pns.map { parentNext ->
+                val lhsc = this.stateSet.expectedAfter(parentNext)
+                val lhs = this.createLookaheadSet(lhsc)
+                HeightGraft(parent, parentNext, lhs)
             }
-        }.toSet()
+        }
+        return res.toSet()
     }
 
     fun heightOrGraftInto2(prevRp: RulePosition?): Set<ParentRelation> {
         return when {
             null == prevRp -> this.parentRelations
-            prevRp.isAtEnd -> emptySet()
+            prevRp.isAtEnd -> emptySet() // should never happen
             else -> this.parentRelations.filter { pr ->
                 when {
                     pr.rulePosition == prevRp -> true

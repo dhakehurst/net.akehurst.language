@@ -126,8 +126,8 @@ class test_rightRecursive {
         val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
 
         val expected = listOf(
-                Pair(RulePosition(S, 0, 0), lhs_U),
-                Pair(RulePosition(S1, 0, 0),lhs_a)
+                HeightGraft(RulePosition(S, 0, 0),RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U),
+                HeightGraft(RulePosition(S1, 0, 0),RulePosition(S1, 0, 1),lhs_a)
         )
         assertEquals(expected, actual)
 
@@ -139,7 +139,7 @@ class test_rightRecursive {
         val actual = s1.transitions(s0)
 
         val expected = listOf<Transition>(
-                Transition(s1, s2, Transition.ParseAction.HEIGHT, lhs_aU, null) { _, _ -> true },
+                Transition(s1, s2, Transition.ParseAction.HEIGHT, lhs_U, null) { _, _ -> true },
                 Transition(s1, s3, Transition.ParseAction.HEIGHT, lhs_a, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)

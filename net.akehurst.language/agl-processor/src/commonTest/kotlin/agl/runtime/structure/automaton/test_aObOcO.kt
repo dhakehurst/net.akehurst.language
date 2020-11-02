@@ -192,7 +192,7 @@ class test_aObOcO {
         val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(aOpt, 0, 0), RulePosition(aOpt, 0, 0),lhs_bcU)
+                HeightGraft(RulePosition(aOpt, 0, 0), RulePosition(aOpt, 0, RulePosition.END_OF_RULE),lhs_bcU)
         )
         assertEquals(expected, actual)
 
