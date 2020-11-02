@@ -114,9 +114,9 @@ internal class RuntimeParser(
         this.possibleEndOfText = possibleEndOfText
     }
 
-    fun start(startLocation: InputLocation) {
+    fun start(startLocation: InputLocation, possibleEndOfText: LookaheadSet) {
         val gState = stateSet.startState
-        this.graph.start(gState, startLocation, LookaheadSet.EMPTY) //TODO: remove LH
+        this.graph.start(gState, startLocation, possibleEndOfText) //TODO: remove LH
         if (this.stateSet.isSkip) {
         } else {
             this.tryGrowInitialSkip()
@@ -332,20 +332,20 @@ internal class RuntimeParser(
             val nextInput = skipNodes.lastOrNull()?.nextInputPosition ?: l.nextInputPosition
             val lastLocation = skipNodes.lastOrNull()?.location ?: l.location
 
-            val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, this.possibleEndOfText, nextInput, lastLocation)
+            val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, curGn.lookahead, nextInput, lastLocation)
 
             if (noLookahead || hasLh) {// || lh.isEmpty()) { //transition.lookaheadGuard.content.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
-                val lhs = LookaheadSet.EMPTY //TODO: remove this
+                val lhs = curGn.lookahead//transition.lookaheadGuard.createWithParent(curGn.lookahead)
                 this.graph.pushToStackOf(false, transition.to, lhs, l, curGn, previousSet, skipNodes)
             }
         }
     }
 
     private fun doHeight(curGn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
-        val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, this.possibleEndOfText, curGn.nextInputPosition, curGn.lastLocation)
+        val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, curGn.lookahead, curGn.nextInputPosition, curGn.lastLocation)
         if (noLookahead || hasLh) {// || lh.isEmpty()) {
             val complete = this.graph.findCompleteNode(curGn.currentState.rulePosition, curGn.startPosition, curGn.matchedTextLength) ?: error("Should never be null")
-            val lhs = LookaheadSet.EMPTY //TODO: remove this
+            val lhs = transition.upLhs!!.createWithParent(previous.node.lookahead)
             this.graph.createWithFirstChild(curGn.isSkipGrowth, transition.to, lhs, complete, setOf(previous), curGn.skipNodes)
         }
     }
@@ -354,11 +354,11 @@ internal class RuntimeParser(
         val prev = previous.node
         if (transition.runtimeGuard(transition, prev, prev.currentState.rulePosition)) {
 
-            val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, this.possibleEndOfText, curGn.nextInputPosition, curGn.lastLocation)
+            val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, prev.lookahead, curGn.nextInputPosition, curGn.lastLocation)
 
             if (noLookahead || hasLh) {// || lh.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
                 val complete = this.graph.findCompleteNode(curGn.currentState.rulePosition, curGn.startPosition, curGn.matchedTextLength) ?: error("Should never be null")
-                val lhs = LookaheadSet.EMPTY //TODO: remove this
+                val lhs = transition.upLhs!!.createWithParent(previous.node.lookahead)
                 this.graph.growNextChild(false, transition.to, lhs, previous.node, complete, previous.node.currentState.position, curGn.skipNodes)
             }
         }
@@ -390,7 +390,7 @@ internal class RuntimeParser(
             }
         }
     */
-
+/*
     val __skipNodes = mutableListOf<SPPTNode>()
     private fun tryParseSkipUntilNone(lookaheadSet: LookaheadSet, location: InputLocation): List<SPPTNode> {
         when {
@@ -411,14 +411,26 @@ internal class RuntimeParser(
         }
         return __skipNodes
     }
+ */
+    private fun tryParseSkipUntilNone(lookaheadSet: LookaheadSet, location: InputLocation): List<SPPTNode> {
+        return when {
+            null == skipParser -> emptyList<SPPTNode>()
+            else -> {
+                val skipNode = tryParseSkip(lookaheadSet, location)
+                when (skipNode) {
+                    null -> emptyList<SPPTNode>()
+                    else -> skipNode.asBranch.children[0].asBranch.children[0].asBranch.children
+                }
+            }
+        }
+    }
 
     private val skipParser = skipStateSet?.let { RuntimeParser(it, null, skipStateSet.userGoalRule, LookaheadSet.EMPTY, this.input) }
     private fun tryParseSkip(lookaheadSet: LookaheadSet, lastLocation: InputLocation): SPPTNode? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
-        //TODO: need to make use of an EOT marker really, but it would change the skipParser statemachine ?!!
         skipParser!!.reset(lookaheadSet)
         val startPosition = lastLocation.position + lastLocation.length
         val startLocation = InputLocation(startPosition, lastLocation.column, lastLocation.line, 0) //TODO: compute correct line and column
-        skipParser.start(startLocation)
+        skipParser.start(startLocation,lookaheadSet)
         var seasons = 1
         var maxNumHeads = skipParser.graph.growingHead.size
         do {
@@ -433,8 +445,8 @@ internal class RuntimeParser(
             skipParser.graph.goals.isEmpty() -> null
             else -> {
                 val match = skipParser.graph.goals.sortedBy { it.matchedTextLength }.last()
-                val skipNodes = match.asBranch.children[0].asBranch.children[0]
-                skipNodes
+                val skipNode = match
+                skipNode
             }
         }
     }
@@ -473,7 +485,7 @@ internal class RuntimeParser(
         val startPosition = gn.lastLocation.position + gn.lastLocation.length
         val startLocation = InputLocation(startPosition, gn.lastLocation.column, gn.lastLocation.line, 0) //TODO: compute correct line and column
 
-        embeddedParser.start(startLocation)
+        embeddedParser.start(startLocation, transition.lookaheadGuard)
         var seasons = 1
         var maxNumHeads = embeddedParser.graph.growingHead.size
         do {

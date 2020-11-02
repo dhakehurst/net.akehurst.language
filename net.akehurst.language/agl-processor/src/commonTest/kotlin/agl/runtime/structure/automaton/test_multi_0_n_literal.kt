@@ -106,8 +106,8 @@ class test_multi_0_n_literal {
         val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(S, 0, RulePosition.START_OF_RULE),RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION), lhs_a),
-                HeightGraft(RulePosition(S, 0, RulePosition.START_OF_RULE),RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U)
+                HeightGraft(RulePosition(S, 0, RulePosition.START_OF_RULE),RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION), lhs_a,lhs_U),
+                HeightGraft(RulePosition(S, 0, RulePosition.START_OF_RULE),RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U,lhs_U)
         )
         assertEquals(expected, actual)
 

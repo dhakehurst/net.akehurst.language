@@ -21,10 +21,12 @@ import kotlin.test.assertEquals
 
 class test_skipRules {
 
+    // skip WS = "\s+" ;
+    // skip COMMENT = "//[^\n]*$"
+    // S = 'a' ;
+
     companion object {
-        // skip WS = "\s+" ;
-        // skip COMMENT = "//[^\n]*$"
-        // S = 'a' ;
+
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
             pattern("COMMENT", "//[^\\n]*$", true)
@@ -33,16 +35,19 @@ class test_skipRules {
 
 
         val S = rrs.findRuntimeRule("S")
+        val SM = rrs.fetchStateSetFor(S)
         val a = rrs.findRuntimeRule("'a'")
-        val G = rrs.startingState(S).runtimeRule
+        val G = SM.startState.runtimeRule
+        val EOT = RuntimeRuleSet.END_OF_TEXT
+        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
         val s0 = rrs.startingState(S)
 
         val skipSS = rrs.skipParserStateSet!!
         val sk0 = skipSS.startState
-        val skG = sk0.runtimeRule                          // G = skS ;
-        val skS = skG.rhs.items[0]                         // skS = WS | CM
-        //val skC = skS.rhs.items[RuntimeRuleItem.MULTI__ITEM]
+        val skG = sk0.runtimeRule                             // G = skS ;
+        val skS = skG.rhs.items[0]                            // skS = skC+
+        val skC = skS.rhs.items[RuntimeRuleItem.MULTI__ITEM]  // skC = WS | CM
         val skWS = rrs.findRuntimeRule("WS")
         val skCM = rrs.findRuntimeRule("COMMENT")
     }
@@ -59,24 +64,24 @@ class test_skipRules {
         )
         assertEquals(expected, actual)
 
-        /*
+
         actual = skipSS.parentPosition[skC]
         expected = setOf(
                 RulePosition(skS, 0, 0),
                 RulePosition(skS, 0, RulePosition.MULIT_ITEM_POSITION)
         )
         assertEquals(expected, actual)
-*/
+
 
         actual = skipSS.parentPosition[skWS]
         expected = setOf(
-                RulePosition(skS, 0, 0)
+                RulePosition(skC, 0, 0)
         )
         assertEquals(expected, actual)
 
         actual = skipSS.parentPosition[skCM]
         expected = setOf(
-                RulePosition(skS, 1, 0)
+                RulePosition(skC, 1, 0)
         )
         assertEquals(expected, actual)
     }
@@ -84,17 +89,24 @@ class test_skipRules {
     @Test
     fun firstTerminals() {
         var actual = skipSS.firstTerminals[RulePosition(skG, 0, 0)]
-        var expected = setOf(skWS,skCM)
+        var expected = setOf(skWS, skCM)
         assertEquals(expected, actual)
 
         actual = skipSS.firstTerminals[RulePosition(skS, 0, 0)]
+        expected = setOf(skWS, skCM)
+        assertEquals(expected, actual)
+
+        actual = skipSS.firstTerminals[RulePosition(skS, 0, RulePosition.MULIT_ITEM_POSITION)]
+        expected = setOf(skWS, skCM)
+        assertEquals(expected, actual)
+
+        actual = skipSS.firstTerminals[RulePosition(skC, 0, 0)]
         expected = setOf(skWS)
         assertEquals(expected, actual)
 
-        actual = skipSS.firstTerminals[RulePosition(skS, 1, 0)]
-        expected = setOf( skCM)
+        actual = skipSS.firstTerminals[RulePosition(skC, 1, 0)]
+        expected = setOf(skCM)
         assertEquals(expected, actual)
-
 
 
     }
@@ -104,10 +116,6 @@ class test_skipRules {
 
         var actual = s0.stateSet.firstOf(RulePosition(G, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         var expected = setOf(a)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.firstOf(RulePosition(G, 0, 1), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(RuntimeRuleSet.END_OF_TEXT)
         assertEquals(expected, actual)
 
         actual = s0.stateSet.firstOf(RulePosition(G, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
@@ -120,6 +128,33 @@ class test_skipRules {
         assertEquals(expected, actual)
 
         actual = s0.stateSet.firstOf(RulePosition(S, 1, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        expected = setOf(a)
+        assertEquals(expected, actual)
+
+
+    }
+
+    @Test
+    fun expectedAfter() {
+
+        var actual = SM.expectedAfter(RulePosition(skG, 0, RulePosition.END_OF_RULE))
+        var expected = setOf(UP)
+        assertEquals(expected, actual)
+
+        actual = SM.expectedAfter(RulePosition(skWS, 0, 0))
+        expected = setOf(a,UP)
+        assertEquals(expected, actual)
+
+        actual = SM.expectedAfter(RulePosition(G, 0, RulePosition.END_OF_RULE))
+        expected = setOf()
+        assertEquals(expected, actual)
+
+
+        actual = SM.expectedAfter(RulePosition(S, 1, 0))
+        expected = setOf(a)
+        assertEquals(expected, actual)
+
+        actual = SM.expectedAfter(RulePosition(S, 1, 0))
         expected = setOf(a)
         assertEquals(expected, actual)
 

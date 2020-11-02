@@ -21,12 +21,9 @@ import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class  test_a : test_ScanOnDemandParserAbstract() {
+class  test_aaa : test_ScanOnDemandParserAbstract() {
 
-    // S = A D C ;
-    // A = a b c ;
-    // D = d a e ;
-    // F = f g a ;
+    // S = a a a ;
 
     companion object {
 
@@ -35,7 +32,7 @@ class  test_a : test_ScanOnDemandParserAbstract() {
         }
     }
     @Test
-    fun a() {
+    fun aaa() {
         val rrs = S
         val goal = "S"
         val sentence = "aaa"

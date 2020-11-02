@@ -66,7 +66,7 @@ class RuntimeRuleSet(
         val USE_PARENT_LOOKAHEAD_RULE_NUMBER = -5;
         val END_OF_TEXT_TAG = "<EOT>"
         val GOAL_TAG = "<GOAL>"
-        val SKIP_RULE_TAG = "<SKIP-GOAL>"
+        val SKIP_RULE_TAG = "<SKIP-MULTI>"
         val SKIP_CHOICE_RULE_TAG = "<SKIP-CHOICE>"
         val USE_PARENT_LOOKAHEAD_RULE_TAG = "<USE-PARENT-LOOKAHEAD>";
 
@@ -74,7 +74,7 @@ class RuntimeRuleSet(
         val USE_PARENT_LOOKAHEAD = RuntimeRule(-1, USE_PARENT_LOOKAHEAD_RULE_NUMBER, USE_PARENT_LOOKAHEAD_RULE_TAG, 0.toChar().toString(), RuntimeRuleKind.TERMINAL, false, false)
 
         fun createGoalRule(userGoalRule: RuntimeRule): RuntimeRule {
-            val gr = RuntimeRule(userGoalRule.runtimeRuleSetNumber, GOAL_RULE_NUMBER, GOAL_TAG, "", RuntimeRuleKind.GOAL, false, false)
+            val gr = RuntimeRule(userGoalRule.runtimeRuleSetNumber, GOAL_RULE_NUMBER, GOAL_TAG, GOAL_TAG, RuntimeRuleKind.GOAL, false, false)
             val items = listOf(userGoalRule) //+ possibleEndOfText
             gr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, items.toTypedArray())
             return gr
@@ -162,17 +162,16 @@ class RuntimeRuleSet(
         if (skipRules.isEmpty()) {
             null
         } else {
-            val possibleEndOfText = emptySet<RuntimeRule>()
 
-//        val skipChoiceRule = RuntimeRule(this, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
-//        skipChoiceRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
-//        val skipGoalRule = RuntimeRule(this, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
-            //       skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.MULTI, RuntimeRuleChoiceKind.NONE, 1, -1, arrayOf(skipChoiceRule))
+            val skipChoiceRule = RuntimeRule(this.number, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, SKIP_CHOICE_RULE_TAG, RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
+            skipChoiceRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
+            val skipMultiRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, SKIP_RULE_TAG, RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
+            skipMultiRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.MULTI, RuntimeRuleChoiceKind.NONE, 1, -1, arrayOf(skipChoiceRule))
 
-            val skipGoalRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
-            skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
+            //val skipGoalRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
+            //skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
 
-            val ss = ParserStateSet(nextStateSetNumber++, this, skipGoalRule, true)
+            val ss = ParserStateSet(nextStateSetNumber++, this, skipMultiRule, true)
             //this.states_cache[skipGoalRule] = ss
             ss
         }
@@ -210,36 +209,37 @@ class RuntimeRuleSet(
         val gr = this.findRuntimeRule(goalRuleName)
         return this.states_cache[gr]!! //findRuntimeRule would throw exception if not exist
     }
-/*
-    internal fun createAllSkipStates() {
-        this.skipRules.forEach { skipRule ->
-            val stateSet = ParserStateSet(nextStateSetNumber++, this, skipRule, emptySet(), true)
-            this.skipStateSet[skipRule] = stateSet
-            val startSet = skipRule.rulePositions.map { rp ->
-                stateSet.states[rp]
-                RulePositionWithLookahead(rp, emptySet())
-            }.toSet()
-            startSet.transitiveClosure { parent ->
-                val parentRP = parent.rulePosition
-                parentRP.items.flatMap { rr ->
-                    rr.rulePositions.mapNotNull { childRP ->
-                        val childRPEnd = RulePosition(childRP.runtimeRule, childRP.option, RulePosition.END_OF_RULE)
-                        //val elh = this.calcLookahead(parent, childRPEnd, parent.lookahead)
-                        val childEndState = stateSet.states[childRPEnd] // create state!
-                        val lh = this.calcLookahead(parent, childRP, parent.lookahead)
-                        //childEndState.addParentRelation(ParentRelation(parentRP, elh))
-                        RulePositionWithLookahead(childRP, lh)
-                        //TODO: this seems different to the other closures!
-                    }
+
+    /*
+        internal fun createAllSkipStates() {
+            this.skipRules.forEach { skipRule ->
+                val stateSet = ParserStateSet(nextStateSetNumber++, this, skipRule, emptySet(), true)
+                this.skipStateSet[skipRule] = stateSet
+                val startSet = skipRule.rulePositions.map { rp ->
+                    stateSet.states[rp]
+                    RulePositionWithLookahead(rp, emptySet())
                 }.toSet()
+                startSet.transitiveClosure { parent ->
+                    val parentRP = parent.rulePosition
+                    parentRP.items.flatMap { rr ->
+                        rr.rulePositions.mapNotNull { childRP ->
+                            val childRPEnd = RulePosition(childRP.runtimeRule, childRP.option, RulePosition.END_OF_RULE)
+                            //val elh = this.calcLookahead(parent, childRPEnd, parent.lookahead)
+                            val childEndState = stateSet.states[childRPEnd] // create state!
+                            val lh = this.calcLookahead(parent, childRP, parent.lookahead)
+                            //childEndState.addParentRelation(ParentRelation(parentRP, elh))
+                            RulePositionWithLookahead(childRP, lh)
+                            //TODO: this seems different to the other closures!
+                        }
+                    }.toSet()
+                }
             }
         }
-    }
 
-    fun fetchSkipStates(rulePosition: RulePosition): ParserState {
-        return this.skipStateSet.values.mapNotNull { it.fetchOrNull(rulePosition) }.first() //TODO: maybe more than 1 !
-    }
-*/
+        fun fetchSkipStates(rulePosition: RulePosition): ParserState {
+            return this.skipStateSet.values.mapNotNull { it.fetchOrNull(rulePosition) }.first() //TODO: maybe more than 1 !
+        }
+    */
     internal fun calcLookahead(parent: RulePositionWithLookahead?, childRP: RulePosition, ifEmpty: Set<RuntimeRule>): Set<RuntimeRule> {
         return when (childRP.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> useParentLH(parent, ifEmpty)
@@ -314,7 +314,7 @@ class RuntimeRuleSet(
         return s0.stateSet.build()
     }
 
-    fun fetchStateSetFor(userGoalRule: RuntimeRule):ParserStateSet {
+    fun fetchStateSetFor(userGoalRule: RuntimeRule): ParserStateSet {
         //TODO: need to cache by possibleEndOfText also
         var stateSet = this.states_cache[userGoalRule]
         if (null == stateSet) {
@@ -404,8 +404,8 @@ class RuntimeRuleSet(
     internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
         return when {
             content.isEmpty() -> LookaheadSet.EMPTY
-            LookaheadSet.EOT.content==content -> LookaheadSet.EOT
-            LookaheadSet.UP.content==content -> LookaheadSet.UP
+            LookaheadSet.EOT.content == content -> LookaheadSet.EOT
+            LookaheadSet.UP.content == content -> LookaheadSet.UP
             else -> {
                 val existing = this.lookaheadSets.firstOrNull { it.content == content }
                 if (null == existing) {

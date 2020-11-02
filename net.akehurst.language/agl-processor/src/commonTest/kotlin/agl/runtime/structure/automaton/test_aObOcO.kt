@@ -165,13 +165,13 @@ class test_aObOcO {
         val cl_G = ClosureItem(null, RulePosition(G, 0, 0), lhs_bcU)
         val cl_G_S = ClosureItem(cl_G, RulePosition(S, 0, 0), lhs_bcU)
         val cl_G_S_aOpt0 = ClosureItem(cl_G_S, RulePosition(aOpt, 0, 0), lhs_bcU)
-        val cl_G_S_aOpt0_a = ClosureItem(cl_G_S_aOpt0, RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_bcU)
+        //val cl_G_S_aOpt0_a = ClosureItem(cl_G_S_aOpt0, RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_bcU)
         val cl_G_S_aOpt1 = ClosureItem(cl_G_S, RulePosition(aOpt, 1, 0), lhs_bcU)
         val cl_G_S_aOpt1_E = ClosureItem(cl_G_S_aOpt1, RulePosition(aOpt_E, 0, RulePosition.END_OF_RULE), lhs_bcU)
 
         var actual = SM.calcClosure(cl_G)
         var expected = setOf(
-                cl_G, cl_G_S, cl_G_S_aOpt0, cl_G_S_aOpt0_a, cl_G_S_aOpt1, cl_G_S_aOpt1_E
+                cl_G, cl_G_S, cl_G_S_aOpt0, cl_G_S_aOpt1
         )
         assertEquals(expected, actual)
     }
@@ -192,7 +192,7 @@ class test_aObOcO {
         val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(aOpt, 0, 0), RulePosition(aOpt, 0, RulePosition.END_OF_RULE),lhs_bcU)
+                HeightGraft(RulePosition(aOpt, 0, 0), RulePosition(aOpt, 0, RulePosition.END_OF_RULE),lhs_bcU,lhs_U)
         )
         assertEquals(expected, actual)
 

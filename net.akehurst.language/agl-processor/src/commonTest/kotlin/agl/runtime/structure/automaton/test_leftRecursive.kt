@@ -126,7 +126,7 @@ class test_leftRecursive {
         val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(S, 0, 0), RulePosition(S, 0, RulePosition.END_OF_RULE),lhs_aU)
+                HeightGraft(RulePosition(S, 0, 0), RulePosition(S, 0, RulePosition.END_OF_RULE),lhs_aU, lhs_U)
         )
         assertEquals(expected, actual)
 
@@ -151,8 +151,8 @@ class test_leftRecursive {
         val actual = s2.heightOrGraftInto(s0.rulePosition)
 
         val expected = setOf(
-                HeightGraft(RulePosition(G, 0, 0), RulePosition(G, 0, RulePosition.END_OF_RULE),lhs_U),
-                HeightGraft(RulePosition(S1, 0, 0), RulePosition(S1, 0, 1),lhs_a)
+                HeightGraft(RulePosition(G, 0, 0), RulePosition(G, 0, RulePosition.END_OF_RULE),lhs_U,lhs_U),
+                HeightGraft(RulePosition(S1, 0, 0), RulePosition(S1, 0, 1),lhs_a,lhs_aU)
         )
         assertEquals(expected, actual)
     }
@@ -201,7 +201,7 @@ class test_leftRecursive {
         val actual = s1.heightOrGraftInto(s4.rulePosition).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(S1, 0, 1), RulePosition(S1, 0, RulePosition.END_OF_RULE),lhs_aU)
+                HeightGraft(RulePosition(S1, 0, 1), RulePosition(S1, 0, RulePosition.END_OF_RULE),lhs_aU,lhs_U)
         )
         assertEquals(expected, actual)
 

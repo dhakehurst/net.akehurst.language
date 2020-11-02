@@ -28,6 +28,8 @@ class Transition(
         val runtimeGuard: Transition.(current:GrowingNode, previous:RulePosition?)->Boolean
 //TODO: add previousGuard for use in graft
 ) {
+    var upLhs : LookaheadSet? = null
+
     enum class ParseAction {
         HEIGHT, // reduce first
         GRAFT,  // reduce other

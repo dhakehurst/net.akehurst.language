@@ -28,19 +28,36 @@ class test_multi_1_n_literal {
             literal("'a'","a")
         }
         val S = rrs.findRuntimeRule("S")
+        val SM = rrs.fetchStateSetFor(S)
+        val G = SM.startState.runtimeRule
         val a = rrs.findRuntimeRule("'a'")
-        val G = rrs.startingState(S).runtimeRule
+        val EOT = RuntimeRuleSet.END_OF_TEXT
+        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
-        val s0 = rrs.startingState(S)
+        val s0 = SM.startState
+        val s1 = SM.states[RulePosition(a,0,0)]
 
-        val lhsE = LookaheadSet.EMPTY
-        val lhs0 = LookaheadSet(0, setOf(RuntimeRuleSet.END_OF_TEXT))
-        val lhs1 = LookaheadSet(1, setOf(a))
+        val lhs_E = LookaheadSet.EMPTY
+        val lhs_U = LookaheadSet.UP
+        val lhs_T = LookaheadSet.EOT
+        val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
+        val lhs_aU = SM.runtimeRuleSet.createLookaheadSet(setOf(a, UP))
     }
 
     fun s0_widthInto() {
         TODO()
     }
 
+    @Test
+    fun s1_heightOrGraftInto_s0() {
 
+        val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
+
+        val expected = listOf(
+                HeightGraft(RulePosition(S, 0, 0), RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION),lhs_a, lhs_U),
+                HeightGraft(RulePosition(S, 0, 0), RulePosition(S, 0, RulePosition.END_OF_RULE),lhs_U, lhs_U)
+        )
+        assertEquals(expected, actual)
+
+    }
 }

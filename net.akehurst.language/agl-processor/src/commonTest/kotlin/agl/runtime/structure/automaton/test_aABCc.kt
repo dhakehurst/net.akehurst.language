@@ -21,13 +21,15 @@ import kotlin.test.assertEquals
 
 class test_aABCc{
 
-    companion object {
-        /*
-            S = b | a S c ;
+    /*
+        S = b | a S c ;
 
-            S = b | S1
-            S1 = a S c
-         */
+        S = b | S1
+        S1 = a S c
+     */
+
+    companion object {
+
         val rrs = runtimeRuleSet {
             choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("b")
@@ -45,7 +47,6 @@ class test_aABCc{
 
         val s0 = rrs.startingState(S)
     }
-
 
     @Test
     fun firstOf() {
@@ -92,7 +93,7 @@ class test_aABCc{
     }
 
     @Test
-    fun calcLookahead() {
+    fun calcLookaheadDown() {
 
         var actual = s0.stateSet.calcLookaheadDown(RulePosition(G,0,0),setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         var expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
