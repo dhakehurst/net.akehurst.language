@@ -81,15 +81,15 @@ class test_leftRecursive {
 
     @Test
     fun calcClosure() {
-        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), (lhs_U))
-        val cl_G_So0 = ClosureItem(cl_G, RulePosition(S, 0, 0), (lhs_U))
-        val cl_G_So1 = ClosureItem(cl_G, RulePosition(S, 1, 0), (lhs_U))
-        val cl_G_So1_S1 = ClosureItem(cl_G_So1, RulePosition(S1, 0, 0), (lhs_a))
-        val cl_G_So1_S1_So0 = ClosureItem(cl_G_So1_S1, RulePosition(S, 0, 0), (lhs_a))
-        val cl_G_So1_S1_So1 = ClosureItem(cl_G_So1_S1, RulePosition(S, 1, 0), (lhs_a))
-        val cl_G_So1_S1_So1_S1 = ClosureItem(cl_G_So1_S1_So1, RulePosition(S1, 0, 0), (lhs_a))
+        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0),lhs_U)
+        val cl_G_So0 = ClosureItem(cl_G, RulePosition(S, 0, 0), RulePosition(G, 0, 0),lhs_U)
+        val cl_G_So1 = ClosureItem(cl_G, RulePosition(S, 1, 0), RulePosition(G, 0, 0),lhs_U)
+        val cl_G_So1_S1 = ClosureItem(cl_G_So1, RulePosition(S1, 0, 0), RulePosition(G, 0, 0),lhs_a)
+        val cl_G_So1_S1_So0 = ClosureItem(cl_G_So1_S1, RulePosition(S, 0, 0), RulePosition(G, 0, 0),lhs_a)
+        val cl_G_So1_S1_So1 = ClosureItem(cl_G_So1_S1, RulePosition(S, 1, 0), RulePosition(G, 0, 0),lhs_a)
+        val cl_G_So1_S1_So1_S1 = ClosureItem(cl_G_So1_S1_So1, RulePosition(S1, 0, 0), RulePosition(G, 0, 0),lhs_a)
 
-        val actual = SM.calcClosure(ClosureItem(null, RulePosition(G, 0, 0), lhs_U))
+        val actual = SM.calcClosure(ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0),lhs_U))
         val expected = setOf(
                 cl_G, cl_G_So0, cl_G_So1, cl_G_So1_S1, cl_G_So1_S1_So0, cl_G_So1_S1_So1,cl_G_So1_S1_So1_S1
         )
@@ -187,17 +187,7 @@ class test_leftRecursive {
         )
         assertEquals(expected, actual)
     }
-    @Test
-    fun s2_transitions_s4() {
 
-        val actual = s2.transitions(s4)
-
-        val expected = listOf<Transition>(
-                Transition(s2, s4, Transition.ParseAction.HEIGHT, lhs_a, lhs_a,null) { _, _ -> true },
-                Transition(s2, s5, Transition.ParseAction.GRAFT, lhs_U, lhs_U,null) { _, _ -> true }
-        )
-        assertEquals(expected, actual)
-    }
     @Test
     fun s4_widthInto_s0() {
         // s4 | S1 = S . a

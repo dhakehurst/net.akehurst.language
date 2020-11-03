@@ -162,12 +162,12 @@ class test_aObOcO {
 
     @Test
     fun createClosure() {
-        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), lhs_bcU)
-        val cl_G_S = ClosureItem(cl_G, RulePosition(S, 0, 0), lhs_bcU)
-        val cl_G_S_aOpt0 = ClosureItem(cl_G_S, RulePosition(aOpt, 0, 0), lhs_bcU)
+        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0),lhs_bcU)
+        val cl_G_S = ClosureItem(cl_G, RulePosition(S, 0, 0),RulePosition(G, 0, 0), lhs_bcU)
+        val cl_G_S_aOpt0 = ClosureItem(cl_G_S, RulePosition(aOpt, 0, 0), RulePosition(G, 0, 0),lhs_bcU)
         //val cl_G_S_aOpt0_a = ClosureItem(cl_G_S_aOpt0, RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_bcU)
-        val cl_G_S_aOpt1 = ClosureItem(cl_G_S, RulePosition(aOpt, 1, 0), lhs_bcU)
-        val cl_G_S_aOpt1_E = ClosureItem(cl_G_S_aOpt1, RulePosition(aOpt_E, 0, RulePosition.END_OF_RULE), lhs_bcU)
+        val cl_G_S_aOpt1 = ClosureItem(cl_G_S, RulePosition(aOpt, 1, 0), RulePosition(G, 0, 0),lhs_bcU)
+        val cl_G_S_aOpt1_E = ClosureItem(cl_G_S_aOpt1, RulePosition(aOpt_E, 0, RulePosition.END_OF_RULE),RulePosition(G, 0, 0), lhs_bcU)
 
         var actual = SM.calcClosure(cl_G)
         var expected = setOf(

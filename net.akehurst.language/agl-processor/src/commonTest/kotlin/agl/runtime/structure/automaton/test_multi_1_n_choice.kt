@@ -26,8 +26,8 @@ class test_multi_1_n_choice {
 
     companion object {
         val rrs = runtimeRuleSet {
-            multi("S",1,-1,"AB")
-            choice("AB",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            multi("S", 1, -1, "AB")
+            choice("AB", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")
                 literal("b")
             }
@@ -51,17 +51,18 @@ class test_multi_1_n_choice {
         val lhs_U = LookaheadSet.UP
         val lhs_T = LookaheadSet.EOT
         val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
-        val lhs_abU = SM.runtimeRuleSet.createLookaheadSet(setOf(a, b,UP))
+        val lhs_ab = SM.runtimeRuleSet.createLookaheadSet(setOf(a, b))
+        val lhs_abU = SM.runtimeRuleSet.createLookaheadSet(setOf(a, b, UP))
         val lhs_aT = SM.runtimeRuleSet.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
     }
 
     @Test
     fun firstOf() {
         val rulePositions = listOf(
-                Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a,b)), // G = . S
+                Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a, b)), // G = . S
                 Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
-                Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_a, setOf(a,b)), // S = . a+
-                Triple(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION), lhs_a, setOf(a,b)), // S = a . a+
+                Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_a, setOf(a, b)), // S = . a+
+                Triple(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION), lhs_a, setOf(a, b)), // S = a . a+
                 Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)) // S = a+ .
         )
 
@@ -80,10 +81,10 @@ class test_multi_1_n_choice {
     @Test
     fun expectedAfter() {
         val rulePositions = listOf(
-                Pair(RulePosition(G, 0, RulePosition.START_OF_RULE), setOf(a,b)), // G = . S
+                Pair(RulePosition(G, 0, RulePosition.START_OF_RULE), setOf(a, b)), // G = . S
                 Pair(RulePosition(G, 0, RulePosition.END_OF_RULE), setOf(UP)), // G = S .
-                Pair(RulePosition(S, 0, RulePosition.START_OF_RULE), setOf(a,b)), // S = . a+
-                Pair(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION), setOf(a,b)), // S = a . a+
+                Pair(RulePosition(S, 0, RulePosition.START_OF_RULE), setOf(a, b)), // S = . a+
+                Pair(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION), setOf(a, b)), // S = a . a+
                 Pair(RulePosition(S, 0, RulePosition.END_OF_RULE), setOf(UP)) // S = a+ .
         )
 
@@ -113,8 +114,8 @@ class test_multi_1_n_choice {
         val actual = s0.transitions(null)
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_abU, LookaheadSet.EMPTY,null) { _, _ -> true },
-                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_abU, LookaheadSet.EMPTY,null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_abU, LookaheadSet.EMPTY, null) { _, _ -> true },
+                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_abU, LookaheadSet.EMPTY, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -128,8 +129,8 @@ class test_multi_1_n_choice {
         val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(test_leftRecursive.G, 0, 0),RulePosition(AB, 0, 0), RulePosition(AB, 0, RulePosition.END_OF_RULE),lhs_abU, lhs_U),
-                HeightGraft(RulePosition(test_leftRecursive.G, 0, 0),RulePosition(S, 0, 0), RulePosition(S, 0, RulePosition.END_OF_RULE),lhs_U, lhs_U)
+                HeightGraft(RulePosition(S, 0, 1), RulePosition(AB, 0, 0), RulePosition(AB, 0, RulePosition.END_OF_RULE), lhs_abU, lhs_ab),
+                HeightGraft(RulePosition(S, 0, RulePosition.END_OF_RULE), RulePosition(AB, 0, 0), RulePosition(AB, 0, RulePosition.END_OF_RULE), lhs_abU, lhs_U)
         )
         assertEquals(expected, actual)
 

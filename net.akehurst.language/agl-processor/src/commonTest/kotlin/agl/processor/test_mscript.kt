@@ -242,6 +242,16 @@ grammar Mscript {
     }
 
     @Test
+    fun process_matrix_row_x4() {
+
+        val text = "1 2 3 4"
+        val actual = sut.parse("row", text)
+
+        assertNotNull(actual)
+        assertEquals("row", actual.root.name)
+    }
+
+    @Test
     fun process_matrix_1x4() {
 
         val text = "[1 2 3 4]"

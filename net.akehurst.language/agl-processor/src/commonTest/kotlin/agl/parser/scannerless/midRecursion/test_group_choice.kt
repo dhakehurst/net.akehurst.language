@@ -45,7 +45,7 @@ class test_group_choice : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun a() {
+    fun rEQaSEMI() {
         val sentence = "r=a;"
         val goal = "S"
         val expected = """

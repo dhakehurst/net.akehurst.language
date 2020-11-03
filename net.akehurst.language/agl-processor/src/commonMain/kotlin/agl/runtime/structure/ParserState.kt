@@ -186,13 +186,13 @@ class ParserState(
             it.rulePosition.item == this.runtimeRule
         }
         val res = filt.flatMap { clsItem ->
-            val prev = clsItem.parentItem?.prev?.firstOrNull() //TODO:support full set
+            val prev = null//clsItem.parentItem?.parentNext//clsItem.prev.firstOrNull() //TODO:support full set
             val parent = clsItem.rulePosition
             //val lhs = clsItem.lookaheadSet
             val upLhs = clsItem.parentItem?.lookaheadSet ?: LookaheadSet.UP
             val pns = parent.next()
             pns.map { parentNext ->
-                val lhsc = this.stateSet.expectedAfter(parentNext)
+                val lhsc = this.stateSet.firstOf(parentNext,upLhs.content)// this.stateSet.expectedAfter(parentNext)
                 val lhs = this.createLookaheadSet(lhsc)
                 HeightGraft(prev, parent, parentNext, lhs, upLhs)
             }
@@ -275,7 +275,7 @@ class ParserState(
                     }
                     Transition.ParseAction.HEIGHT -> {
                         //t.to.growsInto(previousState) &&
-                        previousState.rulePosition == t.prevGuard
+                        previousState.rulePosition != t.prevGuard
                     }
                     Transition.ParseAction.EMBED -> {
                         true

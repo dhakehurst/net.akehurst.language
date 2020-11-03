@@ -84,12 +84,12 @@ class test_rightRecursive {
 
     @Test
     fun calcClosure_G_0_0() {
-        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), (lhs_U))
-        val cl_G_So0 = ClosureItem(cl_G, RulePosition(S, 0, 0), (lhs_U))
-        val cl_G_So1 = ClosureItem(cl_G, RulePosition(S, 1, 0), (lhs_U))
-        val cl_G_So1_S1 = ClosureItem(cl_G_So1, RulePosition(S1, 0, 0), (lhs_a))
+        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0),lhs_U)
+        val cl_G_So0 = ClosureItem(cl_G, RulePosition(S, 0, 0), RulePosition(G, 0, 0),lhs_U)
+        val cl_G_So1 = ClosureItem(cl_G, RulePosition(S, 1, 0), RulePosition(G, 0, 0),lhs_U)
+        val cl_G_So1_S1 = ClosureItem(cl_G_So1, RulePosition(S1, 0, 0), RulePosition(G, 0, 0),lhs_a)
 
-        val actual = SM.calcClosure(ClosureItem(null, RulePosition(G, 0, 0), lhs_U))
+        val actual = SM.calcClosure(ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0),lhs_U))
         val expected = setOf(
                 cl_G, cl_G_So0, cl_G_So1, cl_G_So1_S1
         )
@@ -212,12 +212,12 @@ class test_rightRecursive {
 
     @Test
     fun calcClosure_S1_0_1() {
-        val cl_S1 = ClosureItem(null, RulePosition(S1, 0, 1), (lhs_U))
-        val cl_S1_So0 = ClosureItem(cl_S1, RulePosition(S, 0, 0), (lhs_U))
-        val cl_S1_So1 = ClosureItem(cl_S1, RulePosition(S, 1, 0), (lhs_U))
-        val cl_S1_So1_S1 = ClosureItem(cl_S1_So1, RulePosition(S1, 0, 0), (lhs_a))
+        val cl_S1 = ClosureItem(null, RulePosition(S1, 0, 1), RulePosition(G, 0, 0),lhs_U)
+        val cl_S1_So0 = ClosureItem(cl_S1, RulePosition(S, 0, 0), RulePosition(G, 0, 0),lhs_U)
+        val cl_S1_So1 = ClosureItem(cl_S1, RulePosition(S, 1, 0), RulePosition(G, 0, 0),lhs_U)
+        val cl_S1_So1_S1 = ClosureItem(cl_S1_So1, RulePosition(S1, 0, 0), RulePosition(G, 0, 0),lhs_a)
 
-        val actual = SM.calcClosure(ClosureItem(null, RulePosition(S1, 0, 1), lhs_U))
+        val actual = SM.calcClosure(ClosureItem(null, RulePosition(S1, 0, 1),RulePosition(G, 0, 0), lhs_U))
         val expected = setOf(
                 cl_S1, cl_S1_So0, cl_S1_So1, cl_S1_So1_S1
         )

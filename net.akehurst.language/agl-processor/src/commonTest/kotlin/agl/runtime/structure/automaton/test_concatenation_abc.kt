@@ -97,10 +97,10 @@ class test_concatenation_abc {
 
     @Test
     fun calcClosure_G_0_0() {
-        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), (lhs_U))
-        val cl_G_S0 = ClosureItem(cl_G, RulePosition(S, 0, 0), (lhs_b))
+        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0),lhs_U)
+        val cl_G_S0 = ClosureItem(cl_G, RulePosition(S, 0, 0), RulePosition(G, 0, 0),lhs_b)
 
-        val actual = SM.calcClosure(ClosureItem(null, RulePosition(G, 0, 0), lhs_U))
+        val actual = SM.calcClosure(ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0),lhs_U))
         val expected = setOf(
                 cl_G, cl_G_S0
         )

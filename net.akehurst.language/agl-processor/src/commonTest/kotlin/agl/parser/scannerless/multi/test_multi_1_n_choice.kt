@@ -100,10 +100,11 @@ class test_multi_1_n_choice : test_ScanOnDemandParserAbstract() {
         val sentence = "aaa"
 
         val expected = """
-            S { 'a' 'a' 'a' }
+            S { AB{'a'} AB{'a'} AB{'a'} }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected)
+        val actual =  super.test(rrs, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -112,9 +113,10 @@ class test_multi_1_n_choice : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a".repeat(50)
 
-        val expected = "S { "+"'a' ".repeat(50)+" }"
+        val expected = "S { "+"AB{'a'} ".repeat(50)+" }"
 
-        super.test(rrs, goal, sentence, expected)
+        val actual =  super.test(rrs, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -123,9 +125,10 @@ class test_multi_1_n_choice : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a".repeat(500)
 
-        val expected = "S { "+"'a' ".repeat(500)+" }"
+        val expected = "S { "+"AB{'a'} ".repeat(500)+" }"
 
-        super.test(rrs, goal, sentence, expected)
+        val actual =  super.test(rrs, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -134,8 +137,9 @@ class test_multi_1_n_choice : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a".repeat(2000)
 
-        val expected = "S { "+"'a' ".repeat(2000)+" }"
+        val expected = "S { "+"AB{'a'} ".repeat(2000)+" }"
 
-        super.test(rrs, goal, sentence, expected)
+        val actual =  super.test(rrs, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 }

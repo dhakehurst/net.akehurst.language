@@ -326,8 +326,8 @@ internal class RuntimeParser(
     private fun doWidth(curGn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition, noLookahead: Boolean) {
         val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, curGn.nextInputPosition, curGn.lastLocation)
         if (null != l) {
-
-            val skipLh = transition.lookaheadGuard.createWithParent(this.possibleEndOfText)
+//TODO: skip gets parse multiple times
+            val skipLh = transition.lookaheadGuard.createWithParent(curGn.lookahead)
             val skipNodes = this.tryParseSkipUntilNone(skipLh, l.location)//, lh) //TODO: does the result get reused?
             val nextInput = skipNodes.lastOrNull()?.nextInputPosition ?: l.nextInputPosition
             val lastLocation = skipNodes.lastOrNull()?.location ?: l.location
@@ -419,7 +419,7 @@ internal class RuntimeParser(
                 val skipNode = tryParseSkip(lookaheadSet, location)
                 when (skipNode) {
                     null -> emptyList<SPPTNode>()
-                    else -> skipNode.asBranch.children[0].asBranch.children[0].asBranch.children
+                    else -> skipNode.asBranch.children[0].asBranch.children.flatMap { it.asBranch.children }
                 }
             }
         }

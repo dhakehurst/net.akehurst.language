@@ -533,9 +533,18 @@ class test_AglGrammar_item {
     }
 
     @Test
+    fun HEX_FLOAT_LITERAL_1() {
+        val sentence = "r= 'a''a'? ;".trimIndent()
+        val actual = parse("rule", sentence)
+
+        assertNotNull(actual)
+        assertEquals(1,actual.maxNumHeads)
+    }
+
+    @Test
     fun HEX_FLOAT_LITERAL() {
         val sentence = """
-            HEX_FLOAT_LITERAL =  '0' "[xX]" (HexDigits '.'? | HexDigits? '.' HexDigits) "[pP]" "[+-]"? Digits "[fFdD]"? ;
+            HEX_FLOAT_LITERAL = '0' "[xX]" (HexDigits '.'? | HexDigits? '.' HexDigits) "[pP]" "[+-]"? Digits "[fFdD]"? ;
         """.trimIndent()
         val actual = parse("rule", sentence)
 

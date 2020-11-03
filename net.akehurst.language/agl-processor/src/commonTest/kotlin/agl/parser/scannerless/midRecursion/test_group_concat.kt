@@ -50,7 +50,7 @@ class test_group_concat : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun a() {
+    fun rEQaSEMI() {
         val sentence = "r=a;"
         val goal = "S"
         val expected = """
@@ -65,7 +65,7 @@ class test_group_concat : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun bac() {
+    fun rEQPOaPC() {
         val sentence = "r=(a);"
         val goal = "S"
         val expected = """
