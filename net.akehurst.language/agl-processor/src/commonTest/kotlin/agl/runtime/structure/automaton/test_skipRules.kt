@@ -46,10 +46,21 @@ class test_skipRules {
         val skipSS = rrs.skipParserStateSet!!
         val sk0 = skipSS.startState
         val skG = sk0.runtimeRule                             // G = skS ;
-        val skS = skG.rhs.items[0]                            // skS = skC+
-        val skC = skS.rhs.items[RuntimeRuleItem.MULTI__ITEM]  // skC = WS | CM
+        val skM = skG.rhs.items[0]                            // skS = skC+
+        val skC = skM.rhs.items[RuntimeRuleItem.MULTI__ITEM]  // skC = WS | CM
         val skWS = rrs.findRuntimeRule("WS")
         val skCM = rrs.findRuntimeRule("COMMENT")
+
+        val sk1 = skipSS.states[RulePosition(skWS,0,RulePosition.END_OF_RULE)]
+
+
+        val lhs_E = LookaheadSet.EMPTY
+        val lhs_U = LookaheadSet.UP
+        val lhs_T = LookaheadSet.EOT
+        val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
+        val lhs_skWCU = SM.runtimeRuleSet.createLookaheadSet(setOf(skWS, skCM, UP))
+        val lhs_aT = SM.runtimeRuleSet.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
+
     }
 
     @Test
@@ -58,7 +69,7 @@ class test_skipRules {
         var expected = emptySet<RulePosition>()
         assertEquals(expected, actual)
 
-        actual = skipSS.parentPosition[skS]
+        actual = skipSS.parentPosition[skM]
         expected = setOf(
                 RulePosition(G, 0, 0)
         )
@@ -67,8 +78,8 @@ class test_skipRules {
 
         actual = skipSS.parentPosition[skC]
         expected = setOf(
-                RulePosition(skS, 0, 0),
-                RulePosition(skS, 0, RulePosition.MULIT_ITEM_POSITION)
+                RulePosition(skM, 0, 0),
+                RulePosition(skM, 0, RulePosition.MULIT_ITEM_POSITION)
         )
         assertEquals(expected, actual)
 
@@ -92,11 +103,11 @@ class test_skipRules {
         var expected = setOf(skWS, skCM)
         assertEquals(expected, actual)
 
-        actual = skipSS.firstTerminals[RulePosition(skS, 0, 0)]
+        actual = skipSS.firstTerminals[RulePosition(skM, 0, 0)]
         expected = setOf(skWS, skCM)
         assertEquals(expected, actual)
 
-        actual = skipSS.firstTerminals[RulePosition(skS, 0, RulePosition.MULIT_ITEM_POSITION)]
+        actual = skipSS.firstTerminals[RulePosition(skM, 0, RulePosition.MULIT_ITEM_POSITION)]
         expected = setOf(skWS, skCM)
         assertEquals(expected, actual)
 
@@ -137,28 +148,73 @@ class test_skipRules {
     @Test
     fun expectedAfter() {
 
-        var actual = SM.expectedAfter(RulePosition(skG, 0, RulePosition.END_OF_RULE))
-        var expected = setOf(UP)
+        var actual = skipSS.expectedAfter(RulePosition(skG, 0, 0))
+        var expected = setOf(skWS, skCM)
         assertEquals(expected, actual)
 
-        actual = SM.expectedAfter(RulePosition(skWS, 0, 0))
-        expected = setOf(a,UP)
+        actual = skipSS.expectedAfter(RulePosition(skG, 0, RulePosition.END_OF_RULE))
+        expected = setOf(UP)
         assertEquals(expected, actual)
 
-        actual = SM.expectedAfter(RulePosition(G, 0, RulePosition.END_OF_RULE))
-        expected = setOf()
+        actual = skipSS.expectedAfter(RulePosition(skM, 0, 0))
+        expected = setOf(skWS, skCM)
         assertEquals(expected, actual)
 
-
-        actual = SM.expectedAfter(RulePosition(S, 1, 0))
-        expected = setOf(a)
+        actual = skipSS.expectedAfter(RulePosition(skM, 0, RulePosition.MULIT_ITEM_POSITION))
+        expected = setOf(skWS, skCM)
         assertEquals(expected, actual)
 
-        actual = SM.expectedAfter(RulePosition(S, 1, 0))
-        expected = setOf(a)
+        actual = skipSS.expectedAfter(RulePosition(skM, 0, RulePosition.END_OF_RULE))
+        expected = setOf(UP)
+        assertEquals(expected, actual)
+
+        actual = skipSS.expectedAfter(RulePosition(skC, 0, 0))
+        expected = setOf(skWS)
+        assertEquals(expected, actual)
+
+        actual = skipSS.expectedAfter(RulePosition(skC, 0, RulePosition.END_OF_RULE))
+        expected = setOf(skWS, skCM, UP)
+        assertEquals(expected, actual)
+
+        actual = skipSS.expectedAfter(RulePosition(skC, 0, 0))
+        expected = setOf(skWS)
+        assertEquals(expected, actual)
+
+        actual = skipSS.expectedAfter(RulePosition(skC, 0, RulePosition.END_OF_RULE))
+        expected = setOf(skWS, skCM, UP)
+        assertEquals(expected, actual)
+
+        actual = skipSS.expectedAfter(RulePosition(skWS, 0, RulePosition.END_OF_RULE))
+        expected = setOf(skWS, skCM, UP)
+        assertEquals(expected, actual)
+
+        actual = skipSS.expectedAfter(RulePosition(skCM, 0, RulePosition.END_OF_RULE))
+        expected = setOf(skWS, skCM, UP)
         assertEquals(expected, actual)
 
 
     }
 
+    @Test
+    fun sk0_widthInto() {
+        val actual = sk0.widthInto(null).toList()
+
+        val expected = listOf(
+                Pair(RulePosition(skWS, 0, RulePosition.END_OF_RULE), lhs_skWCU),
+                Pair(RulePosition(skCM, 0, RulePosition.END_OF_RULE), lhs_skWCU)
+        )
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun s1_heightOrGraftInto_s0() {
+
+        val actual = sk1.heightOrGraftInto(sk0.rulePosition).toList()
+
+        val expected = listOf(
+                HeightGraft(RulePosition(test_leftRecursive.G, 0, 0),RulePosition(skC, 0, RulePosition.START_OF_RULE),RulePosition(skC, 0, RulePosition.END_OF_RULE), lhs_a,lhs_U)
+        )
+        assertEquals(expected, actual)
+
+    }
 }

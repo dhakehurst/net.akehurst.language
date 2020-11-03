@@ -180,8 +180,8 @@ class test_aObOcO {
     fun s0_transitions() {
         val actual = s0.transitions(null)
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_bcU, null) { _, _ -> true },
-                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY,null) { _, _ -> true },
+                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY,null) { _, _ -> true }
         )
         assertEquals(expected, actual)
     }
@@ -192,7 +192,13 @@ class test_aObOcO {
         val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(aOpt, 0, 0), RulePosition(aOpt, 0, RulePosition.END_OF_RULE),lhs_bcU,lhs_U)
+                HeightGraft(
+                        RulePosition(test_leftRecursive.G, 0, 0),
+                        RulePosition(aOpt, 0, 0),
+                        RulePosition(aOpt, 0, RulePosition.END_OF_RULE),
+                        lhs_bcU,
+                        lhs_U
+                )
         )
         assertEquals(expected, actual)
 

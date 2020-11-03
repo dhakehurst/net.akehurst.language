@@ -23,12 +23,11 @@ class Transition(
         val from: ParserState,
         val to: ParserState,
         val action: ParseAction,
-        val lookaheadGuard: LookaheadSet, //TODO: is this needed as we have the additionalLookaheads now?
+        val lookaheadGuard: LookaheadSet,
+        val upLookahead: LookaheadSet,
         val prevGuard: RulePosition?,
         val runtimeGuard: Transition.(current:GrowingNode, previous:RulePosition?)->Boolean
-//TODO: add previousGuard for use in graft
 ) {
-    var upLhs : LookaheadSet? = null
 
     enum class ParseAction {
         HEIGHT, // reduce first
@@ -39,7 +38,7 @@ class Transition(
     }
 
     private val hashCode_cache:Int by lazy {
-        arrayListOf<Any>(from, to, action, lookaheadGuard).hashCode()
+        arrayListOf(from, to, action, lookaheadGuard,upLookahead, prevGuard).hashCode()
     }
 
 
@@ -54,6 +53,8 @@ class Transition(
                 if (this.to!=other.to) return false
                 if (this.action!=other.action) return false
                 if (this.lookaheadGuard!=other.lookaheadGuard) return false
+                if (this.upLookahead!=other.upLookahead) return false
+                if (this.prevGuard!=other.prevGuard) return false
                 return true
             }
             else -> return false

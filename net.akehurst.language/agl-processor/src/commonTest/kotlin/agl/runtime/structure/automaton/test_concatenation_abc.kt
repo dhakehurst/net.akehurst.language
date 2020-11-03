@@ -124,7 +124,7 @@ class test_concatenation_abc {
         val actual = s0.transitions(null)
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_b, null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_b, LookaheadSet.EMPTY,null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -138,7 +138,7 @@ class test_concatenation_abc {
         val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(S, 0, 0), RulePosition(S, 0, 1),lhs_b, lhs_U)
+                HeightGraft(RulePosition(test_leftRecursive.G, 0, 0),RulePosition(S, 0, 0), RulePosition(S, 0, 1),lhs_b, lhs_U)
         )
         assertEquals(expected, actual)
 
@@ -149,7 +149,7 @@ class test_concatenation_abc {
         val actual = s1.transitions(s0)
 
         val expected = listOf(
-                Transition(s1, s2, Transition.ParseAction.HEIGHT, lhs_b, null) { _, _ -> true }
+                Transition(s1, s2, Transition.ParseAction.HEIGHT, lhs_b, LookaheadSet.EMPTY,null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -162,7 +162,7 @@ class test_concatenation_abc {
         val actual = s2.transitions(s0)
 
         val expected = listOf(
-                Transition(s2, s3, Transition.ParseAction.WIDTH, lhs_c, null) { _, _ -> true }
+                Transition(s2, s3, Transition.ParseAction.WIDTH, lhs_c, LookaheadSet.EMPTY,null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -175,7 +175,7 @@ class test_concatenation_abc {
         val actual = s3.transitions(s2)
 
         val expected = listOf(
-                Transition(s3, s4, Transition.ParseAction.GRAFT, lhs_c, null) { _, _ -> true }
+                Transition(s3, s4, Transition.ParseAction.GRAFT, lhs_c, LookaheadSet.EMPTY,null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {

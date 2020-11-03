@@ -60,8 +60,8 @@ class test_sList_0_n_literal {
         val s1 = s0.stateSet.fetch(RulePosition(a, 0, RulePosition.END_OF_RULE))
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH,  lhs_T, null) { _, _ -> true },
-                Transition(s0, s1, Transition.ParseAction.WIDTH,  lhs_a, null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH,  lhs_T, LookaheadSet.EMPTY,null) { _, _ -> true },
+                Transition(s0, s1, Transition.ParseAction.WIDTH,  lhs_a, LookaheadSet.EMPTY,null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {

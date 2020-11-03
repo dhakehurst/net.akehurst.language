@@ -30,6 +30,12 @@ data class ClosureItem(
         val lookaheadSet: LookaheadSet
 ) {
 
+    val prev : Set<RulePosition> get() = when {
+        null==parentItem -> emptySet()
+        parentItem.rulePosition.isAtEnd -> parentItem.prev
+        else -> parentItem.rulePosition.next().filter { it.isAtEnd.not() }.toSet()
+    }
+
     private fun chain(): String {
         val p = if (null == parentItem) {
             ""
@@ -313,11 +319,15 @@ class ParserStateSet(
                         }
                         RuntimeRuleKind.GOAL,
                         RuntimeRuleKind.NON_TERMINAL -> {
-                            for (chRp in rr.rulePositionsAt[0]) {
-                                val lh = calcLookaheadDown(chRp, item.lookaheadSet.content)
-                                val lhs = this.runtimeRuleSet.createLookaheadSet(lh)
-                                val ci = ClosureItem(item, chRp, lhs)
-                                calcClosure(ci, items)
+                            val chRps = rr.rulePositionsAt[0]
+                            for (chRp in chRps) {
+                                val chNext = chRp.next()
+                                for(chNx in chNext) {
+                                    val lh = firstOf(chNx, item.lookaheadSet.content)
+                                    val lhs = this.runtimeRuleSet.createLookaheadSet(lh)
+                                    val ci = ClosureItem(item, chRp, lhs)
+                                    calcClosure(ci, items)
+                                }
                             }
                         }
                     }
@@ -458,32 +468,35 @@ class ParserStateSet(
     /**
      * ifReachedEnd must not be empty
      */
-    fun firstOf(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>, done: MutableSet<RulePosition> = mutableSetOf()): Set<RuntimeRule> {
+    fun firstOf(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>, done: MutableMap<RulePosition,Set<RuntimeRule>> = mutableMapOf()): Set<RuntimeRule> {
         return when {
-            done.contains(rulePosition) -> emptySet()
+            done.containsKey(rulePosition) -> done[rulePosition]!!
             rulePosition.isAtEnd -> ifReachEnd
             else -> {
-                done.add(rulePosition)
+                val res = mutableSetOf<RuntimeRule>()
+                done[rulePosition] = res
                 val fst = rulePosition.item
                 val nextRp = rulePosition.next()
                 val next = nextRp.flatMap {
                     firstOf(it, ifReachEnd, done)
                 }.toSet()
                 when {
-                    null == fst -> ifReachEnd
-                    fst.isEmptyRule -> next
+                    null == fst -> res.addAll(ifReachEnd)
+                    fst.isEmptyRule -> res.addAll(next)
                     else -> when (fst.kind) {
                         RuntimeRuleKind.GOAL -> TODO()
-                        RuntimeRuleKind.TERMINAL -> setOf(fst)
+                        RuntimeRuleKind.TERMINAL -> res.add(fst)
                         RuntimeRuleKind.NON_TERMINAL -> {
                             val fs = fst.rulePositionsAt[0]
-                            fs.flatMap {
+                            val r = fs.flatMap {
                                 firstOf(it, next, done)
                             }.toSet()
+                            res.addAll(r)
                         }
                         RuntimeRuleKind.EMBEDDED -> TODO()
                     }
                 }
+                res
             }
         }
     }
@@ -492,8 +505,10 @@ class ParserStateSet(
         return when {
             doneDn.contains(rulePosition) -> emptySet()
             doneUp.contains(rulePosition) -> emptySet()
-            rulePosition.runtimeRule == this.startState.runtimeRule -> {
-                LookaheadSet.UP.content
+            rulePosition.runtimeRule == this.startState.runtimeRule -> when {
+                rulePosition.isAtStart -> this.expectedAfter(RulePosition(rulePosition.item!!, 0, 0), doneDn, doneUp)
+                rulePosition.isAtEnd -> LookaheadSet.UP.content
+                else -> error("should never happen")
             }
             rulePosition.isAtEnd -> {
                 val pps = this.parentPosition[rulePosition.runtimeRule]
@@ -509,7 +524,7 @@ class ParserStateSet(
                 val fst = rulePosition.item
                 val nextRp = rulePosition.next()
                 val next = nextRp.flatMap {
-                    expectedAfter(it, doneDn, doneUp)
+                    expectedAfter(it, doneDn)//, doneUp)
                 }.toSet()
                 when {
                     null == fst -> error("Internal Error: should never happen")

@@ -345,7 +345,7 @@ internal class RuntimeParser(
         val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, curGn.lookahead, curGn.nextInputPosition, curGn.lastLocation)
         if (noLookahead || hasLh) {// || lh.isEmpty()) {
             val complete = this.graph.findCompleteNode(curGn.currentState.rulePosition, curGn.startPosition, curGn.matchedTextLength) ?: error("Should never be null")
-            val lhs = transition.upLhs!!.createWithParent(previous.node.lookahead)
+            val lhs = transition.upLookahead.createWithParent(previous.node.lookahead)
             this.graph.createWithFirstChild(curGn.isSkipGrowth, transition.to, lhs, complete, setOf(previous), curGn.skipNodes)
         }
     }
@@ -358,7 +358,7 @@ internal class RuntimeParser(
 
             if (noLookahead || hasLh) {// || lh.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
                 val complete = this.graph.findCompleteNode(curGn.currentState.rulePosition, curGn.startPosition, curGn.matchedTextLength) ?: error("Should never be null")
-                val lhs = transition.upLhs!!.createWithParent(previous.node.lookahead)
+                val lhs = transition.upLookahead.createWithParent(previous.node.lookahead)
                 this.graph.growNextChild(false, transition.to, lhs, previous.node, complete, previous.node.currentState.position, curGn.skipNodes)
             }
         }
