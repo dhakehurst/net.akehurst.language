@@ -62,7 +62,7 @@ internal class InputFromCharSequence(val text: CharSequence) {
     }
 
     private fun matchRegEx(position: Int, patternText: String): Match? {
-        val pattern = Regex(patternText, setOf(RegexOption.MULTILINE))
+        val pattern = Regex(patternText.replace("\\\"", "\""), setOf(RegexOption.MULTILINE))
         val m = pattern.find(this.text, position)
         val lookingAt = (m?.range?.start == position)
         val matchedText = if (lookingAt) m?.value else null
