@@ -197,6 +197,7 @@ class ParserState(
                 HeightGraft(prev, parent, parentNext, lhs, upLhs)
             }
         }
+        /*
         val grouped = res.groupBy { listOf(it.prev, it.parent, it.parentNext, it.lhs) }
                 .map {
                     val prev = it.key[0] as RulePosition?
@@ -205,6 +206,16 @@ class ParserState(
                     val lhs = it.key[3] as LookaheadSet
                     val upLhsc = it.value.flatMap { it.upLhs.content }.toSet()
                     val upLhs = createLookaheadSet(upLhsc)
+                    HeightGraft(prev,parent, parentNext, lhs, upLhs)
+                }
+         */
+        val grouped = res.groupBy { listOf(it.prev, it.parent, it.parentNext)}//, it.lhs) }
+                .map {
+                    val prev = it.key[0] as RulePosition?
+                    val parent = it.key[1] as RulePosition
+                    val parentNext = it.key[2] as RulePosition
+                    val lhs = createLookaheadSet(it.value.flatMap { it.lhs.content }.toSet())
+                    val upLhs = createLookaheadSet(it.value.flatMap { it.upLhs.content }.toSet())
                     HeightGraft(prev,parent, parentNext, lhs, upLhs)
                 }
         return grouped.toSet()
@@ -459,7 +470,7 @@ class ParserState(
     private fun createHeightTransition3(hg: HeightGraft): Transition {
         val action = Transition.ParseAction.HEIGHT
         val to = this.stateSet.states[hg.parentNext]
-        val trs = Transition(this, to, action, hg.lhs, hg.upLhs, hg.prev) { _, _ -> true }
+        val trs = Transition(this, to, action, hg.lhs, hg.upLhs, hg.parent) { _, _ -> true }
         return trs
     }
 

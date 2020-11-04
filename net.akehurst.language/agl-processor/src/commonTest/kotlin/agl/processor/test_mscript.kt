@@ -31,6 +31,7 @@ namespace com.yakindu.modelviewer.parser
 
 grammar Mscript {
 
+    // if we treat '\n' as part of the WHITESPACE skip rule, we get ambiguity in statements
     skip WHITESPACE = "[ \t\x0B\f]+" ;
     skip LINE_CONTINUATION =  "[.][.][.](.*)\R" ;
     skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
@@ -39,7 +40,6 @@ grammar Mscript {
 
     script = statementList ;
     statementList = [line / "\R"]* ;
-    // if we treat '\n' as part of the WHITESPACE skip rule, we get ambiguity in statements
     line = statement? ';'?  ;
 
     statement
@@ -83,6 +83,8 @@ grammar Mscript {
 
     matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
     row = expression (','? expression)* ;
+    //row = [expression / opCmr ]+ ;
+    //opCmr = ','? ;
 
     literal
       = BOOLEAN
@@ -463,6 +465,41 @@ grammar Mscript {
         assertNotNull(actual)
     }
 
+    @Test
+    fun process_functionCall_func() {
+
+        val text = "func()"
+        val actual = sut.parse("functionCall", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
+    fun process_statement_func() {
+
+        val text = "func()"
+        val actual = sut.parse("statement", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
+    fun process_line_func() {
+
+        val text = "func();"
+        val actual = sut.parse("line", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
+    fun process_statementList_func() {
+
+        val text = "func();"
+        val actual = sut.parse("statementList", text)
+
+        assertNotNull(actual)
+    }
     @Test
     fun process_script_func() {
 

@@ -27,14 +27,15 @@ data class ParentRelation(
 data class ClosureItem(
         val parentItem: ClosureItem?, //needed for height/graft
         val rulePosition: RulePosition,
-        val parentNext:RulePosition?,
+        val next: RulePosition?,
         val lookaheadSet: LookaheadSet
 ) {
 
-    val prev : Set<RulePosition> get() = when {
-        null==parentItem -> emptySet()
-        else -> parentItem.rulePosition.next().filter { it.isAtEnd.not() }.toSet()
-    }
+    val prev: Set<RulePosition>
+        get() = when {
+            null == parentItem -> emptySet()
+            else -> parentItem.rulePosition.next().filter { it.isAtEnd.not() }.toSet()
+        }
 
     private fun chain(): String {
         val p = if (null == parentItem) {
@@ -291,7 +292,7 @@ class ParserStateSet(
     }
 
 
-    internal fun calcClosure(rp:RulePosition, upLhs:LookaheadSet) : Set<ClosureItem> {
+    internal fun calcClosure(rp: RulePosition, upLhs: LookaheadSet): Set<ClosureItem> {
         val lhsc = calcLookaheadDown(rp, upLhs.content)
         val lhs = createLookaheadSet(lhsc)
         return calcClosure(ClosureItem(null, rp, null, lhs))
@@ -322,7 +323,7 @@ class ParserStateSet(
                             val chRps = rr.rulePositionsAt[0]
                             for (chRp in chRps) {
                                 val chNext = chRp.next()
-                                for(chNx in chNext) {
+                                for (chNx in chNext) {
                                     val lh = firstOf(chNx, item.lookaheadSet.content)
                                     val lhs = this.runtimeRuleSet.createLookaheadSet(lh)
                                     val ci = ClosureItem(item, chRp, chNx, lhs)
@@ -468,7 +469,7 @@ class ParserStateSet(
     /**
      * ifReachedEnd must not be empty
      */
-    fun firstOf(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>, done: MutableMap<RulePosition,Set<RuntimeRule>> = mutableMapOf()): Set<RuntimeRule> {
+    fun firstOf1(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>, done: MutableMap<RulePosition, Set<RuntimeRule>> = mutableMapOf()): Set<RuntimeRule> {
         return when {
             done.containsKey(rulePosition) -> done[rulePosition]!!
             rulePosition.isAtEnd -> ifReachEnd
@@ -477,19 +478,24 @@ class ParserStateSet(
                 done[rulePosition] = res
                 val fst = rulePosition.item
                 val nextRp = rulePosition.next()
-                val next = nextRp.flatMap {
-                    firstOf(it, ifReachEnd, done)
-                }.toSet()
+
                 when {
                     null == fst -> res.addAll(ifReachEnd)
-                    fst.isEmptyRule -> res.addAll(next)
                     else -> when (fst.kind) {
                         RuntimeRuleKind.GOAL -> TODO()
                         RuntimeRuleKind.TERMINAL -> res.add(fst)
                         RuntimeRuleKind.NON_TERMINAL -> {
                             val fs = fst.rulePositionsAt[0]
+                            val next = nextRp.flatMap {
+                                firstOf1(it, ifReachEnd, done)
+                            }.toSet()
                             val r = fs.flatMap {
-                                firstOf(it, next, done)
+                                when {
+                                    it.runtimeRule.isEmptyRule -> next
+                                    else -> {
+                                        firstOf1(it, next, done)
+                                    }
+                                }
                             }.toSet()
                             res.addAll(r)
                         }
@@ -499,6 +505,88 @@ class ParserStateSet(
                 res
             }
         }
+    }
+
+    fun firstOf(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>): Set<RuntimeRule> {
+        return firstOfRpNotEmpty(rulePosition, ifReachEnd)
+    }
+
+    fun firstOfRpNotEmpty(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>): Set<RuntimeRule> {
+        return when {
+            rulePosition.isAtEnd -> ifReachEnd
+            else -> {
+                val item = rulePosition.item
+                when {
+                    null == item -> error("should never happen")
+                    item.isEmptyRule -> {
+                        val next = rulePosition.next()
+                        //ensure don't look again at this rulePosition
+                        // sList and multi can return same rp when calling next
+                        val nextNotSame = next.filter { it != rulePosition }
+                        nextNotSame.flatMap {
+                            firstOfRpNotEmpty(it, ifReachEnd) //will always terminate in rps that are at end
+                        }.toSet()
+                    }
+                    else -> when (item.kind) {
+                        RuntimeRuleKind.GOAL -> error("should never happen")
+                        RuntimeRuleKind.EMBEDDED -> setOf(item)
+                        RuntimeRuleKind.TERMINAL -> setOf(item)
+                        RuntimeRuleKind.NON_TERMINAL -> {
+                            val next = rulePosition.next()
+                            val x = firstOfNotEmpty(item, next, ifReachEnd)
+                            x
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //TODO: use smaller array for done, but would to map rule number!
+    fun firstOfNotEmpty(rule: RuntimeRule, next: Set<RulePosition>, ifReachEnd: Set<RuntimeRule>, done: BooleanArray = BooleanArray(this.runtimeRuleSet.runtimeRules.size)): Set<RuntimeRule> {
+        return when {
+            0 > rule.number -> when {
+                RuntimeRuleSet.GOAL_RULE_NUMBER == rule.number -> TODO()
+                RuntimeRuleSet.EOT_RULE_NUMBER == rule.number -> TODO()
+                RuntimeRuleSet.SKIP_RULE_NUMBER == rule.number -> TODO()
+                RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER == rule.number -> firstOfNotEmptySafe(rule, next, ifReachEnd, done)
+                RuntimeRuleSet.USE_PARENT_LOOKAHEAD_RULE_NUMBER == rule.number -> TODO()
+                else -> error("unsupported rule number $rule")
+            }
+            done[rule.number] -> emptySet<RuntimeRule>()
+            else -> {
+                done[rule.number] = true
+                firstOfNotEmptySafe(rule, next, ifReachEnd, done)
+            }
+        }
+    }
+
+    fun firstOfNotEmptySafe(rule: RuntimeRule, next: Set<RulePosition>, ifReachEnd: Set<RuntimeRule>, done: BooleanArray): Set<RuntimeRule> {
+        val res = mutableSetOf<RuntimeRule>()
+        val pos = rule.rulePositionsAt[0]
+        for (rp in pos) {
+            val item = rp.item
+            when {
+                null == item -> error("should never happen")
+                item.isEmptyRule -> {
+                    for (rp in next) {
+                        val x = firstOfRpNotEmpty(rp, ifReachEnd)
+                        res.addAll(x)
+                    }
+                }
+                else -> when (item.kind) {
+                    RuntimeRuleKind.GOAL -> error("should never happen")
+                    RuntimeRuleKind.EMBEDDED -> res.add(item)
+                    RuntimeRuleKind.TERMINAL -> res.add(item)
+                    RuntimeRuleKind.NON_TERMINAL -> {
+                        val next = rp.next()
+                        val x = firstOfNotEmpty(item, next, ifReachEnd, done)
+                        res.addAll(x)
+                    }
+                }
+            }
+        }
+        return res
     }
 
     fun expectedAfter(rulePosition: RulePosition, doneDn: MutableMap<RulePosition, Set<RuntimeRule>> = mutableMapOf(), doneUp: MutableMap<RulePosition, Set<RuntimeRule>> = mutableMapOf()): Set<RuntimeRule> {
@@ -515,7 +603,7 @@ class ParserStateSet(
                 ppsn.flatMap { parentRp ->
                     doneUp[rulePosition] = emptySet()
                     val lh = this.expectedAfter(parentRp, doneDn, doneUp)
-                    doneUp[rulePosition] =lh
+                    doneUp[rulePosition] = lh
                     lh
                 }.toSet()
             }
@@ -541,7 +629,7 @@ class ParserStateSet(
                         RuntimeRuleKind.EMBEDDED -> TODO()
                     }
                 }
-                doneDn[rulePosition]=lh
+                doneDn[rulePosition] = lh
                 lh
             }
         }

@@ -26,9 +26,9 @@ data class RulePosition(
         val START_OF_RULE = 0
         val END_OF_RULE = -1
         //for use in multi and separated list
-        val MULIT_ITEM_POSITION = 1
-        val SLIST_SEPARATOR_POSITION = 1
-        val SLIST_ITEM_POSITION = 2
+        val MULIT_ITEM_POSITION = 1 //TODO: make -ve maybe
+        val SLIST_SEPARATOR_POSITION = 1 //TODO: make -ve maybe
+        val SLIST_ITEM_POSITION = 2 //TODO: make -ve maybe
     }
 
     val isAtStart = position == START_OF_RULE
@@ -67,7 +67,7 @@ data class RulePosition(
                 RuntimeRuleKind.TERMINAL -> TODO() // possibly these never happen!
                 RuntimeRuleKind.EMBEDDED -> TODO()
                 RuntimeRuleKind.GOAL -> when {
-                    itemRule.isSkip -> setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE))
+                    itemRule.isSkip -> setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE)) //TODO: might be wrong
                     else -> when (this.position) {
                         //0 -> setOf(RulePosition(this.runtimeRule, 0, 1))
                         0 -> setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE))
