@@ -76,7 +76,7 @@ class test_sList_compositeMulti {
                 Triple(RulePosition(nl, 0, RulePosition.START_OF_RULE), lhs_U, setOf(n)), // nl = . N cmn
 
                 Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),                 // G = S .
-                Triple(RulePosition(S, 0, RulePosition.SLIST_SEPARATOR_POSITION), lhs_U, setOf(UP)),    // So0 = nl . / ';'
+                Triple(RulePosition(S, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_SEPARATOR_POSITION), lhs_U, setOf(UP)),    // So0 = nl . / ';'
                 Triple(RulePosition(S, 2, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),                 // So2 = E .
                 Triple(RulePosition(nl, 0, 1), lhs_U, setOf(UP)),                               // nl = N . cnm
                 Triple(RulePosition(cnm, 0, RulePosition.START_OF_RULE), lhs_U, setOf(UP)),             // cnm = . cn

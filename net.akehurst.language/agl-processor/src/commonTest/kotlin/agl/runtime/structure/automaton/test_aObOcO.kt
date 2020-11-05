@@ -169,8 +169,8 @@ class test_aObOcO {
         val cl_G_S_aOpt1 = ClosureItem(cl_G_S, RulePosition(aOpt, 1, 0), RulePosition(G, 0, 0),lhs_bcU)
         val cl_G_S_aOpt1_E = ClosureItem(cl_G_S_aOpt1, RulePosition(aOpt_E, 0, RulePosition.END_OF_RULE),RulePosition(G, 0, 0), lhs_bcU)
 
-        var actual = SM.calcClosure(cl_G)
-        var expected = setOf(
+        val actual = SM.calcClosure(cl_G)
+        val expected = setOf(
                 cl_G, cl_G_S, cl_G_S_aOpt0, cl_G_S_aOpt1
         )
         assertEquals(expected, actual)
