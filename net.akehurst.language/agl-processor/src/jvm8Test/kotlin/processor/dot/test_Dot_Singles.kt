@@ -19,19 +19,16 @@ package net.akehurst.language.agl.processor.dot
 //import com.soywiz.korio.file.std.resourcesVfs
 //import java.io.BufferedReader
 //import java.io.InputStreamReader
-import java.util.ArrayList
 
-import org.junit.Assert
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import org.junit.runners.Parameterized.Parameters
-
-import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import net.akehurst.language.api.processor.LanguageProcessor
+import org.junit.Test
+import kotlin.test.assertEquals
 import kotlin.test.fail
 
 
@@ -155,7 +152,7 @@ class test_Dot_Singles {
         """.trimIndent()
         try {
             processor.parse(goal, sentence)
-        } catch (e:ParseFailedException) {
+        } catch (e: ParseFailedException) {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
     }
@@ -168,7 +165,7 @@ class test_Dot_Singles {
         """.trimIndent()
         try {
             processor.parse(goal, sentence)
-        } catch (e:ParseFailedException) {
+        } catch (e: ParseFailedException) {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
     }
@@ -181,10 +178,47 @@ class test_Dot_Singles {
         """.trimIndent()
         try {
             processor.parse(goal, sentence)
-        } catch (e:ParseFailedException) {
+        } catch (e: ParseFailedException) {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
     }
+
+    @Test
+    fun stmt_list_automaton() {
+        val goal = "stmt_list"
+        val sentence = "a -> b ;"
+
+        val converterToRuntimeRules = ConverterToRuntimeRules(processor.grammar)
+        val parser = ScanOnDemandParser(converterToRuntimeRules.transform())
+        val rrs = parser.runtimeRuleSet
+        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
+        val stmt_list = rrs.findRuntimeRule("stmt_list")
+        val stmt_list_multi = stmt_list.rhs.items[0]
+        val stmt1 = rrs.findRuntimeRule("stmt1")
+        val stmt = rrs.findRuntimeRule("stmt")
+        val SM = rrs.fetchStateSetFor(stmt_list)
+        val rps = stmt_list_multi.rulePositionsAt[0]
+        val stmt_list_0_0_firstOf = SM.firstOf(RulePosition(stmt_list,0,0), setOf(UP))
+        val stmt_list_multi_0_0_firstOf = SM.firstOf(RulePosition(stmt_list_multi,0,0), setOf(UP))
+        val stmt_list_multi_0_1_firstOf = SM.firstOf(RulePosition(stmt_list_multi,0,RulePosition.MULIT_ITEM_POSITION), setOf(UP))
+        val stmt1_0_0_firstOf = SM.firstOf(RulePosition(stmt1,0,0), setOf(UP))
+        val stmt1_0_1_firstOf = SM.firstOf(RulePosition(stmt1,0,1), setOf(UP))
+
+        fails at season 9 with edge_list
+        parser.parse(goal, sentence)
+    }
+
+    @Test
+    fun stmt_list1() {
+        val goal = "stmt_list"
+        val sentence = "a -> b ;"
+        try {
+            processor.parse(goal, sentence)
+        } catch (e: ParseFailedException) {
+            fail("${e.message} at ${e.location} expected ${e.expected}")
+        }
+    }
+
 
     @Test
     fun LionShare__stmt_list() {
@@ -291,7 +325,7 @@ class test_Dot_Singles {
         """.trimIndent()
         try {
             processor.parse(goal, sentence)
-        } catch (e:ParseFailedException) {
+        } catch (e: ParseFailedException) {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
     }

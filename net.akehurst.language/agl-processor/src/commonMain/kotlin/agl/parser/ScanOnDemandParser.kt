@@ -204,10 +204,11 @@ class ScanOnDemandParser(
                 ?: error("Internal error")
         val fr = r.filter { it.first.lastLocation.endPosition == maxLastLocation.endPosition }
         val res = fr.flatMap {
+            val ss = it.first.currentState.stateSet
             it.second.mapNotNull {
                 when {
                     it.runtimeRule.kind == RuntimeRuleKind.TERMINAL -> listOf(it.runtimeRule)
-                    else -> this.runtimeRuleSet.firstTerminals2[it]
+                    else -> ss.firstOf(it, setOf(RuntimeRuleSet.END_OF_TEXT))//this.runtimeRuleSet.firstTerminals2[it]
                 }
             }.flatten()
         }.toSet()

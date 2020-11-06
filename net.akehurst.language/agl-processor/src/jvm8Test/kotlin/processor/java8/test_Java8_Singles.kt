@@ -21,8 +21,11 @@ package net.akehurst.language.processor.java8
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.java8.test_Java8Agl_Types
+import net.akehurst.language.api.parser.ParseFailedException
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 
 class test_Java8_Singles {
 
@@ -116,7 +119,14 @@ class test_Java8_Singles {
         val t = proc.parse(goal, sentence)
     }
 
-
+    @Test
+    fun bad_Binary_Literal() {
+        val sentence = "0b012"
+        val goal = "VariableInitializer"
+        assertFailsWith(ParseFailedException::class) {
+            proc.parse(goal, sentence)
+        }
+    }
     @Test
     fun BadLiterals() {
         val sentence = """
@@ -130,7 +140,7 @@ class test_Java8_Singles {
 
 public class BadBinaryLiterals {
     int valid = 0b0;            // valid literal, illegal in source 6
-    int baddigit = 0b012;       // bad digit
+    int baddigit = 0b011;       // bad digit
                     //aaaabbbbccccddddeeeeffffgggghhhh
     int overflow1 = 0b111111111111111111111111111111111; // too long for int
                     //aaaabbbbccccddddeeeeffffgggghhhhiiiijjjjkkkkllllmmmmnnnnoooopppp
@@ -142,6 +152,14 @@ public class BadBinaryLiterals {
         val goal = "CompilationUnit"
         proc.parse(goal, sentence)
 
+    }
+
+    @Test
+    fun UnannQualifiedTypeReference1() {
+        val sentence = "Map.Entry<Object,Object> x;"
+        val goal = "BlockStatement"
+        val t = proc.parse(goal, sentence)
+        assertNotNull(t)
     }
 
     @Test

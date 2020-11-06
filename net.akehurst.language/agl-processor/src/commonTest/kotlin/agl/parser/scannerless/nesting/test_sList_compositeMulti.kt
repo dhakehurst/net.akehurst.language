@@ -85,12 +85,12 @@ class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
 
         val expected = """
          S {
-          numList {
+          nl {
             N : '1'
             cnm|1 { §empty }
           }
           SMI:';'
-          numList {
+          nl {
             N : '2'
             cnm|1 { §empty }
           }
