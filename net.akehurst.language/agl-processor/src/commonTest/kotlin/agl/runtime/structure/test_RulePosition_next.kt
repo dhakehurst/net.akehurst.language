@@ -22,6 +22,7 @@ import kotlin.test.assertFailsWith
 
 class test_RulePosition_next {
 
+
     //empty
     // S =  ;
     @Test
@@ -225,6 +226,7 @@ class test_RulePosition_next {
 
         assertEquals(expected, actual)
     }
+
     @Test
     fun sList0n__S_Item_sep() {
         val rb = RuntimeRuleSetBuilder()
@@ -300,4 +302,91 @@ class test_RulePosition_next {
         assertEquals(expected, actual)
     }
 
+    // -- S = ['a' / ',']+ ;
+    val sList1n = runtimeRuleSet {
+        sList("S", 1, -1, "'a'", "c")
+        literal("c", ",")
+        literal("'a'", "a")
+    }
+
+    @Test
+    fun sList1n__S_Empty_start() {
+        val S = sList1n.findRuntimeRule("S")
+        val SM = sList1n.fetchStateSetFor(S)
+        val G = SM.startState
+
+        val actual = RulePosition(S, RuntimeRuleItem.SLIST__EMPTY_RULE, RulePosition.START_OF_RULE).next()
+        val expected: Set<RulePosition> = emptySet() // S should never be empty
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun sList1n__S_Empty_end() {
+        val S = sList1n.findRuntimeRule("S")
+        val SM = sList1n.fetchStateSetFor(S)
+        val G = SM.startState
+
+        val actual = RulePosition(S, RuntimeRuleItem.SLIST__EMPTY_RULE, RulePosition.END_OF_RULE).next()
+        val expected: Set<RulePosition> = emptySet() // S should never be empty
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun sList1n__S_Item_start() {
+        val S = sList1n.findRuntimeRule("S")
+        val SM = sList1n.fetchStateSetFor(S)
+        val G = SM.startState
+
+        val rp = RulePosition(S, RuntimeRuleItem.SLIST__ITEM, RulePosition.START_OF_RULE)
+        val actual = rp.next()
+        val expected: Set<RulePosition> = setOf(
+                RulePosition(S, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_SEPARATOR_POSITION),
+                RulePosition(S, RuntimeRuleItem.SLIST__ITEM, RulePosition.END_OF_RULE)
+        )
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun sList1n__S_Item_sep() {
+        val S = sList1n.findRuntimeRule("S")
+        val SM = sList1n.fetchStateSetFor(S)
+        val G = SM.startState
+
+        val rp = RulePosition(S, RuntimeRuleItem.SLIST__ITEM, RulePosition.SLIST_SEPARATOR_POSITION)
+        assertFailsWith(IllegalStateException::class) {
+            val actual = rp.next()
+        }
+
+        //assertEquals(expected, actual)
+    }
+
+    @Test
+    fun sList1n__S_Sep_sep() {
+        val S = sList1n.findRuntimeRule("S")
+        val SM = sList1n.fetchStateSetFor(S)
+        val G = SM.startState
+
+        val rp = RulePosition(S, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_SEPARATOR_POSITION)
+        val actual = rp.next()
+        val expected: Set<RulePosition> = setOf(
+                RulePosition(S, RuntimeRuleItem.SLIST__ITEM, RulePosition.SLIST_ITEM_POSITION)
+        )
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun sList1n__S_Sep_Item() {
+        val S = sList1n.findRuntimeRule("S")
+        val SM = sList1n.fetchStateSetFor(S)
+        val G = SM.startState
+
+        val rp = RulePosition(S, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_ITEM_POSITION)
+        assertFailsWith(IllegalStateException::class) {
+            val actual = rp.next()
+        }
+    }
 }

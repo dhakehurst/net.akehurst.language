@@ -495,7 +495,7 @@ class ParserStateSet(
                 RuntimeRuleSet.USE_PARENT_LOOKAHEAD_RULE_NUMBER == rule.number -> TODO()
                 else -> error("unsupported rule number $rule")
             }
-            done[rule.number] -> FirstOfResult(false, emptySet())
+            done[rule.number] -> _firstOfNotEmpty[rule.number]?:FirstOfResult(false, emptySet())
             else -> {
                 var result = _firstOfNotEmpty[rule.number]
                 if (null == result) {
