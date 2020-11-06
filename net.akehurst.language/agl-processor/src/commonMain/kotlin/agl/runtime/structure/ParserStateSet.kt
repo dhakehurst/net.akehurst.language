@@ -508,26 +508,17 @@ class ParserStateSet(
     }
 
     fun firstOf(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>): Set<RuntimeRule> {
-        val result = mutableSetOf<RuntimeRule>()
-        val res = firstOfRpNotEmpty(rulePosition)
-        result.addAll(res.result)
-        val x = when (res.needsNext) {
-            false -> res.result
-            true -> when {
-                rulePosition.isAtEnd -> ifReachEnd
-                else -> {
-                    val next = rulePosition.next()
-                    //ensure don't look again at this rulePosition
-                    // sList and multi can return same rp when calling next
-                    val nextNotSame = next.filter { it != rulePosition }
-                    nextNotSame.flatMap {
-                        firstOf(it, ifReachEnd) //will always terminate in rps that are at end
-                    }.toSet()
+        return when {
+            rulePosition.isAtEnd -> ifReachEnd
+            else -> {
+                // this will iterate .next() until end of rule so no need to do it here
+                val res = firstOfRpNotEmpty(rulePosition)
+                when (res.needsNext) {
+                    false -> res.result
+                    else -> res.result + ifReachEnd
                 }
             }
         }
-        result.addAll(x)
-        return result
     }
 
     data class FirstOfResult(
@@ -535,99 +526,86 @@ class ParserStateSet(
             val result: Set<RuntimeRule>
     )
 
-    fun firstOfRpNotEmpty(rulePosition: RulePosition): FirstOfResult {
-        return when {
-            rulePosition.isAtEnd -> FirstOfResult(true, emptySet())
-            else -> {
-                val item = rulePosition.item
+    fun firstOfRpNotEmpty(rulePosition: RulePosition, done: BooleanArray = BooleanArray(this.runtimeRuleSet.runtimeRules.size)): FirstOfResult {
+        /*DEBUG*/ if (rulePosition.isAtEnd) error("Internal Error")
+        var needsNext = false
+        val result = mutableSetOf<RuntimeRule>()
+
+        var rps = setOf(rulePosition)
+        while (rps.isNotEmpty()) {
+            val nrps = mutableSetOf<RulePosition>()
+            for (rp in rps) {
+                //TODO: handle self recursion, i.e. multi/slist perhaps filter out rp from rp.next or need a 'done' map to results
+                val item = rp.item
                 when {
-                    null == item -> error("should never happen")
-                    item.isEmptyRule -> FirstOfResult(true, emptySet())
+                    //item is null only when rp.isAtEnd
+                    null == item /*rp.isAtEnd*/ -> needsNext = true
+                    item.isEmptyRule -> nrps.addAll(rp.next())
                     else -> when (item.kind) {
-                        RuntimeRuleKind.GOAL -> error("should never happen")
-                        RuntimeRuleKind.EMBEDDED -> FirstOfResult(false, setOf(item))
-                        RuntimeRuleKind.TERMINAL -> FirstOfResult(false, setOf(item))
+                        RuntimeRuleKind.GOAL -> TODO()
+                        RuntimeRuleKind.TERMINAL -> result.add(item)
+                        RuntimeRuleKind.EMBEDDED -> result.add(item)
                         RuntimeRuleKind.NON_TERMINAL -> {
-                            val res = firstOfNotEmpty(item)
-                            when (res.needsNext) {
-                                false -> res
-                                true -> {
-                                    var needsNext = false
-                                    val result = mutableSetOf<RuntimeRule>()
-                                    result.addAll(res.result)
-                                    need to repeat this until end or not needs next
-                                    val nextRp = rulePosition.next()
-                                    //ensure don't look again at this rulePosition
-                                    // sList and multi can return same rp when calling next
-                                    val nextNotSame = nextRp.filter { it != rulePosition }
-                                    for(nrp in nextNotSame) {
-                                        val n = firstOfRpNotEmpty(nrp)
-                                        needsNext = needsNext && n.needsNext
-                                        result.addAll(n.result)
-                                    }
-                                    FirstOfResult(needsNext,result)
-                                }
-                            }
+                            val f = firstOfNotEmpty(item,done)
+                            result.addAll(f.result)
+                            if (f.needsNext) nrps.addAll(rp.next())
                         }
                     }
                 }
             }
+            rps = nrps
         }
+        return FirstOfResult(needsNext, result)
     }
 
     //TODO: use smaller array for done, but would to map rule number!
-    fun firstOfNotEmpty(rule: RuntimeRule, done: BooleanArray = BooleanArray(this.runtimeRuleSet.runtimeRules.size)): FirstOfResult {
-        return when {
+    private val _firstOfNotEmpty = Array<FirstOfResult?>(this.runtimeRuleSet.runtimeRules.size,{null})
+   fun firstOfNotEmpty(rule: RuntimeRule, done: BooleanArray): FirstOfResult {
+    //fun firstOfNotEmpty(rule: RuntimeRule): FirstOfResult {
+            return when {
             0 > rule.number -> when {
                 RuntimeRuleSet.GOAL_RULE_NUMBER == rule.number -> TODO()
                 RuntimeRuleSet.EOT_RULE_NUMBER == rule.number -> TODO()
                 RuntimeRuleSet.SKIP_RULE_NUMBER == rule.number -> TODO()
-                RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER == rule.number -> firstOfNotEmptySafe(rule, done)
+                RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER == rule.number -> firstOfNotEmptySafe(rule,done)
                 RuntimeRuleSet.USE_PARENT_LOOKAHEAD_RULE_NUMBER == rule.number -> TODO()
                 else -> error("unsupported rule number $rule")
             }
             done[rule.number] -> FirstOfResult(false, emptySet())
             else -> {
-                done[rule.number] = true
-                firstOfNotEmptySafe(rule, done)
+                var result = _firstOfNotEmpty[rule.number]
+                if (null==result) {
+                    done[rule.number] = true
+                    result = firstOfNotEmptySafe(rule,done)
+                    _firstOfNotEmpty[rule.number] = result
+                }
+                result
             }
         }
     }
 
-    fun firstOfNotEmptySafe(rule: RuntimeRule, done: BooleanArray): FirstOfResult {
+    fun firstOfNotEmptySafe(rule: RuntimeRule,done: BooleanArray): FirstOfResult {
         var needsNext = false
-        val res = mutableSetOf<RuntimeRule>()
+        val result = mutableSetOf<RuntimeRule>()
         val pos = rule.rulePositionsAt[0]
         for (rp in pos) {
             val item = rp.item
             when {
                 null == item -> error("should never happen")
-                item.isEmptyRule -> needsNext = true
+                item.isEmptyRule -> needsNext = true //should not happen
                 else -> when (item.kind) {
                     RuntimeRuleKind.GOAL -> error("should never happen")
-                    RuntimeRuleKind.EMBEDDED -> res.add(item)
-                    RuntimeRuleKind.TERMINAL -> res.add(item)
+                    RuntimeRuleKind.EMBEDDED -> result.add(item)
+                    RuntimeRuleKind.TERMINAL -> result.add(item)
                     RuntimeRuleKind.NON_TERMINAL -> {
-                        do {
-                            var x = firstOfNotEmpty(item, done)
-                            res.addAll(x.result)
-                            when (x.needsNext) {
-                                false -> null
-                                else -> {
-                                    val nextRp = rp.next()
-                                    for (nrp in nextRp) {
-                                        x = firstOfRpNotEmpty(nrp)
-                                        needsNext = needsNext && x.needsNext
-                                        res.addAll(x.result)
-                                    }
-                                }
-                            }
-                        } while(x.needsNext) or reached end
+                        val f = firstOfRpNotEmpty(rp, done)
+                        result.addAll(f.result)
+                        needsNext = needsNext || f.needsNext
                     }
                 }
             }
         }
-        return FirstOfResult(needsNext,res)
+        return FirstOfResult(needsNext, result)
     }
 
     fun expectedAfter(rulePosition: RulePosition, doneDn: MutableMap<RulePosition, Set<RuntimeRule>> = mutableMapOf(), doneUp: MutableMap<RulePosition, Set<RuntimeRule>> = mutableMapOf()): Set<RuntimeRule> {

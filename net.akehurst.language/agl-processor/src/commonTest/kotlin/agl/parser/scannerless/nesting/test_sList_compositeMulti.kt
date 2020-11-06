@@ -87,12 +87,12 @@ class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
          S {
           numList {
             N : '1'
-            cmExpMl|1 { §empty }
+            cnm|1 { §empty }
           }
           SMI:';'
           numList {
             N : '2'
-            cmExpMl|1 { §empty }
+            cnm|1 { §empty }
           }
         }
         """.trimIndent()

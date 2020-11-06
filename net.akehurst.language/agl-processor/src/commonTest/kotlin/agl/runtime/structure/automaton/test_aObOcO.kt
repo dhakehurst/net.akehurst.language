@@ -45,6 +45,8 @@ class test_aObOcO {
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
         val G = SM.startState.runtimeRule
+        val EOT = RuntimeRuleSet.END_OF_TEXT
+        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
         val s0 = SM.startState
         val s1 = SM.states[RulePosition(a, 0, RulePosition.END_OF_RULE)]
@@ -52,60 +54,38 @@ class test_aObOcO {
 
         val lhs_U = LookaheadSet.UP
         val lhs_T = LookaheadSet.EOT
-        val lhs_bcU = rrs.createLookaheadSet(setOf(b, c, RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        val lhs_bcU = rrs.createLookaheadSet(setOf(b, c, UP))
     }
 
 
     @Test
     fun firstOf() {
 
-        var actual = s0.stateSet.firstOf(RulePosition(G, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        var expected = setOf(a, b, c, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
+        val rulePositions = listOf(
+                Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // cOpt = . empty
+                Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, setOf(c)),        // cOpt = . c
+                Triple(RulePosition(bOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // bOpt = . empty
+                Triple(RulePosition(bOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, setOf(b)),        // bOpt = . b
+                Triple(RulePosition(aOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // aOpt = . empty
+                Triple(RulePosition(aOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, setOf(a)),        // aOpt = . a
+                Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),              // S = a? b? c? .
+                Triple(RulePosition(S, 0, 2), lhs_U, setOf(c, UP)),                           // S = a? b? . c?
+                Triple(RulePosition(S, 0, 1), lhs_U, setOf(b, c, UP)),                        // S = a? . b? c?
+                Triple(RulePosition(S, 0, 0), lhs_U, setOf(a, b, c, UP)),                     // S = a? . b? c?
+                Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),               // G = S .
+                Triple(RulePosition(G, 0, 0), lhs_U, setOf(a, b, c, UP))                      // G = . S
+        )
 
-        actual = s0.stateSet.firstOf(RulePosition(G, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
+        for (t in rulePositions) {
+            val rp = t.first
+            val lhs = t.second
+            val expected = t.third
 
-        actual = s0.stateSet.firstOf(RulePosition(S, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)) // S = . a? b? c?
-        expected = setOf(a, b, c, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
+            val actual = SM.firstOf(rp, lhs.content)
 
-        actual = s0.stateSet.firstOf(RulePosition(S, 0, 1), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))  // S = a? . b? c?
-        expected = setOf(b, c, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
+            assertEquals(expected, actual, "failed $rp")
+        }
 
-        actual = s0.stateSet.firstOf(RulePosition(S, 0, 2), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))  // S = a? b? . c?
-        expected = setOf(c, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.firstOf(RulePosition(S, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))  // S = a? b? c? .
-        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.firstOf(RulePosition(aOpt, RuntimeRuleItem.MULTI__ITEM, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(a)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.firstOf(RulePosition(aOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.firstOf(RulePosition(bOpt, RuntimeRuleItem.MULTI__ITEM, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(b)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.firstOf(RulePosition(bOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.firstOf(RulePosition(cOpt, RuntimeRuleItem.MULTI__ITEM, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(c)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.firstOf(RulePosition(cOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
     }
 
     @Test
@@ -162,12 +142,12 @@ class test_aObOcO {
 
     @Test
     fun createClosure() {
-        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0),lhs_bcU)
-        val cl_G_S = ClosureItem(cl_G, RulePosition(S, 0, 0),RulePosition(G, 0, 0), lhs_bcU)
-        val cl_G_S_aOpt0 = ClosureItem(cl_G_S, RulePosition(aOpt, 0, 0), RulePosition(G, 0, 0),lhs_bcU)
+        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0), lhs_bcU)
+        val cl_G_S = ClosureItem(cl_G, RulePosition(S, 0, 0), RulePosition(S, 0, 1), lhs_bcU)
+        val cl_G_S_aOpt0 = ClosureItem(cl_G_S, RulePosition(aOpt, 0, 0), RulePosition(G, 0, 0), lhs_bcU)
         //val cl_G_S_aOpt0_a = ClosureItem(cl_G_S_aOpt0, RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_bcU)
-        val cl_G_S_aOpt1 = ClosureItem(cl_G_S, RulePosition(aOpt, 1, 0), RulePosition(G, 0, 0),lhs_bcU)
-        val cl_G_S_aOpt1_E = ClosureItem(cl_G_S_aOpt1, RulePosition(aOpt_E, 0, RulePosition.END_OF_RULE),RulePosition(G, 0, 0), lhs_bcU)
+        val cl_G_S_aOpt1 = ClosureItem(cl_G_S, RulePosition(aOpt, 1, 0), RulePosition(G, 0, 0), lhs_bcU)
+        val cl_G_S_aOpt1_E = ClosureItem(cl_G_S_aOpt1, RulePosition(aOpt_E, 0, RulePosition.END_OF_RULE), RulePosition(G, 0, 0), lhs_bcU)
 
         val actual = SM.calcClosure(cl_G)
         val expected = setOf(
@@ -180,20 +160,20 @@ class test_aObOcO {
     fun s0_transitions() {
         val actual = s0.transitions(null)
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY,null) { _, _ -> true },
-                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY,null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true },
+                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected, actual)
     }
 
-        @Test
+    @Test
     fun s1_heightOrGraftInto_s0() {
 
         val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
 
         val expected = listOf(
                 HeightGraft(
-                        RulePosition(test_leftRecursive.G, 0, 0),
+                        null,
                         RulePosition(aOpt, 0, 0),
                         RulePosition(aOpt, 0, RulePosition.END_OF_RULE),
                         lhs_bcU,

@@ -24,14 +24,14 @@ import kotlin.test.assertNotNull
 
 class test_Java8_Grammars {
 
-    @Test(timeout=50000)
+    @Test(timeout=5000)
     fun aglSpec() {
         val grammarStr = this::class.java.getResource("/java8/Java8AglSpec.agl").readText()
         val actual = Agl.processor(grammarStr)
         assertNotNull(actual)
     }
 
-    @Test//(timeout=50000)
+    @Test(timeout=5000)
     fun aglOptm() {
         val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
         //val grammarFile = Paths.get("src/jvm8Test/resources/java8/Java8OptmAgl.agl")
