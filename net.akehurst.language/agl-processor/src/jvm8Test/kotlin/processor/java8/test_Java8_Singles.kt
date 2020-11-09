@@ -163,6 +163,14 @@ public class BadBinaryLiterals {
     }
 
     @Test
+    fun UnannQualifiedTypeReference2() {
+        val sentence = "Map.Entry<Object,Object> x;"
+        val goal = "BlockStatement"
+        val t = proc.parse(goal, sentence)
+        assertNotNull(t)
+    }
+
+    @Test
     fun UnannQualifiedTypeReference() {
         val sentence = "{ Map.@An Entry<Object,Object> x; }"
         val goal = "Block"

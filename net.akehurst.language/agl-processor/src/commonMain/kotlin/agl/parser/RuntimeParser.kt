@@ -319,14 +319,14 @@ internal class RuntimeParser(
     }
 
     private fun doGoal(gn: GrowingNode) {
-        val complete = this.graph.findCompleteNode(gn.currentState.rulePosition, gn.startPosition, gn.matchedTextLength) ?: error("Should never be null")
+        val complete = this.graph.findCompleteNode(gn.currentState.rulePositions.first(), gn.startPosition, gn.matchedTextLength) ?: error("Should never be null")
         this.graph.recordGoal(complete)
     }
 
     private fun doWidth(curGn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition, noLookahead: Boolean) {
-        val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, curGn.nextInputPosition, curGn.lastLocation)
+        val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRules.first(), curGn.nextInputPosition, curGn.lastLocation)
         if (null != l) {
-//TODO: skip gets parse multiple times
+//TODO: skip gets parsed multiple times
             val skipLh = transition.lookaheadGuard.createWithParent(curGn.lookahead)
             val skipNodes = this.tryParseSkipUntilNone(skipLh, l.location)//, lh) //TODO: does the result get reused?
             val nextInput = skipNodes.lastOrNull()?.nextInputPosition ?: l.nextInputPosition
@@ -475,7 +475,7 @@ internal class RuntimeParser(
     }
 
     private fun doEmbedded(gn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition) {
-        val embeddedRule = transition.to.runtimeRule
+        val embeddedRule = transition.to.runtimeRules.first() // should only ever be one
         val endingLookahead = transition.lookaheadGuard.content
         val embeddedRuntimeRuleSet = embeddedRule.embeddedRuntimeRuleSet ?: error("Should never be null")
         val embeddedStartRule = embeddedRule.embeddedStartRule ?: error("Should never be null")

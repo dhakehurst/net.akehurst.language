@@ -61,7 +61,7 @@ class GrowingNode(
 
     val startPosition = location.position
     val matchedTextLength: Int = this.nextInputPosition - this.startPosition
-    val runtimeRule get() = currentState.runtimeRule
+    val runtimeRules get() = currentState.runtimeRules
 
     // used to augment the GrowingNodeIndex (GSS node identity) for MULTI and SEPARATED_LIST
     // needed because the 'RulePosition' does not capture the 'position' in the list
@@ -69,7 +69,7 @@ class GrowingNode(
 
     var skipNodes = mutableListOf<SPPTNode>()
     val lastLocation
-        get() = when (this.runtimeRule.kind) {
+        get() = when (this.runtimeRules.first().kind) {
             RuntimeRuleKind.TERMINAL -> if (this.skipNodes.isEmpty()) this.location else this.skipNodes.last().location
             RuntimeRuleKind.GOAL,
             RuntimeRuleKind.NON_TERMINAL -> if (children.isEmpty()) this.location else children.last().location
@@ -82,7 +82,7 @@ class GrowingNode(
     val hasCompleteChildren: Boolean get() = this.currentState.isAtEnd //this.runtimeRule.isCompleteChildren(currentState.position, numNonSkipChildren, children)
     val isLeaf: Boolean
         get() {
-            return this.runtimeRule.kind == RuntimeRuleKind.TERMINAL
+            return this.runtimeRules.first().kind == RuntimeRuleKind.TERMINAL
         }
     val isEmptyMatch: Boolean
         get() {
@@ -99,12 +99,6 @@ class GrowingNode(
         }
     }
 
-
-    val hasNextExpectedItem: Boolean
-        get() {
-            return this.runtimeRule.findHasNextExpectedItem(this.currentState.position)
-        }
-
     val nextExpectedItems: Set<RuntimeRule> by lazy {
         this.runtimeRule.findNextExpectedItems(this.currentState.position)
     }
@@ -113,11 +107,6 @@ class GrowingNode(
         get() {
             return this.runtimeRule.incrementNextItemIndex(this.currentState.position)
         }
-
-
-    fun expectsItemAt(runtimeRule: RuntimeRule, atPosition: Int): Boolean {
-        return this.runtimeRule.couldHaveChild(runtimeRule, atPosition)
-    }
 
     fun newPrevious() {
         this.previous = mutableMapOf()

@@ -63,7 +63,7 @@ class ParserStateSet(
     var preBuilt = false; private set
 
     val usedRules: Set<RuntimeRule> by lazy {
-        calcUsedRules(this.startState.runtimeRule)
+        calcUsedRules(this.startState.runtimeRules.first())
     }
     val usedTerminalRules: Set<RuntimeRule> by lazy {
         this.usedRules.filter { it.kind === RuntimeRuleKind.TERMINAL }.toSet()
@@ -77,7 +77,7 @@ class ParserStateSet(
      * LR(0) states
      * The parentRelation can be used to determine the LR(1) related lookahead
      */
-    val states = lazyMapNonNull<RulePosition, ParserState>() {
+    val states = lazyMapNonNull<Set<RulePosition>, ParserState> {
         ParserState(StateNumber(this.nextState++), it, this)
     }
 
@@ -85,12 +85,12 @@ class ParserStateSet(
 
     val startState: ParserState by lazy {
         val goalRule = RuntimeRuleSet.createGoalRule(userGoalRule)
-        val goalRP = RulePosition(goalRule, 0, 0)
+        val goalRP = setOf(RulePosition(goalRule, 0, 0))
         val startState = this.states[goalRP]
         startState
     }
 
-
+/*
     // runtimeRule -> set of rulePositions where the rule is used
     internal val parentPosition = lazyMapNonNull<RuntimeRule, Set<RulePosition>> { childRR ->
         //TODO: possibly faster to pre cache this! and goal rules currently not included!
@@ -149,7 +149,7 @@ class ParserStateSet(
         }.toSet()
         return x
     }
-
+*/
     internal val firstTerminals = lazyMapNonNull<RulePosition, Set<RuntimeRule>> { rp ->
         when (rp.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> setOf(rp.runtimeRule)
@@ -199,14 +199,14 @@ class ParserStateSet(
         val s0 = this.startState
         //val sG = this.states[s0.rulePosition.atEnd()]
         //val trans = s0.transitions(null) //+ sG.transitions(null)
-        val done = mutableSetOf<Pair<RuntimeRule, ParserState?>>()//Pair(s0, null))
+        val done = mutableSetOf<Pair<ParserState, ParserState?>>()//Pair(s0, null))
         val prevStack = Stack<Pair<ParserState, LookaheadSet>>()//.push(Pair(null, LookaheadSet.EOT))
         buildAndTraverse(s0, prevStack, done)
         preBuilt = true
         return s0.stateSet
     }
 
-    private fun buildAndTraverse(curState: ParserState, prevStack: Stack<Pair<ParserState, LookaheadSet>>, done: MutableSet<Pair<RuntimeRule, ParserState?>>) {
+    private fun buildAndTraverse(curState: ParserState, prevStack: Stack<Pair<ParserState, LookaheadSet>>, done: MutableSet<Pair<ParserState, ParserState?>>) {
         //TODO: using done here does not work, as the pair (state,prev) does not identify the path to each state, could have alternative 'prev-->prev...'
         // prob need to take the closure of each state first or something, like traditional LR SM build
         // see grammar in test_Java8_Singles.Expressions_Type__int
@@ -214,12 +214,13 @@ class ParserStateSet(
         val prevPair = prevStack.peekOrNull()
         val prevSt = prevPair?.first
         val prevLh = prevPair?.second ?: LookaheadSet.EOT
-        val dp = Pair(curState.runtimeRule, prevSt) //TODO: maybe need LH here also !, maybe done just needs to be the items on the stack!
+        val dp = Pair(curState, prevSt) //TODO: maybe need LH here also !, maybe done just needs to be the items on the stack!
         if (done.contains(dp)) {
             //do nothing more
         } else {
-            for (rp in curState.runtimeRule.rulePositions) {
-                val state = this.fetch(rp)
+            val rps = curState.runtimeRules.flatMap{ it.rulePositions }.toSet()
+            for (rp in rps) {
+                val state = this.fetch(setOf(rp)) //FIXME: this is wrong
                 done.add(dp)
                 val trans = state.transitions(prevSt)
                 for (nt in trans) {
@@ -267,11 +268,11 @@ class ParserStateSet(
     }
 */
 
-    internal fun fetch(rulePosition: RulePosition): ParserState {
+    internal fun fetch(rulePosition: Set<RulePosition>): ParserState {
         return this.states[rulePosition]
     }
 
-    internal fun fetchOrNull(rulePosition: RulePosition): ParserState? {
+    internal fun fetchOrNull(rulePosition: Set<RulePosition>): ParserState? {
         return this.states[rulePosition]
     }
 
@@ -406,6 +407,7 @@ class ParserStateSet(
         }
     }
 
+    /*
     fun calcLookaheadUp2(rulePosition: RulePosition): Set<RuntimeRule> {
         return when {
             rulePosition.isAtEnd -> LookaheadSet.UP.content
@@ -417,7 +419,7 @@ class ParserStateSet(
             }
         }
     }
-
+*/
     fun firstOf(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>): Set<RuntimeRule> {
         return when {
             rulePosition.isAtEnd -> ifReachEnd
@@ -538,7 +540,7 @@ class ParserStateSet(
         }
         return FirstOfResult(needsNext, result)
     }
-
+/*
     fun expectedAfter(rulePosition: RulePosition, doneDn: MutableMap<RulePosition, Set<RuntimeRule>> = mutableMapOf(), doneUp: MutableMap<RulePosition, Set<RuntimeRule>> = mutableMapOf()): Set<RuntimeRule> {
         return when {
             doneDn.containsKey(rulePosition) -> doneDn[rulePosition]!!
@@ -584,7 +586,7 @@ class ParserStateSet(
             }
         }
     }
-
+*/
     override fun hashCode(): Int = this.number
     override fun equals(other: Any?): Boolean = when (other) {
         is ParserStateSet -> this.number == other.number

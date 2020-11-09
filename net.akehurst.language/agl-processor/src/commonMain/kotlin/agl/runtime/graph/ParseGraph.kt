@@ -681,13 +681,14 @@ internal class ParseGraph(
 
     // for embedded segments
     fun pushToStackOf(isSkipGrowth: Boolean, newRp: ParserState, lookahead:LookaheadSet, embeddedNode: SPPTBranch, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
-        (embeddedNode as SPPTNodeAbstract).embeddedIn = newRp.runtimeRule.tag
+        val runtimeRule = newRp.runtimeRules.first()// should only ever be one
+        (embeddedNode as SPPTNodeAbstract).embeddedIn = runtimeRule.tag
         val location = embeddedNode.location
         val nextInputPosition = embeddedNode.nextInputPosition
         val children = listOf(embeddedNode)
         this.findOrCreateGrowingLeafOrEmbeddedNode(isSkipGrowth, newRp, lookahead, location, nextInputPosition, children, oldHead, previous, skipNodes)
         //val id = CompleteNodeIndex(newRp.runtimeRule.number, embeddedNode.startPosition)//newRp.choice, embeddedNode.startPosition)
-        this.completeNodes[newRp.runtimeRule, embeddedNode.startPosition] = embeddedNode
+        this.completeNodes[runtimeRule, embeddedNode.startPosition] = embeddedNode //TODO: should this be here or in leaves ?
     }
 
     fun growNextChild(isSkipGrowth: Boolean, nextRp: ParserState, lookahead:LookaheadSet, parent: GrowingNode, nextChild: SPPTNode, position: Int, skipChildren: List<SPPTNode>) {
