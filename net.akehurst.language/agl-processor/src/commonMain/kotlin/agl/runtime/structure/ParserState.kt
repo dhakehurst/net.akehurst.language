@@ -29,7 +29,7 @@ data class HeightGraft(
 class ParserState(
         val number: StateNumber,
         //val rulePosition: RulePosition,
-        val rulePositions: Set<RulePosition>,
+        val rulePositions: List<RulePosition>, //must be a list so that we can index against Growing children
         val stateSet: ParserStateSet
 ) {
 
@@ -86,6 +86,7 @@ class ParserState(
     val allBuiltTransitions: Set<Transition> get() = transitions_cache.values.filterNotNull().flatten().toSet()
 
     val runtimeRules: Set<RuntimeRule> = this.rulePositions.map { it.runtimeRule }.toSet()
+    val terminalRule = runtimeRules.first()
 
     val isAtEnd: Boolean = this.rulePositions.first().isAtEnd //either all are atEnd or none are
 
@@ -398,7 +399,7 @@ class ParserState(
     }
 
     private fun createGraftTransition3(hg: HeightGraft): Transition {
-        val runtimeGuard: Transition.(GrowingNode, RulePosition?) -> Boolean = { gn, previous ->
+        val runtimeGuard: Transition.(GrowingNode, Set<RulePosition>?) -> Boolean = { gn, previous ->
             if (null == previous) {
                 true
             } else {

@@ -19,29 +19,80 @@ package net.akehurst.language.agl.runtime.graph
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.collections.MutableStack
-import net.akehurst.language.collections.Stack
 
 class GrowingNode(
-        val isSkipGrowth: Boolean,
         val currentState: ParserState, // current rp of this node, it is growing, this changes (for new node) when children are added
-        val lookahead : LookaheadSet,
+        val lookahead: LookaheadSet,
         val location: InputLocation,
-        val nextInputPosition: Int,
         val priority: Int,
-        val children: List<SPPTNode>,
+        val children: GrowingChildren,
         val numNonSkipChildren: Int
 ) {
+    class GrowingChildNode(
+            val state: ParserState?, //if null then its skip children
+            val children: List<SPPTNode>
+    ) {
+        var nextChild: GrowingChildNode? = null
+    }
+
+    class GrowingChildren() {
+        companion object {
+            val NONE = GrowingChildren()
+        }
+
+        var nextInputPosition: Int = -1
+        lateinit var location: InputLocation
+
+        var firstChild: GrowingChildNode? = null
+        var lastChild: GrowingChildNode? = null
+
+        fun appendChild(state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildren {
+            if (null == lastChild) {
+                firstChild = GrowingChildNode(state, nextChildAlts)
+                lastChild = firstChild
+                val fstLoc = nextChildAlts[0].location
+                location = InputLocation(fstLoc.position, fstLoc.column,fstLoc.line,fstLoc.length)
+            } else {
+                val nextChild = GrowingChildNode(state, nextChildAlts)
+                lastChild!!.nextChild = nextChild
+            }
+            nextInputPosition = nextChildAlts[0].nextInputPosition
+            return this
+        }
+
+        fun appendSkip(skipChildren: List<SPPTNode>): GrowingChildren {
+            if (skipChildren.isEmpty()) {
+                //do nothing
+            } else {
+                if (null == lastChild) {
+                    firstChild = GrowingChildNode(null, skipChildren)
+                    lastChild = firstChild
+                    val fstLoc = skipChildren.first().location
+                    val length = skipChildren.last().location.endPosition - fstLoc.position
+                    location = InputLocation(fstLoc.position, fstLoc.column,fstLoc.line,length)
+                } else {
+                    val nextChild = GrowingChildNode(null, skipChildren)
+                    lastChild!!.nextChild = nextChild
+                    location.length
+                }
+                nextInputPosition = skipChildren.last().nextInputPosition
+            }
+            return this
+        }
+
+    }
 
     companion object {
-        fun index(state:ParserState, startPosition:Int, nextInputPosition: Int, children: List<SPPTNode>) :GrowingNodeIndex {
+        fun index(state: ParserState, startPosition: Int, nextInputPosition: Int, children: List<SPPTNode>): GrowingNodeIndex {
             val listSize = listSize(state.runtimeRule, children.size)
-            return GrowingNodeIndex(state, startPosition, nextInputPosition,listSize)
-        }
-        fun index(state:ParserState, startPosition:Int, nextInputPosition: Int, listSize:Int) :GrowingNodeIndex {
             return GrowingNodeIndex(state, startPosition, nextInputPosition, listSize)
         }
-        fun listSize(runtimeRule: RuntimeRule, childrenSize:Int) : Int = when (runtimeRule.kind) {
+
+        fun index(state: ParserState, startPosition: Int, nextInputPosition: Int, listSize: Int): GrowingNodeIndex {
+            return GrowingNodeIndex(state, startPosition, nextInputPosition, listSize)
+        }
+
+        fun listSize(runtimeRule: RuntimeRule, childrenSize: Int): Int = when (runtimeRule.kind) {
             RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.kind) {
                 RuntimeRuleItemKind.EMPTY -> -1
                 RuntimeRuleItemKind.CONCATENATION -> -1
@@ -61,11 +112,14 @@ class GrowingNode(
 
     val startPosition = location.position
     val matchedTextLength: Int = this.nextInputPosition - this.startPosition
-    val runtimeRules get() = currentState.runtimeRules
+    val runtimeRules = currentState.runtimeRules
+    val terminalRule = runtimeRules.first()
+    val nextInputPosition: Int get() = children.nextInputPosition
+    val location: InputLocation get() = children.location
 
     // used to augment the GrowingNodeIndex (GSS node identity) for MULTI and SEPARATED_LIST
     // needed because the 'RulePosition' does not capture the 'position' in the list
-    val listSize:Int get() = listSize(this.currentState.runtimeRule, this.children.size)
+    val listSize: Int get() = listSize(this.currentState.runtimeRule, this.children.size)
 
     var skipNodes = mutableListOf<SPPTNode>()
     val lastLocation
@@ -79,7 +133,6 @@ class GrowingNode(
 
     var previous: MutableMap<GrowingNodeIndex, PreviousInfo> = mutableMapOf()
     val next: MutableSet<GrowingNode> = mutableSetOf() //TODO: do we actually need this?
-    val hasCompleteChildren: Boolean get() = this.currentState.isAtEnd //this.runtimeRule.isCompleteChildren(currentState.position, numNonSkipChildren, children)
     val isLeaf: Boolean
         get() {
             return this.runtimeRules.first().kind == RuntimeRuleKind.TERMINAL
@@ -95,18 +148,22 @@ class GrowingNode(
         if (this.isLeaf || this.isEmptyMatch) {//or this.hasCompleteChildren) {
             false
         } else {
-            this.runtimeRule.canGrowWidth(this.currentState.position)
+            this.currentState.isAtEnd.not()
+//            this.runtimeRule.canGrowWidth(this.currentState.position)
         }
     }
 
     val nextExpectedItems: Set<RuntimeRule> by lazy {
-        this.runtimeRule.findNextExpectedItems(this.currentState.position)
+        this.currentState.rulePositions.mapNotNull { it.item }.toSet()
+        //this.runtimeRule.findNextExpectedItems(this.currentState.position)
     }
 
+    /*
     val incrementedNextItemIndex: Int
         get() {
             return this.runtimeRule.incrementNextItemIndex(this.currentState.position)
         }
+*/
 
     fun newPrevious() {
         this.previous = mutableMapOf()
@@ -121,7 +178,7 @@ class GrowingNode(
 
     fun addPrevious(previousNode: GrowingNode) {
         val info = PreviousInfo(previousNode)
-        val gi = GrowingNode.index(previousNode.currentState, previousNode.startPosition, previousNode.nextInputPosition,  previousNode.listSize)//, previousNode.nextInputPosition, previousNode.priority)
+        val gi = GrowingNode.index(previousNode.currentState, previousNode.startPosition, previousNode.nextInputPosition, previousNode.listSize)//, previousNode.nextInputPosition, previousNode.priority)
         this.previous.put(gi, info)
         previousNode.addNext(this)
     }
@@ -136,10 +193,10 @@ class GrowingNode(
 
     fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {
         var r = "$currentState,$startPosition,$nextInputPosition,"
-        r += if (this.hasCompleteChildren) "C" else this.currentState.position
-        val name = this.runtimeRule.tag //if (this.runtimeRule.isTerminal) "'${this.runtimeRule.patternText}'" else this.runtimeRule.name
-        r += ":" + name + "(" + this.runtimeRule.number + ")"
-
+        r += if (this.currentState.isAtEnd) "C" else this.currentState.rulePositions.first().position
+        val name = this.currentState.runtimeRules.joinToString(prefix = "[", separator = ",", postfix = "]") { "${it.tag}(${it.number})" }
+        r += ":" + name
+/*
         if (withChildren) {
             if (this.isLeaf) {
                 // no children
@@ -155,7 +212,7 @@ class GrowingNode(
                 }
             }
         }
-
+*/
         if (withPrevious) {
             val visited = HashSet<GrowingNode>()
             r += this.toStringPrevious(visited)

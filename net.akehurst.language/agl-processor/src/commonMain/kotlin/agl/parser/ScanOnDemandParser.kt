@@ -180,6 +180,8 @@ class ScanOnDemandParser(
             rp.resetGraphToLastGrown()
             rp.tryGrowHeightOrGraft()
         }
+        TODO()
+        /*
         val r = poss.map { lg ->
             // compute next expected item/RuntimeRule
             when (lg.runtimeRule.kind) {
@@ -213,6 +215,7 @@ class ScanOnDemandParser(
             }.flatten()
         }.toSet()
         return Pair(maxLastLocation, res)
+         */
     }
 
     private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromCharSequence, gns: List<GrowingNode>): Set<RuntimeRule> {
