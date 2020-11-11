@@ -45,10 +45,6 @@ class InputFromString(
 
     var text: String = sentence; private set
 
-    // used by SPPTParser to build up the sentence
-    internal fun append(value: String) {
-        this.text += value
-    }
 
     //internal val leaves: MutableMap<LeafIndex, SPPTLeafDefault?> = mutableMapOf()
     // leaves[runtimeRule, position]
@@ -56,6 +52,11 @@ class InputFromString(
 
     fun reset() {
         this.leaves.clear()
+    }
+
+    // used by SPPTParser to build up the sentence
+    internal fun append(value: String) {
+        this.text += value
     }
 
     operator fun get(startPosition: Int, nextInputPosition: Int): String {

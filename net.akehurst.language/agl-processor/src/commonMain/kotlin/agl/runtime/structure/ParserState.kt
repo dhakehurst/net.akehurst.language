@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.graph.GrowingNode
 data class HeightGraft(
         val prev: RulePosition?,
         val parent: Set<RulePosition>,
-        val parentNext: Set<RulePosition>,
+        val parentNext: List<RulePosition>,
         val lhs: LookaheadSet,
         val upLhs: LookaheadSet
 )
@@ -36,16 +36,17 @@ class ParserState(
     companion object {
         val multiRuntimeGuard: Transition.(GrowingNode) -> Boolean = { gn: GrowingNode ->
             val previousRp = gn.currentState.rulePositions.first() //FIXME:
+            val runtimeRule = gn.runtimeRules.first()
             when {
-                previousRp.isAtEnd -> gn.children.size + 1 >= gn.runtimeRule.rhs.multiMin
+                previousRp.isAtEnd -> gn.children.numberNonSkip + 1 >= runtimeRule.rhs.multiMin
                 previousRp.position == RulePosition.MULIT_ITEM_POSITION -> {
                     //if the to state creates a complete node then min must be >= multiMin
                     if (this.to.rulePositions.first().isAtEnd) {
-                        val minSatisfied = gn.children.size + 1 >= gn.runtimeRule.rhs.multiMin
-                        val maxSatisfied = -1 == gn.runtimeRule.rhs.multiMax || gn.children.size + 1 <= gn.runtimeRule.rhs.multiMax
+                        val minSatisfied = gn.children.numberNonSkip + 1 >= runtimeRule.rhs.multiMin
+                        val maxSatisfied = -1 == runtimeRule.rhs.multiMax || gn.children.numberNonSkip + 1 <= runtimeRule.rhs.multiMax
                         minSatisfied && maxSatisfied
                     } else {
-                        -1 == gn.runtimeRule.rhs.multiMax || gn.children.size + 1 <= gn.runtimeRule.rhs.multiMax
+                        -1 == runtimeRule.rhs.multiMax || gn.children.numberNonSkip + 1 <= runtimeRule.rhs.multiMax
                     }
 
                 }
@@ -54,26 +55,27 @@ class ParserState(
         }
         val sListRuntimeGuard: Transition.(GrowingNode) -> Boolean = { gn: GrowingNode ->
             val previousRp = gn.currentState.rulePositions.first() //FIXME:
+            val runtimeRule = gn.runtimeRules.first()
             when {
-                previousRp.isAtEnd -> (gn.children.size / 2) + 1 >= gn.runtimeRule.rhs.multiMin
+                previousRp.isAtEnd -> (gn.children.numberNonSkip / 2) + 1 >= runtimeRule.rhs.multiMin
                 previousRp.position == RulePosition.SLIST_ITEM_POSITION -> {
                     //if the to state creates a complete node then min must be >= multiMin
                     if (this.to.rulePositions.first().isAtEnd) {
-                        val minSatisfied = (gn.children.size / 2) + 1 >= gn.runtimeRule.rhs.multiMin
-                        val maxSatisfied = -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2) + 1 <= gn.runtimeRule.rhs.multiMax
+                        val minSatisfied = (gn.children.numberNonSkip / 2) + 1 >= runtimeRule.rhs.multiMin
+                        val maxSatisfied = -1 == runtimeRule.rhs.multiMax || (gn.children.numberNonSkip / 2) + 1 <= runtimeRule.rhs.multiMax
                         minSatisfied && maxSatisfied
                     } else {
-                        -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2) + 1 <= gn.runtimeRule.rhs.multiMax
+                        -1 == runtimeRule.rhs.multiMax || (gn.children.numberNonSkip / 2) + 1 <= runtimeRule.rhs.multiMax
                     }
                 }
                 previousRp.position == RulePosition.SLIST_SEPARATOR_POSITION -> {
                     //if the to state creates a complete node then min must be >= multiMin
                     if (this.to.rulePositions.first().isAtEnd) {
-                        val minSatisfied = (gn.children.size / 2) + 1 >= gn.runtimeRule.rhs.multiMin
-                        val maxSatisfied = -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2) + 1 < gn.runtimeRule.rhs.multiMax
+                        val minSatisfied = (gn.children.numberNonSkip / 2) + 1 >= runtimeRule.rhs.multiMin
+                        val maxSatisfied = -1 == runtimeRule.rhs.multiMax || (gn.children.numberNonSkip / 2) + 1 < runtimeRule.rhs.multiMax
                         minSatisfied && maxSatisfied
                     } else {
-                        -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2) + 1 < gn.runtimeRule.rhs.multiMax
+                        -1 == runtimeRule.rhs.multiMax || (gn.children.numberNonSkip / 2) + 1 < runtimeRule.rhs.multiMax
                     }
                 }
                 else -> true
@@ -142,7 +144,7 @@ class ParserState(
             pns.map { parentNext ->
                 val lhsc = this.stateSet.firstOf(parentNext, upLhs.content)// this.stateSet.expectedAfter(parentNext)
                 val lhs = this.createLookaheadSet(lhsc)
-                HeightGraft(prev, setOf(parent), setOf(parentNext), lhs, upLhs)
+                HeightGraft(prev, setOf(parent), listOf(parentNext), lhs, upLhs)
             }
         }
         val grouped = res.groupBy { listOf(it.prev, it.parent, it.parentNext) }//, it.lhs) }
@@ -152,13 +154,13 @@ class ParserState(
                     val parentNext = it.key[2] as RulePosition
                     val lhs = createLookaheadSet(it.value.flatMap { it.lhs.content }.toSet())
                     val upLhs = createLookaheadSet(it.value.flatMap { it.upLhs.content }.toSet())
-                    HeightGraft(prev, setOf(parent), setOf(parentNext), lhs, upLhs)
+                    HeightGraft(prev, setOf(parent), listOf(parentNext), lhs, upLhs)
                 }
         val grouped2 = grouped.groupBy { listOf(it.parent.first().isAtEnd, it.lhs, it.upLhs) }
                 .map {
                     val prev = null
                     val parent = it.value.flatMap { it.parent }.toSet()
-                    val parentNext = it.value.flatMap { it.parentNext }.toSet()
+                    val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
                     val lhs = it.key[1] as LookaheadSet
                     val upLhs = it.key[2] as LookaheadSet
                     HeightGraft(prev, parent, parentNext, lhs, upLhs)
@@ -376,7 +378,7 @@ class ParserState(
     private fun createWidthTransition(rp: RulePosition, lookaheadSet: LookaheadSet): Transition {
         val action = Transition.ParseAction.WIDTH
         val toRp = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE) //TODO: is this not passed in ? //assumes rp is a terminal
-        val to = this.stateSet.states[setOf(toRp)]
+        val to = this.stateSet.states[listOf(toRp)]
         val lh = lookaheadSet
         // upLookahead and prevGuard are unused
         return Transition(this, to, action, lh, LookaheadSet.EMPTY, null) { _, _ -> true }
@@ -385,7 +387,7 @@ class ParserState(
     private fun createEmbeddedTransition(rp: RulePosition, lookaheadSet: LookaheadSet): Transition {
         val action = Transition.ParseAction.EMBED
         val toRp = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE) //TODO: is this not passed in ?
-        val to = this.stateSet.states[setOf(toRp)]
+        val to = this.stateSet.states[listOf(toRp)]
         val lh = lookaheadSet
         // upLookahead and prevGuard are unused
         return Transition(this, to, action, lh, LookaheadSet.EMPTY, null) { _, _ -> true }
@@ -399,7 +401,7 @@ class ParserState(
     }
 
     private fun createGraftTransition3(hg: HeightGraft): Transition {
-        val runtimeGuard: Transition.(GrowingNode, Set<RulePosition>?) -> Boolean = { gn, previous ->
+        val runtimeGuard: Transition.(GrowingNode, List<RulePosition>?) -> Boolean = { gn, previous ->
             if (null == previous) {
                 true
             } else {

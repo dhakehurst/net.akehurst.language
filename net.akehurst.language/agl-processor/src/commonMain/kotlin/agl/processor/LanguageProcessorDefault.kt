@@ -58,13 +58,13 @@ internal class LanguageProcessorDefault(
         return this
     }
 
-    override fun scan(inputText: CharSequence): List<SPPTLeaf> {
+    override fun scan(inputText: String): List<SPPTLeaf> {
         return this.parser.scan(inputText);
     }
 
-    override fun parse(inputText: CharSequence): SharedPackedParseTree = parse(this.goalRuleName, inputText)
+    override fun parse(inputText: String): SharedPackedParseTree = parse(this.goalRuleName, inputText)
 
-    override fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree {
+    override fun parse(goalRuleName: String, inputText: String): SharedPackedParseTree {
         val sppt: SharedPackedParseTree = this.parser.parse(goalRuleName, inputText)
         return sppt
     }
@@ -77,14 +77,14 @@ internal class LanguageProcessorDefault(
     }
 
     override fun <T : Any> process(asmType: KClass<in T>, sppt: SharedPackedParseTree): T = this._process(sppt, asmType).first
-    override fun <T : Any> process(asmType: KClass<in T>, inputText: CharSequence): T = this.process(asmType, this.goalRuleName, inputText)
-    override fun <T : Any> process(asmType: KClass<in T>, goalRuleName: String, inputText: CharSequence): T {
+    override fun <T : Any> process(asmType: KClass<in T>, inputText: String): T = this.process(asmType, this.goalRuleName, inputText)
+    override fun <T : Any> process(asmType: KClass<in T>, goalRuleName: String, inputText: String): T {
         val sppt: SharedPackedParseTree = this.parse(goalRuleName, inputText)
         return this.process(asmType, sppt)
     }
 
-    override fun <T : Any> formatText(asmType: KClass<in T>, inputText: CharSequence): String = formatTextForGoal<T>(asmType, this.goalRuleName, inputText)
-    override fun <T : Any> formatTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: CharSequence): String {
+    override fun <T : Any> formatText(asmType: KClass<in T>, inputText: String): String = formatTextForGoal<T>(asmType, this.goalRuleName, inputText)
+    override fun <T : Any> formatTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: String): String {
         val asm = this.process<T>(asmType, goalRuleName, inputText)
         return this.formatAsm(asmType, asm)
     }
@@ -97,19 +97,19 @@ internal class LanguageProcessorDefault(
         }
     }
 
-    override fun expectedAt(inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem> = expectedAt(this.goalRuleName, inputText, position, desiredDepth)
-    override fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem> {
+    override fun expectedAt(inputText: String, position: Int, desiredDepth: Int): List<CompletionItem> = expectedAt(this.goalRuleName, inputText, position, desiredDepth)
+    override fun expectedAt(goalRuleName: String, inputText: String, position: Int, desiredDepth: Int): List<CompletionItem> {
         val parserExpected: Set<RuntimeRule> = this.parser.expectedAt(goalRuleName, inputText, position);
         val grammarExpected: List<RuleItem> = parserExpected.filter { it !== RuntimeRuleSet.END_OF_TEXT }.map { this.converterToRuntimeRules.originalRuleItemFor(it) }
         val expected = grammarExpected.flatMap { this.completionProvider.provideFor(it, desiredDepth) }
         return expected.toSet().toList()
     }
 
-    override fun <T : Any> analyseText(asmType: KClass<in T>, inputText: CharSequence): List<SemanticAnalyserItem> {
+    override fun <T : Any> analyseText(asmType: KClass<in T>, inputText: String): List<SemanticAnalyserItem> {
         return this.analyseTextForGoal(asmType, this.goalRuleName, inputText)
     }
 
-    override fun <T : Any> analyseTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: CharSequence): List<SemanticAnalyserItem> {
+    override fun <T : Any> analyseTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: String): List<SemanticAnalyserItem> {
         val sppt: SharedPackedParseTree = this.parse(goalRuleName, inputText)
         val p = this._process(sppt, asmType)
         val asm = p.first

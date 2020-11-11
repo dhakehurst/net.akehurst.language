@@ -26,7 +26,7 @@ class test_InputFromCharSequence {
     @Test
     fun construct() {
         val inputText = ""
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(0,inputText)
 
         assertNotNull(sut)
     }
@@ -34,7 +34,7 @@ class test_InputFromCharSequence {
     @Test
     fun isStart_empty_at_start() {
         val inputText = ""
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isStart(0)
 
@@ -44,7 +44,7 @@ class test_InputFromCharSequence {
     @Test
     fun isStart_empty_after_start() {
         val inputText = ""
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isStart(1)
 
@@ -54,7 +54,7 @@ class test_InputFromCharSequence {
     @Test
     fun isStart_full_at_start() {
         val inputText = "abcdefg"
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isStart(0)
 
@@ -64,7 +64,7 @@ class test_InputFromCharSequence {
     @Test
     fun isStart_full_after_start() {
         val inputText = "abcdefg"
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isStart(1)
 
@@ -74,7 +74,7 @@ class test_InputFromCharSequence {
     @Test
     fun isStart_full_before_end() {
         val inputText = "abcdefg"
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isStart(5)
 
@@ -84,7 +84,7 @@ class test_InputFromCharSequence {
     @Test
     fun isStart_full_at_end() {
         val inputText = "abcdefg"
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isStart(6)
 
@@ -94,7 +94,7 @@ class test_InputFromCharSequence {
     @Test
     fun isStart_full_after_end() {
         val inputText = "abcdefg"
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isStart(7)
 
@@ -104,7 +104,7 @@ class test_InputFromCharSequence {
     @Test
     fun isEnd_empty_at_start() {
         val inputText = ""
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isEnd(0)
 
@@ -114,7 +114,7 @@ class test_InputFromCharSequence {
     @Test
     fun isEnd_empty_after_start() {
         val inputText = ""
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isEnd(1)
 
@@ -124,7 +124,7 @@ class test_InputFromCharSequence {
     @Test
     fun isEnd_full_at_start() {
         val inputText = "abcdefg"
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isEnd(0)
 
@@ -134,7 +134,7 @@ class test_InputFromCharSequence {
     @Test
     fun isEnd_full_after_start() {
         val inputText = "abcdefg"
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isEnd(1)
 
@@ -144,7 +144,7 @@ class test_InputFromCharSequence {
     @Test
     fun isEnd_full_before_end() {
         val inputText = "abcdefg"
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isEnd(5)
 
@@ -154,7 +154,7 @@ class test_InputFromCharSequence {
     @Test
     fun isEnd_full_at_end() {
         val inputText = "abcdefg"
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isEnd(6)
 
@@ -164,7 +164,7 @@ class test_InputFromCharSequence {
     @Test
     fun isEnd_full_after_end() {
         val inputText = "abcdefg"
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.isEnd(7)
 
@@ -174,7 +174,7 @@ class test_InputFromCharSequence {
     @Test
     fun tryMatchText_empty_at_start_literal_empty() {
         val inputText = ""
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.tryMatchText(0, "", null)
 
@@ -184,7 +184,7 @@ class test_InputFromCharSequence {
     @Test
     fun tryMatchText_empty_at_start_literal_abc() {
         val inputText = ""
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.tryMatchText(0, "abc", null)
 
@@ -194,7 +194,7 @@ class test_InputFromCharSequence {
     @Test
     fun tryMatchText_empty_at_start_pattern_empty() {
         val inputText = ""
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.tryMatchText(0, "", Regex(""))
 
@@ -204,7 +204,7 @@ class test_InputFromCharSequence {
     @Test
     fun tryMatchText_empty_at_start_pattern_abc() {
         val inputText = ""
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.tryMatchText(0, "abc", Regex("abc"))
 
@@ -214,7 +214,7 @@ class test_InputFromCharSequence {
     @Test
     fun tryMatchText_empty_at_start_pattern_a_to_c() {
         val inputText = ""
-        val sut = InputFromString(inputText)
+        val sut = InputFromString(10,inputText)
 
         val actual = sut.tryMatchText(0, "[a-c]", Regex("[a-c]"))
 

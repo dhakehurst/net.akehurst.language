@@ -38,29 +38,29 @@ interface LanguageProcessor {
     fun buildFor(goalRuleName: String): LanguageProcessor;
 
     @JsName("scan")
-    fun scan(inputText: CharSequence): List<SPPTLeaf>
+    fun scan(inputText: String): List<SPPTLeaf>
 
     @JsName("parse")
-    fun parse(inputText: CharSequence): SharedPackedParseTree
+    fun parse(inputText: String): SharedPackedParseTree
 
     @JsName("parseForGoal")
-    fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree
+    fun parse(goalRuleName: String, inputText: String): SharedPackedParseTree
 
 
     @JsName("process")
-    fun <T : Any> process(asmType: KClass<in T>, inputText: CharSequence): T
+    fun <T : Any> process(asmType: KClass<in T>, inputText: String): T
 
     @JsName("processForGoal")
-    fun <T : Any> process(asmType: KClass<in T>, goalRuleName: String, inputText: CharSequence): T
+    fun <T : Any> process(asmType: KClass<in T>, goalRuleName: String, inputText: String): T
 
     @JsName("processFromSPPT")
     fun <T : Any> process(asmType: KClass<in T>, sppt: SharedPackedParseTree): T
 
     @JsName("formatText")
-    fun <T : Any> formatText(asmType: KClass<in T>, inputText: CharSequence): String
+    fun <T : Any> formatText(asmType: KClass<in T>, inputText: String): String
 
     @JsName("formatTextForGoal")
-    fun <T : Any> formatTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: CharSequence): String
+    fun <T : Any> formatTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: String): String
 
     @JsName("formatAsm")
     fun <T : Any> formatAsm(asmType: KClass<in T>, asm: T): String
@@ -79,18 +79,18 @@ interface LanguageProcessor {
      * @throws ParseTreeException
      */
     @JsName("expectedAt")
-    fun expectedAt(inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem>
+    fun expectedAt(inputText: String, position: Int, desiredDepth: Int): List<CompletionItem>
 
     @JsName("expectedAtForGoal")
-    fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int, desiredDepth: Int): List<CompletionItem>
+    fun expectedAt(goalRuleName: String, inputText: String, position: Int, desiredDepth: Int): List<CompletionItem>
 
     //List<CompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth)
 
     @JsName("analyseText")
-    fun <T : Any> analyseText(asmType: KClass<in T>, inputText: CharSequence): List<SemanticAnalyserItem>
+    fun <T : Any> analyseText(asmType: KClass<in T>, inputText: String): List<SemanticAnalyserItem>
 
     @JsName("analyseTextForGoal")
-    fun <T : Any> analyseTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: CharSequence): List<SemanticAnalyserItem>
+    fun <T : Any> analyseTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: String): List<SemanticAnalyserItem>
 
     @JsName("analyseAsm")
     fun <T : Any> analyseAsm(asmType: KClass<in T>, asm: T, locationMap: Map<Any, InputLocation> = emptyMap()): List<SemanticAnalyserItem>
