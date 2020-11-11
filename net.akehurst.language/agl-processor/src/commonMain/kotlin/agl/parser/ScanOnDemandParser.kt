@@ -44,10 +44,10 @@ class ScanOnDemandParser(
         this.runtimeRuleSet.buildFor(goalRuleName)
     }
 
-    override fun scan(inputText: CharSequence, includeSkipRules: Boolean): List<SPPTLeaf> {
+    override fun scan(inputText: String, includeSkipRules: Boolean): List<SPPTLeaf> {
         val undefined = RuntimeRule(-1, -5, "undefined", "", RuntimeRuleKind.TERMINAL, false, true)
         //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
-        val input = InputFromCharSequence(inputText)
+        val input = InputFromString(this.runtimeRuleSet.terminalRules.size,inputText)
         var terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.nonSkipTerminals
         var result = mutableListOf<SPPTLeaf>()
 
@@ -102,15 +102,15 @@ class ScanOnDemandParser(
         return result
     }
 
-    override fun parse(goalRuleName: String, inputText: CharSequence): SharedPackedParseTree {
+    override fun parse(goalRuleName: String, inputText: String): SharedPackedParseTree {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
-        val input = InputFromCharSequence(inputText)
+        val input = InputFromString(this.runtimeRuleSet.terminalRules.size,inputText)
         val s0 = runtimeRuleSet.startingState(goalRule)
         val skipStateSet = runtimeRuleSet.skipParserStateSet
         val rp = RuntimeParser(s0.stateSet,skipStateSet, goalRule, LookaheadSet.EOT, input)
         this.runtimeParser = rp
 
-        rp.start(RuntimeParser.defaultStartLocation, LookaheadSet.EOT)
+        rp.start(0, LookaheadSet.EOT)
         var seasons = 1
         var maxNumHeads = rp.graph.growingHead.size
         var totalWork = maxNumHeads
@@ -161,7 +161,7 @@ class ScanOnDemandParser(
 
     }
 
-    private fun findNextExpectedAfterError(rp: RuntimeParser, graph: ParseGraph, input: InputFromCharSequence): Pair<InputLocation, Set<RuntimeRule>> {
+    private fun findNextExpectedAfterError(rp: RuntimeParser, graph: ParseGraph, input: InputFromString): Pair<InputLocation, Set<RuntimeRule>> {
         //If there is an error, it is because parsing has stopped before finding a goal.
         // parsing could have stopped because
         //  - no more input and we have not reached a goal
@@ -218,13 +218,13 @@ class ScanOnDemandParser(
          */
     }
 
-    private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromCharSequence, gns: List<GrowingNode>): Set<RuntimeRule> {
+    private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromString, gns: List<GrowingNode>): Set<RuntimeRule> {
         // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
 
         val matches = gns.toMutableList()
         // try grow last leaf with no lookahead
         for (gn in rp.lastGrownLinked) {
-            val gnindex = GrowingNode.index(gn.currentState, gn.startPosition, gn.nextInputPosition, gn.listSize)//, gn.nextInputPosition, gn.priority)
+            val gnindex = GrowingNode.index(gn.currentState, gn.children)
             graph.growingHead[gnindex] = gn
         }
         do {
@@ -244,16 +244,16 @@ class ScanOnDemandParser(
         return nextExpected
     }
 
-    override fun expectedAt(goalRuleName: String, inputText: CharSequence, position: Int): Set<RuntimeRule> {
+    override fun expectedAt(goalRuleName: String, inputText: String, position: Int): Set<RuntimeRule> {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
-        val usedText = inputText.subSequence(0, position)
-        val input = InputFromCharSequence(usedText)
+        val usedText = inputText.substring(0, position)
+        val input = InputFromString(this.runtimeRuleSet.terminalRules.size,usedText)
         val ss = runtimeRuleSet.fetchStateSetFor(goalRule)
         val skipStateSet = runtimeRuleSet.skipParserStateSet
         val rp = RuntimeParser(ss,skipStateSet, goalRule, LookaheadSet.EOT, input)
         this.runtimeParser = rp
 
-        rp.start(RuntimeParser.defaultStartLocation, LookaheadSet.EOT)
+        rp.start(0, LookaheadSet.EOT)
         var seasons = 1
 
         val matches = mutableListOf<GrowingNode>()
@@ -270,7 +270,7 @@ class ScanOnDemandParser(
         return nextExpected
     }
 
-    override fun expectedTerminalsAt(goalRuleName: String, inputText: CharSequence, position: Int): Set<RuntimeRule> {
+    override fun expectedTerminalsAt(goalRuleName: String, inputText: String, position: Int): Set<RuntimeRule> {
         return this.expectedAt(goalRuleName, inputText, position)
                 .flatMap {
                     when (it.kind) {

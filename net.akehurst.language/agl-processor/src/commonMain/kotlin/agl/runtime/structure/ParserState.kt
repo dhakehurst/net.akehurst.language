@@ -94,7 +94,7 @@ class ParserState(
         return this.stateSet.createLookaheadSet(content)
     }
 
-    fun widthInto(prevRps: Set<RulePosition>?): Set<Pair<RulePosition, LookaheadSet>> {
+    fun widthInto(prevRps: List<RulePosition>?): Set<Pair<RulePosition, LookaheadSet>> {
         // get lh by closure on prev
         val upLhs = when (prevRps) {
             null -> LookaheadSet.UP
@@ -126,7 +126,7 @@ class ParserState(
     }
 
     //for graft, previous must match prevGuard, for height must not match
-    fun heightOrGraftInto(topRps: Set<RulePosition>): Set<HeightGraft> {
+    fun heightOrGraftInto(topRps: List<RulePosition>): Set<HeightGraft> {
         // have to ensure somehow that this grows into prev
         //have to do closure down from prev,
         //or we have to check this grows into prev after
@@ -403,7 +403,7 @@ class ParserState(
             if (null == previous) {
                 true
             } else {
-                when (previous.runtimeRule.rhs.kind) {
+                when (previous.first().runtimeRule.rhs.kind) { //FIXME
                     RuntimeRuleItemKind.MULTI -> multiRuntimeGuard.invoke(this, gn)
                     RuntimeRuleItemKind.SEPARATED_LIST -> sListRuntimeGuard.invoke(this, gn)
                     else -> true

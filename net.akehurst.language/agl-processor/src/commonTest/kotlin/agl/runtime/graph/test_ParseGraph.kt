@@ -16,13 +16,11 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.parser.InputFromCharSequence
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
+import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.collections.Stack
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -34,7 +32,7 @@ class test_ParseGraph {
         val rrs = RuntimeRuleSet()
         val goalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
         val text = ""
-        val input = InputFromCharSequence(text)
+        val input = InputFromString(text)
 
         val sut = ParseGraph(goalRule, input, 10,10)
 
@@ -46,7 +44,7 @@ class test_ParseGraph {
         val rrs = RuntimeRuleSet()
         val goalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
         val text = ""
-        val input = InputFromCharSequence(text)
+        val input = InputFromString(text)
         val sut = ParseGraph(goalRule, input, 10,10)
 
         val actual = sut.canGrow
@@ -60,7 +58,7 @@ class test_ParseGraph {
 
         val userGoalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"
-        val input = InputFromCharSequence(text)
+        val input = InputFromString(text)
         val sut = ParseGraph(userGoalRule, input, 10,10)
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)

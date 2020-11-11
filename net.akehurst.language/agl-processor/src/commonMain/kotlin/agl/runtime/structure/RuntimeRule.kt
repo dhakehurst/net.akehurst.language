@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.parser.InputFromCharSequence
-import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.collections.lazyArray
 import net.akehurst.language.collections.lazyMapNonNull

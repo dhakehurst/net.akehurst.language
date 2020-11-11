@@ -17,9 +17,8 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.parser.InputFromCharSequence
+import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.collections.Stack
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -48,7 +47,7 @@ class test_ParseGraph_abc {
         r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_A, r_B, r_C))
 
         val text = "a"
-        val input = InputFromCharSequence(text)
+        val input = InputFromString(text)
         val sut = ParseGraph(r_S,input, 10,10)
 
         val gr = RuntimeRuleSet.createGoalRule(r_S)
@@ -70,7 +69,7 @@ class test_ParseGraph_abc {
         val rrs = RuntimeRuleSet()
         val userGoalRule = RuntimeRule(rrs.number,0,"a", "a", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"
-        val input = InputFromCharSequence(text)
+        val input = InputFromString(text)
         val sut = ParseGraph(userGoalRule,input, 10,10)
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)

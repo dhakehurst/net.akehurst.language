@@ -26,7 +26,7 @@ class Transition(
         val lookaheadGuard: LookaheadSet,
         val upLookahead: LookaheadSet,
         val prevGuard: Set<RulePosition>?,
-        val runtimeGuard: Transition.(current:GrowingNode, previous:Set<RulePosition>?)->Boolean
+        val runtimeGuard: Transition.(current:GrowingNode, previous:List<RulePosition>?)->Boolean
 ) {
 
     enum class ParseAction {
