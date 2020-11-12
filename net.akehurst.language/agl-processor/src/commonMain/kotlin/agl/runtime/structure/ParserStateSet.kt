@@ -220,7 +220,7 @@ class ParserStateSet(
         } else {
             val rps = curState.runtimeRules.flatMap{ it.rulePositions }.toSet()
             for (rp in rps) {
-                val state = this.fetch(listOf(rp)) //FIXME: this is wrong
+                val state = this.states[listOf(rp)] //FIXME: this is wrong
                 done.add(dp)
                 val trans = state.transitions(prevSt)
                 for (nt in trans) {

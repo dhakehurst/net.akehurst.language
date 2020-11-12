@@ -41,7 +41,7 @@ class test_AhoSetiUlman_4_5_5 {
         val C1 = rrs.findRuntimeRule("C1")
         val cT = rrs.findRuntimeRule("'c'")
         val dT = rrs.findRuntimeRule("'d'")
-        val G = rrs.startingState(S).runtimeRule
+        val G = rrs.startingState(S).runtimeRules.first()
 
         val s0 = rrs.startingState(S)
 

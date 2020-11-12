@@ -34,19 +34,19 @@ class test_leftRecursive {
 
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S)
-        val G = SM.startState.runtimeRule
+        val G = SM.startState.runtimeRules.first()
         val S1 = rrs.findRuntimeRule("S1")
         val a = rrs.findRuntimeRule("'a'")
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
         val s0 = SM.startState
-        val s1 = SM.states[RulePosition(a, 0, RulePosition.END_OF_RULE)]
-        val s2 = SM.states[RulePosition(S, 0, RulePosition.END_OF_RULE)]
-        val s3 = SM.states[RulePosition(S1, 0, RulePosition.END_OF_RULE)]
-        val s4 = SM.states[RulePosition(S1, 0, 1)]
-        val s5 = SM.states[RulePosition(G, 0, RulePosition.END_OF_RULE)]
-        val s6 = SM.states[RulePosition(S, 1, RulePosition.END_OF_RULE)]
+        val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
+        val s2 = SM.states[listOf(RulePosition(S, 0, RulePosition.END_OF_RULE))]
+        val s3 = SM.states[listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE))]
+        val s4 = SM.states[listOf(RulePosition(S1, 0, 1))]
+        val s5 = SM.states[listOf(RulePosition(G, 0, RulePosition.END_OF_RULE))]
+        val s6 = SM.states[listOf(RulePosition(S, 1, RulePosition.END_OF_RULE))]
 
         val lhs_E = LookaheadSet.EMPTY
         val lhs_U = LookaheadSet.UP
@@ -124,13 +124,13 @@ class test_leftRecursive {
     @Test
     fun s1_heightOrGraftInto_s0() {
 
-        val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
+        val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
 
         val expected = listOf(
                 HeightGraft(
                         null,
-                        RulePosition(S, 0, 0),
-                        RulePosition(S, 0, RulePosition.END_OF_RULE),
+                        setOf(RulePosition(S, 0, 0)),
+                        listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
                         lhs_aU,
                         lhs_U
                 )
@@ -155,20 +155,20 @@ class test_leftRecursive {
 
     @Test
     fun s2_heightOrGraftInto_s0() {
-        val actual = s2.heightOrGraftInto(s0.rulePosition)
+        val actual = s2.heightOrGraftInto(s0.rulePositions)
 
         val expected = setOf(
                 HeightGraft(
                         null,
-                        RulePosition(G, 0, 0),
-                        RulePosition(G, 0, RulePosition.END_OF_RULE),
+                        setOf(RulePosition(G, 0, 0)),
+                        listOf(RulePosition(G, 0, RulePosition.END_OF_RULE)),
                         lhs_U,
                         lhs_U
                 ),
                 HeightGraft(
                         RulePosition(G, 0, 0),
-                        RulePosition(S1, 0, 0),
-                        RulePosition(S1, 0, 1),
+                        setOf(RulePosition(S1, 0, 0)),
+                        listOf(RulePosition(S1, 0, 1)),
                         lhs_a,
                         lhs_aU
                 )
@@ -191,7 +191,7 @@ class test_leftRecursive {
     @Test
     fun s4_widthInto_s0() {
         // s4 | S1 = S . a
-        val actual = s4.widthInto(s0.rulePosition).toList()
+        val actual = s4.widthInto(s0.rulePositions).toList()
 
         val expected = listOf(
                 Pair(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_aU)
@@ -217,13 +217,13 @@ class test_leftRecursive {
     @Test
     fun s1_heightOrGraftInto_s4() {
 
-        val actual = s1.heightOrGraftInto(s4.rulePosition).toList()
+        val actual = s1.heightOrGraftInto(s4.rulePositions).toList()
 
         val expected = listOf(
                 HeightGraft(
                         null,
-                        RulePosition(S1, 0, 1),
-                        RulePosition(S1, 0, RulePosition.END_OF_RULE),
+                        setOf(RulePosition(S1, 0, 1)),
+                        listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE)),
                         lhs_aU,
                         lhs_U
                 )

@@ -47,13 +47,12 @@ class test_ParseGraph_abc {
         r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_A, r_B, r_C))
 
         val text = "a"
-        val input = InputFromString(text)
+        val input = InputFromString(rrs.terminalRules.size,text)
         val sut = ParseGraph(r_S,input, 10,10)
 
         val gr = RuntimeRuleSet.createGoalRule(r_S)
         val startState = rrs.startingState(r_S)
-        val startLocation = InputLocation(0, 0, 1, 0)
-        sut.start(startState,startLocation, LookaheadSet.EMPTY)
+        sut.start(startState,0, LookaheadSet.EMPTY)
 
         assertEquals(RuntimeRuleKind.GOAL, gr.kind)
         assertEquals(true, sut.canGrow)
@@ -69,7 +68,7 @@ class test_ParseGraph_abc {
         val rrs = RuntimeRuleSet()
         val userGoalRule = RuntimeRule(rrs.number,0,"a", "a", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"
-        val input = InputFromString(text)
+        val input = InputFromString(rrs.terminalRules.size,text)
         val sut = ParseGraph(userGoalRule,input, 10,10)
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)

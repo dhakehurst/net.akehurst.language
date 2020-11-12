@@ -42,7 +42,7 @@ class test_embedded{
         val S = rrs.findRuntimeRule("S")
         val gB = rrs.findRuntimeRule("gB")
         val a = rrs.findRuntimeRule("'a'")
-        val G = rrs.startingState(S).runtimeRule
+        val G = rrs.startingState(S).runtimeRules.first()
 
         val B = rrsB.findRuntimeRule("B")
         val bT = rrsB.findRuntimeRule("'b'")
@@ -56,41 +56,8 @@ class test_embedded{
     }
 
     @Test
-    fun parentPosition() {
-        var actual = psm.parentPosition[G]
-        var expected = emptySet<RulePosition>()
-        assertEquals(expected, actual)
-
-        actual = psm.parentPosition[S]
-        expected = setOf(
-                RulePosition(G, 0, 0)
-        )
-        assertEquals(expected, actual)
-
-        actual = psm.parentPosition[a]
-        expected = setOf(
-                RulePosition(S, 0, 0),
-                RulePosition(S, 0, 2)
-        )
-        assertEquals(expected, actual)
-
-        actual = psm.parentPosition[gB]
-        expected = setOf(
-                RulePosition(S, 0, 1)
-        )
-        assertEquals(expected, actual)
-
-
-        actual = psmB.parentPosition[bT]
-        expected = setOf(
-                RulePosition(B, 0, 0)
-        )
-        assertEquals(expected, actual)
-    }
-
-    @Test
     fun firstOf() {
-
+//TODO
         var actual = psm.firstOf(RulePosition(G,0,0),setOf(UP))
         var expected = setOf(a)
         assertEquals(expected,actual)

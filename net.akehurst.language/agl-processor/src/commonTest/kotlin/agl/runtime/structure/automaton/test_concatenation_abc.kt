@@ -29,7 +29,7 @@ class test_concatenation_abc {
 
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S)
-        val G = SM.startState.runtimeRule
+        val G = SM.startState.runtimeRules.first()
 
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
@@ -38,10 +38,10 @@ class test_concatenation_abc {
         val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
         val s0 = SM.startState
-        val s1 = SM.states[RulePosition(a, 0, RulePosition.END_OF_RULE)]
-        val s2 = SM.states[RulePosition(S, 0, 1)]
-        val s3 = SM.states[RulePosition(b, 0, RulePosition.END_OF_RULE)]
-        val s4 = SM.states[RulePosition(S, 0, 2)]
+        val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
+        val s2 = SM.states[listOf(RulePosition(S, 0, 1))]
+        val s3 = SM.states[listOf(RulePosition(b, 0, RulePosition.END_OF_RULE))]
+        val s4 = SM.states[listOf(RulePosition(S, 0, 2))]
 
         val lhs_E = LookaheadSet.EMPTY
         val lhs_U = LookaheadSet.UP
@@ -69,27 +69,6 @@ class test_concatenation_abc {
             val expected = t.third
 
             val actual = SM.firstOf(rp, lhs.content)
-
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
-    fun expectedAfter() {
-        val rulePositions = listOf(
-                Pair(RulePosition(G, 0, RulePosition.START_OF_RULE),  setOf(UP)), // G = . S
-                Pair(RulePosition(G, 0, RulePosition.END_OF_RULE),  setOf(UP)), // G = S .
-                Pair(RulePosition(S, 0, RulePosition.START_OF_RULE),  setOf(a)), // S = . a b c
-                Pair(RulePosition(S, 0, 1),  setOf(b)), // S = a . b c
-                Pair(RulePosition(S, 0, 2),  setOf(c)), // S = a b . c
-                Pair(RulePosition(S, 0, RulePosition.END_OF_RULE),  setOf(UP))   // S = a b c .
-        )
-
-        for (t in rulePositions) {
-            val rp = t.first
-            val expected = t.second
-
-            val actual = SM.expectedAfter(rp)
 
             assertEquals(expected, actual, "failed $rp")
         }
@@ -135,10 +114,14 @@ class test_concatenation_abc {
     @Test
     fun s1_heightOrGraftInto_s0() {
 
-        val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
+        val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(test_leftRecursive.G, 0, 0),RulePosition(S, 0, 0), RulePosition(S, 0, 1),lhs_b, lhs_U)
+                HeightGraft(
+                        RulePosition(test_leftRecursive.G, 0, 0),
+                        setOf(RulePosition(S, 0, 0)),
+                listOf(RulePosition(S, 0, 1)),
+                        lhs_b, lhs_U)
         )
         assertEquals(expected, actual)
 

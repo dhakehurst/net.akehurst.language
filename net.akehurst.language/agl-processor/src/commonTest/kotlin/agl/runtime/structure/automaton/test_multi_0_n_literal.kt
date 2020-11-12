@@ -31,17 +31,17 @@ class test_multi_0_n_literal {
 
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S)
-        val G = SM.startState.runtimeRule
+        val G = SM.startState.runtimeRules.first()
         val eS = S.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
         val a = rrs.findRuntimeRule("'a'")
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
         val s0 = SM.startState
-        val s1 = SM.states[RulePosition(a, 0, RulePosition.END_OF_RULE)]
-        val s2 = SM.states[RulePosition(eS, 0, RulePosition.END_OF_RULE)]
-        val s3 = SM.states[RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION)]
-        val s4 = SM.states[RulePosition(S, 0, RulePosition.END_OF_RULE)]
+        val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
+        val s2 = SM.states[listOf(RulePosition(eS, 0, RulePosition.END_OF_RULE))]
+        val s3 = SM.states[listOf(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION))]
+        val s4 = SM.states[listOf(RulePosition(S, 0, RulePosition.END_OF_RULE))]
 
         val lhs_E = LookaheadSet.EMPTY
         val lhs_U = LookaheadSet.UP
@@ -103,11 +103,19 @@ class test_multi_0_n_literal {
     @Test
     fun s1_heightOrGraftInto_s0() {
 
-        val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
+        val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(test_leftRecursive.G, 0, 0),RulePosition(S, 0, RulePosition.START_OF_RULE),RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION), lhs_a,lhs_U),
-                HeightGraft(RulePosition(test_leftRecursive.G, 0, 0),RulePosition(S, 0, RulePosition.START_OF_RULE),RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U,lhs_U)
+                HeightGraft(
+                        RulePosition(test_leftRecursive.G, 0, 0),
+                        setOf(RulePosition(S, 0, RulePosition.START_OF_RULE)),
+                listOf(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION)),
+                        lhs_a,lhs_U),
+                HeightGraft(
+                        RulePosition(test_leftRecursive.G, 0, 0),
+                        setOf(RulePosition(S, 0, RulePosition.START_OF_RULE)),
+        listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
+                        lhs_U,lhs_U)
         )
         assertEquals(expected, actual)
 

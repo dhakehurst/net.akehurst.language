@@ -84,8 +84,8 @@ class test_LR1_States {
 
         val actual = s0.transitions(null)
 
-        val s2 = s0.stateSet.fetch(RulePosition(b, 0, RulePosition.END_OF_RULE))
-        val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
+        val s2 = s0.stateSet.fetch(listOf(RulePosition(b, 0, RulePosition.END_OF_RULE)))
+        val s1 = s0.stateSet.fetch(listOf(RulePosition(d, 0, RulePosition.END_OF_RULE)))
         val expected = listOf(
                 Transition(s0, s1, Transition.ParseAction.WIDTH,  LookaheadSet(0, setOf(a)), LookaheadSet.EMPTY,null) { _, _ -> true },
                 Transition(s0, s2, Transition.ParseAction.WIDTH,  LookaheadSet(1,  setOf(d)), LookaheadSet.EMPTY,null) { _, _ -> true },
@@ -106,8 +106,8 @@ class test_LR1_States {
         val tr_d_b = trans_s0.first { it.lookaheadGuard.content.contains(d) }
         val tr_c_d = trans_s0.first { it.lookaheadGuard.content.contains(c) }
         // - WIDTH -> d
-        val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
-        val actual = s1.heightOrGraftInto(s1.rulePosition)
+        val s1 = s0.stateSet.fetch(listOf(RulePosition(d, 0, RulePosition.END_OF_RULE)))
+        val actual = s1.heightOrGraftInto(s1.rulePositions)
         assertNotNull(actual)
         val expected = emptySet<HeightGraft>()
 
@@ -118,12 +118,12 @@ class test_LR1_States {
     fun s1_transitions() {
         val s0 = rrs.startingState(S)
         val s0_trans = s0.transitions(null)
-        val s1 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
+        val s1 = s0.stateSet.fetch(listOf(RulePosition(d, 0, RulePosition.END_OF_RULE)))
         val tr_a_d = s0_trans.first { it.lookaheadGuard.content.contains(a) }
 
         val actual = s1.transitions(s0)
-        val s3 = s0.stateSet.fetch(RulePosition(rA, 0, RulePosition.END_OF_RULE))
-        val s4 = s0.stateSet.fetch(RulePosition(rB, 0, RulePosition.END_OF_RULE))
+        val s3 = s0.stateSet.fetch(listOf(RulePosition(rA, 0, RulePosition.END_OF_RULE)))
+        val s4 = s0.stateSet.fetch(listOf(RulePosition(rB, 0, RulePosition.END_OF_RULE)))
         val expected = listOf<Transition>(
                 Transition(s1, s3, Transition.ParseAction.HEIGHT,  LookaheadSet(0,  setOf(a)), LookaheadSet.EMPTY,null) { _, _ -> true },
                 Transition(s1, s4, Transition.ParseAction.HEIGHT,  LookaheadSet(1,  setOf(c)), LookaheadSet.EMPTY,null) { _, _ -> true }

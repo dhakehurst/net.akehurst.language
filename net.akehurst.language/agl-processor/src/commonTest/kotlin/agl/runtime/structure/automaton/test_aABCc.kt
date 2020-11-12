@@ -43,7 +43,7 @@ class test_aABCc{
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
-        val G = rrs.startingState(S).runtimeRule
+        val G = rrs.startingState(S).runtimeRules.first()
 
         val s0 = rrs.startingState(S)
     }

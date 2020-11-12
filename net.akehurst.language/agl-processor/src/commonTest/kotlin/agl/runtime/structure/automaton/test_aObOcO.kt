@@ -44,13 +44,13 @@ class test_aObOcO {
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
-        val G = SM.startState.runtimeRule
+        val G = SM.startState.runtimeRules.first()
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
         val s0 = SM.startState
-        val s1 = SM.states[RulePosition(a, 0, RulePosition.END_OF_RULE)]
-        val s2 = SM.states[RulePosition(aOpt_E, 0, RulePosition.END_OF_RULE)]
+        val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
+        val s2 = SM.states[listOf(RulePosition(aOpt_E, 0, RulePosition.END_OF_RULE))]
 
         val lhs_U = LookaheadSet.UP
         val lhs_T = LookaheadSet.EOT
@@ -169,13 +169,13 @@ class test_aObOcO {
     @Test
     fun s1_heightOrGraftInto_s0() {
 
-        val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
+        val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
 
         val expected = listOf(
                 HeightGraft(
                         null,
-                        RulePosition(aOpt, 0, 0),
-                        RulePosition(aOpt, 0, RulePosition.END_OF_RULE),
+                        setOf(RulePosition(aOpt, 0, 0)),
+                        listOf(RulePosition(aOpt, 0, RulePosition.END_OF_RULE)),
                         lhs_bcU,
                         lhs_U
                 )
