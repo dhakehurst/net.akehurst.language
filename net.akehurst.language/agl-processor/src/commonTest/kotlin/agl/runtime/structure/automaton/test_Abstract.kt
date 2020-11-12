@@ -16,29 +16,17 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-
-class test_ParserState_closureLR0_leftRecursive {
+abstract class test_Abstract {
 
     companion object {
-        // S =  'a' | S1 ;
-        // S1 = S 'a' ;
-        val rrs = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                literal("a")
-                ref("S1")
-            }
-            concatenation("S1") { ref("S"); literal("a") }
-        }
-        val S = rrs.findRuntimeRule("S")
-        val S1 = rrs.findRuntimeRule("S1")
-        val a = rrs.findRuntimeRule("'a'")
-        val G = rrs.startingState(S).runtimeRules.first()
-    }
+        val EOT = RuntimeRuleSet.END_OF_TEXT
+        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
-    fun s0_widthInto() {
-        TODO()
+        val lhs_E = LookaheadSet.EMPTY
+        val lhs_U = LookaheadSet.UP
+        val lhs_T = LookaheadSet.EOT
+
+        fun RP(rr: RuntimeRule, opt: Int, pos: Int): RulePosition = RulePosition(rr, opt, pos)
     }
 
 }

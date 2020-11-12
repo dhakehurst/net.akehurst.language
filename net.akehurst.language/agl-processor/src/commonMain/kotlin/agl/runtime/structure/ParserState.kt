@@ -20,7 +20,7 @@ import net.akehurst.language.agl.runtime.graph.GrowingNode
 
 data class HeightGraft(
         val prev: RulePosition?,
-        val parent: Set<RulePosition>,
+        val parent: List<RulePosition>,
         val parentNext: List<RulePosition>,
         val lhs: LookaheadSet,
         val upLhs: LookaheadSet
@@ -144,22 +144,22 @@ class ParserState(
             pns.map { parentNext ->
                 val lhsc = this.stateSet.firstOf(parentNext, upLhs.content)// this.stateSet.expectedAfter(parentNext)
                 val lhs = this.createLookaheadSet(lhsc)
-                HeightGraft(prev, setOf(parent), listOf(parentNext), lhs, upLhs)
+                HeightGraft(prev, listOf(parent), listOf(parentNext), lhs, upLhs)
             }
         }
         val grouped = res.groupBy { listOf(it.prev, it.parent, it.parentNext) }//, it.lhs) }
                 .map {
                     val prev = it.key[0] as RulePosition?
-                    val parent = it.key[1] as RulePosition
-                    val parentNext = it.key[2] as RulePosition
+                    val parent = it.key[1] as List<RulePosition>
+                    val parentNext = it.key[2] as List<RulePosition>
                     val lhs = createLookaheadSet(it.value.flatMap { it.lhs.content }.toSet())
                     val upLhs = createLookaheadSet(it.value.flatMap { it.upLhs.content }.toSet())
-                    HeightGraft(prev, setOf(parent), listOf(parentNext), lhs, upLhs)
+                    HeightGraft(prev, (parent), (parentNext), lhs, upLhs)
                 }
         val grouped2 = grouped.groupBy { listOf(it.parent.first().isAtEnd, it.lhs, it.upLhs) }
                 .map {
                     val prev = null
-                    val parent = it.value.flatMap { it.parent }.toSet()
+                    val parent = it.value.flatMap { it.parent }.toSet().toList()
                     val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
                     val lhs = it.key[1] as LookaheadSet
                     val upLhs = it.key[2] as LookaheadSet

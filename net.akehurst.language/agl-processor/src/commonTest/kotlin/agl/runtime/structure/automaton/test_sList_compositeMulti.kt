@@ -42,7 +42,7 @@ class test_sList_compositeMulti {
         val S = rrs.findRuntimeRule("S")
         val Se = S.rhs.items[RuntimeRuleItem.SLIST__EMPTY_RULE]
         val SM = rrs.fetchStateSetFor(S)
-        val G = SM.startState.runtimeRule
+        val G = SM.startState.runtimeRules.first()
         val nl = rrs.findRuntimeRule("nl")
         val cnm = rrs.findRuntimeRule("cnm")
         val cn = rrs.findRuntimeRule("cn")
@@ -62,8 +62,8 @@ class test_sList_compositeMulti {
         val lhs_ciU = SM.runtimeRuleSet.createLookaheadSet(setOf(c,i,UP))
 
         val s0 = rrs.startingState(S)
-        val s1 = SM.states[RulePosition(n,0,RulePosition.END_OF_RULE)]
-        val s2 = SM.states[RulePosition(Se,0,RulePosition.END_OF_RULE)]
+        val s1 = SM.states[listOf(RulePosition(n,0,RulePosition.END_OF_RULE))]
+        val s2 = SM.states[listOf(RulePosition(Se,0,RulePosition.END_OF_RULE))]
     }
 
     @Test
@@ -140,13 +140,13 @@ class test_sList_compositeMulti {
     @Test
     fun s1_heightOrGraftInto_s0() {
 
-        val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
+        val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
 
         val expected = listOf(
                 HeightGraft(
                         null,
-                        RulePosition(S, 0, 0),
-                        RulePosition(S, 0, RulePosition.END_OF_RULE),
+                        listOf(RulePosition(S, 0, 0)),
+                                listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
                         lhs_U,
                         lhs_U
                 )

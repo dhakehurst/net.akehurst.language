@@ -19,7 +19,7 @@ package net.akehurst.language.agl.runtime.structure
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_abc_OR_abd {
+class test_abc_OR_abd : test_Abstract() {
 
     // S =  ABC | ABD
     // ABC = a b c
@@ -43,21 +43,16 @@ class test_abc_OR_abd {
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
         val d = rrs.findRuntimeRule("'d'")
-        val EOT = RuntimeRuleSet.END_OF_TEXT
-        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
-        val s2 = SM.states[listOf(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION))]
-        val s3 = SM.states[listOf(RulePosition(S, 0, RulePosition.END_OF_RULE))]
+        val s1 = SM.states[listOf(RP(a, 0, RulePosition.END_OF_RULE))]
+        val s2 = SM.states[listOf(RP(S, 0, RulePosition.MULIT_ITEM_POSITION))]
+        val s3 = SM.states[listOf(RP(S, 0, RulePosition.END_OF_RULE))]
 
-        val lhs_E = LookaheadSet.EMPTY
-        val lhs_U = LookaheadSet.UP
-        val lhs_T = LookaheadSet.EOT
         val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
         val lhs_b = SM.runtimeRuleSet.createLookaheadSet(setOf(b))
         val lhs_aU = SM.runtimeRuleSet.createLookaheadSet(setOf(a, UP))
-        val lhs_aT = SM.runtimeRuleSet.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
+        val lhs_aT = SM.runtimeRuleSet.createLookaheadSet(setOf(a, EOT))
     }
 
     @Test
@@ -108,12 +103,12 @@ class test_abc_OR_abd {
         val expected = listOf(
                 HeightGraft(
                         RulePosition(G, 0, 0),
-                        setOf(RulePosition(S, 0, 0)),
+                        listOf(RulePosition(S, 0, 0)),
                         listOf(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION)),
                         lhs_a, lhs_U),
                 HeightGraft(
                         RulePosition(G, 0, 0),
-                        setOf(RulePosition(S, 0, 0)),
+                        listOf(RulePosition(S, 0, 0)),
                         listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
                         lhs_U, lhs_U)
         )

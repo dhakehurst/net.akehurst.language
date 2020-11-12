@@ -34,7 +34,7 @@ class test_multi_1_n_choice {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S)
-        val G = SM.startState.runtimeRule
+        val G = SM.startState.runtimeRules.first()
         val AB = rrs.findRuntimeRule("AB")
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
@@ -42,10 +42,10 @@ class test_multi_1_n_choice {
         val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
         val s0 = SM.startState
-        val s1 = SM.states[RulePosition(a, 0, RulePosition.END_OF_RULE)]
-        val s2 = SM.states[RulePosition(b, 0, RulePosition.END_OF_RULE)]
-        val s3 = SM.states[RulePosition(AB, 0, RulePosition.END_OF_RULE)]
-        val s4 = SM.states[RulePosition(S, 0, RulePosition.END_OF_RULE)]
+        val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
+        val s2 = SM.states[listOf(RulePosition(b, 0, RulePosition.END_OF_RULE))]
+        val s3 = SM.states[listOf(RulePosition(AB, 0, RulePosition.END_OF_RULE))]
+        val s4 = SM.states[listOf(RulePosition(S, 0, RulePosition.END_OF_RULE))]
 
         val lhs_E = LookaheadSet.EMPTY
         val lhs_U = LookaheadSet.UP
@@ -79,27 +79,6 @@ class test_multi_1_n_choice {
     }
 
     @Test
-    fun expectedAfter() {
-        val rulePositions = listOf(
-                Pair(RulePosition(G, 0, RulePosition.START_OF_RULE), setOf(a, b)), // G = . S
-                Pair(RulePosition(G, 0, RulePosition.END_OF_RULE), setOf(UP)), // G = S .
-                Pair(RulePosition(S, 0, RulePosition.START_OF_RULE), setOf(a, b)), // S = . a+
-                Pair(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION), setOf(a, b)), // S = a . a+
-                Pair(RulePosition(S, 0, RulePosition.END_OF_RULE), setOf(UP)) // S = a+ .
-        )
-
-
-        for (t in rulePositions) {
-            val rp = t.first
-            val expected = t.second
-
-            val actual = SM.expectedAfter(rp)
-
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
     fun s0_widthInto() {
         val actual = s0.widthInto(null)
         val expected = setOf(
@@ -126,11 +105,17 @@ class test_multi_1_n_choice {
     @Test
     fun s1_heightOrGraftInto_s0() {
 
-        val actual = s1.heightOrGraftInto(s0.rulePosition).toList()
+        val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(S, 0, 1), RulePosition(AB, 0, 0), RulePosition(AB, 0, RulePosition.END_OF_RULE), lhs_abU, lhs_ab),
-                HeightGraft(RulePosition(S, 0, RulePosition.END_OF_RULE), RulePosition(AB, 0, 0), RulePosition(AB, 0, RulePosition.END_OF_RULE), lhs_abU, lhs_U)
+                HeightGraft(RulePosition(S, 0, 1),
+                        listOf(RulePosition(AB, 0, 0)),
+                        listOf(RulePosition(AB, 0, RulePosition.END_OF_RULE)),
+                        lhs_abU, lhs_ab),
+                HeightGraft(RulePosition(S, 0, RulePosition.END_OF_RULE),
+                        listOf(RulePosition(AB, 0, 0)),
+                        listOf(RulePosition(AB, 0, RulePosition.END_OF_RULE)),
+                        lhs_abU, lhs_U)
         )
         assertEquals(expected, actual)
 

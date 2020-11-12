@@ -19,12 +19,12 @@ package net.akehurst.language.agl.runtime.structure
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_concatenation_abc {
+class test_concatenation_abc : test_Abstract() {
     // S =  'a' 'b' 'c' ;
     companion object {
 
         val rrs = runtimeRuleSet {
-            concatenation("S") { literal("a");literal("b");literal("c")}
+            concatenation("S") { literal("a");literal("b");literal("c") }
         }
 
         val S = rrs.findRuntimeRule("S")
@@ -34,18 +34,13 @@ class test_concatenation_abc {
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
-        val EOT = RuntimeRuleSet.END_OF_TEXT
-        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
-        val s2 = SM.states[listOf(RulePosition(S, 0, 1))]
-        val s3 = SM.states[listOf(RulePosition(b, 0, RulePosition.END_OF_RULE))]
-        val s4 = SM.states[listOf(RulePosition(S, 0, 2))]
+        val s1 = SM.states[listOf(RP(a, 0, RulePosition.END_OF_RULE))]
+        val s2 = SM.states[listOf(RP(S, 0, 1))]
+        val s3 = SM.states[listOf(RP(b, 0, RulePosition.END_OF_RULE))]
+        val s4 = SM.states[listOf(RP(S, 0, 2))]
 
-        val lhs_E = LookaheadSet.EMPTY
-        val lhs_U = LookaheadSet.UP
-        val lhs_T = LookaheadSet.EOT
         val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
         val lhs_b = SM.runtimeRuleSet.createLookaheadSet(setOf(b))
         val lhs_c = SM.runtimeRuleSet.createLookaheadSet(setOf(c))
@@ -55,12 +50,12 @@ class test_concatenation_abc {
     @Test
     fun firstOf() {
         val rulePositions = listOf(
-                Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // G = . S
-                Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
-                Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S = . a b c
-                Triple(RulePosition(S, 0, 1), lhs_U, setOf(b)), // S = a . b c
-                Triple(RulePosition(S, 0, 2), lhs_U, setOf(c)), // S = a b . c
-                Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP))   // S = a b c .
+                Triple(RP(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // G = . S
+                Triple(RP(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
+                Triple(RP(S, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S = . a b c
+                Triple(RP(S, 0, 1), lhs_U, setOf(b)), // S = a . b c
+                Triple(RP(S, 0, 2), lhs_U, setOf(c)), // S = a b . c
+                Triple(RP(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP))   // S = a b c .
         )
 
         for (t in rulePositions) {
@@ -76,10 +71,10 @@ class test_concatenation_abc {
 
     @Test
     fun calcClosure_G_0_0() {
-        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0),lhs_U)
-        val cl_G_S0 = ClosureItem(cl_G, RulePosition(S, 0, 0), RulePosition(G, 0, 0),lhs_b)
+        val cl_G = ClosureItem(null, RP(G, 0, 0), RP(G, 0, 0), lhs_U)
+        val cl_G_S0 = ClosureItem(cl_G, RP(S, 0, 0), RP(G, 0, 0), lhs_b)
 
-        val actual = SM.calcClosure(ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0),lhs_U))
+        val actual = SM.calcClosure(ClosureItem(null, RP(G, 0, 0), RP(G, 0, 0), lhs_U))
         val expected = setOf(
                 cl_G, cl_G_S0
         )
@@ -103,7 +98,7 @@ class test_concatenation_abc {
         val actual = s0.transitions(null)
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_b, LookaheadSet.EMPTY,null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_b, LookaheadSet.EMPTY, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -118,9 +113,9 @@ class test_concatenation_abc {
 
         val expected = listOf(
                 HeightGraft(
-                        RulePosition(test_leftRecursive.G, 0, 0),
-                        setOf(RulePosition(S, 0, 0)),
-                listOf(RulePosition(S, 0, 1)),
+                        null,
+                        listOf(RulePosition(S, 0, 0)),
+                        listOf(RulePosition(S, 0, 1)),
                         lhs_b, lhs_U)
         )
         assertEquals(expected, actual)
@@ -132,7 +127,7 @@ class test_concatenation_abc {
         val actual = s1.transitions(s0)
 
         val expected = listOf(
-                Transition(s1, s2, Transition.ParseAction.HEIGHT, lhs_b, LookaheadSet.EMPTY,null) { _, _ -> true }
+                Transition(s1, s2, Transition.ParseAction.HEIGHT, lhs_b, lhs_U, listOf(RP(S, 0, 0))) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -145,7 +140,8 @@ class test_concatenation_abc {
         val actual = s2.transitions(s0)
 
         val expected = listOf(
-                Transition(s2, s3, Transition.ParseAction.WIDTH, lhs_c, LookaheadSet.EMPTY,null) { _, _ -> true }
+                // upLookahead and prevGuard are unused for WIDTH
+                Transition(s2, s3, Transition.ParseAction.WIDTH, lhs_c, lhs_E, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -158,7 +154,7 @@ class test_concatenation_abc {
         val actual = s3.transitions(s2)
 
         val expected = listOf(
-                Transition(s3, s4, Transition.ParseAction.GRAFT, lhs_c, LookaheadSet.EMPTY,null) { _, _ -> true }
+                Transition(s3, s4, Transition.ParseAction.GRAFT, lhs_c, LookaheadSet.UP, listOf(RP(S,0,1))) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {

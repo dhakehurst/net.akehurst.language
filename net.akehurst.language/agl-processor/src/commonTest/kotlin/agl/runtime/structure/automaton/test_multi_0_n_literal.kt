@@ -108,12 +108,12 @@ class test_multi_0_n_literal {
         val expected = listOf(
                 HeightGraft(
                         RulePosition(test_leftRecursive.G, 0, 0),
-                        setOf(RulePosition(S, 0, RulePosition.START_OF_RULE)),
+                        listOf(RulePosition(S, 0, RulePosition.START_OF_RULE)),
                 listOf(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION)),
                         lhs_a,lhs_U),
                 HeightGraft(
                         RulePosition(test_leftRecursive.G, 0, 0),
-                        setOf(RulePosition(S, 0, RulePosition.START_OF_RULE)),
+                        listOf(RulePosition(S, 0, RulePosition.START_OF_RULE)),
         listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
                         lhs_U,lhs_U)
         )

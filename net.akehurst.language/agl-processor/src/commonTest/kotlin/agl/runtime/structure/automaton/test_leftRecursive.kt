@@ -129,7 +129,7 @@ class test_leftRecursive {
         val expected = listOf(
                 HeightGraft(
                         null,
-                        setOf(RulePosition(S, 0, 0)),
+                        listOf(RulePosition(S, 0, 0)),
                         listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
                         lhs_aU,
                         lhs_U
@@ -160,14 +160,14 @@ class test_leftRecursive {
         val expected = setOf(
                 HeightGraft(
                         null,
-                        setOf(RulePosition(G, 0, 0)),
+                        listOf(RulePosition(G, 0, 0)),
                         listOf(RulePosition(G, 0, RulePosition.END_OF_RULE)),
                         lhs_U,
                         lhs_U
                 ),
                 HeightGraft(
                         RulePosition(G, 0, 0),
-                        setOf(RulePosition(S1, 0, 0)),
+                        listOf(RulePosition(S1, 0, 0)),
                         listOf(RulePosition(S1, 0, 1)),
                         lhs_a,
                         lhs_aU
@@ -222,7 +222,7 @@ class test_leftRecursive {
         val expected = listOf(
                 HeightGraft(
                         null,
-                        setOf(RulePosition(S1, 0, 1)),
+                        listOf(RulePosition(S1, 0, 1)),
                         listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE)),
                         lhs_aU,
                         lhs_U

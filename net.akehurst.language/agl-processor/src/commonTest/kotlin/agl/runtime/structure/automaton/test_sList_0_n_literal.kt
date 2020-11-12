@@ -31,7 +31,7 @@ class test_sList_0_n_literal {
         val S = rrs.findRuntimeRule("S")
         val a = rrs.findRuntimeRule("'a'")
         val _c = rrs.findRuntimeRule("','")
-        val G = rrs.startingState(S).runtimeRule
+        val G = rrs.startingState(S).runtimeRules.first()
 
         val s0 = rrs.startingState(S)
 
@@ -57,7 +57,7 @@ class test_sList_0_n_literal {
     @Test
     fun s0_transitions() {
         val actual = s0.transitions(null)
-        val s1 = s0.stateSet.fetch(RulePosition(a, 0, RulePosition.END_OF_RULE))
+        val s1 = s0.stateSet.fetch(listOf(RulePosition(a, 0, RulePosition.END_OF_RULE)))
 
         val expected = listOf(
                 Transition(s0, s1, Transition.ParseAction.WIDTH,  lhs_T, LookaheadSet.EMPTY,null) { _, _ -> true },

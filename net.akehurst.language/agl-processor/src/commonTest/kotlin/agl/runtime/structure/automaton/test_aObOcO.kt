@@ -174,7 +174,7 @@ class test_aObOcO {
         val expected = listOf(
                 HeightGraft(
                         null,
-                        setOf(RulePosition(aOpt, 0, 0)),
+                        listOf(RulePosition(aOpt, 0, 0)),
                         listOf(RulePosition(aOpt, 0, RulePosition.END_OF_RULE)),
                         lhs_bcU,
                         lhs_U
