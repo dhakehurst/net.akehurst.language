@@ -21,7 +21,6 @@ import net.akehurst.language.agl.regex.RegexMatcher
 import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.MutableStack
 
@@ -156,14 +155,14 @@ class SPPTParser(
                         //val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, newText3.length)
                         sentenceStartPosition = sentenceNextInputPosition
                         sentenceNextInputPosition += newText3.length
-                        val leaf = this.leaf(leafName, newText3, input,sentenceStartPosition, sentenceNextInputPosition)
+                        val leaf = this.leaf(leafName, newText3, input, sentenceStartPosition, sentenceNextInputPosition)
                         //sentenceLocation = input.nextLocation(location, leaf.matchedText.length)
                         childrenStack.peek().add(leaf)
                     } else {
                         //val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, text.length)
                         sentenceStartPosition = sentenceNextInputPosition
                         sentenceNextInputPosition += text.length
-                        val leaf = this.leaf(leafName, text, input,sentenceStartPosition, sentenceNextInputPosition)
+                        val leaf = this.leaf(leafName, text, input, sentenceStartPosition, sentenceNextInputPosition)
                         //sentenceLocation = input.nextLocation(location, text.length)
                         childrenStack.peek().add(leaf)
                     }
@@ -185,14 +184,14 @@ class SPPTParser(
                         //val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, newText3.length)
                         sentenceStartPosition = sentenceNextInputPosition
                         sentenceNextInputPosition += newText3.length
-                        val leaf = this.leaf(leafName, newText3, input,sentenceStartPosition, sentenceNextInputPosition)
+                        val leaf = this.leaf(leafName, newText3, input, sentenceStartPosition, sentenceNextInputPosition)
                         //sentenceLocation = input.nextLocation(location, leaf.matchedText.length)
                         childrenStack.peek().add(leaf)
                     } else {
                         // val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, text.length)
                         sentenceStartPosition = sentenceNextInputPosition
                         sentenceNextInputPosition += text.length
-                        val leaf = this.leaf(leafName, text, input,sentenceStartPosition, sentenceNextInputPosition)
+                        val leaf = this.leaf(leafName, text, input, sentenceStartPosition, sentenceNextInputPosition)
                         // sentenceLocation = input.nextLocation(location, text.length)
                         childrenStack.peek().add(leaf)
                     }
@@ -209,7 +208,7 @@ class SPPTParser(
                     //val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, newText3.length)
                     sentenceStartPosition = sentenceNextInputPosition
                     sentenceNextInputPosition += newText3.length
-                    val leaf = this.leaf(name, newText3, input,sentenceStartPosition, sentenceNextInputPosition)
+                    val leaf = this.leaf(name, newText3, input, sentenceStartPosition, sentenceNextInputPosition)
                     //sentenceLocation = input.nextLocation(location, leaf.matchedText.length)
                     childrenStack.peek().add(leaf)
                 }
@@ -236,7 +235,7 @@ class SPPTParser(
         val ruleThatIsEmpty = this.runtimeRuleSet.findRuntimeRule(ruleNameThatIsEmpty)
         val terminalRule = ruleThatIsEmpty.emptyRuleItem
         //val n = SPPTLeafDefault(terminalRule, location, true, "", 0)
-        val n = SPPTLeafFromInput(input, terminalRule, startPosition, nextInputPosition)
+        val n = SPPTLeafFromInput(input, terminalRule, startPosition, nextInputPosition,0)
 
         var existing: SPPTLeaf? = this.findLeaf(n.identity, n.matchedTextLength)
         if (null == existing) {
@@ -250,7 +249,7 @@ class SPPTParser(
         input.append(text)
         val terminalRule = this.runtimeRuleSet.findTerminalRule(pattern)
         //val n = SPPTLeafDefault(terminalRule, location, false, text, 0)
-        val n = SPPTLeafFromInput(input, terminalRule, startPosition, nextInputPosition)
+        val n = SPPTLeafFromInput(input, terminalRule, startPosition, nextInputPosition,0)
         n.eolPositions = Regex("\n", setOf(RegexOption.MULTILINE)).findAll(text).toList().map { it.range.first }
         var existing: SPPTLeaf? = this.findLeaf(n.identity, n.matchedTextLength)
         if (null == existing) {
@@ -263,12 +262,9 @@ class SPPTParser(
 
     fun branch(ruleName: String, option: Int, children: List<SPPTNode>): SPPTBranch {
         val rr = this.runtimeRuleSet.findRuntimeRule(ruleName)
-        val firstLocation = children.first().location
-        val lastLocation = children.last().location
-        val length = (lastLocation.position - firstLocation.position) + lastLocation.length
-        val location = InputLocation(firstLocation.position, firstLocation.column, firstLocation.line, length)
-        val nextInputPosition = location.position + location.length
-        val n = SPPTBranchDefault(rr, option, location, nextInputPosition, 0)
+        val startPosition = children.first().startPosition
+        val nextInputPosition = children.last().nextInputPosition
+        val n = SPPTBranchFromInput(rr, option, startPosition, nextInputPosition, 0)
         n.childrenAlternatives.add(children)
 
         var existing: SPPTBranch? = this.findBranch(n.identity, n.matchedTextLength)

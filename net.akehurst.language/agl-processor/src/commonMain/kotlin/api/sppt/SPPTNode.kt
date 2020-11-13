@@ -23,129 +23,132 @@ import net.akehurst.language.api.parser.InputLocation
  */
 interface SPPTNode : SharedPackedParseTreeVisitable {
 
-	/**
-	 * the identity of this node
-	 */
-	val identity: SPPTNodeIdentity
+    /**
+     * the identity of this node
+     */
+    val identity: SPPTNodeIdentity
 
-	/**
-	 *
-	 * the name of the runtime rule that caused this node to be constructed
-	 */
-	val name: String
+    /**
+     *
+     * the name of the runtime rule that caused this node to be constructed
+     */
+    val name: String
 
-	/**
-	 *
-	 *  the rule number from the runtime grammar that caused this node to be constructed, derived from identity
-	 */
-	val runtimeRuleNumber: Int
-	val option:Int
+    /**
+     *
+     *  the rule number from the runtime grammar that caused this node to be constructed, derived from identity
+     */
+    val runtimeRuleNumber: Int
 
-	val location: InputLocation
-	val lastLocation: InputLocation
-	/**
-	 *
-	 *  the index position of the input text at which this node starts its match, derived from identity
-	 */
-	val startPosition: Int
+    val option: Int
 
-	/**
-	 *
-	 * the length of the text (in characters) matched by this node, derived from identity
-	 */
-	val matchedTextLength: Int
+    val location: InputLocation
 
-	/**
-	 * startPosition + matchedTextLength
-	 */
-	val nextInputPosition: Int
+    val lastLeaf: SPPTLeaf
 
-	/**
-	 * the priority of this node according to the grammar (0 if no priority defined by parent rule)
-	 */
-	val priority: Int
+    /**
+     *
+     *  the index position of the input text at which this node starts its match, derived from identity
+     */
+    val startPosition: Int
 
-	/**
-	 *  all text matched by this node
-	 */
-	val matchedText: String
+    /**
+     *
+     * the length of the text (in characters) matched by this node, derived from identity
+     */
+    val matchedTextLength: Int
 
-	/**
-	 *
-	 *  all text matched by this node excluding text that was matched by skip rules.
-	 */
-	val nonSkipMatchedText: String
+    /**
+     * startPosition + matchedTextLength
+     */
+    val nextInputPosition: Int
 
-	/**
-	 *
-	 *  the number of lines (end of line markers) covered by the text that this node matches
-	 */
-	val numberOfLines: Int
+    /**
+     * the priority of this node according to the grammar (0 if no priority defined by parent rule)
+     */
+    val priority: Int
 
-	/**
-	 * an Empty Leaf is constructed by a parse by specifically matching nothing, caused by:
-	 * <ul>
-	 * <li>a rule with no items (for example 'rule = ;')
-	 * <li>an optional item (for example 'rule = item?;')
-	 * <li>a list of items with 0 multiplicity (for example 'rule = item*;')
-	 *
-	 * true if this node is an EmptyLeaf
-	 */
-	val isEmptyLeaf: Boolean
+    /**
+     *  all text matched by this node
+     */
+    val matchedText: String
 
-	/*
-	 * does this node match none of the input.
-	 * It might match empty leaves, but the matched text will be empty if this is true.
-	 */
-	val isEmptyMatch: Boolean
+    /**
+     *
+     *  all text matched by this node excluding text that was matched by skip rules.
+     */
+    val nonSkipMatchedText: String
 
-	/**
-	 *
-	 *  true if this node is a Leaf
-	 */
-	val isLeaf: Boolean
+    /**
+     *
+     *  the number of lines (end of line markers) covered by the text that this node matches
+     */
+    val numberOfLines: Int
 
-	/**
-	 *
-	 *  true if this node is a branch
-	 */
-	val isBranch: Boolean
+    /**
+     * an Empty Leaf is constructed by a parse by specifically matching nothing, caused by:
+     * <ul>
+     * <li>a rule with no items (for example 'rule = ;')
+     * <li>an optional item (for example 'rule = item?;')
+     * <li>a list of items with 0 multiplicity (for example 'rule = item*;')
+     *
+     * true if this node is an EmptyLeaf
+     */
+    val isEmptyLeaf: Boolean
 
-	/**
-	 * a grammar can define some rules as 'skip' rules, for example a rule to match whitespace is commonly a skip rule.
-	 *
-	 *  true if this node was constructed from a skip rule
-	 */
-	val isSkip: Boolean
+    /*
+     * does this node match none of the input.
+     * It might match empty leaves, but the matched text will be empty if this is true.
+     */
+    val isEmptyMatch: Boolean
 
-	/**
-	 *
-	 *  this node cast to an ILeaf (or null if the node is not a leaf)
-	 */
-	val asLeaf: SPPTLeaf
+    /**
+     *
+     *  true if this node is a Leaf
+     */
+    val isLeaf: Boolean
 
-	/**
-	 *
-	 *  this node cast to an ISPPFBranch (or null if the node is not a branch)
-	 */
-	val asBranch: SPPTBranch
+    /**
+     *
+     *  true if this node is a branch
+     */
+    val isBranch: Boolean
 
-	/**
-	 * A parent might be null if the construction of the node has not set it (it is not required)
-	 *
-	 *  the parent branch of this node.
-	 */
-	var parent: SPPTBranch?
+    /**
+     * a grammar can define some rules as 'skip' rules, for example a rule to match whitespace is commonly a skip rule.
+     *
+     *  true if this node was constructed from a skip rule
+     */
+    val isSkip: Boolean
+
+    /**
+     *
+     *  this node cast to an ILeaf (or null if the node is not a leaf)
+     */
+    val asLeaf: SPPTLeaf
+
+    /**
+     *
+     *  this node cast to an ISPPFBranch (or null if the node is not a branch)
+     */
+    val asBranch: SPPTBranch
+
+    /**
+     * A parent might be null if the construction of the node has not set it (it is not required)
+     *
+     *  the parent branch of this node.
+     */
+    var parent: SPPTBranch?
 
 
-	/**
-	 * <ul>
-	 * <li>this leaf contains another leaf if they are equal
-	 * <li>this branch contains another branch if all the children alternatives of the other are contained in this
-	 *
-	 * @param other
-	 * @return true if this node 'contains' the other node
-	 */
-	fun contains(other: SPPTNode ): Boolean
+    /**
+     * <ul>
+     * <li>this leaf contains another leaf if they are equal
+     * <li>this branch contains another branch if all the children alternatives of the other are contained in this
+     *
+     * @param other
+     * @return true if this node 'contains' the other node
+     */
+    fun contains(other: SPPTNode): Boolean
 
 }

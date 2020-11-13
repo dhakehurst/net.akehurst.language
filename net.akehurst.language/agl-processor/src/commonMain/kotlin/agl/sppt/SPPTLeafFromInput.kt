@@ -26,8 +26,9 @@ class SPPTLeafFromInput(
         val input: InputFromString,
         runtimeRule: RuntimeRule,
         startPosition: Int,
-        nextInputPosition: Int
-) : SPPTNodeFromInputAbstract(runtimeRule, startPosition, nextInputPosition, 0, 0), SPPTLeaf {
+        nextInputPosition: Int,
+        priority: Int
+) : SPPTNodeFromInputAbstract(runtimeRule, 0, startPosition, nextInputPosition, priority), SPPTLeaf {
 
     // --- SPPTLeaf ---
     override val isPattern: Boolean get() = runtimeRule.isPattern
@@ -36,7 +37,7 @@ class SPPTLeafFromInput(
     override val isBranch: Boolean get() = false
     override val asBranch: SPPTBranch get() = throw SPPTException("Not a Branch", null)
     override lateinit var location: InputLocation
-    override val lastLocation get() = this.location
+    override val lastLeaf: SPPTLeaf get() = this
     override val asLeaf: SPPTLeaf = this
     override lateinit var tagList: List<String>// = mutableListOf<String>()
     override lateinit var eolPositions: List<Int> // = emptyList()

@@ -57,7 +57,7 @@ class SPPTLeafDefault(
                 get() = TODO("not implemented")
             override val location: InputLocation
                 get() = TODO("not implemented")
-            override val lastLocation: InputLocation
+            override val lastLeaf: SPPTLeaf
                 get() = TODO("not implemented")
             override val startPosition: Int
                 get() = TODO("not implemented")
@@ -138,7 +138,7 @@ class SPPTLeafDefault(
 
     override val asBranch: SPPTBranch get() { throw SPPTException("Not a Branch", null) }
 
-    override val lastLocation get() = this.location
+    override val lastLeaf get() = this
 
     override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
         return visitor.visit(this,  arg)

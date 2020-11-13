@@ -17,8 +17,8 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SPPTNode
+import net.akehurst.language.collections.transitiveClosure
 
 class GrowingNode(
         val currentState: ParserState, // current rp of this node, it is growing, this changes (for new node) when children are added
@@ -41,8 +41,8 @@ class GrowingNode(
 
         var numberNonSkip: Int = 0; private set
         var nextInputPosition: Int = -1
-        var startPosition:Int = -1
-        lateinit var location: InputLocation
+        var startPosition: Int = -1
+        //lateinit var location: InputLocation
 
         var firstChild: GrowingChildNode? = null
         var lastChild: GrowingChildNode? = null
@@ -52,12 +52,10 @@ class GrowingNode(
                 firstChild = GrowingChildNode(state, nextChildAlts)
                 startPosition = nextChildAlts[0].startPosition
                 lastChild = firstChild
-                val fstLoc = nextChildAlts[0].location
-                location = InputLocation(fstLoc.position, fstLoc.column, fstLoc.line, fstLoc.length)
             } else {
                 val nextChild = GrowingChildNode(state, nextChildAlts)
                 lastChild!!.nextChild = nextChild
-                location.length += nextChildAlts[0].location.length
+                lastChild = nextChild
             }
             numberNonSkip++
             nextInputPosition = nextChildAlts[0].nextInputPosition
@@ -72,15 +70,10 @@ class GrowingNode(
                     firstChild = GrowingChildNode(null, skipChildren)
                     startPosition = skipChildren[0].startPosition
                     lastChild = firstChild
-                    val fstLoc = skipChildren.first().location
-                    val length = skipChildren.last().location.endPosition - fstLoc.position
-                    location = InputLocation(fstLoc.position, fstLoc.column, fstLoc.line, length)
                 } else {
                     val nextChild = GrowingChildNode(null, skipChildren)
                     lastChild!!.nextChild = nextChild
-                    val fstLoc = skipChildren.first().location
-                    val length = skipChildren.last().location.endPosition - fstLoc.position
-                    location.length += length
+                    lastChild = nextChild
                 }
                 nextInputPosition = skipChildren.last().nextInputPosition
             }
@@ -88,9 +81,30 @@ class GrowingNode(
         }
 
         operator fun get(runtimeRule: RuntimeRule): List<SPPTNode> {
-            TODO()
+            return when {
+                null == firstChild -> emptyList()
+                else -> listOf(firstChild!!)
+                        .transitiveClosure { it.nextChild?.let { listOf(it)} ?: emptyList() }
+                        .flatMap {
+                            when {
+                                null==it.state -> it.children
+                                //FIXME: could cause issues if RuntimeRuleSet is different, i.e. embedded rules!
+                                else -> {
+                                    val i = it.state.runtimeRules.indexOf(runtimeRule)
+                                    listOf(it.children[i])
+                                }
+                            }
+                        }
+            }
         }
 
+        override fun toString(): String = when {
+            null == firstChild -> "{}"
+            else -> listOf(firstChild!!).transitiveClosure { it.nextChild?.let { listOf(it) } ?: emptyList() }
+                    .fold(listOf<Pair<ParserState?, String>>()) { acc, ch ->
+                        acc + Pair(ch.state, ch.children.joinToString(prefix = "[", separator = ",", postfix = "]"))
+                    }.joinToString(prefix = "{", separator = ", ", postfix = "}") { "${it.first}->${it.second}" }
+        }
     }
 
     companion object {
@@ -125,7 +139,8 @@ class GrowingNode(
     private val hashCode_cache = arrayOf(this.currentState, this.startPosition).contentHashCode()
 
     val nextInputPosition: Int get() = children.nextInputPosition
-    val location: InputLocation get() = children.location
+
+    //val location: InputLocation get() = children.location
     val startPosition get() = children.startPosition
     val matchedTextLength: Int = this.nextInputPosition - this.startPosition
     val runtimeRules = currentState.runtimeRules

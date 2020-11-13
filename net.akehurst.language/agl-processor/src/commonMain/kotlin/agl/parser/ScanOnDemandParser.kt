@@ -23,6 +23,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTLeafDefault
+import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
@@ -56,16 +57,16 @@ class ScanOnDemandParser(
             it.value.isNotEmpty()
         }.toTypedArray()
 
-        var position = 0
-        var lastLocation = InputLocation(0, 1, 1, 0)
-        while (!input.isEnd(position)) {
+        var startPosition = 0
+        var nextInputPosition = 0
+        while (!input.isEnd(nextInputPosition)) {
             val matches: List<SPPTLeaf> = terminals.mapNotNull {
-                val match = input.tryMatchText(position, it.value, it.pattern)
+                val match = input.tryMatchText(nextInputPosition, it.value, it.pattern)
                 if (null == match) {
                     null
                 } else {
-                    val location = input.nextLocation(lastLocation, match.length)//matchedText.length)
-                    val leaf = SPPTLeafDefault(it, location, false, match, (if (it.isPattern) 0 else 1))
+                    nextInputPosition +=match.length
+                    val leaf = SPPTLeafFromInput(input, it, startPosition, nextInputPosition, (if (it.isPattern) 0 else 1))
                     //leaf.eolPositions = match.eolPositions
                     leaf
                 }
@@ -85,19 +86,17 @@ class ScanOnDemandParser(
             when {
                 (null == longest || longest.matchedTextLength == 0) -> {
                     //TODO: collate unscanned, rather than make a separate token for each char
-                    val text = inputText[position].toString()
-                    lastLocation = input.nextLocation(lastLocation, text.length)
-                    val unscanned = SPPTLeafDefault(undefined, lastLocation, false, text, 0)
+                    val text = inputText[nextInputPosition].toString()
+                    nextInputPosition +=text.length
+                    val unscanned = SPPTLeafFromInput(input,undefined, startPosition, nextInputPosition,0)
                     //unscanned.eolPositions = input.eolPositions(text)
                     result.add(unscanned)
-                    position++
                 }
                 else -> {
                     result.add(longest)
-                    position = longest.nextInputPosition
-                    lastLocation = longest.location
                 }
             }
+            startPosition = nextInputPosition
         }
         return result
     }
@@ -138,9 +137,9 @@ class ScanOnDemandParser(
     private fun throwError(graph: ParseGraph, rp: RuntimeParser, nextExpected: Pair<InputLocation, Set<RuntimeRule>>, seasons: Int, maxNumHeads: Int): SharedPackedParseTreeDefault {
         val llg = rp.longestLastGrown
                 ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0), emptySet())
-
-        val lastLocation = nextExpected.first
-        val exp = nextExpected.second
+/*
+        //val lastLocation = nextExpected.first
+       // val exp = nextExpected.second
         //val expected = exp
         //        .filter { it.number >= 0 && it.isEmptyRule.not() }
         //        .map { this.runtimeRuleSet.firstTerminals[it.number] }
@@ -150,13 +149,17 @@ class ScanOnDemandParser(
         val errorPos = lastLocation.position + lastLocation.length
         val lastEolPos = llg.matchedText.lastIndexOf('\n')
         val errorLine = llg.location.line + llg.numberOfLines
+        val lastLocation = graph.input.locationFor(llg.lastLeaf.startPosition, llg.lastLeaf.nextInputPosition)
         val errorColumn = when {
-            llg.lastLocation.position == 0 && llg.lastLocation.length == 0 -> errorPos + 1
-            -1 == lastEolPos -> llg.lastLocation.column + llg.lastLocation.length
+            lastLocation.position == 0 && lastLocation.length == 0 -> errorPos + 1
+            -1 == lastEolPos -> lastLocation.column + lastLocation.length
             else -> llg.matchedTextLength - lastEolPos
         }
         val errorLength = 1
         val location = InputLocation(errorPos, errorColumn, errorLine, errorLength)
+ */
+        val expected = emptySet<String>()
+        val location = InputLocation(0,0,0,0)
         throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location, expected)
 
     }

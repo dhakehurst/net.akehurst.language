@@ -20,6 +20,7 @@ import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.PreviousInfo
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.sppt.SPPTBranchFromInput
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserInterruptedException
 import net.akehurst.language.api.sppt.SPPTBranch
@@ -61,7 +62,7 @@ internal class RuntimeParser(
 
             //val llg = this.graph.longestCompleteNodeFromStart
             //return llg
-            val llg = this.lastGrown.maxWith(Comparator<GrowingNode> { a, b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
+            val llg = this.lastGrown.maxWith(Comparator { a, b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
 
             return if (null == llg) {
                 return null
@@ -73,10 +74,10 @@ internal class RuntimeParser(
                     val children = listOf(leaf) + llg.skipNodes
                     val firstChild = children.first()
                     val lastChild = children.last()
-                    val length = (lastChild.location.position - firstChild.location.position) + lastChild.location.length
-                    val location = InputLocation(firstChild.location.position, firstChild.location.column, firstChild.location.line, length)
+                    val length = (lastChild.nextInputPosition - firstChild.startPosition)
+                    //val location = InputLocation(firstChild.location.position, firstChild.location.column, firstChild.location.line, length)
                     TODO()
-                    //val branch = SPPTBranchDefault(llg.runtimeRule, llg.currentState.rulePosition.option, location, llg.skipNodes.last().nextInputPosition, llg.priority)
+                    //val branch = SPPTBranchFromInput(llg.runtimeRule, llg.currentState.rulePosition.option, location, llg.skipNodes.last().nextInputPosition, llg.priority)
                     //branch.childrenAlternatives.add(children)
                     //branch
                 }
@@ -380,7 +381,8 @@ TODO()
         }
     }
 
-    private val skipParser = skipStateSet?.let { RuntimeParser(it, null, skipStateSet.userGoalRule, LookaheadSet.EMPTY, this.input) }
+    // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
+    private val skipParser = skipStateSet?.let { RuntimeParser(it, null, skipStateSet.userGoalRule, LookaheadSet.EMPTY, InputFromString(skipStateSet.usedTerminalRules.size,this.input.text)) }
     private fun tryParseSkip(lookaheadSet: LookaheadSet, startPosition:Int): SPPTNode? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
         skipParser!!.reset(lookaheadSet)
         //val startLocation = InputLocation(startPosition, lastLocation.column, lastLocation.line, 0) //TODO: compute correct line and column

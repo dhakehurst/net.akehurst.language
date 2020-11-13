@@ -25,9 +25,9 @@ import net.akehurst.language.api.parser.InputLocation
 
 abstract class SPPTNodeFromInputAbstract(
         val runtimeRule: RuntimeRule,
+        override val option: Int,
         override val startPosition: Int,
         override val nextInputPosition: Int,
-        override val option: Int,
         override val priority: Int                      //not needed as part of the SPPTNode, but needed for the parsing algorithm
 ) : SPPTNode {
 
@@ -47,12 +47,10 @@ abstract class SPPTNodeFromInputAbstract(
 
     override val isSkip: Boolean get() = runtimeRule.isSkip
 
-    override val isEmptyMatch: Boolean get() {
-        // match empty if start and next-input positions are the same
-        return this.startPosition == this.nextInputPosition
-    }
+    // match empty if start and next-input positions are the same
+    override val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPosition
 
-    override val numberOfLines: Int by lazy {
+    override val numberOfLines: Int by lazy { //TODO: maybe not use lazy
         Regex("\n").findAll(this.matchedText, 0).count()
     }
 

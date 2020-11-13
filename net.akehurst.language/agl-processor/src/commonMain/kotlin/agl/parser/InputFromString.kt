@@ -156,7 +156,7 @@ class InputFromString(
         return if (terminalRuntimeRule.isEmptyRule) {
             //val location = this.nextLocation(lastLocation, 0)
             //val leaf = SPPTLeafDefault(terminalRuntimeRule, location, true, "", 0)
-            val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, 0)
+            val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, 0,0)
             this.leaves[terminalRuntimeRule, atInputPosition] = leaf
             //val cindex = CompleteNodeIndex(terminalRuntimeRule.number, inputPosition)//0, index.startPosition)
             //this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
@@ -169,7 +169,7 @@ class InputFromString(
             } else {
                 //val location = this.nextLocation(lastLocation, match.length)//match.matchedText.length)
                 val nextInputPosition = atInputPosition + match.length
-                val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, nextInputPosition)//.matchedText, 0)
+                val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, nextInputPosition,0)//.matchedText, 0)
                 //leaf.eolPositions = match.eolPositions
                 this.leaves[terminalRuntimeRule, atInputPosition] = leaf
                 //val cindex = CompleteNodeIndex(terminalRuntimeRule.number, inputPosition)//0, index.startPosition)
@@ -192,6 +192,11 @@ class InputFromString(
         } else {
             existing as SPPTLeaf
         }
+    }
+
+    fun locationFor(startPosition: Int, nextInputPosition: Int): InputLocation {
+//TODO
+        return InputLocation(startPosition,0,0,nextInputPosition-startPosition)
     }
 
 }
