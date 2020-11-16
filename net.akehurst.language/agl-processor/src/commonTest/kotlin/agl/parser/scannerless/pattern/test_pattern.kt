@@ -106,7 +106,7 @@ class test_pattern {
     }
 
     @Test
-    fun pattern_a2c_a_d() {
+    fun pattern_a2c_a_d_fails() {
         val sp = pattern_a2c()
         val goalRuleName = "a"
         val inputText = "d"

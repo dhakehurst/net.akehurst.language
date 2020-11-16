@@ -2,6 +2,7 @@ package net.akehurst.language.parser.scanondemand.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
@@ -17,30 +18,35 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
     // ifthen = 'if' expr 'then' expr ;
     // expr = var < conditional ;
     // conditional = ifthen < ifthenelse ;
-    // var = 'V' ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_expr = b.rule("expr").build()
-        val r_if = b.literal("if")
-        val r_then = b.literal("then")
-        val r_else = b.literal("else")
-        val r_var = b.rule("var").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("W"),b.literal("X"),b.literal("Y"),b.literal("Z"))
-        val r_ifthen = b.rule("ifthen").concatenation(r_if,r_expr,r_then,r_expr)
-        val r_ifthenelse = b.rule("ifthenelse").concatenation(r_if,r_expr,r_then,r_expr,r_else,r_expr)
-        val r_conditional = b.rule("conditional").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_ifthen, r_ifthenelse)
-        b.rule(r_expr).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_var, r_conditional)
-        b.rule("S").concatenation(r_expr)
-        return b
+    // var = 'W' | 'X' | 'Y' | 'Z' ;
+    val rrs = runtimeRuleSet {
+        concatenation("S") { ref("expr") }
+        choice("expr",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            ref("var")
+            ref("conditional")
+        }
+        choice("conditional",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            ref("ifthen")
+            ref("ifthenelse")
+        }
+        concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
+        concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
+        choice("var",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            literal("W")
+            literal("X")
+            literal("Y")
+            literal("Z")
+        }
     }
+
 
     @Test
     fun empty_fails() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -48,7 +54,6 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun ifthenelse() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "ifWthenXelseY"
 
@@ -71,12 +76,11 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
 
         //NOTE: season 35, long expression is dropped in favour of the shorter one!
 
-        super.test(rrb.ruleSet(), goal, sentence, expected)
+        super.test(rrs, goal, sentence, expected)
     }
 
     @Test
     fun ifthen() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "ifWthenX"
 
@@ -95,12 +99,11 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, expected)
     }
 
     @Test
     fun ifthenelseifthen() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "ifWthenXelseifYthenZ"
 
@@ -130,12 +133,11 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, expected)
     }
 
     @Test
     fun ifthenifthenelse() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "ifWthenifXthenYelseZ"
 
@@ -156,7 +158,7 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
 
-        super.testStringResult(rrb, goal, sentence, expected1)
+        super.test(rrs, goal, sentence, expected1)
         //super.testStringResult(rrb, goal, sentence, expected1, expected2)
     }
 

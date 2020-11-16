@@ -34,7 +34,7 @@ class test_multi_1_n_literal : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun empty() {
+    fun empty_fails() {
         val rrb = S()
         val goal = "S"
         val sentence = ""

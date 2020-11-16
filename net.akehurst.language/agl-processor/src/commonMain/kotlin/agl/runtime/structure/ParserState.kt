@@ -204,7 +204,10 @@ class ParserState(
                         true
                     }
                     Transition.ParseAction.GRAFT -> {
-                        previousState.rulePositions == t.prevGuard
+                        t.prevGuard?.let {
+                            previousState.rulePositions.containsAll(it)
+                        } ?: true
+//                        previousState.rulePositions == t.prevGuard
                     }
                     Transition.ParseAction.HEIGHT -> {
                         //t.to.growsInto(previousState) &&

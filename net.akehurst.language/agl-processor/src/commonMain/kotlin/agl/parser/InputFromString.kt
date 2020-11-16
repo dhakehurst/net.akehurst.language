@@ -60,7 +60,7 @@ class InputFromString(
     }
 
     operator fun get(startPosition: Int, nextInputPosition: Int): String {
-        return text.substring(startPosition, nextInputPosition - 1)
+        return text.substring(startPosition, nextInputPosition)
     }
 
     internal fun isStart(position: Int): Boolean {

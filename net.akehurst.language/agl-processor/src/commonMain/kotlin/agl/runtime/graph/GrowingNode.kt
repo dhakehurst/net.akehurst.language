@@ -24,8 +24,7 @@ class GrowingNode(
         val currentState: ParserState, // current rp of this node, it is growing, this changes (for new node) when children are added
         val lookahead: LookaheadSet,
         val priority: Int,
-        val children: GrowingChildren,
-        val numNonSkipChildren: Int
+        val children: GrowingChildren
 ) {
     class GrowingChildNode(
             val state: ParserState?, //if null then its skip children
@@ -62,7 +61,7 @@ class GrowingNode(
             return this
         }
 
-        fun appendSkip(skipChildren: List<SPPTNode>): GrowingChildren {
+        fun appendSkipIfNotEmpty(skipChildren: List<SPPTNode>): GrowingChildren {
             if (skipChildren.isEmpty()) {
                 //do nothing
             } else {
@@ -89,9 +88,12 @@ class GrowingNode(
                             when {
                                 null==it.state -> it.children
                                 //FIXME: could cause issues if RuntimeRuleSet is different, i.e. embedded rules!
-                                else -> {
-                                    val i = it.state.runtimeRules.indexOf(runtimeRule)
-                                    listOf(it.children[i])
+                                else -> when(it.children.size) {
+                                    1 -> listOf(it.children[0])
+                                    else -> {
+                                        val i = it.state.runtimeRules.indexOf(runtimeRule)
+                                        listOf(it.children[i])
+                                    }
                                 }
                             }
                         }
@@ -139,6 +141,7 @@ class GrowingNode(
     private val hashCode_cache = arrayOf(this.currentState, this.startPosition).contentHashCode()
 
     val nextInputPosition: Int get() = children.nextInputPosition
+    val numNonSkipChildren: Int get() = children.numberNonSkip
 
     //val location: InputLocation get() = children.location
     val startPosition get() = children.startPosition
@@ -146,7 +149,7 @@ class GrowingNode(
     val runtimeRules = currentState.runtimeRules
     val terminalRule = runtimeRules.first()
 
-    var skipNodes = mutableListOf<SPPTNode>()
+    var skipNodes : List<SPPTNode>? = null
     /*
     val lastLocation
         get() = when (this.runtimeRules.first().kind) {
@@ -220,8 +223,8 @@ class GrowingNode(
     fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {
         var r = "$currentState,$startPosition,$nextInputPosition,"
         r += if (this.currentState.isAtEnd) "C" else this.currentState.rulePositions.first().position
-        val name = this.currentState.runtimeRules.joinToString(prefix = "[", separator = ",", postfix = "]") { "${it.tag}(${it.number})" }
-        r += ":" + name
+        //val name = this.currentState.runtimeRules.joinToString(prefix = "[", separator = ",", postfix = "]") { "${it.tag}(${it.number})" }
+        //r += ":" + name
 /*
         if (withChildren) {
             if (this.isLeaf) {

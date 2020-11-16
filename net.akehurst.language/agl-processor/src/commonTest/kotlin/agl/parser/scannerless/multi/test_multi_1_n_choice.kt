@@ -38,7 +38,7 @@ class test_multi_1_n_choice : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun empty() {
+    fun empty_fails() {
         val rrs = S
         val goal = "S"
         val sentence = ""
