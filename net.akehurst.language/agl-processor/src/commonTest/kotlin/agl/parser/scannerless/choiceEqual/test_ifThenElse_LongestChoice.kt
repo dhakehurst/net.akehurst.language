@@ -16,11 +16,8 @@
 
 package net.akehurst.language.parser.scanondemand.choiceEqual
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -34,29 +31,27 @@ class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract() {
     // expr = var | ifthenelse | ifthen ;
     // var = "[a-zA-Z]+" ;
     // WS = "\s+" ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_expr = b.rule("expr").build()
-        val r_if = b.literal("if")
-        val r_then = b.literal("then")
-        val r_else = b.literal("else")
-        val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
-        val r_ifthen = b.rule("ifthen").concatenation(r_if, r_expr, r_then, r_expr)
-        val r_ifthenelse = b.rule("ifthenelse").concatenation(r_if, r_expr, r_then, r_expr, r_else, r_expr)
-        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(r_var, r_ifthenelse, r_ifthen))
-        b.rule("S").concatenation(r_expr)
-        b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
-        return b
+
+    private val rrs = runtimeRuleSet {
+        skip("WS") { pattern("\\s+") }
+        concatenation("S") { ref("expr") }
+        choice("expr",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            ref("var")
+            ref("ifthenelse")
+            ref("ifthen")
+        }
+        concatenation("var") { pattern("[a-zA-Z]+") }
+        concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
+        concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
     }
 
     @Test
     fun empty_fails() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -64,13 +59,12 @@ class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun ifthenelse() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "if a then b else c"
 
         val expected = """
             S {
-              expr {
+              expr|1 {
                 ifthenelse {
                   'if' WS { "\s+" : ' ' }
                   expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
@@ -83,18 +77,17 @@ class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, expected)
     }
 
     @Test
     fun ifthen() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "if a then b"
 
         val expected = """
             S {
-              expr {
+              expr|2 {
                 ifthen {
                   'if' WS { "\s+" : ' ' }
                   expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
@@ -105,25 +98,24 @@ class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, expected)
     }
 
     @Test
     fun ifthenelseifthen() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "if a then b else if c then d"
 
         val expected = """
             S {
-              expr {
+              expr|1 {
                 ifthenelse {
                   'if' WS { "\s+" : ' ' }
                   expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
                   'then' WS { "\s+" : ' ' }
                   expr { var { "[a-zA-Z]+" : 'b' WS { "\s+" : ' ' } } }
                   'else' WS { "\s+" : ' ' }
-                  expr {
+                  expr|2 {
                     ifthen {
                       'if' WS { "\s+" : ' ' }
                       expr { var { "[a-zA-Z]+" : 'c' WS { "\s+" : ' ' } } }
@@ -136,23 +128,22 @@ class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, expected)
     }
 
     @Test
     fun ifthenifthenelse() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "if a then if b then c else d"
 
         val expected1 = """
             S {
-              expr {
+              expr|2 {
                 ifthen {
                   'if' WS { "\s+" : ' ' }
                   expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
                   'then' WS { "\s+" : ' ' }
-                  expr {
+                  expr|1 {
                     ifthenelse {
                       'if' WS { "\s+" : ' ' }
                       expr { var { "[a-zA-Z]+" : 'b' WS { "\s+" : ' ' } } }
@@ -189,8 +180,7 @@ class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        //super.test(rrb, goal, sentence, expected1, expected2)
-        super.testStringResult(rrb, goal, sentence, expected1)
+        super.test(rrs, goal, sentence, expected1)
     }
 
 

@@ -15,14 +15,17 @@ class SPPTBranchFromInputAndGrownChildren(runtimeRule: RuntimeRule,
         runtimeRule, option, startPosition, nextInputPosition, priority
 ), SPPTBranch {
 
-    internal var grownChildrenAlternatives = mutableSetOf<GrowingNode.GrowingChildren>()
+    // option -> children
+    internal var grownChildrenAlternatives = mutableMapOf<Int,GrowingNode.GrowingChildren>()
 
 
     // --- SPPTBranch ---
 
-    override val childrenAlternatives: Set<List<SPPTNode>> get() = this.grownChildrenAlternatives.map { it[this.runtimeRule] }.toSet()
+    override val childrenAlternatives: Set<List<SPPTNode>> get() = this.grownChildrenAlternatives.entries.map {
+        it.value[this.runtimeRule, it.key]
+    }.toSet()
 
-    override val children: List<SPPTNode> get() = this.grownChildrenAlternatives.first()[this.runtimeRule]
+    override val children: List<SPPTNode> get() = this.childrenAlternatives.first()
 
     override val nonSkipChildren: List<SPPTNode> by lazy { //TODO: maybe not use lazy
         this.children.filter { !it.isSkip }

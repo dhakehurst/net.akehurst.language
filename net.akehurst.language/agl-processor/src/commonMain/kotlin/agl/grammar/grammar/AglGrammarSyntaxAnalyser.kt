@@ -166,7 +166,7 @@ class AglGrammarSyntaxAnalyser(
         return if (alternative.isEmpty()) {
             EmptyRuleDefault()
         } else {
-            ChoiceEqualDefault(alternative)
+            ChoiceLongestDefault(alternative)
         }
     }
 

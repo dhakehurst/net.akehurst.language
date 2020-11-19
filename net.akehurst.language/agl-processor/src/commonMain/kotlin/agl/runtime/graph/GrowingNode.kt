@@ -18,12 +18,11 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.collections.transitiveClosure
 
 class GrowingNode(
         val currentState: ParserState, // current rp of this node, it is growing, this changes (for new node) when children are added
         val lookahead: LookaheadSet,
-        val priority: Int,
+        priority_deprecated: Int,
         val children: GrowingChildren
 ) {
     class GrowingChildNode(
@@ -31,6 +30,42 @@ class GrowingNode(
             val children: List<SPPTNode>
     ) {
         var nextChild: GrowingChildNode? = null
+        //Pair<Alt,State> -> Node
+        var nextChildMap: MutableMap<Pair<Int,ParserState?>, GrowingChildNode>? = null //TODO: use IntMap
+        //var alts = 0
+
+        fun next(alt:Int, runtimeRule: RuntimeRule, option: Int): GrowingChildNode? = when {
+            null != nextChildMap -> nextChildMap!!.entries.first {
+                val state = it.value.state
+                it.key.first == alt &&
+                when {
+                    null == state -> true //skipNodes
+                    else -> when (runtimeRule.rhs.kind) {
+                        RuntimeRuleItemKind.CHOICE -> state.rulePositions.any { it.runtimeRule == runtimeRule && it.option == option }
+                        else -> state.rulePositions.any { it.runtimeRule == runtimeRule }
+                    }
+                }
+            }.value
+            null == nextChild -> null
+            else -> nextChild
+        }
+
+        operator fun get(runtimeRule: RuntimeRule, option: Int): List<SPPTNode> {
+            return when {
+                null == this.state -> children //skip nodes
+                else -> {
+                    val i = when (runtimeRule.rhs.kind) {
+                        RuntimeRuleItemKind.CHOICE -> state.rulePositions.indexOfFirst { it.runtimeRule == runtimeRule && it.option == option }
+                        else -> state.rulePositions.indexOfFirst { it.runtimeRule == runtimeRule }
+                    }
+                    when {
+                        -1 == i -> emptyList()
+                        1 == children.size -> children
+                        else -> listOf(children[i])
+                    }
+                }
+            }
+        }
     }
 
     class GrowingChildren() {
@@ -41,24 +76,97 @@ class GrowingNode(
         var numberNonSkip: Int = 0; private set
         var nextInputPosition: Int = -1
         var startPosition: Int = -1
+
         //lateinit var location: InputLocation
 
         var firstChild: GrowingChildNode? = null
         var lastChild: GrowingChildNode? = null
 
+        private var _alts = mutableMapOf<ParserState,Int>()
+        private fun alt(state: ParserState) :Int{
+            val v = _alts[state]
+            return if (null==v) {
+                _alts[state] = 0
+                0
+            } else {
+                v
+            }
+        }
+        private fun incAlt(state: ParserState) {
+            val v = _alts[state]
+            return if (null==v) {
+                _alts[state] = 0
+            } else {
+                _alts[state] = v+1
+            }
+        }
+
+        fun priorityFor(runtimeRule: RuntimeRule): Int = when (runtimeRule.rhs.kind) {
+            RuntimeRuleItemKind.CHOICE -> {
+                check(lastChild!!.state!!.runtimeRules.all { it == runtimeRule }) //TODO: remove the check
+                lastChild!!.children.size - 1
+            }
+            else -> 0
+        }
+
+        fun clone(): GrowingChildren {
+            val c = GrowingChildren()
+            c.numberNonSkip = this.numberNonSkip
+            c.nextInputPosition = this.nextInputPosition
+            c.startPosition = this.startPosition
+            c.firstChild = this.firstChild
+            c.lastChild = this.lastChild
+            c._alts = this._alts.toMutableMap()
+            return c
+        }
+
         fun appendChild(state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildren {
-            if (null == lastChild) {
+            return if (null == lastChild) {
                 firstChild = GrowingChildNode(state, nextChildAlts)
                 startPosition = nextChildAlts[0].startPosition
                 lastChild = firstChild
+                numberNonSkip++
+                nextInputPosition = nextChildAlts[0].nextInputPosition
+                this
             } else {
+                val res = this.clone()
                 val nextChild = GrowingChildNode(state, nextChildAlts)
-                lastChild!!.nextChild = nextChild
-                lastChild = nextChild
+                val lastNext = res.lastChild!!.nextChild
+                when {
+                    null != res.lastChild!!.nextChildMap -> {
+                        val resLast = res.lastChild!!
+                        if (resLast.nextChildMap!!.containsKey(Pair(res.alt(state),state))){
+                            res.incAlt(state)
+                        }
+                        resLast.nextChildMap!![Pair(res.alt(state),state)] = nextChild
+                    }
+                    null == lastNext -> {
+                        res.lastChild!!.nextChild = nextChild
+                    }
+                    //state == lastNext.state -> {
+                        //FIXME: not sure its correct to ignore this
+                        //error("TODO")
+                        //when ambigous this could happen because we are reusing children,
+                        //need to index also by 'alternative'
+                    //}
+                    else -> {
+                        val map = mutableMapOf<Pair<Int,ParserState?>, GrowingChildNode>()
+                        val resLast = res.lastChild!!
+                        resLast.nextChildMap = map
+                        map[Pair(res.alt(state),lastNext.state)] = lastNext
+                        resLast.nextChild = null
+                        if (resLast.nextChildMap!!.containsKey(Pair(res.alt(state),state))){
+                            res.incAlt(state)
+                        }
+                        map[Pair(res.alt(state),state)] = nextChild
+                    }
+                }
+                res.lastChild = nextChild
+                res.numberNonSkip++
+                res.nextInputPosition = nextChildAlts[0].nextInputPosition
+                res
             }
-            numberNonSkip++
-            nextInputPosition = nextChildAlts[0].nextInputPosition
-            return this
+
         }
 
         fun appendSkipIfNotEmpty(skipChildren: List<SPPTNode>): GrowingChildren {
@@ -79,33 +187,48 @@ class GrowingNode(
             return this
         }
 
-        operator fun get(runtimeRule: RuntimeRule): List<SPPTNode> {
+        operator fun get(runtimeRule: RuntimeRule, option: Int): List<SPPTNode> {
             return when {
                 null == firstChild -> emptyList()
-                else -> listOf(firstChild!!)
-                        .transitiveClosure { it.nextChild?.let { listOf(it)} ?: emptyList() }
-                        .flatMap {
-                            when {
-                                null==it.state -> it.children
-                                //FIXME: could cause issues if RuntimeRuleSet is different, i.e. embedded rules!
-                                else -> when(it.children.size) {
-                                    1 -> listOf(it.children[0])
-                                    else -> {
-                                        val i = it.state.runtimeRules.indexOf(runtimeRule)
-                                        listOf(it.children[i])
-                                    }
-                                }
-                            }
-                        }
+                else -> {
+                    val res = mutableListOf<SPPTNode>()
+                    var n: GrowingChildNode? = firstChild
+                    while (n != lastChild) {
+                        res.addAll(n!![runtimeRule, option])
+                        n = n.next(alt, runtimeRule, option)
+                    }
+                    res.addAll(lastChild!![runtimeRule, option])
+                    res
+                }
             }
         }
 
         override fun toString(): String = when {
             null == firstChild -> "{}"
-            else -> listOf(firstChild!!).transitiveClosure { it.nextChild?.let { listOf(it) } ?: emptyList() }
-                    .fold(listOf<Pair<ParserState?, String>>()) { acc, ch ->
-                        acc + Pair(ch.state, ch.children.joinToString(prefix = "[", separator = ",", postfix = "]"))
-                    }.joinToString(prefix = "{", separator = ", ", postfix = "}") { "${it.first}->${it.second}" }
+            else -> {
+                val res = mutableMapOf<RulePosition, List<String>>()
+                val initialSkip = mutableListOf<String>()
+                var sn = firstChild
+                while (null == sn!!.state) {
+                    initialSkip.add(sn.children.joinToString() { it.name })
+                    sn = sn.nextChild
+                }
+                val rps = sn.state!!.rulePositions
+                rps.forEach { rp ->
+                    res[rp] = initialSkip
+                    var n = sn
+                    var skip = ""
+                    while (null != n) {
+                        val state = n.state
+                        when {
+                            null == state -> skip += n.children.joinToString() //skipNodes
+                            else -> res[rp] = res[rp]!! + n[rp.runtimeRule, rp.option].joinToString() { it.name }
+                        }
+                        n = n.next(alt, rp.runtimeRule, rp.option)
+                    }
+                }
+                res.entries.map { "${it.key.runtimeRule.tag}|${it.key.option} -> ${it.value.joinToString()}" }.joinToString(separator = "\n")
+            }
         }
     }
 
@@ -143,13 +266,14 @@ class GrowingNode(
     val nextInputPosition: Int get() = children.nextInputPosition
     val numNonSkipChildren: Int get() = children.numberNonSkip
 
+
     //val location: InputLocation get() = children.location
     val startPosition get() = children.startPosition
     val matchedTextLength: Int = this.nextInputPosition - this.startPosition
     val runtimeRules = currentState.runtimeRules
     val terminalRule = runtimeRules.first()
 
-    var skipNodes : List<SPPTNode>? = null
+    var skipNodes: List<SPPTNode>? = null
     /*
     val lastLocation
         get() = when (this.runtimeRules.first().kind) {
@@ -193,6 +317,7 @@ class GrowingNode(
             return this.runtimeRule.incrementNextItemIndex(this.currentState.position)
         }
 */
+    fun priorityFor(runtimeRule: RuntimeRule): Int = children.priorityFor(runtimeRule)
 
     fun newPrevious() {
         this.previous = mutableMapOf()

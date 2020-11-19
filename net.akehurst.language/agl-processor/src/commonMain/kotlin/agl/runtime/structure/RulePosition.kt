@@ -25,6 +25,7 @@ data class RulePosition(
     companion object {
         val START_OF_RULE = 0
         val END_OF_RULE = -1
+
         //for use in multi and separated list
         val MULIT_ITEM_POSITION = 1 //TODO: make -ve maybe
         val SLIST_SEPARATOR_POSITION = 1 //TODO: make -ve maybe
@@ -34,20 +35,20 @@ data class RulePosition(
     val isAtStart = position == START_OF_RULE
     val isAtEnd = position == END_OF_RULE
 
-    val items: List<RuntimeRule>
-        get() {
-            return if (END_OF_RULE == position) {
-                emptyList()
-            } else {
-                runtimeRule.items(option, position)
-            }
-        }
+    val items: List<RuntimeRule> get() = if (END_OF_RULE == position) {
+        emptyList()
+    } else {
+        runtimeRule.items(option, position)
+    }
 
-    val item : RuntimeRule? get() {
-        return when {
-            END_OF_RULE==this.position -> null
-            else -> runtimeRule.item(option, position)
-        }
+    val item: RuntimeRule? get() = when {
+        END_OF_RULE == this.position -> null
+        else -> runtimeRule.item(option, position)
+    }
+
+    val priority get() = when (this.runtimeRule.rhs.kind) {
+        RuntimeRuleItemKind.CHOICE -> this.option//gn.priorityFor(runtimeRule)
+        else -> 0
     }
 
     fun atEnd() = RulePosition(this.runtimeRule, this.option, END_OF_RULE)

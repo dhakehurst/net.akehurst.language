@@ -1,22 +1,7 @@
-/**
- * Copyright (C) 2020 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-package net.akehurst.language.parser.scanondemand.choiceEqual
+package net.akehurst.language.parser.scanondemand.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
@@ -24,21 +9,23 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
+class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract() {
+
+    // invert the dangling else
 
     // S =  expr ;
     // ifthenelse = 'if' expr 'then' expr 'else' expr ;
     // ifthen = 'if' expr 'then' expr ;
     // expr = var < conditional ;
-    // conditional = ifthenelse | ifthen;
-    // var = W | X | Y | Z ;
+    // conditional = ifthenelse < ifthen;
+    // var = 'W' | 'X' | 'Y' | 'Z' ;
     val rrs = runtimeRuleSet {
         concatenation("S") { ref("expr") }
         choice("expr",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
             ref("var")
             ref("conditional")
         }
-        choice("conditional",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+        choice("conditional",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
             ref("ifthenelse")
             ref("ifthen")
         }
@@ -51,6 +38,7 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
             literal("Z")
         }
     }
+
 
     @Test
     fun empty_fails() {
@@ -72,7 +60,7 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               expr|1 {
-                conditional {
+                conditional|1 {
                     ifthenelse {
                       'if'
                       expr { var { 'W' } }
@@ -99,7 +87,7 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               expr|1 {
-                conditional|1 {
+                conditional|0 {
                     ifthen {
                       'if'
                       expr { var { 'W' } }
@@ -122,7 +110,7 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               expr|1 {
-                conditional {
+                conditional|1 {
                     ifthenelse {
                       'if'
                       expr { var { 'W' } }
@@ -130,7 +118,7 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
                       expr { var|1 { 'X' } }
                       'else'
                       expr|1 {
-                        conditional|1 {
+                        conditional {
                             ifthen {
                               'if'
                               expr { var|2 { 'Y'} }
@@ -154,33 +142,24 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
         val sentence = "ifWthenifXthenYelseZ"
 
         val expected1 = """
-            S {
-              expr|1 {
-                conditional|1 {
-                    ifthen {
+         S { expr|1 { conditional { ifthenelse {
+                'if'
+                expr { var { 'W' } }
+                'then'
+                expr|1 { conditional|1 { ifthen {
                       'if'
-                      expr { var { 'W' } }
+                      expr { var|1 { 'X' } }
                       'then'
-                      expr|1 {
-                        conditional {
-                            ifthenelse {
-                              'if'
-                              expr { var|1 { 'X' } }
-                              'then'
-                              expr { var|2 { 'Y' } }
-                              'else'
-                              expr { var|3 { 'Z' } }
-                            }
-                        }
-                      }
-                    }
-                }
-              }
-            }
+                      expr { var|2 { 'Y' } }
+                    } } }
+                'else'
+                expr { var|3 { 'Z' } }
+              } } } }
         """.trimIndent()
 
 
         super.test(rrs, goal, sentence, expected1)
+        //super.testStringResult(rrb, goal, sentence, expected1, expected2)
     }
 
 

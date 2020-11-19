@@ -18,6 +18,7 @@ package net.akehurst.language.parser.scanondemand.multi
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.fail
@@ -35,10 +36,17 @@ class test_leftRecursive : test_ScanOnDemandParserAbstract() {
         return b
     }
 
+    private val rrs = runtimeRuleSet {
+        choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            ref("P")
+            literal("a")
+        }
+        multi("P",1,-1,"S")
+    }
+
     @Test
     fun a() {
-        //fail("this does not terminate if we parse until !canGrow, ok it parse until first goal found!")
-        val rrb = this.S()
+        fail("this does not terminate if we parse until !canGrow, ok it parse until first goal found!")
         val goal = "S"
         val sentence = "a"
 
@@ -46,7 +54,7 @@ class test_leftRecursive : test_ScanOnDemandParserAbstract() {
             S|1 { 'a' }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, expected)
     }
 
 

@@ -459,10 +459,25 @@ class test_AglGrammar_item {
     }
 
     @Test
+    fun choice_simple_nonTerminal_1() {
+        val actual = parse("choice", "a")
+        val expected = this.sppt("""
+            choice { simpleChoice { §simpleChoice§sList4 {
+                concatenation { §concatenation§multi6 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 {
+                    IDENTIFIER : 'a' WHITESPACE  : ' ' 
+                } } } } } } }
+            } } }
+        """.trimIndent())
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(1,actual.maxNumHeads)
+    }
+
+    @Test
     fun choice_priority_nonTerminal_3() {
         val actual = parse("choice", "a < b < c")
         val expected = this.sppt("""
-            choice { priorityChoice { §priorityChoice§sList2 {
+            choice|1 { priorityChoice { §priorityChoice§sList3 {
                 concatenation { §concatenation§multi6 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 {
                     IDENTIFIER : 'a' WHITESPACE  : ' ' 
                 } } } } } } }

@@ -141,7 +141,7 @@ class SPPTBranchFromInput(
             return if (this.identity != other.identity) {
                 false
             } else {
-                this.contains(other) && other.contains(this)
+                this.contains(other) && other.contains(this) //TODO: inefficient!
             }
         }
     }

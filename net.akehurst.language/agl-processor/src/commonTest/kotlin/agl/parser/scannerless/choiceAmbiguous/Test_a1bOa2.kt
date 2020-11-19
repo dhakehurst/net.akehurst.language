@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scanondemand.choicePriority
+package net.akehurst.language.parser.scanondemand.choiceAmbiguous
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,25 +26,82 @@ import kotlin.test.assertFailsWith
 
 class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
 
-    // S = S1 || a
+    // S = S1 < a
     // S1 = a b?
-    private fun ambiguous(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_bOpt = b.rule("bOpt").multi(0,1,b.literal("b"))
-        val r_S1 = b.rule("S1").concatenation(r_a, r_bOpt)
-        b.rule("S").choice(RuntimeRuleChoiceKind.AMBIGUOUS,r_S1, r_a)
-        return b
+    private val deterministic= runtimeRuleSet {
+        choice("S", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            ref("S1")
+            literal("a")
+        }
+        concatenation("S1") { literal("a"); ref("bOpt") }
+        multi("bOpt",0,1,"'b'")
+        literal("'b'","b")
     }
 
     @Test
-    fun ambiguous_empty_fails() {
-        val rrb = this.ambiguous()
+    fun deterministic_empty_fails() {
         val goal = "S"
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(deterministic, goal, sentence)
+        }
+        assertEquals(1, ex.location.line)
+        assertEquals(1, ex.location.column)
+    }
+
+    @Test
+    fun deterministic_a() {
+        val goal = "S"
+        val sentence = "a"
+
+        val expected = """
+            S|1 {
+              'a'
+            }
+        """.trimIndent()
+
+        super.test(deterministic, goal, sentence, expected)
+
+    }
+
+    @Test
+    fun deterministic_ab() {
+        val goal = "S"
+        val sentence = "ab"
+
+        val expected = """
+            S { S1 {
+              'a'
+              bOpt { 'b' }
+            } }
+        """.trimIndent()
+
+        super.test(deterministic, goal, sentence, expected)
+
+    }
+
+    //TODO: more tests
+
+    // S = S1 || a
+    // S1 = a b?
+    private val ambiguous = runtimeRuleSet {
+        choice("S", RuntimeRuleChoiceKind.AMBIGUOUS) {
+            ref("S1")
+            literal("a")
+        }
+        concatenation("S1") { literal("a"); ref("bOpt") }
+        multi("bOpt",0,1,"'b'")
+        literal("'b'","b")
+    }
+
+    @Test
+    fun ambiguous_empty_fails() {
+        val goal = "S"
+        val sentence = ""
+
+        val ex = assertFailsWith(ParseFailedException::class) {
+            super.test(ambiguous, goal, sentence)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -52,7 +109,6 @@ class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun ambiguous_a() {
-        val rrb = this.ambiguous()
         val goal = "S"
         val sentence = "a"
 
@@ -69,13 +125,12 @@ class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        super.test(rrb.ruleSet(), goal, sentence, expected1, expected2)
+        super.test(ambiguous, goal, sentence, expected1, expected2)
 
     }
 
     @Test
     fun ambiguous_ab() {
-        val rrb = this.ambiguous()
         val goal = "S"
         val sentence = "ab"
 
@@ -86,67 +141,8 @@ class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
             } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(ambiguous, goal, sentence, expected)
 
     }
 
-
-    // S = S1 < a
-    // S1 = a b?
-    private fun deterministic(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_bOpt = b.rule("bOpt").multi(0,1,b.literal("b"))
-        val r_S1 = b.rule("S1").concatenation(r_a, r_bOpt)
-        b.rule("S").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,r_S1, r_a)
-        return b
-    }
-
-    @Test
-    fun deterministic_empty_fails() {
-        val rrb = this.deterministic()
-        val goal = "S"
-        val sentence = ""
-
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
-    }
-
-    @Test
-    fun deterministic_a() {
-        val rrb = this.deterministic()
-        val goal = "S"
-        val sentence = "a"
-
-        val expected = """
-            S|1 {
-              'a'
-            }
-        """.trimIndent()
-
-        super.test(rrb, goal, sentence, expected)
-
-    }
-
-    @Test
-    fun deterministic_ab() {
-        val rrb = this.deterministic()
-        val goal = "S"
-        val sentence = "ab"
-
-        val expected = """
-            S { S1 {
-              'a'
-              bOpt { 'b' }
-            } }
-        """.trimIndent()
-
-        super.testStringResult(rrb, goal, sentence, expected)
-
-    }
-
-    //TODO: more tests
 }

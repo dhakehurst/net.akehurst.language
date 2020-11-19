@@ -104,7 +104,7 @@ class test_Converter {
     fun terminalLiteralRule() {
         // r = 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
+        gb.rule("r").choiceLongest(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
         val sut = ConverterToRuntimeRules(grammar)
@@ -122,7 +122,7 @@ class test_Converter {
     fun terminalLiteralRule_2() {
         // r = 'a' 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").choiceEqual(gb.concatenation(gb.terminalLiteral("a"), gb.terminalLiteral("a")))
+        gb.rule("r").choiceLongest(gb.concatenation(gb.terminalLiteral("a"), gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
         val sut = ConverterToRuntimeRules(grammar)
@@ -140,7 +140,7 @@ class test_Converter {
     fun terminalPatternRule() {
         // r = "[a-c]" ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").choiceEqual(gb.concatenation(gb.terminalPattern("[a-c]")))
+        gb.rule("r").choiceLongest(gb.concatenation(gb.terminalPattern("[a-c]")))
         val grammar = gb.grammar
 
         val sut = ConverterToRuntimeRules(grammar)
@@ -158,7 +158,7 @@ class test_Converter {
     fun concatenationLiteralRule() {
         // r = 'a' 'b' 'c' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").choiceEqual(gb.concatenation(gb.terminalLiteral("a"), gb.terminalLiteral("b"), gb.terminalLiteral("c")))
+        gb.rule("r").choiceLongest(gb.concatenation(gb.terminalLiteral("a"), gb.terminalLiteral("b"), gb.terminalLiteral("c")))
         val grammar = gb.grammar
 
         val sut = ConverterToRuntimeRules(grammar)
@@ -181,10 +181,10 @@ class test_Converter {
         // b = 'b' ;
         // c = 'c' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("a").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
-        gb.rule("b").choiceEqual(gb.concatenation(gb.terminalLiteral("b")))
-        gb.rule("c").choiceEqual(gb.concatenation(gb.terminalLiteral("c")))
-        gb.rule("r").choiceEqual(gb.concatenation(gb.nonTerminal("a"), gb.nonTerminal("b"), gb.nonTerminal("c")))
+        gb.rule("a").choiceLongest(gb.concatenation(gb.terminalLiteral("a")))
+        gb.rule("b").choiceLongest(gb.concatenation(gb.terminalLiteral("b")))
+        gb.rule("c").choiceLongest(gb.concatenation(gb.terminalLiteral("c")))
+        gb.rule("r").choiceLongest(gb.concatenation(gb.nonTerminal("a"), gb.nonTerminal("b"), gb.nonTerminal("c")))
         val grammar = gb.grammar
 
         val sut = ConverterToRuntimeRules(grammar)
@@ -210,7 +210,7 @@ class test_Converter {
     fun choiceEqualLiteralRule() {
         // r = 'a' | 'b' | 'c' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").choiceEqual(gb.concatenation(gb.terminalLiteral("a")), gb.concatenation(gb.terminalLiteral("b")), gb.concatenation(gb.terminalLiteral("c")))
+        gb.rule("r").choiceLongest(gb.concatenation(gb.terminalLiteral("a")), gb.concatenation(gb.terminalLiteral("b")), gb.concatenation(gb.terminalLiteral("c")))
         val grammar = gb.grammar
 
         val sut = ConverterToRuntimeRules(grammar)
@@ -233,10 +233,10 @@ class test_Converter {
         // b = 'b' ;
         // c = 'c' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("a").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
-        gb.rule("b").choiceEqual(gb.concatenation(gb.terminalLiteral("b")))
-        gb.rule("c").choiceEqual(gb.concatenation(gb.terminalLiteral("c")))
-        gb.rule("r").choiceEqual(gb.concatenation(gb.nonTerminal("a")), gb.concatenation(gb.nonTerminal("b")), gb.concatenation(gb.nonTerminal("c")))
+        gb.rule("a").choiceLongest(gb.concatenation(gb.terminalLiteral("a")))
+        gb.rule("b").choiceLongest(gb.concatenation(gb.terminalLiteral("b")))
+        gb.rule("c").choiceLongest(gb.concatenation(gb.terminalLiteral("c")))
+        gb.rule("r").choiceLongest(gb.concatenation(gb.nonTerminal("a")), gb.concatenation(gb.nonTerminal("b")), gb.concatenation(gb.nonTerminal("c")))
         val grammar = gb.grammar
 
         val sut = ConverterToRuntimeRules(grammar)
@@ -289,9 +289,9 @@ class test_Converter {
         // b = 'b' ;
         // c = 'c' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("a").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
-        gb.rule("b").choiceEqual(gb.concatenation(gb.terminalLiteral("b")))
-        gb.rule("c").choiceEqual(gb.concatenation(gb.terminalLiteral("c")))
+        gb.rule("a").choiceLongest(gb.concatenation(gb.terminalLiteral("a")))
+        gb.rule("b").choiceLongest(gb.concatenation(gb.terminalLiteral("b")))
+        gb.rule("c").choiceLongest(gb.concatenation(gb.terminalLiteral("c")))
         gb.rule("r").choicePriority(
                 gb.concatenation(gb.nonTerminal("a")),
                 gb.concatenation(gb.nonTerminal("b")),
@@ -346,7 +346,7 @@ class test_Converter {
         // a = 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         gb.rule("r").multi(0, 1, gb.nonTerminal("a"))
-        gb.rule("a").choiceEqual(gb.terminalLiteral("a"))
+        gb.rule("a").choiceLongest(gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
         val sut = ConverterToRuntimeRules(grammar)
@@ -394,7 +394,7 @@ class test_Converter {
         // a = 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         gb.rule("r").multi(0, -1, gb.nonTerminal("a"))
-        gb.rule("a").choiceEqual(gb.terminalLiteral("a"))
+        gb.rule("a").choiceLongest(gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
         val sut = ConverterToRuntimeRules(grammar)
@@ -440,7 +440,7 @@ class test_Converter {
         // a = 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         gb.rule("r").multi(1, -1, gb.nonTerminal("a"))
-        gb.rule("a").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
+        gb.rule("a").choiceLongest(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
         val sut = ConverterToRuntimeRules(grammar)
@@ -487,7 +487,7 @@ class test_Converter {
         // a = 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         gb.rule("r").separatedList(0, 1, gb.terminalLiteral(","), gb.nonTerminal("a"))
-        gb.rule("a").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
+        gb.rule("a").choiceLongest(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
         val sut = ConverterToRuntimeRules(grammar)
@@ -537,7 +537,7 @@ class test_Converter {
         // a = 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         gb.rule("r").separatedList(0, -1, gb.terminalLiteral(","), gb.nonTerminal("a"))
-        gb.rule("a").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
+        gb.rule("a").choiceLongest(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
         val sut = ConverterToRuntimeRules(grammar)
@@ -585,7 +585,7 @@ class test_Converter {
         // a = 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         gb.rule("r").separatedList(1, -1, gb.terminalLiteral(","), gb.nonTerminal("a"))
-        gb.rule("a").choiceEqual(gb.concatenation(gb.terminalLiteral("a")))
+        gb.rule("a").choiceLongest(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
         val sut = ConverterToRuntimeRules(grammar)

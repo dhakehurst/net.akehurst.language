@@ -120,6 +120,8 @@ class SPPTParser(
                     val empty = scanner.next(EMPTY)
                     val ruleStartThatIsEmpty = nodeNamesStack.peek()
                     //val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, 0)
+                    sentenceStartPosition = sentenceNextInputPosition
+                    //sentenceNextInputPosition = sentenceNextInputPosition + 0
                     val emptyNode = this.emptyLeaf(ruleStartThatIsEmpty.name, input, sentenceStartPosition, sentenceNextInputPosition)
                     childrenStack.peek().add(emptyNode)
                 }
@@ -272,7 +274,7 @@ class SPPTParser(
             this.cacheNode(n)
             existing = n
         } else {
-            (existing as SPPTBranchDefault).childrenAlternatives.add(n.children)
+            (existing as SPPTBranchFromInput).childrenAlternatives.add(n.children)
         }
 
         return existing

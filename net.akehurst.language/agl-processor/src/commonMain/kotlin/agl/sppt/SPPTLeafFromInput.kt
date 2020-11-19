@@ -38,12 +38,12 @@ class SPPTLeafFromInput(
     override val asBranch: SPPTBranch get() = throw SPPTException("Not a Branch", null)
     override lateinit var location: InputLocation
     override val lastLeaf: SPPTLeaf get() = this
-    override val asLeaf: SPPTLeaf = this
+    override val asLeaf: SPPTLeaf get() = this
     override lateinit var tagList: List<String>// = mutableListOf<String>()
     override lateinit var eolPositions: List<Int> // = emptyList()
 
     override val matchedText: String get() = input[startPosition, nextInputPosition]
-    override val isEmptyLeaf: Boolean get() = false
+    override val isEmptyLeaf: Boolean get() = this.runtimeRule.isEmptyRule
     override val metaTags: List<String> by lazy { //TODO: make this configurable on the LanguageProcessor
         val map = mutableMapOf<String, String>(
                 "\$keyword" to "'[a-zA-Z_][a-zA-Z0-9_-]*'"
@@ -70,6 +70,7 @@ class SPPTLeafFromInput(
     override fun toString(): String {
         val name = when {
             this.runtimeRule == RuntimeRuleSet.END_OF_TEXT -> RuntimeRuleSet.END_OF_TEXT_TAG
+            this.runtimeRule.isEmptyRule -> "§empty"
             this.isLiteral -> "'${this.runtimeRule.value}'"
             this.isPattern -> "\"${this.runtimeRule.value}\""
             else -> this.name //shouldn't happen!

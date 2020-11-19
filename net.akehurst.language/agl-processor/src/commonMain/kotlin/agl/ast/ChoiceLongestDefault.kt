@@ -21,7 +21,7 @@ import net.akehurst.language.api.grammar.ChoiceEqual
 import net.akehurst.language.api.grammar.Concatenation
 import net.akehurst.language.api.grammar.GrammarVisitor
 
-class ChoiceEqualDefault(override val alternative: List<Concatenation>) : ChoiceAbstract(alternative), ChoiceEqual {
+class ChoiceLongestDefault(override val alternative: List<Concatenation>) : ChoiceAbstract(alternative), ChoiceEqual {
 
     // --- GrammarVisitable ---
 

@@ -9,7 +9,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
+class test_ifThenElse_NoWS : test_ScanOnDemandParserAbstract() {
 
     // invert the dangling else
 
@@ -26,8 +26,8 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
             ref("conditional")
         }
         choice("conditional",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
-            ref("ifthen")
             ref("ifthenelse")
+            ref("ifthen")
         }
         concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
         concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
@@ -142,19 +142,19 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
         val sentence = "ifWthenifXthenYelseZ"
 
         val expected1 = """
-         S { expr|1 { conditional|1 { ifthenelse {
+         S { expr|1 { conditional { ifthen {
                 'if'
                 expr { var { 'W' } }
                 'then'
-                expr|1 { conditional { ifthen {
-                      'if'
-                      expr { var|1 { 'X' } }
-                      'then'
-                      expr { var|2 { 'Y' } }
-                    } } }
-                'else'
-                expr { var|3 { 'Z' } }
-              } } } }
+                expr|1 { conditional|1 { ifthenelse {
+                    'if'
+                    expr { var|1 { 'X' } }
+                    'then'
+                    expr { var|2 { 'Y' } }
+                    'else'
+                    expr { var|3 { 'Z' } }                    
+                } } }
+        } } } }
         """.trimIndent()
 
 
