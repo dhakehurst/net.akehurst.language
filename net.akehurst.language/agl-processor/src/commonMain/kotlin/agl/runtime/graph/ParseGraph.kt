@@ -80,8 +80,8 @@ internal class ParseGraph(
                 val goalFirstChildren = goal.grownChildrenAlternatives.values.first()
                 val userGoalNode = if (null == goalFirstChildren.firstChild!!.state) {
                     //has skip at start
-                    val skipNodes = goalFirstChildren.firstChild!!.children
-                    val ugn = goalFirstChildren.lastChild!!.children[0] as SPPTBranchFromInputAndGrownChildren
+                    val skipNodes = goalFirstChildren.firstChild!!.childrenAlts[0]
+                    val ugn = goalFirstChildren.lastChild!!.childrenAlts[0][0] as SPPTBranchFromInputAndGrownChildren
                     val startPosition = skipNodes[0].startPosition
                     val nugn = SPPTBranchFromInputAndGrownChildren(ugn.runtimeRule, ugn.option, startPosition, ugn.nextInputPosition, ugn.priority)
                     ugn.grownChildrenAlternatives.values.forEach {
@@ -92,7 +92,7 @@ internal class ParseGraph(
                     }
                     nugn
                 } else {
-                    goalFirstChildren.firstChild!!.children[0]
+                    goalFirstChildren.firstChild!!.childrenAlts[0][0]
                 }
                 return userGoalNode
                 //val alternatives = mutableListOf<List<SPPTNode>>()
@@ -457,10 +457,7 @@ internal class ParseGraph(
                 val runtimeRule = rp.runtimeRule
                 val children = gn.children//[runtimeRule] //TODO: can we separate up the children later ?
                 val option = rp.option
-                val priority = when (rp.runtimeRule.rhs.kind) {
-                    RuntimeRuleItemKind.CHOICE -> rp.option//gn.priorityFor(runtimeRule)
-                    else -> 0
-                }
+                val priority = rp.priority
                 //val location = gn.location
                 val matchedTextLength = gn.matchedTextLength
                 var cn: SPPTNode? = this.findCompleteNode(rp, gn.startPosition)
@@ -538,7 +535,7 @@ internal class ParseGraph(
         return when {
             (gnLength > existingLength) -> {
                 //replace existing with new node
-                val longest = this.createBranchNoChildren(newRp.runtimeRule, newRp.option, newNode.priorityFor(newRp.runtimeRule), newNode.startPosition, newNode.nextInputPosition)
+                val longest = this.createBranchNoChildren(newRp.runtimeRule, newRp.option, newRp.priority, newNode.startPosition, newNode.nextInputPosition)
                 longest.grownChildrenAlternatives[newRp.option]=newChildren
                 longest
             }

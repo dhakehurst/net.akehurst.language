@@ -63,4 +63,20 @@ abstract class SPPTNodeFromInputAbstract(
     abstract override fun hashCode() : Int
 
     abstract override fun equals(other: Any?): Boolean
+
+    fun toStringIndented(indentIncrement: String): String {
+        val visitor = ToStringVisitor("\n", indentIncrement)
+        val all: Set<String> = this.accept(visitor, ToStringVisitor.Indent("", true))
+        val total = all.size
+        val sep = "\n"
+        var cur = 0
+        var res = ""
+        for (pt in all) {
+            cur++
+            res += "Tree ${cur} of ${total}\n"
+            res += pt
+            res += "\n"
+        }
+        return all.joinToString(sep)
+    }
 }
