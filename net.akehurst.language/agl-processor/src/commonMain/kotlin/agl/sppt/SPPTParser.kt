@@ -219,7 +219,7 @@ class SPPTParser(
                     val lastNodeStart = nodeNamesStack.pop()
 
                     val children = childrenStack.pop()
-                    val node = this.branch(lastNodeStart.name, lastNodeStart.option, children)
+                    val node = this.branch(input,lastNodeStart.name, lastNodeStart.option, children)
                     childrenStack.peek().add(node)
                 }
                 else -> {
@@ -237,7 +237,7 @@ class SPPTParser(
         val ruleThatIsEmpty = this.runtimeRuleSet.findRuntimeRule(ruleNameThatIsEmpty)
         val terminalRule = ruleThatIsEmpty.emptyRuleItem
         //val n = SPPTLeafDefault(terminalRule, location, true, "", 0)
-        val n = SPPTLeafFromInput(input, terminalRule, startPosition, nextInputPosition,0)
+        val n = SPPTLeafFromInput(input, terminalRule, startPosition, nextInputPosition, 0)
 
         var existing: SPPTLeaf? = this.findLeaf(n.identity, n.matchedTextLength)
         if (null == existing) {
@@ -251,7 +251,7 @@ class SPPTParser(
         input.append(text)
         val terminalRule = this.runtimeRuleSet.findTerminalRule(pattern)
         //val n = SPPTLeafDefault(terminalRule, location, false, text, 0)
-        val n = SPPTLeafFromInput(input, terminalRule, startPosition, nextInputPosition,0)
+        val n = SPPTLeafFromInput(input, terminalRule, startPosition, nextInputPosition, 0)
         n.eolPositions = Regex("\n", setOf(RegexOption.MULTILINE)).findAll(text).toList().map { it.range.first }
         var existing: SPPTLeaf? = this.findLeaf(n.identity, n.matchedTextLength)
         if (null == existing) {
@@ -262,11 +262,11 @@ class SPPTParser(
         return existing
     }
 
-    fun branch(ruleName: String, option: Int, children: List<SPPTNode>): SPPTBranch {
+    fun branch(input: InputFromString, ruleName: String, option: Int, children: List<SPPTNode>): SPPTBranch {
         val rr = this.runtimeRuleSet.findRuntimeRule(ruleName)
         val startPosition = children.first().startPosition
         val nextInputPosition = children.last().nextInputPosition
-        val n = SPPTBranchFromInput(rr, option, startPosition, nextInputPosition, 0)
+        val n = SPPTBranchFromInput(input, rr, option, startPosition, nextInputPosition, 0)
         n.childrenAlternatives.add(children)
 
         var existing: SPPTBranch? = this.findBranch(n.identity, n.matchedTextLength)

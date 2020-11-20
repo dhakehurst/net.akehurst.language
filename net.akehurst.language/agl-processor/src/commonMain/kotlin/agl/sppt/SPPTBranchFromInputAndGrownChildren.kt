@@ -1,29 +1,31 @@
 package agl.sppt
 
+import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.sppt.SPPTNodeFromInputAbstract
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 
-class SPPTBranchFromInputAndGrownChildren(runtimeRule: RuntimeRule,
-                                          option: Int,
-                                          startPosition: Int,               // can't use children.first.startPosition, there may not be any children
-                                          nextInputPosition: Int,          // don't use children.sumBy { it.matchedTextLength }, it requires unwanted iteration
-                                          priority: Int
-) : SPPTNodeFromInputAbstract(
-        runtimeRule, option, startPosition, nextInputPosition, priority
-), SPPTBranch {
+class SPPTBranchFromInputAndGrownChildren(
+        input: InputFromString,
+        runtimeRule: RuntimeRule,
+        option: Int,
+        startPosition: Int,               // can't use children.first.startPosition, there may not be any children
+        nextInputPosition: Int,          // don't use children.sumBy { it.matchedTextLength }, it requires unwanted iteration
+        priority: Int
+) : SPPTNodeFromInputAbstract(input, runtimeRule, option, startPosition, nextInputPosition, priority), SPPTBranch {
 
     // option -> children
-    internal var grownChildrenAlternatives = mutableMapOf<Int,GrowingNode.GrowingChildren>()
+    internal var grownChildrenAlternatives = mutableMapOf<Int, GrowingNode.GrowingChildren>()
 
 
     // --- SPPTBranch ---
 
-    override val childrenAlternatives: Set<List<SPPTNode>> get() = this.grownChildrenAlternatives.entries.map {
-        it.value[this.runtimeRule, it.key]
-    }.toSet()
+    override val childrenAlternatives: Set<List<SPPTNode>>
+        get() = this.grownChildrenAlternatives.entries.map {
+            it.value[this.runtimeRule, it.key]
+        }.toSet()
 
     override val children: List<SPPTNode> get() = this.childrenAlternatives.first()
 
@@ -104,8 +106,6 @@ class SPPTBranchFromInputAndGrownChildren(runtimeRule: RuntimeRule,
     //override val lastLocation get() = if (children.isEmpty()) this.location else children.last().lastLocation
 
     override val lastLeaf: SPPTLeaf get() = children.last().lastLeaf
-
-    override val location: InputLocation get() = TODO("not implemented")
 
     override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
         return visitor.visit(this, arg)

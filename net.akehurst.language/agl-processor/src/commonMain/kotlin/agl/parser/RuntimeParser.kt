@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.parser
 
+import agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.PreviousInfo
@@ -91,10 +92,12 @@ internal class RuntimeParser(
                 }
 
                  */
-                TODO()
+                //TODO()
                 //val cn = SPPTBranchDefault(llg.runtimeRule, llg.currentState.rulePosition.option, llg.location, llg.nextInputPosition, llg.priority)
-                //cn.childrenAlternatives.add(llg.children)
-                // cn
+                val fst = llg.currentState.rulePositions.first()
+                val cn = SPPTBranchFromInputAndGrownChildren(this.input,fst.runtimeRule, fst.option, llg.startPosition, llg.nextInputPosition, fst.priority)
+                cn.grownChildrenAlternatives[fst.option] = llg.children
+                cn
             }
         }
 
@@ -182,6 +185,7 @@ internal class RuntimeParser(
         when (gn.runtimeRules.first().kind) { //FIXME
             RuntimeRuleKind.GOAL -> {
                 val transitions = gn.currentState.transitions(null)
+                        .filter { it.to.runtimeRules.any{it.isEmptyRule}.not() }
                 for (it in transitions) {
                     when (it.action) {
                         Transition.ParseAction.WIDTH -> doWidth(gn, emptySet(), it, true)
@@ -191,6 +195,7 @@ internal class RuntimeParser(
             else -> {
                 for (prev in previous) {
                     val transitions = gn.currentState.transitions(prev.node.currentState)
+                            .filter { it.to.runtimeRules.any{it.isEmptyRule}.not() }
                     for (it in transitions) {
                         when (it.action) {
                             Transition.ParseAction.WIDTH -> doWidth(gn, setOf(prev), it, true)
@@ -207,8 +212,7 @@ internal class RuntimeParser(
         //if (didSkipNode) {
         //    return
         //} else {
-        TODO()
-        /*
+
         for (prev in previous) {
             //if (gn.isSkipGrowth) {
             //    this.growSkip(gn, prev)
@@ -220,7 +224,7 @@ internal class RuntimeParser(
                 when (transition.action) {
                     Transition.ParseAction.HEIGHT -> doHeight(gn, prev, transition, true)
                     Transition.ParseAction.GRAFT -> {
-                        if (transition.runtimeGuard(transition, prev.node, prev.node.currentState.rulePosition)) {
+                        if (transition.runtimeGuard(transition, prev.node, prev.node.currentState.rulePositions)) {
                             doGraft(gn, prev, transition, true)
                         }
                     }
@@ -230,7 +234,7 @@ internal class RuntimeParser(
         }
         //}
 
-         */
+
     }
 
     fun tryGrowInitialSkip() {

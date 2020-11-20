@@ -18,10 +18,7 @@ package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.ParseGraph
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.SPPTLeafDefault
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
@@ -65,8 +62,8 @@ class ScanOnDemandParser(
                 if (null == match) {
                     null
                 } else {
-                    nextInputPosition +=match.length
-                    val leaf = SPPTLeafFromInput(input, it, startPosition, nextInputPosition, (if (it.isPattern) 0 else 1))
+                    val ni = nextInputPosition + match.length
+                    val leaf = SPPTLeafFromInput(input, it, startPosition, ni, (if (it.isPattern) 0 else 1))
                     //leaf.eolPositions = match.eolPositions
                     leaf
                 }
@@ -94,6 +91,7 @@ class ScanOnDemandParser(
                 }
                 else -> {
                     result.add(longest)
+                    nextInputPosition +=longest.matchedTextLength
                 }
             }
             startPosition = nextInputPosition
@@ -135,11 +133,10 @@ class ScanOnDemandParser(
     }
 
     private fun throwError(graph: ParseGraph, rp: RuntimeParser, nextExpected: Pair<InputLocation, Set<RuntimeRule>>, seasons: Int, maxNumHeads: Int): SharedPackedParseTreeDefault {
-        val llg = rp.longestLastGrown
-                ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0), emptySet())
-/*
-        //val lastLocation = nextExpected.first
-       // val exp = nextExpected.second
+        val llg = rp.longestLastGrown ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0), emptySet())
+
+        val lastLocation = nextExpected.first
+        val exp = nextExpected.second
         //val expected = exp
         //        .filter { it.number >= 0 && it.isEmptyRule.not() }
         //        .map { this.runtimeRuleSet.firstTerminals[it.number] }
@@ -149,7 +146,7 @@ class ScanOnDemandParser(
         val errorPos = lastLocation.position + lastLocation.length
         val lastEolPos = llg.matchedText.lastIndexOf('\n')
         val errorLine = llg.location.line + llg.numberOfLines
-        val lastLocation = graph.input.locationFor(llg.lastLeaf.startPosition, llg.lastLeaf.nextInputPosition)
+        //val lastLocation = graph.input.locationFor(llg.lastLeaf.startPosition, llg.lastLeaf.nextInputPosition)
         val errorColumn = when {
             lastLocation.position == 0 && lastLocation.length == 0 -> errorPos + 1
             -1 == lastEolPos -> lastLocation.column + lastLocation.length
@@ -157,9 +154,9 @@ class ScanOnDemandParser(
         }
         val errorLength = 1
         val location = InputLocation(errorPos, errorColumn, errorLine, errorLength)
- */
-        val expected = emptySet<String>()
-        val location = InputLocation(0,0,0,0)
+
+        //val expected = emptySet<String>()
+       // val location = nextExpected.first//InputLocation(0,0,0,0)
         throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location, expected)
 
     }
@@ -183,42 +180,44 @@ class ScanOnDemandParser(
             rp.resetGraphToLastGrown()
             rp.tryGrowHeightOrGraft()
         }
-        TODO()
-        /*
+
         val r = poss.map { lg ->
             // compute next expected item/RuntimeRule
-            when (lg.runtimeRule.kind) {
+            when (lg.runtimeRules.first().kind) {
                 RuntimeRuleKind.GOAL -> {
-                    val exp = lg.currentState.transitions(null)
-                            .map {
-                                it.to.rulePosition
-                            }.toSet()
+                    val trs = lg.currentState.transitions(null)
+                    val exp = trs.flatMap {tr ->
+                        when(tr.action) {
+                            Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
+                            Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.lookahead.content)
+                            Transition.ParseAction.EMBED -> TODO()
+                            Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.createWithParent(lg.lookahead).content
+                            Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.lookahead }.flatMap{ tr.lookaheadGuard.createWithParent(it).content }
+                        }
+                    }
                     Pair(lg, exp)
                 }
                 else -> {
-                    val exp = lg.previous.values.flatMap { prev ->
+                    val trs = lg.previous.values.flatMap { prev ->
                         lg.currentState.transitions(prev.node.currentState)//TODO: do we need to filter graft by runtimeGuard here?
-                    }.map {
-                        it.to.rulePosition
-                    }.toSet()
+                    }
+                    val exp = trs.flatMap {tr ->
+                        when(tr.action) {
+                            Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
+                            Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.lookahead.content)
+                            Transition.ParseAction.EMBED -> TODO()
+                            Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.createWithParent(lg.lookahead).content
+                            Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.lookahead }.flatMap{ tr.lookaheadGuard.createWithParent(it).content }
+                        }
+                    }
                     Pair(lg, exp)
                 }
             }
         }
-        val maxLastLocation: InputLocation = r.map { it.first.lastLocation }.maxBy { it.endPosition }
-                ?: error("Internal error")
-        val fr = r.filter { it.first.lastLocation.endPosition == maxLastLocation.endPosition }
-        val res = fr.flatMap {
-            val ss = it.first.currentState.stateSet
-            it.second.mapNotNull {
-                when {
-                    it.runtimeRule.kind == RuntimeRuleKind.TERMINAL -> listOf(it.runtimeRule)
-                    else -> ss.firstOf(it, setOf(RuntimeRuleSet.END_OF_TEXT))//this.runtimeRuleSet.firstTerminals2[it]
-                }
-            }.flatten()
-        }.toSet()
+        val maxLastLocation: InputLocation = r.map { input.locationFor(it.first.startPosition, it.first.nextInputPosition) }.maxBy { it.endPosition } ?: error("Internal error")
+        val fr = r.filter { it.first.nextInputPosition == maxLastLocation.endPosition }
+        val res = fr.flatMap { it.second }.toSet()
         return Pair(maxLastLocation, res)
-         */
     }
 
     private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromString, gns: List<GrowingNode>): Set<RuntimeRule> {

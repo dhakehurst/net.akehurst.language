@@ -104,7 +104,7 @@ class test_SPPTParser {
 
         val sut = SPPTParser(rrb)
         val input = InputFromString(10,"")
-        val actual = sut.branch("a", 0, listOf<SPPTNode>(sut.emptyLeaf("a", input, 0,1)))
+        val actual = sut.branch(input, "a", 0, listOf<SPPTNode>(sut.emptyLeaf("a", input, 0,1)))
 
         assertNotNull(actual)
         assertFalse(actual.isLeaf)

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
@@ -50,7 +51,7 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
     }
 
     fun createValueFromLeaf(target: SPPTLeaf): Any? {
-        val leaf = target as SPPTLeafDefault
+        val leaf = target //as SPPTLeafDefault
         val value = when {
             leaf.isEmptyLeaf -> null
             else -> leaf.nonSkipMatchedText
@@ -59,7 +60,7 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
     }
 
     fun createValueFromBranch(target: SPPTBranch): Any? {
-        val br = target as SPPTBranchDefault //TODO: make write thing available on interface
+        val br = target as SPPTBranchFromInputAndGrownChildren //SPPTBranchDefault //TODO: make write thing available on interface
         return when (br.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> error("should never happen!")
             RuntimeRuleKind.NON_TERMINAL -> when (br.runtimeRule.rhs.kind) {

@@ -416,7 +416,7 @@ class test_AglGrammar_item {
     fun priorityChoice_nonTerminal_3() {
         val actual = parse("priorityChoice", "a < b < c")
         val expected = this.sppt("""
-            priorityChoice { §priorityChoice§sList2 {
+            priorityChoice { §priorityChoice§sList3 {
                 concatenation { §concatenation§multi6 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 {
                     IDENTIFIER : 'a' WHITESPACE  : ' ' 
                 } } } } } } }
@@ -462,9 +462,9 @@ class test_AglGrammar_item {
     fun choice_simple_nonTerminal_1() {
         val actual = parse("choice", "a")
         val expected = this.sppt("""
-            choice { simpleChoice { §simpleChoice§sList4 {
+            choice|2 { simpleChoice { §simpleChoice§sList4 {
                 concatenation { §concatenation§multi6 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 {
-                    IDENTIFIER : 'a' WHITESPACE  : ' ' 
+                    IDENTIFIER : 'a'
                 } } } } } } }
             } } }
         """.trimIndent())
@@ -526,7 +526,7 @@ class test_AglGrammar_item {
                 }
                 IDENTIFIER : 'r' WHITESPACE  : ' ' 
                 '=' WHITESPACE  : ' ' 
-                choice { priorityChoice { §priorityChoice§sList2 {
+                choice|1 { priorityChoice { §priorityChoice§sList3 {
                     concatenation { §concatenation§multi6 { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { §qualifiedName§sList0 {
                         IDENTIFIER : 'a' WHITESPACE  : ' ' 
                     } } } } } } }

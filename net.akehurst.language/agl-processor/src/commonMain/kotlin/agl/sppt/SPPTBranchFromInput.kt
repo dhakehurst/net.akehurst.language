@@ -16,18 +16,20 @@
 
 package net.akehurst.language.agl.sppt
 
+import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 
 class SPPTBranchFromInput(
+        input:InputFromString,
         runtimeRule: RuntimeRule,
         option: Int,
         startPosition: Int,               // can't use children.first.startPosition, there may not be any children
         nextInputPosition: Int,          // don't use children.sumBy { it.matchedTextLength }, it requires unwanted iteration
         priority: Int
 ) : SPPTNodeFromInputAbstract(
-        runtimeRule, option, startPosition, nextInputPosition, priority
+        input, runtimeRule, option, startPosition, nextInputPosition, priority
 ), SPPTBranch {
 
     // --- SPPTBranch ---

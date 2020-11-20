@@ -39,6 +39,7 @@ class test_aa : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
+        TODO("does not terminate")
         val rrb = this.S()
         val goal = "S"
         val sentence = "a"

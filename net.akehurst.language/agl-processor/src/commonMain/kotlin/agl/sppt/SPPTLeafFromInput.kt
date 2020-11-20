@@ -23,12 +23,12 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 
 class SPPTLeafFromInput(
-        val input: InputFromString,
+        input: InputFromString,
         runtimeRule: RuntimeRule,
         startPosition: Int,
         nextInputPosition: Int,
         priority: Int
-) : SPPTNodeFromInputAbstract(runtimeRule, 0, startPosition, nextInputPosition, priority), SPPTLeaf {
+) : SPPTNodeFromInputAbstract(input, runtimeRule, 0, startPosition, nextInputPosition, priority), SPPTLeaf {
 
     // --- SPPTLeaf ---
     override val isPattern: Boolean get() = runtimeRule.isPattern
@@ -36,7 +36,7 @@ class SPPTLeafFromInput(
     override val isLeaf: Boolean get() = true
     override val isBranch: Boolean get() = false
     override val asBranch: SPPTBranch get() = throw SPPTException("Not a Branch", null)
-    override lateinit var location: InputLocation
+    override val location: InputLocation get() = input.locationFor(startPosition,nextInputPosition)
     override val lastLeaf: SPPTLeaf get() = this
     override val asLeaf: SPPTLeaf get() = this
     override lateinit var tagList: List<String>// = mutableListOf<String>()

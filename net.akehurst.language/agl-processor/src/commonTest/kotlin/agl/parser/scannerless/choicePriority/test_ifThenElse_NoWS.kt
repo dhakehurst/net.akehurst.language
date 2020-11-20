@@ -26,8 +26,8 @@ class test_ifThenElse_NoWS : test_ScanOnDemandParserAbstract() {
             ref("conditional")
         }
         choice("conditional",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
-            ref("ifthenelse")
             ref("ifthen")
+            ref("ifthenelse")
         }
         concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
         concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
@@ -87,7 +87,7 @@ class test_ifThenElse_NoWS : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               expr|1 {
-                conditional|0 {
+                conditional {
                     ifthen {
                       'if'
                       expr { var { 'W' } }

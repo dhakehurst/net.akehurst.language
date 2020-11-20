@@ -54,7 +54,7 @@ class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'", "'c'"), ex.expected)
+        assertEquals(setOf("'a'"), ex.expected)
     }
 
     @Test
@@ -105,8 +105,8 @@ class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
             super.test(rrs, goal, sentence)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(2, ex.location.column)
-        assertEquals(setOf("'b'"), ex.expected)
+        assertEquals(3, ex.location.column)
+        assertEquals(setOf("'c'"), ex.expected)
     }
 
     @Test

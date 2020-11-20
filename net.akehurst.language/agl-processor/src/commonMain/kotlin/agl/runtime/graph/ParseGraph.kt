@@ -83,7 +83,7 @@ internal class ParseGraph(
                     val skipNodes = goalFirstChildren.firstChild!!.childrenAlts[0]
                     val ugn = goalFirstChildren.lastChild!!.childrenAlts[0][0] as SPPTBranchFromInputAndGrownChildren
                     val startPosition = skipNodes[0].startPosition
-                    val nugn = SPPTBranchFromInputAndGrownChildren(ugn.runtimeRule, ugn.option, startPosition, ugn.nextInputPosition, ugn.priority)
+                    val nugn = SPPTBranchFromInputAndGrownChildren(this.input,ugn.runtimeRule, ugn.option, startPosition, ugn.nextInputPosition, ugn.priority)
                     ugn.grownChildrenAlternatives.values.forEach {
                         val nc = GrowingNode.GrowingChildren().appendSkipIfNotEmpty(skipNodes)
                         nc.firstChild!!.nextChild = it.firstChild
@@ -338,7 +338,7 @@ internal class ParseGraph(
      */
     private fun createBranchNoChildren(runtimeRule: RuntimeRule, option: Int, priority: Int, startPosition: Int, nextInputPosition: Int): SPPTBranchFromInputAndGrownChildren {
         //val cn = SPPTBranchDefault(runtimeRule, option, location, nextInputPosition, priority)
-        val cn = SPPTBranchFromInputAndGrownChildren(runtimeRule, option, startPosition, nextInputPosition, priority)
+        val cn = SPPTBranchFromInputAndGrownChildren(this.input,runtimeRule, option, startPosition, nextInputPosition, priority)
         //val cindex = CompleteNodeIndex(runtimeRule.number, location.position)//option, location.position)
         this.completeNodes[runtimeRule, startPosition] = cn
         return cn
@@ -513,6 +513,7 @@ internal class ParseGraph(
                             val choice = pickLongest(gn, rp, children, cn)
                             if (null == choice) {
                                 //ambiguous, keep existing
+                                //println("WARN: Alternative not resolved by longest, $gn vs $cn")
                             } else {
                                 cn = choice
                             }

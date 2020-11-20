@@ -54,7 +54,7 @@ class test_acsOads : test_ScanOnDemandParserAbstract() {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'", "'c'"), ex.expected)
+        assertEquals(setOf("'a'"), ex.expected)
     }
 
     @Test

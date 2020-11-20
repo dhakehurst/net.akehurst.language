@@ -17,11 +17,8 @@
 package net.akehurst.language.parser.scanondemand.examples
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,8 +30,8 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
      * S = S S S | S S | 'a' ;
      */
     /**
-     * S = S1 | S2 | 'a' ;
-     * S1 = S S S ;
+     * S = S3 | S2 | 'a' ;
+     * S3 = S S S ;
      * S2 = S S ;
      */
     private fun S(): RuntimeRuleSetBuilder {
@@ -47,14 +44,23 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         return rrb
     }
 
+    private val rrs = runtimeRuleSet {
+        choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            ref("S3")
+            ref("S2")
+            literal("a")
+        }
+        concatenation("S3") { ref("S"); ref("S"); ref("S") }
+        concatenation("S2") { ref("S"); ref("S") }
+    }
+
     @Test
     fun empty() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence)
         }
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
@@ -62,7 +68,6 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "a"
 
@@ -70,15 +75,14 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
             S|2 { 'a' }
         """.trimIndent()
 
-        super.test(rrb.ruleSet(), goal, sentence, expected1)
+        super.test(rrs, goal, sentence, expected1)
 
-        val sm = rrb.ruleSet().printUsedAutomaton(goal)
+        val sm = rrs.printUsedAutomaton(goal)
         println(sm)
     }
 
     @Test
     fun aa() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "aa"
 
@@ -91,18 +95,17 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
+        super.test(rrs, goal, sentence, expected1)
     }
 
     @Test
     fun aaa() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "aaa"
 
         val expected1 = """
             S {
-              S1 {
+              S3 {
                 S|2 { 'a' }
                 S|2 { 'a' }
                 S|2 { 'a' }
@@ -111,12 +114,11 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
 
-        super.testStringResult(rrb, goal, sentence, expected1)
+        super.test(rrs, goal, sentence, expected1)
     }
 
     @Test
     fun aaaa() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "aaaa"
 
@@ -134,7 +136,7 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
 
-        super.testStringResult(rrb, goal, sentence, expected1)
+        super.test(rrs, goal, sentence, expected1)
     }
 
     @Test

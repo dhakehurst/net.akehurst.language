@@ -92,6 +92,12 @@ class ParserState(
 
     val isAtEnd: Boolean = this.rulePositions.first().isAtEnd //either all are atEnd or none are
 
+    val isGoal = this.runtimeRules.first().kind==RuntimeRuleKind.GOAL
+
+    fun firstOf(ifReachedEnd:Set<RuntimeRule>): Set<RuntimeRule> = this.rulePositions.flatMap {
+        stateSet.firstOf(it, ifReachedEnd)
+    }.toSet()
+
     internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
         return this.stateSet.createLookaheadSet(content)
     }
@@ -244,8 +250,7 @@ class ParserState(
         __embeddedTransitions.clear()
         __transitions.clear()
 
-        val isGoal = this.runtimeRules.first().kind == RuntimeRuleKind.GOAL
-        val thisIsGoalState = isGoal && null == previousState
+        val thisIsGoalState = this.isGoal && null == previousState
         val isAtEnd = this.rulePositions.first().isAtEnd
         when {
             thisIsGoalState -> when {

@@ -18,6 +18,7 @@ package net.akehurst.language.parser.scanondemand.rightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
@@ -35,6 +36,10 @@ class test_expession : test_ScanOnDemandParserAbstract() {
         val r_I = b.rule("I").separatedList(2,-1,b.literal("o"), r_S)
         b.rule(r_S).choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,r_n, r_P, r_I)
         return b
+    }
+
+    private val rrs = runtimeRuleSet {
+        
     }
 
     @Test

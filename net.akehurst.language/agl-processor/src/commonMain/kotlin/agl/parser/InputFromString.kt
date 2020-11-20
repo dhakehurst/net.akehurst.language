@@ -79,7 +79,8 @@ class InputFromString(
     //}
 
     private fun matchLiteral(position: Int, patternText: String): String? {//RegexMatcher.MatchResult? {
-        val match = this.text.regionMatches(position, patternText, 0, patternText.length, false)
+        val stext = this.text.substring(position)
+        val match = stext.startsWith(patternText)//regionMatches(position, patternText, 0, patternText.length, false)
         val matchedText = if (match) patternText else null
         return if (null == matchedText) {
             null
@@ -108,8 +109,8 @@ class InputFromString(
     }
 
     private fun matchRegEx2(position: Int, regex: Regex): String? {//RegexMatcher.MatchResult? {
-        val text = this.text.substring(position)
-        val matchedText = regex.matchAtStart(text)
+        val stext = this.text.substring(position)
+        val matchedText = regex.matchAtStart(stext)
         return if (null == matchedText)
             null
         else {
@@ -195,8 +196,10 @@ class InputFromString(
     }
 
     fun locationFor(startPosition: Int, nextInputPosition: Int): InputLocation {
-//TODO
-        return InputLocation(startPosition,0,0,nextInputPosition-startPosition)
+        val before = this.text.substring(0,startPosition)
+        val line = before.count { it=='\n' } +1
+        val column = startPosition - before.lastIndexOf('\n')
+        return InputLocation(startPosition,column,line,nextInputPosition-startPosition)
     }
 
 }

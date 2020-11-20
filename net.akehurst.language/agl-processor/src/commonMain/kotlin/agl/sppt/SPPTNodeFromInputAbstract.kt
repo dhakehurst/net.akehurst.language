@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.sppt
 
+import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
@@ -24,6 +25,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.parser.InputLocation
 
 abstract class SPPTNodeFromInputAbstract(
+        val input: InputFromString,
         val runtimeRule: RuntimeRule,
         override val option: Int,
         override val startPosition: Int,
@@ -59,6 +61,8 @@ abstract class SPPTNodeFromInputAbstract(
     abstract override val asBranch: SPPTBranch
 
     override var parent: SPPTBranch? = null
+
+    override val location: InputLocation get() = input.locationFor(startPosition,nextInputPosition)
 
     abstract override fun hashCode() : Int
 

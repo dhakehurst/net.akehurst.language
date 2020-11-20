@@ -50,7 +50,7 @@ class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
-        assertEquals(setOf("a","b","V"), e.expected)
+        assertEquals(setOf("'a'","'b'","V"), e.expected)
     }
 
     @Test
