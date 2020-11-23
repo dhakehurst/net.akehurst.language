@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure
+package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_skipRules {
+class test_skipRules : test_Abstract() {
 
     // skip WS = "\s+" ;
     // skip COMMENT = "//[^\n]*$"
@@ -38,8 +39,6 @@ class test_skipRules {
         val SM = rrs.fetchStateSetFor(S)
         val a = rrs.findRuntimeRule("'a'")
         val G = SM.startState.runtimeRules.first()
-        val EOT = RuntimeRuleSet.END_OF_TEXT
-        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
         val s0 = rrs.startingState(S)
 
@@ -51,17 +50,15 @@ class test_skipRules {
         val skWS = rrs.findRuntimeRule("WS")
         val skCM = rrs.findRuntimeRule("COMMENT")
 
-        val sk1 = skipSS.states[listOf(RulePosition(skWS,0,RulePosition.END_OF_RULE))]
+        val sk1 = skipSS.states[listOf(RulePosition(skWS, 0, RulePosition.END_OF_RULE))]
 
-
-        val lhs_E = LookaheadSet.EMPTY
-        val lhs_U = LookaheadSet.UP
-        val lhs_T = LookaheadSet.EOT
         val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
         val lhs_skWCU = SM.runtimeRuleSet.createLookaheadSet(setOf(skWS, skCM, UP))
         val lhs_aT = SM.runtimeRuleSet.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
 
     }
+
+    override val SM: ParserStateSet get() = Companion.SM
 
     @Test
     fun firstTerminals() {
@@ -89,28 +86,25 @@ class test_skipRules {
 
     }
 
-    @Test
-    fun firstOf() {
+    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
+        get() = listOf(
+                Triple(RP(G, 0, SOR), lhs_U, setOf(a)),  // G = . S
+                Triple(RP(G, 0, EOR), lhs_U, setOf(UP)),  // G = S .
+                Triple(RP(S, 0, SOR), lhs_U, setOf(a)),  // S = . a
+                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),   // S = a .
 
-        var actual = s0.stateSet.firstOf(RulePosition(G, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        var expected = setOf(a)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.firstOf(RulePosition(G, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf()
-        assertEquals(expected, actual)
-
-
-        actual = s0.stateSet.firstOf(RulePosition(S, 1, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(a)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.firstOf(RulePosition(S, 1, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(a)
-        assertEquals(expected, actual)
+                Triple(RP(skG, OMI, SOR), lhs_U, setOf(a)),  // skG = . skM+
+                Triple(RP(skG, 0, EOR), lhs_U, setOf(UP)),   // skG = skM . skM+
+                Triple(RP(skG, 0, SOR), lhs_U, setOf(a)),    // skG = skM+ .
+                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),   //  skM = . WS
+                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),   //  skM = WS .
+                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),   //  skM = . CM
+                Triple(RP(S, 0, EOR), lhs_U, setOf(UP))   //  skM = CM .
+        )
 
 
-    }
+    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+        get() = TODO("not implemented")
 
     @Test
     fun sk0_widthInto() {
@@ -132,7 +126,7 @@ class test_skipRules {
                 HeightGraft(RulePosition(G, 0, 0),
                         listOf(RulePosition(skC, 0, RulePosition.START_OF_RULE)),
                         listOf(RulePosition(skC, 0, RulePosition.END_OF_RULE)),
-                        lhs_a,lhs_U)
+                        lhs_a, lhs_U)
         )
         assertEquals(expected, actual)
 

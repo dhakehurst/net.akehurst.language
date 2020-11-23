@@ -53,7 +53,7 @@ class test_aObc : test_ScanOnDemandParserAbstract() {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'", "'b'", "'c'"), ex.expected)
+        assertEquals(setOf("'a'", "'b'"), ex.expected)
     }
 
     @Test
@@ -77,7 +77,7 @@ class test_aObc : test_ScanOnDemandParserAbstract() {
             test(rrs, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        assertEquals(2, ex.location.column)
         assertEquals(setOf("'a'", "'b'", "'c'"), ex.expected)
     }
 
@@ -90,7 +90,7 @@ class test_aObc : test_ScanOnDemandParserAbstract() {
             test(rrs, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        assertEquals(2, ex.location.column)
         assertEquals(setOf("'a'", "'b'", "'c'"), ex.expected)
     }
 
@@ -115,8 +115,8 @@ class test_aObc : test_ScanOnDemandParserAbstract() {
             test(rrs, goalRuleName, inputText)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'", "'b'", "'c'"), ex.expected)
+        assertEquals(2, ex.location.column)
+        assertEquals(setOf( "'c'"), ex.expected)
     }
 
     @Test
@@ -129,7 +129,7 @@ class test_aObc : test_ScanOnDemandParserAbstract() {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'", "'b'", "'c'"), ex.expected)
+        assertEquals(setOf("'a'", "'b'"), ex.expected)
     }
 
     @Test
@@ -142,7 +142,7 @@ class test_aObc : test_ScanOnDemandParserAbstract() {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'", "'b'", "'c'"), ex.expected)
+        assertEquals(setOf("'a'", "'b'"), ex.expected)
     }
 
 

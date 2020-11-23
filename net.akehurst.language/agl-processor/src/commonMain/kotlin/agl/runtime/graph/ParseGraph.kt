@@ -18,10 +18,11 @@ package net.akehurst.language.agl.runtime.graph
 
 import agl.runtime.graph.CompletedNodesStore
 import agl.sppt.SPPTBranchFromInputAndGrownChildren
+import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.SPPTLeafDefault
-import net.akehurst.language.agl.sppt.SPPTNodeAbstract
+import net.akehurst.language.agl.sppt.SPPTNodeFromInputAbstract
 import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SPPTBranch
@@ -458,8 +459,6 @@ internal class ParseGraph(
                 val children = gn.children//[runtimeRule] //TODO: can we separate up the children later ?
                 val option = rp.option
                 val priority = rp.priority
-                //val location = gn.location
-                val matchedTextLength = gn.matchedTextLength
                 var cn: SPPTNode? = this.findCompleteNode(rp, gn.startPosition)
                 if (null == cn || SPPTLeafDefault.NONE === cn) {
                     cn = this.createBranchNoChildren(runtimeRule, option, priority, gn.startPosition, gn.nextInputPosition)
@@ -628,7 +627,7 @@ internal class ParseGraph(
     // for embedded segments
     fun pushToStackOf(newState: ParserState, lookahead: LookaheadSet, embeddedNode: SPPTBranch, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
         val runtimeRule = newState.runtimeRules.first()// should only ever be one
-        (embeddedNode as SPPTNodeAbstract).embeddedIn = runtimeRule.tag
+        (embeddedNode as SPPTNodeFromInputAbstract).embeddedIn = runtimeRule.tag
         val growingChildren = GrowingNode.GrowingChildren()
         growingChildren.appendChild(newState, listOf(embeddedNode)).appendSkipIfNotEmpty(skipNodes)
         this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, growingChildren, oldHead, previous, skipNodes)

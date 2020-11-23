@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure
+package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
+import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_AglGrammar {
+class test_AglGrammar_grammar : test_Abstract() {
 
     companion object {
         val grammar = AglGrammarGrammar()
@@ -30,6 +34,8 @@ class test_AglGrammar {
         val parser = ScanOnDemandParser(converterToRuntimeRules.transform())
         val rrs = parser.runtimeRuleSet
 
+        val R_grammarDefinition = rrs.findRuntimeRule("grammarDefinition")
+        val R_namespace = rrs.findRuntimeRule("namespace")
         val R_rule = rrs.findRuntimeRule("rule")
 
         val R_isOverride = rrs.findRuntimeRule("isOverride")
@@ -44,38 +50,37 @@ class test_AglGrammar {
         val R_leaf = R_isLeaf.rhs.items[0].rhs.items[RuntimeRuleItem.MULTI__ITEM]
         val R_leafEmpty = R_isLeaf.rhs.items[0].rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
 
-        val R_IDENTIFIER = rrs.findRuntimeRule("IDENTIFIER")
-        val EOT = RuntimeRuleSet.END_OF_TEXT
-        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
+        val T_IDENTIFIER = rrs.findRuntimeRule("IDENTIFIER")
+        val T_namespace = rrs.findRuntimeRule("'namespace'")
+        val T_grammar = rrs.findRuntimeRule("'grammar'")
 
-        val SM = rrs.fetchStateSetFor(R_rule)
+        val SM = rrs.fetchStateSetFor(R_grammarDefinition)
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
 
-        val lhs_E = LookaheadSet.EMPTY
-        val lhs_U = LookaheadSet.UP
-        val lhs_T = LookaheadSet.EOT
+        val lhs_IDENTIFIER = SM.createLookaheadSet(setOf(T_IDENTIFIER))
     }
 
-    @Test
-    fun firstOf() {
-        val rulePositions = listOf(
-                Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(R_isLeaf)), // G = . S
-                Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)) // G = S .
+    override val SM: ParserStateSet
+        get() = Companion.SM
+
+    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
+        get() = listOf(
+                Triple(RP(R_grammarDefinition, 0, SOR), lhs_U, setOf(T_namespace)), // grammarDefinition = . namespace grammars
+                Triple(RP(R_grammarDefinition, 0, 1), lhs_U, setOf(T_grammar)), // grammarDefinition = namespace . grammars
+                Triple(RP(R_grammarDefinition, 0, EOR), lhs_U, setOf(UP)),          // grammarDefinition = namespace grammars .
+                Triple(RP(R_namespace, 0, SOR), lhs_U, setOf(UP)), // namespace = . 'namespace' qualifiedName
+                Triple(RP(R_namespace, 0, 1), lhs_U, setOf(UP)), // namespace = 'namespace' . qualifiedName
+                Triple(RP(R_namespace, 0, EOR), lhs_U, setOf(UP)), // namespace = 'namespace' qualifiedName .
 //TODO
+                Triple(RP(G, 0, SOR), lhs_U, setOf(T_namespace)), // G = . grammarDefinition
+                Triple(RP(G, 0, EOR), lhs_U, setOf(UP))        // G = grammarDefinition .
         )
 
-
-        for (t in rulePositions) {
-            val rp = t.first
-            val lhs = t.second
-            val expected = t.third
-
-            val actual = SM.firstOf(rp, lhs.content)
-
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
+    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+        get() = listOf(
+                Pair(RP(T_namespace,0,EOR), lhs_IDENTIFIER)
+        )
 
     @Test
     fun rule_firstTerminals() {

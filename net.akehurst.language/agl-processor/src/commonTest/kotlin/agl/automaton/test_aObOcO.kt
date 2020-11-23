@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure
+package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_aObOcO {
+class test_aObOcO : test_Abstract() {
     /*
         S = a? b? c?;
      */
@@ -45,23 +46,19 @@ class test_aObOcO {
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
         val G = SM.startState.runtimeRules.first()
-        val EOT = RuntimeRuleSet.END_OF_TEXT
-        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
         val s0 = SM.startState
         val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
         val s2 = SM.states[listOf(RulePosition(aOpt_E, 0, RulePosition.END_OF_RULE))]
 
-        val lhs_U = LookaheadSet.UP
-        val lhs_T = LookaheadSet.EOT
         val lhs_bcU = rrs.createLookaheadSet(setOf(b, c, UP))
     }
 
+    override val SM: ParserStateSet
+        get() = Companion.SM
 
-    @Test
-    fun firstOf() {
-
-        val rulePositions = listOf(
+    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
+        get() = listOf(
                 Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // cOpt = . empty
                 Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, setOf(c)),        // cOpt = . c
                 Triple(RulePosition(bOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // bOpt = . empty
@@ -76,17 +73,6 @@ class test_aObOcO {
                 Triple(RulePosition(G, 0, 0), lhs_U, setOf(a, b, c, UP))                      // G = . S
         )
 
-        for (t in rulePositions) {
-            val rp = t.first
-            val lhs = t.second
-            val expected = t.third
-
-            val actual = SM.firstOf(rp, lhs.content)
-
-            assertEquals(expected, actual, "failed $rp")
-        }
-
-    }
 
     @Test
     fun calcLookahead() {
@@ -142,12 +128,10 @@ class test_aObOcO {
 
     @Test
     fun createClosure() {
-        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0), lhs_bcU)
-        val cl_G_S = ClosureItem(cl_G, RulePosition(S, 0, 0), RulePosition(S, 0, 1), lhs_bcU)
-        val cl_G_S_aOpt0 = ClosureItem(cl_G_S, RulePosition(aOpt, 0, 0), RulePosition(G, 0, 0), lhs_bcU)
-        //val cl_G_S_aOpt0_a = ClosureItem(cl_G_S_aOpt0, RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_bcU)
-        val cl_G_S_aOpt1 = ClosureItem(cl_G_S, RulePosition(aOpt, 1, 0), RulePosition(G, 0, 0), lhs_bcU)
-        val cl_G_S_aOpt1_E = ClosureItem(cl_G_S_aOpt1, RulePosition(aOpt_E, 0, RulePosition.END_OF_RULE), RulePosition(G, 0, 0), lhs_bcU)
+        val cl_G = ClosureItem(null, RP(G, 0, 0), RP(G, 0, EOR), lhs_bcU)
+        val cl_G_S = ClosureItem(cl_G, RP(S, 0, 0), RulePosition(S, 0, 1), lhs_bcU)
+        val cl_G_S_aOpt0 = ClosureItem(cl_G_S, RP(aOpt, OMI, 0), RP(aOpt, OMI, EOR), lhs_bcU)
+        val cl_G_S_aOpt1 = ClosureItem(cl_G_S, RP(aOpt, OME, 0), RP(aOpt, OME, EOR), lhs_bcU)
 
         val actual = SM.calcClosure(cl_G)
         val expected = setOf(
@@ -155,6 +139,12 @@ class test_aObOcO {
         )
         assertEquals(expected, actual)
     }
+
+    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+        get() = listOf(
+                Pair(RP(a, 0, EOR), lhs_bcU),
+                Pair(RP(aOpt_E, 0, EOR), lhs_bcU)
+        )
 
     @Test
     fun s0_transitions() {
@@ -172,13 +162,7 @@ class test_aObOcO {
         val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
 
         val expected = listOf(
-                HeightGraft(
-                        null,
-                        listOf(RulePosition(aOpt, 0, 0)),
-                        listOf(RulePosition(aOpt, 0, RulePosition.END_OF_RULE)),
-                        lhs_bcU,
-                        lhs_U
-                )
+                HeightGraft(null, listOf(RP(aOpt, 0, 0)), listOf(RP(aOpt, 0, EOR)), lhs_bcU, lhs_bcU)
         )
         assertEquals(expected, actual)
 

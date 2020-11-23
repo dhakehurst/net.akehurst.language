@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.parser
 
+import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.structure.*

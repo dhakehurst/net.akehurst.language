@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure
+package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class test_LR1_States {
+class test_LR1_States : test_Abstract() {
 
     companion object {
         // This grammar is LR(1) but not LALR(1)
@@ -63,20 +64,25 @@ class test_LR1_States {
         val c = rrs.findRuntimeRule("'c'")
         val d = rrs.findRuntimeRule("'d'")
 
-        val lhs_T = test_aObOcO.rrs.createLookaheadSet(setOf(RuntimeRuleSet.END_OF_TEXT))
-    }
-    @Test
-    fun s0_widthInto() {
-        val s0 = rrs.startingState(S)
+        val SM = rrs.fetchStateSetFor(S)
+        val s0 = SM.startState
+        val G = s0.runtimeRules.first()
 
-        val actual = s0.widthInto(null)
-        val expected = setOf(
-                Pair(RulePosition(d, 0, 0), lhs_T)
-//                RulePosition(b, 0, 0),
-//                RulePosition(d, 0, 0)
-        )
-        assertEquals(expected, actual)
     }
+
+    override val SM: ParserStateSet
+        get() = Companion.SM
+
+    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
+        get() = TODO("not implemented")
+
+    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+        get() = listOf(
+                Pair(RP(d, 0, 0), lhs_T),
+                Pair(RP(b, 0, 0), lhs_T),
+                Pair(RP(d, 0, 0), lhs_T)
+        )
+
 
     @Test
     fun s0_transitions() {
@@ -87,12 +93,12 @@ class test_LR1_States {
         val s2 = s0.stateSet.fetch(listOf(RulePosition(b, 0, RulePosition.END_OF_RULE)))
         val s1 = s0.stateSet.fetch(listOf(RulePosition(d, 0, RulePosition.END_OF_RULE)))
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH,  LookaheadSet(0, setOf(a)), LookaheadSet.EMPTY,null) { _, _ -> true },
-                Transition(s0, s2, Transition.ParseAction.WIDTH,  LookaheadSet(1,  setOf(d)), LookaheadSet.EMPTY,null) { _, _ -> true },
-                Transition(s0, s1, Transition.ParseAction.WIDTH,  LookaheadSet(2,  setOf(c)), LookaheadSet.EMPTY,null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH, LookaheadSet(0, setOf(a)), LookaheadSet.EMPTY, null) { _, _ -> true },
+                Transition(s0, s2, Transition.ParseAction.WIDTH, LookaheadSet(1, setOf(d)), LookaheadSet.EMPTY, null) { _, _ -> true },
+                Transition(s0, s1, Transition.ParseAction.WIDTH, LookaheadSet(2, setOf(c)), LookaheadSet.EMPTY, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
-        for(i in 0 until actual.size) {
+        for (i in 0 until actual.size) {
             assertEquals(expected[i], actual[i])
         }
     }
@@ -125,8 +131,8 @@ class test_LR1_States {
         val s3 = s0.stateSet.fetch(listOf(RulePosition(rA, 0, RulePosition.END_OF_RULE)))
         val s4 = s0.stateSet.fetch(listOf(RulePosition(rB, 0, RulePosition.END_OF_RULE)))
         val expected = listOf<Transition>(
-                Transition(s1, s3, Transition.ParseAction.HEIGHT,  LookaheadSet(0,  setOf(a)), LookaheadSet.EMPTY,null) { _, _ -> true },
-                Transition(s1, s4, Transition.ParseAction.HEIGHT,  LookaheadSet(1,  setOf(c)), LookaheadSet.EMPTY,null) { _, _ -> true }
+                Transition(s1, s3, Transition.ParseAction.HEIGHT, LookaheadSet(0, setOf(a)), LookaheadSet.EMPTY, null) { _, _ -> true },
+                Transition(s1, s4, Transition.ParseAction.HEIGHT, LookaheadSet(1, setOf(c)), LookaheadSet.EMPTY, null) { _, _ -> true }
         )
     }
 /*

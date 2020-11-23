@@ -16,8 +16,8 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.runtime.structure.ParserState
-import net.akehurst.language.agl.runtime.structure.StateNumber
+import net.akehurst.language.agl.automaton.ParserState
+
 
 /*
  A node that is still growing is identified by

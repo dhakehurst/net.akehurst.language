@@ -14,45 +14,44 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure
+package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
+import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_sList_0_n_literal {
+class test_sList_0_n_literal : test_Abstract() {
     // S =  ['a' / ',']* ;
 
     companion object {
         val rrs = runtimeRuleSet {
-            sList("S",0,-1,"'a'", "','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 0, -1, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
         val a = rrs.findRuntimeRule("'a'")
         val _c = rrs.findRuntimeRule("','")
         val G = rrs.startingState(S).runtimeRules.first()
 
-        val s0 = rrs.startingState(S)
+        val SM = rrs.fetchStateSetFor(S)
+        val s0 = SM.startState
 
-        val lhsE = LookaheadSet.EMPTY
-        val lhs_T = LookaheadSet(0, setOf(RuntimeRuleSet.END_OF_TEXT))
         val lhs_a = LookaheadSet(1, setOf(a))
     }
 
-    @Test
-    fun s0_widthInto() {
+    override val SM: ParserStateSet get() = Companion.SM
 
-        val actual =s0.widthInto(null).toList()
+    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
+        get() = TODO("not implemented")
 
-        val expected = listOf(
-                Pair(RulePosition(a, 0, 0),lhs_T)
+    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+        get() = listOf(
+                Pair(RulePosition(a, 0, 0), lhs_T)
         )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
-    }
 
     @Test
     fun s0_transitions() {
@@ -60,8 +59,8 @@ class test_sList_0_n_literal {
         val s1 = s0.stateSet.fetch(listOf(RulePosition(a, 0, RulePosition.END_OF_RULE)))
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH,  lhs_T, LookaheadSet.EMPTY,null) { _, _ -> true },
-                Transition(s0, s1, Transition.ParseAction.WIDTH,  lhs_a, LookaheadSet.EMPTY,null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_T, LookaheadSet.EMPTY, null) { _, _ -> true },
+                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_a, LookaheadSet.EMPTY, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {

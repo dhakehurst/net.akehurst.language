@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure
+package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_multi_1_n_choice {
+class test_multi_1_n_choice : test_Abstract() {
 
     // S =  AB+
     // AB = a | b
@@ -38,8 +39,6 @@ class test_multi_1_n_choice {
         val AB = rrs.findRuntimeRule("AB")
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
-        val EOT = RuntimeRuleSet.END_OF_TEXT
-        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
         val s0 = SM.startState
         val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
@@ -47,18 +46,17 @@ class test_multi_1_n_choice {
         val s3 = SM.states[listOf(RulePosition(AB, 0, RulePosition.END_OF_RULE))]
         val s4 = SM.states[listOf(RulePosition(S, 0, RulePosition.END_OF_RULE))]
 
-        val lhs_E = LookaheadSet.EMPTY
-        val lhs_U = LookaheadSet.UP
-        val lhs_T = LookaheadSet.EOT
         val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
         val lhs_ab = SM.runtimeRuleSet.createLookaheadSet(setOf(a, b))
         val lhs_abU = SM.runtimeRuleSet.createLookaheadSet(setOf(a, b, UP))
         val lhs_aT = SM.runtimeRuleSet.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
     }
 
-    @Test
-    fun firstOf() {
-        val rulePositions = listOf(
+    override val SM: ParserStateSet
+        get() = Companion.SM
+
+    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
+        get() = listOf(
                 Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a, b)), // G = . S
                 Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
                 Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_a, setOf(a, b)), // S = . a+
@@ -67,26 +65,12 @@ class test_multi_1_n_choice {
         )
 
 
-        for (t in rulePositions) {
-            val rp = t.first
-            val lhs = t.second
-            val expected = t.third
-
-            val actual = SM.firstOf(rp, lhs.content)
-
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
-    fun s0_widthInto() {
-        val actual = s0.widthInto(null)
-        val expected = setOf(
+    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+        get() = listOf(
                 Pair(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_abU),
                 Pair(RulePosition(b, 0, RulePosition.END_OF_RULE), lhs_abU)
         )
-        assertEquals(expected, actual)
-    }
+
 
     @Test
     fun s0_transitions() {

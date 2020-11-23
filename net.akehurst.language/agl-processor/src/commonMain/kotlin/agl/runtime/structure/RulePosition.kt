@@ -26,6 +26,9 @@ data class RulePosition(
         val START_OF_RULE = 0
         val END_OF_RULE = -1
 
+        val OPTION_MULTI_ITEM = 0
+        val OPTION_MULTI_EMPTY = 1
+
         //for use in multi and separated list
         val MULIT_ITEM_POSITION = 1 //TODO: make -ve maybe
         val SLIST_SEPARATOR_POSITION = 1 //TODO: make -ve maybe
@@ -90,28 +93,28 @@ data class RulePosition(
                         }
                     }
                     RuntimeRuleItemKind.MULTI -> when (this.option) {
-                        RuntimeRuleItem.MULTI__EMPTY_RULE -> when {
+                        OPTION_MULTI_EMPTY -> when {
                             START_OF_RULE == this.position && this.runtimeRule.rhs.multiMin == 0 && itemRule == this.runtimeRule.rhs.MULTI__emptyRule -> setOf(
-                                    RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__EMPTY_RULE, END_OF_RULE)
+                                    RulePosition(this.runtimeRule, OPTION_MULTI_EMPTY, END_OF_RULE)
                             )
                             else -> emptySet() //throw ParseException("This should never happen!")
                         }
-                        RuntimeRuleItem.MULTI__ITEM -> when (this.position) {
+                        OPTION_MULTI_ITEM -> when (this.position) {
                             START_OF_RULE -> when {
                                 1 == this.runtimeRule.rhs.multiMax -> setOf(
-                                        RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, END_OF_RULE)
+                                        RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, END_OF_RULE)
                                 )
                                 2 <= this.runtimeRule.rhs.multiMin -> setOf(
-                                        RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, MULIT_ITEM_POSITION)
+                                        RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, MULIT_ITEM_POSITION)
                                 )
                                 else -> setOf(
-                                        RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, MULIT_ITEM_POSITION),
-                                        RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, END_OF_RULE)
+                                        RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, MULIT_ITEM_POSITION),
+                                        RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, END_OF_RULE)
                                 )
                             }
                             MULIT_ITEM_POSITION -> setOf(
-                                    RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, MULIT_ITEM_POSITION),
-                                    RulePosition(this.runtimeRule, RuntimeRuleItem.MULTI__ITEM, END_OF_RULE)
+                                    RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, MULIT_ITEM_POSITION),
+                                    RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, END_OF_RULE)
                             )
                             END_OF_RULE -> emptySet()
                             else -> emptySet()

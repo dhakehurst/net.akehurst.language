@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure
+package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_sList_compositeMulti {
+class test_sList_compositeMulti : test_Abstract() {
 
     // S = [nl / ';']*
     // nl = N cnm
@@ -49,52 +50,33 @@ class test_sList_compositeMulti {
         val c = rrs.findRuntimeRule("CMR")
         val i = rrs.findRuntimeRule("SMI")
         val n = rrs.findRuntimeRule("N")
-        val EOT = RuntimeRuleSet.END_OF_TEXT
-        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 
-        val lhs_E = LookaheadSet.EMPTY
-        val lhs_U = LookaheadSet.UP
-        val lhs_T = LookaheadSet.EOT
         val lhs_n = SM.runtimeRuleSet.createLookaheadSet(setOf(n))
         val lhs_c = SM.runtimeRuleSet.createLookaheadSet(setOf(c))
         val lhs_i = SM.runtimeRuleSet.createLookaheadSet(setOf(i))
         val lhs_nU = SM.runtimeRuleSet.createLookaheadSet(setOf(n, UP))
-        val lhs_ciU = SM.runtimeRuleSet.createLookaheadSet(setOf(c,i,UP))
+        val lhs_ciU = SM.runtimeRuleSet.createLookaheadSet(setOf(c, i, UP))
 
         val s0 = rrs.startingState(S)
-        val s1 = SM.states[listOf(RulePosition(n,0,RulePosition.END_OF_RULE))]
-        val s2 = SM.states[listOf(RulePosition(Se,0,RulePosition.END_OF_RULE))]
+        val s1 = SM.states[listOf(RulePosition(n, 0, RulePosition.END_OF_RULE))]
+        val s2 = SM.states[listOf(RulePosition(Se, 0, RulePosition.END_OF_RULE))]
     }
 
-    @Test
-    fun firstOf() {
+    override val SM: ParserStateSet = Companion.SM
+    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>> = listOf(
+            Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(n, UP)), // G = . S
+            Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_U, setOf(n)), // So0 = . nl / ';'
+            Triple(RulePosition(S, 2, RulePosition.START_OF_RULE), lhs_U, setOf(UP)), // So2 = . E
+            Triple(RulePosition(nl, 0, RulePosition.START_OF_RULE), lhs_U, setOf(n)), // nl = . N cmn
 
-        val rulePositions = listOf(
-                Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(n, UP)), // G = . S
-                Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_U, setOf(n)), // So0 = . nl / ';'
-                Triple(RulePosition(S, 2, RulePosition.START_OF_RULE), lhs_U, setOf(UP)), // So2 = . E
-                Triple(RulePosition(nl, 0, RulePosition.START_OF_RULE), lhs_U, setOf(n)), // nl = . N cmn
-
-                Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),                 // G = S .
-                Triple(RulePosition(S, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_SEPARATOR_POSITION), lhs_U, setOf(UP)),    // So0 = nl . / ';'
-                Triple(RulePosition(S, 2, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),                 // So2 = E .
-                Triple(RulePosition(nl, 0, 1), lhs_U, setOf(UP)),                               // nl = N . cnm
-                Triple(RulePosition(cnm, 0, RulePosition.START_OF_RULE), lhs_U, setOf(UP)),             // cnm = . cn
-                Triple(RulePosition(cnm, 1, RulePosition.START_OF_RULE), lhs_U, setOf(UP)), // cnm = . E
-                Triple(RulePosition(cn, 0, RulePosition.START_OF_RULE), lhs_U, setOf(UP))  // cn = . ',' N
-        )
-
-
-        for (t in rulePositions) {
-            val rp = t.first
-            val lhs = t.second
-            val expected = t.third
-
-            val actual = SM.firstOf(rp, lhs.content)
-
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
+            Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),                 // G = S .
+            Triple(RulePosition(S, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_SEPARATOR_POSITION), lhs_U, setOf(UP)),    // So0 = nl . / ';'
+            Triple(RulePosition(S, 2, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),                 // So2 = E .
+            Triple(RulePosition(nl, 0, 1), lhs_U, setOf(UP)),                               // nl = N . cnm
+            Triple(RulePosition(cnm, 0, RulePosition.START_OF_RULE), lhs_U, setOf(UP)),             // cnm = . cn
+            Triple(RulePosition(cnm, 1, RulePosition.START_OF_RULE), lhs_U, setOf(UP)), // cnm = . E
+            Triple(RulePosition(cn, 0, RulePosition.START_OF_RULE), lhs_U, setOf(UP))  // cn = . ',' N
+    )
 
     @Test
     fun calcClosure_G_0_0() {
@@ -110,26 +92,19 @@ class test_sList_compositeMulti {
         assertEquals(expected, actual)
     }
 
-    @Test
-    fun s0_widthInto() {
-
-        val actual = s0.widthInto(null).toList()
-
-        val expected = listOf(
+    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+        get() = listOf(
                 Pair(RulePosition(n, 0, RulePosition.END_OF_RULE), lhs_ciU),
                 Pair(RulePosition(Se, 0, RulePosition.END_OF_RULE), lhs_U)
         )
-        assertEquals(expected, actual)
-
-    }
 
     @Test
     fun s0_transitions() {
         val actual = s0.transitions(null)
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_ciU, LookaheadSet.EMPTY,null) { _, _ -> true },
-                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_U, LookaheadSet.EMPTY,null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_ciU, LookaheadSet.EMPTY, null) { _, _ -> true },
+                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -146,7 +121,7 @@ class test_sList_compositeMulti {
                 HeightGraft(
                         null,
                         listOf(RulePosition(S, 0, 0)),
-                                listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
+                        listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
                         lhs_U,
                         lhs_U
                 )
@@ -160,7 +135,7 @@ class test_sList_compositeMulti {
         val actual = s1.transitions(s0)
 
         val expected = listOf<Transition>(
-                Transition(s1, s2, Transition.ParseAction.HEIGHT, lhs_U, LookaheadSet.UP,null) { _, _ -> true }
+                Transition(s1, s2, Transition.ParseAction.HEIGHT, lhs_U, LookaheadSet.UP, null) { _, _ -> true }
 //                Transition(s1, s3, Transition.ParseAction.GRAFT, lhs_aU, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)

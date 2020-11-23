@@ -60,7 +60,7 @@ class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               expr|1 {
-                conditional|1 {
+                conditional {
                     ifthenelse {
                       'if'
                       expr { var { 'W' } }
@@ -87,7 +87,7 @@ class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               expr|1 {
-                conditional|0 {
+                conditional|1 {
                     ifthen {
                       'if'
                       expr { var { 'W' } }
@@ -110,7 +110,7 @@ class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               expr|1 {
-                conditional|1 {
+                conditional {
                     ifthenelse {
                       'if'
                       expr { var { 'W' } }

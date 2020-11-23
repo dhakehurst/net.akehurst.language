@@ -53,7 +53,7 @@ class test_abOc : test_ScanOnDemandParserAbstract() {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'", "'b'", "'c'"), ex.expected)
+        assertEquals(setOf("'a'", "'c'"), ex.expected)
     }
 
     @Test
@@ -116,7 +116,7 @@ class test_abOc : test_ScanOnDemandParserAbstract() {
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'", "'b'", "'c'"), ex.expected)
+        assertEquals(setOf("'a'", "'c'"), ex.expected)
     }
 
 }

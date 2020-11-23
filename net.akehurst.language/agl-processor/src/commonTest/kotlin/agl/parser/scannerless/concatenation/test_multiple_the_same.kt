@@ -1,4 +1,20 @@
-package parser.scannerless.concatenation
+/**
+ * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.akehurst.language.parser.scanondemand.concatenation
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
@@ -10,24 +26,25 @@ import kotlin.test.assertNotNull
 
 class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
 
-    val S = runtimeRuleSet {
-        skip("WS") { literal("\\s+") }
-        concatenation("S") { ref("X"); ref("Ls") }
-        multi("Ls",0,-1,"L")
-        concatenation("L") { ref("A"); ref("A"); ref("B"); }
-        literal("A", "a")
-        literal("B", "b")
-        literal("X", "x")
+    companion object {
+        val rrs = runtimeRuleSet {
+            skip("WS") { literal("\\s+") }
+            concatenation("S") { ref("X"); ref("Ls") }
+            multi("Ls", 0, -1, "L")
+            concatenation("L") { ref("A"); ref("A"); ref("B"); }
+            literal("A", "a")
+            literal("B", "b")
+            literal("X", "x")
+        }
     }
 
     @Test
     fun empty_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -35,21 +52,19 @@ class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun id_only() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "x"
 
         val expected = """
             S { X:'x' Ls|1 { §empty } }
         """.trimIndent()
-        val actual = super.test(rrb, goal, sentence, expected)
+        val actual = super.test(rrs, goal, sentence, expected)
 
         assertNotNull(actual)
     }
 
     @Test
     fun xaab() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "xaab"
 
@@ -58,7 +73,7 @@ class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
                 A:'a' A:'a' B:'b'
             } } }
         """.trimIndent()
-        val actual = super.test(rrb, goal, sentence, expected)
+        val actual = super.test(rrs, goal, sentence, expected)
 
         assertNotNull(actual)
     }

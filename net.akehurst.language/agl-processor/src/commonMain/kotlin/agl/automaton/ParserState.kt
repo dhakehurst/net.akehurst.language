@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure
+package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.graph.GrowingNode
+import net.akehurst.language.agl.runtime.structure.*
 
 data class HeightGraft(
         val prev: RulePosition?,

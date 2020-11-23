@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure
+package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
+import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -47,9 +51,11 @@ class test_concatenation_abc : test_Abstract() {
         val lhs_aU = SM.runtimeRuleSet.createLookaheadSet(setOf(a, UP))
     }
 
-    @Test
-    fun firstOf() {
-        val rulePositions = listOf(
+    override val SM: ParserStateSet
+        get() = Companion.SM
+
+    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
+        get() = listOf(
                 Triple(RP(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // G = . S
                 Triple(RP(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
                 Triple(RP(S, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S = . a b c
@@ -58,40 +64,23 @@ class test_concatenation_abc : test_Abstract() {
                 Triple(RP(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP))   // S = a b c .
         )
 
-        for (t in rulePositions) {
-            val rp = t.first
-            val lhs = t.second
-            val expected = t.third
-
-            val actual = SM.firstOf(rp, lhs.content)
-
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
 
     @Test
     fun calcClosure_G_0_0() {
-        val cl_G = ClosureItem(null, RP(G, 0, 0), RP(G, 0, 0), lhs_U)
-        val cl_G_S0 = ClosureItem(cl_G, RP(S, 0, 0), RP(G, 0, 0), lhs_b)
+        val cl_G = ClosureItem(null, RP(G, 0, SOR), RP(G, 0, EOR), lhs_U)
+        val cl_G_S0 = ClosureItem(cl_G, RP(S, 0, 0), RP(S, 0, 1), lhs_b)
 
-        val actual = SM.calcClosure(ClosureItem(null, RP(G, 0, 0), RP(G, 0, 0), lhs_U))
+        val actual = SM.calcClosure(cl_G)
         val expected = setOf(
                 cl_G, cl_G_S0
         )
         assertEquals(expected, actual)
     }
 
-    @Test
-    fun s0_widthInto() {
-
-        val actual = s0.widthInto(null).toList()
-
-        val expected = listOf(
+    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+        get() = listOf(
                 Pair(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_b)
         )
-        assertEquals(expected, actual)
-
-    }
 
     @Test
     fun s0_transitions() {
@@ -154,7 +143,7 @@ class test_concatenation_abc : test_Abstract() {
         val actual = s3.transitions(s2)
 
         val expected = listOf(
-                Transition(s3, s4, Transition.ParseAction.GRAFT, lhs_c, LookaheadSet.UP, listOf(RP(S,0,1))) { _, _ -> true }
+                Transition(s3, s4, Transition.ParseAction.GRAFT, lhs_c, LookaheadSet.UP, listOf(RP(S, 0, 1))) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.sppt.SPPTNode
 
@@ -127,17 +128,22 @@ class GrowingNode(
         }
 
         fun appendChild(state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildren {
-            return when {
+            val newChildren = when {
                 state.isGoal ->when{
                     null==firstChild ->{
                         firstChild = GrowingChildNode(state, nextChildAlts)
                         startPosition = nextChildAlts[0].startPosition
                         lastChild = firstChild
-                        numberNonSkip++
-                        nextInputPosition = nextChildAlts[0].nextInputPosition
+                        this
+                    }
+                    null==lastChild!!.state ->{ //append if last is skip node
+                        val nextChild = GrowingChildNode(state, nextChildAlts)
+                        this.lastChild!!.nextChild = nextChild
+                        this.lastChild = nextChild
                         this
                     }
                     else->{
+                        this.toString()
                         this.incAlt(state)
                         firstChild!!.childrenAlts.add(nextChildAlts)
                         this
@@ -147,8 +153,6 @@ class GrowingNode(
                     firstChild = GrowingChildNode(state, nextChildAlts)
                     startPosition = nextChildAlts[0].startPosition
                     lastChild = firstChild
-                    numberNonSkip++
-                    nextInputPosition = nextChildAlts[0].nextInputPosition
                     this
                 }
                 else->{
@@ -189,12 +193,12 @@ class GrowingNode(
                             res.lastChild = nextChild
                         }
                     }
-                    res.numberNonSkip++
-                    res.nextInputPosition = nextChildAlts[0].nextInputPosition
-                    //res.toString()
                     res
                 }
             }
+            newChildren.numberNonSkip++
+            newChildren.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct
+            return newChildren
         }
 
         fun appendSkipIfNotEmpty(skipChildren: List<SPPTNode>): GrowingChildren {
@@ -242,11 +246,11 @@ class GrowingNode(
                 val res = mutableMapOf<RulePosition, List<String>>()
                 val initialSkip = mutableListOf<String>()
                 var sn = firstChild
-                while (null == sn!!.state) {
+                while (sn!=null && null == sn.state) {
                     initialSkip.add(sn.childrenAlts[0].joinToString() { it.name })
                     sn = sn.nextChild
                 }
-                val rps = sn.state!!.rulePositions
+                val rps = sn?.state?.rulePositions ?: emptyList()
                 for(rp in rps) {
                     res[rp] = initialSkip
                     var n = sn

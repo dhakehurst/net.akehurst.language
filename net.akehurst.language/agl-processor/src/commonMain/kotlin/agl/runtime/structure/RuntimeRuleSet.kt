@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.automaton.ParserState
+import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.collections.lazyMap

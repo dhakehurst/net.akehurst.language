@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.structure
+package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.collections.Stack
 import net.akehurst.language.collections.lazyMapNonNull
 
@@ -407,25 +408,12 @@ class ParserStateSet(
         }
     }
 
-    /*
-    fun calcLookaheadUp2(rulePosition: RulePosition): Set<RuntimeRule> {
-        return when {
-            rulePosition.isAtEnd -> LookaheadSet.UP.content
-            else -> {
-                val next = rulePosition.next()
-                next.flatMap {
-                    expectedAfter(it)
-                }.toSet()
-            }
-        }
-    }
-*/
     fun firstOf(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>): Set<RuntimeRule> {
         return when {
             rulePosition.isAtEnd -> ifReachEnd
             else -> {
                 // this will iterate .next() until end of rule so no need to do it here
-                val res = firstOfRpNotEmpty(rulePosition)
+                val res = firstOfRpNotEmpty(rulePosition,mutableMapOf(),BooleanArray(this.runtimeRuleSet.runtimeRules.size))
                 when (res.needsNext) {
                     false -> res.result
                     else -> res.result + ifReachEnd
@@ -439,9 +427,8 @@ class ParserStateSet(
             val result: Set<RuntimeRule>
     )
 
-    private val _firstOfRpNotEmpty = mutableMapOf<RulePosition, FirstOfResult>()
-    fun firstOfRpNotEmpty(rulePosition: RulePosition, done: BooleanArray = BooleanArray(this.runtimeRuleSet.runtimeRules.size)): FirstOfResult {
-        var existing = _firstOfRpNotEmpty[rulePosition]
+    fun firstOfRpNotEmpty(rulePosition: RulePosition, doneRp:MutableMap<RulePosition,FirstOfResult>, done: BooleanArray): FirstOfResult {
+        var existing = doneRp[rulePosition]
         if (null == existing) {
             /*DEBUG*/ if (rulePosition.isAtEnd) error("Internal Error")
             var needsNext = false
@@ -462,14 +449,14 @@ class ParserStateSet(
                             RuntimeRuleKind.TERMINAL -> result.add(item)
                             RuntimeRuleKind.EMBEDDED -> {
                                 val embSS = item.embeddedRuntimeRuleSet!!.fetchStateSetFor(item.embeddedStartRule!!)
-                                val f = embSS.firstOfNotEmpty(item.embeddedStartRule!!, BooleanArray(item.embeddedRuntimeRuleSet!!.runtimeRules.size))
+                                val f = embSS.firstOfNotEmpty(item.embeddedStartRule, doneRp,BooleanArray(item.embeddedRuntimeRuleSet.runtimeRules.size))
                                 result.addAll(f.result)
                                 if (f.needsNext) {
                                     needsNext = true
                                 }
                             }
                             RuntimeRuleKind.NON_TERMINAL -> {
-                                val f = firstOfNotEmpty(item, done)
+                                val f = firstOfNotEmpty(item, doneRp,done)
                                 result.addAll(f.result)
                                 if (f.needsNext) nrps.addAll(rp.next())
                             }
@@ -479,21 +466,21 @@ class ParserStateSet(
                 rps = nrps
             }
             existing = FirstOfResult(needsNext, result)
-            _firstOfRpNotEmpty[rulePosition] = existing
+            doneRp[rulePosition] = existing
         }
         return existing
     }
 
     //TODO: use smaller array for done, but would to map rule number!
     private val _firstOfNotEmpty = Array<FirstOfResult?>(this.runtimeRuleSet.runtimeRules.size, { null })
-    fun firstOfNotEmpty(rule: RuntimeRule, done: BooleanArray): FirstOfResult {
+    fun firstOfNotEmpty(rule: RuntimeRule, doneRp:MutableMap<RulePosition,FirstOfResult>, done: BooleanArray): FirstOfResult {
         //fun firstOfNotEmpty(rule: RuntimeRule): FirstOfResult {
         return when {
             0 > rule.number -> when {
                 RuntimeRuleSet.GOAL_RULE_NUMBER == rule.number -> TODO()
                 RuntimeRuleSet.EOT_RULE_NUMBER == rule.number -> TODO()
                 RuntimeRuleSet.SKIP_RULE_NUMBER == rule.number -> TODO()
-                RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER == rule.number -> firstOfNotEmptySafe(rule, done)
+                RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER == rule.number -> firstOfNotEmptySafe(rule, doneRp,done)
                 RuntimeRuleSet.USE_PARENT_LOOKAHEAD_RULE_NUMBER == rule.number -> TODO()
                 else -> error("unsupported rule number $rule")
             }
@@ -502,7 +489,7 @@ class ParserStateSet(
                 var result = _firstOfNotEmpty[rule.number]
                 if (null == result) {
                     done[rule.number] = true
-                    result = firstOfNotEmptySafe(rule, done)
+                    result = firstOfNotEmptySafe(rule, doneRp,done)
                     _firstOfNotEmpty[rule.number] = result
                 }
                 result
@@ -510,7 +497,7 @@ class ParserStateSet(
         }
     }
 
-    fun firstOfNotEmptySafe(rule: RuntimeRule, done: BooleanArray): FirstOfResult {
+    fun firstOfNotEmptySafe(rule: RuntimeRule, doneRp:MutableMap<RulePosition,FirstOfResult>, done: BooleanArray): FirstOfResult {
         var needsNext = false
         val result = mutableSetOf<RuntimeRule>()
         val pos = rule.rulePositionsAt[0]
@@ -523,7 +510,7 @@ class ParserStateSet(
                     RuntimeRuleKind.GOAL -> error("should never happen")
                     RuntimeRuleKind.EMBEDDED -> {
                         val embSS = item.embeddedRuntimeRuleSet!!.fetchStateSetFor(item.embeddedStartRule!!)
-                        val f = embSS.firstOfNotEmpty(item.embeddedStartRule!!, BooleanArray(item.embeddedRuntimeRuleSet!!.runtimeRules.size))
+                        val f = embSS.firstOfNotEmpty(item.embeddedStartRule, doneRp,BooleanArray(item.embeddedRuntimeRuleSet.runtimeRules.size))
                         result.addAll(f.result)
                         if (f.needsNext) {
                             needsNext = true
@@ -531,7 +518,7 @@ class ParserStateSet(
                     }
                     RuntimeRuleKind.TERMINAL -> result.add(item)
                     RuntimeRuleKind.NON_TERMINAL -> {
-                        val f = firstOfRpNotEmpty(rp, done)
+                        val f = firstOfRpNotEmpty(rp, doneRp, done)
                         result.addAll(f.result)
                         needsNext = needsNext || f.needsNext
                     }

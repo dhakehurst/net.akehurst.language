@@ -16,14 +16,10 @@
 
 package net.akehurst.language.parser.scanondemand.examples
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.time.*
 
 class test_ScottJohnstone_RightNulled_1 : test_ScanOnDemandParserAbstract() {
     /**
@@ -31,13 +27,21 @@ class test_ScottJohnstone_RightNulled_1 : test_ScanOnDemandParserAbstract() {
      * A = a | aA
      * B = b
      */
-    /**
-     * S = S1 | S2 | 'a' ;
-     * S1 = S S S ;
-     * S2 = S S ;
-     */
     private val rrs = runtimeRuleSet {
-        TODO()
+        choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            ref("abAa")
+            ref("aBAa")
+            ref("aba")
+        }
+        concatenation("abAa") { literal("a"); literal("b"); ref("A"); literal("a") }
+        concatenation("aBAa") { literal("a"); ref("B"); ref("A"); literal("a") }
+        concatenation("aba") { literal("a"); literal("b"); literal("a") }
+        choice("A", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            literal("a")
+            ref("A1")
+        }
+        concatenation("A1") { literal("a"); ref("A") }
+        concatenation("B") { literal("b") }
     }
 
     @Test
