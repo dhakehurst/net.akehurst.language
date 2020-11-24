@@ -29,7 +29,7 @@ class test_aABCc : test_Abstract() {
         S1 = a S c
      */
 
-    companion object {
+    private companion object {
 
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {

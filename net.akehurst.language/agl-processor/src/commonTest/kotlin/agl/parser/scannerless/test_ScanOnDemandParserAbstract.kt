@@ -25,7 +25,7 @@ import kotlin.test.assertEquals
 
 abstract class test_ScanOnDemandParserAbstract {
 
-    fun test(rrs:RuntimeRuleSet, goal:String, sentence:String, vararg expectedTrees:String) : SharedPackedParseTree {
+    fun test(rrs:RuntimeRuleSet, goal:String, sentence:String, expectedNumGSSHeads:Int, vararg expectedTrees:String) : SharedPackedParseTree {
         val parser = ScanOnDemandParser(rrs)
         val actual = parser.parse(goal, sentence)
 
@@ -34,6 +34,7 @@ abstract class test_ScanOnDemandParserAbstract {
         val expected = sppt.tree
         assertEquals(expected.toStringIndented("  "), actual.toStringIndented("  "))
         assertEquals(expected, actual)
+        assertEquals(expectedNumGSSHeads, actual.maxNumHeads,"Too many heads on GSS")
         return actual
     }
 

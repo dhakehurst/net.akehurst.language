@@ -31,7 +31,7 @@ class test_embedded : test_Abstract() {
     S = a gB a ;
     gB = grammar B ;
  */
-    companion object {
+    private companion object {
 
         val rrsB = runtimeRuleSet {
             concatenation("B") { literal("b") }

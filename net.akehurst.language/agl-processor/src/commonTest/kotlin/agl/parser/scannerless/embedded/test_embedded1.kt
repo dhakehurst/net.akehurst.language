@@ -32,12 +32,11 @@ class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun Sn_a_fails() {
-        val rrb = this.Sn
         val goal = "S"
         val sentence = "a"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(Sn, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(2, ex.location.column)
@@ -46,7 +45,6 @@ class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun Sn_aba() {
-        val rrb = this.Sn
         val goal = "S"
         val sentence = "aba"
 
@@ -58,7 +56,13 @@ class test_embedded1 : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = Sn,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     // B = b ;
@@ -74,12 +78,11 @@ class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun empty_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -88,12 +91,11 @@ class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun d_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "d"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -102,12 +104,11 @@ class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "a"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(2, ex.location.column)
@@ -116,12 +117,11 @@ class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun ab_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "ab"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(3, ex.location.column)
@@ -130,7 +130,6 @@ class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aba() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "aba"
 
@@ -143,6 +142,12 @@ class test_embedded1 : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = S,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 }

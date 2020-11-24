@@ -21,22 +21,23 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class test_LR1_States : test_Abstract() {
+class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
 
-    companion object {
-        // This grammar is LR(1) but not LALR(1)
+    // This grammar is LR(1) but not LALR(1)
+    // TODO...from where?
 
-        // S = A a | b A c | B c | b B a ;
-        // A = d ;
-        // B = d ;
-        //
-        // S = S1 | S2 | S3 | S4
-        // S1 = A a ;
-        // S2 = b A c ;
-        // S3 = B c ;
-        // S4 = b B a ;
-        // A = d ;
-        // B = d ;
+    // S = A a | b A c | B c | b B a ;
+    // A = d ;
+    // B = d ;
+    //
+    // S = S1 | S2 | S3 | S4
+    // S1 = A a ;
+    // S2 = b A c ;
+    // S3 = B c ;
+    // S4 = b B a ;
+    // A = d ;
+    // B = d ;
+    private companion object {
 
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
@@ -70,11 +71,42 @@ class test_LR1_States : test_Abstract() {
 
     }
 
-    override val SM: ParserStateSet
-        get() = Companion.SM
+    override val SM: ParserStateSet get() = Companion.SM
 
     override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-        get() = TODO("not implemented")
+        get() = listOf(
+                Triple(RP(rA, 0, SOR), lhs_U, setOf(d)),     // A = . d
+                Triple(RP(rA, 0, EOR), lhs_U, setOf(d)),     // A = d .
+                Triple(RP(rB, 0, SOR), lhs_U, setOf(d)),     // B = . d
+                Triple(RP(rB, 0, EOR), lhs_U, setOf(d)),     // B = d .
+
+                Triple(RP(S1, 0, SOR), lhs_U, setOf(d)),     // S1 = . A a
+                Triple(RP(S1, 0, SOR), lhs_U, setOf(d)),     // S1 = A . a
+                Triple(RP(S1, 0, SOR), lhs_U, setOf(d)),     // S1 = A a .
+                Triple(RP(S2, 0, SOR), lhs_U, setOf(d)),     // S2 = . b A c
+                Triple(RP(S2, 0, SOR), lhs_U, setOf(d)),     // S2 = b . A c
+                Triple(RP(S2, 0, SOR), lhs_U, setOf(d)),     // S2 = b A . c
+                Triple(RP(S2, 0, SOR), lhs_U, setOf(d)),     // S2 = b A c .
+                Triple(RP(S3, 0, SOR), lhs_U, setOf(d)),     // S3 = . B c
+                Triple(RP(S3, 0, SOR), lhs_U, setOf(d)),     // S3 = B . c
+                Triple(RP(S3, 0, SOR), lhs_U, setOf(d)),     // S3 = B c .
+                Triple(RP(S4, 0, SOR), lhs_U, setOf(d)),     // S4 = . b B a
+                Triple(RP(S4, 0, SOR), lhs_U, setOf(d)),     // S4 = b . B a
+                Triple(RP(S4, 0, SOR), lhs_U, setOf(d)),     // S4 = b B . a
+                Triple(RP(S4, 0, SOR), lhs_U, setOf(d)),     // S4 = b B a .
+
+                Triple(RP(S, 0, SOR), lhs_U, setOf(d)),     // S = . S1
+                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // S = S1 .
+                Triple(RP(S, 1, SOR), lhs_U, setOf(b)),     // S = . S2
+                Triple(RP(S, 1, EOR), lhs_U, setOf(UP)),     // S = S2 .
+                Triple(RP(S, 2, SOR), lhs_U, setOf(d)),     // S = . S3
+                Triple(RP(S, 2, EOR), lhs_U, setOf(UP)),     // S = S3 .
+                Triple(RP(S, 3, SOR), lhs_U, setOf(b)),     // S = . S4
+                Triple(RP(S, 3, EOR), lhs_U, setOf(UP)),     // S = S4 .
+
+                Triple(RP(G, 0, SOR), lhs_U, setOf(d, b)),     // G = . S
+                Triple(RP(G, 0, EOR), lhs_U, setOf(UP))        // G = S .
+        )
 
     override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
         get() = listOf(
@@ -134,6 +166,44 @@ class test_LR1_States : test_Abstract() {
                 Transition(s1, s3, Transition.ParseAction.HEIGHT, LookaheadSet(0, setOf(a)), LookaheadSet.EMPTY, null) { _, _ -> true },
                 Transition(s1, s4, Transition.ParseAction.HEIGHT, LookaheadSet(1, setOf(c)), LookaheadSet.EMPTY, null) { _, _ -> true }
         )
+    }
+
+
+    @Test
+    fun build() {
+        val actual = rrs.buildFor("S")
+        println(rrs.printUsedAutomaton("S"))
+        val actual_state_rulePositions = actual.states.values.map { it.rulePositions }
+        val actual_trs_rps = actual.allBuiltTransitions.map {
+            listOf(
+                    it.from.rulePositions,
+                    it.to.rulePositions,
+                    it.action,
+                    it.lookaheadGuard.content,
+                    it.upLookahead.content
+            )
+        }
+        val expected_Trs = listOf(
+                listOf(listOf(RP(G, 0, SOR)), listOf(RP(d, 0, EOR)), Transition.ParseAction.WIDTH, setOf(a, c), setOf(UP)),
+                listOf(listOf(RP(G, 0, SOR)), listOf(RP(b, 0, EOR)), Transition.ParseAction.WIDTH, setOf(d), setOf(UP)),
+                listOf(listOf(RP(d, 0, EOR)), listOf(RP(rA, 0, EOR)), Transition.ParseAction.HEIGHT, setOf(a, c), setOf(UP)),
+                listOf(listOf(RP(d, 0, EOR)), listOf(RP(rB, 0, EOR)), Transition.ParseAction.HEIGHT, setOf(a, c), setOf(UP)),
+                listOf(listOf(RP(b, 0, EOR)), listOf(RP(rA, 0, EOR)), Transition.ParseAction.HEIGHT, setOf(a, c), setOf(UP))
+        )
+
+        val expected_state_rulePositions = listOf(
+                listOf(RP(G, 0, SOR)),
+                listOf(RP(d, 0, EOR)),
+                listOf(RP(b, 0, EOR)),
+                listOf(RP(rA, 0, EOR)),
+                listOf(RP(rB, 0, EOR)),
+                listOf(RP(b, 0, EOR)),
+                listOf(RP(b, 0, EOR)),
+                listOf(RP(rA, 0, EOR))
+        )
+
+        assertEquals(expected_state_rulePositions, actual_state_rulePositions)
+        assertEquals(expected_Trs, actual_trs_rps)
     }
 /*
     @Test

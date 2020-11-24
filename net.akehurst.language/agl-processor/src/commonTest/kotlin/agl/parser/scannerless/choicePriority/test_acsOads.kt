@@ -50,7 +50,7 @@ class test_acsOads : test_ScanOnDemandParserAbstract() {
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -74,7 +74,13 @@ class test_acsOads : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -94,7 +100,13 @@ class test_acsOads : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -102,10 +114,16 @@ class test_acsOads : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a"
 
-        val expected2 = """
+        val expected = """
             S|1 { ads { 'a' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence,expected2)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 }

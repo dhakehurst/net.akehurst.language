@@ -32,23 +32,25 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
     // expr = var < conditional ;
     // conditional = ifthenelse | ifthen;
     // var = W | X | Y | Z ;
-    val rrs = runtimeRuleSet {
-        concatenation("S") { ref("expr") }
-        choice("expr",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
-            ref("var")
-            ref("conditional")
-        }
-        choice("conditional",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            ref("ifthenelse")
-            ref("ifthen")
-        }
-        concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
-        concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
-        choice("var",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            literal("W")
-            literal("X")
-            literal("Y")
-            literal("Z")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            concatenation("S") { ref("expr") }
+            choice("expr", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+                ref("var")
+                ref("conditional")
+            }
+            choice("conditional", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("ifthenelse")
+                ref("ifthen")
+            }
+            concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
+            concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
+            choice("var", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("W")
+                literal("X")
+                literal("Y")
+                literal("Z")
+            }
         }
     }
 
@@ -58,7 +60,7 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -88,7 +90,13 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
 
         //NOTE: season 35, long expression is dropped in favour of the shorter one!
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -111,7 +119,13 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -145,7 +159,13 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -153,7 +173,7 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "ifWthenifXthenYelseZ"
 
-        val expected1 = """
+        val expected = """
             S {
               expr|1 {
                 conditional|1 {
@@ -179,9 +199,13 @@ class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-
-        super.test(rrs, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
-
 
 }

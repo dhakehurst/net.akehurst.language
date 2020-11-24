@@ -48,7 +48,7 @@ class test_aObOc : test_ScanOnDemandParserAbstract() {
         val inputText = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            test(rrs, goalRuleName, inputText)
+            test(rrs, goalRuleName, inputText,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -57,38 +57,53 @@ class test_aObOc : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-        val goalRuleName = "S"
-        val inputText = "a"
+        val goal = "S"
+        val sentence = "a"
 
         val expected = """
             S { a { 'a' } }
         """
-        val actual = test(rrs, goalRuleName, inputText, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun b() {
-        val goalRuleName = "S"
-        val inputText = "b"
+        val goal = "S"
+        val sentence = "b"
 
         val expected = """
             S|1 { b { 'b' } }
         """
-        val actual = test(rrs, goalRuleName, inputText, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun c() {
-        val goalRuleName = "S"
-        val inputText = "c"
+        val goal = "S"
+        val sentence = "c"
 
         val expected = """
             S|2 { c { 'c' } }
         """
-        val actual = test(rrs, goalRuleName, inputText, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -97,7 +112,7 @@ class test_aObOc : test_ScanOnDemandParserAbstract() {
         val inputText = "d"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            test(rrs, goalRuleName, inputText)
+            test(rrs, goalRuleName, inputText,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -110,7 +125,7 @@ class test_aObOc : test_ScanOnDemandParserAbstract() {
         val inputText = "ab"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            test(rrs, goalRuleName, inputText)
+            test(rrs, goalRuleName, inputText,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(2, ex.location.column)

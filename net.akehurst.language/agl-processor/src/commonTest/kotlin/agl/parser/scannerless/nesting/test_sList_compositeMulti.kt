@@ -29,9 +29,8 @@ class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
     // cn = ',' N
     // N = "[0-9]+"
 
-    companion object {
-
-        val S = runtimeRuleSet {
+    private companion object {
+        val rrs = runtimeRuleSet {
             //pattern("WS", "\\s+", true)
             sList("S",0,-1,"nl","SMI")
             concatenation("nl") { ref("N"); ref("cnm") }
@@ -43,9 +42,9 @@ class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
             pattern("N","[0-9]+")
         }
     }
+
     @Test
     fun _1() {
-        val rrs = S
         val goal = "S"
         val sentence = "1"
 
@@ -56,13 +55,17 @@ class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
                 } }
         """.trimIndent()
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun _1c2() {
-        val rrs = S
         val goal = "S"
         val sentence = "1,2"
 
@@ -73,13 +76,17 @@ class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
                 } }
         """.trimIndent()
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun _1s2() {
-        val rrs = S
         val goal = "S"
         val sentence = "1;2"
 
@@ -97,7 +104,12 @@ class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
         }
         """.trimIndent()
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 }

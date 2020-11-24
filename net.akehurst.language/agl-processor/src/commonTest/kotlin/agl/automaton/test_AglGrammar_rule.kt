@@ -28,7 +28,7 @@ import kotlin.test.assertEquals
 
 class test_AglGrammar_rule : test_Abstract() {
 
-    companion object {
+    private companion object {
         val grammar = AglGrammarGrammar()
         val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
         val parser = ScanOnDemandParser(converterToRuntimeRules.transform())

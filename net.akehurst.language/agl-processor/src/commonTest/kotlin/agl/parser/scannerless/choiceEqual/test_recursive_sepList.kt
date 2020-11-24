@@ -48,8 +48,13 @@ class test_recursive_sepList : test_ScanOnDemandParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

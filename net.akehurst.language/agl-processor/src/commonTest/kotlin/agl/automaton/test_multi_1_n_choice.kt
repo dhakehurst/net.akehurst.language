@@ -25,7 +25,7 @@ class test_multi_1_n_choice : test_Abstract() {
     // S =  AB+
     // AB = a | b
 
-    companion object {
+    private companion object {
         val rrs = runtimeRuleSet {
             multi("S", 1, -1, "AB")
             choice("AB", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {

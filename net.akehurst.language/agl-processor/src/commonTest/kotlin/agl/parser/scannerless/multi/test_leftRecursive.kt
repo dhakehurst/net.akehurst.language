@@ -27,21 +27,15 @@ class test_leftRecursive : test_ScanOnDemandParserAbstract() {
 
     // S = P | 'a' ;
     // P =  S+ ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_S = b.rule("S").build()
-        val r_P = b.rule("P").multi(1,-1,r_S)
-        b.rule(r_S).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r_P, r_a)
-        return b
-    }
 
-    private val rrs = runtimeRuleSet {
-        choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            ref("P")
-            literal("a")
+    private companion object {
+        private val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("P")
+                literal("a")
+            }
+            multi("P", 1, -1, "S")
         }
-        multi("P",1,-1,"S")
     }
 
     @Test
@@ -54,7 +48,13 @@ class test_leftRecursive : test_ScanOnDemandParserAbstract() {
             S|1 { 'a' }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 

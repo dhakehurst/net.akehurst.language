@@ -44,7 +44,7 @@ class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(deterministic, goal, sentence)
+            super.test(deterministic, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -61,7 +61,13 @@ class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(deterministic, goal, sentence, expected)
+        val actual = super.test(
+                rrs = deterministic,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
 
     }
 
@@ -77,7 +83,13 @@ class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
             } }
         """.trimIndent()
 
-        super.test(deterministic, goal, sentence, expected)
+        val actual = super.test(
+                rrs = deterministic,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
 
     }
 
@@ -101,7 +113,7 @@ class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(ambiguous, goal, sentence)
+            super.test(ambiguous, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -125,7 +137,13 @@ class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        super.test(ambiguous, goal, sentence, expected1, expected2)
+        val actual = super.test(
+                rrs = ambiguous,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected1,expected2)
+        )
 
     }
 
@@ -141,7 +159,13 @@ class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
             } }
         """.trimIndent()
 
-        super.test(ambiguous, goal, sentence, expected)
+        val actual = super.test(
+                rrs = ambiguous,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
 
     }
 

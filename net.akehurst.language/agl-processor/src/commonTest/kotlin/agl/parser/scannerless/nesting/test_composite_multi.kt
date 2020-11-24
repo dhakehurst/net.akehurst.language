@@ -16,29 +16,28 @@
 
 package net.akehurst.language.parser.scanondemand.nesting
 
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class  test_composite_multi : test_ScanOnDemandParserAbstract() {
+class test_composite_multi : test_ScanOnDemandParserAbstract() {
 
     // S = NUM (',' NUM)* ;
     // NUM = "[0-9]+"
 
-    companion object {
-
-        val S = runtimeRuleSet {
+    private companion object {
+        val rrs = runtimeRuleSet {
             concatenation("S") { ref("NUM"); ref("cmNumMulti") }
-            multi("cmNumMulti",0,-1,"cmNum")
+            multi("cmNumMulti", 0, -1, "cmNum")
             concatenation("cmNum") { ref("CMR"); ref("NUM"); }
-            literal("CMR",",")
-            pattern("NUM","[0-9]+")
+            literal("CMR", ",")
+            pattern("NUM", "[0-9]+")
         }
     }
+
     @Test
     fun _1() {
-        val rrs = S
         val goal = "S"
         val sentence = "1"
 
@@ -49,13 +48,17 @@ class  test_composite_multi : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun _1c2() {
-        val rrs = S
         val goal = "S"
         val sentence = "1,2"
 
@@ -69,8 +72,13 @@ class  test_composite_multi : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 

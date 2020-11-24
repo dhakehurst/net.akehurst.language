@@ -22,17 +22,17 @@ import kotlin.test.Test
 
 class test_group : test_ScanOnDemandParserAbstract() {
 
-
-    val S = runtimeRuleSet {
-        concatenation("R") { ref("grp") }
-        concatenation("grp") { ref("A"); ref("Am")}
-        multi("Am", 0,-1,"A")
-        literal("A","A")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            concatenation("R") { ref("grp") }
+            concatenation("grp") { ref("A"); ref("Am") }
+            multi("Am", 0, -1, "A")
+            literal("A", "A")
+        }
     }
 
     @Test
     fun t1() {
-        val rrb = this.S
         val goal = "R"
         val sentence = "A"
 
@@ -42,12 +42,17 @@ class test_group : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun t2() {
-        val rrb = this.S
         val goal = "R"
         val sentence = "AA"
 
@@ -57,12 +62,17 @@ class test_group : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun t3() {
-        val rrb = this.S
         val goal = "R"
         val sentence = "AAA"
 
@@ -72,6 +82,12 @@ class test_group : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 }

@@ -24,7 +24,7 @@ class test_multi_0_n_literal : test_Abstract() {
 
     // S =  'a'* ;
 
-    companion object {
+    private companion object {
         val rrs = runtimeRuleSet {
             multi("S", 0, -1, "'a'")
             literal("'a'", "a")
@@ -85,12 +85,12 @@ class test_multi_0_n_literal : test_Abstract() {
 
         val expected = listOf(
                 HeightGraft(
-                        RulePosition(test_leftRecursive.G, 0, 0),
+                        RulePosition(G, 0, 0),
                         listOf(RulePosition(S, 0, RulePosition.START_OF_RULE)),
                         listOf(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION)),
                         lhs_a, lhs_U),
                 HeightGraft(
-                        RulePosition(test_leftRecursive.G, 0, 0),
+                        RulePosition(G, 0, 0),
                         listOf(RulePosition(S, 0, RulePosition.START_OF_RULE)),
                         listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
                         lhs_U, lhs_U)

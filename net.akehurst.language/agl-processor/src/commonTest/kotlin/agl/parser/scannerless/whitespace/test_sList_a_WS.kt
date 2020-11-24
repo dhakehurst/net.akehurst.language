@@ -25,16 +25,18 @@ class test_sList_a_WS : test_ScanOnDemandParserAbstract() {
     // skip WS = "\s+" ;
     // S = [a / ',']* ;
     // a = 'a' ;
-    private val S = runtimeRuleSet {
-        pattern("WS", "\\s+", true)
-        sList("S",0,-1,"'a'", "','")
-        literal("'a'", "a")
-        literal("','", ",")
+
+    private companion object {
+        val rrs = runtimeRuleSet {
+            pattern("WS", "\\s+", true)
+            sList("S", 0, -1, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
+        }
     }
 
     @Test
     fun empty() {
-        val rrs = this.S
         val goal = "S"
         val sentence = ""
 
@@ -42,12 +44,17 @@ class test_sList_a_WS : test_ScanOnDemandParserAbstract() {
             S|2 { §empty }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a() {
-        val rrs = this.S
         val goal = "S"
         val sentence = "a"
 
@@ -55,12 +62,17 @@ class test_sList_a_WS : test_ScanOnDemandParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun WSa() {
-        val rrb = this.S
         val goal = "S"
         val sentence = " a"
 
@@ -71,12 +83,17 @@ class test_sList_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun acaca() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "a,a,a"
 
@@ -90,12 +107,17 @@ class test_sList_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun acWSacWSa() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "a, a, a"
 
@@ -109,12 +131,17 @@ class test_sList_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aWScaWSca() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "a ,a ,a"
 
@@ -128,12 +155,17 @@ class test_sList_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aWScWSaWScWSa() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "a , a , a"
 
@@ -147,12 +179,17 @@ class test_sList_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun WSaWScWSaWScWSa() {
-        val rrb = this.S
         val goal = "S"
         val sentence = " a , a , a"
 
@@ -167,12 +204,17 @@ class test_sList_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aWScWSaWScWSaWS() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "a , a , a "
 
@@ -186,12 +228,17 @@ class test_sList_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun WSaWScWSaWScWSaWS() {
-        val rrb = this.S
         val goal = "S"
         val sentence = " a , a , a "
 
@@ -206,7 +253,13 @@ class test_sList_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

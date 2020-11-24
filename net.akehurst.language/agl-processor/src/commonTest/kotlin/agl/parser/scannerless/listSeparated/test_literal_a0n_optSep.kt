@@ -25,88 +25,125 @@ class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
     // S = [a / sep]*
     // sep = ','?
     // a = 'a'
-    private val S = runtimeRuleSet {
-        sList("S", 0, -1, "'a'", "sep")
-        literal("'a'", "a")
-        multi("sep",0,1,"','")
-        literal("','",",")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            sList("S", 0, -1, "'a'", "sep")
+            literal("'a'", "a")
+            multi("sep", 0, 1, "','")
+            literal("','", ",")
+        }
     }
 
     @Test
     fun empty() {
-        val rrs = this.S
         val goal = "S"
         val sentence = ""
 
         val expected = "S|2 { §empty }"
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a() {
-        val rrs = this.S
         val goal = "S"
         val sentence = "a"
 
         val expected = "S { 'a' }"
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aca() {
-        val rrs = this.S
         val goal = "S"
         val sentence = "a,a"
 
         val expected = "S {'a' sep{','} 'a'}"
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aa() {
-        val rrs = this.S
         val goal = "S"
         val sentence = "aa"
 
         val expected = "S {'a' sep|1 { §empty } 'a'}"
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun acaa() {
-        val rrs = this.S
         val goal = "S"
         val sentence = "a,aa"
 
         val expected = "S {'a' sep { ',' } 'a' sep|1 { §empty } 'a'}"
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun acaca() {
-        val rrs = this.S
         val goal = "S"
         val sentence = "a,a,a"
 
         val expected = "S {'a' sep{','} 'a' sep{','} 'a'}"
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun acax100() {
-        val rrs = this.S
         val goal = "S"
         val sentence = "a"+",a".repeat(99)
 
         val expected = "S {'a'"+" sep{','} 'a'".repeat(99)+"}"
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

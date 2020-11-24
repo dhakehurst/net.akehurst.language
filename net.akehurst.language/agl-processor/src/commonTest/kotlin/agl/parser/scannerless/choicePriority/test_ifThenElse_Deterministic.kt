@@ -48,7 +48,7 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
         return b
     }
 
-    private val SS = runtimeRuleSet {
+    private val rrs = runtimeRuleSet {
         skip("WS") { pattern("\\s+") }
         concatenation("S") { ref("expr") }
         choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("var"); ref("conditional") }
@@ -60,12 +60,11 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun empty_fails() {
-        val rrb = this.SS
         val goal = "S"
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -96,12 +95,17 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
 
         //NOTE: season 35, long expression is dropped in favour of the shorter one!
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun ifthen() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "if a then b"
 
@@ -120,12 +124,17 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun ifthenelseifthen() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "if a then b else if c then d"
 
@@ -155,16 +164,21 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun ifthenifthenelse() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "if a then if b then c else d"
 
-        val expected1 = """
+        val expected = """
             S {
               expr|1 {
                 conditional {
@@ -190,9 +204,13 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-
-        super.testStringResult(rrb, goal, sentence, expected1)
-        //super.testStringResult(rrb, goal, sentence, expected1, expected2)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 

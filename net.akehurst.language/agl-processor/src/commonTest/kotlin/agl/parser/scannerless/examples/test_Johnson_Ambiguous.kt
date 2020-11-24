@@ -17,16 +17,16 @@
 package net.akehurst.language.parser.scanondemand.examples
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.time.*
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
+import kotlin.time.TimeSource
+import kotlin.time.measureTime
 
 class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
     /**
@@ -37,24 +37,26 @@ class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
      * S1 = S S S ;
      * S2 = S S ;
      */
-    private fun S(): RuntimeRuleSetBuilder {
-        val rrb = RuntimeRuleSetBuilder()
-        val ra = rrb.literal("a")
-        val rS = rrb.rule("S").build()
-        val rS1 = rrb.rule("S1").concatenation(rS, rS, rS)
-        val rS2 = rrb.rule("S2").concatenation(rS, rS)
-        rS.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.AMBIGUOUS, -1, 0, arrayOf(rS1, rS2, ra))
-        return rrb
+
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.AMBIGUOUS) {
+                ref("S1")
+                ref("S2")
+                literal("a")
+            }
+            concatenation("S1") { ref("S"); ref("S"); ref("S") }
+            concatenation("S2") { ref("S"); ref("S") }
+        }
     }
 
     @Test
     fun empty() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
@@ -62,27 +64,28 @@ class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "a"
 
-        val expected1 = """
+        val expected = """
             S|2 { 'a' }
         """.trimIndent()
 
-        super.test(rrb.ruleSet(), goal, sentence, expected1)
-
-        val sm = rrb.ruleSet().printUsedAutomaton(goal)
-        println(sm)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aa() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "aa"
 
-        val expected1 = """
+        val expected = """
             S|1 {
               S2 {
                 S|2 { 'a' }
@@ -91,12 +94,17 @@ class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aaa() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "aaa"
 
@@ -120,16 +128,21 @@ class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
               } }
         """
 
-        super.test(rrb.ruleSet(), goal, sentence, expected1, expected2)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected1, expected2)
+        )
     }
 
     @Test
     fun aaaa() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "aaaa"
 
-        val expected1 = """
+        val expected = """
          S|1 { S2 {
             S|1 { S2 {
                 S|2 { 'a' }
@@ -142,17 +155,21 @@ class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-
-        super.testStringResult(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a10() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "a".repeat(10)
 
-        val expected1 = """
+        val expected = """
             S {
               S1 {
                 S { 'a' }
@@ -162,19 +179,19 @@ class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-
-        // super.testStringResult(rrb, goal, sentence, expected1)
-        val p = ScanOnDemandParser(rrb.ruleSet())
-        val sppt = p.parse(goal, sentence)
-        val sm = rrb.ruleSet().printUsedAutomaton(goal)
-        println(sm)
-        println(sppt.toStringIndented(" "))
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @ExperimentalTime
     @Test
     fun time() {
-        val parser = ScanOnDemandParser(this.S().ruleSet())
+        val parser = ScanOnDemandParser(rrs)
         val times = mutableListOf<Duration>()
         val goal = "S"
 

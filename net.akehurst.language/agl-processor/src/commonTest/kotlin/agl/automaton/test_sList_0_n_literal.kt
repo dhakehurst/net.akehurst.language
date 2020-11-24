@@ -26,7 +26,7 @@ import kotlin.test.assertEquals
 class test_sList_0_n_literal : test_Abstract() {
     // S =  ['a' / ',']* ;
 
-    companion object {
+    private companion object {
         val rrs = runtimeRuleSet {
             sList("S", 0, -1, "'a'", "','")
             literal("'a'", "a")

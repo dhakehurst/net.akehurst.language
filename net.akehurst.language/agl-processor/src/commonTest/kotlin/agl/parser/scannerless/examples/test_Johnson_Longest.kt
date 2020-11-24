@@ -60,7 +60,7 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
@@ -71,14 +71,17 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a"
 
-        val expected1 = """
+        val expected = """
             S|2 { 'a' }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected1)
-
-        val sm = rrs.printUsedAutomaton(goal)
-        println(sm)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -86,7 +89,7 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "aa"
 
-        val expected1 = """
+        val expected = """
             S|1 {
               S2 {
                 S|2 { 'a' }
@@ -95,7 +98,13 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -103,7 +112,7 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "aaa"
 
-        val expected1 = """
+        val expected = """
             S {
               S3 {
                 S|2 { 'a' }
@@ -113,8 +122,13 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-
-        super.test(rrs, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -122,7 +136,7 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "aaaa"
 
-        val expected1 = """
+        val expected = """
          S|1 { S2 {
             S|1 { S2 {
                 S|2 { 'a' }
@@ -135,8 +149,13 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-
-        super.test(rrs, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -145,7 +164,7 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a".repeat(10)
 
-        val expected1 = """
+        val expected = """
             S {
               S1 {
                 S { 'a' }
@@ -155,13 +174,13 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-
-       // super.testStringResult(rrb, goal, sentence, expected1)
-        val p = ScanOnDemandParser(rrb.ruleSet())
-        p.parse(goal, sentence)
-        val sm = rrb.ruleSet().printUsedAutomaton(goal)
-        println(sm)
-
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @ExperimentalTime

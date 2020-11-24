@@ -23,10 +23,10 @@ import kotlin.test.assertEquals
 
 class  test_a : test_ScanOnDemandParserAbstract() {
 
-    companion object {
+    private companion object {
         // S =  'a' | S1 ;
         // S1 = S 'a' ;
-        val S = runtimeRuleSet {
+        val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")
                 ref("S1")
@@ -36,7 +36,6 @@ class  test_a : test_ScanOnDemandParserAbstract() {
     }
     @Test
     fun a() {
-        val rrs = S
         val goal = "S"
         val sentence = "a"
 
@@ -44,14 +43,18 @@ class  test_a : test_ScanOnDemandParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 
     @Test
     fun aa() {
-        val rrs = S
         val goal = "S"
         val sentence = "aa"
 
@@ -59,15 +62,17 @@ class  test_a : test_ScanOnDemandParserAbstract() {
             S|1 { S1 { S { 'a' } 'a' } }
         """.trimIndent()
 
-        //println(rrs.printFullAutomaton("S", true))
-
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aaa() {
-        val rrs = S
         val goal = "S"
         val sentence = "aaa"
 
@@ -85,59 +90,76 @@ class  test_a : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a50() {
-        val rrs = S
         val goal = "S"
         val sentence = "a".repeat(50)
 
         val expected = "S|1 { S1 { ".repeat(49) + "S { 'a' }" + "'a' } }".repeat(49)
 
-        val actual = super.test(rrs, goal, sentence, expected)
-
-        println(rrs.printUsedAutomaton("S"))
-
-        assertEquals(1, actual.maxNumHeads)
-
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a150() {
-        val rrs = S
         val goal = "S"
         val sentence = "a".repeat(150)
 
         val expected = "S|1 { S1 { ".repeat(149) + "S { 'a' }" + "'a' } }".repeat(149)
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a500() {
-        val rrs = S
         val goal = "S"
         val sentence = "a".repeat(500)
 
         val expected = "S|1 { S1 { ".repeat(499) + "S { 'a' }" + "'a' } }".repeat(499)
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a2000() {
-        val rrs = S
         val goal = "S"
         val sentence = "a".repeat(2000)
 
         val expected = "S|1 { S1 { ".repeat(1999) + "S { 'a' }" + "'a' } }".repeat(1999)
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 }

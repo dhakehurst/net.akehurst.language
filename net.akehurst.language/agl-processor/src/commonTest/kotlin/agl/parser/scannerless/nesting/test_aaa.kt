@@ -16,24 +16,23 @@
 
 package net.akehurst.language.parser.scanondemand.nesting
 
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class  test_aaa : test_ScanOnDemandParserAbstract() {
+class test_aaa : test_ScanOnDemandParserAbstract() {
 
     // S = a a a ;
 
-    companion object {
+    private companion object {
 
-        val S = runtimeRuleSet {
+        val rrs = runtimeRuleSet {
             concatenation("S") { literal("a"); literal("a"); literal("a") }
         }
     }
+
     @Test
     fun aaa() {
-        val rrs = S
         val goal = "S"
         val sentence = "aaa"
 
@@ -41,8 +40,13 @@ class  test_aaa : test_ScanOnDemandParserAbstract() {
             S { 'a' 'a' 'a' }
         """.trimIndent()
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 

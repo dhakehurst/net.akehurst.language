@@ -16,30 +16,29 @@
 
 package net.akehurst.language.parser.scanondemand.nesting
 
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class  test_sList_sList : test_ScanOnDemandParserAbstract() {
+class test_sList_sList : test_ScanOnDemandParserAbstract() {
 
     // S = [numList / ';']* ;
     // numList = [NUM / ',']+
     // NUM = "[0-9]+"
 
-    companion object {
-
-        val S = runtimeRuleSet {
-            sList("S",0,-1,"numList","SMI")
-            sList("numList",1,-1,"NUM","CMR")
-            literal("SMI",";")
-            literal("CMR",",")
-            pattern("NUM","[0-9]+")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            sList("S", 0, -1, "numList", "SMI")
+            sList("numList", 1, -1, "NUM", "CMR")
+            literal("SMI", ";")
+            literal("CMR", ",")
+            pattern("NUM", "[0-9]+")
         }
     }
+
     @Test
     fun _1() {
-        val rrs = S
         val goal = "S"
         val sentence = "1"
 
@@ -47,13 +46,17 @@ class  test_sList_sList : test_ScanOnDemandParserAbstract() {
             S { numList { NUM : '1' } }
         """.trimIndent()
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun _1s2() {
-        val rrs = S
         val goal = "S"
         val sentence = "1;2"
 
@@ -65,13 +68,17 @@ class  test_sList_sList : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun _1c2() {
-        val rrs = S
         val goal = "S"
         val sentence = "1,2"
 
@@ -81,7 +88,12 @@ class  test_sList_sList : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(rrs, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 }

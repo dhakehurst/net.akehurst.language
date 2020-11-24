@@ -37,7 +37,13 @@ class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
 
         val expected = "S{ 'a' }"
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
 
     }
 
@@ -50,7 +56,7 @@ class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, ex.location.line)
@@ -67,7 +73,7 @@ class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         val sentence = "b"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, ex.location.line)
@@ -84,7 +90,7 @@ class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, e.location.line)
@@ -101,7 +107,7 @@ class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         val sentence = "abc"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, e.location.line)
@@ -119,7 +125,7 @@ class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         val sentence = "a   b   c"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, e.location.line)
@@ -138,7 +144,7 @@ class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, e.location.line)
@@ -157,7 +163,7 @@ class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, e.location.line)
@@ -176,7 +182,7 @@ class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, e.location.line)
@@ -195,7 +201,7 @@ class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         val sentence = "aaaaaa"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, e.location.line)

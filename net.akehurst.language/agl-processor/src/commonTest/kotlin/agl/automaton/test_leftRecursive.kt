@@ -25,7 +25,7 @@ class test_leftRecursive : test_Abstract() {
     // S =  'a' | S1
     // S1 = S 'a'
 
-    companion object {
+    private companion object {
 
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
@@ -42,12 +42,12 @@ class test_leftRecursive : test_Abstract() {
         val a = rrs.findRuntimeRule("'a'")
 
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
-        val s2 = SM.states[listOf(RulePosition(S, 0, RulePosition.END_OF_RULE))]
-        val s3 = SM.states[listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE))]
-        val s4 = SM.states[listOf(RulePosition(S1, 0, 1))]
-        val s5 = SM.states[listOf(RulePosition(G, 0, RulePosition.END_OF_RULE))]
-        val s6 = SM.states[listOf(RulePosition(S, 1, RulePosition.END_OF_RULE))]
+        val s1 = SM.states[listOf(RP(a, 0, EOR))]
+        val s2 = SM.states[listOf(RP(S, 0, EOR))]
+        val s3 = SM.states[listOf(RP(S1, 0, EOR))]
+        val s4 = SM.states[listOf(RP(S1, 0, 1))]
+        val s5 = SM.states[listOf(RP(G, 0, EOR))]
+        val s6 = SM.states[listOf(RP(S, 1, EOR))]
 
         val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
         val lhs_aU = SM.runtimeRuleSet.createLookaheadSet(setOf(a, UP))
@@ -58,26 +58,26 @@ class test_leftRecursive : test_Abstract() {
 
     override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
         get() = listOf(
-                Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // G = . S
-                Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
-                Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S = . a
-                Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // S = a .
-                Triple(RulePosition(S1, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S1 = . S a
-                Triple(RulePosition(S1, 1, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S1 = S . a
-                Triple(RulePosition(S1, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)) // S1 = S a .
+                Triple(RP(G, 0, SOR), lhs_U, setOf(a)), // G = . S
+                Triple(RP(G, 0, EOR), lhs_U, setOf(UP)), // G = S .
+                Triple(RP(S, 0, SOR), lhs_U, setOf(a)), // S = . a
+                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)), // S = a .
+                Triple(RP(S1, 0, SOR), lhs_U, setOf(a)), // S1 = . S a
+                Triple(RP(S1, 1, SOR), lhs_U, setOf(a)), // S1 = S . a
+                Triple(RP(S1, 0, EOR), lhs_U, setOf(UP)) // S1 = S a .
         )
 
     @Test
     fun calcClosure_G_0_0() {
-        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), null, lhs_U)
-        val cl_G_So0 = ClosureItem(cl_G, RulePosition(S, 0, 0), RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U)
-        val cl_G_So1 = ClosureItem(cl_G, RulePosition(S, 1, 0), RulePosition(S, 1, RulePosition.END_OF_RULE), lhs_U)
-        val cl_G_So1_S1 = ClosureItem(cl_G_So1, RulePosition(S1, 0, 0), RulePosition(S1, 0, 1), lhs_a)
-        val cl_G_So1_S1_So0 = ClosureItem(cl_G_So1_S1, RulePosition(S, 0, 0), RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_a)
-        val cl_G_So1_S1_So1 = ClosureItem(cl_G_So1_S1, RulePosition(S, 1, 0), RulePosition(S, 1, RulePosition.END_OF_RULE), lhs_a)
-        val cl_G_So1_S1_So1_S1 = ClosureItem(cl_G_So1_S1_So1, RulePosition(S1, 0, 0), RulePosition(S1, 0, 1), lhs_a)
+        val cl_G = ClosureItem(null, RP(G, 0, 0), null, lhs_U)
+        val cl_G_So0 = ClosureItem(cl_G, RP(S, 0, 0), RP(S, 0, EOR), lhs_U)
+        val cl_G_So1 = ClosureItem(cl_G, RP(S, 1, 0), RP(S, 1, EOR), lhs_U)
+        val cl_G_So1_S1 = ClosureItem(cl_G_So1, RP(S1, 0, 0), RP(S1, 0, 1), lhs_a)
+        val cl_G_So1_S1_So0 = ClosureItem(cl_G_So1_S1, RP(S, 0, 0), RP(S, 0, EOR), lhs_a)
+        val cl_G_So1_S1_So1 = ClosureItem(cl_G_So1_S1, RP(S, 1, 0), RP(S, 1, EOR), lhs_a)
+        val cl_G_So1_S1_So1_S1 = ClosureItem(cl_G_So1_S1_So1, RP(S1, 0, 0), RP(S1, 0, 1), lhs_a)
 
-        val actual = SM.calcClosure(RulePosition(G, 0, 0), lhs_U)
+        val actual = SM.calcClosure(RP(G, 0, 0), lhs_U)
         val expected = setOf(
                 cl_G, cl_G_So0, cl_G_So1, cl_G_So1_S1, cl_G_So1_S1_So0, cl_G_So1_S1_So1, cl_G_So1_S1_So1_S1
         )
@@ -86,7 +86,7 @@ class test_leftRecursive : test_Abstract() {
 
     override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
         get() = listOf(
-                Pair(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_aU)
+                Pair(RP(a, 0, EOR), lhs_aU)
         )
 
     @Test
@@ -110,8 +110,8 @@ class test_leftRecursive : test_Abstract() {
         val expected = listOf(
                 HeightGraft(
                         null,
-                        listOf(RulePosition(S, 0, 0)),
-                        listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
+                        listOf(RP(S, 0, 0)),
+                        listOf(RP(S, 0, EOR)),
                         lhs_aU,
                         lhs_U
                 )
@@ -141,15 +141,15 @@ class test_leftRecursive : test_Abstract() {
         val expected = setOf(
                 HeightGraft(
                         null,
-                        listOf(RulePosition(G, 0, 0)),
-                        listOf(RulePosition(G, 0, RulePosition.END_OF_RULE)),
+                        listOf(RP(G, 0, 0)),
+                        listOf(RP(G, 0, EOR)),
                         lhs_U,
                         lhs_U
                 ),
                 HeightGraft(
-                        RulePosition(G, 0, 0),
-                        listOf(RulePosition(S1, 0, 0)),
-                        listOf(RulePosition(S1, 0, 1)),
+                        RP(G, 0, 0),
+                        listOf(RP(S1, 0, 0)),
+                        listOf(RP(S1, 0, 1)),
                         lhs_a,
                         lhs_aU
                 )
@@ -175,7 +175,7 @@ class test_leftRecursive : test_Abstract() {
         val actual = s4.widthInto(s0.rulePositions).toList()
 
         val expected = listOf(
-                Pair(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_aU)
+                Pair(RP(a, 0, EOR), lhs_aU)
         )
         assertEquals(expected, actual)
 
@@ -203,8 +203,8 @@ class test_leftRecursive : test_Abstract() {
         val expected = listOf(
                 HeightGraft(
                         null,
-                        listOf(RulePosition(S1, 0, 1)),
-                        listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE)),
+                        listOf(RP(S1, 0, 1)),
+                        listOf(RP(S1, 0, EOR)),
                         lhs_aU,
                         lhs_U
                 )

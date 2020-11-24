@@ -23,20 +23,20 @@ import kotlin.test.Test
 
 class test_rules : test_ScanOnDemandParserAbstract() {
 
-    companion object {
-        val S = runtimeRuleSet {
+    private companion object {
+        val rrs = runtimeRuleSet {
             skip("W") { pattern("\\s+") }
             concatenation("S") { ref("rules") }
-            multi("rules",0,-1,"normalRule")
-            concatenation("normalRule") { ref("ID"); literal("="); ref("choice"); literal(";")}
-            sList("choice",0,-1,"concat", "chSep")
-            literal("chSep","|")
+            multi("rules", 0, -1, "normalRule")
+            concatenation("normalRule") { ref("ID"); literal("="); ref("choice"); literal(";") }
+            sList("choice", 0, -1, "concat", "chSep")
+            literal("chSep", "|")
             multi("concat", 1, -1, "concatItem")
-            choice("concatItem",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("concatItem", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("simpleItem")
                 ref("multi")
             }
-            choice("simpleItem",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("simpleItem", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("ID")
                 ref("group")
             }
@@ -46,7 +46,7 @@ class test_rules : test_ScanOnDemandParserAbstract() {
                 literal("*")
             }
             concatenation("group") { literal("("); ref("choice"); literal(")") }
-            pattern("ID","[a-zA-Z]")
+            pattern("ID", "[a-zA-Z]")
         }
     }
 
@@ -54,6 +54,7 @@ class test_rules : test_ScanOnDemandParserAbstract() {
     fun a() {
         val sentence = "r=a;"
         val goal = "S"
+
         val expected = """
  S { rules { normalRule {
       ID : 'r'
@@ -62,13 +63,21 @@ class test_rules : test_ScanOnDemandParserAbstract() {
       ';'
     } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun bac() {
         val sentence = "r=(a);"
         val goal = "S"
+
         val expected = """
          S { rules { normalRule {
               ID : 'r'
@@ -81,12 +90,21 @@ class test_rules : test_ScanOnDemandParserAbstract() {
               ';'
             } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
+
     @Test
     fun bbacc() {
         val sentence = "r=((a));"
         val goal = "S"
+
         val expected = """
          S { rules { normalRule {
               ID : 'r'
@@ -103,8 +121,16 @@ class test_rules : test_ScanOnDemandParserAbstract() {
               ';'
             } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
+
     @Test
     fun aqaq() {
         val sentence = "r=a?a?;"
@@ -126,12 +152,21 @@ class test_rules : test_ScanOnDemandParserAbstract() {
               ';'
             } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
+
     @Test
     fun aq_aq_aq() {
         val sentence = "r=a?;r=a?;r=a?;"
         val goal = "S"
+
         val expected = """
          S { rules {
             normalRule {
@@ -163,12 +198,21 @@ class test_rules : test_ScanOnDemandParserAbstract() {
             }
           } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
+
     @Test
     fun aaq() {
         val sentence = "r=aa?;"
         val goal = "S"
+
         val expected = """
         S { rules { normalRule {
               ID : 'r'
@@ -183,12 +227,21 @@ class test_rules : test_ScanOnDemandParserAbstract() {
               ';'
             } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
+
     @Test
     fun baaqc() {
         val sentence = "r=(aa?);"
         val goal = "S"
+
         val expected = """
  S { rules { normalRule {
       ID : 'r'
@@ -207,8 +260,16 @@ class test_rules : test_ScanOnDemandParserAbstract() {
       ';'
     } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
+
     @Test
     fun aq_aqaq_baaqc() {
         val sentence = """
@@ -217,6 +278,7 @@ class test_rules : test_ScanOnDemandParserAbstract() {
             s=(s i?);
         """.trimIndent()
         val goal = "S"
+
         val expected = """
          S { rules {
             normalRule {
@@ -266,6 +328,13 @@ class test_rules : test_ScanOnDemandParserAbstract() {
             }
           } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 }

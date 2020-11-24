@@ -30,24 +30,25 @@ class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
     // A = 'a'?
     // B = 'b'?
     // V = "[a-c]"
-    private val S = runtimeRuleSet {
-        concatenation("S") { ref("AB"); ref("V"); literal("d") }
-        concatenation("AB") { ref("A"); ref("B") }
-        multi("A",0,1,"'a'")
-        literal("'a'","a")
-        multi("B",0,1,"'b'")
-        literal("'b'","b")
-        pattern("V","[a-c]")
+    private companion object {
+         val rrs = runtimeRuleSet {
+            concatenation("S") { ref("AB"); ref("V"); literal("d") }
+            concatenation("AB") { ref("A"); ref("B") }
+            multi("A", 0, 1, "'a'")
+            literal("'a'", "a")
+            multi("B", 0, 1, "'b'")
+            literal("'b'", "b")
+            pattern("V", "[a-c]")
+        }
     }
 
     @Test
     fun empty_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, e.location.line)
@@ -57,7 +58,6 @@ class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun abcd() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "abcd"
 
@@ -72,12 +72,17 @@ class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun acd() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "acd"
 
@@ -92,7 +97,13 @@ class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 

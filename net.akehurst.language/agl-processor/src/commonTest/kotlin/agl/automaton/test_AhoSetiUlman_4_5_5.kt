@@ -26,7 +26,7 @@ class test_AhoSetiUlman_4_5_5 : test_Abstract() {
     // S = C C ;
     // C = C1 | d ;
     // C1 = c C ;
-    companion object {
+    private companion object {
 
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("C"); ref("C") }

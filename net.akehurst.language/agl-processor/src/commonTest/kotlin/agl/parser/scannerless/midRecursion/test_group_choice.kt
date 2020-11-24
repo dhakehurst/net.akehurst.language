@@ -23,8 +23,8 @@ import kotlin.test.Test
 
 class test_group_choice : test_ScanOnDemandParserAbstract() {
 
-    companion object {
-        val S = runtimeRuleSet {
+    private companion object {
+        val rrs = runtimeRuleSet {
             skip("W") { pattern("\\s+") }
             concatenation("S") { ref("rules") }
             multi("rules",0,-1,"normalRule")
@@ -48,6 +48,7 @@ class test_group_choice : test_ScanOnDemandParserAbstract() {
     fun rEQaSEMI() {
         val sentence = "r=a;"
         val goal = "S"
+
         val expected = """
          S { rules { normalRule {
               ID : 'r'
@@ -56,13 +57,21 @@ class test_group_choice : test_ScanOnDemandParserAbstract() {
               ';'
             } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun bac() {
         val sentence = "r=(a);"
         val goal = "S"
+
         val expected = """
          S { rules { normalRule {
               ID : 'r'
@@ -75,12 +84,20 @@ class test_group_choice : test_ScanOnDemandParserAbstract() {
               ';'
             } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
     @Test
     fun bbacc() {
         val sentence = "r=((a));"
         val goal = "S"
+
         val expected = """
  S { rules { normalRule {
       ID : 'r'
@@ -97,7 +114,14 @@ class test_group_choice : test_ScanOnDemandParserAbstract() {
       ';'
     } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

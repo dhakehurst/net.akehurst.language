@@ -28,7 +28,7 @@ class test_sList_compositeMulti : test_Abstract() {
     // cn = ',' N
     // N = "[0-9]+"
 
-    companion object {
+    private companion object {
 
         val rrs = runtimeRuleSet {
             sList("S", 0, -1, "nl", "SMI")

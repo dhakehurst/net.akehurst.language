@@ -30,7 +30,7 @@ class test_aABCc : test_ScanOnDemandParserAbstract() {
             S = b | S1
             S1 = a S c
          */
-        val S = runtimeRuleSet {
+        val rrs = runtimeRuleSet {
             choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("b")
                 ref("S1")
@@ -43,29 +43,53 @@ class test_aABCc : test_ScanOnDemandParserAbstract() {
     fun b() {
         val sentence = "b"
         val goal = "S"
+
         val expected = """
          S { 'b' }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun abc() {
         val sentence = "abc"
         val goal = "S"
+
         val expected = """
          S|1 { S1 { { 'a' S { 'b' } 'c' } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
     @Test
     fun aabcc() {
         val sentence = "aabcc"
         val goal = "S"
+
         val expected = """
          S|1 { S1 { 'a' S|1 { S1 { 'a' S { 'b' } 'c' } } 'c' } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

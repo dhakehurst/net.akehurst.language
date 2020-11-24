@@ -17,9 +17,10 @@
 package net.akehurst.language.parser.scanondemand.examples
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -39,38 +40,40 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
     // S4 = b B a ;
     // A = d ;
     // B = d ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_b = b.literal("b")
-        val r_c = b.literal("c")
-        val r_d = b.literal("d")
-        val r_A = b.rule("A").concatenation(r_d)
-        val r_B = b.rule("B").concatenation(r_d)
-        val r_S1 = b.rule("S1").concatenation(r_A, r_a)
-        val r_S2 = b.rule("S2").concatenation(r_b, r_A, r_c)
-        val r_S3 = b.rule("S3").concatenation(r_B, r_c)
-        val r_S4 = b.rule("S4").concatenation(r_b, r_B, r_a)
-        val r_S = b.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_S1, r_S2, r_S3, r_S4)
-        return b
+    val rrs = runtimeRuleSet {
+        choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            ref("S1")
+            ref("S2")
+            ref("S3")
+            ref("S4")
+        }
+        concatenation("S1") { ref("A"); literal("a") }
+        concatenation("S2") { literal("b"); ref("A"); literal("c") }
+        concatenation("S3") { ref("B"); literal("c") }
+        concatenation("S4") { literal("b"); ref("B"); literal("a") }
+        concatenation("A") { literal("d") }
+        concatenation("B") { literal("d") }
+    }
+
+    @BeforeTest
+    fun before() {
+        rrs.buildFor("S")
     }
 
     @Test //TODO: remove this its temporary
     fun printAutomaton() {
-        val rrb = this.S()
         val goal = "S"
 
-        println(rrb.ruleSet().printFullAutomaton(goal))
+        println(rrs.printFullAutomaton(goal))
     }
 
     @Test
     fun a_fails() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "a"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, ex.location.line, "line is wrong")
         assertEquals(1, ex.location.column, "column is wrong")
@@ -79,12 +82,11 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun d_fails() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "d"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, ex.location.line, "line is wrong")
         assertEquals(2, ex.location.column, "column is wrong")
@@ -93,7 +95,6 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun da() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "da"
 
@@ -101,13 +102,17 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
             S { S1 { A { 'd' } 'a' } }
         """.trimIndent()
 
-        val tree = super.testStringResult(rrb, goal, sentence, expected)
-        assertEquals(1, tree.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun bdc() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "bdc"
 
@@ -115,14 +120,17 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
             S|1 { S2 { 'b' A { 'd' } 'c' } }
         """.trimIndent()
 
-        val tree = super.testStringResult(rrb, goal, sentence, expected)
-        assertEquals(2, tree.maxNumHeads)
-
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun dc() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "dc"
 
@@ -130,13 +138,17 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
             S|2 { S3 { B { 'd' } 'c' } }
         """.trimIndent()
 
-        val tree = super.testStringResult(rrb, goal, sentence, expected)
-        assertEquals(1, tree.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun bda() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "bda"
 
@@ -144,9 +156,13 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
             S|3 { S4 { 'b' B { 'd' } 'a' } }
         """.trimIndent()
 
-        val tree = super.testStringResult(rrb, goal, sentence, expected)
-        assertEquals(2, tree.maxNumHeads)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
-
 
 }

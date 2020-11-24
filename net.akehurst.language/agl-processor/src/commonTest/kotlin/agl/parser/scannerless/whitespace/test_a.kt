@@ -24,9 +24,11 @@ class test_a : test_ScanOnDemandParserAbstract() {
 
     // skip WS = "\s+" ;
     // S = 'a' ;
-    private val rrs = runtimeRuleSet {
-        skip("WS") { pattern("\\s+") }
-        concatenation("S") { literal("a") }
+    private companion object {
+        val rrs = runtimeRuleSet {
+            skip("WS") { pattern("\\s+") }
+            concatenation("S") { literal("a") }
+        }
     }
 
     @Test
@@ -38,7 +40,13 @@ class test_a : test_ScanOnDemandParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -50,7 +58,13 @@ class test_a : test_ScanOnDemandParserAbstract() {
             S { WS { "\s+" : ' ' } 'a' }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -62,7 +76,13 @@ class test_a : test_ScanOnDemandParserAbstract() {
             S { 'a' WS { "\s+" : ' ' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -74,7 +94,13 @@ class test_a : test_ScanOnDemandParserAbstract() {
             S { WS { "\s+" : ' ' } 'a' WS { "\s+" : ' ' } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

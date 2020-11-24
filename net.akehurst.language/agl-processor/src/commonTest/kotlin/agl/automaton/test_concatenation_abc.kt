@@ -25,7 +25,7 @@ import kotlin.test.assertEquals
 
 class test_concatenation_abc : test_Abstract() {
     // S =  'a' 'b' 'c' ;
-    companion object {
+    private companion object {
 
         val rrs = runtimeRuleSet {
             concatenation("S") { literal("a");literal("b");literal("c") }

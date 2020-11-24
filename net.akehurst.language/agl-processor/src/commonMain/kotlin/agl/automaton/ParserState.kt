@@ -178,7 +178,7 @@ class ParserState(
     fun transitions(previousState: ParserState?): List<Transition> {
         val cache = this.transitions_cache[previousState]
         val trans = if (null == cache) {
-            //check(this.stateSet.preBuilt.not(),{"Transitions not built for $this --> $previousState"})
+            check(this.stateSet.preBuilt.not(),{"Transitions not built for $this --> $previousState"})
             val transitions = this.calcFilteredTransitions(previousState).toList()
             //val transitions = this.calcTransitions(previousState).toList()
 

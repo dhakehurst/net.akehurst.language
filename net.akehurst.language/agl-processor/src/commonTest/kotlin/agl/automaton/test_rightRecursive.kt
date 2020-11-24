@@ -25,7 +25,7 @@ class test_rightRecursive : test_Abstract() {
     // S =  'a' | S1 ;
     // S1 = 'a' S ;
 
-    companion object {
+    private companion object {
 
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {

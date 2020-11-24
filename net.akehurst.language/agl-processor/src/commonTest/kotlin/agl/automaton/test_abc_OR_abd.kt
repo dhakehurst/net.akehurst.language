@@ -26,7 +26,7 @@ class test_abc_OR_abd : test_Abstract() {
     // ABC = a b c
     // ABD = a b d
 
-    companion object {
+    private companion object {
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("ABC")

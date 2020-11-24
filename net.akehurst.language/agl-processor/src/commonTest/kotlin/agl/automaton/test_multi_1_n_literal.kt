@@ -24,7 +24,7 @@ class test_multi_1_n_literal : test_Abstract() {
 
     // S =  'a'+ ;
 
-    companion object {
+    private companion object {
         val rrs = runtimeRuleSet {
             multi("S", 1, -1, "'a'")
             literal("'a'", "a")
@@ -57,7 +57,9 @@ class test_multi_1_n_literal : test_Abstract() {
         )
 
     override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
-        get() = TODO("not implemented")
+        get() = listOf(
+                Pair(RP(a,0,EOR), lhs_aU)
+        )
 
     @Test
     fun s1_heightOrGraftInto_s0() {
@@ -65,13 +67,13 @@ class test_multi_1_n_literal : test_Abstract() {
         val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(G, 0, 0),
+                HeightGraft(null,
                         listOf(RulePosition(S, 0, 0)),
-                        listOf(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION)),
+                        listOf(RulePosition(S, 0, PMI)),
                         lhs_a, lhs_U),
-                HeightGraft(RulePosition(G, 0, 0),
+                HeightGraft(null,
                         listOf(RulePosition(S, 0, 0)),
-                        listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
+                        listOf(RulePosition(S, 0, EOR)),
                         lhs_U, lhs_U)
         )
         assertEquals(expected, actual)

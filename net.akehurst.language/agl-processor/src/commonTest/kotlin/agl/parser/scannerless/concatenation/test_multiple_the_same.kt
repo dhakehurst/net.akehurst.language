@@ -44,7 +44,7 @@ class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -58,9 +58,14 @@ class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
         val expected = """
             S { X:'x' Ls|1 { §empty } }
         """.trimIndent()
-        val actual = super.test(rrs, goal, sentence, expected)
 
-        assertNotNull(actual)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -73,9 +78,14 @@ class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
                 A:'a' A:'a' B:'b'
             } } }
         """.trimIndent()
-        val actual = super.test(rrs, goal, sentence, expected)
 
-        assertNotNull(actual)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

@@ -41,7 +41,7 @@ class test_BillotLang_PicoEnglish : test_ScanOnDemandParserAbstract() {
      * VP = 'v' NP
      * PP = 'p' NP
      */
-    private val S = runtimeRuleSet {
+    private val rrs = runtimeRuleSet {
         choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("S1"); ref("S2") }
         concatenation("S1") { ref("NP"); ref("VP") }
         concatenation("S2") { ref("S"); ref("PP") }
@@ -55,12 +55,11 @@ class test_BillotLang_PicoEnglish : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun empty_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
@@ -68,11 +67,10 @@ class test_BillotLang_PicoEnglish : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun nvn() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "nvn"
 
-        val expected1 = """
+        val expected = """
          S { S1 {
             NP { NP1 { 'n' } }
             VP {
@@ -82,7 +80,13 @@ class test_BillotLang_PicoEnglish : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

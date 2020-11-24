@@ -24,7 +24,7 @@ class test_aObOcO : test_Abstract() {
     /*
         S = a? b? c?;
      */
-    companion object {
+    private companion object {
 
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("aOpt"); ref("bOpt"); ref("cOpt") }

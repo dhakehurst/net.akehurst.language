@@ -26,7 +26,7 @@ class test_skipRules : test_Abstract() {
     // skip COMMENT = "//[^\n]*$"
     // S = 'a' ;
 
-    companion object {
+    private companion object {
 
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)

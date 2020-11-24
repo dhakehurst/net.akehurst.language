@@ -23,11 +23,12 @@ import kotlin.test.Test
 
 class test_abc : test_ScanOnDemandParserAbstract() {
 
-    companion object {
-        // skip WS = "\s+" ;
-        // skip COMMENT = "//[^\n]*$"
-        // S = 'a' ;
-        val S = runtimeRuleSet {
+    // skip WS = "\s+" ;
+    // skip COMMENT = "//[^\n]*$"
+    // S = 'a' ;
+
+    private companion object {
+        val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
             pattern("COMMENT", "//[^\\n]*$", true)
             concatenation("S") { literal("a") }
@@ -43,7 +44,13 @@ class test_abc : test_ScanOnDemandParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.test(S, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -55,7 +62,13 @@ class test_abc : test_ScanOnDemandParserAbstract() {
             S { WS : ' ' 'a' }
         """.trimIndent()
 
-        super.test(S, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -74,7 +87,13 @@ class test_abc : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(S, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -86,7 +105,13 @@ class test_abc : test_ScanOnDemandParserAbstract() {
             S { 'a' WS : ' ' }
         """.trimIndent()
 
-        super.test(S, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -98,7 +123,13 @@ class test_abc : test_ScanOnDemandParserAbstract() {
             S { WS : ' '  'a' WS : ' ' }
         """.trimIndent()
 
-        super.test(S, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 

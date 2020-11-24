@@ -33,27 +33,28 @@ class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
     // S1 = B S 'c'
     // B = 'b' | Be
     // Be = <empty>
-    private val S = runtimeRuleSet {
-        choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            ref("S1")
-            literal("a")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("S1")
+                literal("a")
+            }
+            concatenation("S1") { ref("B"); ref("S"); literal("c") }
+            choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("b")
+                ref("Be")
+            }
+            concatenation("Be") { empty() }
         }
-        concatenation("S1") { ref("B"); ref("S"); literal("c") }
-        choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            literal("b")
-            ref("Be")
-        }
-        concatenation("Be") { empty() }
     }
 
     @Test
     fun empty_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence, 1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -61,7 +62,6 @@ class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "a"
 
@@ -69,12 +69,17 @@ class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
             S|1 { 'a' }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun bac() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "bac"
 
@@ -86,12 +91,17 @@ class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun ac() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "ac"
 
@@ -103,12 +113,17 @@ class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun bacc() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "bacc"
 
@@ -124,6 +139,12 @@ class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 }

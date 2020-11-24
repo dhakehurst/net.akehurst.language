@@ -441,37 +441,8 @@ class RuntimeRuleSet(
     }
 
     internal fun printFullAutomaton(goalRuleName: String, withClosure: Boolean = false): String {
-        val b = StringBuilder()
-        val gr = this.findRuntimeRule(goalRuleName)
-
-        val s0 = this.startingState(gr)
-
-        val trans0 = s0.transitions(null)
-        trans0.transitiveClosure {
-            val trans = it.to.transitions(it.from) //TODO: not correct!
-            trans
-        }
-        val states = s0.stateSet.states.values
-
-        val transitions = states.flatMap { it.transitions_cache.values.flatMap { it ?: emptyList() }.toSet() }.toSet()
-
-        states.forEach {
-            b.append(it)
-            if (withClosure) {
-                b.append(" | ")
-                //it.closureLR0.forEach {
-                //    b.append(it.rulePosition)
-                //    b.append(" ")
-                //}
-            }
-            b.append("\n")
-        }
-        transitions.forEach {
-            b.append(it).append("\n")
-        }
-
-
-        return b.toString()
+        this.buildFor(goalRuleName)
+        return this.printUsedAutomaton("S")
     }
 
     override fun toString(): String {
