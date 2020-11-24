@@ -84,9 +84,14 @@ class ParserState(
         }
     }
 
-    internal var transitions_cache: MutableMap<ParserState?, List<Transition>?> = mutableMapOf()
+    // transitions stored here
+    private val _transitionsByTo = mutableMapOf<ParserState, MutableSet<Transition>>()
 
-    val allBuiltTransitions: Set<Transition> get() = transitions_cache.values.filterNotNull().flatten().toSet()
+    // transitions referenced here
+    private val _transitionsByPrevious: MutableMap<ParserState?, MutableList<Transition>?> = mutableMapOf()
+
+    val allBuiltTransitions: Set<Transition> get() = _transitionsByTo.values.flatten().toSet()
+    val transitionsByPrevious: Map<ParserState?,List<Transition>?> get() = _transitionsByPrevious
 
     val runtimeRules: Set<RuntimeRule> = this.rulePositions.map { it.runtimeRule }.toSet()
     val terminalRule = runtimeRules.first()
@@ -98,6 +103,32 @@ class ParserState(
     fun firstOf(ifReachedEnd:Set<RuntimeRule>): Set<RuntimeRule> = this.rulePositions.flatMap {
         stateSet.firstOf(it, ifReachedEnd)
     }.toSet()
+
+    // add the transition and return it, or return existing transition if it already exists
+    internal fun addTransition(previousState: ParserState?, tr:Transition) : Transition{
+        var set = _transitionsByTo[tr.to]
+        val exist = if (null==set) {
+            set = mutableSetOf(tr)
+            _transitionsByTo[tr.to] = set
+            tr
+        } else {
+            val exist = set.firstOrNull { it == tr }
+            if (null==exist) {
+                set.add(tr)
+                tr
+            } else {
+                exist
+            }
+        }
+        var list = this._transitionsByPrevious[previousState]
+        if (null==list) {
+            list = mutableListOf(exist)
+            this._transitionsByPrevious[previousState] = list
+        } else {
+            list.add(exist)
+        }
+        return exist
+    }
 
     internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
         return this.stateSet.createLookaheadSet(content)
@@ -176,10 +207,10 @@ class ParserState(
     }
 
     fun transitions(previousState: ParserState?): List<Transition> {
-        val cache = this.transitions_cache[previousState]
+        val cache = this._transitionsByPrevious[previousState]
         val trans = if (null == cache) {
-            check(this.stateSet.preBuilt.not(),{"Transitions not built for $this --> $previousState"})
-            val transitions = this.calcFilteredTransitions(previousState).toList()
+           // check(this.stateSet.preBuilt.not(),{"Transitions not built for $this --> $previousState"})
+            val filteredTransitions = this.calcFilteredTransitions(previousState).toList()
             //val transitions = this.calcTransitions(previousState).toList()
 
             // transitions.forEach {
@@ -187,9 +218,8 @@ class ParserState(
             //         check(it.isEmptyRule.not(),{"Empty rule found in lookahead"})
             //     }
             // }
-
-            this.transitions_cache[previousState] = transitions
-            transitions
+            val storedTrans = filteredTransitions.map { addTransition(previousState, it) }
+            storedTrans
         } else {
             cache
         }
@@ -207,9 +237,9 @@ class ParserState(
             val transitions = this.calcTransitions(previousState)//, gn.lookaheadStack.peek())
             for (t in transitions) {
                 val filter = when (t.action) {
-                    Transition.ParseAction.WIDTH -> {
-                        true
-                    }
+                    Transition.ParseAction.GOAL ->  true
+                    Transition.ParseAction.WIDTH -> true
+                    Transition.ParseAction.EMBED -> true
                     Transition.ParseAction.GRAFT -> {
                         t.prevGuard?.let {
                             previousState.rulePositions.containsAll(it)
@@ -219,12 +249,6 @@ class ParserState(
                     Transition.ParseAction.HEIGHT -> {
                         //t.to.growsInto(previousState) &&
                         previousState.rulePositions != t.prevGuard
-                    }
-                    Transition.ParseAction.EMBED -> {
-                        true
-                    }
-                    Transition.ParseAction.GOAL -> {
-                        true
                     }
                 }
                 if (filter) __filteredTransitions.add(t)

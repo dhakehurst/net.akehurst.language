@@ -32,30 +32,23 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
     // conditional = ifthen < ifthenelse ;
     // var = "[a-zA-Z]+" ;
     // WS = "\s+" ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_expr = b.rule("expr").build()
-        val r_if = b.literal("if")
-        val r_then = b.literal("then")
-        val r_else = b.literal("else")
-        val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
-        val r_ifthen = b.rule("ifthen").concatenation(r_if, r_expr, r_then, r_expr)
-        val r_ifthenelse = b.rule("ifthenelse").concatenation(r_if, r_expr, r_then, r_expr, r_else, r_expr)
-        val r_conditional = b.rule("conditional").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_ifthen, r_ifthenelse)
-        r_expr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(r_var, r_conditional))
-        b.rule("S").concatenation(r_expr)
-        b.pattern("WS", "\\s+", isSkip = true)
-        return b
-    }
 
-    private val rrs = runtimeRuleSet {
-        skip("WS") { pattern("\\s+") }
-        concatenation("S") { ref("expr") }
-        choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("var"); ref("conditional") }
-        choice("conditional", RuntimeRuleChoiceKind.PRIORITY_LONGEST) { ref("ifThen"); ref("ifThenElse") }
-        concatenation("ifThen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
-        concatenation("ifThenElse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
-        pattern("var", "[a-zA-Z]+")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            pattern("WS","\\s+",true)
+            concatenation("S") { ref("expr") }
+            choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("var")
+                ref("conditional")
+            }
+            choice("conditional", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+                ref("ifThen")
+                ref("ifThenElse")
+            }
+            concatenation("ifThen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
+            concatenation("ifThenElse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
+            pattern("var", "[a-zA-Z]+")
+        }
     }
 
     @Test
@@ -71,8 +64,7 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun ifthenelse() {
-        val rrb = this.S()
+    fun ifThenElse() {
         val goal = "S"
         val sentence = "if a then b else c"
 
@@ -80,13 +72,13 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
             S {
               expr|1 {
                 conditional|1 {
-                    ifthenelse {
-                      'if' WS  : ' ' 
-                      expr { var { "[a-zA-Z]+" : 'a' WS  : ' '  } }
+                    ifThenElse {
+                      'if' WS : ' ' 
+                      expr { var : 'a' WS  : ' '  }
                       'then' WS  : ' ' 
-                      expr { var { "[a-zA-Z]+" : 'b' WS  : ' '  } }
+                      expr { var : 'b' WS  : ' '  } 
                       'else' WS  : ' ' 
-                      expr { var { "[a-zA-Z]+" : 'c' } }
+                      expr { var : 'c' }
                     }
                 }
               }
@@ -105,7 +97,7 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun ifthen() {
+    fun ifThen() {
         val goal = "S"
         val sentence = "if a then b"
 
@@ -113,11 +105,11 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
             S {
               expr|1 {
                 conditional {
-                    ifthen {
+                    ifThen {
                       'if' WS : ' '
-                      expr { var { "[a-zA-Z]+" : 'a' WS : ' ' } }
+                      expr { var : 'a' WS : ' ' }
                       'then' WS : ' ' 
-                      expr { var { "[a-zA-Z]+" : 'b' } }
+                      expr { var : 'b' }
                     }
                 }
               }
@@ -134,7 +126,7 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun ifthenelseifthen() {
+    fun ifThenElseifThen() {
         val goal = "S"
         val sentence = "if a then b else if c then d"
 
@@ -142,19 +134,19 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
             S {
               expr|1 {
                 conditional|1 {
-                    ifthenelse {
+                    ifThenElse {
                       'if' WS  : ' ' 
-                      expr { var { "[a-zA-Z]+" : 'a' WS  : ' '  } }
+                      expr { var : 'a' WS  : ' '  }
                       'then' WS  : ' ' 
-                      expr { var { "[a-zA-Z]+" : 'b' WS : ' '  } }
+                      expr { var : 'b' WS : ' '  }
                       'else' WS : ' ' 
                       expr|1 {
                         conditional {
-                            ifthen {
+                            ifThen {
                               'if' WS  : ' ' 
-                              expr { var { "[a-zA-Z]+" : 'c' WS : ' '  } }
+                              expr { var : 'c' WS : ' '  }
                               'then' WS:' '
-                              expr { var { "[a-zA-Z]+" : 'd' } }
+                              expr { var : 'd' }
                             }
                         }
                       }
@@ -182,19 +174,19 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
             S {
               expr|1 {
                 conditional {
-                    ifthen {
+                    ifThen {
                       'if' WS:' '
-                      expr { var { "[a-zA-Z]+" : 'a' WS:' ' } }
+                      expr { var : 'a' WS:' ' }
                       'then' WS:' '
                       expr|1 {
-                        conditional {
-                            ifthenelse {
+                        conditional|1 {
+                            ifThenElse {
                               'if' WS:' '
-                              expr { var { "[a-zA-Z]+" : 'b' WS:' ' } }
+                              expr { var : 'b' WS:' ' }
                               'then' WS:' '
-                              expr { var { "[a-zA-Z]+" : 'c' WS:' ' } }
+                              expr { var  : 'c' WS:' ' }
                               'else' WS:' '
-                              expr { var { "[a-zA-Z]+" : 'd' } }
+                              expr { var : 'd' }
                             }
                         }
                       }

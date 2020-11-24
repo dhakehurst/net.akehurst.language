@@ -44,7 +44,7 @@ class test_aObOc : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun empty_fails() {
-        val goalRuleName = "r"
+        val goalRuleName = "S"
         val inputText = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {

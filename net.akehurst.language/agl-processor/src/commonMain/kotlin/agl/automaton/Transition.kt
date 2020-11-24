@@ -65,7 +65,8 @@ class Transition(
 
     override fun toString(): String {
         //val lh = " "+this.lookaheadGuard.number.toString()+":"+this.lookaheadGuard.content.map { it.tag }
-        val lh = lookaheadGuard
-        return "Transition { $from -- $action$lh --> $to }"
+        val lh = lookaheadGuard.content.joinToString(separator = ",") {it.tag}
+        val ulh = upLookahead.content.joinToString(separator = ","){it.tag}
+        return "Transition { $from -- $action [$lh|$ulh] --> $to }"
     }
 }

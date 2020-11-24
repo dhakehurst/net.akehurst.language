@@ -427,7 +427,7 @@ class RuntimeRuleSet(
         val gr = this.findRuntimeRule(goalRuleName)
 
         val states = this.states_cache[gr]!!.states.values
-        val transitions = states.flatMap { it.transitions_cache.values.flatMap { it ?: emptyList() }.toSet() }.toSet()
+        val transitions = states.flatMap { it.allBuiltTransitions.toSet() }.toSet()
 
         states.forEach {
             b.append(it).append("\n")

@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_AhoSetiUlman_4_5_5 : test_ScanOnDemandParserAbstract() {
+class test_AhoSetiUlman_4_54 : test_ScanOnDemandParserAbstract() {
 
     // S = CC ;
     // C = cC | d ;

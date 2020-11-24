@@ -25,21 +25,21 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
+class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
 
     // This grammar is LR(1) but not LALR(1)
 
-    // S = A a | b A c | B c | b B a ;
-    // A = d ;
-    // B = d ;
+    // S = a A d | b B d | a B e | b A e
+    // A = c
+    // B = c
     //
     // S = S1 | S2 | S3 | S4
-    // S1 = A a ;
-    // S2 = b A c ;
-    // S3 = B c ;
-    // S4 = b B a ;
-    // A = d ;
-    // B = d ;
+    // S1 = a A d
+    // S2 = b B d
+    // S3 = a B e
+    // S4 = b A e
+    // A = c
+    // B = c
     private companion object {
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
@@ -48,12 +48,12 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
                 ref("S3")
                 ref("S4")
             }
-            concatenation("S1") { ref("A"); literal("a") }
-            concatenation("S2") { literal("b"); ref("A"); literal("c") }
-            concatenation("S3") { ref("B"); literal("c") }
-            concatenation("S4") { literal("b"); ref("B"); literal("a") }
-            concatenation("A") { literal("d") }
-            concatenation("B") { literal("d") }
+            concatenation("S1") { literal("a") ; ref("A"); literal("d") }
+            concatenation("S2") { literal("b"); ref("B"); literal("d") }
+            concatenation("S3") { literal("a"); ref("B"); literal("e")}
+            concatenation("S4") { literal("b"); ref("A"); literal("e") }
+            concatenation("A") { literal("c") }
+            concatenation("B") { literal("c") }
         }
     }
 

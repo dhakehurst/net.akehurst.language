@@ -72,4 +72,51 @@ abstract class test_Abstract {
             assertEquals(expected[i], actual[i])
         }
     }
+
+    fun assertEquals(expected: ParserStateSet, actual: ParserStateSet) {
+        val expected_states = expected.states.values.toList()
+        val actual_states = actual.states.values.toList()
+
+        assertEquals(expected_states.size, actual_states.size, "Number of States do not match")
+
+        for (i in expected_states.indices) {
+            val expected_state = expected_states[i]
+            val actual_state = actual_states[i]
+            assertEquals(expected_state.rulePositions, actual_state.rulePositions, "RulePositions do not match")
+        }
+
+        assertEquals(expected.allBuiltTransitions.size, actual.allBuiltTransitions.size, "Number of Transitions do not match")
+        for (i in expected_states.indices) {
+            assertEquals(expected_states[i], actual_states[i])
+        }
+    }
+
+    fun assertEquals(expected: ParserState, actual: ParserState) {
+        assertEquals(expected.rulePositions, actual.rulePositions, "RulePositions do not match")
+
+        val expected_trans = expected.transitionsByPrevious
+        val actual_trans = actual.transitionsByPrevious
+        assertEquals(expected_trans.keys.map { it?.rulePositions }, actual_trans.keys.map { it?.rulePositions }, "Previous States for Transitions outgoing from ${expected} do not match")
+        assertEquals(expected_trans.size, actual_trans.size, "Number of Transitions outgoing from ${expected} do not match")
+
+        for (entry in expected_trans.entries) {
+            val actual_key = if (null==entry.key) null else actual.stateSet.states[entry.key!!.rulePositions]
+            val expected_outgoing = expected_trans[entry.key] ?: emptyList()
+            val actual_outgoing = actual_trans[actual_key] ?: emptyList()
+            assertEquals(expected_outgoing.size, actual_outgoing.size, "Number of Transitions outgoing from ${entry.key} -> ${expected} do not match")
+
+            for (i in expected_outgoing.indices) {
+                assertEquals(entry.key, expected_outgoing[i], actual_outgoing[i])
+            }
+        }
+    }
+
+    fun assertEquals(expPrev:ParserState?, expected: Transition, actual: Transition) {
+        assertEquals(expected.from.rulePositions, actual.from.rulePositions, "From state does not match for ${expPrev} -> $expected")
+        assertEquals(expected.to.rulePositions, actual.to.rulePositions, "To state does not match for ${expPrev} -> $expected")
+        assertEquals(expected.action, actual.action, "Action does not match for ${expPrev} -> $expected")
+        assertEquals(expected.lookaheadGuard.content, actual.lookaheadGuard.content, "Lookahead content does not match for ${expPrev} -> $expected")
+        assertEquals(expected.upLookahead.content, actual.upLookahead.content, "Up lookahead content does not match for ${expPrev} -> $expected")
+        assertEquals(expected.prevGuard, actual.prevGuard, "Previous guard does not match for ${expPrev} -> $expected")
+    }
 }

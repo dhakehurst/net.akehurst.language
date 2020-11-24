@@ -166,7 +166,7 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              S1 {
+              S3 {
                 S { 'a' }
                 S { 'a' }
                 S { 'a' }

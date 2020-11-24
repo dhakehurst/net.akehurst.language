@@ -84,10 +84,8 @@ class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
         val sentence = "a a a"
 
         val expected = """
-            S {
-                S1 {
-                    S {
-                        S1 {
+            S|1 { S1 {
+                    S|1 { S1 {
                             S { 'a' WS { "\s+" : ' ' } }
                             'a' WS { "\s+" : ' ' }
                         }

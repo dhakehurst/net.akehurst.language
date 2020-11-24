@@ -58,19 +58,6 @@ class test_acsOads : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun a_fails() {
-        val goal = "S"
-        val sentence = "a"
-
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(2, ex.location.column)
-        assertEquals(setOf("'b'"), ex.expected)
-    }
-
-    @Test
     fun aca() {
         val goal = "S"
         val sentence = "aca"

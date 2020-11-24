@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.automaton
 import net.akehurst.language.agl.runtime.structure.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -68,6 +69,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
         val SM = rrs.fetchStateSetFor(S)
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
+        val s1 = SM.states[listOf(RP(d,0,EOR))]
 
     }
 
@@ -136,16 +138,9 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
     }
 
     @Test
-    fun s1_heightOrGraftInto() {
-        // G
-        val s0 = rrs.startingState(S)
-        val trans_s0 = s0.transitions(null)
-        val tr_a_d = trans_s0.first { it.lookaheadGuard.content.contains(a) }
-        val tr_d_b = trans_s0.first { it.lookaheadGuard.content.contains(d) }
-        val tr_c_d = trans_s0.first { it.lookaheadGuard.content.contains(c) }
-        // - WIDTH -> d
-        val s1 = s0.stateSet.fetch(listOf(RulePosition(d, 0, RulePosition.END_OF_RULE)))
-        val actual = s1.heightOrGraftInto(s1.rulePositions)
+    fun s1_heightOrGraftInto_s0() {
+        val actual = s1.heightOrGraftInto(s0.rulePositions)
+
         assertNotNull(actual)
         val expected = emptySet<HeightGraft>()
 
@@ -153,12 +148,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
     }
 
     @Test
-    fun s1_transitions() {
-        val s0 = rrs.startingState(S)
-        val s0_trans = s0.transitions(null)
-        val s1 = s0.stateSet.fetch(listOf(RulePosition(d, 0, RulePosition.END_OF_RULE)))
-        val tr_a_d = s0_trans.first { it.lookaheadGuard.content.contains(a) }
-
+    fun s1_transitions_s0() {
         val actual = s1.transitions(s0)
         val s3 = s0.stateSet.fetch(listOf(RulePosition(rA, 0, RulePosition.END_OF_RULE)))
         val s4 = s0.stateSet.fetch(listOf(RulePosition(rB, 0, RulePosition.END_OF_RULE)))
@@ -166,44 +156,34 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
                 Transition(s1, s3, Transition.ParseAction.HEIGHT, LookaheadSet(0, setOf(a)), LookaheadSet.EMPTY, null) { _, _ -> true },
                 Transition(s1, s4, Transition.ParseAction.HEIGHT, LookaheadSet(1, setOf(c)), LookaheadSet.EMPTY, null) { _, _ -> true }
         )
+
+        assertEquals(expected, actual)
     }
 
-
     @Test
-    fun build() {
+    fun buildFor() {
         val actual = rrs.buildFor("S")
         println(rrs.printUsedAutomaton("S"))
-        val actual_state_rulePositions = actual.states.values.map { it.rulePositions }
-        val actual_trs_rps = actual.allBuiltTransitions.map {
-            listOf(
-                    it.from.rulePositions,
-                    it.to.rulePositions,
-                    it.action,
-                    it.lookaheadGuard.content,
-                    it.upLookahead.content
-            )
+
+        val expected = automaton(rrs, "S", false) {
+            val s0 = state(RP(G, 0, SOR))      // G = . S
+            val s1 = state(RP(d, 0, EOR))      // d
+            val s2 = state(RP(b, 0, EOR))      // b
+            val s3 = state(RP(rA, 0, EOR))     // A = d .
+            val s4 = state(RP(rB, 0, EOR))     // B = d .
+            //val s4 = state(RP(S1, 0, 1))  // S1 = A . a
+            //val s4 = state(RP(S1, 0, EOR))
+            //val s4 = state(RP(rB, 0, EOR))
+            //val s4 = state(RP(rB, 0, EOR))
+
+            transition(null, s0, s1, WIDTH, setOf(a, c), setOf(UP),listOf())
+            transition(null, s0, s2, WIDTH, setOf(d), setOf(UP),listOf())
+            transition(s0, s1, s3, HEIGHT, setOf(a, c), setOf(UP),listOf())
+            transition(s0, s2, s4, HEIGHT, setOf(a, c), setOf(UP),listOf())
+            transition(s0, s0, s1, HEIGHT, setOf(a, c), setOf(UP),listOf())
         }
-        val expected_Trs = listOf(
-                listOf(listOf(RP(G, 0, SOR)), listOf(RP(d, 0, EOR)), Transition.ParseAction.WIDTH, setOf(a, c), setOf(UP)),
-                listOf(listOf(RP(G, 0, SOR)), listOf(RP(b, 0, EOR)), Transition.ParseAction.WIDTH, setOf(d), setOf(UP)),
-                listOf(listOf(RP(d, 0, EOR)), listOf(RP(rA, 0, EOR)), Transition.ParseAction.HEIGHT, setOf(a, c), setOf(UP)),
-                listOf(listOf(RP(d, 0, EOR)), listOf(RP(rB, 0, EOR)), Transition.ParseAction.HEIGHT, setOf(a, c), setOf(UP)),
-                listOf(listOf(RP(b, 0, EOR)), listOf(RP(rA, 0, EOR)), Transition.ParseAction.HEIGHT, setOf(a, c), setOf(UP))
-        )
 
-        val expected_state_rulePositions = listOf(
-                listOf(RP(G, 0, SOR)),
-                listOf(RP(d, 0, EOR)),
-                listOf(RP(b, 0, EOR)),
-                listOf(RP(rA, 0, EOR)),
-                listOf(RP(rB, 0, EOR)),
-                listOf(RP(b, 0, EOR)),
-                listOf(RP(b, 0, EOR)),
-                listOf(RP(rA, 0, EOR))
-        )
-
-        assertEquals(expected_state_rulePositions, actual_state_rulePositions)
-        assertEquals(expected_Trs, actual_trs_rps)
+        assertEquals(expected, actual)
     }
 /*
     @Test

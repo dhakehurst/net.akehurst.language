@@ -34,7 +34,6 @@ class test_skipRules : test_Abstract() {
             concatenation("S") { literal("a") }
         }
 
-
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S)
         val a = rrs.findRuntimeRule("'a'")
@@ -55,7 +54,7 @@ class test_skipRules : test_Abstract() {
         val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
         val lhs_skWCU = SM.runtimeRuleSet.createLookaheadSet(setOf(skWS, skCM, UP))
         val lhs_aT = SM.runtimeRuleSet.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
-
+        val lhs_WS_CM_UP = SM.runtimeRuleSet.createLookaheadSet(setOf(skWS, skCM, UP))
     }
 
     override val SM: ParserStateSet get() = Companion.SM
@@ -88,23 +87,26 @@ class test_skipRules : test_Abstract() {
 
     override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
         get() = listOf(
-                Triple(RP(G, 0, SOR), lhs_U, setOf(a)),  // G = . S
-                Triple(RP(G, 0, EOR), lhs_U, setOf(UP)),  // G = S .
-                Triple(RP(S, 0, SOR), lhs_U, setOf(a)),  // S = . a
+                Triple(RP(G, 0, SOR), lhs_U, setOf(a)),    // G = . S
+                Triple(RP(G, 0, EOR), lhs_U, setOf(UP)),   // G = S .
+                Triple(RP(S, 0, SOR), lhs_U, setOf(a)),    // S = . a
                 Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),   // S = a .
 
-                Triple(RP(skG, OMI, SOR), lhs_U, setOf(a)),  // skG = . skM+
+                Triple(RP(skG, OMI, SOR), lhs_U, setOf(a)),      // skG = . skM+
+                Triple(RP(skG, OMI, EOR), lhs_U, setOf(a)),      // skG = skM+ .
                 Triple(RP(skG, 0, EOR), lhs_U, setOf(UP)),   // skG = skM . skM+
                 Triple(RP(skG, 0, SOR), lhs_U, setOf(a)),    // skG = skM+ .
-                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),   //  skM = . WS
-                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),   //  skM = WS .
-                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),   //  skM = . CM
-                Triple(RP(S, 0, EOR), lhs_U, setOf(UP))   //  skM = CM .
+                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // skM = . WS
+                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // skM = WS .
+                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // skM = . CM
+                Triple(RP(S, 0, EOR), lhs_U, setOf(UP))      // skM = CM .
         )
 
 
     override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
-        get() = TODO("not implemented")
+        get() = listOf(
+                Pair(RP(a, 0, EOR), lhs_U)
+        )
 
     @Test
     fun sk0_widthInto() {
@@ -123,10 +125,10 @@ class test_skipRules : test_Abstract() {
         val actual = sk1.heightOrGraftInto(sk0.rulePositions).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(G, 0, 0),
+                HeightGraft(null,
                         listOf(RulePosition(skC, 0, RulePosition.START_OF_RULE)),
                         listOf(RulePosition(skC, 0, RulePosition.END_OF_RULE)),
-                        lhs_a, lhs_U)
+                        lhs_WS_CM_UP, lhs_WS_CM_UP)
         )
         assertEquals(expected, actual)
 

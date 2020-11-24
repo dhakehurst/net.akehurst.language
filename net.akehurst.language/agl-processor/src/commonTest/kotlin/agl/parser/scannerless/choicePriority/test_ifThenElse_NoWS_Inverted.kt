@@ -130,7 +130,7 @@ class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract() {
                       expr { var|1 { 'X' } }
                       'else'
                       expr|1 {
-                        conditional {
+                        conditional|1 {
                             ifthen {
                               'if'
                               expr { var|2 { 'Y'} }
