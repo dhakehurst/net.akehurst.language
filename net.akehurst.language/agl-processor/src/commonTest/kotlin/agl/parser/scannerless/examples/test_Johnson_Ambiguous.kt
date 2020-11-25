@@ -120,11 +120,11 @@ class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
 
         val expected2 = """
              S|1 { S2 {
-                S|2 { 'a' }
                 S|1 { S2 {
                     S|2 { 'a' }
                     S|2 { 'a' }
                   } }
+                S|2 { 'a' }
               } }
         """
 

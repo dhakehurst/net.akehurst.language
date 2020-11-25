@@ -84,7 +84,7 @@ class RegexParser(
 
     val patternX = pattern + 0.toChar().toString() // add something to the end of the string, saves doing an if (> length) in fun next()
     var pp = 0
-    val matcherBuilder = RegexMatcherBuilder()
+    val matcherBuilder = RegexMatcherBuilder(pattern)
 
     fun parse(): RegexMatcher {
         this.parsePattern()

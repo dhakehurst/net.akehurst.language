@@ -18,7 +18,7 @@ package net.akehurst.language.agl.regex
 
 import net.akehurst.language.collections.MutableStack
 
-class RegexMatcherBuilder {
+class RegexMatcherBuilder(val pattern:String) {
 
     companion object {
 
@@ -238,7 +238,7 @@ class RegexMatcherBuilder {
     }
 
     fun build(): RegexMatcher {
-        return RegexMatcher(this.startState, this.nfa)
+        return RegexMatcher(pattern, this.startState, this.nfa)
     }
 
     fun concatenateGoal() {

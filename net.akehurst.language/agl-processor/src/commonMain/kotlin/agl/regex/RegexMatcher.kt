@@ -21,6 +21,7 @@ fun regexMatcher(pattern:String) = RegexParser(pattern).parse()
 // nfa is Array of States, each state is element in array
 // Array<Int,
 class RegexMatcher(
+        val pattern: String,
         val start:State,
         val nfa: List<State>
 ) {
@@ -115,5 +116,5 @@ class RegexMatcher(
     }
 
 
-
+    override fun toString(): String  = "Regex{$pattern}"
 }

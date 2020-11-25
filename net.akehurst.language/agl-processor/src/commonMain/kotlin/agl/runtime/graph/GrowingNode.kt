@@ -23,7 +23,6 @@ import net.akehurst.language.api.sppt.SPPTNode
 class GrowingNode(
         val currentState: ParserState, // current rp of this node, it is growing, this changes (for new node) when children are added
         val lookahead: LookaheadSet,
-        priority_deprecated: Int,
         val children: GrowingChildren
 ) {
     class GrowingChildNode(

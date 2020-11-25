@@ -138,14 +138,12 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
 
         val expected = """
          S|1 { S2 {
-            S|1 { S2 {
+            S { S3 {
                 S|2 { 'a' }
-                S|2 { 'a' }
-              } }
-            S|1 { S2 {
                 S|2 { 'a' }
                 S|2 { 'a' }
               } }
+            S|2 { 'a' }
           } }
         """.trimIndent()
 
@@ -165,13 +163,32 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val sentence = "a".repeat(10)
 
         val expected = """
-            S {
-              S3 {
-                S { 'a' }
-                S { 'a' }
-                S { 'a' }
-              }
-            }
+         S|1 { S2 {
+            S|1 { S2 {
+                S|1 { S2 {
+                    S|1 { S2 {
+                        S|1 { S2 {
+                            S { S3 {
+                                S|2 { 'a' }
+                                S|2 { 'a' }
+                                S|2 { 'a' }
+                              } }
+                            S|1 { S2 {
+                                S|2 { 'a' }
+                                S|2 { 'a' }
+                              } }
+                          } }
+                        S|1 { S2 {
+                            S|2 { 'a' }
+                            S|2 { 'a' }
+                          } }
+                      } }
+                    S|2 { 'a' }
+                  } }
+                S|2 { 'a' }
+              } }
+            S|2 { 'a' }
+          } }
         """.trimIndent()
 
         val actual = super.test(

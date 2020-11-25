@@ -72,7 +72,7 @@ class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
         val expected = """
               S { nl {
                   N : '1'
-                  cnm|1 { CMR:',' N:2 }
+                  cnm { cn{ CMR:',' N:'2' }}
                 } }
         """.trimIndent()
 
