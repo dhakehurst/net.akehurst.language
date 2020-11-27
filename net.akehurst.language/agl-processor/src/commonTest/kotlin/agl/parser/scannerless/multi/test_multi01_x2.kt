@@ -72,7 +72,7 @@ class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
                 expectedTrees = *arrayOf(expected)
         )
     }
@@ -95,10 +95,76 @@ class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2, //TODO can we make this 1 by merging states?
                 expectedTrees = *arrayOf(expected)
         )
     }
 
+    @Test
+    fun bcd() {
+        val goal = "S"
+        val sentence = "bcd"
 
+        val expected = """
+             S {
+              A|1 { §empty }
+              B { 'b' }
+              V:'c'
+              'd'
+            }
+        """.trimIndent()
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
+                expectedTrees = *arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun cd() {
+        val goal = "S"
+        val sentence = "cd"
+
+        val expected = """
+             S {
+              A|1 { §empty }
+              B|1 { §empty }
+              V:'c'
+              'd'
+            }
+        """.trimIndent()
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
+    }
+    @Test
+    fun ad() {
+        val goal = "S"
+        val sentence = "ad"
+
+        val expected = """
+             S {
+              A|1 { §empty }
+              B|1 { §empty }
+              V:'a'
+              'd'
+            }
+        """.trimIndent()
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
+    }
 }

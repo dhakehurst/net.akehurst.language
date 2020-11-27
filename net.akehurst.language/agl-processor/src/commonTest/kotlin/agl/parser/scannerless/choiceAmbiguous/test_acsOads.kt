@@ -126,7 +126,7 @@ class test_acsOads : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2, //TODO can we make this 1 by merging states?
                 expectedTrees = *arrayOf(expected1,expected2)
         )
     }

@@ -186,7 +186,7 @@ class ScanOnDemandParser(
         } else {
             rp.resetGraphToLastGrown()
             rp.tryGrowHeightOrGraft()
-        }
+       }
 
         val r = poss.map { lg ->
             // compute next expected item/RuntimeRule

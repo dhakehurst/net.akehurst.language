@@ -67,7 +67,7 @@ class test_typeDefs : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 anyhow?
                 expectedTrees = *arrayOf(expected)
         )
     }
@@ -92,7 +92,7 @@ class test_typeDefs : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 anyhow?
                 expectedTrees = *arrayOf(expected)
         )
     }
@@ -143,7 +143,7 @@ class test_typeDefs : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 anyhow?
                 expectedTrees = *arrayOf(expected)
         )
     }

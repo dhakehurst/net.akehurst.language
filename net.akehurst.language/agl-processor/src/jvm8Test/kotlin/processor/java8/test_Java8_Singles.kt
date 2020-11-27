@@ -21,6 +21,7 @@ package net.akehurst.language.processor.java8
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.java8.test_Java8Agl_Types
+import net.akehurst.language.agl.sppt.SPPT2InputText
 import net.akehurst.language.api.parser.ParseFailedException
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -175,6 +176,16 @@ public class BadBinaryLiterals {
         val sentence = "{ Map.@An Entry<Object,Object> x; }"
         val goal = "Block"
         val t = proc.parse(goal, sentence)
+    }
+
+    @Test
+    fun Enum() {
+        val sentence = "enum E { A, B, C }"
+        val goal = "ClassDeclaration"
+        val t = proc.parse(goal, sentence)
+        val actual = t.toStringAll
+        val resultStr = t.accept(SPPT2InputText(), "")
+        assertEquals(sentence,resultStr)
     }
 
     @Test(timeout = 5000)

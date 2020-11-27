@@ -347,7 +347,8 @@ internal class RuntimeParser(
     }
 
     private fun doHeight(curGn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean) {
-        val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, curGn.lookahead, curGn.nextInputPosition)
+        val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, previous.node.lookahead, curGn.nextInputPosition)
+        //val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, curGn.lookahead, curGn.nextInputPosition)
         if (noLookahead || hasLh) {// || lh.isEmpty()) {
 
             val firstChildAlts = curGn.currentState.rulePositions.map {

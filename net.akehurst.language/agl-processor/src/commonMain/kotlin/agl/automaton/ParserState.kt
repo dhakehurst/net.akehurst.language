@@ -90,6 +90,8 @@ class ParserState(
     // transitions referenced here
     private val _transitionsByPrevious: MutableMap<ParserState?, MutableList<Transition>?> = mutableMapOf()
 
+    val rulePositionIdentity = rulePositions.map { it.identity }
+
     val allBuiltTransitions: Set<Transition> get() = _transitionsByTo.values.flatten().toSet()
     val transitionsByPrevious: Map<ParserState?,List<Transition>?> get() = _transitionsByPrevious
 
@@ -247,6 +249,7 @@ class ParserState(
 //                        previousState.rulePositions == t.prevGuard
                     }
                     Transition.ParseAction.HEIGHT -> {
+                        //TODO: can we move this into calcTransitions ?
                         previousState.rulePositions.any { prevRp ->
                             when(prevRp.runtimeRule.rhs.kind){
                                 RuntimeRuleItemKind.SEPARATED_LIST -> {

@@ -158,7 +158,7 @@ class test_n_P_Im : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = Companion.goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 anyhow?
                 expectedTrees = *arrayOf(expected)
         )
     }
@@ -193,7 +193,7 @@ class test_n_P_Im : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = Companion.goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 4, //TODO: can we make this less anyhow?
                 expectedTrees = *arrayOf(expected)
         )
     }

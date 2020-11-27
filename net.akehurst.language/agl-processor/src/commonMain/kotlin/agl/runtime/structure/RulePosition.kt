@@ -16,6 +16,13 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+typealias RuleOptionId = RuleOption //TODO: Make this an Int
+
+data class RuleOption(
+        val runtimeRule: RuntimeRule,
+        val option: Int
+)
+
 data class RulePosition(
         val runtimeRule: RuntimeRule,
         val option: Int,
@@ -37,6 +44,8 @@ data class RulePosition(
         val POSITION_SLIST_SEPARATOR = 1 //TODO: make -ve maybe
         val POSITION_SLIST_ITEM = 2 //TODO: make -ve maybe
     }
+
+    val identity:RuleOptionId=RuleOption(runtimeRule, option) //TODO: Make this an Int
 
     val isAtStart = position == START_OF_RULE
     val isAtEnd = position == END_OF_RULE
