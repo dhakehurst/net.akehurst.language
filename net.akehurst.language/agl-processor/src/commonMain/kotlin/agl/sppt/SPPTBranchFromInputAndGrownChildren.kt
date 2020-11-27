@@ -2,6 +2,7 @@ package agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.GrowingNode
+import net.akehurst.language.agl.runtime.structure.RuleOptionId
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.sppt.SPPTNodeFromInputAbstract
 import net.akehurst.language.api.parser.InputLocation
@@ -24,7 +25,7 @@ class SPPTBranchFromInputAndGrownChildren(
 
     override val childrenAlternatives: Set<List<SPPTNode>>
         get() = this.grownChildrenAlternatives.entries.map {
-            it.value[this.runtimeRule, it.key]
+            it.value[RuleOptionId(this.runtimeRule, it.key)]
         }.toSet()
 
     override val children: List<SPPTNode> get() = this.childrenAlternatives.first()

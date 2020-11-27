@@ -100,6 +100,7 @@ class GrowingNode(
                 else -> _alts!![childIndex] ?: 0
             }
         }
+
         private fun incAlt(childIndex: Int) {
             if (null == _alts) _alts = mutableMapOf()
             val v = _alts!![childIndex]
@@ -110,20 +111,32 @@ class GrowingNode(
             }
         }
 
-        private var _nextAlts: MutableMap<RuleOptionId, Int>? = null
-        private fun nextAlt(value: RuleOptionId): Int {
+        private var _nextAlts: MutableMap<Int,MutableMap<List<RuleOptionId>, Int>>? = null
+        private fun nextAlt(childIndex: Int,ruleOption: RuleOptionId): Int {
             return when {
                 null == _nextAlts -> 0
-                else -> _nextAlts!![value] ?: 0
+                else -> {
+                    val m = _nextAlts!![childIndex]
+                    when {
+                        null == m -> 0
+                        else -> m.entries.firstOrNull { it.key.contains(ruleOption) }?.value ?: 0
+                    }
+                }
             }
         }
-        private fun incNextAlt(value: RuleOptionId) {
+
+        private fun incNextAlt(childIndex: Int,value: List<RuleOptionId>) {
             if (null == _nextAlts) _nextAlts = mutableMapOf()
-            val v = _nextAlts!![value]
+            var m = _nextAlts!![childIndex]
+            if (null==m) {
+                m = mutableMapOf()
+                _nextAlts!![childIndex] = m
+            }
+            val v = m[value]
             if (null == v) {
-                _nextAlts!![value] = 1
+                m[value] = 1
             } else {
-                _nextAlts!![value] = v + 1
+                m[value] = v + 1
             }
         }
 
@@ -143,8 +156,8 @@ class GrowingNode(
             c.startPosition = this.startPosition
             c.firstChild = this.firstChild
             c.lastChild = this.lastChild
-            if (null!=this._alts) c._alts = this._alts!!.toMutableMap()
-            if (null!=this._nextAlts) c._nextAlts = this._nextAlts!!.toMutableMap()
+            if (null != this._alts) c._alts = this._alts!!.toMutableMap()
+            if (null != this._nextAlts) c._nextAlts = this._nextAlts!!.toMutableMap()
             return c
         }
 
@@ -188,7 +201,7 @@ class GrowingNode(
                                 resLast.nextChildMap!![state.rulePositionIdentity] = mutableListOf(nextChild)
                                 res.lastChild = nextChild
                             } else {
-                                res.incNextAlt(state.rulePositionIdentity)  //length-1 is index of current child we add 1 for this child we are adding
+                                res.incNextAlt(res.length,state.rulePositionIdentity)  //length-1 is index of current child we add 1 for this child we are adding
                                 existing.add(nextChild)
                                 res.lastChild = nextChild
                             }
@@ -204,7 +217,22 @@ class GrowingNode(
                             res.lastChild = lastNext
                         }
                         state.rulePositions.all { sRp -> lastNext.state!!.rulePositions.any { lRp -> sRp.identity == lRp.identity } } -> {
-                            TODO()
+
+                            error("this is not right somehow")
+
+                            val resLast = res.lastChild!!
+                            val nextChild = GrowingChildNode(state, nextChildAlts)
+                            val map =  if (null == resLast.nextChildMap) {
+                                resLast.nextChildMap = mutableMapOf()
+                                resLast.nextChildMap!![state.rulePositionIdentity] = mutableListOf(lastNext)
+                                resLast.nextChildMap!!
+                            } else {
+                                resLast.nextChildMap!!
+                            }
+                            resLast.nextChild = null
+                            res.incNextAlt(res.length,state.rulePositionIdentity) //length-1 is index of current child we add 1 for this child we are adding
+                            map[state.rulePositionIdentity]!!.add(nextChild)
+                            res.lastChild = nextChild
                         }
                         else -> {
                             val map = mutableMapOf<List<RuleOptionId>?, MutableList<GrowingChildNode>>()
@@ -254,7 +282,7 @@ class GrowingNode(
                     var n: GrowingChildNode? = firstChild
                     while (n != lastChild && null != n) {
                         res.addAll(n[this.alt(index), ruleOption])
-                        n = n.next(this.nextAlt(ruleOption), ruleOption)
+                        n = n.next(this.nextAlt(index, ruleOption), ruleOption)
                         index++
                     }
                     if (null == n) {
@@ -296,7 +324,7 @@ class GrowingNode(
                                 res[rp] = res[rp]!! + n[this.alt(index), rp.identity].joinToString() { it.name + hasAlts }
                             }
                         }
-                        n = n.next(this.nextAlt(rp.identity),rp.identity)
+                        n = n.next(this.nextAlt(index, rp.identity), rp.identity)
                         index++
                     }
                     if (null == n) {

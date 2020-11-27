@@ -545,8 +545,8 @@ internal class ParseGraph(
     }
 
     private fun pickByLongestChildren(newNode: GrowingNode, newRp: RulePosition, newChildren: GrowingNode.GrowingChildren, existingNode: SPPTBranchFromInputAndGrownChildren): SPPTNode? {
-        val newChildrenList = newChildren[newRp.runtimeRule, newRp.option]
-        val existingChildren = existingNode.grownChildrenAlternatives[newRp.option]!![newRp.runtimeRule, newRp.option]
+        val newChildrenList = newChildren[newRp.identity]
+        val existingChildren = existingNode.grownChildrenAlternatives[newRp.option]!![newRp.identity]
         var i = 0
         var chosen: SPPTNode? = null
         while (i < newChildrenList.size && chosen == null) {
