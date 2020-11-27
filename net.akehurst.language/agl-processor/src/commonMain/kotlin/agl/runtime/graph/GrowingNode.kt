@@ -31,6 +31,7 @@ class GrowingNode(
     ) {
         val childrenAlts = mutableListOf(children)
         var nextChild: GrowingChildNode? = null
+
         //Pair<Alt,State> -> Node
         var nextChildMap: MutableMap<ParserState?, GrowingChildNode>? = null //TODO: use IntMap
         //var alts = 0
@@ -41,8 +42,12 @@ class GrowingNode(
                 when {
                     null == state -> true //skipNodes
                     else -> when (runtimeRule.rhs.kind) {
+                        RuntimeRuleItemKind.CONCATENATION -> state.rulePositions.any { it.runtimeRule == runtimeRule }
                         RuntimeRuleItemKind.CHOICE -> state.rulePositions.any { it.runtimeRule == runtimeRule && it.option == option }
-                        else -> state.rulePositions.any { it.runtimeRule == runtimeRule }
+                        RuntimeRuleItemKind.MULTI -> state.rulePositions.any { it.runtimeRule == runtimeRule && it.option == option }
+                        RuntimeRuleItemKind.SEPARATED_LIST -> state.rulePositions.any { it.runtimeRule == runtimeRule && it.option == option }
+                        RuntimeRuleItemKind.EMPTY -> TODO()
+                        else -> TODO()
                     }
                 }
             }.value
@@ -50,14 +55,18 @@ class GrowingNode(
             else -> nextChild
         }
 
-        operator fun get(alt:Int,runtimeRule: RuntimeRule, option: Int): List<SPPTNode> {
+        operator fun get(alt: Int, runtimeRule: RuntimeRule, option: Int): List<SPPTNode> {
             val children = childrenAlts[alt]
             return when {
                 null == this.state -> children //skip nodes
                 else -> {
                     val i = when (runtimeRule.rhs.kind) {
+                        RuntimeRuleItemKind.CONCATENATION -> state.rulePositions.indexOfFirst { it.runtimeRule == runtimeRule }
                         RuntimeRuleItemKind.CHOICE -> state.rulePositions.indexOfFirst { it.runtimeRule == runtimeRule && it.option == option }
-                        else -> state.rulePositions.indexOfFirst { it.runtimeRule == runtimeRule }
+                        RuntimeRuleItemKind.EMPTY -> TODO()
+                        RuntimeRuleItemKind.MULTI -> state.rulePositions.indexOfFirst { it.runtimeRule == runtimeRule && it.option == option }
+                        RuntimeRuleItemKind.SEPARATED_LIST -> state.rulePositions.indexOfFirst { it.runtimeRule == runtimeRule && it.option == option }
+                        else -> TODO()
                     }
                     when {
                         -1 == i -> emptyList()
@@ -89,28 +98,30 @@ class GrowingNode(
         var firstChild: GrowingChildNode? = null
         var lastChild: GrowingChildNode? = null
 
-        private var _alts = mutableMapOf<ParserState?,Int>()
-        private fun alt(state: ParserState?) :Int{
-            val v = _alts[state]
-            return if (null==v) {
+        // childIndex -> alt
+        private var _alts = mutableMapOf<Int, Int>()
+        private fun alt(childIndex: Int): Int {
+            val v = _alts[childIndex]
+            return if (null == v) {
                 0
             } else {
                 v
             }
         }
-        private fun incAlt(state: ParserState) {
-            val v = _alts[state]
-            return if (null==v) {
-                _alts[state] = 1
+
+        private fun incAlt(childIndex: Int) {
+            val v = _alts[childIndex]
+            return if (null == v) {
+                _alts[childIndex] = 1
             } else {
-                _alts[state] = v+1
+                _alts[childIndex] = v + 1
             }
         }
 
         fun priorityFor(runtimeRule: RuntimeRule): Int = when (runtimeRule.rhs.kind) {
             RuntimeRuleItemKind.CHOICE -> {
                 check(lastChild!!.state!!.runtimeRules.all { it == runtimeRule }) //TODO: remove the check
-                lastChild!!.childrenAlts[this.alt(lastChild!!.state)].size - 1
+                lastChild!!.childrenAlts[this.alt(numberNonSkip)].size - 1
             }
             else -> 0
         }
@@ -128,45 +139,45 @@ class GrowingNode(
 
         fun appendChild(state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildren {
             val newChildren = when {
-                state.isGoal ->when{
-                    null==firstChild ->{
+                state.isGoal -> when {
+                    null == firstChild -> {
                         firstChild = GrowingChildNode(state, nextChildAlts)
                         startPosition = nextChildAlts[0].startPosition
                         lastChild = firstChild
                         this
                     }
-                    null==lastChild!!.state ->{ //append if last is skip node
+                    null == lastChild!!.state -> { //append if last is skip node
                         val nextChild = GrowingChildNode(state, nextChildAlts)
                         this.lastChild!!.nextChild = nextChild
                         this.lastChild = nextChild
                         this
                     }
-                    else->{
+                    else -> {
                         this.toString()
-                        this.incAlt(state)
+                        this.incAlt(0)
                         firstChild!!.childrenAlts.add(nextChildAlts)
                         this
                     }
                 }
-                null==firstChild ->{
+                null == firstChild -> {
                     firstChild = GrowingChildNode(state, nextChildAlts)
                     startPosition = nextChildAlts[0].startPosition
                     lastChild = firstChild
                     this
                 }
-                else->{
+                else -> {
                     val res = this.clone()
                     val lastNext = res.lastChild!!.nextChild
                     when {
                         null != res.lastChild!!.nextChildMap -> {
                             val resLast = res.lastChild!!
                             val existing = resLast.nextChildMap!![state]
-                            if (null==existing) {
+                            if (null == existing) {
                                 val nextChild = GrowingChildNode(state, nextChildAlts)
                                 resLast.nextChildMap!![state] = nextChild
                                 res.lastChild = nextChild
                             } else {
-                                res.incAlt(state)
+                                res.incAlt(res.numberNonSkip+1)
                                 existing.childrenAlts.add(nextChildAlts)
                                 res.lastChild = existing
                             }
@@ -177,7 +188,7 @@ class GrowingNode(
                             res.lastChild = nextChild
                         }
                         state == lastNext.state -> {
-                            res.incAlt(state)
+                            res.incAlt(res.numberNonSkip+1)
                             lastNext.childrenAlts.add(nextChildAlts)
                             res.lastChild = lastNext
                         }
@@ -223,16 +234,18 @@ class GrowingNode(
                 null == firstChild -> emptyList()
                 else -> {
                     val res = mutableListOf<SPPTNode>()
+                    var index = 0
                     var n: GrowingChildNode? = firstChild
-                    while (n != lastChild && null!=n) {
-                        res.addAll(n[this.alt(n.state),runtimeRule, option])
+                    while (n != lastChild && null != n) {
+                        res.addAll(n[this.alt(index), runtimeRule, option])
                         n = n.next(runtimeRule, option)
+                        index++
                     }
-                    if (null==n) {
+                    if (null == n) {
                         //this list of children died
                         error("TODO")
                     } else {
-                        res.addAll(lastChild!![this.alt(n.state), runtimeRule, option])
+                        res.addAll(lastChild!![this.alt(index), runtimeRule, option])
                     }
                     res
                 }
@@ -245,42 +258,44 @@ class GrowingNode(
                 val res = mutableMapOf<RulePosition, List<String>>()
                 val initialSkip = mutableListOf<String>()
                 var sn = firstChild
-                while (sn!=null && null == sn.state) {
+                while (sn != null && null == sn.state) {
                     initialSkip.add(sn.childrenAlts[0].joinToString() { it.name })
                     sn = sn.nextChild
                 }
                 val rps = sn?.state?.rulePositions ?: emptyList()
-                for(rp in rps) {
+                for (rp in rps) {
                     res[rp] = initialSkip
                     var n = sn
                     var skip = ""
-                    while (lastChild != n && null!=n) {
+                    var index = 0
+                    while (lastChild != n && null != n) {
                         val state = n.state
                         when {
-                            null == state -> skip += n.childrenAlts[this.alt(n.state)].joinToString() //skipNodes
+                            null == state -> skip += n.childrenAlts[this.alt(index)].joinToString() //skipNodes
                             else -> {
                                 val hasAlts = when (n.childrenAlts.size) {
-                                     1 -> ""
-                                    else -> "*(${this.alt(n.state)})"
+                                    1 -> ""
+                                    else -> "*(${this.alt(index)})"
                                 }
-                                res[rp] = res[rp]!! + n[this.alt(n.state), rp.runtimeRule, rp.option].joinToString() { it.name + hasAlts }
+                                res[rp] = res[rp]!! + n[this.alt(index), rp.runtimeRule, rp.option].joinToString() { it.name + hasAlts }
                             }
                         }
-                        n = n.next( rp.runtimeRule, rp.option)
+                        n = n.next(rp.runtimeRule, rp.option)
+                        index++
                     }
-                    if (null==n) {
+                    if (null == n) {
                         //this list of children died
                         res[rp] = res[rp]!! + "-X"
                     } else {
                         val state = n.state
                         when {
-                            null == state -> skip += n.childrenAlts[this.alt(n.state)].joinToString() //skipNodes
+                            null == state -> skip += n.childrenAlts[this.alt(index)].joinToString() //skipNodes
                             else -> {
                                 val hasAlts = when (n.childrenAlts.size) {
                                     1 -> ""
-                                    else -> "*(${this.alt(n.state)})"
+                                    else -> "*(${this.alt(index)})"
                                 }
-                                res[rp] = res[rp]!! + n[this.alt(n.state), rp.runtimeRule, rp.option].joinToString() { it.name + hasAlts }
+                                res[rp] = res[rp]!! + n[this.alt(index), rp.runtimeRule, rp.option].joinToString() { it.name + hasAlts }
                             }
                         }
                     }

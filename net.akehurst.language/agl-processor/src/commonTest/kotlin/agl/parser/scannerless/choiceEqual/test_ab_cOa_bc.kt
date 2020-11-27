@@ -125,7 +125,7 @@ class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2, //TODO: might be possible to make this 1...need to combine H-to ab and a_bc
                 expectedTrees = *arrayOf(expected)
         )
     }

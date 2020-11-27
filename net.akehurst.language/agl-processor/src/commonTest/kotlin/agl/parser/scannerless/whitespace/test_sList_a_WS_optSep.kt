@@ -41,7 +41,7 @@ class test_sList_a_WS_optSep : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = ""
 
-        val expected = "S|2 { §empty }"
+        val expected = "S|1 { §empty }"
 
         val actual = super.test(
                 rrs = rrs,

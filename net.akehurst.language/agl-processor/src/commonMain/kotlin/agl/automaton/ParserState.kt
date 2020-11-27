@@ -40,7 +40,7 @@ class ParserState(
             val runtimeRule = gn.runtimeRules.first()
             when {
                 previousRp.isAtEnd -> gn.children.numberNonSkip + 1 >= runtimeRule.rhs.multiMin
-                previousRp.position == RulePosition.MULIT_ITEM_POSITION -> {
+                previousRp.position == RulePosition.POSITION_MULIT_ITEM -> {
                     //if the to state creates a complete node then min must be >= multiMin
                     if (this.to.rulePositions.first().isAtEnd) {
                         val minSatisfied = gn.children.numberNonSkip + 1 >= runtimeRule.rhs.multiMin
@@ -59,7 +59,7 @@ class ParserState(
             val runtimeRule = gn.runtimeRules.first()
             when {
                 previousRp.isAtEnd -> (gn.children.numberNonSkip / 2) + 1 >= runtimeRule.rhs.multiMin
-                previousRp.position == RulePosition.SLIST_ITEM_POSITION -> {
+                previousRp.position == RulePosition.POSITION_SLIST_ITEM -> {
                     //if the to state creates a complete node then min must be >= multiMin
                     if (this.to.rulePositions.first().isAtEnd) {
                         val minSatisfied = (gn.children.numberNonSkip / 2) + 1 >= runtimeRule.rhs.multiMin
@@ -69,7 +69,7 @@ class ParserState(
                         -1 == runtimeRule.rhs.multiMax || (gn.children.numberNonSkip / 2) + 1 <= runtimeRule.rhs.multiMax
                     }
                 }
-                previousRp.position == RulePosition.SLIST_SEPARATOR_POSITION -> {
+                previousRp.position == RulePosition.POSITION_SLIST_SEPARATOR -> {
                     //if the to state creates a complete node then min must be >= multiMin
                     if (this.to.rulePositions.first().isAtEnd) {
                         val minSatisfied = (gn.children.numberNonSkip / 2) + 1 >= runtimeRule.rhs.multiMin
@@ -235,23 +235,31 @@ class ParserState(
         } else {
             __filteredTransitions.clear()
             val transitions = this.calcTransitions(previousState)//, gn.lookaheadStack.peek())
-            for (t in transitions) {
-                val filter = when (t.action) {
+            for (tr in transitions) {
+                val filter = when (tr.action) {
                     Transition.ParseAction.GOAL ->  true
                     Transition.ParseAction.WIDTH -> true
                     Transition.ParseAction.EMBED -> true
                     Transition.ParseAction.GRAFT -> {
-                        t.prevGuard?.let {
+                        tr.prevGuard?.let {
                             previousState.rulePositions.containsAll(it)
                         } ?: true
 //                        previousState.rulePositions == t.prevGuard
                     }
                     Transition.ParseAction.HEIGHT -> {
+                        previousState.rulePositions.any { prevRp ->
+                            when(prevRp.runtimeRule.rhs.kind){
+                                RuntimeRuleItemKind.SEPARATED_LIST -> {
+                                    tr.to.rulePositions.any { toRp -> toRp.runtimeRule == prevRp.runtimeRule }.not()
+                                }
+                                else -> true
+                            }
+                        }
                         //t.to.growsInto(previousState) &&
-                        previousState.rulePositions != t.prevGuard
+                        //previousState.rulePositions != t.prevGuard
                     }
                 }
-                if (filter) __filteredTransitions.add(t)
+                if (filter) __filteredTransitions.add(tr)
             }
             __filteredTransitions
         }
@@ -326,7 +334,7 @@ class ParserState(
                                 }
                             }
                         } else {
-                            val isAtStart = hg.parent.first().isAtStart
+                            val isAtStart = hg.parent.first().isAtStart //FIXME: what about things not the first?
                             when (isAtStart) {
                                 true -> {
                                     val ts = this.createHeightTransition3(hg)

@@ -202,7 +202,7 @@ class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2, //TODO: can it be 1?
                 expectedTrees = *arrayOf(expected1)
         )
     }

@@ -16,10 +16,7 @@
 
 package net.akehurst.language.parser.scanondemand.examples
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
@@ -34,33 +31,81 @@ class test_GTB : test_ScanOnDemandParserAbstract() {
      * B = 'b' | <empty> ;
      *
      */
-    private fun S(): RuntimeRuleSetBuilder {
-        val rrb = RuntimeRuleSetBuilder()
-        val r_a = rrb.literal("a")
-        val r_b = rrb.literal("b")
-        val r_A = rrb.rule("A").concatenation(r_a)
-        val r_B = rrb.rule("B").build()
-        val r_be= rrb.empty(r_B)
-        r_B.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE,RuntimeRuleChoiceKind.LONGEST_PRIORITY,-1,0,arrayOf(r_b, r_be))
-        val r_S1 = rrb.rule("S1").concatenation(r_A, r_B)
-        val r_S2 = rrb.rule("S2").concatenation(r_A, rrb.literal("z"))
-        val r_S = rrb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r_a, r_S1, r_S2)
-        return rrb
+
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                ref("S1")
+                ref("S2")
+            }
+            concatenation("S1") { ref("A"); ref("B") }
+            concatenation("S2") { ref("A"); literal("z") }
+            concatenation("A") { literal("a") }
+            choice("B",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("b")
+                ref("be")
+            }
+            empty("be")
+        }
+
+        val goal = "S"
     }
 
     @Test
     fun a() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a"
 
-        val expected1 = """
+        val expected = """
             S {
               'a'
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
+    @Test
+    fun az() {
+        val sentence = "az"
+
+        val expected = """
+            S|2 {
+              S2 { A { 'a' } 'z' }
+            }
+        """.trimIndent()
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun ab() {
+        val sentence = "ab"
+
+        val expected = """
+            S|1 {
+              S1 { A{'a'} B { 'b' } }
+            }
+        """.trimIndent()
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
+    }
 }

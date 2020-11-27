@@ -36,7 +36,7 @@ class test_multi_1_n_literal : test_Abstract() {
 
         val s0 = SM.startState
         val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
-        val s2 = SM.states[listOf(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION))]
+        val s2 = SM.states[listOf(RulePosition(S, 0, RulePosition.POSITION_MULIT_ITEM))]
         val s3 = SM.states[listOf(RulePosition(S, 0, RulePosition.END_OF_RULE))]
 
         val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
@@ -52,7 +52,7 @@ class test_multi_1_n_literal : test_Abstract() {
                 Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // G = . S
                 Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
                 Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_a, setOf(a)), // S = . a+
-                Triple(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION), lhs_a, setOf(a)), // S = a . a+
+                Triple(RulePosition(S, 0, RulePosition.POSITION_MULIT_ITEM), lhs_a, setOf(a)), // S = a . a+
                 Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)) // S = a+ .
         )
 

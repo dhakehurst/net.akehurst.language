@@ -47,7 +47,7 @@ class test_abc_OR_abd : test_Abstract() {
 
         val s0 = SM.startState
         val s1 = SM.states[listOf(RP(a, 0, RulePosition.END_OF_RULE))]
-        val s2 = SM.states[listOf(RP(S, 0, RulePosition.MULIT_ITEM_POSITION))]
+        val s2 = SM.states[listOf(RP(S, 0, RulePosition.POSITION_MULIT_ITEM))]
         val s3 = SM.states[listOf(RP(S, 0, RulePosition.END_OF_RULE))]
 
         val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))

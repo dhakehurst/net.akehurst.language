@@ -60,7 +60,7 @@ class test_multi_1_n_choice : test_Abstract() {
                 Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a, b)), // G = . S
                 Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
                 Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_a, setOf(a, b)), // S = . a+
-                Triple(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION), lhs_a, setOf(a, b)), // S = a . a+
+                Triple(RulePosition(S, 0, RulePosition.POSITION_MULIT_ITEM), lhs_a, setOf(a, b)), // S = a . a+
                 Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)) // S = a+ .
         )
 
@@ -92,14 +92,20 @@ class test_multi_1_n_choice : test_Abstract() {
         val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
 
         val expected = listOf(
-                HeightGraft(RulePosition(S, 0, 1),
-                        listOf(RulePosition(AB, 0, 0)),
-                        listOf(RulePosition(AB, 0, RulePosition.END_OF_RULE)),
-                        lhs_abU, lhs_ab),
-                HeightGraft(RulePosition(S, 0, RulePosition.END_OF_RULE),
-                        listOf(RulePosition(AB, 0, 0)),
-                        listOf(RulePosition(AB, 0, RulePosition.END_OF_RULE)),
-                        lhs_abU, lhs_U)
+                HeightGraft(null, listOf(RP(AB, 0, SOR)), listOf(RP(AB, 0, EOR)), lhs_abU, lhs_abU)
+        )
+        assertEquals(expected, actual)
+
+    }
+
+    @Test
+    fun s3_heightOrGraftInto_s0() {
+
+        val actual = s3.heightOrGraftInto(s0.rulePositions).toList()
+
+        val expected = listOf(
+                HeightGraft(null, listOf(RP(S, 0, SOR)), listOf(RP(S, 0, PMI)), lhs_ab, lhs_U),
+                HeightGraft(null, listOf(RP(S, 0, SOR)), listOf(RP(S, 0, EOR)), lhs_U, lhs_U)
         )
         assertEquals(expected, actual)
 

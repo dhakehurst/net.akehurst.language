@@ -29,10 +29,13 @@ data class RulePosition(
         val OPTION_MULTI_ITEM = 0
         val OPTION_MULTI_EMPTY = 1
 
+        val OPTION_SLIST_ITEM_OR_SEPERATOR = 0
+        val OPTION_SLIST_EMPTY = 1
+
         //for use in multi and separated list
-        val MULIT_ITEM_POSITION = 1 //TODO: make -ve maybe
-        val SLIST_SEPARATOR_POSITION = 1 //TODO: make -ve maybe
-        val SLIST_ITEM_POSITION = 2 //TODO: make -ve maybe
+        val POSITION_MULIT_ITEM = 1 //TODO: make -ve maybe
+        val POSITION_SLIST_SEPARATOR = 1 //TODO: make -ve maybe
+        val POSITION_SLIST_ITEM = 2 //TODO: make -ve maybe
     }
 
     val isAtStart = position == START_OF_RULE
@@ -105,15 +108,15 @@ data class RulePosition(
                                         RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, END_OF_RULE)
                                 )
                                 2 <= this.runtimeRule.rhs.multiMin -> setOf(
-                                        RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, MULIT_ITEM_POSITION)
+                                        RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, POSITION_MULIT_ITEM)
                                 )
                                 else -> setOf(
-                                        RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, MULIT_ITEM_POSITION),
+                                        RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, POSITION_MULIT_ITEM),
                                         RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, END_OF_RULE)
                                 )
                             }
-                            MULIT_ITEM_POSITION -> setOf(
-                                    RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, MULIT_ITEM_POSITION),
+                            POSITION_MULIT_ITEM -> setOf(
+                                    RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, POSITION_MULIT_ITEM),
                                     RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, END_OF_RULE)
                             )
                             END_OF_RULE -> emptySet()
@@ -122,38 +125,38 @@ data class RulePosition(
                         else -> emptySet()
                     }
                     RuntimeRuleItemKind.SEPARATED_LIST -> when (this.option) {
-                        RuntimeRuleItem.SLIST__EMPTY_RULE -> when {
+                        OPTION_SLIST_EMPTY -> when {
                             START_OF_RULE == this.position && this.runtimeRule.rhs.multiMin == 0 && itemRule == this.runtimeRule.rhs.SLIST__emptyRule -> setOf(
                                     RulePosition(this.runtimeRule, this.option, END_OF_RULE)
                             )
                             else -> emptySet() //throw ParseException("This should never happen!")
                         }
-                        RuntimeRuleItem.SLIST__ITEM -> when (this.position) {
+                        OPTION_SLIST_ITEM_OR_SEPERATOR -> when (this.position) {
                             START_OF_RULE -> when {
                                 1 == this.runtimeRule.rhs.multiMax -> setOf(
-                                        RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, END_OF_RULE)
+                                        RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, END_OF_RULE)
                                 )
                                 2 <= this.runtimeRule.rhs.multiMin -> setOf(
-                                        RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, SLIST_SEPARATOR_POSITION)
+                                        RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, POSITION_SLIST_SEPARATOR)
                                 )
                                 //min == 0 && (max==-1 or max > 1)
                                 else -> setOf(
-                                        RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, SLIST_SEPARATOR_POSITION),
-                                        RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, END_OF_RULE)
+                                        RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, POSITION_SLIST_SEPARATOR),
+                                        RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, END_OF_RULE)
                                 )
                             }
-                            SLIST_ITEM_POSITION -> setOf(
-                                    RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__SEPARATOR, SLIST_SEPARATOR_POSITION),
-                                    RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, END_OF_RULE)
+                            POSITION_SLIST_ITEM -> setOf(
+                                    RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, POSITION_SLIST_SEPARATOR),
+                                    RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, END_OF_RULE)
                             )
+                            POSITION_SLIST_SEPARATOR -> when {
+                                (this.runtimeRule.rhs.multiMax > 1 || -1 == this.runtimeRule.rhs.multiMax) && itemRule == this.runtimeRule.rhs.SLIST__separator -> setOf(
+                                        RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, POSITION_SLIST_ITEM)
+                                )
+                                else -> error("This should never happen!")
+                            }
                             END_OF_RULE -> emptySet()
-                            else -> emptySet()
-                        }
-                        RuntimeRuleItem.SLIST__SEPARATOR -> when {
-                            SLIST_SEPARATOR_POSITION == this.position && (this.runtimeRule.rhs.multiMax > 1 || -1 == this.runtimeRule.rhs.multiMax) && itemRule == this.runtimeRule.rhs.SLIST__separator -> setOf(
-                                    RulePosition(this.runtimeRule, RuntimeRuleItem.SLIST__ITEM, SLIST_ITEM_POSITION)
-                            )
-                            else -> emptySet() //throw ParseException("This should never happen!")
+                            else -> error("This should never happen!")
                         }
                         else -> error("This should never happen!")
                     }

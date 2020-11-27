@@ -267,7 +267,7 @@ internal class ParseGraph(
     private fun findOrCreateGrowingNode(newState: ParserState, lookahead: LookaheadSet, growingChildren: GrowingNode.GrowingChildren, previous: Set<PreviousInfo>) {
         val gnindex = GrowingNode.index(newState, growingChildren)//, nextInputPosition, priority)
         var existing = this.growing[gnindex]
-         if (null == existing) {
+        if (null == existing) {
             var nn = GrowingNode(newState, lookahead, growingChildren)
             when {
                 newState.isAtEnd -> {
@@ -405,10 +405,9 @@ internal class ParseGraph(
             }
         }
     */
-    private fun completeIfReachedEnd(gn: GrowingNode) : GrowingNode {
-        var used = gn
+    private fun completeIfReachedEnd(gn: GrowingNode): GrowingNode {
+        var used: GrowingNode? = null
         if (gn.currentState.isAtEnd) {
-            check(1==gn.currentState.rulePositions.size,{"TODO"}) //TODO
             gn.currentState.rulePositions.forEachIndexed { index, rp ->
                 val runtimeRule = rp.runtimeRule
                 val children = gn.children//[runtimeRule] //TODO: can we separate up the children later ?
@@ -423,11 +422,13 @@ internal class ParseGraph(
                     } else {
                         cn.grownChildrenAlternatives[option] = children
                     }
+                    used = gn
                 } else {
                     if (gn.isLeaf) {
                         TODO()
                         // dont try and add children...can't for a leaf
                         gn.skipNodes
+                        used = gn
                     } else {
                         cn = (cn as SPPTBranchFromInputAndGrownChildren)
 
@@ -471,29 +472,34 @@ internal class ParseGraph(
                             }
                         } else {
                             val choice = pickLongest(gn, rp, children, cn)
-                                    //?:pickHighestPriority(gn, rp, children, cn)
-                                   ?: pickByLongestChildren(gn, rp, children, cn)
+                            //?:pickHighestPriority(gn, rp, children, cn)
+                                    ?: pickByLongestChildren(gn, rp, children, cn)
                             if (null == choice) {
                                 //ambiguous, keep existing TODO is this an error??
                                 cn
                             } else {
-                               choice
+                                choice
                             }
                         }
 
-                        if(cn==chosen) {
+                        if (cn === chosen) {
                             //used existing so return that as the new gn
+                            if (null != used) {
+                                error("TODO")
+                            }
                             used = GrowingNode(gn.currentState, gn.lookahead, cn.grownChildrenAlternatives.values.first())
                         } else {
                             //used new stuff
+                            used = gn
                         }
                     }
                 }
             }
         } else {
             //do nothing
+
         }
-        return used
+        return used!!
     }
 
     // return null if length is the same
@@ -543,16 +549,16 @@ internal class ParseGraph(
         val existingChildren = existingNode.grownChildrenAlternatives[newRp.option]!![newRp.runtimeRule, newRp.option]
         var i = 0
         var chosen: SPPTNode? = null
-        while (i < newChildrenList.size && chosen==null) {
+        while (i < newChildrenList.size && chosen == null) {
             val newChildNP = newChildrenList[i].nextInputPosition
             val existingChildNP = existingChildren[i].nextInputPosition
-            chosen = when{
-                newChildNP > existingChildNP ->{
+            chosen = when {
+                newChildNP > existingChildNP -> {
                     val lngst = this.createBranchNoChildren(newRp.runtimeRule, newRp.option, newRp.priority, newNode.startPosition, newNode.nextInputPosition)
                     lngst.grownChildrenAlternatives[newRp.option] = newChildren
                     lngst
                 }
-                existingChildNP > newChildNP ->{
+                existingChildNP > newChildNP -> {
                     existingNode
                 }
                 else -> null

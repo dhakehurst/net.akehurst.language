@@ -70,7 +70,7 @@ class test_skipRules : test_Abstract() {
         expected = setOf(skWS, skCM)
         assertEquals(expected, actual)
 
-        actual = skipSS.firstTerminals[RulePosition(skM, 0, RulePosition.MULIT_ITEM_POSITION)]
+        actual = skipSS.firstTerminals[RulePosition(skM, 0, RulePosition.POSITION_MULIT_ITEM)]
         expected = setOf(skWS, skCM)
         assertEquals(expected, actual)
 

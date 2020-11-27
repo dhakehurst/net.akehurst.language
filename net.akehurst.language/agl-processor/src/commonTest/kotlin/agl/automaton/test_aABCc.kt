@@ -70,11 +70,11 @@ class test_aABCc : test_Abstract() {
     @Test
     fun calcLookaheadDown() {
 
-        var actual = s0.stateSet.calcLookaheadDown(RulePosition(G, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        var actual = s0.stateSet.calcLookaheadDown(RulePosition(G, 0, SOR), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         var expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(G, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.calcLookaheadDown(RulePosition(G, 0, EOR), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = emptySet()
         assertEquals(expected, actual)
 

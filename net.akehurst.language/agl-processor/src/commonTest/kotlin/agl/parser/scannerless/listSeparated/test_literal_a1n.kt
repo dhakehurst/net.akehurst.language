@@ -18,6 +18,7 @@ package net.akehurst.language.parser.scanondemand.listSeparated
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
@@ -28,21 +29,22 @@ class test_literal_a1n : test_ScanOnDemandParserAbstract() {
 
     // S = [a / ',']+
     // a = 'a'
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r0 = b.literal("a")
-        val r1 = b.rule("S").separatedList(1, -1, b.literal(","), r0)
-        return b
+
+    private companion object {
+        val rrs = runtimeRuleSet {
+            sList("S",1,-1,"'a'","','")
+            literal("'a'","a")
+            literal("','",",")
+        }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val b = S()
-        val goal = "S"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(b, goal, sentence)
+            super.test(rrs, goal, sentence, 1)
         }
 
         assertEquals(1, e.location.line)
@@ -52,23 +54,25 @@ class test_literal_a1n : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-        val b = S()
-        val goal = "S"
         val sentence = "a"
 
         val expected = "S {'a'}"
 
-        super.test(b, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aa_fails() {
-        val b = S()
-        val goal = "S"
         val sentence = "aa"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(b, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, e.location.line)
@@ -78,23 +82,25 @@ class test_literal_a1n : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aca() {
-        val b = S()
-        val goal = "S"
         val sentence = "a,a"
 
         val expected = "S {'a' ',' 'a'}"
 
-        super.test(b, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = Companion.goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun acaa_fails() {
-        val b = S()
-        val goal = "S"
         val sentence = "a,aa"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(b, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, e.location.line)
@@ -104,24 +110,32 @@ class test_literal_a1n : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun acaca() {
-        val b = S()
-        val goal = "S"
         val sentence = "a,a,a"
 
         val expected = "S {'a' ',' 'a' ',' 'a'}"
 
-        super.test(b, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun acax100() {
-        val b = S()
-        val goal = "S"
         val sentence = "a"+",a".repeat(99)
 
         val expected = "S {'a'"+" ',' 'a'".repeat(99)+"}"
 
-        super.test(b, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

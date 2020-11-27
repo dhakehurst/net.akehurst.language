@@ -58,34 +58,38 @@ class test_sList_compositeMulti : test_Abstract() {
         val lhs_ciU = SM.runtimeRuleSet.createLookaheadSet(setOf(c, i, UP))
 
         val s0 = rrs.startingState(S)
-        val s1 = SM.states[listOf(RulePosition(n, 0, RulePosition.END_OF_RULE))]
-        val s2 = SM.states[listOf(RulePosition(Se, 0, RulePosition.END_OF_RULE))]
+        val s1 = SM.states[listOf(RP(n, 0, EOR))]
+        val s2 = SM.states[listOf(RP(Se, 0, EOR))]
     }
 
     override val SM: ParserStateSet = Companion.SM
     override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>> = listOf(
-            Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(n, UP)), // G = . S
-            Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_U, setOf(n)), // So0 = . nl / ';'
-            Triple(RulePosition(S, 2, RulePosition.START_OF_RULE), lhs_U, setOf(UP)), // So2 = . E
-            Triple(RulePosition(nl, 0, RulePosition.START_OF_RULE), lhs_U, setOf(n)), // nl = . N cmn
-
-            Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),                 // G = S .
-            Triple(RulePosition(S, RuntimeRuleItem.SLIST__SEPARATOR, RulePosition.SLIST_SEPARATOR_POSITION), lhs_U, setOf(UP)),    // So0 = nl . / ';'
-            Triple(RulePosition(S, 2, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),                 // So2 = E .
-            Triple(RulePosition(nl, 0, 1), lhs_U, setOf(UP)),                               // nl = N . cnm
-            Triple(RulePosition(cnm, 0, RulePosition.START_OF_RULE), lhs_U, setOf(UP)),             // cnm = . cn
-            Triple(RulePosition(cnm, 1, RulePosition.START_OF_RULE), lhs_U, setOf(UP)), // cnm = . E
-            Triple(RulePosition(cn, 0, RulePosition.START_OF_RULE), lhs_U, setOf(UP))  // cn = . ',' N
+            Triple(RP(G, 0, SOR), lhs_U, setOf(n, UP)), // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, setOf(UP)),        // G = S .
+            Triple(RP(S, OLI, SOR), lhs_U, setOf(UP)),          // So0 = . [nl . / ';']*
+            Triple(RP(S, OLS, PLS), lhs_U, setOf(UP)),          // So0 =  nl . [nl . / ';']*
+            Triple(RP(S, OLI, PLI), lhs_U, setOf(UP)),          // So0 = nl ';' . [nl . / ';']*
+            Triple(RP(S, OLI, EOR), lhs_U, setOf(UP)),          // So0 = [nl . / ';']* .
+            Triple(RP(S, OLE, SOR), lhs_U, setOf(UP)),          // So2 = . E
+            Triple(RP(S, OLE, EOR), lhs_U, setOf(UP)),          // So2 = E .
+            Triple(RP(nl, 0, SOR), lhs_U, setOf(n)),        // nl = . N cmn
+            Triple(RP(nl, 0, 1), lhs_U, setOf(UP)),    // nl = N . cnm
+            Triple(RP(cnm, OMI, SOR), lhs_U, setOf(UP)),      // cnm = . cn*
+            Triple(RP(cnm, OMI, PMI), lhs_U, setOf(UP)),      // cnm = cn . cn*
+            Triple(RP(cnm, OMI, EOR), lhs_U, setOf(UP)),      // cnm = cn* .
+            Triple(RP(cnm, OME, SOR), lhs_U, setOf(UP)),      // cnm = . E
+            Triple(RP(cnm, OME, SOR), lhs_U, setOf(UP)),      // cnm = E .
+            Triple(RP(cn, 0, SOR), lhs_U, setOf(UP))        // cn = . ',' N
     )
 
     @Test
     fun calcClosure_G_0_0() {
-        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0), lhs_U)
-        val cl_G_So0 = ClosureItem(cl_G, RulePosition(S, 0, 0), RulePosition(S, 1, RulePosition.SLIST_SEPARATOR_POSITION), lhs_i)
-        val cl_G_So0_nl = ClosureItem(cl_G_So0, RulePosition(nl, 0, 0), RulePosition(nl, 0, 1), lhs_i)
-        val cl_G_So1 = ClosureItem(cl_G, RulePosition(S, 1, 0), RulePosition(G, 0, 0), lhs_U)
+        val cl_G = ClosureItem(null, RP(G, 0, 0), RP(G, 0, 0), lhs_U)
+        val cl_G_So0 = ClosureItem(cl_G, RP(S, 0, 0), RP(S, OLS, PLS), lhs_i)
+        val cl_G_So0_nl = ClosureItem(cl_G_So0, RP(nl, 0, 0), RP(nl, 0, 1), lhs_i)
+        val cl_G_So1 = ClosureItem(cl_G, RP(S, 1, 0), RP(G, 0, 0), lhs_U)
 
-        val actual = SM.calcClosure(ClosureItem(null, RulePosition(G, 0, 0), null, lhs_U))
+        val actual = SM.calcClosure(ClosureItem(null, RP(G, 0, 0), null, lhs_U))
         val expected = setOf(
                 cl_G, cl_G_So0, cl_G_So1
         )
@@ -94,8 +98,8 @@ class test_sList_compositeMulti : test_Abstract() {
 
     override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
         get() = listOf(
-                Pair(RulePosition(n, 0, RulePosition.END_OF_RULE), lhs_ciU),
-                Pair(RulePosition(Se, 0, RulePosition.END_OF_RULE), lhs_U)
+                Pair(RP(n, 0, EOR), lhs_ciU),
+                Pair(RP(Se, 0, EOR), lhs_U)
         )
 
     @Test
@@ -120,8 +124,8 @@ class test_sList_compositeMulti : test_Abstract() {
         val expected = listOf(
                 HeightGraft(
                         null,
-                        listOf(RulePosition(S, 0, 0)),
-                        listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
+                        listOf(RP(S, 0, 0)),
+                        listOf(RP(S, 0, EOR)),
                         lhs_U,
                         lhs_U
                 )

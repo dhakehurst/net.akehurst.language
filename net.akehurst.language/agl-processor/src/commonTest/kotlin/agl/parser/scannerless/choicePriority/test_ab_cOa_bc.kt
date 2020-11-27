@@ -125,7 +125,7 @@ class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2, //TODO: can this be 1 ?
                 expectedTrees = *arrayOf(expected)
         )
     }

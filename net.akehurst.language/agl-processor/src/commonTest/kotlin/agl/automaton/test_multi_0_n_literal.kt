@@ -39,7 +39,7 @@ class test_multi_0_n_literal : test_Abstract() {
         val s0 = SM.startState
         val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
         val s2 = SM.states[listOf(RulePosition(eS, 0, RulePosition.END_OF_RULE))]
-        val s3 = SM.states[listOf(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION))]
+        val s3 = SM.states[listOf(RulePosition(S, 0, RulePosition.POSITION_MULIT_ITEM))]
         val s4 = SM.states[listOf(RulePosition(S, 0, RulePosition.END_OF_RULE))]
 
         val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
@@ -57,7 +57,7 @@ class test_multi_0_n_literal : test_Abstract() {
                 Triple(RP(S, 1, SOR), lhs_U, setOf(UP)), // S = . (a.empty)
                 Triple(RP(S, 1, EOR), lhs_U, setOf(UP)), // S = (a.empty) .
                 Triple(RP(S, 0, SOR), lhs_a, setOf(a)), // S = . a*
-                Triple(RP(S, 0, RulePosition.MULIT_ITEM_POSITION), lhs_a, setOf(a)), // S = a . a*
+                Triple(RP(S, 0, PMI), lhs_a, setOf(a)), // S = a . a*
                 Triple(RP(S, 0, EOR), lhs_U, setOf(UP)) // S = a* .
         )
 
@@ -84,16 +84,8 @@ class test_multi_0_n_literal : test_Abstract() {
         val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
 
         val expected = listOf(
-                HeightGraft(
-                        RulePosition(G, 0, 0),
-                        listOf(RulePosition(S, 0, RulePosition.START_OF_RULE)),
-                        listOf(RulePosition(S, 0, RulePosition.MULIT_ITEM_POSITION)),
-                        lhs_a, lhs_U),
-                HeightGraft(
-                        RulePosition(G, 0, 0),
-                        listOf(RulePosition(S, 0, RulePosition.START_OF_RULE)),
-                        listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
-                        lhs_U, lhs_U)
+                HeightGraft(null, listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, PMI)), lhs_a, lhs_U),
+                HeightGraft(null, listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, EOR)), lhs_U, lhs_U)
         )
         assertEquals(expected, actual)
 
@@ -104,8 +96,8 @@ class test_multi_0_n_literal : test_Abstract() {
         val actual = s1.transitions(s0)
 
         val expected = listOf<Transition>(
-                Transition(s1, s3, Transition.ParseAction.HEIGHT, lhs_a, LookaheadSet.EMPTY, null) { _, _ -> true },
-                Transition(s1, s4, Transition.ParseAction.HEIGHT, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
+                Transition(s1, s3, Transition.ParseAction.HEIGHT, lhs_a, lhs_U, listOf(RP(S,OMI,SOR))) { _, _ -> true },
+                Transition(s1, s4, Transition.ParseAction.HEIGHT, lhs_U, lhs_U, listOf(RP(S,OMI,SOR))) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {

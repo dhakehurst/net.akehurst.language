@@ -18,12 +18,16 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.api.parser.ParserException
 
+@DslMarker
+annotation class RuntimeRuleSetDslMarker
+
 fun runtimeRuleSet(init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
     val b = RuntimeRuleSetBuilder2()
     b.init()
     return b.ruleSet()
 }
 
+@RuntimeRuleSetDslMarker
 class RuntimeRuleSetBuilder2() {
 
     var runtimeRuleSet=RuntimeRuleSet()
@@ -155,7 +159,7 @@ class RuntimeRuleSetBuilder2() {
     }
 }
 
-
+@RuntimeRuleSetDslMarker
 class RuntimeRuleBuilder(
         val rrsb: RuntimeRuleSetBuilder2,
         val tag: String,
@@ -183,6 +187,7 @@ class RuntimeRuleBuilder(
     }
 }
 
+@RuntimeRuleSetDslMarker
 class RuntimeRuleItemsBuilder(
         val rrsb: RuntimeRuleSetBuilder2,
         val kind: RuntimeRuleItemKind,

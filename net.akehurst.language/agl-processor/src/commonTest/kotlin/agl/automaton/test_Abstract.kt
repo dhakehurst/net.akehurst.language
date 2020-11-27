@@ -31,9 +31,16 @@ abstract class test_Abstract {
 
         val EOR = RulePosition.END_OF_RULE
         val SOR = RulePosition.START_OF_RULE
+
         val OMI = RulePosition.OPTION_MULTI_ITEM
         val OME = RulePosition.OPTION_MULTI_EMPTY
-        val PMI = RulePosition.MULIT_ITEM_POSITION
+        val OLE = RulePosition.OPTION_SLIST_EMPTY
+        val OLI = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+        val OLS = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+
+        val PMI = RulePosition.POSITION_MULIT_ITEM
+        val PLI = RulePosition.POSITION_SLIST_ITEM
+        val PLS = RulePosition.POSITION_SLIST_SEPARATOR
 
         val lhs_E = LookaheadSet.EMPTY
         val lhs_U = LookaheadSet.UP
