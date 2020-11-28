@@ -1,0 +1,168 @@
+/**
+ * Copyright (C) 2020 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.akehurst.language.agl.runtime.graph
+
+import net.akehurst.language.agl.automaton.ParserState
+import net.akehurst.language.agl.runtime.structure.RuleOptionId
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
+import net.akehurst.language.api.sppt.SPPTNode
+
+class GrowingChildNode(
+        val state: ParserState?, //if null then its skip children
+        val children: List<SPPTNode>
+) {
+
+    companion object {
+        private fun ParserState.isDuplicateOf(other: ParserState?): Boolean = when {
+            null == other -> false
+            this == other -> true
+            else -> {
+                this.rulePositions.all { sRp -> other.rulePositions.any { lRp -> sRp.identity == lRp.identity } }
+            }
+        }
+    }
+
+    var nextChild: GrowingChildNode? = null
+    var nextChildAlternatives: MutableMap<List<RuleOptionId>, MutableList<GrowingChildNode>>? = null
+
+    val isLast: Boolean get() = null == nextChild && null == nextChildAlternatives
+
+    val nextInputPosition: Int
+        get() = when {
+            null == state -> children.last().nextInputPosition
+            else -> children.first().nextInputPosition
+        }
+
+    fun appendRealLast(state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildNode {
+        nextChild = GrowingChildNode(state, nextChildAlts)
+        return nextChild!!
+    }
+
+    fun appendAlternativeLast(growingChildren: GrowingChildren, childIndex: Int, state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildNode {
+        val nextChild = this.nextChild
+        return when {
+            null != nextChild -> { // first alternative
+                when {
+                    state.isDuplicateOf(nextChild.state) -> {
+                        val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
+                        when{
+                            alternativeNextChild.nextInputPosition > nextChild.nextInputPosition ->{
+                                val nextChildAlternatives = mutableMapOf<List<RuleOptionId>, MutableList<GrowingChildNode>>()
+                                val alts = mutableListOf(nextChild)
+                                nextChildAlternatives[state.rulePositionIdentity] = alts
+                                this.nextChild = null
+                                val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
+                                alts.add(alternativeNextChild)
+                                growingChildren.incNextChildAlt(childIndex, state.rulePositionIdentity)
+                                this.nextChildAlternatives = nextChildAlternatives
+                                alternativeNextChild
+                            }
+                            else -> {
+                                //TODO: do we replace or drop?"
+                                nextChild
+                            }
+                        }
+                    }
+                    else -> {
+                        val nextChildAlternatives = mutableMapOf<List<RuleOptionId>, MutableList<GrowingChildNode>>()
+                        val alts = mutableListOf(nextChild)
+                        nextChildAlternatives[state.rulePositionIdentity] = alts
+                        this.nextChild = null
+                        val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
+                        alts.add(alternativeNextChild)
+                        growingChildren.incNextChildAlt(childIndex, state.rulePositionIdentity)
+                        this.nextChildAlternatives = nextChildAlternatives
+                        alternativeNextChild
+                    }
+                }
+            }
+            else -> { // other alternatives
+                // if null==nextChild then must be that null!=nextChildAlternatives
+                val nextChildAlternatives = this.nextChildAlternatives!!
+                val alts = nextChildAlternatives[state.rulePositionIdentity]
+                when {
+                    null == alts -> { // first alt with this rulePositionIdentity
+                        val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
+                        nextChildAlternatives[state.rulePositionIdentity] = mutableListOf(alternativeNextChild)
+                        alternativeNextChild
+                    }
+                    else -> {
+                        val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
+                        // check if there is a duplicate with same length
+                        val existing = alts.firstOrNull { alternativeNextChild.nextInputPosition > it.nextInputPosition }
+                        when {
+                            null == existing -> {
+                                alts.add(alternativeNextChild)
+                                growingChildren.incNextChildAlt(childIndex, state.rulePositionIdentity)
+                                alternativeNextChild
+                            }
+                            else -> {
+                                //error("TODO: do we replace or drop?")
+                                existing
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun next(altNext: Int, ruleOption: RuleOptionId): GrowingChildNode? = when {
+        null != nextChildAlternatives -> nextChildAlternatives!!.entries.firstOrNull {
+            val rpIds = it.key
+            when {
+                null == rpIds -> true //skipNodes
+                else -> {
+                    rpIds.any { it == ruleOption }
+                }
+            }
+        }?.value?.get(altNext)
+        null == nextChild -> null
+        else -> nextChild
+    }
+
+    operator fun get(ruleOption: RuleOptionId): List<SPPTNode> {
+        return when {
+            null == this.state -> children //skip nodes
+            else -> {
+                val i = when (ruleOption.runtimeRule.rhs.kind) {
+                    RuntimeRuleItemKind.CONCATENATION -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule }
+                    RuntimeRuleItemKind.CHOICE -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                    RuntimeRuleItemKind.EMPTY -> TODO()
+                    RuntimeRuleItemKind.MULTI -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                    RuntimeRuleItemKind.SEPARATED_LIST -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                    else -> TODO()
+                }
+                when {
+                    -1 == i -> emptyList()
+                    1 == children.size -> children
+                    else -> listOf(children[i])
+                }
+            }
+        }
+    }
+
+    override fun toString(): String = when {
+        null == this.state -> children.joinToString(separator = " ") {
+            "${it.startPosition},${it.nextInputPosition},${it.name}"
+        }
+        else -> children.joinToString(separator = "|") {
+            "${it.startPosition},${it.nextInputPosition},${it.name}"
+        }
+    }
+
+}

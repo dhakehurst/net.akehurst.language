@@ -1,6 +1,7 @@
 package agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
+import net.akehurst.language.agl.runtime.graph.GrowingChildren
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.structure.RuleOptionId
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -18,7 +19,7 @@ class SPPTBranchFromInputAndGrownChildren(
 ) : SPPTNodeFromInputAbstract(input, runtimeRule, option, startPosition, nextInputPosition, priority), SPPTBranch {
 
     // option -> children
-    internal var grownChildrenAlternatives = mutableMapOf<Int, GrowingNode.GrowingChildren>()
+    internal var grownChildrenAlternatives = mutableMapOf<Int, GrowingChildren>()
 
 
     // --- SPPTBranch ---

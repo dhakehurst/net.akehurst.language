@@ -32,7 +32,6 @@ class test_RuntimeParser_parse_concatenation {
         return sp.parse(goalRuleName, inputText)
     }
 
-
     // S = 'a' 'b' 'c' ;
     private fun abc1(): ScanOnDemandParser {
         val b = RuntimeRuleSetBuilder()

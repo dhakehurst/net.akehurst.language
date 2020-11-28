@@ -25,6 +25,7 @@ class GrowingNode(
         val lookahead: LookaheadSet,
         val children: GrowingChildren
 ) {
+    /*
     class GrowingChildNode(
             val state: ParserState?, //if null then its skip children
             children: List<SPPTNode>
@@ -348,7 +349,7 @@ class GrowingNode(
             }
         }
     }
-
+*/
     companion object {
         fun index(state: ParserState, growingChildren: GrowingChildren): GrowingNodeIndex {
             val listSize = listSize(state.runtimeRules.first(), growingChildren.numberNonSkip)
@@ -433,9 +434,9 @@ val lastLocation
         get() {
             return this.runtimeRule.incrementNextItemIndex(this.currentState.position)
         }
-    */
-    fun priorityFor(runtimeRule: RuntimeRule): Int = children.priorityFor(runtimeRule)
 
+    fun priorityFor(runtimeRule: RuntimeRule): Int = children.priorityFor(runtimeRule)
+    */
     fun newPrevious() {
         this.previous = mutableMapOf()
     }
