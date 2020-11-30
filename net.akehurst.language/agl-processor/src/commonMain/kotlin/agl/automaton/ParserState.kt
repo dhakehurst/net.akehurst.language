@@ -101,6 +101,7 @@ class ParserState(
     val isAtEnd: Boolean = this.rulePositions.first().isAtEnd //either all are atEnd or none are
 
     val isGoal = this.runtimeRules.first().kind==RuntimeRuleKind.GOAL
+    val isUserGoal = this.runtimeRules.first() == this.stateSet.userGoalRule
 
     fun firstOf(ifReachedEnd:Set<RuntimeRule>): Set<RuntimeRule> = this.rulePositions.flatMap {
         stateSet.firstOf(it, ifReachedEnd)

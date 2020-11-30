@@ -26,9 +26,11 @@ plugins {
     kotlin("multiplatform") version "1.4.20" apply false
     id("com.jfrog.bintray") version ("1.8.5") apply false
     id("org.jetbrains.dokka") version ("0.10.1") apply false
+    id("jacoco")
 }
 
 allprojects {
+    apply(plugin = "jacoco")
 
     val version_project: String by project
     val group_project = rootProject.name
@@ -41,6 +43,7 @@ allprojects {
 }
 
 fun getProjectProperty(s: String) = project.findProperty(s) as String?
+fun getProjectList(): Set<Project> = subprojects
 
 
 subprojects {
@@ -115,8 +118,6 @@ subprojects {
         into("$buildDir/generated/kotlin")
         expand(templateContext)
     }
-
-
     tasks.getByName("compileKotlinMetadata") {
         dependsOn("generateFromTemplates")
     }

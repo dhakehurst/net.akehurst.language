@@ -78,10 +78,11 @@ internal class ParseGraph(
                 // need to re-write top of the tree so that any initial skip nodes come under the userGoal node
                 val goal = lt as SPPTBranchFromInputAndGrownChildren
 
+                val goalRpId = RuleOption(this.userGoalRule,0)
                 val goalFirstChildren = goal.grownChildrenAlternatives.values.first()
                 val userGoalNode = if (goalFirstChildren.hasSkipAtStart) {
                     //has skip at start
-                    val skipNodes = goalFirstChildren.firstChild.children
+                    val skipNodes = goalFirstChildren.firstChild(null)!!.children
                     val ugn = goalFirstChildren.firstNonSkipChild(RuleOption(this.userGoalRule,0))!!.children[0] as SPPTBranchFromInputAndGrownChildren
                     val startPosition = skipNodes[0].startPosition
                     val nugn = SPPTBranchFromInputAndGrownChildren(this.input, ugn.runtimeRule, ugn.option, startPosition, ugn.nextInputPosition, ugn.priority)
@@ -94,7 +95,7 @@ internal class ParseGraph(
                     }
                     nugn
                 } else {
-                    goalFirstChildren.firstChild.children[0]
+                    goalFirstChildren.firstChild(goalRpId)!!.children[0]
                 }
                 return userGoalNode
                 //val alternatives = mutableListOf<List<SPPTNode>>()

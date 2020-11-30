@@ -47,12 +47,12 @@ class GrowingChildNode(
             else -> children.first().nextInputPosition
         }
 
-    fun appendRealLast(state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildNode {
+    private fun appendRealLast(state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildNode {
         nextChild = GrowingChildNode(state, nextChildAlts)
         return nextChild!!
     }
 
-    fun appendAlternativeLast(growingChildren: GrowingChildren, childIndex: Int, state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildNode {
+    private fun appendAlternativeLast(growingChildren: GrowingChildren, childIndex: Int, state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildNode {
         val nextChild = this.nextChild
         return when {
             null != nextChild -> { // first alternative
@@ -119,6 +119,11 @@ class GrowingChildNode(
                 }
             }
         }
+    }
+
+    fun appendLast(growingChildren: GrowingChildren, childIndex: Int, state: ParserState, nextChildAlts: List<SPPTNode>):GrowingChildNode = when{
+        this.isLast -> appendRealLast(state, nextChildAlts)
+        else -> appendAlternativeLast(growingChildren,childIndex,state,nextChildAlts)
     }
 
     fun next(altNext: Int, ruleOption: RuleOptionId): GrowingChildNode? = when {
