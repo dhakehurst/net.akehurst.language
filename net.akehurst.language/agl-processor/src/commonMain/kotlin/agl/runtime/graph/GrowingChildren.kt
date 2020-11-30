@@ -36,22 +36,22 @@ class GrowingChildren {
 
     private fun clone(): GrowingChildren {
         val cl = GrowingChildren()
-        cl.length = length
-        cl.numberNonSkip = numberNonSkip
-        cl.nextInputPosition = nextInputPosition
-        cl.startPosition = startPosition
-        cl._firstChild = _firstChild
-        if (null != _firstChildAlternatives) {
+        cl.length = this.length
+        cl.numberNonSkip = this.numberNonSkip
+        cl.nextInputPosition = this.nextInputPosition
+        cl.startPosition = this.startPosition
+        cl._firstChild = this._firstChild
+        if (null != this._firstChildAlternatives) {
             cl._firstChildAlternatives = mutableMapOf()
-            _firstChildAlternatives!!.entries.forEach {
+            this._firstChildAlternatives!!.entries.forEach {
                 val l = it.value.toMutableList()
                 cl._firstChildAlternatives!![it.key] = l
             }
         }
-        cl._lastChild = _lastChild
-        if (null != _nextChildAlts) {
+        cl._lastChild = this._lastChild
+        if (null != this._nextChildAlts) {
             cl._nextChildAlts = mutableMapOf()
-            _nextChildAlts!!.entries.forEach {
+            this._nextChildAlts!!.entries.forEach {
                 val mapCl = it.value.toMutableMap()
                 cl._nextChildAlts!![it.key] = mapCl
             }
@@ -137,13 +137,16 @@ class GrowingChildren {
                 val lisc = lastInitialSkipChild
                 when {
                     null == lisc -> { // must be duplicate of firstNode which is goal
+                        //TODO: if nextInputPosition of duplicate ??
                         val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
                         val res = this.clone()
                         res._firstChildAlternatives = mutableMapOf()
                         val alts = mutableListOf(res._firstChild!!)
                         res._firstChildAlternatives!![state.rulePositionIdentity] = alts
+                        res._firstChild = null
                         alts.add(alternativeNextChild)
-                        this.incNextChildAlt(0,state.rulePositionIdentity)
+                        res.incNextChildAlt(0,state.rulePositionIdentity)
+                        res._lastChild = alternativeNextChild
                         // because its a duplicate of existing goal
                         // will not changed the length or numberNonSkip
                         res.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
@@ -166,9 +169,9 @@ class GrowingChildren {
                 }
             }
             else -> {
-                val lastChild = this._lastChild!!
                 val res = this.clone()
-                val nextChild = lastChild.appendLast(this, this.length, state, nextChildAlts)
+                val lastChild = res._lastChild!!
+                val nextChild = lastChild.appendLast(res, res.length, state, nextChildAlts)
                 res._lastChild = nextChild
                 res.length++
                 res.numberNonSkip++
@@ -202,8 +205,8 @@ class GrowingChildren {
             isEmpty -> emptyList()
             else -> {
                 val res = mutableListOf<SPPTNode>()
+                var n: GrowingChildNode? = firstChild(ruleOption)
                 var index = 1
-                var n: GrowingChildNode? = _firstChild
                 while (n != _lastChild && null != n) {
                     res.addAll(n[ruleOption])
                     n = n.next(this.nextChildAlt(index, ruleOption), ruleOption)
@@ -256,7 +259,7 @@ class GrowingChildren {
                 res[rp] = initialSkip
                 var n = sn
                 var skip = ""
-                var index = 0
+                var index = 1
                 while (_lastChild != n && null != n) {
                     val state = n.state
                     when {

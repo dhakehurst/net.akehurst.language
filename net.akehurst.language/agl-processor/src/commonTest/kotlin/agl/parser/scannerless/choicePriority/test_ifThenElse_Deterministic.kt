@@ -42,8 +42,8 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
                 ref("conditional")
             }
             choice("conditional", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
-                ref("ifThen")
                 ref("ifThenElse")
+                ref("ifThen")
             }
             concatenation("ifThen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
             concatenation("ifThenElse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }

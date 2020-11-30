@@ -53,19 +53,18 @@ class GrowingChildNode(
     }
 
     private fun appendAlternativeLast(growingChildren: GrowingChildren, childIndex: Int, state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildNode {
-        val nextChild = this.nextChild
+        val existingNextChild = this.nextChild
         return when {
-            null != nextChild -> { // first alternative
+            null != existingNextChild -> { // first alternative
                 when {
-                    state.isDuplicateOf(nextChild.state) -> {
+                    state.isDuplicateOf(existingNextChild.state) -> {
                         val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
                         when{
-                            alternativeNextChild.nextInputPosition > nextChild.nextInputPosition ->{
+                            alternativeNextChild.nextInputPosition > existingNextChild.nextInputPosition ->{
                                 val nextChildAlternatives = mutableMapOf<List<RuleOptionId>, MutableList<GrowingChildNode>>()
-                                val alts = mutableListOf(nextChild)
+                                val alts = mutableListOf(existingNextChild)
                                 nextChildAlternatives[state.rulePositionIdentity] = alts
                                 this.nextChild = null
-                                val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
                                 alts.add(alternativeNextChild)
                                 growingChildren.incNextChildAlt(childIndex, state.rulePositionIdentity)
                                 this.nextChildAlternatives = nextChildAlternatives
@@ -73,18 +72,16 @@ class GrowingChildNode(
                             }
                             else -> {
                                 //TODO: do we replace or drop?"
-                                nextChild
+                                existingNextChild
                             }
                         }
                     }
                     else -> {
                         val nextChildAlternatives = mutableMapOf<List<RuleOptionId>, MutableList<GrowingChildNode>>()
-                        val alts = mutableListOf(nextChild)
-                        nextChildAlternatives[state.rulePositionIdentity] = alts
+                        nextChildAlternatives[existingNextChild.state!!.rulePositionIdentity] = mutableListOf(existingNextChild)
                         this.nextChild = null
                         val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
-                        alts.add(alternativeNextChild)
-                        growingChildren.incNextChildAlt(childIndex, state.rulePositionIdentity)
+                        nextChildAlternatives[state.rulePositionIdentity] = mutableListOf(alternativeNextChild)
                         this.nextChildAlternatives = nextChildAlternatives
                         alternativeNextChild
                     }

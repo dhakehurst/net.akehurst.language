@@ -34,29 +34,22 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
      * S3 = S S S ;
      * S2 = S S ;
      */
-    private fun S(): RuntimeRuleSetBuilder {
-        val rrb = RuntimeRuleSetBuilder()
-        val ra = rrb.literal("a")
-        val rS = rrb.rule("S").build()
-        val rS1 = rrb.rule("S1").concatenation(rS, rS, rS)
-        val rS2 = rrb.rule("S2").concatenation(rS, rS)
-        rS.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(rS1, rS2, ra))
-        return rrb
-    }
 
-    private val rrs = runtimeRuleSet {
-        choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            ref("S3")
-            ref("S2")
-            literal("a")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("S3")
+                ref("S2")
+                literal("a")
+            }
+            concatenation("S3") { ref("S"); ref("S"); ref("S") }
+            concatenation("S2") { ref("S"); ref("S") }
         }
-        concatenation("S3") { ref("S"); ref("S"); ref("S") }
-        concatenation("S2") { ref("S"); ref("S") }
+        val goal = "S"
     }
 
     @Test
     fun empty() {
-        val goal = "S"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
@@ -68,7 +61,6 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-        val goal = "S"
         val sentence = "a"
 
         val expected = """
@@ -86,7 +78,6 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aa() {
-        val goal = "S"
         val sentence = "aa"
 
         val expected = """
@@ -109,7 +100,6 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aaa() {
-        val goal = "S"
         val sentence = "aaa"
 
         val expected = """
@@ -133,7 +123,6 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aaaa() {
-        val goal = "S"
         val sentence = "aaaa"
 
         val expected = """
@@ -158,8 +147,6 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a10() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a".repeat(10)
 
         val expected = """
@@ -203,9 +190,8 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
     @ExperimentalTime
     @Test
     fun time() {
-        val parser = ScanOnDemandParser(this.S().ruleSet())
+        val parser = ScanOnDemandParser(rrs)
         val times = mutableListOf<Duration>()
-        val goal = "S"
 
         for (i in 1..25) {
             val text = "a".repeat(i)
