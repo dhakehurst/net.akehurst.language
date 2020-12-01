@@ -45,12 +45,12 @@ internal class ParseGraph(
     //TODO: try storing complete nodes by state rather than RuntimRule ? maybe..not sure
     internal val completeNodes = CompletedNodesStore<SPPTBranch>(numNonTerminalRules, input.text.length + 1)
     internal val growing: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
-    internal val _goals: MutableList<SPPTNode> = mutableListOf()
+    internal val _goals: MutableSet<SPPTNode> = mutableSetOf()
     val growingHead: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
 
     val canGrow: Boolean get() = !this.growingHead.isEmpty()
 
-    val goals: List<SPPTNode> get() = this._goals
+    val goals: Set<SPPTNode> get() = this._goals
 
     var goalMatchedAll = true
 
@@ -78,12 +78,12 @@ internal class ParseGraph(
                 // need to re-write top of the tree so that any initial skip nodes come under the userGoal node
                 val goal = lt as SPPTBranchFromInputAndGrownChildren
 
-                val goalRpId = RuleOption(this.userGoalRule,0)
+                val goalRpId = RuleOption(this.userGoalRule, 0)
                 val goalFirstChildren = goal.grownChildrenAlternatives.values.first()
                 val userGoalNode = if (goalFirstChildren.hasSkipAtStart) {
                     //has skip at start
                     val skipNodes = goalFirstChildren.firstChild(null)!!.children
-                    val ugn = goalFirstChildren.firstNonSkipChild(RuleOption(this.userGoalRule,0))!!.children[0] as SPPTBranchFromInputAndGrownChildren
+                    val ugn = goalFirstChildren.firstNonSkipChild(RuleOption(this.userGoalRule, 0))!!.children[0] as SPPTBranchFromInputAndGrownChildren
                     val startPosition = skipNodes[0].startPosition
                     val nugn = SPPTBranchFromInputAndGrownChildren(this.input, ugn.runtimeRule, ugn.option, startPosition, ugn.nextInputPosition, ugn.priority)
                     ugn.grownChildrenAlternatives.values.forEach {
@@ -596,7 +596,10 @@ internal class ParseGraph(
 
     fun pushToStackOf(newState: ParserState, lookahead: LookaheadSet, leafNode: SPPTLeaf, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
         val growingChildren = GrowingChildren()
-        growingChildren.appendChild(newState, listOf(leafNode)).appendSkipIfNotEmpty(skipNodes)
+                .appendChild(newState, listOf(leafNode))
+                .appendSkipIfNotEmpty(skipNodes)
+        //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
+
         this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, growingChildren, oldHead, previous, skipNodes)
     }
 
@@ -605,15 +608,23 @@ internal class ParseGraph(
         val runtimeRule = newState.runtimeRules.first()// should only ever be one
         (embeddedNode as SPPTNodeFromInputAbstract).embeddedIn = runtimeRule.tag
         val growingChildren = GrowingChildren()
-        growingChildren.appendChild(newState, listOf(embeddedNode)).appendSkipIfNotEmpty(skipNodes)
+                .appendChild(newState, listOf(embeddedNode))
+                .appendSkipIfNotEmpty(skipNodes)
         this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, growingChildren, oldHead, previous, skipNodes)
         //val id = CompleteNodeIndex(newRp.runtimeRule.number, embeddedNode.startPosition)//newRp.choice, embeddedNode.startPosition)
         this.completeNodes[runtimeRule, embeddedNode.startPosition] = embeddedNode //TODO: should this be here or in leaves ?
     }
 
     fun growNextChild(nextState: ParserState, lookahead: LookaheadSet, parent: GrowingNode, nextChildAlts: List<SPPTNode>, skipChildren: List<SPPTNode>?) {
-        val growingChildren = parent.children.appendChild(nextState, nextChildAlts)
-        skipChildren?.let { growingChildren.appendSkipIfNotEmpty(it) }
+        var growingChildren = parent.children.appendChild(nextState, nextChildAlts)
+        growingChildren = if (null == skipChildren) {
+            growingChildren
+        } else {
+            growingChildren.appendSkipIfNotEmpty(skipChildren)
+        }
+
+        //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
+
         val previous = parent.previous
         for (pi in previous.values) {
             pi.node.removeNext(parent)
@@ -625,8 +636,14 @@ internal class ParseGraph(
     }
 
     fun createWithFirstChild(newState: ParserState, lookahead: LookaheadSet, firstChildAlts: List<SPPTNode>, previous: Set<PreviousInfo>, skipChildren: List<SPPTNode>?) {
-        val growingChildren = GrowingChildren().appendChild(newState, firstChildAlts)
-        skipChildren?.let { growingChildren.appendSkipIfNotEmpty(it) }
+        var growingChildren = GrowingChildren().appendChild(newState, firstChildAlts)
+        growingChildren = if (null == skipChildren) {
+            growingChildren
+        } else {
+            growingChildren.appendSkipIfNotEmpty(skipChildren)
+        }
+        //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
+
         this.findOrCreateGrowingNode(newState, lookahead, growingChildren, previous)
     }
 

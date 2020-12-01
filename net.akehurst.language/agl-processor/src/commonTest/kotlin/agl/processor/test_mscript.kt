@@ -33,13 +33,13 @@ grammar Mscript {
 
     // if we treat '\n' as part of the WHITESPACE skip rule, we get ambiguity in statements
     skip WHITESPACE = "[ \t\x0B\f]+" ;
-    skip LINE_CONTINUATION =  "[.][.][.](.*)\R" ;
+    skip LINE_CONTINUATION =  "[.][.][.](.*)(\r?\n)" ;
     skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
-         MULTI_LINE_COMMENT = "%[{]([^%]|\R)*%[}]" ;
-         SINGLE_LINE_COMMENT = "%([^{\n].*)?$" ;
+         MULTI_LINE_COMMENT = "%[{]([^%]|(\r?\n))*%[}]" ;
+         SINGLE_LINE_COMMENT = "%([^{\n].*)?" ;
 
     script = statementList ;
-    statementList = [line / "\R"]* ;
+    statementList = [line / "(\r?\n)"]* ;
     line = statement? ';'?  ;
 
     statement

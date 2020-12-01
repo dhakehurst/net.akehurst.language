@@ -119,12 +119,22 @@ class InputFromString(
             matchedText
         }
     }
-
-    internal fun tryMatchText(position: Int, patternText: String, pattern: Regex?): String? {//RegexMatcher.MatchResult? {
+    private fun matchRegEx3(position: Int, regex: Regex): String? {//RegexMatcher.MatchResult? {
+        val stext = this.text.substring(position)
+        val match = regex.find(stext)
+        return if (null == match)
+            null
+        else {
+            //val eolPositions = this.eolPositions(matchedText)
+            //RegexMatcher.MatchResult(matchedText, eolPositions)
+            match.value
+        }
+    }
+    internal fun tryMatchText(position: Int, terminalRule: RuntimeRule): String? {//RegexMatcher.MatchResult? {
         val matched = when {
-            (position >= this.text.length) -> if (patternText == END_OF_TEXT) END_OF_TEXT else null//RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
-            (null == pattern) -> this.matchLiteral(position, patternText)
-            else -> this.matchRegEx2(position, pattern)
+            (position >= this.text.length) -> if (terminalRule.value == END_OF_TEXT) END_OF_TEXT else null//RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
+            terminalRule.isPattern -> this.matchRegEx3(position, terminalRule.patternAtStart!!)
+            else -> this.matchLiteral(position, terminalRule.value)
             //else ->pattern.match(this.text, position)
         }
         return matched
@@ -163,7 +173,7 @@ class InputFromString(
             //this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
             leaf
         } else {
-            val match = this.tryMatchText(atInputPosition, terminalRuntimeRule.value, terminalRuntimeRule.pattern)
+            val match = this.tryMatchText(atInputPosition, terminalRuntimeRule)
             if (null == match) {
                 this.leaves[terminalRuntimeRule, atInputPosition] = SPPTLeafDefault.NONE
                 SPPTLeafDefault.NONE

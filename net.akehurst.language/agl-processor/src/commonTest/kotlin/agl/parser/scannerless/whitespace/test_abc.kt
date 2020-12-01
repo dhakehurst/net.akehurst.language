@@ -30,7 +30,7 @@ class test_abc : test_ScanOnDemandParserAbstract() {
     private companion object {
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
-            pattern("COMMENT", "//[^\\n]*$", true)
+            pattern("COMMENT", "//[^\\n\\r]*", true)
             concatenation("S") { literal("a") }
         }
     }

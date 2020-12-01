@@ -124,14 +124,14 @@ class test_GrowingChildren {
         val leaf = SPPTLeafFromInput(input, a, 5, 6, 0)
 
         val sut = GrowingChildren()
-        sut.appendSkipIfNotEmpty(listOf(ws))
-        sut.appendSkipIfNotEmpty(listOf(cm))
-        val res = sut.appendChild(st_a, listOf(leaf))
+                .appendSkipIfNotEmpty(listOf(ws))
+                .appendSkipIfNotEmpty(listOf(cm))
+                .appendChild(st_a, listOf(leaf))
 
         val actual = sut.lastInitialSkipChild
         val expected = sut.firstChild(null)?.nextChild
         assertEquals(expected, actual)
-        assertEquals("(0,6,'a'[0]) -> WS, CM, 'a'", res.toString())
+        assertEquals("(0,6,'a'[0]) -> WS, CM, 'a'", sut.toString())
     }
 
     @Test
@@ -143,15 +143,15 @@ class test_GrowingChildren {
         val leaf = SPPTLeafFromInput(input, a, 6, 7, 0)
 
         val sut = GrowingChildren()
-        sut.appendSkipIfNotEmpty(listOf(ws1))
-        sut.appendSkipIfNotEmpty(listOf(cm))
-        sut.appendSkipIfNotEmpty(listOf(ws2))
-        val res = sut.appendChild(st_a, listOf(leaf))
+                .appendSkipIfNotEmpty(listOf(ws1))
+                .appendSkipIfNotEmpty(listOf(cm))
+                .appendSkipIfNotEmpty(listOf(ws2))
+                .appendChild(st_a, listOf(leaf))
 
         val actual = sut.lastInitialSkipChild
         val expected = sut.firstChild(null)?.nextChild!!.nextChild
         assertEquals(expected, actual)
-        assertEquals("(0,7,'a'[0]) -> WS, CM, WS, 'a'", res.toString())
+        assertEquals("(0,7,'a'[0]) -> WS, CM, WS, 'a'", sut.toString())
     }
 
     @Test
@@ -187,14 +187,14 @@ class test_GrowingChildren {
         val leaf = SPPTLeafFromInput(input, a, 5, 6, 0)
 
         val sut = GrowingChildren()
-        sut.appendSkipIfNotEmpty(listOf(ws))
-        sut.appendSkipIfNotEmpty(listOf(cm))
-        val res = sut.appendChild(st_a, listOf(leaf))
+                .appendSkipIfNotEmpty(listOf(ws))
+                .appendSkipIfNotEmpty(listOf(cm))
+                .appendChild(st_a, listOf(leaf))
 
         val actual = sut.firstNonSkipChild(RuleOptionId(S, 0))
         val expected = sut.firstChild(null)?.nextChild!!.nextChild
         assertEquals(expected, actual)
-        assertEquals("(0,6,'a'[0]) -> WS, CM, 'a'", res.toString())
+        assertEquals("(0,6,'a'[0]) -> WS, CM, 'a'", sut.toString())
     }
 
     @Test
@@ -206,15 +206,15 @@ class test_GrowingChildren {
         val leaf = SPPTLeafFromInput(input, a, 6, 7, 0)
 
         val sut = GrowingChildren()
-        sut.appendSkipIfNotEmpty(listOf(ws1))
-        sut.appendSkipIfNotEmpty(listOf(cm))
-        sut.appendSkipIfNotEmpty(listOf(ws2))
-        val res = sut.appendChild(st_a, listOf(leaf))
+                .appendSkipIfNotEmpty(listOf(ws1))
+                .appendSkipIfNotEmpty(listOf(cm))
+                .appendSkipIfNotEmpty(listOf(ws2))
+                .appendChild(st_a, listOf(leaf))
 
         val actual = sut.firstNonSkipChild(RuleOptionId(S, 0))
         val expected = sut.firstChild(null)?.nextChild!!.nextChild!!.nextChild
         assertEquals(expected, actual)
-        assertEquals("(0,7,'a'[0]) -> WS, CM, WS, 'a'", res.toString())
+        assertEquals("(0,7,'a'[0]) -> WS, CM, WS, 'a'", sut.toString())
     }
 
     @Test
@@ -239,12 +239,11 @@ class test_GrowingChildren {
         val input = InputFromString(rrs.terminalRules.size, "")
         val leaf = SPPTLeafFromInput(input, a, 0, 1, 0)
         val ws1 = SPPTLeafFromInput(input, WS, 1, 2, 0)
-        val sut = GrowingChildren()
-        sut.appendChild(st_a, listOf(leaf))
 
-        val actual = sut.appendSkipIfNotEmpty(listOf(ws1))
+        val actual = GrowingChildren()
+                .appendChild(st_a, listOf(leaf))
+                .appendSkipIfNotEmpty(listOf(ws1))
 
-        assertEquals(sut, actual)
         assertEquals(2, actual.length)
         assertEquals(1, actual.numberNonSkip)
         assertEquals(2, actual.nextInputPosition)
@@ -399,32 +398,42 @@ class test_GrowingChildren {
     }
 
     @Test
-    fun get_whenEmpty() {}
+    fun get_whenEmpty() {
+    }
 
     @Test
-    fun get_whenSkipAtStart() {}
+    fun get_whenSkipAtStart() {
+    }
 
     @Test
-    fun get_when1NonSkipStart() {}
+    fun get_when1NonSkipStart() {
+    }
 
     @Test
-    fun get_when3NonSkipStart() {}
+    fun get_when3NonSkipStart() {
+    }
 
     @Test
-    fun get_when1NonSkipAfterSkip() {}
+    fun get_when1NonSkipAfterSkip() {
+    }
 
     @Test
-    fun get_when3NonSkipAfterSkip() {}
+    fun get_when3NonSkipAfterSkip() {
+    }
 
     @Test
-    fun get_when3AltNonSkipStart() {}
+    fun get_when3AltNonSkipStart() {
+    }
 
     @Test
-    fun get_when3AltNonSkipAfterSkip() {}
+    fun get_when3AltNonSkipAfterSkip() {
+    }
 
     @Test
-    fun get_when3NonSkipStartAnd2Has3Alts() {}
+    fun get_when3NonSkipStartAnd2Has3Alts() {
+    }
 
     @Test
-    fun get_when3NonSkipStartAnd3Has3Alts() {}
+    fun get_when3NonSkipStartAnd3Has3Alts() {
+    }
 }

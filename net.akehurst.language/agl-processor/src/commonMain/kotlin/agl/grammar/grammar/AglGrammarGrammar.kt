@@ -31,7 +31,7 @@ private fun createRules(): List<Rule> {
     val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar")
     b.skip("WHITESPACE", true).concatenation(b.terminalPattern("\\s+"))
     b.skip("MULTI_LINE_COMMENT", true).concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"))
-    b.skip("SINGLE_LINE_COMMENT", true).concatenation(b.terminalPattern("//[^\\n]*$"))
+    b.skip("SINGLE_LINE_COMMENT", true).concatenation(b.terminalPattern("//[^\\n\\r]*"))
 
     b.rule("grammarDefinition").concatenation(b.nonTerminal("namespace"), b.nonTerminal("definitions"))
     b.rule("definitions").multi(1, -1, b.nonTerminal("grammar"))

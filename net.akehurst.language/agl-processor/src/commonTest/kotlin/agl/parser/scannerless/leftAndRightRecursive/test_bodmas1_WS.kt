@@ -365,22 +365,18 @@ class test_OperatorPrecedence : test_ScanOnDemandParserAbstract() {
         val sentence = "(a+b)*c"
 
         val expected = """
-            S { expr { mul {
-              expr {
-                group {
+         S { expr|3 { mul {
+              expr|1 { group {
                   '('
-                    expr {
-                      add {
-                        expr { root{var { "[a-zA-Z]+" : 'a' } }}
-                        '+'
-                        expr { root{var { "[a-zA-Z]+" : 'b' } }}
-                      }
-                    }
+                  expr|4 { add {
+                      expr { root { var { "[a-zA-Z]+" : 'a' } } }
+                      '+'
+                      expr { root { var { "[a-zA-Z]+" : 'b' } } }
+                    } }
                   ')'
-                }
-              }
+                } }
               '*'
-              expr { root{var { "[a-zA-Z]+" : 'c' } }}
+              expr { root { var { "[a-zA-Z]+" : 'c' } } }
             } } }
         """.trimIndent()
 

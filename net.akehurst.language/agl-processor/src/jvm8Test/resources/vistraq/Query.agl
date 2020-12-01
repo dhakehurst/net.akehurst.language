@@ -4,7 +4,7 @@ grammar Query {
 
     skip WHITE_SPACE = "\s+" ;
 	skip SINGLE_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
-	skip MULTI_LINE_COMMENT = "//[^\n]*$" ;
+	skip MULTI_LINE_COMMENT = "//[^\n\r]*" ;
 
     query = singleQuery | compositeQuery ;
     singleQuery = timespanDefinition? querySource? returnDefinition? ;

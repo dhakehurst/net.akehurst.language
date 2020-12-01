@@ -248,7 +248,7 @@ internal class RuntimeParser(
             val skipLhc = gn.currentState.rulePositions.flatMap { this.stateSet.firstOf(it, setOf(RuntimeRuleSet.END_OF_TEXT)) }.toSet()
             val skipLh = this.stateSet.createLookaheadSet(skipLhc)
             val skipNodes = this.tryParseSkipUntilNone(skipLh, gn.startPosition)
-            gn.children.appendSkipIfNotEmpty(skipNodes)
+            gn.children.appendSkipIfNotEmpty(skipNodes) //ok because gn.children should be empty
 
             //} else {
             val gi = GrowingNode.index(gn.currentState, gn.children)

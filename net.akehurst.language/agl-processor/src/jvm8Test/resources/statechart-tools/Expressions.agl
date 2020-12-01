@@ -13,8 +13,8 @@ namespace  org.yakindu.stext
 grammar Expressions {
 
     skip WS = "\s+";
-   	skip SINGLE_LINE_COMMENT = "/\\*[^*]*\\*+([^*/][^*]*\\*+)*/" ;
-   	skip MULTI_LINE_COMMENT = "//[^\\n]*\\n" ;
+   	skip SINGLE_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+   	skip MULTI_LINE_COMMENT = "//[^\n\r]*" ;
 
     Expression
       = AssignmentExpression

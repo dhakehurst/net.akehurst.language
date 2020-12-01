@@ -333,21 +333,21 @@ class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
         val sentence = "a+b*c*d+f+g"
 
         val expected = """
-            S {
-             expr|4 {
-              add {
-                expr|3 {
-                  mul {
-                    expr { root { var { "[a-zA-Z]+" : 'a' } } }
-                    '*'
-                    expr { root { var { "[a-zA-Z]+" : 'b' } } }
-                  }
-                }
-               '+'
-               expr { root { var { "[a-zA-Z]+" : 'c' } } }
-              }
-             }
-            }
+         S { expr|4 { add {
+              expr { root { var { "[a-zA-Z]+" : 'a' } } }
+              '+'
+              expr|3 { mul {
+                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
+                  '*'
+                  expr { root { var { "[a-zA-Z]+" : 'c' } } }
+                  '*'
+                  expr { root { var { "[a-zA-Z]+" : 'd' } } }
+                } }
+              '+'
+              expr { root { var { "[a-zA-Z]+" : 'f' } } }
+              '+'
+              expr { root { var { "[a-zA-Z]+" : 'g' } } }
+            } } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)

@@ -45,7 +45,11 @@ class GrowingChildNode(
     val nextInputPosition: Int
         get() = when {
             null == state -> children.last().nextInputPosition
-            else -> children.first().nextInputPosition
+            1==children.size -> children.first().nextInputPosition
+            else -> {
+                //check(1==children.map { it.nextInputPosition }.toSet().size)
+                children.first().nextInputPosition
+            }
         }
 
     private fun appendRealLast(state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildNode {
@@ -100,16 +104,17 @@ class GrowingChildNode(
                     }
                     else -> {
                         val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
-                        // check if there is a duplicate with same length
-                        val existing = alts.firstOrNull { alternativeNextChild.nextInputPosition > it.nextInputPosition }
+                        // check if there is a duplicate with greater length
+                        val existing = alts.firstOrNull { it.nextInputPosition >= alternativeNextChild.nextInputPosition }
                         when {
                             null == existing -> {
                                 alts.add(alternativeNextChild)
-                                growingChildren.incNextChildAlt(childIndex, state.rulePositionIdentity)
+                                growingChildren.setNextChildAlt(childIndex, state.rulePositionIdentity,alts.size-1)
                                 alternativeNextChild
                             }
                             else -> {
                                 //error("TODO: do we replace or drop?")
+                                growingChildren.setNextChildAlt(childIndex, state.rulePositionIdentity,alts.indexOf(existing))
                                 existing
                             }
                         }
@@ -127,12 +132,7 @@ class GrowingChildNode(
     fun next(altNext: Int, ruleOption: RuleOptionId): GrowingChildNode? = when {
         null != nextChildAlternatives -> nextChildAlternatives!!.entries.firstOrNull {
             val rpIds = it.key
-            when {
-                null == rpIds -> true //skipNodes
-                else -> {
-                    rpIds.any { it == ruleOption }
-                }
-            }
+            rpIds.any { it == ruleOption }
         }?.value?.get(altNext)
         null == nextChild -> null
         else -> nextChild

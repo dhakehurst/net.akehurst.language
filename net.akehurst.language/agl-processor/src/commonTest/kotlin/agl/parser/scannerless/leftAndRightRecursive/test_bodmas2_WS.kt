@@ -359,12 +359,12 @@ class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
         val sentence = "a+b+c*d+e+f"
 
         val expected = """
-         S { expr { add {
+         S { expr|4 { add {
               expr { root { var { "[a-zA-Z]+" : 'a' } } }
               '+'
               expr { root { var { "[a-zA-Z]+" : 'b' } } }
               '+'
-              expr { mul {
+              expr|3 { mul {
                 expr { root { var { "[a-zA-Z]+" : 'c' } } }
                 '*'
                 expr { root { var { "[a-zA-Z]+" : 'd' } } }

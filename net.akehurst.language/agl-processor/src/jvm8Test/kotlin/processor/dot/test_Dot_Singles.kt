@@ -51,7 +51,15 @@ class test_Dot_Singles {
         """.trimIndent()
         processor.parse(goal, sentence)
     }
-
+    @Test
+    fun MULTI_LINE_COMMENT() {
+        val goal = "graph"
+        val sentence = """
+          /* a comment */
+          graph { }
+        """.trimIndent()
+        processor.parse(goal, sentence)
+    }
     @Test
     fun a_list__from_Data_Structures() {
         val goal = "attr_list_content"
@@ -247,6 +255,21 @@ class test_Dot_Singles {
         }
     }
 
+    @Test
+    fun LionShare__stmt_list1() {
+        val goal = "stmt_list"
+        val sentence = """
+            "marr0017" [shape=diamond,style=filled,label="",height=.1,width=.1] ;
+            "026" -> "marr0017" [dir=none,weight=1] ;
+            "027" -> "marr0017" [dir=none,weight=1] ;
+            "marr0017" -> "028" [dir=none, weight=2] ;
+        """.trimIndent()
+        try {
+            processor.parse(goal, sentence)
+        } catch (e: ParseFailedException) {
+            fail("${e.message} at ${e.location} expected ${e.expected}")
+        }
+    }
 
     @Test
     fun LionShare__stmt_list() {
