@@ -52,6 +52,7 @@ class test_GrowingChildren {
     fun isEmpty_true() {
         val sut = GrowingChildren()
         assertEquals(true, sut.isEmpty)
+        assertEquals("{}", sut.toString())
     }
 
     @Test
@@ -63,6 +64,7 @@ class test_GrowingChildren {
         sut.appendSkipIfNotEmpty(listOf(ws))
 
         assertEquals(false, sut.isEmpty)
+        assertEquals("(0,1,null[null]) -> WS", sut.toString())
     }
 
     @Test
@@ -74,7 +76,7 @@ class test_GrowingChildren {
         sut.appendChild(st_a, listOf(leaf))
 
         assertEquals(false, sut.hasSkipAtStart)
-
+        assertEquals("(0,1,'a'[0]) -> 'a'", sut.toString())
     }
 
     @Test
@@ -86,7 +88,7 @@ class test_GrowingChildren {
         sut.appendSkipIfNotEmpty(listOf(leaf))
 
         assertEquals(true, sut.hasSkipAtStart)
-
+        assertEquals("(0,1,null[null]) -> WS", sut.toString())
     }
 
     @Test
@@ -95,21 +97,23 @@ class test_GrowingChildren {
         val actual = sut.lastInitialSkipChild
         val expected: GrowingChildNode? = null
         assertEquals(expected, actual)
+        assertEquals("{}", sut.toString())
     }
 
     @Test
     fun lastInitialSkipChild_when1InitialSkip() {
         val input = InputFromString(rrs.terminalRules.size, "")
         val ws = SPPTLeafFromInput(input, WS, 0, 1, 0)
-        val leaf = SPPTLeafFromInput(input, a, 0, 1, 0)
+        val leaf = SPPTLeafFromInput(input, a, 1, 2, 0)
 
         val sut = GrowingChildren()
         sut.appendSkipIfNotEmpty(listOf(ws))
-        sut.appendChild(st_a, listOf(leaf))
+        val res = sut.appendChild(st_a, listOf(leaf))
 
         val actual = sut.lastInitialSkipChild
         val expected = sut.firstChild(null)
         assertEquals(expected, actual)
+        assertEquals("(0,2,'a'[0]) -> WS, 'a'", res.toString())
     }
 
     @Test
@@ -117,16 +121,17 @@ class test_GrowingChildren {
         val input = InputFromString(rrs.terminalRules.size, "")
         val ws = SPPTLeafFromInput(input, WS, 0, 1, 0)
         val cm = SPPTLeafFromInput(input, CM, 1, 5, 0)
-        val leaf = SPPTLeafFromInput(input, a, 0, 1, 0)
+        val leaf = SPPTLeafFromInput(input, a, 5, 6, 0)
 
         val sut = GrowingChildren()
         sut.appendSkipIfNotEmpty(listOf(ws))
         sut.appendSkipIfNotEmpty(listOf(cm))
-        sut.appendChild(st_a, listOf(leaf))
+        val res = sut.appendChild(st_a, listOf(leaf))
 
         val actual = sut.lastInitialSkipChild
         val expected = sut.firstChild(null)?.nextChild
         assertEquals(expected, actual)
+        assertEquals("(0,6,'a'[0]) -> WS, CM, 'a'", res.toString())
     }
 
     @Test
@@ -135,17 +140,18 @@ class test_GrowingChildren {
         val ws1 = SPPTLeafFromInput(input, WS, 0, 1, 0)
         val cm = SPPTLeafFromInput(input, CM, 1, 5, 0)
         val ws2 = SPPTLeafFromInput(input, WS, 5, 6, 0)
-        val leaf = SPPTLeafFromInput(input, a, 0, 1, 0)
+        val leaf = SPPTLeafFromInput(input, a, 6, 7, 0)
 
         val sut = GrowingChildren()
         sut.appendSkipIfNotEmpty(listOf(ws1))
         sut.appendSkipIfNotEmpty(listOf(cm))
         sut.appendSkipIfNotEmpty(listOf(ws2))
-        sut.appendChild(st_a, listOf(leaf))
+        val res = sut.appendChild(st_a, listOf(leaf))
 
         val actual = sut.lastInitialSkipChild
         val expected = sut.firstChild(null)?.nextChild!!.nextChild
         assertEquals(expected, actual)
+        assertEquals("(0,7,'a'[0]) -> WS, CM, WS, 'a'", res.toString())
     }
 
     @Test
@@ -154,21 +160,23 @@ class test_GrowingChildren {
         val actual = sut.firstNonSkipChild(RuleOptionId(S, 0))
         val expected: GrowingChildNode? = null
         assertEquals(expected, actual)
+        assertEquals("{}", sut.toString())
     }
 
     @Test
     fun firstNonSkipChild_when1InitialSkip() {
         val input = InputFromString(rrs.terminalRules.size, "")
         val ws = SPPTLeafFromInput(input, WS, 0, 1, 0)
-        val leaf = SPPTLeafFromInput(input, a, 0, 1, 0)
+        val leaf = SPPTLeafFromInput(input, a, 1, 2, 0)
 
         val sut = GrowingChildren()
         sut.appendSkipIfNotEmpty(listOf(ws))
-        sut.appendChild(st_a, listOf(leaf))
+        val res = sut.appendChild(st_a, listOf(leaf))
 
         val actual = sut.firstNonSkipChild(RuleOptionId(S, 0))
         val expected = sut.firstChild(null)?.nextChild
         assertEquals(expected, actual)
+        assertEquals("(0,2,'a'[0]) -> WS, 'a'", res.toString())
     }
 
     @Test
@@ -176,16 +184,17 @@ class test_GrowingChildren {
         val input = InputFromString(rrs.terminalRules.size, "")
         val ws = SPPTLeafFromInput(input, WS, 0, 1, 0)
         val cm = SPPTLeafFromInput(input, CM, 1, 5, 0)
-        val leaf = SPPTLeafFromInput(input, a, 0, 1, 0)
+        val leaf = SPPTLeafFromInput(input, a, 5, 6, 0)
 
         val sut = GrowingChildren()
         sut.appendSkipIfNotEmpty(listOf(ws))
         sut.appendSkipIfNotEmpty(listOf(cm))
-        sut.appendChild(st_a, listOf(leaf))
+        val res = sut.appendChild(st_a, listOf(leaf))
 
         val actual = sut.firstNonSkipChild(RuleOptionId(S, 0))
         val expected = sut.firstChild(null)?.nextChild!!.nextChild
         assertEquals(expected, actual)
+        assertEquals("(0,6,'a'[0]) -> WS, CM, 'a'", res.toString())
     }
 
     @Test
@@ -194,17 +203,18 @@ class test_GrowingChildren {
         val ws1 = SPPTLeafFromInput(input, WS, 0, 1, 0)
         val cm = SPPTLeafFromInput(input, CM, 1, 5, 0)
         val ws2 = SPPTLeafFromInput(input, WS, 5, 6, 0)
-        val leaf = SPPTLeafFromInput(input, a, 0, 1, 0)
+        val leaf = SPPTLeafFromInput(input, a, 6, 7, 0)
 
         val sut = GrowingChildren()
         sut.appendSkipIfNotEmpty(listOf(ws1))
         sut.appendSkipIfNotEmpty(listOf(cm))
         sut.appendSkipIfNotEmpty(listOf(ws2))
-        sut.appendChild(st_a, listOf(leaf))
+        val res = sut.appendChild(st_a, listOf(leaf))
 
         val actual = sut.firstNonSkipChild(RuleOptionId(S, 0))
         val expected = sut.firstChild(null)?.nextChild!!.nextChild!!.nextChild
         assertEquals(expected, actual)
+        assertEquals("(0,7,'a'[0]) -> WS, CM, WS, 'a'", res.toString())
     }
 
     @Test
@@ -221,6 +231,7 @@ class test_GrowingChildren {
         assertEquals(1, actual.nextInputPosition)
         assertEquals(0, actual.startPosition)
         assertEquals(listOf(ws1), actual.firstChild(null)?.children)
+        assertEquals("(0,1,null[null]) -> WS", actual.toString())
     }
 
     @Test
@@ -238,12 +249,13 @@ class test_GrowingChildren {
         assertEquals(1, actual.numberNonSkip)
         assertEquals(2, actual.nextInputPosition)
         assertEquals(0, actual.startPosition)
-        assertEquals(listOf(leaf), actual.firstChild(RuleOption(a,0))?.children)
-        assertEquals(listOf(ws1), actual.firstChild(RuleOption(a,0))?.nextChild!!.children)
+        assertEquals(listOf(leaf), actual.firstChild(RuleOption(a, 0))?.children)
+        assertEquals(listOf(ws1), actual.firstChild(RuleOption(a, 0))?.nextChild!!.children)
+        assertEquals("(0,2,'a'[0]) -> 'a', WS", actual.toString())
     }
 
     @Test
-    fun concatenate() {
+    fun concatenate1() {
         val input = InputFromString(rrs.terminalRules.size, "")
         val ws1 = SPPTLeafFromInput(input, WS, 0, 1, 0)
         val leaf = SPPTLeafFromInput(input, a, 1, 2, 0)
@@ -260,6 +272,26 @@ class test_GrowingChildren {
         assertEquals(0, sut1.startPosition)
         assertEquals(listOf(ws1), sut1.firstChild(null)?.children)
         assertEquals(listOf(leaf), sut1.firstChild(null)?.nextChild!!.children)
+        assertEquals("(0,2,'a'[0]) -> WS, 'a'", sut1.toString())
+    }
+
+    @Test
+    fun concatenate2() {
+        val input = InputFromString(rrs.terminalRules.size, "")
+        val leaf = SPPTLeafFromInput(input, a, 0, 1, 0)
+        val ws1 = SPPTLeafFromInput(input, WS, 1, 2, 0)
+
+        val sut1 = GrowingChildren().appendChild(st_a, listOf(leaf))
+        val sut2 = GrowingChildren().appendSkipIfNotEmpty(listOf(ws1))
+        sut1.concatenate(sut2)
+
+        assertEquals(2, sut1.length)
+        assertEquals(1, sut1.numberNonSkip)
+        assertEquals(2, sut1.nextInputPosition)
+        assertEquals(0, sut1.startPosition)
+        assertEquals(listOf(leaf), sut1.firstChild(null)?.children)
+        assertEquals(listOf(ws1), sut1.firstChild(null)?.nextChild!!.children)
+        assertEquals("(0,2,'a'[0]) -> 'a', WS", sut1.toString())
     }
 
     @Test
@@ -275,7 +307,8 @@ class test_GrowingChildren {
         assertEquals(1, actual.numberNonSkip)
         assertEquals(1, actual.nextInputPosition)
         assertEquals(0, actual.startPosition)
-        assertEquals(listOf(leaf), actual.firstChild(RuleOption(a,0))?.children)
+        assertEquals(listOf(leaf), actual.firstChild(RuleOption(a, 0))?.children)
+        assertEquals("(0,1,'a'[0]) -> 'a'", actual.toString())
     }
 
     @Test
@@ -291,8 +324,10 @@ class test_GrowingChildren {
         assertEquals(1, actual.numberNonSkip)
         assertEquals(1, actual.nextInputPosition)
         assertEquals(0, actual.startPosition)
-        assertEquals(listOf(goal), actual.firstChild(RuleOption(G,0))?.children)
+        assertEquals(listOf(goal), actual.firstChild(RuleOption(G, 0))?.children)
+        assertEquals("(0,1,<GOAL>[0]) -> <GOAL>", actual.toString())
     }
+
     @Test
     fun appendChild_secondGoalAtStart() {
         val input = InputFromString(rrs.terminalRules.size, "")
@@ -308,10 +343,11 @@ class test_GrowingChildren {
         assertEquals(1, actual.numberNonSkip)
         assertEquals(3, actual.nextInputPosition)
         assertEquals(0, actual.startPosition)
-        assertEquals(null, actual.firstChild(RuleOption(G,0))?.nextChild)
-        assertNotNull(actual.firstChild(RuleOption(G,0)))
-        assertEquals(listOf(goal1), actual.firstChild(RuleOption(G,0))?.children)
-        assertEquals(listOf(goal2), actual.firstChild(RuleOption(G,0))?.children)
+        assertEquals(null, actual.firstChild(RuleOption(G, 0))?.nextChild)
+        assertNotNull(actual.firstChild(RuleOption(G, 0)))
+        assertEquals(listOf(goal1), actual.firstChild(RuleOption(G, 0))?.children)
+        assertEquals(listOf(goal2), actual.firstChild(RuleOption(G, 0))?.children)
+        assertEquals("(0,3,<GOAL>[0]) -> <GOAL>", actual.toString())
     }
 
     @Test
@@ -331,6 +367,7 @@ class test_GrowingChildren {
         assertEquals(0, actual.startPosition)
         assertEquals(listOf(ws1), actual.firstChild(null)?.children)
         assertEquals(listOf(goal), actual.firstChild(null)?.nextChild!!.children)
+        assertEquals("(0,2,<GOAL>[0]) -> WS, <GOAL>", actual.toString())
     }
 
     @Test
@@ -354,8 +391,40 @@ class test_GrowingChildren {
         assertEquals(null, actual.firstChild(null)?.nextChild)
         assertNotNull(actual.firstChild(null)?.nextChildAlternatives)
         assertEquals(1, actual.firstChild(null)?.nextChildAlternatives!!.size)
-        assertEquals(2, actual.firstChild(null)?.nextChildAlternatives!![listOf(RuleOption(G,0))]!!.size)
-        assertEquals(listOf(goal1), actual.firstChild(null)?.nextChildAlternatives!![listOf(RuleOption(G,0))]!![0].children)
-        assertEquals(listOf(goal2), actual.firstChild(null)?.nextChildAlternatives!![listOf(RuleOption(G,0))]!![1].children)
+        assertEquals(2, actual.firstChild(null)?.nextChildAlternatives!![listOf(RuleOption(G, 0))]!!.size)
+        assertEquals(listOf(goal1), actual.firstChild(null)?.nextChildAlternatives!![listOf(RuleOption(G, 0))]!![0].children)
+        assertEquals(listOf(goal2), actual.firstChild(null)?.nextChildAlternatives!![listOf(RuleOption(G, 0))]!![1].children)
+        assertEquals(listOf(goal2), actual.lastChild?.children)
+        assertEquals("(0,3,<GOAL>[0]) -> WS, <GOAL>", actual.toString())
     }
+
+    @Test
+    fun get_whenEmpty() {}
+
+    @Test
+    fun get_whenSkipAtStart() {}
+
+    @Test
+    fun get_when1NonSkipStart() {}
+
+    @Test
+    fun get_when3NonSkipStart() {}
+
+    @Test
+    fun get_when1NonSkipAfterSkip() {}
+
+    @Test
+    fun get_when3NonSkipAfterSkip() {}
+
+    @Test
+    fun get_when3AltNonSkipStart() {}
+
+    @Test
+    fun get_when3AltNonSkipAfterSkip() {}
+
+    @Test
+    fun get_when3NonSkipStartAnd2Has3Alts() {}
+
+    @Test
+    fun get_when3NonSkipStartAnd3Has3Alts() {}
 }

@@ -18,7 +18,6 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.RuleOptionId
-import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.api.sppt.SPPTNode
 
 
@@ -90,23 +89,26 @@ class GrowingChildren {
     val isEmpty: Boolean get() = null == _firstChild && null == _firstChildAlternatives
     val hasSkipAtStart: Boolean get() = null == _firstChild!!.state
 
-    val lastInitialSkipChild: GrowingChildNode? get() = when {
-        isEmpty -> null
-        null != this._firstChildAlternatives -> null //skips never have alternatives
-        else -> {
-            var n = this._firstChild
-            var last: GrowingChildNode? = null
-            while (null != n && null == n.state) {
-                last = n
-                n = n.nextChild
+    val lastInitialSkipChild: GrowingChildNode?
+        get() = when {
+            isEmpty -> null
+            null != this._firstChildAlternatives -> null //skips never have alternatives
+            else -> {
+                var n = this._firstChild
+                var last: GrowingChildNode? = null
+                while (null != n && null == n.state) {
+                    last = n
+                    n = n.nextChild
+                }
+                last
             }
-            last
         }
-    }
+
+    val lastChild:GrowingChildNode? get() = this._lastChild
 
     fun firstChild(ruleOption: RuleOptionId?): GrowingChildNode? = when {
         null == this._firstChildAlternatives -> this._firstChild
-        null==ruleOption -> null //skip will not have alternatives
+        null == ruleOption -> null //skip will not have alternatives
         else -> this._firstChildAlternatives!!.entries.firstOrNull {
             it.key.contains(ruleOption)
         }?.value?.get(this.nextChildAlt(0, ruleOption))
@@ -114,7 +116,7 @@ class GrowingChildren {
 
     fun firstNonSkipChild(ruleOption: RuleOptionId): GrowingChildNode? {
         var r = this.firstChild(ruleOption)
-        var index = 0
+        var index = 1
         while (null != r && null == r.state) {
             r = r.next(this.nextChildAlt(index, ruleOption), ruleOption)
             index++
@@ -145,7 +147,7 @@ class GrowingChildren {
                         res._firstChildAlternatives!![state.rulePositionIdentity] = alts
                         res._firstChild = null
                         alts.add(alternativeNextChild)
-                        res.incNextChildAlt(0,state.rulePositionIdentity)
+                        res.incNextChildAlt(0, state.rulePositionIdentity)
                         res._lastChild = alternativeNextChild
                         // because its a duplicate of existing goal
                         // will not changed the length or numberNonSkip
@@ -182,22 +184,33 @@ class GrowingChildren {
     }
 
     fun appendSkipIfNotEmpty(skipChildren: List<SPPTNode>): GrowingChildren {
-        if (skipChildren.isEmpty()) {
+        return if (skipChildren.isEmpty()) {
             //do nothing
+            this
         } else {
             if (isEmpty) {
-                _firstChild = GrowingChildNode(null, skipChildren)
-                startPosition = skipChildren[0].startPosition
-                _lastChild = _firstChild
+                this._firstChild = GrowingChildNode(null, skipChildren)
+                this.startPosition = skipChildren[0].startPosition
+                this._lastChild = _firstChild
+                this.length++
+                this.nextInputPosition = skipChildren.last().nextInputPosition
+                this
             } else {
-                val nextChild = GrowingChildNode(null, skipChildren)
-                _lastChild!!.nextChild = nextChild
-                _lastChild = nextChild
+                when {
+                    null == _lastChild!!.nextChild -> {
+                        val nextChild = GrowingChildNode(null, skipChildren)
+                        _lastChild!!.nextChild = nextChild
+                        _lastChild = nextChild
+                        this.length++
+                        this.nextInputPosition = skipChildren.last().nextInputPosition
+                        this
+                    }
+                    else -> {
+                        error("TODO got another skip?")
+                    }
+                }
             }
-            nextInputPosition = skipChildren.last().nextInputPosition
         }
-        this.length++
-        return this
     }
 
     operator fun get(ruleOption: RuleOptionId): List<SPPTNode> {
@@ -247,44 +260,74 @@ class GrowingChildren {
     override fun toString(): String = when {
         isEmpty -> "{}"
         else -> {
-            val res = mutableMapOf<RulePosition, List<String>>()
+            val res = mutableMapOf<RuleOptionId?, List<String>>()
             val initialSkip = mutableListOf<String>()
+
             var sn = _firstChild
+            var lastSkip = sn
             while (sn != null && null == sn.state) {
                 initialSkip.add(sn.children.joinToString() { it.name })
+                lastSkip = sn
                 sn = sn.nextChild
             }
-            val rps = sn?.state?.rulePositions ?: emptyList()
-            for (rp in rps) {
-                res[rp] = initialSkip
-                var n = sn
-                var skip = ""
-                var index = 1
-                while (_lastChild != n && null != n) {
-                    val state = n.state
-                    when {
-                        null == state -> skip += n.children.joinToString() //skipNodes
-                        else -> {
-                            res[rp] = res[rp]!! + n[rp.identity].joinToString() { it.name }
-                        }
-                    }
-                    n = n.next(this.nextChildAlt(index, rp.identity), rp.identity)
-                    index++
+            val rpIds = when {
+                // there are no skips
+                null!=_firstChildAlternatives -> _firstChildAlternatives!!.entries.flatMap { it.key }
+                null==sn -> when {
+                    //lastSkip.next has alts
+                    null!=lastSkip!!.nextChildAlternatives -> lastSkip.nextChildAlternatives!!.entries.flatMap { it.key }
+                    //nothing after skips
+                    else -> emptyList()
                 }
-                if (null == n) {
-                    //this list of children died
-                    res[rp] = res[rp]!! + "-X"
-                } else {
-                    val state = n.state
-                    when {
-                        null == state -> skip += n.children.joinToString() //skipNodes
-                        else -> {
-                            res[rp] = res[rp]!! + n[rp.identity].joinToString() { it.name }
+                //sn (lastSkip.next) is the first nonSkip node
+                else -> sn.state?.rulePositionIdentity ?: emptyList()
+            }
+            when {
+                rpIds.isEmpty() -> res[null] = initialSkip
+                else -> {
+                    for (rpId in rpIds) {
+                        res[rpId] = initialSkip
+                        var n = firstNonSkipChild(rpId)
+                        var skip = ""
+                        var index = 1
+                        while (_lastChild != n && null != n) {
+                            val state = n.state
+                            when {
+                                null == state -> skip += n.children.joinToString { it.name } //skipNodes
+                                else -> {
+                                    if (skip.isNotBlank()) {
+                                        res[rpId] = res[rpId]!! + skip
+                                        skip = ""
+                                    }
+                                    res[rpId] = res[rpId]!! + n[rpId].joinToString() { it.name }
+                                }
+                            }
+                            n = n.next(this.nextChildAlt(index, rpId), rpId)
+                            index++
+                        }
+                        if (null == n) {
+                            //this list of children died
+                            res[rpId] = res[rpId]!! + "-X"
+                        } else {
+                            val state = n.state
+                            when {
+                                null == state -> {
+                                    skip += n.children.joinToString { it.name } //skipNodes
+                                }
+                                else -> {
+                                    if (skip.isNotBlank()) {
+                                        res[rpId] = res[rpId]!! + skip
+                                        skip = ""
+                                    }
+                                    res[rpId] = res[rpId]!! + n[rpId].joinToString() { it.name }
+                                }
+                            }
                         }
                     }
                 }
             }
-            res.entries.map { "(${this.startPosition},${this.nextInputPosition},${it.key.runtimeRule.tag}[${it.key.option}]) -> ${it.value.joinToString()}" }.joinToString(separator = "\n")
+
+            res.entries.map { "(${this.startPosition},${this.nextInputPosition},${it.key?.runtimeRule?.tag}[${it.key?.option}]) -> ${it.value.joinToString()}" }.joinToString(separator = "\n")
         }
     }
 

@@ -188,7 +188,17 @@ public class BadBinaryLiterals {
         assertEquals(sentence,resultStr)
     }
 
-    @Test(timeout = 5000)
+    @Test
+    fun xx() {
+        val sentence = "interface An { An[] value(); }"
+        val goal = "CompilationUnit"
+        val t = proc.parse(goal, sentence)
+        val actual = t.toStringAll
+        val resultStr = t.accept(SPPT2InputText(), "")
+        assertEquals(sentence,resultStr)
+    }
+
+    @Test//(timeout = 5000)
     fun long_concatenation() {
 
         val sentence = """
@@ -238,6 +248,8 @@ public class BadBinaryLiterals {
         val t = proc.parse(goal, sentence)
 
         // println( t.toStringAll )
+        val resultStr = t.accept(SPPT2InputText(), "")
+        assertEquals(sentence,resultStr)
     }
 
 }

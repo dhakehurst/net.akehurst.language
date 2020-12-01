@@ -219,8 +219,8 @@ class test_Dot_Singles {
 
         val cls_stmt_list_0_0 = SM.calcClosure(RulePosition(stmt_list,0,0),lhs_U)
         val cls_edge_list_0_0 = SM.calcClosure(RulePosition(edge_list,0,0),lhs_U)
-        val cls_edge_list_m = SM.calcClosure(RulePosition(edge_list_m,1,1),lhs_U)
-        val edge_list_m_firstOf_0_2 = SM.firstOf(RulePosition(edge_list_m, RuntimeRuleItem.SLIST__ITEM,RulePosition.POSITION_SLIST_ITEM), setOf(UP))
+        val cls_edge_list_m = SM.calcClosure(RulePosition(edge_list_m,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),lhs_U)
+        val edge_list_m_firstOf_0_2 = SM.firstOf(RulePosition(edge_list_m, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM), setOf(UP))
 
         //lh of sList at pos 2 doesn't work (firstOf)?
 

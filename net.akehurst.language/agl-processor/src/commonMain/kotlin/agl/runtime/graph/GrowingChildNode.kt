@@ -19,6 +19,7 @@ package net.akehurst.language.agl.runtime.graph
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.RuleOptionId
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.api.sppt.SPPTNode
 
 class GrowingChildNode(
@@ -59,8 +60,8 @@ class GrowingChildNode(
                 when {
                     state.isDuplicateOf(existingNextChild.state) -> {
                         val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
-                        when{
-                            alternativeNextChild.nextInputPosition > existingNextChild.nextInputPosition ->{
+                        when {
+                            alternativeNextChild.nextInputPosition > existingNextChild.nextInputPosition -> {
                                 val nextChildAlternatives = mutableMapOf<List<RuleOptionId>, MutableList<GrowingChildNode>>()
                                 val alts = mutableListOf(existingNextChild)
                                 nextChildAlternatives[state.rulePositionIdentity] = alts
@@ -118,9 +119,9 @@ class GrowingChildNode(
         }
     }
 
-    fun appendLast(growingChildren: GrowingChildren, childIndex: Int, state: ParserState, nextChildAlts: List<SPPTNode>):GrowingChildNode = when{
+    fun appendLast(growingChildren: GrowingChildren, childIndex: Int, state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildNode = when {
         this.isLast -> appendRealLast(state, nextChildAlts)
-        else -> appendAlternativeLast(growingChildren,childIndex,state,nextChildAlts)
+        else -> appendAlternativeLast(growingChildren, childIndex, state, nextChildAlts)
     }
 
     fun next(altNext: Int, ruleOption: RuleOptionId): GrowingChildNode? = when {
@@ -140,19 +141,24 @@ class GrowingChildNode(
     operator fun get(ruleOption: RuleOptionId): List<SPPTNode> {
         return when {
             null == this.state -> children //skip nodes
-            else -> {
-                val i = when (ruleOption.runtimeRule.rhs.kind) {
-                    RuntimeRuleItemKind.CONCATENATION -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule }
-                    RuntimeRuleItemKind.CHOICE -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
-                    RuntimeRuleItemKind.EMPTY -> TODO()
-                    RuntimeRuleItemKind.MULTI -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
-                    RuntimeRuleItemKind.SEPARATED_LIST -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
-                    else -> TODO()
-                }
-                when {
-                    -1 == i -> emptyList()
-                    1 == children.size -> children
-                    else -> listOf(children[i])
+            else -> when {
+                1 == children.size -> children
+                else -> {
+                    val rr = ruleOption.runtimeRule
+                    val i = when (rr.kind) {
+                        RuntimeRuleKind.TERMINAL -> 0
+                        RuntimeRuleKind.EMBEDDED -> 0
+                        RuntimeRuleKind.GOAL,
+                        RuntimeRuleKind.NON_TERMINAL -> when (ruleOption.runtimeRule.rhs.kind) {
+                            RuntimeRuleItemKind.CONCATENATION -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule }
+                            RuntimeRuleItemKind.CHOICE -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                            RuntimeRuleItemKind.EMPTY -> TODO()
+                            RuntimeRuleItemKind.MULTI -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                            RuntimeRuleItemKind.SEPARATED_LIST -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                            else -> TODO()
+                        }
+                    }
+                    if (-1==i) emptyList() else listOf(children[i])
                 }
             }
         }
