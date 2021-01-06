@@ -597,10 +597,11 @@ internal class ParseGraph(
     fun pushToStackOf(newState: ParserState, lookahead: LookaheadSet, leafNode: SPPTLeaf, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
         val growingChildren = GrowingChildren()
                 .appendChild(newState, listOf(leafNode))
-                .appendSkipIfNotEmpty(skipNodes)
+                ?.appendSkipIfNotEmpty(skipNodes)
         //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
-
-        this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, growingChildren, oldHead, previous, skipNodes)
+        growingChildren?.let {
+            this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, it, oldHead, previous, skipNodes)
+        }
     }
 
     // for embedded segments
@@ -609,42 +610,44 @@ internal class ParseGraph(
         (embeddedNode as SPPTNodeFromInputAbstract).embeddedIn = runtimeRule.tag
         val growingChildren = GrowingChildren()
                 .appendChild(newState, listOf(embeddedNode))
-                .appendSkipIfNotEmpty(skipNodes)
-        this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, growingChildren, oldHead, previous, skipNodes)
+                ?.appendSkipIfNotEmpty(skipNodes)
+        growingChildren?.let {
+            this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, it, oldHead, previous, skipNodes)
+        }
         //val id = CompleteNodeIndex(newRp.runtimeRule.number, embeddedNode.startPosition)//newRp.choice, embeddedNode.startPosition)
         this.completeNodes[runtimeRule, embeddedNode.startPosition] = embeddedNode //TODO: should this be here or in leaves ?
     }
 
     fun growNextChild(nextState: ParserState, lookahead: LookaheadSet, parent: GrowingNode, nextChildAlts: List<SPPTNode>, skipChildren: List<SPPTNode>?) {
         var growingChildren = parent.children.appendChild(nextState, nextChildAlts)
-        growingChildren = if (null == skipChildren) {
-            growingChildren
-        } else {
-            growingChildren.appendSkipIfNotEmpty(skipChildren)
+        growingChildren = when{
+            null==skipChildren -> growingChildren
+            else -> growingChildren?.appendSkipIfNotEmpty(skipChildren)
         }
 
         //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
-
-        val previous = parent.previous
-        for (pi in previous.values) {
-            pi.node.removeNext(parent)
-        }
-        this.findOrCreateGrowingNode(nextState, lookahead, growingChildren, previous.values.toSet()) //FIXME: don't convert to set
-        if (parent.next.isEmpty()) {
-            this.removeGrowing(parent)
+        growingChildren?.let {
+            val previous = parent.previous
+            for (pi in previous.values) {
+                pi.node.removeNext(parent)
+            }
+            this.findOrCreateGrowingNode(nextState, lookahead, it, previous.values.toSet()) //FIXME: don't convert to set
+            if (parent.next.isEmpty()) {
+                this.removeGrowing(parent)
+            }
         }
     }
 
     fun createWithFirstChild(newState: ParserState, lookahead: LookaheadSet, firstChildAlts: List<SPPTNode>, previous: Set<PreviousInfo>, skipChildren: List<SPPTNode>?) {
         var growingChildren = GrowingChildren().appendChild(newState, firstChildAlts)
-        growingChildren = if (null == skipChildren) {
-            growingChildren
-        } else {
-            growingChildren.appendSkipIfNotEmpty(skipChildren)
+        growingChildren = when{
+            null==skipChildren -> growingChildren
+            else -> growingChildren?.appendSkipIfNotEmpty(skipChildren)
         }
         //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
-
-        this.findOrCreateGrowingNode(newState, lookahead, growingChildren, previous)
+        growingChildren?.let {
+            this.findOrCreateGrowingNode(newState, lookahead, it, previous)
+        }
     }
 
     fun isLookingAt(lookaheadGuard: LookaheadSet, prevLookahead: LookaheadSet?, nextInputPosition: Int): Boolean {

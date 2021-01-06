@@ -133,7 +133,7 @@ class GrowingChildren {
         return r
     }
 
-    fun appendChild(state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildren {
+    fun appendChild(state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildren? {
         return when {
             isEmpty -> {
                 _firstChild = GrowingChildNode(state, nextChildAlts)
@@ -167,29 +167,33 @@ class GrowingChildren {
                     else -> { // must be initial skip and duplicate of existing goal
                         val changeLength = lisc.isLast
                         val appended = lisc.appendLast(this, this.length - 1, state, nextChildAlts)
-                        this._lastChild = appended
-                        if (changeLength) {
-                            this.length++
-                            this.numberNonSkip++
-                        } else {
-                            // because its a duplicate of existing goal
-                            // will not changed the length or numberNonSkip
+                        appended?.let {
+                            this._lastChild = it
+                            if (changeLength) {
+                                this.length++
+                                this.numberNonSkip++
+                            } else {
+                                // because its a duplicate of existing goal
+                                // will not changed the length or numberNonSkip
+                            }
+                            this.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
+                            this
                         }
-                        this.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
-                        this
                     }
                 }
             }
             else -> {
                 val res = this.clone()
                 val lastChild = res._lastChild!!
-                val nextChild = lastChild.appendLast(res, res.length, state, nextChildAlts)
-                res._lastChild = nextChild
-                res.length++
-                res.numberNonSkip++
-                //check(1 == nextChildAlts.map { it.nextInputPosition }.toSet().size)
-                res.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
-                res
+                val appended = lastChild.appendLast(res, res.length, state, nextChildAlts)
+                appended?.let {
+                    res._lastChild = it
+                    res.length++
+                    res.numberNonSkip++
+                    //check(1 == nextChildAlts.map { it.nextInputPosition }.toSet().size)
+                    res.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
+                    res
+                }
             }
         }
     }

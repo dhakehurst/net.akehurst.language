@@ -21,7 +21,7 @@ import net.akehurst.language.api.parser.InputLocation
 /**
  * A leaf node has no children.
  */
-interface SPPTNode : SharedPackedParseTreeVisitable {
+interface SPPTNode {
 
     /**
      * the identity of this node

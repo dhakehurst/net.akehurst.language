@@ -16,26 +16,22 @@
 
 package net.akehurst.language.agl.sppt
 
-import net.akehurst.language.api.sppt.SPPTBranch
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
+import net.akehurst.language.api.sppt.*
 
 class SPPT2InputText : SharedPackedParseTreeVisitor<String, Any> {
 
     override fun visit(target: SharedPackedParseTree, arg: Any): String {
         val root = target.root
-        return root.accept(this, arg)
+        return this.visit(root, arg) //root.accept(this, arg)
     }
-
 
     override fun visit(target: SPPTLeaf, arg: Any): String {
         return target.matchedText
     }
 
     override fun visit(target: SPPTBranch, arg: Any): String {
-        var result = target.children.map { it.accept(this, arg) }.joinToString("")
+        //var result = target.children.map { it.accept(this, arg) }.joinToString("")
+        val result = target.children.map { visit(it, arg) }.joinToString("")
         return result
     }
 

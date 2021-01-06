@@ -29,7 +29,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
-import org.junit.Test
+import kotlin.test.Test
 import kotlin.test.fail
 
 
@@ -496,5 +496,142 @@ class test_Dot_Singles {
             }
             """.trimIndent()
         processor.parse(goal, sentence)
+    }
+
+    @Test
+    fun emptyString() {
+        val goal = "DOUBLE_QUOTE_STRING"
+        val sentence = """
+            ""
+        """.trimIndent()
+        try {
+            processor.parse(goal, sentence)
+        } catch (e: ParseFailedException) {
+            fail("${e.message} at ${e.location} expected ${e.expected}")
+        }
+    }
+    @Test
+    fun node_stmt_with_emptyString() {
+        val goal = "node_stmt"
+        val sentence = """
+            node[style=filled,label=""]
+        """.trimIndent()
+        try {
+            processor.parse(goal, sentence)
+        } catch (e: ParseFailedException) {
+            fail("${e.message} at ${e.location} expected ${e.expected}")
+        }
+    }
+
+    @Test
+    fun Synchronous_Digital_Hierarchy_Stack() {
+        val goal = "graph"
+        val sentence = """
+digraph G {
+	graph [bgcolor=black];	/* set background */
+	edge [color=white];
+	graph[page="8.5,11",size="7.5,7",ratio=fill,center=1];
+	node[style=filled,label=""];
+	subgraph ds3CTP {
+		rank = same;
+		node[shape=box,color=green];
+		ds3CTP_1_1;
+		ds3CTP_1_2;
+		ds3CTP_5_1;
+		ds3CTP_5_2;
+	}
+	subgraph t3TTP {
+		rank = same;
+		node[shape=invtriangle,color=red];
+		t3TTP_1_1;
+		t3TTP_5_2;
+	}
+	subgraph vc3TTP {
+		rank = same;
+		node[shape=invtriangle,color=red];
+		vc3TTP_1_2;
+		vc3TTP_5_1;
+	}
+	subgraph fabric {
+		rank = same;
+		node[shape=hexagon,color=blue];
+		fabric_1_2;
+		fabric_4_1;
+		fabric_5_1;
+	}
+	subgraph xp {
+		rank = same;
+		node[shape=diamond,color=blue];
+		xp_1_2;
+		xp_4_1;
+		xp_5_1;
+	}
+	subgraph au3CTP {
+		rank = same;
+		node[shape=box,color=green];
+		au3CTP_1_2;
+		au3CTP_5_1;
+	}
+	subgraph aug {
+		rank = same;
+		node[shape=invtrapezium,color=pink];
+		aug_1_2;
+		aug_4_1;
+		aug_4_2;
+		aug_5_1;
+	}
+	subgraph protectionTTP {
+		rank = same;
+		node[shape=invtriangle,color=red];
+	}
+	subgraph protectionGroup {
+		rank = same;
+		node[shape=hexagon,color=blue];
+	}
+	subgraph protectionUnit {
+		rank = same;
+		node[shape=diamond,color=blue];
+	}
+	subgraph protectionCTP {
+		node[shape=box,color=green];
+	}
+	subgraph msTTP {
+		rank = same;
+		node[shape=invtriangle,color=red];
+	}
+	subgraph msCTP {
+		rank = same;
+		node[shape=box,color=green];
+	}
+	subgraph rsTTP {
+		rank = same;
+		node[shape=invtriangle,color=red];
+	}
+	subgraph rsCTP {
+		rank = same;
+		node[shape=box,color=green];
+	}
+	subgraph spiTTP {
+		rank = same;
+		node[shape=invtriangle,color=red];
+	}
+	subgraph me {
+		rank = same;
+		node[shape=box,peripheries=2];
+		me_1;
+	}
+	subgraph client_server {
+		edge[style=dotted,dir=none,weight=100];
+		ds3CTP_1_1->t3TTP_1_1;
+		ds3CTP_1_2->vc3TTP_1_2;
+		au3CTP_1_2->aug_1_2->prTTP_1_2;
+	}
+}
+        """.trimIndent()
+        try {
+            processor.parse(goal, sentence)
+        } catch (e: ParseFailedException) {
+            fail("${e.message} at ${e.location} expected ${e.expected}")
+        }
     }
 }

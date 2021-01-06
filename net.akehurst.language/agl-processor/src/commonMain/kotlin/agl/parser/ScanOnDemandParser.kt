@@ -202,6 +202,7 @@ class ScanOnDemandParser(
                             Transition.ParseAction.EMBED -> TODO()
                             Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.createWithParent(lg.lookahead).content
                             Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.lookahead }.flatMap { tr.lookaheadGuard.createWithParent(it).content }
+                            Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                         }
                     }
                     Pair(lg, exp)
@@ -218,6 +219,7 @@ class ScanOnDemandParser(
                                 Transition.ParseAction.EMBED -> TODO()
                                 Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.createWithParent(lg.lookahead).content
                                 Transition.ParseAction.GRAFT -> tr.lookaheadGuard.createWithParent(prev.lookahead).content
+                                Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                             }
                         }
                         exp

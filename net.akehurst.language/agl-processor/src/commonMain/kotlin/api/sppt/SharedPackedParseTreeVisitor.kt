@@ -18,8 +18,8 @@ package net.akehurst.language.api.sppt;
 /**
  * Visitor interface for a SharedPackedParse
  *
- * @param <T>
- *            result type of visit methods
+ * @param <T> result type of visit methods
+ * @param <A> type of arg to visit methods
  */
 interface SharedPackedParseTreeVisitor<T, A> {
 
@@ -29,4 +29,10 @@ interface SharedPackedParseTreeVisitor<T, A> {
 
 	fun visit(target: SPPTBranch, arg: A): T
 
+	fun visit(target: SPPTNode, arg: A) = when (target) {
+		is SPPTLeaf -> visit(target, arg)
+		is SPPTBranch -> visit(target, arg)
+		else -> error("Unknown subtype of SPPTNode ${target::class.simpleName}")
+
+	}
 }

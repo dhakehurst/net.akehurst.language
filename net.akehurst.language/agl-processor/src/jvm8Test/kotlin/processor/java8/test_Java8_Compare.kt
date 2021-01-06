@@ -135,8 +135,9 @@ class test_Java8_Compare(val data: Data) {
             val resultStr = clean(tree.asString)
             assertEquals(queryStr, resultStr)
         } catch (ex: ParseFailedException) {
+            println(this.data)
             println(ex.message)
-            println(ex.longestMatch)
+            println(ex.longestMatch?.asString)
             throw ex
         }
     }

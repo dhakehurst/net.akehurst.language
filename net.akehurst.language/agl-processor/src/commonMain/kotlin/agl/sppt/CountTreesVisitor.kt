@@ -25,7 +25,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 class CountTreesVisitor : SharedPackedParseTreeVisitor<Int, Unit> {
 
     override fun visit(target: SharedPackedParseTree, arg: Unit): Int {
-        return target.root.accept(this, arg)
+        return visit(target.root, arg)
     }
 
 
@@ -42,7 +42,7 @@ class CountTreesVisitor : SharedPackedParseTreeVisitor<Int, Unit> {
             } else {
                 var max = 0
                 for (i in 0 until children.size) {
-                    max = maxOf(max, children[i].accept(this, arg))
+                    max = maxOf(max, visit(children[i], arg))
                 }
                 currentCount += max
             }

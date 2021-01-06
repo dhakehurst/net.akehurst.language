@@ -63,10 +63,6 @@ class SPPTLeafFromInput(
         return this.identity == other.identity
     }
 
-    override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
-        return visitor.visit(this, arg)
-    }
-
     override fun toString(): String {
         val name = when {
             this.runtimeRule == RuntimeRuleSet.END_OF_TEXT -> RuntimeRuleSet.END_OF_TEXT_TAG

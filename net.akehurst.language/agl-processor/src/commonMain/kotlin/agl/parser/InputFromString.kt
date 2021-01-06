@@ -133,7 +133,7 @@ class InputFromString(
     internal fun tryMatchText(position: Int, terminalRule: RuntimeRule): String? {//RegexMatcher.MatchResult? {
         val matched = when {
             (position >= this.text.length) -> if (terminalRule.value == END_OF_TEXT) END_OF_TEXT else null//RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
-            terminalRule.isPattern -> this.matchRegEx3(position, terminalRule.patternAtStart!!)
+            terminalRule.isPattern -> this.matchRegEx2(position, terminalRule.patternAtStart!!)
             else -> this.matchLiteral(position, terminalRule.value)
             //else ->pattern.match(this.text, position)
         }

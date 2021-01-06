@@ -70,7 +70,7 @@ abstract class SPPTNodeFromInputAbstract(
 
     fun toStringIndented(indentIncrement: String): String {
         val visitor = ToStringVisitor("\n", indentIncrement)
-        val all: Set<String> = this.accept(visitor, ToStringVisitor.Indent("", true))
+        val all: Set<String> = visitor.visit(this, ToStringVisitor.Indent("", true))
         val total = all.size
         val sep = "\n"
         var cur = 0

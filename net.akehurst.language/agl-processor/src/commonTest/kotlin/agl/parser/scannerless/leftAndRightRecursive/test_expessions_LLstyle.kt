@@ -17,26 +17,25 @@
 package net.akehurst.language.parser.scanondemand.leftAndRightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.rightRecursive.test_n_P_Im
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_expessions_simple : test_ScanOnDemandParserAbstract() {
+class test_expessions_LLstyle : test_ScanOnDemandParserAbstract() {
 
     // S = E
-    // E = 'a' | I
-    // I = E 'o' E ;
+    // E = P
+    //   | E '+' P
 
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("E") }
-            choice("E",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                literal("a")
-                ref("I")
+            choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("P")
+                ref("E1")
             }
-            concatenation("I") { ref("E"); literal("o"); ref("E")  }
+            concatenation("E1") { ref("E"); literal("o"); ref("P") }
+            concatenation("P") { literal("a") }
         }
         val goal = "S"
     }
@@ -47,7 +46,7 @@ class test_expessions_simple : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S { E {'a'} }
+            S { E { P {'a'} } }
         """.trimIndent()
 
         val actual = super.test(
@@ -64,7 +63,7 @@ class test_expessions_simple : test_ScanOnDemandParserAbstract() {
         val sentence = "aoa"
 
         val expected = """
-            S { E|1 { I { E{'a'} 'o' E{'a'} } }}
+            S { E|1 { E1 { E{ P {'a'} } 'o' P {'a'} } } }
         """.trimIndent()
 
         val actual = super.test(
@@ -81,14 +80,14 @@ class test_expessions_simple : test_ScanOnDemandParserAbstract() {
         val sentence = "aoaoa"
 
         val expected = """
-            S { E|1 { I {
-                E|1 { I {
-                    E { 'a' }
+            S { E|1 { E1 {
+                E|1 { E1 {
+                    E { P {'a'} }
                     'o'
-                    E { 'a' }
+                    P {'a'}
                   } }
                 'o'
-                E { 'a' }
+                P {'a'}
             } } }
         """.trimIndent()
 
@@ -106,18 +105,18 @@ class test_expessions_simple : test_ScanOnDemandParserAbstract() {
         val sentence = "aoaoaoa"
 
         val expected = """
-             S { E|1 { I {
-                  E|1 { I {
-                      E|1 { I {
-                          E { 'a' }
+             S { E|1 { E1 {
+                  E|1 { E1 {
+                      E|1 { E1 {
+                          E { P {'a'} }
                           'o'
-                          E { 'a' }
+                          P {'a'}
                         } }
                       'o'
-                      E { 'a' }
+                      P {'a'}
                     } }
                   'o'
-                  E { 'a' }
+                  P {'a'}
                 } } }
         """.trimIndent()
 

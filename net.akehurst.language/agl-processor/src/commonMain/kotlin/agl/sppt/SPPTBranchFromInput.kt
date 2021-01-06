@@ -118,10 +118,6 @@ class SPPTBranchFromInput(
 
     override val location: InputLocation get() = TODO("not implemented")
 
-    override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
-        return visitor.visit(this, arg)
-    }
-
     // --- Object ---
     override fun toString(): String {
         val tag = if (null == this.embeddedIn) this.runtimeRule.tag else "${embeddedIn}.${runtimeRule.tag}"

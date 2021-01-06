@@ -32,14 +32,6 @@ class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<String>> {
         return this[index]
     }
 
-    fun visit(target: SPPTNode, arg: List<String>) {
-        return when (target) {
-            is SPPTBranch -> this.visit(target, arg)
-            is SPPTLeaf -> this.visit(target, arg)
-            else -> throw SPPTException("Unknown subtype of SPPTNode ${target::class.simpleName}", null)
-        }
-    }
-
     override fun visit(target: SharedPackedParseTree, arg: List<String>) {
         return this.visit(target.root, arg)
     }

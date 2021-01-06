@@ -116,7 +116,7 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 3,
                 expectedTrees = *arrayOf(expected)
         )
     }
@@ -140,7 +140,7 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 5,
                 expectedTrees = *arrayOf(expected)
         )
     }
@@ -150,8 +150,7 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val sentence = "a".repeat(10)
 
         val expected = """
-         S|1 { S2 {
-            S|1 { S2 {
+             S|1 { S2 {
                 S|1 { S2 {
                     S|1 { S2 {
                         S|1 { S2 {
@@ -170,12 +169,13 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
                             S|2 { 'a' }
                           } }
                       } }
-                    S|2 { 'a' }
+                    S|1 { S2 {
+                        S|2 { 'a' }
+                        S|2 { 'a' }
+                      } }
                   } }
                 S|2 { 'a' }
               } }
-            S|2 { 'a' }
-          } }
         """.trimIndent()
 
         val actual = super.test(

@@ -246,6 +246,7 @@ class ParserStateSet(
                             val np = Pair(state, newLh)
                             buildAndTraverse(nextState, prevStack.pop().stack, done)
                         }
+                        Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                         Transition.ParseAction.GOAL -> null;//buildAndTraverse(nextState, prevStack, done)
                     }
                 }
@@ -295,6 +296,7 @@ class ParserStateSet(
                             val np = Pair(state, newLh)
                             buildAndTraverse(nextState, prevStack.pop().stack, done)
                         }
+                        Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                         Transition.ParseAction.GOAL -> null;//buildAndTraverse(nextState, prevStack, done)
                     }
                 }
@@ -533,7 +535,7 @@ class ParserStateSet(
             }
             done[rule.number] -> _firstOfNotEmpty[rule.number] ?: FirstOfResult(false, emptySet())
             else -> {
-                var result = _firstOfNotEmpty[rule.number]
+                var result:FirstOfResult? = null//_firstOfNotEmpty[rule.number]
                 if (null == result) {
                     done[rule.number] = true
                     result = firstOfNotEmptySafe(rule, doneRp, done)

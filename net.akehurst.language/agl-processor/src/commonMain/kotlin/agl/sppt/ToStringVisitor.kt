@@ -31,7 +31,7 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
     }
 
     override fun visit(target: SharedPackedParseTree, arg: Indent): Set<String> {
-        return target.root.accept(this, arg)
+        return visit(target.root, arg)
     }
 
 
@@ -96,7 +96,7 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
 
     private fun visitOnlyChild(currentSet: MutableSet<String>, children: List<SPPTNode>, indent: Indent): MutableSet<String> {
         val r = HashSet<String>()
-        val ssc = children.get(0).accept(this, indent.next(this.indentIncrement, true))
+        val ssc = visit(children.get(0), indent.next(this.indentIncrement, true))
 
         for (current in currentSet) {
             for (sc in ssc) {
@@ -111,7 +111,7 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
 
     private fun visitChild(currentSet: MutableSet<String>, children: List<SPPTNode>, index: Int, indent: Indent): MutableSet<String> {
         val r = HashSet<String>()
-        val ssc = children.get(index).accept(this, indent.next(this.indentIncrement, false))
+        val ssc = visit(children.get(index), indent.next(this.indentIncrement, false))
 
         for (current in currentSet) {
             for (sc in ssc) {

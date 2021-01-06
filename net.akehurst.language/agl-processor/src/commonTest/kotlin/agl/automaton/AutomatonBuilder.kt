@@ -30,6 +30,7 @@ class AutomatonBuilder(
     val WIDTH = Transition.ParseAction.WIDTH
     val HEIGHT = Transition.ParseAction.HEIGHT
     val GRAFT = Transition.ParseAction.GRAFT
+    val GRAFT_OR_HEIGHT = Transition.ParseAction.GRAFT_OR_HEIGHT
 
     fun state(vararg rulePositions: RulePosition): ParserState {
         return result.states[rulePositions.toList()]

@@ -51,7 +51,7 @@ abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVis
         return if (null == branch){
             null
         }else {
-            val asm = branch.accept(this, arg) as T
+            val asm = this.visit(branch, arg) as T
             this.locationMap[asm as Any] = branch.location
             asm
         }
@@ -60,7 +60,7 @@ abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVis
     // --- IParseTreeVisitor ---
     override fun visit(target: SharedPackedParseTree, arg: Any?): Any {
         val root = target.root
-        return root.accept(this, arg)
+        return this.visit(root, arg)
     }
 
     override fun visit(target: SPPTLeaf, arg: Any?): Any {

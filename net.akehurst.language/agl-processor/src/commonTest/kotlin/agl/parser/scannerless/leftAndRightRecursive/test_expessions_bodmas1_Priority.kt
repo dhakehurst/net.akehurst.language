@@ -101,19 +101,19 @@ class test_expessions_bodmas1_Priority : test_ScanOnDemandParserAbstract() {
         val sentence = "v+v+v+v"
 
         val expected = """
-             S { E|1 { I {
-                  E|1 { I {
-                      E|1 { I {
-                          E { var { "[a-z]+":'a' } }
-                          op|2 { '+' }
-                          E { var { "[a-z]+":'a' } }
-                        } }
-                      op|2 { '+' }
-                      E { var { "[a-z]+":'a' } }
-                    } }
-                  op|2 { '+' }
-                  E { var { "[a-z]+":'a' } }
-                } } }
+ S { E|1 { I {
+      E|1 { I {
+          E|1 { I {
+              E { var { "[a-z]+" : 'v' } }
+              op|2 { '+' }
+              E { var { "[a-z]+" : 'v' } }
+            } }
+          op|2 { '+' }
+          E { var { "[a-z]+" : 'v' } }
+        } }
+      op|2 { '+' }
+      E { var { "[a-z]+" : 'v' } }
+    } } }
         """.trimIndent()
 
 

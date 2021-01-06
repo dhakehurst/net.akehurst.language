@@ -27,7 +27,7 @@ class test_n_P_Im : test_ScanOnDemandParserAbstract() {
     // S =  n < P < I ;      //  infix < propertyCall < name
     // n = 'a' ;             // "[a-z]+"
     // P = S 'p' n ;         // S '.' name
-    // I = [S / 'o']2+ ;         // [S / '+']2+
+    // I = [S / 'o']2+ ;     // [S / '+']2+
 
     private companion object {
         val rrs = runtimeRuleSet {
@@ -107,11 +107,27 @@ class test_n_P_Im : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = Companion.goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2,
+                expectedNumGSSHeads = 1,
                 expectedTrees = *arrayOf(expected)
         )
     }
 
+    @Test
+    fun aoaoaoaoa() {
+        val sentence = "aoaoaoaoa"
+
+        val expected = """
+            S|2 { I { S{'a'} 'o' S{'a'} 'o' S{'a'} 'o' S{'a'} 'o' S{'a'} } }
+        """.trimIndent()
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = Companion.goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
+    }
 
     @Test
     fun apaoa() {
@@ -193,7 +209,48 @@ class test_n_P_Im : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = Companion.goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 4, //TODO: can we make this less anyhow?
+                expectedNumGSSHeads = 3, //TODO: can we make this less anyhow?
+                expectedTrees = *arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun apaoapaoapaoapa() {
+        val sentence = "apaoapaoapaoapa"
+
+        val expected = """
+         S|2 { I {
+            S|1 { P {
+                S { 'a' }
+                'p'
+                'a'
+              } }
+            'o'
+            S|1 { P {
+                S { 'a' }
+                'p'
+                'a'
+              } }
+            'o'
+            S|1 { P {
+                S { 'a' }
+                'p'
+                'a'
+              } }
+            'o'
+            S|1 { P {
+                S { 'a' }
+                'p'
+                'a'
+              } }
+          } }
+        """.trimIndent()
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = Companion.goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 3, //TODO: can we make this less anyhow?
                 expectedTrees = *arrayOf(expected)
         )
     }

@@ -57,7 +57,7 @@ class GrowingChildNode(
         return nextChild!!
     }
 
-    private fun appendAlternativeLast(growingChildren: GrowingChildren, childIndex: Int, state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildNode {
+    private fun appendAlternativeLast(growingChildren: GrowingChildren, childIndex: Int, state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildNode? {
         val existingNextChild = this.nextChild
         return when {
             null != existingNextChild -> { // first alternative
@@ -65,7 +65,7 @@ class GrowingChildNode(
                     state.isDuplicateOf(existingNextChild.state) -> {
                         val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
                         when {
-                            alternativeNextChild.nextInputPosition > existingNextChild.nextInputPosition -> {
+                            alternativeNextChild.nextInputPosition != existingNextChild.nextInputPosition -> {
                                 val nextChildAlternatives = mutableMapOf<List<RuleOptionId>, MutableList<GrowingChildNode>>()
                                 val alts = mutableListOf(existingNextChild)
                                 nextChildAlternatives[state.rulePositionIdentity] = alts
@@ -78,6 +78,7 @@ class GrowingChildNode(
                             else -> {
                                 //TODO: do we replace or drop?"
                                 existingNextChild
+                                //null
                             }
                         }
                     }
@@ -105,7 +106,7 @@ class GrowingChildNode(
                     else -> {
                         val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
                         // check if there is a duplicate with greater length
-                        val existing = alts.firstOrNull { it.nextInputPosition >= alternativeNextChild.nextInputPosition }
+                        val existing = alts.firstOrNull { it.nextInputPosition == alternativeNextChild.nextInputPosition }
                         when {
                             null == existing -> {
                                 alts.add(alternativeNextChild)
@@ -116,6 +117,7 @@ class GrowingChildNode(
                                 //error("TODO: do we replace or drop?")
                                 growingChildren.setNextChildAlt(childIndex, state.rulePositionIdentity,alts.indexOf(existing))
                                 existing
+                                //null
                             }
                         }
                     }
@@ -124,7 +126,7 @@ class GrowingChildNode(
         }
     }
 
-    fun appendLast(growingChildren: GrowingChildren, childIndex: Int, state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildNode = when {
+    fun appendLast(growingChildren: GrowingChildren, childIndex: Int, state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildNode? = when {
         this.isLast -> appendRealLast(state, nextChildAlts)
         else -> appendAlternativeLast(growingChildren, childIndex, state, nextChildAlts)
     }

@@ -28,17 +28,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-class test_Java8_Singles {
+class test_Java8_Singles_aglSpec {
 
     companion object {
 
         val aglSpecProcessor: LanguageProcessor by lazy { createJava8Processor("/java8/Java8AglSpec.agl", true ) }
-        val aglOptmProcessor: LanguageProcessor by lazy { createJava8Processor("/java8/Java8AglOptm.agl", true) }
 
-        val antlrSpecProcessor: LanguageProcessor by lazy { createJava8Processor("/java8/Java8AntlrSpec.agl") }
-        val antlrOptmProcessor: LanguageProcessor by lazy { createJava8Processor("/java8/Java8AntlrOptm.agl") }
-
-        val proc = aglOptmProcessor
+        val proc = aglSpecProcessor
 
         fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor {
             val grammarStr = this::class.java.getResource(path).readText()
@@ -184,7 +180,7 @@ public class BadBinaryLiterals {
         val goal = "ClassDeclaration"
         val t = proc.parse(goal, sentence)
         val actual = t.toStringAll
-        val resultStr = t.accept(SPPT2InputText(), "")
+        val resultStr = SPPT2InputText().visit(t, "")
         assertEquals(sentence,resultStr)
     }
 
@@ -194,11 +190,27 @@ public class BadBinaryLiterals {
         val goal = "CompilationUnit"
         val t = proc.parse(goal, sentence)
         val actual = t.toStringAll
-        val resultStr = t.accept(SPPT2InputText(), "")
+        val resultStr = SPPT2InputText().visit(t, "")
         assertEquals(sentence,resultStr)
     }
 
-    @Test(timeout = 5000)
+    @Test
+    fun long_expression() {
+
+        val sentence = """
+          "a" + "b" + "c" + "d" + "e" + "f" + "g" + "h" + "i" + "j" + "k"
+        """.trimIndent()
+        val goal = "Expression"
+
+        val t = proc.parse(goal, sentence)
+
+        // println( t.toStringAll )
+        val resultStr = SPPT2InputText().visit(t, "")
+        assertEquals(sentence, resultStr)
+        assertEquals(1, t.maxNumHeads)
+    }
+
+    @Test//(timeout = 5000)
     fun long_concatenation() {
 
         val sentence = """
@@ -248,7 +260,7 @@ public class BadBinaryLiterals {
         val t = proc.parse(goal, sentence)
 
         // println( t.toStringAll )
-        val resultStr = t.accept(SPPT2InputText(), "")
+        val resultStr = SPPT2InputText().visit(t, "")
         assertEquals(sentence,resultStr)
     }
 

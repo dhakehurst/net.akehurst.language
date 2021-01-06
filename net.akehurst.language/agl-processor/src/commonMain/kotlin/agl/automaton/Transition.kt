@@ -36,7 +36,8 @@ class Transition(
         GRAFT,  // reduce other
         WIDTH,  // shift
         GOAL,    // goal
-        EMBED
+        EMBED,
+        GRAFT_OR_HEIGHT // try graft if fails do height -- reduces ambiguity on recursive rules
     }
 
     private val hashCode_cache:Int by lazy {

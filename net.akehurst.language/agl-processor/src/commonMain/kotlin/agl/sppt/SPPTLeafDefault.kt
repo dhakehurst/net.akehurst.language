@@ -95,10 +95,6 @@ class SPPTLeafDefault(
                 TODO("not implemented")
             }
 
-            override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
-                TODO("not implemented")
-            }
-
         }
     }
 
@@ -139,10 +135,6 @@ class SPPTLeafDefault(
     override val asBranch: SPPTBranch get() { throw SPPTException("Not a Branch", null) }
 
     override val lastLeaf get() = this
-
-    override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
-        return visitor.visit(this,  arg)
-    }
 
     override fun toString(): String {
         val name = when {

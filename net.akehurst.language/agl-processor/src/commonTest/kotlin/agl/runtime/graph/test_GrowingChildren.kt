@@ -128,8 +128,8 @@ class test_GrowingChildren {
                 .appendSkipIfNotEmpty(listOf(cm))
                 .appendChild(st_a, listOf(leaf))
 
-        val actual = sut.lastInitialSkipChild
-        val expected = sut.firstChild(null)?.nextChild
+        val actual = sut?.lastInitialSkipChild
+        val expected = sut?.firstChild(null)?.nextChild
         assertEquals(expected, actual)
         assertEquals("(0,6,'a'[0]) -> WS, CM, 'a'", sut.toString())
     }
@@ -148,8 +148,8 @@ class test_GrowingChildren {
                 .appendSkipIfNotEmpty(listOf(ws2))
                 .appendChild(st_a, listOf(leaf))
 
-        val actual = sut.lastInitialSkipChild
-        val expected = sut.firstChild(null)?.nextChild!!.nextChild
+        val actual = sut?.lastInitialSkipChild
+        val expected = sut?.firstChild(null)?.nextChild!!.nextChild
         assertEquals(expected, actual)
         assertEquals("(0,7,'a'[0]) -> WS, CM, WS, 'a'", sut.toString())
     }
@@ -191,8 +191,8 @@ class test_GrowingChildren {
                 .appendSkipIfNotEmpty(listOf(cm))
                 .appendChild(st_a, listOf(leaf))
 
-        val actual = sut.firstNonSkipChild(RuleOptionId(S, 0))
-        val expected = sut.firstChild(null)?.nextChild!!.nextChild
+        val actual = sut?.firstNonSkipChild(RuleOptionId(S, 0))
+        val expected = sut?.firstChild(null)?.nextChild!!.nextChild
         assertEquals(expected, actual)
         assertEquals("(0,6,'a'[0]) -> WS, CM, 'a'", sut.toString())
     }
@@ -211,8 +211,8 @@ class test_GrowingChildren {
                 .appendSkipIfNotEmpty(listOf(ws2))
                 .appendChild(st_a, listOf(leaf))
 
-        val actual = sut.firstNonSkipChild(RuleOptionId(S, 0))
-        val expected = sut.firstChild(null)?.nextChild!!.nextChild!!.nextChild
+        val actual = sut?.firstNonSkipChild(RuleOptionId(S, 0))
+        val expected = sut?.firstChild(null)?.nextChild!!.nextChild!!.nextChild
         assertEquals(expected, actual)
         assertEquals("(0,7,'a'[0]) -> WS, CM, WS, 'a'", sut.toString())
     }
@@ -242,14 +242,14 @@ class test_GrowingChildren {
 
         val actual = GrowingChildren()
                 .appendChild(st_a, listOf(leaf))
-                .appendSkipIfNotEmpty(listOf(ws1))
+                ?.appendSkipIfNotEmpty(listOf(ws1))
 
-        assertEquals(2, actual.length)
-        assertEquals(1, actual.numberNonSkip)
-        assertEquals(2, actual.nextInputPosition)
-        assertEquals(0, actual.startPosition)
-        assertEquals(listOf(leaf), actual.firstChild(RuleOption(a, 0))?.children)
-        assertEquals(listOf(ws1), actual.firstChild(RuleOption(a, 0))?.nextChild!!.children)
+        assertEquals(2, actual?.length)
+        assertEquals(1, actual?.numberNonSkip)
+        assertEquals(2, actual?.nextInputPosition)
+        assertEquals(0, actual?.startPosition)
+        assertEquals(listOf(leaf), actual?.firstChild(RuleOption(a, 0))?.children)
+        assertEquals(listOf(ws1), actual?.firstChild(RuleOption(a, 0))?.nextChild!!.children)
         assertEquals("(0,2,'a'[0]) -> 'a', WS", actual.toString())
     }
 
@@ -263,7 +263,7 @@ class test_GrowingChildren {
 
         val sut2 = GrowingChildren().appendChild(st_a, listOf(leaf))
 
-        sut1.concatenate(sut2)
+        sut1.concatenate(sut2!!)
 
         assertEquals(2, sut1.length)
         assertEquals(1, sut1.numberNonSkip)
@@ -282,14 +282,14 @@ class test_GrowingChildren {
 
         val sut1 = GrowingChildren().appendChild(st_a, listOf(leaf))
         val sut2 = GrowingChildren().appendSkipIfNotEmpty(listOf(ws1))
-        sut1.concatenate(sut2)
+        sut1?.concatenate(sut2)
 
-        assertEquals(2, sut1.length)
-        assertEquals(1, sut1.numberNonSkip)
-        assertEquals(2, sut1.nextInputPosition)
-        assertEquals(0, sut1.startPosition)
-        assertEquals(listOf(leaf), sut1.firstChild(null)?.children)
-        assertEquals(listOf(ws1), sut1.firstChild(null)?.nextChild!!.children)
+        assertEquals(2, sut1?.length)
+        assertEquals(1, sut1?.numberNonSkip)
+        assertEquals(2, sut1?.nextInputPosition)
+        assertEquals(0, sut1?.startPosition)
+        assertEquals(listOf(leaf), sut1?.firstChild(null)?.children)
+        assertEquals(listOf(ws1), sut1?.firstChild(null)?.nextChild!!.children)
         assertEquals("(0,2,'a'[0]) -> 'a', WS", sut1.toString())
     }
 
@@ -302,11 +302,11 @@ class test_GrowingChildren {
         val actual = sut.appendChild(st_a, listOf(leaf))
 
         assertEquals(sut, actual)
-        assertEquals(1, actual.length)
-        assertEquals(1, actual.numberNonSkip)
-        assertEquals(1, actual.nextInputPosition)
-        assertEquals(0, actual.startPosition)
-        assertEquals(listOf(leaf), actual.firstChild(RuleOption(a, 0))?.children)
+        assertEquals(1, actual?.length)
+        assertEquals(1, actual?.numberNonSkip)
+        assertEquals(1, actual?.nextInputPosition)
+        assertEquals(0, actual?.startPosition)
+        assertEquals(listOf(leaf), actual?.firstChild(RuleOption(a, 0))?.children)
         assertEquals("(0,1,'a'[0]) -> 'a'", actual.toString())
     }
 
@@ -319,11 +319,11 @@ class test_GrowingChildren {
         val actual = sut.appendChild(s0, listOf(goal))
 
         assertEquals(sut, actual)
-        assertEquals(1, actual.length)
-        assertEquals(1, actual.numberNonSkip)
-        assertEquals(1, actual.nextInputPosition)
-        assertEquals(0, actual.startPosition)
-        assertEquals(listOf(goal), actual.firstChild(RuleOption(G, 0))?.children)
+        assertEquals(1, actual?.length)
+        assertEquals(1, actual?.numberNonSkip)
+        assertEquals(1, actual?.nextInputPosition)
+        assertEquals(0, actual?.startPosition)
+        assertEquals(listOf(goal), actual?.firstChild(RuleOption(G, 0))?.children)
         assertEquals("(0,1,<GOAL>[0]) -> <GOAL>", actual.toString())
     }
 
@@ -335,7 +335,7 @@ class test_GrowingChildren {
         val sut = GrowingChildren()
 
         sut.appendChild(s0, listOf(goal1))
-        val actual = sut.appendChild(s0, listOf(goal2))
+        val actual = sut.appendChild(s0, listOf(goal2))!!
 
         assertNotEquals(sut, actual)
         assertEquals(1, actual.length)
@@ -357,7 +357,7 @@ class test_GrowingChildren {
         val sut = GrowingChildren()
 
         sut.appendSkipIfNotEmpty(listOf(ws1))
-        val actual = sut.appendChild(s0, listOf(goal))
+        val actual = sut.appendChild(s0, listOf(goal))!!
 
         assertEquals(sut, actual)
         assertEquals(2, actual.length)
@@ -379,7 +379,7 @@ class test_GrowingChildren {
 
         sut.appendSkipIfNotEmpty(listOf(ws1))
         sut.appendChild(s0, listOf(goal1))
-        val actual = sut.appendChild(s0, listOf(goal2))
+        val actual = sut.appendChild(s0, listOf(goal2))!!
 
         assertEquals(sut, actual)
         assertEquals(2, actual.length)

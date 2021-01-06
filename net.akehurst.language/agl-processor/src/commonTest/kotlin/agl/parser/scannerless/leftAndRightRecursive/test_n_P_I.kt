@@ -125,7 +125,7 @@ class test_n_P_I : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO: can we make this 1 anyhow?
+                expectedNumGSSHeads = 1,
                 expectedTrees = *arrayOf(expected)
         )
     }
@@ -245,7 +245,7 @@ class test_n_P_I : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 4, //TODO: can we make this less anyhow?
+                expectedNumGSSHeads = 2, //TODO: can we make this less anyhow?
                 expectedTrees = *arrayOf(expected)
         )
     }

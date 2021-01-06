@@ -93,30 +93,30 @@ class ParserState(
     val rulePositionIdentity = rulePositions.map { it.identity }
 
     val allBuiltTransitions: Set<Transition> get() = _transitionsByTo.values.flatten().toSet()
-    val transitionsByPrevious: Map<ParserState?,List<Transition>?> get() = _transitionsByPrevious
+    val transitionsByPrevious: Map<ParserState?, List<Transition>?> get() = _transitionsByPrevious
 
     val runtimeRules: Set<RuntimeRule> = this.rulePositions.map { it.runtimeRule }.toSet()
     val terminalRule = runtimeRules.first()
 
     val isAtEnd: Boolean = this.rulePositions.first().isAtEnd //either all are atEnd or none are
 
-    val isGoal = this.runtimeRules.first().kind==RuntimeRuleKind.GOAL
+    val isGoal = this.runtimeRules.first().kind == RuntimeRuleKind.GOAL
     val isUserGoal = this.runtimeRules.first() == this.stateSet.userGoalRule
 
-    fun firstOf(ifReachedEnd:Set<RuntimeRule>): Set<RuntimeRule> = this.rulePositions.flatMap {
+    fun firstOf(ifReachedEnd: Set<RuntimeRule>): Set<RuntimeRule> = this.rulePositions.flatMap {
         stateSet.firstOf(it, ifReachedEnd)
     }.toSet()
 
     // add the transition and return it, or return existing transition if it already exists
-    internal fun addTransition(previousState: ParserState?, tr:Transition) : Transition{
+    internal fun addTransition(previousState: ParserState?, tr: Transition): Transition {
         var set = _transitionsByTo[tr.to]
-        val exist = if (null==set) {
+        val exist = if (null == set) {
             set = mutableSetOf(tr)
             _transitionsByTo[tr.to] = set
             tr
         } else {
             val exist = set.firstOrNull { it == tr }
-            if (null==exist) {
+            if (null == exist) {
                 set.add(tr)
                 tr
             } else {
@@ -124,7 +124,7 @@ class ParserState(
             }
         }
         var list = this._transitionsByPrevious[previousState]
-        if (null==list) {
+        if (null == list) {
             list = mutableListOf(exist)
             this._transitionsByPrevious[previousState] = list
         } else {
@@ -174,8 +174,8 @@ class ParserState(
         //have to do closure down from prev,
         //or we have to check this grows into prev after
 
-        val cls = topRps.flatMap {  this.stateSet.calcClosure(it, LookaheadSet.UP) }.toSet()
-        val filt = cls.filter {this.runtimeRules.contains(it.rulePosition.item)  }
+        val cls = topRps.flatMap { this.stateSet.calcClosure(it, LookaheadSet.UP) }.toSet()
+        val filt = cls.filter { this.runtimeRules.contains(it.rulePosition.item) }
         val res = filt.flatMap { clsItem ->
             val prev = null//clsItem.parentItem?.parentNext//clsItem.prev.firstOrNull() //TODO:support full set
             val parent = clsItem.rulePosition
@@ -212,7 +212,7 @@ class ParserState(
     fun transitions(previousState: ParserState?): List<Transition> {
         val cache = this._transitionsByPrevious[previousState]
         val trans = if (null == cache) {
-           // check(this.stateSet.preBuilt.not(),{"Transitions not built for $this --> $previousState"})
+            // check(this.stateSet.preBuilt.not(),{"Transitions not built for $this --> $previousState"})
             val filteredTransitions = this.calcFilteredTransitions(previousState).toList()
             //val transitions = this.calcTransitions(previousState).toList()
 
@@ -231,6 +231,7 @@ class ParserState(
     }
 
     private val __filteredTransitions = mutableSetOf<Transition>()
+    private val __mergedTransitions = mutableSetOf<Transition>()
     internal fun calcFilteredTransitions(previousState: ParserState?): Set<Transition> {
         return if (null == previousState) {
             val transitions = this.calcTransitions(null)
@@ -240,31 +241,30 @@ class ParserState(
             val transitions = this.calcTransitions(previousState)//, gn.lookaheadStack.peek())
             for (tr in transitions) {
                 val filter = when (tr.action) {
-                    Transition.ParseAction.GOAL ->  true
+                    Transition.ParseAction.GOAL -> true
                     Transition.ParseAction.WIDTH -> true
                     Transition.ParseAction.EMBED -> true
+                    Transition.ParseAction.HEIGHT -> true
                     Transition.ParseAction.GRAFT -> {
                         tr.prevGuard?.let {
                             previousState.rulePositions.containsAll(it)
                         } ?: true
 //                        previousState.rulePositions == t.prevGuard
                     }
-                    Transition.ParseAction.HEIGHT -> {
-                        //TODO: can we move this into calcTransitions ?
-                        previousState.rulePositions.any { prevRp ->
-                            when(prevRp.runtimeRule.rhs.kind){
-                                RuntimeRuleItemKind.SEPARATED_LIST -> {
-                                    tr.to.rulePositions.any { toRp -> toRp.runtimeRule == prevRp.runtimeRule }.not()
-                                }
-                                else -> true
-                            }
-                        }
-                        //t.to.growsInto(previousState) &&
-                        //previousState.rulePositions != t.prevGuard
-                    }
+                    Transition.ParseAction.GRAFT_OR_HEIGHT -> true //should never happen at this point
                 }
                 if (filter) __filteredTransitions.add(tr)
             }
+            //val grouped = __filteredTransitions.groupBy { it.to.runtimeRules }
+            //grouped.forEach {
+            //    when {
+            //        1==it.value.size-> __mergedTransitions.add(it.value[0])
+            //        else -> {
+            //            TODO()
+            //        }
+            //    }
+            //}
+            //__mergedTransitions
             __filteredTransitions
         }
     }
