@@ -147,7 +147,6 @@ class test_Java8_Compare(val data: Data) {
         this.testParse(aglSpecProcessor, true)
     }
 
-
     @Test(timeout = 5000)
     fun aglOptm() {
         this.testParse(aglOptmProcessor, true)
