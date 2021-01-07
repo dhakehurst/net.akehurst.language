@@ -80,6 +80,13 @@ class test_Java8_Singles_antlrOptm {
     }
 
     @Test
+    fun annotation() {
+        val sentence = "@An(1)"
+        val goal = "annotation"
+        val t = proc.parse(goal, sentence)
+    }
+
+    @Test
     fun t() {
         val sentence = "a[0].b"
         val goal = "expression"

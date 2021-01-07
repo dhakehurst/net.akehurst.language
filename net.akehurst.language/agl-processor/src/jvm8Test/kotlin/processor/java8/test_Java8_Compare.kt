@@ -103,7 +103,7 @@ class test_Java8_Compare(val data: Data) {
             col.add(arrayOf(Data("", "block", "{ this.j = i; this.b = true; this.c = c; ConstructorAccess.this.i = i; }")))
             col.add(arrayOf(Data("", "expression","args[0]")))
 
-            col.add(arrayOf(Data("'many ifthen'", "compilationUnit", {
+            col.add(arrayOf(Data("'many ifthen'", "compilationUnit") {
                 var input = "class Test {"
                 input += "void test() {"
                 for (i in 0..9) {
@@ -112,7 +112,7 @@ class test_Java8_Compare(val data: Data) {
                 input += "}"
                 input += "}"
                 input
-            })))
+            }))
 
 
             return col

@@ -133,6 +133,10 @@ class GrowingChildren {
         return r
     }
 
+    fun setFirstChildAlternative() {
+
+    }
+
     fun appendChild(state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildren? {
         return when {
             isEmpty -> {

@@ -408,7 +408,7 @@ internal class ParseGraph(
         }
     */
     private fun completeIfReachedEnd(gn: GrowingNode): GrowingNode {
-        var used: GrowingNode? = null
+        var used = mutableMapOf<RulePosition,GrowingNode>()
         if (gn.currentState.isAtEnd) {
             gn.currentState.rulePositions.forEachIndexed { index, rp ->
                 val runtimeRule = rp.runtimeRule
@@ -424,13 +424,13 @@ internal class ParseGraph(
                     } else {
                         cn.grownChildrenAlternatives[option] = children
                     }
-                    used = gn
+                    used[rp] = gn
                 } else {
                     if (gn.isLeaf) {
                         TODO()
                         // dont try and add children...can't for a leaf
                         gn.skipNodes
-                        used = gn
+                        used[rp] = gn
                     } else {
                         cn = (cn as SPPTBranchFromInputAndGrownChildren)
 
@@ -486,13 +486,15 @@ internal class ParseGraph(
 
                         if (cn === chosen) {
                             //used existing so return that as the new gn
-                            if (null != used) {
-                                error("TODO")
-                            }
-                            used = GrowingNode(gn.currentState, gn.lookahead, cn.grownChildrenAlternatives.values.first())
+                            //if (null != used) {
+                            //    error("TODO")
+                            //    //used.children.addFirstChild()
+                            //}
+                            //used = GrowingNode(gn.currentState, gn.lookahead, cn.grownChildrenAlternatives.values.first())
+                            used[rp] = GrowingNode(gn.currentState, gn.lookahead, cn.grownChildrenAlternatives.values.first())
                         } else {
                             //used new stuff
-                            used = gn
+                            used[rp] = gn
                         }
                     }
                 }
@@ -501,7 +503,12 @@ internal class ParseGraph(
             //do nothing
 
         }
-        return used!!
+        return when {
+            used.isEmpty() -> error("should not happen")
+            1==used.size -> used.values.first()
+            used.size == gn.currentState.rulePositions.size -> gn
+            else -> TODO()
+        }
     }
 
     // return null if length is the same
