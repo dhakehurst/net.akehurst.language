@@ -41,17 +41,7 @@ class LookaheadSet(
     }
 
     override fun toString(): String = "LookaheadSet{$number,${content}}"
-    fun createWithParent(parentLookahead: LookaheadSet): LookaheadSet {
-        val newContent = mutableSetOf<RuntimeRule>()
-        for (rr in this.content) {
-            if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
-                newContent.addAll(parentLookahead.content)
-            } else {
-                newContent.add(rr)
-            }
-        }
-        return LookaheadSet(-1, newContent) //TODO: create this from runtimeRuleset, maybe!
-    }
+
 }
 
 class RuntimeRuleSet(
@@ -420,6 +410,18 @@ class RuntimeRuleSet(
                 }
             }
         }
+    }
+    fun createWithParent(upLhs:LookaheadSet,parentLookahead: LookaheadSet): LookaheadSet {
+        val newContent = mutableSetOf<RuntimeRule>()
+        for (rr in upLhs.content) {
+            if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
+                newContent.addAll(parentLookahead.content)
+            } else {
+                newContent.add(rr)
+            }
+        }
+        return this@RuntimeRuleSet.createLookaheadSet(newContent)
+        //return LookaheadSet(-1, newContent) //TODO: create this from runtimeRuleset, maybe!
     }
 
     internal fun printUsedAutomaton(goalRuleName: String): String {

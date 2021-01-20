@@ -29,6 +29,7 @@ import net.akehurst.language.agl.automaton.ParserState
  */
 data class GrowingNodeIndex(
         val state: ParserState,
+        val lhsNumber:Int,
         val startPosition: Int,
         val nextInputPosition: Int,
         val listSize:Int //for use with MULTI and SEPARATED_LIST

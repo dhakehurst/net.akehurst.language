@@ -351,14 +351,14 @@ class GrowingNode(
     }
 */
     companion object {
-        fun index(state: ParserState, growingChildren: GrowingChildren): GrowingNodeIndex {
+        fun index(state: ParserState, lhs: LookaheadSet, growingChildren: GrowingChildren): GrowingNodeIndex {
             val listSize = listSize(state.runtimeRules.first(), growingChildren.numberNonSkip)
-            return GrowingNodeIndex(state, growingChildren.startPosition, growingChildren.nextInputPosition, listSize)
+            return GrowingNodeIndex(state, lhs.number, growingChildren.startPosition, growingChildren.nextInputPosition, listSize)
         }
 
         // used for start and leaf
-        fun index(state: ParserState, startPosition: Int, nextInputPosition: Int, listSize: Int): GrowingNodeIndex {
-            return GrowingNodeIndex(state, startPosition, nextInputPosition, listSize)
+        fun index(state: ParserState, lhs: LookaheadSet, startPosition: Int, nextInputPosition: Int, listSize: Int): GrowingNodeIndex {
+            return GrowingNodeIndex(state, lhs.number, startPosition, nextInputPosition, listSize)
         }
 
         // used to augment the GrowingNodeIndex (GSS node identity) for MULTI and SEPARATED_LIST
@@ -443,14 +443,14 @@ val lastLocation
 
     fun addPrevious(info: PreviousInfo) {
         val gn = info.node
-        val gi = GrowingNode.index(gn.currentState, gn.children)
+        val gi = GrowingNode.index(gn.currentState, gn.lookahead, gn.children)
         this.previous.put(gi, info)
         info.node.addNext(this)
     }
 
     fun addPrevious(previousNode: GrowingNode) {
         val info = PreviousInfo(previousNode)
-        val gi = GrowingNode.index(previousNode.currentState, previousNode.children)
+        val gi = GrowingNode.index(previousNode.currentState, previousNode.lookahead, previousNode.children)
         this.previous.put(gi, info)
         previousNode.addNext(this)
     }

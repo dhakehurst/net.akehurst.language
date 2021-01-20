@@ -22,10 +22,7 @@ import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.sppt.SPPT2InputText
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
+import kotlin.test.*
 
 class test_Java8_Singles_antlrOptm {
 
@@ -84,6 +81,26 @@ class test_Java8_Singles_antlrOptm {
         val sentence = "@An(1)"
         val goal = "annotation"
         val t = proc.parse(goal, sentence)
+    }
+
+    @Test
+    fun annotation2() {
+        val sentence = "@An1(@An2) interface Intf {  }"
+        val goal = "typeDeclaration"
+        val t = proc.parse(goal, sentence)
+    }
+
+    @Test
+    fun annotation3() {
+        val sentence = "@An(@An) interface Intf {  }"
+        val goal = "compilationUnit"
+
+        val t = proc.parse(goal, sentence)
+
+        //fail("""failure is at season 15,
+        //     something to do with multiple 'previous' and the 'cur.lookahead'.
+        //      maybe the 'cur.lookahead' should be linked to the previous.
+        //""")
     }
 
     @Test
@@ -188,7 +205,7 @@ public class BadBinaryLiterals {
     }
 
 
-    @Test(timeout = 5000)
+    @Test//(timeout = 5000)
     fun long_concatenation() {
 
         val sentence = """

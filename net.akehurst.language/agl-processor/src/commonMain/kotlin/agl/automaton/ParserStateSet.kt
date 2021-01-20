@@ -195,6 +195,7 @@ class ParserStateSet(
     internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
         return this.runtimeRuleSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
     }
+    fun createWithParent(upLhs:LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
 
     fun build(): ParserStateSet {
         val s0 = this.startState

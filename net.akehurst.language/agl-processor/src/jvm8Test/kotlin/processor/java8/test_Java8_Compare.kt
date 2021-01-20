@@ -29,9 +29,9 @@ import kotlin.test.assertNotNull
 class test_Java8_Compare(val data: Data) {
 
     class Data(
-            val title: String?,
-            val grammarRule: String,
-            val sentence: String
+        val title: String?,
+        val grammarRule: String,
+        val sentence: String
     ) {
 
         constructor(title: String, grammarRule: String, sentence: () -> String)
@@ -79,20 +79,21 @@ class test_Java8_Compare(val data: Data) {
             col.add(arrayOf(Data("", "annotation", "@CompilerAnnotationTest(@CompilerAnnotationTest2(name=\"test\",name2=\"test2\"))")))
             col.add(arrayOf(Data("", "typeDeclaration", "@CAT(@CAT2(name=\"test\",name2=\"test2\")) @interface CAT { }")))
             col.add(arrayOf(Data("", "typeDeclaration", "@CAT(@CAT2(name=\"test\",name2=\"test2\")) @interface CAT { CAT2[] value(); }")))
-            col.add(arrayOf(Data("", "compilationUnit", "interface An {  }")))
-            col.add(arrayOf(Data("", "typeDeclaration", "@An interface An {  }")))
-            col.add(arrayOf(Data("", "compilationUnit", "@An interface An {  }")))
+            col.add(arrayOf(Data("", "compilationUnit", "interface Intf {  }")))
+            col.add(arrayOf(Data("", "typeDeclaration", "@An interface Intf {  }")))
+            col.add(arrayOf(Data("", "compilationUnit", "@An interface Intf {  }")))
             col.add(arrayOf(Data("", "annotation", "@An()")))
-            col.add(arrayOf(Data("", "typeDeclaration", "interface An {  }")))
-            col.add(arrayOf(Data("", "typeDeclaration", "@An() interface An {  }")))
-            col.add(arrayOf(Data("", "compilationUnit", "@An() interface An {  }")))
-            col.add(arrayOf(Data("", "compilationUnit", "@An() class An {  }")))
-            col.add(arrayOf(Data("", "compilationUnit", "import x; @An() interface An {  }")))
-            col.add(arrayOf(Data("", "compilationUnit", "@An(@An) interface An {  }")))
-            col.add(arrayOf(Data("", "compilationUnit", "interface An { An[] value(); }")))
-            col.add(arrayOf(Data("", "compilationUnit", "@An(@An) interface An { An[] value(); }")))
-            col.add(arrayOf(Data("", "compilationUnit", "@An(@An) @interface An { An[] value(); }")))
-            col.add(arrayOf(Data("", "compilationUnit", "@An(@An(name=\"test\",name2=\"test2\")) @interface An { An[] value(); }")))
+            col.add(arrayOf(Data("", "typeDeclaration", "interface Intf {  }")))
+            col.add(arrayOf(Data("", "typeDeclaration", "@An() interface Intf {  }")))
+            col.add(arrayOf(Data("", "compilationUnit", "@An() interface Intf {  }")))
+            col.add(arrayOf(Data("", "compilationUnit", "@An() class Cls {  }")))
+            col.add(arrayOf(Data("", "compilationUnit", "import x; @An() interface Intf {  }")))
+            col.add(arrayOf(Data("", "compilationUnit", "@An1(@An2) interface Intf {  }")))
+            col.add(arrayOf(Data("", "compilationUnit", "package p; @An1(@An2) interface Intf {  }")))
+            col.add(arrayOf(Data("", "compilationUnit", "interface Intf { An[] value(); }")))
+            col.add(arrayOf(Data("", "compilationUnit", "@An1(@An2) interface Intf { An[] value(); }")))
+            col.add(arrayOf(Data("", "compilationUnit", "@An1(@An2) @interface Intf { An[] value(); }")))
+            col.add(arrayOf(Data("", "compilationUnit", "@An1(@An2(name=\"test\",name2=\"test2\")) @interface An { An[] value(); }")))
             col.add(arrayOf(Data("", "compilationUnit", "package x; @CAT(@CAT2(name=\"test\",name2=\"test2\")) @interface CAT { CAT2[] value(); }")))
             col.add(arrayOf(Data("", "compilationUnit", "package x; @interface CAT { CAT2[] value(); }")))
             col.add(arrayOf(Data("", "compilationUnit", "public class ConstructorAccess { class Inner { private Inner() { if (x.i != 42 || x.c != 'x') { } } } }")))
@@ -101,7 +102,7 @@ class test_Java8_Compare(val data: Data) {
             col.add(arrayOf(Data("", "block", "{ (a) = (b) = 1; }")))
             col.add(arrayOf(Data("", "block", "{ ls.add(\"Smalltalk rules!\"); }")))
             col.add(arrayOf(Data("", "block", "{ this.j = i; this.b = true; this.c = c; ConstructorAccess.this.i = i; }")))
-            col.add(arrayOf(Data("", "expression","args[0]")))
+            col.add(arrayOf(Data("", "expression", "args[0]")))
 
             col.add(arrayOf(Data("'many ifthen'", "compilationUnit") {
                 var input = "class Test {"
@@ -142,23 +143,22 @@ class test_Java8_Compare(val data: Data) {
         }
     }
 
-    @Test(timeout = 5000)
+    @Test//(timeout = 5000)
     fun aglSpec() {
         this.testParse(aglSpecProcessor, true)
     }
 
-
-    @Test(timeout = 5000)
+    @Test//(timeout = 5000)
     fun aglOptm() {
         this.testParse(aglOptmProcessor, true)
     }
 
-    @Test(timeout = 5000)
+    @Test//(timeout = 5000)
     fun antlrSpec() {
         this.testParse(antlrSpecProcessor)
     }
 
-    @Test(timeout = 5000)
+    @Test//(timeout = 5000)
     fun antlrOptm() {
         this.testParse(antlrOptmProcessor)
     }

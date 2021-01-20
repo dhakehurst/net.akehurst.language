@@ -200,8 +200,8 @@ class ScanOnDemandParser(
                             Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
                             Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.lookahead.content)
                             Transition.ParseAction.EMBED -> TODO()
-                            Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.createWithParent(lg.lookahead).content
-                            Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.lookahead }.flatMap { tr.lookaheadGuard.createWithParent(it).content }
+                            Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard,lg.lookahead).content
+                            Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.lookahead }.flatMap { rp.stateSet.createWithParent(tr.lookaheadGuard,it).content }
                             Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                         }
                     }
@@ -217,8 +217,8 @@ class ScanOnDemandParser(
                                 Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
                                 Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.lookahead.content)
                                 Transition.ParseAction.EMBED -> TODO()
-                                Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.createWithParent(lg.lookahead).content
-                                Transition.ParseAction.GRAFT -> tr.lookaheadGuard.createWithParent(prev.lookahead).content
+                                Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard,lg.lookahead).content
+                                Transition.ParseAction.GRAFT -> rp.stateSet.createWithParent(tr.lookaheadGuard,prev.lookahead).content
                                 Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                             }
                         }
@@ -241,7 +241,7 @@ class ScanOnDemandParser(
         val matches = gns.toMutableList()
         // try grow last leaf with no lookahead
         for (gn in rp.lastGrownLinked) {
-            val gnindex = GrowingNode.index(gn.currentState, gn.children)
+            val gnindex = GrowingNode.index(gn.currentState, gn.lookahead, gn.children)
             graph.growingHead[gnindex] = gn
         }
         do {

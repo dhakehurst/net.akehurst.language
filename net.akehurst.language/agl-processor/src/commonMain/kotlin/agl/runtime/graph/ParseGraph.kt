@@ -150,7 +150,7 @@ internal class ParseGraph(
     }
 
     private fun addGrowing(gn: GrowingNode) {
-        val gnindex = GrowingNode.index(gn.currentState, gn.children)//, nextInputPosition, gn.priority)
+        val gnindex = GrowingNode.index(gn.currentState, gn.lookahead, gn.children)//, nextInputPosition, gn.priority)
         val existing = this.growing[gnindex]
         if (null == existing) {
             this.growing[gnindex] = gn
@@ -165,7 +165,7 @@ internal class ParseGraph(
     private fun addGrowing(gn: GrowingNode, previous: Set<PreviousInfo>): GrowingNode {
         //val startPosition = gn.startPosition
         //val nextInputPosition = gn.nextInputPosition
-        val gnindex = GrowingNode.index(gn.currentState, gn.children)//, nextInputPosition, gn.priority)
+        val gnindex = GrowingNode.index(gn.currentState, gn.lookahead, gn.children)//, nextInputPosition, gn.priority)
         val existing = this.growing[gnindex]
         return if (null == existing) {
             for (info in previous) {
@@ -185,7 +185,7 @@ internal class ParseGraph(
     private fun removeGrowing(gn: GrowingNode) {
         //val startPosition = gn.startPosition
         //val nextInputPosition = gn.nextInputPosition
-        val gnindex = GrowingNode.index(gn.currentState, gn.children)
+        val gnindex = GrowingNode.index(gn.currentState, gn.lookahead, gn.children)
         this.growing.remove(gnindex)
     }
 
@@ -223,7 +223,7 @@ internal class ParseGraph(
         for (info in previous) {
             this.addGrowing(info.node)
         }
-        val gnindex = GrowingNode.index(newState, growingChildren)
+        val gnindex = GrowingNode.index(newState, lookahead, growingChildren)
         val existing = this.growing[gnindex]
         val gn = if (null == existing) {
             val nn = GrowingNode(newState, lookahead, growingChildren)
@@ -267,7 +267,7 @@ internal class ParseGraph(
         }
     */
     private fun findOrCreateGrowingNode(newState: ParserState, lookahead: LookaheadSet, growingChildren: GrowingChildren, previous: Set<PreviousInfo>) {
-        val gnindex = GrowingNode.index(newState, growingChildren)//, nextInputPosition, priority)
+        val gnindex = GrowingNode.index(newState, lookahead, growingChildren)//, nextInputPosition, priority)
         var existing = this.growing[gnindex]
         if (null == existing) {
             var nn = GrowingNode(newState, lookahead, growingChildren)
@@ -279,11 +279,12 @@ internal class ParseGraph(
                 }
                 else -> {
                     this.addAndRegisterGrowingPrevious(nn, previous)
-                    this.addGrowingHead(gnindex, nn) // replaces with existing growwing head if there is one that matches the index already
+                    this.addGrowingHead(gnindex, nn) // replaces with existing growing head if there is one that matches the index already
 
                 }
             }
         } else {
+           // TODO("handle use of lookahead here! passed in lhs is not same as existing node lhs")
             this.addAndRegisterGrowingPrevious(existing, previous)
             this.addGrowingHead(gnindex, existing)
         }
@@ -587,7 +588,7 @@ internal class ParseGraph(
                 lookahead,
                 growingChildren
         )
-        val gi = GrowingNode.index(goalState, growingChildren)
+        val gi = GrowingNode.index(goalState, lookahead, growingChildren)
         this.addGrowingHead(gi, goalGN)
     }
 
