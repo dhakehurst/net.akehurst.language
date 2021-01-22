@@ -25,7 +25,7 @@ import java.time.format.DateTimeFormatter
 import org.jetbrains.dokka.gradle.DokkaTask
 
 plugins {
-    kotlin("multiplatform") version("1.3.71") apply false
+    kotlin("multiplatform") version("1.4.0") apply false
     id("com.jfrog.bintray") version("1.8.4") apply false
     id("org.jetbrains.dokka") version("0.10.1") apply false
 }

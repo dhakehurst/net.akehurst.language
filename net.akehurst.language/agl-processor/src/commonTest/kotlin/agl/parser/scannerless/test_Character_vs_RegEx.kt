@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.ExperimentalTime
-import kotlin.time.MonoClock
+import kotlin.time.TimeSource
 import kotlin.time.measureTimedValue
 
 class test_Character_vs_RegEx : test_ScannerlessParserAbstract() {
@@ -64,10 +64,10 @@ class test_Character_vs_RegEx : test_ScannerlessParserAbstract() {
         charParser.parse(goal, text)
 
         // measure
-        val timeRegEx = MonoClock.measureTimedValue {
+        val timeRegEx = TimeSource.Monotonic.measureTimedValue {
             regExParser.parse(goal, text)
         }
-        val timeChar = MonoClock.measureTimedValue {
+        val timeChar = TimeSource.Monotonic.measureTimedValue {
             charParser.parse(goal, text)
         }
 
@@ -90,10 +90,10 @@ class test_Character_vs_RegEx : test_ScannerlessParserAbstract() {
         regExParser.parse(goal, text)
         charParser.parse(goal, text)
 
-        val timeRegEx = MonoClock.measureTimedValue {
+        val timeRegEx = TimeSource.Monotonic.measureTimedValue {
             regExParser.parse(goal, text)
         }
-        val timeChar = MonoClock.measureTimedValue {
+        val timeChar = TimeSource.Monotonic.measureTimedValue {
             charParser.parse(goal, text)
         }
 
@@ -116,10 +116,10 @@ class test_Character_vs_RegEx : test_ScannerlessParserAbstract() {
         regExParser.parse(goal, text)
         charParser.parse(goal, text)
 
-        val timeRegEx = MonoClock.measureTimedValue {
+        val timeRegEx = TimeSource.Monotonic.measureTimedValue {
             regExParser.parse(goal, text)
         }
-        val timeChar = MonoClock.measureTimedValue {
+        val timeChar = TimeSource.Monotonic.measureTimedValue {
             charParser.parse(goal, text)
         }
 
@@ -142,10 +142,10 @@ class test_Character_vs_RegEx : test_ScannerlessParserAbstract() {
         regExParser.parse(goal, text)
         charParser.parse(goal, text)
 
-        val timeRegEx = MonoClock.measureTimedValue {
+        val timeRegEx = TimeSource.Monotonic.measureTimedValue {
             regExParser.parse(goal, text)
         }
-        val timeChar = MonoClock.measureTimedValue {
+        val timeChar = TimeSource.Monotonic.measureTimedValue {
             charParser.parse(goal, text)
         }
 

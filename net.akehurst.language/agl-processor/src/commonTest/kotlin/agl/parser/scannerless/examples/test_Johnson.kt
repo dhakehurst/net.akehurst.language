@@ -18,17 +18,17 @@ package net.akehurst.language.parser.scannerless.examples
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
-import kotlin.time.MonoClock
+import kotlin.time.TimeSource
 import kotlin.time.measureTime
 
 class test_Johnson : test_ScannerlessParserAbstract() {
@@ -177,7 +177,7 @@ class test_Johnson : test_ScannerlessParserAbstract() {
             //warm up
             parser.parse(goal, text)
             //time it
-            val time = MonoClock.measureTime {
+            val time = TimeSource.Monotonic.measureTime {
                 parser.parse(goal, text)
             }
             times.add(time)

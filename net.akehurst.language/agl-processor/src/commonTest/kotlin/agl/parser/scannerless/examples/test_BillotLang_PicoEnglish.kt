@@ -16,18 +16,13 @@
 
 package net.akehurst.language.parser.scannerless.examples
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.processor.test_ForMatthias
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
-import kotlin.time.MonoClock
-import kotlin.time.measureTime
 
 class test_BillotLang_PicoEnglish : test_ScannerlessParserAbstract() {
     /**

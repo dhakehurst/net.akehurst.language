@@ -1,5 +1,5 @@
 plugins {
-    id("net.akehurst.kotlin.kt2ts") version "1.5.2"
+    //id("net.akehurst.kotlin.kt2ts") version "1.5.2"
 }
 
 tasks.withType<ProcessResources>  {
@@ -7,7 +7,7 @@ tasks.withType<ProcessResources>  {
         expand(project.properties)
     }
 }
-
+/*
 kt2ts {
     jvmTargetName.set("jvm8")
     classPatterns.set(listOf(
@@ -20,6 +20,7 @@ kt2ts {
             "net.akehurst.language.agl.processor.Agl"
     ))
 }
+*/
 /*
 tasks {
     val dokkaJavadoc by creating(org.jetbrains.dokka.gradle.DokkaTask::class) {
