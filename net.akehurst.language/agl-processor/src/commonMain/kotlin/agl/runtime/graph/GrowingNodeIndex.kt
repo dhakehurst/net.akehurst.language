@@ -38,6 +38,6 @@ data class GrowingNodeIndex(
 
 
     override fun toString(): String {
-        return "(${state},${startPosition})"
+        return "{state=${state},lhs=$lhsNumber,startPos=${startPosition}, nextPos=$nextInputPosition, listSize=$listSize}"
     }
 }

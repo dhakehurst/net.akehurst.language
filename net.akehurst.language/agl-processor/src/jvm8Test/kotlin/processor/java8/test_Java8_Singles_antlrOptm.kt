@@ -96,11 +96,14 @@ class test_Java8_Singles_antlrOptm {
         val goal = "compilationUnit"
 
         val t = proc.parse(goal, sentence)
+    }
 
-        //fail("""failure is at season 15,
-        //     something to do with multiple 'previous' and the 'cur.lookahead'.
-        //      maybe the 'cur.lookahead' should be linked to the previous.
-        //""")
+    @Test
+    fun annotation4() {
+        val sentence = """@An(@An(n)) interface An { An[] v(); }"""
+        val goal = "compilationUnit"
+
+        val t = proc.parse(goal, sentence)
     }
 
     @Test

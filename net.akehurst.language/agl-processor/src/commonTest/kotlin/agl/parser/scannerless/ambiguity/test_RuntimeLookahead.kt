@@ -158,4 +158,38 @@ class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             expectedTrees = *arrayOf(expected)
         )
     }
+
+    @Test
+    fun ansansant() {
+        val sentence = "ansansant"
+
+        val expected = """
+            S {
+              oP|1 { §empty }
+              oT { T {
+                  oA { A {
+                      'a'
+                      'n'
+                      oG { G {
+                          's'
+                          oA { A {
+                              'a'
+                              'n'
+                              oG|1 { §empty }
+                            } }
+                        } }
+                    } }
+                  't'
+                } }
+            }
+        """
+
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
+    }
 }
