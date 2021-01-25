@@ -518,7 +518,7 @@ internal class RuntimeParser(
             seasons++
             maxNumHeads = max(maxNumHeads, embeddedParser.graph.growingHead.size)
         } while (embeddedParser.graph.canGrow && (embeddedParser.graph.goals.isEmpty() || embeddedParser.graph.goalMatchedAll.not()))
-        val match = embeddedParser.graph.longestMatch(seasons, maxNumHeads) as SPPTBranch
+        val match = embeddedParser.graph.longestMatch(seasons, maxNumHeads) as SPPTBranch?
         if (match != null) {
             //TODO: parse skipNodes
 

@@ -100,11 +100,21 @@ class test_Java8_Singles_antlrOptm {
 
     @Test
     fun annotation4() {
-        val sentence = """@An(@An(n)) interface An { An[] v(); }"""
+        val sentence = """@An(@An(n)) interface Intf { }"""
+        val goal = "typeDeclaration"
+
+        val t = proc.parse(goal, sentence)
+    }
+
+    @Test
+    fun annotation5() {
+        val sentence = """@An(@An(n)) interface Intf { }"""
         val goal = "compilationUnit"
 
         val t = proc.parse(goal, sentence)
     }
+
+
 
     @Test
     fun t() {

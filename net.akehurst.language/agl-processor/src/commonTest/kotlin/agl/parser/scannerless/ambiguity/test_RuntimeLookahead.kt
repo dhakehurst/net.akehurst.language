@@ -175,7 +175,14 @@ class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
                           oA { A {
                               'a'
                               'n'
-                              oG|1 { §empty }
+                              oG { G {
+                                  's'
+                                  oA { A {
+                                      'a'
+                                      'n'
+                                      oG|1 { §empty }
+                                    } }
+                                } }
                             } }
                         } }
                     } }
