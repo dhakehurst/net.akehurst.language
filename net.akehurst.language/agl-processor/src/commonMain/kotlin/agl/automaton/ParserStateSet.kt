@@ -20,11 +20,6 @@ import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.collections.Stack
 import net.akehurst.language.collections.lazyMapNonNull
 
-data class ParentRelation(
-        val rulePosition: RulePosition,
-        val lookaheadSet: LookaheadSet
-)
-
 data class ClosureItem(
         val parentItem: ClosureItem?, //needed for height/graft
         val rulePosition: RulePosition,
@@ -192,9 +187,7 @@ class ParserStateSet(
         }
     }
 
-    internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
-        return this.runtimeRuleSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
-    }
+    internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet = this.runtimeRuleSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
     fun createWithParent(upLhs:LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
 
     fun build(): ParserStateSet {
@@ -209,6 +202,45 @@ class ParserStateSet(
     }
 
     private fun buildAndTraverse(curState: ParserState, prevStack: Stack<Pair<ParserState, LookaheadSet>>, done: MutableSet<Pair<ParserState, ParserState?>>) {
+        val prevPair = prevStack.peekOrNull()
+        val prevSt = prevPair?.first
+        val dp = Pair(curState, prevSt)
+        if (done.contains(dp)) {
+            //do nothing more
+        } else {
+            //val state = curState
+            done.add(dp)
+            val trans = curState.transitions(prevSt)
+            for (nt in trans) {
+                val nextState = nt.to
+                when (nt.action) {
+                    Transition.ParseAction.WIDTH -> {
+                        val newLh = LookaheadSet.EMPTY
+                        val np = Pair(curState, newLh)
+                        buildAndTraverse(nextState, prevStack.push(np), done)
+                    }
+                    Transition.ParseAction.EMBED -> {
+                        val newLh = LookaheadSet.EMPTY
+                        val np = Pair(curState, newLh)
+                        buildAndTraverse(nextState, prevStack.push(np), done)
+                    }
+                    Transition.ParseAction.HEIGHT -> {
+                        buildAndTraverse(nextState, prevStack, done)
+                    }
+                    Transition.ParseAction.GRAFT -> {
+                        buildAndTraverse(nextState, prevStack.pop().stack, done)
+                    }
+                    Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
+                    Transition.ParseAction.GOAL -> null;//buildAndTraverse(nextState, prevStack, done)
+                }
+            }
+
+        }
+        // }
+    }
+
+
+    private fun buildAndTraverse2(curState: ParserState, prevStack: Stack<Pair<ParserState, LookaheadSet>>, done: MutableSet<Pair<ParserState, ParserState?>>) {
         //TODO: using done here does not work, as the pair (state,prev) does not identify the path to each state, could have alternative 'prev-->prev...'
         // prob need to take the closure of each state first or something, like traditional LR SM build
         // see grammar in test_Java8_Singles.Expressions_Type__int
@@ -229,23 +261,23 @@ class ParserStateSet(
                         Transition.ParseAction.WIDTH -> {
                             val newLh = LookaheadSet.EMPTY
                             val np = Pair(state, newLh)
-                            buildAndTraverse(nextState, prevStack.push(np), done)
+                            buildAndTraverse2(nextState, prevStack.push(np), done)
                         }
                         Transition.ParseAction.EMBED -> {
                             val newLh = LookaheadSet.EMPTY
                             val np = Pair(state, newLh)
-                            buildAndTraverse(nextState, prevStack.push(np), done)
+                            buildAndTraverse2(nextState, prevStack.push(np), done)
                         }
                         Transition.ParseAction.HEIGHT -> {
                             val newLh = LookaheadSet.EMPTY
                             val np = Pair(state, newLh)
-                            buildAndTraverse(nextState, prevStack, done)
+                            buildAndTraverse2(nextState, prevStack, done)
                         }
                         Transition.ParseAction.GRAFT -> {
                             val popped = prevStack.pop()
                             val newLh = popped.item.second
                             val np = Pair(state, newLh)
-                            buildAndTraverse(nextState, prevStack.pop().stack, done)
+                            buildAndTraverse2(nextState, prevStack.pop().stack, done)
                         }
                         Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                         Transition.ParseAction.GOAL -> null;//buildAndTraverse(nextState, prevStack, done)
@@ -279,23 +311,23 @@ class ParserStateSet(
                         Transition.ParseAction.WIDTH -> {
                             val newLh = LookaheadSet.EMPTY
                             val np = Pair(state, newLh)
-                            buildAndTraverse(nextState, prevStack.push(np), done)
+                            buildAndTraverse1(nextState, prevStack.push(np), done)
                         }
                         Transition.ParseAction.EMBED -> {
                             val newLh = LookaheadSet.EMPTY
                             val np = Pair(state, newLh)
-                            buildAndTraverse(nextState, prevStack.push(np), done)
+                            buildAndTraverse1(nextState, prevStack.push(np), done)
                         }
                         Transition.ParseAction.HEIGHT -> {
                             val newLh = LookaheadSet.EMPTY
                             val np = Pair(state, newLh)
-                            buildAndTraverse(nextState, prevStack, done)
+                            buildAndTraverse1(nextState, prevStack, done)
                         }
                         Transition.ParseAction.GRAFT -> {
                             val popped = prevStack.pop()
                             val newLh = popped.item.second
                             val np = Pair(state, newLh)
-                            buildAndTraverse(nextState, prevStack.pop().stack, done)
+                            buildAndTraverse1(nextState, prevStack.pop().stack, done)
                         }
                         Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                         Transition.ParseAction.GOAL -> null;//buildAndTraverse(nextState, prevStack, done)
@@ -306,28 +338,10 @@ class ParserStateSet(
         // }
     }
 
-    /*
-    internal fun fetchOrCreateParseState(rulePosition: RulePosition): ParserState { //
-        val existing = this.states[rulePosition]
-        return if (null == existing) {
-            val v = ParserState(StateNumber(this.nextState++), rulePosition, this)
-            this.states[rulePosition] = v
-            v
-        } else {
-            existing
-        }
-    }
-*/
-
     internal fun fetch(rulePosition: List<RulePosition>): ParserState {
         return this.states[rulePosition]
     }
-
-    internal fun fetchOrNull(rulePosition: List<RulePosition>): ParserState? {
-        return this.states[rulePosition]
-    }
-
-
+    /*
     private val _growsInto = mutableMapOf<Pair<RulePosition, RulePosition>, Boolean>()
     fun growsInto(ancestor: RulePosition, descendant: RulePosition): Boolean {
         //TODO: can we do this faster somehow? the closure is potentially slow!
@@ -341,8 +355,7 @@ class ParserStateSet(
             _growsInto[p] = r
         }
         return r
-    }
-
+    }*/
 
     internal fun calcClosure(rp: RulePosition, upLhs: LookaheadSet): Set<ClosureItem> {
         val lhsc = calcLookaheadDown(rp, upLhs.content)

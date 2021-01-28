@@ -127,7 +127,7 @@ class test_aObOcO : test_Abstract() {
     }
 
     @Test
-    fun createClosure() {
+    fun createClosure_G00() {
         val cl_G = ClosureItem(null, RP(G, 0, 0), RP(G, 0, EOR), lhs_bcU)
         val cl_G_S = ClosureItem(cl_G, RP(S, 0, 0), RulePosition(S, 0, 1), lhs_bcU)
         val cl_G_S_aOpt0 = ClosureItem(cl_G_S, RP(aOpt, OMI, 0), RP(aOpt, OMI, EOR), lhs_bcU)

@@ -69,7 +69,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
         val SM = rrs.fetchStateSetFor(S)
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
-        val s1 = SM.states[listOf(RP(d,0,EOR))]
+        val s1 = SM.states[listOf(RP(d, 0, EOR))]
 
     }
 
@@ -77,46 +77,59 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
 
     override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
         get() = listOf(
-                Triple(RP(rA, 0, SOR), lhs_U, setOf(d)),     // A = . d
-                Triple(RP(rA, 0, EOR), lhs_U, setOf(d)),     // A = d .
-                Triple(RP(rB, 0, SOR), lhs_U, setOf(d)),     // B = . d
-                Triple(RP(rB, 0, EOR), lhs_U, setOf(d)),     // B = d .
+            Triple(RP(rA, 0, SOR), lhs_U, setOf(d)),     // A = . d
+            Triple(RP(rA, 0, EOR), lhs_U, setOf(d)),     // A = d .
+            Triple(RP(rB, 0, SOR), lhs_U, setOf(d)),     // B = . d
+            Triple(RP(rB, 0, EOR), lhs_U, setOf(d)),     // B = d .
 
-                Triple(RP(S1, 0, SOR), lhs_U, setOf(d)),     // S1 = . A a
-                Triple(RP(S1, 0, SOR), lhs_U, setOf(d)),     // S1 = A . a
-                Triple(RP(S1, 0, SOR), lhs_U, setOf(d)),     // S1 = A a .
-                Triple(RP(S2, 0, SOR), lhs_U, setOf(d)),     // S2 = . b A c
-                Triple(RP(S2, 0, SOR), lhs_U, setOf(d)),     // S2 = b . A c
-                Triple(RP(S2, 0, SOR), lhs_U, setOf(d)),     // S2 = b A . c
-                Triple(RP(S2, 0, SOR), lhs_U, setOf(d)),     // S2 = b A c .
-                Triple(RP(S3, 0, SOR), lhs_U, setOf(d)),     // S3 = . B c
-                Triple(RP(S3, 0, SOR), lhs_U, setOf(d)),     // S3 = B . c
-                Triple(RP(S3, 0, SOR), lhs_U, setOf(d)),     // S3 = B c .
-                Triple(RP(S4, 0, SOR), lhs_U, setOf(d)),     // S4 = . b B a
-                Triple(RP(S4, 0, SOR), lhs_U, setOf(d)),     // S4 = b . B a
-                Triple(RP(S4, 0, SOR), lhs_U, setOf(d)),     // S4 = b B . a
-                Triple(RP(S4, 0, SOR), lhs_U, setOf(d)),     // S4 = b B a .
+            Triple(RP(S1, 0, SOR), lhs_U, setOf(d)),     // S1 = . A a
+            Triple(RP(S1, 0, SOR), lhs_U, setOf(d)),     // S1 = A . a
+            Triple(RP(S1, 0, SOR), lhs_U, setOf(d)),     // S1 = A a .
+            Triple(RP(S2, 0, SOR), lhs_U, setOf(d)),     // S2 = . b A c
+            Triple(RP(S2, 0, SOR), lhs_U, setOf(d)),     // S2 = b . A c
+            Triple(RP(S2, 0, SOR), lhs_U, setOf(d)),     // S2 = b A . c
+            Triple(RP(S2, 0, SOR), lhs_U, setOf(d)),     // S2 = b A c .
+            Triple(RP(S3, 0, SOR), lhs_U, setOf(d)),     // S3 = . B c
+            Triple(RP(S3, 0, SOR), lhs_U, setOf(d)),     // S3 = B . c
+            Triple(RP(S3, 0, SOR), lhs_U, setOf(d)),     // S3 = B c .
+            Triple(RP(S4, 0, SOR), lhs_U, setOf(d)),     // S4 = . b B a
+            Triple(RP(S4, 0, SOR), lhs_U, setOf(d)),     // S4 = b . B a
+            Triple(RP(S4, 0, SOR), lhs_U, setOf(d)),     // S4 = b B . a
+            Triple(RP(S4, 0, SOR), lhs_U, setOf(d)),     // S4 = b B a .
 
-                Triple(RP(S, 0, SOR), lhs_U, setOf(d)),     // S = . S1
-                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // S = S1 .
-                Triple(RP(S, 1, SOR), lhs_U, setOf(b)),     // S = . S2
-                Triple(RP(S, 1, EOR), lhs_U, setOf(UP)),     // S = S2 .
-                Triple(RP(S, 2, SOR), lhs_U, setOf(d)),     // S = . S3
-                Triple(RP(S, 2, EOR), lhs_U, setOf(UP)),     // S = S3 .
-                Triple(RP(S, 3, SOR), lhs_U, setOf(b)),     // S = . S4
-                Triple(RP(S, 3, EOR), lhs_U, setOf(UP)),     // S = S4 .
+            Triple(RP(S, 0, SOR), lhs_U, setOf(d)),     // S = . S1
+            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // S = S1 .
+            Triple(RP(S, 1, SOR), lhs_U, setOf(b)),     // S = . S2
+            Triple(RP(S, 1, EOR), lhs_U, setOf(UP)),     // S = S2 .
+            Triple(RP(S, 2, SOR), lhs_U, setOf(d)),     // S = . S3
+            Triple(RP(S, 2, EOR), lhs_U, setOf(UP)),     // S = S3 .
+            Triple(RP(S, 3, SOR), lhs_U, setOf(b)),     // S = . S4
+            Triple(RP(S, 3, EOR), lhs_U, setOf(UP)),     // S = S4 .
 
-                Triple(RP(G, 0, SOR), lhs_U, setOf(d, b)),     // G = . S
-                Triple(RP(G, 0, EOR), lhs_U, setOf(UP))        // G = S .
+            Triple(RP(G, 0, SOR), lhs_U, setOf(d, b)),     // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, setOf(UP))        // G = S .
         )
 
     override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
         get() = listOf(
-                Pair(RP(d, 0, 0), lhs_T),
-                Pair(RP(b, 0, 0), lhs_T),
-                Pair(RP(d, 0, 0), lhs_T)
+            Pair(RP(d, 0, 0), lhs_T),
+            Pair(RP(b, 0, 0), lhs_T),
+            Pair(RP(d, 0, 0), lhs_T)
         )
 
+    @Test
+    fun createClosure_G00_UP() {
+        val cl_G = ClosureItem(null, RP(G, 0, 0), RP(G, 0, EOR), lhs_U)
+        //val cl_G_S = ClosureItem(cl_G, RP(S, 0, 0), RulePosition(S, 0, 1), lhs_bcU)
+        //val cl_G_S_aOpt0 = ClosureItem(cl_G_S, RP(aOpt, OMI, 0), RP(aOpt, OMI, EOR), lhs_bcU)
+        //val cl_G_S_aOpt1 = ClosureItem(cl_G_S, RP(aOpt, OME, 0), RP(aOpt, OME, EOR), lhs_bcU)
+
+        val actual = SM.calcClosure(RP(G, 0, 0), lhs_U)
+        val expected = setOf(
+            cl_G //, cl_G_S, cl_G_S_aOpt0, cl_G_S_aOpt1
+        )
+        assertEquals(expected, actual)
+    }
 
     @Test
     fun s0_transitions() {
@@ -127,9 +140,8 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
         val s2 = s0.stateSet.fetch(listOf(RulePosition(b, 0, RulePosition.END_OF_RULE)))
         val s1 = s0.stateSet.fetch(listOf(RulePosition(d, 0, RulePosition.END_OF_RULE)))
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, LookaheadSet(0, setOf(a)), LookaheadSet.EMPTY, null) { _, _ -> true },
-                Transition(s0, s2, Transition.ParseAction.WIDTH, LookaheadSet(1, setOf(d)), LookaheadSet.EMPTY, null) { _, _ -> true },
-                Transition(s0, s1, Transition.ParseAction.WIDTH, LookaheadSet(2, setOf(c)), LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s0, s1, Transition.ParseAction.WIDTH, LookaheadSet(3, setOf(a, c)), LookaheadSet.EMPTY, null) { _, _ -> true },
+            Transition(s0, s2, Transition.ParseAction.WIDTH, LookaheadSet(1, setOf(d)), LookaheadSet.EMPTY, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -153,8 +165,8 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
         val s3 = s0.stateSet.fetch(listOf(RulePosition(rA, 0, RulePosition.END_OF_RULE)))
         val s4 = s0.stateSet.fetch(listOf(RulePosition(rB, 0, RulePosition.END_OF_RULE)))
         val expected = listOf<Transition>(
-                Transition(s1, s3, Transition.ParseAction.HEIGHT, LookaheadSet(0, setOf(a)), LookaheadSet.EMPTY, null) { _, _ -> true },
-                Transition(s1, s4, Transition.ParseAction.HEIGHT, LookaheadSet(1, setOf(c)), LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s1, s3, Transition.ParseAction.HEIGHT, LookaheadSet(0, setOf(a)), LookaheadSet.EMPTY, null) { _, _ -> true },
+            Transition(s1, s4, Transition.ParseAction.HEIGHT, LookaheadSet(1, setOf(c)), LookaheadSet.EMPTY, null) { _, _ -> true }
         )
 
         assertEquals(expected, actual)
@@ -171,16 +183,33 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
             val s2 = state(RP(b, 0, EOR))      // b
             val s3 = state(RP(rA, 0, EOR))     // A = d .
             val s4 = state(RP(rB, 0, EOR))     // B = d .
-            //val s4 = state(RP(S1, 0, 1))  // S1 = A . a
-            //val s4 = state(RP(S1, 0, EOR))
-            //val s4 = state(RP(rB, 0, EOR))
-            //val s4 = state(RP(rB, 0, EOR))
+            val s5 = state(RP(S1, 0, 1))  // S1 = A . a
+            val s6 = state(RP(a, 0, EOR))
+            val s7 = state(RP(S1, 0, EOR))
+            val s8 = state(RP(S, 0, EOR))
+            val s9 = state(RP(G, 0, EOR))
+            val s10 = state(RP(S3, 0, 1))
+            val s11 = state(RP(c, 0, EOR))
+            val s12 = state(RP(S3, 0, EOR))
+            val s13 = state(RP(S, 2, EOR))
+            val s14 = state(RP(S2, 0, 1), RP(S4, 0, 1))
+            val s15 = state(RP(S2, 0, 2))
+            val s16 = state(RP(S2, 0, EOR))
+            val s17 = state(RP(S, 1, EOR))
+            val s18 = state(RP(S4, 0, 2))
+            val s19 = state(RP(S4, 0, EOR))
+            val s20 = state(RP(S, 3, EOR))
 
-            transition(null, s0, s1, WIDTH, setOf(a, c), setOf(UP),listOf())
-            transition(null, s0, s2, WIDTH, setOf(d), setOf(UP),listOf())
-            transition(s0, s1, s3, HEIGHT, setOf(a, c), setOf(UP),listOf())
-            transition(s0, s2, s4, HEIGHT, setOf(a, c), setOf(UP),listOf())
-            transition(s0, s0, s1, HEIGHT, setOf(a, c), setOf(UP),listOf())
+            transition(null, s0, s1, WIDTH, setOf(a, c), setOf(UP), listOf())
+            transition(null, s0, s2, WIDTH, setOf(d), setOf(UP), listOf())
+
+            transition(s0, s1, s3, HEIGHT, setOf(a), setOf(a), listOf(RP(rA, 0, 0)))
+            transition(s0, s1, s4, HEIGHT, setOf(c), setOf(c), listOf(RP(rB, 0, 0)))
+            transition(s14, s1, s3, HEIGHT, setOf(c), setOf(c), listOf(RP(rA, 0, 0)))
+            transition(s14, s1, s4, HEIGHT, setOf(a), setOf(a), listOf(RP(rB, 0, 0)))
+
+            transition(s0, s2, s4, HEIGHT, setOf(a, c), setOf(UP), listOf())
+            transition(s0, s0, s1, HEIGHT, setOf(a, c), setOf(UP), listOf())
         }
 
         assertEquals(expected, actual)

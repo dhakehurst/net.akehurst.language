@@ -77,6 +77,8 @@ class test_AhoSetiUlman_4_54 : test_Abstract() {
                 Pair(RP(T_d, 0, EOR), lhs_cd)
         )
 
+
+
     @Test
     fun s0_transitions() {
         val s0 = rrs.startingState(S)

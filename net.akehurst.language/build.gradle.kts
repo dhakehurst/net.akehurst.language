@@ -23,7 +23,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 plugins {
-    kotlin("multiplatform") version "1.4.21" apply false
+    kotlin("multiplatform") version "1.4.30-RC" apply false
     id("com.jfrog.bintray") version ("1.8.5") apply false
     id("org.jetbrains.dokka") version ("0.10.1") apply false
     id("jacoco")
@@ -143,6 +143,10 @@ subprojects {
         "commonTestImplementation"(kotlin("test-annotations-common"))
         "jvm8TestImplementation"(kotlin("test-junit"))
         "jsTestImplementation"(kotlin("test-js"))
+
+        //"commonMainImplementation"(kotlin("stdlib"))
+        //"jvm8MainImplementation"(kotlin("stdlib-jdk8"))
+        //"jsMainImplementation"(kotlin("stdlib-js"))
     }
 
     configure<BintrayExtension> {
