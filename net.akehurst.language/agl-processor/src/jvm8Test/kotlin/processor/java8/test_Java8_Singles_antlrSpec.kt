@@ -39,7 +39,7 @@ class test_Java8_Singles_antlrSpec {
             val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processor(grammarStr)
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
-            proc.buildFor(forRule)
+            //proc.buildFor(forRule)
             return proc
         }
     }

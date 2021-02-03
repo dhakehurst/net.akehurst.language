@@ -232,6 +232,7 @@ class ParserStateSet(
             if (done.contains(dp)) {
                 //do nothing
             } else {
+                done.add(dp)
                 // assume we take the transition
                 val curState = curNode.state
                 val nextState = tr.to
@@ -241,13 +242,13 @@ class ParserStateSet(
                         val newNode = StateNode(prev = curNode, state = nextState)
                         val newTrans = newNode.state.transitions(newNode.prev?.state)
                         newTrans.forEach { transitions.enqueue(Pair(newNode,it))  }
-                        done.add(dp)
+                        //done.add(dp)
                     }
                     Transition.ParseAction.EMBED -> {
                         val newNode = StateNode(prev = curNode, state = nextState)
                         val newTrans = newNode.state.transitions(newNode.prev?.state)
                         newTrans.forEach { transitions.enqueue(Pair(newNode,it))  }
-                        done.add(dp)
+                        //done.add(dp)
                     }
                     Transition.ParseAction.HEIGHT -> {
                         val newNode = StateNode(prev = curNode.prev, state = nextState)
@@ -259,7 +260,6 @@ class ParserStateSet(
                         val newNode = StateNode(prev = prevNode.prev, state = nextState)
                         val newTrans = newNode.state.transitions(newNode.prev?.state)
                         newTrans.forEach { transitions.enqueue(Pair(newNode,it))  }
-                        //done.add(pair)
                     }
                     Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                     Transition.ParseAction.GOAL -> null;//buildAndTraverse(nextState, prevStack, done)

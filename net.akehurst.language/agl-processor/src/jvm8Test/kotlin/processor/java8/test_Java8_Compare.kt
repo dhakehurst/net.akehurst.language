@@ -57,10 +57,12 @@ class test_Java8_Compare(val data: Data) {
         var antlrOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrOptm.agl")
 
         fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor {
+            println("Building $path")
             val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processor(grammarStr)
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
             proc.buildFor(forRule)
+            println("Built $path")
             return proc
         }
 

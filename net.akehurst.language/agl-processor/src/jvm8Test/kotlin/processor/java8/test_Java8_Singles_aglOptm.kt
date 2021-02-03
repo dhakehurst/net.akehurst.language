@@ -115,6 +115,28 @@ class test_Java8_Singles_aglOptm {
     }
 
     @Test
+    fun FieldDeclaration() {
+        val sentence = "int valid = 0b0;"
+        val goal = "FieldDeclaration"
+        //proc.parse(goal, sentence)
+        proc.buildFor(goal).parse(goal, sentence)
+    }
+
+    @Test
+    fun TypeDeclaration_FieldDeclaration() {
+        val sentence = "class A { int valid = 0b0; }"
+        val goal = "TypeDeclaration"
+        proc.buildFor(goal).parse(goal, sentence)
+    }
+
+    @Test
+    fun CompilationUnit_FieldDeclaration() {
+        val sentence = "class A { int valid = 0b0; }"
+        val goal = "CompilationUnit"
+        proc.parse(goal, sentence)
+    }
+
+    @Test
     fun bad_Binary_Literal() {
         val sentence = "0b012"
         val goal = "VariableInitializer"
@@ -122,6 +144,7 @@ class test_Java8_Singles_aglOptm {
             proc.parse(goal, sentence)
         }
     }
+
     @Test
     fun BadLiterals() {
         val sentence = """
