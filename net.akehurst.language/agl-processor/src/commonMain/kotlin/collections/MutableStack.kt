@@ -52,3 +52,17 @@ class MutableStack<T>() {
 
 }
 
+class MutableQueue<T>() {
+    private val list = mutableListOf<T>()
+
+    val size: Int get() = this.list.size
+    val isEmpty:Boolean get() = this.list.size ==0
+    val elements:List<T> get() = this.list
+
+    fun enqueue(item: T) {
+        list.add(item)
+    }
+    fun peek(): T = list.last()
+    fun dequeue(): T = list.removeAt(0)
+
+}

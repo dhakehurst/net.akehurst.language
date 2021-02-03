@@ -98,11 +98,11 @@ class RuntimeRuleSetBuilder2() {
         return rb
     }
 
-    fun empty(name: String) {
-        val rhsB = RuntimeRuleItemsBuilder(this, RuntimeRuleItemKind.EMPTY, RuntimeRuleChoiceKind.NONE, -1, 0, false, true)
-        val rb = RuntimeRuleBuilder(this, name, name, RuntimeRuleKind.TERMINAL, false, false, rhsB)
-        this.ruleBuilders.add(rb)
-    }
+    //fun empty(name: String) {
+    //    val rhsB = RuntimeRuleItemsBuilder(this, RuntimeRuleItemKind.EMPTY, RuntimeRuleChoiceKind.NONE, -1, 0, false, true)
+    //    val rb = RuntimeRuleBuilder(this, name, name, RuntimeRuleKind.TERMINAL, false, false, rhsB)
+    //    this.ruleBuilders.add(rb)
+    //}
 
     fun literal(tag: String, value: String, isSkip: Boolean = false) {
         val existing = this.findRuleBuilderByTag(tag)

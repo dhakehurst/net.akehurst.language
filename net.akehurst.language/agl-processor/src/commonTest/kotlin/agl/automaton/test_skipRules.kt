@@ -122,13 +122,15 @@ class test_skipRules : test_Abstract() {
     @Test
     fun s1_heightOrGraftInto_s0() {
 
-        val actual = sk1.heightOrGraftInto(sk0.rulePositions).toList()
+        val actual = sk1.heightOrGraftInto(sk0).toList()
 
         val expected = listOf(
-                HeightGraft(null,
-                        listOf(RulePosition(skC, 0, RulePosition.START_OF_RULE)),
-                        listOf(RulePosition(skC, 0, RulePosition.END_OF_RULE)),
-                        lhs_WS_CM_UP, lhs_WS_CM_UP)
+                HeightGraft(
+                    listOf(RulePosition(skC, 0, RulePosition.START_OF_RULE)),
+                    listOf(RulePosition(skC, 0, RulePosition.END_OF_RULE)),
+                    lhs_WS_CM_UP,
+                    lhs_WS_CM_UP
+                )
         )
         assertEquals(expected, actual)
 

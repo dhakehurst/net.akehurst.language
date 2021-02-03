@@ -119,15 +119,14 @@ class test_sList_compositeMulti : test_Abstract() {
     @Test
     fun s1_heightOrGraftInto_s0() {
 
-        val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
+        val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
                 HeightGraft(
-                        null,
-                        listOf(RP(S, 0, 0)),
-                        listOf(RP(S, 0, EOR)),
-                        lhs_U,
-                        lhs_U
+                    listOf(RP(S, 0, 0)),
+                    listOf(RP(S, 0, EOR)),
+                    lhs_U,
+                    lhs_U
                 )
         )
         assertEquals(expected, actual)

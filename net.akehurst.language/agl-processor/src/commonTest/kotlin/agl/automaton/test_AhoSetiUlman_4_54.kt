@@ -99,7 +99,7 @@ class test_AhoSetiUlman_4_54 : test_Abstract() {
     @Test
     fun buildFor() {
         val actual = rrs.buildFor("S")
-        println(rrs.printUsedAutomaton("S"))
+        println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, "S", false) {
             val s0 = state(RP(G, 0, SOR))       // G = . S

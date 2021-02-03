@@ -62,13 +62,6 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
         rrs.buildFor("S")
     }
 
-    @Test //TODO: remove this its temporary
-    fun printAutomaton() {
-        val goal = "S"
-
-        println(rrs.printFullAutomaton(goal))
-    }
-
     @Test
     fun a_fails() {
         val goal = "S"

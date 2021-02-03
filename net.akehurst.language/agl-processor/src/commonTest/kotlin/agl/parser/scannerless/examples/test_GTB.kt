@@ -46,7 +46,8 @@ class test_GTB : test_ScanOnDemandParserAbstract() {
                 literal("b")
                 ref("be")
             }
-            empty("be")
+            //empty("be")
+            concatenation("be") { empty() }
         }
 
         val goal = "S"
@@ -66,7 +67,7 @@ class test_GTB : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2,
                 expectedTrees = *arrayOf(expected)
         )
     }

@@ -25,8 +25,8 @@ import net.akehurst.language.collections.lazyMapNonNull
 import net.akehurst.language.collections.transitiveClosure
 
 class LookaheadSet(
-        val number: Int,
-        val content: Set<RuntimeRule>
+    val number: Int,
+    val content: Set<RuntimeRule>
 ) {
     companion object {
         val EMPTY = LookaheadSet(-1, emptySet())
@@ -45,7 +45,7 @@ class LookaheadSet(
 }
 
 class RuntimeRuleSet(
-        // rules: List<RuntimeRule>
+    // rules: List<RuntimeRule>
 ) {
 
     companion object {
@@ -60,7 +60,7 @@ class RuntimeRuleSet(
         val GOAL_TAG = "<GOAL>"
         val SKIP_RULE_TAG = "<SKIP-MULTI>"
         val SKIP_CHOICE_RULE_TAG = "<SKIP-CHOICE>"
-        val USE_PARENT_LOOKAHEAD_RULE_TAG = "<USE-PARENT-LOOKAHEAD>";
+        val USE_PARENT_LOOKAHEAD_RULE_TAG = "<UP>"
 
         val END_OF_TEXT = RuntimeRule(-1, EOT_RULE_NUMBER, END_OF_TEXT_TAG, InputFromString.END_OF_TEXT, RuntimeRuleKind.TERMINAL, false, false)
         val USE_PARENT_LOOKAHEAD = RuntimeRule(-1, USE_PARENT_LOOKAHEAD_RULE_NUMBER, USE_PARENT_LOOKAHEAD_RULE_TAG, 0.toChar().toString(), RuntimeRuleKind.TERMINAL, false, false)
@@ -127,7 +127,7 @@ class RuntimeRuleSet(
 
     val firstTerminals: Array<Set<RuntimeRule>> by lazy {
         this.runtimeRules.map { this.calcFirstTerminals(it) }
-                .toTypedArray()
+            .toTypedArray()
     }
 
     val firstSkipRuleTerminalPositions: Set<RuntimeRule> by lazy {
@@ -155,7 +155,8 @@ class RuntimeRuleSet(
             null
         } else {
 
-            val skipChoiceRule = RuntimeRule(this.number, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, SKIP_CHOICE_RULE_TAG, RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
+            val skipChoiceRule =
+                RuntimeRule(this.number, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, SKIP_CHOICE_RULE_TAG, RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
             skipChoiceRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
             val skipMultiRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, SKIP_RULE_TAG, RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
             skipMultiRule.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.MULTI, RuntimeRuleChoiceKind.NONE, 1, -1, arrayOf(skipChoiceRule))
@@ -261,7 +262,7 @@ class RuntimeRuleSet(
                                     }
                                 } else {
                                     val lh: Set<RuntimeRule> = this.firstTerminals2[nextChildRP]
-                                            ?: error("should never happen")
+                                        ?: error("should never happen")
                                     if (lh.isEmpty()) {
                                         error("should never happen")
                                     } else {
@@ -325,15 +326,15 @@ class RuntimeRuleSet(
 
     fun findRuntimeRule(ruleName: String): RuntimeRule {
         val number = this.nonTerminalRuleNumber[ruleName]
-                ?: this.terminalRuleNumber[ruleName]
-                ?: this.embeddedRuleNumber[ruleName]
-                ?: throw ParserException("RuntimeRule '${ruleName}' not found")
+            ?: this.terminalRuleNumber[ruleName]
+            ?: this.embeddedRuleNumber[ruleName]
+            ?: throw ParserException("RuntimeRule '${ruleName}' not found")
         return this.runtimeRules[number]
     }
 
     fun findTerminalRule(pattern: String): RuntimeRule {
         val number = this.terminalRuleNumber[pattern]
-                ?: throw ParserException("Terminal RuntimeRule ${pattern} not found")
+            ?: throw ParserException("Terminal RuntimeRule ${pattern} not found")
         return this.runtimeRules[number]
     }
 
@@ -411,7 +412,8 @@ class RuntimeRuleSet(
             }
         }
     }
-    fun createWithParent(upLhs:LookaheadSet,parentLookahead: LookaheadSet): LookaheadSet {
+
+    fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet {
         val newContent = mutableSetOf<RuntimeRule>()
         for (rr in upLhs.content) {
             if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
@@ -424,7 +426,7 @@ class RuntimeRuleSet(
         //return LookaheadSet(-1, newContent) //TODO: create this from runtimeRuleset, maybe!
     }
 
-    internal fun printUsedAutomaton(goalRuleName: String): String {
+    internal fun usedAutomatonToString(goalRuleName: String): String {
         val b = StringBuilder()
         val gr = this.findRuntimeRule(goalRuleName)
 
@@ -434,17 +436,30 @@ class RuntimeRuleSet(
         states.forEach {
             b.append(it).append("\n")
         }
-        transitions.forEach {
-            b.append(it).append("\n")
+        states.forEach { st ->
+            st.transitionsByPrevious.forEach { me ->
+                val prev = me.key
+                me.value?.forEach { tr ->
+                    val trStr = "${tr.from.number.value} --> ${tr.to.number.value}"
+                    val trGrd = "[${tr.lookaheadGuard.content.joinToString { c -> c.tag }} | ${tr.upLookahead.content.joinToString { c -> c.tag }}]"
+                    val prvGrd = " [${tr.prevGuard?.joinToString()}]"
+                    b.append("{${prev?.number?.value}} ")
+                    b.append(trStr)
+                    b.append(" ${tr.action} ")
+                    b.append(trGrd)
+                    b.append(prvGrd)
+                    b.append("\n")
+                }
+            }
         }
 
 
         return b.toString()
     }
 
-    internal fun printFullAutomaton(goalRuleName: String, withClosure: Boolean = false): String {
+    internal fun fullAutomatonToString(goalRuleName: String, withClosure: Boolean = false): String {
         this.buildFor(goalRuleName)
-        return this.printUsedAutomaton("S")
+        return this.usedAutomatonToString("S")
     }
 
     override fun toString(): String {

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.parser
 
+import agl.automaton.BuildCache
 import agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition

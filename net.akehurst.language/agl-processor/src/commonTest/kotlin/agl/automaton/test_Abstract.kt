@@ -23,8 +23,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-abstract class test_Abstract {
-
+abstract class test_AutomatonUtilsAbstract {
     companion object {
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
@@ -42,42 +41,17 @@ abstract class test_Abstract {
         val PLI = RulePosition.POSITION_SLIST_ITEM
         val PLS = RulePosition.POSITION_SLIST_SEPARATOR
 
+        val WIDTH = Transition.ParseAction.WIDTH
+        val HEIGHT = Transition.ParseAction.HEIGHT
+        val GRAFT = Transition.ParseAction.GRAFT
+        val GOAL = Transition.ParseAction.GOAL
+        val GRAFT_OR_HEIGHT = Transition.ParseAction.GRAFT_OR_HEIGHT
+
         val lhs_E = LookaheadSet.EMPTY
         val lhs_U = LookaheadSet.UP
         val lhs_T = LookaheadSet.EOT
 
         fun RP(rr: RuntimeRule, opt: Int, pos: Int): RulePosition = RulePosition(rr, opt, pos)
-    }
-
-    abstract val SM: ParserStateSet
-    abstract val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-
-    @Test
-    fun firstOf() {
-
-        for (t in firstOf_data) {
-            val rp = t.first
-            val lhs = t.second
-            val expected = t.third
-
-            val actual = SM.firstOf(rp, lhs.content)
-
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    abstract val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
-
-    @Test
-    fun s0_widthInto() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(null).toList()
-
-        val expected = s0_widthInto_expected
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
     }
 
     fun assertEquals(expected: ParserStateSet, actual: ParserStateSet) {
@@ -126,4 +100,40 @@ abstract class test_Abstract {
         assertEquals(expected.upLookahead.content, actual.upLookahead.content, "Up lookahead content does not match for ${expPrev} -> $expected")
         assertEquals(expected.prevGuard, actual.prevGuard, "Previous guard does not match for ${expPrev} -> $expected")
     }
+}
+
+abstract class test_Abstract : test_AutomatonUtilsAbstract() {
+
+    abstract val SM: ParserStateSet
+    abstract val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
+
+    @Test
+    fun firstOf() {
+
+        for (t in firstOf_data) {
+            val rp = t.first
+            val lhs = t.second
+            val expected = t.third
+
+            val actual = SM.firstOf(rp, lhs.content)
+
+            assertEquals(expected, actual, "failed $rp")
+        }
+    }
+
+    abstract val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+
+    @Test
+    fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
+
+        val expected = s0_widthInto_expected
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
+
+
 }

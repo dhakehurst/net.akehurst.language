@@ -81,11 +81,11 @@ class test_multi_0_n_literal : test_Abstract() {
     @Test
     fun s1_heightOrGraftInto_s0() {
 
-        val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
+        val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraft(null, listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, PMI)), lhs_a, lhs_U),
-                HeightGraft(null, listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, EOR)), lhs_U, lhs_U)
+                HeightGraft(listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, PMI)), lhs_a, lhs_U),
+                HeightGraft(listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, EOR)), lhs_U, lhs_U)
         )
         assertEquals(expected, actual)
 

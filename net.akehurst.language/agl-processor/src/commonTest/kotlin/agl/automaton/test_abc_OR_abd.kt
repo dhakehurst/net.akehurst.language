@@ -84,14 +84,15 @@ class test_abc_OR_abd : test_Abstract() {
     @Test
     fun s1_heightOrGraftInto_s0() {
 
-        val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
+        val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
                 HeightGraft(
-                        null,
-                        listOf(RP(ABC, 0, SOR),RP(ABD, 0, SOR)),
-                        listOf(RP(ABC, 0, 1),RP(ABD, 0, 1)),
-                        lhs_b, lhs_U)
+                    listOf(RP(ABC, 0, SOR),RP(ABD, 0, SOR)),
+                    listOf(RP(ABC, 0, 1),RP(ABD, 0, 1)),
+                    lhs_b,
+                    lhs_U
+                )
         )
         assertEquals(expected, actual)
 

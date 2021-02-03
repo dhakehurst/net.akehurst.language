@@ -118,6 +118,18 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
         )
 
     @Test
+    fun s0_widthInto1() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
+
+        val expected = s0_widthInto_expected
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
+
+    @Test
     fun createClosure_G00_UP() {
         val cl_G = ClosureItem(null, RP(G, 0, 0), RP(G, 0, EOR), lhs_U)
         //val cl_G_S = ClosureItem(cl_G, RP(S, 0, 0), RulePosition(S, 0, 1), lhs_bcU)
@@ -151,7 +163,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
 
     @Test
     fun s1_heightOrGraftInto_s0() {
-        val actual = s1.heightOrGraftInto(s0.rulePositions)
+        val actual = s1.heightOrGraftInto(s0)
 
         assertNotNull(actual)
         val expected = emptySet<HeightGraft>()
@@ -175,7 +187,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
     @Test
     fun buildFor() {
         val actual = rrs.buildFor("S")
-        println(rrs.printUsedAutomaton("S"))
+        println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S

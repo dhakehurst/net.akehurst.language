@@ -98,14 +98,15 @@ class test_concatenation_abc : test_Abstract() {
     @Test
     fun s1_heightOrGraftInto_s0() {
 
-        val actual = s1.heightOrGraftInto(s0.rulePositions).toList()
+        val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
                 HeightGraft(
-                        null,
-                        listOf(RulePosition(S, 0, 0)),
-                        listOf(RulePosition(S, 0, 1)),
-                        lhs_b, lhs_U)
+                    listOf(RulePosition(S, 0, 0)),
+                    listOf(RulePosition(S, 0, 1)),
+                    lhs_b,
+                    lhs_U
+                )
         )
         assertEquals(expected, actual)
 
