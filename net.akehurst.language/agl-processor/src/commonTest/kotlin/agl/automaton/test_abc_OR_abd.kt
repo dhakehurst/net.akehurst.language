@@ -97,4 +97,14 @@ class test_abc_OR_abd : test_Abstract() {
         assertEquals(expected, actual)
 
     }
+
+    @Test
+    fun s0_transitions() {
+        val actual = s0.transitions(null)
+        val expected = listOf<Transition>(
+        //    Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true },
+        //    Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true }
+        )
+        assertEquals(expected, actual)
+    }
 }

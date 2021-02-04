@@ -210,7 +210,47 @@ public class BadBinaryLiterals {
         val sentence = "interface An { An[] value(); }"
         val goal = "CompilationUnit"
         val t = proc.parse(goal, sentence)
-        val actual = t.toStringAll
+        //val actual = t.toStringAll
+        val resultStr = SPPT2InputText().visit(t, "")
+        assertEquals(sentence,resultStr)
+    }
+
+    @Test
+    fun class_with_constructor() {
+        val sentence = "class B {  B() {  } }"
+        val goal = "CompilationUnit"
+        val t = proc.parse(goal, sentence)
+        //val actual = t.toStringAll
+        val resultStr = SPPT2InputText().visit(t, "")
+        assertEquals(sentence,resultStr)
+    }
+
+    @Test
+    fun ConstructorDeclaration() {
+        val sentence = "B() {  }"
+        val goal = "ConstructorDeclaration"
+        val t = proc.parse(goal, sentence)
+        //val actual = t.toStringAll
+        val resultStr = SPPT2InputText().visit(t, "")
+        assertEquals(sentence,resultStr)
+    }
+
+    @Test
+    fun ConstructorDeclarator() {
+        val sentence = "B()"
+        val goal = "ConstructorDeclarator"
+        val t = proc.parse(goal, sentence)
+        //val actual = t.toStringAll
+        val resultStr = SPPT2InputText().visit(t, "")
+        assertEquals(sentence,resultStr)
+    }
+
+    @Test
+    fun ConstructorBody() {
+        val sentence = "{  }"
+        val goal = "ConstructorBody"
+        val t = proc.parse(goal, sentence)
+        //val actual = t.toStringAll
         val resultStr = SPPT2InputText().visit(t, "")
         assertEquals(sentence,resultStr)
     }

@@ -19,16 +19,14 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.BuildCache
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.collections.MutableQueue
-import net.akehurst.language.collections.MutableStack
 import net.akehurst.language.collections.Stack
 import net.akehurst.language.collections.lazyMapNonNull
-import kotlin.coroutines.coroutineContext
 
 data class ClosureItem(
-        val parentItem: ClosureItem?, //needed for height/graft
-        val rulePosition: RulePosition,
-        val next: RulePosition?,
-        val lookaheadSet: LookaheadSet
+    val parentItem: ClosureItem?, //needed for height/graft
+    val rulePosition: RulePosition,
+    val next: RulePosition?,
+    val lookaheadSet: LookaheadSet
 ) {
 
     val prev: Set<RulePosition>
@@ -52,13 +50,13 @@ data class ClosureItem(
 }
 
 class ParserStateSet(
-        val number: Int,
-        val runtimeRuleSet: RuntimeRuleSet,
-        val userGoalRule: RuntimeRule,
-        val isSkip: Boolean
+    val number: Int,
+    val runtimeRuleSet: RuntimeRuleSet,
+    val userGoalRule: RuntimeRule,
+    val isSkip: Boolean
 ) {
 
-    private var nextState = 0
+    private var nextStateNumber = 0
     private var nextParentRelation = 0
     var preBuilt = false; private set
     internal val buildCache = BuildCache()
@@ -80,7 +78,7 @@ class ParserStateSet(
      * The parentRelation can be used to determine the LR(1) related lookahead
      */
     val states = lazyMapNonNull<List<RulePosition>, ParserState> {
-        ParserState(StateNumber(this.nextState++), it, this)
+        ParserState(StateNumber(this.nextStateNumber++), it, this)
     }
 
     val allBuiltTransitions: Set<Transition> get() = states.values.flatMap { it.allBuiltTransitions }.toSet()
@@ -88,8 +86,14 @@ class ParserStateSet(
     val startState: ParserState by lazy {
         val goalRule = RuntimeRuleSet.createGoalRule(userGoalRule)
         val goalRP = listOf(RulePosition(goalRule, 0, 0))
-        val startState = this.states[goalRP]
-        startState
+        val state = this.states[goalRP]
+        state
+    }
+    val endState: ParserState by lazy {
+        val goalRule = this.startState.runtimeRules.first()
+        val goalRP = listOf(RulePosition(goalRule, 0, RulePosition.END_OF_RULE))
+        val state = this.states[goalRP]
+        state
     }
 
     /*
@@ -194,7 +198,7 @@ class ParserStateSet(
     }
 
     internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet = this.runtimeRuleSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
-    fun createWithParent(upLhs:LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
+    fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
 
     fun build(): ParserStateSet {
         this.buildCache.on()
@@ -210,25 +214,25 @@ class ParserStateSet(
         return this
     }
 
-    private fun buildAndTraverse() {
-        data class StateNode(val prev:StateNode?, val state:ParserState) {
+    private fun buildAndTraverse1() {
+        data class StateNode(val prev: StateNode?, val state: ParserState) {
             override fun toString(): String = when {
-                null==prev -> "$state"
+                null == prev -> "$state"
                 else -> "$state --> $prev"
             }
         }
 
-        val done = mutableSetOf<Pair<ParserState?,Transition>>()
-        val transitions = MutableQueue<Pair<StateNode,Transition>>()
+        val done = mutableSetOf<Pair<ParserState?, Transition>>()
+        val transitions = MutableQueue<Pair<StateNode, Transition>>()
         var curNode = StateNode(null, this.startState)
         val s0_trans = this.startState.transitions(curNode.prev?.state)
-        s0_trans.forEach { transitions.enqueue(Pair(curNode,it))  }
-        while(transitions.isEmpty.not()) {
+        s0_trans.forEach { transitions.enqueue(Pair(curNode, it)) }
+        while (transitions.isEmpty.not()) {
             val pair = transitions.dequeue()
             curNode = pair.first
             val prevState = curNode.prev?.state
             val tr = pair.second
-            val dp = Pair(prevState,tr)
+            val dp = Pair(prevState, tr)
             if (done.contains(dp)) {
                 //do nothing
             } else {
@@ -236,30 +240,30 @@ class ParserStateSet(
                 // assume we take the transition
                 val curState = curNode.state
                 val nextState = tr.to
-                check(tr.from==curState) { "Error building Automaton" }
+                check(tr.from == curState) { "Error building Automaton" }
                 when (tr.action) {
                     Transition.ParseAction.WIDTH -> {
                         val newNode = StateNode(prev = curNode, state = nextState)
                         val newTrans = newNode.state.transitions(newNode.prev?.state)
-                        newTrans.forEach { transitions.enqueue(Pair(newNode,it))  }
+                        newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
                         //done.add(dp)
                     }
                     Transition.ParseAction.EMBED -> {
                         val newNode = StateNode(prev = curNode, state = nextState)
                         val newTrans = newNode.state.transitions(newNode.prev?.state)
-                        newTrans.forEach { transitions.enqueue(Pair(newNode,it))  }
+                        newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
                         //done.add(dp)
                     }
                     Transition.ParseAction.HEIGHT -> {
                         val newNode = StateNode(prev = curNode.prev, state = nextState)
                         val newTrans = newNode.state.transitions(newNode.prev?.state)
-                        newTrans.forEach { transitions.enqueue(Pair(newNode,it))  }
+                        newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
                     }
                     Transition.ParseAction.GRAFT -> {
                         val prevNode = curNode.prev!!
                         val newNode = StateNode(prev = prevNode.prev, state = nextState)
                         val newTrans = newNode.state.transitions(newNode.prev?.state)
-                        newTrans.forEach { transitions.enqueue(Pair(newNode,it))  }
+                        newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
                     }
                     Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                     Transition.ParseAction.GOAL -> null;//buildAndTraverse(nextState, prevStack, done)
@@ -267,6 +271,56 @@ class ParserStateSet(
             }
         }
     }
+
+    private fun buildAndTraverse() {
+
+        //val rulePositions = this.usedRules.flatMap { it.rulePositions }
+
+        val states = this.usedRules.flatMap { rr ->
+            when (rr.kind) {
+                RuntimeRuleKind.GOAL -> setOf(this.startState, this.endState)
+                RuntimeRuleKind.TERMINAL -> setOf(this.states[listOf(RulePosition(rr, 0, RulePosition.END_OF_RULE))])
+                RuntimeRuleKind.EMBEDDED -> setOf(this.states[listOf(RulePosition(rr, 0, RulePosition.END_OF_RULE))])
+                RuntimeRuleKind.NON_TERMINAL -> rr.rulePositions.mapNotNull { rp ->
+                    when (rp.position) {
+                        0 -> null // never need a state for the first position of a nonTerminal
+                        else -> this.states[listOf(rp)] //TODO: how to predict merged states, maybe can't?
+                    }
+                }.toSet()
+            }
+        }
+
+        for(state in states) {
+            when {
+                state.isGoal -> state.transitions(null)
+                else -> {
+                    val possiblePrev = mutableSetOf<ParserState>()
+                    for(ps in states) {
+                        for(rp in ps.rulePositions) {
+                            val fc = this.buildCache.closureLR0(rp)
+                            for(c in fc) {
+                                val item = c.item
+                                if(state.runtimeRules.contains(item)) {
+                                    possiblePrev.add(ps)
+                                }
+                            }
+                        }
+                    }
+                    //val possiblePrev = states.filter { ps ->
+                   //     ps.rulePositions.any { rp ->
+                   //         val firstsClosure = this.calcClosureLR0(rp)
+                   //         firstsClosure.any { state.rulePositions.contains(it) }
+                    //    }
+                    //}
+                    for(pp in possiblePrev) {
+                        state.transitions(pp)
+                    }
+                }
+            }
+        }
+
+    }
+
 
     internal fun fetch(rulePosition: List<RulePosition>): ParserState {
         return this.states[rulePosition]
@@ -333,35 +387,11 @@ class ParserStateSet(
         }
     }
 
-    private val _calcClosureLR0 = mutableMapOf<RulePosition, Set<RulePosition>>()
-    private fun calcClosureLR0(rp: RulePosition): Set<RulePosition> {
-        var cl = _calcClosureLR0[rp]
-        if (null == cl) {
-            cl = calcClosureLR0(rp, mutableSetOf())
-            _calcClosureLR0[rp] = cl
-        }
-        return cl
-    }
-
-    private fun calcClosureLR0(rp: RulePosition, items: MutableSet<RulePosition>): Set<RulePosition> {
-        return when {
-            items.contains(rp) -> {
-                items
-            }
-            else -> {
-                items.add(rp)
-                val itemRps = rp.items.flatMap {
-                    it.rulePositionsAt[0]
-                }.toSet()
-                itemRps.forEach { childRp ->
-                    calcClosureLR0(childRp, items)
-                }
-                items
-            }
-        }
-    }
-
-    private fun calcUsedRules(rule: RuntimeRule, used: MutableSet<RuntimeRule> = mutableSetOf(), done: BooleanArray = BooleanArray(this.runtimeRuleSet.runtimeRules.size)): Set<RuntimeRule> {
+    private fun calcUsedRules(
+        rule: RuntimeRule,
+        used: MutableSet<RuntimeRule> = mutableSetOf(),
+        done: BooleanArray = BooleanArray(this.runtimeRuleSet.runtimeRules.size)
+    ): Set<RuntimeRule> {
         return when {
             0 > rule.number -> {
                 used.add(rule)
@@ -416,8 +446,8 @@ class ParserStateSet(
     }
 
     data class FirstOfResult(
-            val needsNext: Boolean,
-            val result: Set<RuntimeRule>
+        val needsNext: Boolean,
+        val result: Set<RuntimeRule>
     )
 
     fun firstOfRpNotEmpty(rulePosition: RulePosition, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
@@ -479,7 +509,7 @@ class ParserStateSet(
             }
             done[rule.number] -> _firstOfNotEmpty[rule.number] ?: FirstOfResult(false, emptySet())
             else -> {
-                var result:FirstOfResult? = null//_firstOfNotEmpty[rule.number]
+                var result: FirstOfResult? = null//_firstOfNotEmpty[rule.number]
                 if (null == result) {
                     done[rule.number] = true
                     result = firstOfNotEmptySafe(rule, doneRp, done)
