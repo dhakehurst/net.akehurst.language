@@ -437,7 +437,7 @@ internal class ParseGraph(
 
                         //TODO: when there is ambiguity, sometimes a complete node is replaced after it has been used in the completions of another node
                         // this give unexpected (wrong!) results
-                        val chosen = if (RuntimeRuleItemKind.CHOICE == runtimeRule.rhs.kind) {
+                        val chosen = if (RuntimeRuleRhsItemsKind.CHOICE == runtimeRule.rhs.itemsKind) {
                             when (runtimeRule.rhs.choiceKind) {
                                 RuntimeRuleChoiceKind.LONGEST_PRIORITY -> {
                                     val choice = pickLongest(gn, rp, children, cn)

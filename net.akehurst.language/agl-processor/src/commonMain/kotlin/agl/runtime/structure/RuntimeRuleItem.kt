@@ -33,11 +33,12 @@ import net.akehurst.language.api.parser.ParserException
  * }
  */
 class RuntimeRuleItem(
-  val kind: RuntimeRuleItemKind,
-  val choiceKind : RuntimeRuleChoiceKind,
-  val multiMin : Int,
-  val multiMax : Int,
-  val items : Array<out RuntimeRule>
+    val itemsKind: RuntimeRuleRhsItemsKind,
+    val choiceKind : RuntimeRuleChoiceKind,
+    val listKind : RuntimeRuleListKind,
+    val multiMin : Int,
+    val multiMax : Int,
+    val items : Array<out RuntimeRule>
 ) {
 
     companion object {
@@ -67,47 +68,52 @@ class RuntimeRuleItem(
     //val listSeparator: RuntimeRule get() { return this.items[1] } //should we check type here or is that runtime overhead?
 
     fun findItemAt(n: Int): Array<out RuntimeRule> {
-        return when (this.kind) {
-            RuntimeRuleItemKind.EMPTY -> emptyArray<RuntimeRule>()
-            RuntimeRuleItemKind.CHOICE -> this.items //TODO: should maybe test n == 0
-            RuntimeRuleItemKind.CONCATENATION -> if (this.items.size > n) arrayOf(this.items[n]) else emptyArray<RuntimeRule>()
-            RuntimeRuleItemKind.MULTI -> {
-                if ((this.multiMax == -1 || n <= this.multiMax - 1) && n >= this.multiMin - 1) {
-                    arrayOf(this.items[0])
-                } else {
-                    emptyArray<RuntimeRule>()
-                }
-            }
-            RuntimeRuleItemKind.SEPARATED_LIST -> {
-                when (n % 2) {
-                    0 -> if ((this.multiMax == -1 || n <= this.multiMax - 1) && n >= this.multiMin - 1) {
+        return when (this.itemsKind) {
+            RuntimeRuleRhsItemsKind.EMPTY -> emptyArray<RuntimeRule>()
+            RuntimeRuleRhsItemsKind.CHOICE -> this.items //TODO: should maybe test n == 0
+            RuntimeRuleRhsItemsKind.CONCATENATION -> if (this.items.size > n) arrayOf(this.items[n]) else emptyArray<RuntimeRule>()
+            RuntimeRuleRhsItemsKind.LIST -> when(listKind) {
+                RuntimeRuleListKind.NONE -> error("")
+                RuntimeRuleListKind.MULTI -> {
+                    if ((this.multiMax == -1 || n <= this.multiMax - 1) && n >= this.multiMin - 1) {
                         arrayOf(this.items[0])
                     } else {
                         emptyArray<RuntimeRule>()
                     }
-                    1-> arrayOf(this.SLIST__separator)
-                    else -> emptyArray<RuntimeRule>() // should never happen!
                 }
+                RuntimeRuleListKind.SEPARATED_LIST -> {
+                    when (n % 2) {
+                        0 -> if ((this.multiMax == -1 || n <= this.multiMax - 1) && n >= this.multiMin - 1) {
+                            arrayOf(this.items[0])
+                        } else {
+                            emptyArray<RuntimeRule>()
+                        }
+                        1 -> arrayOf(this.SLIST__separator)
+                        else -> emptyArray<RuntimeRule>() // should never happen!
+                    }
+                }
+                RuntimeRuleListKind.LEFT_ASSOCIATIVE_LIST -> TODO()
+                RuntimeRuleListKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
+                RuntimeRuleListKind.UNORDERED -> TODO()
             }
-            RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> TODO()
-            RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
-            RuntimeRuleItemKind.UNORDERED -> TODO()
         }
     }
 
     override fun toString(): String {
-        val kindStr = when (this.kind) {
-            RuntimeRuleItemKind.CONCATENATION -> "CONCAT"
-            RuntimeRuleItemKind.CHOICE -> when(this.choiceKind) {
+        val kindStr = when (this.itemsKind) {
+            RuntimeRuleRhsItemsKind.EMPTY -> "EMPTY"
+            RuntimeRuleRhsItemsKind.CONCATENATION -> "CONCAT"
+            RuntimeRuleRhsItemsKind.CHOICE -> when(this.choiceKind) {
                 RuntimeRuleChoiceKind.NONE -> "ERROR"
                 RuntimeRuleChoiceKind.AMBIGUOUS -> "CH_AMB"
                 RuntimeRuleChoiceKind.LONGEST_PRIORITY -> "CH_LNG"
                 RuntimeRuleChoiceKind.PRIORITY_LONGEST -> "CH_PRI"
             }
-            RuntimeRuleItemKind.MULTI -> "MULTI"
-            RuntimeRuleItemKind.SEPARATED_LIST -> "SLIST"
-            RuntimeRuleItemKind.EMPTY -> "EMPTY"
-            else -> TODO("Unsupported at present")
+            RuntimeRuleRhsItemsKind.LIST -> when(listKind) {
+                RuntimeRuleListKind.MULTI -> "MULTI"
+                RuntimeRuleListKind.SEPARATED_LIST -> "SLIST"
+                else -> TODO("Unsupported at present")
+            }
         }
         val itemsStr = items.map { "[${it.number}]" }.joinToString(" ")
         return "(${kindStr}) ${itemsStr}"

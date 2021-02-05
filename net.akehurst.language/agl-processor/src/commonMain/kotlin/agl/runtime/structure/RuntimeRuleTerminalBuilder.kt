@@ -58,7 +58,7 @@ class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder) {
         val name = "§empty."+ruleThatIsEmpty.tag
         val rr = RuntimeRule(this.rrsb.runtimeRuleSet.number,this.rrsb.rules.size, name, name, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
-        rr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.EMPTY,RuntimeRuleChoiceKind.NONE,0,0, arrayOf(ruleThatIsEmpty))
+        rr.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.EMPTY,RuntimeRuleChoiceKind.NONE,0,0, arrayOf(ruleThatIsEmpty))
         return rr
     }
 

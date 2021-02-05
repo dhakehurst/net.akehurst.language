@@ -147,7 +147,7 @@ class ConverterToRuntimeRules(
                 // only one choice, so can create a concatination
                 val rhsItem = target.alternative[0]
                 val items = rhsItem.items.map { it.accept(this, arg) as RuntimeRule }
-                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, items.toTypedArray())
+                RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE,-1, 0, items.toTypedArray())
             }
             (target is Choice) -> {
                 val items = target.alternative.map {
@@ -159,18 +159,18 @@ class ConverterToRuntimeRules(
                         builder.rule(thisChoiceName).concatenation(*thisChoiceItems.toTypedArray())
                     }
                 }
-                val kind = RuntimeRuleItemKind.CHOICE
+                val kind = RuntimeRuleRhsItemsKind.CHOICE
                 val choiceKind = when (target) {
                     is ChoiceEqual -> RuntimeRuleChoiceKind.LONGEST_PRIORITY
                     is ChoicePriority -> RuntimeRuleChoiceKind.PRIORITY_LONGEST
                     is ChoiceAmbiguous -> RuntimeRuleChoiceKind.AMBIGUOUS
                     else -> throw RuntimeException("unsupported")
                 }
-                RuntimeRuleItem(kind, choiceKind, -1, 0, items.toTypedArray())
+                RuntimeRuleItem(kind, choiceKind, RuntimeRuleListKind.NONE,-1, 0, items.toTypedArray())
             }
             (target is EmptyRule) -> {
                 val item = target.accept(this, arg) as RuntimeRule
-                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, arrayOf(item))
+                RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE,-1, 0, arrayOf(item))
             }
             else -> {
                 throw ParserException("Not supported (yet)!")

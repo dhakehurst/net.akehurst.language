@@ -274,7 +274,8 @@ class ParserStateSet(
 
     private fun buildAndTraverse() {
 
-        //val rulePositions = this.usedRules.flatMap { it.rulePositions }
+        // key = Pair<listOf(<rhs-items>)>
+        val rulePositionLists = createMergedListsOfRulePositions()
 
         val states = this.usedRules.flatMap { rr ->
             when (rr.kind) {
@@ -290,29 +291,29 @@ class ParserStateSet(
             }
         }
 
-        for(state in states) {
+        for (state in states) {
             when {
                 state.isGoal -> state.transitions(null)
                 else -> {
                     val possiblePrev = mutableSetOf<ParserState>()
-                    for(ps in states) {
-                        for(rp in ps.rulePositions) {
+                    for (ps in states) {
+                        for (rp in ps.rulePositions) {
                             val fc = this.buildCache.closureLR0(rp)
-                            for(c in fc) {
+                            for (c in fc) {
                                 val item = c.item
-                                if(state.runtimeRules.contains(item)) {
+                                if (state.runtimeRules.contains(item)) {
                                     possiblePrev.add(ps)
                                 }
                             }
                         }
                     }
                     //val possiblePrev = states.filter { ps ->
-                   //     ps.rulePositions.any { rp ->
-                   //         val firstsClosure = this.calcClosureLR0(rp)
-                   //         firstsClosure.any { state.rulePositions.contains(it) }
+                    //     ps.rulePositions.any { rp ->
+                    //         val firstsClosure = this.calcClosureLR0(rp)
+                    //         firstsClosure.any { state.rulePositions.contains(it) }
                     //    }
                     //}
-                    for(pp in possiblePrev) {
+                    for (pp in possiblePrev) {
                         state.transitions(pp)
                     }
                 }
@@ -320,6 +321,48 @@ class ParserStateSet(
         }
 
     }
+
+    internal fun createMergedListsOfRulePositions() : List<List<RulePosition>> {
+        // key is first item of RulePosition's rule
+        val map = mutableMapOf<RuntimeRule, MutableList<RulePosition>>()
+        for (rr in this.usedNonTerminalRules) {
+            for (rp in rr.rulePositions) {
+                val key = rp.runtimeRule.item(rp.option,RulePosition.START_OF_RULE)!!
+                val list = map[key] ?: run {
+                    map[key] = mutableListOf<RulePosition>()
+                    map[key]!!
+                }
+                list.add(rp)
+            }
+        }
+        val result = mutableListOf<List<RulePosition>>()
+        for(list in map.values) {
+            when(list.size) {
+                // if only one item, then must be state on its own
+                1 -> result.add(list)
+                else -> {
+                    //multiple rps whoes rule has same first item, might be same state
+                    // need to check the rest of the items
+                    var head = list[0]
+                    var tail = list.drop(1)
+                    while(tail.isNotEmpty()) {
+                        val sl = mutableListOf(head)
+                        for(rp2 in tail) {
+                            when {
+                                head.ruleHasSameItemsUntil(rp2) -> sl.add(rp2)
+                                else -> null //do nothing
+                            }
+                        }
+                        head = tail[0]
+                        tail = tail.drop(1)
+                    }
+
+                }
+            }
+        }
+        return result
+    }
+
 
 
     internal fun fetch(rulePosition: List<RulePosition>): ParserState {

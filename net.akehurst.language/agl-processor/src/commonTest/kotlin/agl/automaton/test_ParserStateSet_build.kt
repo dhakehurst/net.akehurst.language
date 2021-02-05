@@ -358,7 +358,44 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
     }
 
     @Test
-    fun duplicateBeginingOfRule() {
+    fun duplicateContentOfRule() {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("ABC1")
+                ref("ABC2")
+            }
+            concatenation("ABC1") { literal("a"); literal("b"); literal("c") }
+            concatenation("ABC2") { literal("a"); literal("b"); literal("c") }
+        }
+        val S = rrs.findRuntimeRule("S")
+        val SM = rrs.fetchStateSetFor(S)
+        val s0 = SM.startState
+        val G = s0.runtimeRules.first()
+
+        //val actual = SM.build()
+        //println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, "S", false) {
+            val s0 = state(RP(G, 0, SOR))      // G = . S
+
+
+        }
+
+        //super.assertEquals(expected, actual)
+
+        val sentences = listOf(
+            "abc",
+            "abc"
+        )
+        val parser = ScanOnDemandParser(rrs)
+        for (sentence in sentences) {
+            parser.parse("S", sentence)
+        }
+        println(rrs.usedAutomatonToString("S"))
+    }
+
+    @Test
+    fun duplicateBeginningOfRule() {
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("ABC")
@@ -393,4 +430,78 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
         }
         println(rrs.usedAutomatonToString("S"))
     }
+
+    @Test
+    fun duplicateOffsetPartOfRule() {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("ABC")
+                ref("XABD")
+            }
+            concatenation("ABC") { literal("a"); literal("b"); literal("c") }
+            concatenation("XABD") { literal("x"); literal("a"); literal("b"); literal("d") }
+        }
+        val S = rrs.findRuntimeRule("S")
+        val SM = rrs.fetchStateSetFor(S)
+        val s0 = SM.startState
+        val G = s0.runtimeRules.first()
+
+        //val actual = SM.build()
+        //println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, "S", false) {
+            val s0 = state(RP(G, 0, SOR))      // G = . S
+
+
+        }
+
+        //super.assertEquals(expected, actual)
+
+        val sentences = listOf(
+            "abc",
+            "xabd"
+        )
+        val parser = ScanOnDemandParser(rrs)
+        for (sentence in sentences) {
+            parser.parse("S", sentence)
+        }
+        println(rrs.usedAutomatonToString("S"))
+    }
+
+    @Test
+    fun duplicateContentOfRuleConcatAndMulti() {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("AAAA")
+                ref("AAAAm")
+            }
+            concatenation("AAAA") { literal("a"); literal("a"); literal("a"); literal("a") }
+            multi("AAAAm",4,4,"'a'")
+        }
+        val S = rrs.findRuntimeRule("S")
+        val SM = rrs.fetchStateSetFor(S)
+        val s0 = SM.startState
+        val G = s0.runtimeRules.first()
+
+        //val actual = SM.build()
+        //println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, "S", false) {
+            val s0 = state(RP(G, 0, SOR))      // G = . S
+
+
+        }
+
+        //super.assertEquals(expected, actual)
+
+        val sentences = listOf(
+            "aaaa"
+        )
+        val parser = ScanOnDemandParser(rrs)
+        for (sentence in sentences) {
+            parser.parse("S", sentence)
+        }
+        println(rrs.usedAutomatonToString("S"))
+    }
+
 }

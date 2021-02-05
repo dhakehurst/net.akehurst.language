@@ -17,10 +17,11 @@
 package net.akehurst.language.agl.runtime.structure
 
 class RuntimeRuleItemBuilder(
-        private val rrb: RuntimeRuleNonTerminalBuilder,
-        private val kind: RuntimeRuleItemKind,
-        private val choiceKind: RuntimeRuleChoiceKind,
-        private val items: Array<out RuntimeRule>
+    private val rrb: RuntimeRuleNonTerminalBuilder,
+    private val kind: RuntimeRuleRhsItemsKind,
+    private val choiceKind: RuntimeRuleChoiceKind,
+    private val listKind:RuntimeRuleListKind,
+    private val items: Array<out RuntimeRule>
 ) {
 
     private var min: Int = 0
@@ -37,7 +38,7 @@ class RuntimeRuleItemBuilder(
     }
 
     fun ruleItem() : RuntimeRuleItem{
-        return RuntimeRuleItem(this.kind, this.choiceKind, this.min, this.max, this.items)
+        return RuntimeRuleItem(this.kind, this.choiceKind, this.listKind, this.min, this.max, this.items)
     }
 
     fun build() : RuntimeRule {

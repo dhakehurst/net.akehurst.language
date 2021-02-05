@@ -55,11 +55,11 @@ class GrowingNode(
                 null == this.state -> children //skip nodes
                 else -> {
                     val i = when (ruleOption.runtimeRule.rhs.kind) {
-                        RuntimeRuleItemKind.CONCATENATION -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule }
-                        RuntimeRuleItemKind.CHOICE -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
-                        RuntimeRuleItemKind.EMPTY -> TODO()
-                        RuntimeRuleItemKind.MULTI -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
-                        RuntimeRuleItemKind.SEPARATED_LIST -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                        RuntimeRuleRhsItemsKind.CONCATENATION -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule }
+                        RuntimeRuleRhsItemsKind.CHOICE -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                        RuntimeRuleRhsItemsKind.EMPTY -> TODO()
+                        RuntimeRuleRhsItemsKind.MULTI -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                        RuntimeRuleRhsItemsKind.SEPARATED_LIST -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
                         else -> TODO()
                     }
                     when {
@@ -142,7 +142,7 @@ class GrowingNode(
         }
 
         fun priorityFor(runtimeRule: RuntimeRule): Int = when (runtimeRule.rhs.kind) {
-            RuntimeRuleItemKind.CHOICE -> {
+            RuntimeRuleRhsItemsKind.CHOICE -> {
                 check(lastChild!!.state!!.runtimeRules.all { it == runtimeRule }) //TODO: remove the check
                 lastChild!!.childrenAlts[this.alt(numberNonSkip)].size - 1
             }
@@ -364,15 +364,15 @@ class GrowingNode(
         // used to augment the GrowingNodeIndex (GSS node identity) for MULTI and SEPARATED_LIST
         // needed because the 'RulePosition' does not capture the 'position' in the list
         fun listSize(runtimeRule: RuntimeRule, childrenSize: Int): Int = when (runtimeRule.kind) {
-            RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.kind) {
-                RuntimeRuleItemKind.EMPTY -> -1
-                RuntimeRuleItemKind.CONCATENATION -> -1
-                RuntimeRuleItemKind.CHOICE -> -1
-                RuntimeRuleItemKind.UNORDERED -> -1
-                RuntimeRuleItemKind.LEFT_ASSOCIATIVE_LIST -> -1 //TODO
-                RuntimeRuleItemKind.RIGHT_ASSOCIATIVE_LIST -> -1 //TODO
-                RuntimeRuleItemKind.MULTI -> childrenSize
-                RuntimeRuleItemKind.SEPARATED_LIST -> childrenSize
+            RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {
+                RuntimeRuleRhsItemsKind.EMPTY -> -1
+                RuntimeRuleRhsItemsKind.CONCATENATION -> -1
+                RuntimeRuleRhsItemsKind.CHOICE -> -1
+                RuntimeRuleRhsItemsKind.UNORDERED -> -1
+                RuntimeRuleRhsItemsKind.LEFT_ASSOCIATIVE_LIST -> -1 //TODO
+                RuntimeRuleRhsItemsKind.RIGHT_ASSOCIATIVE_LIST -> -1 //TODO
+                RuntimeRuleRhsItemsKind.MULTI -> childrenSize
+                RuntimeRuleRhsItemsKind.SEPARATED_LIST -> childrenSize
             }
             else -> -1
         }

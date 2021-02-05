@@ -441,9 +441,13 @@ class ParserState(
             if (null == previous) {
                 true
             } else {
-                when (previous.first().runtimeRule.rhs.kind) { //FIXME
-                    RuntimeRuleItemKind.MULTI -> multiRuntimeGuard.invoke(this, gn)
-                    RuntimeRuleItemKind.SEPARATED_LIST -> sListRuntimeGuard.invoke(this, gn)
+                val rr = previous.first().runtimeRule //FIXME: possibly more than one!!
+                when (rr.rhs.itemsKind) {
+                    RuntimeRuleRhsItemsKind.LIST -> when(rr.rhs.listKind) {
+                        RuntimeRuleListKind.MULTI -> multiRuntimeGuard.invoke(this, gn)
+                        RuntimeRuleListKind.SEPARATED_LIST -> sListRuntimeGuard.invoke(this, gn)
+                        else -> TODO()
+                    }
                     else -> true
                 }
             }

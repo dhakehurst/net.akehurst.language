@@ -19,14 +19,12 @@ package net.akehurst.language.agl.syntaxAnalyser
 import agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyserException
 import net.akehurst.language.api.sppt.*
-import net.akehurst.language.agl.sppt.SPPTBranchDefault
-import net.akehurst.language.agl.sppt.SPPTLeafDefault
 import net.akehurst.language.api.parser.InputLocation
 
 
@@ -63,8 +61,8 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
         val br = target as SPPTBranchFromInputAndGrownChildren //SPPTBranchDefault //TODO: make write thing available on interface
         return when (br.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> error("should never happen!")
-            RuntimeRuleKind.NON_TERMINAL -> when (br.runtimeRule.rhs.kind) {
-                RuntimeRuleItemKind.MULTI -> {
+            RuntimeRuleKind.NON_TERMINAL -> when (br.runtimeRule.rhs.itemsKind) {
+                RuntimeRuleRhsItemsKind.MULTI -> {
                     val name = br.runtimeRule.rhs.items[RuntimeRuleItem.MULTI__ITEM].tag
                     val list = br.nonSkipChildren.mapNotNull { this.createValue(it) }
                     if (br.runtimeRule.rhs.multiMax == 1) {
@@ -74,7 +72,7 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
                         list
                     }
                 }
-                RuntimeRuleItemKind.SEPARATED_LIST -> {
+                RuntimeRuleRhsItemsKind.SEPARATED_LIST -> {
                     val name = br.runtimeRule.rhs.items[RuntimeRuleItem.SLIST__ITEM].tag
                     val list = br.nonSkipChildren.map { this.createValue(it) }
                     if (br.runtimeRule.rhs.multiMax == 1) {
@@ -84,11 +82,11 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
                         list
                     }
                 }
-                RuntimeRuleItemKind.CHOICE -> {
+                RuntimeRuleRhsItemsKind.CHOICE -> {
                     val v = this.createValue(br.children[0])
                     v
                 }
-                RuntimeRuleItemKind.CONCATENATION -> {
+                RuntimeRuleRhsItemsKind.CONCATENATION -> {
                     val count = mutableMapOf<String, Int>()
                     var el = AsmElementSimple(br.name)
                     br.runtimeRule.rhs.items.forEachIndexed { index, rr ->
@@ -105,8 +103,8 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
                     }
                     if (br.runtimeRule.rhs.items.size == 1) {
                         if (br.runtimeRule.rhs.items[0].kind == RuntimeRuleKind.NON_TERMINAL
-                                && (br.runtimeRule.rhs.items[0].rhs.kind == RuntimeRuleItemKind.MULTI
-                                        || br.runtimeRule.rhs.items[0].rhs.kind == RuntimeRuleItemKind.SEPARATED_LIST)
+                                && (br.runtimeRule.rhs.items[0].rhs.itemsKind == RuntimeRuleRhsItemsKind.MULTI
+                                        || br.runtimeRule.rhs.items[0].rhs.itemsKind == RuntimeRuleRhsItemsKind.SEPARATED_LIST)
                         ) {
                             el.properties[0].value
                         } else {
@@ -126,9 +124,9 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
     fun createPropertyName(runtimeRule: RuntimeRule): String {
         return when (runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> runtimeRule.tag
-            RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.kind) {
-                RuntimeRuleItemKind.MULTI -> createPropertyName(runtimeRule.rhs.items[RuntimeRuleItem.MULTI__ITEM])
-                RuntimeRuleItemKind.SEPARATED_LIST -> createPropertyName(runtimeRule.rhs.items[RuntimeRuleItem.SLIST__ITEM])
+            RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {
+                RuntimeRuleRhsItemsKind.MULTI -> createPropertyName(runtimeRule.rhs.items[RuntimeRuleItem.MULTI__ITEM])
+                RuntimeRuleRhsItemsKind.SEPARATED_LIST -> createPropertyName(runtimeRule.rhs.items[RuntimeRuleItem.SLIST__ITEM])
                 else -> runtimeRule.tag
             }
             RuntimeRuleKind.EMBEDDED -> runtimeRule.tag

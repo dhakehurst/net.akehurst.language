@@ -18,7 +18,7 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.RuleOptionId
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.api.sppt.SPPTNode
 
@@ -151,12 +151,12 @@ class GrowingChildNode(
                         RuntimeRuleKind.TERMINAL -> 0
                         RuntimeRuleKind.EMBEDDED -> 0
                         RuntimeRuleKind.GOAL,
-                        RuntimeRuleKind.NON_TERMINAL -> when (ruleOption.runtimeRule.rhs.kind) {
-                            RuntimeRuleItemKind.CONCATENATION -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule }
-                            RuntimeRuleItemKind.CHOICE -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
-                            RuntimeRuleItemKind.EMPTY -> TODO()
-                            RuntimeRuleItemKind.MULTI -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
-                            RuntimeRuleItemKind.SEPARATED_LIST -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                        RuntimeRuleKind.NON_TERMINAL -> when (ruleOption.runtimeRule.rhs.itemsKind) {
+                            RuntimeRuleRhsItemsKind.CONCATENATION -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule }
+                            RuntimeRuleRhsItemsKind.CHOICE -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                            RuntimeRuleRhsItemsKind.EMPTY -> TODO()
+                            RuntimeRuleRhsItemsKind.MULTI -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                            RuntimeRuleRhsItemsKind.SEPARATED_LIST -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
                             else -> TODO()
                         }
                     }
