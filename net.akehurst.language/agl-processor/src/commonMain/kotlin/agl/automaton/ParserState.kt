@@ -103,7 +103,7 @@ class ParserState(
     val isUserGoal = this.runtimeRules.first() == this.stateSet.userGoalRule
 
     fun firstOf(ifReachedEnd: Set<RuntimeRule>): Set<RuntimeRule> = this.rulePositions.flatMap {
-        stateSet.firstOf(it, ifReachedEnd)
+        stateSet.buildCache.firstOf(it, ifReachedEnd)
     }.toSet()
 
     // add the transition and return it, or return existing transition if it already exists
@@ -149,7 +149,7 @@ class ParserState(
                 this.createLookaheadSet(lhsc)
             }
         }
-        val cls = this.rulePositions.flatMap { this.stateSet.calcClosure(it, upLhs) }
+        val cls = this.rulePositions.flatMap { this.stateSet.buildCache.calcClosure(it, upLhs) }
         val filt = cls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
         val grouped = filt.groupBy { it.rulePosition.item!! }.map {
             val rr = it.key
@@ -176,7 +176,7 @@ class ParserState(
             val upLhs = clsItem.parentItem?.lookaheadSet ?: LookaheadSet.UP
             val pns = parent.next()
             pns.map { parentNext ->
-                val lhsc = this.stateSet.firstOf(parentNext, upLhs.content)// this.stateSet.expectedAfter(parentNext)
+                val lhsc = this.stateSet.buildCache.firstOf(parentNext, upLhs.content)// this.stateSet.expectedAfter(parentNext)
                 val lhs = this.createLookaheadSet(lhsc)
                 HeightGraft(listOf(parent), listOf(parentNext), lhs, upLhs)
             }

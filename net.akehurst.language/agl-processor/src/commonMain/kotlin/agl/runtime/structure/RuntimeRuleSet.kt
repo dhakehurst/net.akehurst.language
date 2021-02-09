@@ -68,7 +68,7 @@ class RuntimeRuleSet(
         fun createGoalRule(userGoalRule: RuntimeRule): RuntimeRule {
             val gr = RuntimeRule(userGoalRule.runtimeRuleSetNumber, GOAL_RULE_NUMBER, GOAL_TAG, GOAL_TAG, RuntimeRuleKind.GOAL, false, false)
             val items = listOf(userGoalRule) //+ possibleEndOfText
-            gr.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, items.toTypedArray())
+            gr.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE,-1, 0, items.toTypedArray())
             return gr
         }
 
@@ -157,9 +157,9 @@ class RuntimeRuleSet(
 
             val skipChoiceRule =
                 RuntimeRule(this.number, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, SKIP_CHOICE_RULE_TAG, RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
-            skipChoiceRule.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
+            skipChoiceRule.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, RuntimeRuleListKind.NONE,-1, 0, skipRules)
             val skipMultiRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, SKIP_RULE_TAG, RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
-            skipMultiRule.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.MULTI, RuntimeRuleChoiceKind.NONE, 1, -1, arrayOf(skipChoiceRule))
+            skipMultiRule.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.LIST, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.MULTI,1, -1, arrayOf(skipChoiceRule))
 
             //val skipGoalRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
             //skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
@@ -349,14 +349,15 @@ class RuntimeRuleSet(
                 when (rp.runtimeRule.kind) {
                     RuntimeRuleKind.TERMINAL -> emptySet<RulePosition>()
                     RuntimeRuleKind.GOAL,
-                    RuntimeRuleKind.NON_TERMINAL -> rp.runtimeRule.items(rp.option, rp.position).flatMap {
-                        when (it.kind) {
+                    RuntimeRuleKind.NON_TERMINAL -> {
+                        val item = rp.runtimeRule.item(rp.option, rp.position) ?: TODO()
+                        when (item.kind) {
                             RuntimeRuleKind.GOAL -> TODO()
                             RuntimeRuleKind.TERMINAL -> setOf(rp)
-                            RuntimeRuleKind.NON_TERMINAL -> it.calcExpectedRulePositions(0)
+                            RuntimeRuleKind.NON_TERMINAL -> item.calcExpectedRulePositions(0)
                             RuntimeRuleKind.EMBEDDED -> {
-                                val embeddedStartRp = RulePosition(it.embeddedStartRule!!, 0, RulePosition.START_OF_RULE)
-                                it.embeddedRuntimeRuleSet!!.expectedTerminalRulePositions[embeddedStartRp]!!.toSet()
+                                val embeddedStartRp = RulePosition(item.embeddedStartRule!!, 0, RulePosition.START_OF_RULE)
+                                item.embeddedRuntimeRuleSet!!.expectedTerminalRulePositions[embeddedStartRp]!!.toSet()
                             }
                         }
                     }

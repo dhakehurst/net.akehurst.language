@@ -16,10 +16,7 @@
 
 package net.akehurst.language.parser.scanondemand.rightRecursive
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,7 +30,7 @@ class test_a : test_ScanOnDemandParserAbstract() {
         val r_a = b.literal("a")
         val r_S = b.rule("S").build()
         val r_S1 = b.rule("S1").concatenation(r_a, r_S)
-        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CHOICE,RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(r_a, r_S1))
+        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CHOICE,RuntimeRuleChoiceKind.LONGEST_PRIORITY, RuntimeRuleListKind.NONE,-1, 0, arrayOf(r_a, r_S1))
         return b
     }
 

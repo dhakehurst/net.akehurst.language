@@ -368,11 +368,11 @@ class GrowingNode(
                 RuntimeRuleRhsItemsKind.EMPTY -> -1
                 RuntimeRuleRhsItemsKind.CONCATENATION -> -1
                 RuntimeRuleRhsItemsKind.CHOICE -> -1
-                RuntimeRuleRhsItemsKind.UNORDERED -> -1
-                RuntimeRuleRhsItemsKind.LEFT_ASSOCIATIVE_LIST -> -1 //TODO
-                RuntimeRuleRhsItemsKind.RIGHT_ASSOCIATIVE_LIST -> -1 //TODO
-                RuntimeRuleRhsItemsKind.MULTI -> childrenSize
-                RuntimeRuleRhsItemsKind.SEPARATED_LIST -> childrenSize
+                RuntimeRuleRhsItemsKind.LIST -> when (runtimeRule.rhs.listKind) {
+                    RuntimeRuleListKind.MULTI -> childrenSize
+                    RuntimeRuleListKind.SEPARATED_LIST -> childrenSize
+                    else -> TODO()
+                }
             }
             else -> -1
         }

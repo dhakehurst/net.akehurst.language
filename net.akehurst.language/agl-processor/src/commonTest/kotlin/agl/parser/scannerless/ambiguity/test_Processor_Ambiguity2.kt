@@ -16,11 +16,8 @@
 
 package net.akehurst.language.parser.scanondemand.ambiguity
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -39,7 +36,7 @@ class test_Processor_Ambiguity2 : test_ScanOnDemandParserAbstract() {
         val ra = rrb.literal("a")
         val rS = rrb.rule("S").build()
         val rS1 = rrb.rule("S1").concatenation(rS, rS)
-        rS.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(ra, rS1))
+        rS.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, RuntimeRuleListKind.NONE,-1, 0, arrayOf(ra, rS1))
         return rrb
     }
 

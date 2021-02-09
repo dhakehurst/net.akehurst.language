@@ -26,11 +26,11 @@ plugins {
     kotlin("multiplatform") version "1.4.30-RC" apply false
     id("com.jfrog.bintray") version ("1.8.5") apply false
     id("org.jetbrains.dokka") version ("0.10.1") apply false
-    id("jacoco")
+    //id("jacoco")
 }
 
 allprojects {
-    apply(plugin = "jacoco")
+    //apply(plugin = "jacoco")
 
     val version_project: String by project
     val group_project = rootProject.name

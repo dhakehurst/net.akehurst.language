@@ -20,6 +20,7 @@ import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.RuleOptionId
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
 import net.akehurst.language.api.sppt.SPPTNode
 
 class GrowingChildNode(
@@ -151,13 +152,15 @@ class GrowingChildNode(
                         RuntimeRuleKind.TERMINAL -> 0
                         RuntimeRuleKind.EMBEDDED -> 0
                         RuntimeRuleKind.GOAL,
-                        RuntimeRuleKind.NON_TERMINAL -> when (ruleOption.runtimeRule.rhs.itemsKind) {
+                        RuntimeRuleKind.NON_TERMINAL -> when (rr.rhs.itemsKind) {
+                            RuntimeRuleRhsItemsKind.EMPTY -> TODO()
                             RuntimeRuleRhsItemsKind.CONCATENATION -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule }
                             RuntimeRuleRhsItemsKind.CHOICE -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
-                            RuntimeRuleRhsItemsKind.EMPTY -> TODO()
-                            RuntimeRuleRhsItemsKind.MULTI -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
-                            RuntimeRuleRhsItemsKind.SEPARATED_LIST -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
-                            else -> TODO()
+                            RuntimeRuleRhsItemsKind.LIST -> when(rr.rhs.listKind) {
+                                RuntimeRuleListKind.MULTI -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                                RuntimeRuleListKind.SEPARATED_LIST -> state.rulePositions.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                                else -> TODO()
+                            }
                         }
                     }
                     if (-1==i) emptyList() else listOf(children[i])

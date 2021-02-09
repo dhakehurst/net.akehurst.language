@@ -53,7 +53,7 @@ data class RulePosition(
     val items: List<RuntimeRule> get() = if (END_OF_RULE == position) {
         emptyList()
     } else {
-        runtimeRule.items(option, position)
+        listOf(runtimeRule.item(option, position)).mapNotNull { it }
     }
 
     val item: RuntimeRule? get() = when {
@@ -180,26 +180,6 @@ data class RulePosition(
         }
     }
 
-    fun ruleHasSameItemsUntil(rp2:RulePosition) :Boolean {
-        return when (this.runtimeRule.kind) {
-            RuntimeRuleKind.TERMINAL -> error("")
-            RuntimeRuleKind.EMBEDDED -> error("")
-            RuntimeRuleKind.GOAL -> error("")
-            RuntimeRuleKind.NON_TERMINAL -> when (this.runtimeRule.rhs.itemsKind) {
-                RuntimeRuleRhsItemsKind.EMPTY -> error("")
-                RuntimeRuleRhsItemsKind.CHOICE -> {
-                    this.runtimeRule.item(this.option,0) == rp2.runtimeRule.item(rp2.option,0)
-                }
-                RuntimeRuleRhsItemsKind.CONCATENATION -> {
-                    val pIndex = if(this.position== END_OF_RULE) this.runtimeRule.rhs.items.size else this.position
-                    (0..pIndex).all { p ->
-                        this.runtimeRule.item(0,p) == rp2.runtimeRule.item(rp2.option, p)
-                    }
-                }
-                RuntimeRuleRhsItemsKind.LIST -> TODO()
-            }
-        }
-    }
 
     override fun toString(): String {
         val r = when {
