@@ -2,8 +2,8 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.*
 
-data class ClosureItem(
-    val parentItem: ClosureItem?, //needed for height/graft
+data class ClosureItemLC0(
+    val parentItem: ClosureItemLC0?, //needed for height/graft
     val rulePosition: RulePosition,
     val next: RulePosition?,
     val lookaheadSet: LookaheadSet
@@ -29,7 +29,7 @@ data class ClosureItem(
     }
 }
 
-class BuildCache(
+class BuildCacheLC0(
     val stateSet: ParserStateSet
 ) {
 
@@ -85,10 +85,10 @@ class BuildCache(
     fun rulePositionsForStates(): List<List<RulePosition>> {
         val rulePositionLists = createMergedListsOfRulePositions()
         val terminalRPs = this.stateSet.usedTerminalRules.map { listOf(RulePosition(it, 0, RulePosition.END_OF_RULE)) } //TODO:EMBEDDED
-        return rulePositionLists + terminalRPs
+        return listOf(this.stateSet.startState.rulePositions) + rulePositionLists + terminalRPs
     }
 
-    internal fun createMergedListsOfRulePositions(): List<List<RulePosition>> {
+    private fun createMergedListsOfRulePositions(): List<List<RulePosition>> {
         val map = createRulePositionsIndexByFirstItem()
         val result = mutableListOf<List<RulePosition>>()
         val allReadyMerged = mutableSetOf<RulePosition>()
@@ -120,9 +120,12 @@ class BuildCache(
                         }
                         head = tail[0]
                         tail = tail.drop(1)
-
                     }
-
+                    if (allReadyMerged.contains(head)){
+                        //skip it
+                    } else {
+                        result.add(listOf(head))
+                    }
                 }
             }
         }
@@ -149,7 +152,7 @@ class BuildCache(
         return map
     }
 
-    fun rulePositionsAreSameState(rp1: RulePosition, rp2: RulePosition): Boolean {
+    private fun rulePositionsAreSameState(rp1: RulePosition, rp2: RulePosition): Boolean {
         val sameItemsUntil = when (rp1.runtimeRule.kind) {
             //RuntimeRuleKind.GOAL -> error("")
             RuntimeRuleKind.NON_TERMINAL -> when (rp1.runtimeRule.rhs.itemsKind) {
@@ -193,25 +196,11 @@ class BuildCache(
             }
             else -> error("should not happen")
         }
-        TODO()
-        //val rp1NextItems = firstOf(rp1,?)//rp1.next().mapNotNull { it.item }
-        //val rp2NextItems = firstOf(rp1,?)//rp2.next().mapNotNull { it.item } need closure !
-        //return sameItemsUntil && rp1NextItems.isNotEmpty() && rp1NextItems == rp2NextItems
+        val rp1NextItems = rp1.item//rp1.next().map { it.item }
+        val rp2NextItems = rp2.item//rp2.next().map { it.item }
+        return sameItemsUntil && rp1NextItems == rp2NextItems
     }
 
-    fun calcRulePositionLookaheadPairs() = calcRulePositionLookaheadPairs(this.stateSet.startState.runtimeRules.first(), LookaheadSet.UP)
-
-    fun calcRulePositionLookaheadPairs(rr: RuntimeRule, ifReachEnd: LookaheadSet): List<Pair<RulePosition, LookaheadSet>> {
-        for(rp in rr.rulePositions) {
-            if (rp.isAtEnd) {
-                Pair(rp, ifReachEnd)
-            } else {
-                val item = rp.item ?: error("should never be null unless at end")
-
-            }
-        }
-        TODO()
-    }
 
     private fun calcClosureItems(prevState: ParserState, thisState: ParserState): List<ClosureItem> {
         val prevRps = prevState.rulePositions
@@ -220,7 +209,7 @@ class BuildCache(
         return upFilt
     }
 
-    private fun calcLookaheadDown(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>): Set<RuntimeRule> {
+    fun calcLookaheadDown(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>): Set<RuntimeRule> {
         return when {
             rulePosition.isAtEnd -> ifReachEnd
             else -> {
@@ -298,6 +287,7 @@ class BuildCache(
             }
         }
     }
+
 
     /*
      * firstOf needs to iterate along a rule (calling .next()) and down (recursively stopping appropriately)

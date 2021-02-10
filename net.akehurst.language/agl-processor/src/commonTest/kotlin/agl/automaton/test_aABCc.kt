@@ -70,43 +70,43 @@ class test_aABCc : test_Abstract() {
     @Test
     fun calcLookaheadDown() {
 
-        var actual = s0.stateSet.calcLookaheadDown(RulePosition(G, 0, SOR), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        var actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(G, 0, SOR), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         var expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(G, 0, EOR), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(G, 0, EOR), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = emptySet()
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(S, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(S, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(S, 1, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S, 1, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(S, 1, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S, 1, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(S1, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S1, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(a, b)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(S1, 0, 1), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S1, 0, 1), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(c)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(S1, 0, 2), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S1, 0, 2), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(S1, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S1, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
     }

@@ -20,7 +20,12 @@ import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.collections.MutableQueue
 import net.akehurst.language.collections.Stack
 import net.akehurst.language.collections.lazyMapNonNull
+import kotlin.reflect.KProperty
 
+// TODO: remove this pre release
+// This a workaround for the debugger
+// see [https://youtrack.jetbrains.com/issue/KTIJ-1170#focus=Comments-27-4433190.0-0]
+operator fun <T> Lazy<T>.getValue(thisRef: Any?, property: KProperty<*>) = value
 
 class ParserStateSet(
     val number: Int,
@@ -31,7 +36,7 @@ class ParserStateSet(
 
     private var nextStateNumber = 0
     var preBuilt = false; private set
-    internal val buildCache = BuildCache(this)
+    internal val buildCache = BuildCacheLC0(this)
 
     val usedRules: Set<RuntimeRule> by lazy {
         calcUsedRules(this.startState.runtimeRules.first())
@@ -246,26 +251,10 @@ class ParserStateSet(
     private fun buildAndTraverse() {
 
         // key = Pair<listOf(<rhs-items>)>
-        val rulePositionLists = createMergedListsOfRulePositions()
-        val terminalRPs = this.usedTerminalRules.map { listOf(RulePosition(it, 0, RulePosition.END_OF_RULE)) } //TODO:EMBEDDED
-        val states = (rulePositionLists + terminalRPs).map {
+        val rulePositionLists = this.buildCache.rulePositionsForStates()
+        val states = rulePositionLists.map {
             this.states[it]
         }
-        /*
-        val states = this.usedRules.flatMap { rr ->
-            when (rr.kind) {
-                RuntimeRuleKind.GOAL -> setOf(this.startState, this.endState)
-                RuntimeRuleKind.TERMINAL -> setOf(this.states[listOf(RulePosition(rr, 0, RulePosition.END_OF_RULE))])
-                RuntimeRuleKind.EMBEDDED -> setOf(this.states[listOf(RulePosition(rr, 0, RulePosition.END_OF_RULE))])
-                RuntimeRuleKind.NON_TERMINAL -> rr.rulePositions.mapNotNull { rp ->
-                    when (rp.position) {
-                        0 -> null // never need a state for the first position of a nonTerminal
-                        else -> this.states[listOf(rp)] //TODO: how to predict merged states, maybe can't?
-                    }
-                }.toSet()
-            }
-        }
-*/
 
         for (state in states) {
             when {
@@ -283,12 +272,6 @@ class ParserStateSet(
                             }
                         }
                     }
-                    //val possiblePrev = states.filter { ps ->
-                    //     ps.rulePositions.any { rp ->
-                    //         val firstsClosure = this.calcClosureLR0(rp)
-                    //         firstsClosure.any { state.rulePositions.contains(it) }
-                    //    }
-                    //}
                     for (pp in possiblePrev) {
                         state.transitions(pp)
                     }
@@ -298,123 +281,7 @@ class ParserStateSet(
 
     }
 
-    internal fun createMergedListsOfRulePositions(): List<List<RulePosition>> {
-        // key is first item of RulePosition's rule
-        val map = mutableMapOf<RuntimeRule, MutableList<RulePosition>>()
-        for (rr in this.usedNonTerminalRules) {
-            for (rp in rr.rulePositions) {
-                if (RulePosition.START_OF_RULE == rp.position) {
-                    // do nothing, SOR position RPs are not made into a state, ther than for GOAL
-                } else {
-                    val key = rp.runtimeRule.item(rp.option, RulePosition.START_OF_RULE)!!
-                    val list = map[key] ?: run {
-                        map[key] = mutableListOf<RulePosition>()
-                        map[key]!!
-                    }
-                    list.add(rp)
-                }
-            }
-        }
-        val result = mutableListOf<List<RulePosition>>()
-        val allReadyMerged = mutableSetOf<RulePosition>()
-        for (list in map.values) {
-            when (list.size) {
-                // if only one item, then must be state on its own
-                1 -> result.add(list)
-                else -> {
-                    //multiple rps whoes rule has same first item, might be same state
-                    // need to check the rest of the items
-                    var head = list[0]
-                    var tail = list.drop(1)
-                    while (tail.isNotEmpty()) {
-                        if (allReadyMerged.contains(head)) {
-                            //skip it
-                        } else {
-                            val sl = mutableListOf(head)
-                            for (rp2 in tail) {
-                                when {
-                                    head.runtimeRule == rp2.runtimeRule -> null // not the same if position in same rule
-                                    rulePositionsAreSameState(head, rp2) -> {
-                                        sl.add(rp2)
-                                        allReadyMerged.add(rp2)
-                                    }
-                                    else -> null //do nothing
-                                }
-                            }
-                            result.add(sl)
-                        }
-                        head = tail[0]
-                        tail = tail.drop(1)
 
-                    }
-
-                }
-            }
-        }
-        return result
-    }
-
-    fun rulePositionsAreSameState(rp1: RulePosition, rp2: RulePosition): Boolean {
-        val sameItemsUntil = when (rp1.runtimeRule.kind) {
-            //RuntimeRuleKind.GOAL -> error("")
-            RuntimeRuleKind.NON_TERMINAL -> when (rp1.runtimeRule.rhs.itemsKind) {
-                RuntimeRuleRhsItemsKind.EMPTY -> error("")
-                RuntimeRuleRhsItemsKind.CHOICE -> {
-                    rp1.runtimeRule.item(rp1.option, 0) == rp2.runtimeRule.item(rp2.option, 0)
-                }
-                RuntimeRuleRhsItemsKind.CONCATENATION -> when (rp2.runtimeRule.kind) {
-                    RuntimeRuleKind.NON_TERMINAL -> when (rp1.runtimeRule.rhs.itemsKind) {
-                        RuntimeRuleRhsItemsKind.EMPTY -> error("")
-                        RuntimeRuleRhsItemsKind.CHOICE -> {
-                            rp1.runtimeRule.item(rp1.option, 0) == rp2.runtimeRule.item(rp2.option, 0)
-                        }
-                        RuntimeRuleRhsItemsKind.CONCATENATION -> {
-                            val pIndex = if (rp1.position == RulePosition.END_OF_RULE) rp1.runtimeRule.rhs.items.size else rp1.position
-                            rp1.position == rp2.position && (1..pIndex).all { p ->
-                                rp1.runtimeRule.item(rp1.option, p) == rp2.runtimeRule.item(rp2.option, p)
-                            }
-                        }
-                        RuntimeRuleRhsItemsKind.LIST -> rp1.runtimeRule.item(rp1.option, rp1.position) == rp2.runtimeRule.item(rp2.option, rp1.position)
-                    }
-                    else -> error("should not happen")
-                }
-                RuntimeRuleRhsItemsKind.LIST -> when (rp2.runtimeRule.kind) {
-                    //RuntimeRuleKind.GOAL -> error("")
-                    RuntimeRuleKind.NON_TERMINAL -> when (rp1.runtimeRule.rhs.itemsKind) {
-                        RuntimeRuleRhsItemsKind.EMPTY -> error("")
-                        RuntimeRuleRhsItemsKind.CHOICE -> {
-                            rp1.runtimeRule.item(rp1.option, 0) == rp2.runtimeRule.item(rp2.option, 0)
-                        }
-                        RuntimeRuleRhsItemsKind.CONCATENATION -> {
-                            val pIndex = if (rp2.position == RulePosition.END_OF_RULE) rp2.runtimeRule.rhs.items.size else rp2.position
-                            (1..pIndex).all { p ->
-                                rp1.runtimeRule.item(rp1.option, p) == rp2.runtimeRule.item(rp2.option, p)
-                            }
-                        }
-                        RuntimeRuleRhsItemsKind.LIST -> rp1.runtimeRule.item(rp1.option, rp1.position) == rp2.runtimeRule.item(rp2.option, rp1.position)
-                    }
-                    else -> error("should not happen")
-                }
-            }
-            else -> error("should not happen")
-        }
-        val rp1NextItems = firstOf(rp1)//rp1.next().mapNotNull { it.item }
-        val rp2NextItems = firstOf(rp1)//rp2.next().mapNotNull { it.item } need closure !
-        return sameItemsUntil && rp1NextItems.isNotEmpty() && rp1NextItems == rp2NextItems
-    }
-
-    fun calcRulePositionLookaheadPairs() = calcRulePositionLookaheadPairs(this.startState.runtimeRules.first(), LookaheadSet.UP)
-
-    fun calcRulePositionLookaheadPairs(rr: RuntimeRule, ifReachEnd: LookaheadSet): List<Pair<RulePosition, LookaheadSet>> {
-        for(rp in rr.rulePositions) {
-            if (rp.isAtEnd) {
-                Pair(rp, ifReachEnd)
-            } else {
-                val item = rp.item ?: error("should never be null unless at end")
-
-            }
-        }
-    }
 
     internal fun fetch(rulePosition: List<RulePosition>): ParserState {
         return this.states[rulePosition]

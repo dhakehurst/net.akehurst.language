@@ -77,7 +77,7 @@ class test_leftRecursive : test_Abstract() {
         val cl_G_So1_S1_So1 = ClosureItem(cl_G_So1_S1, RP(S, 1, 0), RP(S, 1, EOR), lhs_a)
         val cl_G_So1_S1_So1_S1 = ClosureItem(cl_G_So1_S1_So1, RP(S1, 0, 0), RP(S1, 0, 1), lhs_a)
 
-        val actual = SM.calcClosure(RP(G, 0, 0), lhs_U)
+        val actual = SM.buildCache.calcClosure(RP(G, 0, 0), lhs_U)
         val expected = setOf(
                 cl_G, cl_G_So0, cl_G_So1, cl_G_So1_S1, cl_G_So1_S1_So0, cl_G_So1_S1_So1, cl_G_So1_S1_So1_S1
         )

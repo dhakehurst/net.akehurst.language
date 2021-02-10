@@ -70,7 +70,7 @@ class test_concatenation_abc : test_Abstract() {
         val cl_G = ClosureItem(null, RP(G, 0, SOR), RP(G, 0, EOR), lhs_U)
         val cl_G_S0 = ClosureItem(cl_G, RP(S, 0, 0), RP(S, 0, 1), lhs_b)
 
-        val actual = SM.calcClosure(cl_G)
+        val actual = SM.buildCache.calcClosure(cl_G)
         val expected = setOf(
                 cl_G, cl_G_S0
         )

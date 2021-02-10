@@ -30,7 +30,7 @@ class test_skipRules : test_Abstract() {
 
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
-            pattern("COMMENT", "//[^\\n]*$", true)
+            pattern("COMMENT", "//[^\\n]*[\\n]", true)
             concatenation("S") { literal("a") }
         }
 

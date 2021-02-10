@@ -213,22 +213,22 @@ class test_Dot_Singles {
 
 
 
-        val stmt_list_0_0_firstOf = SM.firstOf(RulePosition(stmt_list,0,0), setOf(UP))
-        val stmt_list_multi_0_0_firstOf = SM.firstOf(RulePosition(stmt_list_multi,0,0), setOf(UP))
-        val stmt_list_multi_0_1_firstOf = SM.firstOf(RulePosition(stmt_list_multi,0,RulePosition.POSITION_MULIT_ITEM), setOf(UP))
-        val stmt1_0_0_firstOf = SM.firstOf(RulePosition(stmt1,0,0), setOf(UP))
-        val stmt1_0_1_firstOf = SM.firstOf(RulePosition(stmt1,0,1), setOf(UP))
+        val stmt_list_0_0_firstOf = SM.buildCache.firstOf(RulePosition(stmt_list,0,0), setOf(UP))
+        val stmt_list_multi_0_0_firstOf = SM.buildCache.firstOf(RulePosition(stmt_list_multi,0,0), setOf(UP))
+        val stmt_list_multi_0_1_firstOf = SM.buildCache.firstOf(RulePosition(stmt_list_multi,0,RulePosition.POSITION_MULIT_ITEM), setOf(UP))
+        val stmt1_0_0_firstOf = SM.buildCache.firstOf(RulePosition(stmt1,0,0), setOf(UP))
+        val stmt1_0_1_firstOf = SM.buildCache.firstOf(RulePosition(stmt1,0,1), setOf(UP))
 
         val edge_list_m_rps = edge_list_m.rulePositionsAt[0]
-        val edge_list_m_firstOf_0_0 = SM.firstOf(RulePosition(edge_list_m,0,0), setOf(UP))
+        val edge_list_m_firstOf_0_0 = SM.buildCache.firstOf(RulePosition(edge_list_m,0,0), setOf(UP))
         val edge_list_m_rps_nxt = edge_list_m_rps.flatMap { it.next() }
         val edge_list_m_rps_nxt_nxt = edge_list_m_rps_nxt.flatMap { it.next() }
      //   val edge_list_m_firstOf_0_2 = SM.firstOf(RulePosition(edge_list_m, RuntimeRuleItem.SLIST__ITEM,RulePosition.SLIST_ITEM_POSITION), setOf(UP))
 
-        val cls_stmt_list_0_0 = SM.calcClosure(RulePosition(stmt_list,0,0),lhs_U)
-        val cls_edge_list_0_0 = SM.calcClosure(RulePosition(edge_list,0,0),lhs_U)
-        val cls_edge_list_m = SM.calcClosure(RulePosition(edge_list_m,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),lhs_U)
-        val edge_list_m_firstOf_0_2 = SM.firstOf(RulePosition(edge_list_m, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM), setOf(UP))
+        val cls_stmt_list_0_0 = SM.buildCache.calcClosure(RulePosition(stmt_list,0,0),lhs_U)
+        val cls_edge_list_0_0 = SM.buildCache.calcClosure(RulePosition(edge_list,0,0),lhs_U)
+        val cls_edge_list_m = SM.buildCache.calcClosure(RulePosition(edge_list_m,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),lhs_U)
+        val edge_list_m_firstOf_0_2 = SM.buildCache.firstOf(RulePosition(edge_list_m, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM), setOf(UP))
 
         //lh of sList at pos 2 doesn't work (firstOf)?
 

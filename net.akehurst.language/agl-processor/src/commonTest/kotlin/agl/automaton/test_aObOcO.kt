@@ -77,51 +77,51 @@ class test_aObOcO : test_Abstract() {
     @Test
     fun calcLookahead() {
 
-        var actual = s0.stateSet.calcLookaheadDown(RulePosition(G, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        var actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(G, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         var expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(G, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(G, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(S, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)) // S = . a? b? c?
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)) // S = . a? b? c?
         expected = setOf(b, c, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(S, 0, 1), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))  // S = a? . b? c?
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S, 0, 1), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))  // S = a? . b? c?
         expected = setOf(c, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(S, 0, 2), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))  // S = a? b? . c?
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S, 0, 2), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))  // S = a? b? . c?
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(S, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))  // S = a? b? c? .
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))  // S = a? b? c? .
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(aOpt, RuntimeRuleItem.MULTI__ITEM, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(aOpt, RuntimeRuleItem.MULTI__ITEM, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(aOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(aOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(bOpt, RuntimeRuleItem.MULTI__ITEM, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(bOpt, RuntimeRuleItem.MULTI__ITEM, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(bOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(bOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(cOpt, RuntimeRuleItem.MULTI__ITEM, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(cOpt, RuntimeRuleItem.MULTI__ITEM, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
 
-        actual = s0.stateSet.calcLookaheadDown(RulePosition(cOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(cOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
         expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         assertEquals(expected, actual)
     }
@@ -133,7 +133,7 @@ class test_aObOcO : test_Abstract() {
         val cl_G_S_aOpt0 = ClosureItem(cl_G_S, RP(aOpt, OMI, 0), RP(aOpt, OMI, EOR), lhs_bcU)
         val cl_G_S_aOpt1 = ClosureItem(cl_G_S, RP(aOpt, OME, 0), RP(aOpt, OME, EOR), lhs_bcU)
 
-        val actual = SM.calcClosure(cl_G)
+        val actual = SM.buildCache.calcClosure(cl_G)
         val expected = setOf(
                 cl_G, cl_G_S, cl_G_S_aOpt0, cl_G_S_aOpt1
         )

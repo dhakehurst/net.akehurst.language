@@ -89,7 +89,7 @@ class test_sList_compositeMulti : test_Abstract() {
         val cl_G_So0_nl = ClosureItem(cl_G_So0, RP(nl, 0, 0), RP(nl, 0, 1), lhs_i)
         val cl_G_So1 = ClosureItem(cl_G, RP(S, 1, 0), RP(G, 0, 0), lhs_U)
 
-        val actual = SM.calcClosure(ClosureItem(null, RP(G, 0, 0), null, lhs_U))
+        val actual = SM.buildCache.calcClosure(ClosureItem(null, RP(G, 0, 0), null, lhs_U))
         val expected = setOf(
                 cl_G, cl_G_So0, cl_G_So1
         )

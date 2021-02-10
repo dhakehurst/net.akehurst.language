@@ -136,7 +136,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
         //val cl_G_S_aOpt0 = ClosureItem(cl_G_S, RP(aOpt, OMI, 0), RP(aOpt, OMI, EOR), lhs_bcU)
         //val cl_G_S_aOpt1 = ClosureItem(cl_G_S, RP(aOpt, OME, 0), RP(aOpt, OME, EOR), lhs_bcU)
 
-        val actual = SM.calcClosure(RP(G, 0, 0), lhs_U)
+        val actual = SM.buildCache.calcClosure(RP(G, 0, 0), lhs_U)
         val expected = setOf(
             cl_G //, cl_G_S, cl_G_S_aOpt0, cl_G_S_aOpt1
         )
