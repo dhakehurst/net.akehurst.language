@@ -589,4 +589,49 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
     }
 
+    @Test
+    fun AhoSetiUlman_Ex_4_7_5() {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("S1")
+                ref("S2")
+                ref("S3")
+                ref("S4")
+            }
+            concatenation("S1") { ref("A"); literal("a") }
+            concatenation("S2") { literal("b"); ref("A"); literal("c") }
+            concatenation("S3") { ref("B"); literal("c") }
+            concatenation("S4") { literal("b"); ref("B"); literal("a") }
+            concatenation("A") { literal("d") }
+            concatenation("B") { literal("d") }
+        }
+        val S = rrs.findRuntimeRule("S")
+        val SM = rrs.fetchStateSetFor(S)
+        val s0 = SM.startState
+        val G = s0.runtimeRules.first()
+
+        //val actual = SM.build()
+        //println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, "S", false) {
+            val s0 = state(RP(G, 0, SOR))      // G = . S
+
+
+        }
+
+        //super.assertEquals(expected, actual)
+
+        val sentences = listOf(
+            "da",
+            "bdc",
+            "dc",
+            "bda"
+        )
+        val parser = ScanOnDemandParser(rrs)
+        for (sentence in sentences) {
+            parser.parse("S", sentence)
+        }
+        println(rrs.usedAutomatonToString("S"))
+    }
+
 }

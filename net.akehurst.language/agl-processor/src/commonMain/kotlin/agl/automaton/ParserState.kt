@@ -137,19 +137,21 @@ class ParserState(
     }
 
     fun widthInto(prevState: ParserState?): Set<Pair<RulePosition, LookaheadSet>> {
-        val prevRps = prevState?.rulePositions
+        //val prevRps = prevState?.rulePositions
         // get lh by closure on prev
+        // upLhs can always be LookaheadSet.UP because the actual LH is carried at runtime
+        // thus we don't need prevState in to compute width targets
+        /*
         val upLhs = when (prevRps) {
             null -> LookaheadSet.UP
             else -> {
-                //val upCls = prevRps.flatMap { this.stateSet.calcClosure(it, LookaheadSet.UP) }.toSet()
-                //val upFilt = upCls.filter { this.runtimeRules.contains(it.rulePosition.item) }
                 val upFilt = this.stateSet.buildCache.closureItems(prevState, this)
                 val lhsc = upFilt.flatMap { it.lookaheadSet.content }.toSet() //TODO: should we combine these or keep sepraate?
                 this.createLookaheadSet(lhsc)
             }
         }
-        val cls = this.rulePositions.flatMap { this.stateSet.buildCache.calcClosure(it, upLhs) }
+         */
+        val cls = this.rulePositions.flatMap { this.stateSet.buildCache.calcClosure(it, LookaheadSet.UP)}//upLhs) }
         val filt = cls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
         val grouped = filt.groupBy { it.rulePosition.item!! }.map {
             val rr = it.key
@@ -166,10 +168,6 @@ class ParserState(
     fun heightOrGraftInto(prevState: ParserState): Set<HeightGraft> {
         // have to ensure somehow that this grows into prev
         //have to do closure down from prev,
-        //or we have to check this grows into prev after
-        //val prevRps = prevState.rulePositions
-        //val upCls = prevRps.flatMap { this.stateSet.calcClosure(it, LookaheadSet.UP) }.toSet()
-        //val upFilt = upCls.filter { this.runtimeRules.contains(it.rulePosition.item) }
         val upFilt = this.stateSet.buildCache.closureItems(prevState, this)
         val res = upFilt.flatMap { clsItem ->
             val parent = clsItem.rulePosition

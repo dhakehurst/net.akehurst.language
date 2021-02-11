@@ -34,11 +34,10 @@ class BuildCache(
 ) {
 
     private var _cacheOff = true
-
     private val _calcClosureLR0 = mutableMapOf<RulePosition, Set<RulePosition>>()
     private val _closureItems = mutableMapOf<Pair<ParserState, ParserState>, List<ClosureItem>>()
-
-    //TODO: use smaller array for done, but would to map rule number!
+    private val _closureForRulePosition = mutableMapOf<RulePosition, Set<ClosureItem>>()
+    //could use Map RuleNumber->FirstOfResult, but index with RuleNumber should be faster.
     private val _firstOfNotEmpty = Array<FirstOfResult?>(this.stateSet.runtimeRuleSet.runtimeRules.size, { null })
 
     fun closureLR0(rp: RulePosition): Set<RulePosition> {
@@ -51,12 +50,6 @@ class BuildCache(
                 v
             }
         }
-    }
-
-    internal fun calcClosure(rp: RulePosition, upLhs: LookaheadSet): Set<ClosureItem> {
-        val lhsc = calcLookaheadDown(rp, upLhs.content)
-        val lhs = this.stateSet.createLookaheadSet(lhsc)
-        return calcClosure(ClosureItem(null, rp, null, lhs))
     }
 
     fun closureItems(prevState: ParserState, thisState: ParserState): List<ClosureItem> {
@@ -199,18 +192,25 @@ class BuildCache(
         //return sameItemsUntil && rp1NextItems.isNotEmpty() && rp1NextItems == rp2NextItems
     }
 
-    fun calcRulePositionLookaheadPairs() = calcRulePositionLookaheadPairs(this.stateSet.startState.runtimeRules.first(), LookaheadSet.UP)
+    fun calcRulePositionLookaheadPairs() = calcRulePositionLookaheadPairs(this.stateSet.startState.runtimeRules.first(), LookaheadSet.UP, emptySet())
 
-    fun calcRulePositionLookaheadPairs(rr: RuntimeRule, ifReachEnd: LookaheadSet): List<Pair<RulePosition, LookaheadSet>> {
-        for(rp in rr.rulePositions) {
-            if (rp.isAtEnd) {
-                Pair(rp, ifReachEnd)
-            } else {
-                val item = rp.item ?: error("should never be null unless at end")
-
-            }
+    fun calcRulePositionLookaheadPairs(rr: RuntimeRule, ifReachEnd: LookaheadSet, done:Set<RuntimeRule>): List<Pair<RulePosition, LookaheadSet>> {
+        return if (done.contains(rr)) {
+TODO()
+        } else {
+TODO()
         }
-        TODO()
+    }
+
+    private fun closureForRulePosition(rp:RulePosition,ifReachEnd: LookaheadSet) : Set<ClosureItem> {
+        val cls = _closureForRulePosition[rp]
+        return if (null==cls) {
+            val cl = calcClosure(rp,ifReachEnd)
+            _closureForRulePosition[rp] = cl
+            cl
+        } else {
+            cls
+        }
     }
 
     private fun calcClosureItems(prevState: ParserState, thisState: ParserState): List<ClosureItem> {
@@ -218,6 +218,12 @@ class BuildCache(
         val upCls = prevRps.flatMap { this.calcClosure(it, LookaheadSet.UP) }.toSet()
         val upFilt = upCls.filter { thisState.runtimeRules.contains(it.rulePosition.item) }
         return upFilt
+    }
+
+    internal fun calcClosure(rp: RulePosition, upLhs: LookaheadSet): Set<ClosureItem> {
+        val lhsc = calcLookaheadDown(rp, upLhs.content)
+        val lhs = this.stateSet.createLookaheadSet(lhsc)
+        return calcClosure(ClosureItem(null, rp, null, lhs))
     }
 
     private fun calcLookaheadDown(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>): Set<RuntimeRule> {

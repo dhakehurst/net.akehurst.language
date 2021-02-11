@@ -36,7 +36,7 @@ class ParserStateSet(
 
     private var nextStateNumber = 0
     var preBuilt = false; private set
-    internal val buildCache = BuildCacheLC0(this)
+    internal val buildCache = BuildCache(this)
 
     val usedRules: Set<RuntimeRule> by lazy {
         calcUsedRules(this.startState.runtimeRules.first())
@@ -49,9 +49,9 @@ class ParserStateSet(
     }
 
     /*
-     * A RulePosition identifies a Parser state.
-     * LR(0) states
-     * The parentRelation can be used to determine the LR(1) related lookahead
+     * A collection of RulePositions identifies a Parser state.
+     * similar to LR(0) states
+     * Lookahead on the transitions allows for equivalence to LR(1)
      */
     val states = lazyMapNonNull<List<RulePosition>, ParserState> {
         ParserState(StateNumber(this.nextStateNumber++), it, this)
@@ -280,8 +280,6 @@ class ParserStateSet(
         }
 
     }
-
-
 
     internal fun fetch(rulePosition: List<RulePosition>): ParserState {
         return this.states[rulePosition]
