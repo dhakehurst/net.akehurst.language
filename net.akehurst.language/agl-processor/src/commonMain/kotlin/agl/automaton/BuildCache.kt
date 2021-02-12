@@ -78,7 +78,7 @@ class BuildCache(
     fun rulePositionsForStates(): List<List<RulePosition>> {
         val rulePositionLists = createMergedListsOfRulePositions()
         val terminalRPs = this.stateSet.usedTerminalRules.map { listOf(RulePosition(it, 0, RulePosition.END_OF_RULE)) } //TODO:EMBEDDED
-        return rulePositionLists + terminalRPs
+        return listOf(this.stateSet.startState.rulePositions) + rulePositionLists + terminalRPs
     }
 
     internal fun createMergedListsOfRulePositions(): List<List<RulePosition>> {
@@ -113,9 +113,12 @@ class BuildCache(
                         }
                         head = tail[0]
                         tail = tail.drop(1)
-
                     }
-
+                    if (allReadyMerged.contains(head)){
+                        //skip it
+                    } else {
+                        result.add(listOf(head))
+                    }
                 }
             }
         }
@@ -158,7 +161,7 @@ class BuildCache(
                         }
                         RuntimeRuleRhsItemsKind.CONCATENATION -> {
                             val pIndex = if (rp1.position == RulePosition.END_OF_RULE) rp1.runtimeRule.rhs.items.size else rp1.position
-                            rp1.position == rp2.position && (1..pIndex).all { p ->
+                            rp1.position == rp2.position && (0 until pIndex).all { p ->
                                 rp1.runtimeRule.item(rp1.option, p) == rp2.runtimeRule.item(rp2.option, p)
                             }
                         }
@@ -175,7 +178,7 @@ class BuildCache(
                         }
                         RuntimeRuleRhsItemsKind.CONCATENATION -> {
                             val pIndex = if (rp2.position == RulePosition.END_OF_RULE) rp2.runtimeRule.rhs.items.size else rp2.position
-                            (1..pIndex).all { p ->
+                            (0 until pIndex).all { p ->
                                 rp1.runtimeRule.item(rp1.option, p) == rp2.runtimeRule.item(rp2.option, p)
                             }
                         }
@@ -186,10 +189,9 @@ class BuildCache(
             }
             else -> error("should not happen")
         }
-        TODO()
-        //val rp1NextItems = firstOf(rp1,?)//rp1.next().mapNotNull { it.item }
-        //val rp2NextItems = firstOf(rp1,?)//rp2.next().mapNotNull { it.item } need closure !
-        //return sameItemsUntil && rp1NextItems.isNotEmpty() && rp1NextItems == rp2NextItems
+        val rp1NextItems = firstOf(rp1, emptySet())//rp1.next().mapNotNull { it.item }
+        val rp2NextItems = firstOf(rp1, emptySet())//rp2.next().mapNotNull { it.item } need closure !
+        return sameItemsUntil && rp1NextItems.isNotEmpty() && rp1NextItems == rp2NextItems
     }
 
     fun calcRulePositionLookaheadPairs() = calcRulePositionLookaheadPairs(this.stateSet.startState.runtimeRules.first(), LookaheadSet.UP, emptySet())
@@ -226,7 +228,7 @@ TODO()
         return calcClosure(ClosureItem(null, rp, null, lhs))
     }
 
-    private fun calcLookaheadDown(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>): Set<RuntimeRule> {
+    fun calcLookaheadDown(rulePosition: RulePosition, ifReachEnd: Set<RuntimeRule>): Set<RuntimeRule> {
         return when {
             rulePosition.isAtEnd -> ifReachEnd
             else -> {

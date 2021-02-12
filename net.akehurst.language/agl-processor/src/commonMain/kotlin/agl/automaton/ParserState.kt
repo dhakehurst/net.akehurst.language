@@ -137,11 +137,11 @@ class ParserState(
     }
 
     fun widthInto(prevState: ParserState?): Set<Pair<RulePosition, LookaheadSet>> {
-        //val prevRps = prevState?.rulePositions
         // get lh by closure on prev
         // upLhs can always be LookaheadSet.UP because the actual LH is carried at runtime
         // thus we don't need prevState in to compute width targets
-        /*
+
+        val prevRps = prevState?.rulePositions
         val upLhs = when (prevRps) {
             null -> LookaheadSet.UP
             else -> {
@@ -150,8 +150,9 @@ class ParserState(
                 this.createLookaheadSet(lhsc)
             }
         }
-         */
-        val cls = this.rulePositions.flatMap { this.stateSet.buildCache.calcClosure(it, LookaheadSet.UP)}//upLhs) }
+
+        //val cls = this.rulePositions.flatMap { this.stateSet.buildCache.calcClosure(it, upLhs) }
+        val cls = this.rulePositions.flatMap { this.stateSet.buildCache.calcClosure(it, LookaheadSet.UP)}
         val filt = cls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
         val grouped = filt.groupBy { it.rulePosition.item!! }.map {
             val rr = it.key
