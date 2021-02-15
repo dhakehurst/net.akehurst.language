@@ -249,7 +249,7 @@ class ParserStateSet(
     }
 
     private fun buildAndTraverse() {
-
+        this.buildCache.traverseRulePositions()
         // key = Pair<listOf(<rhs-items>)>
         val rulePositionLists = this.buildCache.rulePositionsForStates()
         val states = rulePositionLists.map {

@@ -76,9 +76,9 @@ class test_abc_OR_abd : test_Abstract() {
                 Triple(RP(ABD, 0, EOR), lhs_U, setOf(UP))     // ABD = a b d .
         )
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = listOf(
-                Pair(RP(a, 0, EOR), lhs_b)
+            WidthIntoInfo(RP(a, 0, EOR), lhs_b)
         )
 
     @Test
@@ -87,7 +87,7 @@ class test_abc_OR_abd : test_Abstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraft(
+            HeightGraftInfo(
                     listOf(RP(ABC, 0, SOR),RP(ABD, 0, SOR)),
                     listOf(RP(ABC, 0, 1),RP(ABD, 0, 1)),
                     lhs_b,

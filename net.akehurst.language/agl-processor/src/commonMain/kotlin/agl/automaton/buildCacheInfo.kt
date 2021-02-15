@@ -16,9 +16,23 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
+import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
 data class FirstOfResult(
     val needsNext: Boolean,
     val result: Set<RuntimeRule>
+)
+
+data class WidthIntoInfo(
+    val to:RulePosition,
+    val lookaheadSet: LookaheadSet
+)
+
+data class HeightGraftInfo(
+    val parent: List<RulePosition>,
+    val parentNext: List<RulePosition>,
+    val lhs: LookaheadSet,
+    val upLhs: LookaheadSet
 )

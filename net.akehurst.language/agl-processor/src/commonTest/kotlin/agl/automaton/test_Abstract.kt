@@ -121,7 +121,7 @@ abstract class test_Abstract : test_AutomatonUtilsAbstract() {
         }
     }
 
-    abstract val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    abstract val s0_widthInto_expected: List<WidthIntoInfo>
 
     @Test
     fun s0_widthInto() {

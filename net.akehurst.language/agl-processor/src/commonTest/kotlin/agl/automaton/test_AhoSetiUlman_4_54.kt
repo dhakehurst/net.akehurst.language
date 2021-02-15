@@ -71,10 +71,10 @@ class test_AhoSetiUlman_4_54 : test_Abstract() {
                 Triple(RP(G, 0, EOR), lhs_U, setOf(UP))             // G = S .
         )
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = listOf(
-                Pair(RP(T_c, 0, EOR), lhs_cd),
-                Pair(RP(T_d, 0, EOR), lhs_cd)
+            WidthIntoInfo(RP(T_c, 0, EOR), lhs_cd),
+            WidthIntoInfo(RP(T_d, 0, EOR), lhs_cd)
         )
 
 

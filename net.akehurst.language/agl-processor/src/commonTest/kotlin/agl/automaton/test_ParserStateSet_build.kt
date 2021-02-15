@@ -634,4 +634,42 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
     }
 
+    @Test
+    fun leftRecursive() {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                ref("S1")
+            }
+            concatenation("S1") { ref("S"); literal("a") }
+        }
+        val S = rrs.findRuntimeRule("S")
+        val SM = rrs.fetchStateSetFor(S)
+        val s0 = SM.startState
+        val G = s0.runtimeRules.first()
+
+        val actual = SM.build()
+        println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, "S", false) {
+            val s0 = state(RP(G, 0, SOR))      // G = . S
+
+
+        }
+
+        //super.assertEquals(expected, actual)
+
+        val sentences = listOf(
+            "da",
+            "bdc",
+            "dc",
+            "bda"
+        )
+        val parser = ScanOnDemandParser(rrs)
+        for (sentence in sentences) {
+            parser.parse("S", sentence)
+        }
+        println(rrs.usedAutomatonToString("S"))
+    }
+
 }

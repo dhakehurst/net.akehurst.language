@@ -72,7 +72,7 @@ class test_embedded : test_Abstract() {
                 Triple(RP(B,0,EOR), lhs_U, setOf(a))      // B = b .
         )
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = TODO("not implemented")
 
 }

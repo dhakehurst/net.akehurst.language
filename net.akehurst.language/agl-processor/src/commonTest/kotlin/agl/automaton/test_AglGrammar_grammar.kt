@@ -77,9 +77,9 @@ class test_AglGrammar_grammar : test_Abstract() {
                 Triple(RP(G, 0, EOR), lhs_U, setOf(UP))        // G = grammarDefinition .
         )
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = listOf(
-                Pair(RP(T_namespace,0,EOR), lhs_IDENTIFIER)
+            WidthIntoInfo(RP(T_namespace,0,EOR), lhs_IDENTIFIER)
         )
 
     @Test

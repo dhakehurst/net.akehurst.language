@@ -111,10 +111,10 @@ class test_aABCc : test_Abstract() {
         assertEquals(expected, actual)
     }
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = listOf(
-                Pair(RP(b,0,EOR),lhs_U),
-                Pair(RP(a,0,EOR),lhs_ab)
+            WidthIntoInfo(RP(b,0,EOR),lhs_U),
+            WidthIntoInfo(RP(a,0,EOR),lhs_ab)
         )
 
 }

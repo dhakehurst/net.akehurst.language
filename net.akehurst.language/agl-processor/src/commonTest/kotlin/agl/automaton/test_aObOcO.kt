@@ -140,10 +140,10 @@ class test_aObOcO : test_Abstract() {
         assertEquals(expected, actual)
     }
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = listOf(
-                Pair(RP(a, 0, EOR), lhs_bcU),
-                Pair(RP(aOpt_E, 0, EOR), lhs_bcU)
+            WidthIntoInfo(RP(a, 0, EOR), lhs_bcU),
+            WidthIntoInfo(RP(aOpt_E, 0, EOR), lhs_bcU)
         )
 
     @Test
@@ -162,7 +162,7 @@ class test_aObOcO : test_Abstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraft(listOf(RP(aOpt, 0, 0)), listOf(RP(aOpt, 0, EOR)), lhs_bcU, lhs_bcU)
+                HeightGraftInfo(listOf(RP(aOpt, 0, 0)), listOf(RP(aOpt, 0, EOR)), lhs_bcU, lhs_bcU)
         )
         assertEquals(expected, actual)
 

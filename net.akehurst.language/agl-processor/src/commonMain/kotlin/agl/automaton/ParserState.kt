@@ -19,13 +19,6 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.structure.*
 
-data class HeightGraft(
-    val parent: List<RulePosition>,
-    val parentNext: List<RulePosition>,
-    val lhs: LookaheadSet,
-    val upLhs: LookaheadSet
-)
-
 class ParserState(
     val number: StateNumber,
     //val rulePosition: RulePosition,
@@ -94,7 +87,10 @@ class ParserState(
     val allBuiltTransitions: Set<Transition> get() = _transitionsByTo.values.flatten().toSet()
     val transitionsByPrevious: Map<ParserState?, List<Transition>?> get() = _transitionsByPrevious
 
-    val runtimeRules: Set<RuntimeRule> = this.rulePositions.map { it.runtimeRule }.toSet()
+    val runtimeRules: List<RuntimeRule> by lazy {
+        this.rulePositions.map { it.runtimeRule }.toSet().toList()
+    }
+
     val terminalRule = runtimeRules.first()
 
     val isAtEnd: Boolean = this.rulePositions.first().isAtEnd //either all are atEnd or none are
@@ -136,68 +132,10 @@ class ParserState(
         return this.stateSet.createLookaheadSet(content)
     }
 
-    fun widthInto(prevState: ParserState?): Set<Pair<RulePosition, LookaheadSet>> {
-        // get lh by closure on prev
-        // upLhs can always be LookaheadSet.UP because the actual LH is carried at runtime
-        // thus we don't need prevState in to compute width targets
-
-        val prevRps = prevState?.rulePositions
-        val upLhs = when (prevRps) {
-            null -> LookaheadSet.UP
-            else -> {
-                val upFilt = this.stateSet.buildCache.closureItems(prevState, this)
-                val lhsc = upFilt.flatMap { it.lookaheadSet.content }.toSet() //TODO: should we combine these or keep sepraate?
-                this.createLookaheadSet(lhsc)
-            }
-        }
-
-        //val cls = this.rulePositions.flatMap { this.stateSet.buildCache.calcClosure(it, upLhs) }
-        val cls = this.rulePositions.flatMap { this.stateSet.buildCache.calcClosure(it, LookaheadSet.UP)}
-        val filt = cls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
-        val grouped = filt.groupBy { it.rulePosition.item!! }.map {
-            val rr = it.key
-            val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
-            val lhsc = it.value.flatMap { it.lookaheadSet.content }.toSet()
-            val lhs = this.createLookaheadSet(lhsc)
-            Pair(rp, lhs)
-        }.toSet()
-        //don't group them, because we need the info on the lookahead for the runtime calc of next lookaheads
-        return grouped
-    }
+    fun widthInto(prevState: ParserState?): Set<WidthIntoInfo> = this.stateSet.buildCache.widthInto(this)
 
     //for graft, previous must match prevGuard, for height must not match
-    fun heightOrGraftInto(prevState: ParserState): Set<HeightGraft> {
-        // have to ensure somehow that this grows into prev
-        //have to do closure down from prev,
-        val upFilt = this.stateSet.buildCache.closureItems(prevState, this)
-        val res = upFilt.flatMap { clsItem ->
-            val parent = clsItem.rulePosition
-            val upLhs = clsItem.parentItem?.lookaheadSet ?: LookaheadSet.UP
-            val pns = parent.next()
-            pns.map { parentNext ->
-                val lhsc = this.stateSet.buildCache.firstOf(parentNext, upLhs.content)// this.stateSet.expectedAfter(parentNext)
-                val lhs = this.createLookaheadSet(lhsc)
-                HeightGraft(listOf(parent), listOf(parentNext), lhs, upLhs)
-            }
-        }
-        val grouped = res.groupBy { listOf(it.parent, it.parentNext) }//, it.lhs) }
-            .map {
-                val parent = it.key[0] as List<RulePosition>
-                val parentNext = it.key[1] as List<RulePosition>
-                val lhs = createLookaheadSet(it.value.flatMap { it.lhs.content }.toSet())
-                val upLhs = createLookaheadSet(it.value.flatMap { it.upLhs.content }.toSet())
-                HeightGraft((parent), (parentNext), lhs, upLhs)
-            }
-        val grouped2 = grouped.groupBy { listOf(it.lhs, it.upLhs) }
-            .map {
-                val parent = it.value.flatMap { it.parent }.toSet().toList()
-                val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
-                val lhs = it.key[0] as LookaheadSet
-                val upLhs = it.key[1] as LookaheadSet
-                HeightGraft(parent, parentNext, lhs, upLhs)
-            }
-        return grouped2.toSet()
-    }
+    fun heightOrGraftInto(prevState: ParserState): Set<HeightGraftInfo> = this.stateSet.buildCache.heightOrGraftInto(prevState, this)
 
     fun transitions(previousState: ParserState?): List<Transition> {
         val cache = this._transitionsByPrevious[previousState]
@@ -289,8 +227,8 @@ class ParserState(
                 else -> {
                     val widthInto = this.widthInto(previousState)
                     for (p in widthInto) {
-                        val rp = p.first//rulePosition
-                        val lhs = p.second//lookaheadSet
+                        val rp = p.to
+                        val lhs = p.lookaheadSet
                         when (rp.runtimeRule.kind) {
                             RuntimeRuleKind.TERMINAL -> {
                                 __widthTransitions.add(this.createWidthTransition(rp, lhs))
@@ -344,8 +282,8 @@ class ParserState(
                 } else {
                     val widthInto = this.widthInto(previousState)
                     for (p in widthInto) {
-                        val rp = p.first//rulePosition
-                        val lhs = p.second//lookaheadSet
+                        val rp = p.to
+                        val lhs = p.lookaheadSet
                         when (rp.runtimeRule.kind) {
                             RuntimeRuleKind.TERMINAL -> {
                                 val ts = this.createWidthTransition(rp, lhs)
@@ -428,14 +366,14 @@ class ParserState(
         return Transition(this, to, action, lh, LookaheadSet.EMPTY, null) { _, _ -> true }
     }
 
-    private fun createHeightTransition3(hg: HeightGraft): Transition {
+    private fun createHeightTransition3(hg: HeightGraftInfo): Transition {
         val action = Transition.ParseAction.HEIGHT
         val to = this.stateSet.states[hg.parentNext]
         val trs = Transition(this, to, action, hg.lhs, hg.upLhs, hg.parent) { _, _ -> true }
         return trs
     }
 
-    private fun createGraftTransition3(hg: HeightGraft): Transition {
+    private fun createGraftTransition3(hg: HeightGraftInfo): Transition {
         val runtimeGuard: Transition.(GrowingNode, List<RulePosition>?) -> Boolean = { gn, previous ->
             if (null == previous) {
                 true

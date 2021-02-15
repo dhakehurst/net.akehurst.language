@@ -110,11 +110,11 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
             Triple(RP(G, 0, EOR), lhs_U, setOf(UP))        // G = S .
         )
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = listOf(
-            Pair(RP(d, 0, 0), lhs_T),
-            Pair(RP(b, 0, 0), lhs_T),
-            Pair(RP(d, 0, 0), lhs_T)
+            WidthIntoInfo(RP(d, 0, 0), lhs_T),
+            WidthIntoInfo(RP(b, 0, 0), lhs_T),
+            WidthIntoInfo(RP(d, 0, 0), lhs_T)
         )
 
     @Test
@@ -166,7 +166,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
         val actual = s1.heightOrGraftInto(s0)
 
         assertNotNull(actual)
-        val expected = emptySet<HeightGraft>()
+        val expected = emptySet<HeightGraftInfo>()
 
         assertEquals(expected, actual)
     }
