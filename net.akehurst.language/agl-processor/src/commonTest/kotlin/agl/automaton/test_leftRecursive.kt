@@ -84,9 +84,9 @@ class test_leftRecursive : test_Abstract() {
         assertEquals(expected, actual)
     }
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = listOf(
-                Pair(RP(a, 0, EOR), lhs_aU)
+            WidthIntoInfo(RP(a, 0, EOR), lhs_aU)
         )
 
     @Test
@@ -108,7 +108,7 @@ class test_leftRecursive : test_Abstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraft(
+                HeightGraftInfo(
                     listOf(RP(S, 0, 0)),
                     listOf(RP(S, 0, EOR)),
                     lhs_aU,
@@ -138,13 +138,13 @@ class test_leftRecursive : test_Abstract() {
         val actual = s2.heightOrGraftInto(s0)
 
         val expected = setOf(
-                HeightGraft(
+                HeightGraftInfo(
                     listOf(RP(G, 0, 0)),
                     listOf(RP(G, 0, EOR)),
                     lhs_U,
                     lhs_U
                 ),
-                HeightGraft(
+                HeightGraftInfo(
                     listOf(RP(S1, 0, 0)),
                     listOf(RP(S1, 0, 1)),
                     lhs_a,
@@ -172,7 +172,7 @@ class test_leftRecursive : test_Abstract() {
         val actual = s4.widthInto(s0).toList()
 
         val expected = listOf(
-                Pair(RP(a, 0, EOR), lhs_aU)
+            WidthIntoInfo(RP(a, 0, EOR), lhs_aU)
         )
         assertEquals(expected, actual)
 
@@ -198,7 +198,7 @@ class test_leftRecursive : test_Abstract() {
         val actual = s1.heightOrGraftInto(s4).toList()
 
         val expected = listOf(
-                HeightGraft(
+                HeightGraftInfo(
                     listOf(RP(S1, 0, 1)),
                     listOf(RP(S1, 0, EOR)),
                     lhs_aU,

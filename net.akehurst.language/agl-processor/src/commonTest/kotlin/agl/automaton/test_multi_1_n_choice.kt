@@ -65,10 +65,10 @@ class test_multi_1_n_choice : test_Abstract() {
         )
 
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = listOf(
-                Pair(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_abU),
-                Pair(RulePosition(b, 0, RulePosition.END_OF_RULE), lhs_abU)
+            WidthIntoInfo(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_abU),
+            WidthIntoInfo(RulePosition(b, 0, RulePosition.END_OF_RULE), lhs_abU)
         )
 
 
@@ -92,7 +92,7 @@ class test_multi_1_n_choice : test_Abstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraft(listOf(RP(AB, 0, SOR)), listOf(RP(AB, 0, EOR)), lhs_abU, lhs_abU)
+                HeightGraftInfo(listOf(RP(AB, 0, SOR)), listOf(RP(AB, 0, EOR)), lhs_abU, lhs_abU)
         )
         assertEquals(expected, actual)
 
@@ -104,8 +104,8 @@ class test_multi_1_n_choice : test_Abstract() {
         val actual = s3.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraft(listOf(RP(S, 0, SOR)), listOf(RP(S, 0, PMI)), lhs_ab, lhs_U),
-                HeightGraft(listOf(RP(S, 0, SOR)), listOf(RP(S, 0, EOR)), lhs_U, lhs_U)
+                HeightGraftInfo(listOf(RP(S, 0, SOR)), listOf(RP(S, 0, PMI)), lhs_ab, lhs_U),
+                HeightGraftInfo(listOf(RP(S, 0, SOR)), listOf(RP(S, 0, EOR)), lhs_U, lhs_U)
         )
         assertEquals(expected, actual)
 

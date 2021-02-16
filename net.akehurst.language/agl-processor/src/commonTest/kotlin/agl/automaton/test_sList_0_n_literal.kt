@@ -48,9 +48,9 @@ class test_sList_0_n_literal : test_Abstract() {
     override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
         get() = TODO("not implemented")
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = listOf(
-                Pair(RulePosition(a, 0, 0), lhs_T)
+            WidthIntoInfo(RulePosition(a, 0, 0), lhs_T)
         )
 
     @Test

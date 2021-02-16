@@ -96,10 +96,10 @@ class test_sList_compositeMulti : test_Abstract() {
         assertEquals(expected, actual)
     }
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = listOf(
-                Pair(RP(n, 0, EOR), lhs_ciU),
-                Pair(RP(Se, 0, EOR), lhs_U)
+            WidthIntoInfo(RP(n, 0, EOR), lhs_ciU),
+            WidthIntoInfo(RP(Se, 0, EOR), lhs_U)
         )
 
     @Test
@@ -122,7 +122,7 @@ class test_sList_compositeMulti : test_Abstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraft(
+                HeightGraftInfo(
                     listOf(RP(S, 0, 0)),
                     listOf(RP(S, 0, EOR)),
                     lhs_U,

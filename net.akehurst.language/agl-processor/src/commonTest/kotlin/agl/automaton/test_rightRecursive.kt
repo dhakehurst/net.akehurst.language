@@ -83,9 +83,9 @@ class test_rightRecursive : test_Abstract() {
         assertEquals(expected, actual)
     }
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = listOf(
-                Pair(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_aU)
+            WidthIntoInfo(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_aU)
         )
 
     @Test
@@ -106,13 +106,13 @@ class test_rightRecursive : test_Abstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraft(
+                HeightGraftInfo(
                     listOf(RulePosition(S, 0, 0)),
                     listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
                     lhs_U,
                     lhs_U
                 ),
-                HeightGraft(
+                HeightGraftInfo(
                     listOf(RulePosition(S1, 0, 0)),
                     listOf(RulePosition(S1, 0, 1)),
                     lhs_a,
@@ -144,7 +144,7 @@ class test_rightRecursive : test_Abstract() {
         val actual = s2.heightOrGraftInto(s0)
 
         val expected = setOf(
-                HeightGraft(
+                HeightGraftInfo(
                     listOf(RulePosition(G, 0, 0)),
                     listOf(RulePosition(G, 0, RulePosition.END_OF_RULE)),
                     lhs_U,
@@ -160,7 +160,7 @@ class test_rightRecursive : test_Abstract() {
         val actual = s2.heightOrGraftInto(s3)
 
         val expected = setOf(
-                HeightGraft(
+                HeightGraftInfo(
                     listOf(RulePosition(S1, 0, 1)),
                     listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE)),
                     lhs_U,
@@ -195,7 +195,7 @@ class test_rightRecursive : test_Abstract() {
 
 
         val expected = setOf(
-                HeightGraft(
+                HeightGraftInfo(
                     listOf(RulePosition(S, 1, 0)),
                     listOf(RulePosition(S, 1, RulePosition.END_OF_RULE)),
                     lhs_U,

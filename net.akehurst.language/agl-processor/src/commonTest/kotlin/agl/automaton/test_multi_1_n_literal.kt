@@ -56,9 +56,9 @@ class test_multi_1_n_literal : test_Abstract() {
                 Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)) // S = a+ .
         )
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = listOf(
-                Pair(RP(a,0,EOR), lhs_aU)
+            WidthIntoInfo(RP(a,0,EOR), lhs_aU)
         )
 
     @Test
@@ -67,13 +67,13 @@ class test_multi_1_n_literal : test_Abstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraft(
+                HeightGraftInfo(
                     listOf(RulePosition(S, 0, 0)),
                     listOf(RulePosition(S, 0, PMI)),
                     lhs_a,
                     lhs_U
                 ),
-                HeightGraft(
+                HeightGraftInfo(
                     listOf(RulePosition(S, 0, 0)),
                     listOf(RulePosition(S, 0, EOR)),
                     lhs_U,

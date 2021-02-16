@@ -103,9 +103,9 @@ class test_skipRules : test_Abstract() {
         )
 
 
-    override val s0_widthInto_expected: List<Pair<RulePosition, LookaheadSet>>
+    override val s0_widthInto_expected: List<WidthIntoInfo>
         get() = listOf(
-                Pair(RP(a, 0, EOR), lhs_U)
+            WidthIntoInfo(RP(a, 0, EOR), lhs_U)
         )
 
     @Test
@@ -113,8 +113,8 @@ class test_skipRules : test_Abstract() {
         val actual = sk0.widthInto(null).toList()
 
         val expected = listOf(
-                Pair(RulePosition(skWS, 0, RulePosition.END_OF_RULE), lhs_skWCU),
-                Pair(RulePosition(skCM, 0, RulePosition.END_OF_RULE), lhs_skWCU)
+            WidthIntoInfo(RulePosition(skWS, 0, RulePosition.END_OF_RULE), lhs_skWCU),
+            WidthIntoInfo(RulePosition(skCM, 0, RulePosition.END_OF_RULE), lhs_skWCU)
         )
         assertEquals(expected, actual)
     }
@@ -125,7 +125,7 @@ class test_skipRules : test_Abstract() {
         val actual = sk1.heightOrGraftInto(sk0).toList()
 
         val expected = listOf(
-                HeightGraft(
+                HeightGraftInfo(
                     listOf(RulePosition(skC, 0, RulePosition.START_OF_RULE)),
                     listOf(RulePosition(skC, 0, RulePosition.END_OF_RULE)),
                     lhs_WS_CM_UP,
