@@ -84,9 +84,9 @@ class test_leftRecursive : test_Abstract() {
         assertEquals(expected, actual)
     }
 
-    override val s0_widthInto_expected: List<WidthIntoInfo>
+    override val s0_widthInto_expected: List<WidthInfo>
         get() = listOf(
-            WidthIntoInfo(RP(a, 0, EOR), lhs_aU)
+            WidthInfo(RP(a, 0, EOR), lhs_aU)
         )
 
     @Test
@@ -172,7 +172,7 @@ class test_leftRecursive : test_Abstract() {
         val actual = s4.widthInto(s0).toList()
 
         val expected = listOf(
-            WidthIntoInfo(RP(a, 0, EOR), lhs_aU)
+            WidthInfo(RP(a, 0, EOR), lhs_aU)
         )
         assertEquals(expected, actual)
 

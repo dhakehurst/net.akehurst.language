@@ -56,9 +56,9 @@ class test_multi_1_n_literal : test_Abstract() {
                 Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)) // S = a+ .
         )
 
-    override val s0_widthInto_expected: List<WidthIntoInfo>
+    override val s0_widthInto_expected: List<WidthInfo>
         get() = listOf(
-            WidthIntoInfo(RP(a,0,EOR), lhs_aU)
+            WidthInfo(RP(a,0,EOR), lhs_aU)
         )
 
     @Test

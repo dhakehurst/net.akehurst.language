@@ -20,8 +20,6 @@ import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class test_embedded : test_Abstract() {
 
@@ -72,7 +70,7 @@ class test_embedded : test_Abstract() {
                 Triple(RP(B,0,EOR), lhs_U, setOf(a))      // B = b .
         )
 
-    override val s0_widthInto_expected: List<WidthIntoInfo>
+    override val s0_widthInto_expected: List<WidthInfo>
         get() = TODO("not implemented")
 
 }

@@ -61,7 +61,7 @@ class test_multi_0_n_literal : test_Abstract() {
                 Triple(RP(S, 0, EOR), lhs_U, setOf(UP)) // S = a* .
         )
 
-    override val s0_widthInto_expected: List<WidthIntoInfo>
+    override val s0_widthInto_expected: List<WidthInfo>
         get() = TODO("not implemented")
 
     @Test

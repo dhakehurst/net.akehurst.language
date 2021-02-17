@@ -25,7 +25,7 @@ data class FirstOfResult(
     val result: Set<RuntimeRule>
 )
 
-data class WidthIntoInfo(
+data class WidthInfo(
     val to:RulePosition,
     val lookaheadSet: LookaheadSet
 )

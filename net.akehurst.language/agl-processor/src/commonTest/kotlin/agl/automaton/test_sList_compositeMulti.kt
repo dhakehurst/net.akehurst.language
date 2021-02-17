@@ -96,10 +96,10 @@ class test_sList_compositeMulti : test_Abstract() {
         assertEquals(expected, actual)
     }
 
-    override val s0_widthInto_expected: List<WidthIntoInfo>
+    override val s0_widthInto_expected: List<WidthInfo>
         get() = listOf(
-            WidthIntoInfo(RP(n, 0, EOR), lhs_ciU),
-            WidthIntoInfo(RP(Se, 0, EOR), lhs_U)
+            WidthInfo(RP(n, 0, EOR), lhs_ciU),
+            WidthInfo(RP(Se, 0, EOR), lhs_U)
         )
 
     @Test

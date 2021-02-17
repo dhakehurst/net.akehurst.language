@@ -77,9 +77,9 @@ class test_concatenation_abc : test_Abstract() {
         assertEquals(expected, actual)
     }
 
-    override val s0_widthInto_expected: List<WidthIntoInfo>
+    override val s0_widthInto_expected: List<WidthInfo>
         get() = listOf(
-            WidthIntoInfo(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_b)
+            WidthInfo(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_b)
         )
 
     @Test

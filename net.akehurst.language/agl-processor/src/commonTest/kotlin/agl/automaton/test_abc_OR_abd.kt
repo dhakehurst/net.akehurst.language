@@ -76,9 +76,9 @@ class test_abc_OR_abd : test_Abstract() {
                 Triple(RP(ABD, 0, EOR), lhs_U, setOf(UP))     // ABD = a b d .
         )
 
-    override val s0_widthInto_expected: List<WidthIntoInfo>
+    override val s0_widthInto_expected: List<WidthInfo>
         get() = listOf(
-            WidthIntoInfo(RP(a, 0, EOR), lhs_b)
+            WidthInfo(RP(a, 0, EOR), lhs_b)
         )
 
     @Test

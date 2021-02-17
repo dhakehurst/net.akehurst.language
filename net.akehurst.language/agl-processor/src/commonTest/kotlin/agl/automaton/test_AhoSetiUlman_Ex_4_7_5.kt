@@ -110,11 +110,11 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
             Triple(RP(G, 0, EOR), lhs_U, setOf(UP))        // G = S .
         )
 
-    override val s0_widthInto_expected: List<WidthIntoInfo>
+    override val s0_widthInto_expected: List<WidthInfo>
         get() = listOf(
-            WidthIntoInfo(RP(d, 0, 0), lhs_T),
-            WidthIntoInfo(RP(b, 0, 0), lhs_T),
-            WidthIntoInfo(RP(d, 0, 0), lhs_T)
+            WidthInfo(RP(d, 0, 0), lhs_T),
+            WidthInfo(RP(b, 0, 0), lhs_T),
+            WidthInfo(RP(d, 0, 0), lhs_T)
         )
 
     @Test

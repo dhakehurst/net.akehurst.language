@@ -68,10 +68,10 @@ class test_AglGrammar_rule : test_Abstract() {
 //TODO
         )
 
-    override val s0_widthInto_expected: List<WidthIntoInfo>
+    override val s0_widthInto_expected: List<WidthInfo>
         get() = listOf(
-            WidthIntoInfo(RP(T_namespace,0,EOR), lhs_U),
-            WidthIntoInfo(RP(T_namespace,0,EOR), lhs_U)
+            WidthInfo(RP(T_namespace,0,EOR), lhs_U),
+            WidthInfo(RP(T_namespace,0,EOR), lhs_U)
         )
 
     @Test

@@ -65,10 +65,10 @@ class test_multi_1_n_choice : test_Abstract() {
         )
 
 
-    override val s0_widthInto_expected: List<WidthIntoInfo>
+    override val s0_widthInto_expected: List<WidthInfo>
         get() = listOf(
-            WidthIntoInfo(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_abU),
-            WidthIntoInfo(RulePosition(b, 0, RulePosition.END_OF_RULE), lhs_abU)
+            WidthInfo(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_abU),
+            WidthInfo(RulePosition(b, 0, RulePosition.END_OF_RULE), lhs_abU)
         )
 
 

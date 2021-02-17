@@ -121,7 +121,7 @@ abstract class test_Abstract : test_AutomatonUtilsAbstract() {
         }
     }
 
-    abstract val s0_widthInto_expected: List<WidthIntoInfo>
+    abstract val s0_widthInto_expected: List<WidthInfo>
 
     @Test
     fun s0_widthInto() {
