@@ -31,7 +31,7 @@ class test_multi_0_n_literal : test_Abstract() {
         }
 
         val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
         val G = SM.startState.runtimeRules.first()
         val eS = S.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
         val a = rrs.findRuntimeRule("'a'")

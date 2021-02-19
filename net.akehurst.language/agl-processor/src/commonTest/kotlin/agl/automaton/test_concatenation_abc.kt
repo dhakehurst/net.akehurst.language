@@ -32,7 +32,7 @@ class test_concatenation_abc : test_Abstract() {
         }
 
         val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
         val G = SM.startState.runtimeRules.first()
 
         val a = rrs.findRuntimeRule("'a'")
@@ -63,19 +63,6 @@ class test_concatenation_abc : test_Abstract() {
                 Triple(RP(S, 0, 2), lhs_U, setOf(c)), // S = a b . c
                 Triple(RP(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP))   // S = a b c .
         )
-
-
-    @Test
-    fun calcClosure_G_0_0() {
-        val cl_G = ClosureItem(null, RP(G, 0, SOR), RP(G, 0, EOR), lhs_U)
-        val cl_G_S0 = ClosureItem(cl_G, RP(S, 0, 0), RP(S, 0, 1), lhs_b)
-
-        val actual = SM.buildCache.calcClosure(cl_G)
-        val expected = setOf(
-                cl_G, cl_G_S0
-        )
-        assertEquals(expected, actual)
-    }
 
     override val s0_widthInto_expected: List<WidthInfo>
         get() = listOf(

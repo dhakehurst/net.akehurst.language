@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.parser
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.ParseGraph
@@ -32,7 +33,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.math.max
 
 class ScanOnDemandParser(
-        internal val runtimeRuleSet: RuntimeRuleSet
+    internal val runtimeRuleSet: RuntimeRuleSet
 ) : Parser {
 
     private var runtimeParser: RuntimeParser? = null
@@ -41,8 +42,8 @@ class ScanOnDemandParser(
         this.runtimeParser?.interrupt(message)
     }
 
-    override fun buildFor(goalRuleName: String) {
-        this.runtimeRuleSet.buildFor(goalRuleName)
+    override fun buildFor(goalRuleName: String, automatonKind: AutomatonKind) {
+        this.runtimeRuleSet.buildFor(goalRuleName, automatonKind)
     }
 
     override fun scan(inputText: String, includeSkipRules: Boolean): List<SPPTLeaf> {
@@ -102,10 +103,10 @@ class ScanOnDemandParser(
         return result
     }
 
-    override fun parse(goalRuleName: String, inputText: String): SharedPackedParseTree {
+    override fun parse(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): SharedPackedParseTree {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
-        val s0 = runtimeRuleSet.startingState(goalRule)
+        val s0 = runtimeRuleSet.fetchStateSetFor(goalRule,automatonKind).startState
         val skipStateSet = runtimeRuleSet.skipParserStateSet
         val rp = RuntimeParser(s0.stateSet, skipStateSet, goalRule, LookaheadSet.EOT, input)
         this.runtimeParser = rp
@@ -120,8 +121,8 @@ class ScanOnDemandParser(
             seasons++
             maxNumHeads = max(maxNumHeads, rp.graph.growingHead.size)
             totalWork += rp.graph.growingHead.size
-       // } while (rp.graph.canGrow)
-    } while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not()))
+            // } while (rp.graph.canGrow)
+        } while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not()))
         //TODO: when parsing an ambiguous grammar,
         // how to know we have found all goals? - keep going until cangrow is false
         // but - how to stop .. some grammars don't stop if we don't do test for a goal!
@@ -137,7 +138,13 @@ class ScanOnDemandParser(
         }
     }
 
-    private fun throwError(graph: ParseGraph, rp: RuntimeParser, nextExpected: Pair<InputLocation, Set<RuntimeRule>>, seasons: Int, maxNumHeads: Int): SharedPackedParseTreeDefault {
+    private fun throwError(
+        graph: ParseGraph,
+        rp: RuntimeParser,
+        nextExpected: Pair<InputLocation, Set<RuntimeRule>>,
+        seasons: Int,
+        maxNumHeads: Int
+    ): SharedPackedParseTreeDefault {
         val llg = rp.longestLastGrown ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0), emptySet())
 
         val lastLocation = nextExpected.first
@@ -188,7 +195,7 @@ class ScanOnDemandParser(
         } else {
             rp.resetGraphToLastGrown()
             rp.tryGrowHeightOrGraft()
-       }
+        }
 
         val r = poss.map { lg ->
             // compute next expected item/RuntimeRule
@@ -200,8 +207,8 @@ class ScanOnDemandParser(
                             Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
                             Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.lookahead.content)
                             Transition.ParseAction.EMBED -> TODO()
-                            Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard,lg.lookahead).content
-                            Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.lookahead }.flatMap { rp.stateSet.createWithParent(tr.lookaheadGuard,it).content }
+                            Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.lookahead).content
+                            Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.lookahead }.flatMap { rp.stateSet.createWithParent(tr.lookaheadGuard, it).content }
                             Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                         }
                     }
@@ -211,14 +218,14 @@ class ScanOnDemandParser(
                     val x = lg.previous.values.flatMap { it ->
                         val prev = it.node
                         val trs = lg.currentState.transitions(prev.currentState)
-                                .filter { it.runtimeGuard(it, prev, prev.currentState.rulePositions) }
+                            .filter { it.runtimeGuard(it, prev, prev.currentState.rulePositions) }
                         val exp = trs.flatMap { tr ->
                             when (tr.action) {
                                 Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
                                 Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.lookahead.content)
                                 Transition.ParseAction.EMBED -> TODO()
-                                Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard,lg.lookahead).content
-                                Transition.ParseAction.GRAFT -> rp.stateSet.createWithParent(tr.lookaheadGuard,prev.lookahead).content
+                                Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.lookahead).content
+                                Transition.ParseAction.GRAFT -> rp.stateSet.createWithParent(tr.lookaheadGuard, prev.lookahead).content
                                 Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                             }
                         }
@@ -255,17 +262,17 @@ class ScanOnDemandParser(
         } while (rp.canGrow && graph.goals.isEmpty())
 
         val nextExpected = matches
-                .filter { it.canGrowWidth }
-                .flatMap { it.nextExpectedItems }
-                .toSet()
+            .filter { it.canGrowWidth }
+            .flatMap { it.nextExpectedItems }
+            .toSet()
         return nextExpected
     }
 
-    override fun expectedAt(goalRuleName: String, inputText: String, position: Int): Set<RuntimeRule> {
+    override fun expectedAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule> {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val usedText = inputText.substring(0, position)
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, usedText)
-        val ss = runtimeRuleSet.fetchStateSetFor(goalRule)
+        val ss = runtimeRuleSet.fetchStateSetFor(goalRule,automatonKind)
         val skipStateSet = runtimeRuleSet.skipParserStateSet
         val rp = RuntimeParser(ss, skipStateSet, goalRule, LookaheadSet.EOT, input)
         this.runtimeParser = rp
@@ -287,15 +294,15 @@ class ScanOnDemandParser(
         return nextExpected
     }
 
-    override fun expectedTerminalsAt(goalRuleName: String, inputText: String, position: Int): Set<RuntimeRule> {
-        return this.expectedAt(goalRuleName, inputText, position)
-                .flatMap {
-                    when (it.kind) {
-                        RuntimeRuleKind.TERMINAL -> listOf(it)
-                        RuntimeRuleKind.NON_TERMINAL -> this.runtimeRuleSet.firstTerminals[it.number]
-                        else -> TODO()
-                    }
+    override fun expectedTerminalsAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule> {
+        return this.expectedAt(goalRuleName, inputText, position,automatonKind)
+            .flatMap {
+                when (it.kind) {
+                    RuntimeRuleKind.TERMINAL -> listOf(it)
+                    RuntimeRuleKind.NON_TERMINAL -> this.runtimeRuleSet.firstTerminals[it.number]
+                    else -> TODO()
                 }
-                .toSet()
+            }
+            .toSet()
     }
 }

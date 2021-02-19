@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.sppt.SPPTParser
@@ -34,7 +35,7 @@ class test_AglGrammar_item {
     private val spptParser = SPPTParser(converterToRuntimeRules.builder.ruleSet())
 
     private fun parse(goalRule: String, inputText: String): SharedPackedParseTree {
-        return parser.parse(goalRule, inputText)
+        return parser.parse(goalRule, inputText, AutomatonKind.LC1)
     }
 
     private fun sppt(treeString: String): SharedPackedParseTree {

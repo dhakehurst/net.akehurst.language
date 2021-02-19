@@ -36,7 +36,7 @@ class test_leftRecursive : test_Abstract() {
         }
 
         val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
         val G = SM.startState.runtimeRules.first()
         val S1 = rrs.findRuntimeRule("S1")
         val a = rrs.findRuntimeRule("'a'")
@@ -67,22 +67,6 @@ class test_leftRecursive : test_Abstract() {
                 Triple(RP(S1, 0, EOR), lhs_U, setOf(UP)) // S1 = S a .
         )
 
-    @Test
-    fun calcClosure_G_0_0() {
-        val cl_G = ClosureItem(null, RP(G, 0, 0), null, lhs_U)
-        val cl_G_So0 = ClosureItem(cl_G, RP(S, 0, 0), RP(S, 0, EOR), lhs_U)
-        val cl_G_So1 = ClosureItem(cl_G, RP(S, 1, 0), RP(S, 1, EOR), lhs_U)
-        val cl_G_So1_S1 = ClosureItem(cl_G_So1, RP(S1, 0, 0), RP(S1, 0, 1), lhs_a)
-        val cl_G_So1_S1_So0 = ClosureItem(cl_G_So1_S1, RP(S, 0, 0), RP(S, 0, EOR), lhs_a)
-        val cl_G_So1_S1_So1 = ClosureItem(cl_G_So1_S1, RP(S, 1, 0), RP(S, 1, EOR), lhs_a)
-        val cl_G_So1_S1_So1_S1 = ClosureItem(cl_G_So1_S1_So1, RP(S1, 0, 0), RP(S1, 0, 1), lhs_a)
-
-        val actual = SM.buildCache.calcClosure(RP(G, 0, 0), lhs_U)
-        val expected = setOf(
-                cl_G, cl_G_So0, cl_G_So1, cl_G_So1_S1, cl_G_So1_S1_So0, cl_G_So1_S1_So1, cl_G_So1_S1_So1_S1
-        )
-        assertEquals(expected, actual)
-    }
 
     override val s0_widthInto_expected: List<WidthInfo>
         get() = listOf(

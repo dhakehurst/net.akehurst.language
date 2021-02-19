@@ -20,6 +20,7 @@ package net.akehurst.language.agl.processor.dot
 //import java.io.BufferedReader
 //import java.io.InputStreamReader
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.processor.Agl
@@ -199,49 +200,9 @@ class test_Dot_Singles {
 
         val converterToRuntimeRules = ConverterToRuntimeRules(processor.grammar)
         val parser = ScanOnDemandParser(converterToRuntimeRules.transform())
-        val rrs = parser.runtimeRuleSet
-        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
-        val lhs_U = rrs.createLookaheadSet(setOf(UP))
-        val stmt_list = rrs.findRuntimeRule("stmt_list")
-        val stmt_list_multi = stmt_list.rhs.items[0]
-        val stmt1 = rrs.findRuntimeRule("stmt1")
-        val stmt = rrs.findRuntimeRule("stmt")
-        val edge_list = rrs.findRuntimeRule("edge_list")
-        val edge_list_m = rrs.findRuntimeRule("§edge_list§sList1")
-        val SM = rrs.fetchStateSetFor(stmt_list)
-        val rps = stmt_list_multi.rulePositionsAt[0]
 
-
-
-        val stmt_list_0_0_firstOf = SM.buildCache.firstOf(RulePosition(stmt_list,0,0), setOf(UP))
-        val stmt_list_multi_0_0_firstOf = SM.buildCache.firstOf(RulePosition(stmt_list_multi,0,0), setOf(UP))
-        val stmt_list_multi_0_1_firstOf = SM.buildCache.firstOf(RulePosition(stmt_list_multi,0,RulePosition.POSITION_MULIT_ITEM), setOf(UP))
-        val stmt1_0_0_firstOf = SM.buildCache.firstOf(RulePosition(stmt1,0,0), setOf(UP))
-        val stmt1_0_1_firstOf = SM.buildCache.firstOf(RulePosition(stmt1,0,1), setOf(UP))
-
-        val edge_list_m_rps = edge_list_m.rulePositionsAt[0]
-        val edge_list_m_firstOf_0_0 = SM.buildCache.firstOf(RulePosition(edge_list_m,0,0), setOf(UP))
-        val edge_list_m_rps_nxt = edge_list_m_rps.flatMap { it.next() }
-        val edge_list_m_rps_nxt_nxt = edge_list_m_rps_nxt.flatMap { it.next() }
-     //   val edge_list_m_firstOf_0_2 = SM.firstOf(RulePosition(edge_list_m, RuntimeRuleItem.SLIST__ITEM,RulePosition.SLIST_ITEM_POSITION), setOf(UP))
-
-        val cls_stmt_list_0_0 = SM.buildCache.calcClosure(RulePosition(stmt_list,0,0),lhs_U)
-        val cls_edge_list_0_0 = SM.buildCache.calcClosure(RulePosition(edge_list,0,0),lhs_U)
-        val cls_edge_list_m = SM.buildCache.calcClosure(RulePosition(edge_list_m,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),lhs_U)
-        val edge_list_m_firstOf_0_2 = SM.buildCache.firstOf(RulePosition(edge_list_m, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM), setOf(UP))
-
-        //lh of sList at pos 2 doesn't work (firstOf)?
-
-        val filt = cls_edge_list_m.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
-        val grouped = filt.groupBy { it.rulePosition.item!! }.map {
-            val rr = it.key
-            val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
-            val lhsc = it.value.flatMap { it.lookaheadSet.content }.toSet()
-            val lhs = SM.createLookaheadSet(lhsc)
-            Pair(rp, lhs)
-        }.toSet()
         //fails at season 9 with edge_list
-        parser.parse(goal, sentence)
+        parser.parse(goal, sentence, AutomatonKind.LC1)
     }
 
     @Test

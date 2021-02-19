@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.parser.InputFromString
 import kotlin.test.Test
@@ -50,7 +51,7 @@ class test_ParseGraph_abc {
         val sut = ParseGraph(r_S,input, 10,10)
 
         val gr = RuntimeRuleSet.createGoalRule(r_S)
-        val startState = rrs.startingState(r_S)
+        val startState = rrs.fetchStateSetFor(r_S, AutomatonKind.LC1).startState
         sut.start(startState,0, LookaheadSet.EMPTY)
 
         assertEquals(RuntimeRuleKind.GOAL, gr.kind)

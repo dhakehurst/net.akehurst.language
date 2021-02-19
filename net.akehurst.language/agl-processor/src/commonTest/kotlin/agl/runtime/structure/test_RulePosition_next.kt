@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -299,7 +300,7 @@ class test_RulePosition_next {
     @Test
     fun sList1n__S_Empty_start() {
         val S = sList1n.findRuntimeRule("S")
-        val SM = sList1n.fetchStateSetFor(S)
+        val SM = sList1n.fetchStateSetFor(S, AutomatonKind.LC1)
         val G = SM.startState
 
         val actual = RP(S, OLE, SOR).next()
@@ -311,7 +312,7 @@ class test_RulePosition_next {
     @Test
     fun sList1n__S_Empty_end() {
         val S = sList1n.findRuntimeRule("S")
-        val SM = sList1n.fetchStateSetFor(S)
+        val SM = sList1n.fetchStateSetFor(S, AutomatonKind.LC1)
         val G = SM.startState
 
         val actual = RP(S, OLE, EOR).next()
@@ -323,7 +324,7 @@ class test_RulePosition_next {
     @Test
     fun sList1n__S_Item_start() {
         val S = sList1n.findRuntimeRule("S")
-        val SM = sList1n.fetchStateSetFor(S)
+        val SM = sList1n.fetchStateSetFor(S, AutomatonKind.LC1)
         val G = SM.startState
 
         val rp = RP(S, OLI, SOR)
@@ -339,7 +340,7 @@ class test_RulePosition_next {
     @Test
     fun sList1n__S_Sep_sep() {
         val S = sList1n.findRuntimeRule("S")
-        val SM = sList1n.fetchStateSetFor(S)
+        val SM = sList1n.fetchStateSetFor(S, AutomatonKind.LC1)
 
         val rp = RP(S, OLS, PLS)
         val actual = rp.next()

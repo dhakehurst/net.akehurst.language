@@ -35,7 +35,7 @@ class test_rightRecursive : test_Abstract() {
             concatenation("S1") { literal("a"); ref("S") }
         }
         val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
         val G = SM.startState.runtimeRules.first()
         val S1 = rrs.findRuntimeRule("S1")
         val a = rrs.findRuntimeRule("'a'")
@@ -69,19 +69,6 @@ class test_rightRecursive : test_Abstract() {
         )
 
 
-    @Test
-    fun calcClosure_G_0_0() {
-        val cl_G = ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0), lhs_U)
-        val cl_G_So0 = ClosureItem(cl_G, RulePosition(S, 0, 0), RulePosition(G, 0, 0), lhs_U)
-        val cl_G_So1 = ClosureItem(cl_G, RulePosition(S, 1, 0), RulePosition(G, 0, 0), lhs_U)
-        val cl_G_So1_S1 = ClosureItem(cl_G_So1, RulePosition(S1, 0, 0), RulePosition(G, 0, 0), lhs_a)
-
-        val actual = SM.buildCache.calcClosure(ClosureItem(null, RulePosition(G, 0, 0), RulePosition(G, 0, 0), lhs_U))
-        val expected = setOf(
-                cl_G, cl_G_So0, cl_G_So1, cl_G_So1_S1
-        )
-        assertEquals(expected, actual)
-    }
 
     override val s0_widthInto_expected: List<WidthInfo>
         get() = listOf(
@@ -219,19 +206,6 @@ class test_rightRecursive : test_Abstract() {
         }
     }
 
-    @Test
-    fun calcClosure_S1_0_1() {
-        val cl_S1 = ClosureItem(null, RulePosition(S1, 0, 1), RulePosition(G, 0, 0), lhs_U)
-        val cl_S1_So0 = ClosureItem(cl_S1, RulePosition(S, 0, 0), RulePosition(G, 0, 0), lhs_U)
-        val cl_S1_So1 = ClosureItem(cl_S1, RulePosition(S, 1, 0), RulePosition(G, 0, 0), lhs_U)
-        val cl_S1_So1_S1 = ClosureItem(cl_S1_So1, RulePosition(S1, 0, 0), RulePosition(G, 0, 0), lhs_a)
-
-        val actual = SM.buildCache.calcClosure(ClosureItem(null, RulePosition(S1, 0, 1), RulePosition(G, 0, 0), lhs_U))
-        val expected = setOf(
-                cl_S1, cl_S1_So0, cl_S1_So1, cl_S1_So1_S1
-        )
-        assertEquals(expected, actual)
-    }
 
     @Test
     fun s3_transitions() {

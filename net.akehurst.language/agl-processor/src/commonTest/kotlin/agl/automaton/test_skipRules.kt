@@ -35,11 +35,11 @@ class test_skipRules : test_Abstract() {
         }
 
         val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
         val a = rrs.findRuntimeRule("'a'")
         val G = SM.startState.runtimeRules.first()
 
-        val s0 = rrs.startingState(S)
+        val s0 = SM.startState
 
         val skipSS = rrs.skipParserStateSet!!
         val sk0 = skipSS.startState

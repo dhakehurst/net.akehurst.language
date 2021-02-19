@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.parser.InputFromString
@@ -164,7 +165,8 @@ class RuntimeRuleSet(
             //val skipGoalRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
             //skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
 
-            val ss = ParserStateSet(nextStateSetNumber++, this, skipMultiRule, true)
+            //TODO: how to set AutomatonKind here!
+            val ss = ParserStateSet(nextStateSetNumber++, this, skipMultiRule, true, AutomatonKind.LC1)
             //this.states_cache[skipGoalRule] = ss
             ss
         }
@@ -197,8 +199,8 @@ class RuntimeRuleSet(
         this.runtimeRules = rules.sortedBy { it.number }
     }
 
-    fun automatonFor(goalRuleName: String): ParserStateSet {
-        this.buildFor(goalRuleName)
+    fun automatonFor(goalRuleName: String, automatonKind:AutomatonKind): ParserStateSet {
+        this.buildFor(goalRuleName,automatonKind)
         val gr = this.findRuntimeRule(goalRuleName)
         return this.states_cache[gr]!! //findRuntimeRule would throw exception if not exist
     }
@@ -301,25 +303,20 @@ class RuntimeRuleSet(
         }
     }
 
-    fun buildFor(goalRuleName: String): ParserStateSet {
+    fun buildFor(goalRuleName: String, automatonKind:AutomatonKind): ParserStateSet {
         val gr = this.findRuntimeRule(goalRuleName)
-        val s0 = this.startingState(gr)
+        val s0 = this.fetchStateSetFor(gr,automatonKind).startState
         return s0.stateSet.build()
     }
 
-    fun fetchStateSetFor(userGoalRule: RuntimeRule): ParserStateSet {
+    fun fetchStateSetFor(userGoalRule: RuntimeRule, automatonKind:AutomatonKind): ParserStateSet {
         //TODO: need to cache by possibleEndOfText also
         var stateSet = this.states_cache[userGoalRule]
         if (null == stateSet) {
-            stateSet = ParserStateSet(nextStateSetNumber++, this, userGoalRule, false)
+            stateSet = ParserStateSet(nextStateSetNumber++, this, userGoalRule, false, automatonKind)
             this.states_cache[userGoalRule] = stateSet
         }
         return stateSet
-    }
-
-    fun startingState(userGoalRule: RuntimeRule): ParserState {
-        var stateSet = fetchStateSetFor(userGoalRule)
-        return stateSet.startState
     }
 
     // ---
@@ -458,8 +455,8 @@ class RuntimeRuleSet(
         return b.toString()
     }
 
-    internal fun fullAutomatonToString(goalRuleName: String, withClosure: Boolean = false): String {
-        this.buildFor(goalRuleName)
+    internal fun fullAutomatonToString(goalRuleName: String, automatonKind:AutomatonKind): String {
+        this.buildFor(goalRuleName,automatonKind)
         return this.usedAutomatonToString("S")
     }
 

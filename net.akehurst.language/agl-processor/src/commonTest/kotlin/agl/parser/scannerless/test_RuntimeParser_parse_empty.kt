@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scanondemand
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
@@ -26,7 +27,7 @@ import kotlin.test.*
 class test_RuntimeParser_parse_empty {
 
     private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
-        return sp.parse(goalRuleName, inputText)
+        return sp.parse(goalRuleName, inputText, AutomatonKind.LC1)
     }
 
     //  R = <empty>

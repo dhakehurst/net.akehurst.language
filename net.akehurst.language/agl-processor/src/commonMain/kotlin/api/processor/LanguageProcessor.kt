@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItem
@@ -35,32 +36,32 @@ interface LanguageProcessor {
      * build the parser before use. Optional, but will speed up the first use of the parser.
      */
     @JsName("buildFor")
-    fun buildFor(goalRuleName: String): LanguageProcessor;
+    fun buildFor(goalRuleName: String, automatonKind: AutomatonKind = AutomatonKind.LC1): LanguageProcessor;
 
     @JsName("scan")
     fun scan(inputText: String): List<SPPTLeaf>
 
     @JsName("parse")
-    fun parse(inputText: String): SharedPackedParseTree
+    fun parse(inputText: String, automatonKind:AutomatonKind=AutomatonKind.LC1): SharedPackedParseTree
 
     @JsName("parseForGoal")
-    fun parse(goalRuleName: String, inputText: String): SharedPackedParseTree
+    fun parse(goalRuleName: String, inputText: String, automatonKind:AutomatonKind=AutomatonKind.LC1): SharedPackedParseTree
 
 
     @JsName("process")
-    fun <T : Any> process(asmType: KClass<in T>, inputText: String): T
+    fun <T : Any> process(asmType: KClass<in T>, inputText: String, automatonKind:AutomatonKind=AutomatonKind.LC1): T
 
     @JsName("processForGoal")
-    fun <T : Any> process(asmType: KClass<in T>, goalRuleName: String, inputText: String): T
+    fun <T : Any> process(asmType: KClass<in T>, goalRuleName: String, inputText: String, automatonKind:AutomatonKind=AutomatonKind.LC1): T
 
     @JsName("processFromSPPT")
     fun <T : Any> process(asmType: KClass<in T>, sppt: SharedPackedParseTree): T
 
     @JsName("formatText")
-    fun <T : Any> formatText(asmType: KClass<in T>, inputText: String): String
+    fun <T : Any> formatText(asmType: KClass<in T>, inputText: String, automatonKind:AutomatonKind=AutomatonKind.LC1): String
 
     @JsName("formatTextForGoal")
-    fun <T : Any> formatTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: String): String
+    fun <T : Any> formatTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: String, automatonKind:AutomatonKind=AutomatonKind.LC1): String
 
     @JsName("formatAsm")
     fun <T : Any> formatAsm(asmType: KClass<in T>, asm: T): String
@@ -79,10 +80,10 @@ interface LanguageProcessor {
      * @throws ParseTreeException
      */
     @JsName("expectedAt")
-    fun expectedAt(inputText: String, position: Int, desiredDepth: Int): List<CompletionItem>
+    fun expectedAt(inputText: String, position: Int, desiredDepth: Int, automatonKind:AutomatonKind=AutomatonKind.LC1): List<CompletionItem>
 
     @JsName("expectedAtForGoal")
-    fun expectedAt(goalRuleName: String, inputText: String, position: Int, desiredDepth: Int): List<CompletionItem>
+    fun expectedAt(goalRuleName: String, inputText: String, position: Int, desiredDepth: Int, automatonKind:AutomatonKind=AutomatonKind.LC1): List<CompletionItem>
 
     //List<CompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth)
 

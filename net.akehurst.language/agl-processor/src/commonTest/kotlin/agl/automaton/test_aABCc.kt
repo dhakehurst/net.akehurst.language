@@ -40,7 +40,7 @@ class test_aABCc : test_Abstract() {
         }
 
         val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
         val S1 = rrs.findRuntimeRule("S1")
@@ -67,49 +67,6 @@ class test_aABCc : test_Abstract() {
 
     )
 
-    @Test
-    fun calcLookaheadDown() {
-
-        var actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(G, 0, SOR), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        var expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(G, 0, EOR), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = emptySet()
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S, 1, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S, 1, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S1, 0, 0), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(a, b)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S1, 0, 1), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(c)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S1, 0, 2), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
-
-        actual = s0.stateSet.buildCache.calcLookaheadDown(RulePosition(S1, 0, RulePosition.END_OF_RULE), setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-        expected = setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        assertEquals(expected, actual)
-    }
 
     override val s0_widthInto_expected: List<WidthInfo>
         get() = listOf(

@@ -66,7 +66,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
         val c = rrs.findRuntimeRule("'c'")
         val d = rrs.findRuntimeRule("'d'")
 
-        val SM = rrs.fetchStateSetFor(S)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
         val s1 = SM.states[listOf(RP(d, 0, EOR))]
@@ -136,16 +136,17 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
         //val cl_G_S_aOpt0 = ClosureItem(cl_G_S, RP(aOpt, OMI, 0), RP(aOpt, OMI, EOR), lhs_bcU)
         //val cl_G_S_aOpt1 = ClosureItem(cl_G_S, RP(aOpt, OME, 0), RP(aOpt, OME, EOR), lhs_bcU)
 
-        val actual = SM.buildCache.calcClosure(RP(G, 0, 0), lhs_U)
-        val expected = setOf(
-            cl_G //, cl_G_S, cl_G_S_aOpt0, cl_G_S_aOpt1
-        )
-        assertEquals(expected, actual)
+        TODO()
+        //val actual = SM.buildCache.calcClosure(RP(G, 0, 0), lhs_U)
+        //val expected = setOf(
+        //    cl_G //, cl_G_S, cl_G_S_aOpt0, cl_G_S_aOpt1
+        //)
+        //assertEquals(expected, actual)
     }
 
     @Test
     fun s0_transitions() {
-        val s0 = rrs.startingState(S)
+        val s0 = rrs.fetchStateSetFor(S, AutomatonKind.LC1).startState
 
         val actual = s0.transitions(null)
 
@@ -186,10 +187,10 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
 
     @Test
     fun buildFor() {
-        val actual = rrs.buildFor("S")
+        val actual = rrs.buildFor("S", AutomatonKind.LC1)
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, "S", false) {
+        val expected = automaton(rrs, AutomatonKind.LC1, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(d, 0, EOR))      // d
             val s2 = state(RP(b, 0, EOR))      // b

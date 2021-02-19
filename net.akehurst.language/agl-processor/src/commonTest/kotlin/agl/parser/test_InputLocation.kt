@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
@@ -38,7 +39,7 @@ class test_InputLocation_singleLine {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parse("S", "abc")
+        val actual = sp.parse("S", "abc", AutomatonKind.LC1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 3), actual.root.location)
@@ -66,7 +67,7 @@ class test_InputLocation_multiLine {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parse("S", "abc")
+        val actual = sp.parse("S", "abc", AutomatonKind.LC1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 3), actual.root.location)
@@ -79,7 +80,7 @@ class test_InputLocation_multiLine {
     fun a_b_c() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parse("S", "a b c")
+        val actual = sp.parse("S", "a b c", AutomatonKind.LC1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 5), actual.root.location)
@@ -99,7 +100,7 @@ class test_InputLocation_multiLine {
             a
             b
             c
-        """.trimIndent())
+        """.trimIndent(), AutomatonKind.LC1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 5), actual.root.location)
@@ -133,7 +134,7 @@ class test_InputLocation_multiLine2 {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parse("S", "aaabbbccc")
+        val actual = sp.parse("S", "aaabbbccc", AutomatonKind.LC1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 9), actual.root.location)
@@ -146,7 +147,7 @@ class test_InputLocation_multiLine2 {
     fun a_b_c() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parse("S", "aaa bbb ccc")
+        val actual = sp.parse("S", "aaa bbb ccc", AutomatonKind.LC1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 11), actual.root.location)
@@ -166,7 +167,7 @@ class test_InputLocation_multiLine2 {
             aaa
             bbb
             ccc
-        """.trimIndent())
+        """.trimIndent(), AutomatonKind.LC1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 11), actual.root.location)
@@ -191,7 +192,7 @@ class test_InputLocation_multiLine2 {
             bbb
             ccc
         """.trimIndent()
-        val actual = sp.parse("S", sentence)
+        val actual = sp.parse("S", sentence, AutomatonKind.LC1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 12), actual.root.location)

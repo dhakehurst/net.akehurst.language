@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scanondemand.examples
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseFailedException
@@ -198,10 +199,10 @@ class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
         for (i in 1..5) {
             val text = "a".repeat(i)
             //warm up
-            parser.parse(goal, text)
+            parser.parse(goal, text, AutomatonKind.LC1)
             //time it
             val time = TimeSource.Monotonic.measureTime {
-                parser.parse(goal, text)
+                parser.parse(goal, text, AutomatonKind.LC1)
             }
             times.add(time)
         }

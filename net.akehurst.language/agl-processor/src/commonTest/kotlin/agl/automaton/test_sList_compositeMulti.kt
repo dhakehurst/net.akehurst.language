@@ -42,7 +42,7 @@ class test_sList_compositeMulti : test_Abstract() {
 
         val S = rrs.findRuntimeRule("S")
         val Se = S.rhs.items[RuntimeRuleItem.SLIST__EMPTY_RULE]
-        val SM = rrs.fetchStateSetFor(S)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
         val G = SM.startState.runtimeRules.first()
         val nl = rrs.findRuntimeRule("nl")
         val cnm = rrs.findRuntimeRule("cnm")
@@ -57,7 +57,7 @@ class test_sList_compositeMulti : test_Abstract() {
         val lhs_nU = SM.runtimeRuleSet.createLookaheadSet(setOf(n, UP))
         val lhs_ciU = SM.runtimeRuleSet.createLookaheadSet(setOf(c, i, UP))
 
-        val s0 = rrs.startingState(S)
+        val s0 = SM.startState
         val s1 = SM.states[listOf(RP(n, 0, EOR))]
         val s2 = SM.states[listOf(RP(Se, 0, EOR))]
     }
@@ -88,12 +88,12 @@ class test_sList_compositeMulti : test_Abstract() {
         val cl_G_So0 = ClosureItem(cl_G, RP(S, 0, 0), RP(S, OLS, PLS), lhs_i)
         val cl_G_So0_nl = ClosureItem(cl_G_So0, RP(nl, 0, 0), RP(nl, 0, 1), lhs_i)
         val cl_G_So1 = ClosureItem(cl_G, RP(S, 1, 0), RP(G, 0, 0), lhs_U)
-
-        val actual = SM.buildCache.calcClosure(ClosureItem(null, RP(G, 0, 0), null, lhs_U))
-        val expected = setOf(
-                cl_G, cl_G_So0, cl_G_So1
-        )
-        assertEquals(expected, actual)
+TODO()
+        //val actual = SM.buildCache.calcClosure(ClosureItem(null, RP(G, 0, 0), null, lhs_U))
+       // val expected = setOf(
+       //         cl_G, cl_G_So0, cl_G_So1
+       // )
+       // assertEquals(expected, actual)
     }
 
     override val s0_widthInto_expected: List<WidthInfo>

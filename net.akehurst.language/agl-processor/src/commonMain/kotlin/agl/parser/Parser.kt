@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.parser
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException
 import net.akehurst.language.api.sppt.SPPTLeaf
@@ -28,7 +29,7 @@ interface Parser {
     /**
      * It is not necessary to call this method, but doing so will speed up future calls to parse as it will build the internal caches for the parser,
      */
-    fun buildFor(goalRuleName: String)
+    fun buildFor(goalRuleName: String, automatonKind: AutomatonKind)
 
     /**
      * get a list of the types of node (is this useful!)
@@ -52,23 +53,23 @@ interface Parser {
      * @throws ParseTreeException
      * @throws GrammarRuleNotFoundException
      */
-    fun parse(goalRuleName: String, inputText: String): SharedPackedParseTree
+    fun parse(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): SharedPackedParseTree
 
     //fun parse(goalRuleName: String, inputText: Reader): SharedPackedParseTree
 
     /**
-     * list of runtime rules expected at the position
+     * list of non-terminal or terminal runtime rules expected at the position
      *
      * @throws ParseFailedException
      * @throws ParseTreeException
      * @throws GrammarRuleNotFoundException
      **/
-    fun expectedAt(goalRuleName: String, inputText: String, position: Int): Set<RuntimeRule>
+    fun expectedAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule>
 
     /*
      * List of terminal rules expected at the position
      */
-    fun expectedTerminalsAt(goalRuleName: String, inputText: String, position: Int): Set<RuntimeRule>
+    fun expectedTerminalsAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule>
 
     //fun expectedAt(goalRuleName: String, inputText: Reader, position: Long): List<RuleItem>
 }

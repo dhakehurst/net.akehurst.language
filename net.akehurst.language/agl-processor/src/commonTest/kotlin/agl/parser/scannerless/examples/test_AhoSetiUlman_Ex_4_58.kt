@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scanondemand.examples
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
@@ -59,7 +60,7 @@ class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
 
     @BeforeTest
     fun before() {
-        rrs.buildFor("S")
+        rrs.buildFor("S", AutomatonKind.LC1)
     }
 
     @Test

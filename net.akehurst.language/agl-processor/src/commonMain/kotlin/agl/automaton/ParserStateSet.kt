@@ -27,16 +27,24 @@ import kotlin.reflect.KProperty
 // see [https://youtrack.jetbrains.com/issue/KTIJ-1170#focus=Comments-27-4433190.0-0]
 operator fun <T> Lazy<T>.getValue(thisRef: Any?, property: KProperty<*>) = value
 
+enum class AutomatonKind { LC0, SLC, LC1 }
+
 class ParserStateSet(
     val number: Int,
     val runtimeRuleSet: RuntimeRuleSet,
     val userGoalRule: RuntimeRule,
-    val isSkip: Boolean
+    val isSkip: Boolean,
+    val automatonKind: AutomatonKind
 ) {
 
     private var nextStateNumber = 0
     var preBuilt = false; private set
-    internal val buildCache = BuildCache(this)
+    internal val buildCache:BuildCache = when(automatonKind) {
+        AutomatonKind.LC0 -> BuildCacheLC0(this)
+        AutomatonKind.SLC -> TODO()
+        AutomatonKind.LC1 -> BuildCacheLC1(this)
+    }
+    //internal val buildCache:BuildCache = BuildCacheLC1(this)
 
     val usedRules: Set<RuntimeRule> by lazy {
         calcUsedRules(this.startState.runtimeRules.first())
@@ -249,31 +257,18 @@ class ParserStateSet(
     }
 
     private fun buildAndTraverse() {
-        this.buildCache.traverseRulePositions()
+        this.buildCache.buildCaches()
         // key = Pair<listOf(<rhs-items>)>
-        val rulePositionLists = this.buildCache.rulePositionsForStates()
-        val states = rulePositionLists.map {
-            this.states[it]
-        }
+        val stateInfos = this.buildCache.stateInfo()
 
-        for (state in states) {
+        for (si in stateInfos) {
+            val state = this.states[si.rulePositions]
             when {
                 state.isGoal -> state.transitions(null)
                 else -> {
-                    val possiblePrev = mutableSetOf<ParserState>()
-                    for (ps in states) {
-                        for (rp in ps.rulePositions) {
-                            val fc = this.buildCache.closureLR0(rp)
-                            for (c in fc) {
-                                val item = c.item
-                                if (state.runtimeRules.contains(item)) {
-                                    possiblePrev.add(ps)
-                                }
-                            }
-                        }
-                    }
-                    for (pp in possiblePrev) {
-                        state.transitions(pp)
+                    for(prevRps in si.possiblePrev) {
+                        val prev = this.states[prevRps]
+                        state.transitions(prev)
                     }
                 }
             }

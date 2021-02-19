@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.InputLocation
@@ -36,16 +37,16 @@ class AglGrammarSemanticAnalyser(
 
     override fun <T> analyse(asm: T, locationMap: Map<Any, InputLocation>): List<SemanticAnalyserItem> {
         return when (asm) {
-            is List<*> -> checkGrammar(asm as List<Grammar>, locationMap)
+            is List<*> -> checkGrammar(asm as List<Grammar>, locationMap, AutomatonKind.LC1) //TODO: how to check using user specified Kind ?
             else -> throw SemanticAnalyserException("This SemanticAnalyser is for an ASM of type List<Grammar>", null)
         }
     }
 
-    fun checkGrammar(grammarList: List<Grammar>, locationMap: Map<Any, InputLocation>): List<SemanticAnalyserItem> {
+    fun checkGrammar(grammarList: List<Grammar>, locationMap: Map<Any, InputLocation>,automatonKind:AutomatonKind): List<SemanticAnalyserItem> {
         grammarList.forEach { grammar ->
             this.checkNonTerminalReferencesExist(grammar, locationMap)
             if (items.isEmpty()) {
-                this.checkForAmbiguities(grammar, locationMap)
+                this.checkForAmbiguities(grammar, locationMap,automatonKind)
             }
         }
         return this.items
@@ -91,14 +92,14 @@ class AglGrammarSemanticAnalyser(
         }
     }
 
-    fun checkForAmbiguities(grammar: Grammar, locationMap: Map<Any, InputLocation>) {
+    fun checkForAmbiguities(grammar: Grammar, locationMap: Map<Any, InputLocation>, automatonKind: AutomatonKind) {
         val itemsSet = mutableSetOf<SemanticAnalyserItem>()
         //TODO: find a way to reuse RuntimeRuleSet rather than re compute here
         val conv = ConverterToRuntimeRules(grammar)
         val rrs = conv.transform()
         //TODO: pass in goalRuleName
         val goalRuleName = grammar.rule.first { it.isSkip.not() }.name
-        val automaton = rrs.automatonFor(goalRuleName)
+        val automaton = rrs.automatonFor(goalRuleName,automatonKind)
 
         automaton.states.values.forEach {state ->
             val trans = state.allBuiltTransitions

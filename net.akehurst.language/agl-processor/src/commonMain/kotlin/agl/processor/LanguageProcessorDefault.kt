@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.Parser
@@ -53,8 +54,8 @@ internal class LanguageProcessorDefault(
         //TODO: interrupt processor
     }
 
-    override fun buildFor(goalRuleName: String): LanguageProcessor {
-        this.parser.buildFor(goalRuleName)
+    override fun buildFor(goalRuleName: String, automatonKind:AutomatonKind): LanguageProcessor {
+        this.parser.buildFor(goalRuleName,automatonKind)
         return this
     }
 
@@ -62,10 +63,10 @@ internal class LanguageProcessorDefault(
         return this.parser.scan(inputText);
     }
 
-    override fun parse(inputText: String): SharedPackedParseTree = parse(this.goalRuleName, inputText)
+    override fun parse(inputText: String, automatonKind:AutomatonKind): SharedPackedParseTree = parse(this.goalRuleName, inputText, automatonKind)
 
-    override fun parse(goalRuleName: String, inputText: String): SharedPackedParseTree {
-        val sppt: SharedPackedParseTree = this.parser.parse(goalRuleName, inputText)
+    override fun parse(goalRuleName: String, inputText: String, automatonKind:AutomatonKind): SharedPackedParseTree {
+        val sppt: SharedPackedParseTree = this.parser.parse(goalRuleName, inputText,automatonKind)
         return sppt
     }
 
@@ -77,15 +78,15 @@ internal class LanguageProcessorDefault(
     }
 
     override fun <T : Any> process(asmType: KClass<in T>, sppt: SharedPackedParseTree): T = this._process(sppt, asmType).first
-    override fun <T : Any> process(asmType: KClass<in T>, inputText: String): T = this.process(asmType, this.goalRuleName, inputText)
-    override fun <T : Any> process(asmType: KClass<in T>, goalRuleName: String, inputText: String): T {
-        val sppt: SharedPackedParseTree = this.parse(goalRuleName, inputText)
+    override fun <T : Any> process(asmType: KClass<in T>, inputText: String, automatonKind:AutomatonKind): T = this.process(asmType, this.goalRuleName, inputText,automatonKind)
+    override fun <T : Any> process(asmType: KClass<in T>, goalRuleName: String, inputText: String, automatonKind:AutomatonKind): T {
+        val sppt: SharedPackedParseTree = this.parse(goalRuleName, inputText,automatonKind)
         return this.process(asmType, sppt)
     }
 
-    override fun <T : Any> formatText(asmType: KClass<in T>, inputText: String): String = formatTextForGoal<T>(asmType, this.goalRuleName, inputText)
-    override fun <T : Any> formatTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: String): String {
-        val asm = this.process<T>(asmType, goalRuleName, inputText)
+    override fun <T : Any> formatText(asmType: KClass<in T>, inputText: String, automatonKind:AutomatonKind): String = formatTextForGoal<T>(asmType, this.goalRuleName, inputText,automatonKind)
+    override fun <T : Any> formatTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: String, automatonKind:AutomatonKind): String {
+        val asm = this.process<T>(asmType, goalRuleName, inputText, automatonKind)
         return this.formatAsm(asmType, asm)
     }
 
@@ -97,9 +98,9 @@ internal class LanguageProcessorDefault(
         }
     }
 
-    override fun expectedAt(inputText: String, position: Int, desiredDepth: Int): List<CompletionItem> = expectedAt(this.goalRuleName, inputText, position, desiredDepth)
-    override fun expectedAt(goalRuleName: String, inputText: String, position: Int, desiredDepth: Int): List<CompletionItem> {
-        val parserExpected: Set<RuntimeRule> = this.parser.expectedAt(goalRuleName, inputText, position);
+    override fun expectedAt(inputText: String, position: Int, desiredDepth: Int, automatonKind:AutomatonKind): List<CompletionItem> = expectedAt(this.goalRuleName, inputText, position, desiredDepth,automatonKind)
+    override fun expectedAt(goalRuleName: String, inputText: String, position: Int, desiredDepth: Int, automatonKind:AutomatonKind): List<CompletionItem> {
+        val parserExpected: Set<RuntimeRule> = this.parser.expectedAt(goalRuleName, inputText, position,automatonKind)
         val grammarExpected: List<RuleItem> = parserExpected.filter { it !== RuntimeRuleSet.END_OF_TEXT }.map { this.converterToRuntimeRules.originalRuleItemFor(it) }
         val expected = grammarExpected.flatMap { this.completionProvider.provideFor(it, desiredDepth) }
         return expected.toSet().toList()

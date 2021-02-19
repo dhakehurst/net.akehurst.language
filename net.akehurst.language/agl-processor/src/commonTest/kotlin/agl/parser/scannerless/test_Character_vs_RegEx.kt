@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scanondemand
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -57,15 +58,15 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         val text = "a".repeat(10)
 
         // warm up the processors
-        regExParser.parse(goal, text)
-        charParser.parse(goal, text)
+        regExParser.parse(goal, text, AutomatonKind.LC1)
+        charParser.parse(goal, text, AutomatonKind.LC1)
 
         // measure
         val timeRegEx = TimeSource.Monotonic.measureTimedValue {
-            regExParser.parse(goal, text)
+            regExParser.parse(goal, text, AutomatonKind.LC1)
         }
         val timeChar = TimeSource.Monotonic.measureTimedValue {
-            charParser.parse(goal, text)
+            charParser.parse(goal, text, AutomatonKind.LC1)
         }
 
         assertEquals("S", timeRegEx.value.root.name)
@@ -84,14 +85,14 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         val text = "a".repeat(100)
 
         // warm up the processors
-        regExParser.parse(goal, text)
-        charParser.parse(goal, text)
+        regExParser.parse(goal, text, AutomatonKind.LC1)
+        charParser.parse(goal, text, AutomatonKind.LC1)
 
         val timeRegEx = TimeSource.Monotonic.measureTimedValue {
-            regExParser.parse(goal, text)
+            regExParser.parse(goal, text, AutomatonKind.LC1)
         }
         val timeChar = TimeSource.Monotonic.measureTimedValue {
-            charParser.parse(goal, text)
+            charParser.parse(goal, text, AutomatonKind.LC1)
         }
 
         assertEquals("S", timeRegEx.value.root.name)
@@ -110,14 +111,14 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         val text = "a".repeat(1000)
 
         // warm up the processors
-        regExParser.parse(goal, text)
-        charParser.parse(goal, text)
+        regExParser.parse(goal, text, AutomatonKind.LC1)
+        charParser.parse(goal, text, AutomatonKind.LC1)
 
         val timeRegEx = TimeSource.Monotonic.measureTimedValue {
-            regExParser.parse(goal, text)
+            regExParser.parse(goal, text, AutomatonKind.LC1)
         }
         val timeChar = TimeSource.Monotonic.measureTimedValue {
-            charParser.parse(goal, text)
+            charParser.parse(goal, text, AutomatonKind.LC1)
         }
 
         assertEquals("S", timeRegEx.value.root.name)
@@ -140,8 +141,8 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         for (i in 0 until 20) {
             kotlinRegEx.matches(text)
             aglRegex.match(text, 0)
-            regExParser.parse(goal, text)
-            charParser.parse(goal, text)
+            regExParser.parse(goal, text, AutomatonKind.LC1)
+            charParser.parse(goal, text, AutomatonKind.LC1)
         }
 
         val timeRegExKotlinList = mutableListOf<Duration>()
@@ -158,10 +159,10 @@ class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
                 aglRegex.match(text, 0)
             }
             val timeRegExParser = TimeSource.Monotonic.measureTimedValue {
-                regExParser.parse(goal, text)
+                regExParser.parse(goal, text, AutomatonKind.LC1)
             }
             val timeCharParser = TimeSource.Monotonic.measureTimedValue {
-                charParser.parse(goal, text)
+                charParser.parse(goal, text, AutomatonKind.LC1)
             }
             assertEquals("S", timeRegExParser.value.root.name)
             assertEquals("S", timeCharParser.value.root.name)

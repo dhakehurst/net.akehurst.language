@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.semanticAnalyser
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.api.parser.InputLocation
 
 class SemanticAnalyserException(message: String, cause: Throwable?) : Exception(message, cause)

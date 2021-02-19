@@ -37,14 +37,16 @@ class test_AhoSetiUlman_4_54 : test_Abstract() {
             }
             concatenation("C1") { literal("c"); ref("C") }
         }
+
         val S = rrs.findRuntimeRule("S")
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
+
         val C = rrs.findRuntimeRule("C")
         val C1 = rrs.findRuntimeRule("C1")
         val T_c = rrs.findRuntimeRule("'c'")
         val T_d = rrs.findRuntimeRule("'d'")
-        val G = rrs.startingState(S).runtimeRules.first()
+        val G = SM.startState.runtimeRules.first()
 
-        val SM = rrs.fetchStateSetFor(S)
         val s0 = SM.startState
         val s1 = SM.states[listOf(RP(T_c, 0, EOR))]
         val s2 = SM.states[listOf(RP(T_d, 0, EOR))]
@@ -81,7 +83,7 @@ class test_AhoSetiUlman_4_54 : test_Abstract() {
 
     @Test
     fun s0_transitions() {
-        val s0 = rrs.startingState(S)
+        val s0 = rrs.fetchStateSetFor(S, AutomatonKind.LC1).startState
 
         val actual = s0.transitions(null)
 
@@ -98,10 +100,10 @@ class test_AhoSetiUlman_4_54 : test_Abstract() {
 
     @Test
     fun buildFor() {
-        val actual = rrs.buildFor("S")
+        val actual = rrs.buildFor("S", AutomatonKind.LC1)
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, "S", false) {
+        val expected = automaton(rrs, AutomatonKind.LC1, "S", false) {
             val s0 = state(RP(G, 0, SOR))       // G = . S
             val s1 = state(RP(T_c, 0, EOR))     // c
             val s2 = state(RP(T_d, 0, EOR))     // d

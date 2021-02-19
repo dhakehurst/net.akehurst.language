@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scanondemand.concatenation
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
@@ -29,7 +30,7 @@ import kotlin.test.assertNotNull
 class test_RuntimeParser_parse_concatenation {
 
     private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
-        return sp.parse(goalRuleName, inputText)
+        return sp.parse(goalRuleName, inputText, AutomatonKind.LC1)
     }
 
     // S = 'a' 'b' 'c' ;

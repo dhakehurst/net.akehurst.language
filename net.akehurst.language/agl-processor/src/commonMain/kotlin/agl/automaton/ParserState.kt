@@ -132,10 +132,10 @@ class ParserState(
         return this.stateSet.createLookaheadSet(content)
     }
 
-    fun widthInto(prevState: ParserState?): Set<WidthInfo> = this.stateSet.buildCache.widthInto(this)
+    fun widthInto(prevState: ParserState?): Set<WidthInfo> = this.stateSet.buildCache.widthInto(this.rulePositions)
 
     //for graft, previous must match prevGuard, for height must not match
-    fun heightOrGraftInto(prevState: ParserState): Set<HeightGraftInfo> = this.stateSet.buildCache.heightOrGraftInto(prevState, this)
+    fun heightOrGraftInto(prevState: ParserState): Set<HeightGraftInfo> = this.stateSet.buildCache.heightGraftInto(prevState.rulePositions, this.runtimeRules)
 
     fun transitions(previousState: ParserState?): List<Transition> {
         val cache = this._transitionsByPrevious[previousState]

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -32,9 +33,10 @@ class test_ParserState_closureLR0_leftRecursive {
             concatenation("S1") { ref("S"); literal("a") }
         }
         val S = rrs.findRuntimeRule("S")
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
         val S1 = rrs.findRuntimeRule("S1")
         val a = rrs.findRuntimeRule("'a'")
-        val G = rrs.startingState(S).runtimeRules.first()
+        val G = SM.startState.runtimeRules.first()
     }
 
     fun s0_widthInto() {

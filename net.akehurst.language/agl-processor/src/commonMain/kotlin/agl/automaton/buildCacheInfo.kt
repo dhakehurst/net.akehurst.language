@@ -25,6 +25,11 @@ data class FirstOfResult(
     val result: Set<RuntimeRule>
 )
 
+data class StateInfo(
+    val rulePositions: List<RulePosition>,
+    val possiblePrev: Set<List<RulePosition>>
+)
+
 data class WidthInfo(
     val to:RulePosition,
     val lookaheadSet: LookaheadSet

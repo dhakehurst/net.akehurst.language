@@ -33,11 +33,12 @@ class test_sList_0_n_literal : test_Abstract() {
             literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
+
         val a = rrs.findRuntimeRule("'a'")
         val _c = rrs.findRuntimeRule("','")
-        val G = rrs.startingState(S).runtimeRules.first()
+        val G = SM.startState.runtimeRules.first()
 
-        val SM = rrs.fetchStateSetFor(S)
         val s0 = SM.startState
 
         val lhs_a = LookaheadSet(1, setOf(a))

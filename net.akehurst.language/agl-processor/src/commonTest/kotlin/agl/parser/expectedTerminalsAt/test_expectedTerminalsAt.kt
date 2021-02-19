@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.expectedTerminalsAt
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
@@ -39,7 +40,7 @@ class test_expectedTerminalsAt {
         val rs = concat_a()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","",0).toList() //to list to make assertions easier
+        val actual =  sp.expectedTerminalsAt("S","",0, AutomatonKind.LC1).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
@@ -52,7 +53,7 @@ class test_expectedTerminalsAt {
         val rs = concat_a()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","a",0).toList() //to list to make assertions easier
+        val actual =  sp.expectedTerminalsAt("S","a",0, AutomatonKind.LC1).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
@@ -65,7 +66,7 @@ class test_expectedTerminalsAt {
         val rs = concat_a()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","a",1)
+        val actual =  sp.expectedTerminalsAt("S","a",1, AutomatonKind.LC1)
         assertNotNull(actual)
 
         assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
@@ -84,7 +85,7 @@ class test_expectedTerminalsAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","",0).toList() //to list to make assertions easier
+        val actual =  sp.expectedTerminalsAt("S","",0, AutomatonKind.LC1).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
@@ -97,7 +98,7 @@ class test_expectedTerminalsAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","a",0).toList() //to list to make assertions easier
+        val actual =  sp.expectedTerminalsAt("S","a",0, AutomatonKind.LC1).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
@@ -110,7 +111,7 @@ class test_expectedTerminalsAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","a",1).toList() //to list to make assertions easier
+        val actual =  sp.expectedTerminalsAt("S","a",1, AutomatonKind.LC1).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
@@ -123,7 +124,7 @@ class test_expectedTerminalsAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","ab",1).toList() //to list to make assertions easier
+        val actual =  sp.expectedTerminalsAt("S","ab",1, AutomatonKind.LC1).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(1, actual.size)
@@ -135,7 +136,7 @@ class test_expectedTerminalsAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","ab",2)
+        val actual =  sp.expectedTerminalsAt("S","ab",2, AutomatonKind.LC1)
         assertNotNull(actual)
 
         assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
@@ -154,7 +155,7 @@ class test_expectedTerminalsAt {
         val rs = choiceEqual_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","",0).toList() //to list to make assertions easier
+        val actual =  sp.expectedTerminalsAt("S","",0, AutomatonKind.LC1).toList() //to list to make assertions easier
         assertNotNull(actual)
 
         assertEquals(2, actual.size)
@@ -169,7 +170,7 @@ class test_expectedTerminalsAt {
         val rs = choiceEqual_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","a",1)
+        val actual =  sp.expectedTerminalsAt("S","a",1, AutomatonKind.LC1)
         assertNotNull(actual)
 
         assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
@@ -180,7 +181,7 @@ class test_expectedTerminalsAt {
         val rs = choiceEqual_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","b",1)
+        val actual =  sp.expectedTerminalsAt("S","b",1, AutomatonKind.LC1)
         assertNotNull(actual)
 
         assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)

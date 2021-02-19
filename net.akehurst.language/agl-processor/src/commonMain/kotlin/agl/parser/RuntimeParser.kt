@@ -503,7 +503,7 @@ internal class RuntimeParser(
         val endingLookahead = transition.lookaheadGuard.content
         val embeddedRuntimeRuleSet = embeddedRule.embeddedRuntimeRuleSet ?: error("Should never be null")
         val embeddedStartRule = embeddedRule.embeddedStartRule ?: error("Should never be null")
-        val embeddedS0 = embeddedRuntimeRuleSet.startingState(embeddedStartRule)
+        val embeddedS0 = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedStartRule, this.stateSet.automatonKind).startState
         val embeddedSkipStateSet = embeddedRuntimeRuleSet.skipParserStateSet
         val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, embeddedStartRule, transition.lookaheadGuard, this.input)
         val startPosition = gn.nextInputPosition

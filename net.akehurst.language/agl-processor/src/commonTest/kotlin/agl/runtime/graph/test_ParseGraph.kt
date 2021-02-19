@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
@@ -62,7 +63,7 @@ class test_ParseGraph {
         val sut = ParseGraph(userGoalRule, input, 10,10)
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
-        val startState = rrs.startingState(userGoalRule)
+        val startState = rrs.fetchStateSetFor(userGoalRule, AutomatonKind.LC1).startState
         sut.start(startState,0, rrs.createLookaheadSet(setOf(RuntimeRuleSet.END_OF_TEXT)))
 
         val actual = sut.canGrow

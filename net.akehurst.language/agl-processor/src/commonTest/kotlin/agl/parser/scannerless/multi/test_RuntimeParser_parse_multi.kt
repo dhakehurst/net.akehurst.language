@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scanondemand.multi
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -32,7 +33,7 @@ class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract() {
     val rrb = RuntimeRuleSetBuilder()
 
     private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
-        return sp.parse(goalRuleName, inputText)
+        return sp.parse(goalRuleName, inputText, AutomatonKind.LC1)
     }
 
 

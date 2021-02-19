@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scanondemand
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
@@ -27,7 +28,7 @@ abstract class test_ScanOnDemandParserAbstract {
 
     fun test(rrs:RuntimeRuleSet, goal:String, sentence:String, expectedNumGSSHeads:Int, vararg expectedTrees:String) : SharedPackedParseTree {
         val parser = ScanOnDemandParser(rrs)
-        val actual = parser.parse(goal, sentence)
+        val actual = parser.parse(goal, sentence, AutomatonKind.LC1)
 
         val sppt = SPPTParser(rrs)
         expectedTrees.forEach { sppt.addTree(it) }
@@ -41,7 +42,7 @@ abstract class test_ScanOnDemandParserAbstract {
 
     fun test(rrsb:RuntimeRuleSetBuilder, goal:String, sentence:String, vararg expectedTrees:String) : SharedPackedParseTree {
         val parser = ScanOnDemandParser(rrsb.ruleSet())
-        val actual = parser.parse(goal, sentence)
+        val actual = parser.parse(goal, sentence, AutomatonKind.LC1)
 
         val sppt = SPPTParser(rrsb.ruleSet())
         expectedTrees.forEach { sppt.addTree(it) }
@@ -52,7 +53,7 @@ abstract class test_ScanOnDemandParserAbstract {
 
     fun testStringResult(rrsb:RuntimeRuleSetBuilder, goal:String, sentence:String, vararg expectedTrees:String) : SharedPackedParseTree {
         val parser = ScanOnDemandParser(rrsb.ruleSet())
-        val actual = parser.parse(goal, sentence)
+        val actual = parser.parse(goal, sentence, AutomatonKind.LC1)
 
         val sppt = SPPTParser(rrsb.ruleSet())
         expectedTrees.forEach { sppt.addTree(it) }

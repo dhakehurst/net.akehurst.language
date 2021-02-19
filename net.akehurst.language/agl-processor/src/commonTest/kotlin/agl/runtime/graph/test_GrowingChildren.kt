@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.runtime.graph
 
 import agl.sppt.SPPTBranchFromInputAndGrownChildren
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuleOption
 import net.akehurst.language.agl.runtime.structure.RuleOptionId
@@ -41,7 +42,7 @@ class test_GrowingChildren {
         val CM = rrs.findRuntimeRule("CM")
         val a = rrs.findRuntimeRule("'a'")
 
-        val SM = rrs.fetchStateSetFor(S)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
         val st_a = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]

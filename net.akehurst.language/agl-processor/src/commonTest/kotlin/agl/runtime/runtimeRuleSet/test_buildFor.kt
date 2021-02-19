@@ -1,8 +1,8 @@
 package net.akehurst.language.agl.runtime.runtimeRuleSet
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -15,7 +15,7 @@ class test_buildFor {
             concatenation("S") { literal("a"); literal("c"); literal("c") }
         }
 
-        val actual = rrs.buildFor("S")
+        val actual = rrs.buildFor("S", AutomatonKind.LC1)
 
         assertEquals(6, actual.states.values.size)
         //TODO: expected Transitions
@@ -32,7 +32,7 @@ class test_buildFor {
             concatenation("S1") { ref("S"); literal("a") }
         }
 
-        val actual = rrs.buildFor("S")
+        val actual = rrs.buildFor("S", AutomatonKind.LC1)
 
         assertEquals(9, actual.states.values.size)
         assertEquals(12, actual.allBuiltTransitions.size)
@@ -50,11 +50,11 @@ class test_buildFor {
             literal("'b'", "b")
         }
 
-        val actual = rrs.buildFor("S")
+        val actual = rrs.buildFor("S", AutomatonKind.LC1)
 
         val parser = ScanOnDemandParser(rrs)
-        parser.parse("S", "ba")
-        parser.parse("S", "a")
+        parser.parse("S", "ba", AutomatonKind.LC1)
+        parser.parse("S", "a", AutomatonKind.LC1)
 
         assertEquals(9, actual.states.values.size)
         assertEquals(12, actual.allBuiltTransitions.size)
@@ -77,10 +77,10 @@ class test_buildFor {
 
         val parser = ScanOnDemandParser(rrs)
         val gr = rrs.findRuntimeRule("S")
-        val s0 = rrs.startingState(gr)
+        val s0 = rrs.fetchStateSetFor(gr, AutomatonKind.LC1).startState
         s0.stateSet.build()
-        parser.parse("S", "abcx")
-        parser.parse("S", "x")
+        parser.parse("S", "abcx", AutomatonKind.LC1)
+        parser.parse("S", "x", AutomatonKind.LC1)
     }
 
 }
