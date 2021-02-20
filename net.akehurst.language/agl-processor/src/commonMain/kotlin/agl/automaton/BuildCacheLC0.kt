@@ -23,11 +23,19 @@ data class ClosureItemLC0(
     val rulePosition: RulePosition
 ) {
 
-    val prev: Set<RulePosition>
-        get() = when {
-            null == parentItem -> emptySet()
-            else -> parentItem.rulePosition.next().filter { it.isAtEnd.not() }.toSet()
+    val prevList: List<List<RulePosition>> by lazy {
+        val result = mutableListOf<List<RulePosition>>()
+        var x: ClosureItemLC0? = this.parentItem
+        while (null != x) {
+            if (x.rulePosition.isAtStart && x.rulePosition.runtimeRule.kind != RuntimeRuleKind.GOAL) {
+                // don't add
+            } else {
+                result.add(listOf(x.rulePosition))
+            }
+            x = x.parentItem
         }
+        result
+    }
 
     private fun chain(): String {
         val p = if (null == parentItem) {
@@ -86,18 +94,14 @@ class BuildCacheLC0(
         _cacheOff = true
     }
 
-    override fun stateInfo(): List<StateInfo> {
-        return this.stateSet.usedNonTerminalRules.flatMap {
-            it.rulePositions.filter { it.isAtStart.not() }.map {
-                StateInfo(listOf(it), emptySet())
-            }
-        }
-    }
+    override fun stateInfo(): Set<StateInfo> = this._stateInfo
 
     override fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo> {
         return this._widthInto[fromStateRulePositions]?.values?.toSet() ?: run {
             val dnCls = fromStateRulePositions.flatMap { this.closureLR0(it) }.toSet()
-            val calc = calcAndCacheWidthInfo(fromStateRulePositions, dnCls)
+            val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
+            val bottomTerminals = filt.map { it.rulePosition.item!! }.toSet()
+            val calc = calcAndCacheWidthInfo(fromStateRulePositions, bottomTerminals)
             calc
         }
     }
@@ -106,32 +110,39 @@ class BuildCacheLC0(
         val key = Pair(prevStateRulePositions, fromStateRuntimeRules)
         return this._heightOrGraftInto[key]?.values?.toSet() ?: run {
             val upCls = prevStateRulePositions.flatMap { this.closureLR0(it) }.toSet()
-            val calc = calcAndCacheHeightOrGraftInto(prevStateRulePositions, fromStateRuntimeRules, upCls)
+            val calc = calcAndCacheHeightOrGraftInto(listOf(prevStateRulePositions), fromStateRuntimeRules, upCls)
             calc
         }
     }
 
-    private fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet = this.stateSet.runtimeRuleSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
+    private fun cacheStateInfo(rulePositions: List<RulePosition>, possiblePrevs: List<List<RulePosition>>) {
+        this._stateInfo.add(StateInfo(rulePositions, possiblePrevs))
+    }
 
-    private fun calcAndCacheWidthInfo(fromRulePositions: List<RulePosition>, cls: Set<ClosureItemLC0>): Set<WidthInfo> {
-        val wis = calcWidthInfo(fromRulePositions, cls)
+    private fun calcAndCacheWidthInfo(fromRulePositions: List<RulePosition>, bottomTerminals: Set<RuntimeRule>): Set<WidthInfo> {
+        val wis = calcWidthInfo(fromRulePositions, bottomTerminals)
         cacheWidthInfo(fromRulePositions, wis)
         return wis
     }
 
-    private fun calcWidthInfo(fromRulePositions: List<RulePosition>, dnCls: Set<ClosureItemLC0>): Set<WidthInfo> {
+    private fun calcWidthInfo(fromRulePositions: List<RulePosition>, bottomTerminals: Set<RuntimeRule>): Set<WidthInfo> {
         // lookahead comes from closure on prev
         // upLhs can always be LookaheadSet.UP because the actual LH is carried at runtime
         // thus we don't need prevState in to compute width targets
-        val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
-        val grouped = filt.groupBy { it.rulePosition.item!! }.map {
-            val rr = it.key
-            val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
+//        val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
+        //       val grouped = filt.groupBy { it.rulePosition.item!! }.map {
+        //           val rr = it.key
+        //           val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
+//            val lhs = LookaheadSet.ANY
+//            WidthInfo(rp, lhs)
+//        }.toSet()
+        //don't group them, because we need the info on the lookahead for the runtime calc of next lookaheads
+        //return grouped
+        return bottomTerminals.map {
+            val rp = RulePosition(it, 0, RulePosition.END_OF_RULE)
             val lhs = LookaheadSet.ANY
             WidthInfo(rp, lhs)
         }.toSet()
-        //don't group them, because we need the info on the lookahead for the runtime calc of next lookaheads
-        return grouped
     }
 
     private fun cacheWidthInfo(fromRulePositions: List<RulePosition>, wis: Set<WidthInfo>) {
@@ -150,9 +161,11 @@ class BuildCacheLC0(
         }
     }
 
-    private fun calcAndCacheHeightOrGraftInto(prev: List<RulePosition>, from: List<RuntimeRule>, upCls: Set<ClosureItemLC0>): Set<HeightGraftInfo> {
+    private fun calcAndCacheHeightOrGraftInto(possiblePrevs: List<List<RulePosition>>, from: List<RuntimeRule>, upCls: Set<ClosureItemLC0>): Set<HeightGraftInfo> {
         val hgi = calcHeightOrGraftInto(from, upCls)
-        cacheHeightOrGraftInto(prev, from, hgi)
+        for (prev in possiblePrevs) {
+            cacheHeightOrGraftInto(prev, from, hgi)
+        }
         return hgi
     }
 
@@ -181,13 +194,13 @@ class BuildCacheLC0(
         val upFilt = upCls.filter { from.contains(it.rulePosition.item) }
         val res = upFilt.flatMap { clsItem ->
             val parent = clsItem.rulePosition
-            val upLhs = when(parent.runtimeRule.kind) {
+            val upLhs = when (parent.runtimeRule.kind) {
                 RuntimeRuleKind.GOAL -> if (parent.isAtEnd) LookaheadSet.UP else LookaheadSet.ANY
                 else -> LookaheadSet.ANY
             }
             val pns = parent.next()
             pns.map { parentNext ->
-                val lhs = when(parentNext.runtimeRule.kind) {
+                val lhs = when (parentNext.runtimeRule.kind) {
                     RuntimeRuleKind.GOAL -> LookaheadSet.UP
                     else -> LookaheadSet.ANY
                 }
@@ -202,7 +215,7 @@ class BuildCacheLC0(
                 val upLhs = if (it.value.map { it.upLhs }.contains(LookaheadSet.ANY)) LookaheadSet.ANY else LookaheadSet.UP
                 HeightGraftInfo((parent), (parentNext), lhs, upLhs)
             }
-        val grouped2 = grouped.groupBy { listOf(it.lhs, it.upLhs) }
+        val grouped2 = grouped.groupBy { listOf(it.lhs, it.upLhs, it.parentNext.map { it.position }) }
             .map {
                 val parent = it.value.flatMap { it.parent }.toSet().toList()
                 val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
@@ -213,33 +226,48 @@ class BuildCacheLC0(
         return grouped2.toSet()
     }
 
-
-    private fun traverseRulePositions(parent: ClosureItemLC0, items: MutableSet<ClosureItemLC0>) {
-        when {
-            parent.rulePosition.isAtEnd -> null
-            items.any { it.rulePosition == parent.rulePosition } -> null
+    // return the terminals at the bottom of each closure
+    private fun traverseRulePositions(parent: ClosureItemLC0, items: Set<ClosureItemLC0>): Set<RuntimeRule> {
+        return when {
+            parent.rulePosition.isAtEnd -> {
+                // cache but cannot traverse down
+                calcAndCacheHeightOrGraftInto(parent.prevList, listOf(parent.rulePosition.runtimeRule), items)
+                cacheStateInfo(listOf(parent.rulePosition), parent.prevList)
+                val rr = parent.rulePosition.runtimeRule
+                if (rr.kind == RuntimeRuleKind.TERMINAL || rr.kind == RuntimeRuleKind.EMBEDDED) {
+                    setOf(rr)
+                } else {
+                    emptySet()
+                }
+            }
+            items.any { it.rulePosition == parent.rulePosition } -> emptySet()
             else -> {
-                items.add(parent)
-                when (parent.rulePosition.position) {
-                    RulePosition.START_OF_RULE -> {
+                val result = mutableSetOf<RuntimeRule>()
+                when {
+                    parent.rulePosition.isAtStart && parent.rulePosition.runtimeRule.kind != RuntimeRuleKind.GOAL -> {
                         // no need to cache for SOR positions, but need to traverse
                         val runtimeRule = parent.rulePosition.item ?: error("should never be null as position != EOR")
                         for (rp in runtimeRule.rulePositions) {
                             val ci = ClosureItemLC0(parent, rp)
-                            traverseRulePositions(ci, items)
+                            val newItems = items + parent
+                            val dnCls = traverseRulePositions(ci, newItems)
+                            result.addAll(dnCls)
                         }
-                    }
-                    RulePosition.END_OF_RULE -> {
-                        // cache but cannot traverse down
                     }
                     else -> {
+                        // cache and traverse
                         val runtimeRule = parent.rulePosition.item ?: error("should never be null as position != EOR")
                         for (rp in runtimeRule.rulePositions) {
-                                    val ci = ClosureItemLC0(parent, rp)
-                                    traverseRulePositions(ci, items)
+                            val ci = ClosureItemLC0(parent, rp)
+                            val newItems = items + parent
+                            val dnCls = traverseRulePositions(ci, newItems)
+                            calcAndCacheWidthInfo(listOf(parent.rulePosition), dnCls)
+                            result.addAll(dnCls)
                         }
+                        cacheStateInfo(listOf(parent.rulePosition), parent.prevList)
                     }
                 }
+                result
             }
         }
     }

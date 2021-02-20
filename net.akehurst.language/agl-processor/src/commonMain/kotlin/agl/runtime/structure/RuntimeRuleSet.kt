@@ -436,7 +436,8 @@ class RuntimeRuleSet(
         val transitions = states.flatMap { it.allBuiltTransitions.toSet() }.toSet()
 
         states.forEach {
-            b.append(it).append("\n")
+            val str = "$it {${it.transitionsByPrevious.keys.map { it?.number?.value }}}"
+            b.append(str).append("\n")
         }
         states.forEach { st ->
             st.transitionsByPrevious.forEach { me ->

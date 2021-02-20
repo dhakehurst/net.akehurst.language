@@ -27,7 +27,7 @@ data class FirstOfResult(
 
 data class StateInfo(
     val rulePositions: List<RulePosition>,
-    val possiblePrev: Set<List<RulePosition>>
+    val possiblePrev: List<List<RulePosition>>
 )
 
 data class WidthInfo(

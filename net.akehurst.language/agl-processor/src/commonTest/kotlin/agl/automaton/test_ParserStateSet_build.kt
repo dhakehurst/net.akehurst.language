@@ -25,9 +25,12 @@ import kotlin.test.Test
 
 class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
+    companion object {
+        val automatonKind = AutomatonKind.LC0
+    }
+
     @Test
     fun singleLiteral() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             concatenation("S") { literal("a") }
         }
@@ -61,11 +64,11 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
         for (sentence in sentences) {
             parser.parse("S", sentence, AutomatonKind.LC1)
         }
+        //println(rrs.usedAutomatonToString("S"))
     }
 
     @Test
     fun concatLiterals() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             concatenation("S") { literal("a"); literal("b"); literal("c"); literal("d") }
         }
@@ -118,7 +121,6 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun choiceLiterals() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a");
@@ -181,7 +183,6 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun concatNonTerm() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("A"); ref("B"); ref("C") }
             concatenation("A") { literal("a") }
@@ -240,7 +241,6 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun empty() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             concatenation("S") { empty() }
         }
@@ -277,7 +277,6 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun concatAllOptional() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("oA"); ref("oB"); ref("oC") }
             choice("oA", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); empty() }
@@ -362,7 +361,6 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun duplicateContentOfRule() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("ABC1")
@@ -399,7 +397,6 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun duplicateBeginningOfRule() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("ABC")
@@ -437,7 +434,6 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun duplicateOffsetPartOfRule() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("ABC")
@@ -475,7 +471,6 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun duplicateContentOfRuleConcatAndMultix4() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("AAAA")
@@ -512,7 +507,6 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun duplicateContentOfRuleConcatAndMultixN() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("AAAA")
@@ -555,7 +549,6 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun duplicateContentOfRuleMultiAndMulti() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("AAAAm1")
@@ -599,7 +592,6 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun AhoSetiUlman_Grm_4_1() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("E1")
@@ -650,7 +642,6 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun AhoSetiUlman_Ex_4_7_5() {
-        val automatonKind = AutomatonKind.LC1
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("S1")
@@ -696,7 +687,6 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun leftRecursive() {
-        val automatonKind = AutomatonKind.LC0
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")
@@ -733,4 +723,41 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
         println(rrs.usedAutomatonToString("S"))
     }
 
+    @Test
+    fun rightRecursive() {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                ref("S1")
+            }
+            concatenation("S1") { literal("a"); ref("S") }
+        }
+        val S = rrs.findRuntimeRule("S")
+        val SM = rrs.fetchStateSetFor(S, automatonKind)
+        val s0 = SM.startState
+        val G = s0.runtimeRules.first()
+
+        val actual = SM.build()
+        println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, automatonKind, "S", false) {
+            val s0 = state(RP(G, 0, SOR))      // G = . S
+
+
+        }
+
+        //super.assertEquals(expected, actual)
+
+        val sentences = listOf(
+            "a",
+            "aa",
+            "aaa",
+            "aaaa"
+        )
+        val parser = ScanOnDemandParser(rrs)
+        for (sentence in sentences) {
+            parser.parse("S", sentence, automatonKind)
+        }
+        println(rrs.usedAutomatonToString("S"))
+    }
 }

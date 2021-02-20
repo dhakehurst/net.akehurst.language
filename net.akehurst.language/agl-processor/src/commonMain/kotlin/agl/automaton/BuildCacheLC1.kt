@@ -86,7 +86,7 @@ class BuildCacheLC1(
         _cacheOff = true
     }
 
-    override fun stateInfo(): List<StateInfo> {
+    override fun stateInfo(): Set<StateInfo> {
         TODO("not implemented")
     }
 

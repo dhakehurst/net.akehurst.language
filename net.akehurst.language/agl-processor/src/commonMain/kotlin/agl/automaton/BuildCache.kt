@@ -24,7 +24,7 @@ interface BuildCache {
     fun buildCaches()
     fun clearAndOff()
 
-    fun stateInfo(): List<StateInfo>
+    fun stateInfo(): Set<StateInfo>
     fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo>
     fun heightGraftInto(prevStateRulePositions:List<RulePosition>, fromStateRuntimeRules: List<RuntimeRule>) : Set<HeightGraftInfo>
 
