@@ -660,18 +660,49 @@ internal class ParseGraph(
 
     fun isLookingAt(lookaheadGuard: LookaheadSet, prevLookahead: LookaheadSet?, nextInputPosition: Int): Boolean {
         //TODO: use regex.lookingAt
-        var result = false
-        for (rr in lookaheadGuard.content) {
-            if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr && null != prevLookahead) {
-                if (isLookingAt(prevLookahead, null, nextInputPosition)) {
-                    return true
+        return when {
+            LookaheadSet.ANY == lookaheadGuard -> true
+            null==prevLookahead -> {
+                var result = false
+                for (rr in lookaheadGuard.content) {
+                    val l = this.input.findOrTryCreateLeaf(rr, nextInputPosition)
+                    if (null != l) {
+                        result = true
+                        break
+                    }
                 }
-            } else {
-                val l = this.input.findOrTryCreateLeaf(rr, nextInputPosition)
-                if (null != l) return true
+                result
+            }
+            LookaheadSet.UP == lookaheadGuard -> {
+                var result = false
+                for (rr in prevLookahead.content) {
+                        val l = this.input.findOrTryCreateLeaf(rr, nextInputPosition)
+                        if (null != l) {
+                            result = true
+                            break
+                        }
+                }
+                result
+            }
+            else -> {
+                var result = false
+                for (rr in lookaheadGuard.content) {
+                    if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
+                        if (isLookingAt(prevLookahead, null, nextInputPosition)) {
+                            result = true
+                            break
+                        }
+                    } else {
+                        val l = this.input.findOrTryCreateLeaf(rr, nextInputPosition)
+                        if (null != l) {
+                            result = true
+                            break
+                        }
+                    }
+                }
+                result
             }
         }
-        return result
     }
 
     fun recordGoal(completeNode: SPPTNode) {

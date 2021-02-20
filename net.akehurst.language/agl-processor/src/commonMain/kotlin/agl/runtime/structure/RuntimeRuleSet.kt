@@ -31,6 +31,7 @@ class LookaheadSet(
 ) {
     companion object {
         val EMPTY = LookaheadSet(-1, emptySet())
+        val ANY = LookaheadSet(-1, setOf(RuntimeRuleSet.ANY_LOOKAHEAD))
         val EOT = LookaheadSet(-2, setOf(RuntimeRuleSet.END_OF_TEXT))
         val UP = LookaheadSet(-3, setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
     }
@@ -57,14 +58,17 @@ class RuntimeRuleSet(
         val SKIP_RULE_NUMBER = -3;
         val SKIP_CHOICE_RULE_NUMBER = -4;
         val USE_PARENT_LOOKAHEAD_RULE_NUMBER = -5;
+        val ANY_LOOKAHEAD_RULE_NUMBER = -6;
         val END_OF_TEXT_TAG = "<EOT>"
         val GOAL_TAG = "<GOAL>"
         val SKIP_RULE_TAG = "<SKIP-MULTI>"
         val SKIP_CHOICE_RULE_TAG = "<SKIP-CHOICE>"
         val USE_PARENT_LOOKAHEAD_RULE_TAG = "<UP>"
+        val ANY_LOOKAHEAD_RULE_TAG = "<ANY>"
 
         val END_OF_TEXT = RuntimeRule(-1, EOT_RULE_NUMBER, END_OF_TEXT_TAG, InputFromString.END_OF_TEXT, RuntimeRuleKind.TERMINAL, false, false)
         val USE_PARENT_LOOKAHEAD = RuntimeRule(-1, USE_PARENT_LOOKAHEAD_RULE_NUMBER, USE_PARENT_LOOKAHEAD_RULE_TAG, 0.toChar().toString(), RuntimeRuleKind.TERMINAL, false, false)
+        val ANY_LOOKAHEAD = RuntimeRule(-1, ANY_LOOKAHEAD_RULE_NUMBER, ANY_LOOKAHEAD_RULE_TAG, 0.toChar().toString(), RuntimeRuleKind.TERMINAL, false, false)
 
         fun createGoalRule(userGoalRule: RuntimeRule): RuntimeRule {
             val gr = RuntimeRule(userGoalRule.runtimeRuleSetNumber, GOAL_RULE_NUMBER, GOAL_TAG, GOAL_TAG, RuntimeRuleKind.GOAL, false, false)

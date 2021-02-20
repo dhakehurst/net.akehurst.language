@@ -111,6 +111,8 @@ class BuildCacheLC0(
         }
     }
 
+    private fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet = this.stateSet.runtimeRuleSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
+
     private fun calcAndCacheWidthInfo(fromRulePositions: List<RulePosition>, cls: Set<ClosureItemLC0>): Set<WidthInfo> {
         val wis = calcWidthInfo(fromRulePositions, cls)
         cacheWidthInfo(fromRulePositions, wis)
@@ -125,7 +127,7 @@ class BuildCacheLC0(
         val grouped = filt.groupBy { it.rulePosition.item!! }.map {
             val rr = it.key
             val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
-            val lhs = LookaheadSet.EMPTY
+            val lhs = LookaheadSet.ANY
             WidthInfo(rp, lhs)
         }.toSet()
         //don't group them, because we need the info on the lookahead for the runtime calc of next lookaheads
@@ -133,7 +135,7 @@ class BuildCacheLC0(
     }
 
     private fun cacheWidthInfo(fromRulePositions: List<RulePosition>, wis: Set<WidthInfo>) {
-        var map = this._widthInto[fromRulePositions] ?: run {
+        val map = this._widthInto[fromRulePositions] ?: run {
             val x = mutableMapOf<RuntimeRule, WidthInfo>()
             this._widthInto[fromRulePositions] = x
             x
@@ -156,7 +158,7 @@ class BuildCacheLC0(
 
     private fun cacheHeightOrGraftInto(prev: List<RulePosition>, from: List<RuntimeRule>, hgis: Set<HeightGraftInfo>) {
         val key = Pair(prev, from)
-        var map = this._heightOrGraftInto[key] ?: run {
+        val map = this._heightOrGraftInto[key] ?: run {
             val x = mutableMapOf<List<RulePosition>, HeightGraftInfo>()
             this._heightOrGraftInto[key] = x
             x
@@ -179,10 +181,16 @@ class BuildCacheLC0(
         val upFilt = upCls.filter { from.contains(it.rulePosition.item) }
         val res = upFilt.flatMap { clsItem ->
             val parent = clsItem.rulePosition
-            val upLhs = LookaheadSet.EMPTY
+            val upLhs = when(parent.runtimeRule.kind) {
+                RuntimeRuleKind.GOAL -> if (parent.isAtEnd) LookaheadSet.UP else LookaheadSet.ANY
+                else -> LookaheadSet.ANY
+            }
             val pns = parent.next()
             pns.map { parentNext ->
-                val lhs = LookaheadSet.EMPTY
+                val lhs = when(parentNext.runtimeRule.kind) {
+                    RuntimeRuleKind.GOAL -> LookaheadSet.UP
+                    else -> LookaheadSet.ANY
+                }
                 HeightGraftInfo(listOf(parent), listOf(parentNext), lhs, upLhs)
             }
         }
@@ -190,8 +198,8 @@ class BuildCacheLC0(
             .map {
                 val parent = it.key[0] as List<RulePosition>
                 val parentNext = it.key[1] as List<RulePosition>
-                val lhs = LookaheadSet.EMPTY
-                val upLhs = LookaheadSet.EMPTY
+                val lhs = if (it.value.map { it.lhs }.contains(LookaheadSet.ANY)) LookaheadSet.ANY else LookaheadSet.UP
+                val upLhs = if (it.value.map { it.upLhs }.contains(LookaheadSet.ANY)) LookaheadSet.ANY else LookaheadSet.UP
                 HeightGraftInfo((parent), (parentNext), lhs, upLhs)
             }
         val grouped2 = grouped.groupBy { listOf(it.lhs, it.upLhs) }
@@ -208,8 +216,8 @@ class BuildCacheLC0(
 
     private fun traverseRulePositions(parent: ClosureItemLC0, items: MutableSet<ClosureItemLC0>) {
         when {
-            parent.rulePosition.isAtEnd -> items
-            items.any { it.rulePosition == parent.rulePosition } -> items
+            parent.rulePosition.isAtEnd -> null
+            items.any { it.rulePosition == parent.rulePosition } -> null
             else -> {
                 items.add(parent)
                 when (parent.rulePosition.position) {

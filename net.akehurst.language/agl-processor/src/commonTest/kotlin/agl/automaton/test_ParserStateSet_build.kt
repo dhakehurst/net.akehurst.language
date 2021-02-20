@@ -670,8 +670,8 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
 
-        val actual = SM.build()
-        println(rrs.usedAutomatonToString("S"))
+        //val actual = SM.build()
+        //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
@@ -696,7 +696,7 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
 
     @Test
     fun leftRecursive() {
-        val automatonKind = AutomatonKind.LC1
+        val automatonKind = AutomatonKind.LC0
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")
@@ -709,7 +709,7 @@ class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
 
-        val actual = SM.build()
+        //val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
