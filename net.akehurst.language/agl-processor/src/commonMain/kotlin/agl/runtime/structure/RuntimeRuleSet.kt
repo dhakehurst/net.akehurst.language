@@ -440,19 +440,17 @@ class RuntimeRuleSet(
             b.append(str).append("\n")
         }
         states.forEach { st ->
-            st.transitionsByPrevious.forEach { me ->
-                val prev = me.key
-                me.value?.forEach { tr ->
-                    val trStr = "${tr.from.number.value} --> ${tr.to.number.value}"
-                    val trGrd = "[${tr.lookaheadGuard.content.joinToString { c -> c.tag }} | ${tr.upLookahead.content.joinToString { c -> c.tag }}]"
-                    val prvGrd = " [${tr.prevGuard?.joinToString()}]"
-                    b.append("{${prev?.number?.value}} ")
-                    b.append(trStr)
-                    b.append(" ${tr.action} ")
-                    b.append(trGrd)
-                    b.append(prvGrd)
-                    b.append("\n")
-                }
+            st.allBuiltTransitions.forEach { tr ->
+                val prev = st.transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
+                val trStr = "${tr.from.number.value} --> ${tr.to.number.value}"
+                val trGrd = "[${tr.lookaheadGuard.content.joinToString { c -> c.tag }} | ${tr.upLookahead.content.joinToString { c -> c.tag }}]"
+                val prvGrd = " [${tr.prevGuard?.joinToString()}]"
+                b.append("{${prev.joinToString()}} ")
+                b.append(trStr)
+                b.append(" ${tr.action} ")
+                b.append(trGrd)
+                b.append(prvGrd)
+                b.append("\n")
             }
         }
 

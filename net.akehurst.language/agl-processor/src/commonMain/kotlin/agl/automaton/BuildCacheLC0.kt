@@ -22,12 +22,17 @@ data class ClosureItemLC0(
     val parentItem: ClosureItemLC0?, //needed for height/graft
     val rulePosition: RulePosition
 ) {
+    val allPrev: Set<ClosureItemLC0> = if (null == parentItem) mutableSetOf() else parentItem.allPrev + parentItem
 
     val prevList: List<List<RulePosition>> by lazy {
+        // default impl of Set is in order, so can reuse _all
+        //allPrev.filter { (it.rulePosition.isAtStart && it.rulePosition.runtimeRule.kind != RuntimeRuleKind.GOAL).not() }
+        //    .map { listOf(it.rulePosition) }
+        /*
         val result = mutableListOf<List<RulePosition>>()
         var x: ClosureItemLC0? = this.parentItem
         while (null != x) {
-            if (x.rulePosition.isAtStart && x.rulePosition.runtimeRule.kind != RuntimeRuleKind.GOAL) {
+            if (it.rulePosition.isAtStart && it.rulePosition.runtimeRule.kind != RuntimeRuleKind.GOAL) {
                 // don't add
             } else {
                 result.add(listOf(x.rulePosition))
@@ -35,7 +40,20 @@ data class ClosureItemLC0(
             x = x.parentItem
         }
         result
+         */
+        if (null == this.parentItem) {
+            emptyList<List<RulePosition>>()
+        } else {
+            var x: ClosureItemLC0 = this.parentItem
+            while (x.rulePosition.isAtStart && x.rulePosition.runtimeRule.kind != RuntimeRuleKind.GOAL) {
+                x = x.parentItem!!
+            }
+            listOf(listOf(x.rulePosition))
+        }
     }
+
+    fun hasLooped(): Boolean = allPrev.contains(this)
+
 
     private fun chain(): String {
         val p = if (null == parentItem) {
@@ -49,6 +67,7 @@ data class ClosureItemLC0(
     override fun toString(): String {
         return "${chain()}"
     }
+
 }
 
 class BuildCacheLC0(
@@ -85,7 +104,8 @@ class BuildCacheLC0(
 
         //traverse down and collect closure
         val ci = ClosureItemLC0(null, G_0_0)
-        this.traverseRulePositions(ci, mutableSetOf())
+        this.traverseRulePositions(ci)
+        cacheStateInfo(listOf(G_0_0.atEnd()), listOf(listOf()))
     }
 
     override fun clearAndOff() {
@@ -227,11 +247,11 @@ class BuildCacheLC0(
     }
 
     // return the terminals at the bottom of each closure
-    private fun traverseRulePositions(parent: ClosureItemLC0, items: Set<ClosureItemLC0>): Set<RuntimeRule> {
+    private fun traverseRulePositions(parent: ClosureItemLC0): Set<RuntimeRule> {
         return when {
             parent.rulePosition.isAtEnd -> {
                 // cache but cannot traverse down
-                calcAndCacheHeightOrGraftInto(parent.prevList, listOf(parent.rulePosition.runtimeRule), items)
+                calcAndCacheHeightOrGraftInto(parent.prevList, listOf(parent.rulePosition.runtimeRule), parent.allPrev)
                 cacheStateInfo(listOf(parent.rulePosition), parent.prevList)
                 val rr = parent.rulePosition.runtimeRule
                 if (rr.kind == RuntimeRuleKind.TERMINAL || rr.kind == RuntimeRuleKind.EMBEDDED) {
@@ -240,7 +260,7 @@ class BuildCacheLC0(
                     emptySet()
                 }
             }
-            items.any { it.rulePosition == parent.rulePosition } -> emptySet()
+            parent.hasLooped() -> emptySet()
             else -> {
                 val result = mutableSetOf<RuntimeRule>()
                 when {
@@ -249,8 +269,7 @@ class BuildCacheLC0(
                         val runtimeRule = parent.rulePosition.item ?: error("should never be null as position != EOR")
                         for (rp in runtimeRule.rulePositions) {
                             val ci = ClosureItemLC0(parent, rp)
-                            val newItems = items + parent
-                            val dnCls = traverseRulePositions(ci, newItems)
+                            val dnCls = traverseRulePositions(ci)
                             result.addAll(dnCls)
                         }
                     }
@@ -259,9 +278,10 @@ class BuildCacheLC0(
                         val runtimeRule = parent.rulePosition.item ?: error("should never be null as position != EOR")
                         for (rp in runtimeRule.rulePositions) {
                             val ci = ClosureItemLC0(parent, rp)
-                            val newItems = items + parent
-                            val dnCls = traverseRulePositions(ci, newItems)
-                            calcAndCacheWidthInfo(listOf(parent.rulePosition), dnCls)
+                            val dnCls = traverseRulePositions(ci)
+                            when (rp.position) {
+                                RulePosition.START_OF_RULE -> calcAndCacheWidthInfo(listOf(parent.rulePosition), dnCls)
+                            }
                             result.addAll(dnCls)
                         }
                         cacheStateInfo(listOf(parent.rulePosition), parent.prevList)

@@ -23,10 +23,10 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 
 
-class test_ParserStateSet_build : test_AutomatonUtilsAbstract() {
+class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
 
     companion object {
-        val automatonKind = AutomatonKind.LC0
+        val automatonKind = AutomatonKind.LC1
     }
 
     @Test

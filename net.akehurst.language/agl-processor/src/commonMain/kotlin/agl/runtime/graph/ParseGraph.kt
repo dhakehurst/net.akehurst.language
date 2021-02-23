@@ -658,11 +658,12 @@ internal class ParseGraph(
         }
     }
 
-    fun isLookingAt(lookaheadGuard: LookaheadSet, prevLookahead: LookaheadSet?, nextInputPosition: Int): Boolean {
+    fun isLookingAt(lookaheadGuard: LookaheadSet, runtimeLookahead: LookaheadSet?, nextInputPosition: Int): Boolean {
         //TODO: use regex.lookingAt
         return when {
+            LookaheadSet.UP == runtimeLookahead -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
             LookaheadSet.ANY == lookaheadGuard -> true
-            null==prevLookahead -> {
+            null==runtimeLookahead -> {
                 var result = false
                 for (rr in lookaheadGuard.content) {
                     val l = this.input.findOrTryCreateLeaf(rr, nextInputPosition)
@@ -675,7 +676,7 @@ internal class ParseGraph(
             }
             LookaheadSet.UP == lookaheadGuard -> {
                 var result = false
-                for (rr in prevLookahead.content) {
+                for (rr in runtimeLookahead.content) {
                         val l = this.input.findOrTryCreateLeaf(rr, nextInputPosition)
                         if (null != l) {
                             result = true
@@ -688,7 +689,7 @@ internal class ParseGraph(
                 var result = false
                 for (rr in lookaheadGuard.content) {
                     if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
-                        if (isLookingAt(prevLookahead, null, nextInputPosition)) {
+                        if (isLookingAt(runtimeLookahead, null, nextInputPosition)) {
                             result = true
                             break
                         }

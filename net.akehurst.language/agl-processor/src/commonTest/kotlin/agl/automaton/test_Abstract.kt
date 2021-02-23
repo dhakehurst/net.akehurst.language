@@ -27,6 +27,7 @@ abstract class test_AutomatonUtilsAbstract {
     companion object {
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
+        val ANY = RuntimeRuleSet.ANY_LOOKAHEAD
 
         val EOR = RulePosition.END_OF_RULE
         val SOR = RulePosition.START_OF_RULE
@@ -55,20 +56,21 @@ abstract class test_AutomatonUtilsAbstract {
     }
 
     fun assertEquals(expected: ParserStateSet, actual: ParserStateSet) {
-        val expected_states = expected.states.values.toList()
-        val actual_states = actual.states.values.toList()
+        val expected_states = expected.states.values.map { it.rulePositions }.toSet()
+        val actual_states = actual.states.values.map { it.rulePositions }.toSet()
 
-        assertEquals(expected_states.size, actual_states.size, "Number of States do not match")
-
+        assertEquals(expected_states, actual_states, "States do not match")
+/*
         for (i in expected_states.indices) {
             val expected_state = expected_states[i]
             val actual_state = actual_states[i]
             assertEquals(expected_state.rulePositions, actual_state.rulePositions, "RulePositions do not match")
         }
-
+*/
         assertEquals(expected.allBuiltTransitions.size, actual.allBuiltTransitions.size, "Number of Transitions do not match")
-        for (i in expected_states.indices) {
-            assertEquals(expected_states[i], actual_states[i])
+        for (exp in expected.states.values) {
+            val act = actual.states[exp.rulePositions]
+            assertEquals(exp, act)
         }
     }
 
