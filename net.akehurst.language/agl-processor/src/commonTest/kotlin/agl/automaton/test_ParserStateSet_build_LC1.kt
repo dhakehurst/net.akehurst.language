@@ -373,8 +373,9 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val SM = rrs.fetchStateSetFor(S, automatonKind)
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
-        val actual = SM.build()
-        println(rrs.usedAutomatonToString("S"))
+
+        //val actual = SM.build()
+        //println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S

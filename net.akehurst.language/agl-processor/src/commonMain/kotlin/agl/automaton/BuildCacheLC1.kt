@@ -58,6 +58,8 @@ class BuildCacheLC1(
     private val _firstOfNotEmpty = Array<FirstOfResult?>(this.stateSet.runtimeRuleSet.runtimeRules.size, { null })
     private val _parentPosition = mutableMapOf<RuntimeRule, Set<RulePosition>>()
 
+    private val _stateInfo = mutableMapOf<List<RulePosition>,StateInfo>()
+
     // from-state-listOf-rule-positions -> mapOf
     //    to-state-terminal-rule -> WidthInfo
     private val _widthInto = mutableMapOf<List<RulePosition>, MutableMap<RuntimeRule, WidthInfo>>()
@@ -86,9 +88,7 @@ class BuildCacheLC1(
         _cacheOff = true
     }
 
-    override fun stateInfo(): Set<StateInfo> {
-        TODO("not implemented")
-    }
+    override fun stateInfo(): Set<StateInfo> = this._stateInfo.values.toSet()
 
     override fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo> {
         return this._widthInto[fromStateRulePositions]?.values?.toSet() ?: run {

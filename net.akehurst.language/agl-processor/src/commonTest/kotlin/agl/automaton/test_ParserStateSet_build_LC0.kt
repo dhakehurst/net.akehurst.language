@@ -377,17 +377,37 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val SM = rrs.fetchStateSetFor(S, automatonKind)
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
-
+        val ABC1 = rrs.findRuntimeRule("ABC1")
+        val ABC2 = rrs.findRuntimeRule("ABC2")
+        val a = rrs.findRuntimeRule("'a'")
+        val b = rrs.findRuntimeRule("'b'")
+        val c = rrs.findRuntimeRule("'c'")
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
+            val s1 = state(RP(a, 0, EOR))      // a
+            val s2 = state(RP(ABC1, 0, 1), RP(ABC2, 0, 1))       // ABC1 = a . b c, ABC2 = a . b c
+            val s3 = state(RP(b, 0, SOR))      // b
+            val s4 = state(RP(ABC1, 0, 2), RP(ABC2, 0, 2))      // ABC1 = a b . c, ABC2 = a b . c
+            val s5 = state(RP(c, 0, EOR))      // c
+            val s6 = state(RP(ABC1, 0, EOR), RP(ABC2, 0, EOR))    // ABC1 = a b c ., ABC2 = a b c .
+            val s7 = state(RP(S, 0, EOR), RP(S, 1, EOR))          // S = ABC1 ., S = ABC2 .
+            val s8 = state(RP(G, 0, SOR))                             // G = S .
 
-
+            transition(null, s0, s1, WIDTH, setOf(ANY), setOf(), null)
+            transition(s0, s1, s2, HEIGHT, setOf(ANY), setOf(ANY), listOf(RP(ABC1, 0, SOR), RP(ABC2, 0, SOR)))
+            transition(s0, s2, s3, WIDTH, setOf(ANY), setOf(ANY), null)
+            transition(s0, s3, s4, GRAFT, setOf(ANY), setOf(ANY), listOf(RP(ABC1, 0, 1), RP(ABC2, 0, 1)))
+            transition(s0, s4, s5, WIDTH, setOf(ANY), setOf(ANY), null)
+            transition(s0, s5, s6, GRAFT, setOf(ANY), setOf(ANY), listOf(RP(ABC1, 0, 2), RP(ABC2, 0, 2)))
+            transition(s0, s6, s7, HEIGHT, setOf(ANY), setOf(ANY), listOf(RP(S, 0, SOR), RP(S, 1, SOR)))
+            transition(s0, s7, s8, GRAFT, setOf(UP), setOf(ANY), listOf(RP(G, 0, SOR)))
+            transition(null, s8, s8, GOAL, setOf(), setOf(), null)
         }
 
-        //super.assertEquals(expected, actual)
+        super.assertEquals(expected, actual)
 
         val sentences = listOf(
             "abc",

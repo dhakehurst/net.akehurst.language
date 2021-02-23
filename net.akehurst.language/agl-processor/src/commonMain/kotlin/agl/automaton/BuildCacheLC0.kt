@@ -24,31 +24,15 @@ data class ClosureItemLC0(
 ) {
     val allPrev: Set<ClosureItemLC0> = if (null == parentItem) mutableSetOf() else parentItem.allPrev + parentItem
 
-    val prevList: List<List<RulePosition>> by lazy {
-        // default impl of Set is in order, so can reuse _all
-        //allPrev.filter { (it.rulePosition.isAtStart && it.rulePosition.runtimeRule.kind != RuntimeRuleKind.GOAL).not() }
-        //    .map { listOf(it.rulePosition) }
-        /*
-        val result = mutableListOf<List<RulePosition>>()
-        var x: ClosureItemLC0? = this.parentItem
-        while (null != x) {
-            if (it.rulePosition.isAtStart && it.rulePosition.runtimeRule.kind != RuntimeRuleKind.GOAL) {
-                // don't add
-            } else {
-                result.add(listOf(x.rulePosition))
-            }
-            x = x.parentItem
-        }
-        result
-         */
+    val prev: List<RulePosition> by lazy {
         if (null == this.parentItem) {
-            emptyList<List<RulePosition>>()
+            emptyList<RulePosition>()
         } else {
             var x: ClosureItemLC0 = this.parentItem
             while (x.rulePosition.isAtStart && x.rulePosition.runtimeRule.kind != RuntimeRuleKind.GOAL) {
                 x = x.parentItem!!
             }
-            listOf(listOf(x.rulePosition))
+            listOf(x.rulePosition)
         }
     }
 
@@ -82,7 +66,7 @@ class BuildCacheLC0(
     //TODO: use smaller array for done, but would to map rule number!
     private val _firstOfNotEmpty = Array<FirstOfResult?>(this.stateSet.runtimeRuleSet.runtimeRules.size, { null })
 
-    private val _stateInfo = mutableSetOf<StateInfo>()
+    private val _stateInfo = mutableMapOf<List<RulePosition>,StateInfo>()
 
     // from-state-listOf-rule-positions -> mapOf
     //    to-state-terminal-rule -> WidthInfo
@@ -105,7 +89,7 @@ class BuildCacheLC0(
         //traverse down and collect closure
         val ci = ClosureItemLC0(null, G_0_0)
         this.traverseRulePositions(ci)
-        cacheStateInfo(listOf(G_0_0.atEnd()), listOf(listOf()))
+        cacheStateInfo(listOf(G_0_0.atEnd()), listOf())
     }
 
     override fun clearAndOff() {
@@ -114,7 +98,7 @@ class BuildCacheLC0(
         _cacheOff = true
     }
 
-    override fun stateInfo(): Set<StateInfo> = this._stateInfo
+    override fun stateInfo(): Set<StateInfo> = this._stateInfo.values.toSet()
 
     override fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo> {
         return this._widthInto[fromStateRulePositions]?.values?.toSet() ?: run {
@@ -130,13 +114,19 @@ class BuildCacheLC0(
         val key = Pair(prevStateRulePositions, fromStateRuntimeRules)
         return this._heightOrGraftInto[key]?.values?.toSet() ?: run {
             val upCls = prevStateRulePositions.flatMap { this.closureLR0(it) }.toSet()
-            val calc = calcAndCacheHeightOrGraftInto(listOf(prevStateRulePositions), fromStateRuntimeRules, upCls)
+            val calc = calcAndCacheHeightOrGraftInto(prevStateRulePositions, fromStateRuntimeRules, upCls)
             calc
         }
     }
 
-    private fun cacheStateInfo(rulePositions: List<RulePosition>, possiblePrevs: List<List<RulePosition>>) {
-        this._stateInfo.add(StateInfo(rulePositions, possiblePrevs))
+    private fun cacheStateInfo(rulePositions: List<RulePosition>, prev: List<RulePosition>) {
+        val existing = this._stateInfo[rulePositions]
+        if (null==existing) {
+            this._stateInfo[rulePositions] = StateInfo(rulePositions, listOf(prev))
+        } else {
+            val pp = existing.possiblePrev.union(listOf(prev)).toList()
+            this._stateInfo[rulePositions] = StateInfo(rulePositions,pp)
+        }
     }
 
     private fun calcAndCacheWidthInfo(fromRulePositions: List<RulePosition>, bottomTerminals: Set<RuntimeRule>): Set<WidthInfo> {
@@ -181,11 +171,9 @@ class BuildCacheLC0(
         }
     }
 
-    private fun calcAndCacheHeightOrGraftInto(possiblePrevs: List<List<RulePosition>>, from: List<RuntimeRule>, upCls: Set<ClosureItemLC0>): Set<HeightGraftInfo> {
+    private fun calcAndCacheHeightOrGraftInto(prev: List<RulePosition>, from: List<RuntimeRule>, upCls: Set<ClosureItemLC0>): Set<HeightGraftInfo> {
         val hgi = calcHeightOrGraftInto(from, upCls)
-        for (prev in possiblePrevs) {
-            cacheHeightOrGraftInto(prev, from, hgi)
-        }
+        cacheHeightOrGraftInto(prev, from, hgi)
         return hgi
     }
 
@@ -196,6 +184,7 @@ class BuildCacheLC0(
             this._heightOrGraftInto[key] = x
             x
         }
+        merge ?
         for (hg in hgis) {
             val existing = map[hg.parent]
             if (null == existing) {
@@ -251,8 +240,8 @@ class BuildCacheLC0(
         return when {
             parent.rulePosition.isAtEnd -> {
                 // cache but cannot traverse down
-                calcAndCacheHeightOrGraftInto(parent.prevList, listOf(parent.rulePosition.runtimeRule), parent.allPrev)
-                cacheStateInfo(listOf(parent.rulePosition), parent.prevList)
+                calcAndCacheHeightOrGraftInto(parent.prev, listOf(parent.rulePosition.runtimeRule), parent.allPrev)
+                cacheStateInfo(listOf(parent.rulePosition), parent.prev)
                 val rr = parent.rulePosition.runtimeRule
                 if (rr.kind == RuntimeRuleKind.TERMINAL || rr.kind == RuntimeRuleKind.EMBEDDED) {
                     setOf(rr)
@@ -284,7 +273,7 @@ class BuildCacheLC0(
                             }
                             result.addAll(dnCls)
                         }
-                        cacheStateInfo(listOf(parent.rulePosition), parent.prevList)
+                        cacheStateInfo(listOf(parent.rulePosition), parent.prev)
                     }
                 }
                 result
