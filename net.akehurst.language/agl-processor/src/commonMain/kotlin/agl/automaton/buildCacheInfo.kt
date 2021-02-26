@@ -37,7 +37,7 @@ data class WidthInfo(
 
 data class HeightGraftInfo(
     val parent: List<RulePosition>,
-    val parentNext: List<RulePosition>,
+    val parentNext: List<RulePosition>, // to state
     val lhs: LookaheadSet,
     val upLhs: LookaheadSet
 )

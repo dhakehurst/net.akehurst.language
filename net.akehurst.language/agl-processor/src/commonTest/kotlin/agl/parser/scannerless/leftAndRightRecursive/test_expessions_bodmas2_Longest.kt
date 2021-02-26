@@ -18,16 +18,45 @@ package net.akehurst.language.parser.scanondemand.leftAndRightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
 class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
 
     // S = E
+    /* E = var | I | '(' E ')' */
+    // E = var | I | par
+    // par = '(' E ')'
     // E = var | I | '(' E ')'
-    // I = E (op E)+ ;
+    /* I = E (op E)+ */
+    // I = E I1
+    // I1 = I+
+    // I2 = op E
     // op = '/' | 'M' | '+' | '-'
     // var = "[a-z]+"
+    companion object {
+        val rrs = runtimeRuleSet {
+            concatenation("S") { ref("E") }
+            choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("var")
+                ref("I")
+                ref("par")
+            }
+            concatenation("var") { pattern("[a-z]+") }
+            concatenation("par") { literal("("); ref("E"); literal(")") }
+            concatenation("I") { ref("E"); ref("I1") }
+            concatenation("I2") { ref("op"); ref("E") }
+            multi("I1",1, -1, "I2")
+            choice("op", RuntimeRuleChoiceKind.LONGEST_PRIORITY){
+                literal("/")
+                literal("*")
+                literal("+")
+                literal("-")
+            }
+        }
+    }
+/*
     private fun S(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r_var = b.rule("var").concatenation(b.pattern("[a-z]+"))
@@ -42,10 +71,9 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
         val r_S = b.rule("S").concatenation(r_E)
         return b
     }
-
+*/
     @Test
     fun a() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "a"
 
@@ -53,12 +81,17 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
             S { E { var { "[a-z]+":'a' } } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+    val actual = super.test(
+        rrs = rrs,
+        goal = goal,
+        sentence = sentence,
+        expectedNumGSSHeads = 1,
+        expectedTrees = *arrayOf(expected)
+    )
     }
 
     @Test
     fun vav() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "v+v"
 
@@ -72,17 +105,21 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun vavav() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "v+v+v"
 
-        //think this should be excluded because of priority I < 'a'
-        val expected1 = """
+        val expected = """
          S { E|1 { I {
               E { var { "[a-z]+" : 'v' } }
               I1 {
@@ -98,13 +135,18 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected1)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
 
     @Test
     fun vavavav() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "v+v+v+v"
 
@@ -128,13 +170,17 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun vavavavav() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "v+v+v+v+v"
 
@@ -162,13 +208,17 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun vdvmvavsv() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "v/v*v+v-v"
 
@@ -196,8 +246,13 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

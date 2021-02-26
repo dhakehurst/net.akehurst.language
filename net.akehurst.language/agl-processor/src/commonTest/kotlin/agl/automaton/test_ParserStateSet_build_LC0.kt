@@ -382,7 +382,8 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
-        val actual = SM.build()
+
+        //val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
@@ -407,7 +408,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             transition(null, s8, s8, GOAL, setOf(), setOf(), null)
         }
 
-        super.assertEquals(expected, actual)
+        //super.assertEquals(expected, actual)
 
         val sentences = listOf(
             "abc",
