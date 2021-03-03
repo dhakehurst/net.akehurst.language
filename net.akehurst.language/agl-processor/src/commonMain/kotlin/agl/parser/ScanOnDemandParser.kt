@@ -205,7 +205,7 @@ class ScanOnDemandParser(
                     val exp = trs.flatMap { tr ->
                         when (tr.action) {
                             Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                            Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.lookahead.content)
+                            Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.lookahead)
                             Transition.ParseAction.EMBED -> TODO()
                             Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.lookahead).content
                             Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.lookahead }.flatMap { rp.stateSet.createWithParent(tr.lookaheadGuard, it).content }
@@ -222,7 +222,7 @@ class ScanOnDemandParser(
                         val exp = trs.flatMap { tr ->
                             when (tr.action) {
                                 Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                                Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.lookahead.content)
+                                Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.lookahead)
                                 Transition.ParseAction.EMBED -> TODO()
                                 Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.lookahead).content
                                 Transition.ParseAction.GRAFT -> rp.stateSet.createWithParent(tr.lookaheadGuard, prev.lookahead).content

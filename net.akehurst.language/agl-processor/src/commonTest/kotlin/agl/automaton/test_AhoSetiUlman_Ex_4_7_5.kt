@@ -131,10 +131,10 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
 
     @Test
     fun createClosure_G00_UP() {
-        val cl_G = ClosureItem(null, RP(G, 0, 0), RP(G, 0, EOR), lhs_U)
-        //val cl_G_S = ClosureItem(cl_G, RP(S, 0, 0), RulePosition(S, 0, 1), lhs_bcU)
-        //val cl_G_S_aOpt0 = ClosureItem(cl_G_S, RP(aOpt, OMI, 0), RP(aOpt, OMI, EOR), lhs_bcU)
-        //val cl_G_S_aOpt1 = ClosureItem(cl_G_S, RP(aOpt, OME, 0), RP(aOpt, OME, EOR), lhs_bcU)
+        val cl_G = ClosureItemLC1(null, RP(G, 0, 0), RP(G, 0, EOR), lhs_U)
+        //val cl_G_S = ClosureItemLC1(cl_G, RP(S, 0, 0), RulePosition(S, 0, 1), lhs_bcU)
+        //val cl_G_S_aOpt0 = ClosureItemLC1(cl_G_S, RP(aOpt, OMI, 0), RP(aOpt, OMI, EOR), lhs_bcU)
+        //val cl_G_S_aOpt1 = ClosureItemLC1(cl_G_S, RP(aOpt, OME, 0), RP(aOpt, OME, EOR), lhs_bcU)
 
         TODO()
         //val actual = SM.buildCache.calcClosure(RP(G, 0, 0), lhs_U)

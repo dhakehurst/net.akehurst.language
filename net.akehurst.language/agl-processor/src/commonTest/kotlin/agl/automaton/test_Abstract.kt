@@ -117,7 +117,7 @@ abstract class test_Abstract : test_AutomatonUtilsAbstract() {
             val lhs = t.second
             val expected = t.third
 
-            val actual = SM.buildCache.firstOf(rp, lhs.content)
+            val actual = SM.buildCache.firstOf(rp, lhs)
 
             assertEquals(expected, actual, "failed $rp")
         }

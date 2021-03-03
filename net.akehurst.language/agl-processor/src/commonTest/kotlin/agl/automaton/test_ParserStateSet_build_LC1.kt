@@ -36,8 +36,7 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val G = SM.startState.runtimeRules.first()
         val a = rrs.findRuntimeRule("'a'")
 
         val actual = SM.build()

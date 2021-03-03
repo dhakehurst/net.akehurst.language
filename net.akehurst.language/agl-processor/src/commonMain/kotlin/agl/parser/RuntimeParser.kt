@@ -248,7 +248,7 @@ internal class RuntimeParser(
         this.graph.growingHead.clear()
         for (gn in this.toGrow) {
             checkInterrupt()
-            val skipLhc = gn.currentState.rulePositions.flatMap { this.stateSet.buildCache.firstOf(it, setOf(RuntimeRuleSet.END_OF_TEXT)) }.toSet()
+            val skipLhc = gn.currentState.rulePositions.flatMap { this.stateSet.buildCache.firstOf(it, LookaheadSet.EOT) }.toSet()
             val skipLh = this.stateSet.createLookaheadSet(skipLhc)
             val skipNodes = this.tryParseSkipUntilNone(skipLh, gn.startPosition)
             gn.children.appendSkipIfNotEmpty(skipNodes) //ok because gn.children should be empty

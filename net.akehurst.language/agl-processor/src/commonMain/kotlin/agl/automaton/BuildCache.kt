@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
@@ -28,6 +29,6 @@ interface BuildCache {
     fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo>
     fun heightGraftInto(prevStateRulePositions:List<RulePosition>, fromStateRuntimeRules: List<RuntimeRule>) : Set<HeightGraftInfo>
 
-    fun firstOf(rulePosition: RulePosition, ifReachedEnd: Set<RuntimeRule>): Set<RuntimeRule>
+    fun firstOf(rulePosition: RulePosition, ifReachedEnd: LookaheadSet): Set<RuntimeRule>
 
 }

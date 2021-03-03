@@ -98,7 +98,7 @@ class ParserState(
     val isGoal = this.runtimeRules.first().kind == RuntimeRuleKind.GOAL
     val isUserGoal = this.runtimeRules.first() == this.stateSet.userGoalRule
 
-    fun firstOf(ifReachedEnd: Set<RuntimeRule>): Set<RuntimeRule> = this.rulePositions.flatMap {
+    fun firstOf(ifReachedEnd: LookaheadSet): Set<RuntimeRule> = this.rulePositions.flatMap {
         stateSet.buildCache.firstOf(it, ifReachedEnd)
     }.toSet()
 

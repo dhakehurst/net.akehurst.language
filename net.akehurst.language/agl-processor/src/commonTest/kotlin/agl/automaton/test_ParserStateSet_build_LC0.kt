@@ -36,8 +36,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val G = SM.startState.runtimeRules.first()
         val a = rrs.findRuntimeRule("'a'")
 
         val actual = SM.build()
@@ -74,8 +73,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val G = SM.startState.runtimeRules.first()
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
@@ -131,8 +129,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val G = SM.startState.runtimeRules.first()
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
@@ -192,8 +189,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val G = SM.startState.runtimeRules.first()
         val A = rrs.findRuntimeRule("A")
         val B = rrs.findRuntimeRule("B")
         val C = rrs.findRuntimeRule("C")
@@ -249,8 +245,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val G = SM.startState.runtimeRules.first()
         val eS = S.rhs.items[0]
 
         val actual = SM.build()
@@ -289,8 +284,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val G = SM.startState.runtimeRules.first()
         val oA = rrs.findRuntimeRule("oA")
         val oB = rrs.findRuntimeRule("oB")
         val oC = rrs.findRuntimeRule("oC")
@@ -375,8 +369,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val G = SM.startState.runtimeRules.first()
         val ABC1 = rrs.findRuntimeRule("ABC1")
         val ABC2 = rrs.findRuntimeRule("ABC2")
         val a = rrs.findRuntimeRule("'a'")
