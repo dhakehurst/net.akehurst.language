@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.automaton.AutomatonKind
-import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.api.parser.ParserException
@@ -170,7 +169,7 @@ class RuntimeRuleSet(
             //skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
 
             //TODO: how to set AutomatonKind here!
-            val ss = ParserStateSet(nextStateSetNumber++, this, skipMultiRule, true, AutomatonKind.LC1)
+            val ss = ParserStateSet(nextStateSetNumber++, this, skipMultiRule, true, AutomatonKind.LOOKAHEAD_1)
             //this.states_cache[skipGoalRule] = ss
             ss
         }
@@ -433,15 +432,15 @@ class RuntimeRuleSet(
         val gr = this.findRuntimeRule(goalRuleName)
 
         val states = this.states_cache[gr]!!.states.values
-        val transitions = states.flatMap { it.allBuiltTransitions.toSet() }.toSet()
+        val transitions = states.flatMap { it.outTransitions.allBuiltTransitions.toSet() }.toSet()
 
         states.forEach {
-            val str = "$it {${it.transitionsByPrevious.keys.map { it?.number?.value }}}"
+            val str = "$it {${it.outTransitions.allPrevious.map { it?.number?.value }}}"
             b.append(str).append("\n")
         }
         states.forEach { st ->
-            st.allBuiltTransitions.forEach { tr ->
-                val prev = st.transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
+            st.outTransitions.allBuiltTransitions.forEach { tr ->
+                val prev = st.outTransitions.previousFor(tr).map { it?.number?.value } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
                 val trStr = "${tr.from.number.value} --> ${tr.to.number.value}"
                 val trGrd = "[${tr.lookaheadGuard.content.joinToString { c -> c.tag }} | ${tr.upLookahead.content.joinToString { c -> c.tag }}]"
                 val prvGrd = " [${tr.prevGuard?.joinToString()}]"

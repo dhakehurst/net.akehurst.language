@@ -77,8 +77,19 @@ abstract class test_AutomatonUtilsAbstract {
     fun assertEquals(expected: ParserState, actual: ParserState) {
         assertEquals(expected.rulePositions, actual.rulePositions, "RulePositions do not match")
 
-        val expected_trans = expected.transitionsByPrevious
-        val actual_trans = actual.transitionsByPrevious
+
+        assertEquals(expected.outTransitions.allPrevious, actual.outTransitions.allPrevious,"Previous States for Transitions outgoing from ${expected} do not match")
+        for(expected_prev in expected.outTransitions.allPrevious) {
+            val expected_trs = expected.outTransitions.findTransitionByPrevious(expected_prev) ?: emptyList()
+            val actual_trs = actual.outTransitions.findTransitionByPrevious(expected_prev)?: emptyList()
+            assertEquals(expected_trs.size, actual_trs.size, "Number of Transitions outgoing from ${expected_prev} -> ${expected} do not match")
+            for (i in expected_trs.indices) {
+                assertEquals(expected_prev, expected_trs[i], actual_trs[i])
+            }
+        }
+        /*
+        val expected_trans = expected.outTransitions.transitionsByPrevious
+        val actual_trans = actual.outTransitions.transitionsByPrevious
         assertEquals(expected_trans.keys.map { it?.rulePositions }, actual_trans.keys.map { it?.rulePositions }, "Previous States for Transitions outgoing from ${expected} do not match")
         assertEquals(expected_trans.size, actual_trans.size, "Number of Transitions outgoing from ${expected} do not match")
 
@@ -92,6 +103,7 @@ abstract class test_AutomatonUtilsAbstract {
                 assertEquals(entry.key, expected_outgoing[i], actual_outgoing[i])
             }
         }
+         */
     }
 
     fun assertEquals(expPrev:ParserState?, expected: Transition, actual: Transition) {

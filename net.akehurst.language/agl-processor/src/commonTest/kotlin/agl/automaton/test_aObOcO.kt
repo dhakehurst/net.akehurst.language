@@ -37,7 +37,7 @@ class test_aObOcO : test_Abstract() {
         }
 
         val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val aOpt = rrs.findRuntimeRule("aOpt")
         val aOpt_E = aOpt.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
         val bOpt = rrs.findRuntimeRule("bOpt")

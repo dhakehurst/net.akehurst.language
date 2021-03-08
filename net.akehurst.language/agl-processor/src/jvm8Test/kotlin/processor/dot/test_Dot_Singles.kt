@@ -24,10 +24,6 @@ import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.runtime.structure.RulePosition
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
@@ -202,7 +198,7 @@ class test_Dot_Singles {
         val parser = ScanOnDemandParser(converterToRuntimeRules.transform())
 
         //fails at season 9 with edge_list
-        parser.parse(goal, sentence, AutomatonKind.LC1)
+        parser.parse(goal, sentence, AutomatonKind.LOOKAHEAD_1)
     }
 
     @Test

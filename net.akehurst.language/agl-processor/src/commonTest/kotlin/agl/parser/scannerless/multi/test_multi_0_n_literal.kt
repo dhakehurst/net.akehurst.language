@@ -88,6 +88,21 @@ class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
         assertEquals(1, actual.maxNumHeads)
     }
 
+
+    @Test
+    fun aaaa() {
+        val rrb = multi_0_n_a()
+        val goal = "S"
+        val sentence = "aaaa"
+
+        val expected = """
+            S { 'a' 'a' 'a' 'a' }
+        """.trimIndent()
+
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
+    }
+
     @Test
     fun a50() {
         val rrb = multi_0_n_a()

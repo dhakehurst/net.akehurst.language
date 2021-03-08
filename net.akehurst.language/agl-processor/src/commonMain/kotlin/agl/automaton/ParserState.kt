@@ -76,16 +76,13 @@ class ParserState(
         }
     }
 
-    // transitions stored here
-    private val _transitionsByTo = mutableMapOf<ParserState, MutableSet<Transition>>()
-
-    // transitions referenced here
-    private val _transitionsByPrevious: MutableMap<ParserState?, MutableList<Transition>?> = mutableMapOf()
+    val outTransitions: TransitionCache = when(this.stateSet.automatonKind) {
+        AutomatonKind.LOOKAHEAD_NONE -> TransitionCacheLC1()//TransitionCacheLC0()
+        AutomatonKind.LOOKAHEAD_SIMPLE -> TODO()
+        AutomatonKind.LOOKAHEAD_1 -> TransitionCacheLC1()
+    }
 
     val rulePositionIdentity = rulePositions.map { it.identity }
-
-    val allBuiltTransitions: Set<Transition> get() = _transitionsByTo.values.flatten().toSet()
-    val transitionsByPrevious: Map<ParserState?, List<Transition>?> get() = _transitionsByPrevious
 
     val runtimeRules: List<RuntimeRule> by lazy {
         this.rulePositions.map { it.runtimeRule }.toSet().toList()
@@ -102,31 +99,7 @@ class ParserState(
         stateSet.buildCache.firstOf(it, ifReachedEnd)
     }.toSet()
 
-    // add the transition and return it, or return existing transition if it already exists
-    internal fun addTransition(previousState: ParserState?, tr: Transition): Transition {
-        var set = _transitionsByTo[tr.to]
-        val exist = if (null == set) {
-            set = mutableSetOf(tr)
-            _transitionsByTo[tr.to] = set
-            tr
-        } else {
-            val exist = set.firstOrNull { it == tr }
-            if (null == exist) {
-                set.add(tr)
-                tr
-            } else {
-                exist
-            }
-        }
-        var list = this._transitionsByPrevious[previousState]
-        if (null == list) {
-            list = mutableListOf(exist)
-            this._transitionsByPrevious[previousState] = list
-        } else {
-            list.add(exist)
-        }
-        return exist
-    }
+
 
     internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
         return this.stateSet.createLookaheadSet(content)
@@ -135,10 +108,11 @@ class ParserState(
     fun widthInto(prevState: ParserState?): Set<WidthInfo> = this.stateSet.buildCache.widthInto(this.rulePositions)
 
     //for graft, previous must match prevGuard, for height must not match
+    // (allow this to take 'null' so can use it for LC0
     fun heightOrGraftInto(prevState: ParserState): Set<HeightGraftInfo> = this.stateSet.buildCache.heightGraftInto(prevState.rulePositions, this.runtimeRules)
 
     fun transitions(previousState: ParserState?): List<Transition> {
-        val cache = this._transitionsByPrevious[previousState]
+        val cache: List<Transition>? = this.outTransitions.findTransitionByPrevious(previousState)
         val trans = if (null == cache) {
             check(this.stateSet.preBuilt.not(), { "Transitions not built for $this --> $previousState" })
             val filteredTransitions = this.calcFilteredTransitions(previousState).toList()
@@ -149,7 +123,7 @@ class ParserState(
             //         check(it.isEmptyRule.not(),{"Empty rule found in lookahead"})
             //     }
             // }
-            val storedTrans = filteredTransitions.map { addTransition(previousState, it) }
+            val storedTrans = filteredTransitions.map { this.outTransitions.addTransition(listOf(previousState), it) }
             storedTrans
         } else {
             cache

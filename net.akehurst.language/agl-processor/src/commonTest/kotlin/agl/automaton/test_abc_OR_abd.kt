@@ -36,7 +36,7 @@ class test_abc_OR_abd : test_Abstract() {
             concatenation("ABD") { literal("a"); literal("b"); literal("d") }
         }
         val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val G = SM.startState.runtimeRules.first()
         val ABC = rrs.findRuntimeRule("ABC")
         val ABD = rrs.findRuntimeRule("ABD")

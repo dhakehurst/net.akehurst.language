@@ -36,7 +36,7 @@ data class ClosureItemLC0(
         }
     }
 
-    fun hasLooped(): Boolean = allPrev.any { it.rulePosition==this.rulePosition }
+    fun hasLooped(): Boolean = allPrev.any { it.rulePosition == this.rulePosition }
 
     private fun chain(): String {
         val p = if (null == parentItem) {
@@ -60,7 +60,7 @@ class BuildCacheLC0(
     private val _upClosure = mutableMapOf<RulePosition, Set<ClosureItemLC0>>()
     private val _dnClosure = mutableMapOf<RulePosition, Set<ClosureItemLC0>>()
 
-    private val _stateInfo = mutableMapOf<List<RulePosition>,StateInfo>()
+    private val _stateInfo = mutableMapOf<List<RulePosition>, StateInfo>()
 
     // from-state-listOf-rule-positions -> mapOf
     //    to-state-terminal-rule -> WidthInfo
@@ -114,11 +114,11 @@ class BuildCacheLC0(
 
     private fun cacheStateInfo(rulePositions: List<RulePosition>, prev: List<RulePosition>) {
         val existing = this._stateInfo[rulePositions]
-        if (null==existing) {
+        if (null == existing) {
             this._stateInfo[rulePositions] = StateInfo(rulePositions, listOf(prev))
         } else {
             val pp = existing.possiblePrev.union(listOf(prev)).toList()
-            this._stateInfo[rulePositions] = StateInfo(rulePositions,pp)
+            this._stateInfo[rulePositions] = StateInfo(rulePositions, pp)
         }
     }
 
@@ -177,7 +177,7 @@ class BuildCacheLC0(
             this._heightOrGraftInto[key] = x
             x
         }
-        for(hg in hgis) {
+        for (hg in hgis) {
             set.add(hg)
         }
     }
@@ -254,11 +254,11 @@ class BuildCacheLC0(
                         val runtimeRule = parent.rulePosition.item ?: error("should never be null as position != EOR")
                         for (rp in runtimeRule.rulePositions) {
                             val ci = ClosureItemLC0(parent, rp)
-                            val dnCls = traverseRulePositions(ci)
-                            when (rp.position) {
-                                RulePosition.START_OF_RULE -> calcAndCacheWidthInfo(listOf(parent.rulePosition), dnCls)
+                            val bottomTerminals = traverseRulePositions(ci)
+                            if (rp.isAtEnd.not()) {
+                                calcAndCacheWidthInfo(listOf(parent.rulePosition), bottomTerminals)
                             }
-                            result.addAll(dnCls)
+                            result.addAll(bottomTerminals)
                         }
                         cacheStateInfo(listOf(parent.rulePosition), parent.prev)
                     }

@@ -17,8 +17,6 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.*
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class test_aABCc : test_Abstract() {
 
@@ -40,7 +38,7 @@ class test_aABCc : test_Abstract() {
         }
 
         val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
         val S1 = rrs.findRuntimeRule("S1")

@@ -46,11 +46,21 @@ class AutomatonBuilder(
         lookaheadGuardContent: Set<RuntimeRule>,
         upLookaheadContent: Set<RuntimeRule>,
         prevGuard: List<RulePosition>?
+    ): Transition = transition(listOf(previousState),from, to, action, lookaheadGuardContent, upLookaheadContent, prevGuard)
+
+    fun transition(
+        previousStates: List<ParserState?>,
+        from: ParserState,
+        to: ParserState,
+        action: Transition.ParseAction,
+        lookaheadGuardContent: Set<RuntimeRule>,
+        upLookaheadContent: Set<RuntimeRule>,
+        prevGuard: List<RulePosition>?
     ): Transition {
         val lookaheadGuard = result.runtimeRuleSet.createLookaheadSet(lookaheadGuardContent)
         val upLookahead = result.runtimeRuleSet.createLookaheadSet(upLookaheadContent)
         val trans = Transition(from, to, action, lookaheadGuard, upLookahead, prevGuard) { _, _ -> true }
-        return from.addTransition(previousState, trans)
+        return from.outTransitions.addTransition(previousStates, trans)
     }
 
     fun build(): ParserStateSet {

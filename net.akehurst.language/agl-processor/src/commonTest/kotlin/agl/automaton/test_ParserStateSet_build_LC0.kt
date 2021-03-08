@@ -26,7 +26,7 @@ import kotlin.test.Test
 class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
 
     companion object {
-        val automatonKind = AutomatonKind.LC0
+        val automatonKind = AutomatonKind.LOOKAHEAD_NONE
     }
 
     @Test
@@ -61,7 +61,7 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, AutomatonKind.LC1)
+            parser.parse("S", sentence, AutomatonKind.LOOKAHEAD_1)
         }
         //println(rrs.usedAutomatonToString("S"))
     }
@@ -753,19 +753,37 @@ class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val G = SM.startState.runtimeRules.first()
+        val a = rrs.findRuntimeRule("'a'")
+        val S1 = rrs.findRuntimeRule("S1")
 
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
+            val s1 = state(RP(a, 0, EOR))      // a
+            val s2 = state(RP(S, 0, EOR))      // S = a .
+            val s3 = state(RP(S1, 0, 1))  // S1 = a . S
+            val s4 = state(RP(G, 0, EOR))      // G = S .
+            val s5 = state(RP(S1, 0, EOR))     // S1 = a S .
+            val s6 = state(RP(S, 1, EOR))      // S = S1 .
 
+            transition(null, s0, s1, WIDTH, setOf(ANY), emptySet(), null)
+            transition(listOf(s0,s3), s1, s2, HEIGHT, setOf(ANY), setOf(ANY), listOf(RP(S,0,SOR)))
+            transition(listOf(s0,s3), s1, s3, HEIGHT, setOf(ANY), setOf(ANY), listOf(RP(S1,0,SOR)))
+            transition(s0, s2, s4, GRAFT, setOf(UP), setOf(ANY), listOf(RP(G,0,SOR)))
+            transition(s3, s2, s5, GRAFT, setOf(ANY), setOf(ANY), listOf(RP(S1,0,1)))
+            transition(listOf(s0,s3), s3, s1, WIDTH, setOf(ANY), emptySet(), null)
+            transition(null, s4, s4, GOAL, emptySet(), emptySet(), null)
+            transition(listOf(s0,s3), s5, s6, HEIGHT, setOf(ANY), setOf(ANY), listOf(RP(S,1,SOR)))
+            transition(s3, s5, s6, HEIGHT, setOf(ANY), setOf(ANY), listOf(RP(S,1,SOR)))
+            transition(s3, s6, s5, GRAFT, setOf(ANY), setOf(ANY), listOf(RP(S1,0,1)))
+            transition(s0, s6, s4, GRAFT, setOf(UP), setOf(ANY), listOf(RP(G,0,SOR)))
 
         }
 
-        //super.assertEquals(expected, actual)
+        super.assertEquals(expected, actual)
 
         val sentences = listOf(
             "a",

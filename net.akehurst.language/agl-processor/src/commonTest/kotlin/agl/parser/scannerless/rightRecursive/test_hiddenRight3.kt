@@ -134,7 +134,7 @@ class test_hiddenRight3 : test_ScanOnDemandParserAbstract() {
                 'b'
                 oC { C {
                     'c'
-                    oA|1 { eA { §empty.eA } }
+                    oA|1 { eA { §empty } }
                   } }
               } }
           } }
@@ -159,7 +159,7 @@ class test_hiddenRight3 : test_ScanOnDemandParserAbstract() {
             S { S1 {
                 S|1 { 'a' }
                 'c'
-                B|1 { Be { §empty } }
+                B|1 { eB { §empty } }
               } }
             'c'
             B { 'b' }

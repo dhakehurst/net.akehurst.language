@@ -26,7 +26,7 @@ import kotlin.test.Test
 class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
 
     companion object {
-        val automatonKind = AutomatonKind.LC1
+        val automatonKind = AutomatonKind.LOOKAHEAD_1
     }
 
     @Test
@@ -61,7 +61,7 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, AutomatonKind.LC1)
+            parser.parse("S", sentence, AutomatonKind.LOOKAHEAD_1)
         }
         //println(rrs.usedAutomatonToString("S"))
     }
@@ -734,14 +734,17 @@ class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         }
         val S = rrs.findRuntimeRule("S")
         val SM = rrs.fetchStateSetFor(S, automatonKind)
-        val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+        val G = SM.startState.runtimeRules.first()
+        val a = rrs.findRuntimeRule("'a'")
 
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
+            val s1 = state(RP(a, 0, EOR))      // a
+            val s2 = state(RP(S, 0, EOR))      // S = a .
+            val s3 = state(RP(G, 0, SOR))      // G = . S
 
 
         }

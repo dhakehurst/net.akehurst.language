@@ -164,7 +164,6 @@ class test_AglGrammar {
 
         val p = Agl.processor(grammarStr)
 
-
         assertNotNull(p)
     }
 

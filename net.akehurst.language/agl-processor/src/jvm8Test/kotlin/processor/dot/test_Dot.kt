@@ -32,7 +32,7 @@ class test_Dot(val data: Data) {
     companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl").readText()
-        var processor: LanguageProcessor = Agl.processor(grammarStr).buildFor("graph")
+        var processor: LanguageProcessor = Agl.processor(grammarStr)//.buildFor("graph") //TODO: use build
 
         val validDirectory = "/dot/valid/"
         var validFiles = this::class.java.getResourceAsStream(validDirectory).use { if (null == it) emptyList<String>() else BufferedReader(InputStreamReader(it)).readLines() }

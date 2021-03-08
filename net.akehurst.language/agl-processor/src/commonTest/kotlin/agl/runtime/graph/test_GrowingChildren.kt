@@ -42,7 +42,7 @@ class test_GrowingChildren {
         val CM = rrs.findRuntimeRule("CM")
         val a = rrs.findRuntimeRule("'a'")
 
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
         val st_a = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]

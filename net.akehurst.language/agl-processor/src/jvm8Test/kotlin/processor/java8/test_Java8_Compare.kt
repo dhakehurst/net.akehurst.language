@@ -61,7 +61,7 @@ class test_Java8_Compare(val data: Data) {
             val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processor(grammarStr)
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
-            proc.buildFor(forRule)
+            //proc.buildFor(forRule)//TODO: use build
             println("Built $path")
             return proc
         }

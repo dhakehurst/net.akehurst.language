@@ -39,7 +39,7 @@ class test_ScanOnDemandParser {
             concatenation("S") { literal("a") }
         }
         val sp = ScanOnDemandParser(rrs)
-        sp.buildFor("S", AutomatonKind.LC1)
+        sp.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         //TODO: how to test if build worked!
     }
@@ -51,7 +51,7 @@ class test_ScanOnDemandParser {
         val r1 = rrb.rule("a").concatenation(r0)
         val sp = ScanOnDemandParser(rrb.ruleSet())
 
-        val actual = sp.parse("a","a", AutomatonKind.LC1)
+        val actual = sp.parse("a","a", AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
 

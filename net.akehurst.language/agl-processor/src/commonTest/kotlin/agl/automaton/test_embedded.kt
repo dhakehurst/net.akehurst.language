@@ -42,15 +42,15 @@ class test_embedded : test_Abstract() {
         val S = rrs.findRuntimeRule("S")
         val gB = rrs.findRuntimeRule("gB")
         val a = rrs.findRuntimeRule("'a'")
-        val G = rrs.fetchStateSetFor(S, AutomatonKind.LC1).startState.runtimeRules.first()
+        val G = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1).startState.runtimeRules.first()
 
         val B = rrsB.findRuntimeRule("B")
         val b_ = rrsB.findRuntimeRule("'b'")
 
-        val S_SM = rrsB.fetchStateSetFor(S, AutomatonKind.LC1)
+        val S_SM = rrsB.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val s0 = S_SM.startState
 
-        val B_SM = rrsB.fetchStateSetFor(B, AutomatonKind.LC1)
+        val B_SM = rrsB.fetchStateSetFor(B, AutomatonKind.LOOKAHEAD_1)
     }
 
     override val SM: ParserStateSet

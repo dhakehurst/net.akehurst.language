@@ -30,7 +30,7 @@ import kotlin.test.assertNotNull
 class test_RuntimeParser_parse_concatenation {
 
     private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
-        return sp.parse(goalRuleName, inputText, AutomatonKind.LC1)
+        return sp.parse(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1)
     }
 
     // S = 'a' 'b' 'c' ;

@@ -60,7 +60,7 @@ class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
 
     @BeforeTest
     fun before() {
-        rrs.buildFor("S", AutomatonKind.LC1)
+        //rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
     }
 
     @Test

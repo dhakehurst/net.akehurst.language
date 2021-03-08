@@ -71,7 +71,7 @@ abstract class BuildCacheAbstract(
                             RuntimeRuleKind.GOAL -> TODO()
                             RuntimeRuleKind.TERMINAL -> result.add(item)
                             RuntimeRuleKind.EMBEDDED -> {
-                                val embSS = item.embeddedRuntimeRuleSet!!.fetchStateSetFor(item.embeddedStartRule!!, AutomatonKind.LC1)
+                                val embSS = item.embeddedRuntimeRuleSet!!.fetchStateSetFor(item.embeddedStartRule!!, AutomatonKind.LOOKAHEAD_1)
                                 val f =
                                     (embSS.buildCache as BuildCacheLC1).firstOfNotEmpty(item.embeddedStartRule, doneRp, BooleanArray(item.embeddedRuntimeRuleSet.runtimeRules.size))
                                 result.addAll(f.result)
@@ -131,7 +131,7 @@ abstract class BuildCacheAbstract(
                 else -> when (item.kind) {
                     RuntimeRuleKind.GOAL -> error("should never happen")
                     RuntimeRuleKind.EMBEDDED -> {
-                        val embSS = item.embeddedRuntimeRuleSet!!.fetchStateSetFor(item.embeddedStartRule!!, AutomatonKind.LC1)
+                        val embSS = item.embeddedRuntimeRuleSet!!.fetchStateSetFor(item.embeddedStartRule!!, AutomatonKind.LOOKAHEAD_1)
                         val f = (embSS.buildCache as BuildCacheLC1).firstOfNotEmpty(item.embeddedStartRule, doneRp, BooleanArray(item.embeddedRuntimeRuleSet.runtimeRules.size))
                         result.addAll(f.result)
                         if (f.needsNext) {

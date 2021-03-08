@@ -33,7 +33,7 @@ class test_sList_0_n_literal : test_Abstract() {
             literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val a = rrs.findRuntimeRule("'a'")
         val _c = rrs.findRuntimeRule("','")

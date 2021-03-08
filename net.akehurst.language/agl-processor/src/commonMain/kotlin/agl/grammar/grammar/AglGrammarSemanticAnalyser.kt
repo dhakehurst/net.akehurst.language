@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.automaton.AutomatonKind
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -37,7 +36,7 @@ class AglGrammarSemanticAnalyser(
 
     override fun <T> analyse(asm: T, locationMap: Map<Any, InputLocation>): List<SemanticAnalyserItem> {
         return when (asm) {
-            is List<*> -> checkGrammar(asm as List<Grammar>, locationMap, AutomatonKind.LC1) //TODO: how to check using user specified Kind ?
+            is List<*> -> checkGrammar(asm as List<Grammar>, locationMap, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified Kind ?
             else -> throw SemanticAnalyserException("This SemanticAnalyser is for an ASM of type List<Grammar>", null)
         }
     }
@@ -102,7 +101,7 @@ class AglGrammarSemanticAnalyser(
         val automaton = rrs.automatonFor(goalRuleName,automatonKind)
 
         automaton.states.values.forEach {state ->
-            val trans = state.allBuiltTransitions
+            val trans = state.outTransitions.allBuiltTransitions
             if (trans.size > 1) {
                 trans.forEach { tr1 ->
                     trans.forEach {tr2 ->

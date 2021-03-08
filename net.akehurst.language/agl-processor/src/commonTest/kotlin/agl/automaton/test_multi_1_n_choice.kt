@@ -34,7 +34,7 @@ class test_multi_1_n_choice : test_Abstract() {
             }
         }
         val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LC1)
+        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val G = SM.startState.runtimeRules.first()
         val AB = rrs.findRuntimeRule("AB")
         val a = rrs.findRuntimeRule("'a'")

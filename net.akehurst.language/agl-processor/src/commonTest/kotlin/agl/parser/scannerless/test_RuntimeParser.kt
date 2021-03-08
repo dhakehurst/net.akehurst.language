@@ -40,7 +40,7 @@ class test_RuntimeParser {
             concatenation("S") { literal("a") }
         }
         val sp = ScanOnDemandParser(rrs)
-        sp.buildFor("S", AutomatonKind.LC1)
+        sp.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         //TODO: how to test if build worked!
     }
@@ -53,7 +53,7 @@ class test_RuntimeParser {
 
         val sp = ScanOnDemandParser(rrb.ruleSet())
 
-        val actual = sp.expectedAt("S", "", 0, AutomatonKind.LC1).toList() //to list to make assertions easier
+        val actual = sp.expectedAt("S", "", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
 
         val expected = listOf(r_S)
 
@@ -68,7 +68,7 @@ class test_RuntimeParser {
 
         val sp = ScanOnDemandParser(rrb.ruleSet())
 
-        val actual = sp.expectedTerminalsAt("S", "", 0, AutomatonKind.LC1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt("S", "", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
 
         val expected = listOf(r_a)
 

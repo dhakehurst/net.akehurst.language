@@ -88,7 +88,8 @@ class BuildCacheLC1(
 
         //traverse down and collect closure
         val cls = this.traverseRulePositions(ClosureItemLC1(null, G_0_0, null, LookaheadSet.UP))
-        calcAndCacheWidthInfo(listOf(G_0_0), cls)
+        //calcAndCacheWidthInfo(listOf(G_0_0), cls)
+        cacheStateInfo(listOf(G_0_0.atEnd()), listOf())
     }
 
     override fun clearAndOff() {
@@ -100,21 +101,35 @@ class BuildCacheLC1(
     override fun stateInfo(): Set<StateInfo> = this._stateInfo.values.toSet()
 
     override fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo> {
-        return this._widthInto[fromStateRulePositions]?.values?.toSet() ?: run {
+        return if (this._cacheOff) {
             val dnCls = fromStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSet.UP) }.toSet()
-            val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
-            val bottomTerminals = filt.map { it.rulePosition.item!! }.toSet()
-            val calc = calcAndCacheWidthInfo(fromStateRulePositions, bottomTerminals)
+            //val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
+            //val bottomTerminals = filt.map { it.rulePosition.item!! }.toSet()
+            val calc = calcAndCacheWidthInfo(fromStateRulePositions, dnCls)
             calc
+        } else {
+            this._widthInto[fromStateRulePositions]?.values?.toSet() ?: run {
+                val dnCls = fromStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSet.UP) }.toSet()
+                //val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
+                //val bottomTerminals = filt.map { it.rulePosition.item!! }.toSet()
+                val calc = calcAndCacheWidthInfo(fromStateRulePositions, dnCls)
+                calc
+            }
         }
     }
 
     override fun heightGraftInto(prevStateRulePositions: List<RulePosition>, fromStateRuntimeRules: List<RuntimeRule>): Set<HeightGraftInfo> {
-        val key = Pair(prevStateRulePositions, fromStateRuntimeRules)
-        return this._heightOrGraftInto[key]?.values?.toSet() ?: run {
+        return if (this._cacheOff) {
             val upCls = prevStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSet.UP) }.toSet()
             val calc = calcAndCacheHeightOrGraftInto(prevStateRulePositions, fromStateRuntimeRules, upCls)
             calc
+        } else {
+            val key = Pair(prevStateRulePositions, fromStateRuntimeRules)
+             this._heightOrGraftInto[key]?.values?.toSet() ?: run {
+                val upCls = prevStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSet.UP) }.toSet()
+                val calc = calcAndCacheHeightOrGraftInto(prevStateRulePositions, fromStateRuntimeRules, upCls)
+                calc
+            }
         }
     }
 
@@ -128,31 +143,24 @@ class BuildCacheLC1(
         }
     }
 
-    private fun calcAndCacheWidthInfo(fromRulePositions: List<RulePosition>, bottomTerminals: Set<RuntimeRule>): Set<WidthInfo> {
-        val wis = calcWidthInfo(fromRulePositions, bottomTerminals)
+    private fun calcAndCacheWidthInfo(fromRulePositions: List<RulePosition>, dnCls: Set<ClosureItemLC1>): Set<WidthInfo> {
+        val wis = calcWidthInfo(fromRulePositions, dnCls)
         cacheWidthInfo(fromRulePositions, wis)
         return wis
     }
 
-    private fun calcWidthInfo(fromRulePositions: List<RulePosition>, bottomTerminals: Set<RuntimeRule>): Set<WidthInfo> {
-        // lookahead comes from closure on prev
-        // upLhs can always be LookaheadSet.UP because the actual LH is carried at runtime
-        // thus we don't need prevState in to compute width targets
-        //val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
-        //val grouped = filt.groupBy { it.rulePosition.item!! }.map {
-        //    val rr = it.key
-        //    val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
-        //    val lhsc = it.value.flatMap { it.lookaheadSet.content }.toSet()
-        //    val lhs = this.createLookaheadSet(lhsc)
-        //    WidthInfo(rp, lhs)
-        //}.toSet()
-        //don't group them, because we need the info on the lookahead for the runtime calc of next lookaheads
-        //return grouped
-        return bottomTerminals.map {
-            val rp = RulePosition(it, 0, RulePosition.END_OF_RULE)
-            val lhs = LookaheadSet.UP
+    private fun calcWidthInfo(fromRulePositions: List<RulePosition>, dnCls: Set<ClosureItemLC1>): Set<WidthInfo> {
+        // lookahead comes from down closure
+        val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
+        val grouped = filt.groupBy { it.rulePosition.item!! }.map {
+            val rr = it.key
+            val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
+            val lhsc = it.value.flatMap { it.lookaheadSet.content }.toSet()
+            val lhs = this.createLookaheadSet(lhsc)
             WidthInfo(rp, lhs)
         }.toSet()
+        //don't group them, because we need the info on the lookahead for the runtime calc of next lookaheads
+        return grouped
     }
 
     private fun cacheWidthInfo(fromRulePositions: List<RulePosition>, wis: Set<WidthInfo>) {
@@ -284,7 +292,7 @@ class BuildCacheLC1(
                                 val ci = ClosureItemLC1(parent, rp, next, lhs)
                                 val dnCls = traverseRulePositions(ci)
                                 when (rp.position) {
-                                    RulePosition.START_OF_RULE -> calcAndCacheWidthInfo(listOf(parent.rulePosition), dnCls)
+   //                                 RulePosition.START_OF_RULE -> calcAndCacheWidthInfo(listOf(parent.rulePosition), dnCls)
                                 }
                                 result.addAll(dnCls)
                             }

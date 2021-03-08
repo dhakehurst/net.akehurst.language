@@ -28,7 +28,7 @@ abstract class test_ScanOnDemandParserAbstract {
 
     fun test(rrs:RuntimeRuleSet, goal:String, sentence:String, expectedNumGSSHeads:Int, vararg expectedTrees:String) : SharedPackedParseTree {
         val parser = ScanOnDemandParser(rrs)
-        val actual = parser.parse(goal, sentence, AutomatonKind.LC1)
+        val actual = parser.parse(goal, sentence, AutomatonKind.LOOKAHEAD_1)
 
         val sppt = SPPTParser(rrs)
         expectedTrees.forEach { sppt.addTree(it) }
@@ -42,7 +42,7 @@ abstract class test_ScanOnDemandParserAbstract {
 
     fun test(rrsb:RuntimeRuleSetBuilder, goal:String, sentence:String, vararg expectedTrees:String) : SharedPackedParseTree {
         val parser = ScanOnDemandParser(rrsb.ruleSet())
-        val actual = parser.parse(goal, sentence, AutomatonKind.LC1)
+        val actual = parser.parse(goal, sentence, AutomatonKind.LOOKAHEAD_1)
 
         val sppt = SPPTParser(rrsb.ruleSet())
         expectedTrees.forEach { sppt.addTree(it) }
@@ -53,7 +53,7 @@ abstract class test_ScanOnDemandParserAbstract {
 
     fun testStringResult(rrsb:RuntimeRuleSetBuilder, goal:String, sentence:String, vararg expectedTrees:String) : SharedPackedParseTree {
         val parser = ScanOnDemandParser(rrsb.ruleSet())
-        val actual = parser.parse(goal, sentence, AutomatonKind.LC1)
+        val actual = parser.parse(goal, sentence, AutomatonKind.LOOKAHEAD_1)
 
         val sppt = SPPTParser(rrsb.ruleSet())
         expectedTrees.forEach { sppt.addTree(it) }

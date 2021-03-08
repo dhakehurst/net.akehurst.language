@@ -27,7 +27,11 @@ import kotlin.reflect.KProperty
 // see [https://youtrack.jetbrains.com/issue/KTIJ-1170#focus=Comments-27-4433190.0-0]
 operator fun <T> Lazy<T>.getValue(thisRef: Any?, property: KProperty<*>) = value
 
-enum class AutomatonKind { LC0, SLC, LC1 }
+enum class AutomatonKind {
+    LOOKAHEAD_NONE,     // LC(O) like LR(0)
+    LOOKAHEAD_SIMPLE,   // SLC like SLR
+    LOOKAHEAD_1         // LC(1) like LR(1)
+}
 
 class ParserStateSet(
     val number: Int,
@@ -39,10 +43,10 @@ class ParserStateSet(
 
     private var nextStateNumber = 0
     var preBuilt = false; private set
-    internal val buildCache:BuildCache = when(automatonKind) {
-        AutomatonKind.LC0 -> BuildCacheLC0(this)
-        AutomatonKind.SLC -> TODO()
-        AutomatonKind.LC1 -> BuildCacheLC1(this)
+    internal val buildCache: BuildCache = when (automatonKind) {
+        AutomatonKind.LOOKAHEAD_NONE -> BuildCacheLC0(this)
+        AutomatonKind.LOOKAHEAD_SIMPLE -> TODO()
+        AutomatonKind.LOOKAHEAD_1 -> BuildCacheLC1(this)
     }
     //internal val buildCache:BuildCache = BuildCacheLC1(this)
 
@@ -65,7 +69,7 @@ class ParserStateSet(
         ParserState(StateNumber(this.nextStateNumber++), it, this)
     }
 
-    val allBuiltTransitions: Set<Transition> get() = states.values.flatMap { it.allBuiltTransitions }.toSet()
+    val allBuiltTransitions: Set<Transition> get() = states.values.flatMap { it.outTransitions.allBuiltTransitions }.toSet()
 
     val startState: ParserState by lazy {
         val goalRule = RuntimeRuleSet.createGoalRule(userGoalRule)
@@ -266,7 +270,7 @@ class ParserStateSet(
             when {
                 state.isGoal -> state.transitions(null)
                 else -> {
-                    for(prevRps in si.possiblePrev) {
+                    for (prevRps in si.possiblePrev) {
                         val prev = this.states[prevRps]
                         state.transitions(prev)
                     }

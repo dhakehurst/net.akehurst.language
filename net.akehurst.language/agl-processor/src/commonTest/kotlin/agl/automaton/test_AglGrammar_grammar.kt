@@ -54,7 +54,7 @@ class test_AglGrammar_grammar : test_Abstract() {
         val T_namespace = rrs.findRuntimeRule("'namespace'")
         val T_grammar = rrs.findRuntimeRule("'grammar'")
 
-        val SM = rrs.fetchStateSetFor(R_grammarDefinition, AutomatonKind.LC1)
+        val SM = rrs.fetchStateSetFor(R_grammarDefinition, AutomatonKind.LOOKAHEAD_1)
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
 

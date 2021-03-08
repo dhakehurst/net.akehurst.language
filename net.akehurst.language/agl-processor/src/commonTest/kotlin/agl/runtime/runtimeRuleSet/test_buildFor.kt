@@ -15,7 +15,7 @@ class test_buildFor {
             concatenation("S") { literal("a"); literal("c"); literal("c") }
         }
 
-        val actual = rrs.buildFor("S", AutomatonKind.LC1)
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         assertEquals(6, actual.states.values.size)
         //TODO: expected Transitions
@@ -32,7 +32,7 @@ class test_buildFor {
             concatenation("S1") { ref("S"); literal("a") }
         }
 
-        val actual = rrs.buildFor("S", AutomatonKind.LC1)
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         assertEquals(9, actual.states.values.size)
         assertEquals(12, actual.allBuiltTransitions.size)
@@ -50,11 +50,11 @@ class test_buildFor {
             literal("'b'", "b")
         }
 
-        val actual = rrs.buildFor("S", AutomatonKind.LC1)
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         val parser = ScanOnDemandParser(rrs)
-        parser.parse("S", "ba", AutomatonKind.LC1)
-        parser.parse("S", "a", AutomatonKind.LC1)
+        parser.parse("S", "ba", AutomatonKind.LOOKAHEAD_1)
+        parser.parse("S", "a", AutomatonKind.LOOKAHEAD_1)
 
         assertEquals(9, actual.states.values.size)
         assertEquals(12, actual.allBuiltTransitions.size)
@@ -77,10 +77,10 @@ class test_buildFor {
 
         val parser = ScanOnDemandParser(rrs)
         val gr = rrs.findRuntimeRule("S")
-        val s0 = rrs.fetchStateSetFor(gr, AutomatonKind.LC1).startState
+        val s0 = rrs.fetchStateSetFor(gr, AutomatonKind.LOOKAHEAD_1).startState
         s0.stateSet.build()
-        parser.parse("S", "abcx", AutomatonKind.LC1)
-        parser.parse("S", "x", AutomatonKind.LC1)
+        parser.parse("S", "abcx", AutomatonKind.LOOKAHEAD_1)
+        parser.parse("S", "x", AutomatonKind.LOOKAHEAD_1)
     }
 
 }

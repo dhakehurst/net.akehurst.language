@@ -197,10 +197,10 @@ class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         for (i in 1..25) {
             val text = "a".repeat(i)
             //warm up
-            parser.parse(goal, text, AutomatonKind.LC1)
+            parser.parse(goal, text, AutomatonKind.LOOKAHEAD_1)
             //time it
             val time = TimeSource.Monotonic.measureTime {
-                parser.parse(goal, text, AutomatonKind.LC1)
+                parser.parse(goal, text, AutomatonKind.LOOKAHEAD_1)
             }
             times.add(time)
         }

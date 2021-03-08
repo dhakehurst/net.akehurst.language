@@ -89,6 +89,18 @@ class test_multi_2_n_literal : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
+    fun aaaa() {
+        val rrb = S()
+        val goal = "S"
+        val sentence = "aaaa"
+
+        val expected = """
+            S { 'a' 'a' 'a' 'a' }
+        """.trimIndent()
+
+        super.testStringResult(rrb, goal, sentence, expected)
+    }
+    @Test
     fun a50() {
         val rrb = S()
         val goal = "S"
