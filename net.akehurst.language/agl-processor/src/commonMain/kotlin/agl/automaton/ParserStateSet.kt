@@ -189,16 +189,11 @@ class ParserStateSet(
     fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
 
     fun build(): ParserStateSet {
-        this.buildCache.on()
-        val s0 = this.startState
-        //val sG = this.states[s0.rulePosition.atEnd()]
-        //val trans = s0.transitions(null) //+ sG.transitions(null)
-        val done = mutableSetOf<Triple<ParserState?, ParserState, ParserState>>()//Pair(s0, null))
-        val prevStack = Stack<Pair<ParserState, LookaheadSet>>()//.push(Pair(null, LookaheadSet.EOT))
-        //buildAndTraverse(s0, prevStack, done)
-        buildAndTraverse()
-        preBuilt = true
-        this.buildCache.clearAndOff()
+        println("Build not yet implemented")
+        //this.buildCache.on()
+        //TODO: buildAndTraverse()
+        //preBuilt = true
+        //this.buildCache.clearAndOff()
         return this
     }
 

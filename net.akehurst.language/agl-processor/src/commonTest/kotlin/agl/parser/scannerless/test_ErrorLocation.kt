@@ -134,6 +134,28 @@ class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
+    fun concatenation_afterEOL_WS_fail() {
+        val rrs = runtimeRuleSet {
+            skip("WS") { pattern("\\s+") }
+            concatenation("S") { literal("a"); literal("b") }
+        }
+        val goal = "S"
+        val sentence = """
+            a
+            b
+            c
+        """.trimIndent()
+
+        val e = assertFailsWith(ParseFailedException::class) {
+            super.test(rrs, goal, sentence,1)
+        }
+
+        assertEquals(2, e.location.line)
+        assertEquals(3, e.location.column)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
+    }
+
+    @Test
     fun multi1n_empty_fail() {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("as") }

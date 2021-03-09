@@ -36,7 +36,7 @@ class SPPTLeafFromInput(
     override val isLeaf: Boolean get() = true
     override val isBranch: Boolean get() = false
     override val asBranch: SPPTBranch get() = throw SPPTException("Not a Branch", null)
-    override val location: InputLocation get() = input.locationFor(startPosition,nextInputPosition)
+    override val location: InputLocation get() = input.locationFor(startPosition,matchedTextLength)
     override val lastLeaf: SPPTLeaf get() = this
     override val asLeaf: SPPTLeaf get() = this
     override lateinit var tagList: List<String>// = mutableListOf<String>()

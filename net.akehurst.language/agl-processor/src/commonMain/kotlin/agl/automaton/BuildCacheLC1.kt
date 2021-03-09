@@ -16,9 +16,12 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
+import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 
-data class ClosureItemLC1(
+class ClosureItemLC1(
     val parentItem: ClosureItemLC1?, //needed for height/graft
     val rulePosition: RulePosition,
     val next: RulePosition?,
@@ -42,9 +45,7 @@ data class ClosureItemLC1(
         it.rulePosition == this.rulePosition &&
                 it.lookaheadSet == this.lookaheadSet &&
                 it.parentItem?.lookaheadSet == this.parentItem?.lookaheadSet
-
     }
-
 
     private fun chain(): String {
         val p = if (null == parentItem) {
@@ -53,6 +54,16 @@ data class ClosureItemLC1(
             "${parentItem.chain()}->"
         }
         return "$p$rulePosition"
+    }
+
+    private val _hashCode = listOf(this.rulePosition, this.next, this.lookaheadSet).hashCode()
+    override fun hashCode(): Int = _hashCode
+
+    override fun equals(other: Any?): Boolean = when (other) {
+        is ClosureItemLC1 -> other.rulePosition == this.rulePosition &&
+                other.lookaheadSet == this.lookaheadSet &&
+                other.parentItem?.lookaheadSet == this.parentItem?.lookaheadSet
+        else -> false
     }
 
     override fun toString(): String {
@@ -68,6 +79,7 @@ class BuildCacheLC1(
     private val _calcClosureLR0 = mutableMapOf<RulePosition, Set<RulePosition>>()
     private val _closureItems = mutableMapOf<Pair<ParserState, ParserState>, List<ClosureItemLC1>>()
     private val _upClosureForRuntimeRule = mutableMapOf<RuntimeRule, Set<ClosureItemLC1>>()
+
     //private val _dnClosureForRulePosition = mutableMapOf<RulePosition, Set<ClosureItemLC1>>()
     private val _dnClosure = mutableMapOf<RulePosition, Set<ClosureItemLC1>>()
 
@@ -125,7 +137,7 @@ class BuildCacheLC1(
             calc
         } else {
             val key = Pair(prevStateRulePositions, fromStateRuntimeRules)
-             this._heightOrGraftInto[key]?.values?.toSet() ?: run {
+            this._heightOrGraftInto[key]?.values?.toSet() ?: run {
                 val upCls = prevStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSet.UP) }.toSet()
                 val calc = calcAndCacheHeightOrGraftInto(prevStateRulePositions, fromStateRuntimeRules, upCls)
                 calc
@@ -271,7 +283,7 @@ class BuildCacheLC1(
                                 }
                                 else -> {
                                     val nexts = rp.next()
-                                    for(next in nexts) {
+                                    for (next in nexts) {
                                         val lhsc = firstOf(next, parent.lookaheadSet)
                                         val lhs = createLookaheadSet(lhsc)
                                         val ci = ClosureItemLC1(parent, rp, next, lhs)
@@ -288,11 +300,11 @@ class BuildCacheLC1(
                         for (rp in runtimeRule.rulePositions) {
                             val lhs = parent.lookaheadSet
                             val nexts = rp.next()
-                            for(next in nexts) {
+                            for (next in nexts) {
                                 val ci = ClosureItemLC1(parent, rp, next, lhs)
                                 val dnCls = traverseRulePositions(ci)
                                 when (rp.position) {
-   //                                 RulePosition.START_OF_RULE -> calcAndCacheWidthInfo(listOf(parent.rulePosition), dnCls)
+                                    //                                 RulePosition.START_OF_RULE -> calcAndCacheWidthInfo(listOf(parent.rulePosition), dnCls)
                                 }
                                 result.addAll(dnCls)
                             }
@@ -422,7 +434,9 @@ class BuildCacheLC1(
             } -> items
             else -> {
                 items.add(item)
-                for (rr in item.rulePosition.items) {
+                //for (rr in item.rulePosition.items) {
+                val rr = item.rulePosition.item
+                if (null!=rr) {
                     when (rr.kind) {
                         RuntimeRuleKind.TERMINAL,
                         RuntimeRuleKind.EMBEDDED -> {

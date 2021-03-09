@@ -67,6 +67,7 @@ class Java8_compare_Test_antlrOptm(val file: FileData) {
                     tree
                 }
             } catch (e: ParseFailedException) {
+                println("Error: ${e.message}")
                 Results.logError(col, file)
                 assertTrue(file.isError)
                 null
@@ -98,7 +99,7 @@ class Java8_compare_Test_antlrOptm(val file: FileData) {
 
     @Test
     fun agl_antlr_optm_compilationUnit() {
-          println("${file.index} of ${totalFiles}")
+        print("File: ${file.index} of $totalFiles")
         parseWithJava8OptmAntlr(file)
     }
 

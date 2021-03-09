@@ -68,21 +68,23 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
         fun end() {
             Results.write()
         }
-    }
 
-    val aglProcessor = createAndBuildProcessor("/agl/Java8AglOptm.agl")
-    fun parseWithJava8Agl(file: FileData): SharedPackedParseTree? {
-        return try {
-            aglProcessor.parse("CompilationUnit", input!!)
-            TimeLogger(col, file).use { timer ->
-                val tree = aglProcessor.parse("CompilationUnit", input!!)
-                timer.success()
-                tree
+
+        val aglProcessor = createAndBuildProcessor("/agl/Java8AglOptm.agl")
+        fun parseWithJava8Agl(file: FileData): SharedPackedParseTree? {
+            return try {
+                aglProcessor.parse("CompilationUnit", input!!)
+                TimeLogger(col, file).use { timer ->
+                    val tree = aglProcessor.parse("CompilationUnit", input!!)
+                    timer.success()
+                    tree
+                }
+            } catch (e: ParseFailedException) {
+                println("Error: ${e.message}")
+                Results.logError(col, file)
+                assertTrue(file.isError)
+                null
             }
-        } catch (e: ParseFailedException) {
-            Results.logError(col, file)
-            assertTrue(file.isError)
-            null
         }
     }
 
@@ -98,7 +100,7 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
 
     @Test
     fun agl_optm_compilationUnit() {
-        println("${file.index} of $totalFiles")
+        print("File: ${file.index} of $totalFiles")
         parseWithJava8Agl(file)
     }
 

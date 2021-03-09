@@ -71,7 +71,7 @@ internal class ParseGraph(
                 }
             }
             if (!this.input.isEnd(lt.nextInputPosition + 1)) {
-                val location = this.input.locationFor(lt.nextInputPosition - 1, lt.nextInputPosition)
+                val location = this.input.locationFor(lt.nextInputPosition - 1, 1)
                 throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(lt, seasons, maxNumHeads), location, emptySet())
             } else {
                 //FIXME: use GrowingChildren

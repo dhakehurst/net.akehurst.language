@@ -62,7 +62,7 @@ abstract class SPPTNodeFromInputAbstract(
 
     override var parent: SPPTBranch? = null
 
-    override val location: InputLocation get() = input.locationFor(startPosition,nextInputPosition)
+    override val location: InputLocation get() = input.locationFor(startPosition,matchedTextLength)
 
     abstract override fun hashCode() : Int
 

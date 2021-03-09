@@ -236,7 +236,7 @@ class ScanOnDemandParser(
                 }
             }
         }
-        val maxLastLocation: InputLocation = r.map { input.locationFor(it.first.startPosition, it.first.nextInputPosition) }.maxBy { it.endPosition } ?: error("Internal error")
+        val maxLastLocation: InputLocation = r.map { input.locationFor(it.first.startPosition, it.first.nextInputPosition-it.first.startPosition) }.maxBy { it.endPosition } ?: error("Internal error")
         val fr = r.filter { it.first.nextInputPosition == maxLastLocation.endPosition }
         val res = fr.flatMap { it.second }.toSet()
         return Pair(maxLastLocation, res)

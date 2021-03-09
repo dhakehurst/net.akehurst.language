@@ -35,7 +35,7 @@ class LookaheadSet(
         val UP = LookaheadSet(-3, setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
     }
 
-    override fun hashCode(): Int = number * 31
+    override fun hashCode(): Int = number
     override fun equals(other: Any?): Boolean = when {
         other is LookaheadSet -> this.number == other.number
         else -> false

@@ -19,11 +19,12 @@ package net.akehurst.language.parser.scanondemand
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.api.parser.InputLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class test_InputFromCharSequence {
+class test_InputFromString {
 
     @Test
     fun construct() {
@@ -262,4 +263,38 @@ class test_InputFromCharSequence {
         assertEquals("b", actual)
     }
     //TODO:....tryMatchText
+
+
+    @Test
+    fun locationFor_singleLine() {
+        val inputText = "abc"
+        val sut = InputFromString(10,inputText)
+
+        for(p in inputText.indices) {
+            val actual = sut.locationFor(p, 1)
+            val col = p+1
+            val line = 1
+            val expected = InputLocation(p, col, line, 1)
+            assertEquals(expected, actual)
+        }
+    }
+
+    @Test
+    fun locationFor_muiltLine() {
+        val inputText = """
+            abc
+            def
+            ghi
+        """.trimIndent()
+        val sut = InputFromString(10,inputText)
+
+        for(p in inputText.indices) {
+            val actual = sut.locationFor(p, 1)
+            val col = (p % 4)+1
+            val line = (p / 4)+1
+            val expected = InputLocation(p, col, line, 1)
+            assertEquals(expected, actual)
+        }
+
+    }
 }

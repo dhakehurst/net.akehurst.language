@@ -653,9 +653,8 @@ class RuntimeRule(
 */
     // --- Any ---
 
-    override fun hashCode(): Int {
-        return (31 * this.runtimeRuleSetNumber) + this.number
-    }
+    private val _hashCode = listOf(this.runtimeRuleSetNumber, this.number).hashCode()
+    override fun hashCode(): Int = _hashCode
 
     override fun equals(other: Any?): Boolean {
         if (other is RuntimeRule) {

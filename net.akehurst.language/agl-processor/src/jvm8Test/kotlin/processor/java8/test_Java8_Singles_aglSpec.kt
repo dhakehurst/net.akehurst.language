@@ -31,8 +31,8 @@ import kotlin.test.assertNotNull
 class test_Java8_Singles_aglSpec {
 
     companion object {
-
-        val aglSpecProcessor: LanguageProcessor by lazy { createJava8Processor("/java8/Java8AglSpec.agl", true ) }
+        val grammarFile = "/java8/Java8AglSpec.agl"
+        val aglSpecProcessor: LanguageProcessor by lazy { createJava8Processor(grammarFile, true ) }
 
         val proc = aglSpecProcessor
 
@@ -56,12 +56,12 @@ class test_Java8_Singles_aglSpec {
     @Test
     fun Types_Type__int() {
 
-        val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
-        val goal = "Types.Type"
+        val grammarStr = this::class.java.getResource(grammarFile).readText()
+        val goal = "Type"
         val p = Agl.processor(grammarStr,goal)
 
         val sentence = "int"
-        val t = p.buildFor("Type").parse("Type", sentence)
+        val t = p.buildFor(goal).parse(goal, sentence)
 
         assertEquals(1, t.maxNumHeads)
     }

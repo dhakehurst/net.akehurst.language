@@ -1,7 +1,7 @@
 plugins {
     id("net.akehurst.kotlin.kt2ts") version "1.6.0"
     id("java-library")
-    jacoco
+    //jacoco
 }
 
 tasks.withType<ProcessResources> {
@@ -40,7 +40,7 @@ tasks {
         }
     }
 }*/
-
+/*
 jacoco {
     toolVersion = "0.8.5"
 }
@@ -60,3 +60,4 @@ tasks.withType<JacocoReport>{
     }
 }
 
+*/

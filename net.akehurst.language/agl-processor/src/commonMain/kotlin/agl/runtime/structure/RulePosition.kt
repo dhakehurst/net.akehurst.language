@@ -23,7 +23,7 @@ data class RuleOption(
         val option: Int
 )
 
-data class RulePosition(
+class RulePosition(
         val runtimeRule: RuntimeRule,
         val option: Int,
         val position: Int
@@ -180,6 +180,16 @@ data class RulePosition(
         }
     }
 
+    private val _hashCode = listOf(this.runtimeRule, this.option, this.position).hashCode()
+    override fun hashCode(): Int  = _hashCode
+
+    override fun equals(other: Any?): Boolean = when(other) {
+        is RulePosition -> this.option==other.option &&
+                this.position==other.position &&
+                this.runtimeRule.runtimeRuleSetNumber==other.runtimeRule.runtimeRuleSetNumber &&
+                this.runtimeRule.number==other.runtimeRule.number
+        else -> false
+    }
 
     override fun toString(): String {
         val r = when {

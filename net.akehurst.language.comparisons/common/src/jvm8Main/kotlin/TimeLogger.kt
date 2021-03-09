@@ -29,6 +29,7 @@ class TimeLogger(private val col: String, private val fileData: FileData) : Auto
         val end = Instant.now()
         val d = Duration.between(start, end)
         Results.log(success, col, fileData, d)
+        println("Duration : ${d.toMillis()} ms")
     }
 
     init {
