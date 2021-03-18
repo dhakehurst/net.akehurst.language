@@ -3,7 +3,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.akehurst.language/agl-processor/badge.svg)](https://maven-badges.herokuapp.com/maven-central/language/agl-processor)
 -->
 [ ![Bintray](https://api.bintray.com/packages/dhakehurst/maven/net.akehurst.language/images/download.svg) ](https://bintray.com/dhakehurst/maven/net.akehurst.language/_latestVersion)
-[![Generic badge](https://img.shields.io/badge/Kotlin-v1.3.71-green)](https://kotlinlang.org/)
+[![Generic badge](https://img.shields.io/badge/Kotlin-v1.4.0-green)](https://kotlinlang.org/)
 
 # AGL: A Grammar Language (or maybe Akehurst Grammar Language!)
 
@@ -39,3 +39,6 @@ lots:
  - performance improvements
  - PT is not always what one expects
  
+# Build
+> cd net.akehurst.language
+> ./gradlew clean build
