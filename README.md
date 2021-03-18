@@ -40,5 +40,7 @@ lots:
  - PT is not always what one expects
  
 # Build
+'''
 > cd net.akehurst.language
 > ./gradlew clean build
+> '''
