@@ -1,7 +1,7 @@
 <!--
 [![Build Status](https://travis-ci.org/dhakehurst/net.akehurst.language.svg?branch=master)](https://travisci.org/dhakehurst/net.akehurst.language)
 -->
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.akehurst.language/agl-processor/badge.svg)](https://maven-badges.herokuapp.com/maven-central/language/agl-processor)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.akehurst.language/agl-processor/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net/akehurst/language/agl-processor)
 [![Generic badge](https://img.shields.io/badge/Kotlin-v1.4.0-green)](https://kotlinlang.org/)
 
 # AGL: A Grammar Language (or maybe Akehurst Grammar Language!)
