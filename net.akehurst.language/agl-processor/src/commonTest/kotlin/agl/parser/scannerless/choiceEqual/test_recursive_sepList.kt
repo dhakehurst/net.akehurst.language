@@ -24,10 +24,10 @@ import kotlin.test.assertEquals
 
 class test_recursive_sepList : test_ScanOnDemandParserAbstract() {
 
-    companion object {
-        // S =  'a' | S1 ;
-        // S1 = 'a' S2 ;
-        // S2 = ',' S ;
+    // S =  'a' | S1 ;
+    // S1 = 'a' S2 ;
+    // S2 = ',' S ;
+    private companion object {
         val S = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")

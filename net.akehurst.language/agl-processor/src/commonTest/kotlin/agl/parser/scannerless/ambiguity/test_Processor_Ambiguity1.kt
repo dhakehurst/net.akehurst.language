@@ -34,19 +34,21 @@ class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
      * S1 = 'a' S B B ;
      * B : 'b' ? ;
      */
-    private val rrs = runtimeRuleSet {
-        choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            literal("a")
-            ref("S1")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                ref("S1")
+            }
+            concatenation("S1") { literal("a"); ref("S"); ref("B"); ref("B") }
+            multi("B", 0, 1, "'b'")
+            literal("'b'", "b")
         }
-        concatenation("S1") { literal("a"); ref("S"); ref("B"); ref("B") }
-        multi("B",0,1,"'b'")
-        literal("'b'","b")
+        val goal = "S"
     }
 
     @Test
     fun S_S_empty_fails() {
-        val goal = "S"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
@@ -58,7 +60,6 @@ class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun S_S_a() {
-        val goal = "S"
         val sentence = "a"
 
         val expected = """
@@ -76,7 +77,6 @@ class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun S_S_aa() {
-        val goal = "S"
         val sentence = "aa"
 
         val expected1 = """
@@ -101,7 +101,6 @@ class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun S_S_aab() {
-        val goal = "S"
         val sentence = "aab"
 
         val expected1 = """
@@ -137,7 +136,6 @@ class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun S_S_aabb() {
-        val goal = "S"
         val sentence = "aabb"
 
         val expected1 = """
@@ -162,7 +160,6 @@ class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun S_S_aaabb() {
-        val goal = "S"
         val sentence = "aaabb"
 
         val expected1 = """

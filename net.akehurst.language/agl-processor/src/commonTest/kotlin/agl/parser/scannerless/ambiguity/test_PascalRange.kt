@@ -19,6 +19,8 @@ package net.akehurst.language.parser.scanondemand.ambiguity
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.scanondemand.rightRecursive.test_hiddenRight3
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,23 +35,25 @@ class test_PascalRange : test_ScanOnDemandParserAbstract() {
      * real : "([0-9]+[.][0-9]*)|([.][0-9]+)" ;
      *
      */
-    private fun S(): RuntimeRuleSetBuilder {
-        val rrb = RuntimeRuleSetBuilder()
-        val r_real = rrb.rule("real").concatenation(rrb.pattern("([0-9]+[.][0-9]*)|([.][0-9]+)"))
-        val r_integer = rrb.rule("integer").concatenation(rrb.pattern("[0-9]+"))
-        val r_range = rrb.rule("range").concatenation(r_integer, rrb.literal(".."), r_integer)
-        val r_expr = rrb.rule("expr").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_range, r_real)
-        return rrb
+    private companion object {
+        val S = runtimeRuleSet {
+            choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("range")
+                ref("real")
+            }
+            concatenation("range") { ref("integer"); literal(".."); ref("integer") }
+            concatenation("real") { pattern("([0-9]+[.][0-9]*)|([.][0-9]+)") }
+            concatenation("integer") { pattern("[0-9]+") }
+        }
+        val goal = "expr"
     }
 
     @Test
     fun expr_empty_fails() {
-        val rrb = this.S()
-        val goal = "expr"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
@@ -57,27 +61,28 @@ class test_PascalRange : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun expr_1() {
-        val rrb = this.S()
-        val goal = "expr"
         val sentence = "1."
 
-        val expected1 = """
-            expr {
+        val expected = """
+            expr|1 {
               real { "([0-9]+[.][0-9]*)|([.][0-9]+)" : '1.' }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
-
+        val actual = super.test(
+            rrs = S,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun expr_1_to_5() {
-        val rrb = this.S()
-        val goal = "expr"
         val sentence = "1..5"
 
-        val expected1 = """
+        val expected = """
             expr {
               range {
                 integer { "[0-9]+" : '1' }
@@ -87,7 +92,12 @@ class test_PascalRange : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
-
+        val actual = super.test(
+            rrs = S,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 }

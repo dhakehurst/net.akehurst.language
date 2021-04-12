@@ -31,16 +31,18 @@ class test_acsOads_sList : test_ScanOnDemandParserAbstract() {
     // S = acs | ads
     // acs = [a / 'c' ]+
     // ads = [a / 'd' ]+
-    private val rrs = runtimeRuleSet {
-        choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            ref("acs")
-            ref("ads")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("acs")
+                ref("ads")
+            }
+            sList("acs", 1, -1, "'a'", "'c'")
+            sList("ads", 1, -1, "'a'", "'d'")
+            literal("'a'", "a")
+            literal("'c'", "c")
+            literal("'d'", "d")
         }
-        sList("acs",1,-1,"'a'","'c'")
-        sList("ads",1,-1,"'a'","'d'")
-        literal("'a'","a")
-        literal("'c'","c")
-        literal("'d'","d")
     }
 
     @Test

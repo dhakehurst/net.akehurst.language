@@ -25,7 +25,7 @@ import kotlin.test.Test
 
 class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
 
-    companion object {
+    private companion object {
         val automatonKind = AutomatonKind.LOOKAHEAD_NONE
     }
 

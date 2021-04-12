@@ -27,7 +27,7 @@ import kotlin.test.assertNotNull
 
 class test_AglGrammar_item {
 
-    companion object {
+    private companion object {
         private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(AglGrammarGrammar())
         private val parser: Parser = ScanOnDemandParser(converterToRuntimeRules.transform())
     }
@@ -597,7 +597,7 @@ class test_AglGrammar_item {
         """.trimIndent())
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(2,actual.maxNumHeads)
     }
 
     @Test
@@ -626,7 +626,7 @@ class test_AglGrammar_item {
         """.trimIndent())
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(2,actual.maxNumHeads)
     }
 
     @Test
@@ -655,6 +655,6 @@ class test_AglGrammar_item {
         """.trimIndent())
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(2,actual.maxNumHeads)
     }
 }

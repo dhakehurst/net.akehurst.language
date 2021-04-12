@@ -34,7 +34,7 @@ class test_QueryParserValid(val data:Data) {
 
     companion object {
 
-        private val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl").readText()
+        private val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl")?.readText() ?: error("File not found")
         var processor: LanguageProcessor = tgqlprocessor()
 
         var sourceFiles = arrayOf("/vistraq/sampleValidQueries.txt")
@@ -47,9 +47,9 @@ class test_QueryParserValid(val data:Data) {
         @Parameters(name = "{0}")
         fun data(): Collection<Array<Any>> {
             val col = ArrayList<Array<Any>>()
-            for (sourceFile in test_QueryParserValid.sourceFiles) {
+            for (sourceFile in sourceFiles) {
                // val inps = ClassLoader.getSystemClassLoader().getResourceAsStream(sourceFile)
-                val inps = test_QueryParserValid::class.java.getResourceAsStream(sourceFile)
+                val inps = test_QueryParserValid::class.java.getResourceAsStream(sourceFile) ?: error("File not found")
 
                 val br = BufferedReader(InputStreamReader(inps))
                 var line: String? = br.readLine()

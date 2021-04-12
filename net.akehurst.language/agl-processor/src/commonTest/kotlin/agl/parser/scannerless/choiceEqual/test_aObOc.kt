@@ -31,15 +31,17 @@ class test_aObOc : test_ScanOnDemandParserAbstract() {
     // a = 'a' ;
     // b = 'b' ;
     // c = 'c' ;
-    private val rrs = runtimeRuleSet {
-        choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            ref("a")
-            ref("b")
-            ref("c")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("a")
+                ref("b")
+                ref("c")
+            }
+            concatenation("a") { literal("a") }
+            concatenation("b") { literal("b") }
+            concatenation("c") { literal("c") }
         }
-        concatenation("a") { literal("a") }
-        concatenation("b") { literal("b") }
-        concatenation("c") { literal("c") }
     }
 
     @Test

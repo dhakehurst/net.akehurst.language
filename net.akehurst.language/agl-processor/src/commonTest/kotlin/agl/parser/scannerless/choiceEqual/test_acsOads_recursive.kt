@@ -33,15 +33,17 @@ class test_acsOads_recursive : test_ScanOnDemandParserAbstract() {
     // acs1 = acs 'c' 'a'
     // ads = 'a' | ads1
     // ads1 = acs 'd' 'a'
-    private val rrs = runtimeRuleSet {
-        choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            ref("acs")
-            ref("ads")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("acs")
+                ref("ads")
+            }
+            choice("acs", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); ref("acs1") }
+            concatenation("acs1") { ref("acs"); literal("c"); literal("a") }
+            choice("ads", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); ref("ads1") }
+            concatenation("ads1") { ref("ads"); literal("d"); literal("a") }
         }
-        choice("acs",RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a") ; ref("acs1")}
-        concatenation("acs1") { ref("acs"); literal("c"); literal("a") }
-        choice("ads",RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a") ; ref("ads1")}
-        concatenation("ads1") { ref("ads"); literal("d"); literal("a") }
     }
 
     @Test

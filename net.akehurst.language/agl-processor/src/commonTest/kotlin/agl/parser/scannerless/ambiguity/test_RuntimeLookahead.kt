@@ -37,8 +37,8 @@ class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
         A = a n G?     // annotation = '@' 'qualifiedName' arguments
         G = s A?
      */
-    companion object {
-        private val rrs = runtimeRuleSet {
+    private companion object {
+        val rrs = runtimeRuleSet {
             concatenation("S") { ref("oP"); ref("oT") }
             multi("oP",0,1,"P")
             multi("oT",0,1,"T")

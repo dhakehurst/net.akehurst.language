@@ -31,18 +31,19 @@ class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract() {
     // expr = var | ifthenelse | ifthen ;
     // var = "[a-zA-Z]+" ;
     // WS = "\s+" ;
-
-    private val rrs = runtimeRuleSet {
-        skip("WS") { pattern("\\s+") }
-        concatenation("S") { ref("expr") }
-        choice("expr",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            ref("var")
-            ref("ifthenelse")
-            ref("ifthen")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            skip("WS") { pattern("\\s+") }
+            concatenation("S") { ref("expr") }
+            choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("var")
+                ref("ifthenelse")
+                ref("ifthen")
+            }
+            concatenation("var") { pattern("[a-zA-Z]+") }
+            concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
+            concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
         }
-        concatenation("var") { pattern("[a-zA-Z]+") }
-        concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
-        concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
     }
 
     @Test

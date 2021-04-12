@@ -33,15 +33,17 @@ class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
     // a_bc = 'a' bc
     // ab = 'a' 'b'
     // bc = 'b' 'c'
-    private val rrs = runtimeRuleSet {
-        choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            ref("ab_c")
-            ref("a_bc")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("ab_c")
+                ref("a_bc")
+            }
+            concatenation("ab_c") { ref("ab"); literal("c") }
+            concatenation("a_bc") { literal("a"); ref("bc") }
+            concatenation("ab") { literal("a"); literal("b") }
+            concatenation("bc") { literal("b"); literal("c") }
         }
-        concatenation("ab_c") { ref("ab"); literal("c") }
-        concatenation("a_bc") { literal("a"); ref("bc") }
-        concatenation("ab") { literal("a"); literal("b") }
-        concatenation("bc") { literal("b"); literal("c") }
     }
 
     @Test

@@ -155,14 +155,15 @@ class test_hiddenRight3 : test_ScanOnDemandParserAbstract() {
         val sentence = "abca"
 
         val expected = """
-         S { S1 {
-            S { S1 {
-                S|1 { 'a' }
-                'c'
-                B|1 { eB { §empty } }
+         S { A {
+            'a'
+            oB { B {
+                'b'
+                oC { C {
+                    'c'
+                    oA|1 { eA { §empty } }
+                  } }
               } }
-            'c'
-            B { 'b' }
           } }
         """.trimIndent()
 

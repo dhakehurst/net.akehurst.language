@@ -20,6 +20,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -31,24 +32,26 @@ class test_abOcLiteral : test_ScanOnDemandParserAbstract() {
     // a = 'a' ;
     // b = 'b' ;
     // c = 'c' ;
-    private fun abOcLiteral(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val ra = b.rule("a").concatenation(b.literal("a"))
-        val rb = b.rule("b").concatenation(b.literal("b"))
-        val rc = b.rule("c").concatenation(b.literal("c"))
-        val rab = b.rule("ab").concatenation(ra, rb)
-        b.rule("S").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,rab, rc)
-        return b
+    private companion object {
+        val S = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+                ref("ab")
+                ref("c")
+            }
+            concatenation("ab") { ref("a"); ref("b") }
+            concatenation("a") { literal("a") }
+            concatenation("b") { literal("b") }
+            concatenation("c") { literal("c") }
+        }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val rrb = this.abOcLiteral()
-        val goal = "S"
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -57,12 +60,10 @@ class test_abOcLiteral : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a_fails() {
-        val rrb = this.abOcLiteral()
-        val goal = "S"
         val sentence = "a"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(2, ex.location.column)
@@ -71,8 +72,6 @@ class test_abOcLiteral : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun ab() {
-        val rrb = this.abOcLiteral()
-        val goal = "S"
         val sentence = "ab"
 
         val expected = """
@@ -84,17 +83,21 @@ class test_abOcLiteral : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = S,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun abc_fails() {
-        val rrb = this.abOcLiteral()
-        val goal = "S"
         val sentence = "abc"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(3, ex.location.column)
@@ -103,8 +106,6 @@ class test_abOcLiteral : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun c() {
-        val rrb = this.abOcLiteral()
-        val goal = "S"
         val sentence = "c"
 
         val expected = """
@@ -113,7 +114,13 @@ class test_abOcLiteral : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = S,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

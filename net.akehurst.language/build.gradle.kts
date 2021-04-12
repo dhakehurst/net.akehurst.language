@@ -23,7 +23,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 plugins {
-    kotlin("multiplatform") version "1.4.31" apply false
+    kotlin("multiplatform") version "1.4.32" apply false
     id("com.jfrog.bintray") version ("1.8.5") apply false
     id("org.jetbrains.dokka") version ("0.10.1") apply false
     //id("jacoco")

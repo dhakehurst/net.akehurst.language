@@ -26,16 +26,30 @@ import kotlin.test.assertFailsWith
 
 class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
 
-    // S = S1 < a
-    // S1 = a b?
-    private val deterministic= runtimeRuleSet {
-        choice("S", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
-            ref("S1")
-            literal("a")
+    private companion object {
+        // S = S1 < a
+        // S1 = a b?
+        val deterministic = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+                ref("S1")
+                literal("a")
+            }
+            concatenation("S1") { literal("a"); ref("bOpt") }
+            multi("bOpt", 0, 1, "'b'")
+            literal("'b'", "b")
         }
-        concatenation("S1") { literal("a"); ref("bOpt") }
-        multi("bOpt",0,1,"'b'")
-        literal("'b'","b")
+
+        // S = S1 || a
+        // S1 = a b?
+        private val ambiguous = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.AMBIGUOUS) {
+                ref("S1")
+                literal("a")
+            }
+            concatenation("S1") { literal("a"); ref("bOpt") }
+            multi("bOpt", 0, 1, "'b'")
+            literal("'b'", "b")
+        }
     }
 
     @Test
@@ -95,18 +109,7 @@ class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
 
     //TODO: more tests
 
-    // S = S1 || a
-    // S1 = a b?
-    private val ambiguous = runtimeRuleSet {
-        choice("S", RuntimeRuleChoiceKind.AMBIGUOUS) {
-            ref("S1")
-            literal("a")
-        }
-        concatenation("S1") { literal("a"); ref("bOpt") }
-        multi("bOpt",0,1,"'b'")
-        literal("'b'","b")
-    }
-
+    /////////////////////
     @Test
     fun ambiguous_empty_fails() {
         val goal = "S"

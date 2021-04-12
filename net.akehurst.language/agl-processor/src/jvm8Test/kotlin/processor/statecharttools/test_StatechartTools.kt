@@ -32,8 +32,8 @@ class test_StatechartTools(val data: Data) {
 
     companion object {
 
-        private val grammarStr1 = this::class.java.getResource("/statechart-tools/Expressions.agl").readText()
-        private val grammarStr2 = this::class.java.getResource("/statechart-tools/SText.agl").readText()
+        private val grammarStr1 = this::class.java.getResource("/statechart-tools/Expressions.agl")?.readText() ?: error("File not found")
+        private val grammarStr2 = this::class.java.getResource("/statechart-tools/SText.agl")?.readText() ?: error("File not found")
         //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
 
         // must create processor for 'Expressions' so that SText can extend it
@@ -47,7 +47,8 @@ class test_StatechartTools(val data: Data) {
             val col = ArrayList<Array<Any>>()
             var ruleName = ""
             for (file in sourceFiles) {
-                val lines = BufferedReader(InputStreamReader(this::class.java.getResourceAsStream(file))).lines()
+                val inps = this::class.java.getResourceAsStream(file) ?: error("File not found")
+                val lines = BufferedReader(InputStreamReader(inps)).lines()
                 lines.forEach { it ->
                     val line = it.trim { it <= ' ' }
                     if (line.isEmpty()) {

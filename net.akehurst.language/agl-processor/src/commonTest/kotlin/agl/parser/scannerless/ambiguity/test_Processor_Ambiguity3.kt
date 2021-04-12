@@ -19,6 +19,7 @@ package net.akehurst.language.parser.scanondemand.ambiguity
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -42,6 +43,30 @@ class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
      * P1 = a P ;
      * P2 = P a ;
      */
+    private companion object {
+        val S = runtimeRuleSet {
+            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("S1")
+                ref("S2")
+            }
+            concatenation("S1") { ref("P"); literal("b") }
+            concatenation("S2") { ref("Q"); literal("c") }
+            choice("Q",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("Q1")
+                literal("a")
+            }
+            concatenation("Q1") { ref("Q"); literal("a") }
+            choice("P",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("P1")
+                ref("P2")
+                literal("a")
+            }
+            concatenation("P1") { literal("a"); ref("P") }
+            concatenation("P2") { ref("P"); literal("a") }
+        }
+        val goal = "S"
+    }
+    /*
     private fun S(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r_a = b.literal("a")
@@ -60,14 +85,14 @@ class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
         return b
     }
 
+     */
+
     @Test
     fun empty_fails() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
@@ -75,12 +100,10 @@ class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a_fails() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, e.location.line)
         assertEquals(2, e.location.column)
@@ -88,43 +111,49 @@ class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun ab() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "ab"
 
-        val expected1 = """
+        val expected = """
             S { S1 {
                 P|2 { 'a' }
                 'b'
             } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected1)
+        val actual = super.test(
+            rrs = S,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun ac() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "ac"
 
-        val expected1 = """
+        val expected = """
             S|1 { S2 {
                 Q|1 { 'a' }
                 'c'
             } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected1)
+        val actual = super.test(
+            rrs = S,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a10b() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a".repeat(10) + "b"
 
-        val expected1 = """
+        val expected = """
          S { S1 {
             P|1 { P2 {
                 P|1 { P2 {
@@ -158,17 +187,27 @@ class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected1)
+        val actual = super.test(
+            rrs = S,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
-    @Test //takes too long at present
+    @Test
     fun a50b() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a".repeat(50) + "b"
 
-        val expected1 = "S { S1 {" + "P|1 { P2 {".repeat(49) + "P|2 {'a'}" + "'a' } }".repeat(49) + "'b'} }"
+        val expected = "S { S1 {" + "P|1 { P2 {".repeat(49) + "P|2 {'a'}" + "'a' } }".repeat(49) + "'b'} }"
 
-        super.testStringResult(rrb, goal, sentence, expected1)
+        val actual = super.test(
+            rrs = S,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 }

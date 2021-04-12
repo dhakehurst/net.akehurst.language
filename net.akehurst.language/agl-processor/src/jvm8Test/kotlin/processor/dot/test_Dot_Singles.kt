@@ -15,11 +15,6 @@
  */
 package net.akehurst.language.agl.processor.dot
 
-//import com.soywiz.korio.async.runBlockingNoSuspensions
-//import com.soywiz.korio.file.std.resourcesVfs
-//import java.io.BufferedReader
-//import java.io.InputStreamReader
-
 import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
@@ -29,12 +24,11 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.fail
 
-
 class test_Dot_Singles {
 
     companion object {
 
-        private val grammarStr = this::class.java.getResource("/dot/Dot.agl").readText()
+        private val grammarStr = this::class.java.getResource("/dot/Dot.agl")?.readText() ?: error("File not found")
         var processor: LanguageProcessor = Agl.processor(grammarStr)
 
     }
@@ -48,6 +42,7 @@ class test_Dot_Singles {
         """.trimIndent()
         processor.parse(goal, sentence)
     }
+
     @Test
     fun MULTI_LINE_COMMENT() {
         val goal = "graph"
@@ -57,6 +52,7 @@ class test_Dot_Singles {
         """.trimIndent()
         processor.parse(goal, sentence)
     }
+
     @Test
     fun a_list__from_Data_Structures() {
         val goal = "attr_list_content"
@@ -467,6 +463,7 @@ class test_Dot_Singles {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
     }
+
     @Test
     fun node_stmt_with_emptyString() {
         val goal = "node_stmt"

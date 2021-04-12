@@ -17,15 +17,15 @@ package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
-import org.junit.Assert
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class test_StatechartTools_Singles {
 
     companion object {
-        private val grammarStr1 = this::class.java.getResource("/statechart-tools/Expressions.agl").readText()
-        private val grammarStr2 = this::class.java.getResource("/statechart-tools/SText.agl").readText()
-        //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
+        private val grammarStr1 = this::class.java.getResource("/statechart-tools/Expressions.agl")?.readText() ?: error("File not found")
+        private val grammarStr2 = this::class.java.getResource("/statechart-tools/SText.agl")?.readText() ?: error("File not found")
 
         // must create processor for 'Expressions' so that SText can extend it
         val exprProcessor = Agl.processor(grammarStr1)
@@ -37,9 +37,9 @@ class test_StatechartTools_Singles {
         val goal = "Expression"
         val sentence = "integer"
         val result = processor.parse(goal, sentence)
-        Assert.assertNotNull(result)
+        assertNotNull(result)
         val resultStr = result.asString
-        Assert.assertEquals(sentence, resultStr)
+        assertEquals(sentence, resultStr)
     }
 
     @Test
@@ -47,9 +47,9 @@ class test_StatechartTools_Singles {
         val goal = "Expression"
         val sentence = "97"
         val result = processor.parse(goal, sentence)
-        Assert.assertNotNull(result)
+        assertNotNull(result)
         val resultStr = result.asString
-        Assert.assertEquals(sentence, resultStr)
+        assertEquals(sentence, resultStr)
     }
 
     @Test
@@ -57,9 +57,9 @@ class test_StatechartTools_Singles {
         val goal = "Expression"
         val sentence = "integer = 97"
         val result = processor.parse(goal, sentence)
-        Assert.assertNotNull(result)
+        assertNotNull(result)
         val resultStr = result.asString
-        Assert.assertEquals(sentence, resultStr)
+        assertEquals(sentence, resultStr)
     }
 
     @Test
@@ -67,9 +67,9 @@ class test_StatechartTools_Singles {
         val goal = "ScopeDeclaration"
         val sentence = "var MyVar : integer = 97"
         val result = processor.parse(goal, sentence)
-        Assert.assertNotNull(result)
+        assertNotNull(result)
         val resultStr = result.asString
-        Assert.assertEquals(sentence, resultStr)
+        assertEquals(sentence, resultStr)
     }
 
 }

@@ -32,15 +32,17 @@ class test_abOc : test_ScanOnDemandParserAbstract() {
     // a = 'a' ;
     // b = 'b' ;
     // c = 'c' ;
-    private val rrs = runtimeRuleSet {
-        choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            ref("ab")
-            ref("c")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("ab")
+                ref("c")
+            }
+            concatenation("ab") { ref("a"); ref("b") }
+            concatenation("a") { literal("a") }
+            concatenation("b") { literal("b") }
+            concatenation("c") { literal("c") }
         }
-        concatenation("ab") { ref("a"); ref("b") }
-        concatenation("a") { literal("a") }
-        concatenation("b") { literal("b") }
-        concatenation("c") { literal("c") }
     }
 
     @Test
