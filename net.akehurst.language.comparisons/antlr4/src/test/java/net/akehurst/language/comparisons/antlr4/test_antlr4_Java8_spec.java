@@ -36,7 +36,7 @@ public class test_antlr4_Java8_spec {
 
     @Parameterized.Parameters(name = "{index}: {0}")
     public static Collection<FileData> getFiles() {
-        var files = Java8TestFiles.INSTANCE.getFiles().subList(0, 3306); // after 3306 we get java.lang.OutOfMemoryError: Java heap space
+        var files = Java8TestFiles.INSTANCE.getFiles();//.subList(0, 3306); // after 3306 we get java.lang.OutOfMemoryError: Java heap space
         totalFiles = files.size();
         return files;
     }

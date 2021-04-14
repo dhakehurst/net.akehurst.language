@@ -33,7 +33,7 @@ grammar Mscript {
     skip LINE_CONTINUATION =  "[.][.][.](.*)(\r?\n)" ;
     skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
          MULTI_LINE_COMMENT = "%[{]([^%]|(\r?\n))*%[}]" ;
-         SINGLE_LINE_COMMENT = "%([^{\n].*)?" ;
+         SINGLE_LINE_COMMENT = "%([^{\n].*)?$" ;
 
     script = statementList ;
     statementList = [line / "(\r?\n)"]* ;
@@ -334,18 +334,8 @@ grammar Mscript {
     }
 
     @Test
-    fun process_row_string_concatenations() {
-        //val text = "'From: ' cn.src_cpu ' to: ' cn.dst_cpu ' on Channel: ' cn.dst_ch"
-        val text = "'From: ' a.b"
-        val actual = sut.parse("row", text)
-
-        assertNotNull(actual)
-        assertEquals("row", actual.root.name)
-    }
-
-    @Test
-    fun process_matrix_string_concatenations() {
-        val text = "['From: ' cn.src_cpu ' to: ' cn.dst_cpu ' on Channel: ' cn.dst_ch]"
+    fun process_field_access() {
+        val text = "cn.src_cpu"
         val actual = sut.parse("matrix", text)
 
         assertNotNull(actual)

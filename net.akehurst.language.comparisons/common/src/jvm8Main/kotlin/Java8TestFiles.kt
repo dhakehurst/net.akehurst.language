@@ -28,7 +28,8 @@ data class FileData(
 )
 
 object Java8TestFiles {
-    var javaTestFiles = "../javaTestFiles/javac"
+    //var javaTestFiles = "../javaTestFiles/javac"
+    var javaTestFiles = "../javaTestFiles/java8-stdlib"
 
     val files: List<FileData>
         get() {
