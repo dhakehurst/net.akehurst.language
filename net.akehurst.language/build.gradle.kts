@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 
-import com.jfrog.bintray.gradle.BintrayExtension
-import com.jfrog.bintray.gradle.tasks.BintrayUploadTask
-import org.gradle.api.publish.maven.internal.artifact.FileBasedMavenArtifact
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import org.jetbrains.dokka.gradle.DokkaTask
+
+//import org.jetbrains.dokka.gradle.DokkaTask
 
 plugins {
-    kotlin("multiplatform") version("1.4.0") apply false
-    id("com.jfrog.bintray") version("1.8.4") apply false
-    id("org.jetbrains.dokka") version("0.10.1") apply false
+    kotlin("multiplatform") version ("1.4.0") apply false
+    id("org.jetbrains.dokka") version ("1.4.0") apply false
+    id("nu.studer.credentials") version ("2.1")
 }
 
 allprojects {
@@ -47,15 +44,17 @@ fun getProjectProperty(s: String) = project.findProperty(s) as String?
 
 subprojects {
 
-    apply(plugin="org.jetbrains.kotlin.multiplatform")
+    apply(plugin = "org.jetbrains.kotlin.multiplatform")
     apply(plugin = "maven-publish")
-    apply(plugin = "com.jfrog.bintray")
+    apply(plugin = "signing")
     apply(plugin = "org.jetbrains.dokka")
 
     repositories {
         mavenCentral()
         jcenter()
     }
+
+    tasks.named("publish").get().dependsOn("javadocJar")
 
     configure<KotlinMultiplatformExtension> {
         jvm("jvm8") {
@@ -88,24 +87,30 @@ subprojects {
         }
     }
 
-
+    val javadocJar by tasks.registering(Jar::class) {
+        dependsOn("dokkaJavadoc")
+        archiveClassifier.set("javadoc")
+        from(project.properties["javadoc"])
+    }
 
     val now = Instant.now()
     fun fBbuildStamp(): String {
         return DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneId.of("UTC")).format(now)
     }
+
     fun fBuildDate(): String {
         return DateTimeFormatter.ofPattern("yyyy-MMM-dd").withZone(ZoneId.of("UTC")).format(now)
     }
+
     fun fBuildTime(): String {
         return DateTimeFormatter.ofPattern("HH:mm:ss z").withZone(ZoneId.of("UTC")).format(now)
     }
     tasks.register<Copy>("generateFromTemplates") {
         val templateContext = mapOf(
-                "version" to project.version,
-                "buildStamp" to fBbuildStamp(),
-                "buildDate" to fBuildDate(),
-                "buildTime" to fBuildTime()
+            "version" to project.version,
+            "buildStamp" to fBbuildStamp(),
+            "buildDate" to fBuildDate(),
+            "buildTime" to fBuildTime()
         )
         inputs.properties(templateContext) // for gradle up-to-date check
         from("src/template/kotlin")
@@ -136,41 +141,31 @@ subprojects {
         "jsTestImplementation"(kotlin("test-js"))
     }
 
-    configure<BintrayExtension> {
-        user = getProjectProperty("bintrayUser")
-        key = getProjectProperty("bintrayApiKey")
-        publish = true
-        override = true
-        setPublications("kotlinMultiplatform","metadata","js","jvm8")
-        pkg(delegateClosureOf<BintrayExtension.PackageConfig> {
-            repo = "maven"
-            name = "${rootProject.name}"
-            userOrg = user
-            websiteUrl = "https://github.com/dhakehurst/net.akehurst.language"
-            vcsUrl = "https://github.com/dhakehurst/net.akehurst.language"
-            setLabels("kotlin")
-            setLicenses("Apache-2.0")
-        })
+    val creds = project.properties["credentials"] as nu.studer.gradle.credentials.domain.CredentialsContainer
+    val sonatype_pwd = creds.propertyMissing("SONATYPE_PASSWORD") as String?
+        ?: getProjectProperty("SONATYPE_PASSWORD")
+        ?: error("Must set project property with Sonatype Password (-P SONATYPE_PASSWORD=<...> or set in ~/.gradle/gradle.properties)")
+    project.ext.set("signing.password", sonatype_pwd)
+
+    configure<PublishingExtension> {
+        repositories {
+            maven {
+                name = "sonatype"
+                setUrl("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+                credentials {
+                    username = getProjectProperty("SONATYPE_USERNAME")
+                        ?: error("Must set project property with Sonatype Username (-P SONATYPE_USERNAME=<...> or set in ~/.gradle/gradle.properties)")
+                    password = sonatype_pwd
+                }
+            }
+        }
+        publications.withType<MavenPublication> {
+            artifact(javadocJar.get())
+        }
     }
 
-    val bintrayUpload by tasks.getting
-    val publishToMavenLocal by tasks.getting
-    val publishing = extensions.getByType(PublishingExtension::class.java)
-
-    bintrayUpload.dependsOn(publishToMavenLocal)
-
-    tasks.withType<BintrayUploadTask> {
-        doFirst {
-            publishing.publications
-                    .filterIsInstance<MavenPublication>()
-                    .forEach { publication ->
-                        val moduleFile = buildDir.resolve("publications/${publication.name}/module.json")
-                        if (moduleFile.exists()) {
-                            publication.artifact(object : FileBasedMavenArtifact(moduleFile) {
-                                override fun getDefaultExtension() = "module"
-                            })
-                        }
-                    }
-        }
+    configure<SigningExtension> {
+        val publishing = project.properties["publishing"] as PublishingExtension
+        sign(publishing.publications)
     }
 }

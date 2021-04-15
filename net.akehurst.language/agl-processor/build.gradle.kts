@@ -7,6 +7,7 @@ tasks.withType<ProcessResources>  {
         expand(project.properties)
     }
 }
+
 /*
 kt2ts {
     jvmTargetName.set("jvm8")
