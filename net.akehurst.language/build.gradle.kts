@@ -161,6 +161,28 @@ subprojects {
         }
         publications.withType<MavenPublication> {
             artifact(javadocJar.get())
+
+            pom {
+                name.set("AGL Processor")
+                description.set("Dynamic, scan-on-demand, parsing; when a regular expression is just not enough")
+                url.set("https://medium.com/@dr.david.h.akehurst/a-kotlin-multi-platform-parser-usable-from-a-jvm-or-javascript-59e870832a79")
+
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+                developers {
+                    developer {
+                        name.set("Dr. David H. Akehurst")
+                        email.set("dr.david.h@akehurst.net")
+                    }
+                }
+                scm {
+                    url.set("https://github.com/dhakehurst/net.akehurst.language")
+                }
+            }
         }
     }
 
