@@ -30,15 +30,15 @@ import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 
 internal class ParseGraph(
-        val userGoalRule: RuntimeRule,
-        val input: InputFromString,
-        numTerminalRules: Int,
-        numNonTerminalRules: Int
+    val userGoalRule: RuntimeRule,
+    val input: InputFromString,
+    numTerminalRules: Int,
+    numNonTerminalRules: Int
 ) {
     data class CompleteNodeIndex(
-            val runtimeRuleNumber: Int,
-            //val option: Int,
-            val startPosition: Int
+        val runtimeRuleNumber: Int,
+        //val option: Int,
+        val startPosition: Int
     )
 
 
@@ -218,7 +218,14 @@ internal class ParseGraph(
     }
 
     //TODO: combine next 3 methods!
-    private fun findOrCreateGrowingLeafOrEmbeddedNode(newState: ParserState, lookahead: LookaheadSet, growingChildren: GrowingChildren, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
+    private fun findOrCreateGrowingLeafOrEmbeddedNode(
+        newState: ParserState,
+        lookahead: LookaheadSet,
+        growingChildren: GrowingChildren,
+        oldHead: GrowingNode,
+        previous: Set<PreviousInfo>,
+        skipNodes: List<SPPTNode>
+    ) {
         val oldOrExistingHead = this.addGrowing(oldHead, previous)
         for (info in previous) {
             this.addGrowing(info.node)
@@ -284,7 +291,7 @@ internal class ParseGraph(
                 }
             }
         } else {
-           // TODO("handle use of lookahead here! passed in lhs is not same as existing node lhs")
+            // TODO("handle use of lookahead here! passed in lhs is not same as existing node lhs")
             this.addAndRegisterGrowingPrevious(existing, previous)
             this.addGrowingHead(gnindex, existing)
         }
@@ -409,7 +416,7 @@ internal class ParseGraph(
         }
     */
     private fun completeIfReachedEnd(gn: GrowingNode): GrowingNode {
-        var used = mutableMapOf<RulePosition,GrowingNode>()
+        var used = mutableMapOf<RulePosition, GrowingNode>()
         if (gn.currentState.isAtEnd) {
             gn.currentState.rulePositions.forEachIndexed { index, rp ->
                 val runtimeRule = rp.runtimeRule
@@ -437,50 +444,53 @@ internal class ParseGraph(
 
                         //TODO: when there is ambiguity, sometimes a complete node is replaced after it has been used in the completions of another node
                         // this give unexpected (wrong!) results
-                        val chosen = if (RuntimeRuleRhsItemsKind.CHOICE == runtimeRule.rhs.itemsKind) {
-                            when (runtimeRule.rhs.choiceKind) {
-                                RuntimeRuleChoiceKind.LONGEST_PRIORITY -> {
-                                    val choice = pickLongest(gn, rp, children, cn)
-                                            ?: pickHighestPriority(gn, rp, children, cn)
-                                    if (null == choice) {
-                                        //ambiguous, keep existing
-                                        cn
-                                    } else {
-                                        choice
-                                    }
-                                }
-                                RuntimeRuleChoiceKind.PRIORITY_LONGEST -> {
-                                    val choice = pickHighestPriority(gn, rp, children, cn)
-                                            ?: pickLongest(gn, rp, children, cn)
-                                    if (null == choice) {
-                                        //ambiguous, keep existing
-                                        cn
-                                    } else {
-                                        choice
-                                    }
-                                }
-                                RuntimeRuleChoiceKind.AMBIGUOUS -> {
-                                    val choice = pickLongest(gn, rp, children, cn)
-                                    if (null == choice) {
-                                        // same length, so ambiguous
-                                        cn.grownChildrenAlternatives[option] = children
-                                        cn
-                                    } else {
-                                        choice
-                                    }
-                                }
-                                else -> {
-                                    TODO()
+                        val chosen = when (runtimeRule.rhs.itemsKind) {
+                            RuntimeRuleRhsItemsKind.CONCATENATION -> {
+                                val choice = pickLongest(gn, rp, children, cn)
+                                //?:pickHighestPriority(gn, rp, children, cn)
+                                    ?: pickByLongestChildren(gn, rp, children, cn)
+                                if (null == choice) {
+                                    //ambiguous, keep existing TODO is this an error??
+                                    cn
+                                } else {
+                                    choice
                                 }
                             }
-                        } else {
-                            val choice = pickLongest(gn, rp, children, cn)
-                            //?:pickHighestPriority(gn, rp, children, cn)
-                                    ?: pickByLongestChildren(gn, rp, children, cn)
-                            if (null == choice) {
-                                //ambiguous, keep existing TODO is this an error??
-                                cn
-                            } else {
+                            RuntimeRuleRhsItemsKind.CHOICE -> {
+                                when (runtimeRule.rhs.choiceKind) {
+                                    RuntimeRuleChoiceKind.LONGEST_PRIORITY -> {
+                                        val choice = pickLongest(gn, rp, children, cn)
+                                            ?: pickHighestPriority(gn, rp, children, cn)
+                                            ?: cn //ambiguous, keep existing
+                                        choice
+                                    }
+                                    RuntimeRuleChoiceKind.PRIORITY_LONGEST -> {
+                                        val choice = pickHighestPriority(gn, rp, children, cn)
+                                            ?: pickLongest(gn, rp, children, cn)
+                                            ?: cn //ambiguous, keep existing
+                                        choice
+                                    }
+                                    RuntimeRuleChoiceKind.AMBIGUOUS -> {
+                                        val choice = pickLongest(gn, rp, children, cn)
+                                        if (null == choice) {
+                                            // same length, so ambiguous
+                                            cn.grownChildrenAlternatives[option] = children
+                                            cn
+                                        } else {
+                                            choice
+                                        }
+                                    }
+                                    else -> {
+                                        TODO()
+                                    }
+                                }
+                            }
+                            RuntimeRuleRhsItemsKind.EMPTY -> {
+                                TODO()
+                            }
+                            RuntimeRuleRhsItemsKind.LIST -> {
+                                val choice = pickLongest(gn, rp, children, cn)
+                                    ?: cn //ambiguous, keep existing
                                 choice
                             }
                         }
@@ -506,7 +516,7 @@ internal class ParseGraph(
         }
         return when {
             used.isEmpty() -> error("should not happen")
-            1==used.size -> used.values.first()
+            1 == used.size -> used.values.first()
             used.size == gn.currentState.rulePositions.size -> gn
             else -> TODO()
         }
@@ -584,9 +594,9 @@ internal class ParseGraph(
         growingChildren.nextInputPosition = startPosition
         growingChildren.startPosition = startPosition
         val goalGN = GrowingNode(
-                goalState,
-                lookahead,
-                growingChildren
+            goalState,
+            lookahead,
+            growingChildren
         )
         val gi = GrowingNode.index(goalState, lookahead, growingChildren)
         this.addGrowingHead(gi, goalGN)
@@ -604,8 +614,8 @@ internal class ParseGraph(
 
     fun pushToStackOf(newState: ParserState, lookahead: LookaheadSet, leafNode: SPPTLeaf, oldHead: GrowingNode, previous: Set<PreviousInfo>, skipNodes: List<SPPTNode>) {
         val growingChildren = GrowingChildren()
-                .appendChild(newState, listOf(leafNode))
-                ?.appendSkipIfNotEmpty(skipNodes)
+            .appendChild(newState, listOf(leafNode))
+            ?.appendSkipIfNotEmpty(skipNodes)
         //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
         growingChildren?.let {
             this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, it, oldHead, previous, skipNodes)
@@ -617,8 +627,8 @@ internal class ParseGraph(
         val runtimeRule = newState.runtimeRules.first()// should only ever be one
         (embeddedNode as SPPTNodeFromInputAbstract).embeddedIn = runtimeRule.tag
         val growingChildren = GrowingChildren()
-                .appendChild(newState, listOf(embeddedNode))
-                ?.appendSkipIfNotEmpty(skipNodes)
+            .appendChild(newState, listOf(embeddedNode))
+            ?.appendSkipIfNotEmpty(skipNodes)
         growingChildren?.let {
             this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, it, oldHead, previous, skipNodes)
         }
@@ -628,8 +638,8 @@ internal class ParseGraph(
 
     fun growNextChild(nextState: ParserState, lookahead: LookaheadSet, parent: GrowingNode, nextChildAlts: List<SPPTNode>, skipChildren: List<SPPTNode>?) {
         var growingChildren = parent.children.appendChild(nextState, nextChildAlts)
-        growingChildren = when{
-            null==skipChildren -> growingChildren
+        growingChildren = when {
+            null == skipChildren -> growingChildren
             else -> growingChildren?.appendSkipIfNotEmpty(skipChildren)
         }
 
@@ -648,8 +658,8 @@ internal class ParseGraph(
 
     fun createWithFirstChild(newState: ParserState, lookahead: LookaheadSet, firstChildAlts: List<SPPTNode>, previous: Set<PreviousInfo>, skipChildren: List<SPPTNode>?) {
         var growingChildren = GrowingChildren().appendChild(newState, firstChildAlts)
-        growingChildren = when{
-            null==skipChildren -> growingChildren
+        growingChildren = when {
+            null == skipChildren -> growingChildren
             else -> growingChildren?.appendSkipIfNotEmpty(skipChildren)
         }
         //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
@@ -663,7 +673,7 @@ internal class ParseGraph(
         return when {
             LookaheadSet.UP == runtimeLookahead -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
             LookaheadSet.ANY == lookaheadGuard -> true
-            null==runtimeLookahead -> {
+            null == runtimeLookahead -> {
                 var result = false
                 for (rr in lookaheadGuard.content) {
                     val l = this.input.findOrTryCreateLeaf(rr, nextInputPosition)
@@ -677,11 +687,11 @@ internal class ParseGraph(
             LookaheadSet.UP == lookaheadGuard -> {
                 var result = false
                 for (rr in runtimeLookahead.content) {
-                        val l = this.input.findOrTryCreateLeaf(rr, nextInputPosition)
-                        if (null != l) {
-                            result = true
-                            break
-                        }
+                    val l = this.input.findOrTryCreateLeaf(rr, nextInputPosition)
+                    if (null != l) {
+                        result = true
+                        break
+                    }
                 }
                 result
             }

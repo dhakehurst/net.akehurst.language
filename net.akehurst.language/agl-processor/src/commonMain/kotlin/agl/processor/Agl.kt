@@ -33,6 +33,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.LanguageProcessorException
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import kotlin.js.JsName
+import net.akehurst.language.agl.processor.BuildConfig
 
 object Agl {
 
@@ -56,8 +57,8 @@ object Agl {
         processor(grammar, AglFormatGrammar.goalRuleName, syntaxAnalyser)
     }
 
-    val version: String = BuildInfo.version
-    val buildStamp: String = BuildInfo.buildStamp
+    val version: String = BuildConfig.version
+    val buildStamp: String = BuildConfig.buildStamp
 
     @JsName("processorFromGrammar")
     fun processor(grammar: Grammar, syntaxAnalyser: SyntaxAnalyser? = null, formatter: Formatter? = null, semanticAnalyser: SemanticAnalyser? = null): LanguageProcessor {

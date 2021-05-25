@@ -169,10 +169,10 @@ grammar Mdl {
     @Test
     fun value_stringList_1() {
         val actual = processor.parse("value", "\"hello\"")
-        val list = actual.root.asBranch.children[0].asBranch.children[0].asBranch.children
+        val list = actual.root.asBranch.children[0].asBranch.children
         assertNotNull(actual)
         assertEquals("value", actual.root.name)
-        assertEquals(3, list.size)
+        assertEquals(1, list.size)
         list.forEach {
             assertEquals("DOUBLE_QUOTE_STRING", it.name)
         }
@@ -182,49 +182,49 @@ grammar Mdl {
     fun value_stringList_2() {
         val actual = processor.parse("value", "\"hello\" \"world\"")
         assertNotNull(actual)
-        assertEquals("BOOLEAN", actual.root.name)
+        assertEquals("value", actual.root.name)
     }
 
     @Test
     fun value_stringList_3() {
         val actual = processor.parse("value", "\"aa\" \"bb\" \"cc\"")
         assertNotNull(actual)
-        assertEquals("BOOLEAN", actual.root.name)
+        assertEquals("value", actual.root.name)
     }
 
     @Test
     fun array() {
         val actual = processor.parse("matrix", "[ on, 1, 3.14, \"hello\" ]")
         assertNotNull(actual)
-        assertEquals("BOOLEAN", actual.root.name)
+        assertEquals("matrix", actual.root.name)
     }
 
     @Test
     fun array1() {
         val actual = processor.parse("matrix", "[ 1.0,2.0,3.0 ]")
         assertNotNull(actual)
-        assertEquals("BOOLEAN", actual.root.name)
+        assertEquals("matrix", actual.root.name)
     }
 
     @Test
     fun array2() {
         val actual = processor.parse("matrix", "[ 1.0, 2.0 ]")
         assertNotNull(actual)
-        assertEquals("BOOLEAN", actual.root.name)
+        assertEquals("matrix", actual.root.name)
     }
 
     @Test
     fun row1() {
         val actual = processor.parse("row", "1.1,2.2")
         assertNotNull(actual)
-        assertEquals("BOOLEAN", actual.root.name)
+        assertEquals("row", actual.root.name)
     }
 
     @Test
     fun matrix() {
         val actual = processor.parse("matrix", "[ 0,1; 2,3 ]")
         assertNotNull(actual)
-        assertEquals("BOOLEAN", actual.root.name)
+        assertEquals("matrix", actual.root.name)
     }
 
 
@@ -241,7 +241,7 @@ grammar Mdl {
         val actual = processor.parse("section", text)
 
         assertNotNull(actual)
-        assertEquals("BOOLEAN", actual.root.name)
+        assertEquals("section", actual.root.name)
     }
 
     @Test
@@ -259,7 +259,7 @@ grammar Mdl {
         val actual = processor.parse("section", text)
 
         assertNotNull(actual)
-        assertEquals("BOOLEAN", actual.root.name)
+        assertEquals("section", actual.root.name)
     }
 
     @Test
@@ -273,7 +273,7 @@ grammar Mdl {
         """.trimIndent())
 
         assertNotNull(actual)
-        assertEquals("BOOLEAN", actual.root.name)
+        assertEquals("section", actual.root.name)
     }
 
     @Test
@@ -289,6 +289,6 @@ grammar Mdl {
         """.trimIndent())
 
         assertNotNull(actual)
-        assertEquals("BOOLEAN", actual.root.name)
+        assertEquals("section", actual.root.name)
     }
 }

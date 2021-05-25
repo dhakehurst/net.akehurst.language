@@ -67,7 +67,7 @@ internal class RuntimeParser(
 
             //val llg = this.graph.longestCompleteNodeFromStart
             //return llg
-            val llg = this.lastGrown.maxWith(Comparator { a, b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
+            val llg = this.lastGrown.maxWithOrNull(Comparator { a, b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
 
             return if (null == llg) {
                 return null

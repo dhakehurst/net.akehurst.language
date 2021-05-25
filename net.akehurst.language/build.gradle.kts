@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-import com.jfrog.bintray.gradle.BintrayExtension
-import com.jfrog.bintray.gradle.tasks.BintrayUploadTask
-import org.gradle.api.publish.maven.internal.artifact.FileBasedMavenArtifact
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import com.github.gmazzo.gradle.plugins.BuildConfigExtension
 
 plugins {
-    kotlin("multiplatform") version "1.4.32" apply false
-    id("com.jfrog.bintray") version ("1.8.5") apply false
-    id("org.jetbrains.dokka") version ("0.10.1") apply false
+    kotlin("multiplatform") version "1.5.10" apply false
+    id("org.jetbrains.dokka") version ("1.4.32") apply false
+    id("com.github.gmazzo.buildconfig") version("3.0.0") apply false
     //id("jacoco")
 }
 
@@ -50,12 +45,24 @@ subprojects {
 
     apply(plugin = "org.jetbrains.kotlin.multiplatform")
     apply(plugin = "maven-publish")
-    apply(plugin = "com.jfrog.bintray")
     apply(plugin = "org.jetbrains.dokka")
+    apply(plugin = "com.github.gmazzo.buildconfig")
 
     repositories {
         mavenCentral()
-        jcenter()
+    }
+
+    configure<BuildConfigExtension> {
+        val now = java.time.Instant.now()
+        fun fBbuildStamp(): String = java.time.format.DateTimeFormatter.ISO_DATE_TIME.withZone(java.time.ZoneId.of("UTC")).format(now)
+        fun fBuildDate(): String = java.time.format.DateTimeFormatter.ofPattern("yyyy-MMM-dd").withZone(java.time.ZoneId.of("UTC")).format(now)
+        fun fBuildTime(): String= java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z").withZone(java.time.ZoneId.of("UTC")).format(now)
+
+        packageName("${project.group}.agl.processor")
+        buildConfigField("String", "version", "\"${project.version}\"")
+        buildConfigField("String", "buildStamp", "\"${fBbuildStamp()}\"")
+        buildConfigField("String", "buildDate", "\"${fBuildDate()}\"")
+        buildConfigField("String", "buildTime", "\"${fBuildTime()}\"")
     }
 
     configure<KotlinMultiplatformExtension> {
@@ -96,96 +103,9 @@ subprojects {
         }
     }
 
-    val now = Instant.now()
-    fun fBbuildStamp(): String {
-        return DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneId.of("UTC")).format(now)
-    }
-
-    fun fBuildDate(): String {
-        return DateTimeFormatter.ofPattern("yyyy-MMM-dd").withZone(ZoneId.of("UTC")).format(now)
-    }
-
-    fun fBuildTime(): String {
-        return DateTimeFormatter.ofPattern("HH:mm:ss z").withZone(ZoneId.of("UTC")).format(now)
-    }
-    tasks.register<Copy>("generateFromTemplates") {
-        val templateContext = mapOf(
-                "version" to project.version,
-                "buildStamp" to fBbuildStamp(),
-                "buildDate" to fBuildDate(),
-                "buildTime" to fBuildTime()
-        )
-        inputs.properties(templateContext) // for gradle up-to-date check
-        from("src/template/kotlin")
-        into("$buildDir/generated/kotlin")
-        expand(templateContext)
-    }
-    tasks.getByName("compileKotlinMetadata") {
-        dependsOn("generateFromTemplates")
-    }
-    tasks.getByName("compileKotlinJvm8") {
-        dependsOn("generateFromTemplates")
-    }
-    tasks.getByName("compileKotlinJs") {
-        dependsOn("generateFromTemplates")
-    }
-    /*
-    tasks.getByName("compileKotlinJsIr") {
-        dependsOn("generateFromTemplates")
-    }
-    tasks.getByName("compileKotlinJsLegacy") {
-        dependsOn("generateFromTemplates")
-    }
-*/
-//    tasks.getByName("compileKotlinMacosX64") {
-//        dependsOn("generateFromTemplates")
-//    }
     dependencies {
         "commonTestImplementation"(kotlin("test"))
         "commonTestImplementation"(kotlin("test-annotations-common"))
-        "jvm8TestImplementation"(kotlin("test-junit"))
-        "jsTestImplementation"(kotlin("test-js"))
-
-        //"commonMainImplementation"(kotlin("stdlib"))
-        //"jvm8MainImplementation"(kotlin("stdlib-jdk8"))
-        //"jsMainImplementation"(kotlin("stdlib-js"))
     }
 
-    configure<BintrayExtension> {
-        user = getProjectProperty("bintrayUser")
-        key = getProjectProperty("bintrayApiKey")
-        publish = true
-        override = true
-        setPublications("kotlinMultiplatform", "metadata", "js", "jvm8")
-        pkg(delegateClosureOf<BintrayExtension.PackageConfig> {
-            repo = "maven"
-            name = "${rootProject.name}"
-            userOrg = user
-            websiteUrl = "https://github.com/dhakehurst/net.akehurst.language"
-            vcsUrl = "https://github.com/dhakehurst/net.akehurst.language"
-            setLabels("kotlin")
-            setLicenses("Apache-2.0")
-        })
-    }
-
-    val bintrayUpload by tasks.getting
-    val publishToMavenLocal by tasks.getting
-    val publishing = extensions.getByType(PublishingExtension::class.java)
-
-    bintrayUpload.dependsOn(publishToMavenLocal)
-
-    tasks.withType<BintrayUploadTask> {
-        doFirst {
-            publishing.publications
-                    .filterIsInstance<MavenPublication>()
-                    .forEach { publication ->
-                        val moduleFile = buildDir.resolve("publications/${publication.name}/module.json")
-                        if (moduleFile.exists()) {
-                            publication.artifact(object : FileBasedMavenArtifact(moduleFile) {
-                                override fun getDefaultExtension() = "module"
-                            })
-                        }
-                    }
-        }
-    }
 }

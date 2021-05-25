@@ -132,6 +132,9 @@ class BuildCacheLC1(
 
     override fun heightGraftInto(prevStateRulePositions: List<RulePosition>, fromStateRuntimeRules: List<RuntimeRule>): Set<HeightGraftInfo> {
         return if (this._cacheOff) {
+            // have to ensure somehow that from grows into prev
+            // have to do closure down from prev,
+            // upCls is the closure down from prev
             val upCls = prevStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSet.UP) }.toSet()
             val calc = calcAndCacheHeightOrGraftInto(prevStateRulePositions, fromStateRuntimeRules, upCls)
             calc
@@ -219,37 +222,40 @@ class BuildCacheLC1(
 
     //for graft, previous must match prevGuard, for height must not match
     private fun calcHeightOrGraftInto(from: List<RuntimeRule>, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
-        // have to ensure somehow that this grows into prev
-        // have to do closure down from prev,
         // upCls is the closure down from prev
-        val upFilt = upCls.filter { from.contains(it.rulePosition.item) }
-        val res = upFilt.flatMap { clsItem ->
-            val parent = clsItem.rulePosition
-            val upLhs = clsItem.parentItem?.lookaheadSet ?: LookaheadSet.UP
-            val pns = parent.next()
-            pns.map { parentNext ->
-                val lhsc = this.stateSet.buildCache.firstOf(parentNext, upLhs)// this.stateSet.expectedAfter(parentNext)
-                val lhs = this.createLookaheadSet(lhsc)
-                HeightGraftInfo(listOf(parent), listOf(parentNext), lhs, upLhs)
+        var grouped = mutableListOf<HeightGraftInfo>()
+        for (fromRp in from) {
+            val upFilt = upCls.filter { fromRp == it.rulePosition.item }
+            val res = upFilt.flatMap { clsItem ->
+                val parent = clsItem.rulePosition
+                val upLhs = clsItem.parentItem?.lookaheadSet ?: LookaheadSet.UP
+                val pns = parent.next()
+                pns.map { parentNext ->
+                    val lhsc = this.stateSet.buildCache.firstOf(parentNext, upLhs)// this.stateSet.expectedAfter(parentNext)
+                    val lhs = this.createLookaheadSet(lhsc)
+                    HeightGraftInfo(listOf(parent), listOf(parentNext), lhs, upLhs)
+                }
             }
+            val grpd = res.groupBy { listOf(it.parent, it.parentNext) }//, it.lhs) }
+                .map {
+                    val parent = it.key[0] as List<RulePosition>
+                    val parentNext = it.key[1] as List<RulePosition>
+                    val lhs = createLookaheadSet(it.value.flatMap { it.lhs.content }.toSet())
+                    val upLhs = createLookaheadSet(it.value.flatMap { it.upLhs.content }.toSet())
+                    HeightGraftInfo((parent), (parentNext), lhs, upLhs)
+                }
+            grouped.addAll(grpd)
         }
-        val grouped = res.groupBy { listOf(it.parent, it.parentNext) }//, it.lhs) }
-            .map {
-                val parent = it.key[0] as List<RulePosition>
-                val parentNext = it.key[1] as List<RulePosition>
-                val lhs = createLookaheadSet(it.value.flatMap { it.lhs.content }.toSet())
-                val upLhs = createLookaheadSet(it.value.flatMap { it.upLhs.content }.toSet())
-                HeightGraftInfo((parent), (parentNext), lhs, upLhs)
-            }
-        val grouped2 = grouped.groupBy { listOf(it.lhs, it.upLhs) }
+        val grouped2 = grouped.groupBy { listOf(it.parent.first().runtimeRule.kind == RuntimeRuleKind.GOAL, it.lhs, it.upLhs) }
             .map {
                 val parent = it.value.flatMap { it.parent }.toSet().toList()
                 val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
-                val lhs = it.key[0] as LookaheadSet
-                val upLhs = it.key[1] as LookaheadSet
+                val lhs = it.key[1] as LookaheadSet
+                val upLhs = it.key[2] as LookaheadSet
                 HeightGraftInfo(parent, parentNext, lhs, upLhs)
             }
-        return grouped2.toSet()
+        //return grouped2.toSet() //TODO: returns wrong because for {A,B}-H->{C,D} maybe only A grows into C & B into D
+        return grouped.toSet() //TODO: gives too many heads in some cases where can be grouped2
     }
 
     // return the 'closure' of the parent.rulePosition
@@ -436,7 +442,7 @@ class BuildCacheLC1(
                 items.add(item)
                 //for (rr in item.rulePosition.items) {
                 val rr = item.rulePosition.item
-                if (null!=rr) {
+                if (null != rr) {
                     when (rr.kind) {
                         RuntimeRuleKind.TERMINAL,
                         RuntimeRuleKind.EMBEDDED -> {

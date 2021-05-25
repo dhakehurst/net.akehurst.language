@@ -1,15 +1,26 @@
 plugins {
-    id("net.akehurst.kotlin.kt2ts") version "1.6.0"
-    id("java-library")
+    id("net.akehurst.kotlin.kt2ts") version "1.7.0"
+   // id("java-library")
     //jacoco
 }
 
-tasks.withType<ProcessResources> {
-    filesMatching("**/package.json") {
-        expand(project.properties)
+kotlin {
+    js("js") {
+        binaries.library()
+        compilations["main"].packageJson {
+            customField("author", mapOf(
+                "name" to "Dr. David H. Akehurst",
+                "email" to "dr.david.h@akehurst.net",
+                "url" to "https://medium.com/@dr.david.h.akehurst"
+            ))
+            customField("license", "Apache-2.0")
+            customField("keywords", listOf("parser","grammar","langauge", "agl"))
+            customField("homepage", "https://github.com/dhakehurst/net.akehurst.language")
+            customField("description:", "Generic Language (DSL) support, (parser, syntax-analyser, formatter, processor, etc), built using Kotlin multiplatform")
+        }
     }
 }
-/*
+
 kt2ts {
     jvmTargetName.set("jvm8")
     jsTargetName.set("js")
@@ -24,7 +35,7 @@ kt2ts {
             "net.akehurst.language.agl.processor.Agl"
     ))
 }
-*/
+
 /*
 tasks {
     val dokkaJavadoc by creating(org.jetbrains.dokka.gradle.DokkaTask::class) {

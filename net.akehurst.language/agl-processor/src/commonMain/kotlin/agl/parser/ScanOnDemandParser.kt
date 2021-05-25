@@ -73,7 +73,7 @@ class ScanOnDemandParser(
                 }
             }
             // prefer literals over patterns
-            val longest = matches.maxWith(Comparator<SPPTLeaf> { l1, l2 ->
+            val longest = matches.maxWithOrNull(Comparator<SPPTLeaf> { l1, l2 ->
                 when {
                     l1.isLiteral && l2.isPattern -> 1
                     l1.isPattern && l2.isLiteral -> -1
@@ -236,7 +236,9 @@ class ScanOnDemandParser(
                 }
             }
         }
-        val maxLastLocation: InputLocation = r.map { input.locationFor(it.first.startPosition, it.first.nextInputPosition-it.first.startPosition) }.maxBy { it.endPosition } ?: error("Internal error")
+        val maxLastLocation: InputLocation = r.map { input.locationFor(it.first.startPosition, it.first.nextInputPosition-it.first.startPosition) }
+            .maxByOrNull { it.endPosition }
+            ?: error("Internal error")
         val fr = r.filter { it.first.nextInputPosition == maxLastLocation.endPosition }
         val res = fr.flatMap { it.second }.toSet()
         return Pair(maxLastLocation, res)
