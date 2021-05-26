@@ -66,7 +66,7 @@ class ScanOnDemandParser(
                 if (null == match) {
                     null
                 } else {
-                    val ni = nextInputPosition + match.length
+                    val ni = nextInputPosition + match.matchedText.length
                     val leaf = SPPTLeafFromInput(input, it, startPosition, ni, (if (it.isPattern) 0 else 1))
                     //leaf.eolPositions = match.eolPositions
                     leaf

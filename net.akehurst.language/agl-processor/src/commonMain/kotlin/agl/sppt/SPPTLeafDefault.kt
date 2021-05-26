@@ -90,7 +90,9 @@ class SPPTLeafDefault(
             override var parent: SPPTBranch?
                 get() = TODO("not implemented")
                 set(value) {TODO("not implemented")}
-
+            override fun setTags(arg: List<String>) {
+                TODO("not implemented")
+            }
             override fun contains(other: SPPTNode): Boolean {
                 TODO("not implemented")
             }
@@ -119,6 +121,11 @@ class SPPTLeafDefault(
             }
         }
     }
+
+    override fun setTags(tags: List<String>) {
+        tagList.addAll(tags)
+    }
+
     // --- SPPTNode ---
 
     override val nonSkipMatchedText: String get() = if (isSkip) "" else this.matchedText

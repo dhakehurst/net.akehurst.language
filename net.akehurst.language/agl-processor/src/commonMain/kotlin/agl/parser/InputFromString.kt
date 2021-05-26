@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.parser
 
 import agl.runtime.graph.CompletedNodesStore
+import net.akehurst.language.agl.regex.RegexMatcher
 import net.akehurst.language.agl.regex.matchAtStart
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.sppt.SPPTLeafDefault
@@ -74,20 +75,20 @@ class InputFromString(
     }
 
     //TODO: write a scanner that counts eols as it goes, rather than scanning the text twice
-    //fun eolPositions(text: String): List<Int> {
-    //    return EOL_PATTERN.findAll(text).map { it.range.first }
-    //}
+    fun eolPositions(text: String): List<Int> {
+        return EOL_PATTERN.findAll(text).map { it.range.first }.toList()
+    }
 
-    private fun matchLiteral(position: Int, patternText: String): String? {//RegexMatcher.MatchResult? {
+    private fun matchLiteral(position: Int, patternText: String):RegexMatcher.MatchResult? {
         val stext = this.text.substring(position)
         val match = stext.startsWith(patternText)//regionMatches(position, patternText, 0, patternText.length, false)
         val matchedText = if (match) patternText else null
         return if (null == matchedText) {
             null
         } else {
-            //val eolPositions = this.eolPositions(matchedText)
-            //RegexMatcher.MatchResult(matchedText, eolPositions)
-            matchedText
+            val eolPositions = this.eolPositions(matchedText)
+            RegexMatcher.MatchResult(matchedText, eolPositions)
+            //matchedText
         }
     }
 
@@ -108,15 +109,15 @@ class InputFromString(
         }
     }
 
-    private fun matchRegEx2(position: Int, regex: Regex): String? {//RegexMatcher.MatchResult? {
+    private fun matchRegEx2(position: Int, regex: Regex): RegexMatcher.MatchResult? {
         val stext = this.text.substring(position)
         val matchedText = regex.matchAtStart(stext)
         return if (null == matchedText)
             null
         else {
-            //val eolPositions = this.eolPositions(matchedText)
-            //RegexMatcher.MatchResult(matchedText, eolPositions)
-            matchedText
+            val eolPositions = this.eolPositions(matchedText)
+            RegexMatcher.MatchResult(matchedText, eolPositions)
+            //matchedText
         }
     }
     private fun matchRegEx3(position: Int, regex: Regex): String? {//RegexMatcher.MatchResult? {
@@ -130,9 +131,9 @@ class InputFromString(
             match.value
         }
     }
-    internal fun tryMatchText(position: Int, terminalRule: RuntimeRule): String? {//RegexMatcher.MatchResult? {
+    internal fun tryMatchText(position: Int, terminalRule: RuntimeRule): RegexMatcher.MatchResult? {
         val matched = when {
-            (position >= this.text.length) -> if (terminalRule.value == END_OF_TEXT) END_OF_TEXT else null//RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
+            (position >= this.text.length) -> if (terminalRule.value == END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
             terminalRule.isPattern -> this.matchRegEx2(position, terminalRule.patternAtStart!!)
             else -> this.matchLiteral(position, terminalRule.value)
             //else ->pattern.match(this.text, position)
@@ -179,9 +180,9 @@ class InputFromString(
                 SPPTLeafDefault.NONE
             } else {
                 //val location = this.nextLocation(lastLocation, match.length)//match.matchedText.length)
-                val nextInputPosition = atInputPosition + match.length
+                val nextInputPosition = atInputPosition + match.matchedText.length
                 val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, nextInputPosition,0)//.matchedText, 0)
-                //leaf.eolPositions = match.eolPositions
+                leaf.eolPositions = match.eolPositions
                 this.leaves[terminalRuntimeRule, atInputPosition] = leaf
                 //val cindex = CompleteNodeIndex(terminalRuntimeRule.number, inputPosition)//0, index.startPosition)
                 //this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice

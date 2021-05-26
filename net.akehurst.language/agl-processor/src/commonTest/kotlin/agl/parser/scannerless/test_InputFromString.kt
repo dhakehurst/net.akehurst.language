@@ -238,7 +238,7 @@ class test_InputFromString {
         val rr = RuntimeRule(0,1,"'abc'","abc",RuntimeRuleKind.TERMINAL,false,false)
         val actual = sut.tryMatchText(0, rr)
 
-        assertEquals("abc", actual)
+        assertEquals("abc", actual?.matchedText)
     }
 
     @Test
@@ -249,7 +249,7 @@ class test_InputFromString {
         val rr = RuntimeRule(0,1,"'[a-c]'","[a-c]",RuntimeRuleKind.TERMINAL,true,false)
         val actual = sut.tryMatchText(0, rr)
 
-        assertEquals("a", actual)
+        assertEquals("a", actual?.matchedText)
     }
 
     @Test
@@ -260,7 +260,7 @@ class test_InputFromString {
         val rr = RuntimeRule(0,1,"'[a-c]'","[a-c]",RuntimeRuleKind.TERMINAL,true,false)
         val actual = sut.tryMatchText(1, rr)
 
-        assertEquals("b", actual)
+        assertEquals("b", actual?.matchedText)
     }
     //TODO:....tryMatchText
 

@@ -39,7 +39,7 @@ class SPPTLeafFromInput(
     override val location: InputLocation get() = input.locationFor(startPosition,matchedTextLength)
     override val lastLeaf: SPPTLeaf get() = this
     override val asLeaf: SPPTLeaf get() = this
-    override lateinit var tagList: List<String>// = mutableListOf<String>()
+    override  var tagList: List<String> = mutableListOf<String>() //TODO: initialise late
     override lateinit var eolPositions: List<Int> // = emptyList()
 
     override val matchedText: String get() = input[startPosition, nextInputPosition]
@@ -54,6 +54,10 @@ class SPPTLeafFromInput(
                 else -> null
             }
         }
+    }
+
+    override fun setTags(tags: List<String>) {
+        this.tagList = tags
     }
 
     // --- SPPTNode ---

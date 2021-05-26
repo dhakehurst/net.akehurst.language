@@ -44,22 +44,24 @@ class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<String>> {
     }
 
     override fun visit(target: SPPTLeaf, arg: List<String>) {
+        target.setTags(arg+target.name)
         when {
             target.isEmptyMatch -> { /* do nothing */
             }
             target.eolPositions.isEmpty() -> {
-                (target.tagList as MutableList<String>).addAll(arg)
-                (target.tagList as MutableList<String>).add(target.name)
+                //(target.tagList as MutableList<String>).addAll(arg)
+                //(target.tagList as MutableList<String>).add(target.name)
                 lines.getOrCreate(target.location.line - 1).add(target)
             }
             else -> {
-                val rr = (target as SPPTLeafDefault).runtimeRule
+                val rr = (target as SPPTLeafFromInput).runtimeRule
                 var line = target.location.line
                 var startLinePos = 0
                 var startPos = target.location.position
                 var column = target.location.column
                 target.eolPositions.forEach { eolPos ->
                     val lineText = target.matchedText.substring(startLinePos, eolPos + 1)
+                    //TODO: use SPPTLeafFromInput
                     val segmentLeaf = SPPTLeafDefault(rr, InputLocation(startLinePos + startPos, column, line, lineText.length), false, lineText, target.priority)
                     lines.getOrCreate(line - 1).add(segmentLeaf)
                     line++
@@ -69,6 +71,7 @@ class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<String>> {
                 // add remaining text if there is any
                 val lineText = target.matchedText.substring(startLinePos)
                 if (lineText.isNotEmpty()) {
+                    //TODO: use SPPTLeafFromInput
                     val segmentLeaf = SPPTLeafDefault(rr, InputLocation(startLinePos + startPos, column, line, lineText.length), false, lineText, target.priority)
                     lines.getOrCreate(line - 1).add(segmentLeaf)
                 }
