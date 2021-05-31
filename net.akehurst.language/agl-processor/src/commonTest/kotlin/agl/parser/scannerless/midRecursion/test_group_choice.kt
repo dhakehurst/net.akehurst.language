@@ -23,13 +23,25 @@ import kotlin.test.Test
 
 class test_group_choice : test_ScanOnDemandParserAbstract() {
 
+    /*
+    skip W = "\\s+"
+    S = rules
+    rules = normalRule*
+    normalRule = ID '=' choice ';'
+    choice = priorityChoice | longestChoice
+    priorityChoice = concatItem+
+    longestChoice = concatItem+
+    concatItem ID | group
+    group = '(' choice ')'
+    ID = "[a-zA-Z]+"
+     */
     private companion object {
         val rrs = runtimeRuleSet {
             skip("W") { pattern("\\s+") }
             concatenation("S") { ref("rules") }
             multi("rules",0,-1,"normalRule")
             concatenation("normalRule") { ref("ID"); literal("="); ref("choice"); literal(";")}
-            choice("choice", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("choice", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
                 ref("priorityChoice")
                 ref("longestChoice")
             }
@@ -62,7 +74,7 @@ class test_group_choice : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2,
                 expectedTrees = *arrayOf(expected)
         )
     }

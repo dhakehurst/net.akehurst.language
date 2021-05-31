@@ -86,6 +86,8 @@ class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         //NOTE: season 35, long expression is dropped in favour of the shorter one!
+        //TODO: if we can implement better combination of states, then this should need only 1 head
+        // currently the "if var then" bit ends up on diff states
 
         val actual = super.test(
                 rrs = rrs,

@@ -20,6 +20,7 @@ import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.ParseGraph
+import net.akehurst.language.agl.runtime.graph.PreviousInfo
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
@@ -223,7 +224,7 @@ class ScanOnDemandParser(
                             when (tr.action) {
                                 Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
                                 Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.lookahead)
-                                Transition.ParseAction.EMBED -> TODO()
+                                Transition.ParseAction.EMBED -> lg.currentState.firstOf(lg.lookahead)
                                 Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.lookahead).content
                                 Transition.ParseAction.GRAFT -> rp.stateSet.createWithParent(tr.lookaheadGuard, prev.lookahead).content
                                 Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
@@ -244,7 +245,7 @@ class ScanOnDemandParser(
         return Pair(maxLastLocation, res)
     }
 
-    private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromString, gns: List<GrowingNode>): Set<RuntimeRule> {
+    private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromString, gns: List<Pair<GrowingNode, Collection<PreviousInfo>?>>): Set<RuntimeRule> {
         // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
 
         val matches = gns.toMutableList()
@@ -258,17 +259,45 @@ class ScanOnDemandParser(
             for (gn in rp.lastGrown) {
                 // may need to change this to finalInputPos!
                 if (input.isEnd(gn.nextInputPosition)) {
-                    matches.add(gn)
+                    // lastGrown is combination of growing and toGrow
+                    //  the previous of groowing is on the node, of toGrow is in the Map
+                    val prev = rp.toGrowPrevious[gn] ?: gn.previous.values
+                    matches.add(Pair(gn, prev))
                 }
             }
         } while (rp.canGrow && graph.goals.isEmpty())
 
-        val nextExpected = matches
-            .filter { it.canGrowWidth }
-            .flatMap { it.nextExpectedItems }
-            .toSet()
-        return nextExpected
+        //val nextExpected = matches
+        //    .filter { it.canGrowWidth }
+        //    .flatMap { it.nextExpectedItems }
+        //    .toSet()
+        //return nextExpected
+
+        val trans_lh_pairs = matches.flatMap { gn_prev ->
+            val gn = gn_prev.first
+            val prev = gn_prev.second?.map { it.node.currentState }
+            val trans = rp.transitionsEndingInNonEmptyFrom(gn.currentState, prev?.toSet())
+            trans.map { tr ->
+                val lh = tr.lookaheadGuard.resolve(gn.lookahead)
+                Pair(tr, lh)
+            }
+        }.toSet()
+
+        val result = trans_lh_pairs.flatMap { tr_lh ->
+            val tr = tr_lh.first
+            val lh = tr_lh.second
+            when(tr.action) {
+                Transition.ParseAction.GOAL -> lh
+                Transition.ParseAction.WIDTH -> tr.to.runtimeRules
+                Transition.ParseAction.GRAFT -> lh
+                Transition.ParseAction.GRAFT_OR_HEIGHT -> lh
+                Transition.ParseAction.HEIGHT -> lh
+                Transition.ParseAction.EMBED -> TODO()
+            }
+        }.toSet()
+        return result
     }
+
 
     override fun expectedAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule> {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
@@ -282,12 +311,13 @@ class ScanOnDemandParser(
         rp.start(0, LookaheadSet.EOT)
         var seasons = 1
 
-        val matches = mutableListOf<GrowingNode>()
+        val matches = mutableListOf<Pair<GrowingNode, Collection<PreviousInfo>?>>()
         do {
             rp.grow(false)
             for (gn in rp.lastGrown) {
                 if (input.isEnd(gn.nextInputPosition)) {
-                    matches.add(gn)
+                    val prev = rp.toGrowPrevious[gn]
+                    matches.add(Pair(gn, prev))
                 }
             }
             seasons++

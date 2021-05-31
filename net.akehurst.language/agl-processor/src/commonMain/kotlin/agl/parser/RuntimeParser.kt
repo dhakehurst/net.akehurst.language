@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.parser
 
 import agl.sppt.SPPTBranchFromInputAndGrownChildren
+import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNode
@@ -114,7 +115,7 @@ internal class RuntimeParser(
 
     // copy of graph growing head for each iteration, cached to that we can find best match in case of error
     private var toGrow: List<GrowingNode> = listOf()
-    private var toGrowPrevious = mutableMapOf<GrowingNode, Collection<PreviousInfo>>()
+    internal var toGrowPrevious = mutableMapOf<GrowingNode, Collection<PreviousInfo>>()
     private var interruptedMessage: String? = null
 
 
@@ -128,7 +129,7 @@ internal class RuntimeParser(
         this.graph.start(gState, startPosition, possibleEndOfText) //TODO: remove LH
         if (this.stateSet.isSkip) {
         } else {
-            this.tryGrowInitialSkip()
+            this.tryGrowInitialSkip(true) //TODO: think this might allow some wrong things, might be a better way
         }
     }
 
@@ -242,7 +243,7 @@ internal class RuntimeParser(
 
     }
 
-    fun tryGrowInitialSkip() {
+    fun tryGrowInitialSkip(noLookahead:Boolean) {
         this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
         this.toGrowPrevious.clear()
         this.graph.growingHead.clear()
@@ -250,7 +251,7 @@ internal class RuntimeParser(
             checkInterrupt()
             val skipLhc = gn.currentState.rulePositions.flatMap { this.stateSet.buildCache.firstOf(it, LookaheadSet.EOT) }.toSet()
             val skipLh = this.stateSet.createLookaheadSet(skipLhc)
-            val skipNodes = this.tryParseSkipUntilNone(skipLh, gn.startPosition)
+            val skipNodes = this.tryParseSkipUntilNone(skipLh, gn.startPosition, noLookahead)
             gn.children.appendSkipIfNotEmpty(skipNodes) //ok because gn.children should be empty
             val gi = GrowingNode.index(gn.currentState, gn.lookahead, gn.children)
             this.graph.addGrowingHead(gi, gn)
@@ -312,7 +313,7 @@ internal class RuntimeParser(
                         Transition.ParseAction.GRAFT -> doGraft(gn, previous, tr, noLookahead)
                         Transition.ParseAction.GRAFT_OR_HEIGHT -> error("Should never happen")
                         Transition.ParseAction.GOAL -> error("Should never happen")
-                        Transition.ParseAction.EMBED -> doEmbedded(gn, setOf(previous), tr)
+                        Transition.ParseAction.EMBED -> doEmbedded(gn, setOf(previous), tr, noLookahead)
                     }
                 }
                 else -> {
@@ -338,7 +339,7 @@ internal class RuntimeParser(
                                 Transition.ParseAction.GRAFT -> doGraft(gn, previous, tr, noLookahead)
                                 Transition.ParseAction.GRAFT_OR_HEIGHT -> error("Should never happen")
                                 Transition.ParseAction.GOAL -> error("Should never happen")
-                                Transition.ParseAction.EMBED -> doEmbedded(gn, setOf(previous), tr)
+                                Transition.ParseAction.EMBED -> doEmbedded(gn, setOf(previous), tr, noLookahead)
                             }
                         }
                     }
@@ -358,7 +359,7 @@ internal class RuntimeParser(
 //TODO: skip gets parsed multiple times
             //val skipLh = transition.lookaheadGuard.createWithParent(curGn.lookahead)
             val skipLh = this.stateSet.createWithParent(transition.lookaheadGuard,curGn.lookahead)
-            val skipNodes = this.tryParseSkipUntilNone(skipLh, l.nextInputPosition)//, lh) //TODO: does the result get reused?
+            val skipNodes = this.tryParseSkipUntilNone(skipLh, l.nextInputPosition,noLookahead)//, lh) //TODO: does the result get reused?
             val nextInput = skipNodes.lastOrNull()?.nextInputPosition ?: l.nextInputPosition
             //val lastLocation = skipNodes.lastOrNull()?.location ?: l.location
 
@@ -433,11 +434,11 @@ internal class RuntimeParser(
         }
     }
 
-    private fun tryParseSkipUntilNone(lookaheadSet: LookaheadSet, startPosition: Int): List<SPPTNode> {
+    private fun tryParseSkipUntilNone(lookaheadSet: LookaheadSet, startPosition: Int, noLookahead: Boolean): List<SPPTNode> {
         return when {
             null == skipParser -> emptyList<SPPTNode>()
             else -> {
-                val skipNode = tryParseSkip(lookaheadSet, startPosition)
+                val skipNode = tryParseSkip(lookaheadSet, startPosition,noLookahead)
                 when (skipNode) {
                     null -> emptyList<SPPTNode>()
                     else -> skipNode.asBranch.children[0].asBranch.children.flatMap { it.asBranch.children }
@@ -450,14 +451,14 @@ internal class RuntimeParser(
     private val skipParser =
         skipStateSet?.let { RuntimeParser(it, null, skipStateSet.userGoalRule, LookaheadSet.EMPTY, InputFromString(skipStateSet.usedTerminalRules.size, this.input.text)) }
 
-    private fun tryParseSkip(lookaheadSet: LookaheadSet, startPosition: Int): SPPTNode? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
+    private fun tryParseSkip(lookaheadSet: LookaheadSet, startPosition: Int, noLookahead: Boolean): SPPTNode? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
         skipParser!!.reset(lookaheadSet)
         //val startLocation = InputLocation(startPosition, lastLocation.column, lastLocation.line, 0) //TODO: compute correct line and column
         skipParser.start(startPosition, lookaheadSet)
         var seasons = 1
         var maxNumHeads = skipParser.graph.growingHead.size
         do {
-            skipParser.grow(false)
+            skipParser.grow(noLookahead)
             seasons++
             maxNumHeads = max(maxNumHeads, skipParser.graph.growingHead.size)
         } while (skipParser.graph.canGrow && (skipParser.graph.goals.isEmpty() || skipParser.graph.goalMatchedAll.not()))
@@ -498,7 +499,7 @@ internal class RuntimeParser(
         //       println(transition)
     }
 */
-    private fun doEmbedded(gn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition) {
+    private fun doEmbedded(gn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition, noLookahead:Boolean) {
         val embeddedRule = transition.to.runtimeRules.first() // should only ever be one
         val endingLookahead = transition.lookaheadGuard.content
         val embeddedRuntimeRuleSet = embeddedRule.embeddedRuntimeRuleSet ?: error("Should never be null")
@@ -526,5 +527,27 @@ internal class RuntimeParser(
         } else {
             // do nothing, could not parse embedded
         }
+    }
+
+    internal fun transitionsFrom(state:ParserState, previous:Set<ParserState>?) :Set<Transition> {
+        return when (state.runtimeRules.first().kind) {//FIXME
+            RuntimeRuleKind.GOAL -> state.transitions(null)
+            RuntimeRuleKind.TERMINAL -> previous!!.flatMap { prevState -> state.transitions(prevState) }
+            RuntimeRuleKind.NON_TERMINAL -> previous!!.flatMap { prevState -> state.transitions(prevState) }
+            RuntimeRuleKind.EMBEDDED -> previous!!.flatMap { prevState -> state.transitions(prevState) }
+        }.toSet()
+    }
+    internal fun transitionsEndingInNonEmptyFrom(state:ParserState, previous:Set<ParserState>?) :Set<Transition> {
+        val tr = transitionsFrom(state, previous)
+        val neTr = tr.flatMap{
+            val toState = it.to
+            if (toState.runtimeRules.any { it.isEmptyRule }){
+                val prev = setOf(it.from)
+                transitionsEndingInNonEmptyFrom(toState, prev)
+            } else {
+                listOf(it)
+            }
+        }
+        return neTr.toSet()
     }
 }

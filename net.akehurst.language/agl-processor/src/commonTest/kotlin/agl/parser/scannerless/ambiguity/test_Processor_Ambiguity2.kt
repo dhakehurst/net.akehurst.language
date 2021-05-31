@@ -76,7 +76,7 @@ class test_Processor_Ambiguity2 : test_ScanOnDemandParserAbstract() {
         val sentence = "aa"
 
         val expected = """
-            S {
+            S|1 {
               S1 {
                 S { 'a' }
                 S { 'a' }

@@ -124,7 +124,7 @@ class test_embedded1 : test_ScanOnDemandParserAbstract() {
             super.test(S, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(3, ex.location.column)
+        assertEquals(2, ex.location.column)
         assertEquals(setOf("'a'"), ex.expected)
     }
 

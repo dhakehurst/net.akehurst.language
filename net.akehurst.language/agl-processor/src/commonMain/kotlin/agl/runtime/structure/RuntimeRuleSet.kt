@@ -35,6 +35,26 @@ class LookaheadSet(
         val UP = LookaheadSet(-3, setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
     }
 
+    fun resolve(runtimeLookahead: LookaheadSet): Set<RuntimeRule> {
+        return when {
+            LookaheadSet.UP == runtimeLookahead -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
+            LookaheadSet.ANY == this -> this.content
+            null == runtimeLookahead -> this.content
+            LookaheadSet.UP == this -> runtimeLookahead.content
+            else -> {
+                var result = mutableSetOf<RuntimeRule>()
+                for (rr in this.content) {
+                    if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
+                        result.addAll(runtimeLookahead.content)
+                    } else {
+                        result.add(rr)
+                    }
+                }
+                result
+            }
+        }
+    }
+
     override fun hashCode(): Int = number
     override fun equals(other: Any?): Boolean = when {
         other is LookaheadSet -> this.number == other.number
