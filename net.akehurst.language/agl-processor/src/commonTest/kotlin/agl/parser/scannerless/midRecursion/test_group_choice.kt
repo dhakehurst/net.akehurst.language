@@ -14,22 +14,34 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.rightRecursive
+package net.akehurst.language.parser.scanondemand.midRecursion
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_group_choice : test_ScannerlessParserAbstract() {
+class test_group_choice : test_ScanOnDemandParserAbstract() {
 
-    companion object {
-        val S = runtimeRuleSet {
+    /*
+    skip W = "\\s+"
+    S = rules
+    rules = normalRule*
+    normalRule = ID '=' choice ';'
+    choice = priorityChoice | longestChoice
+    priorityChoice = concatItem+
+    longestChoice = concatItem+
+    concatItem ID | group
+    group = '(' choice ')'
+    ID = "[a-zA-Z]+"
+     */
+    private companion object {
+        val rrs = runtimeRuleSet {
             skip("W") { pattern("\\s+") }
             concatenation("S") { ref("rules") }
             multi("rules",0,-1,"normalRule")
             concatenation("normalRule") { ref("ID"); literal("="); ref("choice"); literal(";")}
-            choice("choice", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("choice", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
                 ref("priorityChoice")
                 ref("longestChoice")
             }
@@ -45,32 +57,83 @@ class test_group_choice : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun a() {
+    fun rEQaSEMI() {
         val sentence = "r=a;"
         val goal = "S"
+
         val expected = """
-            S { W { "\s+" : ' ' } }
+         S { rules { normalRule {
+              ID : 'r'
+              '='
+              choice|1 { longestChoice { concatItem { ID : 'a' } } }
+              ';'
+            } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 2,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun bac() {
         val sentence = "r=(a);"
         val goal = "S"
+
         val expected = """
-            S { W { "\s+" : ' ' } }
+         S { rules { normalRule {
+              ID : 'r'
+              '='
+              choice|1 { longestChoice { concatItem|1 { group {
+                      '('
+                      choice|1 { longestChoice { concatItem { ID : 'a' } } }
+                      ')'
+                    } } } }
+              ';'
+            } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
     @Test
     fun bbacc() {
         val sentence = "r=((a));"
         val goal = "S"
+
         val expected = """
-             S { W { "\s+" : ' ' } }
+ S { rules { normalRule {
+      ID : 'r'
+      '='
+      choice|1 { longestChoice { concatItem|1 { group {
+              '('
+              choice|1 { longestChoice { concatItem|1 { group {
+                      '('
+                      choice|1 { longestChoice { concatItem { ID : 'a' } } }
+                      ')'
+                    } } } }
+              ')'
+            } } } }
+      ';'
+    } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

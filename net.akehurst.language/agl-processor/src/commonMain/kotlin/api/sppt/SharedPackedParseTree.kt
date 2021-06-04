@@ -24,7 +24,7 @@ import kotlin.js.JsName
  *
  * A traditional ParseTree would be a special case (sub type) of an SharedPackedParseForest that contains only one tree.
  */
-interface SharedPackedParseTree : SharedPackedParseTreeVisitable {
+interface SharedPackedParseTree {
 
     /**
      * Diagnostic info.

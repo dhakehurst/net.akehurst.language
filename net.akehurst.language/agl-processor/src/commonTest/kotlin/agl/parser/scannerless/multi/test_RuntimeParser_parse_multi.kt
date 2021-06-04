@@ -14,145 +14,28 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.multi
+package net.akehurst.language.parser.scanondemand.multi
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import net.akehurst.language.agl.sppt.SPPTParser
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
+class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract() {
 
     val rrb = RuntimeRuleSetBuilder()
 
     private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
-        return sp.parse(goalRuleName, inputText)
+        return sp.parse(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1)
     }
 
-
-    // r = a[2..5]
-    // a = 'a'
-    private fun multi_2_5_a(): ScanOnDemandParser {
-        val r0 = rrb.literal("a")
-        val r1 = rrb.rule("r").multi(2, 5, r0)
-        return ScanOnDemandParser(rrb.ruleSet())
-    }
-
-    @Test
-    fun multi_2_5_a__r__empty_fails() {
-        val sp = multi_2_5_a()
-        val goalRuleName = "r"
-        val inputText = ""
-
-        val e = assertFailsWith(ParseFailedException::class) {
-            test_parse(sp, goalRuleName, inputText)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
-        assertEquals(setOf("'a'"), e.expected)
-    }
-
-    @Test
-    fun multi_2_5_a__r__a_fails() {
-        val sp = multi_2_5_a()
-        val goalRuleName = "r"
-        val inputText = "a"
-
-        val e = assertFailsWith(ParseFailedException::class) {
-            test_parse(sp, goalRuleName, inputText)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
-        assertEquals(setOf("'a'"), e.expected)
-    }
-
-    @Test
-    fun multi_2_5_a__r__aa() {
-        val sp = multi_2_5_a()
-        val goalRuleName = "r"
-        val inputText = "aa"
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
-
-    @Test
-    fun multi_2_5_a__r__aaa() {
-        val sp = multi_2_5_a()
-        val goalRuleName = "r"
-        val inputText = "aaa"
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'a' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
-
-    @Test
-    fun multi_2_5_a__r__aaaa() {
-        val sp = multi_2_5_a()
-        val goalRuleName = "r"
-        val inputText = "aaaa"
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'a' 'a' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
-
-    @Test
-    fun multi_2_5_a__r__aaaaa() {
-        val sp = multi_2_5_a()
-        val goalRuleName = "r"
-        val inputText = "aaaaa"
-
-        val actual = test_parse(sp, goalRuleName, inputText)
-
-        assertNotNull(actual)
-
-        val p = SPPTParser(rrb)
-        val expected = p.addTree("r {'a' 'a' 'a' 'a' 'a'}")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
-    }
-
-    @Test
-    fun multi_2_5_a__r__a6_fails() {
-        val sp = multi_2_5_a()
-        val goalRuleName = "r"
-        val inputText = "aaaaaa"
-
-        val e = assertFailsWith(ParseFailedException::class) {
-            test_parse(sp, goalRuleName, inputText)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(6, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
-    }
 
     // r = m
     // m = a b? a
@@ -206,7 +89,7 @@ class test_RuntimeParser_parse_multi : test_ScannerlessParserAbstract() {
         assertNotNull(actual)
 
         val p = SPPTParser(rrb)
-        val expected = p.addTree("r { m { 'a' bm { §empty } 'a' } }")
+        val expected = p.addTree("r { m { 'a' bm|1 { §empty } 'a' } }")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
     }

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.concatenation
+package net.akehurst.language.parser.scanondemand.concatenation
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -30,9 +30,8 @@ import kotlin.test.assertNotNull
 class test_RuntimeParser_parse_concatenation {
 
     private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
-        return sp.parse(goalRuleName, inputText)
+        return sp.parse(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1)
     }
-
 
     // S = 'a' 'b' 'c' ;
     private fun abc1(): ScanOnDemandParser {
@@ -51,7 +50,7 @@ class test_RuntimeParser_parse_concatenation {
         val actual = test_parse(sp, goalRuleName, inputText)
 
         assertNotNull(actual)
-        assertEquals(11,actual.seasons)
+        assertEquals(9,actual.seasons)
     }
 
     @Test
@@ -107,7 +106,7 @@ class test_RuntimeParser_parse_concatenation {
         }
         assertEquals(1, ex.location.line, "line is wrong")
         assertEquals(4, ex.location.column, "column is wrong")
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), ex.expected)
     }
 
     // S = a b c;
@@ -184,7 +183,7 @@ class test_RuntimeParser_parse_concatenation {
         }
         assertEquals(1, ex.location.line, "line is wrong")
         assertEquals(4, ex.location.column, "column is wrong")
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), ex.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), ex.expected)
     }
 
     // S = ab c;

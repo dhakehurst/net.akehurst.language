@@ -31,6 +31,6 @@ class ParseFailedException(
         val location: InputLocation,
         val expected:Set<String>
 )
-    : RuntimeException(message) {
+    : RuntimeException("$message, at line ${location.line} column ${location.column}, expected one of ${expected}") {
 
 }

@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.agl.grammar.style
 
-import net.akehurst.language.agl.analyser.BranchHandler
-import net.akehurst.language.agl.analyser.SyntaxAnalyserAbstract
+import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserAbstract
 import net.akehurst.language.api.style.AglStyle
 import net.akehurst.language.api.style.AglStyleRule
 import net.akehurst.language.api.sppt.SPPTBranch

@@ -18,16 +18,18 @@ package net.akehurst.language.api.grammar
 
 interface Rule : GrammarVisitable {
 
-	val grammar: Grammar
+    val grammar: Grammar
 
-	val name: String
+    val name: String
 
-	val isSkip: Boolean
+    val isOverride: Boolean
 
-	val isLeaf: Boolean
+    val isSkip: Boolean
 
-	var rhs: RuleItem
+    val isLeaf: Boolean
 
-	val nodeType: NodeType
+    var rhs: RuleItem
+
+    val nodeType: NodeType
 
 }

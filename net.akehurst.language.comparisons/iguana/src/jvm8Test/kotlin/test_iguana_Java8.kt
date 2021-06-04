@@ -16,6 +16,7 @@
 package net.akehurst.language.comparisons.iguana
 
 import iguana.utils.input.Input
+import net.akehurst.language.comparisons.common.FileData
 import net.akehurst.language.comparisons.common.Java8TestFiles
 import net.akehurst.language.comparisons.common.TimeLogger
 import org.iguana.parser.IguanaParser
@@ -30,14 +31,14 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 @RunWith(Parameterized::class)
-class test_iguana_Java8(val file:Path) {
+class test_iguana_Java8(val file:FileData) {
 
     companion object {
         val javaTestFiles = "../javaTestFiles/javac"
 
         @JvmStatic
         @Parameterized.Parameters()//name = "{index}: {0}")
-        fun files(): Collection<Array<Any>> {
+        fun files(): Collection<FileData> {
             return Java8TestFiles.files
         }
 
@@ -52,9 +53,9 @@ class test_iguana_Java8(val file:Path) {
         val specJava8 = createAndBuildParser("/Java8.iggy")
         var input: String? = null
 
-        fun parseWithJava8Spec(file: Path): NonterminalNode? {
+        fun parseWithJava8Spec(file: FileData): NonterminalNode? {
             try {
-                TimeLogger("iguana_spec", file.toString()).use { timer ->
+                TimeLogger("iguana_spec", file).use { timer ->
                     val tree = specJava8.getSPPF(Input.fromString(input))
                     timer.success()
                     return tree
@@ -69,7 +70,7 @@ class test_iguana_Java8(val file:Path) {
     @Before
     fun setUp() {
         try {
-            input = String(Files.readAllBytes(file))
+            input = String(Files.readAllBytes(file.path))
         } catch (e: IOException) {
             e.printStackTrace()
             Assert.fail(e.message)

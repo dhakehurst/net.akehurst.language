@@ -21,26 +21,27 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.comparisons.common.FileData
 import net.akehurst.language.comparisons.common.Java8TestFiles
+import net.akehurst.language.comparisons.common.Results
 import net.akehurst.language.comparisons.common.TimeLogger
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.*
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.IOException
 import java.nio.file.Files
-import java.nio.file.Path
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
 class Java8_compare_Test_antlrSpec(val file: FileData) {
 
     companion object {
-        val javaTestFiles = "../javaTestFiles/javac"
+        const val col = "agl_antlr_spec"
+        var totalFiles = 0
 
         @JvmStatic
         @Parameterized.Parameters(name = "{index}: {0}")
         fun files(): Collection<FileData> {
-            val f = Java8TestFiles.files
+            val f = Java8TestFiles.files.subList(0, 3500) // after 3376 we get java.lang.OutOfMemoryError: Java heap space
+            totalFiles = f.size
             println("Number of files to test against: ${f.size}")
             return f
         }
@@ -49,24 +50,42 @@ class Java8_compare_Test_antlrSpec(val file: FileData) {
             val bytes = Java8_compare_Test_antlrSpec::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
             val proc = Agl.processor(javaGrammarStr)
-            proc.build()
+            // no need to build because, sentence is parsed twice in the test
             return proc
         }
 
-        val specJava8Processor = createAndBuildProcessor("/agl/Java8Spec.agl")
+        val specJava8Processor = createAndBuildProcessor("/agl/Java8AntlrSpec.agl")
 
         var input: String? = null
 
         fun parseWithJava8Spec(file: FileData): SharedPackedParseTree? {
-            val tree = specJava8Processor.parse("compilationUnit", input!!)
-            TimeLogger("agl_spec", file).use { timer ->
-                val tree = specJava8Processor.parse("compilationUnit", input!!)
-                timer.success()
-                return tree
+            return try {
+                specJava8Processor.parse("compilationUnit", input!!)
+                TimeLogger(col, file).use { timer ->
+                    val tree = specJava8Processor.parse("compilationUnit", input!!)
+                    timer.success()
+                    tree
+                }
+            } catch (e: ParseFailedException) {
+                println("Error: ${e.message}")
+                Results.logError(col, file)
+                assertTrue(file.isError)
+                null
             }
         }
-    }
 
+        @BeforeClass
+        @JvmStatic
+        fun init() {
+            Results.reset()
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun end() {
+            Results.write()
+        }
+    }
 
     @Before
     fun setUp() {
@@ -79,9 +98,9 @@ class Java8_compare_Test_antlrSpec(val file: FileData) {
     }
 
     @Test
-    fun spec_compilationUnit() {
-        val tree = parseWithJava8Spec(file)
-        Assert.assertNotNull("Failed to Parse", tree)
+    fun agl_antlr_spec_compilationUnit() {
+        print("File: ${file.index} of $totalFiles")
+        parseWithJava8Spec(file)
     }
 
 }

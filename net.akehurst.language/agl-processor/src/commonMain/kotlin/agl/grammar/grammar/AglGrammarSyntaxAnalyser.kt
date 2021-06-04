@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.sppt2ast
+package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.analyser.BranchHandler
-import net.akehurst.language.agl.analyser.SyntaxAnalyserAbstract
-import net.akehurst.language.api.analyser.GrammarLoader
+import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserAbstract
+import net.akehurst.language.api.syntaxAnalyser.GrammarLoader
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.analyser.SyntaxAnalyserException
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyserException
 import net.akehurst.language.agl.ast.*
 import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 
@@ -46,6 +46,7 @@ class AglGrammarSyntaxAnalyser(
         this.register("choice", this::choice as BranchHandler<RuleItem>)
         this.register("simpleChoice", this::simpleChoice as BranchHandler<RuleItem>)
         this.register("priorityChoice", this::priorityChoice as BranchHandler<RuleItem>)
+        this.register("ambiguousChoice", this::ambiguousChoice as BranchHandler<RuleItem>)
         this.register("concatenation", this::concatenation as BranchHandler<Concatenation>)
         this.register("concatenationItem", this::concatenationItem as BranchHandler<ConcatenationItem>)
         this.register("simpleItem", this::simpleItem as BranchHandler<SimpleItem>)
@@ -128,16 +129,18 @@ class AglGrammarSyntaxAnalyser(
     fun rule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Rule {
         val grammar = arg as GrammarDefault
         val type = this.transform<List<String>>(children[0], arg)
+        val isOverride = type.contains("override")
         val isSkip = type.contains("skip")
         val isLeaf = type.contains("leaf")
         val name = target.nonSkipChildren[1].nonSkipMatchedText
-        val result = RuleDefault(grammar, name, isSkip, isLeaf)
+        val result = RuleDefault(grammar, name, isOverride, isSkip, isLeaf)
         val rhs = this.transform<RuleItem>(children[1], arg)
         result.rhs = rhs
         return result
     }
 
     // ruleTypeLabels : isSkip isLeaf ;
+    // isOverride = 'override' ? ;
     // isSkip = 'leaf' ? ;
     // isLeaf = 'skip' ? ;
     fun ruleTypeLabels(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<String> {
@@ -163,7 +166,7 @@ class AglGrammarSyntaxAnalyser(
         return if (alternative.isEmpty()) {
             EmptyRuleDefault()
         } else {
-            ChoiceEqualDefault(alternative)
+            ChoiceLongestDefault(alternative)
         }
     }
 
@@ -178,7 +181,17 @@ class AglGrammarSyntaxAnalyser(
             ChoicePriorityDefault(alternative)
         }
     }
-
+    // ambiguousChoice : [concatenation / '<']* ;
+    fun ambiguousChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
+        val alternative = children[0].branchNonSkipChildren.mapIndexed { index, it ->
+            this.transform<Concatenation>(it, arg)
+        }
+        return if (alternative.isEmpty()) {
+            EmptyRuleDefault()
+        } else {
+            ChoiceAmbiguousDefault(alternative)
+        }
+    }
     // concatenation : concatenationItem+ ;
     fun concatenation(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Concatenation {
         val items = children[0].branchNonSkipChildren.mapIndexed { index, it ->
@@ -256,9 +269,9 @@ class AglGrammarSyntaxAnalyser(
             val embeddedGrammarRef = nonTerminalRef.substringBeforeLast(".")
             val embeddedStartRuleRef = nonTerminalRef.substringAfterLast(".")
             val embeddedGrammar = GrammarRegistryDefault.find(thisGrammar.namespace.qualifiedName, embeddedGrammarRef)
-            NonTerminalDefault(embeddedStartRuleRef, embeddedGrammar)
+            NonTerminalDefault(embeddedStartRuleRef, embeddedGrammar, true)
         } else {
-            NonTerminalDefault(nonTerminalRef, thisGrammar)
+            NonTerminalDefault(nonTerminalRef, thisGrammar, false)
         }
     }
 
@@ -266,7 +279,12 @@ class AglGrammarSyntaxAnalyser(
     fun terminal(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Terminal {
         val isPattern = target.nonSkipChildren[0].name == "PATTERN"
         val mt = target.nonSkipMatchedText
-        val value = mt.substring(1, mt.length - 1)
+        val escaped = mt.substring(1, mt.length - 1)
+        val value = if (isPattern) {
+            escaped.replace("\\\"", "\"")
+        } else {
+            escaped.replace("\\'", "'").replace("\\\\","\\")
+        }
         return TerminalDefault(value, isPattern)
     }
 

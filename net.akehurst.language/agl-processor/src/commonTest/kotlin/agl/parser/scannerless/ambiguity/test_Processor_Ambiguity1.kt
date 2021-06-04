@@ -14,47 +14,45 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.ambiguity
+package net.akehurst.language.parser.scanondemand.ambiguity
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_Processor_Ambiguity1 : test_ScannerlessParserAbstract() {
+class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
     //TODO: make this use || ambiguouse choice
     /**
-     * S : 'a' S B B | 'a' ;
+     * S : 'a' | 'a' S B B ;
      * B : 'b' ? ;
      */
     /**
-     * S : S1 | 'a' ;
+     * S : 'a' | S1 ;
      * S1 = 'a' S B B ;
      * B : 'b' ? ;
      */
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_B = b.rule("B").multi(0, 1, b.literal("b"))
-        val r_S = b.rule("S").build()
-        val r_S1 = b.rule("S1").concatenation(r_a, r_S, r_B, r_B)
-        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(r_S1, r_a))
-        return b
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                ref("S1")
+            }
+            concatenation("S1") { literal("a"); ref("S"); ref("B"); ref("B") }
+            multi("B", 0, 1, "'b'")
+            literal("'b'", "b")
+        }
+        val goal = "S"
     }
 
     @Test
     fun S_S_empty_fails() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
@@ -62,76 +60,86 @@ class test_Processor_Ambiguity1 : test_ScannerlessParserAbstract() {
 
     @Test
     fun S_S_a() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a"
 
-        val expected1 = """
+        val expected = """
             S { 'a' }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun S_S_aa() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "aa"
 
         val expected1 = """
-            S {
+            S|1 {
               S1 {
                 'a'
                 S { 'a' }
-                B { §empty }
-                B { §empty }
+                B|1 { §empty }
+                B|1 { §empty }
               }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected1)
+        )
     }
 
     @Test
     fun S_S_aab() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "aab"
 
         val expected1 = """
-            S {
+            S|1 {
               S1 {
                 'a'
                 S { 'a' }
                 B { 'b' }
-                B { §empty }
+                B|1 { §empty }
               }
             }
         """.trimIndent()
 
         val expected2 = """
-            S {
+            S|1 {
               S1 {
                 'a'
                 S { 'a' }
-                B { §empty }
+                B|1 { §empty }
                 B { 'b' }
               }
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
+                expectedTrees = *arrayOf(expected1)
+        )
     }
 
     @Test
     fun S_S_aabb() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "aabb"
 
         val expected1 = """
-            S {
+            S|1 {
               S1 {
                 'a'
                 S { 'a' }
@@ -141,26 +149,30 @@ class test_Processor_Ambiguity1 : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
+                expectedTrees = *arrayOf(expected1)
+        )
     }
 
     @Test
     fun S_S_aaabb() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "aaabb"
 
         val expected1 = """
-            S { S1 {
+            S|1 { S1 {
               'a'
-              S { S1 {
+              S|1 { S1 {
                   'a'
                   S { 'a' }
                   B { 'b' }
-                  B { §empty }
+                  B|1 { §empty }
               } }
               B { 'b' }
-              B { §empty }
+              B|1 { §empty }
             } }
         """.trimIndent()
 
@@ -207,19 +219,25 @@ class test_Processor_Ambiguity1 : test_ScannerlessParserAbstract() {
         """.trimIndent()
 
         val expected5 = """
-            S { S1 {
+            S|1 { S1 {
               'a'
-              S { S1 {
+              S|1 { S1 {
                   'a'
                   S { 'a' }
                   B { 'b' }
                   B { 'b' }
               } }
-              B { §empty }
-              B { §empty }
+              B|1 { §empty }
+              B|1 { §empty }
             } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected5) //expected1, expected2, expected3, expected4, expected5)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
+                expectedTrees = *arrayOf(expected5)
+        )
     }
 }

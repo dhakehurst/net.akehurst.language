@@ -30,7 +30,7 @@ internal class test_ForMatthias {
               propertyName = IDENTIFIER ;
               typeName = IDENTIFIER ;
               quantifier = '[0..n]' | '[1]' | '[0..1]' ;
-              IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*" ;
+              leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*" ;
             }
         """.trimIndent()
     private val p = Agl.processor(grammarStr)

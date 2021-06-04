@@ -14,32 +14,30 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.rightRecursive
+package net.akehurst.language.parser.scanondemand.rightRecursive
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.parser.scanondemand.leftRecursive.test_a
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_a : test_ScannerlessParserAbstract() {
+class test_a : test_ScanOnDemandParserAbstract() {
 
     // S =  'a' | S1 ;
     // S1 = 'a' S ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_S = b.rule("S").build()
-        val r_S1 = b.rule("S1").concatenation(r_a, r_S)
-        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE,RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(r_a, r_S1))
-        return b
+    companion object {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                ref("S1")
+            }
+            concatenation("S1") { literal("a"); ref("S") }
+        }
     }
 
     @Test
     fun a() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "a"
 
@@ -47,36 +45,44 @@ class test_a : test_ScannerlessParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        val actual = super.testStringResult(rrb, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
 
     @Test
     fun aa() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "aa"
 
         val expected = """
-            S { S1 { 'a' S { 'a' } } }
+            S|1 { S1 { 'a' S { 'a' } } }
         """.trimIndent()
 
-        val actual = super.testStringResult(rrb, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aaa() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "aaa"
 
         val expected = """
-            S {
+            S|1 {
                 S1 {
                     'a'
-                    S {
+                    S|1 {
                         S1 {
                             'a'
                             S { 'a' }
@@ -86,56 +92,77 @@ class test_a : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.testStringResult(rrb, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a50() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "a".repeat(50)
 
-        val expected = "S { S1 { 'a' ".repeat(49) + "S { 'a' }" +" } }".repeat(49)
+        val expected = "S|1 { S1 { 'a' ".repeat(49) + "S { 'a' }" +" } }".repeat(49)
 
-        val actual = super.test(rrb, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a150() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "a".repeat(150)
 
-        val expected = "S { S1 { 'a' ".repeat(149) + "S { 'a' }" +" } }".repeat(149)
+        val expected = "S|1 { S1 { 'a' ".repeat(149) + "S { 'a' }" +" } }".repeat(149)
 
-        val actual = super.test(rrb, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a500() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "a".repeat(500)
 
-        val expected = "S { S1 { 'a' ".repeat(499) + "S { 'a' }" +" } }".repeat(499)
+        val expected = "S|1 { S1 { 'a' ".repeat(499) + "S { 'a' }" +" } }".repeat(499)
 
-        val actual = super.test(rrb, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a2000() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "a".repeat(2000)
 
-        val expected = "S { S1 { 'a' ".repeat(1999) + "S { 'a' }" +" } }".repeat(1999)
+        val expected = "S|1 { S1 { 'a' ".repeat(1999) + "S { 'a' }" +" } }".repeat(1999)
 
-        val actual = super.test(rrb, goal, sentence, expected)
-        assertEquals(1, actual.maxNumHeads)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

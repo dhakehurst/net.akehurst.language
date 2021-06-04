@@ -15,35 +15,27 @@
  */
 package net.akehurst.language.agl.processor.dot
 
-//import com.soywiz.korio.async.runBlockingNoSuspensions
-//import com.soywiz.korio.file.std.resourcesVfs
-//import java.io.BufferedReader
-//import java.io.InputStreamReader
-import java.util.ArrayList
-
+import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.agl.processor.Agl
 import java.io.BufferedReader
 import java.io.InputStreamReader
-
+import java.util.*
 
 @RunWith(Parameterized::class)
-class test_Dot(val data:Data) {
+class test_Dot(val data: Data) {
 
     companion object {
 
-        private val grammarStr = this::class.java.getResource("/dot/Dot.agl").readText()
-        //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
-        var processor: LanguageProcessor = Agl.processor(grammarStr)
+        private val grammarStr = this::class.java.getResource("/dot/Dot.agl")?.readText() ?: error("File not found")
+        var processor: LanguageProcessor = Agl.processor(grammarStr).buildFor("graph") //TODO: use build
 
         val validDirectory = "/dot/valid/"
-        var validFiles = this::class.java.getResourceAsStream(validDirectory).use { if (null==it) emptyList<String>() else BufferedReader(InputStreamReader(it)).readLines() }
+        var validFiles = this::class.java.getResourceAsStream(validDirectory).use { if (null == it) emptyList<String>() else BufferedReader(InputStreamReader(it)).readLines() }
 
 
         @JvmStatic
@@ -51,7 +43,7 @@ class test_Dot(val data:Data) {
         fun data(): Collection<Array<Any>> {
             val col = ArrayList<Array<Any>>()
             for (file in validFiles) {
-                val text = this::class.java.getResource(validDirectory+file).readText()
+                val text = this::class.java.getResource(validDirectory + file)?.readText() ?: error("File not found")
                 col.add(arrayOf(Data(file, text)))
             }
             return col

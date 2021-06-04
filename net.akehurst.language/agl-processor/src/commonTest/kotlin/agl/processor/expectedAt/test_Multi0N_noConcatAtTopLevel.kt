@@ -25,15 +25,15 @@ class test_Multi0N_noConcatAtTopLevel {
         val grammarStr = """
             namespace test
             grammar Test {
-                S = a* ;
-                a = 'a' 'b' ;
+                S = ab* ;
+                ab = 'a' 'b' ;
             }
         """.trimIndent()
         val processor = Agl.processor(grammarStr)
     }
 
     @Test
-    fun empty() {
+    fun empty_0() {
         val sentence = ""
         val position = 0
 
@@ -45,7 +45,7 @@ class test_Multi0N_noConcatAtTopLevel {
     }
 
     @Test
-    fun before_a() {
+    fun a_before_a() {
         val sentence = "a"
         val position = 0
 
@@ -57,7 +57,7 @@ class test_Multi0N_noConcatAtTopLevel {
     }
 
     @Test
-    fun after_a() {
+    fun a_after_a() {
         val sentence = "a"
         val position = 1
 
@@ -69,7 +69,7 @@ class test_Multi0N_noConcatAtTopLevel {
     }
 
     @Test
-    fun before_b() {
+    fun ab_before_b() {
         val sentence = "ab"
         val position = 1
 
@@ -81,7 +81,7 @@ class test_Multi0N_noConcatAtTopLevel {
     }
 
     @Test
-    fun after_ab() {
+    fun ab_after_ab() {
         val sentence = "ab"
         val position = 2
 

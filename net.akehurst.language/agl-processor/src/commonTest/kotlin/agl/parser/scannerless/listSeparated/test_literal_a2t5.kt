@@ -14,44 +14,39 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.listSeparated
+package net.akehurst.language.parser.scanondemand.listSeparated
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.agl.sppt.SPPTParser
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.group.test_group
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
 
-class test_literal_a2t5 : test_ScannerlessParserAbstract() {
+class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
 
-    companion object {
+    // S = [a / 'b'][2..5]
+    // a = 'a'
 
-        val rrb = RuntimeRuleSetBuilder()
-
-        // S = [a / 'b'][2..5]
-        // a = 'a'
-        private fun literal_ab25(): RuntimeRuleSet {
-            val r0 = rrb.literal("a")
-            val r1 = rrb.rule("S").separatedList(2, 5, rrb.literal("b"), r0)
-            return rrb.ruleSet()
+    private companion object {
+        val rrs = runtimeRuleSet {
+            sList("S",2,5,"'a'","'b'")
+            literal("'a'","a")
+            literal("'b'","b")
         }
 
-        val sp = literal_ab25()
-        val goalRuleName = "S"
+        val goal = "S"
     }
 
     @Test
-    fun literal_ab25__r__empty_fails() {
+    fun empty_fails() {
         val inputText = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            test(sp, goalRuleName, inputText)
+            test(rrs, goal, inputText,1)
         }
 
         assertEquals(1, e.location.line)
@@ -60,24 +55,24 @@ class test_literal_a2t5 : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun literal_ab25__r__a_fails() {
+    fun a_fails() {
         val inputText = "a"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            test(sp, goalRuleName, inputText)
+            test(rrs, goal, inputText,1)
         }
 
         assertEquals(1, e.location.line)
         assertEquals(2, e.location.column)
-        assertEquals(setOf("','"), e.expected)
+        assertEquals(setOf("'b'"), e.expected)
     }
 
     @Test
-    fun literal_ab25__r__ab_fails() {
+    fun ab_fails() {
         val inputText = "ab"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            test(sp, goalRuleName, inputText)
+            test(rrs, goal, inputText,1)
         }
 
         assertEquals(1, e.location.line)
@@ -86,40 +81,63 @@ class test_literal_a2t5 : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun literal_ab25__r__aba() {
-        val inputText = "aba"
+    fun aba() {
+        val sentence = "aba"
 
         val expected = "S {'a' 'b' 'a'}"
 
-        super.test(sp, goalRuleName, inputText, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
-    fun literal_ab25__r__ababa() {
-        val inputText = "ababa"
+    fun ababa() {
+        val sentence = "ababa"
 
         val expected = "S {'a' 'b' 'a' 'b' 'a'}"
 
-        super.test(sp, goalRuleName, inputText, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
-    fun literal_ab25__r__abababa() {
-        val inputText = "abababa"
+    fun abababa() {
+        val sentence = "abababa"
 
         val expected = "S {'a' 'b' 'a' 'b' 'a' 'b' 'a'}"
 
-        super.test(sp, goalRuleName, inputText, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
-    fun literal_ab25__r__ababababa() {
-        val inputText = "ababababa"
+    fun ababababa() {
+        val sentence = "ababababa"
 
         val expected = "S {'a' 'b' 'a' 'b' 'a' 'b' 'a' 'b' 'a'}"
 
-        super.test(sp, goalRuleName, inputText, expected)
-
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
@@ -127,11 +145,11 @@ class test_literal_a2t5 : test_ScannerlessParserAbstract() {
         val inputText = "abababababa"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            test(sp, goalRuleName, inputText)
+            test(rrs, goal, inputText,1)
         }
 
         assertEquals(1, e.location.line)
         assertEquals(10, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
     }
 }

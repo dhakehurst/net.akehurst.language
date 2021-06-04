@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.listSeparated
+package net.akehurst.language.parser.scanondemand.listSeparated
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_literal_a01 : test_ScannerlessParserAbstract() {
+class test_literal_a01 : test_ScanOnDemandParserAbstract() {
 
     // S = ['a' / ',']?
     private fun literal_a01(): RuntimeRuleSetBuilder {
@@ -68,7 +68,7 @@ class test_literal_a01 : test_ScannerlessParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(2, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
     }
 
     @Test
@@ -83,7 +83,7 @@ class test_literal_a01 : test_ScannerlessParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(2, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
 
     }
 
@@ -99,7 +99,7 @@ class test_literal_a01 : test_ScannerlessParserAbstract() {
 
         assertEquals(1, e.location.line)
         assertEquals(2, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
+        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
 
     }
 

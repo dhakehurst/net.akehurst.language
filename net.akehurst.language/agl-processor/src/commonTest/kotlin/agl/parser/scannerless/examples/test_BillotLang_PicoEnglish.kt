@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.examples
+package net.akehurst.language.parser.scanondemand.examples
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_BillotLang_PicoEnglish : test_ScannerlessParserAbstract() {
+class test_BillotLang_PicoEnglish : test_ScanOnDemandParserAbstract() {
     /**
      * S = NP VP | S PP
      * NP = 'n' | 'det' 'n' | NP PP
@@ -42,7 +41,7 @@ class test_BillotLang_PicoEnglish : test_ScannerlessParserAbstract() {
      * VP = 'v' NP
      * PP = 'p' NP
      */
-    private val S = runtimeRuleSet {
+    private val rrs = runtimeRuleSet {
         choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("S1"); ref("S2") }
         concatenation("S1") { ref("NP"); ref("VP") }
         concatenation("S2") { ref("S"); ref("PP") }
@@ -56,28 +55,38 @@ class test_BillotLang_PicoEnglish : test_ScannerlessParserAbstract() {
 
     @Test
     fun empty_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
     }
 
     @Test
-    fun n() {
-        val rrb = this.S
+    fun nvn() {
         val goal = "S"
-        val sentence = "n"
+        val sentence = "nvn"
 
-        val expected1 = """
-            S{ S1{ NP{ NP1{'n'} } } }
+        val expected = """
+         S { S1 {
+            NP { NP1 { 'n' } }
+            VP {
+              'v'
+              NP { NP1 { 'n' } }
+            }
+          } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

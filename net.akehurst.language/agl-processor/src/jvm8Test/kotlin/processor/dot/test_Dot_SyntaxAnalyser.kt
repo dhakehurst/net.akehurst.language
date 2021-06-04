@@ -15,9 +15,10 @@
  */
 package net.akehurst.language.processor.dot
 
-import net.akehurst.language.api.analyser.AsmElementSimple
+
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -39,7 +40,7 @@ class test_Dot_SyntaxAnalyser {
             }
         """.trimIndent()
 
-        val actual = processor.process<AsmElementSimple>(sentence)
+        val actual = processor.process<AsmElementSimple>(AsmElementSimple::class,sentence)
 
         assertNotNull(actual)
         assertEquals(null,actual.getPropertyValue("STRICT"))
@@ -57,7 +58,7 @@ class test_Dot_SyntaxAnalyser {
             }
         """.trimIndent()
 
-        val actual = processor.process<AsmElementSimple>(sentence)
+        val actual = processor.process<AsmElementSimple>(AsmElementSimple::class,sentence)
 
         assertNotNull(actual)
     }

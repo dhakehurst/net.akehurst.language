@@ -1,14 +1,30 @@
-package net.akehurst.language.parser.scannerless.choiceEqual
+/**
+ * Copyright (C) 2020 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.akehurst.language.parser.scanondemand.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
+class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // ifthenelse = 'if' expr 'then' expr 'else' expr ;
@@ -16,29 +32,35 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
     // expr = var < conditional ;
     // conditional = ifthenelse | ifthen;
     // var = W | X | Y | Z ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_expr = b.rule("expr").build()
-        val r_if = b.literal("if")
-        val r_then = b.literal("then")
-        val r_else = b.literal("else")
-        val r_var = b.rule("var").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("W"), b.literal("X"), b.literal("Y"), b.literal("Z"))
-        val r_ifthen = b.rule("ifthen").concatenation(r_if, r_expr, r_then, r_expr)
-        val r_ifthenelse = b.rule("ifthenelse").concatenation(r_if, r_expr, r_then, r_expr, r_else, r_expr)
-        val r_conditional = b.rule("conditional").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_ifthenelse, r_ifthen)
-        b.rule(r_expr).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_var, r_conditional)
-        b.rule("S").concatenation(r_expr)
-        return b
+    private companion object {
+        val rrs = runtimeRuleSet {
+            concatenation("S") { ref("expr") }
+            choice("expr", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+                ref("var")
+                ref("conditional")
+            }
+            choice("conditional", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("ifthenelse")
+                ref("ifthen")
+            }
+            concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
+            concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
+            choice("var", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("W")
+                literal("X")
+                literal("Y")
+                literal("Z")
+            }
+        }
     }
 
     @Test
     fun empty_fails() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -46,21 +68,20 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
 
     @Test
     fun ifthenelse() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "ifWthenXelseY"
 
         val expected = """
             S {
-              expr {
+              expr|1 {
                 conditional {
                     ifthenelse {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr { var { 'X' } }
+                      expr { var|1 { 'X' } }
                       'else'
-                      expr { var { 'Y' } }
+                      expr { var|2 { 'Y' } }
                     }
                 }
               }
@@ -69,56 +90,66 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
 
         //NOTE: season 35, long expression is dropped in favour of the shorter one!
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun ifthen() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "ifWthenX"
 
         val expected = """
             S {
-              expr {
-                conditional {
+              expr|1 {
+                conditional|1 {
                     ifthen {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr { var { 'X' } }
+                      expr { var|1 { 'X' } }
                     }
                 }
               }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun ifthenelseifthen() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "ifWthenXelseifYthenZ"
 
         val expected = """
             S {
-              expr {
+              expr|1 {
                 conditional {
                     ifthenelse {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr { var { 'X' } }
+                      expr { var|1 { 'X' } }
                       'else'
-                      expr {
-                        conditional {
+                      expr|1 {
+                        conditional|1 {
                             ifthen {
                               'if'
-                              expr { var { 'Y'} }
+                              expr { var|2 { 'Y'} }
                               'then'
-                              expr { var { 'Z' } }
+                              expr { var|3 { 'Z' } }
                             }
                         }
                       }
@@ -128,32 +159,37 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun ifthenifthenelse() {
-        val rrb = this.S()
         val goal = "S"
         val sentence = "ifWthenifXthenYelseZ"
 
-        val expected1 = """
+        val expected = """
             S {
-              expr {
-                conditional {
+              expr|1 {
+                conditional|1 {
                     ifthen {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr {
+                      expr|1 {
                         conditional {
                             ifthenelse {
                               'if'
-                              expr { var { 'X' } }
+                              expr { var|1 { 'X' } }
                               'then'
-                              expr { var { 'Y' } }
+                              expr { var|2 { 'Y' } }
                               'else'
-                              expr { var { 'Z' } }
+                              expr { var|3 { 'Z' } }
                             }
                         }
                       }
@@ -163,10 +199,13 @@ class test_ifThenElse_Simple : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-
-        super.testStringResult(rrb, goal, sentence, expected1)
-        //super.testStringResult(rrb, goal, sentence, expected1, expected2)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
+                expectedTrees = *arrayOf(expected)
+        )
     }
-
 
 }

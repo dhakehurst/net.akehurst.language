@@ -14,37 +14,35 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.examples
+package net.akehurst.language.parser.scanondemand.examples
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_BillotLang_UBDA : test_ScannerlessParserAbstract() {
+class test_BillotLang_UBDA : test_ScanOnDemandParserAbstract() {
     /**
-     * A = AA | 'a'
+     * A = 'a' | AA
      */
     /**
-     * A = A1 | 'a' ;
+     * A = 'a' | A1 ;
      * A1 = A A ;
      */
-    private val S = runtimeRuleSet {
-        choice("A", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("A1"); literal("a") }
+    private val rrs = runtimeRuleSet {
+        choice("A", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); ref("A1") }
         concatenation("A1") { ref("A"); ref("A"); }
     }
 
     @Test
     fun empty_fails() {
-        val rrb = this.S
         val goal = "A"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
@@ -52,95 +50,117 @@ class test_BillotLang_UBDA : test_ScannerlessParserAbstract() {
 
     @Test
     fun a() {
-        val rrb = this.S
-        val goal = "S"
+        val goal = "A"
         val sentence = "a"
 
-        val expected1 = """
-            S { 'a' }
+        val expected = """
+            A { 'a' }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aa() {
-        val rrb = this.S
-        val goal = "S"
+        val goal = "A"
         val sentence = "aa"
 
-        val expected1 = """
-            S {
-              S2 {
-                S { 'a' }
-                S { 'a' }
+        val expected = """
+            A|1 {
+              A1 {
+                A { 'a' }
+                A { 'a' }
               }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aaa() {
-        val rrb = this.S
-        val goal = "S"
+        val goal = "A"
         val sentence = "aaa"
 
-        val expected1 = """
-            S {
-              S1 {
-                S { 'a' }
-                S { 'a' }
-                S { 'a' }
-              }
-            }
+        val expected = """
+         A|1 { A1 {
+            A|1 { A1 {
+                A { 'a' }
+                A { 'a' }
+              } }
+            A { 'a' }
+          } }
         """.trimIndent()
 
-
-        super.test(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aaaa() {
-        val rrb = this.S
-        val goal = "S"
+        val goal = "A"
         val sentence = "aaaa"
 
-        val expected1 = """
-         S { S2 {
-            S { S2 {
-                S { 'a' }
-                S { 'a' }
+        val expected = """
+         A|1 { A1 {
+            A|1 { A1 {
+                A { 'a' }
+                A { 'a' }
               } }
-            S { S2 {
-                S { 'a' }
-                S { 'a' }
+            A|1 { A1 {
+                A { 'a' }
+                A { 'a' }
               } }
           } }
         """.trimIndent()
 
-
-        super.test(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a10() {
-        val rrb = this.S
-        val goal = "S"
+        val goal = "A"
         val sentence = "a".repeat(10)
 
-        val expected1 = """
-            S {
-              S1 {
-                S { 'a' }
-                S { 'a' }
-                S { 'a' }
+        val expected = """
+            A|1 {
+              A1 {
+                A { 'a' }
+                A { 'a' }
+                A { 'a' }
               }
             }
         """.trimIndent()
 
-
-       super.test(rrb, goal, sentence, expected1)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 }

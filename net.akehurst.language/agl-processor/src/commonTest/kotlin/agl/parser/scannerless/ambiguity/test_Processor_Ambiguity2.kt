@@ -14,43 +14,41 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.ambiguity
+package net.akehurst.language.parser.scanondemand.ambiguity
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_Processor_Ambiguity2 : test_ScannerlessParserAbstract() {
+class test_Processor_Ambiguity2 : test_ScanOnDemandParserAbstract() {
     /**
-     * S = S S | 'a' ;
+     * S = 'a' | S S ;
      */
     /**
-     * S = S1 | 'a' ;
+     * S = 'a' | S1 ;
      * S1 = S S ;
      */
-    private fun S(): RuntimeRuleSetBuilder {
-        val rrb = RuntimeRuleSetBuilder()
-        val ra = rrb.literal("a")
-        val rS = rrb.rule("S").build()
-        val rS1 = rrb.rule("S1").concatenation(rS, rS)
-        rS.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(rS1, ra))
-        return rrb
+    private companion object {
+        val S = runtimeRuleSet {
+            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                ref("S1")
+            }
+            concatenation("S1") { ref("S"); ref("S") }
+        }
+        val goal = "S"
     }
+
 
     @Test
     fun S_S_empty() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence, 1)
         }
         assertEquals(1, e.location.line)
         assertEquals(1, e.location.column)
@@ -58,25 +56,27 @@ class test_Processor_Ambiguity2 : test_ScannerlessParserAbstract() {
 
     @Test
     fun S_S_a() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a"
 
-        val expected1 = """
+        val expected = """
             S { 'a' }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
+        val actual = super.test(
+            rrs = S,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun S_S_aa() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "aa"
 
-        val expected1 = """
-            S {
+        val expected = """
+            S|1 {
               S1 {
                 S { 'a' }
                 S { 'a' }
@@ -84,19 +84,23 @@ class test_Processor_Ambiguity2 : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected1)
+        val actual = super.test(
+            rrs = S,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun S_S_aaa() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "aaa"
 
-        val expected1 = """
-            S {
+        val expected = """
+            S|1 {
               S1 {
-                S {
+                S|1 {
                   S1 {
                     S { 'a' }
                     S { 'a' }
@@ -107,21 +111,13 @@ class test_Processor_Ambiguity2 : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        val expected2 = """
-            S {
-              S1 {
-                S { 'a' }
-                S {
-                  S1 {
-                    S { 'a' }
-                    S { 'a' }
-                  }
-                }
-              }
-            }
-        """.trimIndent()
-
-        super.testStringResult(rrb, goal, sentence, expected1)//, expected2)
+        val actual = super.test(
+            rrs = S,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
 

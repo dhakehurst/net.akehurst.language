@@ -17,11 +17,11 @@ package net.akehurst.language.comparisons.antlr4;
 
 import net.akehurst.language.comparisons.common.FileData;
 import net.akehurst.language.comparisons.common.Java8TestFiles;
+import net.akehurst.language.comparisons.common.Results;
 import net.akehurst.language.comparisons.common.TimeLogger;
 import org.antlr.v4.runtime.*;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -31,29 +31,39 @@ import java.util.Collection;
 @RunWith(Parameterized.class)
 public class test_antlr4_Java8_spec {
 
+    static int totalFiles;
     static CharStream input;
 
     @Parameterized.Parameters(name = "{index}: {0}")
     public static Collection<FileData> getFiles() {
-        return Java8TestFiles.INSTANCE.getFiles();
+        var files = Java8TestFiles.INSTANCE.getFiles();//.subList(0, 3306); // after 3306 we get java.lang.OutOfMemoryError: Java heap space
+        totalFiles = files.size();
+        return files;
     }
 
-    static antlr4.spec.Java8Parser.CompilationUnitContext parseWithAntlr4Spec(final FileData file) {
-        final Lexer lexer = new antlr4.spec.Java8Lexer(input);
-        final CommonTokenStream tokens = new CommonTokenStream(lexer);
+    static antlr4.spec.Java8ParserSpec.CompilationUnitContext parseWithAntlr4Spec(final FileData file) {
+        try {
+            final Lexer lexer = new antlr4.spec.Java8LexerSpec(input);
+            final CommonTokenStream tokens = new CommonTokenStream(lexer);
 
-        //pre cache
-        final antlr4.optm.Java8Parser p1 = new antlr4.optm.Java8Parser(tokens);
-        p1.setErrorHandler(new BailErrorStrategy());
-        p1.compilationUnit();
+            //pre cache
+            final antlr4.spec.Java8ParserSpec p1 = new antlr4.spec.Java8ParserSpec(tokens);
+            p1.setErrorHandler(new BailErrorStrategy());
+            p1.compilationUnit();
 
-        final antlr4.spec.Java8Parser p = new antlr4.spec.Java8Parser(tokens);
-        p.setErrorHandler(new BailErrorStrategy());
+            tokens.seek(0);
+            final antlr4.spec.Java8ParserSpec p = new antlr4.spec.Java8ParserSpec(tokens);
+            p.setErrorHandler(new BailErrorStrategy());
 
-        try (TimeLogger timer = new TimeLogger("antlr4_spec", file)) {
-            antlr4.spec.Java8Parser.CompilationUnitContext r = p.compilationUnit();
-            timer.success();
-            return r;
+            try (TimeLogger timer = new TimeLogger("antlr4_spec", file)) {
+                antlr4.spec.Java8ParserSpec.CompilationUnitContext r = p.compilationUnit();
+                timer.success();
+                return r;
+            }
+        } catch (ParseCancellationException | RecognitionException e) {
+            Results.INSTANCE.logError("antlr4_spec", file);
+            Assert.assertTrue(file.isError());
+            return null;
         }
     }
 
@@ -61,6 +71,11 @@ public class test_antlr4_Java8_spec {
 
     public test_antlr4_Java8_spec(final FileData file) {
         this.file = file;
+    }
+
+    @BeforeClass
+    public static void init() {
+        Results.INSTANCE.reset();
     }
 
     @Before
@@ -75,8 +90,12 @@ public class test_antlr4_Java8_spec {
 
     @Test
     public void antlr4_spec_compilationUnit() {
-        final antlr4.spec.Java8Parser.CompilationUnitContext tree = parseWithAntlr4Spec(this.file);
-        Assert.assertNotNull("Failed to Parse", tree);
+        System.out.println("" + file.getIndex() + " of " + totalFiles);
+        parseWithAntlr4Spec(this.file);
     }
 
+    @AfterClass
+    public static void end() {
+        Results.INSTANCE.write();
+    }
 }

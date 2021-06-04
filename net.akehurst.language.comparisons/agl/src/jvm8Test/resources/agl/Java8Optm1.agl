@@ -1,5 +1,5 @@
 /**
- * Modified from Antlr v4 Optimised JavaParser.v4 file.
+ * Modified from Antlr v4 Optimised Java8 grammar [https://github.com/antlr/grammars-v4/tree/master/java/java]
  */
 
 /*
@@ -127,7 +127,7 @@ BOOL_LITERAL=     	"true|false" ;
 
 CHAR_LITERAL=       '\'' ("[^'\\\r\n]" | EscapeSequence) '\'';
 
-STRING_LITERAL=     "\"(?:\\?.)*?\"" ;
+STRING_LITERAL=     "\"(\?.)*\"" ;
 
 NULL_LITERAL=       'null';
 
@@ -194,8 +194,8 @@ ELLIPSIS=           '...';
 // Whitespace and comments
 
 skip WS  =  "[ \t\r\n\u000C]+";
-skip COMMENT =   "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
-skip LINE_COMMENT =   "//.*?$" ;
+skip COMMENT =   "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+skip LINE_COMMENT =   "//[^\n]*$" ;
 
 // Identifiers
 

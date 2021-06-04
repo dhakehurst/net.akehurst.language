@@ -46,7 +46,7 @@ class test_TutorialExamples {
         val actual = sppt.toStringAll.trim()
         assertNotNull(sppt)
 
-        val expected = "typeReference { userDefinedType { NAME : 'int' } }"
+        val expected = "typeReference|1 { userDefinedType { NAME : 'int' } }"
 
         assertEquals(expected, actual)
     }
@@ -93,7 +93,7 @@ class test_TutorialExamples {
         assertNotNull(sppt)
 
         val expected = """
-                typeReference { builtInType { 'boolean' } }
+                typeReference|1 { builtInType|1 { 'boolean' } }
         """.trimIndent()
 
         assertEquals(expected, actual)
@@ -117,7 +117,7 @@ class test_TutorialExamples {
         assertNotNull(sppt)
 
         val expected = """
-                typeReference { builtInType { 'int' } }
+                typeReference|1 { builtInType { 'int' } }
         """.trimIndent()
 
         assertEquals(expected, actual)

@@ -16,8 +16,9 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.parser.InputFromCharSequence
+import net.akehurst.language.agl.parser.InputFromString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -32,26 +33,26 @@ class test_ParseGraph_abc {
 
     @Test
     fun start() {
-        val rrs = RuntimeRuleSet(listOf())
-        val r_a = RuntimeRule(0, "a", "a", RuntimeRuleKind.TERMINAL, false, false)
-        val r_b = RuntimeRule(1, "b","b", RuntimeRuleKind.TERMINAL, false, false)
-        val r_c = RuntimeRule(2, "c", "c", RuntimeRuleKind.TERMINAL, false, false)
-        val r_A = RuntimeRule(3,"A","A", RuntimeRuleKind.NON_TERMINAL, false, false)
-        r_A.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_a))
-        val r_B = RuntimeRule(3,"B", "B", RuntimeRuleKind.NON_TERMINAL, false, false)
-        r_B.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_b))
-        val r_C = RuntimeRule(3,"C", "C", RuntimeRuleKind.NON_TERMINAL, false, false)
-        r_C.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_c))
-        val r_S = RuntimeRule(0,"S", "", RuntimeRuleKind.NON_TERMINAL, false, false)
-        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,-1, 0, arrayOf(r_A, r_B, r_C))
+        val rrs = RuntimeRuleSet()
+        val r_a = RuntimeRule(rrs.number,0, "a", "a", RuntimeRuleKind.TERMINAL, false, false)
+        val r_b = RuntimeRule(rrs.number,1, "b","b", RuntimeRuleKind.TERMINAL, false, false)
+        val r_c = RuntimeRule(rrs.number,2, "c", "c", RuntimeRuleKind.TERMINAL, false, false)
+        val r_A = RuntimeRule(rrs.number,3,"A","A", RuntimeRuleKind.NON_TERMINAL, false, false)
+        r_A.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,-1, 0, arrayOf(r_a))
+        val r_B = RuntimeRule(rrs.number,3,"B", "B", RuntimeRuleKind.NON_TERMINAL, false, false)
+        r_B.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,-1, 0, arrayOf(r_b))
+        val r_C = RuntimeRule(rrs.number,3,"C", "C", RuntimeRuleKind.NON_TERMINAL, false, false)
+        r_C.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,-1, 0, arrayOf(r_c))
+        val r_S = RuntimeRule(rrs.number,0,"S", "", RuntimeRuleKind.NON_TERMINAL, false, false)
+        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,-1, 0, arrayOf(r_A, r_B, r_C))
 
         val text = "a"
-        val input = InputFromCharSequence(text)
-        val sut = ParseGraph(r_S,input)
+        val input = InputFromString(rrs.terminalRules.size,text)
+        val sut = ParseGraph(r_S,input, 10,10)
 
         val gr = RuntimeRuleSet.createGoalRule(r_S)
-        val startState = rrs.startingState(r_S)
-        sut.start(startState)
+        val startState = rrs.fetchStateSetFor(r_S, AutomatonKind.LOOKAHEAD_1).startState
+        sut.start(startState,0, LookaheadSet.EMPTY)
 
         assertEquals(RuntimeRuleKind.GOAL, gr.kind)
         assertEquals(true, sut.canGrow)
@@ -64,11 +65,11 @@ class test_ParseGraph_abc {
 
     @Test
     fun s1() {
-        val rrs = RuntimeRuleSet(listOf())
-        val userGoalRule = RuntimeRule(0,"a", "a", RuntimeRuleKind.TERMINAL, false, false)
+        val rrs = RuntimeRuleSet()
+        val userGoalRule = RuntimeRule(rrs.number,0,"a", "a", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"
-        val input = InputFromCharSequence(text)
-        val sut = ParseGraph(userGoalRule,input)
+        val input = InputFromString(rrs.terminalRules.size,text)
+        val sut = ParseGraph(userGoalRule,input, 10,10)
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
         val startState = RulePositionWithLookahead(RulePosition(gr,0,0), emptySet())

@@ -1,0 +1,26 @@
+id
+A.B.C::f
+@An A<T>.@An B.C<V>::f
+f()
+f(1,2,3)
+A.B.C.f()
+A.B.C.<T,U>f()
+super.<T>f()
+A.B.C.super.<T>f()
+A.class
+int.class
+boolean.class
+void.class
+A[][].class
+boolean[].class
+this
+super
+A.B.C.this
+( 1 )
+( A.class )
+new A()
+new A<>()
+new A<S,T>()
+
+id.b
+id[0].b

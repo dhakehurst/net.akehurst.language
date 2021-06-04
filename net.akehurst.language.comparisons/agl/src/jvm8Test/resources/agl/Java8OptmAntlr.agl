@@ -125,9 +125,9 @@ leaf HEX_FLOAT_LITERAL=  '0' "[xX]" (HexDigits '.'? | HexDigits? '.' HexDigits) 
 
 leaf BOOL_LITERAL=       'true' | 'false' ;
 
-leaf CHAR_LITERAL=       '\'' ("[^'\\\r\n]" | EscapeSequence) '\'';
+leaf CHAR_LITERAL=       '\'' ("[^'\r\n\\]" | EscapeSequence) '\'';
 
-leaf STRING_LITERAL=     "\"(?:\\?.)*?\"" ;
+leaf STRING_LITERAL=     "\"(\\?.)*\"" ;
 
 leaf NULL_LITERAL=       'null';
 
@@ -194,8 +194,8 @@ leaf ELLIPSIS=           '...';
 // Whitespace and comments
 
 skip WS  =  "[ \t\r\n\u000C]+";
-skip COMMENT =   "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
-skip LINE_COMMENT =   "//.*?$" ;
+skip COMMENT =   "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+skip LINE_COMMENT =   "//[^\n]*$" ;
 
 // Identifiers
 

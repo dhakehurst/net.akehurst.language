@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar.runtime
+package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.ParserException
@@ -25,12 +25,14 @@ import net.akehurst.language.api.analyser.GrammarExeception
 /**
  * arg: String =
  */
-class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String> {
+class ConverterToRuntimeRules(
+        val grammar: Grammar,
+        val builder: RuntimeRuleSetBuilder = RuntimeRuleSetBuilder()
+) : GrammarVisitor<Any, String> {
 
     class CompressedItem(val value: String, val isPattern: Boolean)
 
     private val originalRule: MutableMap<RuntimeRule, RuleItem> = mutableMapOf()
-    val builder = RuntimeRuleSetBuilder()
 
     private fun findRule(name: String): RuntimeRule? {
         return this.builder.findRuleByName(name, false)
@@ -68,7 +70,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
             rhs is Multi -> {
                 val ct = this.compressRhs(rhs.item)
                 val min = rhs.min
-                val max = if (-1==rhs.max) "" else rhs.max
+                val max = if (-1 == rhs.max) "" else rhs.max
                 val pattern = "(${ct.value}){${min},${max}}"
                 CompressedItem(pattern, true)
             }
@@ -77,7 +79,11 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
                 val pattern = "(${ct.value})"
                 CompressedItem(pattern, true)
             }
-            rhs is NonTerminal -> this.compressRhs(rhs.referencedRule.rhs) //TODO: need to catch the recursion before this
+            rhs is NonTerminal -> {
+                //TODO: handle overridden vs embedded rules!
+                //TODO: need to catch the recursion before this
+                this.compressRhs(rhs.referencedRule.rhs)
+            }
             else -> throw GrammarExeception("Rule ${rhs.owningRule.name}, compressing ${rhs::class} to leaf is not yet supported", null)
         }
     }
@@ -96,30 +102,6 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
     fun originalRuleItemFor(rr: RuntimeRule): RuleItem {
         return this.originalRule.get(rr)
                 ?: throw LanguageProcessorException("cannot find original item for " + rr, null)
-        /*
-        val name = rr.name
-        if (name.startsWith("§")) {
-            // decode it (see Converter) and RuleItem.setOwningRule
-            val split = name.split("[.]".toRegex()).dropLastWhile({ it.isEmpty() }).toTypedArray()
-            val ruleName = split[0].substring(1)
-            val rhs = grammar.findAllRule(ruleName).rhs
-            val type = split[1]
-            val index = IntArray(split.size - 3)
-            for (i in 3 until split.size) {
-                val ix = split[i].toInt()
-                index[i - 3] = ix
-            }
-            var item = rhs
-            for (i in index) {
-                item = item.subItem(i)
-            }
-
-            return item
-        } else {
-            // find grammar rule
-            return NonTerminalRuleReference(grammar, name)
-        }
-        */
     }
 
     fun transform(): RuntimeRuleSet {
@@ -165,7 +147,7 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
                 // only one choice, so can create a concatination
                 val rhsItem = target.alternative[0]
                 val items = rhsItem.items.map { it.accept(this, arg) as RuntimeRule }
-                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, items.toTypedArray())
+                RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE,-1, 0, items.toTypedArray())
             }
             (target is Choice) -> {
                 val items = target.alternative.map {
@@ -177,17 +159,18 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
                         builder.rule(thisChoiceName).concatenation(*thisChoiceItems.toTypedArray())
                     }
                 }
-                val kind = RuntimeRuleItemKind.CHOICE
+                val kind = RuntimeRuleRhsItemsKind.CHOICE
                 val choiceKind = when (target) {
                     is ChoiceEqual -> RuntimeRuleChoiceKind.LONGEST_PRIORITY
                     is ChoicePriority -> RuntimeRuleChoiceKind.PRIORITY_LONGEST
+                    is ChoiceAmbiguous -> RuntimeRuleChoiceKind.AMBIGUOUS
                     else -> throw RuntimeException("unsupported")
                 }
-                RuntimeRuleItem(kind, choiceKind, -1, 0, items.toTypedArray())
+                RuntimeRuleItem(kind, choiceKind, RuntimeRuleListKind.NONE,-1, 0, items.toTypedArray())
             }
             (target is EmptyRule) -> {
                 val item = target.accept(this, arg) as RuntimeRule
-                RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, arrayOf(item))
+                RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE,-1, 0, arrayOf(item))
             }
             else -> {
                 throw ParserException("Not supported (yet)!")
@@ -218,9 +201,19 @@ class ConverterToRuntimeRules(val grammar: Grammar) : GrammarVisitor<Any, String
     }
 
     override fun visit(target: NonTerminal, arg: String): RuntimeRule {
-        val nonTerminalRule = this.findRule(target.referencedRule.name)
-                ?: target.referencedRule.accept(this, arg) as RuntimeRule
-        return nonTerminalRule
+        val refName = target.name
+        val nonTerminalRule = this.findRule(refName)
+        return if (null == nonTerminalRule) {
+            if (target.embedded) {
+                val embeddedGrammar = target.referencedRule.grammar
+                val embeddedConverter = ConverterToRuntimeRules(embeddedGrammar, this.builder)
+                embeddedConverter.visit(target.referencedRule, arg)
+            } else {
+                this.grammar.findAllRule(refName).accept(this, arg) as RuntimeRule
+            }
+        } else {
+            nonTerminalRule
+        }
     }
 
     override fun visit(target: ChoiceEqual, arg: String): RuntimeRule {

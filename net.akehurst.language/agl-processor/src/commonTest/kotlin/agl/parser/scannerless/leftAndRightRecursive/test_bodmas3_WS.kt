@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.leftAndRightRecursive
+package net.akehurst.language.parser.scanondemand.leftAndRightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_bodmas3_WS : test_ScannerlessParserAbstract() {
+class test_bodmas3_WS : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // expr = root | group | infix ;
@@ -88,7 +86,7 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
         val sentence = "true"
 
         val expected = """
-              expr { root {
+              expr { root|1 {
                 bool { 'true' }
               } }
         """.trimIndent()
@@ -104,7 +102,7 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr { root {
+              expr { root|1 {
                 bool { 'true' }
               } }
             }
@@ -138,7 +136,7 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|1 {
                 group {
                   '('
                   expr { root { var { "[a-zA-Z]+" : 'a' } } }
@@ -160,7 +158,7 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|2 {
                 infix {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
                   op { '/' WS { "\s+" : ' ' } }
@@ -182,10 +180,10 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|2 {
                 infix {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
-                  op { '*' WS { "\s+" : ' ' } }
+                  op|1 { '*' WS { "\s+" : ' ' } }
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
@@ -247,11 +245,11 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
         val sentence = "a+b*c"
 
         val expected = """
-         S { expr { infix {
+         S { expr|2 { infix {
               expr { root { var { "[a-zA-Z]+" : 'a' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'b' } } }
-              op { '*' }
+              op|1 { '*' }
               expr { root { var { "[a-zA-Z]+" : 'c' } } }
             } } }
         """.trimIndent()
@@ -266,11 +264,11 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
         val sentence = "a*b+c"
 
         val expected = """
-         S { expr { infix {
+         S { expr|2 { infix {
               expr { root { var { "[a-zA-Z]+" : 'a' } } }
-              op { '*' }
+              op|1 { '*' }
               expr { root { var { "[a-zA-Z]+" : 'b' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'c' } } }
             } } }
         """.trimIndent()
@@ -285,13 +283,13 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
         val sentence = "a+b+c+d"
 
         val expected = """
-         S { expr { infix {
+         S { expr|2 { infix {
               expr { root { var { "[a-zA-Z]+" : 'a' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'b' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'c' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'd' } } }
             } } }
         """.trimIndent()
@@ -306,17 +304,17 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
         val sentence = "a+b+c+d+e+f"
 
         val expected = """
-         S { expr { infix {
+         S { expr|2 { infix {
               expr { root { var { "[a-zA-Z]+" : 'a' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'b' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'c' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'd' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'e' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'f' } } }
             } } }
         """.trimIndent()
@@ -331,17 +329,17 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
         val sentence = "a+b+c*d+e+f"
 
         val expected = """
-         S { expr { infix {
+         S { expr|2 { infix {
               expr { root { var { "[a-zA-Z]+" : 'a' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'b' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'c' } } }
-              op { '*' }
+              op|1 { '*' }
               expr { root { var { "[a-zA-Z]+" : 'd' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'e' } } }
-              op { '+' }
+              op|2 { '+' }
               expr { root { var { "[a-zA-Z]+" : 'f' } } }
             } } }
         """.trimIndent()
@@ -356,17 +354,17 @@ class test_bodmas3_WS : test_ScannerlessParserAbstract() {
         val sentence = "(a+b)*c"
 
         val expected = """
-         S { expr { infix {
-              expr { group {
+         S { expr|2 { infix {
+              expr|1 { group {
                   '('
-                  expr { infix {
+                  expr|2 { infix {
                       expr { root { var { "[a-zA-Z]+" : 'a' } } }
-                      op { '+' }
+                      op|2 { '+' }
                       expr { root { var { "[a-zA-Z]+" : 'b' } } }
                     } }
                   ')'
                 } }
-              op { '*' }
+              op|1 { '*' }
               expr { root { var { "[a-zA-Z]+" : 'c' } } }
             } } }
         """.trimIndent()

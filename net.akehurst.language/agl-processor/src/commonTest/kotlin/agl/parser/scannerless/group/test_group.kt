@@ -14,40 +14,45 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.group
+package net.akehurst.language.parser.scanondemand.group
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_group : test_ScannerlessParserAbstract() {
+class test_group : test_ScanOnDemandParserAbstract() {
 
-
-    val S = runtimeRuleSet {
-        concatenation("R") { ref("grp") }
-        concatenation("grp") { ref("A"); ref("Am")}
-        multi("Am", 0,-1,"A")
-        literal("A","A")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            concatenation("R") { ref("grp") }
+            concatenation("grp") { ref("A"); ref("Am") }
+            multi("Am", 0, -1, "A")
+            literal("A", "A")
+        }
     }
 
     @Test
     fun t1() {
-        val rrb = this.S
         val goal = "R"
         val sentence = "A"
 
         val expected = """
             R {
-              grp { A:'A' Am { §empty } }
+              grp { A:'A' Am|1 { §empty } }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun t2() {
-        val rrb = this.S
         val goal = "R"
         val sentence = "AA"
 
@@ -57,12 +62,17 @@ class test_group : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun t3() {
-        val rrb = this.S
         val goal = "R"
         val sentence = "AAA"
 
@@ -72,6 +82,12 @@ class test_group : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 }

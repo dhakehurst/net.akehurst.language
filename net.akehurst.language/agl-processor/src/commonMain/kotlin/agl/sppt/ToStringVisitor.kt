@@ -31,7 +31,7 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
     }
 
     override fun visit(target: SharedPackedParseTree, arg: Indent): Set<String> {
-        return target.root.accept(this, arg)
+        return visit(target.root, arg)
     }
 
 
@@ -39,10 +39,10 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
         val t = when {
             target.isEmptyLeaf -> "${target.name}"
             (target.isLiteral) -> {
-                "'${target.matchedText.replace("\n", 0x23CE.toString())}'"
+                "'${target.matchedText.replace("\n", "\u23CE")}'"
             }
             (target.isPattern) -> {
-                "${target.name} : '${target.matchedText.replace("\n", 0x23CE.toString())}'"
+                "${target.name} : '${target.matchedText.replace("\n", "\u23CE")}'"
             }
             else -> throw RuntimeException("should not happen")
         }
@@ -57,6 +57,9 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
         for (children in target.childrenAlternatives) {
             var s = if (arg.onlyChild) " " else arg.text
             s += target.name
+            if (target.option!=0) {
+                s+="|${target.option}"
+            }
             s += if (target.childrenAlternatives.size > 1) "*" else ""
             s += " {"
             if (children.isEmpty()) {
@@ -93,7 +96,7 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
 
     private fun visitOnlyChild(currentSet: MutableSet<String>, children: List<SPPTNode>, indent: Indent): MutableSet<String> {
         val r = HashSet<String>()
-        val ssc = children.get(0).accept(this, indent.next(this.indentIncrement, true))
+        val ssc = visit(children.get(0), indent.next(this.indentIncrement, true))
 
         for (current in currentSet) {
             for (sc in ssc) {
@@ -108,7 +111,7 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
 
     private fun visitChild(currentSet: MutableSet<String>, children: List<SPPTNode>, index: Int, indent: Indent): MutableSet<String> {
         val r = HashSet<String>()
-        val ssc = children.get(index).accept(this, indent.next(this.indentIncrement, false))
+        val ssc = visit(children.get(index), indent.next(this.indentIncrement, false))
 
         for (current in currentSet) {
             for (sc in ssc) {

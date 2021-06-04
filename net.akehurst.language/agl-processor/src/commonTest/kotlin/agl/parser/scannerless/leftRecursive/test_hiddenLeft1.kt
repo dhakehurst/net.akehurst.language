@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.leftRecursive
+package net.akehurst.language.parser.scanondemand.leftRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.fail
 
-class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
+class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
 
     // S = B S 'c' | 'a'
     // B = 'b' | <empty>
@@ -35,27 +33,28 @@ class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
     // S1 = B S 'c'
     // B = 'b' | Be
     // Be = <empty>
-    private val S = runtimeRuleSet {
-        choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            ref("S1")
-            literal("a")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("S1")
+                literal("a")
+            }
+            concatenation("S1") { ref("B"); ref("S"); literal("c") }
+            choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("b")
+                ref("Be")
+            }
+            concatenation("Be") { empty() }
         }
-        concatenation("S1") { ref("B"); ref("S"); literal("c") }
-        choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            literal("b")
-            ref("Be")
-        }
-        concatenation("Be") { empty() }
     }
 
     @Test
     fun empty_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(rrs, goal, sentence, 1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -63,54 +62,68 @@ class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
 
     @Test
     fun a() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "a"
 
         val expected = """
-            S { 'a' }
+            S|1 { 'a' }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 2,//TODO can we make this 1 by merging states?
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun bac() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "bac"
 
         val expected = """
          S { S1 {
             B { 'b' }
-            S { 'a' }
+            S|1 { 'a' }
             'c'
           } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 3,//TODO can we make this 1 by merging states?
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun ac() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "ac"
 
         val expected = """
          S { S1 {
-            B { Be { §empty } }
-            S { 'a' }
+            B|1 { Be { §empty } }
+            S|1 { 'a' }
             'c'
           } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 2,//TODO can we make this 1 by merging states?
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun bacc() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "bacc"
 
@@ -118,14 +131,20 @@ class test_hiddenLeft1 : test_ScannerlessParserAbstract() {
          S { S1 {
             B { 'b' }
             S { S1 {
-                B { Be { §empty } }
-                S { 'a' }
+                B|1 { Be { §empty } }
+                S|1 { 'a' }
                 'c'
               } }
             'c'
           } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
+                expectedTrees = *arrayOf(expected)
+        )
     }
 }

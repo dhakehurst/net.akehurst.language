@@ -19,7 +19,7 @@ data class InputLocation(
         val position:Int,
         val column: Int,
         val line: Int,
-        val length: Int
+        var length: Int // var so that when adding children we can increment this rather than create a new object
 ) {
 
     val endPosition get() = position+length

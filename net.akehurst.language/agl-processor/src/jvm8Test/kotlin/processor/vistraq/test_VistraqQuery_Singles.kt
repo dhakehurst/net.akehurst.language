@@ -22,173 +22,21 @@ import org.junit.Assert
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.fail
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
+import kotlin.time.measureTimedValue
 
 class test_VistraqQuery_Singles {
 
     companion object {
 
-        private val grammarStr = """
-namespace com.itemis.typedgraph.query
-
-grammar Query {
-
-    skip WHITE_SPACE = "\s+" ;
-	skip SINGLE_LINE_COMMENT = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
-	skip MULTI_LINE_COMMENT = "//.*?$" ;
-
-    query = singleQuery | compositeQuery ;
-    singleQuery = timespanDefinition? querySource? returnDefinition? ;
-    compositeQuery = query compositionOperator query ;
-    compositionOperator = 'UNION' | 'JOIN' ;
-
-    timespanDefinition = 'FOR' timeDef nameDefinition? ;
-	timeDef =  time | timespan ;
-	time = 'TIME' timePoint ;
-	timePoint = 'start' | 'now' | timestamp ;
-	timestamp = SINGLE_QUOTE_STRING ;
-	timespan = 'TIMESPAN' timeRange 'EVERY' period ;
-	timeRange = 'all' | timePoint 'UNTIL' timePoint ;
-	period = 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year' ;
-
-
-	querySource = pathQuery | storedQueryReference ;
-	storedQueryReference = 'FROM' STORED_QUERY_ID ;
-    pathQuery = 'MATCH' pathExpression whereClause? ;
-    pathExpression =  nodeSelector linkedNodeSelectorPath? ;
-
-	nodeSelector = nodeTypeReferenceExpression nameDefinition? ;
-    nodeTypeReferenceExpression
-        = nodeTypeReference
-        < NONE_NODE_TYPE
-        < ANY_NODE_TYPE
-        < negatedNodeTypeReferenceExpression
-        < nodeTypeReferenceGroup
-        ;
-    negatedNodeTypeReferenceExpression = 'NOT' nodeTypeReferenceExpression ;
-    nodeTypeReferenceGroup = '(' [nodeTypeReferenceExpression / 'OR' ]+ ')' ;
-
-    linkedNodeSelector = linkSelectorExpression ;
-    linkedNodeSelectorNegated = linkSelectorNegated ;
-	linkSelectorExpression = linkSelector | linkSelectorGroupedPath ;
-	linkSelector = 'LINKED' links? multiplicity? via? ('TO'|'FROM'|'WITH') nodeSelector ;
-
-	links = 'USING' range 'LINKS' ;
-	multiplicity = range 'TIMES' ;
-    range = POSITIVE_INT '..' UNLIMITED_POSITIVE_INT | UNLIMITED_POSITIVE_INT ;
-
-	via = 'VIA'  linkTypeReferenceExpression ;
-	linkSelectorNegated = 'NOT' linkSelectorGroupedPath ;
-	linkSelectorGroupedPath = '(' linkSelectorGroupedItem ')' ;
-	linkSelectorGroupedItem = linkedNodeSelectorPath | linkSelectorOperator ;
-	//linkSelectorGroupedOperator = '(' linkSelectorOperator ')';
-	linkSelectorOperator = linkedNodeSelectorPath logicalOperator linkedNodeSelectorPath ;
-
-	linkedNodeSelectorPath = linkedNodeSelectorPathNormal | linkedNodeSelectorPathNegated ;
-	linkedNodeSelectorPathNormal = linkedNodeSelector+ ;
-	linkedNodeSelectorPathNegated = linkedNodeSelector*  linkedNodeSelectorNegated ;
-
-    linkTypeReferenceExpression = ANY_LINK_TYPE | linkTypeReference | negatedLinkTypeReferenceExpression | linkTypeReferenceGroup ;
-    negatedLinkTypeReferenceExpression = 'NOT' linkTypeReferenceExpression ;
-    linkTypeReferenceGroup = '(' [linkTypeReferenceExpression / 'OR' ]+ ')' ;
-
-	whereClause = 'WHERE' expression ;
-
-	returnDefinition = returnExpression | returnTable | returnSelect | returnGraph ;
-
-	returnExpression = 'RETURN' aggregateFunctionCallOrExpression ;
-
-	returnTable = 'RETURN' 'TABLE' columnDefinition+ orderBy? ;
-	columnDefinition = 'COLUMN' NAME 'CONTAINING' aggregateFunctionCallOrExpression whereClause? ;
-
-    returnSelect = 'RETURN' 'SELECT' selectList;
-    selectList = [selectItem / ',']* ;
-    selectItem = NAME | propertyReference ;
-    propertyReference = NAME '.' NAME ;
-
-	returnGraph = 'RETURN' 'GRAPH' subgraphConstruction ;
-	subgraphConstruction = nodeConstruction linkedSubGraphConstruction? whereConstructionClause?;
-	nodeConstruction = nodeTypeConstructionExpression '{' nodeIdentityExpressionConstruction nodePropertyAssignmentExpressionList? '}' nameDefinition?;
-	nodeTypeConstructionExpression = expression < nodeTypeReference ;
-    nodeIdentityExpressionConstruction = expression ;
-    nodePropertyAssignmentExpressionList = '|' nodePropertyAssignmentExpression+ ;
-    nodePropertyAssignmentExpression = NAME ':=' expression ;
-
-	linkedSubGraphConstruction = linkedNodeConstructionExpression+ ;
-	linkedNodeConstructionExpression = linkedNodeConstructionPath | linkedNodeConstructionGroup ;
-	linkedNodeConstructionPath = linkedNodeConstruction+ ;
-	linkedNodeConstruction = 'LINKED' 'VIA' linkTypeReference ('TO'|'FROM') nodeConstruction ;
-	linkedNodeConstructionGroup = '(' linkedNodeConstructionGroupItem ')' ;
-	linkedNodeConstructionGroupItem = linkedNodeConstructionPath |  linkedNodeConstructionGroupItemOperator ;
-	linkedNodeConstructionGroupItemOperator =  linkedNodeConstructionExpression 'AND' linkedNodeConstructionExpression ;
-
-	whereConstructionClause = 'WHERE' constructionExpression ;
-
-	constructionExpression = andConstructionExpression
-	                       < propertyAssignment
-                           ;
-
-	propertyAssignment = propertyCall ':=' expression ;
-	andConstructionExpression = constructionExpression 'AND' constructionExpression ;
-
-	aggregateFunctionCallOrExpression = aggregateFunctionCall | expression ;
-	aggregateFunctionCall = aggregateFunctionName '(' expression ')' ;
-    expression
-		= root
-		| literalValue
-		| propertyCall
-		| methodCall
-		| infixFunction
-		| conditionalExpression
-    	| groupExpression
-        ;
-
-    nameDefinition = 'AS' NAME ;
-
-    groupExpression = '(' expression ')'  ;
-	root = NAME;
-	propertyCall = expression '.' NAME ;
-	methodCall = expression '.' NAME '(' argList ')';
-	argList = [expression / ',']* ;
-	infixFunction = [expression / operator]2+ ;
-    operator
-        = logicalOperator
-        | arithmeticOperator
-        | comparisonOperator
-        ;
-    leaf arithmeticOperator =  '/' | '*' | '+' | '-' ;
-    leaf comparisonOperator = '==' | '!=' | '<=' | '>=' | '<' | '>' ;
-    leaf logicalOperator = 'AND' | 'OR' | 'XOR' ;
-
-    conditionalExpression = expression '?' expression ':' expression ;
-
-	orderBy = 'ORDER' 'BY' [columnOrder / ',']+ ;
-	columnOrder = NAME ('ASCENDING' | 'DESCENDING')? ;
-
-	ANY_NODE_TYPE = 'any' ;
-	NONE_NODE_TYPE = 'none' ;
-	nodeTypeReference = NAME ;
-	ANY_LINK_TYPE = 'any' ;
-	linkTypeReference = NAME ;
-	aggregateFunctionName = NAME ;
-	leaf STORED_QUERY_ID = "([a-zA-Z_][a-zA-Z0-9_]*)([.][a-zA-Z_][a-zA-Z0-9_]*)?" ; // project metricDef OR metricSet.metricDef
-	leaf NAME = "[a-zA-Z_][a-zA-Z0-9_]*" ;
-	leaf POSITIVE_INT = "[0-9]+" ;
-	leaf UNLIMITED_POSITIVE_INT = "[0-9]+" | '*' ;
-
-    literalValue = BOOLEAN < SINGLE_QUOTE_STRING < INTEGER < REAL < NULL ;
-    leaf BOOLEAN = 'true' | 'false' ;
-    leaf SINGLE_QUOTE_STRING = "'(?:\\?.)*?'" ;
-    leaf INTEGER = "[0-9]+" ;
-    leaf REAL = "[0-9]+[.][0-9]+" ;
-    leaf NULL = 'null' ;
-
-}
-        """.trimIndent()
+        private val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl")?.readText() ?: error("File not found")
         var processor: LanguageProcessor = tgqlprocessor()
 
         fun tgqlprocessor() : LanguageProcessor {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processor(grammarStr).build()
+            return Agl.processor(grammarStr)//.buildFor("query") //TODO: use build
          }
 
     }
@@ -400,7 +248,8 @@ grammar Query {
         Assert.assertEquals(queryStr, resultStr)
     }
 
-    @Test(timeout = 5000)
+    @ExperimentalTime
+    @Test//(timeout = 5000)
     fun fromBlog() {
         val queryStr = """
 FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
@@ -433,9 +282,18 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
    RETURN TABLE COLUMN Percent CONTAINING (Met / Due)* 100
         """.trimIndent()
 
-        val result = processor.parse("query", queryStr)
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(queryStr, resultStr)
+        try {
+            println("parse")
+            val v = measureTimedValue {
+                processor.parse("query", queryStr)
+            }
+            println(v.duration)
+            val result = v.value
+            Assert.assertNotNull(result)
+            val resultStr = result.asString
+            Assert.assertEquals(queryStr, resultStr)
+        } catch (e:ParseFailedException) {
+            fail("${e.message}, at ${e.location}, expected ${e.expected}")
+        }
     }
 }

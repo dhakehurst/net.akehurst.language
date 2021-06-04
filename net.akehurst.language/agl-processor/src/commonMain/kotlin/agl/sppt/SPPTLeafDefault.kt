@@ -29,11 +29,77 @@ class SPPTLeafDefault(
         priority: Int
 ) : SPPTNodeAbstract(
         terminalRule,
+        0, //no option for terminal rules
         location,
         location.position+matchedText.length,
         priority
 ), SPPTLeaf
 {
+    companion object {
+        val NONE = object : SPPTLeaf {
+            override val isPattern: Boolean
+                get() = TODO("not implemented")
+            override val isLiteral: Boolean
+                get() = TODO("not implemented")
+            override val tagList: List<String>
+                get() = TODO("not implemented")
+            override val eolPositions: List<Int>
+                get() = TODO("not implemented")
+            override val metaTags: List<String>
+                get() = TODO("not implemented")
+            override val identity: SPPTNodeIdentity
+                get() = TODO("not implemented")
+            override val name: String
+                get() = TODO("not implemented")
+            override val runtimeRuleNumber: Int
+                get() = TODO("not implemented")
+            override val option: Int
+                get() = TODO("not implemented")
+            override val location: InputLocation
+                get() = TODO("not implemented")
+            override val lastLeaf: SPPTLeaf
+                get() = TODO("not implemented")
+            override val startPosition: Int
+                get() = TODO("not implemented")
+            override val matchedTextLength: Int
+                get() = TODO("not implemented")
+            override val nextInputPosition: Int
+                get() = TODO("not implemented")
+            override val priority: Int
+                get() = TODO("not implemented")
+            override val matchedText: String
+                get() = TODO("not implemented")
+            override val nonSkipMatchedText: String
+                get() = TODO("not implemented")
+            override val numberOfLines: Int
+                get() = TODO("not implemented")
+            override val isEmptyLeaf: Boolean
+                get() = TODO("not implemented")
+            override val isEmptyMatch: Boolean
+                get() = TODO("not implemented")
+            override val isLeaf: Boolean
+                get() = true
+            override val isBranch: Boolean
+                get() = false
+            override val isSkip: Boolean
+                get() = TODO("not implemented")
+            override val asLeaf: SPPTLeaf
+                get() = TODO("not implemented")
+            override val asBranch: SPPTBranch
+                get() = TODO("not implemented")
+            override var parent: SPPTBranch?
+                get() = TODO("not implemented")
+                set(value) {TODO("not implemented")}
+            override fun setTags(arg: List<String>) {
+                TODO("not implemented")
+            }
+            override fun contains(other: SPPTNode): Boolean {
+                TODO("not implemented")
+            }
+
+        }
+    }
+
 
     // --- SPPTLeaf ---
 
@@ -42,7 +108,7 @@ class SPPTLeafDefault(
 
     override val tagList = mutableListOf<String>()
 
-    override var eolPositions: List<Int> = emptyList()
+    override lateinit var eolPositions: List<Int> // = emptyList()
 
     override val metaTags: List<String> by lazy { //TODO: make this configurable on the LanguageProcessor
         val map = mutableMapOf<String, String>(
@@ -55,9 +121,14 @@ class SPPTLeafDefault(
             }
         }
     }
+
+    override fun setTags(tags: List<String>) {
+        tagList.addAll(tags)
+    }
+
     // --- SPPTNode ---
 
-    override val nonSkipMatchedText: String = if (isSkip) "" else this.matchedText
+    override val nonSkipMatchedText: String get() = if (isSkip) "" else this.matchedText
 
     override fun contains(other: SPPTNode): Boolean {
         return this.identity == other.identity
@@ -70,15 +141,11 @@ class SPPTLeafDefault(
 
     override val asBranch: SPPTBranch get() { throw SPPTException("Not a Branch", null) }
 
-    override val lastLocation get() = this.location
-
-    override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
-        return visitor.visit(this,  arg)
-    }
+    override val lastLeaf get() = this
 
     override fun toString(): String {
         val name = when {
-            this.runtimeRule == RuntimeRuleSet.END_OF_TEXT -> "EOT"
+            this.runtimeRule == RuntimeRuleSet.END_OF_TEXT -> RuntimeRuleSet.END_OF_TEXT_TAG
             this.isLiteral -> "'${this.runtimeRule.value}'"
             this.isPattern -> "\"${this.runtimeRule.value}\""
             else -> this.name //shouldn't happen!

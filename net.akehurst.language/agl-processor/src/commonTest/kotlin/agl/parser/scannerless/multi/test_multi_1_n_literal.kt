@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.multi
+package net.akehurst.language.parser.scanondemand.multi
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_multi_1_n_literal : test_ScannerlessParserAbstract() {
+class test_multi_1_n_literal : test_ScanOnDemandParserAbstract() {
 
     // S = 'a'+
     private fun S(): RuntimeRuleSetBuilder {
@@ -34,7 +34,7 @@ class test_multi_1_n_literal : test_ScannerlessParserAbstract() {
     }
 
     @Test
-    fun empty() {
+    fun empty_fails() {
         val rrb = S()
         val goal = "S"
         val sentence = ""
@@ -57,7 +57,8 @@ class test_multi_1_n_literal : test_ScannerlessParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -70,7 +71,8 @@ class test_multi_1_n_literal : test_ScannerlessParserAbstract() {
             S { 'a' 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -81,6 +83,19 @@ class test_multi_1_n_literal : test_ScannerlessParserAbstract() {
 
         val expected = """
             S { 'a' 'a' 'a' }
+        """.trimIndent()
+
+        super.testStringResult(rrb, goal, sentence, expected)
+    }
+
+    @Test
+    fun aaaa() {
+        val rrb = S()
+        val goal = "S"
+        val sentence = "aaaa"
+
+        val expected = """
+            S { 'a' 'a' 'a' 'a' }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)

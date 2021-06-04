@@ -33,15 +33,15 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
     }
 
     fun rule(name: String): RuleBuilder {
-        return RuleBuilder(RuleDefault(grammar, name, false, false))
+        return RuleBuilder(RuleDefault(grammar, name, false, false, false))
     }
 
     fun skip(name: String, isLeaf: Boolean = false): RuleBuilder {
-        return RuleBuilder(RuleDefault(this.grammar, name, true, isLeaf))
+        return RuleBuilder(RuleDefault(this.grammar, name, false, true, isLeaf))
     }
 
     fun leaf(name: String): RuleBuilder {
-        return RuleBuilder(RuleDefault(this.grammar, name, false, true))
+        return RuleBuilder(RuleDefault(this.grammar, name, false, false, true))
     }
 
     fun terminalLiteral(value: String): Terminal {
@@ -56,7 +56,7 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         if (name.contains(".")) {
             TODO()
         } else {
-            return NonTerminalDefault(name, this.grammar)
+            return NonTerminalDefault(name, this.grammar, false)
         }
     }
 
@@ -71,17 +71,17 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         }
 
         fun concatenation(vararg sequence: ConcatenationItem) {
-            this.rule.rhs = ChoiceEqualDefault(listOf(ConcatenationDefault(sequence.toList())));
+            this.rule.rhs = ChoiceLongestDefault(listOf(ConcatenationDefault(sequence.toList())));
         }
 
-        fun choiceEqual(vararg alternative: Concatenation) {
-            //val alternativeConcats = alternative.map { ChoiceEqualDefault(listOf(it)) }
-            this.rule.rhs = ChoiceEqualDefault(alternative.asList());
+        fun choiceLongest(vararg alternative: Concatenation) {
+            //val alternativeConcats = alternative.map { ChoiceLongestDefault(listOf(it)) }
+            this.rule.rhs = ChoiceLongestDefault(alternative.asList());
         }
 
-        fun choiceEqual(vararg alternative: ConcatenationItem) {
+        fun choiceLongest(vararg alternative: ConcatenationItem) {
             val alternativeConcats = alternative.map { ConcatenationDefault(listOf(it)) }
-            this.rule.rhs = ChoiceEqualDefault(alternativeConcats);
+            this.rule.rhs = ChoiceLongestDefault(alternativeConcats);
         }
 
         fun choicePriority(vararg alternative: Concatenation) {
@@ -90,12 +90,12 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         }
 
         fun multi(min: Int, max: Int, item: TangibleItem) {
-            this.rule.rhs = ChoiceEqualDefault(listOf(ConcatenationDefault(listOf(MultiDefault(min, max, item)))));
+            this.rule.rhs = ChoiceLongestDefault(listOf(ConcatenationDefault(listOf(MultiDefault(min, max, item)))));
         }
 
         //TODO: original only allows separator to be a TerminalLiteral here,  I think any Terminal is ok though!
         fun separatedList(min: Int, max: Int, separator: Terminal, item: TangibleItem) {
-            this.rule.rhs = ChoiceEqualDefault(listOf(ConcatenationDefault(listOf(SeparatedListDefault(min, max, separator, item)))));
+            this.rule.rhs = ChoiceLongestDefault(listOf(ConcatenationDefault(listOf(SeparatedListDefault(min, max, separator, item)))));
         }
     }
 }

@@ -21,7 +21,9 @@ import net.akehurst.language.agl.ast.RuleDefault
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.CompletionItem
 
-class CompletionProvider {
+class CompletionProvider(
+        val targetGrammar:Grammar
+) {
 
     fun provideFor(item: RuleItem, desiredDepth: Int): List<CompletionItem> {
         val rule = item.owningRule
@@ -50,7 +52,10 @@ class CompletionProvider {
                     item.isPattern -> listOf(CompletionItem(item.owningRule, item.name)) //TODO: generate text/example from regEx
                     else -> listOf(CompletionItem(item.owningRule, item.value))
                 }
-                is NonTerminal -> getItems(item.referencedRule.rhs, desiredDepth - 1, done + item)
+                is NonTerminal -> {
+                    //TODO: handle overridden vs embedded rules!
+                    getItems(item.referencedRule.rhs, desiredDepth - 1, done + item)
+                }
                 is SeparatedList -> {
                     val items = getItems(item.item, desiredDepth, done + item)
                     if (item.min == 0) {

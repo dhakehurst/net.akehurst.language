@@ -1722,6 +1722,6 @@ COMMENT
 
 skip
 LINE_COMMENT
-    =   "//.*?$"
+    =   "//[^\n]*$"
     ;
 }

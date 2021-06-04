@@ -41,6 +41,14 @@ object AglLanguage {
                   foreground: darkgreen;
                   font-style: bold;
                 }
+                'extends' {
+                  foreground: darkgreen;
+                  font-style: bold;
+                }
+                'override' {
+                  foreground: darkgreen;
+                  font-style: bold;
+                }
                 'skip' {
                   foreground: darkgreen;
                   font-style: bold;

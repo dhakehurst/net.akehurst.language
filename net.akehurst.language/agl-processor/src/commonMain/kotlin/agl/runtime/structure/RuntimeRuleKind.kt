@@ -22,3 +22,26 @@ enum class RuntimeRuleKind {
     TERMINAL,
     EMBEDDED
 }
+
+enum class RuntimeRuleRhsItemsKind {
+    EMPTY,            // r = ;
+    CONCATENATION,    // r = a b c ;
+    CHOICE,           // see RuntimeRuleChoiceKind
+    LIST              // see RuntimeRuleListKind
+}
+
+enum class RuntimeRuleChoiceKind {
+    NONE,
+    AMBIGUOUS,
+    LONGEST_PRIORITY,
+    PRIORITY_LONGEST
+}
+
+enum class RuntimeRuleListKind {
+    NONE,
+    MULTI,                       // r = a? ; , n : a* ; n : a+ ; ,            TODO: n : a0..5
+    SEPARATED_LIST,              // r = [ a / ',' ]* ;  n : [ a / ',' ]+ ;    TODO: n : [ a / ',' ]0..6 ;
+    LEFT_ASSOCIATIVE_LIST,       // r = [ a < '+' ]* ;  n : [ a < ',' ]+ ;    TODO: support this
+    RIGHT_ASSOCIATIVE_LIST,      // r = [ a > '-' ]* ;  n : [ a > ',' ]+ ;    TODO: support this
+    UNORDERED,                   // r = a & b & c ;                           TODO: support this
+}

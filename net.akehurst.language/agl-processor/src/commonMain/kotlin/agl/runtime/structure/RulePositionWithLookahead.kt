@@ -19,36 +19,17 @@ package net.akehurst.language.agl.runtime.structure
 inline class StateNumber(val value:Int)
 
 //TODO: how is this different to ParentRelation ?
-class RulePositionWithLookahead(
+data class RulePositionWithLookahead(
     val rulePosition: RulePosition,
     val lookahead: Set<RuntimeRule>
 ) {
 
-    val items:Set<RuntimeRule> get() { return this.rulePosition.items }
-    val runtimeRule:RuntimeRule get() { return this.rulePosition.runtimeRule }
-    val choice:Int get() { return this.rulePosition.choice }
-    val position:Int get() { return this.rulePosition.position }
+    //val items:Set<RuntimeRule> get() { return this.rulePosition.items }
+    //val runtimeRule:RuntimeRule get() { return this.rulePosition.runtimeRule }
+    //val choice:Int get() { return this.rulePosition.option }
+    //val position:Int get() { return this.rulePosition.position }
 
     val isAtStart: Boolean get() { return this.rulePosition.isAtStart }
     val isAtEnd: Boolean get() { return this.rulePosition.isAtEnd }
-
-    // --- Any ---
-
-    override fun hashCode(): Int {
-        return rulePosition.hashCode()
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return if (other is RulePositionWithLookahead) {
-            other.rulePosition == this.rulePosition
-                && this.lookahead == other.lookahead
-        } else {
-            false
-        }
-    }
-
-    override fun toString(): String {
-        return "(${rulePosition},${lookahead})"
-    }
 
 }

@@ -16,9 +16,12 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.analyser.AsmElementSimple
 import net.akehurst.language.api.parser.ParseFailedException
-import kotlin.test.*
+import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 
 internal class test_Agl {
 
@@ -110,7 +113,7 @@ internal class test_Agl {
         """.trimIndent()
         val sentence = "a"
         val myProcessor = Agl.processor(grammarStr)
-        val asm = myProcessor.process<AsmElementSimple>(sentence)
+        val asm = myProcessor.process<AsmElementSimple>(AsmElementSimple::class,sentence)
     }
 
 }

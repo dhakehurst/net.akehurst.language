@@ -15,22 +15,21 @@
  */
 
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-
-//import org.jetbrains.dokka.gradle.DokkaTask
+import com.github.gmazzo.gradle.plugins.BuildConfigExtension
 
 plugins {
-    kotlin("multiplatform") version ("1.4.0") apply false
-    id("org.jetbrains.dokka") version ("1.4.0") apply false
-    id("nu.studer.credentials") version ("2.1")
+    //kotlin("multiplatform") version ("1.5.20-RC-179") apply false
+    kotlin("multiplatform") version ("1.5.10") apply false
+    id("org.jetbrains.dokka") version ("1.4.32") apply false
+    id("com.github.gmazzo.buildconfig") version("3.0.0") apply false
+    //id("jacoco")
 }
 
 allprojects {
+    //apply(plugin = "jacoco")
 
     val version_project: String by project
-    val group_project = "${rootProject.name}"
+    val group_project = rootProject.name
 
     group = group_project
     version = version_project
@@ -39,33 +38,50 @@ allprojects {
 
 }
 
-fun getProjectProperty(s: String) = project.findProperty(s) as String?
-
-
 subprojects {
 
     apply(plugin = "org.jetbrains.kotlin.multiplatform")
     apply(plugin = "maven-publish")
-    apply(plugin = "signing")
     apply(plugin = "org.jetbrains.dokka")
+    apply(plugin = "com.github.gmazzo.buildconfig")
 
     repositories {
         mavenCentral()
-        jcenter()
+        maven {
+            url = uri("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/")
+        }
     }
 
-    tasks.named("publish").get().dependsOn("javadocJar")
+    configure<BuildConfigExtension> {
+        val now = java.time.Instant.now()
+        fun fBbuildStamp(): String = java.time.format.DateTimeFormatter.ISO_DATE_TIME.withZone(java.time.ZoneId.of("UTC")).format(now)
+        fun fBuildDate(): String = java.time.format.DateTimeFormatter.ofPattern("yyyy-MMM-dd").withZone(java.time.ZoneId.of("UTC")).format(now)
+        fun fBuildTime(): String= java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z").withZone(java.time.ZoneId.of("UTC")).format(now)
+
+        packageName("${project.group}.agl.processor")
+        buildConfigField("String", "version", "\"${project.version}\"")
+        buildConfigField("String", "buildStamp", "\"${fBbuildStamp()}\"")
+        buildConfigField("String", "buildDate", "\"${fBuildDate()}\"")
+        buildConfigField("String", "buildTime", "\"${fBuildTime()}\"")
+    }
 
     configure<KotlinMultiplatformExtension> {
+
         jvm("jvm8") {
             val main by compilations.getting {
                 kotlinOptions {
+                    languageVersion = "1.5"
+                    apiVersion = "1.5"
                     jvmTarget = JavaVersion.VERSION_1_8.toString()
+                    //useIR = true
                 }
             }
             val test by compilations.getting {
                 kotlinOptions {
+                    languageVersion = "1.5"
+                    apiVersion = "1.5"
                     jvmTarget = JavaVersion.VERSION_1_8.toString()
+                    //useIR = true
                 }
             }
         }
@@ -87,107 +103,9 @@ subprojects {
         }
     }
 
-    val javadocJar by tasks.registering(Jar::class) {
-        dependsOn("dokkaJavadoc")
-        archiveClassifier.set("javadoc")
-        from(project.properties["javadoc"])
-    }
-
-    val now = Instant.now()
-    fun fBbuildStamp(): String {
-        return DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneId.of("UTC")).format(now)
-    }
-
-    fun fBuildDate(): String {
-        return DateTimeFormatter.ofPattern("yyyy-MMM-dd").withZone(ZoneId.of("UTC")).format(now)
-    }
-
-    fun fBuildTime(): String {
-        return DateTimeFormatter.ofPattern("HH:mm:ss z").withZone(ZoneId.of("UTC")).format(now)
-    }
-    tasks.register<Copy>("generateFromTemplates") {
-        val templateContext = mapOf(
-            "version" to project.version,
-            "buildStamp" to fBbuildStamp(),
-            "buildDate" to fBuildDate(),
-            "buildTime" to fBuildTime()
-        )
-        inputs.properties(templateContext) // for gradle up-to-date check
-        from("src/template/kotlin")
-        into("$buildDir/generated/kotlin")
-        expand(templateContext)
-    }
-    tasks.getByName("compileKotlinMetadata") {
-        dependsOn("generateFromTemplates")
-    }
-    tasks.getByName("compileKotlinJvm8") {
-        dependsOn("generateFromTemplates")
-    }
-    tasks.getByName("compileKotlinJs") {
-        dependsOn("generateFromTemplates")
-    }
-//    tasks.getByName("compileKotlinMacosX64") {
-//        dependsOn("generateFromTemplates")
-//    }
     dependencies {
-        "commonMainImplementation"(kotlin("stdlib"))
         "commonTestImplementation"(kotlin("test"))
         "commonTestImplementation"(kotlin("test-annotations-common"))
-
-        "jvm8MainImplementation"(kotlin("stdlib-jdk8"))
-        "jvm8TestImplementation"(kotlin("test-junit"))
-
-        "jsMainImplementation"(kotlin("stdlib-js"))
-        "jsTestImplementation"(kotlin("test-js"))
     }
 
-    val creds = project.properties["credentials"] as nu.studer.gradle.credentials.domain.CredentialsContainer
-    val sonatype_pwd = creds.propertyMissing("SONATYPE_PASSWORD") as String?
-        ?: getProjectProperty("SONATYPE_PASSWORD")
-        ?: error("Must set project property with Sonatype Password (-P SONATYPE_PASSWORD=<...> or set in ~/.gradle/gradle.properties)")
-    project.ext.set("signing.password", sonatype_pwd)
-
-    configure<PublishingExtension> {
-        repositories {
-            maven {
-                name = "sonatype"
-                setUrl("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-                credentials {
-                    username = getProjectProperty("SONATYPE_USERNAME")
-                        ?: error("Must set project property with Sonatype Username (-P SONATYPE_USERNAME=<...> or set in ~/.gradle/gradle.properties)")
-                    password = sonatype_pwd
-                }
-            }
-        }
-        publications.withType<MavenPublication> {
-            artifact(javadocJar.get())
-
-            pom {
-                name.set("AGL Processor")
-                description.set("Dynamic, scan-on-demand, parsing; when a regular expression is just not enough")
-                url.set("https://medium.com/@dr.david.h.akehurst/a-kotlin-multi-platform-parser-usable-from-a-jvm-or-javascript-59e870832a79")
-
-                licenses {
-                    license {
-                        name.set("The Apache License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                    }
-                }
-                developers {
-                    developer {
-                        name.set("Dr. David H. Akehurst")
-                        email.set("dr.david.h@akehurst.net")
-                    }
-                }
-                scm {
-                    url.set("https://github.com/dhakehurst/net.akehurst.language")
-                }
-            }
-        }
-    }
-
-    configure<SigningExtension> {
-        val publishing = project.properties["publishing"] as PublishingExtension
-        sign(publishing.publications)
-    }
 }

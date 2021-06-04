@@ -14,67 +14,70 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.whitespace
+package net.akehurst.language.parser.scanondemand.whitespace
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_leftRecursive_a : test_ScannerlessParserAbstract() {
+class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
     // S =  'a' | S1 ;
     // S1 = S 'a' ;
     // skip WS = "\s+" ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_S = b.rule("S").build()
-        val r_S1 = b.rule("S1").concatenation(r_S, r_a)
-        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CHOICE,RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, arrayOf(r_a, r_S1))
-        val r_WS = b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
-        return b
+
+    private companion object {
+        val rrs = runtimeRuleSet {
+            skip("WS") { pattern("\\s+") }
+            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                ref("S1")
+            }
+            concatenation("S1") { ref("S"); literal("a") }
+        }
+        val goal = "S"
     }
 
     @Test
     fun WSaWS() {
-        val rrb = this.S().ruleSet()
-        val goal = "S"
         val sentence = " a "
 
         val expected = """
             S { WS { "\s+" : ' ' } 'a' WS { "\s+" : ' ' } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
-
 
     @Test
     fun aWSa() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a a"
 
         val expected = """
-            S { S1 { S { 'a' WS { "\s+" : ' ' } } 'a' } }
+            S|1 { S1 { S { 'a' WS { "\s+" : ' ' } } 'a' } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aWSaWSa() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a a a"
 
         val expected = """
-            S {
-                S1 {
-                    S {
-                        S1 {
+            S|1 { S1 {
+                    S|1 { S1 {
                             S { 'a' WS { "\s+" : ' ' } }
                             'a' WS { "\s+" : ' ' }
                         }
@@ -84,19 +87,23 @@ class test_leftRecursive_a : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun WSaWSaWSaWS() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = " a a a "
 
         val expected = """
-            S { WS { "\s+" : ' ' }
+            S|1 { WS { "\s+" : ' ' }
                 S1 {
-                    S {
+                    S|1 {
                         S1 {
                             S { 'a' WS { "\s+" : ' ' } }
                             'a' WS { "\s+" : ' ' }
@@ -107,19 +114,28 @@ class test_leftRecursive_a : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aWS500() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a ".repeat(500)
 
         val expected = "S { S1 { ".repeat(499) + "S { 'a' WS { \"\\s+\" : ' ' } }" + "'a' WS { \"\\s+\" : ' ' } } }".repeat(499)
 
-
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

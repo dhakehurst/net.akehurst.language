@@ -27,6 +27,7 @@ import org.junit.runners.Parameterized.Parameters
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.parser.ParseFailedException
+import java.lang.RuntimeException
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.fail
@@ -38,11 +39,11 @@ class test_NaturalLanguage(val data:Data) {
     companion object {
 
         private val grammarStr = this::class.java.getResource("/natural/English.agl").readText()
-        var processor: LanguageProcessor = tgqlprocessor()
+        var processor: LanguageProcessor = processor()
 
         var sourceFiles = arrayOf("/natural/english-sentences-valid.txt")
 
-        fun tgqlprocessor() : LanguageProcessor {
+        fun processor() : LanguageProcessor {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
             return Agl.processor(grammarStr)
          }
@@ -88,6 +89,12 @@ class test_NaturalLanguage(val data:Data) {
     @Test
     fun test() {
         try {
+            val scan = processor.scan(this.data.sentence)
+            scan.forEach { l ->
+                if(l.name=="undefined") {
+                    throw RuntimeException("Found unknown words '${l.matchedText}', at ${l.location}")
+                }
+            }
             val result = processor.parse(this.data.goal, this.data.sentence)
             assertNotNull(result)
             val resultStr = result.asString

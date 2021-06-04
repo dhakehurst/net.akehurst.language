@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.choiceEqual
+package net.akehurst.language.parser.scanondemand.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.scanondemand.leftAndRightRecursive.test_expessions_bodmas2_Longest
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
+class test_bodmas1_WS : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // expr = root | group | div | mul | add | sub ;
@@ -37,229 +39,279 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
     // bool = 'true' | 'false' ;
     // var = "[a-zA-Z]+" ;
     // WS = "\s+" ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_expr = b.rule("expr").build()
-        val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
-        val r_bool = b.rule("bool").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("true"), b.literal("false"))
-        val r_group = b.rule("group").concatenation(b.literal("("),r_expr,b.literal(")"))
-        val r_div = b.rule("div").concatenation(r_expr,b.literal("/"),r_expr)
-        val r_mul = b.rule("mul").concatenation(r_expr,b.literal("*"),r_expr)
-        val r_add = b.rule("add").concatenation(r_expr,b.literal("+"),r_expr)
-        val r_sub = b.rule("sub").concatenation(r_expr,b.literal("-"),r_expr)
-        val r_root = b.rule("root").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,r_var, r_bool)
-        b.rule(r_expr).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_root, r_group, r_div, r_mul,r_add, r_sub)
-        b.rule("S").concatenation(r_expr)
-        b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
-        return b
+    private companion object {
+        val rrs = runtimeRuleSet {
+            pattern("WS","\\s+",true)
+            concatenation("S") { ref("expr") }
+            choice("expr",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("root")
+                ref("group")
+                ref("div")
+                ref("mul")
+                ref("add")
+                ref("sub")
+            }
+            choice("root",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+                ref("var")
+                ref("bool")
+            }
+            concatenation("group") { literal("("); ref("expr"); literal(")") }
+            concatenation("div") { ref("expr"); literal("/"); ref("expr") }
+            concatenation("mul") { ref("expr"); literal("*"); ref("expr") }
+            concatenation("add") { ref("expr"); literal("+"); ref("expr") }
+            concatenation("sub") { ref("expr"); literal("-"); ref("expr") }
+            choice("bool",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("true")
+                literal("false")
+            }
+            pattern("var","[a-zA-Z]+")
+        }
+
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1
+            )
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
     }
 
-
     @Test
     fun a() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a"
 
         val expected = """
             S {
-              expr { root{ var { "[a-zA-Z]+" : 'a' } } }
+              expr { root { var : 'a' } }
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
 
     }
 
     @Test
     fun expr_true() {
-        val rrb = this.S()
-        val goal = "expr"
         val sentence = "true"
 
         val expected = """
-              expr { root {
+              expr { root|1 {
                 bool { 'true' }
               } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = Companion.goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun S_true() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "true"
 
         val expected = """
             S {
-              expr { root {
+              expr { root|1 {
                 bool { 'true' }
               } }
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun S_var() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "var"
 
         val expected = """
             S {
               expr { root {
-                var { "[a-zA-Z]+" : 'var' }
+                var : 'var'
               } }
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun S_group_a() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "(a)"
 
         val expected = """
             S {
-              expr {
+              expr|1 {
                 group {
                   '('
-                  expr { root { var { "[a-zA-Z]+" : 'a' } } }
+                  expr { root { var : 'a' } }
                   ')'
                 }
               }
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
 
     }
 
     @Test
     fun a_div_b() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a / b"
 
         val expected = """
             S {
-              expr {
+              expr|2 {
                 div {
-                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
-                  '/' WS { "\s+" : ' ' }
-                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
+                  expr { root { var : 'a' WS : ' ' } }
+                  '/' WS : ' '
+                  expr { root { var : 'b' } }
                 }
               }
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
 
     }
 
     @Test
     fun a_mul_b() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a * b"
 
         val expected = """
             S {
-              expr {
+              expr|3 {
                 mul {
-                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
-                  '*' WS { "\s+" : ' ' }
-                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
+                  expr { root { var : 'a' WS : ' ' } }
+                  '*' WS : ' '
+                  expr { root { var : 'b' } }
                 }
               }
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
 
     }
 
     @Test
     fun a_add_b() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a + b"
 
         val expected = """
             S {
-              expr {
+              expr|4 {
                 add {
-                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
-                  '+' WS { "\s+" : ' ' }
-                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
+                  expr { root { var : 'a' WS : ' ' } }
+                  '+' WS : ' '
+                  expr { root { var : 'b' } }
                 }
               }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
 
     }
 
     @Test
     fun a_sub_b() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a - b"
 
         val expected = """
             S {
-              expr {
+              expr|5 {
                 sub {
-                  expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
-                  '-' WS { "\s+" : ' ' }
-                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
+                  expr { root { var : 'a' WS : ' ' } }
+                  '-' WS : ' '
+                  expr { root { var : 'b' } }
                 }
               }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
 
     }
 
     @Test
     fun a_add_b_mul_c() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a+b*c"
 
         val expected = """
             S {
-             expr {
+             expr|4 {
               add {
-                expr { root { var { "[a-zA-Z]+" : 'a' } } }
+                expr { root { var : 'a' } }
                 '+'
-                expr {
+                expr|3 {
                   mul {
-                    expr { root { var { "[a-zA-Z]+" : 'b' } } }
+                    expr { root { var : 'b' } }
                     '*'
-                    expr { root { var { "[a-zA-Z]+" : 'c' } } }
+                    expr { root { var : 'c' } }
                   }
                 }
               }
@@ -267,124 +319,147 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a_mul_b_add_c() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a*b+c"
 
         val expected = """
             S {
-             expr {
+             expr|4 {
               add {
-                expr {
+                expr|3 {
                   mul {
-                    expr { root { var { "[a-zA-Z]+" : 'a' } } }
+                    expr { root { var : 'a' } }
                     '*'
-                    expr { root { var { "[a-zA-Z]+" : 'b' } } }
+                    expr { root { var : 'b' } }
                   }
                 }
                '+'
-               expr { root { var { "[a-zA-Z]+" : 'c' } } }
+               expr { root { var : 'c' } }
               }
              }
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = Companion.goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a_add_b_add_c_add_d() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a+b+c+c+d"
 
         val expected = """
-           S {
-             expr {
-               add {
-                 expr {
-                  add {
-                    expr {
-                      mul {
-                        expr { root { var { "[a-zA-Z]+" : 'a' } } }
-                        '+'
-                        expr { root { var { "[a-zA-Z]+" : 'b' } } }
-                      }
-                    }
-                   '+'
-                   expr { root { var { "[a-zA-Z]+" : 'c' } } }
-                  }
-                 }
-                 '+'
-                 expr { root { var { "[a-zA-Z]+" : 'c' } } }
-               }
-             }
-           }
+ S { expr|4 { add {
+      expr|4 { add {
+          expr|4 { add {
+              expr|4 { add {
+                  expr { root { var : 'a' } }
+                  '+'
+                  expr { root { var : 'b' } }
+                } }
+              '+'
+              expr { root { var : 'c' } }
+            } }
+          '+'
+          expr { root { var : 'c' } }
+        } }
+      '+'
+      expr { root { var : 'd' } }
+    } } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = Companion.goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a_add_b_add_c_add_d_add_e_add_f() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a+b+c+c+d+e+f"
 
         val expected = """
-            S {
-             expr {
-              add {
-                expr {
-                  mul {
-                    expr { var { "[a-zA-Z]+" : 'a' } }
-                    '*'
-                    expr { var { "[a-zA-Z]+" : 'b' } }
-                  }
-                }
-               '+'
-               expr { var { "[a-zA-Z]+" : 'c' } }
-              }
-             }
-            }
-        """.trimIndent()
-
-        super.testStringResult(rrb, goal, sentence, expected)
-    }
-
-
-    @Test
-    fun Og_a_add_b_Cg_mul_c() {
-        val rrb = this.S()
-        val goal = "S"
-        val sentence = "(a+b)*c"
-
-        val expected = """
-            S { expr { mul {
-              expr {
-                group {
-                  '('
-                    expr {
-                      add {
-                        expr { var { "[a-zA-Z]+" : 'a' } }
-                        '+'
-                        expr { var { "[a-zA-Z]+" : 'b' } }
-                      }
-                    }
-                  ')'
-                }
-              }
-              '*'
-              expr { var { "[a-zA-Z]+" : 'c' } }
+         S { expr|4 { add {
+              expr|4 { add {
+                  expr|4 { add {
+                      expr|4 { add {
+                          expr|4 { add {
+                              expr|4 { add {
+                                  expr { root { var : 'a' } }
+                                  '+'
+                                  expr { root { var : 'b' } }
+                                } }
+                              '+'
+                              expr { root { var : 'c' } }
+                            } }
+                          '+'
+                          expr { root { var : 'c' } }
+                        } }
+                      '+'
+                      expr { root { var : 'd' } }
+                    } }
+                  '+'
+                  expr { root { var : 'e' } }
+                } }
+              '+'
+              expr { root { var : 'f' } }
             } } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+            rrs = rrs,
+            goal = Companion.goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun Og_a_add_b_Cg_mul_c() {
+        val sentence = "(a+b)*c"
+
+        val expected = """
+         S { expr|3 { mul {
+              expr|1 { group {
+                  '('
+                  expr|4 { add {
+                      expr { root { var : 'a' } }
+                      '+'
+                      expr { root { var : 'b' } }
+                    } }
+                  ')'
+                } }
+              '*'
+              expr { root { var : 'c' } }
+            } } }
+        """.trimIndent()
+
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

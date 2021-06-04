@@ -19,13 +19,11 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
-import kotlin.js.JsName
 
 class SharedPackedParseTreeDefault(
-        override val root: SPPTNode,
-        override val seasons: Int,
-        override val maxNumHeads: Int
+    override val root: SPPTNode,
+    override val seasons: Int,
+    override val maxNumHeads: Int
 ) : SharedPackedParseTree {
 
     override fun contains(other: SharedPackedParseTree): Boolean {
@@ -52,7 +50,7 @@ class SharedPackedParseTreeDefault(
     }
 
     override val asString: String by lazy {
-        this.accept(SPPT2InputText(), "")
+        SPPT2InputText().visit(this, "")
     }
 
     override val countTrees: Int by lazy {
@@ -63,10 +61,9 @@ class SharedPackedParseTreeDefault(
         this.toStringIndented("")
     }
 
-
     override fun toStringIndented(indentIncrement: String): String {
         val visitor = ToStringVisitor("\n", indentIncrement)
-        val all: Set<String> = this.accept(visitor, ToStringVisitor.Indent("", true))
+        val all: Set<String> = visitor.visit(this, ToStringVisitor.Indent("", true))
         val total = all.size
         val sep = "\n"
         var cur = 0
@@ -78,10 +75,6 @@ class SharedPackedParseTreeDefault(
             res += "\n"
         }
         return all.joinToString(sep)
-    }
-
-    override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
-        return visitor.visit(this, arg)
     }
 
     override fun equals(other: Any?): Boolean {

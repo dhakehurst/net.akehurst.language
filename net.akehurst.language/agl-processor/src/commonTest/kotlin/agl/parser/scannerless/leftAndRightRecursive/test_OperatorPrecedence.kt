@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.choicePriority
+package net.akehurst.language.parser.scanondemand.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItemKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
+class test_OperatorPrecedence : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // expr = var < bool < group < div < mul < add < sub ;
@@ -250,11 +248,11 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-             expr {
+             expr|5 {
               add {
                 expr { var { "[a-zA-Z]+" : 'a' } }
                 '+'
-                expr {
+                expr|4 {
                   mul {
                     expr { var { "[a-zA-Z]+" : 'b' } }
                     '*'
@@ -303,21 +301,23 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
         val sentence = "a+b+c+c+d"
 
         val expected = """
-            S {
-             expr {
-              add {
-                expr {
-                  mul {
-                    expr { var { "[a-zA-Z]+" : 'a' } }
-                    '*'
-                    expr { var { "[a-zA-Z]+" : 'b' } }
-                  }
-                }
-               '+'
-               expr { var { "[a-zA-Z]+" : 'c' } }
-              }
-             }
-            }
+ S { expr|5 { add {
+      expr|5 { add {
+          expr|5 { add {
+              expr|5 { add {
+                  expr { var { "[a-zA-Z]+" : 'a' } }
+                  '+'
+                  expr { var { "[a-zA-Z]+" : 'b' } }
+                } }
+              '+'
+              expr { var { "[a-zA-Z]+" : 'c' } }
+            } }
+          '+'
+          expr { var { "[a-zA-Z]+" : 'c' } }
+        } }
+      '+'
+      expr { var { "[a-zA-Z]+" : 'd' } }
+    } } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)
@@ -330,21 +330,27 @@ class test_OperatorPrecedence : test_ScannerlessParserAbstract() {
         val sentence = "a+b+c+d+e+f"
 
         val expected = """
-            S {
-             expr {
-              add {
-                expr {
-                  mul {
-                    expr { var { "[a-zA-Z]+" : 'a' } }
-                    '*'
-                    expr { var { "[a-zA-Z]+" : 'b' } }
-                  }
-                }
-               '+'
-               expr { var { "[a-zA-Z]+" : 'c' } }
-              }
-             }
-            }
+ S { expr|5 { add {
+      expr|5 { add {
+          expr|5 { add {
+              expr|5 { add {
+                  expr|5 { add {
+                      expr { var { "[a-zA-Z]+" : 'a' } }
+                      '+'
+                      expr { var { "[a-zA-Z]+" : 'b' } }
+                    } }
+                  '+'
+                  expr { var { "[a-zA-Z]+" : 'c' } }
+                } }
+              '+'
+              expr { var { "[a-zA-Z]+" : 'd' } }
+            } }
+          '+'
+          expr { var { "[a-zA-Z]+" : 'e' } }
+        } }
+      '+'
+      expr { var { "[a-zA-Z]+" : 'f' } }
+    } } }
         """.trimIndent()
 
         super.testStringResult(rrb, goal, sentence, expected)

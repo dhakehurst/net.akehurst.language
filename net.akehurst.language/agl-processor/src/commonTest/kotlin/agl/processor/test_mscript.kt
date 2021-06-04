@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.parser.ParseFailedException
-import kotlin.reflect.KClass
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
-
 
 class test_mscript {
     companion object {
@@ -31,15 +28,15 @@ namespace com.yakindu.modelviewer.parser
 
 grammar Mscript {
 
+    // if we treat '\n' as part of the WHITESPACE skip rule, we get ambiguity in statements
     skip WHITESPACE = "[ \t\x0B\f]+" ;
-    skip LINE_CONTINUATION =  "[.][.][.](?:.*)\R" ;
+    skip LINE_CONTINUATION =  "[.][.][.](.*)(\r?\n)" ;
     skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
-         MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
-         SINGLE_LINE_COMMENT = "%(?:[^{].*?)?$" ;
+         MULTI_LINE_COMMENT = "%[{]([^%]|(\r?\n))*%[}]" ;
+         SINGLE_LINE_COMMENT = "%([^{\n].*)?$" ;
 
     script = statementList ;
-    statementList = [line / "\R"]* ;
-    // if we treat '\n' as part of the WHITESPACE skip rule, we get ambiguity in statements
+    statementList = [line / "(\r?\n)"]* ;
     line = statement? ';'?  ;
 
     statement
@@ -83,6 +80,8 @@ grammar Mscript {
 
     matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
     row = expression (','? expression)* ;
+    //row = [expression / opCmr ]+ ;
+    //opCmr = ','? ;
 
     literal
       = BOOLEAN
@@ -95,17 +94,43 @@ grammar Mscript {
 
     number = INTEGER | REAL ;
 
-    NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
+    leaf NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
 
-    COLON               = ':' ;
-    BOOLEAN             = 'true' | 'false' ;
-    INTEGER             = "([+]|[-])?[0-9]+" ;
-    REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
-    SINGLE_QUOTE_STRING = "'(?:\\?.)*?'" ;
-    DOUBLE_QUOTE_STRING = "\"(?:\\?.)*?\"" ;
+    leaf COLON               = ':' ;
+    leaf BOOLEAN             = 'true' | 'false' ;
+    leaf INTEGER             = "([+]|[-])?[0-9]+" ;
+    leaf REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
+    leaf SINGLE_QUOTE_STRING = "'([^'\\]|\\.)*'" ;
+    leaf DOUBLE_QUOTE_STRING = "\"([^\"\\]|\\.)*\"" ;
+
 }
     """.trimIndent()
         val sut = Agl.processor(grammarStr)
+    }
+
+    @Test
+    fun process_single_line_comment() {
+
+        val text = "% this is a comment"
+        val actual = sut.parse("script", text)
+
+        assertNotNull(actual)
+
+    }
+
+    @Test
+    fun process_multi_line_comment() {
+
+        val text = """
+            %{
+             a multiline comment
+             a multiline comment
+            %}
+        """.trimIndent()
+        val actual = sut.parse("script", text)
+
+        assertNotNull(actual)
+
     }
 
     @Test
@@ -211,6 +236,34 @@ grammar Mscript {
     }
 
     @Test
+    fun process_SINGLE_QUOTE_STRING_empty() {
+        val text = "''"
+        val actual = sut.parse("SINGLE_QUOTE_STRING", text)
+
+        assertNotNull(actual)
+        assertEquals("SINGLE_QUOTE_STRING", actual.root.name)
+    }
+
+    @Test
+    fun process_SINGLE_QUOTE_STRING_simple() {
+        val text = "'xxx'"
+        val actual = sut.parse("SINGLE_QUOTE_STRING", text)
+
+        assertNotNull(actual)
+        assertEquals("SINGLE_QUOTE_STRING", actual.root.name)
+    }
+
+    @Test
+    fun process_SINGLE_QUOTE_STRING_withLineBreak() {
+        val text = """'xx
+            x'""".trimIndent()
+        val actual = sut.parse("SINGLE_QUOTE_STRING", text)
+
+        assertNotNull(actual)
+        assertEquals("SINGLE_QUOTE_STRING", actual.root.name)
+    }
+
+    @Test
     fun process_matrix_0x0() {
 
         val text = "[]"
@@ -241,6 +294,16 @@ grammar Mscript {
     }
 
     @Test
+    fun process_matrix_row_x4() {
+
+        val text = "1 2 3 4"
+        val actual = sut.parse("row", text)
+
+        assertNotNull(actual)
+        assertEquals("row", actual.root.name)
+    }
+
+    @Test
     fun process_matrix_1x4() {
 
         val text = "[1 2 3 4]"
@@ -264,6 +327,15 @@ grammar Mscript {
     fun process_matrix_row_composition_4x1() {
 
         val text = "[1; 2; 3; 4]"
+        val actual = sut.parse("matrix", text)
+
+        assertNotNull(actual)
+        assertEquals("matrix", actual.root.name)
+    }
+
+    @Test
+    fun process_field_access() {
+        val text = "cn.src_cpu"
         val actual = sut.parse("matrix", text)
 
         assertNotNull(actual)
@@ -375,15 +447,16 @@ grammar Mscript {
     @Test
     fun process_expression_operators_10() {
 
-        val text = "1"+" + 1".repeat(10)
+        val text = "1" + " + 1".repeat(10)
         val actual = sut.parse("expression", text)
 
         assertNotNull(actual)
     }
 
+    @Test
     fun process_expression_operators_100() {
 
-        val text = "1"+" + 1".repeat(100)
+        val text = "1" + " + 1".repeat(100)
         val actual = sut.parse("expression", text)
 
         assertNotNull(actual)
@@ -397,33 +470,6 @@ grammar Mscript {
 
         assertNotNull(actual)
     }
-
-
-    @Test
-    fun process_single_line_comment() {
-
-        val text = "% this is a comment"
-        val actual = sut.parse("script", text)
-
-        assertNotNull(actual)
-
-    }
-
-    @Test
-    fun process_multi_line_comment() {
-
-        val text = """
-            %{
-             a multiline comment
-             a multiline comment
-            %}
-        """.trimIndent()
-        val actual = sut.parse("script", text)
-
-        assertNotNull(actual)
-
-    }
-
 
     @Test
     fun process_script_empty() {
@@ -453,6 +499,42 @@ grammar Mscript {
     }
 
     @Test
+    fun process_functionCall_func() {
+
+        val text = "func()"
+        val actual = sut.parse("functionCall", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
+    fun process_statement_func() {
+
+        val text = "func()"
+        val actual = sut.parse("statement", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
+    fun process_line_func() {
+
+        val text = "func();"
+        val actual = sut.parse("line", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
+    fun process_statementList_func() {
+
+        val text = "func();"
+        val actual = sut.parse("statementList", text)
+
+        assertNotNull(actual)
+    }
+
+    @Test
     fun process_script_func() {
 
         val text = "func();"
@@ -473,6 +555,7 @@ grammar Mscript {
 
         assertNotNull(actual)
     }
+
     @Test
     fun parse_script_func_args() {
 
@@ -489,9 +572,11 @@ grammar Mscript {
         val actual = sut.parse("script", text)
 
         assertNotNull(actual)
-        assertEquals("script",actual.root.name)
-        assertEquals("functionCall",actual.root.asBranch.branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].name)
+        assertEquals("script", actual.root.name)
+        assertEquals(
+            "functionCall",
+            actual.root.asBranch.branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].name
+        )
     }
-
 
 }

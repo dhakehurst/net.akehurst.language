@@ -13,8 +13,8 @@ namespace  org.yakindu.stext
 grammar Expressions {
 
     skip WS = "\s+";
-   	skip SINGLE_LINE_COMMENT = "/\*[^*]*\*+(?:[^*/][^*]*\*+)*/" ;
-   	skip MULTI_LINE_COMMENT = "//.*?$" ;
+   	skip SINGLE_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+   	skip MULTI_LINE_COMMENT = "//[^\n\r]*" ;
 
     Expression
       = AssignmentExpression
@@ -110,6 +110,6 @@ grammar Expressions {
     leaf INT = "[0-9]+" ;
     leaf ID = "[a-zA-Z_][a-zA-Z_0-9]*" ;
     leaf STRING = DQ_STRING | SQ_STRING ;
-    leaf DQ_STRING = "\"(?:\\?.)*?\"";
-    leaf SQ_STRING = "'(?:\\?.)*?'" ;
+    leaf DQ_STRING = "\"(\\?.)*\"";
+    leaf SQ_STRING = "'(\\?.)*'" ;
 }

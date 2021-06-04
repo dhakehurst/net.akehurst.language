@@ -14,110 +14,130 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.listSeparated
+package net.akehurst.language.parser.scanondemand.listSeparated
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_literal_a0n : test_ScannerlessParserAbstract() {
+class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
-    // S = [a / ',']*
-    // a = 'a'
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r0 = b.literal("a")
-        val r1 = b.rule("S").separatedList(0, -1, b.literal(","), r0)
-        return b
+    // S = ['a' / ',']*
+
+    private companion object {
+        val rrs = runtimeRuleSet {
+            sList("S",0,-1,"'a'","','")
+            literal("'a'","a")
+            literal("','",",")
+        }
+        val goal = "S"
     }
+
 
     @Test
     fun empty() {
-        val b = S()
-        val goal = "S"
         val sentence = ""
 
-        val expected = "S { §empty }"
+        val expected = "S|1 { §empty }"
 
-        super.test(b, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun a() {
-        val b = S()
-        val goal = "S"
         val sentence = "a"
 
         val expected = "S { 'a' }"
 
-        super.test(b, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = Companion.goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun aa_fails() {
-        val b = S()
-        val goal = "S"
         val sentence = "aa"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(b, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, e.location.line)
         assertEquals(2, e.location.column)
-        assertEquals(setOf("','", RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
+        assertEquals(setOf("','", RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
     }
 
     @Test
     fun aca() {
-        val b = S()
-        val goal = "S"
         val sentence = "a,a"
 
         val expected = "S {'a' ',' 'a'}"
 
-        super.test(b, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun acaa_fails() {
-        val b = S()
-        val goal = "S"
         val sentence = "a,aa"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            super.test(b, goal, sentence)
+            super.test(rrs, goal, sentence,1)
         }
 
         assertEquals(1, e.location.line)
         assertEquals(4, e.location.column)
-        assertEquals(setOf("','", RuntimeRuleSet.END_OF_TEXT.tag), e.expected)
+        assertEquals(setOf("','", RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
     }
 
     @Test
     fun acaca() {
-        val b = S()
-        val goal = "S"
         val sentence = "a,a,a"
 
         val expected = "S {'a' ',' 'a' ',' 'a'}"
 
-        super.test(b, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun acax100() {
-        val b = S()
-        val goal = "S"
         val sentence = "a"+",a".repeat(99)
 
         val expected = "S {'a'"+" ',' 'a'".repeat(99)+"}"
 
-        super.test(b, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

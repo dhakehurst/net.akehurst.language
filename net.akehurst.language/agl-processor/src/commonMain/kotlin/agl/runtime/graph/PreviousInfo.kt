@@ -20,4 +20,10 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
 data class PreviousInfo(
     val node: GrowingNode
-)
+) {
+    override fun hashCode(): Int = arrayOf(node.currentState, node.lookahead).contentHashCode()
+    override fun equals(other: Any?): Boolean = when(other) {
+        is PreviousInfo -> this.node.currentState == other.node.currentState && this.node.lookahead == other.node.lookahead
+        else -> false
+    }
+}

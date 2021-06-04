@@ -22,7 +22,7 @@ class test_nestedLists_from_Dot {
 
     companion object {
         val grammarStr="""
-            namespace test
+namespace test
 grammar Dot  {
     skip leaf WHITESPACE = "\s+" ;
 

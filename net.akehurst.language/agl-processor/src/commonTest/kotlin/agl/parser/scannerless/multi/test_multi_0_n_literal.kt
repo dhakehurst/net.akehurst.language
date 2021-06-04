@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.multi
+package net.akehurst.language.parser.scanondemand.multi
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
-class test_multi_0_n_literal : test_ScannerlessParserAbstract() {
+class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
 
     // S = 'a'*
     private fun multi_0_n_a(): RuntimeRuleSetBuilder {
@@ -37,10 +38,12 @@ class test_multi_0_n_literal : test_ScannerlessParserAbstract() {
         val sentence = ""
 
         val expected = """
-            S { §empty }
+            S|1 { §empty }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
+
     }
 
     @Test
@@ -53,7 +56,8 @@ class test_multi_0_n_literal : test_ScannerlessParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -66,7 +70,8 @@ class test_multi_0_n_literal : test_ScannerlessParserAbstract() {
             S { 'a' 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -79,7 +84,23 @@ class test_multi_0_n_literal : test_ScannerlessParserAbstract() {
             S { 'a' 'a' 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
+    }
+
+
+    @Test
+    fun aaaa() {
+        val rrb = multi_0_n_a()
+        val goal = "S"
+        val sentence = "aaaa"
+
+        val expected = """
+            S { 'a' 'a' 'a' 'a' }
+        """.trimIndent()
+
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -90,7 +111,8 @@ class test_multi_0_n_literal : test_ScannerlessParserAbstract() {
 
         val expected = "S { "+"'a' ".repeat(50)+" }"
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -101,7 +123,8 @@ class test_multi_0_n_literal : test_ScannerlessParserAbstract() {
 
         val expected = "S { "+"'a' ".repeat(500)+" }"
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -112,6 +135,7 @@ class test_multi_0_n_literal : test_ScannerlessParserAbstract() {
 
         val expected = "S { "+"'a' ".repeat(2000)+" }"
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        val actual = super.testStringResult(rrb, goal, sentence, expected)
+        assertEquals(1, actual.maxNumHeads)
     }
 }

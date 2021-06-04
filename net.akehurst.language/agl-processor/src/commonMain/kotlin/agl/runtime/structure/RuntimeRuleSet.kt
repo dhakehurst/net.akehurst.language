@@ -16,58 +16,104 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.parser.InputFromCharSequence
-import net.akehurst.language.agl.runtime.graph.GrowingNode
+import net.akehurst.language.agl.automaton.AutomatonKind
+import net.akehurst.language.agl.automaton.ParserStateSet
+import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.collections.lazyMap
 import net.akehurst.language.collections.lazyMapNonNull
 import net.akehurst.language.collections.transitiveClosure
 
+class LookaheadSet(
+    val number: Int,
+    val content: Set<RuntimeRule>
+) {
+    companion object {
+        val EMPTY = LookaheadSet(-1, emptySet())
+        val ANY = LookaheadSet(-1, setOf(RuntimeRuleSet.ANY_LOOKAHEAD))
+        val EOT = LookaheadSet(-2, setOf(RuntimeRuleSet.END_OF_TEXT))
+        val UP = LookaheadSet(-3, setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+    }
 
-class RuntimeRuleSet(rules: List<RuntimeRule>) {
+    fun resolve(runtimeLookahead: LookaheadSet): Set<RuntimeRule> {
+        return when {
+            LookaheadSet.UP == runtimeLookahead -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
+            LookaheadSet.ANY == this -> this.content
+            null == runtimeLookahead -> this.content
+            LookaheadSet.UP == this -> runtimeLookahead.content
+            else -> {
+                var result = mutableSetOf<RuntimeRule>()
+                for (rr in this.content) {
+                    if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
+                        result.addAll(runtimeLookahead.content)
+                    } else {
+                        result.add(rr)
+                    }
+                }
+                result
+            }
+        }
+    }
+
+    override fun hashCode(): Int = number
+    override fun equals(other: Any?): Boolean = when {
+        other is LookaheadSet -> this.number == other.number
+        else -> false
+    }
+
+    override fun toString(): String = "LookaheadSet{$number,${content}}"
+
+}
+
+class RuntimeRuleSet(
+    // rules: List<RuntimeRule>
+) {
 
     companion object {
+        var nextRuntimeRuleSetNumber = 0
+
         val GOAL_RULE_NUMBER = -1;
         val EOT_RULE_NUMBER = -2;
-        val END_OF_TEXT = RuntimeRule(EOT_RULE_NUMBER, "<EOT>", InputFromCharSequence.END_OF_TEXT, RuntimeRuleKind.TERMINAL, false, false)
+        val SKIP_RULE_NUMBER = -3;
+        val SKIP_CHOICE_RULE_NUMBER = -4;
+        val USE_PARENT_LOOKAHEAD_RULE_NUMBER = -5;
+        val ANY_LOOKAHEAD_RULE_NUMBER = -6;
+        val END_OF_TEXT_TAG = "<EOT>"
+        val GOAL_TAG = "<GOAL>"
+        val SKIP_RULE_TAG = "<SKIP-MULTI>"
+        val SKIP_CHOICE_RULE_TAG = "<SKIP-CHOICE>"
+        val USE_PARENT_LOOKAHEAD_RULE_TAG = "<UP>"
+        val ANY_LOOKAHEAD_RULE_TAG = "<ANY>"
+
+        val END_OF_TEXT = RuntimeRule(-1, EOT_RULE_NUMBER, END_OF_TEXT_TAG, InputFromString.END_OF_TEXT, RuntimeRuleKind.TERMINAL, false, false)
+        val USE_PARENT_LOOKAHEAD = RuntimeRule(-1, USE_PARENT_LOOKAHEAD_RULE_NUMBER, USE_PARENT_LOOKAHEAD_RULE_TAG, 0.toChar().toString(), RuntimeRuleKind.TERMINAL, false, false)
+        val ANY_LOOKAHEAD = RuntimeRule(-1, ANY_LOOKAHEAD_RULE_NUMBER, ANY_LOOKAHEAD_RULE_TAG, 0.toChar().toString(), RuntimeRuleKind.TERMINAL, false, false)
 
         fun createGoalRule(userGoalRule: RuntimeRule): RuntimeRule {
-            return createGoalRule(userGoalRule, listOf(END_OF_TEXT))
-        }
-
-        fun createGoalRule(userGoalRule: RuntimeRule, possibleEndOfText: List<RuntimeRule>): RuntimeRule {
-            val gr = RuntimeRule(GOAL_RULE_NUMBER, "<GOAL>", "", RuntimeRuleKind.GOAL, false, false)
-            val items = listOf(userGoalRule) + possibleEndOfText
-            gr.rhsOpt = RuntimeRuleItem(RuntimeRuleItemKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, -1, 0, items.toTypedArray())
+            val gr = RuntimeRule(userGoalRule.runtimeRuleSetNumber, GOAL_RULE_NUMBER, GOAL_TAG, GOAL_TAG, RuntimeRuleKind.GOAL, false, false)
+            val items = listOf(userGoalRule) //+ possibleEndOfText
+            gr.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE,-1, 0, items.toTypedArray())
             return gr
         }
 
     }
 
+    val number: Int = nextRuntimeRuleSetNumber++
+
     private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
     private val terminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
     private val embeddedRuleNumber: MutableMap<String, Int> = mutableMapOf()
 
+    private var nextLookaheadSetId = 0
+    private val lookaheadSets = mutableListOf<LookaheadSet>()
+
     //TODO: are Arrays faster than Lists?
-    val runtimeRules: Array<out RuntimeRule> by lazy {
-        rules.sortedBy { it.number }.toTypedArray()
-    }
+    var runtimeRules: List<RuntimeRule> = emptyList()
 
     val skipRules: Array<RuntimeRule> by lazy {
         this.runtimeRules.filter { it.isSkip }.toTypedArray()
     }
 
-    /*
-    // used to add to lookahead
-    val allSkipTerminals: Array<RuntimeRule> by lazy {
-        this.allSkipRules.flatMap {
-            if (it.isTerminal)
-                listOf(it)
-            else
-                it.rhs.items.filter { it.isTerminal }
-        }.toTypedArray()
-    }
-    */
     // used to add to lookahead
     val firstSkipTerminals: Array<RuntimeRule> by lazy {
         this.skipRules.flatMap {
@@ -75,13 +121,6 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }.toTypedArray()
     }
 
-    /*
-    val isSkipTerminal: Array<Boolean> by lazy {
-        this.runtimeRules.map {
-            this.calcIsSkipTerminal(it)
-        }.toTypedArray()
-    }
-*/
     val nonSkipRules: Array<RuntimeRule> by lazy {
         this.runtimeRules.filter { it.isSkip.not() }.toTypedArray()
     }
@@ -112,7 +151,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
 
     val firstTerminals: Array<Set<RuntimeRule>> by lazy {
         this.runtimeRules.map { this.calcFirstTerminals(it) }
-                .toTypedArray()
+            .toTypedArray()
     }
 
     val firstSkipRuleTerminalPositions: Set<RuntimeRule> by lazy {
@@ -126,7 +165,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     }
 
     // used when calculating lookahead
-    val firstTerminals2 = lazyMap<RulePosition, Set<RuntimeRule>> {
+    val firstTerminals2 = lazyMapNonNull<RulePosition, Set<RuntimeRule>> {
         val trps = expectedTerminalRulePositions[it] ?: arrayOf()
         trps.flatMap { it.items }.toSet()
     }
@@ -135,12 +174,30 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
     private val states_cache = mutableMapOf<RuntimeRule, ParserStateSet>()
     private val skipStateSet = mutableMapOf<RuntimeRule, ParserStateSet>()
 
-    private val skipTransitions_cache = lazyMapNonNull<RuntimeRule, MutableMap<ParserState, Set<Transition>>> { userGoalRule ->
-        mutableMapOf()
+    val skipParserStateSet: ParserStateSet? by lazy {
+        if (skipRules.isEmpty()) {
+            null
+        } else {
+
+            val skipChoiceRule =
+                RuntimeRule(this.number, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, SKIP_CHOICE_RULE_TAG, RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
+            skipChoiceRule.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, RuntimeRuleListKind.NONE,-1, 0, skipRules)
+            val skipMultiRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, SKIP_RULE_TAG, RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
+            skipMultiRule.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.LIST, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.MULTI,1, -1, arrayOf(skipChoiceRule))
+
+            //val skipGoalRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, "", RuntimeRuleKind.NON_TERMINAL, false, true, null, null)
+            //skipGoalRule.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, -1, 0, skipRules)
+
+            //TODO: how to set AutomatonKind here!
+            val ss = ParserStateSet(nextStateSetNumber++, this, skipMultiRule, true, AutomatonKind.LOOKAHEAD_1)
+            //this.states_cache[skipGoalRule] = ss
+            ss
+        }
     }
 
     //called from ParserStateSet, which adds the Goal Rule bits
     internal val parentPosition = lazyMapNonNull<RuntimeRule, Set<RulePosition>> { childRR ->
+        //TODO: this is slow, is there a better way?
         this.runtimeRules.flatMap { rr ->
             val rps = rr.rulePositions
             val f = rps.filter { rp ->
@@ -150,7 +207,9 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         }.toSet()
     }
 
-    init {
+    private var nextStateSetNumber = 0
+
+    fun setRules(rules: List<RuntimeRule>) {
         for (rr in rules) {
             when (rr.kind) {
                 RuntimeRuleKind.GOAL -> { /*do nothing*/
@@ -160,37 +219,45 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 RuntimeRuleKind.EMBEDDED -> this.embeddedRuleNumber[rr.tag] = rr.number
             }
         }
+        this.runtimeRules = rules.sortedBy { it.number }
     }
 
-    internal fun createAllSkipStates() {
-        this.skipRules.forEach { skipRule ->
-            val stateSet = ParserStateSet(this, skipRule, emptyList())
-            this.skipStateSet[skipRule] = stateSet
-            val startSet = skipRule.rulePositions.map { rp ->
-                stateSet.fetchOrCreateParseState(rp)
-                RulePositionWithLookahead(rp, emptySet())
-            }.toSet()
-            startSet.transitiveClosure { parent ->
-                val parentRP = parent.rulePosition
-                parentRP.items.flatMap { rr ->
-                    rr.rulePositions.mapNotNull { childRP ->
-                        val childRPEnd = RulePosition(childRP.runtimeRule, childRP.choice, RulePosition.END_OF_RULE)
-                        //val elh = this.calcLookahead(parent, childRPEnd, parent.lookahead)
-                        val childEndState = stateSet.fetchOrCreateParseState(childRPEnd) // create state!
-                        val lh = this.calcLookahead(parent, childRP, parent.lookahead)
-                        //childEndState.addParentRelation(ParentRelation(parentRP, elh))
-                        RulePositionWithLookahead(childRP, lh)
-                        //TODO: this seems different to the other closures!
-                    }
+    fun automatonFor(goalRuleName: String, automatonKind:AutomatonKind): ParserStateSet {
+        this.buildFor(goalRuleName,automatonKind)
+        val gr = this.findRuntimeRule(goalRuleName)
+        return this.states_cache[gr]!! //findRuntimeRule would throw exception if not exist
+    }
+
+    /*
+        internal fun createAllSkipStates() {
+            this.skipRules.forEach { skipRule ->
+                val stateSet = ParserStateSet(nextStateSetNumber++, this, skipRule, emptySet(), true)
+                this.skipStateSet[skipRule] = stateSet
+                val startSet = skipRule.rulePositions.map { rp ->
+                    stateSet.states[rp]
+                    RulePositionWithLookahead(rp, emptySet())
                 }.toSet()
+                startSet.transitiveClosure { parent ->
+                    val parentRP = parent.rulePosition
+                    parentRP.items.flatMap { rr ->
+                        rr.rulePositions.mapNotNull { childRP ->
+                            val childRPEnd = RulePosition(childRP.runtimeRule, childRP.option, RulePosition.END_OF_RULE)
+                            //val elh = this.calcLookahead(parent, childRPEnd, parent.lookahead)
+                            val childEndState = stateSet.states[childRPEnd] // create state!
+                            val lh = this.calcLookahead(parent, childRP, parent.lookahead)
+                            //childEndState.addParentRelation(ParentRelation(parentRP, elh))
+                            RulePositionWithLookahead(childRP, lh)
+                            //TODO: this seems different to the other closures!
+                        }
+                    }.toSet()
+                }
             }
         }
-    }
 
-    fun fetchSkipStates(rulePosition: RulePosition): ParserState {
-        return this.skipStateSet.values.mapNotNull { it.fetchOrNull(rulePosition) }.first() //TODO: maybe more than 1 !
-    }
-
+        fun fetchSkipStates(rulePosition: RulePosition): ParserState {
+            return this.skipStateSet.values.mapNotNull { it.fetchOrNull(rulePosition) }.first() //TODO: maybe more than 1 !
+        }
+    */
     internal fun calcLookahead(parent: RulePositionWithLookahead?, childRP: RulePosition, ifEmpty: Set<RuntimeRule>): Set<RuntimeRule> {
         return when (childRP.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> useParentLH(parent, ifEmpty)
@@ -220,7 +287,7 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                                     }
                                 } else {
                                     val lh: Set<RuntimeRule> = this.firstTerminals2[nextChildRP]
-                                            ?: error("should never happen")
+                                        ?: error("should never happen")
                                     if (lh.isEmpty()) {
                                         error("should never happen")
                                     } else {
@@ -258,283 +325,36 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
             }
         }
     }
-    /*
-        private fun createWidthTransition(from: ParserState, closureRPlh: RulePositionWithLookahead): Transition {
-            val action = Transition.ParseAction.WIDTH
-            val lookaheadGuard = closureRPlh.lookahead
-            val toRP = RulePosition(closureRPlh.runtimeRule, closureRPlh.choice, RulePosition.END_OF_RULE)
-            val to = from.stateSet.fetchOrCreateParseState(toRP) //TODO: state also depends on lh (or parentRels!)
-            return Transition(from, to, action, lookaheadGuard, null) { _, _ -> true }
-        }
 
-        private fun createHeightTransition(from: ParserState, parentRelation: ParentRelation): Set<Transition> {
-            val parentRP = parentRelation.rulePosition
-            val prevGuard = parentRP //for height, previous must not match prevGuard
-            val action = Transition.ParseAction.HEIGHT
-
-            val toSet = parentRP.next().map { from.stateSet.fetchOrCreateParseState(it) }
-            //val filteredToSet = toSet.filter { this.canGrowInto(it, previous) }
-            return toSet.flatMap { to ->
-                if (to.parentRelations.isEmpty()) {
-                    val lookaheadGuard = this.calcLookahead(null, from.rulePosition, parentRelation.lookahead)
-                    setOf(Transition(from, to, action, lookaheadGuard, prevGuard) { _, _ -> true })
-                } else {
-                    to.parentRelations.map { toParent ->
-                        val lh = when {
-                            to.isAtEnd -> toParent.lookahead
-                            else -> to.stateSet.calcLookahead(parentRelation, from.rulePosition)
-                        }
-                        val lookaheadGuard = lh //parentRelation.lookahead //to.stateSet.calcLookahead(toParent,from.rulePosition) //parentRelation.lookahead //this.calcLookahead(RulePositionWithLookahead(to.rulePosition, parentRelation.lookahead), from.rulePosition, parentRelation.lookahead)
-                        Transition(from, to, action, lookaheadGuard, prevGuard) { _, _ -> true }
-                    }
-                }
-
-            }.toSet()
-        }
-
-        val multiRuntimeGuard: Transition.(GrowingNode) -> Boolean = { gn: GrowingNode ->
-            val previousRp = gn.currentState.rulePosition
-            when {
-                previousRp.isAtEnd -> gn.children.size + 1 >= gn.runtimeRule.rhs.multiMin
-                previousRp.position == RulePosition.MULIT_ITEM_POSITION -> {
-                    //if the to state creates a complete node then min must be >= multiMin
-                    if (this.to.isAtEnd) {
-                        val minSatisfied = gn.children.size + 1 >= gn.runtimeRule.rhs.multiMin
-                        val maxSatisfied = -1 == gn.runtimeRule.rhs.multiMax || gn.children.size + 1 <= gn.runtimeRule.rhs.multiMax
-                        minSatisfied && maxSatisfied
-                    } else {
-                        -1 == gn.runtimeRule.rhs.multiMax || gn.children.size + 1 <= gn.runtimeRule.rhs.multiMax
-                    }
-
-                }
-                else -> true
-            }
-        }
-        val sListRuntimeGuard: Transition.(GrowingNode) -> Boolean = { gn: GrowingNode ->
-            val previousRp = gn.currentState.rulePosition
-            when {
-                previousRp.isAtEnd -> (gn.children.size / 2) + 1 >= gn.runtimeRule.rhs.multiMin
-                previousRp.position == RulePosition.SLIST_ITEM_POSITION -> {
-                    //if the to state creates a complete node then min must be >= multiMin
-                    if (this.to.isAtEnd) {
-                        val minSatisfied = (gn.children.size / 2) + 1 >= gn.runtimeRule.rhs.multiMin
-                        val maxSatisfied = -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2) + 1 <= gn.runtimeRule.rhs.multiMax
-                        minSatisfied && maxSatisfied
-                    } else {
-                        -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2) + 1 <= gn.runtimeRule.rhs.multiMax
-                    }
-                }
-                previousRp.position == RulePosition.SLIST_SEPARATOR_POSITION -> {
-                    //if the to state creates a complete node then min must be >= multiMin
-                    if (this.to.isAtEnd) {
-                        val minSatisfied = (gn.children.size / 2) + 1 >= gn.runtimeRule.rhs.multiMin
-                        val maxSatisfied = -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2) + 1 < gn.runtimeRule.rhs.multiMax
-                        minSatisfied && maxSatisfied
-                    } else {
-                        -1 == gn.runtimeRule.rhs.multiMax || (gn.children.size / 2) + 1 < gn.runtimeRule.rhs.multiMax
-                    }
-                }
-                else -> true
-            }
-        }
-
-        private fun createGraftTransition(from: ParserState, parentRelation: ParentRelation): Set<Transition> {
-            val parentRP = parentRelation.rulePosition
-            val prevGuard = parentRP //for graft, previous must match prevGuard
-            val action = Transition.ParseAction.GRAFT
-            val toSet = parentRP.next().map { from.stateSet.fetchOrCreateParseState(it) }
-            //val filteredToSet = toSet.filter { this.canGrowInto(it, previous) }
-            val runtimeGuard: Transition.(GrowingNode, RulePosition?) -> Boolean = { gn, previous ->
-                if (null == previous) {
-                    true
-                } else {
-                    when (previous.runtimeRule.rhs.kind) {
-                        RuntimeRuleItemKind.MULTI -> multiRuntimeGuard.invoke(this, gn)
-                        RuntimeRuleItemKind.SEPARATED_LIST -> sListRuntimeGuard.invoke(this, gn)
-                        else -> true
-                    }
-                }
-            }
-            return toSet.flatMap { to ->
-                if (to.parentRelations.isEmpty()) {
-                    val lookaheadGuard = this.calcLookahead(null, from.rulePosition, parentRelation.lookahead)
-                    setOf(Transition(from, to, action, lookaheadGuard, prevGuard, runtimeGuard))
-                } else {
-                    to.parentRelations.map { toParent ->
-                        val lh = when {
-                            to.isAtEnd -> toParent.lookahead
-                            else -> to.stateSet.calcLookahead(parentRelation, from.rulePosition)
-                        }
-                        val lookaheadGuard = lh //toParent.lookahead //to.stateSet.calcLookahead(toParent,from.rulePosition)  //this.calcLookahead(RulePositionWithLookahead(toParent.rulePosition, toParent.lookahead), from.rulePosition, toParent.lookahead)
-                        Transition(from, to, action, lookaheadGuard, prevGuard, runtimeGuard)
-                    }
-                }
-
-            }.toSet()
-
-        }
-
-        private fun createEmbeddedTransition(from: ParserState, closureRPlh: RulePositionWithLookahead): Transition {
-            val action = Transition.ParseAction.EMBED
-            val lookaheadGuard = closureRPlh.lookahead
-            val toRP = RulePosition(closureRPlh.runtimeRule, closureRPlh.choice, RulePosition.END_OF_RULE)
-            val to = from.stateSet.fetchOrCreateParseState(toRP)
-            return Transition(from, to, action, lookaheadGuard, null) { _, _ -> true }
-        }
-
-        internal fun calcTransitions(from: ParserState, previous: ParserState?): Set<Transition> { //TODO: add previous in order to filter parent relations
-            val heightTransitions = mutableSetOf<Transition>()
-            val graftTransitions = mutableSetOf<Transition>()
-            val widthTransitions = mutableSetOf<Transition>()
-            val goalTransitions = mutableSetOf<Transition>()
-            val embeddedTransitions = mutableSetOf<Transition>()
-
-            val goal = from.runtimeRule.kind == RuntimeRuleKind.GOAL && from.isAtEnd //from.rulePosition.position==1//from.isAtEnd
-            if (goal) {
-                val action = Transition.ParseAction.GOAL
-                val to = from
-                goalTransitions += Transition(from, to, action, emptySet(), null) { _, _ -> true }
-            } else {
-                if (from.isAtEnd) {
-                    if (from.parentRelations.isEmpty()) {
-                        //end of skip
-                        val action = Transition.ParseAction.GOAL
-                        val to = from
-                        goalTransitions += Transition(from, to, action, emptySet(), null) { _, _ -> true }
-                    } else {
-                        val filteredRelations = from.canGrowInto(previous)
-                        for (parentRelation in filteredRelations) {
-                            if (parentRelation.rulePosition.runtimeRule.kind == RuntimeRuleKind.GOAL) {
-                                when {
-                                    from.runtimeRule == END_OF_TEXT -> {
-                                        graftTransitions += this.createGraftTransition(from, parentRelation)
-                                    }
-                                    (parentRelation.lookahead.isEmpty()) -> {
-                                        // must be end of skip. TODO: can do something better than this!
-                                        val action = Transition.ParseAction.GOAL
-                                        val to = from
-                                        goalTransitions += Transition(from, to, action, emptySet(), null) { _, _ -> true }
-                                    }
-                                    else -> {
-                                        graftTransitions += this.createGraftTransition(from, parentRelation)
-                                    }
-                                }
-                            } else {
-                                val height = parentRelation.rulePosition.isAtStart
-                                val graft = parentRelation.rulePosition.isAtStart.not()
-                                if (height) {
-                                    heightTransitions += this.createHeightTransition(from, parentRelation)
-                                }
-                                if (graft) {
-                                    graftTransitions += this.createGraftTransition(from, parentRelation)
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    val parentRelations = from.stateSet.fetchOrCreateParseState(from.rulePosition.atEnd()).parentRelations
-                    if (parentRelations.isEmpty()) {
-                        val prLh = when (from.runtimeRule.kind) {
-                            RuntimeRuleKind.GOAL -> from.rulePosition.next().flatMap { it.items }.toSet()
-                            else -> emptySet<RuntimeRule>()
-                        }
-                        val closure = from.createClosure(prLh)
-                        for (closureRPlh in closure.content) {
-                            when (closureRPlh.runtimeRule.kind) {
-                                RuntimeRuleKind.TERMINAL -> widthTransitions += this.createWidthTransition(from, closureRPlh)
-                                RuntimeRuleKind.EMBEDDED -> embeddedTransitions += this.createEmbeddedTransition(from, closureRPlh)
-                            }
-                        }
-                    } else {
-                        val filteredRelations = from.canGrowInto(previous)
-                         for (parentRelation in filteredRelations) {
-                            val closure = from.createClosure(parentRelation.lookahead)
-                            for (closureRPlh in closure.content) {
-                                when (closureRPlh.runtimeRule.kind) {
-                                    RuntimeRuleKind.TERMINAL -> widthTransitions += this.createWidthTransition(from, closureRPlh)
-                                    RuntimeRuleKind.EMBEDDED -> embeddedTransitions += this.createEmbeddedTransition(from, closureRPlh)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            //TODO: merge transitions with everything duplicate except lookahead (merge lookaheads)
-            //not sure if this should be before or after the h/g conflict test.
-
-            val conflictHeightTransitionPairs = mutableSetOf<Pair<Transition, Transition>>()
-            for (trh in heightTransitions) {
-                for (trg in graftTransitions) {
-                    if (trg.lookaheadGuard.containsAll(trh.lookaheadGuard)) {
-                        val newTr = Transition(trh.from, trh.to, trh.action, trh.lookaheadGuard, trg.prevGuard, trh.runtimeGuard)
-                        conflictHeightTransitionPairs.add(Pair(trh, trg))
-                    }
-                }
-            }
-
-            val conflictHeightTransitions = conflictHeightTransitionPairs.map {
-                val trh = it.first
-                val trg = it.second
-                Transition(trh.from, trh.to, trh.action, trh.lookaheadGuard, trg.prevGuard, trh.runtimeGuard)
-            }
-            //Note: need to do the conflict stuff to make multi work, at present!
-
-            //val newHeightTransitions = (heightTransitions - conflictHeightTransitionPairs.map { it.first }) + conflictHeightTransitions
-
-            val newHeightTransitions = heightTransitions
-            val mergedWidthTransitions = widthTransitions.groupBy { it.to }.map {
-                Transition(from, it.key, Transition.ParseAction.WIDTH, it.value.flatMap { it.lookaheadGuard }.toSet(), null) { _, _ -> true }
-            }
-
-            val mergedHeightTransitions = newHeightTransitions.groupBy { Pair(it.to, it.prevGuard) }.map {
-                Transition(from, it.key.first, Transition.ParseAction.HEIGHT, it.value.flatMap { it.lookaheadGuard }.toSet(), it.key.second) { _, _ -> true }
-            }
-
-            val mergedGraftTransitions = graftTransitions.groupBy { Pair(it.to, it.prevGuard) }.map {
-                Transition(from, it.key.first, Transition.ParseAction.GRAFT, it.value.flatMap { it.lookaheadGuard }.toSet(), it.key.second, it.value[0].runtimeGuard)
-            }
-
-            val transitions = mergedHeightTransitions + mergedGraftTransitions + mergedWidthTransitions + goalTransitions + embeddedTransitions
-            return transitions.toSet()
-        }
-    */
-    fun buildCaches() {
-
+    fun buildFor(goalRuleName: String, automatonKind:AutomatonKind): ParserStateSet {
+        val gr = this.findRuntimeRule(goalRuleName)
+        val s0 = this.fetchStateSetFor(gr,automatonKind).startState
+        return s0.stateSet.build()
     }
 
-    fun startingState(userGoalRule: RuntimeRule, possibleEndOfText: List<RuntimeRule> = listOf(RuntimeRuleSet.END_OF_TEXT)): ParserState {
+    fun fetchStateSetFor(userGoalRule: RuntimeRule, automatonKind:AutomatonKind): ParserStateSet {
+        //TODO: need to cache by possibleEndOfText also
         var stateSet = this.states_cache[userGoalRule]
         if (null == stateSet) {
-            stateSet = ParserStateSet(this, userGoalRule, possibleEndOfText)
+            stateSet = ParserStateSet(nextStateSetNumber++, this, userGoalRule, false, automatonKind)
             this.states_cache[userGoalRule] = stateSet
         }
-        return stateSet.startState
+        return stateSet
     }
-/*
-    fun skipTransitions(userGoalRule: RuntimeRule, from: ParserState, previous: RulePosition): Set<Transition> {
-        val transitions = this.skipTransitions_cache[userGoalRule][from]
-        if (null == transitions) {
-            val t = this.calcTransitions(from, null)//previous)
-            this.skipTransitions_cache[userGoalRule][from] = t
-            return t
-        } else {
-            return transitions
-        }
-    }
-*/
+
     // ---
 
     fun findRuntimeRule(ruleName: String): RuntimeRule {
         val number = this.nonTerminalRuleNumber[ruleName]
-                ?: this.terminalRuleNumber[ruleName]
-                ?: throw ParserException("NonTerminal RuntimeRule '${ruleName}' not found")
+            ?: this.terminalRuleNumber[ruleName]
+            ?: this.embeddedRuleNumber[ruleName]
+            ?: throw ParserException("RuntimeRule '${ruleName}' not found")
         return this.runtimeRules[number]
     }
 
     fun findTerminalRule(pattern: String): RuntimeRule {
         val number = this.terminalRuleNumber[pattern]
-                ?: throw ParserException("Terminal RuntimeRule ${pattern} not found")
+            ?: throw ParserException("Terminal RuntimeRule ${pattern} not found")
         return this.runtimeRules[number]
     }
 
@@ -549,14 +369,15 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 when (rp.runtimeRule.kind) {
                     RuntimeRuleKind.TERMINAL -> emptySet<RulePosition>()
                     RuntimeRuleKind.GOAL,
-                    RuntimeRuleKind.NON_TERMINAL -> rp.runtimeRule.items(rp.choice, rp.position).flatMap {
-                        when (it.kind) {
+                    RuntimeRuleKind.NON_TERMINAL -> {
+                        val item = rp.runtimeRule.item(rp.option, rp.position) ?: TODO()
+                        when (item.kind) {
                             RuntimeRuleKind.GOAL -> TODO()
                             RuntimeRuleKind.TERMINAL -> setOf(rp)
-                            RuntimeRuleKind.NON_TERMINAL -> it.calcExpectedRulePositions(0)
+                            RuntimeRuleKind.NON_TERMINAL -> item.calcExpectedRulePositions(0)
                             RuntimeRuleKind.EMBEDDED -> {
-                                val embeddedStartRp = RulePosition(it.embeddedStartRule!!, 0, RulePosition.START_OF_RULE)
-                                it.embeddedRuntimeRuleSet!!.expectedTerminalRulePositions[embeddedStartRp]!!.toSet()
+                                val embeddedStartRp = RulePosition(item.embeddedStartRule!!, 0, RulePosition.START_OF_RULE)
+                                item.embeddedRuntimeRuleSet!!.expectedTerminalRulePositions[embeddedStartRp]!!.toSet()
                             }
                         }
                     }
@@ -594,46 +415,71 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
         return rr
     }
 
-    internal fun printUsedAutomaton(goalRuleName: String): String {
+    internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
+        return when {
+            content.isEmpty() -> LookaheadSet.EMPTY
+            LookaheadSet.EOT.content == content -> LookaheadSet.EOT
+            LookaheadSet.UP.content == content -> LookaheadSet.UP
+            else -> {
+                val existing = this.lookaheadSets.firstOrNull { it.content == content }
+                if (null == existing) {
+                    val num = this.nextLookaheadSetId++
+                    val lhs = LookaheadSet(num, content)
+                    this.lookaheadSets.add(lhs)
+                    lhs
+                } else {
+                    existing
+                }
+            }
+        }
+    }
+
+    fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet {
+        val newContent = mutableSetOf<RuntimeRule>()
+        for (rr in upLhs.content) {
+            if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
+                newContent.addAll(parentLookahead.content)
+            } else {
+                newContent.add(rr)
+            }
+        }
+        return this@RuntimeRuleSet.createLookaheadSet(newContent)
+        //return LookaheadSet(-1, newContent) //TODO: create this from runtimeRuleset, maybe!
+    }
+
+    internal fun usedAutomatonToString(goalRuleName: String): String {
         val b = StringBuilder()
         val gr = this.findRuntimeRule(goalRuleName)
 
         val states = this.states_cache[gr]!!.states.values
-        val transitions = states.flatMap { it.transitions_cache.values.flatMap { it ?: emptySet() }.toSet() }.toSet()
+        val transitions = states.flatMap { it.outTransitions.allBuiltTransitions.toSet() }.toSet()
 
         states.forEach {
-            b.append(it).append("\n")
+            val str = "$it {${it.outTransitions.allPrevious.map { it?.number?.value }}}"
+            b.append(str).append("\n")
         }
-        transitions.forEach {
-            b.append(it).append("\n")
+        states.forEach { st ->
+            st.outTransitions.allBuiltTransitions.forEach { tr ->
+                val prev = st.outTransitions.previousFor(tr).map { it?.number?.value } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
+                val trStr = "${tr.from.number.value} --> ${tr.to.number.value}"
+                val trGrd = "[${tr.lookaheadGuard.content.joinToString { c -> c.tag }} | ${tr.upLookahead.content.joinToString { c -> c.tag }}]"
+                val prvGrd = " [${tr.prevGuard?.joinToString()}]"
+                b.append("{${prev.joinToString()}} ")
+                b.append(trStr)
+                b.append(" ${tr.action} ")
+                b.append(trGrd)
+                b.append(prvGrd)
+                b.append("\n")
+            }
         }
 
 
         return b.toString()
     }
 
-    internal fun printFullAutomaton(goalRuleName: String): String {
-        val b = StringBuilder()
-        val gr = this.findRuntimeRule(goalRuleName)
-
-        val s0 = this.startingState(gr, listOf(RuntimeRuleSet.END_OF_TEXT))
-
-        val states = setOf(s0).transitiveClosure {
-            val trans = it.transitions(null)
-            trans.map { it.to }.toSet()
-        }
-
-        val transitions = states.flatMap { it.transitions_cache.values.flatMap { it ?: emptySet() }.toSet() }.toSet()
-
-        states.forEach {
-            b.append(it).append("\n")
-        }
-        transitions.forEach {
-            b.append(it).append("\n")
-        }
-
-
-        return b.toString()
+    internal fun fullAutomatonToString(goalRuleName: String, automatonKind:AutomatonKind): String {
+        this.buildFor(goalRuleName,automatonKind)
+        return this.usedAutomatonToString("S")
     }
 
     override fun toString(): String {
@@ -645,5 +491,11 @@ class RuntimeRuleSet(rules: List<RuntimeRule>) {
                 ${rulesStr}
             }
         """.trimIndent()
+    }
+
+    override fun hashCode(): Int = number
+    override fun equals(other: Any?): Boolean = when {
+        other is RuntimeRuleSet -> this.number == other.number
+        else -> false
     }
 }

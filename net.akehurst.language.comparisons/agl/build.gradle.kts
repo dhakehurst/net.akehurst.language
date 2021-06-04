@@ -1,5 +1,5 @@
 plugins {
-	kotlin("multiplatform") version ("1.3.71")
+	kotlin("multiplatform") version ("1.4.32")
 }
 
 val version_agl:String by project
@@ -22,11 +22,11 @@ kotlin {
 
 
 dependencies {
-	"commonMainImplementation"(kotlin("stdlib"))
+	//"commonMainImplementation"(kotlin("stdlib"))
 	"commonTestImplementation"(kotlin("test"))
 	"commonTestImplementation"(kotlin("test-annotations-common"))
 
-	"jvm8MainImplementation"(kotlin("stdlib-jdk8"))
+	//"jvm8MainImplementation"(kotlin("stdlib-jdk8"))
 	"jvm8TestImplementation"(kotlin("test-junit"))
 
 	"jvm8TestImplementation"(project(":common"))

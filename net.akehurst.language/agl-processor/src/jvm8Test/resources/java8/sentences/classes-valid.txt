@@ -1,0 +1,7 @@
+enum E { A, B, C }
+class A extends B implements C,D { }
+class A { ; }
+class A { int i; }
+class A { abstract void f(); }
+class A { void f() { } }
+

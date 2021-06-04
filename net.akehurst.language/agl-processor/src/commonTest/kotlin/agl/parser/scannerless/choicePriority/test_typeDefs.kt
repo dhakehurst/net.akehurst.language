@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.choicePriority
+package net.akehurst.language.parser.scanondemand.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_typeDefs : test_ScannerlessParserAbstract() {
+class test_typeDefs : test_ScanOnDemandParserAbstract() {
 
     // S = type name ;
     // type = userDefined < builtIn;
@@ -29,117 +29,149 @@ class test_typeDefs : test_ScannerlessParserAbstract() {
     // userDefined = "[a-zA-Z]+" ;
     // name = "[a-zA-Z]+" ;
     // WS = "\s+" ;
-    private fun typeDefs(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_azAZ = b.pattern("[a-zA-Z]+")
-        val r_name = b.rule("name").concatenation(r_azAZ)
-        val r_userDefined = b.rule("userDefined").concatenation(r_azAZ)
-        val r_builtIn = b.rule("builtIn").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("int"), b.literal("bool"))
-        val r_type = b.rule("type").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_userDefined, r_builtIn)
-        b.rule("S").concatenation(r_type, r_name)
-        b.pattern("WS","\\s+", isSkip = true)
-        return b
+
+    private val rrs = runtimeRuleSet {
+        concatenation("S") { ref("type"); ref("name") }
+        choice("type",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            ref("userDefined")
+            ref("builtIn")
+        }
+        choice("builtIn", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            literal("int")
+            literal("bool")
+        }
+        concatenation("userDefined") { ref("ID") }
+        concatenation("name") { ref("ID") }
+        pattern("ID", "[a-zA-Z]+")
+        pattern("WS", "\\s+", true)
     }
+
 
     @Test
     fun int_a() {
-        val rrb = this.typeDefs()
         val goal = "S"
         val sentence = "int a"
 
         val expected = """
             S {
-              type {
+              type|1 {
                 builtIn { 'int' WS : ' '  }
               }
               name {
-                "[a-zA-Z]+" : 'a'
+                ID : 'a'
               }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 anyhow?
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun bool_a() {
-        val rrb = this.typeDefs()
         val goal = "S"
         val sentence = "bool a"
 
         val expected = """
             S {
-              type {
-                builtIn { 'bool' WS  : ' '  }
+              type|1 {
+                builtIn|1 { 'bool' WS  : ' '  }
               }
               name {
-                "[a-zA-Z]+" : 'a'
+                ID : 'a'
               }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 anyhow?
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun A_a() {
-        val rrb = this.typeDefs()
         val goal = "S"
         val sentence = "A a"
 
         val expected = """
             S {
               type {
-                userDefined { "[a-zA-Z]+" : 'A' WS : ' '  }
+                userDefined { ID : 'A' WS : ' '  }
               }
               name {
-                "[a-zA-Z]+" : 'a'
+                ID : 'a'
               }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
     fun int_int() {
-        val rrb = this.typeDefs()
+
         val goal = "S"
         val sentence = "int int"
 
         val expected = """
             S {
-              type {
+              type|1 {
                 builtIn { 'int' WS:' ' }
               }
               name {
-                "[a-zA-Z]+" : 'int'
+                ID : 'int'
               }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 anyhow?
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 
     @Test
     fun A_int() {
-        val rrb = this.typeDefs()
         val goal = "S"
         val sentence = "A int"
 
         val expected = """
             S {
               type {
-                userDefined { "[a-zA-Z]+" : 'A' WS:' ' }
+                userDefined { ID : 'A' WS:' ' }
               }
               name {
-                "[a-zA-Z]+" : 'int'
+                ID : 'int'
               }
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 

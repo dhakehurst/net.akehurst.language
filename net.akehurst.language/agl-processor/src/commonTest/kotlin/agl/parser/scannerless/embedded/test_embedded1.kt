@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.embedded
+package net.akehurst.language.parser.scanondemand.embedded
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_embedded1 : test_ScannerlessParserAbstract() {
+class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
     val Sn = runtimeRuleSet {
         concatenation("S") { literal("a"); ref("B"); literal("a"); }
@@ -34,12 +32,11 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
 
     @Test
     fun Sn_a_fails() {
-        val rrb = this.Sn
         val goal = "S"
         val sentence = "a"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(Sn, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(2, ex.location.column)
@@ -48,7 +45,6 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
 
     @Test
     fun Sn_aba() {
-        val rrb = this.Sn
         val goal = "S"
         val sentence = "aba"
 
@@ -60,7 +56,13 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = Sn,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     // B = b ;
@@ -68,7 +70,7 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
         concatenation("B") { literal("b") }
     }
     // S = a gB a ;
-    // gB = grammar B ;
+    // gB = grammar B.B ;
     val S = runtimeRuleSet {
         concatenation("S") { literal("a"); ref("gB"); literal("a"); }
         embedded("gB", B, B.findRuntimeRule("B"))
@@ -76,12 +78,11 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
 
     @Test
     fun empty_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = ""
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -90,12 +91,11 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
 
     @Test
     fun d_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "d"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(1, ex.location.column)
@@ -104,12 +104,11 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
 
     @Test
     fun a_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "a"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
         assertEquals(2, ex.location.column)
@@ -118,33 +117,37 @@ class test_embedded1 : test_ScannerlessParserAbstract() {
 
     @Test
     fun ab_fails() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "ab"
 
         val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
+            super.test(S, goal, sentence,1)
         }
         assertEquals(1, ex.location.line)
-        assertEquals(3, ex.location.column)
+        assertEquals(2, ex.location.column)
         assertEquals(setOf("'a'"), ex.expected)
     }
 
     @Test
     fun aba() {
-        val rrb = this.S
         val goal = "S"
         val sentence = "aba"
 
-        TODO("how should we express embedded rules in the following string ?")
+        //TODO("how should we express embedded rules in the following string ?")
         val expected = """
             S {
               'a'
-              B { 'b' }
+              gb { B.B { 'b' } }
               'a'
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = S,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 }

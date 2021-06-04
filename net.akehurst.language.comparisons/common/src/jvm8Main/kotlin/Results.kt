@@ -27,14 +27,36 @@ import java.time.Duration
 
 object Results {
 
+    data class Result(
+            val success: Boolean,
+            val col: String,
+            val fileData: FileData,
+            val value: Duration
+    )
+
+    val results = mutableMapOf<Int, Result>()
+
+    fun reset() {
+        this.results.clear()
+    }
+
     @Synchronized
     fun log(success: Boolean, col: String, fileData: FileData, value: Duration) {
-        val resultsFile = Paths.get("../results/results.xlsx")
-        println("Result: $col, $value | $fileData")
-        ZipSecureFile.setMinInflateRatio(0.00009)
-        var wb: Workbook? = null
+        val res = Result(success, col, fileData, value)
+        this.results[fileData.index] = res
+    }
+
+    @Synchronized
+    fun logError(col: String, fileData: FileData) {
+        val res = Result(false, col, fileData, Duration.ZERO)
+        this.results[fileData.index] = res
+    }
+
+    fun write() {
         try {
-            wb = if (resultsFile.toFile().exists()) {
+            val resultsFile = Paths.get("../results/results.xlsx")
+            ZipSecureFile.setMinInflateRatio(0.00009)
+            var wb: Workbook? = if (resultsFile.toFile().exists()) {
                 WorkbookFactory.create(Files.newInputStream(resultsFile))
             } else {
                 XSSFWorkbook()
@@ -44,6 +66,20 @@ object Results {
                 sheet = wb.createSheet()
             }
             sheet = wb.getSheetAt(0)
+
+            for (result in this.results.values.sortedBy { it.fileData.index }) {
+                write(wb, sheet, result.success, result.col, result.fileData, result.value)
+            }
+
+            Files.newOutputStream(resultsFile).use { fileOut -> wb.write(fileOut) }
+
+        } catch (ex: Exception) {
+            throw RuntimeException("Error logging results", ex)
+        }
+    }
+
+    fun write(wb: Workbook, sheet: Sheet, success: Boolean, col: String, fileData: FileData, value: Duration) {
+        try {
             val headerFont = wb.createFont()
             headerFont.bold = true
             headerFont.fontHeightInPoints = 14.toShort()
@@ -55,6 +91,7 @@ object Results {
             headerFont.color = IndexedColors.RED.getIndex()
             val errorCellStyle = wb.createCellStyle()
             headerCellStyle.setFont(errorFont)
+
             var headerRow = sheet.getRow(0)
             if (null == headerRow) {
                 headerRow = sheet.createRow(0)
@@ -81,27 +118,37 @@ object Results {
                 colNum = cell.columnIndex
             }
             var rowNum = fileData.index + 1 //+1 for headings
-            if (sheet.lastRowNum < rowNum) {
-                val row = sheet.createRow(sheet.lastRowNum + 1)
-                val c = row.createCell(0)
+            //if (sheet.lastRowNum < rowNum) {
+            //    val row = sheet.createRow(sheet.lastRowNum + 1)
+            //    val c = row.createCell(0)
+            //    c.setCellValue(fileData.path.toString())
+            //    val c2 = row.createCell(1)
+            //    c2.setCellValue(fileData.chars.toDouble())
+            //    rowNum = row.rowNum
+            //}
+            var valueRow = sheet.getRow(rowNum)
+            if (null==valueRow) {
+                valueRow = sheet.createRow(rowNum)
+                val c = valueRow.createCell(0)
                 c.setCellValue(fileData.path.toString())
-                val c2 = row.createCell(1)
-                c2.setCellValue(fileData.size.toDouble())
-                rowNum = row.rowNum
+                val c2 = valueRow.createCell(1)
+                c2.setCellValue(fileData.chars.toDouble())
+                rowNum = valueRow.rowNum
             }
-            val valueRow = sheet.getRow(rowNum)
             var valueCell = valueRow.getCell(colNum)
             if (null == valueCell) {
                 valueCell = valueRow.createCell(colNum)
             }
-            valueCell!!.setCellValue(value.toMillis().toDouble())
-            if (!success) {
+            if (success) {
+                valueCell!!.setCellValue(value.toNanos().div(1000).toDouble()) //micro seconds
+            } else {
                 valueCell.cellStyle = errorCellStyle
-                valueCell.setCellValue("error")
+                valueCell.setBlank()
             }
-            Files.newOutputStream(resultsFile).use { fileOut -> wb.write(fileOut) }
         } catch (ex: Exception) {
-            throw RuntimeException("Error logging results", ex)
+            throw RuntimeException("Error writing $fileData", ex)
         }
     }
+
+
 }

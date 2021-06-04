@@ -22,11 +22,13 @@ import net.akehurst.language.api.parser.InputLocation
 
 class SPPTBranchDefault(
         runtimeRule: RuntimeRule,
+        option: Int,
         location: InputLocation,                     // can't use children.first.startPosition, there may not be any children
         nextInputPosition: Int,                 // dont't use children.sumBy { it.matchedTextLength }, it requires unwanted iteration
         priority: Int
 ) : SPPTNodeAbstract(
         runtimeRule,
+        option,
         location,
         nextInputPosition,
         priority
@@ -86,7 +88,7 @@ class SPPTBranchDefault(
                             for (i in 0 until thisChildren.size) {
                                 val thisChildrenNode = thisChildren.get(i)
                                 val otherChildrenNode = otherChildren.get(i)
-                                thisMatch = thisMatch and thisChildrenNode.contains(otherChildrenNode)
+                                thisMatch = thisMatch && thisChildrenNode.contains(otherChildrenNode)
                             }
                             if (thisMatch) {
                                 foundContainMatch = true
@@ -100,7 +102,7 @@ class SPPTBranchDefault(
                             continue
                         }
                     }
-                    allOthersAreContained = allOthersAreContained and foundContainMatch
+                    allOthersAreContained = allOthersAreContained && foundContainMatch
                 }
                 return allOthersAreContained
             } else {
@@ -127,12 +129,9 @@ class SPPTBranchDefault(
 
     override val asBranch: SPPTBranch = this
 
-    override val lastLocation get() = if (children.isEmpty()) this.location else children.last().lastLocation
+    //override val lastLocation get() = if (children.isEmpty()) this.location else children.last().lastLocation
 
-
-    override fun <T, A> accept(visitor: SharedPackedParseTreeVisitor<T, A>, arg: A): T {
-        return visitor.visit(this, arg)
-    }
+    override val lastLeaf: SPPTLeaf get() = children.last().lastLeaf
 
     // --- Object ---
     override fun toString(): String {

@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.choiceEqual
+package net.akehurst.language.parser.scanondemand.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
+class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // expr = root | group | div | mul | add | sub ;
@@ -100,7 +100,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         val sentence = "true"
 
         val expected = """
-              expr { root {
+              expr { root|1 {
                 bool { 'true' }
               } }
         """.trimIndent()
@@ -116,7 +116,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr { root {
+              expr { root|1 {
                 bool { 'true' }
               } }
             }
@@ -150,7 +150,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|1 {
                 group {
                   '('
                   expr { root { var { "[a-zA-Z]+" : 'a' } } }
@@ -172,7 +172,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|2 {
                 div {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
                   '/' WS { "\s+" : ' ' }
@@ -194,7 +194,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|3 {
                 mul {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
                   '*' WS { "\s+" : ' ' }
@@ -260,11 +260,11 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-             expr {
+             expr|4 {
               add {
                 expr { root { var { "[a-zA-Z]+" : 'a' } } }
                 '+'
-                expr {
+                expr|3 {
                   mul {
                     expr { root { var { "[a-zA-Z]+" : 'b' } } }
                     '*'
@@ -287,9 +287,9 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
 
         val expected = """
             S {
-             expr {
+             expr|4 {
               add {
-                expr {
+                expr|3 {
                   mul {
                     expr { root { var { "[a-zA-Z]+" : 'a' } } }
                     '*'
@@ -313,7 +313,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         val sentence = "a+b+c+d"
 
         val expected = """
-             S { expr { add {
+             S { expr|4 { add {
                   expr { root { var { "[a-zA-Z]+" : 'a' } } }
                   '+'
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
@@ -334,7 +334,7 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         val sentence = "a+b+c+d+e+f"
 
         val expected = """
-         S { expr { add {
+         S { expr|4 { add {
               expr { root { var { "[a-zA-Z]+" : 'a' } } }
               '+'
               expr { root { var { "[a-zA-Z]+" : 'b' } } }
@@ -359,12 +359,12 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         val sentence = "a+b+c*d+e+f"
 
         val expected = """
-         S { expr { add {
+         S { expr|4 { add {
               expr { root { var { "[a-zA-Z]+" : 'a' } } }
               '+'
               expr { root { var { "[a-zA-Z]+" : 'b' } } }
               '+'
-              expr { mul {
+              expr|3 { mul {
                 expr { root { var { "[a-zA-Z]+" : 'c' } } }
                 '*'
                 expr { root { var { "[a-zA-Z]+" : 'd' } } }
@@ -386,11 +386,11 @@ class test_OperatorPrecedence2 : test_ScannerlessParserAbstract() {
         val sentence = "(a+b)*c"
 
         val expected = """
-            S { expr { mul {
-              expr {
+            S { expr|3 { mul {
+              expr|1 {
                 group {
                   '('
-                    expr {
+                    expr|4 {
                       add {
                         expr { root { var { "[a-zA-Z]+" : 'a' } } }
                         '+'

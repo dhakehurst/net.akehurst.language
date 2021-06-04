@@ -21,7 +21,7 @@ import kotlin.test.*
 
 class test_Concatination {
 
-    companion object {
+    private companion object {
         val grammarStr = """
             namespace test
             grammar Test {

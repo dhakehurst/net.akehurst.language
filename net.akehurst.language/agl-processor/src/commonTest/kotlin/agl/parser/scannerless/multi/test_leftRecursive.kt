@@ -14,39 +14,47 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.multi
+package net.akehurst.language.parser.scanondemand.multi
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.fail
 
-class test_leftRecursive : test_ScannerlessParserAbstract() {
+class test_leftRecursive : test_ScanOnDemandParserAbstract() {
 
     // S = P | 'a' ;
     // P =  S+ ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_S = b.rule("S").build()
-        val r_P = b.rule("P").multi(1,-1,r_S)
-        b.rule(r_S).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r_P, r_a)
-        return b
+
+    private companion object {
+        private val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("P")
+                literal("a")
+            }
+            multi("P", 1, -1, "S")
+        }
     }
 
     @Test
     fun a() {
-        //fail("this does not terminate if we parse until !canGrow, ok it parse until first goal found!")
-        val rrb = this.S()
+        fail("this does not terminate if we parse until !canGrow, ok it parse until first goal found!")
         val goal = "S"
         val sentence = "a"
 
         val expected = """
-            S { 'a' }
+            S|1 { 'a' }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 

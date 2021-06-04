@@ -14,27 +14,29 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scannerless.rightRecursive
+package net.akehurst.language.parser.scanondemand.midRecursion
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scannerless.test_ScannerlessParserAbstract
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_group_concat : test_ScannerlessParserAbstract() {
+class test_group_concat : test_ScanOnDemandParserAbstract() {
 
-    companion object {
-        /*
-            skip WS = "\s+" ;
-            S = rules ;
-            rules = normalRule* ;
-            normalRule = ID '=' concat ';' ;
-            concat = concatItem+ ;
-            concatItem = ID | group ;
-            group = '(' concat ')' ;
-            ID = "[a-zA-Z]+" ;
-         */
-        val S = runtimeRuleSet {
+    /*
+        skip WS = "\s+" ;
+        S = rules ;
+        rules = normalRule* ;
+        normalRule = ID '=' concat ';' ;
+        concat = concatItem+ ;
+        concatItem = ID | group ;
+        group = '(' concat ')' ;
+        ID = "[a-zA-Z]+" ;
+     */
+
+    private companion object {
+
+        val rrs = runtimeRuleSet {
             skip("W") { pattern("\\s+") }
             concatenation("S") { ref("rules") }
             multi("rules",0,-1,"normalRule")
@@ -47,35 +49,85 @@ class test_group_concat : test_ScannerlessParserAbstract() {
             concatenation("group") { literal("("); ref("concat"); literal(")") }
             pattern("ID","[a-zA-Z]+")
         }
+
+        val goal = "S"
     }
 
     @Test
-    fun a() {
+    fun rEQaSEMI() {
         val sentence = "r=a;"
-        val goal = "S"
+
         val expected = """
-            S { W { "\s+" : ' ' } }
+         S { rules { normalRule {
+              ID : 'r'
+              '='
+              concat { concatItem { ID : 'a' } }
+              ';'
+            } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
     @Test
-    fun bac() {
+    fun rEQPOaPC() {
         val sentence = "r=(a);"
-        val goal = "S"
+
         val expected = """
-            S { W { "\s+" : ' ' } }
+         S { rules { normalRule {
+              ID : 'r'
+              '='
+              concat { concatItem|1 { group {
+                    '('
+                    concat { concatItem { ID : 'a' } }
+                    ')'
+                  } } }
+              ';'
+            } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
     @Test
     fun bbacc() {
         val sentence = "r=((a));"
-        val goal = "S"
+
         val expected = """
-             S { W { "\s+" : ' ' } }
+         S { rules { normalRule {
+              ID : 'r'
+              '='
+              concat { concatItem|1 { group {
+                    '('
+                    concat { concatItem|1 { group {
+                          '('
+                          concat { concatItem { ID : 'a' } }
+                          ')'
+                        } } }
+                    ')'
+                  } } }
+              ';'
+            } } }
         """.trimIndent()
-        super.test(S,goal,sentence,expected)
+
+        val actual = super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

@@ -4,33 +4,37 @@ namespace net.akehurst.language.natural
 
 grammar English {
 
+    skip WHITESPACE = "\s+" ;
+
+    text = sentence* ;
+
     sentence
         = simple-sentence
-        | compound-sentence
+        || compound-sentence
         ;
 
     simple-sentence
         = declarative-sentence
-        | interrogative-sentence
-        | imperative-sentence
-        | conditional-sentence
+        || interrogative-sentence
+        || imperative-sentence
+        || conditional-sentence
         ;
 
     compound-sentence
         = simple-sentence CONJUNCTION simple-sentence
-        | 'Either' declarative-sentence 'or' declarative-sentence
-        | 'Either' imperative-sentence 'or' imperative-sentence
+        || 'Either' declarative-sentence 'or' declarative-sentence
+        || 'Either' imperative-sentence 'or' imperative-sentence
         ;
 
     interrogative-sentence
         = declarative-sentence '?'
-        | 'Who' predicate '?'
-        | ('What' | 'Which') (ADVERB* adjective)? noun predicate '?'
-        | ('What' | 'When' | 'Where' | 'Who' | 'To whom' | 'Why')?  ('do' |'does' |'don\'t' |'doesn\'t' |'did' |'didn\'t') subject predicate '?'
-        | 'Which'  noun-phrase? ('do' |'does' |'don\'t' |'doesn\'t' |'did' |'didn\'t') subject predicate '?'
-        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('will' |'won\'t') subject predicate1 '?'
-        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('has' |'have' |'hasn\'t' |'haven\'t') subject predicate2 '?'
-        | ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('are' |'is' |'was' |'were' |  'aren\'t' |'isn\'t' |'wasn\'t' |'weren\'t') subject (ADVERB* adjective | prepositional-phrase* | predicate3)? '?'
+        || 'Who' predicate '?'
+        || ('What' | 'Which') (ADVERB* adjective)? noun predicate '?'
+        || ('What' | 'When' | 'Where' | 'Who' | 'To whom' | 'Why')?  ('do' |'does' |'don\'t' |'doesn\'t' |'did' |'didn\'t') subject predicate '?'
+        || 'Which'  noun-phrase? ('do' |'does' |'don\'t' |'doesn\'t' |'did' |'didn\'t') subject predicate '?'
+        || ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('will' |'won\'t') subject predicate1 '?'
+        || ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('has' |'have' |'hasn\'t' |'haven\'t') subject predicate2 '?'
+        || ('What' |'Which' |'When' |'Where' |'Who' |'To whom' | 'Why')? ('are' |'is' |'was' |'were' |  'aren\'t' |'isn\'t' |'wasn\'t' |'weren\'t') subject (ADVERB* adjective | prepositional-phrase* | predicate3)? '?'
         ;
 
     imperative-sentence =  imperative-predicate ;
@@ -39,65 +43,65 @@ grammar English {
 
     conditional-sentence
         = dependent-clause ',' independent-clause
-        | independent-clause dependent-clause
+        || independent-clause dependent-clause
         ;
     dependent-clause = ('if' | 'when') declarative-sentence ;
     independent-clause
         = declarative-sentence
-        | interrogative-sentence
+        || interrogative-sentence
         ;
 
     declarative-sentence = subject predicate ;
 
-    subject = simple-subject compound-subject ;
+    subject = simple-subject | compound-subject ;
 
     simple-subject = noun-phrase | NOMINATIVE_PERSONAL_PRONOUN ;
 
     noun-phrase
         = 'the' SPECIFIC_PROPER_NOUN
-        | PROPER_NOUN
-        | NON_PERSONAL_PRONOUN
-        | ARTICLE (ADVERB* compound-adjective)? compound-noun
-        | (ADVERB* compound-adjective)? COMMON_NOUN_PLURAL
-        | PROPER_NOUN_POSSESSIVE (ADVERB* compound-adjective)? compound-noun
-        | PERSONAL_PRONOUN_POSSESSIVE_ADJECTIVE (ADVERB* compound-adjective)? compound-noun
-        | ARTICLE COMMON_NOUN_POSSESSIVE  (ADVERB* compound-adjective)? compound-noun
+        || PROPER_NOUN
+        || NON_PERSONAL_PRONOUN
+        || ARTICLE (ADVERB* compound-adjective)? compound-noun
+        || (ADVERB* compound-adjective)? COMMON_NOUN_PLURAL
+        || PROPER_NOUN_POSSESSIVE (ADVERB* compound-adjective)? compound-noun
+        || PERSONAL_PRONOUN_POSSESSIVE_ADJECTIVE (ADVERB* compound-adjective)? compound-noun
+        || ARTICLE COMMON_NOUN_POSSESSIVE  (ADVERB* compound-adjective)? compound-noun
         ;
 
     compound-noun = noun prepositional-phrase* ;
     prepositional-phrase = PREPOSITION object ;
 
-    compound-adjective = adjective ('and' | 'or') adjective ;
+    compound-adjective = [adjective / ('and' | 'or') ]+ ;
 
     compound-subject
         = simple-subject ('and' | 'or') simple-subject
-        | 'Either' simple-subject 'or' simple-subject
-        | 'Neither' simple-subject 'nor' simple-subject
+        || 'Either' simple-subject 'or' simple-subject
+        || 'Neither' simple-subject 'nor' simple-subject
         ;
 
     predicate = (verb | verb-phrase) complement? ;
 
     verb = VERB_1s_PRESENT
-         | VERB_2s_PRESENT
-         | VERB_3s_PRESENT
-         | VERB_1p_PRESENT
-         | VERB_2p_PRESENT
-         | VERB_3p_PRESENT
-         | VERB_1s_PAST
-         | VERB_2s_PAST
-         | VERB_3s_PAST
-         | VERB_1p_PAST
-         | VERB_2p_PAST
-         | VERB_3p_PAST
-         | LINKING_VERB
+         || VERB_2s_PRESENT
+         || VERB_3s_PRESENT
+         || VERB_1p_PRESENT
+         || VERB_2p_PRESENT
+         || VERB_3p_PRESENT
+         || VERB_1s_PAST
+         || VERB_2s_PAST
+         || VERB_3s_PAST
+         || VERB_1p_PAST
+         || VERB_2p_PAST
+         || VERB_3p_PAST
+         || LINKING_VERB
          ;
 
     complement
         =  object? object     // indirect-object? object
-        |  ADVERB* adjective
-        |  prepositional-phrase*
-        |  'to' VERB_INFINITIVE object?
-        |  VERB_PRESENT_PARTICIPLE
+        ||  ADVERB* adjective
+        ||  prepositional-phrase*
+        ||  'to' VERB_INFINITIVE object?
+        ||  VERB_PRESENT_PARTICIPLE
         ;
 
     object =
@@ -106,23 +110,23 @@ grammar English {
 
     simple-object
         = noun-phrase
-        | OBJECTIVE_PERSONAL_PRONOUN
+        || OBJECTIVE_PERSONAL_PRONOUN
         ;
 
     compound-object = simple-object ('and' | 'or') simple-object ;
 
     verbal-phrase
         = 'to' VERB_INFINITIVE complement?
-        | VERB_PRESENT_PARTICIPLE complement?
-        | VERB_PAST_PARTICIPLE complement?
+        || VERB_PRESENT_PARTICIPLE complement?
+        || VERB_PAST_PARTICIPLE complement?
         ;
 
     predicate1 = verb1 complement? ;
     verb1
         = 'have' VERB_PAST_PARTICIPLE
-        | 'have' 'been' VERB_PRESENT_PARTICIPLE
-        | 'be' VERB_PRESENT_PARTICIPLE
-        | VERB_INFINITIVE
+        || 'have' 'been' VERB_PRESENT_PARTICIPLE
+        || 'be' VERB_PRESENT_PARTICIPLE
+        || VERB_INFINITIVE
         ;
 
     predicate2 = verb2 complement? ;
@@ -133,25 +137,25 @@ grammar English {
 
     verb-phrase
         = ('had' | 'have' | 'has') 'not'? VERB_PAST_PARTICIPLE
-        | ('had' | 'have' | 'has') 'not'? 'been' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
-        | AUX_VERB 'not'? 'have' VERB_PAST_PARTICIPLE
-        | AUX_VERB 'not'? 'have' 'been' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
-        | AUX_VERB 'not'? 'be' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
-        | AUX_VERB 'not'? VERB_INFINITIVE
-        | 'ought' ('to' | 'not') VERB_INFINITIVE
-        | 'ought' ('to' | 'not') 'be' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
-        | 'ought' ('to' | 'not') 'have' VERB_PAST_PARTICIPLE
-        | 'ought' ('to' | 'not') 'have' 'been' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
-        | ('do' |'does' |'did') 'not'? VERB_INFINITIVE?
-        | ('am' |'are' |'is' |'was' |'were') 'not'? (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
-        | ('am' |'are' |'is' |'was' |'were') 'not'? 'being' VERB_PAST_PARTICIPLE?
-        | ('am' |'are' |'is' |'was' |'were') 'not'? 'going' 'to' VERB_INFINITIVE?
+        || ('had' | 'have' | 'has') 'not'? 'been' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
+        || AUX_VERB 'not'? 'have' VERB_PAST_PARTICIPLE
+        || AUX_VERB 'not'? 'have' 'been' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
+        || AUX_VERB 'not'? 'be' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
+        || AUX_VERB 'not'? VERB_INFINITIVE
+        || 'ought' ('to' | 'not') VERB_INFINITIVE
+        || 'ought' ('to' | 'not') 'be' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
+        || 'ought' ('to' | 'not') 'have' VERB_PAST_PARTICIPLE
+        || 'ought' ('to' | 'not') 'have' 'been' (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
+        || ('do' |'does' |'did') 'not'? VERB_INFINITIVE?
+        || ('am' |'are' |'is' |'was' |'were') 'not'? (VERB_PAST_PARTICIPLE | VERB_PRESENT_PARTICIPLE)?
+        || ('am' |'are' |'is' |'was' |'were') 'not'? 'being' VERB_PAST_PARTICIPLE?
+        || ('am' |'are' |'is' |'was' |'were') 'not'? 'going' 'to' VERB_INFINITIVE?
         ;
 
     adjective
         = ADJECTIVE_POSITIVE
-        | ADJECTIVE_COMPARATIVE
-        | ADJECTIVE_SUPERLATIVE
+        || ADJECTIVE_COMPARATIVE
+        || ADJECTIVE_SUPERLATIVE
         ;
 
     //TODO: need to enable some kind of function to get these words!
@@ -162,18 +166,18 @@ grammar English {
 
 
     //TODO: these should come from a dictionary not be listed here
-    PROPER_NOUN = 'John' | 'America' | 'Dr. Allen' | 'State Street' ;
+    PROPER_NOUN = 'John' | 'America' | 'Dr. Allen' | 'State Street' | 'Mary' ;
     PROPER_NOUN_PLURAL = 'Johns' | 'Americas' ;
     PROPER_NOUN_POSSESSIVE = 'John\'s' | 'America\'s' | 'Dr. Allen\'s' ;
     SPECIFIC_PROPER_NOUN = 'Atlantic Ocean' | 'Sahara' ;
 
-    COMMON_NOUN = 'mouse' | 'cat' | 'book' | 'tree' ;
-    COMMON_NOUN_PLURAL = 'cats' | 'books' | 'trees' ;
+    COMMON_NOUN = 'mouse' | 'cat' | 'book' | 'tree' | 'name' ;
+    COMMON_NOUN_PLURAL = 'cats' | 'books' | 'trees' | 'sentences' | 'statements' ;
     COMMON_NOUN_POSSESSIVE = 'cat\'s' | 'book\'s' | 'tree\'s' ;
 
 
     //TODO: these should come from a dictionary not be listed here
-    ADJECTIVE_POSITIVE = 'new' | 'yellow' | 'pretty' | 'useful' ;
+    ADJECTIVE_POSITIVE = 'new' | 'yellow' | 'pretty' | 'useful' | 'declarative' ;
     ADJECTIVE_COMPARATIVE = 'newer' | 'yellower' | 'prettier' ;
     ADJECTIVE_SUPERLATIVE = 'newest' | 'yellowest' | 'prettiest' ;
     ARTICLE = 'a' | 'an' | 'the' ; //TODO: definite or indefinite
@@ -186,7 +190,7 @@ grammar English {
     LINKING_VERB = 'be' | 'am' | 'are' | 'is' | 'was' | 'were' | 'look' | 'looks' | 'looked' | 'become' | 'became' | 'become' ;
 
     //TODO: these should come from a dictionary not be listed here
-    VERB_INFINITIVE         = 'be'    | 'start'    ;
+    VERB_INFINITIVE         = 'be'    | 'start'    | 'form' ;
     VERB_PRESENT_PARTICIPLE = 'being' | 'starting' ;
     VERB_PAST_PARTICIPLE    = 'been'  | 'started'  ;
     VERB_1s_PRESENT         = 'am'    | 'start'    ;
@@ -200,7 +204,7 @@ grammar English {
     VERB_3s_PAST            = 'was'   | 'started'  ;
     VERB_1p_PAST            = 'were'  | 'started'  ;
     VERB_2p_PAST            = 'were'  | 'started'  ;
-    VERB_3p_PAST            = 'were'  | 'started'  ;
+    VERB_3p_PAST            = 'were'  | 'started' | 'used' ;
 
 
     NOMINATIVE_PERSONAL_PRONOUN = 'I' | 'you' | 'he' | 'she' | 'it' | 'we' | 'they' ;

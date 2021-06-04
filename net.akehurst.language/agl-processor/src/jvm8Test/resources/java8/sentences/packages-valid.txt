@@ -1,0 +1,4 @@
+// empty
+class A { }
+package a; class A { }
+package a.b.c; class A { } class B { }
