@@ -39,7 +39,9 @@ lots:
  - PT is not always what one expects
  
 # Build
+There are currently a number of failing tests, these indicate things to be fixed, and desired performance improvements.
+To build locally the latest version, use `assemble` or `publishToMavenLocal`.
 ```
 > cd net.akehurst.language
-> ./gradlew clean build
+> ./gradlew clean assemble
 ```
