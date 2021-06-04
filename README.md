@@ -1,9 +1,10 @@
+<!--
 [![Build Status](https://travis-ci.org/dhakehurst/net.akehurst.language.svg?branch=master)](https://travisci.org/dhakehurst/net.akehurst.language)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.akehurst.language/agl-processor/badge.svg)](https://maven-badges.herokuapp.com/maven-central/language/agl-processor)
-[ ![Bintray](https://api.bintray.com/packages/dhakehurst/maven/net.akehurst.language/images/download.svg) ](https://bintray.com/dhakehurst/maven/net.akehurst.language/_latestVersion)
+-->
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.akehurst.language/agl-processor/badge.svg?gav=true)](https://maven-badges.herokuapp.com/maven-central/net.akehurst.language/agl-processor)
+[![Generic badge](https://img.shields.io/badge/Kotlin-v1.4.0-green)](https://kotlinlang.org/)
 
 # AGL: A Grammar Language (or maybe Akehurst Grammar Language!)
-### net.akehurst.language
 
 Generic Language (DSL) support for kotlin multiplatform (parser, syntax-analyser, formatter, processor, etc)
 
@@ -18,17 +19,27 @@ My Requirements:
  - Simple grammar for defining a language with no restrictions
  -- i.e. should support left & right recursive rules,
  - Useable in Java and Javascript (other platforms/languages a bonus but not essential)
- - Scanner-less, i.e. no need to worry about keyword/identifier clashes
+ - No need to worry about keyword/identifier clashes
  - Interpreted at runtime, i.e. no generate parser step.
  - Supports families of languages, i.e. grammar composition/extension
  - 
+ 
+# Other
+ - [Editor Integration and Demo](https://github.com/dhakehurst/net.akehurst.language.editor)
 
+# Articles
+
+ - [Creating a custom Domain Specific Language for text input validation](https://medium.com/javascript-in-plain-english/agl-your-dsl-in-the-web-c9f54595691b)
+ - [Documentation](https://medium.com/@dr.david.h.akehurst/a-kotlin-multi-platform-parser-usable-from-a-jvm-or-javascript-59e870832a79)
 
 # TODO
 
 lots:
  - performance improvements
- - grammar composition
- - support for AST creation (rather than just PT) within the grammar definition
  - PT is not always what one expects
  
+# Build
+```
+> cd net.akehurst.language
+> ./gradlew clean build
+```
