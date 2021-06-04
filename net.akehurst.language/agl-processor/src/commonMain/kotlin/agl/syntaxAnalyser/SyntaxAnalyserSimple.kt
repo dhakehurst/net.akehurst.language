@@ -103,7 +103,7 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
                     }
                     RuntimeRuleListKind.SEPARATED_LIST -> {
                         val name = br.runtimeRule.rhs.items[RuntimeRuleItem.SLIST__ITEM].tag
-                        val list = br.nonSkipChildren.map { this.createValue(it) }
+                        val list = br.nonSkipChildren.mapNotNull { this.createValue(it) }
                         if (br.runtimeRule.rhs.multiMax == 1) {
                             val value = if (list.isEmpty()) null else list[0]
                             value

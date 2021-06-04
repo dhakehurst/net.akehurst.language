@@ -303,4 +303,42 @@ class test_SyntaxAnalyserSimple {
         assertEquals(true, actual0.hasProperty("NUMBER"))
         assertEquals("12345", actual0.getPropertyValue("NUMBER"))
     }
+
+    @Test
+    fun slist2() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip leaf WHITESPACE = "\s+" ;
+                attr_stmt = attr_type attr_lists ;
+                attr_type = 'graph' | 'node' | 'edge' ;
+                attr_lists = attr_list+ ;
+                attr_list = '[' attr_list_content ']' ;
+                attr_list_content = [ attr / a_list_sep ]* ;
+                attr = ID '=' ID ;
+                a_list_sep = (';' | ',')? ;
+                ID = "[a-zA-Z_][a-zA-Z_0-9]+" ;
+            }
+        """.trimIndent()
+
+        val sentence = "graph [fontsize=ss labelloc=yy label=bb splines=true overlap=false]"
+
+        val proc = Agl.processor(grammarStr, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmElementSimple>(AsmElementSimple::class,"attr_stmt", sentence)
+
+        assertEquals("addressBook", actual.typeName)
+        assertEquals(2, actual.properties.size)
+        assertEquals(true, actual.hasProperty("ID"))
+        assertEquals("bk1", actual.getPropertyValue("ID"))
+        assertEquals(true, actual.hasProperty("contacts"))
+        assertEquals(5, (actual.getPropertyValue("contacts") as List<Any>).size)
+        val list = (actual.getPropertyValue("contacts") as List<Any>)
+        val actual0 = list[0] as AsmElementSimple
+        assertEquals(true, actual0.hasProperty("NAME"))
+        assertEquals("adam", actual0.getPropertyValue("NAME"))
+        assertEquals(true, actual0.hasProperty("NAME2"))
+        assertEquals("ant", actual0.getPropertyValue("NAME2"))
+        assertEquals(true, actual0.hasProperty("NUMBER"))
+        assertEquals("12345", actual0.getPropertyValue("NUMBER"))
+    }
 }
