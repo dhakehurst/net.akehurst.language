@@ -1,6 +1,5 @@
 plugins {
-    id("net.akehurst.kotlin.kt2ts") version "1.7.0"
-   // id("java-library")
+    //id("net.akehurst.kotlin.kt2ts") version "1.7.0"
     //jacoco
 }
 
@@ -21,6 +20,7 @@ kotlin {
     }
 }
 
+/*
 kt2ts {
     jvmTargetName.set("jvm8")
     jsTargetName.set("js")
@@ -35,22 +35,8 @@ kt2ts {
             "net.akehurst.language.agl.processor.Agl"
     ))
 }
+*/
 
-/*
-tasks {
-    val dokkaJavadoc by creating(org.jetbrains.dokka.gradle.DokkaTask::class) {
-        outputFormat = "javadoc"
-        outputDirectory = "$buildDir/dokka"
-        multiplatform {
-            val jvm8 by creating {
-                targets = listOf("JVM")
-                platform = "jvm"
-                jdkVersion = 8
-                noJdkLink = true
-            }
-        }
-    }
-}*/
 /*
 jacoco {
     toolVersion = "0.8.5"
