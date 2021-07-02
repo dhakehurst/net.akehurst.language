@@ -17,10 +17,11 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_skipRules : test_Abstract() {
+internal class test_skipRules : test_Abstract() {
 
     // skip WS = "\s+" ;
     // skip COMMENT = "//[^\n]*$"

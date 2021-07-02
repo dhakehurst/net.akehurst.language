@@ -19,7 +19,7 @@ package net.akehurst.language.api.syntaxAnalyser
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-class SyntaxAnalyserException(message: String, cause: Throwable?) : Exception(message, cause)
+class SyntaxAnalyserException(message: String, cause: Throwable?) : RuntimeException(message, cause)
 
 /**
  *

@@ -16,9 +16,8 @@
 
 package net.akehurst.language.processor.expectedAt
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.parser.expectedTerminalsAt.test_aOpt
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

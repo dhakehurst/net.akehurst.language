@@ -201,7 +201,7 @@ public class BadBinaryLiterals {
         val goal = "ClassDeclaration"
         val t = proc.parse(goal, sentence)
         val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -211,7 +211,7 @@ public class BadBinaryLiterals {
         val goal = "CompilationUnit"
         val t = proc.parse(goal, sentence)
         //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -221,7 +221,7 @@ public class BadBinaryLiterals {
         val goal = "CompilationUnit"
         val t = proc.parse(goal, sentence)
         //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -230,7 +230,7 @@ public class BadBinaryLiterals {
         val sentence = "A a"
         val goal = "FormalParameterList"
         val t = proc.parse(goal, sentence)
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -239,7 +239,7 @@ public class BadBinaryLiterals {
         val sentence = "A this"
         val goal = "FormalParameterList"
         val t = proc.parse(goal, sentence)
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -248,7 +248,7 @@ public class BadBinaryLiterals {
         val sentence = "A... this"
         val goal = "FormalParameterList"
         val t = proc.parse(goal, sentence)
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -257,7 +257,7 @@ public class BadBinaryLiterals {
         val sentence = "A a, B b"
         val goal = "FormalParameterList"
         val t = proc.parse(goal, sentence)
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -267,7 +267,7 @@ public class BadBinaryLiterals {
         val goal = "FormalParameterList"
         val t = proc.parse(goal, sentence)
         //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -277,7 +277,7 @@ public class BadBinaryLiterals {
         val goal = "ConstructorDeclaration"
         val t = proc.parse(goal, sentence)
         //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -287,7 +287,7 @@ public class BadBinaryLiterals {
         val goal = "ConstructorDeclarator"
         val t = proc.parse(goal, sentence)
         //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -297,7 +297,7 @@ public class BadBinaryLiterals {
         val goal = "ConstructorBody"
         val t = proc.parse(goal, sentence)
         //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -351,7 +351,7 @@ public class BadBinaryLiterals {
         val t = proc.parse(goal, sentence)
 
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 

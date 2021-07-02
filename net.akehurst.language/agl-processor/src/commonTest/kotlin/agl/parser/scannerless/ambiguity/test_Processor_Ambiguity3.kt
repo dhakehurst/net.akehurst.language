@@ -17,15 +17,14 @@
 package net.akehurst.language.parser.scanondemand.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
+internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
     /**
      * From [https://pdfs.semanticscholar.org/eeac/392e02671b0edcd81ae080a5117e5f9584f5.pdf]
      * Generalised Parsing: Some Costs. Adrian Johnstone, Elizabeth Scott, and Giorgios Economopoulos

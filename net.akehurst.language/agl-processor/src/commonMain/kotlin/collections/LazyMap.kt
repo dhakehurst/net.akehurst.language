@@ -16,9 +16,9 @@
 
 package net.akehurst.language.collections
 
-fun <K,V> lazyMap(accessor: (K) -> V) = LazyMap(accessor)
+internal fun <K,V> lazyMap(accessor: (K) -> V) = LazyMap(accessor)
 
-class LazyMap<K,V>(val accessor: (K) -> V) : Map<K,V> {
+internal class LazyMap<K,V>(val accessor: (K) -> V) : Map<K,V> {
 
     val map = mutableMapOf<K,V>()
 

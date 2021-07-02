@@ -16,11 +16,12 @@
 
 package net.akehurst.language.parser.scanondemand.examples
 
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_GTB : test_ScanOnDemandParserAbstract() {
+internal class test_GTB : test_ScanOnDemandParserAbstract() {
 
     /*
      * from [https://ac.els-cdn.com/S1571066104052211/1-s2.0-S1571066104052211-main.pdf?_tid=ebfa8627-2763-446d-b750-084833f9dd4c&acdnat=1548755247_c9590c54393a9cf75f34499780c7b400]

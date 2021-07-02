@@ -16,9 +16,9 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.automaton.AutomatonKind
-import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.parser.InputFromString
+import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

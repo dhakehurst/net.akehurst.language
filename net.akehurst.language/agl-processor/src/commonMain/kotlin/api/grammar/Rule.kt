@@ -16,7 +16,7 @@
 
 package net.akehurst.language.api.grammar
 
-interface Rule : GrammarVisitable {
+interface Rule {
 
     val grammar: Grammar
 

@@ -16,16 +16,17 @@
 
 package net.akehurst.language.parser.scanondemand.whitespace
 
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_rightRecursive_a : test_ScanOnDemandParserAbstract() {
+internal class test_rightRecursive_a : test_ScanOnDemandParserAbstract() {
 
     // S =  'a' | S1 ;
     // S1 = 'a' S ;
     // skip WS = "\s+" ;
-    companion object {
+    private companion object {
         val S = runtimeRuleSet {
             choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")

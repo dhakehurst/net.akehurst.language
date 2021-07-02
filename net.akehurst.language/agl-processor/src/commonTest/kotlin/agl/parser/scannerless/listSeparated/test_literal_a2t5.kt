@@ -17,16 +17,14 @@
 package net.akehurst.language.parser.scanondemand.listSeparated
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scanondemand.group.test_group
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
+internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
 
     // S = [a / 'b'][2..5]
     // a = 'a'

@@ -27,7 +27,7 @@ import net.akehurst.language.agl.ast.*
 import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 
 
-class AglGrammarSyntaxAnalyser(
+internal class AglGrammarSyntaxAnalyser(
         val grammarRegistry: GrammarRegistry
 ) : SyntaxAnalyserAbstract() {
 

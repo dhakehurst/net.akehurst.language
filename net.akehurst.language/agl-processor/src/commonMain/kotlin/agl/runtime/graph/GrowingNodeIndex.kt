@@ -27,7 +27,7 @@ import net.akehurst.language.agl.automaton.ParserState
     length/nextInputPosition is necessary because ?
   - size of a list ( only relevant for MULTI and SEPARATED_LIST)
  */
-data class GrowingNodeIndex(
+internal data class GrowingNodeIndex(
         val state: ParserState,
         val lhsNumber:Int,
         val startPosition: Int,

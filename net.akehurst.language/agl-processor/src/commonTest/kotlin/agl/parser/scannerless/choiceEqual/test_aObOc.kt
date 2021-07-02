@@ -25,7 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_aObOc : test_ScanOnDemandParserAbstract() {
+internal class test_aObOc : test_ScanOnDemandParserAbstract() {
 
     // S = a | b | c;
     // a = 'a' ;

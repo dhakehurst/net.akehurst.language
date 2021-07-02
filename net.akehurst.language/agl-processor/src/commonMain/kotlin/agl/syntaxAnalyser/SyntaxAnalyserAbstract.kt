@@ -51,23 +51,23 @@ abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVis
         return if (null == branch){
             null
         }else {
-            val asm = this.visit(branch, arg) as T
+            val asm = this.visitBranch(branch, arg) as T
             this.locationMap[asm as Any] = branch.location
             asm
         }
     }
 
     // --- IParseTreeVisitor ---
-    override fun visit(target: SharedPackedParseTree, arg: Any?): Any {
+    override fun visitTree(target: SharedPackedParseTree, arg: Any?): Any {
         val root = target.root
-        return this.visit(root, arg)
+        return this.visitNode(root, arg)
     }
 
-    override fun visit(target: SPPTLeaf, arg: Any?): Any {
+    override fun visitLeaf(target: SPPTLeaf, arg: Any?): Any {
         return target.matchedText
     }
 
-    override fun visit(target: SPPTBranch, arg: Any?): Any {
+    override fun visitBranch(target: SPPTBranch, arg: Any?): Any {
         val branchName = target.name
         val handler = this.findBranchHandler<Any>(branchName)
         val branchChildren = target.branchNonSkipChildren// .stream().map(it -> it.getIsEmpty() ? null :

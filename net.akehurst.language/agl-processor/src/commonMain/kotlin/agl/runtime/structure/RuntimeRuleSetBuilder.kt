@@ -19,7 +19,7 @@ package net.akehurst.language.agl.runtime.structure
 import net.akehurst.language.api.parser.ParserException
 
 @Deprecated("Use runtimeRuleSet { ... }")
-class RuntimeRuleSetBuilder() {
+internal class RuntimeRuleSetBuilder() {
 
     val runtimeRuleSet = RuntimeRuleSet()
     private var nextGroupNumber: Int = 0

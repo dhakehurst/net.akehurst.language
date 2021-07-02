@@ -9,7 +9,7 @@ import net.akehurst.language.agl.sppt.SPPTNodeFromInputAbstract
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 
-class SPPTBranchFromInputAndGrownChildren(
+internal class SPPTBranchFromInputAndGrownChildren(
         input: InputFromString,
         runtimeRule: RuntimeRule,
         option: Int,

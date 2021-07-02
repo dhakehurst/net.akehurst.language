@@ -32,8 +32,6 @@ import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.LanguageProcessorException
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import kotlin.js.JsName
-import net.akehurst.language.agl.processor.BuildConfig
 
 object Agl {
 
@@ -42,43 +40,40 @@ object Agl {
         val syntaxAnalyser: SyntaxAnalyser = AglGrammarSyntaxAnalyser(GrammarRegistryDefault) //TODO: enable the registry to be changed
         val formatter: Formatter? = null
         val semanticAnalyser: SemanticAnalyser = AglGrammarSemanticAnalyser()
-        processor(grammar, AglGrammarGrammar.goalRuleName, syntaxAnalyser, formatter, semanticAnalyser)
+        processorFromGrammarForGoal(grammar, AglGrammarGrammar.goalRuleName, syntaxAnalyser, formatter, semanticAnalyser)
     }
 
     val styleProcessor: LanguageProcessor by lazy {
         val grammar = AglStyleGrammar()
         val syntaxAnalyser: SyntaxAnalyser = AglStyleSyntaxAnalyser()
-        processor(grammar, AglStyleGrammar.goalRuleName, syntaxAnalyser)
+        processorFromGrammarForGoal(grammar, AglStyleGrammar.goalRuleName, syntaxAnalyser)
     }
 
     val formatProcessor: LanguageProcessor by lazy {
         val grammar = AglFormatGrammar()
         val syntaxAnalyser: SyntaxAnalyser = AglFormatSyntaxAnalyser()
-        processor(grammar, AglFormatGrammar.goalRuleName, syntaxAnalyser)
+        processorFromGrammarForGoal(grammar, AglFormatGrammar.goalRuleName, syntaxAnalyser)
     }
 
     val version: String = BuildConfig.version
     val buildStamp: String = BuildConfig.buildStamp
 
-    @JsName("processorFromGrammar")
-    fun processor(grammar: Grammar, syntaxAnalyser: SyntaxAnalyser? = null, formatter: Formatter? = null, semanticAnalyser: SemanticAnalyser? = null): LanguageProcessor {
+    fun processorFromGrammar(grammar: Grammar, syntaxAnalyser: SyntaxAnalyser? = null, formatter: Formatter? = null, semanticAnalyser: SemanticAnalyser? = null): LanguageProcessor {
         val goalRuleName = grammar.rule.first { it.isSkip.not() }.name
-        return processor(grammar, goalRuleName, syntaxAnalyser, formatter, semanticAnalyser)
+        return processorFromGrammarForGoal(grammar, goalRuleName, syntaxAnalyser, formatter, semanticAnalyser)
     }
 
-    @JsName("processorFromGrammarForGoal")
-    fun processor(grammar: Grammar, goalRuleName: String, syntaxAnalyser: SyntaxAnalyser? = null, formatter: Formatter? = null, semanticAnalyser: SemanticAnalyser? = null): LanguageProcessor {
+    fun processorFromGrammarForGoal(grammar: Grammar, goalRuleName: String, syntaxAnalyser: SyntaxAnalyser? = null, formatter: Formatter? = null, semanticAnalyser: SemanticAnalyser? = null): LanguageProcessor {
         return LanguageProcessorDefault(grammar, goalRuleName, syntaxAnalyser, formatter, semanticAnalyser)
     }
 
     /**
      * Create a LanguageProcessor from a grammar definition string
      */
-    @JsName("processorFromString")
-    fun processor(grammarDefinitionStr: String, syntaxAnalyser: SyntaxAnalyser? = null, formatter: Formatter? = null, semanticAnalyser: SemanticAnalyser? = null): LanguageProcessor {
+    fun processorFromString(grammarDefinitionStr: String, syntaxAnalyser: SyntaxAnalyser? = null, formatter: Formatter? = null, semanticAnalyser: SemanticAnalyser? = null): LanguageProcessor {
         try {
-            val grammar = grammarProcessor.process<List<Grammar>>(List::class, "grammarDefinition", grammarDefinitionStr).last()
-            return processor(grammar, syntaxAnalyser, formatter, semanticAnalyser)
+            val grammar = grammarProcessor.processForGoal<List<Grammar>>(List::class, "grammarDefinition", grammarDefinitionStr).last()
+            return processorFromGrammar(grammar, syntaxAnalyser, formatter, semanticAnalyser)
         } catch (e: ParseFailedException) {
             throw LanguageProcessorException("Unable to parse grammarDefinitionStr at line: ${e.location.line} column: ${e.location.column} (position:${e.location.position}) expected one of: ${e.expected}", e)
         }
@@ -94,31 +89,29 @@ object Agl {
      *   else use the last grammar in the grammarDefinitionStr
      * }
      */
-    @JsName("processorFromStringForGoal")
-    fun processor(grammarDefinitionStr: String, goalRuleName: String, syntaxAnalyser: SyntaxAnalyser? = null, formatter: Formatter? = null, semanticAnalyser: SemanticAnalyser? = null): LanguageProcessor {
+    fun processorFromStringForGoal(grammarDefinitionStr: String, goalRuleName: String, syntaxAnalyser: SyntaxAnalyser? = null, formatter: Formatter? = null, semanticAnalyser: SemanticAnalyser? = null): LanguageProcessor {
         try {
-            val grammars = grammarProcessor.process<List<Grammar>>(List::class, "grammarDefinition", grammarDefinitionStr)
+            val grammars = grammarProcessor.processForGoal<List<Grammar>>(List::class, "grammarDefinition", grammarDefinitionStr)
             return when {
                 goalRuleName.contains(".") -> {
                     val grammarName = goalRuleName.substringBefore(".")
                     val grammar = grammars.find { it.name == grammarName } ?: throw LanguageProcessorException("Grammar with name $grammarName not found", null)
                     val goalName = goalRuleName.substringAfter(".")
-                    processor(grammar, goalName, syntaxAnalyser, formatter, semanticAnalyser)
+                    processorFromGrammarForGoal(grammar, goalName, syntaxAnalyser, formatter, semanticAnalyser)
                 }
-                else -> processor(grammars.last(), goalRuleName, syntaxAnalyser, formatter, semanticAnalyser)
+                else -> processorFromGrammarForGoal(grammars.last(), goalRuleName, syntaxAnalyser, formatter, semanticAnalyser)
             }
         } catch (e: ParseFailedException) {
             throw LanguageProcessorException("Unable to parse grammarDefinitionStr at line: ${e.location.line} column: ${e.location.column} expected one of: ${e.expected}", e)
         }
     }
 
-    @JsName("processorFromRuleList")
-    fun processor(rules: List<String>, syntaxAnalyser: SyntaxAnalyser? = null, formatter: Formatter? = null, semanticAnalyser: SemanticAnalyser? = null): LanguageProcessor {
+    fun processorFromRuleList(rules: List<String>, syntaxAnalyser: SyntaxAnalyser? = null, formatter: Formatter? = null, semanticAnalyser: SemanticAnalyser? = null): LanguageProcessor {
         val prefix = "namespace temp grammar Temp { "
         val grammarStr = prefix + rules.joinToString(" ") + "}"
         try {
-            val grammar = grammarProcessor.process<List<Grammar>>(List::class, "grammarDefinition", grammarStr)[0]
-            return processor(grammar, syntaxAnalyser, formatter, semanticAnalyser)
+            val grammar = grammarProcessor.processForGoal<List<Grammar>>(List::class, "grammarDefinition", grammarStr)[0]
+            return processorFromGrammar(grammar, syntaxAnalyser, formatter, semanticAnalyser)
         } catch (e: ParseFailedException) {
             //TODO: better, different exception to detect which list item fails
             val newCol = e.location.column.minus(prefix.length)

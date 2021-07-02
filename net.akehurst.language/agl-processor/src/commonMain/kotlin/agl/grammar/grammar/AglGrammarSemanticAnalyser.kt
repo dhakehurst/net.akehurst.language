@@ -16,16 +16,16 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserException
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItem
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItemKind
 
 
-class AglGrammarSemanticAnalyser(
+internal class AglGrammarSemanticAnalyser(
 ) : SemanticAnalyser {
 
     private val items = mutableListOf<SemanticAnalyserItem>()

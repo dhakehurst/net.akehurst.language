@@ -21,21 +21,21 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_aABCc : test_ScanOnDemandParserAbstract() {
+internal class test_aABCc : test_ScanOnDemandParserAbstract() {
 
-    companion object {
-        /*
-            S = b | a S c ;
+    /*
+        S = b | a S c ;
 
-            S = b | S1
-            S1 = a S c
-         */
+        S = b | S1
+        S1 = a S c
+     */
+    private companion object {
         val rrs = runtimeRuleSet {
-            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("b")
                 ref("S1")
             }
-            concatenation("S1") { literal("a"); ref("S"); literal("c")}
+            concatenation("S1") { literal("a"); ref("S"); literal("c") }
         }
     }
 
@@ -49,11 +49,11 @@ class test_aABCc : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
         )
     }
 
@@ -67,13 +67,14 @@ class test_aABCc : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
         )
     }
+
     @Test
     fun aabcc() {
         val sentence = "aabcc"
@@ -84,11 +85,11 @@ class test_aABCc : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
         )
     }
 

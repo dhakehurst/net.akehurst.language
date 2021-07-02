@@ -24,7 +24,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.fail
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
 class test_VistraqQuery_Singles {
@@ -150,7 +149,7 @@ class test_VistraqQuery_Singles {
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
-        println(result.toStringIndented("  "))
+        println(result.toStringAllWithIndent("  "))
     }
 
     @Test(timeout=5000)

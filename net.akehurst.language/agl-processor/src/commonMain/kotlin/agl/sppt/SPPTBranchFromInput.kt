@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 
-class SPPTBranchFromInput(
+internal class SPPTBranchFromInput(
         input:InputFromString,
         runtimeRule: RuntimeRule,
         option: Int,

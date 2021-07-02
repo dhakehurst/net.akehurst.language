@@ -18,7 +18,7 @@ package net.akehurst.language.agl.ast
 
 import net.akehurst.language.api.grammar.SimpleItem
 
-abstract class SimpleItemAbstract : ConcatenationItemAbstract(), SimpleItem {
+internal abstract class SimpleItemAbstract : ConcatenationItemAbstract(), SimpleItem {
 
     abstract val name: String
 

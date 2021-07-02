@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_literal_a2n : test_ScanOnDemandParserAbstract() {
+internal class test_literal_a2n : test_ScanOnDemandParserAbstract() {
 
     // S = [a / ',']2+
     // a = 'a'

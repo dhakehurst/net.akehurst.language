@@ -16,7 +16,10 @@
 
 package net.akehurst.language.agl.processor
 
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 internal class test_Agl_scan {
 

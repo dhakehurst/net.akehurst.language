@@ -16,10 +16,10 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.sppt.SPPTParser
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.test.Test
 import kotlin.test.assertEquals

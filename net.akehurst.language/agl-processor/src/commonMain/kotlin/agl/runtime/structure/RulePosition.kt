@@ -16,14 +16,14 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-typealias RuleOptionId = RuleOption //TODO: Make this an Int
+internal typealias RuleOptionId = RuleOption //TODO: Make this an Int
 
-data class RuleOption(
+internal data class RuleOption(
         val runtimeRule: RuntimeRule,
         val option: Int
 )
 
-class RulePosition(
+internal class RulePosition(
         val runtimeRule: RuntimeRule,
         val option: Int,
         val position: Int

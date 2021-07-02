@@ -1,6 +1,6 @@
 plugins {
     //id("net.akehurst.kotlin.kt2ts") version "1.7.0"
-    //jacoco
+    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.0.0")
 }
 
 kotlin {
@@ -19,8 +19,15 @@ kotlin {
         }
     }
 }
-
 /*
+tasks.named<Copy>("jsProductionLibraryCompileSync") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+tasks.named<Copy>("jsDevelopmentLibraryCompileSync") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
 kt2ts {
     jvmTargetName.set("jvm8")
     jsTargetName.set("js")
@@ -36,7 +43,6 @@ kt2ts {
     ))
 }
 */
-
 /*
 jacoco {
     toolVersion = "0.8.5"

@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.agl.processor.dot
 
-import net.akehurst.language.agl.automaton.AutomatonKind
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.processor.Agl

@@ -17,23 +17,13 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.MutableQueue
 import net.akehurst.language.collections.Stack
 import net.akehurst.language.collections.lazyMapNonNull
 import kotlin.reflect.KProperty
 
-// TODO: remove this pre release
-// This a workaround for the debugger
-// see [https://youtrack.jetbrains.com/issue/KTIJ-1170#focus=Comments-27-4433190.0-0]
-operator fun <T> Lazy<T>.getValue(thisRef: Any?, property: KProperty<*>) = value
-
-enum class AutomatonKind {
-    LOOKAHEAD_NONE,     // LC(O) like LR(0)
-    LOOKAHEAD_SIMPLE,   // SLC like SLR
-    LOOKAHEAD_1         // LC(1) like LR(1)
-}
-
-class ParserStateSet(
+internal class ParserStateSet(
     val number: Int,
     val runtimeRuleSet: RuntimeRuleSet,
     val userGoalRule: RuntimeRule,

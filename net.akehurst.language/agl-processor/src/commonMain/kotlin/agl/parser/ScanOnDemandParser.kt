@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.parser
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.ParseGraph
@@ -29,11 +28,12 @@ import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.math.max
 
-class ScanOnDemandParser(
+internal class ScanOnDemandParser(
     internal val runtimeRuleSet: RuntimeRuleSet
 ) : Parser {
 

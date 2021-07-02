@@ -32,7 +32,7 @@ import net.akehurst.language.api.parser.ParserException
  *   RIGHT_ASSOCIATIVE_LIST  -> items[0] == the item to repeat, items[1] == separator
  * }
  */
-class RuntimeRuleItem(
+internal class RuntimeRuleItem(
     val itemsKind: RuntimeRuleRhsItemsKind,
     val choiceKind : RuntimeRuleChoiceKind,
     val listKind : RuntimeRuleListKind,

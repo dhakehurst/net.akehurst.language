@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import com.github.gmazzo.gradle.plugins.BuildConfigExtension
 
 plugins {
-    kotlin("multiplatform") version ("1.5.10") apply false
+    kotlin("multiplatform") version ("1.5.20") apply false
     id("org.jetbrains.dokka") version ("1.4.32") apply false
     id("com.github.gmazzo.buildconfig") version("3.0.0") apply false
     id("nu.studer.credentials") version ("2.1")
@@ -43,13 +43,9 @@ subprojects {
     apply(plugin = "com.github.gmazzo.buildconfig")
 
     repositories {
+        mavenLocal()
         mavenCentral()
-        maven {
-            url = uri("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/")
-        }
     }
-
-    tasks.named("publish").get().dependsOn("javadocJar")
 
     configure<BuildConfigExtension> {
         val now = java.time.Instant.now()
@@ -107,6 +103,7 @@ subprojects {
         archiveClassifier.set("javadoc")
         from(dokkaHtml.outputDirectory)
     }
+    tasks.named("publish").get().dependsOn("javadocJar")
 
     dependencies {
         "commonTestImplementation"(kotlin("test"))

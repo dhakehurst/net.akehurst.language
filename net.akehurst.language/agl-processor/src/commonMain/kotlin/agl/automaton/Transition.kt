@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.collections.Stack
 
-class Transition(
+internal class Transition(
         val from: ParserState,
         val to: ParserState,
         val action: ParseAction,
@@ -31,7 +31,7 @@ class Transition(
         val runtimeGuard: Transition.(current:GrowingNode, previous:List<RulePosition>?)->Boolean
 ) {
 
-    enum class ParseAction {
+    internal  enum class ParseAction {
         HEIGHT, // reduce first
         GRAFT,  // reduce other
         WIDTH,  // shift

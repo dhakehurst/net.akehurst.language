@@ -18,7 +18,7 @@ package net.akehurst.language.agl.ast;
 
 import net.akehurst.language.api.grammar.ConcatenationItem;
 
-abstract class ConcatenationItemAbstract : RuleItemAbstract(), ConcatenationItem {
+internal abstract class ConcatenationItemAbstract : RuleItemAbstract(), ConcatenationItem {
 
 
 }

@@ -17,12 +17,11 @@
 package net.akehurst.language.parser.scanondemand.leftAndRightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
+internal class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
 
     // S = E
     /* E = var | I | '(' E ')' */
@@ -35,7 +34,7 @@ class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
     // I2 = op E
     // op = '/' | 'M' | '+' | '-'
     // var = "[a-z]+"
-    companion object {
+    private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("E") }
             choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {

@@ -20,7 +20,7 @@ import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.sppt.SPPTNode
 
-class GrowingNode(
+internal class GrowingNode(
         val currentState: ParserState, // current rp of this node, it is growing, this changes (for new node) when children are added
         val lookahead: LookaheadSet,
         val children: GrowingChildren

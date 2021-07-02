@@ -18,7 +18,7 @@ package net.akehurst.language.agl.ast
 
 import net.akehurst.language.api.grammar.*
 
-class GroupDefault(override val choice: Choice) : SimpleItemAbstract(), Group {
+internal class GroupDefault(override val choice: Choice) : SimpleItemAbstract(), Group {
 
     override val name: String = "${'$'}group"
 
@@ -39,12 +39,6 @@ class GroupDefault(override val choice: Choice) : SimpleItemAbstract(), Group {
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
 		this.choice.allNonTerminal
-	}
-
-	// --- GrammarVisitable ---
-
-	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
-		return visitor.visit(this, arg);
 	}
 	
 }

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.regex
 
+import net.akehurst.language.api.regex.RegexMatcher
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

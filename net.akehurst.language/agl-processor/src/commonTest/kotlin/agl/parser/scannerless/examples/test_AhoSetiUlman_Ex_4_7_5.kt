@@ -16,7 +16,6 @@
 
 package net.akehurst.language.parser.scanondemand.examples
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
@@ -26,7 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
+internal class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
 
     // This grammar is LR(1) but not LALR(1)
 

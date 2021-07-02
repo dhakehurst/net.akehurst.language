@@ -19,14 +19,12 @@ package net.akehurst.language.parser.scanondemand.listSeparated
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.parser.scanondemand.leftRecursive.test_a
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.fail
 
-class test_leftRecursive  : test_ScanOnDemandParserAbstract() {
+internal class test_leftRecursive  : test_ScanOnDemandParserAbstract() {
 
     // S = E
     // E = 'a' | L

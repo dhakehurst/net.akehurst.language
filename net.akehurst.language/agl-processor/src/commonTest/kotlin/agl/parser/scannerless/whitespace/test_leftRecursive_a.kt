@@ -16,11 +16,12 @@
 
 package net.akehurst.language.parser.scanondemand.whitespace
 
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
+internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
     // S =  'a' | S1 ;
     // S1 = S 'a' ;
     // skip WS = "\s+" ;

@@ -20,7 +20,7 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 
 
-class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<String>> {
+internal class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<String>> {
 
     val lines = mutableListOf<MutableList<SPPTLeaf>>()
     fun MutableList<MutableList<SPPTLeaf>>.getOrCreate(index: Int): MutableList<SPPTLeaf> {
@@ -32,18 +32,18 @@ class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<String>> {
         return this[index]
     }
 
-    override fun visit(target: SharedPackedParseTree, arg: List<String>) {
-        return this.visit(target.root, arg)
+    override fun visitTree(target: SharedPackedParseTree, arg: List<String>) {
+        return this.visitNode(target.root, arg)
     }
 
-    override fun visit(target: SPPTBranch, arg: List<String>) {
+    override fun visitBranch(target: SPPTBranch, arg: List<String>) {
         target.children.forEach {
             val list = arg + target.name
-            this.visit(it, list)
+            this.visitNode(it, list)
         }
     }
 
-    override fun visit(target: SPPTLeaf, arg: List<String>) {
+    override fun visitLeaf(target: SPPTLeaf, arg: List<String>) {
         target.setTags(arg+target.name)
         when {
             target.isEmptyMatch -> { /* do nothing */

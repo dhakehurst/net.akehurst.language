@@ -22,11 +22,10 @@ import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
 
-class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
+internal class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
 
-    companion object {
+    private companion object {
         val rrs = runtimeRuleSet {
             skip("WS") { literal("\\s+") }
             concatenation("S") { ref("X"); ref("Ls") }

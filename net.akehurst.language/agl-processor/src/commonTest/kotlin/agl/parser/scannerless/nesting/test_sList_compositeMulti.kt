@@ -16,12 +16,11 @@
 
 package net.akehurst.language.parser.scanondemand.nesting
 
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
+internal class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
 
     // S = [nl / ';']*
     // nl = N cnm

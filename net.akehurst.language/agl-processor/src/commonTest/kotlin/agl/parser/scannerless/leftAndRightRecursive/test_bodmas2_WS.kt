@@ -16,14 +16,15 @@
 
 package net.akehurst.language.parser.scanondemand.choiceEqual
 
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
+internal class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // expr = root | group | div | mul | add | sub ;

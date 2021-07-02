@@ -24,7 +24,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 
-class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
+internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
 
 
     @Test

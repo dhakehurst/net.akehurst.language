@@ -19,9 +19,8 @@ package net.akehurst.language.parser.scanondemand.nesting
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class test_composite_multi : test_ScanOnDemandParserAbstract() {
+internal class test_composite_multi : test_ScanOnDemandParserAbstract() {
 
     // S = NUM (',' NUM)* ;
     // NUM = "[0-9]+"

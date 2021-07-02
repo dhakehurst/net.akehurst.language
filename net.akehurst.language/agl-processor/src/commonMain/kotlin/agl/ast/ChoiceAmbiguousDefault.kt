@@ -19,14 +19,7 @@ package net.akehurst.language.agl.ast
 
 import net.akehurst.language.api.grammar.ChoiceAmbiguous
 import net.akehurst.language.api.grammar.Concatenation
-import net.akehurst.language.api.grammar.GrammarVisitor
 
-class ChoiceAmbiguousDefault(override val alternative: List<Concatenation>) : ChoiceAbstract(alternative), ChoiceAmbiguous {
-
-    // --- GrammarVisitable ---
-
-    override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
-        return visitor.visit(this, arg);
-    }
+internal class ChoiceAmbiguousDefault(override val alternative: List<Concatenation>) : ChoiceAbstract(alternative), ChoiceAmbiguous {
 
 }

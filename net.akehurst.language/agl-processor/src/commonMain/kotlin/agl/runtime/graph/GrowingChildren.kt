@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuleOptionId
 import net.akehurst.language.api.sppt.SPPTNode
 
 
-class GrowingChildren {
+internal class GrowingChildren {
 
     var length: Int = 0; private set
     var numberNonSkip: Int = 0; private set

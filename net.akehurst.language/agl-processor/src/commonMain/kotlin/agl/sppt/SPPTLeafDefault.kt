@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
 
-class SPPTLeafDefault(
+internal class SPPTLeafDefault(
         terminalRule: RuntimeRule,
         location: InputLocation,
         override val isEmptyLeaf: Boolean,

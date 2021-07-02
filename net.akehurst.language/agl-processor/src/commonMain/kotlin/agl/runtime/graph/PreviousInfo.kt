@@ -18,7 +18,7 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
-data class PreviousInfo(
+internal data class PreviousInfo(
     val node: GrowingNode
 ) {
     override fun hashCode(): Int = arrayOf(node.currentState, node.lookahead).contentHashCode()

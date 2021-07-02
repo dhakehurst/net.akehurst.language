@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2021 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,18 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.grammar
+package net.akehurst.language.api.regex
 
-interface GrammarVisitable {
+import net.akehurst.language.agl.regex.CharacterMatcher
 
-	fun <T,A> accept(visitor: GrammarVisitor<T,A>, arg: A): T
+
+interface RegexMatcher {
+
+    data class MatchResult(
+        val matchedText: String,
+        val eolPositions: List<Int>
+    )
+
+    fun match(text: CharSequence, startPosition: Int = 0): MatchResult?
 
 }

@@ -18,11 +18,12 @@ package net.akehurst.language.agl.automaton
 
 import agl.automaton.automaton
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
+internal class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
 
     // This grammar is LR(1) but not LALR(1)
     // TODO...from where?

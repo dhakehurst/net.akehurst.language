@@ -17,10 +17,11 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_rightRecursive : test_Abstract() {
+internal class test_rightRecursive : test_Abstract() {
 
     // S =  'a' | S1 ;
     // S1 = 'a' S ;

@@ -16,8 +16,6 @@
 
 package net.akehurst.language.api.syntaxAnalyser
 
-import kotlin.js.JsName
-
 class AsmElementProperty(
         val name: String,
         val value: Any?
@@ -39,24 +37,18 @@ class AsmElementSimple(
 
     val properties: List<AsmElementProperty> get() = _properties.values.toList()
 
-    @JsName("hasProperty")
     fun hasProperty(name: String): Boolean = _properties.containsKey(name)
 
-    @JsName("getPropertyValue")
     fun getPropertyValue(name: String): Any? = _properties[name]?.value
 
-    @JsName("getPropertyAsAsmElement")
     fun getPropertyAsAsmElement(name: String): AsmElementSimple = getPropertyValue(name) as AsmElementSimple
 
-    @JsName("getPropertyAsList")
     fun getPropertyAsList(name: String): List<Any> = getPropertyValue(name) as List<Any>
 
-
-    @JsName("setProperty")
     fun setProperty(name: String, value: Any?) {
         _properties[name] = AsmElementProperty(name, value)
     }
-    @JsName("addAllProperty")
+
     fun addAllProperty(value: List<AsmElementProperty>) {
         value.forEach { this._properties[it.name] = it }
     }

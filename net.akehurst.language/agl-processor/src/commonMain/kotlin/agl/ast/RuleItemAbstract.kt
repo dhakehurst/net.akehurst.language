@@ -18,7 +18,7 @@ package net.akehurst.language.agl.ast
 
 import net.akehurst.language.api.grammar.*
 
-abstract class RuleItemAbstract : GrammarVisitable, RuleItem {
+internal abstract class RuleItemAbstract : RuleItem {
 
 	protected var _owningRule : Rule? = null
 

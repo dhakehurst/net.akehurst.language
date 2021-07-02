@@ -16,9 +16,6 @@
 
 package net.akehurst.language.agl.regex
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-
 class test_RegexMatcher_multi1n {
 
 }

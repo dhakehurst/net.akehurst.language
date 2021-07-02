@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

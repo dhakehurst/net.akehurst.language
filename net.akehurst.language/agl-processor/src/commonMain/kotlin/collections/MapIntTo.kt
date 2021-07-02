@@ -18,7 +18,7 @@ package net.akehurst.language.collections
 
 import kotlin.math.pow
 
-class MapIntTo<V> private constructor( val loadFactor: Double, initialCapacity: Int, val initialiser:(()->V)?=null) {
+internal class MapIntTo<V> private constructor( val loadFactor: Double, initialCapacity: Int, val initialiser:(()->V)?=null) {
     constructor(initialCapacityPower:Int=5, loadFactor: Double=0.75, initialiser:(()->V)? = null) : this(loadFactor, (2.0).pow(initialCapacityPower).toInt(), initialiser)
 
     companion object {

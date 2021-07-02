@@ -18,6 +18,6 @@ package net.akehurst.language.agl.ast
 
 import net.akehurst.language.api.grammar.NodeType;
 
-data class NodeTypeDefault(override val identity: String) : NodeType {
+internal data class NodeTypeDefault(override val identity: String) : NodeType {
 
 }

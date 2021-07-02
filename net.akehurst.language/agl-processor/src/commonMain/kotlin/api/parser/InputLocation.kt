@@ -15,6 +15,9 @@
  */
 package net.akehurst.language.api.parser;
 
+import kotlin.js.JsExport
+
+@JsExport
 data class InputLocation(
         val position:Int,
         val column: Int,

@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
+internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // ifthenelse = 'if' expr 'then' expr 'else' expr ;

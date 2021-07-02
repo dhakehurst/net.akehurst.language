@@ -21,7 +21,7 @@ import net.akehurst.language.agl.ast.NamespaceDefault
 import net.akehurst.language.api.grammar.Rule
 
 
-class AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglStyle", createRules()) {
+internal class AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglStyle", createRules()) {
     companion object {
         const val goalRuleName = "rules"
     }
@@ -43,8 +43,8 @@ private fun createRules(): List<Rule> {
 
     b.rule("rules").multi(0,-1, b.nonTerminal("rule"))
     b.rule("rule").concatenation(b.nonTerminal("selectorExpression"), b.terminalLiteral("{"), b.nonTerminal("styleList"), b.terminalLiteral("}"))
-    b.rule("selectorExpression").choiceLongest(b.nonTerminal("selectorSingle"))
-    b.rule("selectorSingle").choiceLongest(b.nonTerminal("LITERAL"), b.nonTerminal("PATTERN"), b.nonTerminal("IDENTIFIER"), b.nonTerminal("META_IDENTIFIER"))
+    b.rule("selectorExpression").choiceLongestFromConcatenationItem(b.nonTerminal("selectorSingle"))
+    b.rule("selectorSingle").choiceLongestFromConcatenationItem(b.nonTerminal("LITERAL"), b.nonTerminal("PATTERN"), b.nonTerminal("IDENTIFIER"), b.nonTerminal("META_IDENTIFIER"))
     // these must match what is in the AglGrammarGrammar
     b.leaf("LITERAL").concatenation(b.terminalPattern("'([^'\\\\]|\\\\'|\\\\\\\\)*'"))
     b.leaf("PATTERN").concatenation(b.terminalPattern("\"(\\\\\"|[^\"])*\""))

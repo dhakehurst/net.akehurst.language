@@ -16,9 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure.transitions
 
-import net.akehurst.language.agl.runtime.structure.*
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class test_ParserState_transitions {
     @Test

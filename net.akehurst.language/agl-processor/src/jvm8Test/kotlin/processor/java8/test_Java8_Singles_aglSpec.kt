@@ -20,7 +20,6 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.java8.test_Java8Agl_Types
 import net.akehurst.language.agl.sppt.SPPT2InputText
 import net.akehurst.language.api.parser.ParseFailedException
 import kotlin.test.Test
@@ -180,7 +179,7 @@ public class BadBinaryLiterals {
         val goal = "ClassDeclaration"
         val t = proc.parse(goal, sentence)
         val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence,resultStr)
     }
 
@@ -190,7 +189,7 @@ public class BadBinaryLiterals {
         val goal = "CompilationUnit"
         val t = proc.parse(goal, sentence)
         val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence,resultStr)
     }
 
@@ -205,7 +204,7 @@ public class BadBinaryLiterals {
         val t = proc.parse(goal, sentence)
 
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
         assertEquals(1, t.maxNumHeads)
     }
@@ -260,7 +259,7 @@ public class BadBinaryLiterals {
         val t = proc.parse(goal, sentence)
 
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence,resultStr)
     }
 

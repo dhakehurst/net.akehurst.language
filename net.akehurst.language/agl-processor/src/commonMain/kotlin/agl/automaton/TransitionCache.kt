@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
-interface TransitionCache {
+internal interface TransitionCache {
     val allBuiltTransitions: Set<Transition>
     val allPrevious : List<ParserState?>
 
@@ -26,7 +26,7 @@ interface TransitionCache {
     fun previousFor(transition: Transition): List<ParserState?>
 }
 
-class TransitionCacheLC0 : TransitionCache {
+internal class TransitionCacheLC0 : TransitionCache {
 
     // transitions stored here
     private var _donePrev = mutableSetOf<ParserState?>()
@@ -57,7 +57,7 @@ class TransitionCacheLC0 : TransitionCache {
     override fun previousFor(transition: Transition): List<ParserState?> = emptyList()
 }
 
-class TransitionCacheLC1 : TransitionCache {
+internal class TransitionCacheLC1 : TransitionCache {
 
     // transitions stored here
     private val _transitionsByTo = mutableMapOf<ParserState, MutableSet<Transition>>()

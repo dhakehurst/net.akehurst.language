@@ -1,6 +1,5 @@
 package agl.semanticAnalyser
 
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItem

@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class test_InputFromString {
+internal class test_InputFromString {
 
     @Test
     fun construct() {

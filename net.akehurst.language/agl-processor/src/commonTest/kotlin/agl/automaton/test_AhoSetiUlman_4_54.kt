@@ -18,10 +18,11 @@ package net.akehurst.language.agl.automaton
 
 import agl.automaton.automaton
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_AhoSetiUlman_4_54 : test_Abstract() {
+internal class test_AhoSetiUlman_4_54 : test_Abstract() {
     // S = C C ;
     // C = c C | d ;
     //

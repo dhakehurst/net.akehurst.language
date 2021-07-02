@@ -16,28 +16,28 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-enum class RuntimeRuleKind {
+internal enum class RuntimeRuleKind {
     GOAL,
     NON_TERMINAL,
     TERMINAL,
     EMBEDDED
 }
 
-enum class RuntimeRuleRhsItemsKind {
+internal enum class RuntimeRuleRhsItemsKind {
     EMPTY,            // r = ;
     CONCATENATION,    // r = a b c ;
     CHOICE,           // see RuntimeRuleChoiceKind
     LIST              // see RuntimeRuleListKind
 }
 
-enum class RuntimeRuleChoiceKind {
+internal enum class RuntimeRuleChoiceKind {
     NONE,
     AMBIGUOUS,
     LONGEST_PRIORITY,
     PRIORITY_LONGEST
 }
 
-enum class RuntimeRuleListKind {
+internal enum class RuntimeRuleListKind {
     NONE,
     MULTI,                       // r = a? ; , n : a* ; n : a+ ; ,            TODO: n : a0..5
     SEPARATED_LIST,              // r = [ a / ',' ]* ;  n : [ a / ',' ]+ ;    TODO: n : [ a / ',' ]0..6 ;

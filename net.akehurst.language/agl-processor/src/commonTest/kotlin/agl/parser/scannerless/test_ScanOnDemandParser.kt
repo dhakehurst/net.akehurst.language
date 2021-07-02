@@ -16,14 +16,14 @@
 
 package net.akehurst.language.parser.scanondemand
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
-class test_ScanOnDemandParser {
+internal class test_ScanOnDemandParser {
 
     @Test
     fun construct() {

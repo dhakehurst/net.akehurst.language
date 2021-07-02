@@ -23,7 +23,7 @@ import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 
-class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
+internal class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
 
     init {
         this.register("rules", this::rules as BranchHandler<List<AglStyleRule>>)

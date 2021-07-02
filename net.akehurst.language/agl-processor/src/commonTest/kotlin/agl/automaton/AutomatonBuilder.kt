@@ -1,24 +1,24 @@
 package agl.automaton
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.api.processor.AutomatonKind
 
 @DslMarker
-annotation class AglAutomatonDslMarker
+internal annotation class AglAutomatonDslMarker
 
-fun automaton(rrs: RuntimeRuleSet, automatonKind: AutomatonKind, userGoalRule: String, isSkip: Boolean, init: AutomatonBuilder.() -> Unit): ParserStateSet {
+internal fun automaton(rrs: RuntimeRuleSet, automatonKind: AutomatonKind, userGoalRule: String, isSkip: Boolean, init: AutomatonBuilder.() -> Unit): ParserStateSet {
     val b = AutomatonBuilder(rrs, automatonKind, userGoalRule, isSkip)
     b.init()
     return b.build()
 }
 
 @AglAutomatonDslMarker
-class AutomatonBuilder(
+internal class AutomatonBuilder(
     rrs: RuntimeRuleSet,
     automatonKind: AutomatonKind,
     userGoalRule: String,

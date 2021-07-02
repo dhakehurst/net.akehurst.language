@@ -5,7 +5,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.collections.MapIntTo
 import kotlin.math.pow
 
-class CompletedNodesStore2<T>(val num: Int, val inputLength: Int) {
+internal class CompletedNodesStore2<T>(val num: Int, val inputLength: Int) {
 
     companion object {
         fun nPowersOf2(n: Int): List<Int> = when (n) {
@@ -88,7 +88,7 @@ class CompletedNodesStore2<T>(val num: Int, val inputLength: Int) {
 
 }
 
-class CompletedNodesStore<T>(val num: Int, val inputLength: Int) {
+internal class CompletedNodesStore<T>(val num: Int, val inputLength: Int) {
 
     private val _map = HashMap<Pair<Int,Int>,T>()
     private var _goal: T? = null

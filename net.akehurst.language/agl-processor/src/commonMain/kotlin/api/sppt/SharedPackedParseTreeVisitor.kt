@@ -23,15 +23,15 @@ package net.akehurst.language.api.sppt;
  */
 interface SharedPackedParseTreeVisitor<T, A> {
 
-	fun visit(target: SharedPackedParseTree, arg: A): T
+	fun visitTree(target: SharedPackedParseTree, arg: A): T
 
-	fun visit(target: SPPTLeaf, arg: A): T
+	fun visitLeaf(target: SPPTLeaf, arg: A): T
 
-	fun visit(target: SPPTBranch, arg: A): T
+	fun visitBranch(target: SPPTBranch, arg: A): T
 
-	fun visit(target: SPPTNode, arg: A) = when (target) {
-		is SPPTLeaf -> visit(target, arg)
-		is SPPTBranch -> visit(target, arg)
+	fun visitNode(target: SPPTNode, arg: A) = when (target) {
+		is SPPTLeaf -> visitLeaf(target, arg)
+		is SPPTBranch -> visitBranch(target, arg)
 		else -> error("Unknown subtype of SPPTNode ${target::class.simpleName}")
 
 	}

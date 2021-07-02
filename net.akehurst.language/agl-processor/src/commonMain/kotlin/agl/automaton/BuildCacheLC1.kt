@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 
-class ClosureItemLC1(
+internal class ClosureItemLC1(
     val parentItem: ClosureItemLC1?, //needed for height/graft
     val rulePosition: RulePosition,
     val next: RulePosition?,
@@ -71,7 +71,7 @@ class ClosureItemLC1(
     }
 }
 
-class BuildCacheLC1(
+internal class BuildCacheLC1(
     stateSet: ParserStateSet
 ) : BuildCacheAbstract(stateSet) {
 

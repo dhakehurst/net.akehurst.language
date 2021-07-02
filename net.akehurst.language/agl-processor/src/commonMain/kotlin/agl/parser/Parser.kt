@@ -16,13 +16,13 @@
 
 package net.akehurst.language.agl.parser
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-interface Parser {
+internal interface Parser {
 
     fun interrupt(message:String)
 

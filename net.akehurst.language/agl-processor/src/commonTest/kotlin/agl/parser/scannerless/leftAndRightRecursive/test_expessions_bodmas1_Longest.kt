@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_expessions_bodmas1_Longest : test_ScanOnDemandParserAbstract() {
+internal class test_expessions_bodmas1_Longest : test_ScanOnDemandParserAbstract() {
 
     // S = E
     // E = var | I | '(' E ')'

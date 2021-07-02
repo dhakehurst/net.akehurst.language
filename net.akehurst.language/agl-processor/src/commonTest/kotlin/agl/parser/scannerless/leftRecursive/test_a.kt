@@ -16,12 +16,12 @@
 
 package net.akehurst.language.parser.scanondemand.leftRecursive
 
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class  test_a : test_ScanOnDemandParserAbstract() {
+internal class  test_a : test_ScanOnDemandParserAbstract() {
 
     private companion object {
         // S =  'a' | S1 ;

@@ -16,13 +16,13 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.automaton.AutomatonKind
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_RulePosition_next {
+internal class test_RulePosition_next {
 
-    companion object {
+    private companion object {
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
 

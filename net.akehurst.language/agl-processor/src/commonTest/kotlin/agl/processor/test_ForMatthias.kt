@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
-import kotlin.test.*
+import kotlin.test.Test
 
 internal class test_ForMatthias {
     private val grammarStr = """

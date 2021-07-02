@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_n_P_I : test_ScanOnDemandParserAbstract() {
+internal class test_n_P_I : test_ScanOnDemandParserAbstract() {
 
     // S = n | P | I        // name | propertyCall | infix
     // n = 'a' ;             // "[a-z]+"

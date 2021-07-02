@@ -21,7 +21,7 @@ import net.akehurst.language.agl.ast.GrammarBuilderDefault
 import net.akehurst.language.agl.ast.NamespaceDefault
 import net.akehurst.language.api.grammar.Rule
 
-class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar", createRules()) {
+internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar", createRules()) {
     companion object {
         const val goalRuleName = "grammarDefinition"
     }
@@ -49,7 +49,7 @@ private fun createRules(): List<Rule> {
     b.rule("isLeaf").multi(0, 1, b.terminalLiteral("leaf"))
     //TODO: choice has ambiguity, if resolved by priority, then wrong result with "a < b < c", it matches "choiceEqual { a }" as higher priority
     // make rule = choice | concatination, and choices must have multiple items
-    b.rule("choice").choiceLongest(b.concatenation(b.nonTerminal("ambiguousChoice")), b.concatenation(b.nonTerminal("priorityChoice")), b.concatenation(b.nonTerminal("simpleChoice")))
+    b.rule("choice").choiceLongestFromConcatenation(b.concatenation(b.nonTerminal("ambiguousChoice")), b.concatenation(b.nonTerminal("priorityChoice")), b.concatenation(b.nonTerminal("simpleChoice")))
     b.rule("simpleChoice").separatedList(0, -1, b.terminalLiteral("|"), b.nonTerminal("concatenation"))
     b.rule("priorityChoice").separatedList(0, -1, b.terminalLiteral("<"), b.nonTerminal("concatenation"))
     b.rule("ambiguousChoice").separatedList(0, -1, b.terminalLiteral("||"), b.nonTerminal("concatenation"))
@@ -58,10 +58,10 @@ private fun createRules(): List<Rule> {
     //b.rule("choicePriority").separatedList(0, -1, b.terminalLiteral("<"), b.nonTerminal("concatenation"));
     //b.rule("choiceAmbiguous").separatedList(0, -1, b.terminalLiteral("||"), b.nonTerminal("concatenation"));
     b.rule("concatenation").multi(1, -1, b.nonTerminal("concatenationItem"))
-    b.rule("concatenationItem").choiceLongest(b.concatenation(b.nonTerminal("simpleItem")), b.concatenation(b.nonTerminal("multi")), b.concatenation(b.nonTerminal("separatedList")))
-    b.rule("simpleItem").choiceLongest(b.concatenation(b.nonTerminal("terminal")), b.concatenation(b.nonTerminal("nonTerminal")), b.concatenation(b.nonTerminal("group")))
+    b.rule("concatenationItem").choiceLongestFromConcatenation(b.concatenation(b.nonTerminal("simpleItem")), b.concatenation(b.nonTerminal("multi")), b.concatenation(b.nonTerminal("separatedList")))
+    b.rule("simpleItem").choiceLongestFromConcatenation(b.concatenation(b.nonTerminal("terminal")), b.concatenation(b.nonTerminal("nonTerminal")), b.concatenation(b.nonTerminal("group")))
     b.rule("multi").concatenation(b.nonTerminal("simpleItem"), b.nonTerminal("multiplicity"))
-    b.rule("multiplicity").choiceLongest(//
+    b.rule("multiplicity").choiceLongestFromConcatenation(//
             b.concatenation(b.terminalLiteral("*")), //
             b.concatenation(b.terminalLiteral("+")), //
             b.concatenation(b.terminalLiteral("?")), //
@@ -71,9 +71,9 @@ private fun createRules(): List<Rule> {
     b.rule("group").concatenation(b.terminalLiteral("("), b.nonTerminal("choice"), b.terminalLiteral(")"))
     b.rule("separatedList").concatenation(b.terminalLiteral("["), b.nonTerminal("simpleItem"), b.terminalLiteral("/"),
             b.nonTerminal("simpleItem"), b.terminalLiteral("]"), b.nonTerminal("multiplicity"))
-    b.rule("nonTerminal").choiceLongest(b.concatenation(b.nonTerminal("qualifiedName")))
+    b.rule("nonTerminal").choiceLongestFromConcatenation(b.concatenation(b.nonTerminal("qualifiedName")))
     b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
-    b.rule("terminal").choiceLongest(b.concatenation(b.nonTerminal("LITERAL")), b.concatenation(b.nonTerminal("PATTERN")))
+    b.rule("terminal").choiceLongestFromConcatenation(b.concatenation(b.nonTerminal("LITERAL")), b.concatenation(b.nonTerminal("PATTERN")))
     b.leaf("LITERAL").concatenation(b.terminalPattern("'([^'\\\\]|\\\\'|\\\\\\\\)*'"))
     b.leaf("PATTERN").concatenation(b.terminalPattern("\"(\\\\\"|[^\"])*\""))
     b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"))

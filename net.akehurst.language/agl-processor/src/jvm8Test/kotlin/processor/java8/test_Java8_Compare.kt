@@ -145,22 +145,22 @@ class test_Java8_Compare(val data: Data) {
         }
     }
 
-    @Test//(timeout = 5000)
+    @Test(timeout = 5000)
     fun aglSpec() {
         this.testParse(aglSpecProcessor, true)
     }
 
-    @Test//(timeout = 5000)
+    @Test(timeout = 5000)
     fun aglOptm() {
         this.testParse(aglOptmProcessor, true)
     }
 
-    @Test//(timeout = 5000)
+    @Test(timeout = 5000)
     fun antlrSpec() {
         this.testParse(antlrSpecProcessor)
     }
 
-    @Test//(timeout = 5000)
+    @Test(timeout = 5000)
     fun antlrOptm() {
         this.testParse(antlrOptmProcessor)
     }

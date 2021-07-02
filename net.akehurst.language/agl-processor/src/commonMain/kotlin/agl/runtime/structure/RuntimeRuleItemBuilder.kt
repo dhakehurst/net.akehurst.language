@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-class RuntimeRuleItemBuilder(
+internal class RuntimeRuleItemBuilder(
     private val rrb: RuntimeRuleNonTerminalBuilder,
     private val kind: RuntimeRuleRhsItemsKind,
     private val choiceKind: RuntimeRuleChoiceKind,

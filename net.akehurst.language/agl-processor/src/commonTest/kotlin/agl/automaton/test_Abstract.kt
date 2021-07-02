@@ -23,7 +23,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-abstract class test_AutomatonUtilsAbstract {
+internal abstract class test_AutomatonUtilsAbstract {
     companion object {
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
@@ -116,7 +116,7 @@ abstract class test_AutomatonUtilsAbstract {
     }
 }
 
-abstract class test_Abstract : test_AutomatonUtilsAbstract() {
+internal abstract class test_Abstract : test_AutomatonUtilsAbstract() {
 
     abstract val SM: ParserStateSet
     abstract val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>

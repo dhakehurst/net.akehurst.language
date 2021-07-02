@@ -17,8 +17,9 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.processor.AutomatonKind
 
-class test_aABCc : test_Abstract() {
+internal class test_aABCc : test_Abstract() {
 
     /*
         S = b | a S c ;

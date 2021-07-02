@@ -16,15 +16,9 @@
 
 package net.akehurst.language.agl.ast
 
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.GrammarRuleNotFoundException
-import net.akehurst.language.api.grammar.Namespace
-import net.akehurst.language.api.grammar.NodeType
-import net.akehurst.language.api.grammar.Rule
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.Terminal
+import net.akehurst.language.api.grammar.*
 
-class GrammarDefault(
+internal class GrammarDefault(
         override val namespace: Namespace,
         override val name: String,
         override val rule: MutableList<Rule>
@@ -32,7 +26,7 @@ class GrammarDefault(
 
 }
 
-abstract class GrammarAbstract(
+internal abstract class GrammarAbstract(
         override val namespace: Namespace,
         override val name: String,
         override val rule: List<Rule>
@@ -82,4 +76,5 @@ abstract class GrammarAbstract(
         }
         return all.first()
     }
+
 }

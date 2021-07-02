@@ -18,7 +18,7 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.api.sppt.SPPTNodeIdentity
 
-data class SPPTNodeIdentityDefault(
+internal data class SPPTNodeIdentityDefault(
         override val runtimeRuleNumber: Int,
         override val startPosition: Int//,
         //override val matchedTextLength: Int

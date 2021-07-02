@@ -16,10 +16,13 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-inline class StateNumber(val value:Int)
+import kotlin.jvm.JvmInline
+
+@JvmInline
+internal value class StateNumber(val value:Int)
 
 //TODO: how is this different to ParentRelation ?
-data class RulePositionWithLookahead(
+internal data class RulePositionWithLookahead(
     val rulePosition: RulePosition,
     val lookahead: Set<RuntimeRule>
 ) {

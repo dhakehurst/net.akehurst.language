@@ -21,7 +21,7 @@ import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
+internal class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
 
     // S = 'a'*
     private fun multi_0_n_a(): RuntimeRuleSetBuilder {
