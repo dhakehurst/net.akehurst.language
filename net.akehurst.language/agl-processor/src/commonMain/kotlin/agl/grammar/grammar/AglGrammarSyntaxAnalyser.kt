@@ -68,14 +68,14 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     //   grammarDefinition : namespace grammar ;
-    fun grammarDefinition(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<Grammar> {
+    private fun grammarDefinition(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<Grammar> {
         val namespace = this.transform<Namespace>(children[0], null)
         val definitions = this.transform<List<Grammar>>(children[1], namespace)
         return definitions
     }
 
     // definitions = grammar+ ;
-    fun definitions(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<Grammar> {
+    private fun definitions(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<Grammar> {
         val definitions = target.branchNonSkipChildren[0].branchNonSkipChildren.map {
             this.transform<Grammar>(it, arg)
         }

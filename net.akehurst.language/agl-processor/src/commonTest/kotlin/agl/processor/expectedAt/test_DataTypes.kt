@@ -42,7 +42,7 @@ class test_DataTypes {
             }
         """.trimIndent()
         val goal = "unit"
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
 
         val testData = listOf(
             Data("",0, listOf("class")),
@@ -77,7 +77,7 @@ class test_DataTypes {
             val sentence = data.sentence
             val position = data.position
 
-            val result = processor.expectedAt(goal, sentence, position, 1, AutomatonKind.LOOKAHEAD_1)
+            val result = processor.expectedAtForGoal(goal, sentence, position, 1, AutomatonKind.LOOKAHEAD_1)
             val actual = result.map { it.text }
             val expected = data.expected
             assertEquals(expected, actual, data.toString())

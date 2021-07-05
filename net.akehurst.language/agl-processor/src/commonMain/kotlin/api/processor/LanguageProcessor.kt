@@ -36,7 +36,12 @@ interface LanguageProcessor {
 
     fun scan(inputText: String): List<SPPTLeaf>
 
-    fun parse(inputText: String, automatonKind:AutomatonKind=AutomatonKind.LOOKAHEAD_1): SharedPackedParseTree
+    /**
+     * use default AutomatonKind LOOKAHEAD_1
+     */
+    fun parse(inputText: String): SharedPackedParseTree
+
+    fun parseWithAutomatonKind(inputText: String, automatonKind:AutomatonKind): SharedPackedParseTree
 
     fun parseForGoal(goalRuleName: String, inputText: String, automatonKind:AutomatonKind=AutomatonKind.LOOKAHEAD_1): SharedPackedParseTree
 

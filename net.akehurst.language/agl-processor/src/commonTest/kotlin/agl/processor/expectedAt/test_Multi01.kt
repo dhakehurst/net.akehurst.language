@@ -31,7 +31,7 @@ class test_Multi01 {
                 b = 'b' ;
             }
         """.trimIndent()
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
     }
 
     @Test

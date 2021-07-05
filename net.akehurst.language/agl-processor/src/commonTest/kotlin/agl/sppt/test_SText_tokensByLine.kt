@@ -251,13 +251,13 @@ FQN = ID ('.' ID)*;
 }
         """.trimIndent()
 
-        val exprProcessor = Agl.processor(grammarStr1)
-        var processor: LanguageProcessor = Agl.processor(grammarStr2)
+        val exprProcessor = Agl.processorFromString(grammarStr1)
+        var processor: LanguageProcessor = Agl.processorFromString(grammarStr2)
     }
 
     @Test
     fun t1() {
-        val sppt = processor.parse("StateScope", "after 10 s / raise ABC.intEvent")
+        val sppt = processor.parseForGoal("StateScope", "after 10 s / raise ABC.intEvent")
         val actual = sppt.tokensByLine(0)
 
         assertEquals("after", actual[0].matchedText)

@@ -41,7 +41,7 @@ class test_Java8Agl_Packages(val data:Data) {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
         val processor : LanguageProcessor by lazy {
-            Agl.processor(grammarStr, "Packages.CompilationUnit")
+            Agl.processorFromStringForGoal(grammarStr, "Packages.CompilationUnit")
         }
         var sourceFiles = arrayOf(
                 "/java8/sentences/packages-valid.txt"

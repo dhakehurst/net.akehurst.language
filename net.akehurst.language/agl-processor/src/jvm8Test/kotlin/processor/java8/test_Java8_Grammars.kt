@@ -27,7 +27,7 @@ class test_Java8_Grammars {
     @Test(timeout=5000)
     fun aglSpec() {
         val grammarStr = this::class.java.getResource("/java8/Java8AglSpec.agl").readText()
-        val actual = Agl.processor(grammarStr)
+        val actual = Agl.processorFromString(grammarStr)
         assertNotNull(actual)
     }
 
@@ -37,7 +37,7 @@ class test_Java8_Grammars {
         //val grammarFile = Paths.get("src/jvm8Test/resources/java8/Java8OptmAgl.agl")
         //val bytes = Files.readAllBytes(grammarFile)
         //val grammarStr = String(bytes)
-        val actual = Agl.processor(grammarStr)
+        val actual = Agl.processorFromString(grammarStr)
         assertNotNull(actual)
 
         val res = Agl.grammarProcessor.analyseText(List::class, grammarStr)
@@ -51,7 +51,7 @@ class test_Java8_Grammars {
     fun antrlSpec() {
         //val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()
         val grammarStr = this::class.java.getResource("/java8/Java8AntlrSpec.agl").readText()
-        val actual = Agl.processor(grammarStr)
+        val actual = Agl.processorFromString(grammarStr)
         assertNotNull(actual)
     }
 
@@ -63,7 +63,7 @@ class test_Java8_Grammars {
         //val grammarFile = Paths.get("src/jvm8Test/resources/java8/Java8OptmAntlr.agl")
         //val bytes = Files.readAllBytes(grammarFile)
         //val grammarStr = String(bytes)
-        val actual = Agl.processor(grammarStr)
+        val actual = Agl.processorFromString(grammarStr)
         assertNotNull(actual)
     }
 

@@ -30,7 +30,7 @@ class test_Multi0N_noConcatAtTopLevel {
                 ab = 'a' 'b' ;
             }
         """.trimIndent()
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
     }
 
     @Test

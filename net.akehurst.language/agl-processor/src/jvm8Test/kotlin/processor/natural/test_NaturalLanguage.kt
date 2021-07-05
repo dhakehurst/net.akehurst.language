@@ -45,7 +45,7 @@ class test_NaturalLanguage(val data:Data) {
 
         fun processor() : LanguageProcessor {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processor(grammarStr)
+            return Agl.processorFromString(grammarStr)
          }
 
         @JvmStatic
@@ -95,7 +95,7 @@ class test_NaturalLanguage(val data:Data) {
                     throw RuntimeException("Found unknown words '${l.matchedText}', at ${l.location}")
                 }
             }
-            val result = processor.parse(this.data.goal, this.data.sentence)
+            val result = processor.parseForGoal(this.data.goal, this.data.sentence)
             assertNotNull(result)
             val resultStr = result.asString
             assertEquals(this.data.sentence, resultStr)

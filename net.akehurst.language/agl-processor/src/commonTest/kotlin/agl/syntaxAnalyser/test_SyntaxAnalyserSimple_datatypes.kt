@@ -40,7 +40,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             
             }
         """.trimIndent()
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
     }
 
 

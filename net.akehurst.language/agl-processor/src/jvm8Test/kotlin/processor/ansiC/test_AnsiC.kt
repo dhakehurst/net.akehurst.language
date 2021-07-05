@@ -41,7 +41,7 @@ class test_AnsiC(val data:Data) {
 
         private val grammarStr = this::class.java.getResource("/ansiC/ansiC.agl").readText()
         val processor : LanguageProcessor by lazy {
-            Agl.processor(grammarStr)
+            Agl.processorFromString(grammarStr)
         }
         var sourceFiles = arrayOf("/ansiC/expression-valid.txt")
 
@@ -82,7 +82,7 @@ class test_AnsiC(val data:Data) {
 
     @Test
     fun test() {
-        val result = processor.parse("expression", this.data.text)
+        val result = processor.parseForGoal("expression", this.data.text)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(this.data.text, resultStr)

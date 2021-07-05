@@ -30,7 +30,7 @@ class test_Concatination_with_skip {
                 S = 'a' 'b' 'c' 'd' ;
             }
         """.trimIndent()
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
     }
 
     @Test

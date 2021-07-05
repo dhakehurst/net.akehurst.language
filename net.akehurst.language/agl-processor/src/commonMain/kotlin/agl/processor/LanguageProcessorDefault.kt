@@ -63,7 +63,9 @@ internal class LanguageProcessorDefault(
         return this.parser.scan(inputText);
     }
 
-    override fun parse(inputText: String, automatonKind:AutomatonKind): SharedPackedParseTree = parseForGoal(this.goalRuleName, inputText, automatonKind)
+    override fun parse(inputText: String): SharedPackedParseTree = parseForGoal(this.goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1)
+
+    override fun parseWithAutomatonKind(inputText: String, automatonKind: AutomatonKind): SharedPackedParseTree = parseForGoal(this.goalRuleName, inputText, automatonKind)
 
     override fun parseForGoal(goalRuleName: String, inputText: String, automatonKind:AutomatonKind): SharedPackedParseTree {
         val sppt: SharedPackedParseTree = this.parser.parse(goalRuleName, inputText,automatonKind)

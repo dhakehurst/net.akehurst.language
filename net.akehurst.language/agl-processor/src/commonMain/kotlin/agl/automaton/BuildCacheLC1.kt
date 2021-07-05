@@ -56,11 +56,12 @@ internal class ClosureItemLC1(
         return "$p$rulePosition"
     }
 
-    private val _hashCode = listOf(this.rulePosition, this.next, this.lookaheadSet).hashCode()
+    private val _hashCode = listOf(this.parentItem?.lookaheadSet, this.rulePosition, this.next, this.lookaheadSet).hashCode()
     override fun hashCode(): Int = _hashCode
 
     override fun equals(other: Any?): Boolean = when (other) {
         is ClosureItemLC1 -> other.rulePosition == this.rulePosition &&
+                other.next == this.next &&
                 other.lookaheadSet == this.lookaheadSet &&
                 other.parentItem?.lookaheadSet == this.parentItem?.lookaheadSet
         else -> false

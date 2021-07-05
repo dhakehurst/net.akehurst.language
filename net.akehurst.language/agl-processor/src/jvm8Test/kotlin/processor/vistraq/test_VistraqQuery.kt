@@ -40,7 +40,7 @@ class test_QueryParserValid(val data:Data) {
         var sourceFiles = arrayOf("/vistraq/sampleValidQueries.txt")
 
         fun tgqlprocessor() : LanguageProcessor {
-            return Agl.processor(grammarStr)
+            return Agl.processorFromString(grammarStr)
          }
 
         @JvmStatic
@@ -82,7 +82,7 @@ class test_QueryParserValid(val data:Data) {
     @Test(timeout=1000)
     fun test() {
         val queryStr = this.data.queryStr
-        val result = processor.parse("query", queryStr)
+        val result = processor.parseForGoal("query", queryStr)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)

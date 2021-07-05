@@ -40,7 +40,7 @@ class test_TutorialExamples {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
         """.trimIndent()
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
 
         val sppt = processor.parse("int")
         val actual = sppt.toStringAll.trim()
@@ -62,7 +62,7 @@ class test_TutorialExamples {
                 NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
         """.trimIndent()
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
 
         val sppt = processor.parse("xxx")
         val actual = sppt.toStringAll.trim()
@@ -86,7 +86,7 @@ class test_TutorialExamples {
                 NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
         """.trimIndent()
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
 
         val sppt = processor.parse("boolean")
         val actual = sppt.toStringAll.trim()
@@ -110,7 +110,7 @@ class test_TutorialExamples {
                 NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
         """.trimIndent()
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
 
         val sppt = processor.parse("int")
         val actual = sppt.toStringAll.trim()

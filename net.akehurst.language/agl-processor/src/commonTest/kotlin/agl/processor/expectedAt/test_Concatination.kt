@@ -29,7 +29,7 @@ class test_Concatination {
                 S = 'a' 'b' 'c' 'd' ;
             }
         """.trimIndent()
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
     }
 
     @Test

@@ -16,7 +16,7 @@ class test_AglStyle {
             // single line comment
         """.trimIndent()
 
-        val p = Agl.styleProcessor.process<List<AglStyleRule>>(List::class,"rules", text)
+        val p = Agl.styleProcessor.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
 
         assertNotNull(p)
         assertEquals(0, p.size)
@@ -32,7 +32,7 @@ class test_AglStyle {
             */
         """.trimIndent()
 
-        val p = Agl.styleProcessor.process<List<AglStyleRule>>(List::class,"rules", text)
+        val p = Agl.styleProcessor.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
 
         assertNotNull(p)
         assertEquals(0, p.size)
@@ -45,7 +45,7 @@ class test_AglStyle {
             selector { }
         """.trimIndent()
 
-        val actual = Agl.styleProcessor.process<List<AglStyleRule>>(List::class,"rules", text)
+        val actual = Agl.styleProcessor.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
 
         assertNotNull(actual)
         assertEquals(1, actual.size)
@@ -61,7 +61,7 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val actual = Agl.styleProcessor.process<List<AglStyleRule>>(List::class,"rules", text)
+        val actual = Agl.styleProcessor.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
 
         assertNotNull(actual)
         assertEquals(1, actual.size)
@@ -82,7 +82,7 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val actual = Agl.styleProcessor.process<List<AglStyleRule>>(List::class,"rules", text)
+        val actual = Agl.styleProcessor.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
 
         assertNotNull(actual)
         assertEquals(2, actual.size)
@@ -96,7 +96,7 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val actual = Agl.styleProcessor.process<List<AglStyleRule>>(List::class,"rules", text)
+        val actual = Agl.styleProcessor.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
 
         assertNotNull(actual)
         assertEquals(1, actual.size)

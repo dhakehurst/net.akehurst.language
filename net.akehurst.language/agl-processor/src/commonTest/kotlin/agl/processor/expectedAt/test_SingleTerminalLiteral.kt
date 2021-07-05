@@ -30,7 +30,7 @@ class test_SingleTerminalLiteral {
                 S = 'a' ;
             }
         """.trimIndent()
-        val sut = Agl.processor(grammarStr)
+        val sut = Agl.processorFromString(grammarStr)
 
         val sentence = ""
         val position = 0
@@ -49,7 +49,7 @@ class test_SingleTerminalLiteral {
                 S = 'a' ;
             }
         """.trimIndent()
-        val sut = Agl.processor(grammarStr)
+        val sut = Agl.processorFromString(grammarStr)
 
         val sentence = "a"
         val position = 0
@@ -68,7 +68,7 @@ class test_SingleTerminalLiteral {
                 S = 'a' ;
             }
         """.trimIndent()
-        val sut = Agl.processor(grammarStr)
+        val sut = Agl.processorFromString(grammarStr)
 
         val sentence = "a"
         val position = 1

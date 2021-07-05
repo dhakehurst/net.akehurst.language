@@ -44,7 +44,7 @@ class test_Xml(val data:Data) {
 
         fun tgqlprocessor() : LanguageProcessor {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processor(grammarStr)
+            return Agl.processorFromString(grammarStr)
          }
 
         @JvmStatic
@@ -69,7 +69,7 @@ class test_Xml(val data:Data) {
 
     @Test
     fun test() {
-        val result = processor.parse("file", this.data.text)
+        val result = processor.parseForGoal("file", this.data.text)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(this.data.text, resultStr)
