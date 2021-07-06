@@ -40,13 +40,13 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
     }
 
     override fun <T> transform(sppt: SharedPackedParseTree): T {
-        return this.transform<T>(sppt.root.asBranch, "")
+        return this.transformBranch<T>(sppt.root.asBranch, "")
     }
 
     // rules : rule* ;
     fun rules(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<AglStyleRule> {
         return children[0].branchNonSkipChildren.mapIndexed { index, it ->
-            this.transform<AglStyleRule>(it, arg)
+            this.transformBranch<AglStyleRule>(it, arg)
         }
     }
 
@@ -54,7 +54,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
     fun rule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): AglStyleRule {
         val selector = children[0].nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")  //TODO: ? selector combinations, and/or/contains etc
         val rule = AglStyleRule(selector)
-        val styles:List<AglStyle> = this.transform(children[1], arg)
+        val styles:List<AglStyle> = this.transformBranch(children[1], arg)
         styles.forEach {
             rule.styles[it.name] = it
         }
@@ -63,7 +63,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
 
     // selectorExpression = selectorSingle ; //TODO
     fun selectorExpression(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): String {
-        return transform<String>(children[0],arg)
+        return transformBranch<String>(children[0],arg)
     }
 
     // selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
@@ -74,7 +74,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
     // styleList = style* ;
     fun styleList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?) : List<AglStyle> {
         return children[0].branchNonSkipChildren.mapIndexed { index, it ->
-            this.transform<AglStyle>(it, arg)
+            this.transformBranch<AglStyle>(it, arg)
         }
     }
 

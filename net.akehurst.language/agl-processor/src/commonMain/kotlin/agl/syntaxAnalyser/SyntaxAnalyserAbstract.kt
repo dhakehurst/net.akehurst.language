@@ -43,11 +43,11 @@ abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVis
         return handler ?: throw SyntaxAnalyserException("Cannot find SyntaxAnalyser branch handler method named $branchName", null)
     }
 
-    protected fun <T> transform(branch: SPPTBranch, arg: Any?): T {
-        return this.transformOpt(branch, arg) ?: throw SyntaxAnalyserException("cannot transform ${branch}", null)
+    protected fun <T> transformBranch(branch: SPPTBranch, arg: Any?): T {
+        return this.transformBranchOpt(branch, arg) ?: throw SyntaxAnalyserException("cannot transform ${branch}", null)
     }
 
-    protected fun <T> transformOpt(branch: SPPTBranch?, arg: Any?): T? {
+    protected fun <T> transformBranchOpt(branch: SPPTBranch?, arg: Any?): T? {
         return if (null == branch){
             null
         }else {
