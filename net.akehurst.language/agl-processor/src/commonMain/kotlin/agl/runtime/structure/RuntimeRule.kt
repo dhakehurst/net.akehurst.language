@@ -59,9 +59,10 @@ internal class RuntimeRule(
         }
 
     internal val patternAtStart = if (this.isPattern) {
-        check(this.value.startsWith("^").not(), { "Must not start with ^ in a pattern" })
+//        check(this.value.startsWith("^").not(), { "Must not start with ^ in a pattern" })
 //        check(this.value.endsWith("$").not(), { "Must not end with $ in a pattern" })
-        Regex("^${this.value}")
+//        Regex("^${this.value}")
+        Regex("${this.value}")
         //regexMatcher(this.value)
     } else {
         null

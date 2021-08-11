@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.parser
 
 import agl.runtime.graph.CompletedNodesStore
-import net.akehurst.language.agl.regex.matchAtStart
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.sppt.SPPTLeafDefault
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
@@ -110,8 +109,9 @@ internal class InputFromString(
     }
 
     private fun matchRegEx2(position: Int, regex: Regex): RegexMatcher.MatchResult? {
-        val stext = this.text.substring(position)
-        val matchedText = regex.matchAtStart(stext)
+        //val stext = this.text.substring(position)
+        //val matchedText = regex.matchAtStart(stext)
+        val matchedText = regex.matchAt(this.text,position)?.value
         return if (null == matchedText)
             null
         else {

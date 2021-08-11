@@ -1,5 +1,6 @@
 package net.akehurst.language.agl.regex
 
+/*
 actual fun Regex.matchAtStart(input:String) : String? {
     val m = this.toPattern().matcher(input)
     return if (m.lookingAt()) {
@@ -8,4 +9,4 @@ actual fun Regex.matchAtStart(input:String) : String? {
         null
     }
 }
-
+*/
