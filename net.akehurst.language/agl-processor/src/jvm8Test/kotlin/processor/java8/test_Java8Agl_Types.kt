@@ -38,7 +38,7 @@ class test_Java8Agl_Types(val data:Data) {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
         val processor : LanguageProcessor by lazy {
-            Agl.processor(grammarStr, "Type")//.buildFor("Type")
+            Agl.processorFromStringForGoal(grammarStr, "Type")//.buildFor("Type")
         }
         var sourceFiles = arrayOf(
                 "/java8/sentences/types-valid.txt"

@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_aa : test_ScanOnDemandParserAbstract() {
+internal class test_aa : test_ScanOnDemandParserAbstract() {
 
     // S  = P | 'a' ;
     // P  = S | P1 ;  // S*

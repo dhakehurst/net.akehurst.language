@@ -22,7 +22,7 @@ import kotlin.math.abs
  * If there are multiple values that contribute to a key,
  * it should be faster to use the keys separately, rather than create a separate 'key' object
  */
-class MutableMap2IntKeys<V>(val key1Max:Int, val key2Max:Int) {
+internal class MutableMap2IntKeys<V>(val key1Max:Int, val key2Max:Int) {
 
     companion object {
         const val EMPTY = 0

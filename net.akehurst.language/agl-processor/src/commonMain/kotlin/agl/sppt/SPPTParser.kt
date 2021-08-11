@@ -17,14 +17,14 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
-import net.akehurst.language.agl.regex.RegexMatcher
 import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.api.regex.RegexMatcher
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.MutableStack
 
-class SPPTParser(
+internal class SPPTParser(
         val runtimeRuleSet: RuntimeRuleSet
 ) {
     constructor(rrsb: RuntimeRuleSetBuilder) : this(rrsb.ruleSet())

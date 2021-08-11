@@ -1,7 +1,6 @@
 package net.akehurst.language.parser.scanondemand.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
@@ -9,7 +8,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_ifThenElse_NoWS : test_ScanOnDemandParserAbstract() {
+internal class test_ifThenElse_NoWS : test_ScanOnDemandParserAbstract() {
 
     // invert the dangling else
 
@@ -19,26 +18,27 @@ class test_ifThenElse_NoWS : test_ScanOnDemandParserAbstract() {
     // expr = var < conditional ;
     // conditional = ifthen < ifthenelse ;
     // var = 'W' | 'X' | 'Y' | 'Z' ;
-    val rrs = runtimeRuleSet {
-        concatenation("S") { ref("expr") }
-        choice("expr",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
-            ref("var")
-            ref("conditional")
-        }
-        choice("conditional",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
-            ref("ifthen")
-            ref("ifthenelse")
-        }
-        concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
-        concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
-        choice("var",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-            literal("W")
-            literal("X")
-            literal("Y")
-            literal("Z")
+    private companion object {
+        val rrs = runtimeRuleSet {
+            concatenation("S") { ref("expr") }
+            choice("expr", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+                ref("var")
+                ref("conditional")
+            }
+            choice("conditional", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+                ref("ifthen")
+                ref("ifthenelse")
+            }
+            concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
+            concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
+            choice("var", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("W")
+                literal("X")
+                literal("Y")
+                literal("Z")
+            }
         }
     }
-
 
     @Test
     fun empty_fails() {

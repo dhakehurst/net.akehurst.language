@@ -16,18 +16,18 @@
 
 package net.akehurst.language.parser.scanondemand
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.*
 
-class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
+internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
 
 
-    companion object {
+    private companion object {
 
         val kotlinRegEx = Regex("a*")
         val aglRegex = regexMatcher("a*")

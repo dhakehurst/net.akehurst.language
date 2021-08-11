@@ -2,10 +2,7 @@ package agl.processor
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.test_ProcessorAbstract
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 class test_Hannes : test_ProcessorAbstract() {
 
@@ -35,7 +32,7 @@ class test_Hannes : test_ProcessorAbstract() {
             
         """.trimIndent()
 
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
     }
 
     @Test

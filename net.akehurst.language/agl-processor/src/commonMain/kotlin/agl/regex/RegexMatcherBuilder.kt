@@ -18,7 +18,7 @@ package net.akehurst.language.agl.regex
 
 import net.akehurst.language.collections.MutableStack
 
-class RegexMatcherBuilder(val pattern:String) {
+internal class RegexMatcherBuilder(val pattern:String) {
 
     companion object {
 
@@ -28,7 +28,7 @@ class RegexMatcherBuilder(val pattern:String) {
     val nfa = mutableListOf<State>()
     var nextStateNumber = 0
     var stack = MutableStack<Fragment>()
-    var startState: State = RegexMatcher.ERROR_STATE
+    var startState: State = RegexMatcherImpl.ERROR_STATE
 
     // return state number of new state
     private fun createState(isSplit: Boolean): State {
@@ -237,8 +237,8 @@ class RegexMatcherBuilder(val pattern:String) {
     fun finishGroup() {
     }
 
-    fun build(): RegexMatcher {
-        return RegexMatcher(pattern, this.startState, this.nfa)
+    fun build(): RegexMatcherImpl {
+        return RegexMatcherImpl(pattern, this.startState, this.nfa)
     }
 
     fun concatenateGoal() {
@@ -246,7 +246,7 @@ class RegexMatcherBuilder(val pattern:String) {
             //don't add goal
         } else {
             val f1 = this.stack.pop()
-            f1.outgoing.forEach { it.to = RegexMatcher.MATCH_STATE }
+            f1.outgoing.forEach { it.to = RegexMatcherImpl.MATCH_STATE }
             this.startState = f1.start
         }
     }

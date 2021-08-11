@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-data class LeafIndex(
+internal data class LeafIndex(
         val ruleNumber: Int,
         val startPosition: Int
 ) {

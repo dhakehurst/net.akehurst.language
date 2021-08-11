@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_group_choice : test_ScanOnDemandParserAbstract() {
+internal class test_group_choice : test_ScanOnDemandParserAbstract() {
 
     /*
     skip W = "\\s+"

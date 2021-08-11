@@ -17,7 +17,8 @@
 package net.akehurst.language.processor.expectedAt
 
 import net.akehurst.language.agl.processor.Agl
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class test_SingleTerminalLiteral {
 
@@ -29,7 +30,7 @@ class test_SingleTerminalLiteral {
                 S = 'a' ;
             }
         """.trimIndent()
-        val sut = Agl.processor(grammarStr)
+        val sut = Agl.processorFromString(grammarStr)
 
         val sentence = ""
         val position = 0
@@ -48,7 +49,7 @@ class test_SingleTerminalLiteral {
                 S = 'a' ;
             }
         """.trimIndent()
-        val sut = Agl.processor(grammarStr)
+        val sut = Agl.processorFromString(grammarStr)
 
         val sentence = "a"
         val position = 0
@@ -67,7 +68,7 @@ class test_SingleTerminalLiteral {
                 S = 'a' ;
             }
         """.trimIndent()
-        val sut = Agl.processor(grammarStr)
+        val sut = Agl.processorFromString(grammarStr)
 
         val sentence = "a"
         val position = 1

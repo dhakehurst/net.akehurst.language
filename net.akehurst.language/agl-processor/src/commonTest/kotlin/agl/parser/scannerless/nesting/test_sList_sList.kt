@@ -19,9 +19,8 @@ package net.akehurst.language.parser.scanondemand.nesting
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class test_sList_sList : test_ScanOnDemandParserAbstract() {
+internal class test_sList_sList : test_ScanOnDemandParserAbstract() {
 
     // S = [numList / ';']* ;
     // numList = [NUM / ',']+

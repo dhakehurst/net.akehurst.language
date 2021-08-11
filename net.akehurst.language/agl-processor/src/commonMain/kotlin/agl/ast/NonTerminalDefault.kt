@@ -17,9 +17,8 @@
 package net.akehurst.language.agl.ast
 
 import net.akehurst.language.api.grammar.*
-import kotlin.text.Regex
 
-class NonTerminalDefault(
+internal class NonTerminalDefault(
         override val name: String,
         val owningGrammar: Grammar,
         override val embedded: Boolean
@@ -44,12 +43,6 @@ class NonTerminalDefault(
 
     override val allNonTerminal: Set<NonTerminal> by lazy {
         setOf(this)
-    }
-
-    // --- GrammarVisitable ---
-
-    override fun <T, A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
-        return visitor.visit(this, arg);
     }
 
 }

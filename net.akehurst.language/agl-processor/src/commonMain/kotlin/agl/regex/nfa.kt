@@ -18,7 +18,7 @@ package net.akehurst.language.agl.regex
 
 import kotlin.properties.Delegates
 
-class State(
+internal class State(
         val number: Int,
         val isSplit: Boolean
 ) {
@@ -35,17 +35,17 @@ class State(
     override fun toString(): String = "State{$number}"
 }
 
-class Fragment(
+internal class Fragment(
         val start: State,
         val outgoing: List<Transition>
 ) {
 }
 
-enum class MatcherKind {
+internal enum class MatcherKind {
   EMPTY, ANY, END_OF_LINE_OR_INPUT, NEGATED, LITERAL, ONE_OF, RANGE
 }
 
-class CharacterMatcher(
+internal class CharacterMatcher(
         val kind:MatcherKind,
         val literal:Char = '\u0000', // min
         val max:Char = '\u0000',
@@ -119,16 +119,16 @@ internal fun addNextStates(nextStates: MutableList<State>, next: State?): Boolea
             next.outgoing.any { addNextStates(nextStates, it.to) }
         } else {
             nextStates.add(next)
-            next == RegexMatcher.MATCH_STATE
+            next == RegexMatcherImpl.MATCH_STATE
         }
     }
 }
 
-enum class TransitionKind {
+internal enum class TransitionKind {
     MATCHER, EMPTY, END_OF_LINE_OR_INPUT
 }
 
-class Transition(val kind: TransitionKind, val matcher: CharacterMatcher) {
+internal class Transition(val kind: TransitionKind, val matcher: CharacterMatcher) {
 
     var to: State? = null
     lateinit var nextStates: Array<State>

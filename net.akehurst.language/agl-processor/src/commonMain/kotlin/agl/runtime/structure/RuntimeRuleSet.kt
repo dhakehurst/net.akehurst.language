@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.automaton.AutomatonKind
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.api.parser.ParserException
@@ -24,7 +24,7 @@ import net.akehurst.language.collections.lazyMap
 import net.akehurst.language.collections.lazyMapNonNull
 import net.akehurst.language.collections.transitiveClosure
 
-class LookaheadSet(
+internal class LookaheadSet(
     val number: Int,
     val content: Set<RuntimeRule>
 ) {
@@ -37,10 +37,10 @@ class LookaheadSet(
 
     fun resolve(runtimeLookahead: LookaheadSet): Set<RuntimeRule> {
         return when {
-            LookaheadSet.UP == runtimeLookahead -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
-            LookaheadSet.ANY == this -> this.content
+            UP == runtimeLookahead -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
+            ANY == this -> this.content
             null == runtimeLookahead -> this.content
-            LookaheadSet.UP == this -> runtimeLookahead.content
+            UP == this -> runtimeLookahead.content
             else -> {
                 var result = mutableSetOf<RuntimeRule>()
                 for (rr in this.content) {
@@ -65,7 +65,7 @@ class LookaheadSet(
 
 }
 
-class RuntimeRuleSet(
+internal  class RuntimeRuleSet(
     // rules: List<RuntimeRule>
 ) {
 
@@ -174,7 +174,7 @@ class RuntimeRuleSet(
     private val states_cache = mutableMapOf<RuntimeRule, ParserStateSet>()
     private val skipStateSet = mutableMapOf<RuntimeRule, ParserStateSet>()
 
-    val skipParserStateSet: ParserStateSet? by lazy {
+     internal  val skipParserStateSet: ParserStateSet? by lazy {
         if (skipRules.isEmpty()) {
             null
         } else {
@@ -222,7 +222,7 @@ class RuntimeRuleSet(
         this.runtimeRules = rules.sortedBy { it.number }
     }
 
-    fun automatonFor(goalRuleName: String, automatonKind:AutomatonKind): ParserStateSet {
+     internal  fun automatonFor(goalRuleName: String, automatonKind:AutomatonKind): ParserStateSet {
         this.buildFor(goalRuleName,automatonKind)
         val gr = this.findRuntimeRule(goalRuleName)
         return this.states_cache[gr]!! //findRuntimeRule would throw exception if not exist
@@ -326,13 +326,13 @@ class RuntimeRuleSet(
         }
     }
 
-    fun buildFor(goalRuleName: String, automatonKind:AutomatonKind): ParserStateSet {
+     internal fun buildFor(goalRuleName: String, automatonKind:AutomatonKind): ParserStateSet {
         val gr = this.findRuntimeRule(goalRuleName)
         val s0 = this.fetchStateSetFor(gr,automatonKind).startState
         return s0.stateSet.build()
     }
 
-    fun fetchStateSetFor(userGoalRule: RuntimeRule, automatonKind:AutomatonKind): ParserStateSet {
+     internal fun fetchStateSetFor(userGoalRule: RuntimeRule, automatonKind:AutomatonKind): ParserStateSet {
         //TODO: need to cache by possibleEndOfText also
         var stateSet = this.states_cache[userGoalRule]
         if (null == stateSet) {

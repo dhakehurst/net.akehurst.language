@@ -16,13 +16,16 @@
 
 package net.akehurst.language.agl.processor
 
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 internal class test_Agl_scan {
 
     @Test
     fun scan_literal_empty_a() {
-        val sut = Agl.processor(listOf("a = '';"))
+        val sut = Agl.processorFromRuleList(listOf("a = '';"))
         val tokens = sut.scan("ab")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
@@ -40,7 +43,7 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_pattern_empty_a() {
-        val sut = Agl.processor(listOf("a = \"[x]*\";"))
+        val sut = Agl.processorFromRuleList(listOf("a = \"[x]*\";"))
         val tokens = sut.scan("ab")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
@@ -58,7 +61,7 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_a_a() {
-        val sut = Agl.processor(listOf("a = 'a';"))
+        val sut = Agl.processorFromRuleList(listOf("a = 'a';"))
         val tokens = sut.scan("a")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
@@ -76,7 +79,7 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_a_aa() {
-        val sut = Agl.processor(listOf("a = 'a';"))
+        val sut = Agl.processorFromRuleList(listOf("a = 'a';"))
         val tokens = sut.scan("aa")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
@@ -87,7 +90,7 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_a_aaa() {
-        val sut = Agl.processor(listOf("a = 'a';"))
+        val sut = Agl.processorFromRuleList(listOf("a = 'a';"))
         val tokens = sut.scan("aaa")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
@@ -98,7 +101,7 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_ab_aba() {
-        val sut = Agl.processor(listOf("a = 'a';", "b = 'b';"))
+        val sut = Agl.processorFromRuleList(listOf("a = 'a';", "b = 'b';"))
         val tokens = sut.scan("aba")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")

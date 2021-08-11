@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.sppt
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -27,7 +25,7 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_a() {
-        val proc = Agl.processor("""
+        val proc = Agl.processorFromString("""
             namespace test
             grammar Test {
                 skip WS = "\s+" ;
@@ -48,7 +46,7 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_eolx1() {
-        val proc = Agl.processor("""
+        val proc = Agl.processorFromString("""
             namespace test
             grammar Test {
                 skip WS = "\s+" ;
@@ -77,7 +75,7 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_eolx1_indent() {
-        val proc = Agl.processor("""
+        val proc = Agl.processorFromString("""
             namespace test
             grammar Test {
                 skip WS = "\s+" ;
@@ -107,7 +105,7 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_eolx2() {
-        val proc = Agl.processor("""
+        val proc = Agl.processorFromString("""
             namespace test
 
             grammar Test {

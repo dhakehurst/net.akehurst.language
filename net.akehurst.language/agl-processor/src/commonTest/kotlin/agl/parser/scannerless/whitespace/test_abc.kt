@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_abc : test_ScanOnDemandParserAbstract() {
+internal class test_abc : test_ScanOnDemandParserAbstract() {
 
     // skip WS = "\s+" ;
     // skip COMMENT = "//[^\n]*$"

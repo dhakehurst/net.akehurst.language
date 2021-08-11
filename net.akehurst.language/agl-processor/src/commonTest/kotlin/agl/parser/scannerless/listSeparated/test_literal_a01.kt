@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_literal_a01 : test_ScanOnDemandParserAbstract() {
+internal class test_literal_a01 : test_ScanOnDemandParserAbstract() {
 
     // S = ['a' / ',']?
     private fun literal_a01(): RuntimeRuleSetBuilder {

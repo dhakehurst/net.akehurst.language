@@ -42,7 +42,7 @@ class test_Java8Agl_Expressions(val data: Data) {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
         val processor: LanguageProcessor by lazy {
-            Agl.processor(grammarStr, "Expressions.Expression")
+            Agl.processorFromStringForGoal(grammarStr, "Expressions.Expression")
         }
         var sourceFiles = arrayOf(
                 "/java8/sentences/literals-valid.txt",

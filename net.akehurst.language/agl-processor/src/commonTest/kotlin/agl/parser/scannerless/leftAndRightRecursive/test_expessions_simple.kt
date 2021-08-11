@@ -17,13 +17,11 @@
 package net.akehurst.language.parser.scanondemand.leftAndRightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.rightRecursive.test_n_P_Im
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_expessions_simple : test_ScanOnDemandParserAbstract() {
+internal class test_expessions_simple : test_ScanOnDemandParserAbstract() {
 
     // S = E
     // E = 'a' | I

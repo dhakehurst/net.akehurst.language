@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_AhoSetiUlman_Ex_4_7_4 : test_ScanOnDemandParserAbstract() {
+internal class test_AhoSetiUlman_Ex_4_7_4 : test_ScanOnDemandParserAbstract() {
 
     // This grammar is LALR(1) but not SLR(1)
 

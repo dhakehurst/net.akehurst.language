@@ -28,15 +28,15 @@ class test_StatechartTools_Singles {
         private val grammarStr2 = this::class.java.getResource("/statechart-tools/SText.agl")?.readText() ?: error("File not found")
 
         // must create processor for 'Expressions' so that SText can extend it
-        val exprProcessor = Agl.processor(grammarStr1)
-        var processor: LanguageProcessor = Agl.processor(grammarStr2)
+        val exprProcessor = Agl.processorFromString(grammarStr1)
+        var processor: LanguageProcessor = Agl.processorFromString(grammarStr2)
     }
 
     @Test
     fun ConditionalExpression_integer() {
         val goal = "Expression"
         val sentence = "integer"
-        val result = processor.parse(goal, sentence)
+        val result = processor.parseForGoal(goal, sentence)
         assertNotNull(result)
         val resultStr = result.asString
         assertEquals(sentence, resultStr)
@@ -46,7 +46,7 @@ class test_StatechartTools_Singles {
     fun ConditionalExpression_97() {
         val goal = "Expression"
         val sentence = "97"
-        val result = processor.parse(goal, sentence)
+        val result = processor.parseForGoal(goal, sentence)
         assertNotNull(result)
         val resultStr = result.asString
         assertEquals(sentence, resultStr)
@@ -56,7 +56,7 @@ class test_StatechartTools_Singles {
     fun AssignmentExpression_integer_AS_97() {
         val goal = "Expression"
         val sentence = "integer = 97"
-        val result = processor.parse(goal, sentence)
+        val result = processor.parseForGoal(goal, sentence)
         assertNotNull(result)
         val resultStr = result.asString
         assertEquals(sentence, resultStr)
@@ -66,7 +66,7 @@ class test_StatechartTools_Singles {
     fun ScopeDeclaration_integer_AS_97() {
         val goal = "ScopeDeclaration"
         val sentence = "var MyVar : integer = 97"
-        val result = processor.parse(goal, sentence)
+        val result = processor.parseForGoal(goal, sentence)
         assertNotNull(result)
         val resultStr = result.asString
         assertEquals(sentence, resultStr)

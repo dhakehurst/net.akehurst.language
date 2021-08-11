@@ -26,7 +26,6 @@ import net.akehurst.language.agl.runtime.graph.PreviousInfo
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserInterruptedException
 import net.akehurst.language.api.sppt.SPPTBranch
@@ -148,7 +147,7 @@ internal class RuntimeParser(
 
     fun resetGraphToLastGrown() {
         for (gn in this.lastGrownLinked) {
-            val gnindex = GrowingNode.index(gn.currentState, gn.lookahead, gn.children)//, gn.nextInputPosition, gn.priority)
+            val gnindex = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.lookahead, gn.children)//, gn.nextInputPosition, gn.priority)
             this.graph.growingHead[gnindex] = gn
         }
     }
@@ -253,7 +252,7 @@ internal class RuntimeParser(
             val skipLh = this.stateSet.createLookaheadSet(skipLhc)
             val skipNodes = this.tryParseSkipUntilNone(skipLh, gn.startPosition, noLookahead)
             gn.children.appendSkipIfNotEmpty(skipNodes) //ok because gn.children should be empty
-            val gi = GrowingNode.index(gn.currentState, gn.lookahead, gn.children)
+            val gi = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.lookahead, gn.children)
             this.graph.addGrowingHead(gi, gn)
         }
     }

@@ -28,7 +28,7 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
     override fun clear() {
-        TODO("not implemented")
+        locationMap.clear()
     }
 
     override fun <T> transform(sppt: SharedPackedParseTree): T {
@@ -36,7 +36,7 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
         return value as T
     }
 
-    fun createValue(target: SPPTNode): Any? {
+    private fun createValue(target: SPPTNode): Any? {
         return when (target) {
             is SPPTLeaf -> createValueFromLeaf(target)
             is SPPTBranch -> createValueFromBranch(target)
@@ -44,7 +44,7 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
         }
     }
 
-    fun createValueFromLeaf(target: SPPTLeaf): Any? {
+    private fun createValueFromLeaf(target: SPPTLeaf): Any? {
         val leaf = target //as SPPTLeafDefault
         val value = when {
             leaf.isEmptyLeaf -> null
@@ -53,7 +53,7 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
         return value
     }
 
-    fun createValueFromBranch(target: SPPTBranch): Any? {
+    private fun createValueFromBranch(target: SPPTBranch): Any? {
         val br = target as SPPTBranchFromInputAndGrownChildren //SPPTBranchDefault //TODO: make write thing available on interface
         return when (br.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> error("should never happen!")
@@ -119,7 +119,7 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
         }
     }
 
-    fun createPropertyName(runtimeRule: RuntimeRule): String {
+    private fun createPropertyName(runtimeRule: RuntimeRule): String {
         return when (runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> runtimeRule.tag
             RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {

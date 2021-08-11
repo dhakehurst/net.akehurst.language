@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder) {
+internal class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder) {
 
 
     private var kind: RuntimeRuleKind = RuntimeRuleKind.TERMINAL

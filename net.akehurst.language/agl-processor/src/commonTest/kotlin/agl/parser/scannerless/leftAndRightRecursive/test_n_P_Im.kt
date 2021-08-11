@@ -17,12 +17,11 @@
 package net.akehurst.language.parser.scanondemand.rightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_n_P_Im : test_ScanOnDemandParserAbstract() {
+internal class test_n_P_Im : test_ScanOnDemandParserAbstract() {
 
     // S =  n < P < I ;      //  infix < propertyCall < name
     // n = 'a' ;             // "[a-z]+"

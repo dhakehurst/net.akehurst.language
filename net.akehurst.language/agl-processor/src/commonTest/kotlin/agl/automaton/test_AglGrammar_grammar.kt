@@ -23,10 +23,11 @@ import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_AglGrammar_grammar : test_Abstract() {
+internal class test_AglGrammar_grammar : test_Abstract() {
 
     private companion object {
         val grammar = AglGrammarGrammar()

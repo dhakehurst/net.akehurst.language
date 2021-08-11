@@ -16,15 +16,16 @@
 
 package net.akehurst.language.agl.regex
 
+import net.akehurst.language.api.regex.RegexMatcher
 import net.akehurst.language.collections.MutableStack
 
 class RegexParserException(msg: String) : RuntimeException(msg)
 
-class RegexParser(
+internal class RegexParser(
         val pattern: String
 ) {
 
-    enum class EscapeKind { SINGLE, OPTIONS, LITERAL }
+    internal  enum class EscapeKind { SINGLE, OPTIONS, LITERAL }
 
     companion object {
         val PREC_GROUP_OPEN = 1

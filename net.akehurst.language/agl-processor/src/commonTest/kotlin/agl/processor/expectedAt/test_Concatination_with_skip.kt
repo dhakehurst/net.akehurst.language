@@ -17,7 +17,8 @@
 package net.akehurst.language.processor.expectedAt
 
 import net.akehurst.language.agl.processor.Agl
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class test_Concatination_with_skip {
 
@@ -29,7 +30,7 @@ class test_Concatination_with_skip {
                 S = 'a' 'b' 'c' 'd' ;
             }
         """.trimIndent()
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
     }
 
     @Test

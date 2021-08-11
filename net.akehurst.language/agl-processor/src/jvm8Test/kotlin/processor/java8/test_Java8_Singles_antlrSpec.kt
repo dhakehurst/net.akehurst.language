@@ -37,7 +37,7 @@ class test_Java8_Singles_antlrSpec {
 
         fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor {
             val grammarStr = this::class.java.getResource(path).readText()
-            val proc = Agl.processor(grammarStr)
+            val proc = Agl.processorFromString(grammarStr)
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
             //proc.buildFor(forRule)
             return proc
@@ -49,7 +49,7 @@ class test_Java8_Singles_antlrSpec {
         val sentence = "0"
         val goal = "literal"
 
-        val t = proc.parse(goal, sentence)
+        val t = proc.parseForGoal(goal, sentence)
     }
 
     @Test
@@ -57,10 +57,10 @@ class test_Java8_Singles_antlrSpec {
 
         val grammarStr = this::class.java.getResource(grammarFile).readText()
         val goal = "unannType"
-        val p = Agl.processor(grammarStr, goal)
+        val p = Agl.processorFromStringForGoal(grammarStr, goal)
 
         val sentence = "int"
-        val t = p.buildFor(goal).parse(goal, sentence)
+        val t = p.buildFor(goal).parseForGoal(goal, sentence)
 
         assertEquals(1, t.maxNumHeads)
     }
@@ -71,21 +71,21 @@ class test_Java8_Singles_antlrSpec {
         val sentence = "import x; @An() interface An {  }"
         val goal = "compilationUnit"
 
-        val t = proc.parse(goal, sentence)
+        val t = proc.parseForGoal(goal, sentence)
     }
 
     @Test
     fun arrayIndex() {
         val sentence = "a[0]"
         val goal = "expression"
-        val t = proc.parse(goal, sentence)
+        val t = proc.parseForGoal(goal, sentence)
     }
 
     @Test
     fun t() {
         val sentence = "a[0].b"
         val goal = "expression"
-        val t = proc.parse(goal, sentence)
+        val t = proc.parseForGoal(goal, sentence)
     }
 
     @Test
@@ -93,7 +93,7 @@ class test_Java8_Singles_antlrSpec {
         val sentence = "0b012"
         val goal = "variableInitializer"
         assertFailsWith(ParseFailedException::class) {
-            proc.parse(goal, sentence)
+            proc.parseForGoal(goal, sentence)
         }
     }
 
@@ -120,7 +120,7 @@ public class BadBinaryLiterals {
 }
             """.trimIndent()
         val goal = "compilationUnit"
-        proc.parse(goal, sentence)
+        proc.parseForGoal(goal, sentence)
 
     }
 
@@ -128,7 +128,7 @@ public class BadBinaryLiterals {
     fun UnannQualifiedTypeReference1() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "blockStatement"
-        val t = proc.parse(goal, sentence)
+        val t = proc.parseForGoal(goal, sentence)
         assertNotNull(t)
     }
 
@@ -136,7 +136,7 @@ public class BadBinaryLiterals {
     fun UnannQualifiedTypeReference2() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "blockStatement"
-        val t = proc.parse(goal, sentence)
+        val t = proc.parseForGoal(goal, sentence)
         assertNotNull(t)
     }
 
@@ -144,16 +144,16 @@ public class BadBinaryLiterals {
     fun UnannQualifiedTypeReference() {
         val sentence = "{ Map.@An Entry<Object,Object> x; }"
         val goal = "block"
-        val t = proc.parse(goal, sentence)
+        val t = proc.parseForGoal(goal, sentence)
     }
 
     @Test
     fun Enum() {
         val sentence = "enum E { A, B, C }"
         val goal = "classDeclaration"
-        val t = proc.parse(goal, sentence)
+        val t = proc.parseForGoal(goal, sentence)
         val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -161,13 +161,13 @@ public class BadBinaryLiterals {
     fun xx() {
         val sentence = "interface An { An[] value(); }"
         val goal = "compilationUnit"
-        val t = proc.parse(goal, sentence)
+        val t = proc.parseForGoal(goal, sentence)
         val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test//(timeout = 5000)
+    @Test(timeout = 5000)
     fun long_concatenation() {
 
         val sentence = """
@@ -214,10 +214,10 @@ public class BadBinaryLiterals {
         """.trimIndent()
         val goal = "block"
 
-        val t = proc.parse(goal, sentence)
+        val t = proc.parseForGoal(goal, sentence)
 
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visit(t, "")
+        val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
 

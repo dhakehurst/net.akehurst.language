@@ -16,22 +16,24 @@
 
 package net.akehurst.language.parser
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 
-class test_InputLocation_singleLine {
+internal class test_InputLocation_singleLine {
 
-    val S = runtimeRuleSet {
-        concatenation("S") {
-            literal("a")
-            literal("b")
-            literal("c")
+    private companion object {
+        val S = runtimeRuleSet {
+            concatenation("S") {
+                literal("a")
+                literal("b")
+                literal("c")
+            }
         }
     }
 
@@ -51,15 +53,16 @@ class test_InputLocation_singleLine {
 }
 
 class test_InputLocation_multiLine {
-
-    val S = runtimeRuleSet {
-        skip("WS") {
-            pattern("\\s+")
-        }
-        concatenation("S") {
-            literal("a")
-            literal("b")
-            literal("c")
+    private companion object {
+        val S = runtimeRuleSet {
+            skip("WS") {
+                pattern("\\s+")
+            }
+            concatenation("S") {
+                literal("a")
+                literal("b")
+                literal("c")
+            }
         }
     }
 
@@ -118,15 +121,16 @@ class test_InputLocation_multiLine {
 }
 
 class test_InputLocation_multiLine2 {
-
-    val S = runtimeRuleSet {
-        skip("WS") {
-            pattern("\\s+")
-        }
-        concatenation("S") {
-            literal("aaa")
-            literal("bbb")
-            literal("ccc")
+    private companion object {
+        val S = runtimeRuleSet {
+            skip("WS") {
+                pattern("\\s+")
+            }
+            concatenation("S") {
+                literal("aaa")
+                literal("bbb")
+                literal("ccc")
+            }
         }
     }
 

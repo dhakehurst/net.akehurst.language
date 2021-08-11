@@ -16,7 +16,7 @@
 
 package net.akehurst.language.collections
 
-fun <T> Set<T>.transitiveClosure(accumulate: Boolean = true, function: (T) -> Set<T>): Set<T> {
+internal fun <T> Set<T>.transitiveClosure(accumulate: Boolean = true, function: (T) -> Set<T>): Set<T> {
     var result: MutableSet<T> = this.toMutableSet()
     var newThings: MutableSet<T> = this.toMutableSet()
     var newStuff = true
@@ -38,7 +38,7 @@ fun <T> Set<T>.transitiveClosure(accumulate: Boolean = true, function: (T) -> Se
     return result
 }
 
-fun <T> Set<T>.transitiveClosure_old(function: (T) -> Set<T>): Set<T> {
+internal fun <T> Set<T>.transitiveClosure_old(function: (T) -> Set<T>): Set<T> {
     var result: MutableSet<T> = this.toMutableSet()
     var oldResult: MutableSet<T> = mutableSetOf<T>()
     while (!oldResult.containsAll(result)) {
@@ -51,7 +51,7 @@ fun <T> Set<T>.transitiveClosure_old(function: (T) -> Set<T>): Set<T> {
     return result
 }
 
-fun <T> List<T>.transitiveClosure(function: (T) -> List<T>): List<T> {
+internal fun <T> List<T>.transitiveClosure(function: (T) -> List<T>): List<T> {
     var result: MutableList<T> = this.toMutableList()
     var newThings: MutableList<T> = this.toMutableList()
     var newStuff = true
@@ -68,7 +68,7 @@ fun <T> List<T>.transitiveClosure(function: (T) -> List<T>): List<T> {
     return result
 }
 
-fun IntArray.including(value:Int) : IntArray {
+internal fun IntArray.including(value:Int) : IntArray {
     return if (this.contains(value)) {
         this
     } else {

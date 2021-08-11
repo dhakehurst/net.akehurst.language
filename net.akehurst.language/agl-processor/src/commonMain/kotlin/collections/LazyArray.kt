@@ -16,9 +16,9 @@
 
 package net.akehurst.language.collections
 
-fun <T> lazyArray(size:Int,accessor: (Int) -> T) = LazyArray(size,accessor)
+internal fun <T> lazyArray(size:Int,accessor: (Int) -> T) = LazyArray(size,accessor)
 
-class LazyArray<T>(size:Int, val accessor: (Int) -> T)  {
+internal class LazyArray<T>(size:Int, val accessor: (Int) -> T)  {
 
     val arr = arrayOfNulls<Any?>(size) as Array<T?>
 

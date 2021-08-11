@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
+internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
 
     private companion object {
         // S = S1 < a

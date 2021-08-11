@@ -64,13 +64,13 @@ grammar Mdl {
 }
     """.trimIndent()
 
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
 
     }
 
     @Test
     fun literal_BOOLEAN() {
-        val actual = processor.parse("literal", "on")
+        val actual = processor.parseForGoal("literal", "on")
         assertNotNull(actual)
         assertEquals("literal", actual.root.name)
         assertEquals("BOOLEAN", actual.root.asBranch.children[0].name)
@@ -78,7 +78,7 @@ grammar Mdl {
 
     @Test
     fun literal_INTEGER() {
-        val actual = processor.parse("literal", "1")
+        val actual = processor.parseForGoal("literal", "1")
         assertNotNull(actual)
         assertEquals("literal", actual.root.name)
         assertEquals("INTEGER", actual.root.asBranch.children[0].name)
@@ -86,7 +86,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_1() {
-        val actual = processor.parse("literal", "3.14")
+        val actual = processor.parseForGoal("literal", "3.14")
         assertNotNull(actual)
         assertEquals("literal", actual.root.name)
         assertEquals("REAL", actual.root.asBranch.children[0].name)
@@ -94,7 +94,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_2() {
-        val actual = processor.parse("literal", ".14")
+        val actual = processor.parseForGoal("literal", ".14")
         assertNotNull(actual)
         assertEquals("literal", actual.root.name)
         assertEquals("REAL", actual.root.asBranch.children[0].name)
@@ -102,7 +102,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_3() {
-        val actual = processor.parse("literal", "3.14e-05")
+        val actual = processor.parseForGoal("literal", "3.14e-05")
         assertNotNull(actual)
         assertEquals("literal", actual.root.name)
         assertEquals("REAL", actual.root.asBranch.children[0].name)
@@ -110,7 +110,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_4() {
-        val actual = processor.parse("literal", "3.0e5")
+        val actual = processor.parseForGoal("literal", "3.0e5")
         assertNotNull(actual)
         assertEquals("literal", actual.root.name)
         assertEquals("REAL", actual.root.asBranch.children[0].name)
@@ -118,7 +118,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_5() {
-        val actual = processor.parse("literal", ".3e5")
+        val actual = processor.parseForGoal("literal", ".3e5")
         assertNotNull(actual)
         assertEquals("literal", actual.root.name)
         assertEquals("REAL", actual.root.asBranch.children[0].name)
@@ -126,7 +126,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_6() {
-        val actual = processor.parse("literal", "1e-05")
+        val actual = processor.parseForGoal("literal", "1e-05")
         assertNotNull(actual)
         assertEquals("literal", actual.root.name)
         assertEquals("REAL", actual.root.asBranch.children[0].name)
@@ -134,7 +134,7 @@ grammar Mdl {
 
     @Test
     fun stringList_1() {
-        val actual = processor.parse("stringList", "\"hello\"")
+        val actual = processor.parseForGoal("stringList", "\"hello\"")
         assertNotNull(actual)
         assertEquals("stringList", actual.root.name)
         assertEquals(1, actual.root.asBranch.children[0].asBranch.children.size)
@@ -145,7 +145,7 @@ grammar Mdl {
 
     @Test
     fun stringList_2() {
-        val actual = processor.parse("stringList", "\"hello\" \"world\"")
+        val actual = processor.parseForGoal("stringList", "\"hello\" \"world\"")
         assertNotNull(actual)
         assertEquals("stringList", actual.root.name)
         assertEquals(2, actual.root.asBranch.children[0].asBranch.children.size)
@@ -156,7 +156,7 @@ grammar Mdl {
 
     @Test
     fun stringList_3() {
-        val actual = processor.parse("stringList", "\"aa\" \"bb\" \"cc\"")
+        val actual = processor.parseForGoal("stringList", "\"aa\" \"bb\" \"cc\"")
         val list = actual.root.asBranch.children[0].asBranch.children
         assertNotNull(actual)
         assertEquals("stringList", actual.root.name)
@@ -168,7 +168,7 @@ grammar Mdl {
 
     @Test
     fun value_stringList_1() {
-        val actual = processor.parse("value", "\"hello\"")
+        val actual = processor.parseForGoal("value", "\"hello\"")
         val list = actual.root.asBranch.children[0].asBranch.children
         assertNotNull(actual)
         assertEquals("value", actual.root.name)
@@ -180,49 +180,49 @@ grammar Mdl {
 
     @Test
     fun value_stringList_2() {
-        val actual = processor.parse("value", "\"hello\" \"world\"")
+        val actual = processor.parseForGoal("value", "\"hello\" \"world\"")
         assertNotNull(actual)
         assertEquals("value", actual.root.name)
     }
 
     @Test
     fun value_stringList_3() {
-        val actual = processor.parse("value", "\"aa\" \"bb\" \"cc\"")
+        val actual = processor.parseForGoal("value", "\"aa\" \"bb\" \"cc\"")
         assertNotNull(actual)
         assertEquals("value", actual.root.name)
     }
 
     @Test
     fun array() {
-        val actual = processor.parse("matrix", "[ on, 1, 3.14, \"hello\" ]")
+        val actual = processor.parseForGoal("matrix", "[ on, 1, 3.14, \"hello\" ]")
         assertNotNull(actual)
         assertEquals("matrix", actual.root.name)
     }
 
     @Test
     fun array1() {
-        val actual = processor.parse("matrix", "[ 1.0,2.0,3.0 ]")
+        val actual = processor.parseForGoal("matrix", "[ 1.0,2.0,3.0 ]")
         assertNotNull(actual)
         assertEquals("matrix", actual.root.name)
     }
 
     @Test
     fun array2() {
-        val actual = processor.parse("matrix", "[ 1.0, 2.0 ]")
+        val actual = processor.parseForGoal("matrix", "[ 1.0, 2.0 ]")
         assertNotNull(actual)
         assertEquals("matrix", actual.root.name)
     }
 
     @Test
     fun row1() {
-        val actual = processor.parse("row", "1.1,2.2")
+        val actual = processor.parseForGoal("row", "1.1,2.2")
         assertNotNull(actual)
         assertEquals("row", actual.root.name)
     }
 
     @Test
     fun matrix() {
-        val actual = processor.parse("matrix", "[ 0,1; 2,3 ]")
+        val actual = processor.parseForGoal("matrix", "[ 0,1; 2,3 ]")
         assertNotNull(actual)
         assertEquals("matrix", actual.root.name)
     }
@@ -238,7 +238,7 @@ grammar Mdl {
 			}
         """.trimIndent()
 
-        val actual = processor.parse("section", text)
+        val actual = processor.parseForGoal("section", text)
 
         assertNotNull(actual)
         assertEquals("section", actual.root.name)
@@ -256,7 +256,7 @@ grammar Mdl {
 		}
         """.trimIndent()
 
-        val actual = processor.parse("section", text)
+        val actual = processor.parseForGoal("section", text)
 
         assertNotNull(actual)
         assertEquals("section", actual.root.name)
@@ -264,7 +264,7 @@ grammar Mdl {
 
     @Test
     fun misc() {
-        val actual = processor.parse("section", """
+        val actual = processor.parseForGoal("section", """
         Block {
 			DecimalParam	1.5
 			StringParam		"abc"
@@ -278,7 +278,7 @@ grammar Mdl {
 
     @Test
     fun misc2() {
-        val actual = processor.parse("section", """
+        val actual = processor.parseForGoal("section", """
             Object {
                   PropName		      "WindowsInfo"
                   ObjectID		      2

@@ -42,7 +42,7 @@ class test_NaturalLanguage_Singles{
 
         fun tgqlprocessor() : LanguageProcessor {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processor(grammarStr)
+            return Agl.processorFromString(grammarStr)
          }
     }
 
@@ -51,7 +51,7 @@ class test_NaturalLanguage_Singles{
         val goal = "subject"
         val sentence = "my name"
         try {
-            val result = processor.parse(goal, sentence)
+            val result = processor.parseForGoal(goal, sentence)
             assertNotNull(result)
             val resultStr = result.asString
             assertEquals(sentence, resultStr)

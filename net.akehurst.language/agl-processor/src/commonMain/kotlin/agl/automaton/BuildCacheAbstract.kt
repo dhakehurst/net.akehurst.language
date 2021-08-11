@@ -17,8 +17,9 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.processor.AutomatonKind
 
-abstract class BuildCacheAbstract(
+internal abstract class BuildCacheAbstract(
     val stateSet: ParserStateSet
 ) : BuildCache {
 

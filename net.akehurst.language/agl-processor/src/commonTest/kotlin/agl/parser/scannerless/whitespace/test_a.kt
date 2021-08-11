@@ -20,7 +20,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_a : test_ScanOnDemandParserAbstract() {
+internal class test_a : test_ScanOnDemandParserAbstract() {
 
     // skip WS = "\s+" ;
     // S = 'a' ;

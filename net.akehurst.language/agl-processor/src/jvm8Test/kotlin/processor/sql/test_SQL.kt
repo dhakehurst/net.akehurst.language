@@ -36,7 +36,7 @@ class test_SQLValid(val data:Data) {
 
         private val grammarStr = test_SQLValid::class.java.getResource("/sql/simple-sql.agl").readText()
         val processor : LanguageProcessor by lazy {
-            Agl.processor(grammarStr)
+            Agl.processorFromString(grammarStr)
         }
 
         var sourceFiles = arrayOf("/sql/valid.txt")
@@ -79,7 +79,7 @@ class test_SQLValid(val data:Data) {
     @Test(timeout=1000)
     fun test() {
         val queryStr = this.data.queryStr
-        val result = processor.parse("terminated-statement", queryStr)
+        val result = processor.parseForGoal("terminated-statement", queryStr)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)

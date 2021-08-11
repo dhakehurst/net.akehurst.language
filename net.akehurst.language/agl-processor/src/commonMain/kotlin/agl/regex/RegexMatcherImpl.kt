@@ -16,20 +16,17 @@
 
 package net.akehurst.language.agl.regex
 
-fun regexMatcher(pattern:String) = RegexParser(pattern).parse()
+import net.akehurst.language.api.regex.RegexMatcher
+
+fun regexMatcher(pattern:String):RegexMatcher = RegexParser(pattern).parse()
 
 // nfa is Array of States, each state is element in array
 // Array<Int,
-class RegexMatcher(
+internal class RegexMatcherImpl(
         val pattern: String,
         val start:State,
         val nfa: List<State>
-) {
-
-    data class MatchResult(
-            val matchedText: String,
-            val eolPositions: List<Int>
-    )
+) : RegexMatcher {
 
     companion object {
         val MATCH_STATE = State(-1, false)
@@ -49,7 +46,7 @@ class RegexMatcher(
         }
     }
 
-    fun matches( matcher:CharacterMatcher, text:CharSequence, pos:Int): Boolean {
+    private fun matches( matcher:CharacterMatcher, text:CharSequence, pos:Int): Boolean {
         return when(matcher.kind) {
             MatcherKind.EMPTY -> error("should not happen")
             MatcherKind.ANY -> true
@@ -76,7 +73,7 @@ class RegexMatcher(
     private var currentStates = ArrayList<Array<State>>(10)
     private var nextStates = ArrayList<Array<State>>(10)
     private var eolPositions = ArrayList<Int>(10)
-    fun match(text: CharSequence, startPosition: Int = 0): MatchResult? {
+    override fun match(text: CharSequence, startPosition: Int): RegexMatcher.MatchResult? {
         var pos = startPosition
         this.currentStates.clear()
         this.nextStates.clear()
@@ -109,7 +106,7 @@ class RegexMatcher(
         }
         return if (maxMatchedPos!=-1) {
             val matchedText = text.substring(startPosition, maxMatchedPos+1)
-            MatchResult(matchedText, eolPositions)
+            RegexMatcher.MatchResult(matchedText, eolPositions)
         } else {
             null
         }

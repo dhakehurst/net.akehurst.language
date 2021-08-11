@@ -59,7 +59,7 @@ class test_Java8_Compare(val data: Data) {
         fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor {
             println("Building $path")
             val grammarStr = this::class.java.getResource(path).readText()
-            val proc = Agl.processor(grammarStr)
+            val proc = Agl.processorFromString(grammarStr)
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
             //proc.buildFor(forRule)//TODO: use build
             println("Built $path")
@@ -133,7 +133,7 @@ class test_Java8_Compare(val data: Data) {
         try {
             val queryStr = this.data.sentence
             val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
-            val tree = proc.parse(grammarRule, queryStr)
+            val tree = proc.parseForGoal(grammarRule, queryStr)
             assertNotNull(tree)
             val resultStr = clean(tree.asString)
             assertEquals(queryStr, resultStr)
@@ -145,22 +145,22 @@ class test_Java8_Compare(val data: Data) {
         }
     }
 
-    @Test//(timeout = 5000)
+    @Test(timeout = 5000)
     fun aglSpec() {
         this.testParse(aglSpecProcessor, true)
     }
 
-    @Test//(timeout = 5000)
+    @Test(timeout = 5000)
     fun aglOptm() {
         this.testParse(aglOptmProcessor, true)
     }
 
-    @Test//(timeout = 5000)
+    @Test(timeout = 5000)
     fun antlrSpec() {
         this.testParse(antlrSpecProcessor)
     }
 
-    @Test//(timeout = 5000)
+    @Test(timeout = 5000)
     fun antlrOptm() {
         this.testParse(antlrOptmProcessor)
     }

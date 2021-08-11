@@ -18,7 +18,7 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.api.parser.ParserException
 
-class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val name: String) {
+internal class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val name: String) {
 
     private var kind: RuntimeRuleKind = RuntimeRuleKind.NON_TERMINAL
     private var isPattern: Boolean = false

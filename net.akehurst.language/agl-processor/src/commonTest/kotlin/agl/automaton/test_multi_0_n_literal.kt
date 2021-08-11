@@ -17,10 +17,11 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_multi_0_n_literal : test_Abstract() {
+internal class test_multi_0_n_literal : test_Abstract() {
 
     // S =  'a'* ;
 

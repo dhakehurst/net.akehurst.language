@@ -19,7 +19,7 @@ package net.akehurst.language.agl.ast
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.collections.lazyMapNonNull
 
-class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
+internal class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
     private val _literals = lazyMapNonNull<String, Terminal>() {
         TerminalDefault(it, false)
@@ -74,12 +74,12 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
             this.rule.rhs = ChoiceLongestDefault(listOf(ConcatenationDefault(sequence.toList())));
         }
 
-        fun choiceLongest(vararg alternative: Concatenation) {
+        fun choiceLongestFromConcatenation(vararg alternative: Concatenation) {
             //val alternativeConcats = alternative.map { ChoiceLongestDefault(listOf(it)) }
             this.rule.rhs = ChoiceLongestDefault(alternative.asList());
         }
 
-        fun choiceLongest(vararg alternative: ConcatenationItem) {
+        fun choiceLongestFromConcatenationItem(vararg alternative: ConcatenationItem) {
             val alternativeConcats = alternative.map { ConcatenationDefault(listOf(it)) }
             this.rule.rhs = ChoiceLongestDefault(alternativeConcats);
         }

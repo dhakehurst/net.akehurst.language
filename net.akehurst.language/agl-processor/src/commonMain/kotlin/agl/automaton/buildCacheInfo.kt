@@ -20,22 +20,22 @@ import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
-data class FirstOfResult(
+internal data class FirstOfResult(
     val needsNext: Boolean,
     val result: Set<RuntimeRule>
 )
 
-data class StateInfo(
+internal data class StateInfo(
     val rulePositions: List<RulePosition>,
     val possiblePrev: List<List<RulePosition>>
 )
 
-data class WidthInfo(
+internal data class WidthInfo(
     val to:RulePosition,
     val lookaheadSet: LookaheadSet
 )
 
-data class HeightGraftInfo(
+internal data class HeightGraftInfo(
     val parent: List<RulePosition>,
     val parentNext: List<RulePosition>, // to state
     val lhs: LookaheadSet,

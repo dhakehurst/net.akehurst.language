@@ -23,7 +23,7 @@ import net.akehurst.language.api.sppt.SPPTNodeIdentity
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.parser.InputLocation
 
-abstract class SPPTNodeAbstract(
+internal abstract class SPPTNodeAbstract(
         val runtimeRule: RuntimeRule,
         override val option: Int,
         override val location: InputLocation,
@@ -70,7 +70,7 @@ abstract class SPPTNodeAbstract(
 
      fun toStringIndented(indentIncrement: String): String {
         val visitor = ToStringVisitor("\n", indentIncrement)
-        val all: Set<String> = visitor.visit(this, ToStringVisitor.Indent("", true))
+        val all: Set<String> = visitor.visitNode(this, ToStringVisitor.Indent("", true))
         val total = all.size
         val sep = "\n"
         var cur = 0

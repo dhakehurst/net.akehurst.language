@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_multi_2_n_literal : test_ScanOnDemandParserAbstract() {
+internal class test_multi_2_n_literal : test_ScanOnDemandParserAbstract() {
 
     // S = 'a'2+
     private fun S(): RuntimeRuleSetBuilder {

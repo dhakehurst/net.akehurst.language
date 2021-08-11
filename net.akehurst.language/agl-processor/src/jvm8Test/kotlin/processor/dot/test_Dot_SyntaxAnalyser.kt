@@ -27,7 +27,7 @@ class test_Dot_SyntaxAnalyser {
 
     companion object {
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl").readText()
-        var processor: LanguageProcessor = Agl.processor(grammarStr)
+        var processor: LanguageProcessor = Agl.processorFromString(grammarStr)
     }
 
 

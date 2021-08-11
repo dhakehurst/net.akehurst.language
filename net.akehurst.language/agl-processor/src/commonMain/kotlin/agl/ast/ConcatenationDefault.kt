@@ -16,15 +16,9 @@
 
 package net.akehurst.language.agl.ast
 
-import net.akehurst.language.api.grammar.Concatenation;
-import net.akehurst.language.api.grammar.ConcatenationItem;
-import net.akehurst.language.api.grammar.NonTerminal;
-import net.akehurst.language.api.grammar.RuleItem;
-import net.akehurst.language.api.grammar.Terminal;
-import net.akehurst.language.api.grammar.Rule;
-import net.akehurst.language.api.grammar.GrammarVisitor;
+import net.akehurst.language.api.grammar.*
 
-class ConcatenationDefault(override val items: List<ConcatenationItem>) : RuleItemAbstract(), Concatenation {
+internal class ConcatenationDefault(override val items: List<ConcatenationItem>) : RuleItemAbstract(), Concatenation {
 
    override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this._owningRule = rule
@@ -46,12 +40,6 @@ class ConcatenationDefault(override val items: List<ConcatenationItem>) : RuleIt
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
 		this.items.flatMap { it.allNonTerminal }.toSet()
-	}
-
-	// --- GrammarVisitable ---
-
-	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
-		return visitor.visit(this, arg);
 	}
 
 }

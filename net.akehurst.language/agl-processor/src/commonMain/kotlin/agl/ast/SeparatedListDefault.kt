@@ -16,16 +16,9 @@
 
 package net.akehurst.language.agl.ast
 
-import net.akehurst.language.api.grammar.SimpleItem
-import net.akehurst.language.api.grammar.Terminal
-import net.akehurst.language.api.grammar.SeparatedList
-import net.akehurst.language.api.grammar.Rule
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.NonTerminal
-import net.akehurst.language.api.grammar.GrammarVisitor
-import net.akehurst.language.api.grammar.GrammarRuleItemNotFoundException
+import net.akehurst.language.api.grammar.*
 
-class SeparatedListDefault(
+internal class SeparatedListDefault(
 		override val min: Int,
 		override val max: Int,
 		override val separator: SimpleItem,
@@ -54,12 +47,6 @@ class SeparatedListDefault(
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
 		this.item.allNonTerminal
-	}
-
-	// --- GrammarVisitable ---
-
-	override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
-		return visitor.visit(this, arg);
 	}
 
 }

@@ -17,14 +17,14 @@
 package net.akehurst.language.parser.scanondemand.leftAndRightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_bodmas3_WS : test_ScanOnDemandParserAbstract() {
+internal class test_bodmas3_WS : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // expr = root | group | infix ;

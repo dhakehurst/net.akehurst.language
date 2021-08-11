@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_multi_3_5_literal : test_ScanOnDemandParserAbstract() {
+internal class test_multi_3_5_literal : test_ScanOnDemandParserAbstract() {
 
     // S = 'a'3..5
     private fun S(): RuntimeRuleSetBuilder {

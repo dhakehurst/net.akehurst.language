@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-class RuntimeRuleExtender(val rrsb: RuntimeRuleSetBuilder, val rule: RuntimeRule) {
+internal class RuntimeRuleExtender(val rrsb: RuntimeRuleSetBuilder, val rule: RuntimeRule) {
 
     fun choice(choiceKind: RuntimeRuleChoiceKind, vararg items: RuntimeRule) {
         rule.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CHOICE, choiceKind,RuntimeRuleListKind.NONE,-1, 0, items)

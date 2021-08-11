@@ -16,8 +16,8 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -40,7 +40,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             
             }
         """.trimIndent()
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
     }
 
 

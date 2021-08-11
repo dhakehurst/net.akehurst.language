@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
-import kotlin.test.*
+import kotlin.test.Test
 
 internal class test_ForMatthias {
     private val grammarStr = """
@@ -33,11 +33,11 @@ internal class test_ForMatthias {
               leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*" ;
             }
         """.trimIndent()
-    private val p = Agl.processor(grammarStr)
+    private val p = Agl.processorFromString(grammarStr)
 
     @Test
     fun conceptDefinition0() {
-        p.parse("conceptDefinition", """
+        p.parseForGoal("conceptDefinition", """
             concept Test {
               properties {
               }
@@ -47,7 +47,7 @@ internal class test_ForMatthias {
 
     @Test
     fun conceptDefinition1() {
-        p.parse("conceptDefinition", """
+        p.parseForGoal("conceptDefinition", """
             concept Test {
               properties {
                  p1 : Int [1]
@@ -57,7 +57,7 @@ internal class test_ForMatthias {
     }
     @Test
     fun conceptDefinition2() {
-        p.parse("conceptDefinition", """
+        p.parseForGoal("conceptDefinition", """
             concept Test {
               properties {
                  p1 : Int [1]
@@ -68,7 +68,7 @@ internal class test_ForMatthias {
     }
     @Test
     fun properties() {
-        p.parse("properties", """
+        p.parseForGoal("properties", """
             properties {
 
             }

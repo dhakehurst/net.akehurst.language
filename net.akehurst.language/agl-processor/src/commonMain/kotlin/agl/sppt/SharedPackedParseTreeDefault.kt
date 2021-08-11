@@ -20,7 +20,7 @@ import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-class SharedPackedParseTreeDefault(
+internal class SharedPackedParseTreeDefault(
     override val root: SPPTNode,
     override val seasons: Int,
     override val maxNumHeads: Int
@@ -32,7 +32,7 @@ class SharedPackedParseTreeDefault(
 
     private val _tokensByLine: List<List<SPPTLeaf>> by lazy {
         val visitor = TokensByLineVisitor()
-        visitor.visit(this, emptyList())
+        visitor.visitTree(this, emptyList())
         visitor.lines
     }
 
@@ -50,20 +50,20 @@ class SharedPackedParseTreeDefault(
     }
 
     override val asString: String by lazy {
-        SPPT2InputText().visit(this, "")
+        SPPT2InputText().visitTree(this, "")
     }
 
     override val countTrees: Int by lazy {
-        CountTreesVisitor().visit(this, Unit)
+        CountTreesVisitor().visitTree(this, Unit)
     }
 
     override val toStringAll: String by lazy {
-        this.toStringIndented("")
+        this.toStringAllWithIndent("")
     }
 
-    override fun toStringIndented(indentIncrement: String): String {
+    override fun toStringAllWithIndent(indentIncrement: String): String {
         val visitor = ToStringVisitor("\n", indentIncrement)
-        val all: Set<String> = visitor.visit(this, ToStringVisitor.Indent("", true))
+        val all: Set<String> = visitor.visitTree(this, ToStringVisitor.Indent("", true))
         val total = all.size
         val sep = "\n"
         var cur = 0

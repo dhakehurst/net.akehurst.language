@@ -18,7 +18,7 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.*
 
-data class ClosureItemLC0(
+internal data class ClosureItemLC0(
     val parentItem: ClosureItemLC0?, //needed for height/graft
     val rulePosition: RulePosition
 ) {
@@ -53,7 +53,7 @@ data class ClosureItemLC0(
 
 }
 
-class BuildCacheLC0(
+internal class BuildCacheLC0(
     stateSet: ParserStateSet
 ) : BuildCacheAbstract(stateSet) {
 

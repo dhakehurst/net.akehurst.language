@@ -16,14 +16,9 @@
 
 package net.akehurst.language.agl.ast
 
-import net.akehurst.language.api.grammar.NonTerminal
-import net.akehurst.language.api.grammar.Terminal
-import net.akehurst.language.api.grammar.GrammarVisitor
-import net.akehurst.language.api.grammar.Rule
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.GrammarRuleItemNotFoundException
+import net.akehurst.language.api.grammar.*
 
-class TerminalDefault(override val value: String, override val isPattern: Boolean) : RuleItemAbstract(), Terminal {
+internal class TerminalDefault(override val value: String, override val isPattern: Boolean) : RuleItemAbstract(), Terminal {
 /*
     fun pattern(): Regex {
             return if (isPattern) Regex(value, RegexOption.MULTILINE) else throw GrammarRuleItemNotFoundException("${this} is not a pattern")
@@ -52,12 +47,6 @@ class TerminalDefault(override val value: String, override val isPattern: Boolea
 
     override val allNonTerminal: Set<NonTerminal> by lazy {
         emptySet<NonTerminal>()
-    }
-
-    // --- GrammarVisitable ---
-
-    override fun <T, A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
-        return visitor.visit(this, arg);
     }
 
 }

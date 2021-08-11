@@ -16,16 +16,16 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserException
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItem
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItemKind
 
 
-class AglGrammarSemanticAnalyser(
+internal class AglGrammarSemanticAnalyser(
 ) : SemanticAnalyser {
 
     private val items = mutableListOf<SemanticAnalyserItem>()
@@ -41,7 +41,7 @@ class AglGrammarSemanticAnalyser(
         }
     }
 
-    fun checkGrammar(grammarList: List<Grammar>, locationMap: Map<Any, InputLocation>,automatonKind:AutomatonKind): List<SemanticAnalyserItem> {
+    private fun checkGrammar(grammarList: List<Grammar>, locationMap: Map<Any, InputLocation>, automatonKind:AutomatonKind): List<SemanticAnalyserItem> {
         grammarList.forEach { grammar ->
             this.checkNonTerminalReferencesExist(grammar, locationMap)
             if (items.isEmpty()) {
@@ -51,14 +51,14 @@ class AglGrammarSemanticAnalyser(
         return this.items
     }
 
-    fun checkNonTerminalReferencesExist(grammar: Grammar, locationMap: Map<Any, InputLocation>) {
+    private fun checkNonTerminalReferencesExist(grammar: Grammar, locationMap: Map<Any, InputLocation>) {
         grammar.rule.forEach {
             val rhs = it.rhs
             this.checkRuleItem(grammar, locationMap, rhs)
         }
     }
 
-    fun checkRuleItem(grammar: Grammar, locationMap: Map<Any, InputLocation>, rhs: RuleItem) {
+    private fun checkRuleItem(grammar: Grammar, locationMap: Map<Any, InputLocation>, rhs: RuleItem) {
         when (rhs) {
             is EmptyRule -> {
             }
@@ -91,7 +91,7 @@ class AglGrammarSemanticAnalyser(
         }
     }
 
-    fun checkForAmbiguities(grammar: Grammar, locationMap: Map<Any, InputLocation>, automatonKind: AutomatonKind) {
+    private fun checkForAmbiguities(grammar: Grammar, locationMap: Map<Any, InputLocation>, automatonKind: AutomatonKind) {
         val itemsSet = mutableSetOf<SemanticAnalyserItem>()
         //TODO: find a way to reuse RuntimeRuleSet rather than re compute here
         val conv = ConverterToRuntimeRules(grammar)

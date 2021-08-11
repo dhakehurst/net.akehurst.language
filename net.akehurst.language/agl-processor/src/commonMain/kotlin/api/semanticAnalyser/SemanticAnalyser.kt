@@ -16,10 +16,9 @@
 
 package net.akehurst.language.api.semanticAnalyser
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.api.parser.InputLocation
 
-class SemanticAnalyserException(message: String, cause: Throwable?) : Exception(message, cause)
+class SemanticAnalyserException(message: String, cause: Throwable?) : RuntimeException(message, cause)
 
 /**
  *
@@ -34,6 +33,12 @@ interface SemanticAnalyser {
 }
 
 enum class SemanticAnalyserItemKind { ERROR, WARNING }
+//FIXME: added because currently Kotlin will not 'export' enums to JS
+object SemanticAnalyserItemKind_api {
+    val ERROR = SemanticAnalyserItemKind.ERROR
+    val WARNING = SemanticAnalyserItemKind.WARNING
+}
+
 data class SemanticAnalyserItem (
     val kind: SemanticAnalyserItemKind,
     val location:InputLocation?,

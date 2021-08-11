@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.automaton.transitions
 
 import net.akehurst.language.agl.automaton.Transition
-import net.akehurst.language.agl.runtime.structure.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

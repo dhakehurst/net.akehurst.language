@@ -20,7 +20,7 @@ import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
-interface BuildCache {
+internal interface BuildCache {
     fun on()
     fun buildCaches()
     fun clearAndOff()

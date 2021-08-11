@@ -18,8 +18,9 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.processor.AutomatonKind
 
-class ParserState(
+internal class ParserState(
     val number: StateNumber,
     //val rulePosition: RulePosition,
     val rulePositions: List<RulePosition>, //must be a list so that we can index against Growing children

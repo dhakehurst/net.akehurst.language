@@ -17,14 +17,9 @@
 package net.akehurst.language.agl.ast
 
 
-import net.akehurst.language.api.grammar.Choice
-import net.akehurst.language.api.grammar.Terminal
-import net.akehurst.language.api.grammar.NonTerminal
-import net.akehurst.language.api.grammar.Rule
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.Concatenation
+import net.akehurst.language.api.grammar.*
 
-abstract class ChoiceAbstract(override val alternative: List<Concatenation>) : RuleItemAbstract(), Choice {
+internal abstract class ChoiceAbstract(override val alternative: List<Concatenation>) : RuleItemAbstract(), Choice {
 
 	override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this._owningRule = rule

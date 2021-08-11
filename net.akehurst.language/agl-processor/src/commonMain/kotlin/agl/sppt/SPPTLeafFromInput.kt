@@ -22,7 +22,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 
-class SPPTLeafFromInput(
+internal class SPPTLeafFromInput(
         input: InputFromString,
         runtimeRule: RuntimeRule,
         startPosition: Int,

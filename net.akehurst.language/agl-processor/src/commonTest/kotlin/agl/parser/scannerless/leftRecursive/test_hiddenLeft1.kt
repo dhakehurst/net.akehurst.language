@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
+internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
 
     // S = B S 'c' | 'a'
     // B = 'b' | <empty>

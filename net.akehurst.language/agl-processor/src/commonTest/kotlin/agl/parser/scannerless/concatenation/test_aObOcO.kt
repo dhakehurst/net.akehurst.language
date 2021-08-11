@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_aObOcO : test_ScanOnDemandParserAbstract() {
+internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
     /*
         S = a? b? c?;
      */

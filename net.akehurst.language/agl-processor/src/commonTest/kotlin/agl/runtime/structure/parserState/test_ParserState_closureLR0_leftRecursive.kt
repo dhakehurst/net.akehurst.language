@@ -16,11 +16,11 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.automaton.AutomatonKind
+import net.akehurst.language.api.processor.AutomatonKind
 
 class test_ParserState_closureLR0_leftRecursive {
 
-    companion object {
+    private companion object {
         // S =  'a' | S1 ;
         // S1 = S 'a' ;
         val rrs = runtimeRuleSet {

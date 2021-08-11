@@ -57,14 +57,14 @@ grammar Dot  {
 }
         """.trimIndent()
 
-        val proc = Agl.processor(grammarStr)
+        val proc = Agl.processorFromString(grammarStr)
     }
 
     @Test
     fun t() {
         val goal = "stmt_list"
         val sentence =  "graph[a=a ]; node [b=b c=c]; edge[];"
-        proc.parse(goal, sentence)
+        proc.parseForGoal(goal, sentence)
     }
 
 }

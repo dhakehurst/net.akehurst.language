@@ -16,21 +16,23 @@
 
 package net.akehurst.language.parser.scanondemand.multi
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import net.akehurst.language.agl.sppt.SPPTParser
+import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract() {
+internal class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract() {
 
-    val rrb = RuntimeRuleSetBuilder()
+    private companion object {
+        val rrb = RuntimeRuleSetBuilder()
+    }
 
     private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
         return sp.parse(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1)

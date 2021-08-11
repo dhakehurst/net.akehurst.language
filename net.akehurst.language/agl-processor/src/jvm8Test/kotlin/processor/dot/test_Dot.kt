@@ -32,7 +32,7 @@ class test_Dot(val data: Data) {
     companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl")?.readText() ?: error("File not found")
-        var processor: LanguageProcessor = Agl.processor(grammarStr).buildFor("graph") //TODO: use build
+        var processor: LanguageProcessor = Agl.processorFromString(grammarStr).buildFor("graph") //TODO: use build
 
         val validDirectory = "/dot/valid/"
         var validFiles = this::class.java.getResourceAsStream(validDirectory).use { if (null == it) emptyList<String>() else BufferedReader(InputStreamReader(it)).readLines() }
@@ -60,7 +60,7 @@ class test_Dot(val data: Data) {
 
     @Test
     fun test() {
-        val result = processor.parse("graph", this.data.text)
+        val result = processor.parseForGoal("graph", this.data.text)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(this.data.text, resultStr)

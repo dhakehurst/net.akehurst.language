@@ -16,17 +16,17 @@
 
 package net.akehurst.language.parser.expectedTerminalsAt
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class test_expectedTerminalsAt {
+internal class test_expectedTerminalsAt {
 
     fun concat_a() : RuntimeRuleSet {
         val rrb = RuntimeRuleSetBuilder()

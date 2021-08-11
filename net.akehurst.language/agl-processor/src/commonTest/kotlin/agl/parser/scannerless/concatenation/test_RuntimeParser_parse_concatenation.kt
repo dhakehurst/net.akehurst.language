@@ -16,18 +16,18 @@
 
 package net.akehurst.language.parser.scanondemand.concatenation
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-class test_RuntimeParser_parse_concatenation {
+internal class test_RuntimeParser_parse_concatenation {
 
     private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
         return sp.parse(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1)

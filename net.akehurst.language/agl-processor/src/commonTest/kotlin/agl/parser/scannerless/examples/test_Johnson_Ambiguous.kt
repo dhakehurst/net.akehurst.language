@@ -16,10 +16,11 @@
 
 package net.akehurst.language.parser.scanondemand.examples
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -29,7 +30,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.TimeSource
 import kotlin.time.measureTime
 
-class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
+internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
     /**
      * S = S S S || S S || 'a' ;
      */

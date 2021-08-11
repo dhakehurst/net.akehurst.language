@@ -16,15 +16,15 @@
 
 package net.akehurst.language.parser.scanondemand
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.sppt.SPPTParser
+import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.test.assertEquals
 
-abstract class test_ScanOnDemandParserAbstract {
+internal abstract class test_ScanOnDemandParserAbstract {
 
     fun test(rrs:RuntimeRuleSet, goal:String, sentence:String, expectedNumGSSHeads:Int, vararg expectedTrees:String) : SharedPackedParseTree {
         val parser = ScanOnDemandParser(rrs)
@@ -33,7 +33,7 @@ abstract class test_ScanOnDemandParserAbstract {
         val sppt = SPPTParser(rrs)
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
-        assertEquals(expected.toStringIndented("  "), actual.toStringIndented("  "))
+        assertEquals(expected.toStringAllWithIndent("  "), actual.toStringAllWithIndent("  "))
         assertEquals(expected, actual)
         //FIXME: add back this assert
         assertEquals(expectedNumGSSHeads, actual.maxNumHeads,"Too many heads on GSS")
@@ -58,7 +58,7 @@ abstract class test_ScanOnDemandParserAbstract {
         val sppt = SPPTParser(rrsb.ruleSet())
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
-        assertEquals(expected.toStringIndented("  "), actual.toStringIndented("  "))
+        assertEquals(expected.toStringAllWithIndent("  "), actual.toStringAllWithIndent("  "))
         assertEquals(expected, actual)
         return actual
     }

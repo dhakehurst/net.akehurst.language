@@ -20,7 +20,7 @@ import net.akehurst.language.api.sppt.*
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.parser.InputLocation
 
-class SPPTBranchDefault(
+internal class SPPTBranchDefault(
         runtimeRule: RuntimeRule,
         option: Int,
         location: InputLocation,                     // can't use children.first.startPosition, there may not be any children

@@ -17,7 +17,6 @@
 package net.akehurst.language.parser.scanondemand.listSeparated
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
@@ -25,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_literal_a0n : test_ScanOnDemandParserAbstract() {
+internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
     // S = ['a' / ',']*
 

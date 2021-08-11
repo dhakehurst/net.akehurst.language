@@ -16,7 +16,7 @@
 
 package net.akehurst.language.collections
 
-class Stack<T>(
+internal class Stack<T>(
         val items : List<T> = emptyList()
 ) {
 
@@ -37,7 +37,7 @@ class Stack<T>(
 
 }
 
-class MutableStack<T>() {
+internal class MutableStack<T>() {
     private val list = mutableListOf<T>()
 
     val size: Int get() = this.list.size
@@ -52,7 +52,7 @@ class MutableStack<T>() {
 
 }
 
-class MutableQueue<T>() {
+internal class MutableQueue<T>() {
     private val list = mutableListOf<T>()
 
     val size: Int get() = this.list.size

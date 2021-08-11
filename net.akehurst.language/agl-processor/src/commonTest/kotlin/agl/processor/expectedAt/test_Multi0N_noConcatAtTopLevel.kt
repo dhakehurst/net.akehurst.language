@@ -17,7 +17,8 @@
 package net.akehurst.language.processor.expectedAt
 
 import net.akehurst.language.agl.processor.Agl
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class test_Multi0N_noConcatAtTopLevel {
 
@@ -29,7 +30,7 @@ class test_Multi0N_noConcatAtTopLevel {
                 ab = 'a' 'b' ;
             }
         """.trimIndent()
-        val processor = Agl.processor(grammarStr)
+        val processor = Agl.processorFromString(grammarStr)
     }
 
     @Test

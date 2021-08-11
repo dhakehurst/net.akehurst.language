@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.parser
 
-import net.akehurst.language.agl.automaton.AutomatonKind
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.ParseGraph
@@ -29,11 +28,12 @@ import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.math.max
 
-class ScanOnDemandParser(
+internal class ScanOnDemandParser(
     internal val runtimeRuleSet: RuntimeRuleSet
 ) : Parser {
 
@@ -251,7 +251,7 @@ class ScanOnDemandParser(
         val matches = gns.toMutableList()
         // try grow last leaf with no lookahead
         for (gn in rp.lastGrownLinked) {
-            val gnindex = GrowingNode.index(gn.currentState, gn.lookahead, gn.children)
+            val gnindex = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.lookahead, gn.children)
             graph.growingHead[gnindex] = gn
         }
         do {

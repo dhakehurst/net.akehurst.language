@@ -20,9 +20,8 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class test_recursive_sepList : test_ScanOnDemandParserAbstract() {
+internal class test_recursive_sepList : test_ScanOnDemandParserAbstract() {
 
     // S =  'a' | S1 ;
     // S1 = 'a' S2 ;

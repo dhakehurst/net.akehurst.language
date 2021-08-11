@@ -23,7 +23,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
 import net.akehurst.language.api.sppt.SPPTNode
 
-class GrowingChildNode(
+internal class GrowingChildNode(
         val state: ParserState?, //if null then its skip children
         val children: List<SPPTNode>
 ) {

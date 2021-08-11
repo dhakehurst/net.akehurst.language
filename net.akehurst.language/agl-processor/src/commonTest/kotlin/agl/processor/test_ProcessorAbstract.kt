@@ -24,7 +24,7 @@ import kotlin.test.assertEquals
 abstract class test_ProcessorAbstract {
 
     fun test(processor:LanguageProcessor, goal:String, sentence:String, vararg expectedTrees:String) {
-        val actual = processor.parse(goal, sentence)
+        val actual = processor.parseForGoal(goal, sentence)
 
         val converter = ConverterToRuntimeRules(processor.grammar)
         converter.transform()

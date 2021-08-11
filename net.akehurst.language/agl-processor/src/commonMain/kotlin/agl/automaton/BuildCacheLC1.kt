@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 
-class ClosureItemLC1(
+internal class ClosureItemLC1(
     val parentItem: ClosureItemLC1?, //needed for height/graft
     val rulePosition: RulePosition,
     val next: RulePosition?,
@@ -56,11 +56,12 @@ class ClosureItemLC1(
         return "$p$rulePosition"
     }
 
-    private val _hashCode = listOf(this.rulePosition, this.next, this.lookaheadSet).hashCode()
+    private val _hashCode = listOf(this.parentItem?.lookaheadSet, this.rulePosition, this.next, this.lookaheadSet).hashCode()
     override fun hashCode(): Int = _hashCode
 
     override fun equals(other: Any?): Boolean = when (other) {
         is ClosureItemLC1 -> other.rulePosition == this.rulePosition &&
+                other.next == this.next &&
                 other.lookaheadSet == this.lookaheadSet &&
                 other.parentItem?.lookaheadSet == this.parentItem?.lookaheadSet
         else -> false
@@ -71,7 +72,7 @@ class ClosureItemLC1(
     }
 }
 
-class BuildCacheLC1(
+internal class BuildCacheLC1(
     stateSet: ParserStateSet
 ) : BuildCacheAbstract(stateSet) {
 

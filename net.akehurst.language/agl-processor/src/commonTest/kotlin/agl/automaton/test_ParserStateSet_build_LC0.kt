@@ -20,10 +20,11 @@ import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 
 
-class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
+internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
 
     private companion object {
         val automatonKind = AutomatonKind.LOOKAHEAD_NONE

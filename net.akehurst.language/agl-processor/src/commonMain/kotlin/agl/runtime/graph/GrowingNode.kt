@@ -20,7 +20,7 @@ import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.sppt.SPPTNode
 
-class GrowingNode(
+internal class GrowingNode(
         val currentState: ParserState, // current rp of this node, it is growing, this changes (for new node) when children are added
         val lookahead: LookaheadSet,
         val children: GrowingChildren
@@ -351,7 +351,7 @@ class GrowingNode(
     }
 */
     companion object {
-        fun index(state: ParserState, lhs: LookaheadSet, growingChildren: GrowingChildren): GrowingNodeIndex {
+        fun indexFromGrowingChildren(state: ParserState, lhs: LookaheadSet, growingChildren: GrowingChildren): GrowingNodeIndex {
             val listSize = listSize(state.runtimeRules.first(), growingChildren.numberNonSkip)
             return GrowingNodeIndex(state, lhs.number, growingChildren.startPosition, growingChildren.nextInputPosition, listSize)
         }
@@ -443,14 +443,14 @@ val lastLocation
 
     fun addPrevious(info: PreviousInfo) {
         val gn = info.node
-        val gi = GrowingNode.index(gn.currentState, gn.lookahead, gn.children)
+        val gi = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.lookahead, gn.children)
         this.previous.put(gi, info)
         info.node.addNext(this)
     }
 
     fun addPrevious(previousNode: GrowingNode) {
         val info = PreviousInfo(previousNode)
-        val gi = GrowingNode.index(previousNode.currentState, previousNode.lookahead, previousNode.children)
+        val gi = GrowingNode.indexFromGrowingChildren(previousNode.currentState, previousNode.lookahead, previousNode.children)
         this.previous.put(gi, info)
         previousNode.addNext(this)
     }

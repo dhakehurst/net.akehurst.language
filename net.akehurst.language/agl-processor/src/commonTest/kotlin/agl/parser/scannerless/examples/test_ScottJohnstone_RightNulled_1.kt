@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-class test_ScottJohnstone_RightNulled_1 : test_ScanOnDemandParserAbstract() {
+internal class test_ScottJohnstone_RightNulled_1 : test_ScanOnDemandParserAbstract() {
     /**
      * S = abAa | aBAa | aba
      * A = a | aA

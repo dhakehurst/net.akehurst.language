@@ -18,7 +18,7 @@ package net.akehurst.language.agl.ast;
 
 import net.akehurst.language.api.grammar.*
 
-class EmptyRuleDefault : RuleItemAbstract(), EmptyRule {
+internal class EmptyRuleDefault : RuleItemAbstract(), EmptyRule {
 
     override val name : String by lazy {
         "<empty>"
@@ -40,9 +40,4 @@ class EmptyRuleDefault : RuleItemAbstract(), EmptyRule {
         throw GrammarRuleItemNotFoundException("subitem ${index} not found")
     }
 
-    // --- GrammarVisitable ---
-
-    override fun <T,A> accept(visitor: GrammarVisitor<T, A>, arg: A): T {
-        return visitor.visit(this, arg);
-    }
 }

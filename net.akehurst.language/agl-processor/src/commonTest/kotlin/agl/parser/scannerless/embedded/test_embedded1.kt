@@ -16,18 +16,31 @@
 
 package net.akehurst.language.parser.scanondemand.embedded
 
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_embedded1 : test_ScanOnDemandParserAbstract() {
+internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
-    val Sn = runtimeRuleSet {
-        concatenation("S") { literal("a"); ref("B"); literal("a"); }
-        concatenation("B") { literal("b") }
+    private companion object {
+        val Sn = runtimeRuleSet {
+            concatenation("S") { literal("a"); ref("B"); literal("a"); }
+            concatenation("B") { literal("b") }
+        }
+
+        // B = b ;
+        val B = runtimeRuleSet {
+            concatenation("B") { literal("b") }
+        }
+        // S = a gB a ;
+        // gB = grammar B.B ;
+        val S = runtimeRuleSet {
+            concatenation("S") { literal("a"); ref("gB"); literal("a"); }
+            embedded("gB", B, B.findRuntimeRule("B"))
+        }
     }
 
     @Test
@@ -65,16 +78,7 @@ class test_embedded1 : test_ScanOnDemandParserAbstract() {
         )
     }
 
-    // B = b ;
-    val B = runtimeRuleSet {
-        concatenation("B") { literal("b") }
-    }
-    // S = a gB a ;
-    // gB = grammar B.B ;
-    val S = runtimeRuleSet {
-        concatenation("S") { literal("a"); ref("gB"); literal("a"); }
-        embedded("gB", B, B.findRuntimeRule("B"))
-    }
+
 
     @Test
     fun empty_fails() {

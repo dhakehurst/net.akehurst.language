@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
+internal class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
 
     // S = AB V 'd'
     // AB = A B

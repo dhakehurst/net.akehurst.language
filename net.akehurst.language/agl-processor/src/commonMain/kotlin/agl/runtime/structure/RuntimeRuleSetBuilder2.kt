@@ -19,16 +19,16 @@ package net.akehurst.language.agl.runtime.structure
 import net.akehurst.language.api.parser.ParserException
 
 @DslMarker
-annotation class RuntimeRuleSetDslMarker
+internal annotation class RuntimeRuleSetDslMarker
 
-fun runtimeRuleSet(init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
+internal fun runtimeRuleSet(init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
     val b = RuntimeRuleSetBuilder2()
     b.init()
     return b.ruleSet()
 }
 
 @RuntimeRuleSetDslMarker
-class RuntimeRuleSetBuilder2() {
+internal class RuntimeRuleSetBuilder2() {
 
     var runtimeRuleSet = RuntimeRuleSet()
 
@@ -173,7 +173,7 @@ class RuntimeRuleSetBuilder2() {
 }
 
 @RuntimeRuleSetDslMarker
-class RuntimeRuleBuilder(
+internal class RuntimeRuleBuilder(
     val rrsb: RuntimeRuleSetBuilder2,
     val tag: String,
     val value: String,
@@ -200,8 +200,10 @@ class RuntimeRuleBuilder(
     }
 }
 
+internal data class RuntimeRuleRef(val tag: String)
+
 @RuntimeRuleSetDslMarker
-class RuntimeRuleItemsBuilder(
+internal class RuntimeRuleItemsBuilder(
     val rrsb: RuntimeRuleSetBuilder2,
     val kind: RuntimeRuleRhsItemsKind,
     val choiceKind: RuntimeRuleChoiceKind,
@@ -254,10 +256,4 @@ class RuntimeRuleItemsBuilder(
         val rhs = RuntimeRuleItem(this.kind, this.choiceKind, this.listKind, this.min, this.max, rItems.toTypedArray())
         return rhs
     }
-}
-
-data class RuntimeRuleRef(
-    val tag: String
-) {
-
 }

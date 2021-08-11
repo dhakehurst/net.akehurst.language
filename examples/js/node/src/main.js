@@ -1,6 +1,6 @@
 const agl_module = require('net.akehurst.language-agl-processor');
 const Agl = agl_module.net.akehurst.language.agl.processor.Agl;
-
+const AsmElementSimple = agl_module.net.akehurst.language.api.syntaxAnalyser.AsmElementSimple;
 
 const grammarStr = `
 namespace test
@@ -41,7 +41,32 @@ class class {
 }
 `;
 const sppt = proc.parse(sentence);
-console.info(sppt);
+console.info(sppt.toStringAllWithIndent('  '));
 
-const asm = proc.process(sentence).toArray();
-console.info(asm);
+const asm = proc.process(null, sentence);
+
+function asmToString(indent, asm) {
+    const newIndent = '  '+indent;
+    if (typeof(asm)==='string') {
+        return asm;
+    } else if (asm instanceof AsmElementSimple) {
+        var str = ':'+asm.typeName + ' {\n';
+        const props = asm.properties.toArray();
+        for (const p of props) {
+            str += indent + p.name+' = '+asmToString(newIndent, p.value) +'\n';
+        }
+        str += indent+'}';
+        return str;
+    } else { // assume a List
+        var str = '[\n';
+        const arr = asm.toArray();
+        for (const el of arr) {
+            str += indent + asmToString(newIndent, el) + '\n';
+        }
+        str += indent+']';
+        return str;
+    }
+}
+
+
+console.info(asmToString('',asm));

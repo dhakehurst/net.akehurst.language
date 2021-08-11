@@ -22,7 +22,7 @@ import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 
-class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : SharedPackedParseTreeVisitor<Set<String>, ToStringVisitor.Indent> {
+internal class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : SharedPackedParseTreeVisitor<Set<String>, ToStringVisitor.Indent> {
 
     class Indent(val text: String, val onlyChild: Boolean) {
         fun next(increment: String, onlyChild: Boolean): Indent {
@@ -30,12 +30,12 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
         }
     }
 
-    override fun visit(target: SharedPackedParseTree, arg: Indent): Set<String> {
-        return visit(target.root, arg)
+    override fun visitTree(target: SharedPackedParseTree, arg: Indent): Set<String> {
+        return visitNode(target.root, arg)
     }
 
 
-    override fun visit(target: SPPTLeaf, arg: Indent): Set<String> {
+    override fun visitLeaf(target: SPPTLeaf, arg: Indent): Set<String> {
         val t = when {
             target.isEmptyLeaf -> "${target.name}"
             (target.isLiteral) -> {
@@ -51,7 +51,7 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
     }
 
 
-    override fun visit(target: SPPTBranch, arg: Indent): Set<String> {
+    override fun visitBranch(target: SPPTBranch, arg: Indent): Set<String> {
         val r = HashSet<String>()
 
         for (children in target.childrenAlternatives) {
@@ -96,7 +96,7 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
 
     private fun visitOnlyChild(currentSet: MutableSet<String>, children: List<SPPTNode>, indent: Indent): MutableSet<String> {
         val r = HashSet<String>()
-        val ssc = visit(children.get(0), indent.next(this.indentIncrement, true))
+        val ssc = visitNode(children.get(0), indent.next(this.indentIncrement, true))
 
         for (current in currentSet) {
             for (sc in ssc) {
@@ -111,7 +111,7 @@ class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : 
 
     private fun visitChild(currentSet: MutableSet<String>, children: List<SPPTNode>, index: Int, indent: Indent): MutableSet<String> {
         val r = HashSet<String>()
-        val ssc = visit(children.get(index), indent.next(this.indentIncrement, false))
+        val ssc = visitNode(children.get(index), indent.next(this.indentIncrement, false))
 
         for (current in currentSet) {
             for (sc in ssc) {

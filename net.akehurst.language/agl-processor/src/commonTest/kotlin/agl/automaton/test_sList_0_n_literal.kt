@@ -20,10 +20,11 @@ import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_sList_0_n_literal : test_Abstract() {
+internal class test_sList_0_n_literal : test_Abstract() {
     // S =  ['a' / ',']* ;
 
     private companion object {
