@@ -1,0 +1,13 @@
+html {
+    display: flex;
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex: 1;
+}
+
+textarea {
+    flex: 1;
+}
