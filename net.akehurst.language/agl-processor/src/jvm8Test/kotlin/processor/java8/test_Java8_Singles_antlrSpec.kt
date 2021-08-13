@@ -22,6 +22,7 @@ import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.sppt.SPPT2InputText
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
+import test.assertEqualsWarning
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -62,7 +63,7 @@ class test_Java8_Singles_antlrSpec {
         val sentence = "int"
         val t = p.buildFor(goal).parseForGoal(goal, sentence)
 
-        assertEquals(1, t.maxNumHeads)
+        assertEqualsWarning(1, t.maxNumHeads)
     }
 
     @Test

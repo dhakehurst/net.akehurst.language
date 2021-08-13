@@ -16,11 +16,14 @@
 
 package net.akehurst.language.agl.sppt
 
+
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-internal class SharedPackedParseTreeDefault(
+//TODO: currently this has to be public, because otherwise kotlin does not
+// use the non-mangled names for properties
+/*internal */ class SharedPackedParseTreeDefault(
     override val root: SPPTNode,
     override val seasons: Int,
     override val maxNumHeads: Int

@@ -17,7 +17,7 @@ package net.akehurst.language.api.parser;
 
 import net.akehurst.language.api.sppt.SharedPackedParseTree;
 
-class ParserConstructionFailedException(message: String) : Exception(message) {
+class ParserConstructionFailedException(message: String) : RuntimeException(message) {
 
 }
 

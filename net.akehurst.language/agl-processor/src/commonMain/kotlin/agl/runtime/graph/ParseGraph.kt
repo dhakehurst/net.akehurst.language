@@ -17,11 +17,11 @@
 package net.akehurst.language.agl.runtime.graph
 
 import agl.runtime.graph.CompletedNodesStore
-import agl.sppt.SPPTBranchFromInputAndGrownChildren
+import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.sppt.SPPTLeafDefault
+import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.agl.sppt.SPPTNodeFromInputAbstract
 import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
 import net.akehurst.language.api.parser.ParseFailedException
@@ -424,7 +424,7 @@ internal class ParseGraph(
                 val option = rp.option
                 val priority = rp.priority
                 var cn: SPPTNode? = this.findCompleteNode(rp, gn.startPosition)
-                if (null == cn || SPPTLeafDefault.NONE === cn) {
+                if (null == cn || SPPTLeafFromInput.NONE === cn) {
                     cn = this.createBranchNoChildren(runtimeRule, option, priority, gn.startPosition, gn.nextInputPosition)
                     if (gn.isLeaf) {
                         // dont try and add children...can't for a leaf

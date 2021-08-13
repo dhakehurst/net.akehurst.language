@@ -16,7 +16,7 @@
 
 package net.akehurst.language.api.parser
 
-class ParseTreeException : Exception {
+class ParseTreeException : RuntimeException {
     constructor(message: String, cause: Throwable) : super(message, cause)
     constructor(message:String) : super(message)
 }

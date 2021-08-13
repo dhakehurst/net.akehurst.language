@@ -24,13 +24,15 @@ import net.akehurst.language.api.sppt.SPPTNodeIdentity
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.parser.InputLocation
 
-internal abstract class SPPTNodeFromInputAbstract(
-        val input: InputFromString,
-        val runtimeRule: RuntimeRule,
-        override val option: Int,
-        override val startPosition: Int,
-        override val nextInputPosition: Int,
-        override val priority: Int                      //not needed as part of the SPPTNode, but needed for the parsing algorithm
+//TODO: currently this has to be public, because otherwise kotlin does not
+// use the non-mangled names for properties
+/*internal */ abstract class SPPTNodeFromInputAbstract internal constructor(
+    internal val input: InputFromString,
+    internal val runtimeRule: RuntimeRule,
+    override val option: Int,
+    final override val startPosition: Int,
+    override val nextInputPosition: Int,
+    override val priority: Int                      //not needed as part of the SPPTNode, but needed for the parsing algorithm
 ) : SPPTNode {
 
     var embeddedIn : String? = null
