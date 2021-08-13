@@ -22,6 +22,7 @@ import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.sppt.SPPT2InputText
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
+import test.assertEqualsWarning
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -88,7 +89,7 @@ class test_Java8_Singles_aglOptm {
         //val t = p.buildFor(goal).parse(goal, sentence)//TODO: use build
         val t = p.parseForGoal(goal, sentence)//TODO: use build
 
-        assertEquals(1, t.maxNumHeads)
+        assertEqualsWarning(1, t.maxNumHeads)
     }
 
     @Test

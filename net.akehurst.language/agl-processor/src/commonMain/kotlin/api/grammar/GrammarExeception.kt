@@ -16,6 +16,4 @@
 
 package net.akehurst.language.api.analyser
 
-class GrammarExeception(message: String, cause: Throwable?) : Exception(message, cause) {
-
-}
+class GrammarExeception(message: String, cause: Throwable?) : RuntimeException(message, cause)

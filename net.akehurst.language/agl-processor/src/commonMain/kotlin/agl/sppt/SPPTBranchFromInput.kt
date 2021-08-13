@@ -21,7 +21,9 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 
-internal class SPPTBranchFromInput(
+//TODO: currently this has to be public, because otherwise kotlin does not
+// use the non-mangled names for properties
+/*internal */ class SPPTBranchFromInput internal constructor(
         input:InputFromString,
         runtimeRule: RuntimeRule,
         option: Int,

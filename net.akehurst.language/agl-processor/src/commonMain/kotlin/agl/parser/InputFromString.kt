@@ -18,7 +18,6 @@ package net.akehurst.language.agl.parser
 
 import agl.runtime.graph.CompletedNodesStore
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.sppt.SPPTLeafDefault
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.regex.RegexMatcher
@@ -176,8 +175,8 @@ internal class InputFromString(
         } else {
             val match = this.tryMatchText(atInputPosition, terminalRuntimeRule)
             if (null == match) {
-                this.leaves[terminalRuntimeRule, atInputPosition] = SPPTLeafDefault.NONE
-                SPPTLeafDefault.NONE
+                this.leaves[terminalRuntimeRule, atInputPosition] = SPPTLeafFromInput.NONE
+                SPPTLeafFromInput.NONE
             } else {
                 //val location = this.nextLocation(lastLocation, match.length)//match.matchedText.length)
                 val nextInputPosition = atInputPosition + match.matchedText.length
@@ -199,7 +198,7 @@ internal class InputFromString(
             //this.leaves[index] = l
             //this.completeNodes[terminalRuntimeRule.number, inputPosition] = existing
         }
-        return if (SPPTLeafDefault.NONE === existing) {
+        return if (SPPTLeafFromInput.NONE === existing) {
             null
         } else {
             existing as SPPTLeaf

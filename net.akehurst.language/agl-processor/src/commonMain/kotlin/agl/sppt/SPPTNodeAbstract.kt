@@ -23,8 +23,11 @@ import net.akehurst.language.api.sppt.SPPTNodeIdentity
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.parser.InputLocation
 
-internal abstract class SPPTNodeAbstract(
-        val runtimeRule: RuntimeRule,
+/*
+//TODO: currently this has to be public, because otherwise kotlin does not
+// use the non-mangled names for properties
+/*internal */ abstract class SPPTNodeAbstract internal constructor(
+        internal val runtimeRule: RuntimeRule,
         override val option: Int,
         override val location: InputLocation,
         override val nextInputPosition: Int,
@@ -84,3 +87,5 @@ internal abstract class SPPTNodeAbstract(
         return all.joinToString(sep)
     }
 }
+
+ */

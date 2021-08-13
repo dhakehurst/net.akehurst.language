@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "net.akehurst.language-agl-processor": "file:../../net.akehurst.language/.gradle-build/agl-processor/productionLibrary"
+  }
+}

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
+import test.assertEqualsWarning
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.sppt.SPPTParser
@@ -565,7 +566,7 @@ class test_AglGrammar_item {
         val actual = parse("rule", sentence)
 
         assertNotNull(actual)
-        assertEquals(1,actual.maxNumHeads)
+        assertEqualsWarning(1,actual.maxNumHeads)
     }
 
     @Test

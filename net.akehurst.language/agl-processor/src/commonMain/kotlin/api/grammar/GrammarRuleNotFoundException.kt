@@ -16,6 +16,4 @@
 
 package net.akehurst.language.api.grammar
 
-class GrammarRuleNotFoundException(message: String) : Exception(message) {
-
-}
+class GrammarRuleNotFoundException(message: String) : RuntimeException(message)

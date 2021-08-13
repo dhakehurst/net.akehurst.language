@@ -17,20 +17,13 @@ package net.akehurst.language.api.parser;
 
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-class ParserException(message: String) : RuntimeException(message) {
+class ParserException(message: String) : RuntimeException(message)
 
-}
-
-class ParserInterruptedException(message: String) : RuntimeException(message) {
-
-}
+class ParserInterruptedException(message: String) : RuntimeException(message)
 
 class ParseFailedException(
         message: String,
         val longestMatch: SharedPackedParseTree?,
         val location: InputLocation,
         val expected:Set<String>
-)
-    : RuntimeException("$message, at line ${location.line} column ${location.column}, expected one of ${expected}") {
-
-}
+) : RuntimeException("$message, at line ${location.line} column ${location.column}, expected one of ${expected}")

@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import agl.sppt.SPPTBranchFromInputAndGrownChildren
+import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*

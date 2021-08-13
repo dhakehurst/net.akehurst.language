@@ -19,8 +19,10 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.parser.InputLocation
-
-internal class SPPTBranchDefault(
+/*
+//TODO: currently this has to be public, because otherwise kotlin does not
+// use the non-mangled names for properties
+/*internal */ class SPPTBranchDefault internal constructor(
         runtimeRule: RuntimeRule,
         option: Int,
         location: InputLocation,                     // can't use children.first.startPosition, there may not be any children
@@ -159,3 +161,4 @@ internal class SPPTBranchDefault(
         }
     }
 }
+ */

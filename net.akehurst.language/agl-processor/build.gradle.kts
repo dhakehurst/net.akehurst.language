@@ -1,6 +1,6 @@
 plugins {
     //id("net.akehurst.kotlin.kt2ts") version "1.7.0"
-    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.2.0")
+    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.3.0")
 }
 
 kotlin {
@@ -19,6 +19,18 @@ kotlin {
         }
     }
 }
+
+exportPublic {
+    exportPatterns.set(listOf(
+        "net.akehurst.language.api.**",
+        "net.akehurst.language.agl.regex.**",
+        "net.akehurst.language.agl.processor.**",
+        "net.akehurst.language.agl.grammar.**",
+        "net.akehurst.language.agl.syntaxAnalyser.**",
+        "net.akehurst.language.agl.sppt.**",
+    ))
+}
+
 /*
 tasks.named<Copy>("jsProductionLibraryCompileSync") {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE

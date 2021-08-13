@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.parser
 
-import agl.sppt.SPPTBranchFromInputAndGrownChildren
+import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
