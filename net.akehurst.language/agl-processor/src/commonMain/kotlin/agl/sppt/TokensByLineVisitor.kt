@@ -67,6 +67,7 @@ internal class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<Str
                     target.eolPositions.forEach { eolPos ->
                         val lineText = target.matchedText.substring(indexPos, eolPos + 1)
                         val segmentLeaf = SPPTLeafFromInput(target.input, rr, startLinePos, startLinePos + lineText.length, target.priority)
+                        segmentLeaf.setTags(arg+target.name)
                         //val segmentLeaf = SPPTLeafDefault(rr, InputLocation(startLinePos + startPos, column, line, lineText.length), false, lineText, target.priority)
                         lines.getOrCreate(line - 1).add(segmentLeaf)
                         line++
@@ -80,6 +81,7 @@ internal class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<Str
                     if (lineText.isNotEmpty()) {
                         //TODO: use SPPTLeafFromInput
                         val segmentLeaf = SPPTLeafFromInput(target.input, rr, startLinePos, startLinePos + lineText.length, target.priority)
+                        segmentLeaf.setTags(arg+target.name)
                         //val segmentLeaf = SPPTLeafDefault(rr, InputLocation(startLinePos + startPos, column, line, lineText.length), false, lineText, target.priority)
                         lines.getOrCreate(line - 1).add(segmentLeaf)
                     }
