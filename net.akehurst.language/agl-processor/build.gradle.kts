@@ -1,5 +1,4 @@
 plugins {
-    //id("net.akehurst.kotlin.kt2ts") version "1.7.0"
     id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.3.0")
 }
 

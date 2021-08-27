@@ -48,7 +48,7 @@ internal class RuntimeRuleSetBuilder() {
     fun findRuleByName(ruleName: String, terminal: Boolean): RuntimeRule? {
         return this.rules.firstOrNull {
             if (terminal) {
-                it.kind==RuntimeRuleKind.TERMINAL && it.tag == ruleName
+                it.kind == RuntimeRuleKind.TERMINAL && it.tag == ruleName
             } else {
                 it.tag == ruleName
             }
@@ -63,7 +63,7 @@ internal class RuntimeRuleSetBuilder() {
         }
     }
 
-    fun literal(name: String, value: String, isSkip:Boolean = false): RuntimeRule {
+    fun literal(name: String, value: String, isSkip: Boolean = false): RuntimeRule {
         if (this.runtimeRuleSet.runtimeRules.isNotEmpty()) {
             throw ParserException("Must not add rules after creating the ruleSet")
         } else {
@@ -79,7 +79,7 @@ internal class RuntimeRuleSetBuilder() {
         }
     }
 
-    fun pattern(name: String, pattern: String, isSkip:Boolean = false): RuntimeRule {
+    fun pattern(name: String, pattern: String, isSkip: Boolean = false): RuntimeRule {
         if (this.runtimeRuleSet.runtimeRules.isNotEmpty()) {
             throw ParserException("Must not add rules after creating the ruleSet")
         } else {
@@ -92,6 +92,14 @@ internal class RuntimeRuleSetBuilder() {
             throw ParserException("Must not add rules after creating the ruleSet")
         } else {
             return RuntimeRuleTerminalBuilder(this).empty(ruleThatIsEmpty)
+        }
+    }
+
+    fun embedded(tag: String, name: String, embeddedRuntimeRuleSet: RuntimeRuleSet, embeddedStartRule: RuntimeRule): RuntimeRule {
+        if (this.runtimeRuleSet.runtimeRules.isNotEmpty()) {
+            throw ParserException("Must not add rules after creating the ruleSet")
+        } else {
+            return RuntimeRuleTerminalBuilder(this).embedded(tag,name,embeddedRuntimeRuleSet,embeddedStartRule)
         }
     }
 

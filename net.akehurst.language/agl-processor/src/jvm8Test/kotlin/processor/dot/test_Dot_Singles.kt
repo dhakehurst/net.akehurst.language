@@ -54,6 +54,15 @@ class test_Dot_Singles {
     }
 
     @Test
+    fun ID__from_HTML() {
+        val goal = "ID"
+        val sentence = """
+        <<xml>xxxx</xml>>
+        """
+        processor.parseForGoal(goal, sentence)
+    }
+
+    @Test
     fun a_list__from_Data_Structures() {
         val goal = "attr_list_content"
         val sentence = """
