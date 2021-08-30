@@ -44,6 +44,11 @@ internal class InputFromString(
 
     var text: String = sentence; private set
 
+    fun contextInText(contextSize: Int, position: Int): String {
+        val startIndex = maxOf(0, position - contextSize)
+        val endIndex = minOf(this.text.length, position + contextSize)
+        return this.text.substring(startIndex, position) + "^" + this.text.substring(position,endIndex)
+    }
 
     //internal val leaves: MutableMap<LeafIndex, SPPTLeafDefault?> = mutableMapOf()
     // leaves[runtimeRule, position]

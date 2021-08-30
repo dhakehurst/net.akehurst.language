@@ -21,6 +21,39 @@ import net.akehurst.language.agl.ast.GrammarBuilderDefault
 import net.akehurst.language.agl.ast.NamespaceDefault
 import net.akehurst.language.api.grammar.Rule
 
+/**
+    AGL :
+        grammar Agl {
+            skip WHITESPACE = "\s+" ;
+            skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
+            skip SINGLE_LINE_COMMENT = "//.*?$" ;
+
+            grammarDefinition = namespace grammar ;
+            namespace = 'namespace' qualifiedName ;
+            grammar = 'grammar' IDENTIFIER extends? '{' rules '}' ;
+            extends = 'extends' [qualifiedName / ',']+ ;
+            rules = anyRule+ ;
+            anyRule = normalRule | skipRule ;
+            normalRule = IDENTIFIER '=' choice ';' ;
+            skipRule = 'skip' IDENTIFIER '=' choice ';' ;
+            choice = simpleChoice < priorityChoice ;
+            simpleChoice = [concatenation / '|']* ;
+            priorityChoice = [concatenation / '<']* ;
+            concatenation = concatenationItem+ ;
+            concatenationItem = simpleItem | multi | separatedList ;
+            simpleItem = terminal | nonTerminal | group ;
+            multiplicity = '*' | '+' | '?' ;
+            multi = simpleItem multiplicity ;
+            group = '(' choice ')' ;
+            separatedList = '[' simpleItem '/' terminal ']' multiplicity ;
+            nonTerminal = IDENTIFIER ;
+            terminal = LITERAL | PATTERN ;
+            qualifiedName = [IDENTIFIER / '.']+ ;
+            IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*";
+            LITERAL = "'([^'\\]|\\'|\\\\)*'" ;
+            PATTERN = "\"(\\\"|[^\"])*\"" ;
+        }
+ */
 internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar", createRules()) {
     companion object {
         const val goalRuleName = "grammarDefinition"
@@ -74,8 +107,8 @@ private fun createRules(): List<Rule> {
     b.rule("nonTerminal").choiceLongestFromConcatenation(b.concatenation(b.nonTerminal("qualifiedName")))
     b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
     b.rule("terminal").choiceLongestFromConcatenation(b.concatenation(b.nonTerminal("LITERAL")), b.concatenation(b.nonTerminal("PATTERN")))
-    b.leaf("LITERAL").concatenation(b.terminalPattern("'([^'\\\\]|\\\\'|\\\\\\\\)*'"))
-    b.leaf("PATTERN").concatenation(b.terminalPattern("\"(\\\\\"|[^\"])*\""))
+    b.leaf("LITERAL").concatenation(b.terminalPattern("'([^'\\\\]|\\\\.)*'"))
+    b.leaf("PATTERN").concatenation(b.terminalPattern("\"([^\"\\\\]|\\\\.)*\""))
     b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"))
     b.leaf("POSITIVE_INTEGER").concatenation(b.terminalPattern("[0-9]+"))
     return b.grammar.rule

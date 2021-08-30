@@ -16,6 +16,24 @@
 
 package net.akehurst.language.api.sppt
 
+
+/**
+        grammar Tree {
+            skip WHITESPACE : "\s+" ;
+
+            tree : node ;
+            nodes : node+ ;
+            node : branch | leaf | EMPTY ;
+            branch : NAME '{'  nodes '}' ;
+            leaf : LITERAL | pattern ;
+            pattern : PATTERN ':' LITERAL ;
+            PATTERN : "\"([^\"\\]|\\.)*\"" ;
+            LITERAL : "'([^'\\]|\\.)*'" ;
+            EMPTY : '§empty' ;
+
+            NAME : "[a-zA-Z_][a-zA-Z_0-9]*" ;  //same as IDENTIFIER from OGL.ogl
+        }
+ */
 interface SPPTParser {
 
     fun parse(treeAsString: String): SharedPackedParseTree

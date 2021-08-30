@@ -33,8 +33,8 @@ internal class SPPTParserDefault(
     private val EMPTY = regexMatcher("§empty")
     private val NAME = regexMatcher("[a-zA-Z_§][a-zA-Z_0-9§]*")
     private val OPTION = regexMatcher("[|][0-9]+")
-    private val LITERAL = regexMatcher("'([^'\\\\]|\\\\'|\\\\\\\\)*'")
-    private val PATTERN = regexMatcher("\"([^\"]|\\\\.)*\"") //FIXME: maybe should be "\"(\\\\\"|[^\"])*\""
+    private val LITERAL = regexMatcher("'([^'\\\\]|\\\\.)*'")
+    private val PATTERN = regexMatcher("\"([^\"\\\\]|\\\\.)*\"")
     private val COLON = regexMatcher("[:]")
     private val CHILDREN_START = regexMatcher("[{]")
     private val CHILDREN_END = regexMatcher("[}]")

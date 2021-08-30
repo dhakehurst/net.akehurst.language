@@ -116,7 +116,7 @@ object Agl {
             //TODO: better, different exception to detect which list item fails
             val newCol = e.location.column.minus(prefix.length)
             val location = InputLocation(newCol, 1, 1, 0)
-            throw ParseFailedException("Unable to parse list of rules", e.longestMatch, location, e.expected)
+            throw ParseFailedException("Unable to parse list of rules", e.longestMatch, location, e.expected, e.contextInText)
         }
     }
 

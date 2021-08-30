@@ -146,7 +146,8 @@ internal class ScanOnDemandParser(
         seasons: Int,
         maxNumHeads: Int
     ): SharedPackedParseTreeDefault {
-        val llg = rp.longestLastGrown ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0), emptySet())
+        val llg = rp.longestLastGrown
+            ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0), emptySet(),"")
 
         val lastLocation = nextExpected.first
         val exp = nextExpected.second
@@ -174,7 +175,7 @@ internal class ScanOnDemandParser(
 
         //val expected = emptySet<String>()
         // val location = nextExpected.first//InputLocation(0,0,0,0)
-        throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location, expected)
+        throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location, expected, rp.graph.input.contextInText(5,location.position))
 
     }
 

@@ -76,7 +76,7 @@ internal class ParseGraph(
                 when {
                     this.input.isEnd(lt.nextInputPosition + 1).not() -> {
                         val location = this.input.locationFor(lt.nextInputPosition - 1, 1)
-                        throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(lt, seasons, maxNumHeads), location, emptySet())
+                        throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(lt, seasons, maxNumHeads), location, emptySet(), this.input.contextInText(5,location.position))
                     }
                     else -> {
                         useGoal(lt)
