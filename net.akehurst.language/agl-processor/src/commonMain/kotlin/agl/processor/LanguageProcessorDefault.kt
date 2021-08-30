@@ -22,6 +22,7 @@ import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
@@ -35,6 +36,7 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserException
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItem
+import net.akehurst.language.api.sppt.SPPTParser
 import kotlin.reflect.KClass
 
 internal class LanguageProcessorDefault(
@@ -49,6 +51,10 @@ internal class LanguageProcessorDefault(
     //internal so that tests can use it
     internal val parser: Parser = ScanOnDemandParser(this.converterToRuntimeRules.transform())
     private val completionProvider: CompletionProvider = CompletionProvider(this.grammar)
+
+    override val spptParser: SPPTParser by lazy {
+        SPPTParserDefault((parser as ScanOnDemandParser).runtimeRuleSet)
+    }
 
     override fun interrupt(message: String) {
         this.parser.interrupt(message)

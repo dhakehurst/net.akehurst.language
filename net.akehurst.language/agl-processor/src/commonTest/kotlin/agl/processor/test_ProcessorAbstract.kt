@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.sppt.SPPTParser
+import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.assertEquals
 
@@ -29,7 +29,7 @@ abstract class test_ProcessorAbstract {
         val converter = ConverterToRuntimeRules(processor.grammar)
         converter.transform()
         val rrb = converter.builder
-        val sppt = SPPTParser(rrb)
+        val sppt = SPPTParserDefault(rrb)
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
 

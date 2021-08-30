@@ -19,12 +19,9 @@ import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.LanguageProcessorDefault
-import net.akehurst.language.agl.sppt.SPPTParser
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.fail
 
 class test_Dot_Singles {
@@ -61,13 +58,13 @@ class test_Dot_Singles {
 
         val goal = "ID"
         val sentence = """
-        <<xml >xxxx</xml>>
+        < <xml >xxxx</xml> >
         """.trimIndent()
         val actual = processor.parseForGoal(goal, sentence)
         println(actual.toStringAll)
         /*
         TODO: PARSING EMBEDDED GRAMMAR SPPTs
-        val expected = SPPTParser(((processor as LanguageProcessorDefault).parser as ScanOnDemandParser).runtimeRuleSet).addTree("""
+        val expected = SPPTParserDefault(((processor as LanguageProcessorDefault).parser as ScanOnDemandParser).runtimeRuleSet).addTree("""
             ID|3 {
                 WHITESPACE : '\n        '
                 HTML {

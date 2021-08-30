@@ -19,7 +19,7 @@ package net.akehurst.language.agl.grammar.grammar
 import test.assertEqualsWarning
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.sppt.SPPTParser
+import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.test.Test
@@ -33,7 +33,7 @@ class test_AglGrammar_item {
         private val parser: Parser = ScanOnDemandParser(converterToRuntimeRules.transform())
     }
 
-    private val spptParser = SPPTParser(converterToRuntimeRules.builder.ruleSet())
+    private val spptParser = SPPTParserDefault(converterToRuntimeRules.builder.ruleSet())
 
     private fun parse(goalRule: String, inputText: String): SharedPackedParseTree {
         return parser.parse(goalRule, inputText, AutomatonKind.LOOKAHEAD_1)

@@ -24,17 +24,17 @@ import net.akehurst.language.api.regex.RegexMatcher
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.MutableStack
 
-internal class SPPTParser(
+internal class SPPTParserDefault(
         val runtimeRuleSet: RuntimeRuleSet
-) {
+) : SPPTParser {
     constructor(rrsb: RuntimeRuleSetBuilder) : this(rrsb.ruleSet())
 
     private val WS = regexMatcher("\\s+")
     private val EMPTY = regexMatcher("§empty")
     private val NAME = regexMatcher("[a-zA-Z_§][a-zA-Z_0-9§]*")
     private val OPTION = regexMatcher("[|][0-9]+")
-    private val LITERAL = regexMatcher("'([^']|\\\\.)*'")
-    private val PATTERN = regexMatcher("\"([^\"]|\\\\.)*\"")
+    private val LITERAL = regexMatcher("'([^'\\\\]|\\\\'|\\\\\\\\)*'")
+    private val PATTERN = regexMatcher("\"([^\"]|\\\\.)*\"") //FIXME: maybe should be "\"(\\\\\"|[^\"])*\""
     private val COLON = regexMatcher("[:]")
     private val CHILDREN_START = regexMatcher("[{]")
     private val CHILDREN_END = regexMatcher("[}]")
@@ -103,7 +103,7 @@ internal class SPPTParser(
         return n?.asBranch
     }
 
-    private fun parse(treeString: String) {
+    override fun parse(treeString: String) : SharedPackedParseTree {
         val input = InputFromString(runtimeRuleSet.terminalRules.size, "") //TODO: not sure we should reuse this here? maybe ok
         val scanner = SimpleScanner(treeString)
         val nodeNamesStack = MutableStack<NodeStart>()
@@ -231,6 +231,7 @@ internal class SPPTParser(
             }
         }
         this.root = childrenStack.pop()[0]
+        return this.tree
     }
 
     fun emptyLeaf(ruleNameThatIsEmpty: String, input: InputFromString, startPosition: Int, nextInputPosition: Int): SPPTLeaf {

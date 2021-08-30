@@ -20,12 +20,15 @@ import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItem
 import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.reflect.KClass
 
 interface LanguageProcessor {
 
     val grammar: Grammar
+
+    val spptParser : SPPTParser
 
     fun interrupt(message: String)
 
