@@ -19,7 +19,7 @@ package net.akehurst.language.parser.scanondemand
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.agl.sppt.SPPTParser
+import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import test.assertEqualsWarning
@@ -31,7 +31,7 @@ internal abstract class test_ScanOnDemandParserAbstract {
         val parser = ScanOnDemandParser(rrs)
         val actual = parser.parse(goal, sentence, AutomatonKind.LOOKAHEAD_1)
 
-        val sppt = SPPTParser(rrs)
+        val sppt = SPPTParserDefault(rrs)
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
         assertEquals(expected.toStringAllWithIndent("  "), actual.toStringAllWithIndent("  "))
@@ -45,7 +45,7 @@ internal abstract class test_ScanOnDemandParserAbstract {
         val parser = ScanOnDemandParser(rrsb.ruleSet())
         val actual = parser.parse(goal, sentence, AutomatonKind.LOOKAHEAD_1)
 
-        val sppt = SPPTParser(rrsb.ruleSet())
+        val sppt = SPPTParserDefault(rrsb.ruleSet())
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
         assertEquals(expected, actual)
@@ -56,7 +56,7 @@ internal abstract class test_ScanOnDemandParserAbstract {
         val parser = ScanOnDemandParser(rrsb.ruleSet())
         val actual = parser.parse(goal, sentence, AutomatonKind.LOOKAHEAD_1)
 
-        val sppt = SPPTParser(rrsb.ruleSet())
+        val sppt = SPPTParserDefault(rrsb.ruleSet())
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
         assertEquals(expected.toStringAllWithIndent("  "), actual.toStringAllWithIndent("  "))

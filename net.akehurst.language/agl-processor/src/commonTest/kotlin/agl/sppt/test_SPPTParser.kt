@@ -34,7 +34,7 @@ class test_SPPTParser {
 
         val converter = ConverterToRuntimeRules(grammar)
         val rrb = converter.builder
-        val sut = SPPTParser(rrb)
+        val sut = SPPTParserDefault(rrb)
 
         assertNotNull(sut)
     }
@@ -44,7 +44,7 @@ class test_SPPTParser {
         val rrb = RuntimeRuleSetBuilder()
         rrb.literal("a")
 
-        val sut = SPPTParser(rrb)
+        val sut = SPPTParserDefault(rrb)
         val input = InputFromString(10,"")
         val actual = sut.leaf("'a'", "a", input, 0,1)
 
@@ -64,7 +64,7 @@ class test_SPPTParser {
         val rrb = RuntimeRuleSetBuilder()
         rrb.pattern("[a-z]")
 
-        val sut = SPPTParser(rrb)
+        val sut = SPPTParserDefault(rrb)
         val input = InputFromString(10,"")
         val actual = sut.leaf("\"[a-z]\"", "a", input, 0,1)
 
@@ -83,7 +83,7 @@ class test_SPPTParser {
         val rrb = RuntimeRuleSetBuilder()
         rrb.rule("a").empty()
 
-        val sut = SPPTParser(rrb)
+        val sut = SPPTParserDefault(rrb)
         val input = InputFromString(10,"")
         val actual = sut.emptyLeaf("a", input, 0,1)
         assertNotNull(actual)
@@ -101,7 +101,7 @@ class test_SPPTParser {
         val rrb = RuntimeRuleSetBuilder()
         rrb.rule("a").empty()
 
-        val sut = SPPTParser(rrb)
+        val sut = SPPTParserDefault(rrb)
         val input = InputFromString(10,"")
         val actual = sut.branch(input, "a", 0, listOf<SPPTNode>(sut.emptyLeaf("a", input, 0,1)))
 
@@ -119,7 +119,7 @@ class test_SPPTParser {
         val rrb = RuntimeRuleSetBuilder()
         rrb.literal("a")
 
-        val sut = SPPTParser(rrb)
+        val sut = SPPTParserDefault(rrb)
 
         val treeString = """
             'a'
@@ -136,7 +136,7 @@ class test_SPPTParser {
         val rrb = RuntimeRuleSetBuilder()
         rrb.literal("BS","\\\\")
 
-        val sut = SPPTParser(rrb)
+        val sut = SPPTParserDefault(rrb)
 
         val treeString = """
             BS : '\'
@@ -153,7 +153,7 @@ class test_SPPTParser {
         val rrb = RuntimeRuleSetBuilder()
         rrb.pattern("[a-z]")
 
-        val sut = SPPTParser(rrb)
+        val sut = SPPTParserDefault(rrb)
 
         val treeString = """
             "[a-z]" : 'a'
@@ -170,7 +170,7 @@ class test_SPPTParser {
         val rrb = RuntimeRuleSetBuilder()
         rrb.rule("a").empty()
 
-        val sut = SPPTParser(rrb)
+        val sut = SPPTParserDefault(rrb)
 
         val treeString = """
             a { §empty }
@@ -188,7 +188,7 @@ class test_SPPTParser {
         val lit = rrb.literal("a")
         rrb.rule("a").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, lit)
 
-        val sut = SPPTParser(rrb)
+        val sut = SPPTParserDefault(rrb)
 
         val treeString = """
             a { 'a' }

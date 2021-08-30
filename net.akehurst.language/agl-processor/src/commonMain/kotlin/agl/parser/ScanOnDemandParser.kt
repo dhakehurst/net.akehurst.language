@@ -109,7 +109,7 @@ internal class ScanOnDemandParser(
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
         val s0 = runtimeRuleSet.fetchStateSetFor(goalRule,automatonKind).startState
         val skipStateSet = runtimeRuleSet.skipParserStateSet
-        val rp = RuntimeParser(s0.stateSet, skipStateSet, goalRule, LookaheadSet.EOT, input)
+        val rp = RuntimeParser(s0.stateSet, skipStateSet, goalRule, input)
         this.runtimeParser = rp
 
         rp.start(0, LookaheadSet.EOT)
@@ -305,7 +305,7 @@ internal class ScanOnDemandParser(
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, usedText)
         val ss = runtimeRuleSet.fetchStateSetFor(goalRule,automatonKind)
         val skipStateSet = runtimeRuleSet.skipParserStateSet
-        val rp = RuntimeParser(ss, skipStateSet, goalRule, LookaheadSet.EOT, input)
+        val rp = RuntimeParser(ss, skipStateSet, goalRule, input)
         this.runtimeParser = rp
 
         rp.start(0, LookaheadSet.EOT)

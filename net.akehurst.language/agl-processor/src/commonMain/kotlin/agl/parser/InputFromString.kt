@@ -53,7 +53,7 @@ internal class InputFromString(
         this.leaves.clear()
     }
 
-    // used by SPPTParser to build up the sentence
+    // used by SPPTParserDefault to build up the sentence
     internal fun append(value: String) {
         this.text += value
     }

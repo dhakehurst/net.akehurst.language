@@ -18,7 +18,7 @@ package net.akehurst.language.parser.scanondemand.multi
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.agl.sppt.SPPTParser
+import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -90,7 +90,7 @@ internal class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract(
 
         assertNotNull(actual)
 
-        val p = SPPTParser(rrb)
+        val p = SPPTParserDefault(rrb)
         val expected = p.addTree("r { m { 'a' bm|1 { §empty } 'a' } }")
 
         assertEquals(expected.toStringAll, actual.toStringAll)
