@@ -112,6 +112,28 @@ internal class test_Agl_scan {
         assertEquals("b", tokens[1].matchedText)
         assertEquals("a", tokens[2].matchedText)
 
+    }
 
+    @Test
+    fun scan_end_of_line() {
+        val sut = Agl.processorFromString("""
+            namespace test
+            grammar Test {
+                skip WHITESPACE = "\s+" ;
+                chars = char+ ;
+                char = "[a-z]" ;
+            }
+        """.trimIndent())
+        var tokens = sut.scan("a")
+        var tokenStr = tokens.map { it.toString() }.joinToString(", ")
+        println("tokens = ${tokenStr}")
+        assertEquals(1, tokens.size)
+
+        tokens = sut.scan("a b")
+        tokenStr = tokens.map { it.toString() }.joinToString(", ")
+        println("tokens = ${tokenStr}")
+        assertEquals(3, tokens.size)
+
+        TODO("test eol")
     }
 }

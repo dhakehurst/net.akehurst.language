@@ -48,7 +48,7 @@ internal class RuntimeRuleSetBuilder2() {
             }
             val ruleMap = mutableMapOf<String, RuntimeRule>()
             rules.forEach { ruleMap[it.tag] = it }
-            val rbs = this.ruleBuilders.toList() //to stop concuttent modification
+            val rbs = this.ruleBuilders.toList() //to stop concurent modification
             rbs.forEach { rb ->
                 when (rb.kind) {
                     RuntimeRuleKind.GOAL -> {

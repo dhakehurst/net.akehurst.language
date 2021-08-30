@@ -206,10 +206,14 @@ internal class ConverterToRuntimeRules(
         val nonTerminalRule = this.findRule(refName)
         return if (null == nonTerminalRule) {
             if (target.embedded) {
+                // TODO: cache grammar -> RuleSet or we will be creating same thing multiple times
                 val embeddedGrammar = target.referencedRule.grammar
-                val embeddedConverter = ConverterToRuntimeRules(embeddedGrammar, this.builder)
+                val embeddedConverter = ConverterToRuntimeRules(embeddedGrammar)
+                val embeddedRuleSet = embeddedConverter.transform()
+                val embeddedStartRule = embeddedRuleSet.findRuntimeRule(target.referencedRule.name)
                 //target.referencedRule.accept(embeddedConverter, arg)
                 embeddedConverter.visitRule(target.referencedRule, arg)
+                this.builder.embedded(refName, refName, embeddedRuleSet, embeddedStartRule)
             } else {
                 val r = this.grammar.findAllRule(refName)
                 this.visitRule(r, arg)

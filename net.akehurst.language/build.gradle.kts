@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import com.github.gmazzo.gradle.plugins.BuildConfigExtension
 
 plugins {
-    kotlin("multiplatform") version ("1.5.30-RC") apply false
+    kotlin("multiplatform") version ("1.5.30") apply false
     id("org.jetbrains.dokka") version ("1.4.32") apply false
     id("com.github.gmazzo.buildconfig") version("3.0.0") apply false
     id("nu.studer.credentials") version ("2.1")
@@ -53,7 +53,7 @@ subprojects {
         fun fBuildDate(): String = java.time.format.DateTimeFormatter.ofPattern("yyyy-MMM-dd").withZone(java.time.ZoneId.of("UTC")).format(now)
         fun fBuildTime(): String= java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z").withZone(java.time.ZoneId.of("UTC")).format(now)
 
-        packageName("${project.group}.agl.processor")
+        packageName("${project.group}.${project.name.replace("-",".")}")
         buildConfigField("String", "version", "\"${project.version}\"")
         buildConfigField("String", "buildStamp", "\"${fBbuildStamp()}\"")
         buildConfigField("String", "buildDate", "\"${fBuildDate()}\"")
@@ -78,7 +78,7 @@ subprojects {
                 }
             }
         }
-        js("js") {
+        js("js", IR) {
             nodejs()
             browser {
                 webpackTask {

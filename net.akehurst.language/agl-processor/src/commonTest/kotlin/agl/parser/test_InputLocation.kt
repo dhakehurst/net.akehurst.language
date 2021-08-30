@@ -162,7 +162,6 @@ class test_InputLocation_multiLine2 {
         assertEquals(InputLocation(8, 9, 1, 3), actual.root.asBranch.children[4].location)
     }
 
-
     @Test
     fun aNLbNLc() {
         val sp = ScanOnDemandParser(S)
@@ -212,5 +211,29 @@ class test_InputLocation_multiLine2 {
         assertEquals(InputLocation(8, 4, 3, 1), actual.root.asBranch.children[4].location)
         assertEquals("ccc", actual.root.asBranch.children[5].matchedText)
         assertEquals(InputLocation(9, 1, 4, 3), actual.root.asBranch.children[5].location)
+    }
+
+    @Test
+    fun aNLbSPSPNLc() {
+        val sp = ScanOnDemandParser(S)
+
+        val actual = sp.parse("S", """
+            aaa
+              bbb
+            ccc
+        """.trimIndent(), AutomatonKind.LOOKAHEAD_1)
+
+        assertNotNull(actual)
+        assertEquals(InputLocation(0, 1, 1, 13), actual.root.location)
+        assertEquals("aaa", actual.root.asBranch.children[0].matchedText)
+        assertEquals(InputLocation(0, 1, 1, 3), actual.root.asBranch.children[0].location)
+        assertEquals("\n  ", actual.root.asBranch.children[1].matchedText)
+        assertEquals(InputLocation(3, 4, 1, 3), actual.root.asBranch.children[1].location)
+        assertEquals("bbb", actual.root.asBranch.children[2].matchedText)
+        assertEquals(InputLocation(6, 3, 2, 3), actual.root.asBranch.children[2].location)
+        assertEquals("\n", actual.root.asBranch.children[3].matchedText)
+        assertEquals(InputLocation(9, 6, 2, 1), actual.root.asBranch.children[3].location)
+        assertEquals("ccc", actual.root.asBranch.children[4].matchedText)
+        assertEquals(InputLocation(10, 1, 3, 3), actual.root.asBranch.children[4].location)
     }
 }

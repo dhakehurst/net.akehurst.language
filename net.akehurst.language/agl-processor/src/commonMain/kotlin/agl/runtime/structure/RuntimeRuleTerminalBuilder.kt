@@ -61,5 +61,10 @@ internal class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder) {
         rr.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.EMPTY,RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,0,0, arrayOf(ruleThatIsEmpty))
         return rr
     }
+    fun embedded(tag:String, name:String, embeddedRuntimeRuleSet:RuntimeRuleSet,embeddedStartRule:RuntimeRule): RuntimeRule {
+        val rr = RuntimeRule(this.rrsb.runtimeRuleSet.number,this.rrsb.rules.size, tag, name, RuntimeRuleKind.EMBEDDED, false, false,embeddedRuntimeRuleSet,embeddedStartRule)
+        this.rrsb.rules.add(rr)
+        return rr
+    }
 
 }

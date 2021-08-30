@@ -16,12 +16,12 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuleOption
 import net.akehurst.language.agl.runtime.structure.RuleOptionId
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
