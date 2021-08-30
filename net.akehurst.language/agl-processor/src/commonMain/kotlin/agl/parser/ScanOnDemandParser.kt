@@ -130,7 +130,7 @@ internal class ScanOnDemandParser(
         // e.g. leftRecursive.test_aa
         // e.g. test_a1bOa2.ambiguous_a
 
-        val match = rp.graph.longestMatch(seasons, maxNumHeads)
+        val match = rp.graph.longestMatch(seasons, maxNumHeads, false)
         return if (match != null) {
             SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
         } else {

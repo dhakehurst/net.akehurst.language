@@ -46,7 +46,8 @@ internal class LanguageProcessorDefault(
 ) : LanguageProcessor {
 
     private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(this.grammar)
-    private val parser: Parser = ScanOnDemandParser(this.converterToRuntimeRules.transform())
+    //internal so that tests can use it
+    internal val parser: Parser = ScanOnDemandParser(this.converterToRuntimeRules.transform())
     private val completionProvider: CompletionProvider = CompletionProvider(this.grammar)
 
     override fun interrupt(message: String) {

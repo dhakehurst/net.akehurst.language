@@ -62,52 +62,57 @@ internal class ParseGraph(
         this.growingHead.clear()
     }
 
-    fun longestMatch(seasons: Int, maxNumHeads: Int, possibleEOT:LookaheadSet?=null): SPPTNode? {
-        if (!this.goals.isEmpty() && this.goals.size >= 1) {
+    fun longestMatch(seasons: Int, maxNumHeads: Int, embedded:Boolean): SPPTNode? {
+        return if (!this.goals.isEmpty() && this.goals.size >= 1) {
             var lt = this.goals.iterator().next()
             for (gt in this.goals) {
                 if (gt.matchedTextLength > lt.matchedTextLength) {
                     lt = gt
                 }
             }
-            when{
-                null!=possibleEOT ->{
-                    TODO(handle embedded")
-                }
-                this.input.isEnd(lt.nextInputPosition + 1).not() -{
-                    val location = this.input.locationFor(lt.nextInputPosition - 1, 1)
-                    throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(lt, seasons, maxNumHeads), location, emptySet())
-                }
-                else {
-                    //FIXME: use GrowingChildren
-                    // need to re-write top of the tree so that any initial skip nodes come under the userGoal node
-                    val goal = lt as SPPTBranchFromInputAndGrownChildren
-
-                    val goalRpId = RuleOption(this.userGoalRule, 0)
-                    val goalFirstChildren = goal.grownChildrenAlternatives.values.first()
-                    val userGoalNode = if (goalFirstChildren.hasSkipAtStart) {
-                        //has skip at start
-                        val skipNodes = goalFirstChildren.firstChild(null)!!.children
-                        val ugn = goalFirstChildren.firstNonSkipChild(RuleOption(this.userGoalRule, 0))!!.children[0] as SPPTBranchFromInputAndGrownChildren
-                        val startPosition = skipNodes[0].startPosition
-                        val nugn = SPPTBranchFromInputAndGrownChildren(this.input, ugn.runtimeRule, ugn.option, startPosition, ugn.nextInputPosition, ugn.priority)
-                        ugn.grownChildrenAlternatives.values.forEach {
-                            val nc = GrowingChildren().appendSkipIfNotEmpty(skipNodes)
-                            //nc._firstChild!!.nextChild = it.firstChild
-                            //nc._lastChild = it.lastChild
-                            nc.concatenate(it)
-                            nugn.grownChildrenAlternatives[ugn.option] = nc
-                        }
-                        nugn
-                    } else {
-                        goalFirstChildren.firstChild(goalRpId)!!.children[0]
+            if ( embedded) {
+                useGoal(lt) // next token is from the parent grammar, no need to check anything
+            } else {
+                when {
+                    this.input.isEnd(lt.nextInputPosition + 1).not() -> {
+                        val location = this.input.locationFor(lt.nextInputPosition - 1, 1)
+                        throw ParseFailedException("Goal does not match full text", SharedPackedParseTreeDefault(lt, seasons, maxNumHeads), location, emptySet())
                     }
-                    return userGoalNode
+                    else -> {
+                        useGoal(lt)
+                    }
                 }
             }
         } else {
-            return null;
+             null;
         }
+    }
+
+    fun useGoal(lt: SPPTNode): SPPTNode {
+        //FIXME: use GrowingChildren
+        // need to re-write top of the tree so that any initial skip nodes come under the userGoal node
+        val goal = lt as SPPTBranchFromInputAndGrownChildren
+
+        val goalRpId = RuleOption(this.userGoalRule, 0)
+        val goalFirstChildren = goal.grownChildrenAlternatives.values.first()
+        val userGoalNode = if (goalFirstChildren.hasSkipAtStart) {
+            //has skip at start
+            val skipNodes = goalFirstChildren.firstChild(null)!!.children
+            val ugn = goalFirstChildren.firstNonSkipChild(RuleOption(this.userGoalRule, 0))!!.children[0] as SPPTBranchFromInputAndGrownChildren
+            val startPosition = skipNodes[0].startPosition
+            val nugn = SPPTBranchFromInputAndGrownChildren(this.input, ugn.runtimeRule, ugn.option, startPosition, ugn.nextInputPosition, ugn.priority)
+            ugn.grownChildrenAlternatives.values.forEach {
+                val nc = GrowingChildren().appendSkipIfNotEmpty(skipNodes)
+                //nc._firstChild!!.nextChild = it.firstChild
+                //nc._lastChild = it.lastChild
+                nc.concatenate(it)
+                nugn.grownChildrenAlternatives[ugn.option] = nc
+            }
+            nugn
+        } else {
+            goalFirstChildren.firstChild(goalRpId)!!.children[0]
+        }
+        return userGoalNode
     }
 
     fun findCompleteNode(rulePosition: RulePosition, startPosition: Int): SPPTNode? {

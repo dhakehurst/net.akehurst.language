@@ -63,6 +63,7 @@ internal class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder) {
     }
     fun embedded(tag:String, name:String, embeddedRuntimeRuleSet:RuntimeRuleSet,embeddedStartRule:RuntimeRule): RuntimeRule {
         val rr = RuntimeRule(this.rrsb.runtimeRuleSet.number,this.rrsb.rules.size, tag, name, RuntimeRuleKind.EMBEDDED, false, false,embeddedRuntimeRuleSet,embeddedStartRule)
+        this.rrsb.rules.add(rr)
         return rr
     }
 

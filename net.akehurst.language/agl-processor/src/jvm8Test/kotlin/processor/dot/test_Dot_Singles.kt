@@ -19,9 +19,12 @@ import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.processor.LanguageProcessorDefault
+import net.akehurst.language.agl.sppt.SPPTParser
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.fail
 
 class test_Dot_Singles {
@@ -55,11 +58,46 @@ class test_Dot_Singles {
 
     @Test
     fun ID__from_HTML() {
+
         val goal = "ID"
         val sentence = """
-        <<xml>xxxx</xml>>
-        """
-        processor.parseForGoal(goal, sentence)
+        <<xml >xxxx</xml>>
+        """.trimIndent()
+        val actual = processor.parseForGoal(goal, sentence)
+        println(actual.toStringAll)
+        /*
+        TODO: PARSING EMBEDDED GRAMMAR SPPTs
+        val expected = SPPTParser(((processor as LanguageProcessorDefault).parser as ScanOnDemandParser).runtimeRuleSet).addTree("""
+            ID|3 {
+                WHITESPACE : '\n        '
+                HTML {
+                    '<'
+                    Xml.elementContent {
+                        startTag {
+                            '<'
+                            §startTag§multi7|1 { §empty.§startTag§multi7 }
+                            NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
+                            §startTag§multi8 { WS { "\s+" : ' ' } }
+                            §startTag§multi9|1 { §empty.§startTag§multi9 }
+                            '>'
+                        }
+                        content { §content§multi10 { §content§group0 { §§content§group0§choice0 { §§content§group0§choice0 { CHARDATA { "[^<]+" : 'xxxx' } } } } } }
+                        endTag {
+                            '</'
+                            §endTag§multi11|1 { §empty.§endTag§multi11 }
+                            NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
+                            §endTag§multi12|1 { §empty.§endTag§multi12 }
+                            '>'
+                        }
+                    }
+                    '>'
+                    WHITESPACE : '\n        '
+                }
+            }
+        """.trimIndent())
+        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected,actual)
+        */
     }
 
     @Test

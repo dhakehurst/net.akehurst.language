@@ -264,8 +264,8 @@ internal class SPPTParser(
 
     fun branch(input: InputFromString, ruleName: String, option: Int, children: List<SPPTNode>): SPPTBranch {
         val rr = this.runtimeRuleSet.findRuntimeRule(ruleName)
-        val startPosition = children.first().startPosition
-        val nextInputPosition = children.last().nextInputPosition
+        val startPosition = children.firstOrNull()?.startPosition ?: 0
+        val nextInputPosition = children.lastOrNull()?.nextInputPosition ?: 0
         val n = SPPTBranchFromInput(input, rr, option, startPosition, nextInputPosition, 0)
         n.childrenAlternatives.add(children)
 
