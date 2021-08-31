@@ -235,7 +235,7 @@ class test_Dot_Singles {
         val sentence = "a -> b ;"
 
         val converterToRuntimeRules = ConverterToRuntimeRules(processor.grammar)
-        val parser = ScanOnDemandParser(converterToRuntimeRules.transform())
+        val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
 
         //fails at season 9 with edge_list
         parser.parse(goal, sentence, AutomatonKind.LOOKAHEAD_1)

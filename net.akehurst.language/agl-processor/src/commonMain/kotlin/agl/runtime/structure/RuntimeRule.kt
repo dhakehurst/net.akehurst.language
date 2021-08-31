@@ -21,6 +21,9 @@ import net.akehurst.language.collections.lazyArray
 import net.akehurst.language.collections.lazyMapNonNull
 import net.akehurst.language.collections.transitiveClosure
 
+/**
+ * identified by: (runtimeRuleSetNumber, number)
+ */
 internal class RuntimeRule(
     val runtimeRuleSetNumber: Int,
     val number: Int,

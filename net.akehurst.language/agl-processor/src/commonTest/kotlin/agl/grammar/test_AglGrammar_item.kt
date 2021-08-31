@@ -30,10 +30,10 @@ class test_AglGrammar_item {
 
     private companion object {
         private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(AglGrammarGrammar())
-        private val parser: Parser = ScanOnDemandParser(converterToRuntimeRules.transform())
+        private val parser: Parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
     }
 
-    private val spptParser = SPPTParserDefault(converterToRuntimeRules.builder.ruleSet())
+    private val spptParser = SPPTParserDefault(converterToRuntimeRules.runtimeRuleSet)
 
     private fun parse(goalRule: String, inputText: String): SharedPackedParseTree {
         return parser.parse(goalRule, inputText, AutomatonKind.LOOKAHEAD_1)

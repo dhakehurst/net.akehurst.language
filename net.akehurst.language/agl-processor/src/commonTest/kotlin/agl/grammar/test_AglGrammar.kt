@@ -450,26 +450,28 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
+        //NOTE: there should be no pseudo rule because there is only one item on rhs of rule 'S'
+
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
         val actual1 = p.parse("");
         val expected1 = p.spptParser.parse("""
-             S { §S§multi0|1 { §empty } }
+             S { §empty }
         """)
         assertEquals(expected1.toStringAll, actual1.toStringAll)
         assertEquals(expected1, actual1)
 
         val actual2 = p.parse("a");
         val expected2 = p.spptParser.parse("""
-             S { §S§multi0 { a{'a'} } }
+             S { a{'a'} }
         """)
         assertEquals(expected2.toStringAll, actual2.toStringAll)
         assertEquals(expected2, actual2)
 
         val actual3 = p.parse("aaa");
         val expected3 = p.spptParser.parse("""
-             S { §S§multi0 { a{'a'} a{'a'} a{'a'} } }
+             S { a{'a'} a{'a'} a{'a'} }
         """)
         assertEquals(expected3.toStringAll, actual3.toStringAll)
         assertEquals(expected3, actual3)

@@ -27,9 +27,7 @@ abstract class test_ProcessorAbstract {
         val actual = processor.parseForGoal(goal, sentence)
 
         val converter = ConverterToRuntimeRules(processor.grammar)
-        converter.transform()
-        val rrb = converter.builder
-        val sppt = SPPTParserDefault(rrb)
+        val sppt = SPPTParserDefault(converter.runtimeRuleSet)
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
 

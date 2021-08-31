@@ -90,12 +90,12 @@ internal class GrammarBuilderDefault(val namespace: Namespace, val name: String)
         }
 
         fun multi(min: Int, max: Int, item: TangibleItem) {
-            this.rule.rhs = ChoiceLongestDefault(listOf(ConcatenationDefault(listOf(MultiDefault(min, max, item)))));
+            this.rule.rhs = ChoiceLongestDefault(listOf(ConcatenationDefault(listOf(SimpleListDefault(min, max, item)))));
         }
 
         //TODO: original only allows separator to be a TerminalLiteral here,  I think any Terminal is ok though!
         fun separatedList(min: Int, max: Int, separator: Terminal, item: TangibleItem) {
-            this.rule.rhs = ChoiceLongestDefault(listOf(ConcatenationDefault(listOf(SeparatedListDefault(min, max, separator, item)))));
+            this.rule.rhs = ChoiceLongestDefault(listOf(ConcatenationDefault(listOf(SeparatedListDefault(min, max, item, separator, SeparatedListKind.Flat)))));
         }
     }
 }

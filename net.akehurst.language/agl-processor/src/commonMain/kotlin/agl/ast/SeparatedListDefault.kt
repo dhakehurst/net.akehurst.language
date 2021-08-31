@@ -21,8 +21,9 @@ import net.akehurst.language.api.grammar.*
 internal class SeparatedListDefault(
 		override val min: Int,
 		override val max: Int,
+		override val item: SimpleItem,
 		override val separator: SimpleItem,
-		override val item: SimpleItem
+		override val associativity: SeparatedListKind
 ) : RuleItemAbstract(), SeparatedList {
 
 	override fun setOwningRule(rule: Rule, indices: List<Int>) {

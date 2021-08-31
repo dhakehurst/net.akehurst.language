@@ -21,12 +21,12 @@ grammar C_Expression {
     postfix-operator = '--' | '++' ;
     array-index-expression = expression '[' expression ']' ;
     function-call-expression = expression '(' argument-list ')' ;
-    argument-list = [ expression / ',' ]* ;
+    argument-list = [ expression, ',' ]* ;
     field-selector-expression = expression '.' ID ;
     unary-expression = unary-operator expression ;
     unary-operator = '+' | '-' ;
     cast-expression = '(' type-name ')' expression ;
-    infix-expression = [ expression / infix-operator ]2+ ;
+    infix-expression = [ expression, infix-operator ]2+ ;
     infix-operator = '*' | '/' | '+' | '-' ;
     assignment-expression = expression '=' expression ;
     grouped-expression = '(' expression ')' ;

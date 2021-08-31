@@ -81,7 +81,7 @@ internal class AglGrammarSemanticAnalyser(
             is Group -> {
                 rhs.choice.alternative.forEach { checkRuleItem(grammar, locationMap, it) }
             }
-            is Multi -> {
+            is SimpleList -> {
                 checkRuleItem(grammar, locationMap, rhs.item)
             }
             is SeparatedList -> {
@@ -95,7 +95,7 @@ internal class AglGrammarSemanticAnalyser(
         val itemsSet = mutableSetOf<SemanticAnalyserItem>()
         //TODO: find a way to reuse RuntimeRuleSet rather than re compute here
         val conv = ConverterToRuntimeRules(grammar)
-        val rrs = conv.transform()
+        val rrs = conv.runtimeRuleSet
         //TODO: pass in goalRuleName
         val goalRuleName = grammar.rule.first { it.isSkip.not() }.name
         val automaton = rrs.automatonFor(goalRuleName,automatonKind)

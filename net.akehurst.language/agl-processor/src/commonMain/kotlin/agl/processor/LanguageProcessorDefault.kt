@@ -49,7 +49,7 @@ internal class LanguageProcessorDefault(
 
     private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(this.grammar)
     //internal so that tests can use it
-    internal val parser: Parser = ScanOnDemandParser(this.converterToRuntimeRules.transform())
+    internal val parser: Parser = ScanOnDemandParser(this.converterToRuntimeRules.runtimeRuleSet)
     private val completionProvider: CompletionProvider = CompletionProvider(this.grammar)
 
     override val spptParser: SPPTParser by lazy {
@@ -110,7 +110,9 @@ internal class LanguageProcessorDefault(
     override fun expectedAt(inputText: String, position: Int, desiredDepth: Int, automatonKind:AutomatonKind): List<CompletionItem> = expectedAtForGoal(this.goalRuleName, inputText, position, desiredDepth,automatonKind)
     override fun expectedAtForGoal(goalRuleName: String, inputText: String, position: Int, desiredDepth: Int, automatonKind:AutomatonKind): List<CompletionItem> {
         val parserExpected: Set<RuntimeRule> = this.parser.expectedAt(goalRuleName, inputText, position,automatonKind)
-        val grammarExpected: List<RuleItem> = parserExpected.filter { it !== RuntimeRuleSet.END_OF_TEXT }.map { this.converterToRuntimeRules.originalRuleItemFor(it) }
+        val grammarExpected: List<RuleItem> = parserExpected
+            .filter { it !== RuntimeRuleSet.END_OF_TEXT }
+            .map { this.converterToRuntimeRules.originalRuleItemFor(it) }
         val expected = grammarExpected.flatMap { this.completionProvider.provideFor(it, desiredDepth) }
         return expected.toSet().toList()
     }

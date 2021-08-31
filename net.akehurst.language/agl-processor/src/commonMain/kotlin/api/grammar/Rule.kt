@@ -17,19 +17,11 @@
 package net.akehurst.language.api.grammar
 
 interface Rule {
-
     val grammar: Grammar
-
     val name: String
-
     val isOverride: Boolean
-
     val isSkip: Boolean
-
     val isLeaf: Boolean
-
     var rhs: RuleItem
-
     val nodeType: NodeType
-
 }

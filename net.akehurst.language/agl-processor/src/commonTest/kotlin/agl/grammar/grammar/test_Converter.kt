@@ -90,7 +90,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(2, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -107,7 +107,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(2, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -125,7 +125,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(2, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 2)
@@ -143,7 +143,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(2, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -161,7 +161,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(4, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 3)
@@ -187,7 +187,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(7, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "a", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -213,7 +213,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(4, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CHOICE, RuntimeRuleChoiceKind.LONGEST_PRIORITY, RuntimeRuleListKind.NONE, 3)
@@ -239,7 +239,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(7, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "a", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -269,7 +269,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(4, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CHOICE, RuntimeRuleChoiceKind.PRIORITY_LONGEST, RuntimeRuleListKind.NONE, 3)
@@ -299,7 +299,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(7, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "a", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -325,7 +325,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(4, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -349,7 +349,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(5, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -373,7 +373,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(4, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -397,7 +397,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(5, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -421,7 +421,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(3, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -443,7 +443,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(4, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -465,7 +465,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(5, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -490,7 +490,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(6, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -515,7 +515,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(5, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -540,7 +540,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(6, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -565,7 +565,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(4, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)
@@ -588,7 +588,7 @@ class test_Converter {
 
         val sut = ConverterToRuntimeRules(grammar)
 
-        val actual = sut.transform()
+        val actual = sut.runtimeRuleSet
 
         assertEquals(5, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 1)

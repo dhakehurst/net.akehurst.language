@@ -33,8 +33,7 @@ class test_SPPTParser {
         val grammar = gb.grammar
 
         val converter = ConverterToRuntimeRules(grammar)
-        val rrb = converter.builder
-        val sut = SPPTParserDefault(rrb)
+        val sut = SPPTParserDefault(converter.runtimeRuleSet)
 
         assertNotNull(sut)
     }

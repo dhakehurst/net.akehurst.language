@@ -175,7 +175,7 @@ internal class ScanOnDemandParser(
 
         //val expected = emptySet<String>()
         // val location = nextExpected.first//InputLocation(0,0,0,0)
-        throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location, expected, rp.graph.input.contextInText(5,location.position))
+        throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location, expected, rp.graph.input.contextInText(location.position))
 
     }
 
