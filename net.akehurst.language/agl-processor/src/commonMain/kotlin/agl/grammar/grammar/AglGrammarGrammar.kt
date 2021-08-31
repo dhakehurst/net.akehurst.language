@@ -112,7 +112,8 @@ private fun createRules(): List<Rule> {
         b.terminalLiteral("["), b.nonTerminal("simpleItem"), b.terminalLiteral(","),
         b.nonTerminal("simpleItem"), b.terminalLiteral("]"), b.nonTerminal("multiplicity")
     )
-    b.rule("group").concatenation(b.terminalLiteral("("), b.nonTerminal("choice"), b.terminalLiteral(")"))
+    b.rule("group").concatenation(b.terminalLiteral("("), b.nonTerminal("groupedContent"), b.terminalLiteral(")"))
+    b.rule("groupedContent").choiceLongestFromConcatenationItem(b.nonTerminal("concatenation"),b.nonTerminal("choice"))
     b.rule("nonTerminal").concatenation(b.nonTerminal("qualifiedName"))
     b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
     b.rule("terminal").choiceLongestFromConcatenationItem(b.nonTerminal("LITERAL"), b.nonTerminal("PATTERN"))

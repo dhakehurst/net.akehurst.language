@@ -52,18 +52,38 @@ internal class ConverterToRuntimeRules(
         val embeddedConverter = ConverterToRuntimeRules(embeddedGrammar)
         embeddedConverter
     }
-    private var nextGroupNumber = 0
-    private var nextChoiceNumber = 0
-    private var nextSimpleListNumber = 0
-    private var nextSeparatedListNumber = 0
+    private var _nextGroupNumber = mutableMapOf<String,Int>()
+    private var _nextChoiceNumber = mutableMapOf<String,Int>()
+    private var _nextSimpleListNumber = mutableMapOf<String,Int>()
+    private var _nextSeparatedListNumber = mutableMapOf<String,Int>()
 
-    private fun createGroupRuleName(parentRuleName: String): String = "§${parentRuleName}§group" + this.nextGroupNumber++ //TODO: include original rule name fo easier debug
+    private fun createGroupRuleName(parentRuleName: String): String {
+        var n = _nextGroupNumber[parentRuleName] ?: 0
+        n++
+        _nextGroupNumber[parentRuleName]=n
+        return "§${parentRuleName}§group$n" //TODO: include original rule name fo easier debug
+    }
 
-    private fun createChoiceRuleName(parentRuleName: String): String = "§${parentRuleName}§choice" + this.nextChoiceNumber++ //TODO: include original rule name fo easier debug
+    private fun createChoiceRuleName(parentRuleName: String): String {
+        var n = _nextChoiceNumber[parentRuleName] ?: 0
+        n++
+        _nextChoiceNumber[parentRuleName]=n
+        return "§${parentRuleName}§choice$n" //TODO: include original rule name fo easier debug
+    }
 
-    private fun createSimpleListRuleName(parentRuleName: String): String = "§${parentRuleName}§multi" + this.nextSimpleListNumber++ //TODO: include original rule name fo easier debug
+    private fun createSimpleListRuleName(parentRuleName: String): String {
+        var n = _nextSimpleListNumber[parentRuleName] ?: 0
+        n++
+        _nextSimpleListNumber[parentRuleName]=n
+        return "§${parentRuleName}§multi$n" //TODO: include original rule name fo easier debug
+    }
 
-    private fun createSeparatedListRuleName(parentRuleName: String): String = "§${parentRuleName}§sList" + this.nextSeparatedListNumber++ //TODO: include original rule name fo easier debug
+    private fun createSeparatedListRuleName(parentRuleName: String): String {
+        var n = _nextSeparatedListNumber[parentRuleName] ?: 0
+        n++
+        _nextSeparatedListNumber[parentRuleName]=n
+        return "§${parentRuleName}§sepList$n" //TODO: include original rule name fo easier debug
+    }
 
     private fun nextRule(tag: String, kind: RuntimeRuleKind, isPattern: Boolean, isSkip: Boolean): RuntimeRule {
         check(this.runtimeRules.containsKey(tag).not())
@@ -72,6 +92,7 @@ internal class ConverterToRuntimeRules(
         return newRule
     }
     private fun terminalRule(tag: String, value: String, kind: RuntimeRuleKind, isPattern: Boolean, isSkip: Boolean): RuntimeRule {
+        check(this.runtimeRules.containsKey(tag).not())
         check(this.terminalRules.containsKey(value).not())
         val newRule = RuntimeRule(_runtimeRuleSet.number, runtimeRules.size, tag, value, kind, isPattern, isSkip, null, null)
         runtimeRules[tag] = newRule
@@ -156,7 +177,7 @@ internal class ConverterToRuntimeRules(
         } else {
             this.terminalRule(target.name, ci.value, RuntimeRuleKind.TERMINAL, false, isSkip)
         }
-        this.originalRuleItem.put(target.name, target.rhs)
+        this.originalRuleItem.put(rule.tag, target.rhs)
         return rule
     }
 
@@ -251,9 +272,9 @@ internal class ConverterToRuntimeRules(
         val existing = this.findTerminal(target.value)
         if (null == existing) {
             val terminalRule = if (target.isPattern) {
-                this.terminalRule(target.name, target.value, RuntimeRuleKind.TERMINAL, true, false)
+                this.terminalRule("'${target.name}'", target.value, RuntimeRuleKind.TERMINAL, true, false)
             } else {
-                this.terminalRule(target.name, target.value, RuntimeRuleKind.TERMINAL, false, false)
+                this.terminalRule("'${target.name}'", target.value, RuntimeRuleKind.TERMINAL, false, false)
             }
             this.originalRuleItem.put(terminalRule.tag, target)
             return terminalRule
