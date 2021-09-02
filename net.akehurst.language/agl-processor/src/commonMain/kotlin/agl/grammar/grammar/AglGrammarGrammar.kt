@@ -31,16 +31,16 @@ import net.akehurst.language.api.grammar.Rule
         namespace = 'namespace' qualifiedName ;
         definitions = grammar+ ;
         grammar = 'grammar' IDENTIFIER extends? '{' rules '}' ;
-        extends = 'extends' [qualifiedName, ',']+ ;
+        extends = 'extends' [qualifiedName / ',']+ ;
         rules = rule+ ;
         rule = ruleTypeLabels IDENTIFIER '=' rhs ';' ;
         rhs = empty | concatenation | choice ;
         ruleTypeLabels = 'override'? 'skip'? 'leaf'? ;
         empty = ;
         choice = ambiguousChoice | priorityChoice | simpleChoice ;
-        ambiguousChoice = [ concatenation, '||' ]2+ ;
-        priorityChoice = [ concatenation, '<' ]2+ ;
-        simpleChoice = [ concatenation, '|' ]2+ ;
+        ambiguousChoice = [ concatenation / '||' ]2+ ;
+        priorityChoice = [ concatenation / '<' ]2+ ;
+        simpleChoice = [ concatenation / '|' ]2+ ;
         concatenation = concatenationItem+ ;
         concatenationItem = simpleItem | listOfItems ;
         simpleItem = terminal | nonTerminal | group ;
@@ -49,11 +49,11 @@ import net.akehurst.language.api.grammar.Rule
         oneOrMore = POSITIVE_INTEGER '+' ;
         range = POSITIVE_INTEGER '..' POSITIVE_INTEGER ;
         simpleList = simpleItem multiplicity ;
-        separatedList = '[' simpleItem ',' terminal ']' multiplicity ;
+        separatedList = '[' simpleItem '/' terminal ']' multiplicity ;
         group = '(' choice ')' ;
         nonTerminal = qualifiedName ;
         terminal = LITERAL | PATTERN ;
-        qualifiedName = [IDENTIFIER, '.']+ ;
+        qualifiedName = [IDENTIFIER / '.']+ ;
         IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*";
         LITERAL = "'([^'\\]|\\'|\\\\)*'" ;
         PATTERN = "\"(\\\"|[^\"])*\"" ;
@@ -109,7 +109,7 @@ private fun createRules(): List<Rule> {
     b.rule("range").concatenation(b.nonTerminal("POSITIVE_INTEGER"), b.terminalLiteral(".."), b.nonTerminal("POSITIVE_INTEGER"))
     b.rule("simpleList").concatenation(b.nonTerminal("simpleItem"), b.nonTerminal("multiplicity"))
     b.rule("separatedList").concatenation(
-        b.terminalLiteral("["), b.nonTerminal("simpleItem"), b.terminalLiteral(","),
+        b.terminalLiteral("["), b.nonTerminal("simpleItem"), b.terminalLiteral("/"),
         b.nonTerminal("simpleItem"), b.terminalLiteral("]"), b.nonTerminal("multiplicity")
     )
     b.rule("group").concatenation(b.terminalLiteral("("), b.nonTerminal("groupedContent"), b.terminalLiteral(")"))

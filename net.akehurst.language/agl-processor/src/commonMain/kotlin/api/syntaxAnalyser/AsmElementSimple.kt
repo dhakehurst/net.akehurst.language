@@ -16,22 +16,25 @@
 
 package net.akehurst.language.api.syntaxAnalyser
 
-class AsmElementProperty(
-        val name: String,
-        val value: Any?
-) {
+class AsmSimple {
+    private var _nextElementId = 0
 
-    override fun toString(): String {
-        return when (value) {
-            is AsmElementSimple -> "$name = :${value.typeName}"
-            is List<*> -> "$name = [...]"
-            else -> "$name = ${value}"
-        }
+    val rootElements: List<AsmElementSimple> = mutableListOf()
+
+    fun addRoot(root: AsmElementSimple) {
+        (rootElements as MutableList).add(root)
     }
+
+    fun createNonRootElement(typeName: String) = AsmElementSimple(_nextElementId++, this, typeName)
+
+    fun createRootElement(typeName: String) = createNonRootElement(typeName).also { this.addRoot(it) }
+
 }
 
 class AsmElementSimple(
-        val typeName: String
+    val id: Int,
+    val asm: AsmSimple,
+    val typeName: String
 ) {
     private var _properties = mutableMapOf<String, AsmElementProperty>()
 
@@ -53,7 +56,51 @@ class AsmElementSimple(
         value.forEach { this._properties[it.name] = it }
     }
 
+    private fun Any.asString(indent: String, currentIndent: String = ""): String = when (this) {
+        is String -> "'$this'"
+        is List<*> -> when (this.size) {
+            0 -> "[]"
+            1 -> "[]"
+            else -> "[]"
+        }
+        is AsmElementSimple -> this.asString(indent, currentIndent)
+        else -> error("property value type not handled '${this::class}'")
+    }
+
+    fun asString(indent: String, currentIndent: String = ""): String {
+        val newIndent = currentIndent + indent
+        val propsStr = this.properties.joinToString(separator = "\n$newIndent", prefix = "{\n$newIndent", postfix = "\n$currentIndent}") {
+            if (null == it.value) {
+                "${it.name} = null"
+            } else {
+                "${it.name} = ${it.value.asString(indent, newIndent)}"
+            }
+        }
+        return "$currentIndent:$typeName $propsStr"
+    }
+
+    override fun hashCode(): Int = id
+
+    override fun equals(other: Any?): Boolean = when (other) {
+        is AsmElementSimple -> this.id == other.id && this.asm == other.asm
+        else -> false
+    }
+
+    override fun toString(): String = ":$typeName($id)"
+
+}
+
+class AsmElementProperty(
+    val name: String,
+    val value: Any?
+    //TODO: enable references!
+) {
+
     override fun toString(): String {
-        return ":$typeName"
+        return when (value) {
+            is AsmElementSimple -> "$name = :${value.typeName}"
+            is List<*> -> "$name = [...]"
+            else -> "$name = ${value}"
+        }
     }
 }

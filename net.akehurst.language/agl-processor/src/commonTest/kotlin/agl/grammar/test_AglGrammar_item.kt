@@ -16,12 +16,12 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import test.assertEqualsWarning
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import test.assertEqualsWarning
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -50,16 +50,18 @@ class test_AglGrammar_item {
             a
         """.trimIndent()
         val actual = parse("nonTerminal", text)
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             nonTerminal {
                 SINGLE_LINE_COMMENT : '// a single line comment'
                 WHITESPACE : '⏎'
                 qualifiedName { IDENTIFIER : 'a' } 
             }
-        """)
+        """
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -69,16 +71,18 @@ class test_AglGrammar_item {
             a
         """.trimIndent()
         val actual = parse("nonTerminal", text)
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             nonTerminal {
                 SINGLE_LINE_COMMENT : '//'
                 WHITESPACE : '⏎'
                 qualifiedName { IDENTIFIER : 'a' } 
             }
-        """)
+        """
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -91,16 +95,18 @@ class test_AglGrammar_item {
         """.trimIndent()
         val actual = parse("nonTerminal", text)
         //TODO("what is 9166 ?")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             nonTerminal {
                 MULTI_LINE_COMMENT : '/* a single line comment⏎sfgh⏎*/'
                 WHITESPACE : '⏎'
                 qualifiedName { IDENTIFIER : 'a' }
             }
-        """)
+        """
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -110,7 +116,7 @@ class test_AglGrammar_item {
         val expected = this.sppt("IDENTIFIER  : 'a' ")
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -119,7 +125,7 @@ class test_AglGrammar_item {
         val expected = this.sppt("LITERAL  : '\\'a\\'' ")
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -128,13 +134,15 @@ class test_AglGrammar_item {
             '\\'
             """.trimIndent()
         val actual = parse("LITERAL", text)
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             LITERAL  : '\'\\\''
-        """.trimIndent())
+        """.trimIndent()
+        )
         //converted to single backslash by SyntaxAnalyser
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -143,7 +151,7 @@ class test_AglGrammar_item {
         val expected = this.sppt("PATTERN  : '\"[a-c]\"' ")
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -152,7 +160,7 @@ class test_AglGrammar_item {
         val expected = this.sppt("PATTERN  : '\"([^\\\"\\\\]|\\.)*\"' ")
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -164,7 +172,7 @@ class test_AglGrammar_item {
         val expected = this.sppt("PATTERN  : '\"[\\\\]\"' ")
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -173,7 +181,7 @@ class test_AglGrammar_item {
         val expected = this.sppt("terminal { LITERAL :'\\'a\\'' }")
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -182,7 +190,7 @@ class test_AglGrammar_item {
         val expected = this.sppt("terminal|1 { PATTERN  : '\"[a-c]\"'  }")
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -191,28 +199,31 @@ class test_AglGrammar_item {
         val expected = this.sppt("qualifiedName { IDENTIFIER  : 'a'  }")
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun qualifiedName_2() {
         val actual = parse("qualifiedName", "a.b")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             qualifiedName {
                 IDENTIFIER  : 'a' 
                 '.'
                 IDENTIFIER  : 'b' 
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun qualifiedName_3() {
         val actual = parse("qualifiedName", "a.b.c")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             qualifiedName {
                 IDENTIFIER  : 'a' 
                 '.'
@@ -220,189 +231,219 @@ class test_AglGrammar_item {
                 '.'
                 IDENTIFIER : 'c' 
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun simpleItem_literal() {
         val actual = parse("simpleItem", "'a'")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             simpleItem { terminal { LITERAL  : '\'a\''  } }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun simpleItem_nonTerminal() {
         val actual = parse("simpleItem", "a")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun multiplicity_0_n() {
         val actual = parse("multiplicity", "*")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             multiplicity { '*' : '*' }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun multiplicity_0_1() {
         val actual = parse("multiplicity", "?")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             multiplicity|2 { '?' : '?' }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun multiplicity_1_n() {
         val actual = parse("multiplicity", "+")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             multiplicity|1 { '+' : '+' }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun multiplicity_2_n() {
         val actual = parse("multiplicity", "2+")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             multiplicity|3 { oneOrMore {
                 POSITIVE_INTEGER : '2'
                 '+'
             } }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun multiplicity_2_5() {
         val actual = parse("multiplicity", "2..5")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             multiplicity|4 { range {
               POSITIVE_INTEGER  : '2' 
               '..'
               POSITIVE_INTEGER  : '5' 
             } }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun multi_literal() {
         val actual = parse("simpleList", "'a'*")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             simpleList {
                 simpleItem { terminal { LITERAL  : '\'a\''  } }
                 multiplicity { '*' : '*' }
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun multi_nonTerminal() {
         val actual = parse("simpleList", "a*")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             simpleList {
                 simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } }
                 multiplicity { '*' }
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun concatenationItem_literal() {
         val actual = parse("concatenationItem", "'a'")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             concatenationItem { simpleItem { terminal { LITERAL : '\'a\'' } } }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun concatenationItem_nonTerminal() {
         val actual = parse("concatenationItem", "a")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } } }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun concatenation_literal_1() {
         val actual = parse("concatenation", "'a'")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             concatenation {
                concatenationItem { simpleItem { terminal { LITERAL  : '\'a\''  } } }
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun concatenation_literal_3() {
         val actual = parse("concatenation", "'a' 'b' 'c'")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             concatenation {
                 concatenationItem { simpleItem { terminal { LITERAL  : '\'a\''  WHITESPACE  : ' ' } } } 
                 concatenationItem { simpleItem { terminal { LITERAL  : '\'b\''  WHITESPACE  : ' ' } } } 
                 concatenationItem { simpleItem { terminal { LITERAL  : '\'c\''  } } 
             } }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun concatenation_nonTerminal_1() {
         val actual = parse("concatenation", "a")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
              concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } } } }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun concatenation_nonTerminal_3() {
         val actual = parse("concatenation", "a b c")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             concatenation {
                 concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
                     IDENTIFIER : 'a' WHITESPACE  : ' ' 
@@ -412,16 +453,18 @@ class test_AglGrammar_item {
                 } } } }
                 concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } }
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun priorityChoice_nonTerminal_3() {
         val actual = parse("priorityChoice", "a < b < c")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             priorityChoice {
                 concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
                     IDENTIFIER : 'a' WHITESPACE  : ' ' 
@@ -433,16 +476,18 @@ class test_AglGrammar_item {
                 '<' WHITESPACE  : ' ' 
                 concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } }
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun simpleChoice_nonTerminal_3() {
         val actual = parse("simpleChoice", "a | b | c")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
              simpleChoice {
                 concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
                 IDENTIFIER : 'a' WHITESPACE : ' '
@@ -454,16 +499,18 @@ class test_AglGrammar_item {
                 '|' WHITESPACE : ' '
                 concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } }
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun choice_simple_nonTerminal_1() {
         val actual = parse("choice", "a | b")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             choice|2 { simpleChoice {
                 concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
                     IDENTIFIER : 'a'
@@ -473,16 +520,18 @@ class test_AglGrammar_item {
                 WHITESPACE : ' '
                 concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' } } } } }
             } }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun choice_priority_nonTerminal_3() {
         val actual = parse("choice", "a < b < c")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             choice|1 { priorityChoice {
                 concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
                     IDENTIFIER : 'a' WHITESPACE  : ' ' 
@@ -494,36 +543,89 @@ class test_AglGrammar_item {
                 '<' WHITESPACE  : ' ' 
                 concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } }
             } }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun group1() {
         val gstr = """
-            r=e?;
-            e=w? a*;
-            s=(s i?);
+            s = a (b c?) ;
         """.trimIndent()
         val actual = parse("rules", gstr)
-        val expected = this.sppt("""
-            group {
-            concatenation {
-                concatenationItem { simpleItem { terminal { LITERAL  : '\'a\''  } } }
-            }
-            }
-        """.trimIndent())
+        val expected = this.sppt(
+            """
+            rules { rule {
+                ruleTypeLabels { isOverride|1 { §empty } isSkip|1 { §empty } isLeaf|1 { §empty } }
+                IDENTIFIER : 's' WHITESPACE : ' '
+                '=' WHITESPACE : ' '
+                rhs|1 { concatenation {
+                    concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' WHITESPACE : ' ' } } } }
+                    concatenationItem { simpleItem|2 { group {
+                        '('
+                        groupedContent { concatenation {
+                        concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
+                        concatenationItem|1 { listOfItems { simpleList { 
+                            simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } }
+                            multiplicity|2 { '?' }
+                        } } }
+                        } }
+                        ')' WHITESPACE : ' '
+                    } } }
+                } }
+                ';'
+            } }
+        """.trimIndent()
+        )
         assertNotNull(actual)
-       // assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(1, actual.maxNumHeads)
+    }
+
+    @Test
+    fun group2() {
+        val gstr = """
+            s = (a b | c?) ;
+        """.trimIndent()
+        val actual = parse("rules", gstr)
+        val expected = this.sppt(
+            """
+            rules { rule {
+                ruleTypeLabels { isOverride|1 { §empty } isSkip|1 { §empty } isLeaf|1 { §empty } }
+                IDENTIFIER : 's' WHITESPACE : ' '
+                '=' WHITESPACE : ' '
+                rhs|1 { concatenation { concatenationItem { simpleItem|2 { group {
+                    '('
+                    groupedContent|1 { choice|2 { simpleChoice {
+                        concatenation {
+                            concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' WHITESPACE : ' ' } } } }
+                            concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
+                        }
+                        '|' WHITESPACE : ' '
+                        concatenation { concatenationItem|1 { listOfItems { simpleList {
+                            simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } }
+                            multiplicity|2 { '?' }
+                        } } } }
+                    } } }
+                    ')' WHITESPACE : ' '
+                } } } } }
+                ';'
+            } }
+        """.trimIndent()
+        )
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
     fun normalRule_priorityChoice_nonTerminal_3() {
         val actual = parse("rule", "r = a < b < c ;")
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             rule {
                 ruleTypeLabels {
                     isOverride|1 { §empty }
@@ -549,10 +651,11 @@ class test_AglGrammar_item {
                 } } }
                 ';'
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -561,7 +664,7 @@ class test_AglGrammar_item {
         val actual = parse("rule", sentence)
 
         assertNotNull(actual)
-        assertEquals(1,actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -572,7 +675,7 @@ class test_AglGrammar_item {
         val actual = parse("rule", sentence)
 
         assertNotNull(actual)
-        assertEqualsWarning(1,actual.maxNumHeads)
+        assertEqualsWarning(1, actual.maxNumHeads)
     }
 
     @Test
@@ -581,7 +684,8 @@ class test_AglGrammar_item {
             skip r = a ;
         """.trimIndent()
         val actual = parse("rule", sentence)
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             rule {
                 ruleTypeLabels {
                     isOverride|1 { §empty }
@@ -596,10 +700,11 @@ class test_AglGrammar_item {
                 } } } } } }
                 ';'
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(2,actual.maxNumHeads)
+        assertEquals(2, actual.maxNumHeads)
     }
 
     @Test
@@ -608,7 +713,8 @@ class test_AglGrammar_item {
             leaf r = a ;
         """.trimIndent()
         val actual = parse("rule", sentence)
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             rule {
                 ruleTypeLabels {
                     isOverride|1 {  §empty } 
@@ -623,10 +729,11 @@ class test_AglGrammar_item {
                 } } } } } }
                 ';'
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(2,actual.maxNumHeads)
+        assertEquals(2, actual.maxNumHeads)
     }
 
     @Test
@@ -635,7 +742,8 @@ class test_AglGrammar_item {
             skip leaf r = a ;
         """.trimIndent()
         val actual = parse("rule", sentence)
-        val expected = this.sppt("""
+        val expected = this.sppt(
+            """
             rule {
                 ruleTypeLabels {
                     isOverride|1 { §empty }
@@ -650,9 +758,10 @@ class test_AglGrammar_item {
                 } } } } } }
                 ';'
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(2,actual.maxNumHeads)
+        assertEquals(2, actual.maxNumHeads)
     }
 }

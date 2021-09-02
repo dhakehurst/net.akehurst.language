@@ -64,6 +64,15 @@ internal class SPPTParserDefault(
     private class SimpleScanner(private val input: CharSequence) {
         var position: Int = 0
 
+        val line:Int get() {
+            val parsed = input.subSequence(0,position)
+            return parsed.count { it=='\n' }
+        }
+        val column:Int get() {
+            val parsed = input.subSequence(0,position)
+            return parsed.length - parsed.lastIndexOf('\n')
+        }
+
         fun hasMore(): Boolean {
             return this.position < this.input.length
         }
@@ -216,6 +225,7 @@ internal class SPPTParserDefault(
                 }
                 scanner.hasNext(CHILDREN_END) -> {
                     scanner.next(CHILDREN_END)
+                    check(nodeNamesStack.isEmpty.not()) {"Error parsing tree at position line:${scanner.line},column:${scanner.column}"}
                     val lastNodeStart = nodeNamesStack.pop()
 
                     val children = childrenStack.pop()

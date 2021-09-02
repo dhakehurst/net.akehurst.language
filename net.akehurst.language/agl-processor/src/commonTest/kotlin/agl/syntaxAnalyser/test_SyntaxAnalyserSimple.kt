@@ -18,6 +18,8 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
+import net.akehurst.language.api.syntaxAnalyser.AsmSimple
+import net.akehurst.language.api.syntaxAnalyser.asmSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -36,11 +38,15 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a"
 
         val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmElementSimple::class,sentence)
+        val actual = proc.process(AsmSimple::class,sentence).rootElements[0]
 
-        assertEquals("S", actual.typeName)
-        assertEquals(1, actual.properties.size)
-        assertEquals("a", actual.getPropertyValue("'a'"))
+        val expected = asmSimple() {
+            element("S") {
+                property("'a'", "a")
+            }
+        }.rootElements[0]
+
+        assertEquals(expected.asString("  "),actual.asString("  "))
     }
 
     @Test
@@ -56,12 +62,15 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a"
 
         val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmElementSimple::class,sentence)
+        val actual = proc.process(AsmSimple::class,sentence).rootElements[0]
 
-        assertEquals("S", actual.typeName)
-        assertEquals(1, actual.properties.size)
-        assertEquals(true, actual.hasProperty("ID"))
-        assertEquals("a", actual.getPropertyValue("ID"))
+        val expected = asmSimple() {
+            element("S") {
+                property("ID", "a")
+            }
+        }.rootElements[0]
+
+        assertEquals(expected.asString("  "),actual.asString("  "))
     }
 
     @Test
@@ -79,14 +88,17 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a : A"
 
         val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process<AsmElementSimple>(AsmElementSimple::class,sentence)
+        val actual = proc.process(AsmSimple::class,sentence).rootElements[0]
 
-        assertEquals("S", actual.typeName)
-        assertEquals(3, actual.properties.size)
-        assertEquals(true, actual.hasProperty("ID"))
-        assertEquals("a", actual.getPropertyValue("ID"))
-        assertEquals(true, actual.hasProperty("type"))
-        assertEquals("A", actual.getPropertyValue("type"))
+        val expected = asmSimple() {
+            element("S") {
+                property("ID", "a")
+                property("':'",":")
+                property("type","A")
+            }
+        }.rootElements[0]
+
+        assertEquals(expected.asString("  "),actual.asString("  "))
     }
 
 
@@ -106,14 +118,17 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a 8 fred"
 
         val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process<AsmElementSimple>(AsmElementSimple::class,sentence)
+        val actual = proc.process(AsmSimple::class,sentence).rootElements[0]
 
-        assertEquals("S", actual.typeName)
-        assertEquals(3, actual.properties.size)
-        assertEquals(true, actual.hasProperty("ID"))
-        assertEquals("a", actual.getPropertyValue("ID"))
-        assertEquals("8", actual.getPropertyValue("NUMBER"))
-        assertEquals("fred", actual.getPropertyValue("NAME"))
+        val expected = asmSimple() {
+            element("S") {
+                property("ID", "a")
+                property("NUMBER","8")
+                property("NAME","fred")
+            }
+        }.rootElements[0]
+
+        assertEquals(expected.asString("  "),actual.asString("  "))
     }
 
     @Test
@@ -138,9 +153,9 @@ class test_SyntaxAnalyserSimple {
         val sentence3 = "a fred 8"
 
         val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual1 = proc.process<AsmElementSimple>(AsmElementSimple::class,sentence1)
-        val actual2 = proc.process<AsmElementSimple>(AsmElementSimple::class,sentence2)
-        val actual3 = proc.process<AsmElementSimple>(AsmElementSimple::class,sentence3)
+        val actual1 = proc.process(AsmSimple::class,sentence1).rootElements[0]
+        val actual2 = proc.process(AsmSimple::class,sentence2).rootElements[0]
+        val actual3 = proc.process(AsmSimple::class,sentence3).rootElements[0]
 
         assertEquals("S", actual1.typeName)
         assertEquals(2, actual1.properties.size)
@@ -178,7 +193,7 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a 8 fred"
 
         val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process<AsmElementSimple>(AsmElementSimple::class,sentence)
+        val actual = proc.process(AsmSimple::class,sentence).rootElements[0]
 
         assertEquals("S", actual.typeName)
         assertEquals(3, actual.properties.size)
@@ -204,7 +219,7 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a fred"
 
         val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process<AsmElementSimple>(AsmElementSimple::class,sentence)
+        val actual = proc.process(AsmSimple::class,sentence).rootElements[0]
 
         assertEquals("S", actual.typeName)
         assertEquals(3, actual.properties.size)
@@ -230,7 +245,7 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a"
 
         val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process<AsmElementSimple>(AsmElementSimple::class,sentence)
+        val actual = proc.process(AsmSimple::class,sentence).rootElements[0]
 
         assertEquals("S", actual.typeName)
         assertEquals(2, actual.properties.size)
@@ -257,7 +272,7 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a adam betty charles"
 
         val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process<AsmElementSimple>(AsmElementSimple::class,sentence)
+        val actual = proc.process(AsmSimple::class,sentence).rootElements[0]
 
         assertEquals("S", actual.typeName)
         assertEquals(2, actual.properties.size)
@@ -286,7 +301,7 @@ class test_SyntaxAnalyserSimple {
         val sentence = "bk1 adam ant 12345, betty boo 34567, charlie chaplin 98765"
 
         val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process<AsmElementSimple>(AsmElementSimple::class,sentence)
+        val actual = proc.process(AsmSimple::class,sentence).rootElements[0]
 
         assertEquals("addressBook", actual.typeName)
         assertEquals(2, actual.properties.size)
@@ -324,12 +339,12 @@ class test_SyntaxAnalyserSimple {
         val sentence = "graph [fontsize=ss labelloc=yy label=bb splines=true overlap=false]"
 
         val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.processForGoal(AsmElementSimple::class,"attr_stmt", sentence)
+        val actual = proc.processForGoal(AsmSimple::class,"attr_stmt", sentence).rootElements[0]
 
-        assertEquals("addressBook", actual.typeName)
+        assertEquals("attr_stmt", actual.typeName)
         assertEquals(2, actual.properties.size)
-        assertEquals(true, actual.hasProperty("ID"))
-        assertEquals("bk1", actual.getPropertyValue("ID"))
+        assertEquals(true, actual.hasProperty("att_type"))
+        assertEquals("graph", actual.getPropertyValue("att_type"))
         assertEquals(true, actual.hasProperty("contacts"))
         assertEquals(5, (actual.getPropertyValue("contacts") as List<Any>).size)
         val list = (actual.getPropertyValue("contacts") as List<Any>)

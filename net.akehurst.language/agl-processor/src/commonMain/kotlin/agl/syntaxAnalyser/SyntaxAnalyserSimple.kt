@@ -21,10 +21,15 @@ import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
+import net.akehurst.language.api.syntaxAnalyser.AsmSimple
+import net.akehurst.language.api.syntaxAnalyser.AsmSimpleBuilder
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 
 class SyntaxAnalyserSimple : SyntaxAnalyser {
+
+    private val _asm = AsmSimple()
+
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
     override fun clear() {
@@ -33,7 +38,8 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
 
     override fun <T> transform(sppt: SharedPackedParseTree): T {
         val value = this.createValue(sppt.root)
-        return value as T
+        _asm.addRoot(value as AsmElementSimple)
+        return _asm as T
     }
 
     private fun createValue(target: SPPTNode): Any? {
@@ -65,7 +71,7 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
                 }
                 RuntimeRuleRhsItemsKind.CONCATENATION -> {
                     val count = mutableMapOf<String, Int>()
-                    var el = AsmElementSimple(br.name)
+                    var el = _asm.createNonRootElement(br.name)// AsmElementSimple(br.name)
                     br.runtimeRule.rhs.items.forEachIndexed { index, rr ->
                         val name = createPropertyName(rr)
                         val value = this.createValue(br.nonSkipChildren[index])

@@ -61,28 +61,28 @@ internal class ConverterToRuntimeRules(
         var n = _nextGroupNumber[parentRuleName] ?: 0
         n++
         _nextGroupNumber[parentRuleName] = n
-        return "§${parentRuleName}§group$n" //TODO: include original rule name fo easier debug
+        return "§${parentRuleName.removePrefix("§")}§group$n" //TODO: include original rule name fo easier debug
     }
 
     private fun createChoiceRuleName(parentRuleName: String): String {
         var n = _nextChoiceNumber[parentRuleName] ?: 0
         n++
         _nextChoiceNumber[parentRuleName] = n
-        return "§${parentRuleName}§choice$n" //TODO: include original rule name fo easier debug
+        return "§${parentRuleName.removePrefix("§")}§choice$n" //TODO: include original rule name fo easier debug
     }
 
     private fun createSimpleListRuleName(parentRuleName: String): String {
         var n = _nextSimpleListNumber[parentRuleName] ?: 0
         n++
         _nextSimpleListNumber[parentRuleName] = n
-        return "§${parentRuleName}§multi$n" //TODO: include original rule name fo easier debug
+        return "§${parentRuleName.removePrefix("§")}§multi$n" //TODO: include original rule name fo easier debug
     }
 
     private fun createSeparatedListRuleName(parentRuleName: String): String {
         var n = _nextSeparatedListNumber[parentRuleName] ?: 0
         n++
         _nextSeparatedListNumber[parentRuleName] = n
-        return "§${parentRuleName}§sepList$n" //TODO: include original rule name fo easier debug
+        return "§${parentRuleName.removePrefix("§")}§sepList$n" //TODO: include original rule name fo easier debug
     }
 
     private fun nextRule(tag: String, kind: RuntimeRuleKind, isPattern: Boolean, isSkip: Boolean): RuntimeRule {
@@ -233,9 +233,13 @@ internal class ConverterToRuntimeRules(
             }
         }
 
-        is Concatenation -> {
-            val items = target.items.map { this.visitConcatenationItem(it, arg) }
-            RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, items.toTypedArray())
+        is Concatenation -> when(target.items.size) {
+            0 -> error("Should not happen")
+            1 -> this.createRhs(target.items[0], arg)
+            else -> {
+                val items = target.items.map { this.visitConcatenationItem(it, arg) }
+                RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, items.toTypedArray())
+            }
         }
 
         is Choice -> this.createRhsForChoice(target, arg)
