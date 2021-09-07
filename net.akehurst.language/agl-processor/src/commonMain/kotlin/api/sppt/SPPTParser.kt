@@ -36,6 +36,6 @@ package net.akehurst.language.api.sppt
  */
 interface SPPTParser {
 
-    fun parse(treeAsString: String): SharedPackedParseTree
+    fun parse(treeAsString: String, addTree:Boolean=false): SharedPackedParseTree
 
 }

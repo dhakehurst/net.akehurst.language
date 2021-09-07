@@ -18,6 +18,8 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
+import net.akehurst.language.api.syntaxAnalyser.AsmSimple
+import net.akehurst.language.api.syntaxAnalyser.asmSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -50,10 +52,20 @@ class test_SyntaxAnalyserSimple_datatypes {
             datatype A { }
         """.trimIndent()
 
-        val actual = processor.process<List<AsmElementSimple>>(List::class,sentence)
+        val actual = processor.process(AsmSimple::class,sentence)
 
-        assertEquals(1, actual.size)
-        assertEquals(0, actual[0].getPropertyAsList("property").size)
+        val expected = asmSimple {
+            element("unit") {
+                property("declaration", listOf(
+                    element("declaration") {
+                        property("ID", "A")
+                        property("property", emptyList<AsmElementSimple>())
+                    }
+                ))
+            }
+        }
+
+        assertEquals(expected.asString("  ",""), actual.asString("  ",""))
     }
 
     @Test
@@ -63,10 +75,24 @@ class test_SyntaxAnalyserSimple_datatypes {
             datatype B { }
         """.trimIndent()
 
-        val actual = processor.process<List<AsmElementSimple>>(List::class,sentence)
+        val actual = processor.process(AsmSimple::class,sentence)
 
-        assertEquals(2, actual.size)
-        assertEquals(0, actual[0].getPropertyAsList("property").size)
+        val expected = asmSimple {
+            element("unit") {
+                property("declaration", listOf(
+                    element("datatype") {
+                        property("ID", "A")
+                        property("property", emptyList<AsmElementSimple>())
+                    },
+                    element("datatype") {
+                        property("ID", "B")
+                        property("property", emptyList<AsmElementSimple>())
+                    }
+                ))
+            }
+        }
+
+        assertEquals(expected.asString("  ",""), actual.asString("  ",""))
     }
 
     @Test
@@ -77,12 +103,19 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         """.trimIndent()
 
-        val actual = processor.process<List<AsmElementSimple>>(List::class,sentence)
+        val actual = processor.process(AsmSimple::class,sentence)
 
-        assertEquals(1, actual.size)
-        val actualDeclaration1 = actual[0]
-        assertEquals(1, actualDeclaration1.getPropertyAsList("property").size)
-        val actualDeclaration1Property1 = actualDeclaration1.getPropertyAsList("property")[0] as AsmElementSimple
-        assertEquals("a", actualDeclaration1Property1.getPropertyValue("ID"))
+        val expected = asmSimple {
+            element("unit") {
+                property("declaration", listOf(
+                    element("declaration") {
+                        property("ID", "A")
+                        property("property", emptyList<AsmElementSimple>())
+                    }
+                ))
+            }
+        }
+
+        assertEquals(expected.asString("  ",""), actual.asString("  ",""))
     }
 }

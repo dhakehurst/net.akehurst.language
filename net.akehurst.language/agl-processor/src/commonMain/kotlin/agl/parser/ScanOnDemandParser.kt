@@ -135,12 +135,12 @@ internal class ScanOnDemandParser(
             SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
         } else {
             val nextExpected = this.findNextExpectedAfterError(rp, rp.graph, input) //this possibly modifies rp and hence may change the longestLastGrown
-            throwError(rp.graph, rp, nextExpected, seasons, maxNumHeads)
+            throwError(input, rp, nextExpected, seasons, maxNumHeads)
         }
     }
 
     private fun throwError(
-        graph: ParseGraph,
+        input: InputFromString,
         rp: RuntimeParser,
         nextExpected: Pair<InputLocation, Set<RuntimeRule>>,
         seasons: Int,
@@ -158,20 +158,8 @@ internal class ScanOnDemandParser(
         //        .toSet()
         val expected = exp.map { it.tag }.toSet()
         val errorPos = lastLocation.position + lastLocation.length
-        val lastEolPos = llg.matchedText.lastIndexOf('\n')
-        val errorLine = llg.location.line + llg.numberOfLines
-        //val lastLocation = graph.input.locationFor(llg.lastLeaf.startPosition, llg.lastLeaf.nextInputPosition)
-        // val errorColumn = when {
-        //     lastLocation.position == 0 && lastLocation.length == 0 -> errorPos + 1
-        //     -1 == lastEolPos -> lastLocation.column + lastLocation.length
-        //     else -> llg.matchedTextLength - lastEolPos
-        // }
-        val errorColumn = when {
-            -1 == lastEolPos -> errorPos + 1
-            else -> llg.matchedTextLength - lastEolPos
-        }
-        val errorLength = 1
-        val location = InputLocation(errorPos, errorColumn, errorLine, errorLength)
+        val errorLength = 1 //TODO: determine a better length
+        val location = input.locationFor(errorPos,errorLength)//InputLocation(errorPos, errorColumn, errorLine, errorLength)
 
         //val expected = emptySet<String>()
         // val location = nextExpected.first//InputLocation(0,0,0,0)

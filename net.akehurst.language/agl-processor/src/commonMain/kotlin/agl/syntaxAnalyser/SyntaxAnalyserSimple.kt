@@ -28,7 +28,7 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 class SyntaxAnalyserSimple : SyntaxAnalyser {
 
-    private val _asm = AsmSimple()
+    private var _asm:AsmSimple? =null
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
@@ -37,8 +37,9 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
     }
 
     override fun <T> transform(sppt: SharedPackedParseTree): T {
+        _asm = AsmSimple()
         val value = this.createValue(sppt.root)
-        _asm.addRoot(value as AsmElementSimple)
+        _asm?.addRoot(value as AsmElementSimple)
         return _asm as T
     }
 
@@ -71,8 +72,9 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
                 }
                 RuntimeRuleRhsItemsKind.CONCATENATION -> {
                     val count = mutableMapOf<String, Int>()
-                    var el = _asm.createNonRootElement(br.name)// AsmElementSimple(br.name)
+                    var el = _asm!!.createNonRootElement(br.name)// AsmElementSimple(br.name)
                     br.runtimeRule.rhs.items.forEachIndexed { index, rr ->
+                        //TODO: leave out unnamed literals
                         val name = createPropertyName(rr)
                         val value = this.createValue(br.nonSkipChildren[index])
                         if (el.hasProperty(name)) {
@@ -85,7 +87,8 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
                         }
                     }
                     if (br.runtimeRule.rhs.items.size == 1) {
-                        if (br.runtimeRule.rhs.items[0].kind == RuntimeRuleKind.NON_TERMINAL
+                        if (br != br.tree?.root &&
+                            br.runtimeRule.rhs.items[0].kind == RuntimeRuleKind.NON_TERMINAL
                             && br.runtimeRule.rhs.items[0].rhs.itemsKind == RuntimeRuleRhsItemsKind.LIST
                         ) {
                             el.properties[0].value
@@ -100,11 +103,17 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
                     RuntimeRuleListKind.MULTI -> {
                         val name = br.runtimeRule.rhs.items[RuntimeRuleItem.MULTI__ITEM].tag
                         val list = br.nonSkipChildren.mapNotNull { this.createValue(it) }
-                        if (br.runtimeRule.rhs.multiMax == 1) {
-                            val value = if (list.isEmpty()) null else list[0]
-                            value
+                        val value = if (br.runtimeRule.rhs.multiMax == 1) {
+                            if (list.isEmpty()) null else list[0]
                         } else {
                             list
+                        }
+                        if (br == br.tree?.root) {
+                            val el = _asm!!.createNonRootElement(br.name)
+                            el.setProperty(name, value)
+                            el
+                        } else {
+                            value
                         }
                     }
                     RuntimeRuleListKind.SEPARATED_LIST -> {
@@ -126,12 +135,13 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
     }
 
     private fun createPropertyName(runtimeRule: RuntimeRule): String {
+        //TODO: think we have to determine if rr is a pseudo rule or not here!
         return when (runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> runtimeRule.tag
             RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {
                 RuntimeRuleRhsItemsKind.LIST -> when (runtimeRule.rhs.listKind) {
                     RuntimeRuleListKind.MULTI -> createPropertyName(runtimeRule.rhs.items[RuntimeRuleItem.MULTI__ITEM])
-                    RuntimeRuleListKind.SEPARATED_LIST -> createPropertyName(runtimeRule.rhs.items[RuntimeRuleItem.SLIST__ITEM])
+                    RuntimeRuleListKind.SEPARATED_LIST -> runtimeRule.tag
                     else -> TODO()
                 }
                 else -> runtimeRule.tag

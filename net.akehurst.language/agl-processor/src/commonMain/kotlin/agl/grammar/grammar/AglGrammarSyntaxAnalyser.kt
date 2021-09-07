@@ -113,7 +113,7 @@ internal class AglGrammarSyntaxAnalyser(
         return if (children.isEmpty()) {
             emptyList<Grammar>()
         } else {
-            val extendNameList = children[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren.map { it.nonSkipMatchedText }
+            val extendNameList = children[0].branchNonSkipChildren[0].branchNonSkipChildren.map { it.nonSkipMatchedText }
             val extendedGrammars = extendNameList.map {
                 this.grammarRegistry.find(localNamespace.qualifiedName, it)
             }

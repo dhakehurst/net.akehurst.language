@@ -78,8 +78,6 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         )
     }
 
-
-
     @Test
     fun empty_fails() {
         val goal = "S"

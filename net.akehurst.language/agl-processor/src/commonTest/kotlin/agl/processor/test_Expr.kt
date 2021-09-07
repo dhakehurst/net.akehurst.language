@@ -32,10 +32,10 @@ grammar Test {
         val text = "a"
 
         val expected = """
-             S|1 { INT : '123' }
+             expr|1 { var { NAME : 'a' } }
         """.trimIndent()
 
-        super.test(processor,"S", text, expected)
+        super.test(processor,"expr", text, expected)
     }
 
 }

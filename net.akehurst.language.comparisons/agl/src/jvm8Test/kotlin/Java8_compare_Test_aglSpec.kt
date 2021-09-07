@@ -49,7 +49,7 @@ class Java8_compare_Test_aglSpec(val file: FileData) {
         fun createAndBuildProcessor(aglFile: String): LanguageProcessor {
             val bytes = Java8_compare_Test_aglSpec::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
-            val proc = Agl.processor(javaGrammarStr)
+            val proc = Agl.processorFromString(javaGrammarStr)
             // no need to build because, sentence is parsed twice in the test
             return proc
         }
@@ -60,9 +60,9 @@ class Java8_compare_Test_aglSpec(val file: FileData) {
 
         fun parseWithJava8Agl(file: FileData): SharedPackedParseTree? {
             return try {
-                aglProcessor.parse("CompilationUnit", input!!)
+                aglProcessor.parseForGoal("CompilationUnit", input!!)
                 TimeLogger(col, file).use { timer ->
-                    val tree = aglProcessor.parse("CompilationUnit", input!!)
+                    val tree = aglProcessor.parseForGoal("CompilationUnit", input!!)
                     timer.success()
                     tree
                 }

@@ -186,7 +186,7 @@ grammar Expressions extends Types {
     leaf INFIX_OPERATOR
       = '%' | '/' | '*' | '+' | '-'
       | '<<' | '>>>' | '>>'
-      | '<=' | '>=' | '<' | '>'
+      | '<=' | '>=' | '<' | '>' | 'instanceof'
       | '==' | '!='
       | '&&' | '||' | '&' | '|' | '^'
       ;

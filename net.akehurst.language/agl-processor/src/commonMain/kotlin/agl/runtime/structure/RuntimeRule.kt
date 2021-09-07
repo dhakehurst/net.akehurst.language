@@ -35,6 +35,11 @@ internal class RuntimeRule(
     val embeddedRuntimeRuleSet: RuntimeRuleSet? = null,
     val embeddedStartRule: RuntimeRule? = null
 ) {
+    //TODO: neeeds properties:
+    // isUnnamedLiteral - so we can eliminate from AsmSimple
+    // isGenerated - also w.r.t. AsmSimple so we know if we should try and get a property name from the elements
+    // not sure if I really want to add the data to this class as only used for AsmSimple not runtime use?
+
 
     //TODO: get rid of this rhsOpt hack!
     var rhsOpt: RuntimeRuleItem? = null

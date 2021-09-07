@@ -29,6 +29,10 @@ class AsmSimple {
 
     fun createRootElement(typeName: String) = createNonRootElement(typeName).also { this.addRoot(it) }
 
+    fun asString(indent: String, currentIndent: String = ""): String = this.rootElements.joinToString(separator = "\n") {
+        it.asString(indent, currentIndent)
+    }
+
 }
 
 class AsmElementSimple(
@@ -60,8 +64,11 @@ class AsmElementSimple(
         is String -> "'$this'"
         is List<*> -> when (this.size) {
             0 -> "[]"
-            1 -> "[]"
-            else -> "[]"
+            1 -> "[${this[0]?.asString(indent, currentIndent)}]"
+            else -> {
+                val newIndent = currentIndent + indent
+                this.joinToString(separator = "\n$newIndent", prefix = "[\n$newIndent", postfix = "\n$currentIndent]") { it?.asString(indent, newIndent) ?: "null" }
+            }
         }
         is AsmElementSimple -> this.asString(indent, currentIndent)
         else -> error("property value type not handled '${this::class}'")
@@ -76,7 +83,7 @@ class AsmElementSimple(
                 "${it.name} = ${it.value.asString(indent, newIndent)}"
             }
         }
-        return "$currentIndent:$typeName $propsStr"
+        return ":$typeName $propsStr"
     }
 
     override fun hashCode(): Int = id

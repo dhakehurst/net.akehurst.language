@@ -222,7 +222,7 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(1, actual.runtimeRules[1].rhs.multiMin)
         assertEquals(-1, actual.runtimeRules[1].rhs.multiMax)
         assertEquals(r0, actual.runtimeRules[1].rhs.items.get(0))
-        assertFailsWith(ParserException::class) {
+        assertFailsWith(IllegalStateException::class) {
             actual.runtimeRules[1].emptyRuleItem
         }
     }
@@ -234,13 +234,13 @@ class test_RuntimeRuleSetBuilder {
         val actual = sut.ruleSet()
 
         assertNotNull(actual)
-        assertFailsWith(ParserException::class) {
+        assertFailsWith(IllegalStateException::class) {
             sut.literal("a")
         }
-        assertFailsWith(ParserException::class) {
+        assertFailsWith(IllegalStateException::class) {
             sut.pattern("[a-z]")
         }
-        assertFailsWith(ParserException::class) {
+        assertFailsWith(IllegalStateException::class) {
             sut.rule("a").empty()
         }
 

@@ -18,6 +18,7 @@ package net.akehurst.language.parser.scanondemand.multi
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.AutomatonKind
@@ -30,36 +31,31 @@ import kotlin.test.assertNotNull
 
 internal class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract() {
 
+    // r = m
+    // m = a b? a
+    // a = 'a'
+    // b = 'b'
     private companion object {
-        val rrb = RuntimeRuleSetBuilder()
+        val rrs = runtimeRuleSet {
+            concatenation("r") { ref("m") }
+            concatenation("m") { literal("a"); ref("bm"); literal("a") }
+            multi("bm",0,1,"'b'")
+            literal("'b'","b")
+        }
+        val goal = "r"
+        val parser = ScanOnDemandParser(rrs)
     }
 
     private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
         return sp.parse(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1)
     }
 
-
-    // r = m
-    // m = a b? a
-    // a = 'a'
-    // b = 'b'
-    private fun rmab01a(): ScanOnDemandParser {
-        val ra = rrb.literal("a")
-        val rb = rrb.literal("b")
-        val rbm = rrb.rule("bm").multi(0, 1, rb)
-        val rm = rrb.rule("m").concatenation(ra, rbm, ra)
-        val rr = rrb.rule("r").concatenation(rm)
-        return ScanOnDemandParser(rrb.ruleSet())
-    }
-
     @Test
     fun rma01__r__empty_fails() {
-        val sp = rmab01a()
-        val goalRuleName = "r"
         val inputText = ""
 
         val e = assertFailsWith(ParseFailedException::class) {
-            test_parse(sp, goalRuleName, inputText)
+            test_parse(parser, goal, inputText)
         }
 
         assertEquals(1, e.location.line)
@@ -68,12 +64,10 @@ internal class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract(
 
     @Test
     fun rma01__r__a_fails() {
-        val sp = rmab01a()
-        val goalRuleName = "r"
         val inputText = "a"
 
         val e = assertFailsWith(ParseFailedException::class) {
-            test_parse(sp, goalRuleName, inputText)
+            test_parse(parser, goal, inputText)
         }
 
         assertEquals(1, e.location.line)
@@ -82,15 +76,13 @@ internal class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract(
 
     @Test
     fun rmab01a__r__aa() {
-        val sp = rmab01a()
-        val goalRuleName = "r"
         val inputText = "aa"
 
-        val actual = test_parse(sp, goalRuleName, inputText)
+        val actual = test_parse(parser, goal, inputText)
 
         assertNotNull(actual)
 
-        val p = SPPTParserDefault(rrb)
+        val p = SPPTParserDefault(rrs)
         val expected = p.addTree("r { m { 'a' bm|1 { §empty } 'a' } }")
 
         assertEquals(expected.toStringAll, actual.toStringAll)

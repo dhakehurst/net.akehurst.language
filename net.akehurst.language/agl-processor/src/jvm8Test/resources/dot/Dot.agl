@@ -54,7 +54,7 @@ grammar Dot  {
     leaf compass_pt	= 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw' | 'c' | '_' ;
 
     edge_stmt =	edge_list attr_lists? ;
-    edge_list = [edge_end, EDGEOP ]2+ ;
+    edge_list = [edge_end / EDGEOP ]2+ ;
     edge_end = node_id | subgraph ;
     leaf EDGEOP = '--' | '->' ;
 
@@ -62,7 +62,7 @@ grammar Dot  {
     attr_type = GRAPH | NODE | EDGE ;
     attr_lists = attr_list+ ;
     attr_list = '[' attr_list_content ']' ;
-    attr_list_content = [ attr, a_list_sep ]* ;
+    attr_list_content = [ attr / a_list_sep ]* ;
     attr = ID '=' ID ;
     a_list_sep = (';' | ',')? ;
 

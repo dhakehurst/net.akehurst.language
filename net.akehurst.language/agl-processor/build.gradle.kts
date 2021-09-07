@@ -12,7 +12,7 @@ kotlin {
                 "url" to "https://medium.com/@dr.david.h.akehurst"
             ))
             customField("license", "Apache-2.0")
-            customField("keywords", listOf("parser","grammar","langauge", "agl"))
+            customField("keywords", listOf("parser", "grammar", "langauge", "dsl", "agl"))
             customField("homepage", "https://github.com/dhakehurst/net.akehurst.language")
             customField("description:", "Generic Language (DSL) support, (parser, syntax-analyser, formatter, processor, etc), built using Kotlin multiplatform")
         }

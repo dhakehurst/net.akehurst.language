@@ -16,6 +16,8 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.syntaxAnalyser.AsmSimple
+import net.akehurst.language.api.syntaxAnalyser.asmSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -28,16 +30,17 @@ namespace com.yakindu.modelviewer.parser
 
 grammar Mscript {
 
-    // if we treat '\n' as part of the WHITESPACE skip rule, we get ambiguity in statements
+    // end-of-line ('\n') is not whitespace as it marks end of a line in a statementList
     skip WHITESPACE = "[ \t\x0B\f]+" ;
-    skip LINE_CONTINUATION =  "[.][.][.](.*)(\r?\n)" ;
+    skip LINE_CONTINUATION =  "[.][.][.](?:.*)\R" ;
     skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
-         MULTI_LINE_COMMENT = "%[{]([^%]|(\r?\n))*%[}]" ;
-         SINGLE_LINE_COMMENT = "%([^{\n].*)?$" ;
+         MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
+         SINGLE_LINE_COMMENT = "(?:%[^{].+${'$'})|(?:%${'$'})" ;
 
     script = statementList ;
-    statementList = [line / "(\r?\n)"]* ;
-    line = statement? ';'?  ;
+    statementList = [line / "\R"]* ;
+    // if we treat '\n' as part of the WHITESPACE skip rule, we get ambiguity in statements
+    line = [statement / ';']* ';'? ;
 
     statement
       = conditional
@@ -72,16 +75,14 @@ grammar Mscript {
 
     infixExpression =  [ expression / infixOperator ]2+ ;
     infixOperator
-        = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-'     // arithmetic
+        = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-'    // arithmetic
         | '==' | '~=' | '>' | '>=' | '<' | '<='                 // relational
         | '&' | '|' | '&&' | '||' | '~'                         // logical
-        | ':'
+        | ':'                                                   // vector creation
         ;
 
     matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
     row = expression (','? expression)* ;
-    //row = [expression / opCmr ]+ ;
-    //opCmr = ','? ;
 
     literal
       = BOOLEAN
@@ -94,15 +95,14 @@ grammar Mscript {
 
     number = INTEGER | REAL ;
 
-    leaf NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
+    NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
 
-    leaf COLON               = ':' ;
-    leaf BOOLEAN             = 'true' | 'false' ;
-    leaf INTEGER             = "([+]|[-])?[0-9]+" ;
-    leaf REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
-    leaf SINGLE_QUOTE_STRING = "'([^'\\]|\\.)*'" ;
-    leaf DOUBLE_QUOTE_STRING = "\"([^\"\\]|\\.)*\"" ;
-
+    COLON               = ':' ;
+    BOOLEAN             = 'true' | 'false' ;
+    INTEGER             = "([+]|[-])?[0-9]+" ;
+    REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
+    SINGLE_QUOTE_STRING = "'(?:[^'\\]|\\.)*'" ;
+    DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
 }
     """.trimIndent()
         val sut = Agl.processorFromString(grammarStr)
@@ -569,14 +569,15 @@ grammar Mscript {
     fun process_script_nested_func() {
 
         val text = "disp(get_param(gcbh,'xxx'))"
-        val actual = sut.parseForGoal("script", text)
+        val actual = sut.processForGoal(AsmSimple::class,"script", text)
 
-        assertNotNull(actual)
-        assertEquals("script", actual.root.name)
-        assertEquals(
-            "functionCall",
-            actual.root.asBranch.branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].branchNonSkipChildren[0].name
-        )
+        val expected = asmSimple {
+            element(":script") {
+
+            }
+        }
+
+        assertEquals(expected.asString(" "), actual.asString(" "))
     }
 
 }

@@ -42,7 +42,7 @@ class AsmElementSimpleBuilder(
 ) {
     private val _element = if (isRoot) _asm.createRootElement(typeName) else _asm.createNonRootElement(typeName)
 
-    fun property(name: String, value: String) {
+    fun property(name: String, value: Any?) {
         _element.setProperty(name, value)
     }
 

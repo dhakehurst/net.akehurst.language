@@ -17,6 +17,8 @@
 package net.akehurst.language.parser.expectedTerminalsAt
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -24,7 +26,7 @@ import kotlin.test.assertEquals
 
 class test_aOpt {
 
-    private data class Data(val sentence: String, val position: Int, val expected: List<String>)
+    private data class Data(val sentence: String, val position: Int, val expected: List<RuntimeRule>)
 
     // skip WS = "\s+" ;
     // S = 'a'? ;
@@ -37,23 +39,25 @@ class test_aOpt {
         }
         val goal = "S"
         val parser = ScanOnDemandParser(rrs)
+        val a = rrs.findTerminalRule("'a'")
+        val EOT = RuntimeRuleSet.END_OF_TEXT
 
         val testData = listOf(
-            Data("", 0, listOf("a")),
-            Data(" ", 0, listOf("a")),
-            Data(" ", 1, listOf("a")),
-            Data("a", 0, listOf("a")),
-            Data("a", 1, listOf()),
-            Data(" a", 0, listOf("a")),
-            Data(" a", 1, listOf("a")),
-            Data(" a", 2, listOf()),
-            Data("a ", 0, listOf("a")),
-            Data("a ", 1, listOf()),
-            Data("a ", 2, listOf()),
-            Data(" a ", 0, listOf("a")),
-            Data(" a ", 1, listOf("a")),
-            Data(" a ", 2, listOf()),
-            Data(" a ", 3, listOf()),
+            Data("", 0, listOf(a, EOT)),
+            Data(" ", 0, listOf(a, EOT)),
+            Data(" ", 1, listOf(a, EOT)),
+            Data("a", 0, listOf(a, EOT)),
+            Data("a", 1, listOf(EOT)),
+            Data(" a", 0, listOf(a, EOT)),
+            Data(" a", 1, listOf(a, EOT)),
+            Data(" a", 2, listOf(EOT)),
+            Data("a ", 0, listOf(a, EOT)),
+            Data("a ", 1, listOf(EOT)),
+            Data("a ", 2, listOf(EOT)),
+            Data(" a ", 0, listOf(a, EOT)),
+            Data(" a ", 1, listOf(a, EOT)),
+            Data(" a ", 2, listOf(EOT)),
+            Data(" a ", 3, listOf(EOT)),
         )
     }
 
@@ -64,9 +68,9 @@ class test_aOpt {
             val position = data.position
 
             val result = parser.expectedTerminalsAt(goal, sentence, position, AutomatonKind.LOOKAHEAD_1)
-            val actual = result.filter { it.isEmptyRule.not() }.map { it.value }
+            val actual = result.filter { it.isEmptyRule.not() }
             val expected = data.expected
-            assertEquals(expected, actual)
+            assertEquals(expected, actual, "${data}")
         }
     }
 

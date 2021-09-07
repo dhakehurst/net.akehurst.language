@@ -19,7 +19,6 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.regex.RegexMatcher
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.MutableStack
@@ -27,7 +26,6 @@ import net.akehurst.language.collections.MutableStack
 internal class SPPTParserDefault(
         val runtimeRuleSet: RuntimeRuleSet
 ) : SPPTParser {
-    constructor(rrsb: RuntimeRuleSetBuilder) : this(rrsb.ruleSet())
 
     private val WS = regexMatcher("\\s+")
     private val EMPTY = regexMatcher("§empty")
@@ -112,9 +110,14 @@ internal class SPPTParserDefault(
         return n?.asBranch
     }
 
-    override fun parse(treeString: String) : SharedPackedParseTree {
+    override fun parse(treeAsString: String, addTree:Boolean) : SharedPackedParseTree {
+        if (addTree) {
+            //do not reset cache
+        } else {
+            this.node_cache.clear()
+        }
         val input = InputFromString(runtimeRuleSet.terminalRules.size, "") //TODO: not sure we should reuse this here? maybe ok
-        val scanner = SimpleScanner(treeString)
+        val scanner = SimpleScanner(treeAsString)
         val nodeNamesStack = MutableStack<NodeStart>()
         val childrenStack = MutableStack<MutableList<SPPTNode>>()
         // add rootList
@@ -233,8 +236,8 @@ internal class SPPTParserDefault(
                     childrenStack.peek().add(node)
                 }
                 else -> {
-                    val before = treeString.substring(maxOf(0, scanner.position - 5), scanner.position)
-                    val after = treeString.substring(scanner.position, minOf(treeString.length, scanner.position + 5))
+                    val before = treeAsString.substring(maxOf(0, scanner.position - 5), scanner.position)
+                    val after = treeAsString.substring(scanner.position, minOf(treeAsString.length, scanner.position + 5))
                     val seg = "${before}^${after}"
                     throw RuntimeException("Tree String invalid at position ${scanner.position}, ...$seg...")
                 }
@@ -292,7 +295,7 @@ internal class SPPTParserDefault(
     }
 
     fun addTree(treeString: String): SharedPackedParseTree {
-        this.parse(treeString)
+        this.parse(treeString, true)
         return this.tree
     }
 }

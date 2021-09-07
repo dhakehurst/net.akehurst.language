@@ -17,12 +17,9 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
-import net.akehurst.language.api.sppt.SPPTBranch
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.api.sppt.SPPTNodeIdentity
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.sppt.*
 
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties
@@ -63,6 +60,19 @@ import net.akehurst.language.api.parser.InputLocation
     abstract override val asBranch: SPPTBranch
 
     override var parent: SPPTBranch? = null
+
+    private var _tree: SharedPackedParseTree? = null
+    override var tree: SharedPackedParseTree?
+    get() = if (null != this._tree || null==this.parent) {
+        this._tree
+    } else {
+        var br = this.parent
+        while (null!=br?.parent) {
+           br = br.parent
+        }
+        br?.tree
+    }
+    set(value) { _tree = value }
 
     override val location: InputLocation get() = input.locationFor(startPosition,matchedTextLength)
 
