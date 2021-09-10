@@ -52,11 +52,11 @@ internal class test_sList_compositeMulti : test_Abstract() {
         val i = rrs.findRuntimeRule("SMI")
         val n = rrs.findRuntimeRule("N")
 
-        val lhs_n = SM.runtimeRuleSet.createLookaheadSet(setOf(n))
-        val lhs_c = SM.runtimeRuleSet.createLookaheadSet(setOf(c))
-        val lhs_i = SM.runtimeRuleSet.createLookaheadSet(setOf(i))
-        val lhs_nU = SM.runtimeRuleSet.createLookaheadSet(setOf(n, UP))
-        val lhs_ciU = SM.runtimeRuleSet.createLookaheadSet(setOf(c, i, UP))
+        val lhs_n = SM.createLookaheadSet(setOf(n))
+        val lhs_c = SM.createLookaheadSet(setOf(c))
+        val lhs_i = SM.createLookaheadSet(setOf(i))
+        val lhs_nU = SM.createLookaheadSet(setOf(n, UP))
+        val lhs_ciU = SM.createLookaheadSet(setOf(c, i, UP))
 
         val s0 = SM.startState
         val s1 = SM.states[listOf(RP(n, 0, EOR))]

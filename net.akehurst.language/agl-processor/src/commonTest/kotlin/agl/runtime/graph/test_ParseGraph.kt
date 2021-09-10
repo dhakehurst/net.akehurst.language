@@ -63,7 +63,7 @@ class test_ParseGraph {
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
         val startState = rrs.fetchStateSetFor(userGoalRule, AutomatonKind.LOOKAHEAD_1).startState
-        sut.start(startState,0, rrs.createLookaheadSet(setOf(RuntimeRuleSet.END_OF_TEXT)))
+        sut.start(startState,0, startState.stateSet.createLookaheadSet(setOf(RuntimeRuleSet.END_OF_TEXT)))
 
         val actual = sut.canGrow
 

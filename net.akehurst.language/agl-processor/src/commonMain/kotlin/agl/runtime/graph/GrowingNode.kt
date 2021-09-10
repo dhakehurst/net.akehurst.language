@@ -21,9 +21,10 @@ import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.sppt.SPPTNode
 
 internal class GrowingNode(
-        val currentState: ParserState, // current rp of this node, it is growing, this changes (for new node) when children are added
-        val lookahead: LookaheadSet,
-        val children: GrowingChildren
+    val graph: ParseGraph,
+    val currentState: ParserState,
+    val lookahead: LookaheadSet,
+    val children: GrowingChildren
 ) {
     /*
     class GrowingChildNode(
@@ -384,7 +385,6 @@ internal class GrowingNode(
     val nextInputPosition: Int get() = children.nextInputPosition
     val numNonSkipChildren: Int get() = children.numberNonSkip
 
-
     //val location: InputLocation get() = children.location
     val startPosition get() = children.startPosition
     val matchedTextLength: Int = this.nextInputPosition - this.startPosition
@@ -414,29 +414,16 @@ val lastLocation
             return this.currentState.isAtEnd && this.startPosition == this.nextInputPosition
         }
 
-    val canGrowWidth: Boolean by lazy {
-        // not sure we need the test for isEmpty, because if it is empty it should be complete or NOT!???
-        if (this.isLeaf || this.isEmptyMatch) {//or this.hasCompleteChildren) {
-            false
-        } else {
-            this.currentState.isAtEnd.not()
-//            this.runtimeRule.canGrowWidth(this.currentState.position)
+    private var _asCompletedNodes: MutableList<SPPTNode>? = null
+    val asCompletedNodes: List<SPPTNode> get() {
+         if (null==_asCompletedNodes && this.isLeaf) {
+             this._asCompletedNodes = mutableListOf(
+                 this.graph.input.leaves[this.runtimeRules.first(), startPosition] ?: error("Internal Error: leaf node not found!")
+             )
         }
+        return _asCompletedNodes ?: error("Internal Error: completedNodes not set")
     }
 
-    val nextExpectedItems: Set<RuntimeRule> by lazy {
-        this.currentState.rulePositions.mapNotNull { it.item }.toSet()
-        //this.runtimeRule.findNextExpectedItems(this.currentState.position)
-    }
-
-    /*
-    val incrementedNextItemIndex: Int
-        get() {
-            return this.runtimeRule.incrementNextItemIndex(this.currentState.position)
-        }
-
-    fun priorityFor(runtimeRule: RuntimeRule): Int = children.priorityFor(runtimeRule)
-    */
     fun newPrevious() {
         this.previous = mutableMapOf()
     }
@@ -461,6 +448,11 @@ val lastLocation
 
     fun removeNext(value: GrowingNode) {
         this.next.remove(value)
+    }
+
+    fun addCompleted(runtimeRule: RuntimeRule, completedNode:SPPTNode) {
+        if (null==this._asCompletedNodes) this._asCompletedNodes = mutableListOf()
+        this._asCompletedNodes?.add(completedNode)
     }
 
     fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {
@@ -513,7 +505,7 @@ val lastLocation
         return s
     }
 
-// --- Any ---
+    // --- Any ---
 
     override fun hashCode(): Int {
         return this.hashCode_cache
@@ -533,4 +525,5 @@ val lastLocation
     override fun toString(): String {
         return this.toStringTree(false, true)
     }
+
 }

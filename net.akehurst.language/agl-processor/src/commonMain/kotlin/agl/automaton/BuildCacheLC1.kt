@@ -396,7 +396,7 @@ internal class BuildCacheLC1(
         }
     }
 
-    private fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet = this.stateSet.runtimeRuleSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
+    private fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet = this.stateSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
 
     private fun dnClosureLC1(rp: RulePosition, upLhs: LookaheadSet): Set<ClosureItemLC1> {
         return if (_cacheOff) {
@@ -457,7 +457,7 @@ internal class BuildCacheLC1(
                                 val chNext = chRp.next()
                                 for (chNx in chNext) {
                                     val lh = firstOf(chNx, item.lookaheadSet)
-                                    val lhs = this.stateSet.runtimeRuleSet.createLookaheadSet(lh)
+                                    val lhs = this.stateSet.createLookaheadSet(lh)
                                     val ci = ClosureItemLC1(item, chRp, chNx, lhs)
                                     calcDnClosureLC1(ci, items)
                                 }

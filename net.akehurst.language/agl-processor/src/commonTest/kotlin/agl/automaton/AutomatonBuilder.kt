@@ -57,8 +57,8 @@ internal class AutomatonBuilder(
         upLookaheadContent: Set<RuntimeRule>,
         prevGuard: List<RulePosition>?
     ): Transition {
-        val lookaheadGuard = result.runtimeRuleSet.createLookaheadSet(lookaheadGuardContent)
-        val upLookahead = result.runtimeRuleSet.createLookaheadSet(upLookaheadContent)
+        val lookaheadGuard = result.createLookaheadSet(lookaheadGuardContent)
+        val upLookahead = result.createLookaheadSet(upLookaheadContent)
         val trans = Transition(from, to, action, lookaheadGuard, upLookahead, prevGuard) { _, _ -> true }
         return from.outTransitions.addTransition(previousStates, trans)
     }

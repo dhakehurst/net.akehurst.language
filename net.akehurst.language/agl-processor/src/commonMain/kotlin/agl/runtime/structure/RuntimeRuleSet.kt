@@ -24,47 +24,6 @@ import net.akehurst.language.collections.lazyMap
 import net.akehurst.language.collections.lazyMapNonNull
 import net.akehurst.language.collections.transitiveClosure
 
-internal class LookaheadSet(
-    val number: Int,
-    val content: Set<RuntimeRule>
-) {
-    companion object {
-        val EMPTY = LookaheadSet(-1, emptySet())
-        val ANY = LookaheadSet(-1, setOf(RuntimeRuleSet.ANY_LOOKAHEAD))
-        val EOT = LookaheadSet(-2, setOf(RuntimeRuleSet.END_OF_TEXT))
-        val UP = LookaheadSet(-3, setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
-    }
-
-    fun resolve(runtimeLookahead: LookaheadSet): Set<RuntimeRule> {
-        return when {
-            UP == runtimeLookahead -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
-            ANY == this -> this.content
-            null == runtimeLookahead -> this.content
-            UP == this -> runtimeLookahead.content
-            else -> {
-                var result = mutableSetOf<RuntimeRule>()
-                for (rr in this.content) {
-                    if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
-                        result.addAll(runtimeLookahead.content)
-                    } else {
-                        result.add(rr)
-                    }
-                }
-                result
-            }
-        }
-    }
-
-    override fun hashCode(): Int = number
-    override fun equals(other: Any?): Boolean = when {
-        other is LookaheadSet -> this.number == other.number
-        else -> false
-    }
-
-    override fun toString(): String = "LookaheadSet{$number,${content}}"
-
-}
-
 internal  class RuntimeRuleSet(
     // rules: List<RuntimeRule>
 ) {
@@ -103,9 +62,6 @@ internal  class RuntimeRuleSet(
     private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
     private val terminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
     private val embeddedRuleNumber: MutableMap<String, Int> = mutableMapOf()
-
-    private var nextLookaheadSetId = 0
-    private val lookaheadSets = mutableListOf<LookaheadSet>()
 
     //TODO: are Arrays faster than Lists?
     var runtimeRules: List<RuntimeRule> = emptyList()
@@ -415,37 +371,9 @@ internal  class RuntimeRuleSet(
         return rr
     }
 
-    internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
-        return when {
-            content.isEmpty() -> LookaheadSet.EMPTY
-            LookaheadSet.EOT.content == content -> LookaheadSet.EOT
-            LookaheadSet.UP.content == content -> LookaheadSet.UP
-            else -> {
-                val existing = this.lookaheadSets.firstOrNull { it.content == content }
-                if (null == existing) {
-                    val num = this.nextLookaheadSetId++
-                    val lhs = LookaheadSet(num, content)
-                    this.lookaheadSets.add(lhs)
-                    lhs
-                } else {
-                    existing
-                }
-            }
-        }
-    }
 
-    fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet {
-        val newContent = mutableSetOf<RuntimeRule>()
-        for (rr in upLhs.content) {
-            if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
-                newContent.addAll(parentLookahead.content)
-            } else {
-                newContent.add(rr)
-            }
-        }
-        return this@RuntimeRuleSet.createLookaheadSet(newContent)
-        //return LookaheadSet(-1, newContent) //TODO: create this from runtimeRuleset, maybe!
-    }
+
+
 
     internal fun usedAutomatonToString(goalRuleName: String): String {
         val b = StringBuilder()

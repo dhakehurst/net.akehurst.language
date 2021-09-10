@@ -52,10 +52,10 @@ internal class test_skipRules : test_Abstract() {
 
         val sk1 = skipSS.states[listOf(RulePosition(skWS, 0, RulePosition.END_OF_RULE))]
 
-        val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
-        val lhs_skWCU = SM.runtimeRuleSet.createLookaheadSet(setOf(skWS, skCM, UP))
-        val lhs_aT = SM.runtimeRuleSet.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
-        val lhs_WS_CM_UP = SM.runtimeRuleSet.createLookaheadSet(setOf(skWS, skCM, UP))
+        val lhs_a = SM.createLookaheadSet(setOf(a))
+        val lhs_skWCU = SM.createLookaheadSet(setOf(skWS, skCM, UP))
+        val lhs_aT = SM.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
+        val lhs_WS_CM_UP = SM.createLookaheadSet(setOf(skWS, skCM, UP))
     }
 
     override val SM: ParserStateSet get() = Companion.SM

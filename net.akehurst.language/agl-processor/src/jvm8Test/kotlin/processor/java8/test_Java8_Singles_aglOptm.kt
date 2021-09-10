@@ -510,6 +510,20 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val resultStr = SPPT2InputText().visitTree(t, "")
         assertEquals(sentence, resultStr)
     }
+    @Test
+    fun fromStdLib_CharBufferSpliterator_3b() {
+
+        val sentence = """
+            cb.getUnchecked(i)
+        """.trimIndent()
+        val goal = "Navigations"
+
+        val t = proc.parseForGoal(goal, sentence)
+
+        // println( t.toStringAll )
+        val resultStr = SPPT2InputText().visitTree(t, "")
+        assertEquals(sentence, resultStr)
+    }
 
     @Test
     fun fromStdLib_CharBufferSpliterator_4() {
@@ -518,6 +532,36 @@ class CharBufferSpliterator implements Spliterator.OfInt {
             getUnchecked(i++)
         """.trimIndent()
         val goal = "NavigableExpression"
+
+        val t = proc.parseForGoal(goal, sentence)
+
+        // println( t.toStringAll )
+        val resultStr = SPPT2InputText().visitTree(t, "")
+        assertEquals(sentence, resultStr)
+    }
+
+    @Test
+    fun fromStdLib_CharBufferSpliterator_4b() {
+
+        val sentence = """
+            getUnchecked(i)
+        """.trimIndent()
+        val goal = "NavigableExpression"
+
+        val t = proc.parseForGoal(goal, sentence)
+
+        // println( t.toStringAll )
+        val resultStr = SPPT2InputText().visitTree(t, "")
+        assertEquals(sentence, resultStr)
+    }
+
+    @Test
+    fun fromStdLib_CharBufferSpliterator_5() {
+
+        val sentence = """
+            getUnchecked(i++)
+        """.trimIndent()
+        val goal = "GenericMethodInvocation"
 
         val t = proc.parseForGoal(goal, sentence)
 

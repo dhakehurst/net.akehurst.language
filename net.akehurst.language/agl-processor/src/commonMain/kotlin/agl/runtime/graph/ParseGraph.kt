@@ -115,7 +115,11 @@ internal class ParseGraph(
         return userGoalNode
     }
 
-    fun findCompleteNode(rulePosition: RulePosition, startPosition: Int): SPPTNode? {
+    fun createGrowingNode(state: ParserState, lookahead: LookaheadSet, growingChildren: GrowingChildren): GrowingNode {
+        return GrowingNode(this, state, lookahead, growingChildren)
+    }
+
+    fun findCompleteNode(rulePosition: RulePosition, startPosition: Int, nextInputPosition: Int): SPPTNode? {
         val rr = rulePosition.runtimeRule
         // val option = rulePosition.option
         return when (rulePosition.runtimeRule.kind) {
@@ -130,6 +134,27 @@ internal class ParseGraph(
                 this.completeNodes[rr, startPosition]
             }
         }
+    }
+
+    fun findLongestCompleteNode(rulePosition: RulePosition, startPosition: Int): SPPTNode? {
+        val rr = rulePosition.runtimeRule
+        // val option = rulePosition.option
+        return when (rulePosition.runtimeRule.kind) {
+            RuntimeRuleKind.TERMINAL -> this.input.leaves[rr, startPosition]
+            RuntimeRuleKind.GOAL,
+            RuntimeRuleKind.NON_TERMINAL -> {
+                //val index = CompleteNodeIndex(rr.number, startPosition)//option, startPosition)
+                this.completeNodes[rr, startPosition]
+            }
+            RuntimeRuleKind.EMBEDDED -> {
+                //val index = CompleteNodeIndex(rr.number, startPosition)//option, startPosition)
+                this.completeNodes[rr, startPosition]
+            }
+        }
+    }
+
+    private fun addBranchToCompetedNodes(runtimeRule:RuntimeRule, cn:SPPTBranch) {
+        this.completeNodes[runtimeRule, cn.startPosition] = cn
     }
 
     private fun addGrowing(gn: GrowingNode) {
@@ -200,6 +225,15 @@ internal class ParseGraph(
         }
     }
 
+    private fun findSimilarGrowing(newState: ParserState): GrowingNode? {
+        val opts = this.growing.values.filter { gn ->
+            gn.currentState.rulePositions.any { rp ->
+                newState.rulePositions.any { it.runtimeRule == rp.runtimeRule }
+            }
+        }
+        return opts.firstOrNull()
+    }
+
     //TODO: combine next 3 methods!
     private fun findOrCreateGrowingLeafOrEmbeddedNode(
         newState: ParserState,
@@ -216,7 +250,7 @@ internal class ParseGraph(
         val gnindex = GrowingNode.indexFromGrowingChildren(newState, lookahead, growingChildren)
         val existing = this.growing[gnindex]
         val gn = if (null == existing) {
-            val nn = GrowingNode(newState, lookahead, growingChildren)
+            val nn = this.createGrowingNode(newState, lookahead, growingChildren)
             nn.addPrevious(oldOrExistingHead)
             nn
         } else {
@@ -229,38 +263,11 @@ internal class ParseGraph(
         this.addGrowingHead(gnindex, gn)
     }
 
-    /*
-        private fun findOrCreateGrowingLeafForSkip(curRp: ParserState, lookahead: LookaheadSet, startPosition: Int, nextInputPosition: Int, previous: Set<PreviousInfo>, skipChildren: List<SPPTNode>) {
-            // TODO: remove, this is for test
-            for (info in previous) {
-                this.addGrowing(info.node)
-            }
-            val listSize = 0 // must be 0 if this is a leaf
-            val gnindex = GrowingNode.index(curRp, startPosition, nextInputPosition, listSize)
-            val existing = this.growing[gnindex]
-            if (null == existing) {
-                val nn = GrowingNode(
-                        curRp,
-                        lookahead,
-                        0,
-                        GrowingNode.GrowingChildren.NONE,
-                        0
-                )
-                this.addAndRegisterGrowingPrevious(nn, previous)
-                nn.skipNodes.addAll(skipChildren)
-                this.addGrowingHead(gnindex, nn)
-            } else {
-                this.addAndRegisterGrowingPrevious(existing, previous)
-                existing.skipNodes.addAll(skipChildren)
-                this.addGrowingHead(gnindex, existing)
-            }
-        }
-    */
     private fun findOrCreateGrowingNode(newState: ParserState, lookahead: LookaheadSet, growingChildren: GrowingChildren, previous: Set<PreviousInfo>) {
         val gnindex = GrowingNode.indexFromGrowingChildren(newState, lookahead, growingChildren)//, nextInputPosition, priority)
-        var existing = this.growing[gnindex]
+        val existing = this.growing[gnindex] //?: findSimilarGrowing(newState)
         if (null == existing) {
-            var nn = GrowingNode(newState, lookahead, growingChildren)
+            val nn = this.createGrowingNode(newState, lookahead, growingChildren)
             when {
                 newState.isAtEnd -> {
                     val used = this.completeIfReachedEnd(nn)
@@ -275,8 +282,25 @@ internal class ParseGraph(
             }
         } else {
             // TODO("handle use of lookahead here! passed in lhs is not same as existing node lhs")
-            this.addAndRegisterGrowingPrevious(existing, previous)
-            this.addGrowingHead(gnindex, existing)
+            if (lookahead == existing.lookahead) {
+                this.addAndRegisterGrowingPrevious(existing, previous)
+                this.addGrowingHead(gnindex, existing)
+            } else {
+                val mergedLhs = lookahead.union(newState.stateSet,existing.lookahead)
+                val nn = this.createGrowingNode(newState, mergedLhs, growingChildren)
+                when {
+                    newState.isAtEnd -> {
+                        val used = this.completeIfReachedEnd(nn)
+                        this.addAndRegisterGrowingPrevious(used, previous)
+                        this.addGrowingHead(gnindex, used) // replaces with existing growing head if there is one that matches the index already
+                    }
+                    else -> {
+                        this.addAndRegisterGrowingPrevious(nn, previous)
+                        this.addGrowingHead(gnindex, nn) // replaces with existing growing head if there is one that matches the index already
+
+                    }
+                }
+            }
         }
     }
 
@@ -284,10 +308,8 @@ internal class ParseGraph(
      * this will overwrite an existing node with same runtimeRule and startPosition
      */
     private fun createBranchNoChildren(runtimeRule: RuntimeRule, option: Int, priority: Int, startPosition: Int, nextInputPosition: Int): SPPTBranchFromInputAndGrownChildren {
-        //val cn = SPPTBranchDefault(runtimeRule, option, location, nextInputPosition, priority)
         val cn = SPPTBranchFromInputAndGrownChildren(this.input, runtimeRule, option, startPosition, nextInputPosition, priority)
-        //val cindex = CompleteNodeIndex(runtimeRule.number, location.position)//option, location.position)
-        this.completeNodes[runtimeRule, startPosition] = cn
+        this.addBranchToCompetedNodes(runtimeRule, cn)
         return cn
     }
 
@@ -399,14 +421,14 @@ internal class ParseGraph(
         }
     */
     private fun completeIfReachedEnd(gn: GrowingNode): GrowingNode {
-        var used = mutableMapOf<RulePosition, GrowingNode>()
+        val used = mutableMapOf<RulePosition, GrowingNode>()
         if (gn.currentState.isAtEnd) {
             gn.currentState.rulePositions.forEachIndexed { index, rp ->
                 val runtimeRule = rp.runtimeRule
                 val children = gn.children//[runtimeRule] //TODO: can we separate up the children later ?
                 val option = rp.option
                 val priority = rp.priority
-                var cn: SPPTNode? = this.findCompleteNode(rp, gn.startPosition)
+                var cn: SPPTNode? = this.findLongestCompleteNode(rp, gn.startPosition)
                 if (null == cn || SPPTLeafFromInput.NONE === cn) {
                     cn = this.createBranchNoChildren(runtimeRule, option, priority, gn.startPosition, gn.nextInputPosition)
                     if (gn.isLeaf) {
@@ -415,12 +437,14 @@ internal class ParseGraph(
                     } else {
                         cn.grownChildrenAlternatives[option] = children
                     }
+                    gn.addCompleted(runtimeRule, cn)
                     used[rp] = gn
                 } else {
                     if (gn.isLeaf) {
                         TODO()
                         // dont try and add children...can't for a leaf
                         gn.skipNodes
+                        gn.addCompleted(runtimeRule, cn)
                         used[rp] = gn
                     } else {
                         cn = (cn as SPPTBranchFromInputAndGrownChildren)
@@ -485,9 +509,11 @@ internal class ParseGraph(
                             //    //used.children.addFirstChild()
                             //}
                             //used = GrowingNode(gn.currentState, gn.lookahead, cn.grownChildrenAlternatives.values.first())
-                            used[rp] = GrowingNode(gn.currentState, gn.lookahead, cn.grownChildrenAlternatives.values.first())
+                            used[rp] = this.createGrowingNode(gn.currentState, gn.lookahead, cn.grownChildrenAlternatives.values.first())
+                            used[rp]?.addCompleted(runtimeRule, chosen)
                         } else {
                             //used new stuff
+                            gn.addCompleted(runtimeRule, chosen)
                             used[rp] = gn
                         }
                     }
@@ -576,7 +602,7 @@ internal class ParseGraph(
         val growingChildren = GrowingChildren()
         growingChildren.nextInputPosition = startPosition
         growingChildren.startPosition = startPosition
-        val goalGN = GrowingNode(
+        val goalGN = this.createGrowingNode(
             goalState,
             lookahead,
             growingChildren
@@ -615,8 +641,8 @@ internal class ParseGraph(
         growingChildren?.let {
             this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, it, oldHead, previous, skipNodes)
         }
-        //val id = CompleteNodeIndex(newRp.runtimeRule.number, embeddedNode.startPosition)//newRp.choice, embeddedNode.startPosition)
-        this.completeNodes[runtimeRule, embeddedNode.startPosition] = embeddedNode //TODO: should this be here or in leaves ?
+        //TODO: do we need to check for longest ?
+        this.addBranchToCompetedNodes(runtimeRule,embeddedNode )//TODO: should this be here or in leaves ?
     }
 
     fun growNextChild(nextState: ParserState, lookahead: LookaheadSet, parent: GrowingNode, nextChildAlts: List<SPPTNode>, skipChildren: List<SPPTNode>?) {

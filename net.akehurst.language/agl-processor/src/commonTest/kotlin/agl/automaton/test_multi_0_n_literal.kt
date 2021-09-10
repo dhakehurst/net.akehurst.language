@@ -43,9 +43,9 @@ internal class test_multi_0_n_literal : test_Abstract() {
         val s3 = SM.states[listOf(RulePosition(S, 0, RulePosition.POSITION_MULIT_ITEM))]
         val s4 = SM.states[listOf(RulePosition(S, 0, RulePosition.END_OF_RULE))]
 
-        val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
-        val lhs_aU = SM.runtimeRuleSet.createLookaheadSet(setOf(a, UP))
-        val lhs_aT = SM.runtimeRuleSet.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
+        val lhs_a = SM.createLookaheadSet(setOf(a))
+        val lhs_aU = SM.createLookaheadSet(setOf(a, UP))
+        val lhs_aT = SM.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
     }
 
     override val SM: ParserStateSet

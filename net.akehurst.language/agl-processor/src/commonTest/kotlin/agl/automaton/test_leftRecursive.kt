@@ -50,8 +50,8 @@ internal class test_leftRecursive : test_Abstract() {
         val s5 = SM.states[listOf(RP(G, 0, EOR))]
         val s6 = SM.states[listOf(RP(S, 1, EOR))]
 
-        val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
-        val lhs_aU = SM.runtimeRuleSet.createLookaheadSet(setOf(a, UP))
+        val lhs_a = SM.createLookaheadSet(setOf(a))
+        val lhs_aU = SM.createLookaheadSet(setOf(a, UP))
     }
 
     override val SM: ParserStateSet

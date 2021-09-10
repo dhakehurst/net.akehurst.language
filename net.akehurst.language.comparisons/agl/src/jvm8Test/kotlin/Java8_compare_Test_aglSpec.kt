@@ -40,7 +40,7 @@ class Java8_compare_Test_aglSpec(val file: FileData) {
         @JvmStatic
         @Parameterized.Parameters(name = "{index}: {0}")
         fun files(): Collection<FileData> {
-            val f = Java8TestFiles.files.subList(0, 3529) // after 3529 we get java.lang.OutOfMemoryError: Java heap space
+            val f = Java8TestFiles.files.subList(0, 5317) // after this we get java.lang.OutOfMemoryError: Java heap space
             totalFiles = f.size
             println("Number of files to test against: ${f.size}")
             return f
@@ -54,10 +54,21 @@ class Java8_compare_Test_aglSpec(val file: FileData) {
             return proc
         }
 
-        val aglProcessor = createAndBuildProcessor("/agl/Java8AglSpec.agl")
-
         var input: String? = null
 
+        @BeforeClass
+        @JvmStatic
+        fun init() {
+            Results.reset()
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun end() {
+            Results.write()
+        }
+
+        val aglProcessor = createAndBuildProcessor("/agl/Java8AglSpec.agl")
         fun parseWithJava8Agl(file: FileData): SharedPackedParseTree? {
             return try {
                 aglProcessor.parseForGoal("CompilationUnit", input!!)
@@ -73,24 +84,12 @@ class Java8_compare_Test_aglSpec(val file: FileData) {
                 null
             }
         }
-
-        @BeforeClass
-        @JvmStatic
-        fun init() {
-            Results.reset()
-        }
-
-        @AfterClass
-        @JvmStatic
-        fun end() {
-            Results.write()
-        }
     }
 
     @Before
     fun setUp() {
         try {
-            input = String(Files.readAllBytes(file.path))
+            input = file.path.toFile().readText()
         } catch (e: IOException) {
             e.printStackTrace()
             Assert.fail(e.message)
@@ -99,7 +98,7 @@ class Java8_compare_Test_aglSpec(val file: FileData) {
 
     @Test
     fun agl_spec_compilationUnit() {
-        print("File: ${file.index} of $totalFiles")
+        print("File: ${file.index} of $totalFiles ")
         parseWithJava8Agl(file)
     }
 
