@@ -21,7 +21,8 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
-internal class LanguageDefinitionDefault(
+//TODO: has to be public at present because otherwise JSNames are not correct for properties
+class LanguageDefinitionDefault(
     override val identity: String,
     override val grammar: String,
     override val defaultGoalRule: String?,
