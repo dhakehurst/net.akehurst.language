@@ -66,6 +66,7 @@ class test_AglStyle {
         assertNotNull(actual)
         assertEquals(1, actual.size)
         assertEquals("class", actual[0].selector)
+        assertEquals(2, actual[0].styles.size)
     }
 
     @Test

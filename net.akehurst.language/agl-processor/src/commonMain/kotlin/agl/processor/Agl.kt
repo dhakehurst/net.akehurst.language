@@ -29,12 +29,16 @@ import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.Formatter
+import net.akehurst.language.api.processor.LanguageDefinition
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.LanguageProcessorException
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 
 object Agl {
 
+    val registry = LanguageRegistry()
+
+    @Deprecated("use registry.")
     val grammarProcessor: LanguageProcessor by lazy {
         val grammar = AglGrammarGrammar()
         val syntaxAnalyser: SyntaxAnalyser = AglGrammarSyntaxAnalyser(GrammarRegistryDefault) //TODO: enable the registry to be changed
@@ -57,6 +61,11 @@ object Agl {
 
     val version: String = BuildConfig.version
     val buildStamp: String = BuildConfig.buildStamp
+
+
+    fun register(definition: LanguageDefinition) {
+        registry.registerFromDefinition(definition)
+    }
 
     fun processorFromGrammar(grammar: Grammar, syntaxAnalyser: SyntaxAnalyser? = null, formatter: Formatter? = null, semanticAnalyser: SemanticAnalyser? = null): LanguageProcessor {
         val goalRuleName = grammar.rule.first { it.isSkip.not() }.name

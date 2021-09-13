@@ -1,0 +1,42 @@
+/**
+ * Copyright (C) 2021 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.akehurst.language.agl.processor
+
+import net.akehurst.language.api.processor.LanguageDefinition
+import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+
+internal class LanguageDefinitionDefault(
+    override val identity: String,
+    override val grammar: String,
+    override val defaultGoalRule: String?,
+    override var style: String?,
+    override var format: String?,
+    override val syntaxAnalyser: SyntaxAnalyser?,
+    override val semanticAnalyser: SemanticAnalyser?
+) : LanguageDefinition {
+    constructor(identity: String, grammar: String) : this(identity, grammar, null,null,null,null,null)
+
+    override val processor: LanguageProcessor by lazy {
+        if (null==defaultGoalRule) {
+            Agl.processorFromString(grammar)
+        } else {
+            Agl.processorFromStringForGoal(grammar, defaultGoalRule)
+        }
+    }
+}

@@ -47,64 +47,7 @@ internal class ScanOnDemandParser(
         this.runtimeRuleSet.buildFor(goalRuleName, automatonKind)
     }
 
-    override fun scan(inputText: String, includeSkipRules: Boolean): List<SPPTLeaf> {
-        val undefined = RuntimeRule(-1, -5, "undefined", "", RuntimeRuleKind.TERMINAL, false, true)
-        //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
-        val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
-        var terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.nonSkipTerminals
-        var result = mutableListOf<SPPTLeaf>()
-
-        //eliminate tokens that are empty matches
-        terminals = terminals.filter {
-            it.value.isNotEmpty()
-        }.toTypedArray()
-
-        var startPosition = 0
-        var nextInputPosition = 0
-        while (!input.isEnd(nextInputPosition)) {
-            val matches: List<SPPTLeaf> = terminals.mapNotNull {
-                val match = input.tryMatchText(nextInputPosition, it)
-                if (null == match) {
-                    null
-                } else {
-                    val ni = nextInputPosition + match.matchedText.length
-                    val leaf = SPPTLeafFromInput(input, it, startPosition, ni, (if (it.isPattern) 0 else 1))
-                    //leaf.eolPositions = match.eolPositions
-                    leaf
-                }
-            }
-            // prefer literals over patterns
-            val longest = matches.maxWithOrNull(Comparator<SPPTLeaf> { l1, l2 ->
-                when {
-                    l1.isLiteral && l2.isPattern -> 1
-                    l1.isPattern && l2.isLiteral -> -1
-                    else -> when {
-                        l1.matchedTextLength > l2.matchedTextLength -> 1
-                        l2.matchedTextLength > l1.matchedTextLength -> -1
-                        else -> 0
-                    }
-                }
-            })
-            when {
-                (null == longest || longest.matchedTextLength == 0) -> {
-                    //TODO: collate unscanned, rather than make a separate token for each char
-                    val text = inputText[nextInputPosition].toString()
-                    nextInputPosition += text.length
-                    val unscanned = SPPTLeafFromInput(input, undefined, startPosition, nextInputPosition, 0)
-                    //unscanned.eolPositions = input.eolPositions(text)
-                    result.add(unscanned)
-                }
-                else -> {
-                    result.add(longest)
-                    nextInputPosition += longest.matchedTextLength
-                }
-            }
-            startPosition = nextInputPosition
-        }
-        return result
-    }
-
-    override fun parse(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): SharedPackedParseTree {
+    override fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): SharedPackedParseTree {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
         val s0 = runtimeRuleSet.fetchStateSetFor(goalRule,automatonKind).startState

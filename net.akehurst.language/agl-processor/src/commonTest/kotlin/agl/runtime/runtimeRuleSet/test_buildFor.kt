@@ -53,8 +53,8 @@ class test_buildFor {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         val parser = ScanOnDemandParser(rrs)
-        parser.parse("S", "ba", AutomatonKind.LOOKAHEAD_1)
-        parser.parse("S", "a", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "ba", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
 
         assertEquals(9, actual.states.values.size)
         assertEquals(12, actual.allBuiltTransitions.size)
@@ -79,8 +79,8 @@ class test_buildFor {
         val gr = rrs.findRuntimeRule("S")
         val s0 = rrs.fetchStateSetFor(gr, AutomatonKind.LOOKAHEAD_1).startState
         s0.stateSet.build()
-        parser.parse("S", "abcx", AutomatonKind.LOOKAHEAD_1)
-        parser.parse("S", "x", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "abcx", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "x", AutomatonKind.LOOKAHEAD_1)
     }
 
 }

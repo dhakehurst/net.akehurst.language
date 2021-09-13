@@ -77,7 +77,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
 
     // styleList = style* ;
     fun styleList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?) : List<AglStyle> {
-        return children[0].branchNonSkipChildren.mapIndexed { index, it ->
+        return children.mapIndexed { index, it ->
             this.transformBranch<AglStyle>(it, arg)
         }
     }

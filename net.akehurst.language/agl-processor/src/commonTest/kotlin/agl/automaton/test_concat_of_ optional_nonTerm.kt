@@ -21,7 +21,6 @@ import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 internal class test_concat_of_optional_nonTerm : test_Abstract() {
 
@@ -70,7 +69,7 @@ internal class test_concat_of_optional_nonTerm : test_Abstract() {
     fun parse_b() {
     //TODO: is there a way to reset the rrs if it needs it?
         val parser = ScanOnDemandParser(rrs)
-        parser.parse("S", "b", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "b", AutomatonKind.LOOKAHEAD_1)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {

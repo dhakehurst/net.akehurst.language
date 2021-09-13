@@ -41,7 +41,7 @@ internal class test_InputLocation_singleLine {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parse("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 3), actual.root.location)
@@ -70,7 +70,7 @@ class test_InputLocation_multiLine {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parse("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 3), actual.root.location)
@@ -83,7 +83,7 @@ class test_InputLocation_multiLine {
     fun a_b_c() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parse("S", "a b c", AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.parseForGoal("S", "a b c", AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 5), actual.root.location)
@@ -99,7 +99,7 @@ class test_InputLocation_multiLine {
     fun aNLbNLc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parse("S", """
+        val actual = sp.parseForGoal("S", """
             a
             b
             c
@@ -138,7 +138,7 @@ class test_InputLocation_multiLine2 {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parse("S", "aaabbbccc", AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.parseForGoal("S", "aaabbbccc", AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 9), actual.root.location)
@@ -151,7 +151,7 @@ class test_InputLocation_multiLine2 {
     fun a_b_c() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parse("S", "aaa bbb ccc", AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.parseForGoal("S", "aaa bbb ccc", AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 11), actual.root.location)
@@ -166,7 +166,7 @@ class test_InputLocation_multiLine2 {
     fun aNLbNLc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parse("S", """
+        val actual = sp.parseForGoal("S", """
             aaa
             bbb
             ccc
@@ -195,7 +195,7 @@ class test_InputLocation_multiLine2 {
             bbb
             ccc
         """.trimIndent()
-        val actual = sp.parse("S", sentence, AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.parseForGoal("S", sentence, AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 12), actual.root.location)
@@ -217,7 +217,7 @@ class test_InputLocation_multiLine2 {
     fun aNLbSPSPNLc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parse("S", """
+        val actual = sp.parseForGoal("S", """
             aaa
               bbb
             ccc

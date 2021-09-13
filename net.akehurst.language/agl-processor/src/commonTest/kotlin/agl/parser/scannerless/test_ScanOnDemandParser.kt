@@ -51,7 +51,7 @@ internal class test_ScanOnDemandParser {
         val r1 = rrb.rule("a").concatenation(r0)
         val sp = ScanOnDemandParser(rrb.ruleSet())
 
-        val actual = sp.parse("a","a", AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.parseForGoal("a","a", AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
 

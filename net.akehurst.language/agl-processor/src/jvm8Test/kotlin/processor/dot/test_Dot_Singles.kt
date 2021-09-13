@@ -238,7 +238,7 @@ class test_Dot_Singles {
         val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
 
         //fails at season 9 with edge_list
-        parser.parse(goal, sentence, AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
     }
 
     @Test

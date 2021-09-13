@@ -29,7 +29,7 @@ import kotlin.test.assertNotNull
 internal class test_literal {
 
     private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
-        return sp.parse(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1)
+        return sp.parseForGoal(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1)
     }
 
     // literal
