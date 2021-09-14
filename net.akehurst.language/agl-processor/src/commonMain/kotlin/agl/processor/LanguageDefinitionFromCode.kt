@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.processor.LanguageDefinition
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
@@ -25,28 +26,24 @@ import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
-class LanguageDefinitionDefault(
+class LanguageDefinitionFromCode(
     override val identity: String,
-    grammar: String?,
+    grammar: Grammar,
     override var defaultGoalRule: String?,
     style: String?,
     format: String?,
     override val syntaxAnalyser: SyntaxAnalyser?,
     override val semanticAnalyser: SemanticAnalyser?
 ) : LanguageDefinition {
-    constructor(identity: String, grammar: String) : this(identity, grammar, null, null, null, null, null)
+    constructor(identity: String, grammar: Grammar) : this(identity, grammar, null, null, null, null, null)
 
+    private val _grammar: Grammar = grammar
     private val _processor_cache: CachedValue<LanguageProcessor?> = cached {
-        val g = this.grammar
-        if (null==g) {
-            null
-        }else {
-            val r = defaultGoalRule
-            if (null == r) {
-                Agl.processorFromString(g)
-            } else {
-                Agl.processorFromStringForGoal(g, r)
-            }
+        val r = defaultGoalRule
+        if (null == r) {
+            Agl.processorFromGrammar(this._grammar)
+        } else {
+            Agl.processorFromGrammarForGoal(this._grammar, r)
         }
     }
 
@@ -54,17 +51,18 @@ class LanguageDefinitionDefault(
     override val styleObservers = mutableListOf<(String?, String?) -> Unit>()
     override val formatObservers = mutableListOf<(String?, String?) -> Unit>()
 
-    override var grammar: String? by Delegates.observable(grammar) { _, oldValue, newValue ->
-        this._processor_cache.reset()
-        grammarObservers.forEach { it(oldValue,newValue) }
-    }
+    override var grammar: String?
+        get() = this._grammar.toString() //TODO:
+        set(value) {
+            error("Cannot set the grammar of a LanguageDefinitionFromCode using a String")
+        }
 
     override var style: String? by Delegates.observable(style) { _, oldValue, newValue ->
-        styleObservers.forEach { it(oldValue,newValue) }
+        styleObservers.forEach { it(oldValue, newValue) }
     }
 
     override var format: String? by Delegates.observable(format) { _, oldValue, newValue ->
-        formatObservers.forEach { it(oldValue,newValue) }
+        formatObservers.forEach { it(oldValue, newValue) }
     }
 
     override val processor: LanguageProcessor? get() = this._processor_cache.value

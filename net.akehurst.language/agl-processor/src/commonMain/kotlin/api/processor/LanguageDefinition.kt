@@ -21,12 +21,16 @@ import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 interface LanguageDefinition {
     val identity: String
-    val grammar: String
-    val defaultGoalRule: String?
+    var grammar: String?
+    var defaultGoalRule: String?
     var style: String?
     var format: String?
     val syntaxAnalyser: SyntaxAnalyser?
     val semanticAnalyser: SemanticAnalyser?
 
-    val processor: LanguageProcessor
+    val processor: LanguageProcessor?
+
+    val grammarObservers: MutableList<(String?, String?) -> Unit>
+    val styleObservers: MutableList<(String?, String?) -> Unit>
+    val formatObservers: MutableList<(String?, String?) -> Unit>
 }
