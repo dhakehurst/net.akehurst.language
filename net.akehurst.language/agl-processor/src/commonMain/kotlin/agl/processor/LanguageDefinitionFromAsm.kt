@@ -26,7 +26,7 @@ import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
-class LanguageDefinitionFromCode(
+class LanguageDefinitionFromAsm(
     override val identity: String,
     grammar: Grammar,
     override var defaultGoalRule: String?,
@@ -37,13 +37,13 @@ class LanguageDefinitionFromCode(
 ) : LanguageDefinition {
     constructor(identity: String, grammar: Grammar) : this(identity, grammar, null, null, null, null, null)
 
-    private val _grammar: Grammar = grammar
+    private val _grammarAsm: Grammar = grammar
     private val _processor_cache: CachedValue<LanguageProcessor?> = cached {
         val r = defaultGoalRule
         if (null == r) {
-            Agl.processorFromGrammar(this._grammar)
+            Agl.processorFromGrammar(this._grammarAsm, syntaxAnalyser, null, semanticAnalyser)
         } else {
-            Agl.processorFromGrammarForGoal(this._grammar, r)
+            Agl.processorFromGrammarForGoal(this._grammarAsm, r, syntaxAnalyser, null, semanticAnalyser)
         }
     }
 
@@ -52,9 +52,9 @@ class LanguageDefinitionFromCode(
     override val formatObservers = mutableListOf<(String?, String?) -> Unit>()
 
     override var grammar: String?
-        get() = this._grammar.toString() //TODO:
+        get() = this._grammarAsm.toString() //TODO:
         set(value) {
-            error("Cannot set the grammar of a LanguageDefinitionFromCode using a String")
+            error("Cannot set the grammar of a LanguageDefinitionFromAsm using a String")
         }
 
     override var style: String? by Delegates.observable(style) { _, oldValue, newValue ->
@@ -66,4 +66,6 @@ class LanguageDefinitionFromCode(
     }
 
     override val processor: LanguageProcessor? get() = this._processor_cache.value
+
+    override val grammarIsModifiable: Boolean = false
 }

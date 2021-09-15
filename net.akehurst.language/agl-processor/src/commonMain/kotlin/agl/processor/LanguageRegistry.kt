@@ -25,24 +25,31 @@ import net.akehurst.language.agl.grammar.grammar.AglGrammarSyntaxAnalyser
 import net.akehurst.language.agl.grammar.style.AglStyleGrammar
 import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
 import net.akehurst.language.api.processor.LanguageDefinition
-import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
-class LanguageRegistry {
+interface AglLanguages {
+    val grammarLanguageIdentity: String
+    val styleLanguageIdentity: String
+    val formatLanguageIdentity: String
 
-    companion object {
-        const val aglGrammarLanguageIdentity:String = "net.akehurst.language.agl.AglGrammar"
-        const val aglStyleLanguageIdentity:String = "net.akehurst.language.agl.AglStyle"
-        const val aglFormatLanguageIdentity:String = "net.akehurst.language.agl.AglFormat"
-    }
+    val grammar: LanguageDefinition
+    val style: LanguageDefinition
+    val format: LanguageDefinition
+}
+
+class LanguageRegistry {
 
     private val _registry = mutableMapOf<String, LanguageDefinition>()
 
-    val agl = object {
-        val grammar = this@LanguageRegistry.registerFromDefinition(
-            LanguageDefinitionFromCode(
-                identity = aglGrammarLanguageIdentity,
+    val agl = object : AglLanguages {
+        override val grammarLanguageIdentity: String = "net.akehurst.language.agl.AglGrammar"
+        override val styleLanguageIdentity: String = "net.akehurst.language.agl.AglStyle"
+        override val formatLanguageIdentity: String = "net.akehurst.language.agl.AglFormat"
+
+        override val grammar = this@LanguageRegistry.registerFromDefinition(
+            LanguageDefinitionFromAsm(
+                identity = grammarLanguageIdentity,
                 grammar = AglGrammarGrammar(),
                 defaultGoalRule = AglGrammarGrammar.goalRuleName,
                 style = """
@@ -88,9 +95,9 @@ class LanguageRegistry {
             )
         )
 
-        val style = this@LanguageRegistry.registerFromDefinition(
-            LanguageDefinitionFromCode(
-                identity = aglStyleLanguageIdentity,
+        override val style = this@LanguageRegistry.registerFromDefinition(
+            LanguageDefinitionFromAsm(
+                identity = styleLanguageIdentity,
                 grammar = AglStyleGrammar(),
                 defaultGoalRule = AglStyleGrammar.goalRuleName,
                 style = """
@@ -122,9 +129,9 @@ class LanguageRegistry {
             )
         )
 
-        val format = this@LanguageRegistry.registerFromDefinition(
-            LanguageDefinitionFromCode(
-                identity = aglFormatLanguageIdentity,
+        override val format = this@LanguageRegistry.registerFromDefinition(
+            LanguageDefinitionFromAsm(
+                identity = formatLanguageIdentity,
                 grammar = AglFormatGrammar(),
                 defaultGoalRule = AglFormatGrammar.goalRuleName,
                 style = """
@@ -139,9 +146,9 @@ class LanguageRegistry {
 
     fun registerFromDefinition(definition: LanguageDefinition): LanguageDefinition {
         val existing = this._registry[definition.identity]
-        return if (null==existing) {
+        return if (null == existing) {
             this._registry[definition.identity] = definition
-             definition
+            definition
         } else {
             definition.grammarObservers.addAll(existing.grammarObservers)
             definition.styleObservers.addAll(existing.styleObservers)
@@ -151,32 +158,36 @@ class LanguageRegistry {
         }
     }
 
-    fun register(identity: String,
-                 grammar: String,
-                 defaultGoalRule: String?,
-                 style: String?,
-                 format: String?,
-                 syntaxAnalyser: SyntaxAnalyser?,
-                 semanticAnalyser: SemanticAnalyser?): LanguageDefinition {
-        return this.registerFromDefinition(LanguageDefinitionDefault(
-            identity,
-            grammar,
-            defaultGoalRule,
-            style,
-            format,
-            syntaxAnalyser,
-            semanticAnalyser
-        ))
+    fun register(
+        identity: String,
+        grammar: String,
+        defaultGoalRule: String?,
+        style: String?,
+        format: String?,
+        syntaxAnalyser: SyntaxAnalyser?,
+        semanticAnalyser: SemanticAnalyser?
+    ): LanguageDefinition {
+        return this.registerFromDefinition(
+            LanguageDefinitionDefault(
+                identity,
+                grammar,
+                defaultGoalRule,
+                style,
+                format,
+                syntaxAnalyser,
+                semanticAnalyser
+            )
+        )
     }
 
     fun findOrNull(identity: String): LanguageDefinition? {
         return this._registry[identity]
     }
 
-    fun findOrPlaceholder(identity: String) : LanguageDefinition {
+    fun findOrPlaceholder(identity: String): LanguageDefinition {
         val existing = this.findOrNull(identity)
-        return if (null==existing) {
-            val placeholder = LanguageDefinitionDefault(identity, "-placeholder-")
+        return if (null == existing) {
+            val placeholder = LanguageDefinitionDefault(identity, null)
             this._registry[identity] = placeholder
             placeholder
         } else {

@@ -33,4 +33,6 @@ interface LanguageDefinition {
     val grammarObservers: MutableList<(String?, String?) -> Unit>
     val styleObservers: MutableList<(String?, String?) -> Unit>
     val formatObservers: MutableList<(String?, String?) -> Unit>
+
+    val grammarIsModifiable: Boolean
 }

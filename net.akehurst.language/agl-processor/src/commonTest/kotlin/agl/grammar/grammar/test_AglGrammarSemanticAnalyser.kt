@@ -35,7 +35,7 @@ class test_AglGrammarSemanticAnalyser {
             }
         """.trimIndent()
         //val proc = Agl.processor(grammarStr)
-        val actual = Agl.grammarProcessor.analyseText(List::class, grammarStr)
+        val actual = Agl.registry.agl.grammar.processor!!.analyseText(List::class, grammarStr)
         val expected = listOf(
                 SemanticAnalyserItem(SemanticAnalyserItemKind.ERROR, InputLocation(38, 9, 3, 2), "Rule 'b' not found in grammar 'Test'")
         )
@@ -54,7 +54,7 @@ class test_AglGrammarSemanticAnalyser {
             }
         """.trimIndent()
         //val proc = Agl.processor(grammarStr)
-        val actual = Agl.grammarProcessor.analyseText(List::class, grammarStr)
+        val actual = Agl.registry.agl.grammar.processor!!.analyseText(List::class, grammarStr)
         val expected = listOf(
                 SemanticAnalyserItem(SemanticAnalyserItemKind.ERROR, InputLocation(38, 9, 3, 2), "More than one rule named 'b' in grammar 'Test', have you remembered the 'override' modifier")
         )
@@ -72,7 +72,7 @@ class test_AglGrammarSemanticAnalyser {
             }
         """.trimIndent()
         //val proc = Agl.processor(grammarStr)
-        val actual = Agl.grammarProcessor.analyseText(List::class, grammarStr)
+        val actual = Agl.registry.agl.grammar.processor!!.analyseText(List::class, grammarStr)
         val expected = listOf(
                 SemanticAnalyserItem(SemanticAnalyserItemKind.WARNING, InputLocation(57, 10, 4, 4), "Ambiguity on [<EOT>] with b2"),
                 SemanticAnalyserItem(SemanticAnalyserItemKind.WARNING, InputLocation(72, 10, 5, 4), "Ambiguity on [<EOT>] with b1")

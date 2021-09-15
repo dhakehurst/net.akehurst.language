@@ -34,18 +34,18 @@ class LanguageDefinitionDefault(
     override val syntaxAnalyser: SyntaxAnalyser?,
     override val semanticAnalyser: SemanticAnalyser?
 ) : LanguageDefinition {
-    constructor(identity: String, grammar: String) : this(identity, grammar, null, null, null, null, null)
+    constructor(identity: String, grammar: String?) : this(identity, grammar, null, null, null, null, null)
 
     private val _processor_cache: CachedValue<LanguageProcessor?> = cached {
         val g = this.grammar
-        if (null==g) {
+        if (null == g) {
             null
-        }else {
+        } else {
             val r = defaultGoalRule
             if (null == r) {
-                Agl.processorFromString(g)
+                Agl.processorFromString(g, syntaxAnalyser, null, semanticAnalyser)
             } else {
-                Agl.processorFromStringForGoal(g, r)
+                Agl.processorFromStringForGoal(g, r, syntaxAnalyser, null, semanticAnalyser)
             }
         }
     }
@@ -56,16 +56,18 @@ class LanguageDefinitionDefault(
 
     override var grammar: String? by Delegates.observable(grammar) { _, oldValue, newValue ->
         this._processor_cache.reset()
-        grammarObservers.forEach { it(oldValue,newValue) }
+        grammarObservers.forEach { it(oldValue, newValue) }
     }
 
     override var style: String? by Delegates.observable(style) { _, oldValue, newValue ->
-        styleObservers.forEach { it(oldValue,newValue) }
+        styleObservers.forEach { it(oldValue, newValue) }
     }
 
     override var format: String? by Delegates.observable(format) { _, oldValue, newValue ->
-        formatObservers.forEach { it(oldValue,newValue) }
+        formatObservers.forEach { it(oldValue, newValue) }
     }
 
     override val processor: LanguageProcessor? get() = this._processor_cache.value
+
+    override val grammarIsModifiable: Boolean = true
 }
