@@ -29,14 +29,13 @@ class CachedValue<V>(initializer:()->V)  {
         internal object UNINITIALIZED_VALUE
     }
 
-    private var initializer: (() -> V)? = initializer
+    private var initializer: (() -> V) = initializer
     private var _value: Any? = UNINITIALIZED_VALUE
 
 
     val value:V get() {
         if (_value === UNINITIALIZED_VALUE) {
-            _value = initializer!!()
-            initializer = null
+            _value = initializer.invoke()
         }
         @Suppress("UNCHECKED_CAST")
         return _value as V

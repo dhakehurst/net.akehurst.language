@@ -145,39 +145,26 @@ class LanguageRegistry {
     }
 
     fun registerFromDefinition(definition: LanguageDefinition): LanguageDefinition {
-        val existing = this._registry[definition.identity]
-        return if (null == existing) {
-            this._registry[definition.identity] = definition
-            definition
+        return if (this._registry.containsKey(definition.identity)) {
+            error("LanguageDefinition '${definition.identity}' is already registered, please unregister the old one first")
         } else {
-            definition.grammarObservers.addAll(existing.grammarObservers)
-            definition.styleObservers.addAll(existing.styleObservers)
-            definition.formatObservers.addAll(existing.formatObservers)
             this._registry[definition.identity] = definition
             definition
         }
     }
 
     fun register(
-        identity: String,
-        grammar: String,
-        defaultGoalRule: String?,
-        style: String?,
-        format: String?,
-        syntaxAnalyser: SyntaxAnalyser?,
-        semanticAnalyser: SemanticAnalyser?
-    ): LanguageDefinition {
-        return this.registerFromDefinition(
-            LanguageDefinitionDefault(
-                identity,
-                grammar,
-                defaultGoalRule,
-                style,
-                format,
-                syntaxAnalyser,
-                semanticAnalyser
-            )
+        identity: String, grammar: String, defaultGoalRule: String?,
+        style: String?, format: String?, syntaxAnalyser: SyntaxAnalyser?, semanticAnalyser: SemanticAnalyser?
+    ): LanguageDefinition = this.registerFromDefinition(
+        LanguageDefinitionDefault(
+            identity, grammar, defaultGoalRule,
+            style, format, syntaxAnalyser, semanticAnalyser
         )
+    )
+
+    fun unregister(identity: String) {
+        this._registry.remove(identity)
     }
 
     fun findOrNull(identity: String): LanguageDefinition? {
@@ -188,8 +175,7 @@ class LanguageRegistry {
         val existing = this.findOrNull(identity)
         return if (null == existing) {
             val placeholder = LanguageDefinitionDefault(identity, null)
-            this._registry[identity] = placeholder
-            placeholder
+            registerFromDefinition(placeholder)
         } else {
             existing
         }
