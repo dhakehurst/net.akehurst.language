@@ -87,6 +87,9 @@ import net.akehurst.language.api.sppt.*
             override var parent: SPPTBranch?
                 get() = TODO("not implemented")
                 set(value) {TODO("not implemented")}
+            override var tree: SharedPackedParseTree?
+                get() = TODO("not implemented")
+                set(value) {TODO("not implemented")}
             override fun setTags(arg: List<String>) {
                 TODO("not implemented")
             }

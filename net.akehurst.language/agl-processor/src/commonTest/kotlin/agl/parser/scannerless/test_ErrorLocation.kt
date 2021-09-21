@@ -26,7 +26,6 @@ import kotlin.test.assertFailsWith
 
 internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
 
-
     @Test
     fun parse_success() {
         val rrs = runtimeRuleSet {
@@ -150,8 +149,9 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
             super.test(rrs, goal, sentence,1)
         }
 
-        assertEquals(2, e.location.line)
-        assertEquals(3, e.location.column)
+        println(e)
+        assertEquals(3, e.location.line)
+        assertEquals(1, e.location.column)
         assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
     }
 
@@ -226,6 +226,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
             super.test(rrs, goal, sentence,1)
         }
 
+        println(e)
         assertEquals(1, e.location.line)
         assertEquals(6, e.location.column)
         assertEquals(setOf("'a'"), e.expected)

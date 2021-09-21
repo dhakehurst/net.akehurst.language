@@ -39,10 +39,10 @@ internal class ToStringVisitor(val lineSeparator: String, val indentIncrement: S
         val t = when {
             target.isEmptyLeaf -> "${target.name}"
             (target.isLiteral) -> {
-                "'${target.matchedText.replace("\n", "\u23CE")}'"
+                "'${target.matchedText.replace("\n", "\u23CE").replace("\t","\u2B72")}'"
             }
             (target.isPattern) -> {
-                "${target.name} : '${target.matchedText.replace("\n", "\u23CE")}'"
+                "${target.name} : '${target.matchedText.replace("\n", "\u23CE").replace("\t","\u2B72")}'"
             }
             else -> throw RuntimeException("should not happen")
         }

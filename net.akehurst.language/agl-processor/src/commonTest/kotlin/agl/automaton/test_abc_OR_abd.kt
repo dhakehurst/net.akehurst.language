@@ -51,10 +51,10 @@ internal class test_abc_OR_abd : test_Abstract() {
         val s2 = SM.states[listOf(RP(S, 0, RulePosition.POSITION_MULIT_ITEM))]
         val s3 = SM.states[listOf(RP(S, 0, RulePosition.END_OF_RULE))]
 
-        val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
-        val lhs_b = SM.runtimeRuleSet.createLookaheadSet(setOf(b))
-        val lhs_aU = SM.runtimeRuleSet.createLookaheadSet(setOf(a, UP))
-        val lhs_aT = SM.runtimeRuleSet.createLookaheadSet(setOf(a, EOT))
+        val lhs_a = SM.createLookaheadSet(setOf(a))
+        val lhs_b = SM.createLookaheadSet(setOf(b))
+        val lhs_aU = SM.createLookaheadSet(setOf(a, UP))
+        val lhs_aT = SM.createLookaheadSet(setOf(a, EOT))
     }
 
     override val SM: ParserStateSet get() = Companion.SM

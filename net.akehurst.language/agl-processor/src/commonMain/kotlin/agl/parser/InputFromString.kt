@@ -35,6 +35,7 @@ internal class InputFromString(
     )
 
     companion object {
+        const val contextSize = 10
         val END_OF_TEXT = 3.toChar().toString()
         val EOL_PATTERN = Regex("\n", setOf(RegexOption.MULTILINE))
     }
@@ -44,6 +45,11 @@ internal class InputFromString(
 
     var text: String = sentence; private set
 
+    fun contextInText(position: Int): String {
+        val startIndex = maxOf(0, position - contextSize)
+        val endIndex = minOf(this.text.length, position + contextSize)
+        return this.text.substring(startIndex, position) + "^" + this.text.substring(position,endIndex)
+    }
 
     //internal val leaves: MutableMap<LeafIndex, SPPTLeafDefault?> = mutableMapOf()
     // leaves[runtimeRule, position]

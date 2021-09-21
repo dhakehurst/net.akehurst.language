@@ -31,7 +31,10 @@ internal class ParserStateSet(
     val automatonKind: AutomatonKind
 ) {
 
+    private var nextLookaheadSetId = 0
+    private val lookaheadSets = mutableListOf<LookaheadSet>()
     private var nextStateNumber = 0
+
     var preBuilt = false; private set
     internal val buildCache: BuildCache = when (automatonKind) {
         AutomatonKind.LOOKAHEAD_NONE -> BuildCacheLC0(this)
@@ -175,8 +178,38 @@ internal class ParserStateSet(
         }
     }
 
-    internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet = this.runtimeRuleSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
-    fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
+    //internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet = this.runtimeRuleSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
+    //fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
+
+    internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
+        return when {
+            content.isEmpty() -> LookaheadSet.EMPTY
+            LookaheadSet.EOT.content == content -> LookaheadSet.EOT
+            LookaheadSet.UP.content == content -> LookaheadSet.UP
+            else -> {
+                val existing = this.lookaheadSets.firstOrNull { it.content == content }
+                if (null == existing) {
+                    val num = this.nextLookaheadSetId++
+                    val lhs = LookaheadSet(num, content)
+                    this.lookaheadSets.add(lhs)
+                    lhs
+                } else {
+                    existing
+                }
+            }
+        }
+    }
+    fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet {
+        val newContent = mutableSetOf<RuntimeRule>()
+        for (rr in upLhs.content) {
+            if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
+                newContent.addAll(parentLookahead.content)
+            } else {
+                newContent.add(rr)
+            }
+        }
+        return this.createLookaheadSet(newContent)
+    }
 
     fun build(): ParserStateSet {
         println("Build not yet implemented")

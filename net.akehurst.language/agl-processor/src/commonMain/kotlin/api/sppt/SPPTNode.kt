@@ -134,12 +134,19 @@ interface SPPTNode {
     val asBranch: SPPTBranch
 
     /**
+     * The parent branch of this node.
+     *
      * A parent might be null if the construction of the node has not set it (it is not required)
      *
-     *  the parent branch of this node.
      */
     var parent: SPPTBranch?
 
+    /**
+     * The tree which this node is part of
+     *
+     * Might be null if the construction of the node has not set it (it is not required)
+     */
+    var tree: SharedPackedParseTree?
 
     /**
      * <ul>

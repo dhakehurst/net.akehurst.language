@@ -348,7 +348,7 @@ internal class RuntimeParser(
     }
 
     private fun doGoal(gn: GrowingNode) {
-        val complete = this.graph.findCompleteNode(gn.currentState.rulePositions.first(), gn.startPosition) ?: error("Should never be null")
+        val complete = this.graph.findCompleteNode(gn.currentState.rulePositions.first(), gn.startPosition, gn.nextInputPosition) ?: error("Should never be null")
         this.graph.recordGoal(complete)
     }
 
@@ -376,9 +376,10 @@ internal class RuntimeParser(
         val prevNode = previous.node
         val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, prevNode.lookahead, curGn.nextInputPosition)
         if (noLookahead || hasLh) {// || lh.isEmpty()) {
-            val firstChildAlts = curGn.currentState.rulePositions.map {
-                this.graph.findCompleteNode(it, curGn.startPosition) ?: error("Should never be null")
-            }
+            //val firstChildAlts = curGn.currentState.rulePositions.map {
+            //    this.graph.findCompleteNode(it, curGn.startPosition, curGn.nextInputPosition) ?: error("Should never be null")
+            //}
+            val firstChildAlts = curGn.asCompletedNodes
             //val lhs = transition.upLookahead.createWithParent(prevNode.lookahead)
             val lhs = this.stateSet.createWithParent(transition.upLookahead, prevNode.lookahead)
             this.graph.createWithFirstChild(transition.to, lhs, firstChildAlts, setOf(previous), curGn.skipNodes)
@@ -393,9 +394,10 @@ internal class RuntimeParser(
         if (transition.runtimeGuard(transition, prevNode, prevNode.currentState.rulePositions)) {
             val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, prevNode.lookahead, curGn.nextInputPosition)
             if (noLookahead || hasLh) {
-                val nextChildAlts = curGn.currentState.rulePositions.map {
-                    this.graph.findCompleteNode(it, curGn.startPosition) ?: error("Should never be null")
-                }
+                //val nextChildAlts = curGn.currentState.rulePositions.map {
+                //    this.graph.findCompleteNode(it, curGn.startPosition, curGn.nextInputPosition) ?: error("Should never be null")
+                //}
+                val nextChildAlts = curGn.asCompletedNodes
                 //val lhs = transition.upLookahead.createWithParent(prevNode.lookahead)
                 val lhs = this.stateSet.createWithParent(transition.upLookahead, prevNode.lookahead)
                 this.graph.growNextChild(transition.to, lhs, prevNode, nextChildAlts, curGn.skipNodes)
@@ -411,9 +413,10 @@ internal class RuntimeParser(
         if (trg.runtimeGuard(trg, prevNode, prevNode.currentState.rulePositions)) {
             val hasLh = this.graph.isLookingAt(trg.lookaheadGuard, prevNode.lookahead, curGn.nextInputPosition)
             if (noLookahead || hasLh) {
-                val nextChildAlts = curGn.currentState.rulePositions.map {
-                    this.graph.findCompleteNode(it, curGn.startPosition) ?: error("Should never be null")
-                }
+                //val nextChildAlts = curGn.currentState.rulePositions.map {
+                //    this.graph.findCompleteNode(it, curGn.startPosition, curGn.nextInputPosition) ?: error("Should never be null")
+                //}
+                val nextChildAlts = curGn.asCompletedNodes
                 //val lhs = trg.upLookahead.createWithParent(previous.node.lookahead)
                 val lhs = this.stateSet.createWithParent(trg.upLookahead, prevNode.lookahead)
                 this.graph.growNextChild(trg.to, lhs, previous.node, nextChildAlts, curGn.skipNodes)
@@ -423,9 +426,10 @@ internal class RuntimeParser(
         if (notDoneGraft) { // then try height
             val hasLh = this.graph.isLookingAt(trh.lookaheadGuard, prevNode.lookahead, curGn.nextInputPosition)
             if (noLookahead || hasLh) {
-                val firstChildAlts = curGn.currentState.rulePositions.map {
-                    this.graph.findCompleteNode(it, curGn.startPosition) ?: error("Should never be null")
-                }
+                //val firstChildAlts = curGn.currentState.rulePositions.map {
+                //    this.graph.findCompleteNode(it, curGn.startPosition, curGn.nextInputPosition) ?: error("Should never be null")
+                //}
+                val firstChildAlts = curGn.asCompletedNodes
                 //val lhs = trh.upLookahead.createWithParent(prevNode.lookahead)
                 val lhs = this.stateSet.createWithParent(trh.upLookahead, prevNode.lookahead)
                 this.graph.createWithFirstChild(trh.to, lhs, firstChildAlts, setOf(previous), curGn.skipNodes)
@@ -507,7 +511,7 @@ internal class RuntimeParser(
         val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, embeddedStartRule, this.input)
         val startPosition = curGn.nextInputPosition
         //val startLocation = InputLocation(startPosition, gn.lastLocation.column, gn.lastLocation.line, 0) //TODO: compute correct line and column
-        val embeddedPossibleEOT = embeddedRuntimeRuleSet.createLookaheadSet(
+        val embeddedPossibleEOT = embeddedS0.stateSet.createLookaheadSet(
             transition.lookaheadGuard.content.union(
                 this.skipStateSet?.runtimeRuleSet?.firstTerminals?.flatMap { it }?.toSet()?: emptySet()
             )

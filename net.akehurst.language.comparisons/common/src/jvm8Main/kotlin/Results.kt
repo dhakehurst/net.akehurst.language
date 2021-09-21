@@ -97,13 +97,17 @@ object Results {
                 headerRow = sheet.createRow(0)
             }
             val itemCol = headerRow!!.getCell(0)
-            if (null == itemCol) {
+            if (null == itemCol || itemCol.stringCellValue.isNullOrBlank()) {
                 val cell = headerRow.createCell(0)
                 cell.setCellValue("File")
                 cell.cellStyle = headerCellStyle
                 val cell2 = headerRow.createCell(1)
-                cell2.setCellValue("Size")
+                cell2.setCellValue("Chars")
                 cell2.cellStyle = headerCellStyle
+                val cell3 = headerRow.createCell(2)
+                cell3.setCellValue("CharsNoComments")
+                cell3.cellStyle = headerCellStyle
+
             }
             var colNum = -1
             for (c in headerRow) {
@@ -118,23 +122,26 @@ object Results {
                 colNum = cell.columnIndex
             }
             var rowNum = fileData.index + 1 //+1 for headings
-            //if (sheet.lastRowNum < rowNum) {
-            //    val row = sheet.createRow(sheet.lastRowNum + 1)
-            //    val c = row.createCell(0)
-            //    c.setCellValue(fileData.path.toString())
-            //    val c2 = row.createCell(1)
-            //    c2.setCellValue(fileData.chars.toDouble())
-            //    rowNum = row.rowNum
-            //}
             var valueRow = sheet.getRow(rowNum)
             if (null==valueRow) {
                 valueRow = sheet.createRow(rowNum)
-                val c = valueRow.createCell(0)
-                c.setCellValue(fileData.path.toString())
+                val c1 = valueRow.createCell(0)
+                c1.setCellValue(fileData.path.toString())
                 val c2 = valueRow.createCell(1)
                 c2.setCellValue(fileData.chars.toDouble())
-                rowNum = valueRow.rowNum
+                val c3 = valueRow.createCell(2)
+                c3.setCellValue(fileData.charsNoComments.toDouble())
+            } else {
+                val c1 = valueRow.createCell(0)
+                if (c1.stringCellValue.isNullOrBlank()) {
+                    c1.setCellValue(fileData.path.toString())
+                    val c2 = valueRow.createCell(1)
+                    c2.setCellValue(fileData.chars.toDouble())
+                    val c3 = valueRow.createCell(2)
+                    c3.setCellValue(fileData.charsNoComments.toDouble())
+                }
             }
+
             var valueCell = valueRow.getCell(colNum)
             if (null == valueCell) {
                 valueCell = valueRow.createCell(colNum)

@@ -47,64 +47,7 @@ internal class ScanOnDemandParser(
         this.runtimeRuleSet.buildFor(goalRuleName, automatonKind)
     }
 
-    override fun scan(inputText: String, includeSkipRules: Boolean): List<SPPTLeaf> {
-        val undefined = RuntimeRule(-1, -5, "undefined", "", RuntimeRuleKind.TERMINAL, false, true)
-        //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
-        val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
-        var terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.nonSkipTerminals
-        var result = mutableListOf<SPPTLeaf>()
-
-        //eliminate tokens that are empty matches
-        terminals = terminals.filter {
-            it.value.isNotEmpty()
-        }.toTypedArray()
-
-        var startPosition = 0
-        var nextInputPosition = 0
-        while (!input.isEnd(nextInputPosition)) {
-            val matches: List<SPPTLeaf> = terminals.mapNotNull {
-                val match = input.tryMatchText(nextInputPosition, it)
-                if (null == match) {
-                    null
-                } else {
-                    val ni = nextInputPosition + match.matchedText.length
-                    val leaf = SPPTLeafFromInput(input, it, startPosition, ni, (if (it.isPattern) 0 else 1))
-                    //leaf.eolPositions = match.eolPositions
-                    leaf
-                }
-            }
-            // prefer literals over patterns
-            val longest = matches.maxWithOrNull(Comparator<SPPTLeaf> { l1, l2 ->
-                when {
-                    l1.isLiteral && l2.isPattern -> 1
-                    l1.isPattern && l2.isLiteral -> -1
-                    else -> when {
-                        l1.matchedTextLength > l2.matchedTextLength -> 1
-                        l2.matchedTextLength > l1.matchedTextLength -> -1
-                        else -> 0
-                    }
-                }
-            })
-            when {
-                (null == longest || longest.matchedTextLength == 0) -> {
-                    //TODO: collate unscanned, rather than make a separate token for each char
-                    val text = inputText[nextInputPosition].toString()
-                    nextInputPosition += text.length
-                    val unscanned = SPPTLeafFromInput(input, undefined, startPosition, nextInputPosition, 0)
-                    //unscanned.eolPositions = input.eolPositions(text)
-                    result.add(unscanned)
-                }
-                else -> {
-                    result.add(longest)
-                    nextInputPosition += longest.matchedTextLength
-                }
-            }
-            startPosition = nextInputPosition
-        }
-        return result
-    }
-
-    override fun parse(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): SharedPackedParseTree {
+    override fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): SharedPackedParseTree {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
         val s0 = runtimeRuleSet.fetchStateSetFor(goalRule,automatonKind).startState
@@ -135,18 +78,19 @@ internal class ScanOnDemandParser(
             SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
         } else {
             val nextExpected = this.findNextExpectedAfterError(rp, rp.graph, input) //this possibly modifies rp and hence may change the longestLastGrown
-            throwError(rp.graph, rp, nextExpected, seasons, maxNumHeads)
+            throwError(input, rp, nextExpected, seasons, maxNumHeads)
         }
     }
 
     private fun throwError(
-        graph: ParseGraph,
+        input: InputFromString,
         rp: RuntimeParser,
         nextExpected: Pair<InputLocation, Set<RuntimeRule>>,
         seasons: Int,
         maxNumHeads: Int
     ): SharedPackedParseTreeDefault {
-        val llg = rp.longestLastGrown ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0), emptySet())
+        val llg = rp.longestLastGrown
+            ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0), emptySet(),"")
 
         val lastLocation = nextExpected.first
         val exp = nextExpected.second
@@ -157,24 +101,12 @@ internal class ScanOnDemandParser(
         //        .toSet()
         val expected = exp.map { it.tag }.toSet()
         val errorPos = lastLocation.position + lastLocation.length
-        val lastEolPos = llg.matchedText.lastIndexOf('\n')
-        val errorLine = llg.location.line + llg.numberOfLines
-        //val lastLocation = graph.input.locationFor(llg.lastLeaf.startPosition, llg.lastLeaf.nextInputPosition)
-        // val errorColumn = when {
-        //     lastLocation.position == 0 && lastLocation.length == 0 -> errorPos + 1
-        //     -1 == lastEolPos -> lastLocation.column + lastLocation.length
-        //     else -> llg.matchedTextLength - lastEolPos
-        // }
-        val errorColumn = when {
-            -1 == lastEolPos -> errorPos + 1
-            else -> llg.matchedTextLength - lastEolPos
-        }
-        val errorLength = 1
-        val location = InputLocation(errorPos, errorColumn, errorLine, errorLength)
+        val errorLength = 1 //TODO: determine a better length
+        val location = input.locationFor(errorPos,errorLength)//InputLocation(errorPos, errorColumn, errorLine, errorLength)
 
         //val expected = emptySet<String>()
         // val location = nextExpected.first//InputLocation(0,0,0,0)
-        throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location, expected)
+        throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location, expected, rp.graph.input.contextInText(location.position))
 
     }
 

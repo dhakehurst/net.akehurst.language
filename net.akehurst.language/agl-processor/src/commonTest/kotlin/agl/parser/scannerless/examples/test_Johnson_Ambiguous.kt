@@ -200,10 +200,10 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
         for (i in 1..5) {
             val text = "a".repeat(i)
             //warm up
-            parser.parse(goal, text, AutomatonKind.LOOKAHEAD_1)
+            parser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
             //time it
             val time = TimeSource.Monotonic.measureTime {
-                parser.parse(goal, text, AutomatonKind.LOOKAHEAD_1)
+                parser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
             }
             times.add(time)
         }

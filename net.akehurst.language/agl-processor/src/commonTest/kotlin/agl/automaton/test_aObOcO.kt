@@ -52,7 +52,7 @@ internal class test_aObOcO : test_Abstract() {
         val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
         val s2 = SM.states[listOf(RulePosition(aOpt_E, 0, RulePosition.END_OF_RULE))]
 
-        val lhs_bcU = rrs.createLookaheadSet(setOf(b, c, UP))
+        val lhs_bcU = SM.createLookaheadSet(setOf(b, c, UP))
     }
 
     override val SM: ParserStateSet

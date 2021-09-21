@@ -49,7 +49,7 @@ class Java8_compare_Test_antlrSpec(val file: FileData) {
         fun createAndBuildProcessor(aglFile: String): LanguageProcessor {
             val bytes = Java8_compare_Test_antlrSpec::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
-            val proc = Agl.processor(javaGrammarStr)
+            val proc = Agl.processorFromString(javaGrammarStr)
             // no need to build because, sentence is parsed twice in the test
             return proc
         }
@@ -60,9 +60,9 @@ class Java8_compare_Test_antlrSpec(val file: FileData) {
 
         fun parseWithJava8Spec(file: FileData): SharedPackedParseTree? {
             return try {
-                specJava8Processor.parse("compilationUnit", input!!)
+                specJava8Processor.parseForGoal("compilationUnit", input!!)
                 TimeLogger(col, file).use { timer ->
-                    val tree = specJava8Processor.parse("compilationUnit", input!!)
+                    val tree = specJava8Processor.parseForGoal("compilationUnit", input!!)
                     timer.success()
                     tree
                 }

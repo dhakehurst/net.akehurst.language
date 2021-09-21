@@ -18,7 +18,7 @@ package net.akehurst.language.agl.ast
 
 import net.akehurst.language.api.grammar.*
 
-internal class MultiDefault(override val min: Int, override val max: Int, override val item: SimpleItem) : RuleItemAbstract(), Multi {
+internal class SimpleListDefault(override val min: Int, override val max: Int, override val item: SimpleItem) : RuleItemAbstract(), SimpleList {
 
     override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this._owningRule = rule

@@ -46,10 +46,10 @@ internal class test_concatenation_abc : test_Abstract() {
         val s3 = SM.states[listOf(RP(b, 0, RulePosition.END_OF_RULE))]
         val s4 = SM.states[listOf(RP(S, 0, 2))]
 
-        val lhs_a = SM.runtimeRuleSet.createLookaheadSet(setOf(a))
-        val lhs_b = SM.runtimeRuleSet.createLookaheadSet(setOf(b))
-        val lhs_c = SM.runtimeRuleSet.createLookaheadSet(setOf(c))
-        val lhs_aU = SM.runtimeRuleSet.createLookaheadSet(setOf(a, UP))
+        val lhs_a = SM.createLookaheadSet(setOf(a))
+        val lhs_b = SM.createLookaheadSet(setOf(b))
+        val lhs_c = SM.createLookaheadSet(setOf(c))
+        val lhs_aU = SM.createLookaheadSet(setOf(a, UP))
     }
 
     override val SM: ParserStateSet

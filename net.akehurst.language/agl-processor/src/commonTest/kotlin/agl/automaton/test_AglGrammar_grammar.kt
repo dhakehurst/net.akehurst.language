@@ -32,7 +32,7 @@ internal class test_AglGrammar_grammar : test_Abstract() {
     private companion object {
         val grammar = AglGrammarGrammar()
         val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
-        val parser = ScanOnDemandParser(converterToRuntimeRules.transform())
+        val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
         val rrs = parser.runtimeRuleSet
 
         val R_grammarDefinition = rrs.findRuntimeRule("grammarDefinition")

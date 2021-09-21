@@ -47,7 +47,7 @@ class Java8_compare_all_parse_error(val file: FileData) {
         fun createAndBuildProcessor(aglFile: String, goalRuleName: String): LanguageProcessor {
             val bytes = Java8_compare_all_parse_error::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
-            val proc = Agl.processor(javaGrammarStr)
+            val proc = Agl.processorFromString(javaGrammarStr)
             proc.buildFor(goalRuleName)
             return proc
         }
@@ -63,7 +63,7 @@ class Java8_compare_all_parse_error(val file: FileData) {
         fun parse(file: FileData, proc: LanguageProcessor, goalRuleName: String): TimedValue<SharedPackedParseTree?> {
             return TimeSource.Monotonic.measureTimedValue {
                 try {
-                    val tree = proc.parse(goalRuleName, input!!)
+                    val tree = proc.parseForGoal(goalRuleName, input!!)
                     tree
                 } catch (t: Throwable) {
                     null

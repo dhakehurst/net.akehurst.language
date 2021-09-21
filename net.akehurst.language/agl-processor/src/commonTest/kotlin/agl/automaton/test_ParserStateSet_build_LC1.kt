@@ -62,7 +62,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, AutomatonKind.LOOKAHEAD_1)
+            parser.parseForGoal("S", sentence, AutomatonKind.LOOKAHEAD_1)
         }
         //println(rrs.usedAutomatonToString("S"))
     }
@@ -115,7 +115,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
     }
 
@@ -177,7 +177,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
     }
 
@@ -235,7 +235,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
     }
 
@@ -271,7 +271,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
     }
 
@@ -355,7 +355,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
     }
 
@@ -391,7 +391,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
         println(rrs.usedAutomatonToString("S"))
     }
@@ -428,7 +428,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
         println(rrs.usedAutomatonToString("S"))
     }
@@ -465,7 +465,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
         println(rrs.usedAutomatonToString("S"))
     }
@@ -501,7 +501,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
         println(rrs.usedAutomatonToString("S"))
     }
@@ -543,7 +543,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
         println(rrs.usedAutomatonToString("S"))
     }
@@ -586,7 +586,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
         println(rrs.usedAutomatonToString("S"))
     }
@@ -636,7 +636,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
         println(rrs.usedAutomatonToString("S"))
     }
@@ -681,7 +681,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
         println(rrs.usedAutomatonToString("S"))
     }
@@ -719,7 +719,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
         println(rrs.usedAutomatonToString("S"))
     }
@@ -760,7 +760,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         )
         val parser = ScanOnDemandParser(rrs)
         for (sentence in sentences) {
-            parser.parse("S", sentence, automatonKind)
+            parser.parseForGoal("S", sentence, automatonKind)
         }
         println(rrs.usedAutomatonToString("S"))
     }

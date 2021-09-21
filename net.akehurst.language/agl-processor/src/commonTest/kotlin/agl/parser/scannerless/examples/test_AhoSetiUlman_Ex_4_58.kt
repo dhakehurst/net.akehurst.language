@@ -72,7 +72,7 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
             super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(1, ex.location.column, "column is wrong")
+        assertEquals(2, ex.location.column, "column is wrong")
         assertEquals(setOf("'b'", "'d'"), ex.expected)
     }
 
@@ -85,7 +85,7 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
             super.test(rrs, goal, sentence,1)
         }
         assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(2, ex.location.column, "column is wrong")
+        assertEquals(1, ex.location.column, "column is wrong")
         assertEquals(setOf("'c'", "'a'"), ex.expected)
     }
 

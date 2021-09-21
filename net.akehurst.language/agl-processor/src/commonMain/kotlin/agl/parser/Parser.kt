@@ -32,18 +32,6 @@ internal interface Parser {
     fun buildFor(goalRuleName: String, automatonKind: AutomatonKind)
 
     /**
-     * get a list of the types of node (is this useful!)
-     */
-    //val nodeTypes: Set<NodeType>
-
-    /**
-     * using the terminals (literals and patterns) from the grammar, scan the input text
-     * and return a list of "tokens" leaves. Useful for syntax highlighting.
-     * Where more than one terminal matches, the longest takes priority, and literals take priority over patterns
-     */
-    fun scan(inputText: String, includeSkipRules: Boolean = false): List<SPPTLeaf>
-
-    /**
      * parse the inputText starting with the given grammar rule and return the shared packed parse Tree.
      *
      * @param goalRuleName
@@ -53,9 +41,7 @@ internal interface Parser {
      * @throws ParseTreeException
      * @throws GrammarRuleNotFoundException
      */
-    fun parse(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): SharedPackedParseTree
-
-    //fun parse(goalRuleName: String, inputText: Reader): SharedPackedParseTree
+    fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): SharedPackedParseTree
 
     /**
      * list of non-terminal or terminal runtime rules expected at the position
@@ -71,5 +57,4 @@ internal interface Parser {
      */
     fun expectedTerminalsAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule>
 
-    //fun expectedAt(goalRuleName: String, inputText: Reader, position: Long): List<RuleItem>
 }

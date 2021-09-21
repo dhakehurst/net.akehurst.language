@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform") version ("1.5.20")
+    kotlin("multiplatform") version ("1.5.30")
 }
 
 val version_agl:String by project

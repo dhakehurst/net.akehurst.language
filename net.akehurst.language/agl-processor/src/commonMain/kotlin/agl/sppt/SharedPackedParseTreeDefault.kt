@@ -29,6 +29,10 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
     override val maxNumHeads: Int
 ) : SharedPackedParseTree {
 
+    init {
+        root.tree = this
+    }
+
     override fun contains(other: SharedPackedParseTree): Boolean {
         return this.root.contains(other.root)
     }

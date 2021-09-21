@@ -22,8 +22,9 @@ class ParserException(message: String) : RuntimeException(message)
 class ParserInterruptedException(message: String) : RuntimeException(message)
 
 class ParseFailedException(
-        message: String,
-        val longestMatch: SharedPackedParseTree?,
-        val location: InputLocation,
-        val expected:Set<String>
-) : RuntimeException("$message, at line ${location.line} column ${location.column}, expected one of ${expected}")
+    message: String,
+    val longestMatch: SharedPackedParseTree?,
+    val location: InputLocation,
+    val expected: Set<String>,
+    val contextInText:String
+) : RuntimeException("$message, at line ${location.line} column ${location.column}, expected one of ${expected}\n...${contextInText}...")

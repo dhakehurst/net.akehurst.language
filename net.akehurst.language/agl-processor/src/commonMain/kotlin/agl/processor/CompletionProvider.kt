@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.ast.EmptyRuleDefault
-import net.akehurst.language.agl.ast.RuleDefault
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.CompletionItem
 
@@ -64,7 +62,7 @@ class CompletionProvider(
                         items + emptyList<CompletionItem>()
                     }
                 }
-                is Multi -> {
+                is SimpleList -> {
                     val items = getItems(item.item, desiredDepth, done + item)
                     if (item.min == 0) {
                         items + listOf(null)

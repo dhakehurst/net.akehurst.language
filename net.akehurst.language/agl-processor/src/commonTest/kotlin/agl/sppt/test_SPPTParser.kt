@@ -20,8 +20,7 @@ import net.akehurst.language.agl.ast.GrammarBuilderDefault
 import net.akehurst.language.agl.ast.NamespaceDefault
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.InputFromString
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.sppt.SPPTNode
 import kotlin.test.*
 
@@ -33,18 +32,16 @@ class test_SPPTParser {
         val grammar = gb.grammar
 
         val converter = ConverterToRuntimeRules(grammar)
-        val rrb = converter.builder
-        val sut = SPPTParserDefault(rrb)
+        val sut = SPPTParserDefault(converter.runtimeRuleSet)
 
         assertNotNull(sut)
     }
 
     @Test
     fun leaf_literal() {
-        val rrb = RuntimeRuleSetBuilder()
-        rrb.literal("a")
+        val rrs = runtimeRuleSet { literal("'a'","a") }
 
-        val sut = SPPTParserDefault(rrb)
+        val sut = SPPTParserDefault(rrs)
         val input = InputFromString(10,"")
         val actual = sut.leaf("'a'", "a", input, 0,1)
 
@@ -61,10 +58,9 @@ class test_SPPTParser {
 
     @Test
     fun leaf_pattern() {
-        val rrb = RuntimeRuleSetBuilder()
-        rrb.pattern("[a-z]")
+        val rrs = runtimeRuleSet { pattern("\"[a-z]\"","[a-z]") }
 
-        val sut = SPPTParserDefault(rrb)
+        val sut = SPPTParserDefault(rrs)
         val input = InputFromString(10,"")
         val actual = sut.leaf("\"[a-z]\"", "a", input, 0,1)
 
@@ -80,12 +76,11 @@ class test_SPPTParser {
 
     @Test
     fun emptyLeaf() {
-        val rrb = RuntimeRuleSetBuilder()
-        rrb.rule("a").empty()
+        val rrs = runtimeRuleSet { concatenation("a") { empty() } }
 
-        val sut = SPPTParserDefault(rrb)
+        val sut = SPPTParserDefault(rrs)
         val input = InputFromString(10,"")
-        val actual = sut.emptyLeaf("a", input, 0,1)
+        val actual = sut.emptyLeaf("a", input, 0,0)
         assertNotNull(actual)
         assertTrue(actual.isLeaf)
         assertFalse(actual.isPattern)
@@ -98,12 +93,11 @@ class test_SPPTParser {
 
     @Test
     fun branch_empty() {
-        val rrb = RuntimeRuleSetBuilder()
-        rrb.rule("a").empty()
+        val rrs = runtimeRuleSet { concatenation("a") { empty() } }
 
-        val sut = SPPTParserDefault(rrb)
+        val sut = SPPTParserDefault(rrs)
         val input = InputFromString(10,"")
-        val actual = sut.branch(input, "a", 0, listOf<SPPTNode>(sut.emptyLeaf("a", input, 0,1)))
+        val actual = sut.branch(input, "a", 0, listOf<SPPTNode>(sut.emptyLeaf("a", input, 0,0)))
 
         assertNotNull(actual)
         assertFalse(actual.isLeaf)
@@ -116,10 +110,9 @@ class test_SPPTParser {
 
     @Test
     fun parse_leaf_literal() {
-        val rrb = RuntimeRuleSetBuilder()
-        rrb.literal("a")
+        val rrs = runtimeRuleSet { literal("'a'","a") }
 
-        val sut = SPPTParserDefault(rrb)
+        val sut = SPPTParserDefault(rrs)
 
         val treeString = """
             'a'
@@ -133,27 +126,25 @@ class test_SPPTParser {
 
     @Test
     fun parse_leaf_literal_backslash() {
-        val rrb = RuntimeRuleSetBuilder()
-        rrb.literal("BS","\\\\")
+        val rrs = runtimeRuleSet { literal("BS","\\") }
 
-        val sut = SPPTParserDefault(rrb)
+        val sut = SPPTParserDefault(rrs)
 
         val treeString = """
-            BS : '\'
+            BS : '\\'
         """.trimIndent()
 
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" '\\'", actual.toStringAll)
+        assertEquals(" '\\\\'", actual.toStringAll)
     }
 
     @Test
     fun parse_leaf_pattern() {
-        val rrb = RuntimeRuleSetBuilder()
-        rrb.pattern("[a-z]")
+        val rrs = runtimeRuleSet { pattern("\"[a-z]\"","[a-z]") }
 
-        val sut = SPPTParserDefault(rrb)
+        val sut = SPPTParserDefault(rrs)
 
         val treeString = """
             "[a-z]" : 'a'
@@ -167,10 +158,9 @@ class test_SPPTParser {
 
     @Test
     fun parse_branch_empty() {
-        val rrb = RuntimeRuleSetBuilder()
-        rrb.rule("a").empty()
+        val rrs = runtimeRuleSet { concatenation("a") { empty() } }
 
-        val sut = SPPTParserDefault(rrb)
+        val sut = SPPTParserDefault(rrs)
 
         val treeString = """
             a { §empty }
@@ -184,11 +174,9 @@ class test_SPPTParser {
 
     @Test
     fun parse_branch() {
-        val rrb = RuntimeRuleSetBuilder()
-        val lit = rrb.literal("a")
-        rrb.rule("a").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, lit)
+        val rrs = runtimeRuleSet { concatenation("a") { literal("a") } }
 
-        val sut = SPPTParserDefault(rrb)
+        val sut = SPPTParserDefault(rrs)
 
         val treeString = """
             a { 'a' }

@@ -28,7 +28,7 @@ class SyntaxAnalyserException(message: String, cause: Throwable?) : RuntimeExcep
  * e.g. as whitesapce
  *
  */
-interface SyntaxAnalyser {
+interface SyntaxAnalyser { //TODO: make transform type argument here maybe!
 
 	val locationMap: Map<Any, InputLocation>
 

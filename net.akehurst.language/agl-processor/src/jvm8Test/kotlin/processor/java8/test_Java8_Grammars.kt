@@ -40,7 +40,7 @@ class test_Java8_Grammars {
         val actual = Agl.processorFromString(grammarStr)
         assertNotNull(actual)
 
-        val res = Agl.grammarProcessor.analyseText(List::class, grammarStr)
+        val res = Agl.registry.agl.grammar.processor!!.analyseText(List::class, grammarStr)
         assertNotNull(actual)
         res.forEach {
             println(it)
