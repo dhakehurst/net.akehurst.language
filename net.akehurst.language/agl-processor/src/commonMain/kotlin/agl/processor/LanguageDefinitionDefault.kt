@@ -55,16 +55,22 @@ class LanguageDefinitionDefault(
     override val formatObservers = mutableListOf<(String?, String?) -> Unit>()
 
     override var grammar: String? by Delegates.observable(grammar) { _, oldValue, newValue ->
-        this._processor_cache.reset()
-        grammarObservers.forEach { it(oldValue, newValue) }
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+            grammarObservers.forEach { it(oldValue, newValue) }
+        }
     }
 
     override var style: String? by Delegates.observable(style) { _, oldValue, newValue ->
-        styleObservers.forEach { it(oldValue, newValue) }
+        if (oldValue != newValue) {
+            styleObservers.forEach { it(oldValue, newValue) }
+        }
     }
 
     override var format: String? by Delegates.observable(format) { _, oldValue, newValue ->
-        formatObservers.forEach { it(oldValue, newValue) }
+        if (oldValue != newValue) {
+            formatObservers.forEach { it(oldValue, newValue) }
+        }
     }
 
     override val processor: LanguageProcessor? get() = this._processor_cache.value

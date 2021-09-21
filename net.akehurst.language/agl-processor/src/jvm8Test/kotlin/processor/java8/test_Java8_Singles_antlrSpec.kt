@@ -27,6 +27,10 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.time.ExperimentalTime
+import kotlin.time.TimeSource
+import kotlin.time.measureTime
+import kotlin.time.measureTimedValue
 
 class test_Java8_Singles_antlrSpec {
 
@@ -168,6 +172,7 @@ public class BadBinaryLiterals {
         assertEquals(sentence, resultStr)
     }
 
+    @OptIn(ExperimentalTime::class)
     @Test(timeout = 5000)
     fun long_concatenation() {
 
@@ -215,10 +220,12 @@ public class BadBinaryLiterals {
         """.trimIndent()
         val goal = "block"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val t = TimeSource.Monotonic.measureTimedValue {
+            proc.parseForGoal(goal, sentence)
+        }
 
-        // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        println( t.duration )
+        val resultStr = SPPT2InputText().visitTree(t.value, "")
         assertEquals(sentence, resultStr)
     }
 
