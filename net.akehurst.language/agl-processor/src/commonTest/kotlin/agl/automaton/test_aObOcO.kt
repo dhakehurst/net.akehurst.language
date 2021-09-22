@@ -54,32 +54,41 @@ internal class test_aObOcO : test_Abstract() {
 
         val lhs_bcU = SM.createLookaheadSet(setOf(b, c, UP))
     }
+    @Test
+    override fun firstOf() {
+        listOf(
+            Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // cOpt = . empty
+            Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, setOf(c)),        // cOpt = . c
+            Triple(RulePosition(bOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // bOpt = . empty
+            Triple(RulePosition(bOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, setOf(b)),        // bOpt = . b
+            Triple(RulePosition(aOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // aOpt = . empty
+            Triple(RulePosition(aOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, setOf(a)),        // aOpt = . a
+            Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),              // S = a? b? c? .
+            Triple(RulePosition(S, 0, 2), lhs_U, setOf(c, UP)),                           // S = a? b? . c?
+            Triple(RulePosition(S, 0, 1), lhs_U, setOf(b, c, UP)),                        // S = a? . b? c?
+            Triple(RulePosition(S, 0, 0), lhs_U, setOf(a, b, c, UP)),                     // S = a? . b? c?
+            Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),               // G = S .
+            Triple(RulePosition(G, 0, 0), lhs_U, setOf(a, b, c, UP))                      // G = . S
+        ).testAll { rp, lhs, expected ->
+            val actual = SM.buildCache.firstOf(rp, lhs)
+            assertEquals(expected, actual, "failed $rp")
+        }
+    }
 
-    override val SM: ParserStateSet
-        get() = Companion.SM
+    @Test
+    override fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
 
-    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-        get() = listOf(
-                Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // cOpt = . empty
-                Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, setOf(c)),        // cOpt = . c
-                Triple(RulePosition(bOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // bOpt = . empty
-                Triple(RulePosition(bOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, setOf(b)),        // bOpt = . b
-                Triple(RulePosition(aOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // aOpt = . empty
-                Triple(RulePosition(aOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, setOf(a)),        // aOpt = . a
-                Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),              // S = a? b? c? .
-                Triple(RulePosition(S, 0, 2), lhs_U, setOf(c, UP)),                           // S = a? b? . c?
-                Triple(RulePosition(S, 0, 1), lhs_U, setOf(b, c, UP)),                        // S = a? . b? c?
-                Triple(RulePosition(S, 0, 0), lhs_U, setOf(a, b, c, UP)),                     // S = a? . b? c?
-                Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),               // G = S .
-                Triple(RulePosition(G, 0, 0), lhs_U, setOf(a, b, c, UP))                      // G = . S
-        )
-
-
-    override val s0_widthInto_expected: List<WidthInfo>
-        get() = listOf(
+        val expected =  listOf(
             WidthInfo(RP(a, 0, EOR), lhs_bcU),
             WidthInfo(RP(aOpt_E, 0, EOR), lhs_bcU)
         )
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
 
     @Test
     fun s0_transitions() {

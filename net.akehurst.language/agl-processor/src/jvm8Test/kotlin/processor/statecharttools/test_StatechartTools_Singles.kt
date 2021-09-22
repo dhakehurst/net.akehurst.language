@@ -16,6 +16,7 @@
 package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -72,4 +73,13 @@ class test_StatechartTools_Singles {
         assertEquals(sentence, resultStr)
     }
 
+    @Test
+    fun expectedAt_TransitionSpecification_0() {
+        val goal = "TransitionSpecification"
+        val sentence = ""
+        val actual = processor.expectedAtForGoal(goal, sentence,0,1)
+
+        val expected = listOf<CompletionItem>()
+        assertEquals(expected, actual)
+    }
 }

@@ -53,26 +53,34 @@ internal class test_leftRecursive : test_Abstract() {
         val lhs_a = SM.createLookaheadSet(setOf(a))
         val lhs_aU = SM.createLookaheadSet(setOf(a, UP))
     }
+    @Test
+    override fun firstOf() {
+        listOf(
+            Triple(RP(G, 0, SOR), lhs_U, setOf(a)), // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, setOf(UP)), // G = S .
+            Triple(RP(S, 0, SOR), lhs_U, setOf(a)), // S = . a
+            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)), // S = a .
+            Triple(RP(S1, 0, SOR), lhs_U, setOf(a)), // S1 = . S a
+            Triple(RP(S1, 1, SOR), lhs_U, setOf(a)), // S1 = S . a
+            Triple(RP(S1, 0, EOR), lhs_U, setOf(UP)) // S1 = S a .
+        ).testAll { rp, lhs, expected ->
+            val actual = SM.buildCache.firstOf(rp, lhs)
+            assertEquals(expected, actual, "failed $rp")
+        }
+    }
+    @Test
+    override fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
 
-    override val SM: ParserStateSet
-        get() = Companion.SM
-
-    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-        get() = listOf(
-                Triple(RP(G, 0, SOR), lhs_U, setOf(a)), // G = . S
-                Triple(RP(G, 0, EOR), lhs_U, setOf(UP)), // G = S .
-                Triple(RP(S, 0, SOR), lhs_U, setOf(a)), // S = . a
-                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)), // S = a .
-                Triple(RP(S1, 0, SOR), lhs_U, setOf(a)), // S1 = . S a
-                Triple(RP(S1, 1, SOR), lhs_U, setOf(a)), // S1 = S . a
-                Triple(RP(S1, 0, EOR), lhs_U, setOf(UP)) // S1 = S a .
-        )
-
-
-    override val s0_widthInto_expected: List<WidthInfo>
-        get() = listOf(
+        val expected = listOf(
             WidthInfo(RP(a, 0, EOR), lhs_aU)
         )
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
 
     @Test
     fun s0_transitions() {

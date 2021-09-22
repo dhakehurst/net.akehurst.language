@@ -48,22 +48,33 @@ internal class test_multi_0_n_literal : test_Abstract() {
         val lhs_aT = SM.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
     }
 
-    override val SM: ParserStateSet
-        get() = Companion.SM
+    @Test
+    override fun firstOf() {
+        listOf(
+            Triple(RP(G, 0, SOR), lhs_U, setOf(a, UP)), // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, setOf(UP)), // G = S .
+            Triple(RP(S, 1, SOR), lhs_U, setOf(UP)), // S = . (a.empty)
+            Triple(RP(S, 1, EOR), lhs_U, setOf(UP)), // S = (a.empty) .
+            Triple(RP(S, 0, SOR), lhs_a, setOf(a)), // S = . a*
+            Triple(RP(S, 0, PMI), lhs_a, setOf(a)), // S = a . a*
+            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)) // S = a* .
+        ).testAll { rp, lhs, expected ->
+            val actual = SM.buildCache.firstOf(rp, lhs)
+            assertEquals(expected, actual, "failed $rp")
+        }
+    }
 
-    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-        get() = listOf(
-                Triple(RP(G, 0, SOR), lhs_U, setOf(a, UP)), // G = . S
-                Triple(RP(G, 0, EOR), lhs_U, setOf(UP)), // G = S .
-                Triple(RP(S, 1, SOR), lhs_U, setOf(UP)), // S = . (a.empty)
-                Triple(RP(S, 1, EOR), lhs_U, setOf(UP)), // S = (a.empty) .
-                Triple(RP(S, 0, SOR), lhs_a, setOf(a)), // S = . a*
-                Triple(RP(S, 0, PMI), lhs_a, setOf(a)), // S = a . a*
-                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)) // S = a* .
-        )
+    @Test
+    override fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
 
-    override val s0_widthInto_expected: List<WidthInfo>
-        get() = TODO("not implemented")
+        val expected = listOf<WidthInfo>()
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
 
     @Test
     fun s0_transitions() {

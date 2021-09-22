@@ -271,7 +271,7 @@ internal class ParserStateSet(
                         val newTrans = newNode.state.transitions(newNode.prev?.state)
                         newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
                     }
-                    Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
+     //               Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                     Transition.ParseAction.GOAL -> null;//buildAndTraverse(nextState, prevStack, done)
                 }
             }

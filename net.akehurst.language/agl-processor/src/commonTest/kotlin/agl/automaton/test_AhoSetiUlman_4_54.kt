@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
@@ -55,32 +56,40 @@ internal class test_AhoSetiUlman_4_54 : test_Abstract() {
         val lhs_cd = LookaheadSet(0, setOf(T_c, T_d))
     }
 
-    override val SM: ParserStateSet
-        get() = Companion.SM
+    @Test
+    override fun firstOf() {
+        listOf(
+            Triple(RP(C1, 0, SOR), lhs_U, setOf(T_c)),          // C1 = . c C
+            Triple(RP(C1, 0, 1), lhs_U, setOf(T_c, T_d)),  // C1 = c . C
+            Triple(RP(C1, 0, EOR), lhs_U, setOf(UP)),           // C1 = c C .
+            Triple(RP(C, 1, SOR), lhs_U, setOf(T_d)),           // C = . d
+            Triple(RP(C, 1, EOR), lhs_U, setOf(UP)),            // C = d .
+            Triple(RP(C, 0, SOR), lhs_U, setOf(T_c)),           // C = . C1
+            Triple(RP(C, 0, EOR), lhs_U, setOf(UP)),            // C = C1 .
+            Triple(RP(S, 0, SOR), lhs_U, setOf(T_c, T_d)),      // S = . C C
+            Triple(RP(S, 0, 1), lhs_U, setOf(T_c, T_d)),   // S = C . C
+            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),            // S = C C .
+            Triple(RP(G, 0, SOR), lhs_U, setOf(T_c, T_d)),      // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, setOf(UP))             // G = S .
+        ).testAll { rp, lhs, expected ->
+            val actual = SM.buildCache.firstOf(rp, lhs)
+            assertEquals(expected, actual, "failed $rp")
+        }
+    }
 
-    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-        get() = listOf(
-                Triple(RP(C1, 0, SOR), lhs_U, setOf(T_c)),          // C1 = . c C
-                Triple(RP(C1, 0, 1), lhs_U, setOf(T_c, T_d)),  // C1 = c . C
-                Triple(RP(C1, 0, EOR), lhs_U, setOf(UP)),           // C1 = c C .
-                Triple(RP(C, 1, SOR), lhs_U, setOf(T_d)),           // C = . d
-                Triple(RP(C, 1, EOR), lhs_U, setOf(UP)),            // C = d .
-                Triple(RP(C, 0, SOR), lhs_U, setOf(T_c)),           // C = . C1
-                Triple(RP(C, 0, EOR), lhs_U, setOf(UP)),            // C = C1 .
-                Triple(RP(S, 0, SOR), lhs_U, setOf(T_c, T_d)),      // S = . C C
-                Triple(RP(S, 0, 1), lhs_U, setOf(T_c, T_d)),   // S = C . C
-                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),            // S = C C .
-                Triple(RP(G, 0, SOR), lhs_U, setOf(T_c, T_d)),      // G = . S
-                Triple(RP(G, 0, EOR), lhs_U, setOf(UP))             // G = S .
-        )
+    override fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
 
-    override val s0_widthInto_expected: List<WidthInfo>
-        get() = listOf(
+        val expected = listOf(
             WidthInfo(RP(T_c, 0, EOR), lhs_cd),
             WidthInfo(RP(T_d, 0, EOR), lhs_cd)
         )
-
-
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
 
     @Test
     fun s0_transitions() {
@@ -104,7 +113,7 @@ internal class test_AhoSetiUlman_4_54 : test_Abstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))       // G = . S
             val s1 = state(RP(T_c, 0, EOR))     // c
             val s2 = state(RP(T_d, 0, EOR))     // d
@@ -152,6 +161,6 @@ internal class test_AhoSetiUlman_4_54 : test_Abstract() {
             transition(null, s9, s9, GOAL, setOf(), setOf(), null)
         }
 
-        assertEquals(expected, actual)
+        AutomatonTest.assertEquals(expected, actual)
     }
 }
