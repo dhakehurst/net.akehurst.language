@@ -18,13 +18,12 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_concatenation_abc : test_Abstract() {
+internal class test_concatenation_abc : test_AutomatonAbstract() {
     // S =  'a' 'b' 'c' ;
     private companion object {
 

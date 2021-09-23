@@ -24,7 +24,7 @@ import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_concat_of_optional_nonTerm : test_Abstract() {
+internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
     //    GenericMethodInvocation = TypeArguments? MethodInvocation ;
     //    MethodInvocation = IDENTIFIER ArgumentList ;

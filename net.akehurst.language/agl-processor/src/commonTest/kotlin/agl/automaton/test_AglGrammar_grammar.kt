@@ -25,7 +25,7 @@ import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_AglGrammar_grammar : test_Abstract() {
+internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
 
     private companion object {
         val grammar = AglGrammarGrammar()

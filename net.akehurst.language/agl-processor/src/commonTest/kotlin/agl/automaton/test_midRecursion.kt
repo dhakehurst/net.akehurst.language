@@ -24,7 +24,7 @@ import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_midRecursion : test_Abstract() {
+internal class test_midRecursion : test_AutomatonAbstract() {
 
     /*
         S = b | a S c ;

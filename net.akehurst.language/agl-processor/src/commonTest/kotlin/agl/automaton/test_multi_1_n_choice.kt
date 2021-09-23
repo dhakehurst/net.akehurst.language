@@ -21,7 +21,7 @@ import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_multi_1_n_choice : test_Abstract() {
+internal class test_multi_1_n_choice : test_AutomatonAbstract() {
 
     // S =  AB+
     // AB = a | b

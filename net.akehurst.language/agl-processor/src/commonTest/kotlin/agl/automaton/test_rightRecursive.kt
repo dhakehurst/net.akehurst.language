@@ -24,7 +24,7 @@ import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_rightRecursive : test_Abstract() {
+internal class test_rightRecursive : test_AutomatonAbstract() {
 
     // S =  'a' | S1 ;
     // S1 = 'a' S ;

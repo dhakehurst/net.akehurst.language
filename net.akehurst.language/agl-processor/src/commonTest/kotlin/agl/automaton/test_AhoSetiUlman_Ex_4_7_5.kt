@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
+internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
 
     // This grammar is LR(1) but not LALR(1)
     // TODO...from where?

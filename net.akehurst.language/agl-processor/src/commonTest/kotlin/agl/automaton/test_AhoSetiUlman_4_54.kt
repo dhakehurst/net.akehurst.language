@@ -23,7 +23,7 @@ import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_AhoSetiUlman_4_54 : test_Abstract() {
+internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
     // S = C C ;
     // C = c C | d ;
     //

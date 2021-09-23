@@ -77,9 +77,9 @@ class test_StatechartTools_Singles {
     fun expectedAt_TransitionSpecification_0() {
         val goal = "TransitionSpecification"
         val sentence = ""
-        val actual = processor.expectedAtForGoal(goal, sentence,0,1)
+        val actual = processor.expectedAtForGoal(goal, sentence,0,1).map { it.text }
 
-        val expected = listOf<CompletionItem>()
+        val expected = listOf<String>("ID", "after", "every","entry","exit","always","oncycle","[","default","else","/","#")
         assertEquals(expected, actual)
     }
 }

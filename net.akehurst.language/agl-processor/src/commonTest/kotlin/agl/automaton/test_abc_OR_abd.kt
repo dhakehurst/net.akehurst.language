@@ -16,12 +16,15 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.AutomatonTest
+import agl.automaton.automaton
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_abc_OR_abd : test_Abstract() {
+internal class test_abc_OR_abd : test_AutomatonAbstract() {
 
     // S =  ABC | ABD
     // ABC = a b c
@@ -119,5 +122,30 @@ internal class test_abc_OR_abd : test_Abstract() {
         //    Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected, actual)
+    }
+
+    @Test
+    fun parse_abc() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+            /* G = . S   */ val s0 = state(RP(G, 0, SOR))
+            /* a .       */ val s1 = state(RP(a, 0, EOR))
+            /* S = ABC . */ val s2 = state(RP(S, 0, 1)); error("Should be no position 1 ??")
+            /* S = ABC . */ val s3 = state(RP(a, 0, EOR))
+            /* S = ABC . */ val s4 = state(RP(a, 0, EOR))
+            /* S = ABC . */ val s5 = state(RP(a, 0, EOR))
+            /* S = ABC . */ val s6 = state(RP(a, 0, EOR))
+
+            transition(null, s0, s1, WIDTH, setOf(UP), setOf(), null)
+            transition(null, s0, s2, WIDTH, setOf(a, b), setOf(), null)
+            transition(s0, s1, s3, HEIGHT, setOf(UP), setOf(UP), listOf(RP(S, 0, SOR)))
+            transition(s0, s3, s4, GRAFT, setOf(UP), setOf(UP), listOf(RP(G, 0, SOR)))
+            transition(null, s4, s4, GOAL, setOf(), setOf(), null)
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
     }
 }

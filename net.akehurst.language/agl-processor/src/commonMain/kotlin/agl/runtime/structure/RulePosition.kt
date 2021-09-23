@@ -19,14 +19,14 @@ package net.akehurst.language.agl.runtime.structure
 internal typealias RuleOptionId = RuleOption //TODO: Make this an Int
 
 internal data class RuleOption(
-        val runtimeRule: RuntimeRule,
-        val option: Int
+    val runtimeRule: RuntimeRule,
+    val option: Int
 )
 
 internal class RulePosition(
-        val runtimeRule: RuntimeRule,
-        val option: Int,
-        val position: Int
+    val runtimeRule: RuntimeRule,
+    val option: Int,
+    val position: Int
 ) {
 
     companion object {
@@ -45,26 +45,35 @@ internal class RulePosition(
         val POSITION_SLIST_ITEM = 2 //TODO: make -ve maybe
     }
 
-    val identity:RuleOptionId=RuleOption(runtimeRule, option) //TODO: Make this an Int
+    val identity: RuleOptionId = RuleOption(runtimeRule, option) //TODO: Make this an Int
 
     val isAtStart = position == START_OF_RULE
     val isAtEnd = position == END_OF_RULE
 
-    val items: List<RuntimeRule> get() = if (END_OF_RULE == position) {
-        emptyList()
-    } else {
-        listOf(runtimeRule.item(option, position)).mapNotNull { it }
-    }
+    val items: List<RuntimeRule>
+        get() = if (END_OF_RULE == position) {
+            emptyList()
+        } else {
+            listOf(runtimeRule.item(option, position)).mapNotNull { it }
+        }
 
-    val item: RuntimeRule? get() = when {
-        END_OF_RULE == this.position -> null
-        else -> runtimeRule.item(option, position)
-    }
+    val item: RuntimeRule?
+        get() = when {
+            END_OF_RULE == this.position -> null
+            else -> runtimeRule.item(option, position)
+        }
 
-    val priority get() = when (this.runtimeRule.rhs.itemsKind) {
-        RuntimeRuleRhsItemsKind.CHOICE -> this.option//gn.priorityFor(runtimeRule)
-        else -> 0
-    }
+    val priority
+        get() = when (this.runtimeRule.kind) {
+            RuntimeRuleKind.EMBEDDED,
+            RuntimeRuleKind.TERMINAL -> 0
+            RuntimeRuleKind.NON_TERMINAL,
+            RuntimeRuleKind.GOAL ->
+                when (this.runtimeRule.rhs.itemsKind) {
+                    RuntimeRuleRhsItemsKind.CHOICE -> this.option//gn.priorityFor(runtimeRule)
+                    else -> 0
+                }
+        }
 
     fun atEnd() = RulePosition(this.runtimeRule, this.option, END_OF_RULE)
 
@@ -181,13 +190,13 @@ internal class RulePosition(
     }
 
     private val _hashCode = listOf(this.runtimeRule, this.option, this.position).hashCode()
-    override fun hashCode(): Int  = _hashCode
+    override fun hashCode(): Int = _hashCode
 
-    override fun equals(other: Any?): Boolean = when(other) {
-        is RulePosition -> this.option==other.option &&
-                this.position==other.position &&
-                this.runtimeRule.runtimeRuleSetNumber==other.runtimeRule.runtimeRuleSetNumber &&
-                this.runtimeRule.number==other.runtimeRule.number
+    override fun equals(other: Any?): Boolean = when (other) {
+        is RulePosition -> this.option == other.option &&
+                this.position == other.position &&
+                this.runtimeRule.runtimeRuleSetNumber == other.runtimeRule.runtimeRuleSetNumber &&
+                this.runtimeRule.number == other.runtimeRule.number
         else -> false
     }
 

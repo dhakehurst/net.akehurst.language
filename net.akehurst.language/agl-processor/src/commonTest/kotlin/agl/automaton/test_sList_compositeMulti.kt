@@ -21,7 +21,7 @@ import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_sList_compositeMulti : test_Abstract() {
+internal class test_sList_compositeMulti : test_AutomatonAbstract() {
 
     // S = [nl / ';']*
     // nl = N cnm
