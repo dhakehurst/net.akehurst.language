@@ -18,13 +18,12 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_sList_0_n_literal : test_Abstract() {
+internal class test_sList_0_n_literal : test_AutomatonAbstract() {
     // S =  ['a' / ',']* ;
 
     private companion object {
@@ -45,15 +44,23 @@ internal class test_sList_0_n_literal : test_Abstract() {
         val lhs_a = LookaheadSet(1, setOf(a))
     }
 
-    override val SM: ParserStateSet get() = Companion.SM
+    @Test
+    override fun firstOf() {
+        TODO("not implemented")
+    }
+    @Test
+    override fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
 
-    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-        get() = TODO("not implemented")
-
-    override val s0_widthInto_expected: List<WidthInfo>
-        get() = listOf(
+        val expected = listOf(
             WidthInfo(RulePosition(a, 0, 0), lhs_T)
         )
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
 
     @Test
     fun s0_transitions() {

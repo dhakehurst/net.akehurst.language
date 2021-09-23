@@ -16,12 +16,15 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
+import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_rightRecursive : test_Abstract() {
+internal class test_rightRecursive : test_AutomatonAbstract() {
 
     // S =  'a' | S1 ;
     // S1 = 'a' S ;
@@ -53,34 +56,43 @@ internal class test_rightRecursive : test_Abstract() {
         val lhs_aU = SM.createLookaheadSet(setOf(a, UP))
     }
 
-    override val SM: ParserStateSet
-        get() = Companion.SM
+    @Test
+    override fun firstOf() {
+        listOf(
+            Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // G = . S
+            Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
+            Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S = . a
+            Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // S = a .
+            Triple(RulePosition(S, 1, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S = . S1
+            Triple(RulePosition(S, 1, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // S = S1 .
+            Triple(RulePosition(S1, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S1 = . a S
+            Triple(RulePosition(S1, 1, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S1 = a . S
+            Triple(RulePosition(S1, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)) // S1 = a S .
+        ).testAll { rp, lhs, expected ->
+            val actual = SM.buildCache.firstOf(rp, lhs)
+            assertEquals(expected, actual, "failed $rp")
+        }
+    }
 
-    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-        get() = listOf(
-                Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // G = . S
-                Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
-                Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S = . a
-                Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // S = a .
-                Triple(RulePosition(S, 1, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S = . S1
-                Triple(RulePosition(S, 1, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // S = S1 .
-                Triple(RulePosition(S1, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S1 = . a S
-                Triple(RulePosition(S1, 1, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S1 = a . S
-                Triple(RulePosition(S1, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)) // S1 = a S .
-        )
+    @Test
+    override fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
 
-
-
-    override val s0_widthInto_expected: List<WidthInfo>
-        get() = listOf(
+        val expected = listOf(
             WidthInfo(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_aU)
         )
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
 
     @Test
     fun s0_transitions() {
         val actual = s0.transitions(null)
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_aU, LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_aU, LookaheadSet.EMPTY, null) { _, _ -> true }
         ).toList()
 
         assertEquals(expected.size, actual.size)
@@ -94,18 +106,18 @@ internal class test_rightRecursive : test_Abstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraftInfo(
-                    listOf(RulePosition(S, 0, 0)),
-                    listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
-                    lhs_U,
-                    lhs_U
-                ),
-                HeightGraftInfo(
-                    listOf(RulePosition(S1, 0, 0)),
-                    listOf(RulePosition(S1, 0, 1)),
-                    lhs_a,
-                    lhs_U
-                )
+            HeightGraftInfo(
+                listOf(RulePosition(S, 0, 0)),
+                listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
+                lhs_U,
+                lhs_U
+            ),
+            HeightGraftInfo(
+                listOf(RulePosition(S1, 0, 0)),
+                listOf(RulePosition(S1, 0, 1)),
+                lhs_a,
+                lhs_U
+            )
         )
         assertEquals(expected, actual)
 
@@ -117,8 +129,8 @@ internal class test_rightRecursive : test_Abstract() {
         val actual = s1.transitions(s0)
 
         val expected = listOf<Transition>(
-                Transition(s1, s2, Transition.ParseAction.HEIGHT, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true },
-                Transition(s1, s3, Transition.ParseAction.HEIGHT, lhs_a, LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s1, s2, Transition.ParseAction.HEIGHT, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true },
+            Transition(s1, s3, Transition.ParseAction.HEIGHT, lhs_a, LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -132,12 +144,12 @@ internal class test_rightRecursive : test_Abstract() {
         val actual = s2.heightOrGraftInto(s0)
 
         val expected = setOf(
-                HeightGraftInfo(
-                    listOf(RulePosition(G, 0, 0)),
-                    listOf(RulePosition(G, 0, RulePosition.END_OF_RULE)),
-                    lhs_U,
-                    lhs_U
-                )
+            HeightGraftInfo(
+                listOf(RulePosition(G, 0, 0)),
+                listOf(RulePosition(G, 0, RulePosition.END_OF_RULE)),
+                lhs_U,
+                lhs_U
+            )
         )
         assertEquals(expected, actual)
     }
@@ -148,12 +160,12 @@ internal class test_rightRecursive : test_Abstract() {
         val actual = s2.heightOrGraftInto(s3)
 
         val expected = setOf(
-                HeightGraftInfo(
-                    listOf(RulePosition(S1, 0, 1)),
-                    listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE)),
-                    lhs_U,
-                    lhs_U
-                )
+            HeightGraftInfo(
+                listOf(RulePosition(S1, 0, 1)),
+                listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE)),
+                lhs_U,
+                lhs_U
+            )
         )
         assertEquals(expected, actual)
     }
@@ -162,7 +174,7 @@ internal class test_rightRecursive : test_Abstract() {
     fun s2_transitions_s0() {
         val actual = s2.transitions(s0)
         val expected = listOf<Transition>(
-                Transition(s2, s5, Transition.ParseAction.GRAFT, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s2, s5, Transition.ParseAction.GRAFT, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected, actual)
     }
@@ -171,7 +183,7 @@ internal class test_rightRecursive : test_Abstract() {
     fun s2_transitions_s3() {
         val actual = s2.transitions(s3)
         val expected = listOf<Transition>(
-                Transition(s2, s4, Transition.ParseAction.GRAFT, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s2, s4, Transition.ParseAction.GRAFT, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected, actual)
     }
@@ -183,12 +195,12 @@ internal class test_rightRecursive : test_Abstract() {
 
 
         val expected = setOf(
-                HeightGraftInfo(
-                    listOf(RulePosition(S, 1, 0)),
-                    listOf(RulePosition(S, 1, RulePosition.END_OF_RULE)),
-                    lhs_U,
-                    lhs_U
-                )
+            HeightGraftInfo(
+                listOf(RulePosition(S, 1, 0)),
+                listOf(RulePosition(S, 1, RulePosition.END_OF_RULE)),
+                lhs_U,
+                lhs_U
+            )
         )
         assertEquals(expected, actual)
 
@@ -199,7 +211,7 @@ internal class test_rightRecursive : test_Abstract() {
 
         val actual = s4.transitions(s0)
         val expected = listOf<Transition>(
-                Transition(s4, s6, Transition.ParseAction.HEIGHT, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s4, s6, Transition.ParseAction.HEIGHT, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -214,7 +226,7 @@ internal class test_rightRecursive : test_Abstract() {
         val actual = s3.transitions(s0)
 
         val expected = listOf<Transition>(
-                Transition(s3, s1, Transition.ParseAction.WIDTH, lhs_aU, LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s3, s1, Transition.ParseAction.WIDTH, lhs_aU, LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -228,7 +240,7 @@ internal class test_rightRecursive : test_Abstract() {
         val actual = s6.transitions(s0)
 
         val expected = listOf<Transition>(
-                Transition(s6, s5, Transition.ParseAction.GRAFT, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s6, s5, Transition.ParseAction.GRAFT, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -242,7 +254,7 @@ internal class test_rightRecursive : test_Abstract() {
         val actual = s6.transitions(s3)
 
         val expected = listOf<Transition>(
-                Transition(s6, s4, Transition.ParseAction.GRAFT, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s6, s4, Transition.ParseAction.GRAFT, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {

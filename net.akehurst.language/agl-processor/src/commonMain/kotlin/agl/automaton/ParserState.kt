@@ -154,7 +154,7 @@ internal class ParserState(
                         } ?: true
 //                        previousState.rulePositions == t.prevGuard
                     }
-                    Transition.ParseAction.GRAFT_OR_HEIGHT -> true //should never happen at this point
+ //                   Transition.ParseAction.GRAFT_OR_HEIGHT -> true //should never happen at this point
                 }
                 if (filter) __filteredTransitions.add(tr)
             }
@@ -195,9 +195,8 @@ internal class ParserState(
         when {
             thisIsGoalState -> when {
                 isAtEnd -> {
-                    val action = Transition.ParseAction.GOAL
                     val to = this
-                    __goalTransitions.add(Transition(this, to, action, LookaheadSet.EMPTY, LookaheadSet.EMPTY, null) { _, _ -> true })
+                    __goalTransitions.add(Transition(this, to, Transition.ParseAction.GOAL, LookaheadSet.EMPTY, LookaheadSet.EMPTY, null) { _, _ -> true })
                 }
                 else -> {
                     val widthInto = this.widthInto(previousState)
@@ -231,9 +230,8 @@ internal class ParserState(
                                 // }
                                 (isGoal && this.stateSet.isSkip) -> {
                                     // must be end of skip. TODO: can do something better than this!
-                                    val action = Transition.ParseAction.GOAL
                                     val to = this
-                                    __goalTransitions.add(Transition(this, to, action, LookaheadSet.EMPTY, LookaheadSet.EMPTY, null) { _, _ -> true })
+                                    __goalTransitions.add(Transition(this, to, Transition.ParseAction.GOAL, LookaheadSet.EMPTY, LookaheadSet.EMPTY, null) { _, _ -> true })
                                 }
                                 else -> {
                                     val ts = this.createGraftTransition3(hg)
@@ -324,27 +322,24 @@ internal class ParserState(
     }
 
     private fun createWidthTransition(rp: RulePosition, lookaheadSet: LookaheadSet): Transition {
-        val action = Transition.ParseAction.WIDTH
         val toRp = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE) //TODO: is this not passed in ? //assumes rp is a terminal
         val to = this.stateSet.states[listOf(toRp)]
         val lh = lookaheadSet
         // upLookahead and prevGuard are unused
-        return Transition(this, to, action, lh, LookaheadSet.EMPTY, null) { _, _ -> true }
+        return Transition(this, to, Transition.ParseAction.WIDTH, lh, LookaheadSet.EMPTY, null) { _, _ -> true }
     }
 
     private fun createEmbeddedTransition(rp: RulePosition, lookaheadSet: LookaheadSet): Transition {
-        val action = Transition.ParseAction.EMBED
         val toRp = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE) //TODO: is this not passed in ?
         val to = this.stateSet.states[listOf(toRp)]
         val lh = lookaheadSet
         // upLookahead and prevGuard are unused
-        return Transition(this, to, action, lh, LookaheadSet.EMPTY, null) { _, _ -> true }
+        return Transition(this, to, Transition.ParseAction.EMBED, lh, LookaheadSet.EMPTY, null) { _, _ -> true }
     }
 
     private fun createHeightTransition3(hg: HeightGraftInfo): Transition {
-        val action = Transition.ParseAction.HEIGHT
         val to = this.stateSet.states[hg.parentNext]
-        val trs = Transition(this, to, action, hg.lhs, hg.upLhs, hg.parent) { _, _ -> true }
+        val trs = Transition(this, to, Transition.ParseAction.HEIGHT, hg.lhs, hg.upLhs, hg.parent) { _, _ -> true }
         return trs
     }
 
@@ -364,9 +359,8 @@ internal class ParserState(
                 }
             }
         }
-        val action = Transition.ParseAction.GRAFT
         val to = this.stateSet.states[hg.parentNext]
-        val trs = Transition(this, to, action, hg.lhs, hg.upLhs, hg.parent, runtimeGuard)
+        val trs = Transition(this, to, Transition.ParseAction.GRAFT, hg.lhs, hg.upLhs, hg.parent, runtimeGuard)
         return trs
     }
 

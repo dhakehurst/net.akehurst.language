@@ -16,13 +16,15 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
-internal class test_concat_of_optional_nonTerm : test_Abstract() {
+internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
     //    GenericMethodInvocation = TypeArguments? MethodInvocation ;
     //    MethodInvocation = IDENTIFIER ArgumentList ;
@@ -55,24 +57,39 @@ internal class test_concat_of_optional_nonTerm : test_Abstract() {
         val T_b = rrs.findRuntimeRule("'b'")
         val E_optA = optA.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
     }
+    @Test
+    override fun firstOf() {
+        listOf(
+            /* G = S . */ Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),
+            /* G = . S */ Triple(RulePosition(G, 0, 0), lhs_U, setOf(UP))
+        ).testAll { rp, lhs, expected ->
+            val actual = SM.buildCache.firstOf(rp, lhs)
+            assertEquals(expected, actual, "failed $rp")
+        }
+    }
 
-    override val SM: ParserStateSet
-        get() = TODO("not implemented")
+    @Test
+    override fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
+        TODO()
+        val expected = listOf<WidthInfo>(
 
-    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-        get() = TODO("not implemented")
-
-    override val s0_widthInto_expected: List<WidthInfo>
-        get() = TODO("not implemented")
+        )
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
 
     @Test
     fun parse_b() {
-    //TODO: is there a way to reset the rrs if it needs it?
+        //TODO: is there a way to reset the rrs if it needs it?
         val parser = ScanOnDemandParser(rrs)
         parser.parseForGoal("S", "b", AutomatonKind.LOOKAHEAD_1)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))       // G = . S
             val s1 = state(RP(T_a, 0, EOR))       // 'a'
             val s2 = state(RP(E_optA, 0, EOR))
@@ -88,7 +105,7 @@ internal class test_concat_of_optional_nonTerm : test_Abstract() {
             // B = b ;
         }
 
-        assertEquals(expected,actual)
+        AutomatonTest.assertEquals(expected, actual)
 
     }
 

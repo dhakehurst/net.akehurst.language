@@ -142,7 +142,7 @@ internal class ScanOnDemandParser(
                             Transition.ParseAction.EMBED -> TODO()
                             Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.lookahead).content
                             Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.lookahead }.flatMap { rp.stateSet.createWithParent(tr.lookaheadGuard, it).content }
-                            Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
+    //                        Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                         }
                     }
                     Pair(lg, exp)
@@ -159,7 +159,7 @@ internal class ScanOnDemandParser(
                                 Transition.ParseAction.EMBED -> lg.currentState.firstOf(lg.lookahead)
                                 Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.lookahead).content
                                 Transition.ParseAction.GRAFT -> rp.stateSet.createWithParent(tr.lookaheadGuard, prev.lookahead).content
-                                Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
+       //                         Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                             }
                         }
                         exp
@@ -222,14 +222,13 @@ internal class ScanOnDemandParser(
                 Transition.ParseAction.GOAL -> lh
                 Transition.ParseAction.WIDTH -> tr.to.runtimeRules
                 Transition.ParseAction.GRAFT -> lh
-                Transition.ParseAction.GRAFT_OR_HEIGHT -> lh
+       //         Transition.ParseAction.GRAFT_OR_HEIGHT -> lh
                 Transition.ParseAction.HEIGHT -> lh
                 Transition.ParseAction.EMBED -> TODO()
             }
         }.toSet()
         return result
     }
-
 
     override fun expectedAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule> {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
@@ -249,7 +248,11 @@ internal class ScanOnDemandParser(
             for (gn in rp.lastGrown) {
                 if (input.isEnd(gn.nextInputPosition)) {
                     val prev = rp.toGrowPrevious[gn]
-                    matches.add(Pair(gn, prev))
+                    if (prev==null && gn.currentState.isGoal.not()) {
+                        //don't include it TODO: why does this happen?
+                    } else {
+                        matches.add(Pair(gn, prev))
+                    }
                 }
             }
             seasons++

@@ -19,15 +19,13 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
-import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_AglGrammar_grammar : test_Abstract() {
+internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
 
     private companion object {
         val grammar = AglGrammarGrammar()
@@ -62,26 +60,37 @@ internal class test_AglGrammar_grammar : test_Abstract() {
         val lhs_IDENTIFIER = SM.createLookaheadSet(setOf(T_IDENTIFIER))
     }
 
-    override val SM: ParserStateSet
-        get() = Companion.SM
-
-    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-        get() = listOf(
-                Triple(RP(R_grammarDefinition, 0, SOR), lhs_U, setOf(T_namespace)), // grammarDefinition = . namespace grammars
-                Triple(RP(R_grammarDefinition, 0, 1), lhs_U, setOf(T_grammar)), // grammarDefinition = namespace . grammars
-                Triple(RP(R_grammarDefinition, 0, EOR), lhs_U, setOf(UP)),          // grammarDefinition = namespace grammars .
-                Triple(RP(R_namespace, 0, SOR), lhs_U, setOf(UP)), // namespace = . 'namespace' qualifiedName
-                Triple(RP(R_namespace, 0, 1), lhs_U, setOf(UP)), // namespace = 'namespace' . qualifiedName
-                Triple(RP(R_namespace, 0, EOR), lhs_U, setOf(UP)), // namespace = 'namespace' qualifiedName .
+    @Test
+    override fun firstOf() {
+        listOf(
+            Triple(RP(R_grammarDefinition, 0, SOR), lhs_U, setOf(T_namespace)), // grammarDefinition = . namespace grammars
+            Triple(RP(R_grammarDefinition, 0, 1), lhs_U, setOf(T_grammar)), // grammarDefinition = namespace . grammars
+            Triple(RP(R_grammarDefinition, 0, EOR), lhs_U, setOf(UP)),          // grammarDefinition = namespace grammars .
+            Triple(RP(R_namespace, 0, SOR), lhs_U, setOf(UP)), // namespace = . 'namespace' qualifiedName
+            Triple(RP(R_namespace, 0, 1), lhs_U, setOf(UP)), // namespace = 'namespace' . qualifiedName
+            Triple(RP(R_namespace, 0, EOR), lhs_U, setOf(UP)), // namespace = 'namespace' qualifiedName .
 //TODO
-                Triple(RP(G, 0, SOR), lhs_U, setOf(T_namespace)), // G = . grammarDefinition
-                Triple(RP(G, 0, EOR), lhs_U, setOf(UP))        // G = grammarDefinition .
-        )
+            Triple(RP(G, 0, SOR), lhs_U, setOf(T_namespace)), // G = . grammarDefinition
+            Triple(RP(G, 0, EOR), lhs_U, setOf(UP))        // G = grammarDefinition .
+        ).testAll { rp, lhs, expected ->
+            val actual = SM.buildCache.firstOf(rp, lhs)
+            assertEquals(expected, actual, "failed $rp")
+        }
+    }
 
-    override val s0_widthInto_expected: List<WidthInfo>
-        get() = listOf(
-            WidthInfo(RP(T_namespace,0,EOR), lhs_IDENTIFIER)
+    @Test
+    override fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
+
+        val expected = listOf(
+            WidthInfo(RP(T_namespace, 0, EOR), lhs_IDENTIFIER)
         )
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
 
     @Test
     fun rule_firstTerminals() {

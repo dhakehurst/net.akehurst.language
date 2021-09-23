@@ -18,13 +18,12 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_concatenation_abc : test_Abstract() {
+internal class test_concatenation_abc : test_AutomatonAbstract() {
     // S =  'a' 'b' 'c' ;
     private companion object {
 
@@ -51,24 +50,34 @@ internal class test_concatenation_abc : test_Abstract() {
         val lhs_c = SM.createLookaheadSet(setOf(c))
         val lhs_aU = SM.createLookaheadSet(setOf(a, UP))
     }
+    @Test
+    override fun firstOf() {
+        listOf(
+            Triple(RP(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // G = . S
+            Triple(RP(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
+            Triple(RP(S, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S = . a b c
+            Triple(RP(S, 0, 1), lhs_U, setOf(b)), // S = a . b c
+            Triple(RP(S, 0, 2), lhs_U, setOf(c)), // S = a b . c
+            Triple(RP(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP))   // S = a b c .
+        ).testAll { rp, lhs, expected ->
+            val actual = SM.buildCache.firstOf(rp, lhs)
+            assertEquals(expected, actual, "failed $rp")
+        }
+    }
 
-    override val SM: ParserStateSet
-        get() = Companion.SM
+    @Test
+    override fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
 
-    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-        get() = listOf(
-                Triple(RP(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // G = . S
-                Triple(RP(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
-                Triple(RP(S, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S = . a b c
-                Triple(RP(S, 0, 1), lhs_U, setOf(b)), // S = a . b c
-                Triple(RP(S, 0, 2), lhs_U, setOf(c)), // S = a b . c
-                Triple(RP(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP))   // S = a b c .
-        )
-
-    override val s0_widthInto_expected: List<WidthInfo>
-        get() = listOf(
+        val expected = listOf(
             WidthInfo(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_b)
         )
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
 
     @Test
     fun s0_transitions() {

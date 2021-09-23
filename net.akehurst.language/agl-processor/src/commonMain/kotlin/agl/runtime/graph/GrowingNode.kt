@@ -18,6 +18,7 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.api.sppt.SPPTNode
 
 internal class GrowingNode(
@@ -415,7 +416,7 @@ val lastLocation
         }
 
     private var _asCompletedNodes: MutableList<SPPTNode>? = null
-    val asCompletedNodes: List<SPPTNode> get() {
+    val asCompletedNodes1: List<SPPTNode> get() {
          if (null==_asCompletedNodes && this.isLeaf) {
              this._asCompletedNodes = mutableListOf(
                  this.graph.input.leaves[this.runtimeRules.first(), startPosition] ?: error("Internal Error: leaf node not found!")
@@ -423,6 +424,30 @@ val lastLocation
         }
         return _asCompletedNodes ?: error("Internal Error: completedNodes not set")
     }
+
+    val asCompletedNodes2: List<SPPTNode> by lazy {
+        if (this.isLeaf) {
+            listOf(
+                this.graph.input.leaves[this.runtimeRules.first(), startPosition] ?: error("Internal Error: leaf node not found!")
+            )
+        } else {
+            if (this.currentState.isAtEnd) {
+                this.currentState.rulePositions.map {
+                    val input = this.graph.input
+                    val rr = it.runtimeRule
+                    val option = it.option
+                    val priority = it.priority
+                    val cn = SPPTBranchFromInputAndGrownChildren(input, rr, option, startPosition, nextInputPosition, priority)
+                    cn.grownChildrenAlternatives[option] = this.children
+                    cn
+                }
+            } else {
+                error("Internal Error: trying to create complete nodes from incomplete GrowingNode")
+            }
+        }
+    }
+
+    val asCompletedNodes: List<SPPTNode> get() = this.asCompletedNodes2
 
     fun newPrevious() {
         this.previous = mutableMapOf()

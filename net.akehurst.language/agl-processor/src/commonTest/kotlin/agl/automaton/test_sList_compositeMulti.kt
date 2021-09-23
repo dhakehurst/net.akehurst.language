@@ -21,7 +21,7 @@ import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_sList_compositeMulti : test_Abstract() {
+internal class test_sList_compositeMulti : test_AutomatonAbstract() {
 
     // S = [nl / ';']*
     // nl = N cnm
@@ -63,8 +63,9 @@ internal class test_sList_compositeMulti : test_Abstract() {
         val s2 = SM.states[listOf(RP(Se, 0, EOR))]
     }
 
-    override val SM: ParserStateSet = Companion.SM
-    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>> = listOf(
+    @Test
+    override fun firstOf() {
+        listOf(
             Triple(RP(G, 0, SOR), lhs_U, setOf(n, UP)), // G = . S
             Triple(RP(G, 0, EOR), lhs_U, setOf(UP)),        // G = S .
             Triple(RP(S, OLI, SOR), lhs_U, setOf(UP)),          // So0 = . [nl . / ';']*
@@ -81,7 +82,26 @@ internal class test_sList_compositeMulti : test_Abstract() {
             Triple(RP(cnm, OME, SOR), lhs_U, setOf(UP)),      // cnm = . E
             Triple(RP(cnm, OME, SOR), lhs_U, setOf(UP)),      // cnm = E .
             Triple(RP(cn, 0, SOR), lhs_U, setOf(UP))        // cn = . ',' N
-    )
+        ).testAll { rp, lhs, expected ->
+            val actual = SM.buildCache.firstOf(rp, lhs)
+            assertEquals(expected, actual, "failed $rp")
+        }
+    }
+
+    @Test
+    override fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
+
+        val expected = listOf(
+            WidthInfo(RP(n, 0, EOR), lhs_ciU),
+            WidthInfo(RP(Se, 0, EOR), lhs_U)
+        )
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
 
     @Test
     fun calcClosure_G_0_0() {
@@ -96,12 +116,6 @@ TODO()
        // )
        // assertEquals(expected, actual)
     }
-
-    override val s0_widthInto_expected: List<WidthInfo>
-        get() = listOf(
-            WidthInfo(RP(n, 0, EOR), lhs_ciU),
-            WidthInfo(RP(Se, 0, EOR), lhs_U)
-        )
 
     @Test
     fun s0_transitions() {

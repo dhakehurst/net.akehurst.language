@@ -21,7 +21,7 @@ import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_multi_1_n_choice : test_Abstract() {
+internal class test_multi_1_n_choice : test_AutomatonAbstract() {
 
     // S =  AB+
     // AB = a | b
@@ -53,33 +53,42 @@ internal class test_multi_1_n_choice : test_Abstract() {
         val lhs_aT = SM.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
     }
 
-    override val SM: ParserStateSet
-        get() = Companion.SM
+    @Test
+    override fun firstOf() {
+        listOf(
+            Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a, b)), // G = . S
+            Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
+            Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_a, setOf(a, b)), // S = . a+
+            Triple(RulePosition(S, 0, RulePosition.POSITION_MULIT_ITEM), lhs_a, setOf(a, b)), // S = a . a+
+            Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)) // S = a+ .
+        ).testAll { rp, lhs, expected ->
+            val actual = SM.buildCache.firstOf(rp, lhs)
+            assertEquals(expected, actual, "failed $rp")
+        }
+    }
 
-    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-        get() = listOf(
-                Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a, b)), // G = . S
-                Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
-                Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_a, setOf(a, b)), // S = . a+
-                Triple(RulePosition(S, 0, RulePosition.POSITION_MULIT_ITEM), lhs_a, setOf(a, b)), // S = a . a+
-                Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)) // S = a+ .
-        )
+    @Test
+    override fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
 
-
-    override val s0_widthInto_expected: List<WidthInfo>
-        get() = listOf(
+        val expected = listOf(
             WidthInfo(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_abU),
             WidthInfo(RulePosition(b, 0, RulePosition.END_OF_RULE), lhs_abU)
         )
-
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
 
     @Test
     fun s0_transitions() {
         val actual = s0.transitions(null)
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_abU, LookaheadSet.EMPTY, null) { _, _ -> true },
-                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_abU, LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_abU, LookaheadSet.EMPTY, null) { _, _ -> true },
+            Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_abU, LookaheadSet.EMPTY, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -93,7 +102,7 @@ internal class test_multi_1_n_choice : test_Abstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraftInfo(listOf(RP(AB, 0, SOR)), listOf(RP(AB, 0, EOR)), lhs_abU, lhs_abU)
+            HeightGraftInfo(listOf(RP(AB, 0, SOR)), listOf(RP(AB, 0, EOR)), lhs_abU, lhs_abU)
         )
         assertEquals(expected, actual)
 
@@ -105,8 +114,8 @@ internal class test_multi_1_n_choice : test_Abstract() {
         val actual = s3.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraftInfo(listOf(RP(S, 0, SOR)), listOf(RP(S, 0, PMI)), lhs_ab, lhs_U),
-                HeightGraftInfo(listOf(RP(S, 0, SOR)), listOf(RP(S, 0, EOR)), lhs_U, lhs_U)
+            HeightGraftInfo(listOf(RP(S, 0, SOR)), listOf(RP(S, 0, PMI)), lhs_ab, lhs_U),
+            HeightGraftInfo(listOf(RP(S, 0, SOR)), listOf(RP(S, 0, EOR)), lhs_U, lhs_U)
         )
         assertEquals(expected, actual)
 

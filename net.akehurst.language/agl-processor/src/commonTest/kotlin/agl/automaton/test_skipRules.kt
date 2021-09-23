@@ -21,7 +21,7 @@ import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class test_skipRules : test_Abstract() {
+internal class test_skipRules : test_AutomatonAbstract() {
 
     // skip WS = "\s+" ;
     // skip COMMENT = "//[^\n]*$"
@@ -58,8 +58,6 @@ internal class test_skipRules : test_Abstract() {
         val lhs_WS_CM_UP = SM.createLookaheadSet(setOf(skWS, skCM, UP))
     }
 
-    override val SM: ParserStateSet get() = Companion.SM
-
     @Test
     fun firstTerminals() {
         //TODO
@@ -86,28 +84,41 @@ internal class test_skipRules : test_Abstract() {
 
     }
 
-    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-        get() = listOf(
-                Triple(RP(G, 0, SOR), lhs_U, setOf(a)),    // G = . S
-                Triple(RP(G, 0, EOR), lhs_U, setOf(UP)),   // G = S .
-                Triple(RP(S, 0, SOR), lhs_U, setOf(a)),    // S = . a
-                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),   // S = a .
+    @Test
+    override fun firstOf() {
+        listOf(
+            Triple(RP(G, 0, SOR), lhs_U, setOf(a)),    // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, setOf(UP)),   // G = S .
+            Triple(RP(S, 0, SOR), lhs_U, setOf(a)),    // S = . a
+            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),   // S = a .
 
-                Triple(RP(skG, OMI, SOR), lhs_U, setOf(a)),      // skG = . skM+
-                Triple(RP(skG, OMI, EOR), lhs_U, setOf(a)),      // skG = skM+ .
-                Triple(RP(skG, 0, EOR), lhs_U, setOf(UP)),   // skG = skM . skM+
-                Triple(RP(skG, 0, SOR), lhs_U, setOf(a)),    // skG = skM+ .
-                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // skM = . WS
-                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // skM = WS .
-                Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // skM = . CM
-                Triple(RP(S, 0, EOR), lhs_U, setOf(UP))      // skM = CM .
-        )
+            Triple(RP(skG, OMI, SOR), lhs_U, setOf(a)),      // skG = . skM+
+            Triple(RP(skG, OMI, EOR), lhs_U, setOf(a)),      // skG = skM+ .
+            Triple(RP(skG, 0, EOR), lhs_U, setOf(UP)),   // skG = skM . skM+
+            Triple(RP(skG, 0, SOR), lhs_U, setOf(a)),    // skG = skM+ .
+            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // skM = . WS
+            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // skM = WS .
+            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // skM = . CM
+            Triple(RP(S, 0, EOR), lhs_U, setOf(UP))      // skM = CM .
+        ).testAll { rp, lhs, expected ->
+            val actual = SM.buildCache.firstOf(rp, lhs)
+            assertEquals(expected, actual, "failed $rp")
+        }
+    }
 
+    @Test
+    override fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
 
-    override val s0_widthInto_expected: List<WidthInfo>
-        get() = listOf(
+        val expected = listOf(
             WidthInfo(RP(a, 0, EOR), lhs_U)
         )
+        assertEquals(expected.size, actual.size)
+        for (i in 0 until actual.size) {
+            assertEquals(expected[i], actual[i])
+        }
+    }
 
     @Test
     fun sk0_widthInto() {
@@ -126,12 +137,12 @@ internal class test_skipRules : test_Abstract() {
         val actual = sk1.heightOrGraftInto(sk0).toList()
 
         val expected = listOf(
-                HeightGraftInfo(
-                    listOf(RulePosition(skC, 0, RulePosition.START_OF_RULE)),
-                    listOf(RulePosition(skC, 0, RulePosition.END_OF_RULE)),
-                    lhs_WS_CM_UP,
-                    lhs_WS_CM_UP
-                )
+            HeightGraftInfo(
+                listOf(RulePosition(skC, 0, RulePosition.START_OF_RULE)),
+                listOf(RulePosition(skC, 0, RulePosition.END_OF_RULE)),
+                lhs_WS_CM_UP,
+                lhs_WS_CM_UP
+            )
         )
         assertEquals(expected, actual)
 

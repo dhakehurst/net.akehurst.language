@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
@@ -23,7 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
+internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
 
     // This grammar is LR(1) but not LALR(1)
     // TODO...from where?
@@ -74,10 +75,9 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
 
     }
 
-    override val SM: ParserStateSet get() = Companion.SM
-
-    override val firstOf_data: List<Triple<RulePosition, LookaheadSet, Set<RuntimeRule>>>
-        get() = listOf(
+    @Test
+    override fun firstOf() {
+        listOf(
             Triple(RP(rA, 0, SOR), lhs_U, setOf(d)),     // A = . d
             Triple(RP(rA, 0, EOR), lhs_U, setOf(d)),     // A = d .
             Triple(RP(rB, 0, SOR), lhs_U, setOf(d)),     // B = . d
@@ -109,21 +109,21 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
 
             Triple(RP(G, 0, SOR), lhs_U, setOf(d, b)),     // G = . S
             Triple(RP(G, 0, EOR), lhs_U, setOf(UP))        // G = S .
-        )
+        ).testAll { rp, lhs, expected ->
+            val actual = SM.buildCache.firstOf(rp, lhs)
+            assertEquals(expected, actual, "failed $rp")
+        }
+    }
 
-    override val s0_widthInto_expected: List<WidthInfo>
-        get() = listOf(
+    override fun s0_widthInto() {
+        val s0 = SM.startState
+        val actual = s0.widthInto(null).toList()
+
+        val expected = listOf(
             WidthInfo(RP(d, 0, 0), lhs_T),
             WidthInfo(RP(b, 0, 0), lhs_T),
             WidthInfo(RP(d, 0, 0), lhs_T)
         )
-
-    @Test
-    fun s0_widthInto1() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(null).toList()
-
-        val expected = s0_widthInto_expected
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
             assertEquals(expected[i], actual[i])
@@ -191,7 +191,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(d, 0, EOR))      // d
             val s2 = state(RP(b, 0, EOR))      // b
@@ -226,7 +226,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_Abstract() {
             transition(s0, s0, s1, HEIGHT, setOf(a, c), setOf(UP), listOf())
         }
 
-        assertEquals(expected, actual)
+        AutomatonTest.assertEquals(expected, actual)
     }
 /*
     @Test

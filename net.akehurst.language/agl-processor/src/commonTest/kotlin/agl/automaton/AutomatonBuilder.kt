@@ -11,8 +11,8 @@ import net.akehurst.language.api.processor.AutomatonKind
 @DslMarker
 internal annotation class AglAutomatonDslMarker
 
-internal fun automaton(rrs: RuntimeRuleSet, automatonKind: AutomatonKind, userGoalRule: String, isSkip: Boolean, init: AutomatonBuilder.() -> Unit): ParserStateSet {
-    val b = AutomatonBuilder(rrs, automatonKind, userGoalRule, isSkip)
+internal fun automaton(rrs: RuntimeRuleSet, automatonKind: AutomatonKind, userGoalRule: String, stateSetNumber:Int, isSkip: Boolean, init: AutomatonBuilder.() -> Unit): ParserStateSet {
+    val b = AutomatonBuilder(rrs, automatonKind, userGoalRule, stateSetNumber, isSkip)
     b.init()
     return b.build()
 }
@@ -22,17 +22,18 @@ internal class AutomatonBuilder(
     rrs: RuntimeRuleSet,
     automatonKind: AutomatonKind,
     userGoalRule: String,
+    stateSetNumber:Int,
     isSkip: Boolean
 ) {
 
-    private val result = ParserStateSet(-1, rrs, rrs.findRuntimeRule(userGoalRule), isSkip, automatonKind)
+    private val result = ParserStateSet(stateSetNumber, rrs, rrs.findRuntimeRule(userGoalRule), isSkip, automatonKind)
     private var nextState = 0
 
     val GOAL = Transition.ParseAction.GOAL
     val WIDTH = Transition.ParseAction.WIDTH
     val HEIGHT = Transition.ParseAction.HEIGHT
     val GRAFT = Transition.ParseAction.GRAFT
-    val GRAFT_OR_HEIGHT = Transition.ParseAction.GRAFT_OR_HEIGHT
+ //   val GRAFT_OR_HEIGHT = Transition.ParseAction.GRAFT_OR_HEIGHT
 
     fun state(vararg rulePositions: RulePosition): ParserState {
         return result.states[rulePositions.toList()]
