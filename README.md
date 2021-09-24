@@ -2,7 +2,8 @@
 [![Build Status](https://travis-ci.org/dhakehurst/net.akehurst.language.svg?branch=master)](https://travisci.org/dhakehurst/net.akehurst.language)
 -->
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.akehurst.language/agl-processor/badge.svg?gav=true)](https://maven-badges.herokuapp.com/maven-central/net.akehurst.language/agl-processor)
-[![Generic badge](https://img.shields.io/badge/Kotlin-v1.4.0-green)](https://kotlinlang.org/)
+![npm](https://img.shields.io/npm/v/net.akehurst.language-agl-processor)
+[![Generic badge](https://img.shields.io/badge/Kotlin-1.5.30-green)](https://kotlinlang.org/)
 
 # AGL: A Grammar Language (or maybe Akehurst Grammar Language!)
 
@@ -39,7 +40,9 @@ lots:
  - PT is not always what one expects
  
 # Build
+There are currently a number of failing tests, these indicate things to be fixed, and desired performance improvements.
+To build locally the latest version, use `assemble` or `publishToMavenLocal`.
 ```
 > cd net.akehurst.language
-> ./gradlew clean build
+> ./gradlew clean assemble
 ```
