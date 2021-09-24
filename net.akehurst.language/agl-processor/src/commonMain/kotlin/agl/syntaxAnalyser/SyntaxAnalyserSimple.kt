@@ -22,7 +22,6 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
 import net.akehurst.language.api.syntaxAnalyser.AsmSimple
-import net.akehurst.language.api.syntaxAnalyser.AsmSimpleBuilder
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 

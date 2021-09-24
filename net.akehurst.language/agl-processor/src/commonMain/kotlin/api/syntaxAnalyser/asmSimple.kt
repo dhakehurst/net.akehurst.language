@@ -53,7 +53,7 @@ class AsmElementSimple(
     fun getPropertyAsList(name: String): List<Any> = getPropertyValue(name) as List<Any>
 
     fun setProperty(name: String, value: Any?) {
-        _properties[name] = AsmElementProperty(name, value)
+        _properties[name] = AsmElementProperty(this, name, value)
     }
 
     fun addAllProperty(value: List<AsmElementProperty>) {
@@ -98,6 +98,7 @@ class AsmElementSimple(
 }
 
 class AsmElementProperty(
+    val owner: AsmElementSimple,
     val name: String,
     val value: Any?
     //TODO: enable references!
@@ -111,3 +112,8 @@ class AsmElementProperty(
         }
     }
 }
+
+val AsmElementSimple.children: List<AsmElementSimple> get()
+    = this.properties
+        .flatMap { if (it.value is List<*>) it.value else listOf(it.value) }
+        .filterIsInstance<AsmElementSimple>()

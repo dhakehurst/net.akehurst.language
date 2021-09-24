@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
 import net.akehurst.language.api.syntaxAnalyser.AsmSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals

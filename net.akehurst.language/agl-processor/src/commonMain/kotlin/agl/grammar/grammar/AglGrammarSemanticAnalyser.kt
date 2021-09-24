@@ -36,7 +36,7 @@ internal class AglGrammarSemanticAnalyser(
 
     override fun <T> analyse(asm: T, locationMap: Map<Any, InputLocation>): List<SemanticAnalyserItem> {
         return when (asm) {
-            is List<*> -> checkGrammar(asm as List<Grammar>, locationMap, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified Kind ?
+            is List<*> -> checkGrammar(asm as List<Grammar>, locationMap, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
             else -> throw SemanticAnalyserException("This SemanticAnalyser is for an ASM of type List<Grammar>", null)
         }
     }
