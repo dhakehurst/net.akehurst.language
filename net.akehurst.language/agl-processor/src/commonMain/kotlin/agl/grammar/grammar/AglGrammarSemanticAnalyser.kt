@@ -26,7 +26,7 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItemKind
 
 
 internal class AglGrammarSemanticAnalyser(
-) : SemanticAnalyser {
+) : SemanticAnalyser<List<Grammar>> {
 
     private val items = mutableListOf<SemanticAnalyserItem>()
 
@@ -34,7 +34,7 @@ internal class AglGrammarSemanticAnalyser(
         this.items.clear()
     }
 
-    override fun <T> analyse(asm: T, locationMap: Map<Any, InputLocation>): List<SemanticAnalyserItem> {
+    override fun analyse(asm: List<Grammar>, locationMap: Map<Any, InputLocation>): List<SemanticAnalyserItem> {
         return when (asm) {
             is List<*> -> checkGrammar(asm as List<Grammar>, locationMap, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
             else -> throw SemanticAnalyserException("This SemanticAnalyser is for an ASM of type List<Grammar>", null)

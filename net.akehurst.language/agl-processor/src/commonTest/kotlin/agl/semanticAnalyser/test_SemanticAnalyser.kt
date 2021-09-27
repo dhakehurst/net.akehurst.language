@@ -8,12 +8,12 @@ import kotlin.test.Test
 
 class test_SemanticAnalyser {
 
-    class TestSemanticAnalyser : SemanticAnalyser {
+    class TestSemanticAnalyser : SemanticAnalyser<Any> {
         override fun clear() {
             TODO("not implemented")
         }
 
-        override fun <T> analyse(asm: T, locationMap: Map<Any, InputLocation>): List<SemanticAnalyserItem> {
+        override fun analyse(asm: Any, locationMap: Map<Any, InputLocation>): List<SemanticAnalyserItem> {
             return when (asm) {
                 "error" -> listOf(SemanticAnalyserItem(SemanticAnalyserItemKind.ERROR, null,"error"))
                 "warning" -> listOf(SemanticAnalyserItem(SemanticAnalyserItemKind.WARNING, null,"error"))

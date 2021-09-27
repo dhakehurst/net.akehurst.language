@@ -63,7 +63,7 @@ object Agl {
         grammar: Grammar,
         syntaxAnalyser: SyntaxAnalyser? = null,
         formatter: Formatter? = null,
-        semanticAnalyser: SemanticAnalyser? = null
+        semanticAnalyser: SemanticAnalyser<*>? = null
     ): LanguageProcessor {
         val goalRuleName = grammar.rule.first { it.isSkip.not() }.name
         return processorFromGrammarForGoal(grammar, goalRuleName, syntaxAnalyser, formatter, semanticAnalyser)
@@ -74,7 +74,7 @@ object Agl {
         goalRuleName: String,
         syntaxAnalyser: SyntaxAnalyser? = null,
         formatter: Formatter? = null,
-        semanticAnalyser: SemanticAnalyser? = null
+        semanticAnalyser: SemanticAnalyser<*>? = null
     ): LanguageProcessor {
         return LanguageProcessorDefault(grammar, goalRuleName, syntaxAnalyser, formatter, semanticAnalyser)
     }
@@ -86,7 +86,7 @@ object Agl {
         grammarDefinitionStr: String,
         syntaxAnalyser: SyntaxAnalyser? = null,
         formatter: Formatter? = null,
-        semanticAnalyser: SemanticAnalyser? = null
+        semanticAnalyser: SemanticAnalyser<*>? = null
     ): LanguageProcessor {
         try {
             val grammar = this.registry.agl.grammar.processor!!.processForGoal<List<Grammar>>(List::class, "grammarDefinition", grammarDefinitionStr).last()
@@ -114,7 +114,7 @@ object Agl {
         goalRuleName: String,
         syntaxAnalyser: SyntaxAnalyser? = null,
         formatter: Formatter? = null,
-        semanticAnalyser: SemanticAnalyser? = null
+        semanticAnalyser: SemanticAnalyser<*>? = null
     ): LanguageProcessor {
         try {
             val grammars = this.registry.agl.grammar.processor!!.processForGoal<List<Grammar>>(List::class, "grammarDefinition", grammarDefinitionStr)
@@ -136,7 +136,7 @@ object Agl {
         rules: List<String>,
         syntaxAnalyser: SyntaxAnalyser? = null,
         formatter: Formatter? = null,
-        semanticAnalyser: SemanticAnalyser? = null
+        semanticAnalyser: SemanticAnalyser<*>? = null
     ): LanguageProcessor {
         val prefix = "namespace temp grammar Temp { "
         val grammarStr = prefix + rules.joinToString(" ") + "}"

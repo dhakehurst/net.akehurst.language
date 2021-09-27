@@ -46,14 +46,16 @@ class AsmElementSimple(
 
     fun hasProperty(name: String): Boolean = _properties.containsKey(name)
 
+    fun getProperty(name: String): Any? = _properties[name]
+
     fun getPropertyValue(name: String): Any? = _properties[name]?.value
 
     fun getPropertyAsAsmElement(name: String): AsmElementSimple = getPropertyValue(name) as AsmElementSimple
 
     fun getPropertyAsList(name: String): List<Any> = getPropertyValue(name) as List<Any>
 
-    fun setProperty(name: String, value: Any?) {
-        _properties[name] = AsmElementProperty(this, name, value)
+    fun setProperty(name: String, value: Any?, isReference: Boolean) {
+        _properties[name] = AsmElementProperty(this, name, value, isReference)
     }
 
     fun addAllProperty(value: List<AsmElementProperty>) {
@@ -100,8 +102,8 @@ class AsmElementSimple(
 class AsmElementProperty(
     val owner: AsmElementSimple,
     val name: String,
-    val value: Any?
-    //TODO: enable references!
+    val value: Any?,
+    val isReference: Boolean
 ) {
 
     override fun toString(): String {
@@ -113,7 +115,8 @@ class AsmElementProperty(
     }
 }
 
-val AsmElementSimple.children: List<AsmElementSimple> get()
+val AsmElementSimple.children: List<AsmElementSimple>
+    get()
     = this.properties
         .flatMap { if (it.value is List<*>) it.value else listOf(it.value) }
         .filterIsInstance<AsmElementSimple>()

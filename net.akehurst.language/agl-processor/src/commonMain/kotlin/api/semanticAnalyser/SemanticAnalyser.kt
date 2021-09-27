@@ -25,11 +25,11 @@ class SemanticAnalyserException(message: String, cause: Throwable?) : RuntimeExc
  * A Semantic Analyser, language specific functionality
  *
  */
-interface SemanticAnalyser {
+interface SemanticAnalyser<in T> {
 
     fun clear()
 
-    fun <T> analyse(asm: T, locationMap: Map<Any,InputLocation> = emptyMap()): List<SemanticAnalyserItem>
+    fun analyse(asm: T, locationMap: Map<Any,InputLocation> = emptyMap()): List<SemanticAnalyserItem>
 }
 
 enum class SemanticAnalyserItemKind { ERROR, WARNING }

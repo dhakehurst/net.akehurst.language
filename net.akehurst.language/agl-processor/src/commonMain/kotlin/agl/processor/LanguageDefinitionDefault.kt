@@ -32,7 +32,7 @@ class LanguageDefinitionDefault(
     style: String?,
     format: String?,
     override val syntaxAnalyser: SyntaxAnalyser?,
-    override val semanticAnalyser: SemanticAnalyser?
+    override val semanticAnalyser: SemanticAnalyser<*>?
 ) : LanguageDefinition {
     constructor(identity: String, grammar: String?) : this(identity, grammar, null, null, null, null, null)
 

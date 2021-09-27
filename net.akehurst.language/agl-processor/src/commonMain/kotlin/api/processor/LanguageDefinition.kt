@@ -26,7 +26,7 @@ interface LanguageDefinition {
     var style: String?
     var format: String?
     val syntaxAnalyser: SyntaxAnalyser?
-    val semanticAnalyser: SemanticAnalyser?
+    val semanticAnalyser: SemanticAnalyser<*>?
 
     val processor: LanguageProcessor?
 

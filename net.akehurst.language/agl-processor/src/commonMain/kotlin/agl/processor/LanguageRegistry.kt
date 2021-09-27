@@ -155,7 +155,7 @@ class LanguageRegistry {
 
     fun register(
         identity: String, grammar: String, defaultGoalRule: String?,
-        style: String?, format: String?, syntaxAnalyser: SyntaxAnalyser?, semanticAnalyser: SemanticAnalyser?
+        style: String?, format: String?, syntaxAnalyser: SyntaxAnalyser?, semanticAnalyser: SemanticAnalyser<*>?
     ): LanguageDefinition = this.registerFromDefinition(
         LanguageDefinitionDefault(
             identity, grammar, defaultGoalRule,

@@ -80,9 +80,9 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
                             val i = count[name] ?: 2
                             count[name] = i + 1
                             val nname = name + i
-                            el.setProperty(nname, value)
+                            el.setProperty(nname, value, false)
                         } else {
-                            el.setProperty(name, value)
+                            el.setProperty(name, value, false)
                         }
                     }
                     if (br.runtimeRule.rhs.items.size == 1) {
@@ -109,7 +109,7 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
                         }
                         if (br == br.tree?.root) {
                             val el = _asm!!.createNonRootElement(br.name)
-                            el.setProperty(name, value)
+                            el.setProperty(name, value, false)
                             el
                         } else {
                             value

@@ -45,7 +45,7 @@ internal class LanguageProcessorDefault(
     val defaultGoalRuleName: String,
     val syntaxAnalyser: SyntaxAnalyser?,
     val formatter: Formatter?,
-    val semanticAnalyser: SemanticAnalyser?
+    val semanticAnalyser: SemanticAnalyser<*>?
 ) : LanguageProcessor {
 
     private val _scanner by lazy { Scanner(this._converterToRuntimeRules.runtimeRuleSet) }
@@ -138,7 +138,7 @@ internal class LanguageProcessorDefault(
     }
 
     override fun <T : Any> analyseAsm(asmType: KClass<in T>, asm: T, locationMap: Map<Any, InputLocation>): List<SemanticAnalyserItem> {
-        val semAnalyser = this.semanticAnalyser ?: throw SemanticAnalyserException("No semantic analyser was supplied to the language processor", null)
+        val semAnalyser:SemanticAnalyser<T> = (this.semanticAnalyser ?: throw SemanticAnalyserException("No semantic analyser was supplied to the language processor", null)) as SemanticAnalyser<Any>
         semAnalyser.clear()
         return semAnalyser.analyse(asm, locationMap)
     }

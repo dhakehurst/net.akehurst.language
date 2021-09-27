@@ -26,7 +26,7 @@ class AsmSimpleBuilder() {
 
     private val _asm = AsmSimple()
 
-    fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
+    fun root(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val b = AsmElementSimpleBuilder(this._asm, typeName, true)
         b.init()
         return b.build()
@@ -43,15 +43,26 @@ class AsmElementSimpleBuilder(
     private val _element = if (isRoot) _asm.createRootElement(typeName) else _asm.createNonRootElement(typeName)
 
     fun property(name: String, value: Any?) {
-        _element.setProperty(name, value)
+        _element.setProperty(name, value,false)
     }
 
+    fun property(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = property(name,name,init)
     fun property(name: String, typeName:String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
-        val b = AsmElementSimpleBuilder(this._asm, typeName, true)
+        val b = AsmElementSimpleBuilder(this._asm, typeName, false)
         b.init()
         val el = b.build()
-        this._element.setProperty(name,el)
+        this._element.setProperty(name,el, false)
         return el
+    }
+
+    fun reference(name: String, element:AsmElementSimple) {
+        _element.setProperty(name,element,true)
+    }
+
+    fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
+        val b = AsmElementSimpleBuilder(this._asm, typeName, false)
+        b.init()
+        return b.build()
     }
 
     fun build(): AsmElementSimple = _element
