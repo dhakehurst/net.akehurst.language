@@ -23,10 +23,11 @@ import net.akehurst.language.api.asm.ScopeSimple
 import net.akehurst.language.api.asm.children
 
 class ContextSimple(
-    parentScope: ScopeSimple<AsmElementSimple>?=null
+    parentScope: ScopeSimple<AsmElementSimple>?=null,
+    rootScopeTypeName:String
 ) {
 
-    val scope = ScopeSimple<AsmElementSimple>(parentScope,null)
+    val scope = ScopeSimple<AsmElementSimple>(parentScope,rootScopeTypeName)
 
 
 }

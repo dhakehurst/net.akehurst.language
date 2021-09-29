@@ -40,10 +40,11 @@ class test_SyntaxAnalyserSimple_datatypes {
                 primitive = 'primitive' ID ;
                 datatype = 'datatype' ID '{' property* '}' ;
                 property = ID ':' typeReference ;
-                typeReference = ID typeArguments? ;
+                typeReference = type typeArguments? ;
                 typeArguments = '<' [typeReference / ',']+ '>' ;
             
                 leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
+                leaf type = ID;
             
             }
         """.trimIndent()
@@ -58,7 +59,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                     )
                 ),
                 references = mapOf(
-                    Pair("typeReference", "ID") to ""
+                    Pair("typeReference", "type") to ""
                 )
             )
         )
@@ -124,7 +125,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val (actual, items) = processor.process<AsmSimple, Any>(
             sentence = sentence,
-            context = ContextSimple()
+            context = ContextSimple(null, "unit")
         )
 
         val expected = asmSimple {
@@ -136,7 +137,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                             element("property") {
                                 property("ID", "a")
                                 property("typeReference") {
-                                    reference("ID", "String")
+                                    reference("type", "String")
                                     property("typeArguments", null)
                                 }
                             }
@@ -162,7 +163,10 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         """.trimIndent()
 
-        val (actual, items) = processor.process<AsmSimple, Any>(sentence)
+        val (actual, items) = processor.process<AsmSimple, Any>(
+            sentence = sentence,
+            context = ContextSimple(null, "unit")
+        )
 
         val expected = asmSimple {
             root("unit") {
@@ -176,7 +180,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                             element("property") {
                                 property("ID", "a")
                                 property("typeReference") {
-                                    reference("ID", "String")
+                                    reference("type", "String")
                                     property("typeArguments", null)
                                 }
                             }

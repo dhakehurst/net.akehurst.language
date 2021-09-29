@@ -18,14 +18,14 @@ package net.akehurst.language.api.asm
 
 class ScopeSimple<E>(
     val parent: ScopeSimple<E>?,
-    val belongingTo:E?
+    val forTypeName:String
 ) {
 
     private val _children = mutableListOf<ScopeSimple<E>>()
     val children:List<ScopeSimple<E>> = this._children
 
-    fun childScope(belongingTo:E): ScopeSimple<E> {
-        val child = ScopeSimple<E>(this,belongingTo)
+    fun childScope(forTypeName:String): ScopeSimple<E> {
+        val child = ScopeSimple<E>(this,forTypeName)
         this._children.add(child)
         return child
     }

@@ -19,10 +19,9 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.api.analyser.AnalyserIssue
+import net.akehurst.language.api.analyser.AnalyserIssueKind
 import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.asm.AsmElementSimple
-import net.akehurst.language.api.asm.AsmSimple
-import net.akehurst.language.api.asm.ScopeSimple
+import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
@@ -37,7 +36,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
  */
 class SyntaxAnalyserSimple(
     val scopeDefinition: Map<String, Map<String, String>>? = null,
-    val references: Map<Pair<String, String>, Any>?=null
+    val references: Map<Pair<String, String>, Any>? = null
 ) : SyntaxAnalyser<AsmSimple, ContextSimple> {
 
     private var _asm: AsmSimple? = null
@@ -50,6 +49,7 @@ class SyntaxAnalyserSimple(
     override fun clear() {
         this.locationMap.clear()
         this._context = null
+        _issues.clear()
     }
 
     override fun transform(sppt: SharedPackedParseTree, context: ContextSimple?): Pair<AsmSimple, List<AnalyserIssue>> {
@@ -58,7 +58,7 @@ class SyntaxAnalyserSimple(
         val value = this.createValue(sppt.root, context?.scope)
         _asm?.addRoot(value as AsmElementSimple)
 
-        val issues = this.resolveReferences()
+        val issues = this.resolveReferences(context?.scope)
 
         return Pair(_asm!!, issues)
     }
@@ -71,6 +71,7 @@ class SyntaxAnalyserSimple(
         }
         if (v is AsmElementSimple) {
             locationMap[v] = target.location
+            this.addToScope(scope,v)
         }
         return v
     }
@@ -220,15 +221,8 @@ class SyntaxAnalyserSimple(
         return if (null == scope) {
             null
         } else {
-            val scopeName = scope.belongingTo?.typeName
-            if (null != scopeName) {
-                val referableName = getReferable(scopeName, el)
-                if (null!=referableName) {
-                    scope.addToScope(referableName, el)
-                }
-            }
             if (scopeDefinition?.containsKey(el.typeName) ?: false) {
-                val newScope = scope.childScope(el)
+                val newScope = scope.childScope(el.typeName)
                 _scopes[el] = newScope
                 newScope
             } else {
@@ -238,21 +232,50 @@ class SyntaxAnalyserSimple(
         }
     }
 
-    fun resolveReferences(): List<AnalyserIssue> {
-        _issues.clear()
+    private fun addToScope(scope: ScopeSimple<AsmElementSimple>?, el: AsmElementSimple) {
+        if (null == scope) {
+            //do nothing
+        } else {
+            val scopeName = scope.forTypeName
+            val referableName = getReferable(scopeName, el)
+            if (null != referableName) {
+                scope.addToScope(referableName, el)
+            }
+        }
+    }
+
+    private fun resolveReferences(scope: ScopeSimple<AsmElementSimple>?): List<AnalyserIssue> {
         _asm!!.rootElements.forEach {
-            resolveReferencesElement(it)
+            resolveReferencesElement(it, scope)
         }
         return _issues
     }
 
-    private fun resolveReferencesElement(el: AsmElementSimple) {
+    private fun resolveReferencesElement(el: AsmElementSimple, scope: ScopeSimple<AsmElementSimple>?) {
+        val elScope = _scopes[el] ?: scope
         el.properties.forEach {
             if (it.isReference) {
-
+                val v = it.value
+                if (null==v) {
+                    //can't set reference, but no issue
+                } else if (v is AsmElementReference) {
+                    val referred = elScope?.findOrNull(v.reference)
+                    if (null==referred) {
+                        val location = locationMap[el] //TODO: should be property location
+                        this._issues.add(AnalyserIssue(AnalyserIssueKind.ERROR, location, "Cannot find '${v.reference}' as reference for '${el.typeName}.${it.name}'"))
+                    } else {
+                        el.getPropertyAsReference(it.name)?.value = referred
+                    }
+                } else {
+                    val location = locationMap[el] //TODO: should be property location
+                    this._issues.add(AnalyserIssue(AnalyserIssueKind.ERROR, location, "Cannot resolve '${el.typeName}.${it.name}' is not defined as a reference"))
+                }
             } else {
                 // no need to resolve
             }
+        }
+        el.children.forEach {
+            resolveReferencesElement(it,elScope)
         }
     }
 

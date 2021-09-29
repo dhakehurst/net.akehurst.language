@@ -47,18 +47,21 @@ class AsmElementSimple(
     fun hasProperty(name: String): Boolean = _properties.containsKey(name)
 
     fun getProperty(name: String): Any? = _properties[name]
-
     fun getPropertyAsString(name: String): String? = _properties[name]?.value as String?
-
     fun getPropertyAsAsmElement(name: String): AsmElementSimple? = _properties[name]?.value as AsmElementSimple?
-
+    fun getPropertyAsReference(name: String): AsmElementReference? = _properties[name]?.value as AsmElementReference?
     fun getPropertyAsList(name: String): List<Any> = _properties[name]?.value as List<Any>
 
     fun setPropertyAsString(name: String, value: String?) = setProperty(name, value, false)
     fun setPropertyAsListOfString(name: String, value: List<String>?) = setProperty(name, value, false)
     fun setPropertyAsAsmElement(name: String, value: AsmElementSimple?, isReference: Boolean) = setProperty(name, value, isReference)
     fun setProperty(name: String, value: Any?, isReference: Boolean) {
-        _properties[name] = AsmElementProperty(this, name, value, isReference)
+        if (isReference) {
+            val ref = AsmElementReference(value as String, null)
+            _properties[name] = AsmElementProperty(name, ref, true)
+        } else {
+            _properties[name] = AsmElementProperty(name, value, false)
+        }
     }
 
     fun addAllProperty(value: List<AsmElementProperty>) {
@@ -83,10 +86,11 @@ class AsmElementSimple(
         val newIndent = currentIndent + indent
         val propsStr = this.properties.joinToString(separator = "\n$newIndent", prefix = "{\n$newIndent", postfix = "\n$currentIndent}") {
             if (it.isReference) {
-                if (it.value is String) {
-                    "${it.name} = &${it.value}"
+                val ref = it.value as AsmElementReference
+                if (null==ref.value) {
+                    "${it.name} = <unresolved> &${ref.reference}"
                 } else {
-                    error("reference must be a String")
+                    "${it.name} = &${ref.reference} : ${ref.value?.typeName}"
                 }
             } else if (null == it.value) {
                 "${it.name} = null"
@@ -108,8 +112,12 @@ class AsmElementSimple(
 
 }
 
+class AsmElementReference(
+    val reference: String,
+    var value: AsmElementSimple?
+)
+
 class AsmElementProperty(
-    val owner: AsmElementSimple,
     val name: String,
     val value: Any?,
     val isReference: Boolean

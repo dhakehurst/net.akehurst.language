@@ -93,7 +93,7 @@ internal class ConverterToRuntimeRules(
 
     private fun terminalRule(tag: String, value: String, kind: RuntimeRuleKind, isPattern: Boolean, isSkip: Boolean): RuntimeRule {
         check(this.runtimeRules.containsKey(tag).not()) { "Already got rule with tag '$tag'" }
-        check(this.terminalRules.containsKey(value).not()) { "Already got terminal rule with value '$value'" }
+//TODO: warn in analyser        check(this.terminalRules.containsKey(value).not()) { "Already got terminal rule with value '$value'" }
         val newRule = RuntimeRule(_runtimeRuleSet.number, runtimeRules.size, tag, value, kind, isPattern, isSkip, null, null)
         runtimeRules[tag] = newRule
         terminalRules[value] = newRule
