@@ -19,10 +19,10 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.analyser.AnalyserIssue
 import net.akehurst.language.api.analyser.AnalyserIssueKind
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
+import net.akehurst.language.api.parser.InputLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -50,7 +50,17 @@ class test_SyntaxAnalyserSimple_datatypes {
         val processor = Agl.processorFromString(
             grammarStr,
             "unit",
-            syntaxAnalyser = SyntaxAnalyserSimple()
+            syntaxAnalyser = SyntaxAnalyserSimple(
+                scopeDefinition = mapOf(
+                    "unit" to mapOf(
+                        "primitive" to "ID",
+                        "datatype" to "ID"
+                    )
+                ),
+                references = mapOf(
+                    Pair("typeReference", "ID") to ""
+                )
+            )
         )
     }
 
@@ -61,7 +71,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             datatype A { }
         """.trimIndent()
 
-        val (actual,i) = processor.process<AsmSimple,Any>(sentence)
+        val (actual, i) = processor.process<AsmSimple, Any>(sentence)
 
         val expected = asmSimple {
             root("unit") {
@@ -74,7 +84,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("  ",""), actual.asString("  ",""))
+        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
     }
 
     @Test
@@ -84,7 +94,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             datatype B { }
         """.trimIndent()
 
-        val (actual,i) = processor.process<AsmSimple,Any>(sentence)
+        val (actual, i) = processor.process<AsmSimple, Any>(sentence)
 
         val expected = asmSimple {
             root("unit") {
@@ -101,7 +111,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("  ",""), actual.asString("  ",""))
+        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
     }
 
     @Test
@@ -112,11 +122,9 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         """.trimIndent()
 
-        val (actual,items) = processor.process<AsmSimple,Any>(
-            sentence=sentence,
-            context = ContextSimple(mapOf(
-                Pair("typeReference","ID") to 1
-            ))
+        val (actual, items) = processor.process<AsmSimple, Any>(
+            sentence = sentence,
+            context = ContextSimple()
         )
 
         val expected = asmSimple {
@@ -128,8 +136,8 @@ class test_SyntaxAnalyserSimple_datatypes {
                             element("property") {
                                 property("ID", "a")
                                 property("typeReference") {
-                                    reference("ID","String")
-                                    property("typeArguments",null)
+                                    reference("ID", "String")
+                                    property("typeArguments", null)
                                 }
                             }
                         ))
@@ -138,10 +146,10 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
         val expItems = listOf(
-            AnalyserIssue(AnalyserIssueKind.ERROR, InputLocation(0,1,1,1),"Type 'String' is not defined")
+            AnalyserIssue(AnalyserIssueKind.ERROR, InputLocation(0, 1, 1, 1), "Type 'String' is not defined")
         )
 
-        assertEquals(expected.asString("  ",""), actual.asString("  ",""))
+        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
         assertEquals(expItems, items)
     }
 
@@ -154,7 +162,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         """.trimIndent()
 
-        val (actual,items) = processor.process<AsmSimple,Any>(sentence)
+        val (actual, items) = processor.process<AsmSimple, Any>(sentence)
 
         val expected = asmSimple {
             root("unit") {
@@ -168,8 +176,8 @@ class test_SyntaxAnalyserSimple_datatypes {
                             element("property") {
                                 property("ID", "a")
                                 property("typeReference") {
-                                    reference("ID","String")
-                                    property("typeArguments",null)
+                                    reference("ID", "String")
+                                    property("typeArguments", null)
                                 }
                             }
                         ))
@@ -180,7 +188,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         val expItems = listOf<AnalyserIssue>(
         )
 
-        assertEquals(expected.asString("  ",""), actual.asString("  ",""))
+        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
         assertEquals(expItems, items)
     }
 }

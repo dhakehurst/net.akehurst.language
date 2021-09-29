@@ -17,8 +17,24 @@
 package net.akehurst.language.api.asm
 
 class ScopeSimple<E>(
-    val parent: ScopeSimple<E>?
+    val parent: ScopeSimple<E>?,
+    val belongingTo:E?
 ) {
+
+    private val _children = mutableListOf<ScopeSimple<E>>()
+    val children:List<ScopeSimple<E>> = this._children
+
+    fun childScope(belongingTo:E): ScopeSimple<E> {
+        val child = ScopeSimple<E>(this,belongingTo)
+        this._children.add(child)
+        return child
+    }
+
     val items: MutableMap<String,E> = mutableMapOf()
 
+    fun addToScope(name:String, item:E) {
+        this.items[name]=item
+    }
+
+    fun findOrNull(name:String):E? = this.items[name]
 }

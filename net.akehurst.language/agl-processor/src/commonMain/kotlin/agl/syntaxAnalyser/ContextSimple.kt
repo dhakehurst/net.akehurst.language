@@ -23,64 +23,10 @@ import net.akehurst.language.api.asm.ScopeSimple
 import net.akehurst.language.api.asm.children
 
 class ContextSimple(
-    val scopes: Map<String, String>,
-    val references:Map<Pair<String,String>,Any>  // TypeName,propertyName  -> ??
+    parentScope: ScopeSimple<AsmElementSimple>?=null
 ) {
 
-    private val _issues = mutableListOf<AnalyserIssue>()
-    private val _scopeAsm = ScopeSimple<AsmElementSimple>(null)
-    private val _scopes = mutableMapOf<AsmElementSimple, ScopeSimple<AsmElementSimple>>()
+    val scope = ScopeSimple<AsmElementSimple>(parentScope,null)
 
-    fun resolveReferences(asm: AsmSimple) : List<AnalyserIssue> {
-        _issues.clear()
-        asm.rootElements.forEach {
-            createScopes(_scopeAsm, it)
-        }
-        asm.rootElements.forEach {
-            resolveReferencesElement(it)
-        }
-        return _issues
-    }
 
-    fun isReference(el: AsmElementSimple, name: String): Boolean {
-        return references.containsKey(Pair(el.typeName,name))
-    }
-
-    private fun createScopes(parentScope:ScopeSimple<AsmElementSimple>, el: AsmElementSimple) {
-        if (isReferable(el)) {
-            val referable = getReferable(el)
-            parentScope.items[referable] = el
-        }
-        //TODO: could save an asm iteration if this was done as we build the asm!
-        if (scopes.containsKey(el.typeName)) {
-            val newScope = ScopeSimple<AsmElementSimple>(parentScope)
-            _scopes[el] = newScope
-            el.children.forEach {
-                createScopes(newScope, it)
-            }
-        } else {
-            el.children.forEach {
-                createScopes(parentScope, it)
-            }
-        }
-
-    }
-
-    private fun isReferable(el: AsmElementSimple) :Boolean {
-
-    }
-
-    private fun getReferable(el: AsmElementSimple) :String {
-
-    }
-
-    private fun resolveReferencesElement(el: AsmElementSimple) {
-        el.properties.forEach {
-            if (it.isReference) {
-
-            } else {
-                // no need to resolve
-            }
-        }
-    }
 }
