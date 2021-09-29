@@ -17,13 +17,12 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.syntaxAnalyser.AsmSimple
-import net.akehurst.language.api.syntaxAnalyser.asmSimple
+import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.asmSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class test_SyntaxAnalyserSimple {
-
 
     @Test
     fun oneLiteral() {
@@ -36,11 +35,11 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a"
 
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmSimple, Any>(sentence).first.rootElements[0]
 
         val expected = asmSimple() {
-            element("S") {
+            root("S") {
                 property("'a'", "a")
             }
         }.rootElements[0]
@@ -60,11 +59,11 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a"
 
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmSimple, Any>(sentence).first.rootElements[0]
 
         val expected = asmSimple() {
-            element("S") {
+            root("S") {
                 property("ID", "a")
             }
         }.rootElements[0]
@@ -86,11 +85,11 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a : A"
 
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmSimple, Any>(sentence).first.rootElements[0]
 
         val expected = asmSimple() {
-            element("S") {
+            root("S") {
                 property("ID", "a")
                 property("':'", ":")
                 property("type", "A")
@@ -116,11 +115,11 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a 8 fred"
 
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmSimple, Any>(sentence).first.rootElements[0]
 
         val expected = asmSimple() {
-            element("S") {
+            root("S") {
                 property("ID", "a")
                 property("NUMBER", "8")
                 property("NAME", "fred")
@@ -147,13 +146,13 @@ class test_SyntaxAnalyserSimple {
             }
         """.trimIndent()
 
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual1 = proc.process(AsmSimple::class, "a 8").rootElements[0]
-        val actual2 = proc.process(AsmSimple::class, "a fred").rootElements[0]
-        val actual3 = proc.process(AsmSimple::class, "a fred 8").rootElements[0]
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val actual1 = proc.process<AsmSimple, Any>("a 8").first.rootElements[0]
+        val actual2 = proc.process<AsmSimple, Any>("a fred").first.rootElements[0]
+        val actual3 = proc.process<AsmSimple, Any>("a fred 8").first.rootElements[0]
 
         val expected1 = asmSimple() {
-            element("S") {
+            root("S") {
                 property("ID", "a")
                 property("item", "A") {
                     property("NUMBER", "8")
@@ -163,7 +162,7 @@ class test_SyntaxAnalyserSimple {
         assertEquals(expected1.asString("  "), actual1.asString("  "))
 
         val expected2 = asmSimple() {
-            element("S") {
+            root("S") {
                 property("ID", "a")
                 property("item", "B") {
                     property("NAME", "fred")
@@ -173,7 +172,7 @@ class test_SyntaxAnalyserSimple {
         assertEquals(expected2.asString("  "), actual2.asString("  "))
 
         val expected3 = asmSimple() {
-            element("S") {
+            root("S") {
                 property("ID", "a")
                 property("item", "C") {
                     property("NAME", "fred")
@@ -199,15 +198,15 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a 8 fred"
 
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmSimple, Any>(sentence).first.rootElements[0]
 
         assertEquals("S", actual.typeName)
         assertEquals(3, actual.properties.size)
         assertEquals(true, actual.hasProperty("ID"))
-        assertEquals("a", actual.getPropertyValue("ID"))
-        assertEquals("8", actual.getPropertyValue("NUMBER"))
-        assertEquals("fred", actual.getPropertyValue("NAME"))
+        assertEquals("a", actual.getPropertyAsString("ID"))
+        assertEquals("8", actual.getPropertyAsString("NUMBER"))
+        assertEquals("fred", actual.getPropertyAsString("NAME"))
     }
 
     @Test
@@ -225,11 +224,11 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a fred"
 
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmSimple, Any>(sentence).first.rootElements[0]
 
         val expected = asmSimple() {
-            element("S") {
+            root("S") {
                 property("ID", "a")
                 property("NUMBER", null)
                 property("NAME", "fred")
@@ -253,11 +252,11 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a"
 
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmSimple, Any>(sentence).first.rootElements[0]
 
         val expected = asmSimple() {
-            element("S") {
+            root("S") {
                 property("ID", "a")
                 property("NAME", emptyList<String>())
             }
@@ -280,11 +279,11 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a adam betty charles"
 
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmSimple, Any>(sentence).first.rootElements[0]
 
         val expected = asmSimple() {
-            element("S") {
+            root("S") {
                 property("ID", "a")
                 property("NAME", listOf("adam", "betty", "charles"))
             }
@@ -309,10 +308,11 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "bk1 adam ant 12345, betty boo 34567, charlie chaplin 98765"
 
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
-        val expected = asmSimple() {
-            element("addressBook") {
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmSimple, Any>(sentence).first.rootElements[0]
+
+        val expected = asmSimple {
+            root("addressBook") {
                 property("ID", "bk1")
                 property("contacts", listOf(
                     element("person") {
@@ -357,40 +357,41 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "graph [fontsize=ss, labelloc=yy label=bb; splines=true overlap=false]"
 
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.processForGoal(AsmSimple::class, "attr_stmt", sentence).rootElements[0]
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val actual = proc.process<AsmSimple, Any>(sentence,"attr_stmt").first.rootElements[0]
 
-        val expected = asmSimple() {
-            element("attr_stmt") {
+        val expected = asmSimple {
+            root("attr_stmt") {
                 property("attr_type", "graph")
-                property("attr_lists", listOf(
+                property(
+                    "attr_lists", listOf(
                         element("attr_list") {
                             property("'['", "[")
                             property("attr_list_content", listOf(
                                 element("attr") {
-                                    property("ID","fontsize")
-                                    property("'='","=")
-                                    property("ID2","ss")
-                                },",",
+                                    property("ID", "fontsize")
+                                    property("'='", "=")
+                                    property("ID2", "ss")
+                                }, ",",
                                 element("attr") {
-                                    property("ID","labelloc")
-                                    property("'='","=")
-                                    property("ID2","yy")
-                                },"",
+                                    property("ID", "labelloc")
+                                    property("'='", "=")
+                                    property("ID2", "yy")
+                                }, "",
                                 element("attr") {
-                                    property("ID","label")
-                                    property("'='","=")
-                                    property("ID2","bb")
-                                },";",
+                                    property("ID", "label")
+                                    property("'='", "=")
+                                    property("ID2", "bb")
+                                }, ";",
                                 element("attr") {
-                                    property("ID","splines")
-                                    property("'='","=")
-                                    property("ID2","true")
-                                },"",
+                                    property("ID", "splines")
+                                    property("'='", "=")
+                                    property("ID2", "true")
+                                }, "",
                                 element("attr") {
-                                    property("ID","overlap")
-                                    property("'='","=")
-                                    property("ID2","false")
+                                    property("ID", "overlap")
+                                    property("'='", "=")
+                                    property("ID2", "false")
                                 }
                             ))
                             property("']'", "]")

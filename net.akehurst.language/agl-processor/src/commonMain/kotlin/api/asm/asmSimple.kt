@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.syntaxAnalyser
+package net.akehurst.language.api.asm
 
 class AsmSimple {
     private var _nextElementId = 0
@@ -48,12 +48,15 @@ class AsmElementSimple(
 
     fun getProperty(name: String): Any? = _properties[name]
 
-    fun getPropertyValue(name: String): Any? = _properties[name]?.value
+    fun getPropertyAsString(name: String): String? = _properties[name]?.value as String?
 
-    fun getPropertyAsAsmElement(name: String): AsmElementSimple = getPropertyValue(name) as AsmElementSimple
+    fun getPropertyAsAsmElement(name: String): AsmElementSimple? = _properties[name]?.value as AsmElementSimple?
 
-    fun getPropertyAsList(name: String): List<Any> = getPropertyValue(name) as List<Any>
+    fun getPropertyAsList(name: String): List<Any> = _properties[name]?.value as List<Any>
 
+    fun setPropertyAsString(name: String, value: String?) = setProperty(name, value, false)
+    fun setPropertyAsListOfString(name: String, value: List<String>?) = setProperty(name, value, false)
+    fun setPropertyAsAsmElement(name: String, value: AsmElementSimple?, isReference: Boolean) = setProperty(name, value, isReference)
     fun setProperty(name: String, value: Any?, isReference: Boolean) {
         _properties[name] = AsmElementProperty(this, name, value, isReference)
     }
@@ -79,7 +82,13 @@ class AsmElementSimple(
     fun asString(indent: String, currentIndent: String = ""): String {
         val newIndent = currentIndent + indent
         val propsStr = this.properties.joinToString(separator = "\n$newIndent", prefix = "{\n$newIndent", postfix = "\n$currentIndent}") {
-            if (null == it.value) {
+            if (it.isReference) {
+                if (it.value is String) {
+                    "${it.name} = &${it.value}"
+                } else {
+                    error("reference must be a String")
+                }
+            } else if (null == it.value) {
                 "${it.name} = null"
             } else {
                 "${it.name} = ${it.value.asString(indent, newIndent)}"
@@ -110,6 +119,7 @@ class AsmElementProperty(
         return when (value) {
             is AsmElementSimple -> "$name = :${value.typeName}"
             is List<*> -> "$name = [...]"
+            is String -> if (isReference) "$name = &${value}" else "$name = ${value}"
             else -> "$name = ${value}"
         }
     }

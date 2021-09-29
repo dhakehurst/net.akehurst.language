@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.ast
 
-import net.akehurst.language.api.analyser.GrammarExeception
+import net.akehurst.language.api.grammar.GrammarExeception
 import net.akehurst.language.api.grammar.NodeType
 import net.akehurst.language.api.grammar.Rule
 import net.akehurst.language.api.grammar.RuleItem

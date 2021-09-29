@@ -16,8 +16,8 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 
 interface LanguageDefinition {
     val identity: String
@@ -25,8 +25,8 @@ interface LanguageDefinition {
     var defaultGoalRule: String?
     var style: String?
     var format: String?
-    val syntaxAnalyser: SyntaxAnalyser?
-    val semanticAnalyser: SemanticAnalyser<*>?
+    val syntaxAnalyser: SyntaxAnalyser<*,*>?
+    val semanticAnalyser: SemanticAnalyser<*,*>?
 
     val processor: LanguageProcessor?
 

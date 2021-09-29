@@ -16,18 +16,19 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.analyser.SyntaxAnalyserException
+import net.akehurst.language.api.grammar.GrammarLoader
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.syntaxAnalyser.GrammarLoader
+
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyserException
 
 typealias BranchHandler<T> = (SPPTBranch, List<SPPTBranch>, Any?) -> T
 
-abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVisitor<Any, Any?> {
+abstract class SyntaxAnalyserAbstract<out AsmType, in ContextType> : SyntaxAnalyser<AsmType, ContextType>, SharedPackedParseTreeVisitor<Any, Any?> {
 
     private var grammarLoader: GrammarLoader? = null
     private val branchHandlers: MutableMap<String, BranchHandler<*>> = mutableMapOf()

@@ -18,7 +18,7 @@ package net.akehurst.language.processor.dot
 
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
+import net.akehurst.language.api.asm.AsmElementSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -40,13 +40,13 @@ class test_Dot_SyntaxAnalyser {
             }
         """.trimIndent()
 
-        val actual = processor.process<AsmElementSimple>(AsmElementSimple::class,sentence)
+        val (actual,i) = processor.process<AsmElementSimple,Any>(sentence)
 
         assertNotNull(actual)
-        assertEquals(null,actual.getPropertyValue("STRICT"))
-        assertEquals("graph",actual.getPropertyValue("type"))
-        assertEquals(null,actual.getPropertyValue("STRICT"))
-        assertEquals(null,actual.getPropertyValue("STRICT"))
+        assertEquals(null,actual.getPropertyAsString("STRICT"))
+        assertEquals("graph",actual.getPropertyAsString("type"))
+        assertEquals(null,actual.getPropertyAsString("STRICT"))
+        assertEquals(null,actual.getPropertyAsString("STRICT"))
     }
 
     @Test
@@ -58,7 +58,7 @@ class test_Dot_SyntaxAnalyser {
             }
         """.trimIndent()
 
-        val actual = processor.process<AsmElementSimple>(AsmElementSimple::class,sentence)
+        val (actual,i) = processor.process<AsmElementSimple,Any>(sentence)
 
         assertNotNull(actual)
     }

@@ -18,18 +18,18 @@ package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserAbstract
-import net.akehurst.language.api.syntaxAnalyser.GrammarLoader
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyserException
 import net.akehurst.language.agl.ast.*
 import net.akehurst.language.agl.grammar.GrammarRegistryDefault
+import net.akehurst.language.api.analyser.AnalyserIssue
+import net.akehurst.language.api.analyser.SyntaxAnalyserException
 
 
 internal class AglGrammarSyntaxAnalyser(
         val grammarRegistry: GrammarRegistry
-) : SyntaxAnalyserAbstract() {
+) : SyntaxAnalyserAbstract<List<Grammar>, GrammarContext>() {
 
     var grammarLoader: GrammarLoader? = null
 
@@ -67,8 +67,9 @@ internal class AglGrammarSyntaxAnalyser(
 
     }
 
-    override fun <T> transform(sppt: SharedPackedParseTree): T {
-        return this.transformBranch<T>(sppt.root.asBranch, "")
+    override fun transform(sppt: SharedPackedParseTree,context:GrammarContext?): Pair<List<Grammar>,List<AnalyserIssue>> {
+        val grammars = this.transformBranch<List<Grammar>>(sppt.root.asBranch, "")
+        return Pair(grammars, emptyList()) //TODO
     }
 
     // grammarDefinition : namespace definitions ;

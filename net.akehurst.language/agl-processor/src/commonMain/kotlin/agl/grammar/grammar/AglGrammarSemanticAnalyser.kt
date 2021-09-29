@@ -19,46 +19,49 @@ package net.akehurst.language.agl.grammar.grammar
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserException
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItem
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItemKind
+import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.analyser.SemanticAnalyserException
+import net.akehurst.language.api.analyser.AnalyserIssue
+import net.akehurst.language.api.analyser.AnalyserIssueKind
 
 
 internal class AglGrammarSemanticAnalyser(
-) : SemanticAnalyser<List<Grammar>> {
+) : SemanticAnalyser<List<Grammar>, Any> {
 
-    private val items = mutableListOf<SemanticAnalyserItem>()
+    private val items = mutableListOf<AnalyserIssue>()
+    private var _locationMap: Map<*, InputLocation>? = null
 
     override fun clear() {
         this.items.clear()
+        _locationMap=null
     }
 
-    override fun analyse(asm: List<Grammar>, locationMap: Map<Any, InputLocation>): List<SemanticAnalyserItem> {
+    override fun analyse(asm: List<Grammar>, locationMap: Map<*, InputLocation>?, arg: Any?): List<AnalyserIssue> {
+        this._locationMap = locationMap ?: emptyMap<Any,InputLocation>()
         return when (asm) {
-            is List<*> -> checkGrammar(asm as List<Grammar>, locationMap, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
+            is List<*> -> checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
             else -> throw SemanticAnalyserException("This SemanticAnalyser is for an ASM of type List<Grammar>", null)
         }
     }
 
-    private fun checkGrammar(grammarList: List<Grammar>, locationMap: Map<Any, InputLocation>, automatonKind:AutomatonKind): List<SemanticAnalyserItem> {
+    private fun checkGrammar(grammarList: List<Grammar>, automatonKind:AutomatonKind): List<AnalyserIssue> {
         grammarList.forEach { grammar ->
-            this.checkNonTerminalReferencesExist(grammar, locationMap)
+            this.checkNonTerminalReferencesExist(grammar)
             if (items.isEmpty()) {
-                this.checkForAmbiguities(grammar, locationMap,automatonKind)
+                this.checkForAmbiguities(grammar,automatonKind)
             }
         }
         return this.items
     }
 
-    private fun checkNonTerminalReferencesExist(grammar: Grammar, locationMap: Map<Any, InputLocation>) {
+    private fun checkNonTerminalReferencesExist(grammar: Grammar) {
         grammar.rule.forEach {
             val rhs = it.rhs
-            this.checkRuleItem(grammar, locationMap, rhs)
+            this.checkRuleItem(grammar, rhs)
         }
     }
 
-    private fun checkRuleItem(grammar: Grammar, locationMap: Map<Any, InputLocation>, rhs: RuleItem) {
+    private fun checkRuleItem(grammar: Grammar, rhs: RuleItem) {
         when (rhs) {
             is EmptyRule -> {
             }
@@ -68,31 +71,31 @@ internal class AglGrammarSemanticAnalyser(
                 try {
                     rhs.referencedRule //will throw 'GrammarRuleNotFoundException' if rule not found
                 } catch (e: GrammarRuleNotFoundException) {
-                    val item = SemanticAnalyserItem(SemanticAnalyserItemKind.ERROR, locationMap[rhs], e.message!!)
+                    val item = AnalyserIssue(AnalyserIssueKind.ERROR, _locationMap!![rhs], e.message!!)
                     this.items.add(item)
                 }
             }
             is Concatenation -> {
-                rhs.items.forEach { checkRuleItem(grammar, locationMap, it) }
+                rhs.items.forEach { checkRuleItem(grammar, it) }
             }
             is Choice -> {
-                rhs.alternative.forEach { checkRuleItem(grammar, locationMap, it) }
+                rhs.alternative.forEach { checkRuleItem(grammar, it) }
             }
             is Group -> {
-                rhs.choice.alternative.forEach { checkRuleItem(grammar, locationMap, it) }
+                rhs.choice.alternative.forEach { checkRuleItem(grammar, it) }
             }
             is SimpleList -> {
-                checkRuleItem(grammar, locationMap, rhs.item)
+                checkRuleItem(grammar, rhs.item)
             }
             is SeparatedList -> {
-                checkRuleItem(grammar, locationMap, rhs.item)
-                checkRuleItem(grammar, locationMap, rhs.separator)
+                checkRuleItem(grammar, rhs.item)
+                checkRuleItem(grammar, rhs.separator)
             }
         }
     }
 
-    private fun checkForAmbiguities(grammar: Grammar, locationMap: Map<Any, InputLocation>, automatonKind: AutomatonKind) {
-        val itemsSet = mutableSetOf<SemanticAnalyserItem>()
+    private fun checkForAmbiguities(grammar: Grammar, automatonKind: AutomatonKind) {
+        val itemsSet = mutableSetOf<AnalyserIssue>()
         //TODO: find a way to reuse RuntimeRuleSet rather than re compute here
         val conv = ConverterToRuntimeRules(grammar)
         val rrs = conv.runtimeRuleSet
@@ -115,8 +118,8 @@ internal class AglGrammarSemanticAnalyser(
                                 val or2 = ori2.owningRule
                                 val lhStr = lhi.map { it.tag }
                                 val msg = "Ambiguity on $lhStr between ${or1.name} and ${or2.name}"
-                                itemsSet.add(SemanticAnalyserItem(SemanticAnalyserItemKind.WARNING, locationMap[ori1], msg))
-                                itemsSet.add(SemanticAnalyserItem(SemanticAnalyserItemKind.WARNING, locationMap[ori2], msg))
+                                itemsSet.add(AnalyserIssue(AnalyserIssueKind.WARNING, _locationMap!![ori1], msg))
+                                itemsSet.add(AnalyserIssue(AnalyserIssueKind.WARNING, _locationMap!![ori2], msg))
                             }
                         }
                     }

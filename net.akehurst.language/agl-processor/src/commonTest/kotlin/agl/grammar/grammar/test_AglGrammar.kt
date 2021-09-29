@@ -18,7 +18,7 @@ package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.syntaxAnalyser.AsmSimple
+import net.akehurst.language.api.asm.AsmSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -40,7 +40,7 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val actual = p.parse("a");
+        val actual = p.parse("a")
         val expected = p.spptParser.parse("""
             a { 'a' }
         """)
@@ -952,6 +952,6 @@ class test_AglGrammar {
         assertNotNull(p)
         //TODO: more checks
 
-        val actual:AsmSimple = p.process(AsmSimple::class,"aca")
+        val (actual,items) = p.process<AsmSimple,Any>("aca")
     }
 }

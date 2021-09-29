@@ -25,8 +25,8 @@ import net.akehurst.language.agl.grammar.grammar.AglGrammarSyntaxAnalyser
 import net.akehurst.language.agl.grammar.style.AglStyleGrammar
 import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
 import net.akehurst.language.api.processor.LanguageDefinition
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 
 interface AglLanguages {
     val grammarLanguageIdentity: String
@@ -155,7 +155,7 @@ class LanguageRegistry {
 
     fun register(
         identity: String, grammar: String, defaultGoalRule: String?,
-        style: String?, format: String?, syntaxAnalyser: SyntaxAnalyser?, semanticAnalyser: SemanticAnalyser<*>?
+        style: String?, format: String?, syntaxAnalyser: SyntaxAnalyser<*,*>?, semanticAnalyser: SemanticAnalyser<*,*>?
     ): LanguageDefinition = this.registerFromDefinition(
         LanguageDefinitionDefault(
             identity, grammar, defaultGoalRule,

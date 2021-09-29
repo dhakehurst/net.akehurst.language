@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2020 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2021 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.grammar.format
+package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.api.analyser.AnalyserIssue
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.analyser.AnalyserIssue
 
-internal class AglFormatSyntaxAnalyser : SyntaxAnalyser<Any,Any> {
-    override val locationMap = mutableMapOf<Any, InputLocation>()
+class SemanticAnalyserSimple<AsmType : Any, ContextType : Any> : SemanticAnalyser<AsmType, ContextType> {
 
     override fun clear() {
-        TODO("not implemented")
+
     }
 
-    override fun transform(sppt: SharedPackedParseTree, context: Any?): Pair<Any, List<AnalyserIssue>> {
-        TODO("not implemented")
+    override fun analyse(asm: AsmType, locationMap: Map<*, InputLocation>?, arg: ContextType?): List<AnalyserIssue> {
+        return emptyList()
     }
 }

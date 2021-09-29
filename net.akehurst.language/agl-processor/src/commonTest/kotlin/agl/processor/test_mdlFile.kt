@@ -15,7 +15,6 @@
  */
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.sppt.SPPTParser
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -71,175 +70,204 @@ grammar Mdl {
 
     @Test
     fun literal_BOOLEAN() {
-        val actual = processor.parseForGoal("literal", "on")
+        val actual = processor.parse("on", "literal")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             literal { BOOLEAN : 'on' }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_INTEGER() {
-        val actual = processor.parseForGoal("literal", "1")
-        val expected = processor.spptParser.parse("""
+        val actual = processor.parse("1", "literal")
+        val expected = processor.spptParser.parse(
+            """
             literal|1 { INTEGER : '1' }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_REAL_1() {
-        val actual = processor.parseForGoal("literal", "3.14")
-        val expected = processor.spptParser.parse("""
+        val actual = processor.parse("3.14", "literal")
+        val expected = processor.spptParser.parse(
+            """
             literal|2 { REAL : '3.14' }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_REAL_2() {
-        val actual = processor.parseForGoal("literal", ".14")
+        val actual = processor.parse(".14", "literal")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             literal|2 { REAL : '.14' }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_REAL_3() {
-        val actual = processor.parseForGoal("literal", "3.14e-05")
+        val actual = processor.parse("3.14e-05", "literal")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             literal|2 { REAL : '3.14e-05' }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_REAL_4() {
-        val actual = processor.parseForGoal("literal", "3.0e5")
+        val actual = processor.parse("3.0e5", "literal")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             literal|2 { REAL : '3.0e5' }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_REAL_5() {
-        val actual = processor.parseForGoal("literal", ".3e5")
+        val actual = processor.parse(".3e5", "literal")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             literal|2 { REAL : '.3e5' }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_REAL_6() {
-        val actual = processor.parseForGoal("literal", "1e-05")
+        val actual = processor.parse("1e-05", "literal")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             literal|2 { REAL : '1e-05' }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun stringList_1() {
-        val actual = processor.parseForGoal("stringList", "\"hello\"")
+        val actual = processor.parse("\"hello\"", "stringList")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             stringList { DOUBLE_QUOTE_STRING : '"hello"' }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun stringList_2() {
-        val actual = processor.parseForGoal("stringList", "\"hello\" \"world\"")
+        val actual = processor.parse("\"hello\" \"world\"", "stringList")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             stringList {
                 DOUBLE_QUOTE_STRING : '"hello"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"world"'
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun stringList_3() {
-        val actual = processor.parseForGoal("stringList", "\"aa\" \"bb\" \"cc\"")
+        val actual = processor.parse("\"aa\" \"bb\" \"cc\"", "stringList")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             stringList {
                 DOUBLE_QUOTE_STRING : '"aa"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"bb"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"cc"'
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun value_stringList_1() {
-        val actual = processor.parseForGoal("value", "\"hello\"")
+        val actual = processor.parse("\"hello\"", "value")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
              value|1 { literal|3 { DOUBLE_QUOTE_STRING : '"hello"' } }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun value_stringList_2() {
-        val actual = processor.parseForGoal("value", "\"hello\" \"world\"")
+        val actual = processor.parse("\"hello\" \"world\"", "value")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             value { stringList {
                 DOUBLE_QUOTE_STRING : '"hello"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"world"'
             } }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun value_stringList_3() {
-        val actual = processor.parseForGoal("value", "\"aa\" \"bb\" \"cc\"")
+        val actual = processor.parse("\"aa\" \"bb\" \"cc\"", "value")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             value { stringList {
                 DOUBLE_QUOTE_STRING : '"aa"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"bb"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"cc"'
             } }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun array() {
-        val actual = processor.parseForGoal("matrix", "[ on, 1, 3.14, \"hello\" ]")
+        val actual = processor.parse("[ on, 1, 3.14, \"hello\" ]", "matrix")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             matrix {
                 '[' WHITESPACE : ' '
                 §matrix§sepList1 { row { §row§sepList1 {
@@ -253,16 +281,18 @@ grammar Mdl {
                 } } }
                 ']'
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun array1() {
-        val actual = processor.parseForGoal("matrix", "[ 1.0,2.0,3.0 ]")
+        val actual = processor.parse("[ 1.0,2.0,3.0 ]", "matrix")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             matrix {
                 '[' WHITESPACE : ' '
                 §matrix§sepList1 { row { §row§sepList1 {
@@ -274,16 +304,18 @@ grammar Mdl {
                 } } }
                 ']'
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun array2() {
-        val actual = processor.parseForGoal("matrix", "[ 1.0, 2.0 ]")
+        val actual = processor.parse("[ 1.0, 2.0 ]", "matrix")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             matrix {
                 '[' WHITESPACE : ' '
                 §matrix§sepList1 { row { §row§sepList1 {
@@ -293,31 +325,35 @@ grammar Mdl {
                 } } }
                 ']'
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun row1() {
-        val actual = processor.parseForGoal("row", "1.1,2.2")
+        val actual = processor.parse("1.1,2.2", "row")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             row { §row§sepList1 {
                 literal|2 { REAL : '1.1' }
                 ','
                 literal|2 { REAL : '2.2' }
             } }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun matrix() {
-        val actual = processor.parseForGoal("matrix", "[ 0,1; 2,3 ]")
+        val actual = processor.parse("[ 0,1; 2,3 ]", "matrix")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             matrix {
                 '[' WHITESPACE : ' '
                 §matrix§sepList1 {
@@ -335,9 +371,10 @@ grammar Mdl {
                 }
                 ']'
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
 
@@ -351,9 +388,10 @@ grammar Mdl {
 			}
         """.trimIndent()
 
-        val actual = processor.parseForGoal("section", text)
+        val actual = processor.parse(text, "section")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             section {
                 IDENTIFIER : 'Branch' WHITESPACE : ' '
                 '{' WHITESPACE : '⏎    '
@@ -369,9 +407,10 @@ grammar Mdl {
                     }
                 '}'
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
@@ -386,9 +425,10 @@ grammar Mdl {
 		}
         """.trimIndent()
 
-        val actual = processor.parseForGoal("section", text)
+        val actual = processor.parse(text, "section")
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             section {
                 IDENTIFIER : 'Line' WHITESPACE : ' '
                 '{' WHITESPACE : '⏎    '
@@ -409,22 +449,26 @@ grammar Mdl {
                 } } }
                 '}'
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun misc() {
-        val actual = processor.parseForGoal("section", """
+        val actual = processor.parse(
+            """
             Block {
                 DecimalParam   1.5
                 StringParam    "abc"
                 OnParam        on
             }
-        """.trimIndent())
+        """.trimIndent(), "section"
+        )
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             section {
                 IDENTIFIER : 'Block' WHITESPACE : ' '
                 '{' WHITESPACE : '⏎    '
@@ -444,16 +488,18 @@ grammar Mdl {
                     }
                 '}'
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
         //FIXME: fails because priorities should create BOOLEAN rather than IDENTIFIER - but doesn't
-        assertEquals(expected.toStringAll,actual.toStringAll)
+        assertEquals(expected.toStringAll, actual.toStringAll)
 
     }
 
     @Test
     fun misc2() {
-        val actual = processor.parseForGoal("section", """
+        val actual = processor.parse(
+            """
             Object {
                   PropName		      "WindowsInfo"
                   ObjectID		      2
@@ -461,7 +507,8 @@ grammar Mdl {
                   IsActive		      [1]
                   Location		      [705.0, 195.0, 1025.0, 639.0]
 		    }
-        """.trimIndent())
+        """.trimIndent(),"section"
+        )
 
         assertNotNull(actual)
         assertEquals("section", actual.root.name)

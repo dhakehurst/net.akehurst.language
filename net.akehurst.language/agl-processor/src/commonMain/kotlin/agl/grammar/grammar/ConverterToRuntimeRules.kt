@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.api.analyser.GrammarExeception
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.LanguageProcessorException
 import net.akehurst.language.collections.LazyMapNonNull

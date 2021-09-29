@@ -18,8 +18,8 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.processor.LanguageDefinition
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
@@ -31,8 +31,8 @@ class LanguageDefinitionDefault(
     override var defaultGoalRule: String?,
     style: String?,
     format: String?,
-    override val syntaxAnalyser: SyntaxAnalyser?,
-    override val semanticAnalyser: SemanticAnalyser<*>?
+    override val syntaxAnalyser: SyntaxAnalyser<*, *>?,
+    override val semanticAnalyser: SemanticAnalyser<*,*>?
 ) : LanguageDefinition {
     constructor(identity: String, grammar: String?) : this(identity, grammar, null, null, null, null, null)
 
@@ -41,12 +41,7 @@ class LanguageDefinitionDefault(
         if (null == g) {
             null
         } else {
-            val r = defaultGoalRule
-            if (null == r) {
-                Agl.processorFromString(g, syntaxAnalyser, null, semanticAnalyser)
-            } else {
-                Agl.processorFromStringForGoal(g, r, syntaxAnalyser, null, semanticAnalyser)
-            }
+            Agl.processorFromString(g,defaultGoalRule, syntaxAnalyser,  semanticAnalyser, null)
         }
     }
 

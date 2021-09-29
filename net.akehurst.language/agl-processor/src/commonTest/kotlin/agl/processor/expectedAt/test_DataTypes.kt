@@ -77,7 +77,7 @@ class test_DataTypes {
             val sentence = data.sentence
             val position = data.position
 
-            val result = processor.expectedAtForGoal(goal, sentence, position, 1, AutomatonKind.LOOKAHEAD_1)
+            val result = processor.expectedAt(sentence, position, 1,goal, AutomatonKind.LOOKAHEAD_1)
             val actual = result.map { it.text }
             val expected = data.expected
             assertEquals(expected, actual, data.toString())

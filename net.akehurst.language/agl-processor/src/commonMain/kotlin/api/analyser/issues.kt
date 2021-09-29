@@ -14,12 +14,19 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.syntaxAnalyser
+package net.akehurst.language.api.analyser
 
-import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.parser.InputLocation
 
-interface GrammarLoader {
-
-	fun resolve(vararg qualifiedGrammarNames: String): List<Grammar>
-
+enum class AnalyserIssueKind { ERROR, WARNING }
+//FIXME: added because currently Kotlin will not 'export' enums to JS
+object SemanticAnalyserIssueKind_api {
+    val ERROR = AnalyserIssueKind.ERROR
+    val WARNING = AnalyserIssueKind.WARNING
 }
+
+data class AnalyserIssue (
+    val kind: AnalyserIssueKind,
+    val location: InputLocation?,
+    val message: String
+)

@@ -79,7 +79,7 @@ class test_SQLValid(val data:Data) {
     @Test(timeout=1000)
     fun test() {
         val queryStr = this.data.queryStr
-        val result = processor.parseForGoal("terminated-statement", queryStr)
+        val result = processor.parse(queryStr,"terminated-statement")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)

@@ -72,7 +72,7 @@ class test_StatechartTools(val data: Data) {
 
     @Test
     fun test() {
-        val result = processor.parseForGoal(this.data.ruleName, this.data.text)
+        val result = processor.parse(this.data.text, this.data.ruleName)
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(this.data.text, resultStr)

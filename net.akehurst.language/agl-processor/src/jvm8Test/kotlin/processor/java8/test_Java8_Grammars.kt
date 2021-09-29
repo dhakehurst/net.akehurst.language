@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.processor.java8
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.grammar.Grammar
 import org.junit.Test
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -40,9 +41,9 @@ class test_Java8_Grammars {
         val actual = Agl.processorFromString(grammarStr)
         assertNotNull(actual)
 
-        val res = Agl.registry.agl.grammar.processor!!.analyseText(List::class, grammarStr)
-        assertNotNull(actual)
-        res.forEach {
+        val (ams,items) = Agl.registry.agl.grammar.processor!!.process<List<Grammar>,Any>(grammarStr)
+        assertNotNull(items)
+        items.forEach {
             println(it)
         }
     }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.syntaxAnalyser
+package net.akehurst.language.api.analyser
 
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -28,18 +28,21 @@ class SyntaxAnalyserException(message: String, cause: Throwable?) : RuntimeExcep
  * e.g. as whitesapce
  *
  */
-interface SyntaxAnalyser { //TODO: make transform type argument here maybe!
+interface SyntaxAnalyser<out AsmType, in ContextType> { //TODO: make transform type argument here maybe!
 
-	val locationMap: Map<Any, InputLocation>
+    /**
+     * Map of ASM items to an InputLocation. Should contain content after 'process' is called
+     */
+    val locationMap: Map<Any, InputLocation>
 
-	/**
-	 * reset the sppt2ast, clearing any cached values
-	 */
-	fun clear()
+    /**
+     * reset the sppt2ast, clearing any cached values
+     */
+    fun clear()
 
-	/**
-	 * map the tree into an instance of the targetType
-	 *
-	 */
-	fun <T> transform(sppt: SharedPackedParseTree): T
+    /**
+     * map the tree into an instance of the targetType
+     *
+     */
+    fun transform(sppt: SharedPackedParseTree, context: ContextType?): Pair<AsmType, List<AnalyserIssue>>
 }

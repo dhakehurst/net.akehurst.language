@@ -37,41 +37,51 @@ internal class test_ForMatthias {
 
     @Test
     fun conceptDefinition0() {
-        p.parseForGoal("conceptDefinition", """
+        p.parse(
+            """
             concept Test {
               properties {
               }
             }
-        """.trimIndent())
+        """.trimIndent(), "conceptDefinition"
+        )
     }
 
     @Test
     fun conceptDefinition1() {
-        p.parseForGoal("conceptDefinition", """
+        p.parse(
+            """
             concept Test {
               properties {
                  p1 : Int [1]
               }
             }
-        """.trimIndent())
+        """.trimIndent(), "conceptDefinition"
+        )
     }
+
     @Test
     fun conceptDefinition2() {
-        p.parseForGoal("conceptDefinition", """
+        p.parse(
+            """
             concept Test {
               properties {
                  p1 : Int [1]
                  p2 : Int [0..1]
               }
             }
-        """.trimIndent())
+        """.trimIndent(), "conceptDefinition"
+        )
     }
+
     @Test
     fun properties() {
-        p.parseForGoal("properties", """
+        p.parse(
+            """
             properties {
 
             }
-        """.trimIndent())
+        """.trimIndent(), "properties"
+        )
     }
 }

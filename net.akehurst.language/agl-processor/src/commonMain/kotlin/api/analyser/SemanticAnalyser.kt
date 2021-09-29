@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.semanticAnalyser
+package net.akehurst.language.api.analyser
 
 import net.akehurst.language.api.parser.InputLocation
 
@@ -25,22 +25,10 @@ class SemanticAnalyserException(message: String, cause: Throwable?) : RuntimeExc
  * A Semantic Analyser, language specific functionality
  *
  */
-interface SemanticAnalyser<in T> {
+interface SemanticAnalyser<in AsmType, in ContextType> {
 
     fun clear()
 
-    fun analyse(asm: T, locationMap: Map<Any,InputLocation> = emptyMap()): List<SemanticAnalyserItem>
+    fun analyse(asm: AsmType, locationMap: Map<*,InputLocation>?=null, context:ContextType?=null): List<AnalyserIssue>
 }
 
-enum class SemanticAnalyserItemKind { ERROR, WARNING }
-//FIXME: added because currently Kotlin will not 'export' enums to JS
-object SemanticAnalyserItemKind_api {
-    val ERROR = SemanticAnalyserItemKind.ERROR
-    val WARNING = SemanticAnalyserItemKind.WARNING
-}
-
-data class SemanticAnalyserItem (
-    val kind: SemanticAnalyserItemKind,
-    val location:InputLocation?,
-    val message: String
-)

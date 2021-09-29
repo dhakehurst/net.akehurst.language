@@ -133,7 +133,7 @@ class test_Java8_Compare(val data: Data) {
         try {
             val queryStr = this.data.sentence
             val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
-            val tree = proc.parseForGoal(grammarRule, queryStr)
+            val tree = proc.parse(queryStr,grammarRule)
             assertNotNull(tree)
             val resultStr = clean(tree.asString)
             assertEquals(queryStr, resultStr)

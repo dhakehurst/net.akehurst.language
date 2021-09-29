@@ -9,6 +9,10 @@ import kotlin.test.assertNotNull
 
 class test_AglStyle {
 
+    companion object {
+        val aglProc = Agl.registry.agl.grammar.processor!!
+    }
+
     @Test
     fun single_line_comment() {
 
@@ -16,7 +20,7 @@ class test_AglStyle {
             // single line comment
         """.trimIndent()
 
-        val p = Agl.registry.agl.style.processor!!.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
+        val (p,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
 
         assertNotNull(p)
         assertEquals(0, p.size)
@@ -32,7 +36,7 @@ class test_AglStyle {
             */
         """.trimIndent()
 
-        val p = Agl.registry.agl.style.processor!!.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
+        val (p,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
 
         assertNotNull(p)
         assertEquals(0, p.size)
@@ -45,7 +49,7 @@ class test_AglStyle {
             selector { }
         """.trimIndent()
 
-        val actual = Agl.registry.agl.style.processor!!.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
+        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
 
         assertNotNull(actual)
         assertEquals(1, actual.size)
@@ -61,7 +65,7 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val actual = Agl.registry.agl.style.processor!!.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
+        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
 
         assertNotNull(actual)
         assertEquals(1, actual.size)
@@ -83,7 +87,7 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val actual = Agl.registry.agl.style.processor!!.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
+        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
 
         assertNotNull(actual)
         assertEquals(2, actual.size)
@@ -97,7 +101,7 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val actual = Agl.registry.agl.style.processor!!.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
+        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
 
         assertNotNull(actual)
         assertEquals(1, actual.size)

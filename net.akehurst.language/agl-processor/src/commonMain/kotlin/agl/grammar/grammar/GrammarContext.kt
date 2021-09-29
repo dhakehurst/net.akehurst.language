@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2021 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.grammar
+package net.akehurst.language.agl.grammar.grammar
 
-class GrammarExeception(message: String, cause: Throwable?) : RuntimeException(message, cause)
+class GrammarContext {
+}

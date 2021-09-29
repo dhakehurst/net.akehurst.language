@@ -42,7 +42,7 @@ class test_Java8Agl_Literals(val data:Data) {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
         val processor : LanguageProcessor by lazy {
-            Agl.processorFromStringForGoal(grammarStr, "Literal").buildFor("Literal")
+            Agl.processorFromString(grammarStr, "Literal").buildFor("Literal")
         }
         var sourceFiles = arrayOf("/java8/sentences/literals-valid.txt")
 

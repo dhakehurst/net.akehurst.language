@@ -17,14 +17,19 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItem
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItemKind
+import net.akehurst.language.api.analyser.AnalyserIssue
+import net.akehurst.language.api.analyser.AnalyserIssueKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 
 class test_AglGrammarSemanticAnalyser {
+
+    companion object {
+        val aglProc = Agl.registry.agl.grammar.processor!!
+    }
 
     @Test
     fun nonTerminalNotFound() {
@@ -35,9 +40,9 @@ class test_AglGrammarSemanticAnalyser {
             }
         """.trimIndent()
         //val proc = Agl.processor(grammarStr)
-        val actual = Agl.registry.agl.grammar.processor!!.analyseText(List::class, grammarStr)
+        val (asm,actual) = aglProc.process<List<Grammar>,Any>(grammarStr)
         val expected = listOf(
-                SemanticAnalyserItem(SemanticAnalyserItemKind.ERROR, InputLocation(38, 9, 3, 2), "Rule 'b' not found in grammar 'Test'")
+                AnalyserIssue(AnalyserIssueKind.ERROR, InputLocation(38, 9, 3, 2), "Rule 'b' not found in grammar 'Test'")
         )
         assertEquals(expected, actual)
     }
@@ -54,9 +59,9 @@ class test_AglGrammarSemanticAnalyser {
             }
         """.trimIndent()
         //val proc = Agl.processor(grammarStr)
-        val actual = Agl.registry.agl.grammar.processor!!.analyseText(List::class, grammarStr)
+        val (asm,actual) = aglProc.process<List<Grammar>,Any>(grammarStr)
         val expected = listOf(
-                SemanticAnalyserItem(SemanticAnalyserItemKind.ERROR, InputLocation(38, 9, 3, 2), "More than one rule named 'b' in grammar 'Test', have you remembered the 'override' modifier")
+                AnalyserIssue(AnalyserIssueKind.ERROR, InputLocation(38, 9, 3, 2), "More than one rule named 'b' in grammar 'Test', have you remembered the 'override' modifier")
         )
         assertEquals(expected, actual)
     }
@@ -72,10 +77,10 @@ class test_AglGrammarSemanticAnalyser {
             }
         """.trimIndent()
         //val proc = Agl.processor(grammarStr)
-        val actual = Agl.registry.agl.grammar.processor!!.analyseText(List::class, grammarStr)
+        val (asm,actual) = aglProc.process<List<Grammar>,Any>(grammarStr)
         val expected = listOf(
-                SemanticAnalyserItem(SemanticAnalyserItemKind.WARNING, InputLocation(57, 10, 4, 4), "Ambiguity on [<EOT>] with b2"),
-                SemanticAnalyserItem(SemanticAnalyserItemKind.WARNING, InputLocation(72, 10, 5, 4), "Ambiguity on [<EOT>] with b1")
+                AnalyserIssue(AnalyserIssueKind.WARNING, InputLocation(57, 10, 4, 4), "Ambiguity on [<EOT>] with b2"),
+                AnalyserIssue(AnalyserIssueKind.WARNING, InputLocation(72, 10, 5, 4), "Ambiguity on [<EOT>] with b1")
         )
         actual.forEach {
             println(it)

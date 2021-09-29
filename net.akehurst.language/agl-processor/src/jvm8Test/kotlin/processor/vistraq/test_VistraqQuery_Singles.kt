@@ -42,14 +42,14 @@ class test_VistraqQuery_Singles {
 
     @Test
     fun NULL() {
-        processor.parseForGoal("NULL", "null")
+        processor.parse( "null","NULL")
     }
 
     @Test
     fun REAL_0() {
 
         val e = assertFailsWith(ParseFailedException::class) {
-            processor.parseForGoal("REAL", "0")
+            processor.parse( "0","REAL",)
         }
 
         assertEquals(1, e.location.line)
@@ -59,7 +59,7 @@ class test_VistraqQuery_Singles {
     @Test
     fun REAL_p0() {
         val e = assertFailsWith(ParseFailedException::class) {
-            processor.parseForGoal("REAL", ".0")
+            processor.parse( ".0","REAL")
         }
 
         assertEquals(1, e.location.line)
@@ -68,18 +68,18 @@ class test_VistraqQuery_Singles {
 
     @Test
     fun REAL_0p0() {
-        processor.parseForGoal("REAL", "0.0")
+        processor.parse( "0.0","REAL",)
     }
 
     @Test
     fun REAL_3p14() {
-        processor.parseForGoal("REAL", "3.14")
+        processor.parse( "3.14","REAL",)
     }
 
     @Test
     fun expression_1() {
         val queryStr = "1"
-        val result = processor.parseForGoal("expression", queryStr)
+        val result = processor.parse(queryStr,"expression")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -88,7 +88,7 @@ class test_VistraqQuery_Singles {
     @Test
     fun literalValue_0p1() {
         val queryStr = "0.1"
-        val result = processor.parseForGoal("literalValue", queryStr)
+        val result = processor.parse(queryStr,"literalValue")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -97,7 +97,7 @@ class test_VistraqQuery_Singles {
     @Test
     fun expression_0p1() {
         val queryStr = "0.1"
-        val result = processor.parseForGoal("expression", queryStr)
+        val result = processor.parse(queryStr,"expression")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -106,7 +106,7 @@ class test_VistraqQuery_Singles {
     @Test
     fun nodeSelector_NOT_A() {
         val queryStr = "NOT A"
-        val result = processor.parseForGoal("nodeSelector", queryStr)
+        val result = processor.parse(queryStr,"nodeSelector")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -116,7 +116,7 @@ class test_VistraqQuery_Singles {
     @Test
     fun pathExpression_NOT_A() {
         val queryStr = "NOT A"
-        val result = processor.parseForGoal("pathExpression", queryStr)
+        val result = processor.parse(queryStr,"pathExpression")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -125,7 +125,7 @@ class test_VistraqQuery_Singles {
     @Test
     fun pathQuery_MATCH_NOT_A() {
         val queryStr = "MATCH NOT A"
-        val result = processor.parseForGoal("pathQuery", queryStr)
+        val result = processor.parse(queryStr,"pathQuery")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -135,7 +135,7 @@ class test_VistraqQuery_Singles {
     fun expression_literalValue_true() {
         val queryStr = "true"
 
-        val result = processor.parseForGoal("expression", queryStr)
+        val result = processor.parse(queryStr,"expression")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -145,7 +145,7 @@ class test_VistraqQuery_Singles {
     fun expression_long_3() {
         val queryStr = "a.p AND b.p AND c.p AND d.p"
 
-        val result = processor.parseForGoal("expression", queryStr)
+        val result = processor.parse(queryStr,"expression")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -156,7 +156,7 @@ class test_VistraqQuery_Singles {
     fun expression_long_5() {
         val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p"
 
-        val result = processor.parseForGoal("expression", queryStr)
+        val result = processor.parse(queryStr,"expression")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -166,7 +166,7 @@ class test_VistraqQuery_Singles {
     fun expression_long_11() {
         val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p AND g.p AND h.p AND i.p AND j.p AND k.p AND l.p"
 
-        val result = processor.parseForGoal("expression", queryStr)
+        val result = processor.parse(queryStr,"expression")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -177,7 +177,7 @@ class test_VistraqQuery_Singles {
     fun whereClause_expression_literalValue_true() {
         val queryStr = "WHERE true"
 
-        val result = processor.parseForGoal("whereClause", queryStr)
+        val result = processor.parse(queryStr,"whereClause")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -187,7 +187,7 @@ class test_VistraqQuery_Singles {
     fun pathQuery1() {
         val queryStr = "MATCH Milestone WHERE true"
 
-        val result = processor.parseForGoal("pathQuery", queryStr)
+        val result = processor.parse(queryStr,"pathQuery")
 
         Assert.assertNotNull(result)
         val resultStr = result.asString
@@ -198,7 +198,7 @@ class test_VistraqQuery_Singles {
     fun singleQuery1() {
         val queryStr = "MATCH Milestone RETURN 1"
 
-        val result = processor.parseForGoal("singleQuery", queryStr)
+        val result = processor.parse(queryStr,"singleQuery")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -210,7 +210,7 @@ class test_VistraqQuery_Singles {
    MATCH Milestone WHERE true RETURN 1
         """.trimIndent()
 
-        val result = processor.parseForGoal("singleQuery", queryStr)
+        val result = processor.parse(queryStr,"singleQuery")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -229,7 +229,7 @@ class test_VistraqQuery_Singles {
              COLUMN Y CONTAINING Name WHERE Name=='Y'
         """.trimIndent()
 
-        val result = processor.parseForGoal("query", queryStr)
+        val result = processor.parse(queryStr,"query")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -241,7 +241,7 @@ class test_VistraqQuery_Singles {
    MATCH A WHERE a == b AND a == b AND true RETURN TABLE COLUMN a CONTAINING a
         """.trimIndent()
 
-        val result = processor.parseForGoal("query", queryStr)
+        val result = processor.parse(queryStr,"query")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
@@ -284,7 +284,7 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
         try {
             println("parse")
             val v = measureTimedValue {
-                processor.parseForGoal("query", queryStr)
+                processor.parse(queryStr,"query")
             }
             println(v.duration)
             val result = v.value

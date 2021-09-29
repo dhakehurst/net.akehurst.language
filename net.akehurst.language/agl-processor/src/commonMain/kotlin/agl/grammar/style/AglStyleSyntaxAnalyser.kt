@@ -17,13 +17,14 @@ package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserAbstract
+import net.akehurst.language.api.analyser.AnalyserIssue
 import net.akehurst.language.api.style.AglStyle
 import net.akehurst.language.api.style.AglStyleRule
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 
-internal class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
+internal class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract<List<AglStyleRule>,Any>() {
 
     init {
         this.register("rules", this::rules as BranchHandler<List<AglStyleRule>>)
@@ -39,8 +40,9 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract() {
 
     }
 
-    override fun <T> transform(sppt: SharedPackedParseTree): T {
-        return this.transformBranch<T>(sppt.root.asBranch, "")
+    override fun transform(sppt: SharedPackedParseTree, context: Any?): Pair<List<AglStyleRule>, List<AnalyserIssue>> {
+        val rules:List<AglStyleRule> =  this.transformBranch(sppt.root.asBranch, "")
+        return Pair(rules, emptyList()) //TODO
     }
 
     // rules : rule* ;

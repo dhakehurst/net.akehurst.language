@@ -37,7 +37,7 @@ class test_StatechartTools_Singles {
     fun ConditionalExpression_integer() {
         val goal = "Expression"
         val sentence = "integer"
-        val result = processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence,goal)
         assertNotNull(result)
         val resultStr = result.asString
         assertEquals(sentence, resultStr)
@@ -47,7 +47,7 @@ class test_StatechartTools_Singles {
     fun ConditionalExpression_97() {
         val goal = "Expression"
         val sentence = "97"
-        val result = processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence,goal)
         assertNotNull(result)
         val resultStr = result.asString
         assertEquals(sentence, resultStr)
@@ -57,7 +57,7 @@ class test_StatechartTools_Singles {
     fun AssignmentExpression_integer_AS_97() {
         val goal = "Expression"
         val sentence = "integer = 97"
-        val result = processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence,goal)
         assertNotNull(result)
         val resultStr = result.asString
         assertEquals(sentence, resultStr)
@@ -67,7 +67,7 @@ class test_StatechartTools_Singles {
     fun ScopeDeclaration_integer_AS_97() {
         val goal = "ScopeDeclaration"
         val sentence = "var MyVar : integer = 97"
-        val result = processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence,goal)
         assertNotNull(result)
         val resultStr = result.asString
         assertEquals(sentence, resultStr)
@@ -77,7 +77,7 @@ class test_StatechartTools_Singles {
     fun expectedAt_TransitionSpecification_0() {
         val goal = "TransitionSpecification"
         val sentence = ""
-        val actual = processor.expectedAtForGoal(goal, sentence,0,1).map { it.text }
+        val actual = processor.expectedAt(sentence,0,1,goal).map { it.text }
 
         val expected = listOf<String>("ID", "after", "every","entry","exit","always","oncycle","[","default","else","/","#")
         assertEquals(expected, actual)

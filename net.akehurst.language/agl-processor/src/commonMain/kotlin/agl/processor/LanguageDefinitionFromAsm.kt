@@ -19,8 +19,8 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.processor.LanguageDefinition
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
@@ -32,19 +32,14 @@ class LanguageDefinitionFromAsm(
     override var defaultGoalRule: String?,
     style: String?,
     format: String?,
-    override val syntaxAnalyser: SyntaxAnalyser?,
-    override val semanticAnalyser: SemanticAnalyser<*>?
+    override val syntaxAnalyser: SyntaxAnalyser<*, *>?,
+    override val semanticAnalyser: SemanticAnalyser<*, *>?
 ) : LanguageDefinition {
     constructor(identity: String, grammar: Grammar) : this(identity, grammar, null, null, null, null, null)
 
     private val _grammarAsm: Grammar = grammar
     private val _processor_cache: CachedValue<LanguageProcessor?> = cached {
-        val r = defaultGoalRule
-        if (null == r) {
-            Agl.processorFromGrammar(this._grammarAsm, syntaxAnalyser, null, semanticAnalyser)
-        } else {
-            Agl.processorFromGrammarForGoal(this._grammarAsm, r, syntaxAnalyser, null, semanticAnalyser)
-        }
+        Agl.processorFromGrammar(_grammarAsm, defaultGoalRule, syntaxAnalyser, semanticAnalyser, null)
     }
 
     override val grammarObservers = mutableListOf<(String?, String?) -> Unit>()

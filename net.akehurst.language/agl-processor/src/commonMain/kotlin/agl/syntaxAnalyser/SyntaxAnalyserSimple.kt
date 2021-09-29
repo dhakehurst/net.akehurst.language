@@ -18,36 +18,47 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.analyser.AnalyserIssue
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
-import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
-import net.akehurst.language.api.syntaxAnalyser.AsmSimple
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.api.asm.AsmElementSimple
+import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 
 
-class SyntaxAnalyserSimple : SyntaxAnalyser {
+class SyntaxAnalyserSimple : SyntaxAnalyser<AsmSimple, ContextSimple> {
 
     private var _asm:AsmSimple? =null
+    private var _context:ContextSimple? = null // cached value, provided on call to transform
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
     override fun clear() {
         locationMap.clear()
+        _context = null
     }
 
-    override fun <T> transform(sppt: SharedPackedParseTree): T {
+    override fun transform(sppt: SharedPackedParseTree, context: ContextSimple?): Pair<AsmSimple, List<AnalyserIssue>> {
+        this._context = context
         _asm = AsmSimple()
         val value = this.createValue(sppt.root)
         _asm?.addRoot(value as AsmElementSimple)
-        return _asm as T
+
+        val issues = context?.resolveReferences(_asm!!) ?: emptyList()
+
+        return Pair(_asm!!,issues)
     }
 
     private fun createValue(target: SPPTNode): Any? {
-        return when (target) {
+        val v = when (target) {
             is SPPTLeaf -> createValueFromLeaf(target)
             is SPPTBranch -> createValueFromBranch(target)
             else -> error("should never happen!")
         }
+        if (v is AsmElementSimple) {
+            locationMap[v] = target.location
+        }
+        return v
     }
 
     private fun createValueFromLeaf(target: SPPTLeaf): Any? {
@@ -74,15 +85,19 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
                     var el = _asm!!.createNonRootElement(br.name)// AsmElementSimple(br.name)
                     br.runtimeRule.rhs.items.forEachIndexed { index, rr ->
                         //TODO: leave out unnamed literals
-                        val name = createPropertyName(rr)
-                        val value = this.createValue(br.nonSkipChildren[index])
-                        if (el.hasProperty(name)) {
-                            val i = count[name] ?: 2
-                            count[name] = i + 1
-                            val nname = name + i
-                            el.setProperty(nname, value, false)
+                        if (rr.tag=="'${rr.value}'") {
+                            // is unnamed literal don't use it as a property
                         } else {
-                            el.setProperty(name, value, false)
+                            val name = createPropertyName(rr)
+                            val nname = if (el.hasProperty(name)) {
+                                val i = count[name] ?: 2
+                                count[name] = i + 1
+                                name + i
+                            } else {
+                                name
+                            }
+                            val value = this.createValue(br.nonSkipChildren[index])
+                            this.setPropertyOrReference(el, nname, value)
                         }
                     }
                     if (br.runtimeRule.rhs.items.size == 1) {
@@ -150,4 +165,12 @@ class SyntaxAnalyserSimple : SyntaxAnalyser {
         }
     }
 
+    private fun setPropertyOrReference(el:AsmElementSimple, name:String, value:Any?) {
+        val isRef = this._context?.isReference(el,name) ?: false
+        when {
+            isRef ->el.setProperty(name, value, true)
+            else -> el.setProperty(name,value,false)
+        }
+
+    }
 }

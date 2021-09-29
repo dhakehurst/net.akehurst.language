@@ -15,22 +15,19 @@
  */
 package net.akehurst.language.agl.processor.vistraq
 
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.ArrayList
-
+import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.agl.processor.Agl
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 
 @RunWith(Parameterized::class)
-class test_QueryParserValid(val data:Data) {
+class test_QueryParserValid(val data: Data) {
 
     companion object {
 
@@ -39,16 +36,16 @@ class test_QueryParserValid(val data:Data) {
 
         var sourceFiles = arrayOf("/vistraq/sampleValidQueries.txt")
 
-        fun tgqlprocessor() : LanguageProcessor {
+        fun tgqlprocessor(): LanguageProcessor {
             return Agl.processorFromString(grammarStr)
-         }
+        }
 
         @JvmStatic
         @Parameters(name = "{0}")
         fun data(): Collection<Array<Any>> {
             val col = ArrayList<Array<Any>>()
             for (sourceFile in sourceFiles) {
-               // val inps = ClassLoader.getSystemClassLoader().getResourceAsStream(sourceFile)
+                // val inps = ClassLoader.getSystemClassLoader().getResourceAsStream(sourceFile)
                 val inps = test_QueryParserValid::class.java.getResourceAsStream(sourceFile) ?: error("File not found")
 
                 val br = BufferedReader(InputStreamReader(inps))
@@ -79,15 +76,14 @@ class test_QueryParserValid(val data:Data) {
         }
     }
 
-    @Test(timeout=1000)
+    @Test(timeout = 1000)
     fun test() {
         val queryStr = this.data.queryStr
-        val result = processor.parseForGoal("query", queryStr)
+        val result = processor.parse(queryStr, "query")
         Assert.assertNotNull(result)
         val resultStr = result.asString
         Assert.assertEquals(queryStr, resultStr)
     }
-
 
 
 }

@@ -51,7 +51,7 @@ class test_NaturalLanguage_Singles{
         val goal = "subject"
         val sentence = "my name"
         try {
-            val result = processor.parseForGoal(goal, sentence)
+            val result = processor.parse(sentence,goal)
             assertNotNull(result)
             val resultStr = result.asString
             assertEquals(sentence, resultStr)

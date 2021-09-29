@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.syntaxAnalyser
+package net.akehurst.language.api.asm
 
 fun asmSimple(init: AsmSimpleBuilder.() -> Unit): AsmSimple {
     val b = AsmSimpleBuilder()
@@ -42,10 +42,12 @@ class AsmElementSimpleBuilder(
 ) {
     private val _element = if (isRoot) _asm.createRootElement(typeName) else _asm.createNonRootElement(typeName)
 
-    fun property(name: String, value: Any?) {
+    private fun _property(name: String, value: Any?) {
         _element.setProperty(name, value,false)
     }
 
+    fun property(name: String, value: String?) = this._property(name,value)
+    fun property(name: String, list: List<*>) = this._property(name,list) //TODO: should only be List<String> or List<AsmElementSimple>
     fun property(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = property(name,name,init)
     fun property(name: String, typeName:String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val b = AsmElementSimpleBuilder(this._asm, typeName, false)
@@ -55,8 +57,8 @@ class AsmElementSimpleBuilder(
         return el
     }
 
-    fun reference(name: String, element:AsmElementSimple) {
-        _element.setProperty(name,element,true)
+    fun reference(name: String, elementReference:String) {
+        _element.setProperty(name, elementReference,true)
     }
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {

@@ -40,7 +40,7 @@ class test_Dot_Singles {
           // a comment
           graph { }
         """.trimIndent()
-        processor.parseForGoal(goal, sentence)
+        processor.parse(sentence,goal)
     }
 
     @Test
@@ -50,7 +50,7 @@ class test_Dot_Singles {
           /* a comment */
           graph { }
         """.trimIndent()
-        processor.parseForGoal(goal, sentence)
+        processor.parse(sentence,goal)
     }
 
     @Test
@@ -60,7 +60,7 @@ class test_Dot_Singles {
         val sentence = """
         < <xml >xxxx</xml> >
         """.trimIndent()
-        val actual = processor.parseForGoal(goal, sentence)
+        val actual = processor.parse(sentence,goal)
         println(actual.toStringAll)
         /*
         TODO: PARSING EMBEDDED GRAMMAR SPPTs
@@ -104,7 +104,7 @@ class test_Dot_Singles {
         label = "<f0> 0x10ba8| <f1>"
         shape = "record"
         """
-        processor.parseForGoal(goal, sentence)
+        processor.parse(sentence,goal)
     }
 
     @Test
@@ -114,7 +114,7 @@ class test_Dot_Singles {
         label = "<f0> 0x10ba8| <f1>"
         shape = "record"
         ]"""
-        processor.parseForGoal(goal, sentence)
+        processor.parse(sentence,goal)
     }
 
     @Test
@@ -123,7 +123,7 @@ class test_Dot_Singles {
         val sentence = """
             edge [ ]
         """.trimIndent()
-        processor.parseForGoal(goal, sentence)
+        processor.parse(sentence,goal)
     }
 
     @Test
@@ -140,7 +140,7 @@ class test_Dot_Singles {
             edge [
             ];
         """.trimIndent()
-        processor.parseForGoal(goal, sentence)
+        processor.parse(sentence,goal)
     }
 
     @Test
@@ -163,7 +163,7 @@ class test_Dot_Singles {
             ];
             }
         """.trimIndent()
-        processor.parseForGoal(goal, sentence)
+        processor.parse(sentence,goal)
 
     }
 
@@ -171,14 +171,14 @@ class test_Dot_Singles {
     fun stmt_list__1() {
         val goal = "stmt_list"
         val sentence = "graph[a=a ]; node [b=b c=c]; edge[];"
-        processor.parseForGoal(goal, sentence)
+        processor.parse(sentence,goal)
     }
 
     @Test
     fun attr_list__2s() {
         val goal = "attr_list"
         val sentence = "[x = x; y=y]"
-        processor.parseForGoal(goal, sentence)
+        processor.parse(sentence,goal)
 
     }
 
@@ -186,7 +186,7 @@ class test_Dot_Singles {
     fun attr_list__2n() {
         val goal = "attr_list"
         val sentence = "[x = x y=y]"
-        processor.parseForGoal(goal, sentence)
+        processor.parse(sentence,goal)
 
     }
 
@@ -197,7 +197,7 @@ class test_Dot_Singles {
             "001"
         """.trimIndent()
         try {
-            processor.parseForGoal(goal, sentence)
+            processor.parse(sentence,goal)
         } catch (e: ParseFailedException) {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
@@ -210,7 +210,7 @@ class test_Dot_Singles {
             [shape=box     , regular=1,style=filled,fillcolor=white   ]
         """.trimIndent()
         try {
-            processor.parseForGoal(goal, sentence)
+            processor.parse(sentence,goal)
         } catch (e: ParseFailedException) {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
@@ -223,7 +223,7 @@ class test_Dot_Singles {
             "001" [shape=box     , regular=1,style=filled,fillcolor=white   ]
         """.trimIndent()
         try {
-            processor.parseForGoal(goal, sentence)
+            processor.parse(sentence,goal)
         } catch (e: ParseFailedException) {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
@@ -246,7 +246,7 @@ class test_Dot_Singles {
         val goal = "stmt_list"
         val sentence = "a -> b ;"
         try {
-            processor.parseForGoal(goal, sentence)
+            processor.parse(sentence,goal)
         } catch (e: ParseFailedException) {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
@@ -262,7 +262,7 @@ class test_Dot_Singles {
             "marr0017" -> "028" [dir=none, weight=2] ;
         """.trimIndent()
         try {
-            processor.parseForGoal(goal, sentence)
+            processor.parse(sentence,goal)
         } catch (e: ParseFailedException) {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
@@ -372,7 +372,7 @@ class test_Dot_Singles {
             "marr0017" -> "028" [dir=none, weight=2] ;
         """.trimIndent()
         try {
-            processor.parseForGoal(goal, sentence)
+            processor.parse(sentence,goal)
         } catch (e: ParseFailedException) {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
@@ -492,7 +492,7 @@ class test_Dot_Singles {
             "marr0017" -> "028" [dir=none, weight=2] ;
             }
             """.trimIndent()
-        processor.parseForGoal(goal, sentence)
+        processor.parse(sentence,goal)
     }
 
     @Test
@@ -502,7 +502,7 @@ class test_Dot_Singles {
             ""
         """.trimIndent()
         try {
-            processor.parseForGoal(goal, sentence)
+            processor.parse(sentence,goal)
         } catch (e: ParseFailedException) {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
@@ -515,7 +515,7 @@ class test_Dot_Singles {
             node[style=filled,label=""]
         """.trimIndent()
         try {
-            processor.parseForGoal(goal, sentence)
+            processor.parse(sentence,goal)
         } catch (e: ParseFailedException) {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
@@ -627,7 +627,7 @@ digraph G {
 }
         """.trimIndent()
         try {
-            processor.parseForGoal(goal, sentence)
+            processor.parse(sentence,goal)
         } catch (e: ParseFailedException) {
             fail("${e.message} at ${e.location} expected ${e.expected}")
         }
