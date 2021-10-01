@@ -14,19 +14,25 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.analyser
+package net.akehurst.language.api.processor
 
 import net.akehurst.language.api.parser.InputLocation
 
-enum class AnalyserIssueKind { ERROR, WARNING }
+enum class LanguageIssueKind { ERROR, WARNING, INFORMATION }
+
 //FIXME: added because currently Kotlin will not 'export' enums to JS
-object SemanticAnalyserIssueKind_api {
-    val ERROR = AnalyserIssueKind.ERROR
-    val WARNING = AnalyserIssueKind.WARNING
+object LanguageIssueKind_api {
+    val ERROR = LanguageIssueKind.ERROR
+    val WARNING = LanguageIssueKind.WARNING
+    val INFORMATION = LanguageIssueKind.INFORMATION
 }
 
-data class AnalyserIssue (
-    val kind: AnalyserIssueKind,
+enum class LanguageProcessorPhase { PARSE, SYNTAX_ANALYSIS, SEMANTIC_ANALYSIS }
+
+data class LanguageIssue(
+    val kind: LanguageIssueKind,
+    val phase: LanguageProcessorPhase,
     val location: InputLocation?,
-    val message: String
+    val message: String,
+    val data: Any? = null
 )

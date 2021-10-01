@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.api.analyser.AnalyserIssue
+import net.akehurst.language.api.analyser.LanguageIssue
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.test.Test
 
@@ -34,7 +34,7 @@ class TestSyntaxAnalyser : SyntaxAnalyserAbstract<Any,Any>() {
 
     }
 
-    override fun transform(sppt: SharedPackedParseTree, context: Any?): Pair<Any, List<AnalyserIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, context: Any?): Pair<Any, List<LanguageIssue>> {
         return Pair(1, emptyList())
     }
 

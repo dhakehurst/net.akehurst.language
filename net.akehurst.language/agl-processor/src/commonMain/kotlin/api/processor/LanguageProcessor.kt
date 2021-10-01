@@ -16,7 +16,6 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.analyser.AnalyserIssue
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SPPTLeaf
@@ -35,8 +34,16 @@ interface LanguageProcessor {
 
     val grammar: Grammar
 
+    /**
+     * An SPPT parser for this language,
+     * will parse the SPPT text syntax,
+     * useful for testing parser output
+     */
     val spptParser: SPPTParser
 
+    /**
+     * can be called from a different thread to stop the parser
+     */
     fun interrupt(message: String)
 
     /**
@@ -57,17 +64,17 @@ interface LanguageProcessor {
      * @param sentence the sentence to parse
      * @param automatonKind default LOOKAHEAD_1
      */
-    fun parse(sentence: String, goalRuleName: String? = null, automatonKind: AutomatonKind? = null): SharedPackedParseTree
+    fun parse(sentence: String, goalRuleName: String? = null, automatonKind: AutomatonKind? = null): Pair<SharedPackedParseTree?, List<LanguageIssue>>
 
     /**
      * Converts the SharedPackedParseTree into a language specific Abstract Syntax Tree/Model
      */
-    fun <AsmType : Any, ContextType : Any> syntaxAnalysis(sppt: SharedPackedParseTree, context: ContextType? = null): Triple<AsmType, List<AnalyserIssue>, Map<*, InputLocation>>
+    fun <AsmType : Any, ContextType : Any> syntaxAnalysis(sppt: SharedPackedParseTree, context: ContextType? = null): Triple<AsmType?, List<LanguageIssue>, Map<*, InputLocation>>
 
     /**
      *
      */
-    fun <AsmType : Any, ContextType : Any> semanticAnalysis(asm: AsmType, locationMap: Map<*, InputLocation>? = null, context: ContextType? = null): List<AnalyserIssue>
+    fun <AsmType : Any, ContextType : Any> semanticAnalysis(asm: AsmType, locationMap: Map<*, InputLocation>? = null, context: ContextType? = null): List<LanguageIssue>
 
     /**
      * Process the sentence, performing all phases where possible.
@@ -77,16 +84,16 @@ interface LanguageProcessor {
         goalRuleName: String? = null,
         automatonKind: AutomatonKind? = null,
         context: ContextType? = null
-    ): Pair<AsmType, List<AnalyserIssue>>
+    ): Pair<AsmType?, List<LanguageIssue>>
 
     //fun <T> process(reader: Reader, goalRuleName: String, targetType: Class<T>): T
 
     /**
      *
      */
-    fun <AsmType : Any, ContextType : Any> format(sentence: String, goalRuleName: String? = null, automatonKind: AutomatonKind? = null): String
+    fun <AsmType : Any, ContextType : Any> format(sentence: String, goalRuleName: String? = null, automatonKind: AutomatonKind? = null): String?
 
-    fun <AsmType : Any, ContextType : Any> formatAsm(asm: AsmType): String
+    fun <AsmType : Any, ContextType : Any> formatAsm(asm: AsmType): String?
 
     /**
      * returns list of names of expected rules

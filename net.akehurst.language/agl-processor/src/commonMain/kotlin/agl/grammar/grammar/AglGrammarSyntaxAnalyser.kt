@@ -23,7 +23,7 @@ import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.agl.ast.*
 import net.akehurst.language.agl.grammar.GrammarRegistryDefault
-import net.akehurst.language.api.analyser.AnalyserIssue
+import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.analyser.SyntaxAnalyserException
 
 
@@ -67,7 +67,7 @@ internal class AglGrammarSyntaxAnalyser(
 
     }
 
-    override fun transform(sppt: SharedPackedParseTree,context:GrammarContext?): Pair<List<Grammar>,List<AnalyserIssue>> {
+    override fun transform(sppt: SharedPackedParseTree,context:GrammarContext?): Pair<List<Grammar>,List<LanguageIssue>> {
         val grammars = this.transformBranch<List<Grammar>>(sppt.root.asBranch, "")
         return Pair(grammars, emptyList()) //TODO
     }

@@ -16,11 +16,10 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.processor.*
 
 object Agl {
 
@@ -63,19 +62,30 @@ object Agl {
     ): LanguageProcessor {
         try {
             val aglProc = this.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
-            val (grammars, items) = aglProc.process<List<Grammar>, Any>(grammarDefinitionStr, "grammarDefinition", AutomatonKind.LOOKAHEAD_1, null)
-            val goal = goalRuleName ?: grammars.last().rule.first { it.isSkip.not() }.name
-            return when {
-                goal.contains(".") -> {
-                    val grammarName = goal.substringBefore(".")
-                    val grammar = grammars.find { it.name == grammarName } ?: throw LanguageProcessorException("Grammar with name $grammarName not found", null)
-                    val goalName = goal.substringAfter(".")
-                    processorFromGrammar(grammar, goalName, syntaxAnalyser, semanticAnalyser, formatter)
+            val (grammars, issues) = aglProc.process<List<Grammar>, Any>(grammarDefinitionStr, "grammarDefinition", AutomatonKind.LOOKAHEAD_1, null)
+            if (null != grammars) {
+                val goal = goalRuleName ?: grammars.last().rule.first { it.isSkip.not() }.name
+                return when {
+                    goal.contains(".") -> {
+                        val grammarName = goal.substringBefore(".")
+                        val grammar = grammars.find { it.name == grammarName } ?: throw LanguageProcessorException("Grammar with name $grammarName not found", null)
+                        val goalName = goal.substringAfter(".")
+                        processorFromGrammar(grammar, goalName, syntaxAnalyser, semanticAnalyser, formatter)
+                    }
+                    else -> processorFromGrammar(grammars.last(), goal, syntaxAnalyser, semanticAnalyser, formatter)
                 }
-                else -> processorFromGrammar(grammars.last(), goal, syntaxAnalyser, semanticAnalyser, formatter)
+            } else {
+                if (issues.isEmpty()) {
+                    throw LanguageProcessorException("Unable to parse grammarDefinitionStr - unknown reason", null)
+                } else {
+                    val issuesStr = issues.joinToString(separator = "\n") {
+                        "at line: ${it.location?.line} column: ${it.location?.column} expected one of: ${it.data}"
+                    }
+                    throw LanguageProcessorException("Unable to parse grammarDefinitionStr:\n $issuesStr", null)
+                }
             }
-        } catch (e: ParseFailedException) {
-            throw LanguageProcessorException("Unable to parse grammarDefinitionStr at line: ${e.location.line} column: ${e.location.column} expected one of: ${e.expected}", e)
+        } catch (e:Throwable) {
+            throw LanguageProcessorException("Unable to create processor for grammarDefinitionStr", e)
         }
     }
 

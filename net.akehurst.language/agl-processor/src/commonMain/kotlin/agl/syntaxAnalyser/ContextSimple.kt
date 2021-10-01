@@ -16,11 +16,8 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.api.analyser.AnalyserIssue
 import net.akehurst.language.api.asm.AsmElementSimple
-import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.ScopeSimple
-import net.akehurst.language.api.asm.children
 
 class ContextSimple(
     parentScope: ScopeSimple<AsmElementSimple>?=null,

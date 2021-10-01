@@ -2,8 +2,8 @@ package agl.semanticAnalyser
 
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.AnalyserIssue
-import net.akehurst.language.api.analyser.AnalyserIssueKind
+import net.akehurst.language.api.analyser.LanguageIssue
+import net.akehurst.language.api.analyser.LanguageIssueKind
 import kotlin.test.Test
 
 class test_SemanticAnalyser {
@@ -13,10 +13,10 @@ class test_SemanticAnalyser {
             TODO("not implemented")
         }
 
-        override fun analyse(asm: Any, locationMap: Map<*, InputLocation>?, arg: Any?): List<AnalyserIssue> {
+        override fun analyse(asm: Any, locationMap: Map<*, InputLocation>?, arg: Any?): List<LanguageIssue> {
             return when (asm) {
-                "error" -> listOf(AnalyserIssue(AnalyserIssueKind.ERROR, null,"error"))
-                "warning" -> listOf(AnalyserIssue(AnalyserIssueKind.WARNING, null,"error"))
+                "error" -> listOf(LanguageIssue(LanguageIssueKind.ERROR, null,"error"))
+                "warning" -> listOf(LanguageIssue(LanguageIssueKind.WARNING, null,"error"))
                 else -> throw RuntimeException("Test Error")
             }
         }

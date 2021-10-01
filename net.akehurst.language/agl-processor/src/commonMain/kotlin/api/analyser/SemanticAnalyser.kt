@@ -17,6 +17,7 @@
 package net.akehurst.language.api.analyser
 
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
 
 class SemanticAnalyserException(message: String, cause: Throwable?) : RuntimeException(message, cause)
 
@@ -29,6 +30,6 @@ interface SemanticAnalyser<in AsmType, in ContextType> {
 
     fun clear()
 
-    fun analyse(asm: AsmType, locationMap: Map<*,InputLocation>?=null, context:ContextType?=null): List<AnalyserIssue>
+    fun analyse(asm: AsmType, locationMap: Map<*,InputLocation>?=null, context:ContextType?=null): List<LanguageIssue>
 }
 

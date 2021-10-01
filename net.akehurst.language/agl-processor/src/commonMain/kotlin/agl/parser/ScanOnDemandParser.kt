@@ -29,6 +29,9 @@ import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.math.max
@@ -47,7 +50,7 @@ internal class ScanOnDemandParser(
         this.runtimeRuleSet.buildFor(goalRuleName, automatonKind)
     }
 
-    override fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): SharedPackedParseTree {
+    override fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): Pair<SharedPackedParseTree?, List<LanguageIssue>> {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
         val s0 = runtimeRuleSet.fetchStateSetFor(goalRule,automatonKind).startState
@@ -75,10 +78,13 @@ internal class ScanOnDemandParser(
 
         val match = rp.graph.longestMatch(seasons, maxNumHeads, false)
         return if (match != null) {
-            SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
+            val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
+            Pair(sppt, emptyList())
         } else {
             val nextExpected = this.findNextExpectedAfterError(rp, rp.graph, input) //this possibly modifies rp and hence may change the longestLastGrown
-            throwError(input, rp, nextExpected, seasons, maxNumHeads)
+            val issue = throwError(input, rp, nextExpected, seasons, maxNumHeads)
+            val sppt = rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
+            Pair(sppt, listOf(issue))
         }
     }
 
@@ -88,25 +94,20 @@ internal class ScanOnDemandParser(
         nextExpected: Pair<InputLocation, Set<RuntimeRule>>,
         seasons: Int,
         maxNumHeads: Int
-    ): SharedPackedParseTreeDefault {
+    ): LanguageIssue {
         val llg = rp.longestLastGrown
             ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0), emptySet(),"")
 
         val lastLocation = nextExpected.first
         val exp = nextExpected.second
-        //val expected = exp
-        //        .filter { it.number >= 0 && it.isEmptyRule.not() }
-        //        .map { this.runtimeRuleSet.firstTerminals[it.number] }
-        //        .flatMap { it.map { it.value } }
-        //        .toSet()
         val expected = exp.map { it.tag }.toSet()
         val errorPos = lastLocation.position + lastLocation.length
         val errorLength = 1 //TODO: determine a better length
         val location = input.locationFor(errorPos,errorLength)//InputLocation(errorPos, errorColumn, errorLine, errorLength)
 
-        //val expected = emptySet<String>()
-        // val location = nextExpected.first//InputLocation(0,0,0,0)
-        throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location, expected, rp.graph.input.contextInText(location.position))
+        val contextInText = rp.graph.input.contextInText(location.position)
+        return LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, location, "$contextInText", expected)
+        //throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location, expected, )
 
     }
 

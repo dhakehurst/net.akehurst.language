@@ -18,11 +18,12 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
-import net.akehurst.language.api.analyser.AnalyserIssue
-import net.akehurst.language.api.analyser.AnalyserIssueKind
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
@@ -41,8 +42,15 @@ class SyntaxAnalyserSimple(
 
     private var _asm: AsmSimple? = null
     private var _context: ContextSimple? = null // cached value, provided on call to transform
-    private val _issues = mutableListOf<AnalyserIssue>()
+    private val _issues = mutableListOf<LanguageIssue>()
     private val _scopes = mutableMapOf<AsmElementSimple, ScopeSimple<AsmElementSimple>>()
+
+    private var _referencesDefinition: String = ""
+    var referencesDefinition: String
+        get() = _referencesDefinition
+        set(value) {
+            TODO()
+        }
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
@@ -52,7 +60,7 @@ class SyntaxAnalyserSimple(
         _issues.clear()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, context: ContextSimple?): Pair<AsmSimple, List<AnalyserIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, context: ContextSimple?): Pair<AsmSimple, List<LanguageIssue>> {
         this._context = context
         _asm = AsmSimple()
         val value = this.createValue(sppt.root, context?.scope)
@@ -71,7 +79,7 @@ class SyntaxAnalyserSimple(
         }
         if (v is AsmElementSimple) {
             locationMap[v] = target.location
-            this.addToScope(scope,v)
+            this.addToScope(scope, v)
         }
         return v
     }
@@ -244,7 +252,7 @@ class SyntaxAnalyserSimple(
         }
     }
 
-    private fun resolveReferences(scope: ScopeSimple<AsmElementSimple>?): List<AnalyserIssue> {
+    private fun resolveReferences(scope: ScopeSimple<AsmElementSimple>?): List<LanguageIssue> {
         _asm!!.rootElements.forEach {
             resolveReferencesElement(it, scope)
         }
@@ -256,26 +264,40 @@ class SyntaxAnalyserSimple(
         el.properties.forEach {
             if (it.isReference) {
                 val v = it.value
-                if (null==v) {
+                if (null == v) {
                     //can't set reference, but no issue
                 } else if (v is AsmElementReference) {
                     val referred = elScope?.findOrNull(v.reference)
-                    if (null==referred) {
+                    if (null == referred) {
                         val location = locationMap[el] //TODO: should be property location
-                        this._issues.add(AnalyserIssue(AnalyserIssueKind.ERROR, location, "Cannot find '${v.reference}' as reference for '${el.typeName}.${it.name}'"))
+                        this._issues.add(
+                            LanguageIssue(
+                                LanguageIssueKind.ERROR,
+                                LanguageProcessorPhase.SYNTAX_ANALYSIS,
+                                location,
+                                "Cannot find '${v.reference}' as reference for '${el.typeName}.${it.name}'"
+                            )
+                        )
                     } else {
                         el.getPropertyAsReference(it.name)?.value = referred
                     }
                 } else {
                     val location = locationMap[el] //TODO: should be property location
-                    this._issues.add(AnalyserIssue(AnalyserIssueKind.ERROR, location, "Cannot resolve '${el.typeName}.${it.name}' is not defined as a reference"))
+                    this._issues.add(
+                        LanguageIssue(
+                            LanguageIssueKind.ERROR,
+                            LanguageProcessorPhase.SYNTAX_ANALYSIS,
+                            location,
+                            "Cannot resolve '${el.typeName}.${it.name}' is not defined as a reference"
+                        )
+                    )
                 }
             } else {
                 // no need to resolve
             }
         }
         el.children.forEach {
-            resolveReferencesElement(it,elScope)
+            resolveReferencesElement(it, elScope)
         }
     }
 

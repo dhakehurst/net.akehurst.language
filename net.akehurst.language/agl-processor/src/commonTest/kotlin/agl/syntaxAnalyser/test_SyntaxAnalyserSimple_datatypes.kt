@@ -17,8 +17,8 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.analyser.AnalyserIssue
-import net.akehurst.language.api.analyser.AnalyserIssueKind
+import net.akehurst.language.api.analyser.LanguageIssue
+import net.akehurst.language.api.analyser.LanguageIssueKind
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
@@ -147,7 +147,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
         val expItems = listOf(
-            AnalyserIssue(AnalyserIssueKind.ERROR, InputLocation(0, 1, 1, 1), "Type 'String' is not defined")
+            LanguageIssue(LanguageIssueKind.ERROR, InputLocation(0, 1, 1, 1), "Type 'String' is not defined")
         )
 
         assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
@@ -189,7 +189,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                 ))
             }
         }
-        val expItems = listOf<AnalyserIssue>(
+        val expItems = listOf<LanguageIssue>(
         )
 
         assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))

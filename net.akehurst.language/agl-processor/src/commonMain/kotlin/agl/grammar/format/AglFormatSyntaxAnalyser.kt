@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.agl.grammar.format
 
-import net.akehurst.language.api.analyser.AnalyserIssue
+import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.analyser.SyntaxAnalyser
@@ -27,7 +27,7 @@ internal class AglFormatSyntaxAnalyser : SyntaxAnalyser<Any,Any> {
         TODO("not implemented")
     }
 
-    override fun transform(sppt: SharedPackedParseTree, context: Any?): Pair<Any, List<AnalyserIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, context: Any?): Pair<Any, List<LanguageIssue>> {
         TODO("not implemented")
     }
 }

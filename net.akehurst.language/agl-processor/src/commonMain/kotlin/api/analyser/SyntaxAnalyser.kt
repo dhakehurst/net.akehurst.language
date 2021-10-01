@@ -17,6 +17,7 @@
 package net.akehurst.language.api.analyser
 
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 class SyntaxAnalyserException(message: String, cause: Throwable?) : RuntimeException(message, cause)
@@ -44,5 +45,5 @@ interface SyntaxAnalyser<out AsmType, in ContextType> { //TODO: make transform t
      * map the tree into an instance of the targetType
      *
      */
-    fun transform(sppt: SharedPackedParseTree, context: ContextType?): Pair<AsmType, List<AnalyserIssue>>
+    fun transform(sppt: SharedPackedParseTree, context: ContextType?): Pair<AsmType, List<LanguageIssue>>
 }

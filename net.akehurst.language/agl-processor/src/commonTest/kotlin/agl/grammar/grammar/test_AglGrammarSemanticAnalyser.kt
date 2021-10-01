@@ -19,8 +19,8 @@ package net.akehurst.language.agl.grammar.grammar
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.analyser.AnalyserIssue
-import net.akehurst.language.api.analyser.AnalyserIssueKind
+import net.akehurst.language.api.analyser.LanguageIssue
+import net.akehurst.language.api.analyser.LanguageIssueKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -42,7 +42,7 @@ class test_AglGrammarSemanticAnalyser {
         //val proc = Agl.processor(grammarStr)
         val (asm,actual) = aglProc.process<List<Grammar>,Any>(grammarStr)
         val expected = listOf(
-                AnalyserIssue(AnalyserIssueKind.ERROR, InputLocation(38, 9, 3, 2), "Rule 'b' not found in grammar 'Test'")
+                LanguageIssue(LanguageIssueKind.ERROR, InputLocation(38, 9, 3, 2), "Rule 'b' not found in grammar 'Test'")
         )
         assertEquals(expected, actual)
     }
@@ -61,7 +61,7 @@ class test_AglGrammarSemanticAnalyser {
         //val proc = Agl.processor(grammarStr)
         val (asm,actual) = aglProc.process<List<Grammar>,Any>(grammarStr)
         val expected = listOf(
-                AnalyserIssue(AnalyserIssueKind.ERROR, InputLocation(38, 9, 3, 2), "More than one rule named 'b' in grammar 'Test', have you remembered the 'override' modifier")
+                LanguageIssue(LanguageIssueKind.ERROR, InputLocation(38, 9, 3, 2), "More than one rule named 'b' in grammar 'Test', have you remembered the 'override' modifier")
         )
         assertEquals(expected, actual)
     }
@@ -79,8 +79,8 @@ class test_AglGrammarSemanticAnalyser {
         //val proc = Agl.processor(grammarStr)
         val (asm,actual) = aglProc.process<List<Grammar>,Any>(grammarStr)
         val expected = listOf(
-                AnalyserIssue(AnalyserIssueKind.WARNING, InputLocation(57, 10, 4, 4), "Ambiguity on [<EOT>] with b2"),
-                AnalyserIssue(AnalyserIssueKind.WARNING, InputLocation(72, 10, 5, 4), "Ambiguity on [<EOT>] with b1")
+                LanguageIssue(LanguageIssueKind.WARNING, InputLocation(57, 10, 4, 4), "Ambiguity on [<EOT>] with b2"),
+                LanguageIssue(LanguageIssueKind.WARNING, InputLocation(72, 10, 5, 4), "Ambiguity on [<EOT>] with b1")
         )
         actual.forEach {
             println(it)
