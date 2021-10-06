@@ -35,8 +35,8 @@ class test_AglGrammar_item {
 
     private val spptParser = SPPTParserDefault(converterToRuntimeRules.runtimeRuleSet)
 
-    private fun parse(goalRule: String, inputText: String): SharedPackedParseTree {
-        return parser.parseForGoal(goalRule, inputText, AutomatonKind.LOOKAHEAD_1)
+    private fun parse(goalRule: String, inputText: String): SharedPackedParseTree? {
+        return parser.parseForGoal(goalRule, inputText, AutomatonKind.LOOKAHEAD_1).first
     }
 
     private fun sppt(treeString: String): SharedPackedParseTree {

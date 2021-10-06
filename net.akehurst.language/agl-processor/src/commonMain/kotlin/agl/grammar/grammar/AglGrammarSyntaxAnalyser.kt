@@ -32,6 +32,7 @@ internal class AglGrammarSyntaxAnalyser(
 ) : SyntaxAnalyserAbstract<List<Grammar>, GrammarContext>() {
 
     var grammarLoader: GrammarLoader? = null
+    private val _issues = mutableListOf<LanguageIssue>()
 
     init {
         this.register("grammarDefinition", this::grammarDefinition as BranchHandler<Grammar>)
@@ -64,12 +65,12 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     override fun clear() {
-
+        _issues.clear()
     }
 
     override fun transform(sppt: SharedPackedParseTree,context:GrammarContext?): Pair<List<Grammar>,List<LanguageIssue>> {
         val grammars = this.transformBranch<List<Grammar>>(sppt.root.asBranch, "")
-        return Pair(grammars, emptyList()) //TODO
+        return Pair(grammars, _issues) //TODO
     }
 
     // grammarDefinition : namespace definitions ;

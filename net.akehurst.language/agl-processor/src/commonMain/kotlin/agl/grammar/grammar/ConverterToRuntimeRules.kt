@@ -296,7 +296,7 @@ internal class ConverterToRuntimeRules(
                 val (embeddedRuleSet, embeddedStartRule) = this.embedded(embeddedGrammar, target.referencedRule)
                 this.embeddedRule(target.name, false, embeddedRuleSet, embeddedStartRule)
             } else {
-                val r = this.grammar.findAllRule(refName)
+                val r = target.referencedRule //this.grammar.findAllRule(refName)
                 this.visitRule(r, arg)
             }
     }

@@ -17,8 +17,12 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -40,12 +44,15 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual,issues) = p.parse("a")
-        val expected = p.spptParser.parse("""
+        val (actual, issues) = p.parse("a")
+        val expected = p.spptParser.parse(
+            """
             a { 'a' }
-        """)
+        """
+        )
         assertEquals(expected.toStringAll, actual?.toStringAll)
         assertEquals(expected, actual)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -61,12 +68,15 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual,issues) = p.parse("");
-        val expected = p.spptParser.parse("""
+        val (actual, issues) = p.parse("");
+        val expected = p.spptParser.parse(
+            """
             a { §empty }
-        """)
+        """
+        )
         assertEquals(expected.toStringAll, actual?.toStringAll)
         assertEquals(expected, actual)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -82,12 +92,15 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual,issues) = p.parse("a");
-        val expected = p.spptParser.parse("""
+        val (actual, issues) = p.parse("a");
+        val expected = p.spptParser.parse(
+            """
             a { 'a' }
-        """)
+        """
+        )
         assertEquals(expected.toStringAll, actual?.toStringAll)
         assertEquals(expected, actual)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -103,12 +116,15 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual,issues) = p.parse("a");
-        val expected = p.spptParser.parse("""
+        val (actual, issues) = p.parse("a");
+        val expected = p.spptParser.parse(
+            """
             a { '' 'a' }
-        """)
+        """
+        )
         assertEquals(expected.toStringAll, actual?.toStringAll)
         assertEquals(expected, actual)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -124,15 +140,18 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual,issues) = p.parse("\\b");
-        val expected = p.spptParser.parse("""
+        val (actual, issues) = p.parse("\\b");
+        val expected = p.spptParser.parse(
+            """
              EscapeSequence {
                 '\\'
                 "[btnfr'\\]" : 'b'
              }
-        """)
+        """
+        )
         assertEquals(expected.toStringAll, actual?.toStringAll)
         assertEquals(expected, actual)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -148,14 +167,17 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual,issues) = p.parse("b");
-        val expected = p.spptParser.parse("""
+        val (actual, issues) = p.parse("b");
+        val expected = p.spptParser.parse(
+            """
              a {
                 "[a-c]":'b'
              }
-        """)
+        """
+        )
         assertEquals(expected.toStringAll, actual?.toStringAll)
         assertEquals(expected, actual)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -171,12 +193,15 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual,issues) = p.parse("a");
-        val expected = p.spptParser.parse("""
+        val (actual, issues) = p.parse("a");
+        val expected = p.spptParser.parse(
+            """
              a:'a'
-        """)
+        """
+        )
         assertEquals(expected.toStringAll, actual?.toStringAll)
         assertEquals(expected, actual)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -193,12 +218,15 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual,issues) = p.parse("ba");
-        val expected = p.spptParser.parse("""
+        val (actual, issues) = p.parse("ba");
+        val expected = p.spptParser.parse(
+            """
              b{ 'b' a : 'a' }
-        """)
+        """
+        )
         assertEquals(expected.toStringAll, actual?.toStringAll)
         assertEquals(expected, actual)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -214,12 +242,15 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual,issues) = p.parse("abc");
-        val expected = p.spptParser.parse("""
+        val (actual, issues) = p.parse("abc");
+        val expected = p.spptParser.parse(
+            """
              a { 'a' 'b' 'c' }
-        """)
+        """
+        )
         assertEquals(expected.toStringAll, actual?.toStringAll)
         assertEquals(expected, actual)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -235,12 +266,15 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual,issues) = p.parse("b");
-        val expected = p.spptParser.parse("""
+        val (actual, issues) = p.parse("b");
+        val expected = p.spptParser.parse(
+            """
              abc|1 { 'b' }
-        """)
+        """
+        )
         assertEquals(expected.toStringAll, actual?.toStringAll)
         assertEquals(expected, actual)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -256,12 +290,15 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual,issues) = p.parse("b");
-        val expected = p.spptParser.parse("""
+        val (actual, issues) = p.parse("b");
+        val expected = p.spptParser.parse(
+            """
              abc|1 { 'b' }
-        """)
+        """
+        )
         assertEquals(expected.toStringAll, actual?.toStringAll)
         assertEquals(expected, actual)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -284,12 +321,15 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual,issues) = p.parse("f");
-        val expected = p.spptParser.parse("""
+        val (actual, issues) = p.parse("f");
+        val expected = p.spptParser.parse(
+            """
              choice|5 { f { 'f' } }
-        """)
+        """
+        )
         assertEquals(expected.toStringAll, actual?.toStringAll)
         assertEquals(expected, actual)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -305,19 +345,25 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual1,issues1) = p.parse("");
-        val expected1 = p.spptParser.parse("""
+        val (actual1, issues1) = p.parse("");
+        val expected1 = p.spptParser.parse(
+            """
              a|1 { §empty }
-        """)
+        """
+        )
         assertEquals(expected1.toStringAll, actual1?.toStringAll)
         assertEquals(expected1, actual1)
+        assertEquals(emptyList(), issues1)
 
-        val (actual2,issues2) = p.parse("a");
-        val expected2 = p.spptParser.parse("""
+        val (actual2, issues2) = p.parse("a");
+        val expected2 = p.spptParser.parse(
+            """
              a { 'a' }
-        """)
+        """
+        )
         assertEquals(expected2.toStringAll, actual2?.toStringAll)
         assertEquals(expected2, actual2)
+        assertEquals(emptyList(), issues2)
     }
 
     @Test
@@ -333,26 +379,35 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val actual1 = p.parse("");
-        val expected1 = p.spptParser.parse("""
+        val (actual1, issues1) = p.parse("");
+        val expected1 = p.spptParser.parse(
+            """
              a|1 { §empty }
-        """)
+        """
+        )
         assertEquals(expected1.toStringAll, actual1?.toStringAll)
         assertEquals(expected1, actual1)
+        assertEquals(emptyList(), issues1)
 
-        val actual2 = p.parse("a");
-        val expected2 = p.spptParser.parse("""
+        val (actual2, issues2) = p.parse("a");
+        val expected2 = p.spptParser.parse(
+            """
              a { 'a' }
-        """)
+        """
+        )
         assertEquals(expected2.toStringAll, actual2?.toStringAll)
         assertEquals(expected2, actual2)
+        assertEquals(emptyList(), issues2)
 
-        val actual3 = p.parse("aaa");
-        val expected3 = p.spptParser.parse("""
+        val (actual3, issues3) = p.parse("aaa");
+        val expected3 = p.spptParser.parse(
+            """
              a { 'a' 'a' 'a' }
-        """)
-        assertEquals(expected3.toStringAll, actual3.toStringAll)
+        """
+        )
+        assertEquals(expected3.toStringAll, actual3?.toStringAll)
         assertEquals(expected3, actual3)
+        assertEquals(emptyList(), issues3)
     }
 
     @Test
@@ -368,23 +423,31 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        assertFailsWith<ParseFailedException> {
-            val actual1 = p.parse("")
-        }
+        val (actual1, issues1) = p.parse("")
+        assertEquals(null, actual1)
+        val expIssues1 = listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 0, 0, 0), "", null))
+        assertEquals(expIssues1, issues1)
 
-        val actual2 = p.parse("a");
-        val expected2 = p.spptParser.parse("""
+
+        val (actual2, issues2) = p.parse("a");
+        val expected2 = p.spptParser.parse(
+            """
              a { 'a' }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
+        """
+        )
+        assertEquals(expected2.toStringAll, actual2?.toStringAll)
         assertEquals(expected2, actual2)
+        assertEquals(emptyList(), issues2)
 
-        val actual3 = p.parse("aaa");
-        val expected3 = p.spptParser.parse("""
+        val (actual3, issues3) = p.parse("aaa");
+        val expected3 = p.spptParser.parse(
+            """
              a { 'a' 'a' 'a' }
-        """)
-        assertEquals(expected3.toStringAll, actual3.toStringAll)
+        """
+        )
+        assertEquals(expected3.toStringAll, actual3?.toStringAll)
         assertEquals(expected3, actual3)
+        assertEquals(emptyList(), issues3)
     }
 
     @Test
@@ -403,12 +466,15 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val actual1 = p.parse("abc");
-        val expected1 = p.spptParser.parse("""
+        val (actual1, issues1) = p.parse("abc");
+        val expected1 = p.spptParser.parse(
+            """
              S { a {'a'} b{'b'} c{'c'} }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
+        """
+        )
+        assertEquals(expected1.toStringAll, actual1?.toStringAll)
         assertEquals(expected1, actual1)
+        assertEquals(emptyList(), issues1)
     }
 
     @Test
@@ -425,19 +491,25 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val actual1 = p.parse("");
-        val expected1 = p.spptParser.parse("""
+        val (actual1, issues1) = p.parse("");
+        val expected1 = p.spptParser.parse(
+            """
              S|1 {  §empty }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
+        """
+        )
+        assertEquals(expected1.toStringAll, actual1?.toStringAll)
         assertEquals(expected1, actual1)
+        assertEquals(emptyList(), issues1)
 
-        val actual2 = p.parse("a");
-        val expected2 = p.spptParser.parse("""
+        val (actual2, issues2) = p.parse("a");
+        val expected2 = p.spptParser.parse(
+            """
              S { a{'a'} }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
+        """
+        )
+        assertEquals(expected2.toStringAll, actual2?.toStringAll)
         assertEquals(expected2, actual2)
+        assertEquals(emptyList(), issues2)
     }
 
     @Test
@@ -456,26 +528,35 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val (actual1,issues1) = p.parse("");
-        val expected1 = p.spptParser.parse("""
+        val (actual1, issues1) = p.parse("");
+        val expected1 = p.spptParser.parse(
+            """
              S|1 { §empty }
-        """)
+        """
+        )
         assertEquals(expected1.toStringAll, actual1?.toStringAll)
         assertEquals(expected1, actual1)
+        assertEquals(emptyList(), issues1)
 
-        val (actual2,issues2) = p.parse("a");
-        val expected2 = p.spptParser.parse("""
+        val (actual2, issues2) = p.parse("a");
+        val expected2 = p.spptParser.parse(
+            """
              S { a{'a'} }
-        """)
+        """
+        )
         assertEquals(expected2.toStringAll, actual2?.toStringAll)
         assertEquals(expected2, actual2)
+        assertEquals(emptyList(), issues2)
 
-        val (actual3,issues3) = p.parse("aaa");
-        val expected3 = p.spptParser.parse("""
+        val (actual3, issues3) = p.parse("aaa");
+        val expected3 = p.spptParser.parse(
+            """
              S { a{'a'} a{'a'} a{'a'} }
-        """)
+        """
+        )
         assertEquals(expected3.toStringAll, actual3?.toStringAll)
         assertEquals(expected3, actual3)
+        assertEquals(emptyList(), issues3)
     }
 
     @Test
@@ -492,23 +573,29 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        assertFailsWith<ParseFailedException> {
-            val actual1 = p.parse("")
-        }
+        val (actual1, issues1) = p.parse("")
+        assertEquals(null, actual1)
+        assertEquals(emptyList(), issues1)
 
-        val actual2 = p.parse("a");
-        val expected2 = p.spptParser.parse("""
+        val (actual2, issues2) = p.parse("a");
+        val expected2 = p.spptParser.parse(
+            """
              S {  a{'a'} }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
+        """
+        )
+        assertEquals(expected2.toStringAll, actual2?.toStringAll)
         assertEquals(expected2, actual2)
+        assertEquals(emptyList(), issues2)
 
-        val actual3 = p.parse("aaa");
-        val expected3 = p.spptParser.parse("""
+        val (actual3, issues3) = p.parse("aaa");
+        val expected3 = p.spptParser.parse(
+            """
              S {  a{'a'} a{'a'} a{'a'} }
-        """)
-        assertEquals(expected3.toStringAll, actual3.toStringAll)
+        """
+        )
+        assertEquals(expected3.toStringAll, actual3?.toStringAll)
         assertEquals(expected3, actual3)
+        assertEquals(emptyList(), issues3)
     }
 
     @Test
@@ -525,27 +612,33 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        assertFailsWith<ParseFailedException> {
-            val actual0 = p.parse("")
-        }
+        val (actual0, issues0) = p.parse("")
+        assertEquals(null, actual0)
+        assertEquals(emptyList(), issues0)
 
-        assertFailsWith<ParseFailedException> {
-            val actual1 = p.parse("a")
-        }
+        val (actual1, issues1) = p.parse("a")
+        assertEquals(null, actual1)
+        assertEquals(emptyList(), issues1)
 
-        val actual2 = p.parse("aa");
-        val expected2 = p.spptParser.parse("""
+        val (actual2, issues2) = p.parse("aa");
+        val expected2 = p.spptParser.parse(
+            """
              S { a{'a'} a{'a'} }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
+        """
+        )
+        assertEquals(expected2.toStringAll, actual2?.toStringAll)
         assertEquals(expected2, actual2)
+        assertEquals(emptyList(), issues2)
 
-        val actual4 = p.parse("aaaa");
-        val expected4 = p.spptParser.parse("""
+        val (actual4, issues4) = p.parse("aaaa");
+        val expected4 = p.spptParser.parse(
+            """
              S { a{'a'} a{'a'} a{'a'} a{'a'} }
-        """)
-        assertEquals(expected4.toStringAll, actual4.toStringAll)
+        """
+        )
+        assertEquals(expected4.toStringAll, actual4?.toStringAll)
         assertEquals(expected4, actual4)
+        assertEquals(emptyList(), issues4)
     }
 
     @Test
@@ -562,27 +655,33 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        assertFailsWith<ParseFailedException> {
-            val actual0 = p.parse("")
-        }
+        val (actual0, issues0) = p.parse("")
+        assertEquals(null, actual0)
+        assertEquals(emptyList(), issues0)
 
-        assertFailsWith<ParseFailedException> {
-            val actual1 = p.parse("a")
-        }
+        val (actual1, issues1) = p.parse("a")
+        assertEquals(null, actual1)
+        assertEquals(emptyList(), issues1)
 
-        val actual2 = p.parse("aa");
-        val expected2 = p.spptParser.parse("""
+        val (actual2, issues2) = p.parse("aa");
+        val expected2 = p.spptParser.parse(
+            """
              S { a{'a'} a{'a'} }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
+        """
+        )
+        assertEquals(expected2.toStringAll, actual2?.toStringAll)
         assertEquals(expected2, actual2)
+        assertEquals(emptyList(), issues2)
 
-        val actual5 = p.parse("aaaaa");
-        val expected5 = p.spptParser.parse("""
+        val (actual5, issues5) = p.parse("aaaaa");
+        val expected5 = p.spptParser.parse(
+            """
              S { a{'a'} a{'a'} a{'a'} a{'a'} a{'a'} }
-        """)
-        assertEquals(expected5.toStringAll, actual5.toStringAll)
+        """
+        )
+        assertEquals(expected5.toStringAll, actual5?.toStringAll)
         assertEquals(expected5, actual5)
+        assertEquals(emptyList(), issues5)
 
         assertFailsWith<ParseFailedException> {
             val actual6 = p.parse("aaaaaa")
@@ -603,23 +702,29 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val actual0 = p.parse("");
-        val expected0 = p.spptParser.parse("""
+        val (actual0, issues0) = p.parse("");
+        val expected0 = p.spptParser.parse(
+            """
              S|1 { §empty }
-        """)
-        assertEquals(expected0.toStringAll, actual0.toStringAll)
+        """
+        )
+        assertEquals(expected0.toStringAll, actual0?.toStringAll)
         assertEquals(expected0, actual0)
+        assertEquals(emptyList(), issues0)
 
-        val actual1 = p.parse("a");
-        val expected1 = p.spptParser.parse("""
+        val (actual1, issues1) = p.parse("a");
+        val expected1 = p.spptParser.parse(
+            """
              S { a{'a'} }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
+        """
+        )
+        assertEquals(expected1.toStringAll, actual1?.toStringAll)
         assertEquals(expected1, actual1)
+        assertEquals(emptyList(), issues1)
 
-        assertFailsWith<ParseFailedException> {
-            val actual2 = p.parse("aa")
-        }
+        val (actual2, issues2) = p.parse("aa")
+        assertEquals(null, actual2)
+        assertEquals(emptyList(), issues2)
     }
 
     @Test
@@ -636,26 +741,35 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val actual0 = p.parse("")
-        val expected0 = p.spptParser.parse("""
+        val (actual0, issues0) = p.parse("")
+        val expected0 = p.spptParser.parse(
+            """
              S|1 { §empty }
-        """)
-        assertEquals(expected0.toStringAll, actual0.toStringAll)
+        """
+        )
+        assertEquals(expected0.toStringAll, actual0?.toStringAll)
         assertEquals(expected0, actual0)
+        assertEquals(emptyList(), issues0)
 
-        val actual1 = p.parse("a")
-        val expected1 = p.spptParser.parse("""
+        val (actual1, issues1) = p.parse("a")
+        val expected1 = p.spptParser.parse(
+            """
              S { a{'a'} }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
+        """
+        )
+        assertEquals(expected1.toStringAll, actual1?.toStringAll)
         assertEquals(expected1, actual1)
+        assertEquals(emptyList(), issues1)
 
-        val actual3 = p.parse("a,a,a");
-        val expected3 = p.spptParser.parse("""
+        val (actual3, issues3) = p.parse("a,a,a");
+        val expected3 = p.spptParser.parse(
+            """
              S { a{'a'} ',' a{'a'} ',' a{'a'} }
-        """)
-        assertEquals(expected3.toStringAll, actual3.toStringAll)
+        """
+        )
+        assertEquals(expected3.toStringAll, actual3?.toStringAll)
         assertEquals(expected3, actual3)
+        assertEquals(emptyList(), issues3)
     }
 
     @Test
@@ -672,23 +786,29 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        assertFailsWith<ParseFailedException> {
-            val actual0 = p.parse("")
-        }
+        val (actual0, issues0) = p.parse("")
+        assertEquals(null, actual0)
+        assertEquals(emptyList(), issues0)
 
-        val actual1 = p.parse("a")
-        val expected1 = p.spptParser.parse("""
+        val (actual1, issues1) = p.parse("a")
+        val expected1 = p.spptParser.parse(
+            """
              S { a{'a'} }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
+        """
+        )
+        assertEquals(expected1.toStringAll, actual1?.toStringAll)
         assertEquals(expected1, actual1)
+        assertEquals(emptyList(), issues1)
 
-        val actual3 = p.parse("a,a,a");
-        val expected3 = p.spptParser.parse("""
+        val (actual3, issues3) = p.parse("a,a,a");
+        val expected3 = p.spptParser.parse(
+            """
              S { a{'a'} ',' a{'a'} ',' a{'a'} }
-        """)
-        assertEquals(expected3.toStringAll, actual3.toStringAll)
+        """
+        )
+        assertEquals(expected3.toStringAll, actual3?.toStringAll)
         assertEquals(expected3, actual3)
+        assertEquals(emptyList(), issues3)
     }
 
     @Test
@@ -705,27 +825,33 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        assertFailsWith<ParseFailedException> {
-            val actual0 = p.parse("")
-        }
+        val (actual0, issues0) = p.parse("")
+        assertEquals(null, actual0)
+        assertEquals(emptyList(), issues0)
 
-        assertFailsWith<ParseFailedException> {
-            val actual1 = p.parse("a")
-        }
+        val (actual1, issues1) = p.parse("a")
+        assertEquals(null, actual1)
+        assertEquals(emptyList(), issues1)
 
-        val actual2 = p.parse("a,a");
-        val expected2 = p.spptParser.parse("""
+        val (actual2, issues2) = p.parse("a,a");
+        val expected2 = p.spptParser.parse(
+            """
              S { a{'a'} ',' a{'a'}}
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
+        """
+        )
+        assertEquals(expected2.toStringAll, actual2?.toStringAll)
         assertEquals(expected2, actual2)
+        assertEquals(emptyList(), issues2)
 
-        val actual5 = p.parse("a,a,a,a,a");
-        val expected5 = p.spptParser.parse("""
+        val (actual5, issues5) = p.parse("a,a,a,a,a");
+        val expected5 = p.spptParser.parse(
+            """
              S { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} }
-        """)
-        assertEquals(expected5.toStringAll, actual5.toStringAll)
+        """
+        )
+        assertEquals(expected5.toStringAll, actual5?.toStringAll)
         assertEquals(expected5, actual5)
+        assertEquals(emptyList(), issues5)
     }
 
     @Test
@@ -742,31 +868,38 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        assertFailsWith<ParseFailedException> {
-            val actual0 = p.parse("")
-        }
 
-        assertFailsWith<ParseFailedException> {
-            val actual1 = p.parse("a")
-        }
+        val (actual0, issues0) = p.parse("")
+        assertEquals(null, actual0)
+        assertEquals(emptyList(), issues0)
 
-        val actual2 = p.parse("a,a");
-        val expected2 = p.spptParser.parse("""
+        val (actual1, issues1) = p.parse("a")
+        assertEquals(null, actual1)
+        assertEquals(emptyList(), issues1)
+
+        val (actual2, issues2) = p.parse("a,a");
+        val expected2 = p.spptParser.parse(
+            """
              S { a{'a'} ',' a{'a'}}
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
+        """
+        )
+        assertEquals(expected2.toStringAll, actual2?.toStringAll)
         assertEquals(expected2, actual2)
+        assertEquals(emptyList(), issues2)
 
-        val actual5 = p.parse("a,a,a,a,a");
-        val expected5 = p.spptParser.parse("""
+        val (actual5, issues5) = p.parse("a,a,a,a,a");
+        val expected5 = p.spptParser.parse(
+            """
              S { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} }
-        """)
-        assertEquals(expected5.toStringAll, actual5.toStringAll)
+        """
+        )
+        assertEquals(expected5.toStringAll, actual5?.toStringAll)
         assertEquals(expected5, actual5)
+        assertEquals(emptyList(), issues5)
 
-        assertFailsWith<ParseFailedException> {
-            val actual6 = p.parse("aaaaaa")
-        }
+        val (actual6, issues6) = p.parse("aaaaaa")
+        assertEquals(null, actual6)
+        assertEquals(emptyList(), issues6)
     }
 
     @Test
@@ -783,34 +916,38 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        assertFailsWith<ParseFailedException> {
-            p.parse("")
-        }
+        val (actual1, issues1) = p.parse("")
+        assertEquals(null,actual1)
+        assertEquals(emptyList(), issues1)
 
-        assertFailsWith<ParseFailedException> {
-            p.parse("a")
-        }
+        val (actual2, issues2) = p.parse("a")
+        assertEquals(null,actual2)
+        assertEquals(emptyList(), issues2)
 
-        assertFailsWith<ParseFailedException> {
-            p.parse("b")
-        }
+        val (actual3, issues3) = p.parse("b")
+        assertEquals(null,actual3)
+        assertEquals(emptyList(), issues3)
 
-        assertFailsWith<ParseFailedException> {
-            p.parse("c")
-        }
+        val (actual4, issues4) = p.parse("c")
+        assertEquals(null,actual4)
+        assertEquals(emptyList(), issues4)
 
-        val actual_ab = p.parse("ab");
-        val expected_ab = p.spptParser.parse("""
+        val (actual5, issues5) = p.parse("ab");
+        val expected5 = p.spptParser.parse(
+            """
             S {
                 'a'
                 §S§group1 { 'b' }
             }
-        """)
-        assertEquals(expected_ab.toStringAll, actual_ab.toStringAll)
-        assertEquals(expected_ab, actual_ab)
+        """
+        )
+        assertEquals(expected5.toStringAll, actual5?.toStringAll)
+        assertEquals(expected5, actual5)
+        assertEquals(emptyList(),issues5)
 
-        val actual_accc = p.parse("accc");
-        val expected_accc = p.spptParser.parse("""
+        val (actual6, issues6) = p.parse("accc");
+        val expected6 = p.spptParser.parse(
+            """
             S {
                 'a'
                 §S§group1|1 { §S§group1§multi1 {
@@ -819,9 +956,11 @@ class test_AglGrammar {
                     c : 'c'
                 } }
             }
-        """)
-        assertEquals(expected_accc.toStringAll, actual_accc.toStringAll)
-        assertEquals(expected_accc, actual_accc)
+        """
+        )
+        assertEquals(expected6.toStringAll, actual6?.toStringAll)
+        assertEquals(expected6, actual6)
+        assertEquals(emptyList(),issues6)
     }
 
     @Test
@@ -838,18 +977,26 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        assertFailsWith<ParseFailedException> { p.parse("") }
-        assertFailsWith<ParseFailedException> { p.parse("a") }
+        val (actual1,issues1) = p.parse("")
+        assertEquals(null,actual1)
+        assertEquals(emptyList(),issues1)
 
-        val actual_abbb = p.parse("abbb");
-        val expected_abbb = p.spptParser.parse("""
+        val (actual2,issues2) = p.parse("a")
+        assertEquals(null,actual2)
+        assertEquals(emptyList(),issues2)
+
+        val (actual3,issues3) = p.parse("abbb");
+        val expected3 = p.spptParser.parse(
+            """
             S {
                 'a'
                 §S§multi1 { b:'b' b:'b' b:'b' }
             }
-        """)
-        assertEquals(expected_abbb.toStringAll, actual_abbb.toStringAll)
-        assertEquals(expected_abbb, actual_abbb)
+        """
+        )
+        assertEquals(expected3.toStringAll, actual3?.toStringAll)
+        assertEquals(expected3, actual3)
+        assertEquals(emptyList(),issues3)
     }
 
     @Test
@@ -866,15 +1013,19 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr)
         assertNotNull(p)
 
-        val actual1 = p.parse("a");
-        val expected1 = p.spptParser.parse("""
+        val (actual1,issues1) = p.parse("a");
+        val expected1 = p.spptParser.parse(
+            """
              S { a{'a'} §S§multi1|1 { §empty } }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
+        """
+        )
+        assertEquals(expected1.toStringAll, actual1?.toStringAll)
         assertEquals(expected1, actual1)
+        assertEquals(emptyList(),issues1)
 
-        val actual2 = p.parse("abc");
-        val expected2 = p.spptParser.parse("""
+        val (actual2,issues2) = p.parse("abc");
+        val expected2 = p.spptParser.parse(
+            """
             S {
                 a { 'a' }
                 §S§multi1 { §S§multi1§choice1 {
@@ -882,9 +1033,11 @@ class test_AglGrammar {
                     c { 'c' }
                 } }
             }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
+        """
+        )
+        assertEquals(expected2.toStringAll, actual2?.toStringAll)
         assertEquals(expected2, actual2)
+        assertEquals(emptyList(),issues2)
     }
 
     @Test
@@ -952,6 +1105,6 @@ class test_AglGrammar {
         assertNotNull(p)
         //TODO: more checks
 
-        val (actual,items) = p.process<AsmSimple,Any>("aca")
+        val (actual, issues) = p.process<AsmSimple, Any>("aca")
     }
 }

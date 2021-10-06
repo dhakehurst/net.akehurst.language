@@ -28,8 +28,8 @@ import kotlin.test.assertNotNull
 
 internal class test_pattern {
 
-    private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
-        return sp.parseForGoal(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1)
+    private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree? {
+        return sp.parseForGoal(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1).first
     }
 
     // pattern

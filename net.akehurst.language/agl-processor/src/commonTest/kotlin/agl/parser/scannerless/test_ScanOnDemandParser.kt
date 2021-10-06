@@ -21,6 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 internal class test_ScanOnDemandParser {
@@ -51,9 +52,10 @@ internal class test_ScanOnDemandParser {
         val r1 = rrb.rule("a").concatenation(r0)
         val sp = ScanOnDemandParser(rrb.ruleSet())
 
-        val actual = sp.parseForGoal("a","a", AutomatonKind.LOOKAHEAD_1)
+        val (actual,issues) = sp.parseForGoal("a","a", AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
+        assertEquals(emptyList(),issues)
 
         println( actual.toStringAll )
     }

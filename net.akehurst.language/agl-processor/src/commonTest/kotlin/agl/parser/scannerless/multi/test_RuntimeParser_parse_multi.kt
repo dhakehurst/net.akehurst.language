@@ -45,8 +45,8 @@ internal class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract(
         val parser = ScanOnDemandParser(rrs)
     }
 
-    private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
-        return sp.parseForGoal(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1)
+    private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree? {
+        return sp.parseForGoal(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1).first
     }
 
     @Test
