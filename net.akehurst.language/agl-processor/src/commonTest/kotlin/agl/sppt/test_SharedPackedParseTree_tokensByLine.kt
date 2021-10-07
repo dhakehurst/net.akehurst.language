@@ -21,6 +21,7 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class test_SharedPackedParseTree_tokensByLine {
 
@@ -38,7 +39,9 @@ class test_SharedPackedParseTree_tokensByLine {
 
     @Test
     fun all_on_one_line() {
-        val sppt = processor.parse("aaa bbb ccc")
+        val (sppt,issues) = processor.parse("aaa bbb ccc")
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         val actual = sppt.tokensByLine(0)
 
         assertEquals("aaa", actual[0].matchedText)
@@ -55,11 +58,13 @@ class test_SharedPackedParseTree_tokensByLine {
 
     @Test
     fun separate_lines() {
-        val sppt = processor.parse("""
+        val (sppt,issues) = processor.parse("""
             aaa
             bbb
             ccc
         """.trimIndent())
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         val actual_1 = sppt.tokensByLine(0)
         val actual_2 = sppt.tokensByLine(1)
         val actual_3 = sppt.tokensByLine(2)
@@ -83,11 +88,13 @@ class test_SharedPackedParseTree_tokensByLine {
 
     @Test
     fun separate_lines_with_indent() {
-        val sppt = processor.parse("""
+        val (sppt,issues) = processor.parse("""
             aaa
               bbb
             ccc
         """.trimIndent())
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         val actual = sppt.tokensByLine(0)
 
         val actual_1 = sppt.tokensByLine(0)

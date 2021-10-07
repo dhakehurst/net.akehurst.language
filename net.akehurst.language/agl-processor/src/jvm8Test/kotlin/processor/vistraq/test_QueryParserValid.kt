@@ -24,6 +24,8 @@ import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 
 @RunWith(Parameterized::class)
@@ -79,9 +81,10 @@ class test_QueryParserValid(val data: Data) {
     @Test(timeout = 1000)
     fun test() {
         val queryStr = this.data.queryStr
-        val result = processor.parse(queryStr, "query")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt,issues) = processor.parse(queryStr, "query")
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 

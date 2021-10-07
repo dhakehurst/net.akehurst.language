@@ -18,6 +18,8 @@ package net.akehurst.language.parser.scanondemand.leftRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.scanondemand.choicePriority.test_OperatorPrecedence2
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
@@ -26,6 +28,21 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
     // S  = P | 'a' ;
     // P  = S | P1 ;  // S*
     // P1 = P S ;    // S*; try right recursive also
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY){
+                ref("P")
+                literal("a")
+            }
+            choice("P",RuntimeRuleChoiceKind.LONGEST_PRIORITY){
+                ref("S")
+                ref("P1")
+            }
+            concatenation("P1") { ref("P"); ref("S") }
+        }
+        val goal = "S"
+    }
+
     private fun S(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r_a = b.literal("a")
@@ -40,22 +57,18 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
     @Test
     fun a() {
         TODO("does not terminate")
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a"
 
         val expected = """
             S { 'a' }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     //@Test
     fun aa() {
         TODO("does not terminate!")
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "aa"
 
         val expected = """
@@ -65,7 +78,7 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
 }

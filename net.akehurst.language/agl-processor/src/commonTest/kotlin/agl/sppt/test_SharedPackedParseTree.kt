@@ -19,6 +19,7 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 
 class test_SharedPackedParseTree {
@@ -37,8 +38,10 @@ class test_SharedPackedParseTree {
             }
         """.trimIndent())
 
-        val sut = proc.parse("a".trimIndent())
+        val (sut,issues) = proc.parse("a".trimIndent())
 
+        assertNotNull(sut)
+        assertEquals(emptyList(),issues)
         val actual = sut.tokensByLine(0)
 
         assertEquals("a", actual[0].matchedText)
@@ -58,11 +61,13 @@ class test_SharedPackedParseTree {
             }
         """.trimIndent())
 
-        val sut = proc.parse("""
+        val (sut,issues) = proc.parse("""
             a + b
             + c
         """.trimIndent())
 
+        assertNotNull(sut)
+        assertEquals(emptyList(),issues)
         val actual = listOf(
                 sut.tokensByLine(0),
                 sut.tokensByLine(1)
@@ -87,11 +92,13 @@ class test_SharedPackedParseTree {
             }
         """.trimIndent())
 
-        val sut = proc.parse("""
+        val (sut,issues) = proc.parse("""
             a + b
               + c
         """.trimIndent())
 
+        assertNotNull(sut)
+        assertEquals(emptyList(),issues)
         val actual = listOf(
                 sut.tokensByLine(0),
                 sut.tokensByLine(1)
@@ -130,8 +137,10 @@ class XXX {
 }
         """
         val text2 = text.trimStart()
-        val sut = proc.parse(text2)
+        val (sut,issues) = proc.parse(text2)
 
+        assertNotNull(sut)
+        assertEquals(emptyList(),issues)
         val actual = listOf(
                 sut.tokensByLine(0),
                 sut.tokensByLine(1),

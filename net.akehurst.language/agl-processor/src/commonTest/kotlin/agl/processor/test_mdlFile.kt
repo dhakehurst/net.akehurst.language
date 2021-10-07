@@ -70,7 +70,7 @@ grammar Mdl {
 
     @Test
     fun literal_BOOLEAN() {
-        val actual = processor.parse("on", "literal")
+        val (actual,issues) = processor.parse("on", "literal")
 
         val expected = processor.spptParser.parse(
             """
@@ -78,36 +78,42 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_INTEGER() {
-        val actual = processor.parse("1", "literal")
+        val (actual,issues) = processor.parse("1", "literal")
         val expected = processor.spptParser.parse(
             """
             literal|1 { INTEGER : '1' }
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_REAL_1() {
-        val actual = processor.parse("3.14", "literal")
+        val (actual,issues) = processor.parse("3.14", "literal")
         val expected = processor.spptParser.parse(
             """
             literal|2 { REAL : '3.14' }
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_REAL_2() {
-        val actual = processor.parse(".14", "literal")
+        val (actual,issues) = processor.parse(".14", "literal")
 
         val expected = processor.spptParser.parse(
             """
@@ -115,12 +121,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_REAL_3() {
-        val actual = processor.parse("3.14e-05", "literal")
+        val (actual,issues) = processor.parse("3.14e-05", "literal")
 
         val expected = processor.spptParser.parse(
             """
@@ -128,12 +136,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_REAL_4() {
-        val actual = processor.parse("3.0e5", "literal")
+        val (actual,issues) = processor.parse("3.0e5", "literal")
 
         val expected = processor.spptParser.parse(
             """
@@ -141,12 +151,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_REAL_5() {
-        val actual = processor.parse(".3e5", "literal")
+        val (actual,issues) = processor.parse(".3e5", "literal")
 
         val expected = processor.spptParser.parse(
             """
@@ -154,12 +166,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun literal_REAL_6() {
-        val actual = processor.parse("1e-05", "literal")
+        val (actual,issues) = processor.parse("1e-05", "literal")
 
         val expected = processor.spptParser.parse(
             """
@@ -167,12 +181,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun stringList_1() {
-        val actual = processor.parse("\"hello\"", "stringList")
+        val (actual,issues) = processor.parse("\"hello\"", "stringList")
 
         val expected = processor.spptParser.parse(
             """
@@ -180,12 +196,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun stringList_2() {
-        val actual = processor.parse("\"hello\" \"world\"", "stringList")
+        val (actual,issues) = processor.parse("\"hello\" \"world\"", "stringList")
 
         val expected = processor.spptParser.parse(
             """
@@ -196,12 +214,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun stringList_3() {
-        val actual = processor.parse("\"aa\" \"bb\" \"cc\"", "stringList")
+        val (actual,issues) = processor.parse("\"aa\" \"bb\" \"cc\"", "stringList")
 
         val expected = processor.spptParser.parse(
             """
@@ -213,12 +233,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun value_stringList_1() {
-        val actual = processor.parse("\"hello\"", "value")
+        val (actual,issues) = processor.parse("\"hello\"", "value")
 
         val expected = processor.spptParser.parse(
             """
@@ -226,12 +248,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun value_stringList_2() {
-        val actual = processor.parse("\"hello\" \"world\"", "value")
+        val (actual,issues) = processor.parse("\"hello\" \"world\"", "value")
 
         val expected = processor.spptParser.parse(
             """
@@ -242,12 +266,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun value_stringList_3() {
-        val actual = processor.parse("\"aa\" \"bb\" \"cc\"", "value")
+        val (actual,issues) = processor.parse("\"aa\" \"bb\" \"cc\"", "value")
 
         val expected = processor.spptParser.parse(
             """
@@ -259,12 +285,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun array() {
-        val actual = processor.parse("[ on, 1, 3.14, \"hello\" ]", "matrix")
+        val (actual,issues) = processor.parse("[ on, 1, 3.14, \"hello\" ]", "matrix")
 
         val expected = processor.spptParser.parse(
             """
@@ -284,12 +312,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun array1() {
-        val actual = processor.parse("[ 1.0,2.0,3.0 ]", "matrix")
+        val (actual,issues) = processor.parse("[ 1.0,2.0,3.0 ]", "matrix")
 
         val expected = processor.spptParser.parse(
             """
@@ -307,12 +337,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun array2() {
-        val actual = processor.parse("[ 1.0, 2.0 ]", "matrix")
+        val (actual,issues) = processor.parse("[ 1.0, 2.0 ]", "matrix")
 
         val expected = processor.spptParser.parse(
             """
@@ -328,12 +360,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun row1() {
-        val actual = processor.parse("1.1,2.2", "row")
+        val (actual,issues) = processor.parse("1.1,2.2", "row")
 
         val expected = processor.spptParser.parse(
             """
@@ -345,12 +379,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun matrix() {
-        val actual = processor.parse("[ 0,1; 2,3 ]", "matrix")
+        val (actual,issues) = processor.parse("[ 0,1; 2,3 ]", "matrix")
 
         val expected = processor.spptParser.parse(
             """
@@ -374,6 +410,8 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
@@ -388,7 +426,7 @@ grammar Mdl {
 			}
         """.trimIndent()
 
-        val actual = processor.parse(text, "section")
+        val (actual,issues) = processor.parse(text, "section")
 
         val expected = processor.spptParser.parse(
             """
@@ -410,6 +448,8 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
@@ -425,7 +465,7 @@ grammar Mdl {
 		}
         """.trimIndent()
 
-        val actual = processor.parse(text, "section")
+        val (actual,issues) = processor.parse(text, "section")
 
         val expected = processor.spptParser.parse(
             """
@@ -452,12 +492,14 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals(expected.toStringAll, actual.toStringAll)
     }
 
     @Test
     fun misc() {
-        val actual = processor.parse(
+        val (actual,issues) = processor.parse(
             """
             Block {
                 DecimalParam   1.5
@@ -491,6 +533,8 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         //FIXME: fails because priorities should create BOOLEAN rather than IDENTIFIER - but doesn't
         assertEquals(expected.toStringAll, actual.toStringAll)
 
@@ -498,7 +542,7 @@ grammar Mdl {
 
     @Test
     fun misc2() {
-        val actual = processor.parse(
+        val (actual,issues) = processor.parse(
             """
             Object {
                   PropName		      "WindowsInfo"
@@ -511,6 +555,7 @@ grammar Mdl {
         )
 
         assertNotNull(actual)
+        assertEquals(emptyList(),issues)
         assertEquals("section", actual.root.name)
         //TODO
     }

@@ -15,100 +15,113 @@
  */
 package net.akehurst.language.agl.processor.vistraq
 
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import org.junit.Assert
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 import kotlin.test.fail
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
 
 class test_VistraqQuery_Singles {
 
-    companion object {
+    private companion object {
 
         private val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl")?.readText() ?: error("File not found")
         var processor: LanguageProcessor = tgqlprocessor()
 
-        fun tgqlprocessor() : LanguageProcessor {
+        fun tgqlprocessor(): LanguageProcessor {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
             return Agl.processorFromString(grammarStr)//.buildFor("query") //TODO: use build
-         }
+        }
 
     }
 
     @Test
     fun NULL() {
-        processor.parse( "null","NULL")
+        val (sppt, issues) = processor.parse("null", "NULL")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
     fun REAL_0() {
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            processor.parse( "0","REAL",)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val (sppt, issues) = processor.parse("0", "REAL")
+        assertNotNull(sppt)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"")
+        ), issues)
     }
 
     @Test
     fun REAL_p0() {
-        val e = assertFailsWith(ParseFailedException::class) {
-            processor.parse( ".0","REAL")
-        }
+        val (sppt, issues) = processor.parse(".0", "REAL")
+        assertNotNull(sppt)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"")
+        ), issues)
 
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
     }
 
     @Test
     fun REAL_0p0() {
-        processor.parse( "0.0","REAL",)
+        val (sppt, issues) = processor.parse("0.0", "REAL")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
     fun REAL_3p14() {
-        processor.parse( "3.14","REAL",)
+        val (sppt, issues) = processor.parse("3.14", "REAL")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
     fun expression_1() {
         val queryStr = "1"
-        val result = processor.parse(queryStr,"expression")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(queryStr, resultStr)
+        val (sppt, issues) = processor.parse(queryStr, "expression")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
+        assertEquals(queryStr, resultStr)
     }
 
     @Test
     fun literalValue_0p1() {
         val queryStr = "0.1"
-        val result = processor.parse(queryStr,"literalValue")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(queryStr, resultStr)
+        val (sppt, issues) = processor.parse(queryStr, "literalValue")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
+        assertEquals(queryStr, resultStr)
     }
 
     @Test
     fun expression_0p1() {
         val queryStr = "0.1"
-        val result = processor.parse(queryStr,"expression")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt, issues) = processor.parse(queryStr, "expression")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 
     @Test
     fun nodeSelector_NOT_A() {
         val queryStr = "NOT A"
-        val result = processor.parse(queryStr,"nodeSelector")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt, issues) = processor.parse(queryStr, "nodeSelector")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 
@@ -116,18 +129,20 @@ class test_VistraqQuery_Singles {
     @Test
     fun pathExpression_NOT_A() {
         val queryStr = "NOT A"
-        val result = processor.parse(queryStr,"pathExpression")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt, issues) = processor.parse(queryStr, "pathExpression")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 
     @Test
     fun pathQuery_MATCH_NOT_A() {
         val queryStr = "MATCH NOT A"
-        val result = processor.parse(queryStr,"pathQuery")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt, issues) = processor.parse(queryStr, "pathQuery")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 
@@ -135,40 +150,44 @@ class test_VistraqQuery_Singles {
     fun expression_literalValue_true() {
         val queryStr = "true"
 
-        val result = processor.parse(queryStr,"expression")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt, issues) = processor.parse(queryStr, "expression")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 
-    @Test(timeout=5000)
+    @Test(timeout = 5000)
     fun expression_long_3() {
         val queryStr = "a.p AND b.p AND c.p AND d.p"
 
-        val result = processor.parse(queryStr,"expression")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt, issues) = processor.parse(queryStr, "expression")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
-        println(result.toStringAllWithIndent("  "))
+        println(sppt.toStringAllWithIndent("  "))
     }
 
-    @Test(timeout=5000)
+    @Test(timeout = 5000)
     fun expression_long_5() {
         val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p"
 
-        val result = processor.parse(queryStr,"expression")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt, issues) = processor.parse(queryStr, "expression")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 
-    @Test(timeout=5000)
+    @Test(timeout = 5000)
     fun expression_long_11() {
         val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p AND g.p AND h.p AND i.p AND j.p AND k.p AND l.p"
 
-        val result = processor.parse(queryStr,"expression")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt, issues) = processor.parse(queryStr, "expression")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 
@@ -177,9 +196,10 @@ class test_VistraqQuery_Singles {
     fun whereClause_expression_literalValue_true() {
         val queryStr = "WHERE true"
 
-        val result = processor.parse(queryStr,"whereClause")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt, issues) = processor.parse(queryStr, "whereClause")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 
@@ -187,10 +207,10 @@ class test_VistraqQuery_Singles {
     fun pathQuery1() {
         val queryStr = "MATCH Milestone WHERE true"
 
-        val result = processor.parse(queryStr,"pathQuery")
-
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt, issues) = processor.parse(queryStr, "pathQuery")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 
@@ -198,9 +218,10 @@ class test_VistraqQuery_Singles {
     fun singleQuery1() {
         val queryStr = "MATCH Milestone RETURN 1"
 
-        val result = processor.parse(queryStr,"singleQuery")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt, issues) = processor.parse(queryStr, "singleQuery")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 
@@ -210,9 +231,10 @@ class test_VistraqQuery_Singles {
    MATCH Milestone WHERE true RETURN 1
         """.trimIndent()
 
-        val result = processor.parse(queryStr,"singleQuery")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt, issues) = processor.parse(queryStr, "singleQuery")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 
@@ -229,9 +251,10 @@ class test_VistraqQuery_Singles {
              COLUMN Y CONTAINING Name WHERE Name=='Y'
         """.trimIndent()
 
-        val result = processor.parse(queryStr,"query")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt, issues) = processor.parse(queryStr, "query")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 
@@ -241,10 +264,11 @@ class test_VistraqQuery_Singles {
    MATCH A WHERE a == b AND a == b AND true RETURN TABLE COLUMN a CONTAINING a
         """.trimIndent()
 
-        val result = processor.parse(queryStr,"query")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(queryStr, resultStr)
+        val (sppt, issues) = processor.parse(queryStr, "query")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
+        assertEquals(queryStr, resultStr)
     }
 
     @ExperimentalTime
@@ -284,14 +308,15 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
         try {
             println("parse")
             val v = measureTimedValue {
-                processor.parse(queryStr,"query")
+                processor.parse(queryStr, "query")
             }
             println(v.duration)
-            val result = v.value
-            Assert.assertNotNull(result)
-            val resultStr = result.asString
-            Assert.assertEquals(queryStr, resultStr)
-        } catch (e:ParseFailedException) {
+            val (sppt, issues) = v.value
+            assertNotNull(sppt)
+            assertEquals(emptyList(), issues)
+            val resultStr = sppt.asString
+            assertEquals(queryStr, resultStr)
+        } catch (e: ParseFailedException) {
             fail("${e.message}, at ${e.location}, expected ${e.expected}")
         }
     }

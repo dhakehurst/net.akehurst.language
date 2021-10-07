@@ -17,6 +17,7 @@
 package net.akehurst.language.parser.scanondemand.whitespace
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
@@ -25,31 +26,28 @@ internal class test_multi_a_WS : test_ScanOnDemandParserAbstract() {
     // skip WS = "\s+" ;
     // S = a* ;
     // a = 'a' ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_WS = b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
-        val r_a = b.rule("a").concatenation(b.literal("a"))
-        b.rule("S").multi(0,-1,r_a)
-        return b
+    private companion object {
+        val rrs = runtimeRuleSet {
+            skip("WS") { pattern("\\s+") }
+            multi("S",3,5,"a")
+            concatenation("a") { literal("a") }
+        }
+        val goal = "S"
     }
 
     @Test
     fun a() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a"
 
         val expected = """
             S { a { 'a' } }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun WSa() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = " a"
 
         val expected = """
@@ -59,13 +57,11 @@ internal class test_multi_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun aaa() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "aaa"
 
         val expected = """
@@ -76,13 +72,11 @@ internal class test_multi_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun aWSaWSa() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a a a"
 
         val expected = """
@@ -93,13 +87,11 @@ internal class test_multi_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun WSaWSaWSa() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = " a a a"
 
         val expected = """
@@ -111,13 +103,11 @@ internal class test_multi_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun aWSaWSaWS() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a a a "
 
         val expected = """
@@ -128,13 +118,11 @@ internal class test_multi_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun WSaWSaWSaWS() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = " a a a "
 
         val expected = """
@@ -146,8 +134,9 @@ internal class test_multi_a_WS : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected) //works
-        super.test(rrb, goal, sentence, expected) //fails ?
+        super.test(rrs, goal, sentence, 1, expected)
+        //super.testStringResult(rrb, goal, sentence, expected) //works
+        //super.test(rrb, goal, sentence, expected) //fails ?
     }
 
 }

@@ -27,6 +27,8 @@ import org.junit.runners.Parameterized.Parameters
 
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 
 @RunWith(Parameterized::class)
@@ -79,10 +81,11 @@ class test_SQLValid(val data:Data) {
     @Test(timeout=1000)
     fun test() {
         val queryStr = this.data.queryStr
-        val result = processor.parse(queryStr,"terminated-statement")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(queryStr, resultStr)
+        val (sppt,issues) = processor.parse(queryStr,"terminated-statement")
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = sppt.asString
+        assertEquals(queryStr, resultStr)
     }
 
 

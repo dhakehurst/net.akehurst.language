@@ -41,13 +41,15 @@ internal class test_InputLocation_singleLine {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val (actual,issues) = sp.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 3), actual.root.location)
         assertEquals(InputLocation(0, 1, 1, 1), actual.root.asBranch.children[0].location)
         assertEquals(InputLocation(1, 2, 1, 1), actual.root.asBranch.children[1].location)
         assertEquals(InputLocation(2, 3, 1, 1), actual.root.asBranch.children[2].location)
+
+        assertEquals(emptyList(),issues)
     }
 
 }
@@ -70,20 +72,22 @@ class test_InputLocation_multiLine {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val (actual,issues) = sp.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 3), actual.root.location)
         assertEquals(InputLocation(0, 1, 1, 1), actual.root.asBranch.children[0].location)
         assertEquals(InputLocation(1, 2, 1, 1), actual.root.asBranch.children[1].location)
         assertEquals(InputLocation(2, 3, 1, 1), actual.root.asBranch.children[2].location)
+
+        assertEquals(emptyList(),issues)
     }
 
     @Test
     fun a_b_c() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parseForGoal("S", "a b c", AutomatonKind.LOOKAHEAD_1)
+        val (actual,issues) = sp.parseForGoal("S", "a b c", AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 5), actual.root.location)
@@ -92,6 +96,8 @@ class test_InputLocation_multiLine {
         assertEquals(InputLocation(2, 3, 1, 1), actual.root.asBranch.children[2].location)
         assertEquals(InputLocation(3, 4, 1, 1), actual.root.asBranch.children[3].location)
         assertEquals(InputLocation(4, 5, 1, 1), actual.root.asBranch.children[4].location)
+
+        assertEquals(emptyList(),issues)
     }
 
 
@@ -99,7 +105,7 @@ class test_InputLocation_multiLine {
     fun aNLbNLc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parseForGoal("S", """
+        val (actual,issues) = sp.parseForGoal("S", """
             a
             b
             c
@@ -117,6 +123,8 @@ class test_InputLocation_multiLine {
         assertEquals(InputLocation(3, 2, 2, 1), actual.root.asBranch.children[3].location)
         assertEquals("c", actual.root.asBranch.children[4].matchedText)
         assertEquals(InputLocation(4, 1, 3, 1), actual.root.asBranch.children[4].location)
+
+        assertEquals(emptyList(),issues)
     }
 }
 
@@ -138,20 +146,22 @@ class test_InputLocation_multiLine2 {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parseForGoal("S", "aaabbbccc", AutomatonKind.LOOKAHEAD_1)
+        val (actual,issues) = sp.parseForGoal("S", "aaabbbccc", AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 9), actual.root.location)
         assertEquals(InputLocation(0, 1, 1, 3), actual.root.asBranch.children[0].location)
         assertEquals(InputLocation(3, 4, 1, 3), actual.root.asBranch.children[1].location)
         assertEquals(InputLocation(6, 7, 1, 3), actual.root.asBranch.children[2].location)
+
+        assertEquals(emptyList(),issues)
     }
 
     @Test
     fun a_b_c() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parseForGoal("S", "aaa bbb ccc", AutomatonKind.LOOKAHEAD_1)
+        val (actual,issues) = sp.parseForGoal("S", "aaa bbb ccc", AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 11), actual.root.location)
@@ -160,13 +170,15 @@ class test_InputLocation_multiLine2 {
         assertEquals(InputLocation(4, 5, 1, 3), actual.root.asBranch.children[2].location)
         assertEquals(InputLocation(7, 8, 1, 1), actual.root.asBranch.children[3].location)
         assertEquals(InputLocation(8, 9, 1, 3), actual.root.asBranch.children[4].location)
+
+        assertEquals(emptyList(),issues)
     }
 
     @Test
     fun aNLbNLc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parseForGoal("S", """
+        val (actual,issues) = sp.parseForGoal("S", """
             aaa
             bbb
             ccc
@@ -184,6 +196,8 @@ class test_InputLocation_multiLine2 {
         assertEquals(InputLocation(7, 4, 2, 1), actual.root.asBranch.children[3].location)
         assertEquals("ccc", actual.root.asBranch.children[4].matchedText)
         assertEquals(InputLocation(8, 1, 3, 3), actual.root.asBranch.children[4].location)
+
+        assertEquals(emptyList(),issues)
     }
 
     @Test
@@ -195,7 +209,7 @@ class test_InputLocation_multiLine2 {
             bbb
             ccc
         """.trimIndent()
-        val actual = sp.parseForGoal("S", sentence, AutomatonKind.LOOKAHEAD_1)
+        val (actual,issues) = sp.parseForGoal("S", sentence, AutomatonKind.LOOKAHEAD_1)
 
         assertNotNull(actual)
         assertEquals(InputLocation(0, 1, 1, 12), actual.root.location)
@@ -211,13 +225,15 @@ class test_InputLocation_multiLine2 {
         assertEquals(InputLocation(8, 4, 3, 1), actual.root.asBranch.children[4].location)
         assertEquals("ccc", actual.root.asBranch.children[5].matchedText)
         assertEquals(InputLocation(9, 1, 4, 3), actual.root.asBranch.children[5].location)
+
+        assertEquals(emptyList(),issues)
     }
 
     @Test
     fun aNLbSPSPNLc() {
         val sp = ScanOnDemandParser(S)
 
-        val actual = sp.parseForGoal("S", """
+        val (actual,issues) = sp.parseForGoal("S", """
             aaa
               bbb
             ccc
@@ -235,5 +251,7 @@ class test_InputLocation_multiLine2 {
         assertEquals(InputLocation(9, 6, 2, 1), actual.root.asBranch.children[3].location)
         assertEquals("ccc", actual.root.asBranch.children[4].matchedText)
         assertEquals(InputLocation(10, 1, 3, 3), actual.root.asBranch.children[4].location)
+
+        assertEquals(emptyList(),issues)
     }
 }

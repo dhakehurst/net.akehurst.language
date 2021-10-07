@@ -37,9 +37,10 @@ class test_StatechartTools_Singles {
     fun ConditionalExpression_integer() {
         val goal = "Expression"
         val sentence = "integer"
-        val result = processor.parse(sentence,goal)
-        assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt,issues) = processor.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = sppt.asString
         assertEquals(sentence, resultStr)
     }
 
@@ -47,9 +48,10 @@ class test_StatechartTools_Singles {
     fun ConditionalExpression_97() {
         val goal = "Expression"
         val sentence = "97"
-        val result = processor.parse(sentence,goal)
-        assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt,issues) = processor.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = sppt.asString
         assertEquals(sentence, resultStr)
     }
 
@@ -57,9 +59,10 @@ class test_StatechartTools_Singles {
     fun AssignmentExpression_integer_AS_97() {
         val goal = "Expression"
         val sentence = "integer = 97"
-        val result = processor.parse(sentence,goal)
-        assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt,issues) = processor.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = sppt.asString
         assertEquals(sentence, resultStr)
     }
 
@@ -67,9 +70,10 @@ class test_StatechartTools_Singles {
     fun ScopeDeclaration_integer_AS_97() {
         val goal = "ScopeDeclaration"
         val sentence = "var MyVar : integer = 97"
-        val result = processor.parse(sentence,goal)
-        assertNotNull(result)
-        val resultStr = result.asString
+        val (sppt,issues) = processor.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = sppt.asString
         assertEquals(sentence, resultStr)
     }
 

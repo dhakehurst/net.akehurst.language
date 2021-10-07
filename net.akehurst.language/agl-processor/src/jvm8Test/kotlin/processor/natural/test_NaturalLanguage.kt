@@ -15,26 +15,20 @@
  */
 package net.akehurst.language.agl.processor.natural
 
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.ArrayList
-
+import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.ParseFailedException
-import java.lang.RuntimeException
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.fail
 
 
 @RunWith(Parameterized::class)
-class test_NaturalLanguage(val data:Data) {
+class test_NaturalLanguage(val data: Data) {
 
     companion object {
 
@@ -43,17 +37,17 @@ class test_NaturalLanguage(val data:Data) {
 
         var sourceFiles = arrayOf("/natural/english-sentences-valid.txt")
 
-        fun processor() : LanguageProcessor {
+        fun processor(): LanguageProcessor {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
             return Agl.processorFromString(grammarStr)
-         }
+        }
 
         @JvmStatic
         @Parameters(name = "{0}")
         fun data(): Collection<Array<Any>> {
             val col = ArrayList<Array<Any>>()
             for (sourceFile in sourceFiles) {
-               // val inps = ClassLoader.getSystemClassLoader().getResourceAsStream(sourceFile)
+                // val inps = ClassLoader.getSystemClassLoader().getResourceAsStream(sourceFile)
                 val inps = this::class.java.getResourceAsStream(sourceFile)
 
                 val br = BufferedReader(InputStreamReader(inps))
@@ -78,7 +72,7 @@ class test_NaturalLanguage(val data:Data) {
         }
     }
 
-    class Data(val sourceFile: String, val goal:String, val sentence: String) {
+    class Data(val sourceFile: String, val goal: String, val sentence: String) {
 
         // --- Object ---
         override fun toString(): String {
@@ -88,22 +82,20 @@ class test_NaturalLanguage(val data:Data) {
 
     @Test
     fun test() {
-        try {
-            val scan = processor.scan(this.data.sentence)
-            scan.forEach { l ->
-                if(l.name=="undefined") {
-                    throw RuntimeException("Found unknown words '${l.matchedText}', at ${l.location}")
-                }
+
+        val scan = processor.scan(this.data.sentence)
+        scan.forEach { l ->
+            if (l.name == "undefined") {
+                throw RuntimeException("Found unknown words '${l.matchedText}', at ${l.location}")
             }
-            val result = processor.parse(this.data.sentence, this.data.goal)
-            assertNotNull(result)
-            val resultStr = result.asString
-            assertEquals(this.data.sentence, resultStr)
-        } catch (e:ParseFailedException) {
-            println("${e.message} at ${e.location}")
-            println("expecting one of: ${e.expected}")
-            fail(e.message)
         }
+        val (sppt, issues) = processor.parse(this.data.sentence, this.data.goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+
+        val resultStr = sppt.asString
+        assertEquals(this.data.sentence, resultStr)
+
     }
 
 }

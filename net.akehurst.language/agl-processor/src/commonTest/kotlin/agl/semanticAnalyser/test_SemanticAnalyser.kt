@@ -2,8 +2,10 @@ package agl.semanticAnalyser
 
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.LanguageIssue
-import net.akehurst.language.api.analyser.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+
 import kotlin.test.Test
 
 class test_SemanticAnalyser {
@@ -15,8 +17,8 @@ class test_SemanticAnalyser {
 
         override fun analyse(asm: Any, locationMap: Map<*, InputLocation>?, arg: Any?): List<LanguageIssue> {
             return when (asm) {
-                "error" -> listOf(LanguageIssue(LanguageIssueKind.ERROR, null,"error"))
-                "warning" -> listOf(LanguageIssue(LanguageIssueKind.WARNING, null,"error"))
+                "error" -> listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE,null,"error"))
+                "warning" -> listOf(LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.PARSE,null,"error"))
                 else -> throw RuntimeException("Test Error")
             }
         }

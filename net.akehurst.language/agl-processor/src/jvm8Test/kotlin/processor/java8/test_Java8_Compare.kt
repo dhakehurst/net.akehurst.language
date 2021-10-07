@@ -130,19 +130,13 @@ class test_Java8_Compare(val data: Data) {
     }
 
     private fun testParse(proc: LanguageProcessor, toUpper: Boolean = false) {
-        try {
             val queryStr = this.data.sentence
             val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
-            val tree = proc.parse(queryStr,grammarRule)
-            assertNotNull(tree)
-            val resultStr = clean(tree.asString)
+            val (sppt,issues) = proc.parse(queryStr,grammarRule)
+            assertNotNull(sppt)
+            assertEquals(emptyList(),issues)
+            val resultStr = clean(sppt.asString)
             assertEquals(queryStr, resultStr)
-        } catch (ex: ParseFailedException) {
-            println(this.data)
-            println(ex.message)
-            println(ex.longestMatch?.asString)
-            throw ex
-        }
     }
 
     @Test(timeout = 5000)

@@ -29,6 +29,8 @@ import org.junit.runners.Parameterized.Parameters
 
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 
 @RunWith(Parameterized::class)
@@ -69,10 +71,11 @@ class test_Xml(val data:Data) {
 
     @Test
     fun test() {
-        val result = processor.parse(this.data.text,"file")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(this.data.text, resultStr)
+        val (sppt,issues) = processor.parse(this.data.text,"file")
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = sppt.asString
+        assertEquals(this.data.text, resultStr)
     }
 
 }

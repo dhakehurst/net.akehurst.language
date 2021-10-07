@@ -15,18 +15,18 @@
  */
 package net.akehurst.language.agl.processor.dot
 
-import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
-import kotlin.test.fail
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class test_Dot_Singles {
 
-    companion object {
+    private companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl")?.readText() ?: error("File not found")
         var processor: LanguageProcessor = Agl.processorFromString(grammarStr)
@@ -40,7 +40,9 @@ class test_Dot_Singles {
           // a comment
           graph { }
         """.trimIndent()
-        processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -50,7 +52,9 @@ class test_Dot_Singles {
           /* a comment */
           graph { }
         """.trimIndent()
-        processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -60,8 +64,10 @@ class test_Dot_Singles {
         val sentence = """
         < <xml >xxxx</xml> >
         """.trimIndent()
-        val actual = processor.parse(sentence,goal)
-        println(actual.toStringAll)
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        println(sppt.toStringAll)
         /*
         TODO: PARSING EMBEDDED GRAMMAR SPPTs
         val expected = SPPTParserDefault(((processor as LanguageProcessorDefault).parser as ScanOnDemandParser).runtimeRuleSet).addTree("""
@@ -104,7 +110,9 @@ class test_Dot_Singles {
         label = "<f0> 0x10ba8| <f1>"
         shape = "record"
         """
-        processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -114,7 +122,9 @@ class test_Dot_Singles {
         label = "<f0> 0x10ba8| <f1>"
         shape = "record"
         ]"""
-        processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -123,7 +133,9 @@ class test_Dot_Singles {
         val sentence = """
             edge [ ]
         """.trimIndent()
-        processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -140,7 +152,9 @@ class test_Dot_Singles {
             edge [
             ];
         """.trimIndent()
-        processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -163,7 +177,9 @@ class test_Dot_Singles {
             ];
             }
         """.trimIndent()
-        processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
 
     }
 
@@ -171,14 +187,18 @@ class test_Dot_Singles {
     fun stmt_list__1() {
         val goal = "stmt_list"
         val sentence = "graph[a=a ]; node [b=b c=c]; edge[];"
-        processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
     fun attr_list__2s() {
         val goal = "attr_list"
         val sentence = "[x = x; y=y]"
-        processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
 
     }
 
@@ -186,7 +206,9 @@ class test_Dot_Singles {
     fun attr_list__2n() {
         val goal = "attr_list"
         val sentence = "[x = x y=y]"
-        processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
 
     }
 
@@ -196,11 +218,9 @@ class test_Dot_Singles {
         val sentence = """
             "001"
         """.trimIndent()
-        try {
-            processor.parse(sentence,goal)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -209,11 +229,10 @@ class test_Dot_Singles {
         val sentence = """
             [shape=box     , regular=1,style=filled,fillcolor=white   ]
         """.trimIndent()
-        try {
-            processor.parse(sentence,goal)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -222,11 +241,11 @@ class test_Dot_Singles {
         val sentence = """
             "001" [shape=box     , regular=1,style=filled,fillcolor=white   ]
         """.trimIndent()
-        try {
-            processor.parse(sentence,goal)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+
     }
 
     @Test
@@ -238,18 +257,19 @@ class test_Dot_Singles {
         val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
 
         //fails at season 9 with edge_list
-        parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
+        val (sppt, issues) = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
     fun stmt_list1() {
         val goal = "stmt_list"
         val sentence = "a -> b ;"
-        try {
-            processor.parse(sentence,goal)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -261,11 +281,10 @@ class test_Dot_Singles {
             "027" -> "marr0017" [dir=none,weight=1] ;
             "marr0017" -> "028" [dir=none, weight=2] ;
         """.trimIndent()
-        try {
-            processor.parse(sentence,goal)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -371,11 +390,10 @@ class test_Dot_Singles {
             "027" -> "marr0017" [dir=none,weight=1] ;
             "marr0017" -> "028" [dir=none, weight=2] ;
         """.trimIndent()
-        try {
-            processor.parse(sentence,goal)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -492,7 +510,9 @@ class test_Dot_Singles {
             "marr0017" -> "028" [dir=none, weight=2] ;
             }
             """.trimIndent()
-        processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -501,11 +521,10 @@ class test_Dot_Singles {
         val sentence = """
             ""
         """.trimIndent()
-        try {
-            processor.parse(sentence,goal)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -514,11 +533,10 @@ class test_Dot_Singles {
         val sentence = """
             node[style=filled,label=""]
         """.trimIndent()
-        try {
-            processor.parse(sentence,goal)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -626,10 +644,9 @@ digraph G {
 	}
 }
         """.trimIndent()
-        try {
-            processor.parse(sentence,goal)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val (sppt, issues) = processor.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
     }
 }

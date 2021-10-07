@@ -25,6 +25,8 @@ import org.junit.runners.Parameterized.Parameters
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 
 @RunWith(Parameterized::class)
@@ -72,10 +74,11 @@ class test_StatechartTools(val data: Data) {
 
     @Test
     fun test() {
-        val result = processor.parse(this.data.text, this.data.ruleName)
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(this.data.text, resultStr)
+        val (sppt,issues) = processor.parse(this.data.text, this.data.ruleName)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = sppt.asString
+        assertEquals(this.data.text, resultStr)
     }
 
 }

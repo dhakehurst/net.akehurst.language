@@ -15,23 +15,17 @@
  */
 package net.akehurst.language.agl.processor.dot
 
-//import com.soywiz.korio.async.runBlockingNoSuspensions
-//import com.soywiz.korio.file.std.resourcesVfs
-//import java.io.BufferedReader
-//import java.io.InputStreamReader
-import java.util.ArrayList
 
-import org.junit.Assert
-import org.junit.Test
+import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.sql.test_SQLValid
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 
 @RunWith(Parameterized::class)
@@ -82,10 +76,11 @@ class test_AnsiC(val data:Data) {
 
     @Test
     fun test() {
-        val result = processor.parse( this.data.text,"expression")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(this.data.text, resultStr)
+        val (sppt,issues) = processor.parse( this.data.text,"expression")
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = sppt.asString
+        assertEquals(this.data.text, resultStr)
     }
 
 }

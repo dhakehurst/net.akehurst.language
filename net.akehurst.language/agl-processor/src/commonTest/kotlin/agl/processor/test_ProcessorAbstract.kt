@@ -24,14 +24,16 @@ import kotlin.test.assertEquals
 abstract class test_ProcessorAbstract {
 
     fun test(processor:LanguageProcessor, goal:String, sentence:String, vararg expectedTrees:String) {
-        val actual = processor.parse(sentence,goal)
+        val (actual,issues) = processor.parse(sentence,goal)
 
         val converter = ConverterToRuntimeRules(processor.grammar)
         val sppt = SPPTParserDefault(converter.runtimeRuleSet)
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
 
-        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(expected.toStringAll, actual?.toStringAll)
+        assertEquals(expected, actual)
+        assertEquals(emptyList(),issues)
     }
 
 }

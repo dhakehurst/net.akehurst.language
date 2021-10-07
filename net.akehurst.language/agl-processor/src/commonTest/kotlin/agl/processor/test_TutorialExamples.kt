@@ -42,9 +42,10 @@ class test_TutorialExamples {
         """.trimIndent()
         val processor = Agl.processorFromString(grammarStr)
 
-        val sppt = processor.parse("int")
-        val actual = sppt.toStringAll.trim()
+        val (sppt,issues) = processor.parse("int")
         assertNotNull(sppt)
+        val actual = sppt.toStringAll.trim()
+        assertEquals(emptyList(),issues)
 
         val expected = "typeReference|1 { userDefinedType { NAME : 'int' } }"
 
@@ -64,9 +65,10 @@ class test_TutorialExamples {
         """.trimIndent()
         val processor = Agl.processorFromString(grammarStr)
 
-        val sppt = processor.parse("xxx")
-        val actual = sppt.toStringAll.trim()
+        val (sppt,issues) = processor.parse("xxx")
         assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val actual = sppt.toStringAll.trim()
 
         val expected = """
                 typeReference { userDefinedType { NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xxx' } } }
@@ -88,9 +90,10 @@ class test_TutorialExamples {
         """.trimIndent()
         val processor = Agl.processorFromString(grammarStr)
 
-        val sppt = processor.parse("boolean")
-        val actual = sppt.toStringAll.trim()
+        val (sppt,issues) = processor.parse("boolean")
         assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val actual = sppt.toStringAll.trim()
 
         val expected = """
                 typeReference|1 { builtInType|1 { 'boolean' } }
@@ -112,9 +115,10 @@ class test_TutorialExamples {
         """.trimIndent()
         val processor = Agl.processorFromString(grammarStr)
 
-        val sppt = processor.parse("int")
-        val actual = sppt.toStringAll.trim()
+        val (sppt,issues) = processor.parse("int")
         assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val actual = sppt.toStringAll.trim()
 
         val expected = """
                 typeReference|1 { builtInType { 'int' } }

@@ -17,14 +17,15 @@ package net.akehurst.language.agl.processor.dot
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
-import org.junit.Assert
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 @RunWith(Parameterized::class)
 class test_Dot(val data: Data) {
@@ -60,10 +61,11 @@ class test_Dot(val data: Data) {
 
     @Test
     fun test() {
-        val result = processor.parse(this.data.text,"graph")
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(this.data.text, resultStr)
+        val (sppt,issues) = processor.parse(this.data.text,"graph")
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = sppt.asString
+        assertEquals(this.data.text, resultStr)
     }
 
 }

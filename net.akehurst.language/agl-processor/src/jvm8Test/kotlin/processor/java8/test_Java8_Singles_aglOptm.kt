@@ -48,7 +48,9 @@ class test_Java8_Singles_aglOptm {
         val sentence = "0"
         val goal = "Literal"
 
-        val t = proc.parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
     }
 
     @Test
@@ -59,9 +61,10 @@ class test_Java8_Singles_aglOptm {
         val p = Agl.processorFromString(grammarStr, goal)
 
         val sentence = "int"
-        val t = p.buildFor(goal).parse(sentence,goal)//TODO: use build
-
-        assertEquals(1, t.maxNumHeads)
+        val (sppt,issues) = p.buildFor(goal).parse(sentence,goal)//TODO: use build
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        assertEquals(1, sppt.maxNumHeads)
     }
 
     @Test
@@ -87,9 +90,11 @@ class test_Java8_Singles_aglOptm {
 
         val sentence = "int"
         //val t = p.buildFor(goal).parse(goal, sentence)//TODO: use build
-        val t = p.parse(sentence,goal)//TODO: use build
+        val (sppt,issues) = p.parse(sentence,goal)//TODO: use build
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
 
-        assertEqualsWarning(1, t.maxNumHeads)
+        assertEqualsWarning(1, sppt.maxNumHeads)
     }
 
     @Test
@@ -98,21 +103,27 @@ class test_Java8_Singles_aglOptm {
         val sentence = "import x; @An() interface An {  }"
         val goal = "CompilationUnit"
 
-        val t = proc.parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
     }
 
     @Test
     fun arrayIndex() {
         val sentence = "a[0]"
         val goal = "Expression"
-        val t = proc.parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
     }
 
     @Test
     fun t() {
         val sentence = "a[0].b"
         val goal = "Expression"
-        val t = proc.parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
     }
 
     @Test
@@ -120,30 +131,38 @@ class test_Java8_Singles_aglOptm {
         val sentence = "int valid = 0b0;"
         val goal = "FieldDeclaration"
         //proc.parse(goal, sentence)
-        proc.buildFor(goal).parse(sentence,goal)
+        val (sppt,issues) = proc.buildFor(goal).parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
     }
 
     @Test
     fun TypeDeclaration_FieldDeclaration() {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "TypeDeclaration"
-        proc.buildFor(goal).parse(sentence,goal)
+        val (sppt,issues) = proc.buildFor(goal).parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
     }
 
     @Test
     fun CompilationUnit_FieldDeclaration() {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "CompilationUnit"
-        proc.parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
     }
 
     @Test
     fun bad_Binary_Literal() {
         val sentence = "0b012"
         val goal = "VariableInitializer"
-        assertFailsWith(ParseFailedException::class) {
-            proc.parse(sentence,goal)
-        }
+
+            val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+
     }
 
     @Test
@@ -169,7 +188,9 @@ public class BadBinaryLiterals {
 }
             """.trimIndent()
         val goal = "CompilationUnit"
-        proc.parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
 
     }
 
@@ -177,32 +198,38 @@ public class BadBinaryLiterals {
     fun UnannQualifiedTypeReference1() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "BlockStatement"
-        val t = proc.parse(sentence,goal)
-        assertNotNull(t)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
     }
 
     @Test
     fun UnannQualifiedTypeReference2() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "BlockStatement"
-        val t = proc.parse(sentence,goal)
-        assertNotNull(t)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
     }
 
     @Test
     fun UnannQualifiedTypeReference() {
         val sentence = "{ Map.@An Entry<Object,Object> x; }"
         val goal = "Block"
-        val t = proc.parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
     }
 
     @Test
     fun Enum() {
         val sentence = "enum E { A, B, C }"
         val goal = "ClassDeclaration"
-        val t = proc.parse(sentence,goal)
-        val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val actual = sppt.toStringAll
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -210,9 +237,11 @@ public class BadBinaryLiterals {
     fun xx() {
         val sentence = "interface An { An[] value(); }"
         val goal = "CompilationUnit"
-        val t = proc.parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -220,9 +249,11 @@ public class BadBinaryLiterals {
     fun class_with_constructor() {
         val sentence = "class B {  B() {  } }"
         val goal = "CompilationUnit"
-        val t = proc.parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -230,8 +261,10 @@ public class BadBinaryLiterals {
     fun FormalParameterList_FormalParameter() {
         val sentence = "A a"
         val goal = "FormalParameterList"
-        val t = proc.parse(sentence,goal)
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -239,8 +272,10 @@ public class BadBinaryLiterals {
     fun FormalParameterList_ReceiverParameter() {
         val sentence = "A this"
         val goal = "FormalParameterList"
-        val t = proc.parse(sentence,goal)
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -248,8 +283,10 @@ public class BadBinaryLiterals {
     fun FormalParameterList_VarargsParameter() {
         val sentence = "A... this"
         val goal = "FormalParameterList"
-        val t = proc.parse(sentence,goal)
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -257,8 +294,10 @@ public class BadBinaryLiterals {
     fun FormalParameterList_2() {
         val sentence = "A a, B b"
         val goal = "FormalParameterList"
-        val t = proc.parse(sentence,goal)
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -266,9 +305,11 @@ public class BadBinaryLiterals {
     fun FormalParameterList_3() {
         val sentence = "A a, B b, C c"
         val goal = "FormalParameterList"
-        val t = proc.parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -276,9 +317,11 @@ public class BadBinaryLiterals {
     fun ConstructorDeclaration() {
         val sentence = "B() {  }"
         val goal = "ConstructorDeclaration"
-        val t = proc.parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -286,9 +329,11 @@ public class BadBinaryLiterals {
     fun ConstructorDeclarator() {
         val sentence = "B()"
         val goal = "ConstructorDeclarator"
-        val t = proc.parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -296,9 +341,11 @@ public class BadBinaryLiterals {
     fun ConstructorBody() {
         val sentence = "{  }"
         val goal = "ConstructorBody"
-        val t = proc.parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -349,10 +396,11 @@ public class BadBinaryLiterals {
         """.trimIndent()
         val goal = "Block"
 
-        val t = proc.parse(sentence,goal)
-
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -459,10 +507,11 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         """.trimIndent()
         val goal = "CompilationUnit"
 
-        val t = proc.parse(sentence,goal)
-
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -474,10 +523,11 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         """.trimIndent()
         val goal = "Navigations"
 
-        val t = proc.parse(sentence,goal)
-
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -489,10 +539,11 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         """.trimIndent()
         val goal = "MethodInvocation"
 
-        val t = proc.parse(sentence,goal)
-
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -504,10 +555,11 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         """.trimIndent()
         val goal = "Navigations"
 
-        val t = proc.parse(sentence,goal)
-
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
     @Test
@@ -518,10 +570,11 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         """.trimIndent()
         val goal = "Navigations"
 
-        val t = proc.parse(sentence,goal)
-
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -533,10 +586,11 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         """.trimIndent()
         val goal = "NavigableExpression"
 
-        val t = proc.parse(sentence,goal)
-
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -548,10 +602,11 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         """.trimIndent()
         val goal = "NavigableExpression"
 
-        val t = proc.parse(sentence,goal)
-
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -563,10 +618,11 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         """.trimIndent()
         val goal = "GenericMethodInvocation"
 
-        val t = proc.parse(sentence,goal)
-
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
 }

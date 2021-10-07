@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.api.analyser.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.test.Test
 
