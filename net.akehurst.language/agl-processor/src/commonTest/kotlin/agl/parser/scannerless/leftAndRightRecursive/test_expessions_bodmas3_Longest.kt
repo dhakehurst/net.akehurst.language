@@ -18,6 +18,7 @@ package net.akehurst.language.parser.scanondemand.leftAndRightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
@@ -27,36 +28,40 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
     // E = var | I | '(' E ')'
     // I = [E / '+']2+ ;
     // var = "[a-z]+"
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_var = b.rule("var").concatenation(b.pattern("[a-z]+"))
-        val r_I = b.rule("I").build()
-        val r_op = b.rule("op").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,b.literal("/"), b.literal("*"), b.literal("+"), b.literal("-"))
-        val r_par = b.rule("par").build()
-        val r_E = b.rule("E").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r_var, r_I, r_par)
-        b.rule(r_par).concatenation(b.literal("("), r_E, b.literal(")"))
-        b.rule(r_I).sList(2, -1, r_op, r_E)
-        val r_S = b.rule("S").concatenation(r_E)
-        return b
+    private companion object {
+        val rrs = runtimeRuleSet {
+            concatenation("S") { ref("E") }
+            choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("var")
+                ref("I")
+                ref("par")
+            }
+            sList("I",2,-1,"E","op")
+            choice("op", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+                literal("/")
+                literal("*")
+                literal("+")
+                literal("-")
+            }
+            concatenation("par") { literal("("); ref("E"); literal(")") }
+            concatenation("var") { pattern("[a-z]+") }
+        }
+        val goal = "S"
     }
 
     @Test
     fun a() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a"
 
         val expected = """
             S { E { var { "[a-z]+":'a' } } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1,expected)
     }
 
     @Test
     fun vav() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "v+v"
 
         val expected = """
@@ -67,13 +72,11 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
             } } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1,expected)
     }
 
     @Test
     fun vavav() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "v+v+v"
 
         //think this should be excluded because of priority I < 'a'
@@ -87,14 +90,12 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
             } } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected1)
+        super.test(rrs, goal, sentence, 1,expected1)
     }
 
 
     @Test
     fun vavavav() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "v+v+v+v"
 
         val expected = """
@@ -109,14 +110,11 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
             } } }
         """.trimIndent()
 
-
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1,expected)
     }
 
     @Test
     fun vavavavav() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "v+v+v+v+v"
 
         val expected = """
@@ -133,14 +131,11 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
             } } }
         """.trimIndent()
 
-
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1,expected)
     }
 
     @Test
     fun vdvmvavsv() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "v/v*v+v-v"
 
         val expected = """
@@ -157,6 +152,6 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
             } } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1,expected)
     }
 }
