@@ -27,7 +27,7 @@ import net.akehurst.language.api.processor.LanguageProcessorPhase
 
 
 internal class AglGrammarSemanticAnalyser(
-) : SemanticAnalyser<List<Grammar>, Any> {
+) : SemanticAnalyser<List<Grammar>, GrammarContext> {
 
     private val items = mutableListOf<LanguageIssue>()
     private var _locationMap: Map<*, InputLocation>? = null
@@ -37,7 +37,7 @@ internal class AglGrammarSemanticAnalyser(
         _locationMap = null
     }
 
-    override fun analyse(asm: List<Grammar>, locationMap: Map<*, InputLocation>?, arg: Any?): List<LanguageIssue> {
+    override fun analyse(asm: List<Grammar>, locationMap: Map<*, InputLocation>?, context: GrammarContext?): List<LanguageIssue> {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
         return when (asm) {
             is List<*> -> checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?

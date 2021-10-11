@@ -40,7 +40,6 @@ class test_AglGrammarSemanticAnalyser {
                 a = b ;
             }
         """.trimIndent()
-        //val proc = Agl.processor(grammarStr)
         val (asm,actual) = aglProc.process<List<Grammar>,Any>(grammarStr)
         val expected = listOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,InputLocation(38, 9, 3, 2), "Rule 'b' not found in grammar 'Test'")
