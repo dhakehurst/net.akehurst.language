@@ -80,6 +80,7 @@ internal class LanguageProcessorDefault(
 
     override fun <AsmType : Any,ContextType : Any> syntaxAnalysis(sppt: SharedPackedParseTree,context: ContextType?): Triple<AsmType?,List<LanguageIssue>,Map<*,InputLocation>> {
         val sa:SyntaxAnalyser<AsmType,ContextType> = (this.syntaxAnalyser ?: SyntaxAnalyserSimple()) as SyntaxAnalyser<AsmType, ContextType>
+        sa.clear()
         val (asm: AsmType, issues) = sa.transform(sppt,context)
         return Triple(asm,issues, sa.locationMap)
     }

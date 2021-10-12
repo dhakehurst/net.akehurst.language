@@ -16,6 +16,10 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.agl.grammar.scopes.Identifiable
+import net.akehurst.language.agl.agl.grammar.scopes.ReferenceDefinition
+import net.akehurst.language.agl.agl.grammar.scopes.Scope
+import net.akehurst.language.agl.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -50,26 +54,23 @@ class test_SyntaxAnalyserSimple_datatypes {
             
             }
         """.trimIndent()
+        val scopeModel = ScopeModel().also {
+            it.scopes.add(Scope("unit").also {
+                it.identifiables.add(Identifiable("primitive", "ID"))
+                it.identifiables.add(Identifiable("datatype", "ID"))
+            })
+            it.references.add(ReferenceDefinition("typeReference","type",listOf("primitive","datatype")))
+        }
         val processor = Agl.processorFromString(
             grammarStr,
             "unit",
-            syntaxAnalyser = SyntaxAnalyserSimple(
-                scopeDefinition = mapOf(
-                    "unit" to mapOf(
-                        "primitive" to "ID",
-                        "datatype" to "ID"
-                    )
-                ),
-                references = mapOf(
-                    Pair("typeReference", "type") to ""
-                )
-            )
+            syntaxAnalyser = SyntaxAnalyserSimple(scopeModel)
         )
     }
 
 
     @Test
-    fun dt1() {
+    fun datatype_with_no_properties() {
         val sentence = """
             datatype A { }
         """.trimIndent()
@@ -93,7 +94,7 @@ class test_SyntaxAnalyserSimple_datatypes {
     }
 
     @Test
-    fun dt2() {
+    fun two_datatypes_with_no_properties() {
         val sentence = """
             datatype A { }
             datatype B { }
@@ -122,7 +123,7 @@ class test_SyntaxAnalyserSimple_datatypes {
     }
 
     @Test
-    fun prop1_undefined() {
+    fun datatype_with_property_whos_type_is_undefined() {
         val sentence = """
             datatype A {
                 a : String
@@ -154,7 +155,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
         val expItems = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(0, 1, 1, 1), "Type 'String' is not defined")
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(21, 9, 2, 7), "Cannot find 'String' as reference for 'typeReference.type'")
         )
 
         assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
@@ -162,7 +163,7 @@ class test_SyntaxAnalyserSimple_datatypes {
     }
 
     @Test
-    fun prop1_defined() {
+    fun datatype_with_property_whos_type_is_defined() {
         val sentence = """
             primitive String
             datatype A {
@@ -177,7 +178,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertNotNull(actual)
         assertEquals(emptyList(),issues)
 
-        val expected = asmSimple {
+        val expected = asmSimple(scopeModel, ContextSimple(null,"unit")) {
             root("unit") {
                 property("declaration", listOf(
                     element("primitive") {

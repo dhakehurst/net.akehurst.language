@@ -21,20 +21,28 @@ class ScopeSimple<E>(
     val forTypeName:String
 ) {
 
-    private val _children = mutableListOf<ScopeSimple<E>>()
-    val children:List<ScopeSimple<E>> = this._children
+    private val _children = mutableMapOf<String,ScopeSimple<E>>()
 
-    fun childScope(forTypeName:String): ScopeSimple<E> {
-        val child = ScopeSimple<E>(this,forTypeName)
-        this._children.add(child)
+    // typeName -> referableName -> item
+    private val _items: MutableMap<String,MutableMap<String,E>> = mutableMapOf()
+
+    fun childScope(scopeFor:String): ScopeSimple<E> {
+        var child = this._children[scopeFor]
+        if (null==child) {
+            child = ScopeSimple<E>(this, forTypeName)
+            this._children[scopeFor] = child
+        }
         return child
     }
 
-    val items: MutableMap<String,E> = mutableMapOf()
-
-    fun addToScope(name:String, item:E) {
-        this.items[name]=item
+    fun addToScope(referableName:String, typeName:String, item:E) {
+        var m = this._items[typeName]
+        if (null==m) {
+            m = mutableMapOf()
+            this._items[typeName] = m
+        }
+        m[referableName]=item
     }
 
-    fun findOrNull(name:String):E? = this.items[name]
+    fun findOrNull(referableName:String, typeName:String):E? = this._items[typeName]?.get(referableName)
 }

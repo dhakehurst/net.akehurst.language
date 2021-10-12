@@ -16,56 +16,100 @@
 
 package net.akehurst.language.api.asm
 
-fun asmSimple(init: AsmSimpleBuilder.() -> Unit): AsmSimple {
-    val b = AsmSimpleBuilder()
+import net.akehurst.language.agl.agl.grammar.scopes.ScopeModel
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.syntaxAnalyser.resolveReferencesElement
+
+fun asmSimple(scopeModel: ScopeModel = ScopeModel(), context: ContextSimple? = null, init: AsmSimpleBuilder.() -> Unit): AsmSimple {
+    val b = AsmSimpleBuilder(scopeModel, context)
     b.init()
     return b.build()
 }
 
-class AsmSimpleBuilder() {
+class AsmSimpleBuilder(
+    private val _scopeModel: ScopeModel,
+    private val _context: ContextSimple?
+) {
 
     private val _asm = AsmSimple()
 
     fun root(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
-        val b = AsmElementSimpleBuilder(this._asm, typeName, true)
+        val b = AsmElementSimpleBuilder(_scopeModel, this._asm, typeName, true, _context?.scope)
         b.init()
         return b.build()
     }
 
-    fun build(): AsmSimple = _asm
+    fun build(): AsmSimple {
+        _asm.rootElements.forEach { el ->
+            _scopeModel.resolveReferencesElement(el, emptyMap(),_context?.scope)
+        }
+        return _asm
+    }
 }
 
 class AsmElementSimpleBuilder(
+    private val _scopeModel: ScopeModel,
     private val _asm: AsmSimple,
     typeName: String,
-    isRoot: Boolean
+    isRoot: Boolean,
+    private val _scope: ScopeSimple<AsmElementSimple>?
 ) {
     private val _element = if (isRoot) _asm.createRootElement(typeName) else _asm.createNonRootElement(typeName)
 
     private fun _property(name: String, value: Any?) {
-        _element.setProperty(name, value,false)
+        _element.setProperty(name, value, false)
     }
 
-    fun property(name: String, value: String?) = this._property(name,value)
-    fun property(name: String, list: List<*>) = this._property(name,list) //TODO: should only be List<String> or List<AsmElementSimple>
-    fun property(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = property(name,name,init)
-    fun property(name: String, typeName:String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
-        val b = AsmElementSimpleBuilder(this._asm, typeName, false)
+    fun property(name: String, value: String?) = this._property(name, value)
+    fun property(name: String, list: List<*>) = this._property(name, list) //TODO: should only be List<String> or List<AsmElementSimple>
+    fun property(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = property(name, name, init)
+    fun property(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
+        val childScope = _scope?.let {
+            if (_scopeModel.isScope(_element.typeName)) {
+                val newScope = _scope.childScope(_element.typeName)
+                _element.ownScope = newScope
+                newScope
+            } else {
+                _scope
+            }
+        }
+        val b = AsmElementSimpleBuilder(_scopeModel, this._asm, typeName, false,childScope)
         b.init()
         val el = b.build()
-        this._element.setProperty(name,el, false)
+        this._element.setProperty(name, el, false)
         return el
     }
 
-    fun reference(name: String, elementReference:String) {
-        _element.setProperty(name, elementReference,true)
+    fun reference(name: String, elementReference: String) {
+        _element.setProperty(name, elementReference, true)
     }
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
-        val b = AsmElementSimpleBuilder(this._asm, typeName, false)
+        val childScope = _scope?.let {
+            if (_scopeModel.isScope(_element.typeName)) {
+                val newScope = _scope.childScope(_element.typeName)
+                _element.ownScope = newScope
+                newScope
+            } else {
+                _scope
+            }
+        }
+        val b = AsmElementSimpleBuilder(_scopeModel, this._asm, typeName, false,childScope)
         b.init()
         return b.build()
     }
 
-    fun build(): AsmElementSimple = _element
+    fun build(): AsmElementSimple {
+        if (null == _scope) {
+            //do nothing
+        } else {
+            val scopeFor = _scope.forTypeName
+            val referablePropertyName = _scopeModel.getReferablePropertyNameFor(scopeFor, _element.typeName)
+            val referableName = referablePropertyName?.let { _element.getPropertyAsString(it) }
+            if (null != referableName) {
+                _scope.addToScope(referableName, _element.typeName, _element)
+            }
+        }
+        return _element
+    }
 }

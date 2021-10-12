@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.agl.grammar.scopes.AglScopesGrammar
+import net.akehurst.language.agl.agl.grammar.scopes.AglScopesSyntaxAnalyser
 import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 import net.akehurst.language.agl.grammar.format.AglFormatGrammar
 import net.akehurst.language.agl.grammar.format.AglFormatSyntaxAnalyser
@@ -32,10 +34,12 @@ interface AglLanguages {
     val grammarLanguageIdentity: String
     val styleLanguageIdentity: String
     val formatLanguageIdentity: String
+    val scopesLanguageIdentity:String
 
     val grammar: LanguageDefinition
     val style: LanguageDefinition
     val format: LanguageDefinition
+    val scopes:LanguageDefinition
 }
 
 class LanguageRegistry {
@@ -46,6 +50,7 @@ class LanguageRegistry {
         override val grammarLanguageIdentity: String = "net.akehurst.language.agl.AglGrammar"
         override val styleLanguageIdentity: String = "net.akehurst.language.agl.AglStyle"
         override val formatLanguageIdentity: String = "net.akehurst.language.agl.AglFormat"
+        override val scopesLanguageIdentity: String = "net.akehurst.language.agl.AglScopes"
 
         override val grammar = this@LanguageRegistry.registerFromDefinition(
             LanguageDefinitionFromAsm(
@@ -139,6 +144,20 @@ class LanguageRegistry {
                 format = """
                 """.trimIndent(),
                 syntaxAnalyser = AglFormatSyntaxAnalyser(),
+                semanticAnalyser = null
+            )
+        )
+
+        override val scopes: LanguageDefinition= this@LanguageRegistry.registerFromDefinition(
+            LanguageDefinitionFromAsm(
+                identity = scopesLanguageIdentity,
+                grammar = AglScopesGrammar(),
+                defaultGoalRule = AglScopesGrammar.goalRuleName,
+                style = """
+                """.trimIndent(),
+                format = """
+                """.trimIndent(),
+                syntaxAnalyser = AglScopesSyntaxAnalyser(),
                 semanticAnalyser = null
             )
         )

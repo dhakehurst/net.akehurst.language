@@ -42,6 +42,7 @@ class AsmElementSimple(
 ) {
     private var _properties = mutableMapOf<String, AsmElementProperty>()
 
+    var ownScope: ScopeSimple<AsmElementSimple>? = null
     val properties: List<AsmElementProperty> get() = _properties.values.toList()
 
     fun hasProperty(name: String): Boolean = _properties.containsKey(name)
@@ -87,7 +88,7 @@ class AsmElementSimple(
         val propsStr = this.properties.joinToString(separator = "\n$newIndent", prefix = "{\n$newIndent", postfix = "\n$currentIndent}") {
             if (it.isReference) {
                 val ref = it.value as AsmElementReference
-                if (null==ref.value) {
+                if (null == ref.value) {
                     "${it.name} = <unresolved> &${ref.reference}"
                 } else {
                     "${it.name} = &${ref.reference} : ${ref.value?.typeName}"
