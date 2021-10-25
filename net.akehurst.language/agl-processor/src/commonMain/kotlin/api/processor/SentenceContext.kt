@@ -14,18 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.syntaxAnalyser
+package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.asm.AsmElementSimple
-import net.akehurst.language.api.asm.ScopeSimple
-import net.akehurst.language.api.processor.SentenceContext
-
-class ContextSimple(
-    parentScope: ScopeSimple<AsmElementSimple>?=null,
-    rootScopeTypeName:String
-) : SentenceContext {
-
-    val scope = ScopeSimple<AsmElementSimple>(parentScope,rootScopeTypeName)
-
-
+interface SentenceContext {
 }

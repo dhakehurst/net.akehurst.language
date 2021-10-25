@@ -18,6 +18,7 @@ package net.akehurst.language.api.analyser
 
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 class SyntaxAnalyserException(message: String, cause: Throwable?) : RuntimeException(message, cause)
@@ -40,6 +41,11 @@ interface SyntaxAnalyser<out AsmType, in ContextType> { //TODO: make transform t
      * reset the sppt2ast, clearing any cached values
      */
     fun clear()
+
+    /**
+     * configure the SyntaxAnalyser
+     */
+    fun configure(configurationContext:SentenceContext, configuration:String)
 
     /**
      * map the tree into an instance of the targetType

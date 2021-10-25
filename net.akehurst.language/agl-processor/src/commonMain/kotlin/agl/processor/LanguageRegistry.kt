@@ -22,6 +22,7 @@ import net.akehurst.language.agl.grammar.format.AglFormatSyntaxAnalyser
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSyntaxAnalyser
+import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.grammar.scopes.AglScopesGrammar
 import net.akehurst.language.agl.grammar.scopes.AglScopesSyntaxAnalyser
 import net.akehurst.language.agl.grammar.style.AglStyleGrammar
@@ -154,12 +155,56 @@ class LanguageRegistry {
                 grammar = AglScopesGrammar(),
                 defaultGoalRule = AglScopesGrammar.goalRuleName,
                 style = """
+                    'scope' {
+                      foreground: darkgreen;
+                      font-style: bold;
+                    }
+                    'identify' {
+                      foreground: darkgreen;
+                      font-style: bold;
+                    }
+                    'by' {
+                      foreground: darkgreen;
+                      font-style: bold;
+                    }
+                    'references' {
+                      foreground: darkgreen;
+                      font-style: bold;
+                    }
+                    'in' {
+                      foreground: darkgreen;
+                      font-style: bold;
+                    }
+                    'property' {
+                      foreground: darkgreen;
+                      font-style: bold;
+                    }
+                    'refers-to' {
+                      foreground: darkgreen;
+                      font-style: bold;
+                    }
+                    '|' {
+                      foreground: darkgreen;
+                      font-style: bold;
+                    }
                 """.trimIndent(),
                 format = """
                 """.trimIndent(),
                 syntaxAnalyser = AglScopesSyntaxAnalyser(),
                 semanticAnalyser = null
-            )
+            ).also {
+                it.syntaxAnalyser?.configure(
+                    configurationContext = ContextFromGrammar(this.grammar.processor!!.grammar),
+                    configuration = """
+                        references {
+                            in scope property typeReference refers-to Rule
+                            in identifiable property typeReference refers-to Rule
+                            in referenceDefinition property typeReference refers-to Rule
+                            in referenceDefinition property propertyReference refers-to Rule
+                        } 
+                    """.trimIndent()
+                )
+            }
         )
     }
 

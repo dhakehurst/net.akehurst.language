@@ -17,17 +17,18 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 
+import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.grammar.scopes.Identifiable
 import net.akehurst.language.agl.grammar.scopes.ReferenceDefinition
 import net.akehurst.language.agl.grammar.scopes.Scope
 import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -55,18 +56,26 @@ class test_SyntaxAnalyserSimple_datatypes {
             
             }
         """.trimIndent()
-        val scopeModel = ScopeModel().also {
-            it.scopes.add(Scope("unit").also {
-                it.identifiables.add(Identifiable("primitive", "ID"))
-                it.identifiables.add(Identifiable("datatype", "ID"))
-            })
-            it.references.add(ReferenceDefinition("typeReference","type",listOf("primitive","datatype")))
-        }
+        val references = """
+            scope unit {
+                identify primitive by ID
+                identify datatype by ID
+            }
+            references {
+                in typeReference property type refers-to primitive|datatype
+            }
+        """.trimIndent()
+        val syntaxAnalyser = SyntaxAnalyserSimple()
         val processor = Agl.processorFromString(
             grammarStr,
             "unit",
-            syntaxAnalyser = SyntaxAnalyserSimple(scopeModel)
-        )
+            syntaxAnalyser = syntaxAnalyser
+        ).also {
+            syntaxAnalyser.configure(
+                configurationContext = ContextFromGrammar(it.grammar),
+                configuration = references
+            )
+        }
     }
 
 
@@ -78,7 +87,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val (actual, issues) = processor.process<AsmSimple, Any>(sentence)
         assertNotNull(actual)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
 
         val expected = asmSimple {
             root("unit") {
@@ -103,7 +112,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val (actual, issues) = processor.process<AsmSimple, Any>(sentence)
         assertNotNull(actual)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
 
         val expected = asmSimple {
             root("unit") {
@@ -177,9 +186,9 @@ class test_SyntaxAnalyserSimple_datatypes {
             context = ContextSimple(null, "unit")
         )
         assertNotNull(actual)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
 
-        val expected = asmSimple(scopeModel, ContextSimple(null,"unit")) {
+        val expected = asmSimple(syntaxAnalyser.scopeModel, ContextSimple(null, "unit")) {
             root("unit") {
                 property("declaration", listOf(
                     element("primitive") {

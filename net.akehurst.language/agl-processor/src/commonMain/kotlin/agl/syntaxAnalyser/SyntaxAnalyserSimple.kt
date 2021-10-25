@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.grammar.scopes.ScopeModel
+import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.api.analyser.SyntaxAnalyser
@@ -25,6 +26,7 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
@@ -36,21 +38,38 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
  * @param scopeDefinition TypeNameDefiningScope -> Map<TypeNameDefiningSomethingReferencable, referencableProperty>
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
-class SyntaxAnalyserSimple(
-    val scopeModel: ScopeModel = ScopeModel()
-) : SyntaxAnalyser<AsmSimple, ContextSimple> {
+class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
 
     private var _asm: AsmSimple? = null
     private var _context: ContextSimple? = null // cached value, provided on call to transform
     private val _issues = mutableListOf<LanguageIssue>()
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
+    var scopeModel: ScopeModel = ScopeModel()
 
     override fun clear() {
         this.locationMap.clear()
         this._asm = null
         this._context = null
         this._issues.clear()
+    }
+
+    override fun configure(configurationContext: SentenceContext, configuration: String) {
+        //TODO: pass grammar as context ?
+        val proc = Agl.registry.agl.scopes.processor ?: error("Cross-Reference language not found!")
+        val (sm, issues) = proc.process<ScopeModel, SentenceContext>(
+            sentence = configuration,
+            context = configurationContext
+        )
+        if (null == sm) {
+            //TODO: handle issues
+            issues.forEach {
+                println(it)
+            }
+            error("Error processing references definition as configuration for SyntaxAnalyserSimple")
+        } else {
+            this.scopeModel = sm
+        }
     }
 
     override fun transform(sppt: SharedPackedParseTree, context: ContextSimple?): Pair<AsmSimple, List<LanguageIssue>> {
@@ -234,7 +253,7 @@ class SyntaxAnalyserSimple(
     }
 }
 
-internal fun ScopeModel.resolveReferencesElement(el: AsmElementSimple, locationMap:Map<Any,InputLocation>, scope: ScopeSimple<AsmElementSimple>?) : List<LanguageIssue> {
+internal fun ScopeModel.resolveReferencesElement(el: AsmElementSimple, locationMap: Map<Any, InputLocation>, scope: ScopeSimple<AsmElementSimple>?): List<LanguageIssue> {
     val scopeModel = this
     val issues = mutableListOf<LanguageIssue>()
     val elScope = el.ownScope ?: scope

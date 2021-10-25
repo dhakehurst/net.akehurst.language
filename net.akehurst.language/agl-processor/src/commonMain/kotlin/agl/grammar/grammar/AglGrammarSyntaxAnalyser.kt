@@ -25,6 +25,7 @@ import net.akehurst.language.agl.ast.*
 import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.analyser.SyntaxAnalyserException
+import net.akehurst.language.api.processor.SentenceContext
 
 
 internal class AglGrammarSyntaxAnalyser(
@@ -66,6 +67,10 @@ internal class AglGrammarSyntaxAnalyser(
 
     override fun clear() {
         _issues.clear()
+    }
+
+    override fun configure(configurationContext: SentenceContext, configuration: String) {
+        //TODO
     }
 
     override fun transform(sppt: SharedPackedParseTree,context:GrammarContext?): Pair<List<Grammar>,List<LanguageIssue>> {

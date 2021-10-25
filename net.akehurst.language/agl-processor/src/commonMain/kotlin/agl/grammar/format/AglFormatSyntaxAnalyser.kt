@@ -19,6 +19,7 @@ import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.processor.SentenceContext
 
 internal class AglFormatSyntaxAnalyser : SyntaxAnalyser<Any,Any> {
     override val locationMap = mutableMapOf<Any, InputLocation>()
@@ -27,6 +28,9 @@ internal class AglFormatSyntaxAnalyser : SyntaxAnalyser<Any,Any> {
         TODO("not implemented")
     }
 
+    override fun configure(configurationContext: SentenceContext, configuration: String) {
+        TODO("not implemented")
+    }
     override fun transform(sppt: SharedPackedParseTree, context: Any?): Pair<Any, List<LanguageIssue>> {
         TODO("not implemented")
     }

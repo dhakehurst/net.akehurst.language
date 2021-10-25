@@ -14,18 +14,26 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.syntaxAnalyser
+package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.ScopeSimple
+import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.grammar.Rule
 import net.akehurst.language.api.processor.SentenceContext
 
-class ContextSimple(
-    parentScope: ScopeSimple<AsmElementSimple>?=null,
-    rootScopeTypeName:String
+// used by other languages that reference rules  in a grammar
+
+class ContextFromGrammar(
+    val grammar: Grammar
 ) : SentenceContext {
 
-    val scope = ScopeSimple<AsmElementSimple>(parentScope,rootScopeTypeName)
+    val scope = ScopeSimple<Rule>(null, grammar.name)
 
+    init {
+        grammar.allRule.forEach {
+            scope.addToScope(it.name, "Rule", it)
+        }
+    }
 
 }

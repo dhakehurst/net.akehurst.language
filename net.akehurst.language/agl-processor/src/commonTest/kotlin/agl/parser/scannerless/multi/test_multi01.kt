@@ -35,8 +35,8 @@ internal class test_multi01 : test_ScanOnDemandParserAbstract() {
     // S = 'a'?
     private companion object {
         val rrs = runtimeRuleSet {
-            multi("S",0,1,"a")
-            concatenation("a") { literal("a") }
+            multi("S",0,1,"'a'")
+            literal("'a'","a")
         }
         val goal = "S"
     }

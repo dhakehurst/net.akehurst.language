@@ -15,10 +15,14 @@
  */
 package net.akehurst.language.agl.grammar.scopes
 
+import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
@@ -33,8 +37,28 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextSimple> {
         this.issues.clear()
     }
 
+    override fun configure(configurationContext: SentenceContext, configuration: String) {
+    }
+
     override fun transform(sppt: SharedPackedParseTree, context: ContextSimple?): Pair<ScopeModel, List<LanguageIssue>> {
         val asm = this.declarations(sppt.root.asBranch)
+
+        if (null!=context) {
+            asm.scopes.forEach { scope ->
+                val scopeRule = context.scope.findOrNull(scope.scopeFor, "Rule")
+                if (null == scopeRule) {
+                    val loc = this.locationMap[scope]
+                    issues.add(
+                        LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, loc, "Rule '${scope.scopeFor}' not found")
+                    )
+                }
+                scope.identifiables.forEach { identifiable ->
+                    val propRule = context.scope.findOrNull(identifiable.propertyName,"Rule")
+                    TODO()
+                }
+            }
+        }
+
         return Pair(asm,issues)
     }
 

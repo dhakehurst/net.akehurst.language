@@ -213,7 +213,7 @@ internal class test_OperatorPrecedence : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|5 {
                 add {
                   expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
                   '+' WS { "\s+" : ' ' }

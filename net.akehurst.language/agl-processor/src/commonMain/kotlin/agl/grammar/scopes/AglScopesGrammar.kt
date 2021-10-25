@@ -30,7 +30,7 @@ import net.akehurst.language.api.grammar.Rule
     references = 'references' '{' referenceDefinitions '}'
     referenceDefinitions = referenceDefinition*
     referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
-    typeReferences = [typeReferences / ',']+
+    typeReferences = [typeReferences / '|']+
 
     typeReference = IDENTIFIER     // same as grammar rule name
     propertyReference = IDENTIFIER // same as grammar rule name
@@ -54,7 +54,7 @@ internal class AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst.
             b.rule("references").concatenation(b.terminalLiteral("references"), b.terminalLiteral("{"), b.nonTerminal("referenceDefinitions"),b.terminalLiteral("}"))
             b.rule("referenceDefinitions").multi(0,-1,b.nonTerminal("referenceDefinition"))
             b.rule("referenceDefinition").concatenation(b.terminalLiteral("in"),b.nonTerminal("typeReference"),b.terminalLiteral("property"),b.nonTerminal("propertyReference"),b.terminalLiteral("refers-to"),b.nonTerminal("typeReferences"))
-            b.rule("typeReferences").multi(1,-1,b.nonTerminal("typeReference"))
+            b.rule("typeReferences").separatedList(1,-1,b.terminalLiteral("|"),b.nonTerminal("typeReference"))
             b.rule("typeReference").concatenation(b.nonTerminal("IDENTIFIER"))
             b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
             b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));

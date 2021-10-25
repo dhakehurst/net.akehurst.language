@@ -17,4 +17,5 @@
 package net.akehurst.language.agl.grammar.grammar
 
 class GrammarContext {
+    //TODO: should provide other registered grammars
 }

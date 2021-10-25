@@ -66,6 +66,10 @@ internal class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
             concatenation("group") { literal("("); ref("expr"); literal(")") }
             choice("bool",RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("true");literal("false") }
             concatenation("var") { pattern("[a-zA-Z]+") }
+            literal("'/'","/")
+            literal("'*'","*")
+            literal("'+'","+")
+            literal("'-'","-")
         }
         val goal = "S"
     }

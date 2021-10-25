@@ -131,5 +131,25 @@ class test_AglScopes {
         assertEquals(emptyList(),issues)
     }
 
+    @Test
+    fun one_reference_to_three() {
+        val text = """
+            references {
+                in type1 property prop refers-to type2|type3|type4
+            }
+        """.trimIndent()
+
+        val (asm,issues) = aglProc.process<ScopeModel, Any>(text,AglScopesGrammar.goalRuleName)
+
+        val expected = ScopeModel().apply {
+            references.add(ReferenceDefinition("type1","prop",listOf("type2","type3","type4")))
+        }
+
+        assertEquals(expected.scopes, asm?.scopes)
+        assertEquals(expected.scopes.flatMap { it.identifiables }, asm?.scopes?.flatMap { it.identifiables })
+        assertEquals(expected.references, asm?.references)
+        assertEquals(emptyList(),issues)
+    }
+
     //TODO more checks + check rules (types/properties) exist in context of grammar
 }
