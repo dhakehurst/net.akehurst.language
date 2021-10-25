@@ -16,10 +16,11 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.agl.grammar.scopes.Identifiable
-import net.akehurst.language.agl.agl.grammar.scopes.ReferenceDefinition
-import net.akehurst.language.agl.agl.grammar.scopes.Scope
-import net.akehurst.language.agl.agl.grammar.scopes.ScopeModel
+
+import net.akehurst.language.agl.grammar.scopes.Identifiable
+import net.akehurst.language.agl.grammar.scopes.ReferenceDefinition
+import net.akehurst.language.agl.grammar.scopes.Scope
+import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind

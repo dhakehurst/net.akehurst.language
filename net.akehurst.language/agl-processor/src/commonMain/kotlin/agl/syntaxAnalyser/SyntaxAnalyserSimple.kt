@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.agl.grammar.scopes.ScopeModel
+import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.api.analyser.SyntaxAnalyser

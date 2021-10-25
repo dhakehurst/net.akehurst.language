@@ -16,7 +16,8 @@
 
 package net.akehurst.language.api.asm
 
-import net.akehurst.language.agl.agl.grammar.scopes.ScopeModel
+
+import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.resolveReferencesElement
 

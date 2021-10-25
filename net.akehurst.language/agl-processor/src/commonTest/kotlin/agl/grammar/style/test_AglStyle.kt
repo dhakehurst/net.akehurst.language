@@ -9,8 +9,8 @@ import kotlin.test.assertNotNull
 
 class test_AglStyle {
 
-    companion object {
-        val aglProc = Agl.registry.agl.grammar.processor!!
+    private companion object {
+        val aglProc = Agl.registry.agl.style.processor!!
     }
 
     @Test

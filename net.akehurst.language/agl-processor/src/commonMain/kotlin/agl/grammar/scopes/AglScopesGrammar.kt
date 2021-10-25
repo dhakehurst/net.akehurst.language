@@ -1,4 +1,19 @@
-package net.akehurst.language.agl.agl.grammar.scopes
+/**
+ * Copyright (C) 2021 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package net.akehurst.language.agl.grammar.scopes
 
 import net.akehurst.language.agl.ast.GrammarAbstract
 import net.akehurst.language.agl.ast.GrammarBuilderDefault
@@ -31,12 +46,12 @@ internal class AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst.
             b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//[^\\n\\r]*"));
 
             b.rule("declarations").concatenation(b.nonTerminal("scopes"),b.nonTerminal("references"))
-            b.rule("scopes").multi(1,-1,b.nonTerminal("scope"))
+            b.rule("scopes").multi(0,-1,b.nonTerminal("scope"))
             b.rule("scope").concatenation(b.terminalLiteral("scope"), b.nonTerminal("typeReference"), b.terminalLiteral("{"), b.nonTerminal("identifiables"), b.terminalLiteral("}"))
             b.rule("identifiables").multi(0, -1, b.nonTerminal("identifiable"))
             b.rule("identifiable").concatenation(b.terminalLiteral("identify"),b.nonTerminal("typeReference"),b.terminalLiteral("by"),b.nonTerminal("propertyReference"))
 
-            b.rule("references").concatenation(b.terminalLiteral("references"), b.terminalLiteral("{"), b.nonTerminal("referenceDefinitions"),b.nonTerminal("}"))
+            b.rule("references").concatenation(b.terminalLiteral("references"), b.terminalLiteral("{"), b.nonTerminal("referenceDefinitions"),b.terminalLiteral("}"))
             b.rule("referenceDefinitions").multi(0,-1,b.nonTerminal("referenceDefinition"))
             b.rule("referenceDefinition").concatenation(b.terminalLiteral("in"),b.nonTerminal("typeReference"),b.terminalLiteral("property"),b.nonTerminal("propertyReference"),b.terminalLiteral("refers-to"),b.nonTerminal("typeReferences"))
             b.rule("typeReferences").multi(1,-1,b.nonTerminal("typeReference"))

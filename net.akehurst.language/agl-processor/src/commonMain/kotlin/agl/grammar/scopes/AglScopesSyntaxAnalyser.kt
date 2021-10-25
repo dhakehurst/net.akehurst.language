@@ -1,4 +1,19 @@
-package net.akehurst.language.agl.agl.grammar.scopes
+/**
+ * Copyright (C) 2021 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package net.akehurst.language.agl.grammar.scopes
 
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.analyser.SyntaxAnalyser
@@ -26,8 +41,8 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextSimple> {
     // declarations = scopes references
     private fun declarations(node: SPPTBranch): ScopeModel {
         val asm = ScopeModel()
-        val scopes = this.scopes(node.children[0].asBranch)
-        val references = this.references(node.children[1].asBranch)
+        val scopes = this.scopes(node.branchChild(0))
+        val references = this.references(node.branchChild(1))
         asm.scopes.addAll(scopes)
         asm.references.addAll(references)
         locationMap[asm] = node.location
@@ -36,7 +51,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextSimple> {
 
     // scopes = scope+
     private fun scopes(node: SPPTBranch): List<Scope> {
-        return node.children.map {
+        return node.branchNonSkipChildren.map {
             this.scope(it.asBranch)
         }
     }
@@ -53,7 +68,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextSimple> {
 
     // identifiables = identifiable*
     private fun identifiables(node: SPPTBranch): List<Identifiable> {
-        return node.children.map {
+        return node.branchNonSkipChildren.map {
             this.identifiable(it.asBranch)
         }
     }
@@ -74,7 +89,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextSimple> {
 
     // referenceDefinitions = referenceDefinition*
     private fun referenceDefinitions(node: SPPTBranch): List<ReferenceDefinition> {
-        return node.children.map {
+        return node.branchNonSkipChildren.map {
             this.referenceDefinition(it.asBranch)
         }
     }
@@ -82,8 +97,8 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextSimple> {
     // referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
     private fun referenceDefinition(node: SPPTBranch): ReferenceDefinition {
         val inTypeName = this.typeReference(node.branchChild(0))
-        val referringPropertyName = this.typeReference(node.branchChild(0))
-        val typeReferences = this.typeReferences(node.branchChild(0))
+        val referringPropertyName = this.typeReference(node.branchChild(1))
+        val typeReferences = this.typeReferences(node.branchChild(2))
         val def = ReferenceDefinition(inTypeName, referringPropertyName, typeReferences)
         this.locationMap[def] = node.location
         return def
@@ -91,7 +106,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextSimple> {
 
     // typeReferences = [typeReferences / ',']+
     private fun typeReferences(node: SPPTBranch): List<String> {
-        return node.nonSkipChildren.map {
+        return node.branchNonSkipChildren.map {
             this.typeReference(it.asBranch)
         }
     }
