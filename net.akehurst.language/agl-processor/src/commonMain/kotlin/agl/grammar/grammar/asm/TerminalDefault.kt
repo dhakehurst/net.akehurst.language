@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast
+package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 
-internal class NonTerminalDefault(
-        override val name: String,
-        val owningGrammar: Grammar,
-        override val embedded: Boolean
-) : RuleItemAbstract(), NonTerminal {
-
-    override val referencedRule: Rule by lazy {
-        this.owningGrammar.findAllRule(this.name)
+class TerminalDefault(override val value: String, override val isPattern: Boolean) : RuleItemAbstract(), Terminal {
+/*
+    fun pattern(): Regex {
+            return if (isPattern) Regex(value, RegexOption.MULTILINE) else throw GrammarRuleItemNotFoundException("${this} is not a pattern")
+        }
+*/
+    override val name: String by lazy {
+        value
     }
-
+/*
+    fun matches(value: String): Boolean {
+        return if (isPattern) this.pattern().matches(value) else value.equals(this.value);
+    }
+*/
     override fun setOwningRule(rule: Rule, indices: List<Int>) {
         this._owningRule = rule
         this.index = indices
@@ -38,11 +42,11 @@ internal class NonTerminalDefault(
     }
 
     override val allTerminal: Set<Terminal> by lazy {
-        emptySet<Terminal>()
+        setOf(this)
     }
 
     override val allNonTerminal: Set<NonTerminal> by lazy {
-        setOf(this)
+        emptySet<NonTerminal>()
     }
 
 }

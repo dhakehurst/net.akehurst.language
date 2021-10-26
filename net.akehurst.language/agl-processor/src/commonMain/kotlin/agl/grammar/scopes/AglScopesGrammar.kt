@@ -15,9 +15,9 @@
  */
 package net.akehurst.language.agl.grammar.scopes
 
-import net.akehurst.language.agl.ast.GrammarAbstract
-import net.akehurst.language.agl.ast.GrammarBuilderDefault
-import net.akehurst.language.agl.ast.NamespaceDefault
+import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
+import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.grammar.Rule
 
 /**
@@ -36,7 +36,7 @@ import net.akehurst.language.api.grammar.Rule
     propertyReference = IDENTIFIER // same as grammar rule name
     leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
  */
-internal class AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglScopes", createRules()) {
+internal class AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglScopes") {
     companion object {
         const val goalRuleName = "declarations"
         private fun createRules(): List<Rule> {
@@ -61,5 +61,8 @@ internal class AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst.
 
             return b.grammar.rule
         }
+    }
+    init {
+        super.rule.addAll(createRules())
     }
 }

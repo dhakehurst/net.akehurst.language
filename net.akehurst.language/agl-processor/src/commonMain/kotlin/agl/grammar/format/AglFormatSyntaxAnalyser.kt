@@ -28,7 +28,7 @@ internal class AglFormatSyntaxAnalyser : SyntaxAnalyser<Any,Any> {
         TODO("not implemented")
     }
 
-    override fun configure(configurationContext: SentenceContext, configuration: String) {
+    override fun configure(configurationContext: SentenceContext, configuration: String): List<LanguageIssue> {
         TODO("not implemented")
     }
     override fun transform(sppt: SharedPackedParseTree, context: Any?): Pair<Any, List<LanguageIssue>> {

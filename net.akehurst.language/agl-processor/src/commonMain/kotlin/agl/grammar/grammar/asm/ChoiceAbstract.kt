@@ -14,31 +14,35 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast
+package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 
-internal class GroupDefault(override val choice: Choice) : SimpleItemAbstract(), Group {
+abstract class ChoiceAbstract(
+	override val alternative: List<Concatenation>
+) : RuleItemAbstract(), Choice {
 
-    override val name: String = "${'$'}group"
-
-    override fun setOwningRule(rule: Rule, indices: List<Int>) {
+	override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this._owningRule = rule
 		this.index = indices
-		val nextIndex: List<Int> = indices + 0
-		this.choice.setOwningRule(rule, nextIndex)
+		var i: Int = 0
+		this.alternative.forEach {
+			val nextIndex: List<Int> = indices + (i++)
+			it.setOwningRule(rule, nextIndex)
+		}
 	}
-		
+
 	override fun subItem(index: Int): RuleItem {
-		return if (0==index) this.choice else throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+//		 return if (index < this.alternative.size) this.alternative.get(index) else null
+		return this.alternative.get(index)
 	}
-	
+
 	override val allTerminal: Set<Terminal> by lazy {
-		this.choice.allTerminal
+		this.alternative.flatMap { it.allTerminal }.toSet()
 	}
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
-		this.choice.allNonTerminal
+		this.alternative.flatMap { it.allNonTerminal }.toSet()
 	}
-	
+
 }

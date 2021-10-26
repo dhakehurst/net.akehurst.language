@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast
+package net.akehurst.language.agl.grammar.grammar.asm
 
-import net.akehurst.language.api.grammar.SimpleItem
 
-internal abstract class SimpleItemAbstract : ConcatenationItemAbstract(), SimpleItem {
+import net.akehurst.language.api.grammar.ChoiceAmbiguous
+import net.akehurst.language.api.grammar.Concatenation
 
-    abstract val name: String
+class ChoiceAmbiguousDefault(override val alternative: List<Concatenation>) : ChoiceAbstract(alternative), ChoiceAmbiguous {
 
 }

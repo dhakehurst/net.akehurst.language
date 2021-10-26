@@ -15,9 +15,9 @@
  */
 package net.akehurst.language.agl.grammar.style
 
-import net.akehurst.language.agl.ast.GrammarAbstract
-import net.akehurst.language.agl.ast.GrammarBuilderDefault
-import net.akehurst.language.agl.ast.NamespaceDefault
+import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
+import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.grammar.Rule
 
 /**
@@ -28,7 +28,7 @@ import net.akehurst.language.api.grammar.Rule
     styleList = style* ;
     style = STYLE_ID ':' STYLE_VALUE ';' ;
  */
-internal class AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglStyle", createRules()) {
+internal class AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglStyle") {
     companion object {
         const val goalRuleName = "rules"
         private fun createRules(): List<Rule> {
@@ -55,6 +55,9 @@ internal class AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.
 
             return b.grammar.rule
         }
+    }
+    init {
+        super.rule.addAll(createRules())
     }
 }
 

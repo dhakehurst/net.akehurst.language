@@ -16,8 +16,8 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.ast.GrammarBuilderDefault
-import net.akehurst.language.agl.ast.NamespaceDefault
+import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.agl.runtime.structure.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -304,7 +304,7 @@ class test_Converter {
         val actual = sut.runtimeRuleSet
 
         assertEquals(5, actual.runtimeRules.size)
-        this.checkCRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleChoiceKind.LONGEST_PRIORITY,  2)
+        this.checkCRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleChoiceKind.LONGEST_PRIORITY, 2)
         this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
         this.checkTRule(2, actual.runtimeRules[2], "'b'", "b", false, false)
         this.checkNRule(3, actual.runtimeRules[3], "§r§choice1", false, 2)
@@ -330,7 +330,7 @@ class test_Converter {
         val actual = sut.runtimeRuleSet
 
         assertEquals(4, actual.runtimeRules.size)
-        this.checkCRule(0, actual.runtimeRules[0], "r", false,  RuntimeRuleChoiceKind.PRIORITY_LONGEST,  3)
+        this.checkCRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleChoiceKind.PRIORITY_LONGEST, 3)
         this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
         this.checkTRule(2, actual.runtimeRules[2], "'b'", "b", false, false)
         this.checkTRule(3, actual.runtimeRules[3], "'c'", "c", false, false)
@@ -362,7 +362,7 @@ class test_Converter {
         assertEquals(7, actual.runtimeRules.size)
         this.checkNRule(0, actual.runtimeRules[0], "a", false, 1)
         this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-        this.checkNRule(2, actual.runtimeRules[2], "b", false,  1)
+        this.checkNRule(2, actual.runtimeRules[2], "b", false, 1)
         this.checkTRule(3, actual.runtimeRules[3], "'b'", "b", false, false)
         this.checkNRule(4, actual.runtimeRules[4], "c", false, 1)
         this.checkTRule(5, actual.runtimeRules[5], "'c'", "c", false, false)
@@ -495,7 +495,7 @@ class test_Converter {
 
         assertEquals(3, actual.runtimeRules.size)
         this.checkLRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleListKind.MULTI, 1, 1, -1)
-        this.checkNRule(1, actual.runtimeRules[1], "a", false,  1)
+        this.checkNRule(1, actual.runtimeRules[1], "a", false, 1)
         this.checkTRule(2, actual.runtimeRules[2], "'a'", "a", false, false)
 
         this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1])

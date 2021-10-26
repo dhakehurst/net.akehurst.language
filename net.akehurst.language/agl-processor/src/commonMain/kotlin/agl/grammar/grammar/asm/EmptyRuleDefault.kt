@@ -14,24 +14,30 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast
+package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 
-internal abstract class RuleItemAbstract : RuleItem {
+class EmptyRuleDefault : RuleItemAbstract(), EmptyRule {
 
-	protected var _owningRule : Rule? = null
+    override val name : String by lazy {
+        "<empty>"
+    }
 
-	override val owningRule: Rule get() {
-		return this._owningRule ?: throw GrammarRuleNotFoundException("Internal Error: owningRule must be set")
-	}
-	
-	var index: List<Int>? = null
+    override val allTerminal: Set<Terminal> by lazy {
+        emptySet<Terminal>()
+    }
 
-	abstract override val allTerminal: Set<Terminal>
+    override val allNonTerminal: Set<NonTerminal> by lazy {
+        emptySet<NonTerminal>()
+    }
+    override fun setOwningRule(rule: Rule, indices: List<Int>) {
+        this._owningRule = rule
+        this.index = indices
+    }
 
-	abstract override val allNonTerminal: Set<NonTerminal>
+    override fun subItem(index: Int): RuleItem {
+        throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+    }
 
-	
-	
 }

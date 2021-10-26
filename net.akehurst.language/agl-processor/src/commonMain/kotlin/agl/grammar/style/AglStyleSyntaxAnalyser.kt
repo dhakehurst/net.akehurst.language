@@ -41,8 +41,8 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract<List<AglStyleRule
 
     }
 
-    override fun configure(configurationContext: SentenceContext, configuration: String) {
-        TODO("not implemented")
+    override fun configure(configurationContext: SentenceContext, configuration: String): List<LanguageIssue> {
+        return emptyList()
     }
     override fun transform(sppt: SharedPackedParseTree, context: Any?): Pair<List<AglStyleRule>, List<LanguageIssue>> {
         val rules:List<AglStyleRule> =  this.transformBranch(sppt.root.asBranch, "")

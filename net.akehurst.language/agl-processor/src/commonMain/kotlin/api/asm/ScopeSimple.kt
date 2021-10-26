@@ -45,4 +45,6 @@ class ScopeSimple<E>(
     }
 
     fun findOrNull(referableName:String, typeName:String):E? = this._items[typeName]?.get(referableName)
+
+    fun isMissing(referableName:String, typeName:String):Boolean = null==this.findOrNull(referableName,typeName)
 }

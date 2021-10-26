@@ -14,32 +14,33 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast
+package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 
-internal class GrammarDefault(
-        override val namespace: Namespace,
-        override val name: String,
-        override val rule: MutableList<Rule>
-) : GrammarAbstract(namespace, name, rule) {
+class GrammarDefault(
+    override val namespace: Namespace,
+    override val name: String
+) : GrammarAbstract(namespace, name) {
 
 }
 
-internal abstract class GrammarAbstract(
-        override val namespace: Namespace,
-        override val name: String,
-        override val rule: List<Rule>
+abstract class GrammarAbstract(
+    override val namespace: Namespace,
+    override val name: String
 ) : Grammar {
 
-    override val extends: MutableList<Grammar> = mutableListOf<Grammar>();
+    override val extends: MutableList<Grammar> = mutableListOf<Grammar>()
+
+    override var rule: MutableList<Rule> = mutableListOf<Rule>() //TODO: should be a val, but currently serialisation needs it to be a var
 
     override val allRule: List<Rule> by lazy {
         //TODO: Handle situation where super grammar/rule is included more than once ?
         val rules = this.extends.flatMap { it.allRule }.toMutableList()
         this.rule.forEach { rule ->
             if (rule.isOverride) {
-                val overridden = rules.find { it.name == rule.name } ?: throw GrammarRuleNotFoundException("Rule ${rule.name} is marked as overridden, but there is no super rule with that name to override.")
+                val overridden = rules.find { it.name == rule.name }
+                    ?: throw GrammarRuleNotFoundException("Rule ${rule.name} is marked as overridden, but there is no super rule with that name to override.")
                 rules.remove(overridden)
                 rules.add(rule)
             } else {

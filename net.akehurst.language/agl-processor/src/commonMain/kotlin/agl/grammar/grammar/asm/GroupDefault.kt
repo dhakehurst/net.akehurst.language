@@ -14,30 +14,31 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast;
+package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 
-internal class EmptyRuleDefault : RuleItemAbstract(), EmptyRule {
+class GroupDefault(override val choice: Choice) : SimpleItemAbstract(), Group {
 
-    override val name : String by lazy {
-        "<empty>"
-    }
+    override val name: String = "${'$'}group"
 
-    override val allTerminal: Set<Terminal> by lazy {
-        emptySet<Terminal>()
-    }
-
-    override val allNonTerminal: Set<NonTerminal> by lazy {
-        emptySet<NonTerminal>()
-    }
     override fun setOwningRule(rule: Rule, indices: List<Int>) {
-        this._owningRule = rule
-        this.index = indices
-    }
+		this._owningRule = rule
+		this.index = indices
+		val nextIndex: List<Int> = indices + 0
+		this.choice.setOwningRule(rule, nextIndex)
+	}
+		
+	override fun subItem(index: Int): RuleItem {
+		return if (0==index) this.choice else throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+	}
+	
+	override val allTerminal: Set<Terminal> by lazy {
+		this.choice.allTerminal
+	}
 
-    override fun subItem(index: Int): RuleItem {
-        throw GrammarRuleItemNotFoundException("subitem ${index} not found")
-    }
-
+	override val allNonTerminal: Set<NonTerminal> by lazy {
+		this.choice.allNonTerminal
+	}
+	
 }

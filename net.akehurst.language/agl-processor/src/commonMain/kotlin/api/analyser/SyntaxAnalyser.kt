@@ -45,7 +45,7 @@ interface SyntaxAnalyser<out AsmType, in ContextType> { //TODO: make transform t
     /**
      * configure the SyntaxAnalyser
      */
-    fun configure(configurationContext:SentenceContext, configuration:String)
+    fun configure(configurationContext:SentenceContext, configuration:String): List<LanguageIssue>
 
     /**
      * map the tree into an instance of the targetType

@@ -14,36 +14,32 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast
-
+package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 
-internal abstract class ChoiceAbstract(
-	override val alternative: List<Concatenation>
-) : RuleItemAbstract(), Choice {
+class ConcatenationDefault(override val items: List<ConcatenationItem>) : RuleItemAbstract(), Concatenation {
 
-	override fun setOwningRule(rule: Rule, indices: List<Int>) {
+   override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this._owningRule = rule
 		this.index = indices
 		var i: Int = 0
-		this.alternative.forEach {
+		this.items.forEach {
 			val nextIndex: List<Int> = indices + (i++)
 			it.setOwningRule(rule, nextIndex)
 		}
 	}
-
+	
 	override fun subItem(index: Int): RuleItem {
-//		 return if (index < this.alternative.size) this.alternative.get(index) else null
-		return this.alternative.get(index)
+		return this.items.get(index)
 	}
-
+	
 	override val allTerminal: Set<Terminal> by lazy {
-		this.alternative.flatMap { it.allTerminal }.toSet()
+		this.items.flatMap { it.allTerminal }.toSet()
 	}
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
-		this.alternative.flatMap { it.allNonTerminal }.toSet()
+		this.items.flatMap { it.allNonTerminal }.toSet()
 	}
 
 }

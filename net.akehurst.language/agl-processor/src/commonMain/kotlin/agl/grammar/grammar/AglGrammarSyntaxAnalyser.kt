@@ -16,20 +16,20 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
+import net.akehurst.language.agl.grammar.grammar.asm.*
+import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserAbstract
+import net.akehurst.language.api.analyser.SyntaxAnalyserException
 import net.akehurst.language.api.grammar.*
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.agl.ast.*
-import net.akehurst.language.agl.grammar.GrammarRegistryDefault
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.analyser.SyntaxAnalyserException
-import net.akehurst.language.api.processor.SentenceContext
 
 
 internal class AglGrammarSyntaxAnalyser(
-        val grammarRegistry: GrammarRegistry
+    val grammarRegistry: GrammarRegistry
 ) : SyntaxAnalyserAbstract<List<Grammar>, GrammarContext>() {
 
     var grammarLoader: GrammarLoader? = null
@@ -69,11 +69,12 @@ internal class AglGrammarSyntaxAnalyser(
         _issues.clear()
     }
 
-    override fun configure(configurationContext: SentenceContext, configuration: String) {
+    override fun configure(configurationContext: SentenceContext, configuration: String): List<LanguageIssue> {
         //TODO
+        return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree,context:GrammarContext?): Pair<List<Grammar>,List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, context: GrammarContext?): Pair<List<Grammar>, List<LanguageIssue>> {
         val grammars = this.transformBranch<List<Grammar>>(sppt.root.asBranch, "")
         return Pair(grammars, _issues) //TODO
     }
@@ -104,7 +105,7 @@ internal class AglGrammarSyntaxAnalyser(
         val namespace = arg as Namespace
         val name = target.nonSkipChildren[1].nonSkipMatchedText
         val extends = this.transformBranch<List<Grammar>>(children[0], namespace)
-        val result = GrammarDefault(namespace, name, mutableListOf())
+        val result = GrammarDefault(namespace, name)
         result.extends.addAll(extends)
 
         this.grammarRegistry.register(result)
@@ -255,14 +256,14 @@ internal class AglGrammarSyntaxAnalyser(
 
     // simpleList = simpleItem multiplicity ;
     fun simpleList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): SimpleList {
-        val (min,max) = this.transformBranch<Pair<Int, Int>>(children[1], arg)
+        val (min, max) = this.transformBranch<Pair<Int, Int>>(children[1], arg)
         val item = this.transformBranch<SimpleItem>(children[0], arg)
         return SimpleListDefault(min, max, item)
     }
 
     // separatedList : '[' simpleItem '/' terminal ']' multiplicity ;
     fun separatedList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): SeparatedList {
-        val (min,max) = this.transformBranch<Pair<Int, Int>>(children[2], arg)
+        val (min, max) = this.transformBranch<Pair<Int, Int>>(children[2], arg)
         val separator = this.transformBranch<SimpleItem>(children[1], arg)
         val item = this.transformBranch<SimpleItem>(children[0], arg)
         return SeparatedListDefault(min, max, item, separator, SeparatedListKind.Flat)
@@ -271,14 +272,14 @@ internal class AglGrammarSyntaxAnalyser(
     // group : '(' choice ')' ;
     fun group(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Group {
         val groupContent = this.transformBranch<RuleItem>(children[0], arg)
-        return when(groupContent) {
+        return when (groupContent) {
             is Choice -> GroupDefault(groupContent)
             is Concatenation -> GroupDefault(ChoiceLongestDefault(listOf(groupContent)))
             else -> error("Intertnal Error: type of group content not handled '${groupContent::class.simpleName}'")
         }
     }
 
-    fun groupedContent(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?):RuleItem {
+    fun groupedContent(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
         val content = this.transformBranch<RuleItem>(children[0], arg)
         return content
     }
@@ -306,7 +307,7 @@ internal class AglGrammarSyntaxAnalyser(
         val value = if (isPattern) {
             escaped.replace("\\\"", "\"")
         } else {
-            escaped.replace("\\'", "'").replace("\\\\","\\")
+            escaped.replace("\\'", "'").replace("\\\\", "\\")
         }
         return TerminalDefault(value, isPattern)
     }

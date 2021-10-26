@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast
+package net.akehurst.language.agl.grammar.grammar.asm
 
+import net.akehurst.language.api.grammar.NodeType;
 
-import net.akehurst.language.api.grammar.ChoiceEqual
-import net.akehurst.language.api.grammar.Concatenation
-
-internal class ChoiceLongestDefault(override val alternative: List<Concatenation>) : ChoiceAbstract(alternative), ChoiceEqual {
+data class NodeTypeDefault(override val identity: String) : NodeType {
 
 }

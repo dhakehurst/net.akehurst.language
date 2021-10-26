@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast
+package net.akehurst.language.agl.grammar.grammar.asm
 
+import net.akehurst.language.api.grammar.SimpleItem
 
-import net.akehurst.language.api.grammar.ChoicePriority
-import net.akehurst.language.api.grammar.Concatenation
+abstract class SimpleItemAbstract : ConcatenationItemAbstract(), SimpleItem {
 
-internal class ChoicePriorityDefault(
-    override val alternative: List<Concatenation>
-) : ChoiceAbstract(alternative), ChoicePriority {
-
+    abstract val name: String
 
 }

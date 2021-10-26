@@ -14,32 +14,29 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast
+package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 
-internal class ConcatenationDefault(override val items: List<ConcatenationItem>) : RuleItemAbstract(), Concatenation {
+class SimpleListDefault(override val min: Int, override val max: Int, override val item: SimpleItem) : RuleItemAbstract(), SimpleList {
 
-   override fun setOwningRule(rule: Rule, indices: List<Int>) {
+    override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this._owningRule = rule
 		this.index = indices
-		var i: Int = 0
-		this.items.forEach {
-			val nextIndex: List<Int> = indices + (i++)
-			it.setOwningRule(rule, nextIndex)
-		}
+		val nextIndex: List<Int> = indices + 0
+		this.item.setOwningRule(rule, nextIndex)
 	}
-	
+		
 	override fun subItem(index: Int): RuleItem {
-		return this.items.get(index)
+		return if (0==index) this.item else throw GrammarRuleItemNotFoundException("subitem ${index} not found")
 	}
 	
 	override val allTerminal: Set<Terminal> by lazy {
-		this.items.flatMap { it.allTerminal }.toSet()
+		this.item.allTerminal
 	}
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
-		this.items.flatMap { it.allNonTerminal }.toSet()
+		this.item.allNonTerminal
 	}
-
+	
 }

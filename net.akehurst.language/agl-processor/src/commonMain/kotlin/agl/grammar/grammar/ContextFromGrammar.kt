@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.ScopeSimple
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.Rule

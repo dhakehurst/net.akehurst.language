@@ -14,29 +14,40 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast
+package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 
-internal class SimpleListDefault(override val min: Int, override val max: Int, override val item: SimpleItem) : RuleItemAbstract(), SimpleList {
+class SeparatedListDefault(
+		override val min: Int,
+		override val max: Int,
+		override val item: SimpleItem,
+		override val separator: SimpleItem,
+		override val associativity: SeparatedListKind
+) : RuleItemAbstract(), SeparatedList {
 
-    override fun setOwningRule(rule: Rule, indices: List<Int>) {
+	override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this._owningRule = rule
 		this.index = indices
 		val nextIndex: List<Int> = indices + 0
 		this.item.setOwningRule(rule, nextIndex)
+		this.separator.setOwningRule(rule, nextIndex)
 	}
-		
+
 	override fun subItem(index: Int): RuleItem {
-		return if (0==index) this.item else throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+		return when (index) {
+			0 -> this.item
+			1 -> this.separator
+			else -> throw GrammarRuleItemNotFoundException("subitem ${index} not found")
+		}
 	}
-	
+
 	override val allTerminal: Set<Terminal> by lazy {
-		this.item.allTerminal
+		this.item.allTerminal + this.separator.allTerminal
 	}
 
 	override val allNonTerminal: Set<NonTerminal> by lazy {
 		this.item.allNonTerminal
 	}
-	
+
 }

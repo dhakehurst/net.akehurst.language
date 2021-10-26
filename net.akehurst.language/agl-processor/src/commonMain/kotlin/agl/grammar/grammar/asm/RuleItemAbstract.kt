@@ -14,11 +14,24 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast;
+package net.akehurst.language.agl.grammar.grammar.asm
 
-import net.akehurst.language.api.grammar.ConcatenationItem;
+import net.akehurst.language.api.grammar.*
 
-internal abstract class ConcatenationItemAbstract : RuleItemAbstract(), ConcatenationItem {
+abstract class RuleItemAbstract : RuleItem {
 
+	protected var _owningRule : Rule? = null
 
+	override val owningRule: Rule get() {
+		return this._owningRule ?: throw GrammarRuleNotFoundException("Internal Error: owningRule must be set")
+	}
+	
+	var index: List<Int>? = null
+
+	abstract override val allTerminal: Set<Terminal>
+
+	abstract override val allNonTerminal: Set<NonTerminal>
+
+	
+	
 }

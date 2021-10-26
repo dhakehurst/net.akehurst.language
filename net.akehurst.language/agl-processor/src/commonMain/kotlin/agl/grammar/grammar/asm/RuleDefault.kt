@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast
+package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.GrammarExeception
 import net.akehurst.language.api.grammar.NodeType
 import net.akehurst.language.api.grammar.Rule
 import net.akehurst.language.api.grammar.RuleItem
 
-internal data class RuleDefault(
+data class RuleDefault(
 		override val grammar: GrammarDefault,
 		override val name: String,
 		override val isOverride:Boolean,

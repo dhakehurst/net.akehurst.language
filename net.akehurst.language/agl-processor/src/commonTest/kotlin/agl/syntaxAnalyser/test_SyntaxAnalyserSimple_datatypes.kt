@@ -56,15 +56,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             
             }
         """.trimIndent()
-        val references = """
-            scope unit {
-                identify primitive by ID
-                identify datatype by ID
-            }
-            references {
-                in typeReference property type refers-to primitive|datatype
-            }
-        """.trimIndent()
+
         val syntaxAnalyser = SyntaxAnalyserSimple()
         val processor = Agl.processorFromString(
             grammarStr,
@@ -73,7 +65,15 @@ class test_SyntaxAnalyserSimple_datatypes {
         ).also {
             syntaxAnalyser.configure(
                 configurationContext = ContextFromGrammar(it.grammar),
-                configuration = references
+                configuration = """
+                    scope unit {
+                        identify primitive by ID
+                        identify datatype by ID
+                    }
+                    references {
+                        in typeReference property type refers-to primitive|datatype
+                    }
+                """.trimIndent()
             )
         }
     }

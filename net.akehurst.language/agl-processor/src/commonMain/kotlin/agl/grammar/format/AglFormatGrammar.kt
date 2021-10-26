@@ -15,28 +15,31 @@
  */
 package net.akehurst.language.agl.grammar.format
 
-import net.akehurst.language.agl.ast.GrammarAbstract
-import net.akehurst.language.agl.ast.GrammarBuilderDefault
-import net.akehurst.language.agl.ast.NamespaceDefault
+import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
+import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.grammar.Rule
 
 
-internal class AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglFormat", createRules()) {
+internal class AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglFormat") {
     companion object {
         const val goalRuleName = "rules"
+        private fun createRules(): List<Rule> {
+            val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglFormat");
+            b.skip("WHITESPACE").concatenation(b.terminalPattern("\\s+"));
+            b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/"));
+            b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//[^\\n\\r]*"));
+
+            b.rule("rules").multi(0, -1, b.nonTerminal("rule"))
+            b.rule("rule").concatenation(b.nonTerminal("IDENTIFIER"), b.terminalLiteral("{"), b.terminalLiteral("}"))
+
+            b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
+
+            return b.grammar.rule
+        }
     }
-}
 
-private fun createRules(): List<Rule> {
-    val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglFormat");
-    b.skip("WHITESPACE").concatenation(b.terminalPattern("\\s+"));
-    b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/"));
-    b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//[^\\n\\r]*"));
-
-    b.rule("rules").multi(0,-1, b.nonTerminal("rule"))
-    b.rule("rule").concatenation(b.nonTerminal("IDENTIFIER"), b.terminalLiteral("{"), b.terminalLiteral("}"))
-
-    b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
-
-    return b.grammar.rule
+    init {
+        super.rule.addAll(createRules())
+    }
 }

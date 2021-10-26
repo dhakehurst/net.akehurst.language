@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast
+package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.collections.lazyMapNonNull
 
-internal class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
+class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
     private val _literals = lazyMapNonNull<String, Terminal>() {
         TerminalDefault(it, false)
@@ -29,7 +29,7 @@ internal class GrammarBuilderDefault(val namespace: Namespace, val name: String)
 
 
     init {
-        this.grammar = GrammarDefault(namespace, name, mutableListOf<Rule>());
+        this.grammar = GrammarDefault(namespace, name)
     }
 
     fun rule(name: String): RuleBuilder {

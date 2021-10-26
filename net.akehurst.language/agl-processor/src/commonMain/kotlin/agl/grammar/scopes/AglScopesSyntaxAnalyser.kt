@@ -15,8 +15,7 @@
  */
 package net.akehurst.language.agl.grammar.scopes
 
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -26,7 +25,12 @@ import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextSimple> {
+class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextFromGrammar> {
+
+    data class PropertyValue(
+        val asmObject: Any,
+        val value: String
+    )
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
@@ -37,29 +41,53 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextSimple> {
         this.issues.clear()
     }
 
-    override fun configure(configurationContext: SentenceContext, configuration: String) {
+    override fun configure(configurationContext: SentenceContext, configuration: String): List<LanguageIssue> {
+        return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, context: ContextSimple?): Pair<ScopeModel, List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, context: ContextFromGrammar?): Pair<ScopeModel, List<LanguageIssue>> {
         val asm = this.declarations(sppt.root.asBranch)
 
-        if (null!=context) {
+        if (null != context) {
             asm.scopes.forEach { scope ->
-                val scopeRule = context.scope.findOrNull(scope.scopeFor, "Rule")
-                if (null == scopeRule) {
-                    val loc = this.locationMap[scope]
-                    issues.add(
-                        LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, loc, "Rule '${scope.scopeFor}' not found")
-                    )
+                if (context.scope.isMissing(scope.scopeFor, "Rule")) {
+                    val loc = this.locationMap[PropertyValue(scope, "typeReference")]
+                    issues.raise(loc, "Rule '${scope.scopeFor}' not found for scope")
                 }
                 scope.identifiables.forEach { identifiable ->
-                    val propRule = context.scope.findOrNull(identifiable.propertyName,"Rule")
-                    TODO()
+                    if (context.scope.isMissing(identifiable.typeName, "Rule")) {
+                        val loc = this.locationMap[PropertyValue(identifiable, "typeReference")]
+                        issues.raise(loc, "In scope for '${scope.scopeFor}' Rule '${identifiable.typeName}' not found as identifiable type")
+                    }
+                    if (context.scope.isMissing(identifiable.propertyName, "Rule")) {
+                        val loc = this.locationMap[PropertyValue(identifiable, "propertyName")]
+                        issues.raise(loc, "In scope for '${scope.scopeFor}' Rule '${identifiable.propertyName}' not found for identifying property of '${identifiable.typeName}'")
+                    }
+                }
+            }
+            asm.references.forEach { ref ->
+                if (context.scope.isMissing(ref.inTypeName, "Rule")) {
+                    val loc = this.locationMap[PropertyValue(ref, "in")]
+                    issues.raise(loc, "Referring type Rule '${ref.inTypeName}' not found")
+                }
+                if (context.scope.isMissing(ref.referringPropertyName, "Rule")) {
+                    val loc = this.locationMap[PropertyValue(ref, "propertyReference")]
+                    issues.raise(loc, "For reference in '${ref.inTypeName}' referring property Rule '${ref.referringPropertyName}' not found")
+                }
+                ref.refersToTypeName.forEachIndexed { i, n ->
+                    if (context.scope.isMissing(n, "Rule")) {
+                        val loc = this.locationMap[PropertyValue(ref, "typeReferences[$i]")]
+                        issues.raise(loc, "For reference in '${ref.inTypeName}' referred to type Rule '$n' not found")
+                    }
                 }
             }
         }
 
-        return Pair(asm,issues)
+        return Pair(asm, issues)
+    }
+
+    private fun MutableList<LanguageIssue>.raise(location: InputLocation?, message: String) {
+        this.add(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, location, message))
     }
 
     // declarations = scopes references
@@ -87,6 +115,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextSimple> {
         val scope = Scope(scopeFor)
         scope.identifiables.addAll(identifiables)
         locationMap[scope] = node.location
+        locationMap[PropertyValue(scope, "typeReference")] = node.branchChild(0).location
         return scope
     }
 
@@ -103,6 +132,8 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextSimple> {
         val propertyName = this.propertyReference(node.branchChild(1))
         val identifiable = Identifiable(typeName, propertyName)
         locationMap[identifiable] = node.location
+        locationMap[PropertyValue(identifiable, "typeReference")] = node.branchChild(0).location
+        locationMap[PropertyValue(identifiable, "propertyName")] = node.branchChild(1).location
         return identifiable
     }
 
@@ -125,6 +156,11 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextSimple> {
         val typeReferences = this.typeReferences(node.branchChild(2))
         val def = ReferenceDefinition(inTypeName, referringPropertyName, typeReferences)
         this.locationMap[def] = node.location
+        locationMap[PropertyValue(def, "in")] = node.branchChild(0).location
+        locationMap[PropertyValue(def, "propertyReference")] = node.branchChild(1).location
+        node.branchChild(2).branchNonSkipChildren.forEachIndexed { i, n ->
+            locationMap[PropertyValue(def, "typeReferences[$i]")] = n.location
+        }
         return def
     }
 

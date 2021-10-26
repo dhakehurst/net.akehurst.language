@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.ast
+package net.akehurst.language.agl.grammar.grammar.asm
 
-import net.akehurst.language.api.grammar.Namespace
+import net.akehurst.language.api.grammar.ConcatenationItem;
 
-internal data class NamespaceDefault(override val qualifiedName: String) : Namespace {
+abstract class ConcatenationItemAbstract : RuleItemAbstract(), ConcatenationItem {
+
 
 }
