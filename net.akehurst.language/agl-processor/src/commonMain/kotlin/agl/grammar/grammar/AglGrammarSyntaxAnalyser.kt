@@ -266,7 +266,7 @@ internal class AglGrammarSyntaxAnalyser(
         val (min, max) = this.transformBranch<Pair<Int, Int>>(children[2], arg)
         val separator = this.transformBranch<SimpleItem>(children[1], arg)
         val item = this.transformBranch<SimpleItem>(children[0], arg)
-        return SeparatedListDefault(min, max, item, separator, SeparatedListKind.Flat)
+        return SeparatedListDefault(min, max, item, separator)//, SeparatedListKind.Flat)
     }
 
     // group : '(' choice ')' ;

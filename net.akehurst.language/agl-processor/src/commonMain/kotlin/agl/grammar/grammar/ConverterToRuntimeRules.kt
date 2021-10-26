@@ -377,11 +377,12 @@ internal class ConverterToRuntimeRules(
     private fun createRhsForSeparatedList(target: SeparatedList, arg: String): RuntimeRuleItem {
         val item = this.visitSimpleItem(target.item, arg)
         val separator = this.visitSimpleItem(target.separator, arg)
-        val kind = when (target.associativity) {
-            SeparatedListKind.Flat -> RuntimeRuleListKind.SEPARATED_LIST
-            SeparatedListKind.Left -> RuntimeRuleListKind.LEFT_ASSOCIATIVE_LIST
-            SeparatedListKind.Right -> RuntimeRuleListKind.RIGHT_ASSOCIATIVE_LIST
-        }
+        val kind =RuntimeRuleListKind.SEPARATED_LIST
+        //val kind = when (target.associativity) {
+       //     SeparatedListKind.Flat -> RuntimeRuleListKind.SEPARATED_LIST
+        //    SeparatedListKind.Left -> RuntimeRuleListKind.LEFT_ASSOCIATIVE_LIST
+       //     SeparatedListKind.Right -> RuntimeRuleListKind.RIGHT_ASSOCIATIVE_LIST
+       // }
         val items = when (target.min) {
             0 -> arrayOf(item, separator, createEmptyRuntimeRuleFor(arg))
             else -> arrayOf(item, separator)

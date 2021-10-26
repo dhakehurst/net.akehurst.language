@@ -23,7 +23,7 @@ class SeparatedListDefault(
 		override val max: Int,
 		override val item: SimpleItem,
 		override val separator: SimpleItem,
-		override val associativity: SeparatedListKind
+		//override val associativity: SeparatedListKind
 ) : RuleItemAbstract(), SeparatedList {
 
 	override fun setOwningRule(rule: Rule, indices: List<Int>) {

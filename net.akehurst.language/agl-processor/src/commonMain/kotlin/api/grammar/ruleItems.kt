@@ -18,7 +18,7 @@ package net.akehurst.language.api.grammar
 
 interface RuleItem {
     val owningRule: Rule
-	fun setOwningRule(rule: Rule, indices: List<Int>)
+	fun setOwningRule(rule: Rule, indices: List<Int>) //TODO: make internal not on interface
     val allTerminal: Set<Terminal>
     val allNonTerminal: Set<NonTerminal>
     fun subItem(index: Int): RuleItem
@@ -46,7 +46,7 @@ interface ListOfItems : ConcatenationItem {
 interface SimpleList : ListOfItems
 interface SeparatedList : ListOfItems {
     val separator: SimpleItem
-    val associativity: SeparatedListKind
+   // val associativity: SeparatedListKind
 }
 enum class SeparatedListKind { Flat, Left, Right }
 

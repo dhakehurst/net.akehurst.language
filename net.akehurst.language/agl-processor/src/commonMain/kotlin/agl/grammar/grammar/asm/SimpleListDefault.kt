@@ -18,7 +18,11 @@ package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 
-class SimpleListDefault(override val min: Int, override val max: Int, override val item: SimpleItem) : RuleItemAbstract(), SimpleList {
+class SimpleListDefault(
+	override val min: Int,
+	override val max: Int,
+	override val item: SimpleItem
+) : RuleItemAbstract(), SimpleList {
 
     override fun setOwningRule(rule: Rule, indices: List<Int>) {
 		this._owningRule = rule
