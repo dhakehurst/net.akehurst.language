@@ -140,7 +140,7 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
                             br.runtimeRule.rhs.items[0].kind == RuntimeRuleKind.NON_TERMINAL
                             && br.runtimeRule.rhs.items[0].rhs.itemsKind == RuntimeRuleRhsItemsKind.LIST
                         ) {
-                            el.properties[0].value
+                            el.properties.values.first().value
                         } else {
                             el
                         }
@@ -254,7 +254,8 @@ internal fun ScopeModel.resolveReferencesElement(el: AsmElementSimple, locationM
     val issues = mutableListOf<LanguageIssue>()
     val elScope = el.ownScope ?: scope
     if (null != elScope) {
-        el.properties.forEach { prop ->
+        el.properties.forEach { e ->
+            val prop = e.value
             if (prop.isReference) {
                 val v = prop.value
                 if (null == v) {

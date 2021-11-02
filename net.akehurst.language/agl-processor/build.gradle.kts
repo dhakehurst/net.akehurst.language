@@ -1,5 +1,5 @@
 plugins {
-    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.3.0")
+
 }
 
 kotlin {

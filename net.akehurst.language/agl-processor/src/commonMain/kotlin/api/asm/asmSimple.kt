@@ -43,7 +43,7 @@ class AsmElementSimple(
     private var _properties = mutableMapOf<String, AsmElementProperty>()
 
     var ownScope: ScopeSimple<AsmElementSimple>? = null
-    val properties: List<AsmElementProperty> get() = _properties.values.toList()
+    val properties: Map<String, AsmElementProperty> get() = _properties
 
     fun hasProperty(name: String): Boolean = _properties.containsKey(name)
 
@@ -85,7 +85,7 @@ class AsmElementSimple(
 
     fun asString(indent: String, currentIndent: String = ""): String {
         val newIndent = currentIndent + indent
-        val propsStr = this.properties.joinToString(separator = "\n$newIndent", prefix = "{\n$newIndent", postfix = "\n$currentIndent}") {
+        val propsStr = this.properties.values.joinToString(separator = "\n$newIndent", prefix = "{\n$newIndent", postfix = "\n$currentIndent}") {
             if (it.isReference) {
                 val ref = it.value as AsmElementReference
                 if (null == ref.value) {
@@ -136,6 +136,6 @@ class AsmElementProperty(
 
 val AsmElementSimple.children: List<AsmElementSimple>
     get()
-    = this.properties
+    = this.properties.values
         .flatMap { if (it.value is List<*>) it.value else listOf(it.value) }
         .filterIsInstance<AsmElementSimple>()
