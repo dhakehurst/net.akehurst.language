@@ -16,11 +16,20 @@
 package net.akehurst.language.agl.grammar.scopes
 
 class ScopeModel {
-    val scopes = mutableListOf<Scope>()
+    companion object {
+        val ROOT_SCOPE_TYPE_NAME = "§root"
+        val IDENTIFY_BY_NOTHING = "§nothing"
+    }
+
+    val scopes = mutableMapOf<String,ScopeDefinition>()
     val references = mutableListOf<ReferenceDefinition>()
 
+    init {
+        scopes[ROOT_SCOPE_TYPE_NAME]=ScopeDefinition(ROOT_SCOPE_TYPE_NAME)
+    }
+
     fun isScope(scopeFor: String): Boolean {
-        return scopes.any { it.scopeFor == scopeFor }
+        return scopes.containsKey(scopeFor)
     }
 
     fun isReference(typeName: String, propertyName: String): Boolean {
@@ -31,7 +40,7 @@ class ScopeModel {
     }
 
     fun getReferablePropertyNameFor(scopeFor: String, typeName: String): String? {
-        val scope = scopes.firstOrNull { it.scopeFor == scopeFor }
+        val scope = scopes[scopeFor]
         val identifiable = scope?.identifiables?.firstOrNull { it.typeName == typeName }
         return identifiable?.propertyName
     }
@@ -39,9 +48,13 @@ class ScopeModel {
         val def = references.firstOrNull { it.inTypeName == inTypeName && it.referringPropertyName==referringPropertyName }
         return def?.refersToTypeName ?: emptyList()
     }
+
+    fun shouldCreateReference(scopeFor: String, typeName: String): Boolean {
+        return null!=getReferablePropertyNameFor(scopeFor,typeName)
+    }
 }
 
-data class Scope(
+data class ScopeDefinition(
     val scopeFor: String
 ) {
     val identifiables = mutableListOf<Identifiable>()

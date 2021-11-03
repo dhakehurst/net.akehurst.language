@@ -21,17 +21,19 @@ import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.grammar.Rule
 
 /**
-    declarations = scopes references
+    declarations = rootIdentifiables scopes references
+    rootIdentifiables = identifiable*
     scopes = scope+
     scope = 'scope' typeReference '{' identifiables '}
     identifiables = identifiable*
-    identifiable = 'identify' typeReference 'by' propertyName
+    identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
 
     references = 'references' '{' referenceDefinitions '}'
     referenceDefinitions = referenceDefinition*
     referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
     typeReferences = [typeReferences / '|']+
 
+    propertyReferenceOrNothing = '§nothing' | propertyReference
     typeReference = IDENTIFIER     // same as grammar rule name
     propertyReference = IDENTIFIER // same as grammar rule name
     leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
@@ -45,17 +47,19 @@ internal class AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst.
             b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"));
             b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//[^\\n\\r]*"));
 
-            b.rule("declarations").concatenation(b.nonTerminal("scopes"),b.nonTerminal("references"))
+            b.rule("declarations").concatenation(b.nonTerminal("rootIdentifiables"), b.nonTerminal("scopes"),b.nonTerminal("references"))
+            b.rule("rootIdentifiables").multi(0, -1, b.nonTerminal("identifiable"))
             b.rule("scopes").multi(0,-1,b.nonTerminal("scope"))
             b.rule("scope").concatenation(b.terminalLiteral("scope"), b.nonTerminal("typeReference"), b.terminalLiteral("{"), b.nonTerminal("identifiables"), b.terminalLiteral("}"))
             b.rule("identifiables").multi(0, -1, b.nonTerminal("identifiable"))
-            b.rule("identifiable").concatenation(b.terminalLiteral("identify"),b.nonTerminal("typeReference"),b.terminalLiteral("by"),b.nonTerminal("propertyReference"))
+            b.rule("identifiable").concatenation(b.terminalLiteral("identify"),b.nonTerminal("typeReference"),b.terminalLiteral("by"),b.nonTerminal("propertyReferenceOrNothing"))
 
             b.rule("references").concatenation(b.terminalLiteral("references"), b.terminalLiteral("{"), b.nonTerminal("referenceDefinitions"),b.terminalLiteral("}"))
             b.rule("referenceDefinitions").multi(0,-1,b.nonTerminal("referenceDefinition"))
             b.rule("referenceDefinition").concatenation(b.terminalLiteral("in"),b.nonTerminal("typeReference"),b.terminalLiteral("property"),b.nonTerminal("propertyReference"),b.terminalLiteral("refers-to"),b.nonTerminal("typeReferences"))
             b.rule("typeReferences").separatedList(1,-1,b.terminalLiteral("|"),b.nonTerminal("typeReference"))
             b.rule("typeReference").concatenation(b.nonTerminal("IDENTIFIER"))
+            b.rule("propertyReferenceOrNothing").choiceLongestFromConcatenationItem(b.terminalLiteral("§nothing"),b.nonTerminal("propertyReference"))
             b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
             b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
 

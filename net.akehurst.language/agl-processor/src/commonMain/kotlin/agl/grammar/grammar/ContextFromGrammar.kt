@@ -27,7 +27,7 @@ class ContextFromGrammar(
     val grammar: Grammar
 ) : SentenceContext {
 
-    val scope = ScopeSimple<Rule>(null, grammar.name)
+    val scope = ScopeSimple<Rule>(null, "", grammar.name)
 
     init {
         grammar.allRule.forEach {

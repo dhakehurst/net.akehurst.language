@@ -18,10 +18,6 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
-import net.akehurst.language.agl.grammar.scopes.Identifiable
-import net.akehurst.language.agl.grammar.scopes.ReferenceDefinition
-import net.akehurst.language.agl.grammar.scopes.Scope
-import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimple
@@ -66,6 +62,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             syntaxAnalyser.configure(
                 configurationContext = ContextFromGrammar(it.grammar),
                 configuration = """
+                    identify unit by §nothing
                     scope unit {
                         identify primitive by ID
                         identify datatype by ID
@@ -142,7 +139,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val (actual, issues) = processor.process<AsmSimple, Any>(
             sentence = sentence,
-            context = ContextSimple(null, "unit")
+            context = ContextSimple()
         )
         assertNotNull(actual)
 
@@ -183,12 +180,12 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val (actual, issues) = processor.process<AsmSimple, Any>(
             sentence = sentence,
-            context = ContextSimple(null, "unit")
+            context = ContextSimple()
         )
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
 
-        val expected = asmSimple(syntaxAnalyser.scopeModel, ContextSimple(null, "unit")) {
+        val expected = asmSimple(syntaxAnalyser.scopeModel, ContextSimple()) {
             root("unit") {
                 property("declaration", listOf(
                     element("primitive") {

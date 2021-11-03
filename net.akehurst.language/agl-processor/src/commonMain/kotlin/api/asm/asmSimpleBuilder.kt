@@ -19,6 +19,7 @@ package net.akehurst.language.api.asm
 
 import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
 import net.akehurst.language.agl.syntaxAnalyser.resolveReferencesElement
 
 fun asmSimple(scopeModel: ScopeModel = ScopeModel(), context: ContextSimple? = null, init: AsmSimpleBuilder.() -> Unit): AsmSimple {
@@ -35,14 +36,14 @@ class AsmSimpleBuilder(
     private val _asm = AsmSimple()
 
     fun root(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
-        val b = AsmElementSimpleBuilder(_scopeModel, this._asm, typeName, true, _context?.scope)
+        val b = AsmElementSimpleBuilder(_scopeModel, this._asm, typeName, true, _context?.rootScope)
         b.init()
         return b.build()
     }
 
     fun build(): AsmSimple {
         _asm.rootElements.forEach { el ->
-            _scopeModel.resolveReferencesElement(el, emptyMap(),_context?.scope)
+            _scopeModel.resolveReferencesElement(el, emptyMap(),_context?.rootScope)
         }
         return _asm
     }
@@ -67,7 +68,8 @@ class AsmElementSimpleBuilder(
     fun property(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val childScope = _scope?.let {
             if (_scopeModel.isScope(_element.typeName)) {
-                val newScope = _scope.childScope(_element.typeName)
+                val refInParent = _scopeModel.createReferenceLocalToScope(_scope,_element) ?: error("Trying to create child scope but cannot create a reference for $_element")
+                val newScope = _scope.createOrGetChildScope(refInParent, _element.typeName)
                 _element.ownScope = newScope
                 newScope
             } else {
@@ -88,7 +90,8 @@ class AsmElementSimpleBuilder(
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val childScope = _scope?.let {
             if (_scopeModel.isScope(_element.typeName)) {
-                val newScope = _scope.childScope(_element.typeName)
+                val refInParent = _scopeModel.createReferenceLocalToScope(_scope,_element) ?: error("Trying to create child scope but cannot create a reference for $_element")
+                val newScope = _scope.createOrGetChildScope(refInParent,_element.typeName)
                 _element.ownScope = newScope
                 newScope
             } else {

@@ -49,19 +49,26 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextFromGrammar> {
         val asm = this.declarations(sppt.root.asBranch)
 
         if (null != context) {
-            asm.scopes.forEach { scope ->
-                if (context.scope.isMissing(scope.scopeFor, "Rule")) {
-                    val loc = this.locationMap[PropertyValue(scope, "typeReference")]
-                    issues.raise(loc, "Rule '${scope.scopeFor}' not found for scope")
-                }
-                scope.identifiables.forEach { identifiable ->
-                    if (context.scope.isMissing(identifiable.typeName, "Rule")) {
-                        val loc = this.locationMap[PropertyValue(identifiable, "typeReference")]
-                        issues.raise(loc, "In scope for '${scope.scopeFor}' Rule '${identifiable.typeName}' not found as identifiable type")
+            asm.scopes.forEach { (k,scope) ->
+                if (ScopeModel.ROOT_SCOPE_TYPE_NAME==scope.scopeFor) {
+                    //do nothing
+                } else {
+                    if (context.scope.isMissing(scope.scopeFor, "Rule")) {
+                        val loc = this.locationMap[PropertyValue(scope, "typeReference")]
+                        issues.raise(loc, "Rule '${scope.scopeFor}' not found for scope")
                     }
-                    if (context.scope.isMissing(identifiable.propertyName, "Rule")) {
-                        val loc = this.locationMap[PropertyValue(identifiable, "propertyName")]
-                        issues.raise(loc, "In scope for '${scope.scopeFor}' Rule '${identifiable.propertyName}' not found for identifying property of '${identifiable.typeName}'")
+                    scope.identifiables.forEach { identifiable ->
+                        if (context.scope.isMissing(identifiable.typeName, "Rule")) {
+                            val loc = this.locationMap[PropertyValue(identifiable, "typeReference")]
+                            issues.raise(loc, "In scope for '${scope.scopeFor}' Rule '${identifiable.typeName}' not found as identifiable type")
+                        }
+                        if (context.scope.isMissing(identifiable.propertyName, "Rule")) {
+                            val loc = this.locationMap[PropertyValue(identifiable, "propertyName")]
+                            issues.raise(
+                                loc,
+                                "In scope for '${scope.scopeFor}' Rule '${identifiable.propertyName}' not found for identifying property of '${identifiable.typeName}'"
+                            )
+                        }
                     }
                 }
             }
@@ -90,29 +97,40 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextFromGrammar> {
         this.add(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, location, message))
     }
 
-    // declarations = scopes references
+    // declarations = rootIdentifiables scopes references
     private fun declarations(node: SPPTBranch): ScopeModel {
         val asm = ScopeModel()
-        val scopes = this.scopes(node.branchChild(0))
-        val references = this.references(node.branchChild(1))
-        asm.scopes.addAll(scopes)
+        val rootIdentifiables = this.rootIdentifiables(node.branchChild(0))
+        val scopes = this.scopes(node.branchChild(1))
+        val references = this.references(node.branchChild(2))
+        asm.scopes[ScopeModel.ROOT_SCOPE_TYPE_NAME]?.identifiables?.addAll(rootIdentifiables)
+        scopes.forEach {
+            asm.scopes[it.scopeFor]=it
+        }
         asm.references.addAll(references)
         locationMap[asm] = node.location
         return asm
     }
 
+    // rootIdentifiables = identifiable*
+    private fun rootIdentifiables(node: SPPTBranch): List<Identifiable> {
+        return node.branchNonSkipChildren.map {
+            this.identifiable(it.asBranch)
+        }
+    }
+
     // scopes = scope+
-    private fun scopes(node: SPPTBranch): List<Scope> {
+    private fun scopes(node: SPPTBranch): List<ScopeDefinition> {
         return node.branchNonSkipChildren.map {
             this.scope(it.asBranch)
         }
     }
 
     // scope = 'scope' typeReference '{' identifiables '}
-    private fun scope(node: SPPTBranch): Scope {
+    private fun scope(node: SPPTBranch): ScopeDefinition {
         val scopeFor = this.typeReference(node.branchChild(0))
         val identifiables = this.identifiables(node.branchChild(1))
-        val scope = Scope(scopeFor)
+        val scope = ScopeDefinition(scopeFor)
         scope.identifiables.addAll(identifiables)
         locationMap[scope] = node.location
         locationMap[PropertyValue(scope, "typeReference")] = node.branchChild(0).location
@@ -126,10 +144,10 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextFromGrammar> {
         }
     }
 
-    // identifiable = 'identify' typeReference 'by' propertyName
+    // identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
     private fun identifiable(node: SPPTBranch): Identifiable {
         val typeName = this.typeReference(node.branchChild(0))
-        val propertyName = this.propertyReference(node.branchChild(1))
+        val propertyName = this.propertyReferenceOrNothing(node.branchChild(1))
         val identifiable = Identifiable(typeName, propertyName)
         locationMap[identifiable] = node.location
         locationMap[PropertyValue(identifiable, "typeReference")] = node.branchChild(0).location
@@ -168,6 +186,15 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextFromGrammar> {
     private fun typeReferences(node: SPPTBranch): List<String> {
         return node.branchNonSkipChildren.map {
             this.typeReference(it.asBranch)
+        }
+    }
+
+    // propertyReferenceOrNothing = '§nothing' | propertyReference
+    private fun propertyReferenceOrNothing(node: SPPTBranch): String {
+        val text = node.nonSkipMatchedText
+        return when (text) {
+            "§nothing" -> ScopeModel.IDENTIFY_BY_NOTHING
+            else -> text
         }
     }
 

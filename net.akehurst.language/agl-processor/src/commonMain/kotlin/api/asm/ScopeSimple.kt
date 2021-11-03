@@ -18,19 +18,36 @@ package net.akehurst.language.api.asm
 
 class ScopeSimple<E>(
     val parent: ScopeSimple<E>?,
+    val forReferenceInParent:String,
     val forTypeName:String
 ) {
 
-    private val _children = mutableMapOf<String,ScopeSimple<E>>()
+    private val _childScopes = mutableMapOf<String,ScopeSimple<E>>()
 
     // typeName -> referableName -> item
     private val _items: MutableMap<String,MutableMap<String,E>> = mutableMapOf()
 
-    fun childScope(scopeFor:String): ScopeSimple<E> {
-        var child = this._children[scopeFor]
+    val rootScope:ScopeSimple<E> by lazy {
+        var s = this
+        while(null!=s.parent) s = s.parent!!
+        s
+    }
+
+    // accessor needed for serialisation which assumes mutableMap for deserialisation
+    val childScopes:Map<String,ScopeSimple<E>> = _childScopes
+
+    // accessor needed for serialisation which assumes mutableMap for deserialisation
+    val items:Map<String,Map<String,E>> = _items
+
+    val path:List<String> by lazy {
+        if (null==parent) emptyList() else parent.path + forReferenceInParent
+    }
+
+    fun createOrGetChildScope(forReferenceInParent:String, forTypeName:String): ScopeSimple<E> {
+        var child = this._childScopes[forReferenceInParent]
         if (null==child) {
-            child = ScopeSimple<E>(this, forTypeName)
-            this._children[scopeFor] = child
+            child = ScopeSimple<E>(this, forReferenceInParent, forTypeName)
+            this._childScopes[forReferenceInParent] = child
         }
         return child
     }
@@ -47,4 +64,9 @@ class ScopeSimple<E>(
     fun findOrNull(referableName:String, typeName:String):E? = this._items[typeName]?.get(referableName)
 
     fun isMissing(referableName:String, typeName:String):Boolean = null==this.findOrNull(referableName,typeName)
+
+    override fun toString(): String = when {
+        null==parent -> "/$forTypeName"
+        else -> "$parent/$forTypeName"
+    }
 }

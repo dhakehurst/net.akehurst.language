@@ -71,21 +71,21 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
     override fun transform(sppt: SharedPackedParseTree, context: ContextSimple?): Pair<AsmSimple, List<LanguageIssue>> {
         this._context = context
         _asm = AsmSimple()
-        val value = this.createValue(sppt.root, context?.scope)
+        val value = this.createValue(sppt.root, AsmElementPath.ROOT, context?.rootScope)
         _asm?.addRoot(value as AsmElementSimple)
 
         _asm!!.rootElements.forEach {
-            val iss = scopeModel.resolveReferencesElement(it, locationMap, context?.scope)
+            val iss = scopeModel.resolveReferencesElement(it, locationMap, context?.rootScope)
             this._issues.addAll(iss)
         }
 
         return Pair(_asm!!, _issues)
     }
 
-    private fun createValue(target: SPPTNode, scope: ScopeSimple<AsmElementSimple>?): Any? {
+    private fun createValue(target: SPPTNode, path:AsmElementPath, scope: ScopeSimple<AsmElementPath>?): Any? {
         val v = when (target) {
             is SPPTLeaf -> createValueFromLeaf(target)
-            is SPPTBranch -> createValueFromBranch(target, scope)
+            is SPPTBranch -> createValueFromBranch(target,path, scope)
             else -> error("should never happen!")
         }
         if (v is AsmElementSimple) {
@@ -104,37 +104,40 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
         return value
     }
 
-    private fun createValueFromBranch(target: SPPTBranch, scope: ScopeSimple<AsmElementSimple>?): Any? {
+    private fun createValueFromBranch(target: SPPTBranch, path:AsmElementPath, scope: ScopeSimple<AsmElementPath>?): Any? {
         val br = target as SPPTBranchFromInputAndGrownChildren //SPPTBranchDefault //TODO: make write thing available on interface
         return when (br.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> error("should never happen!")
             RuntimeRuleKind.NON_TERMINAL -> when (br.runtimeRule.rhs.itemsKind) {
                 RuntimeRuleRhsItemsKind.EMPTY -> TODO()
                 RuntimeRuleRhsItemsKind.CHOICE -> {
-                    val v = this.createValue(br.children[0], scope)
+                    val v = this.createValue(br.children[0], path,scope)
                     v
                 }
                 RuntimeRuleRhsItemsKind.CONCATENATION -> {
                     val count = mutableMapOf<String, Int>()
-                    val el = _asm!!.createNonRootElement(br.name)// AsmElementSimple(br.name)
+                    val el = _asm!!.createNonRootElement(path,br.name)
+                    val childsScope = createScope(scope, el)
                     br.runtimeRule.rhs.items.forEachIndexed { index, rr ->
                         //TODO: leave out unnamed literals
                         if (rr.tag == "'${rr.value}'") {
                             // is unnamed literal don't use it as a property
                         } else {
                             val name = createPropertyName(rr)
-                            val nname = if (el.hasProperty(name)) {
-                                val i = count[name] ?: 2
+                            val nname = if (count.containsKey(name)) {
+                                val i = count[name]!!
                                 count[name] = i + 1
                                 name + i
                             } else {
+                                count[name] = 1
                                 name
                             }
-                            val childsScope = createScope(scope, el) // could be same scope or a new one
-                            val value = this.createValue(br.nonSkipChildren[index], childsScope)
+                            val childPath = path+nname
+                            val value = this.createValue(br.nonSkipChildren[index], childPath,childsScope)
                             this.setPropertyOrReference(el, nname, value)
                         }
                     }
+
                     if (br.runtimeRule.rhs.items.size == 1) {
                         if (br != br.tree?.root &&
                             br.runtimeRule.rhs.items[0].kind == RuntimeRuleKind.NON_TERMINAL
@@ -151,23 +154,43 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
                 RuntimeRuleRhsItemsKind.LIST -> when (br.runtimeRule.rhs.listKind) {
                     RuntimeRuleListKind.MULTI -> {
                         val name = br.runtimeRule.rhs.items[RuntimeRuleItem.MULTI__ITEM].tag
-                        val list = br.nonSkipChildren.mapNotNull { this.createValue(it, scope) } //TODO: childsScope
-                        val value = if (br.runtimeRule.rhs.multiMax == 1) {
-                            if (list.isEmpty()) null else list[0]
-                        } else {
-                            list
-                        }
+                        // if it is the root of the tree we want an element not a list
                         if (br == br.tree?.root) {
-                            val el = _asm!!.createNonRootElement(br.name)
+                            val el = _asm!!.createNonRootElement(path, br.name)
+                            val childsScope = createScope(scope, el)
+                            val list = br.nonSkipChildren.mapIndexedNotNull { i,b->
+                                val childPath = path+i.toString()
+                                this.createValue(b,childPath, childsScope)
+                            }
+                            val value = if (br.runtimeRule.rhs.multiMax == 1) {
+                                if (list.isEmpty()) null else list[0]
+                            } else {
+                                list
+                            }
                             el.setProperty(name, value, false)
                             el
                         } else {
+                            TODO("childScope?")
+                            val list = br.nonSkipChildren.mapIndexedNotNull { i,b->
+                                val childPath = path+i.toString()
+                                this.createValue(b,childPath, scope)
+                            }
+                            val value = if (br.runtimeRule.rhs.multiMax == 1) {
+                                if (list.isEmpty()) null else list[0]
+                            } else {
+                                list
+                            }
                             value
                         }
                     }
                     RuntimeRuleListKind.SEPARATED_LIST -> {
                         val name = br.runtimeRule.rhs.items[RuntimeRuleItem.SLIST__ITEM].tag
-                        val list = br.nonSkipChildren.mapNotNull { this.createValue(it, scope) }//TODO: childsScope
+                        // if it is the root of the tree we want an element not a list TODO
+                        val list = br.nonSkipChildren.mapIndexedNotNull { i,b->
+                            val childPath = path+i.toString()
+                            TODO("childScope?")
+                            this.createValue(b,childPath, scope)
+                        }
                         if (br.runtimeRule.rhs.multiMax == 1) {
                             val value = if (list.isEmpty()) null else list[0]
                             value
@@ -178,7 +201,7 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
                     else -> TODO()
                 }
             }
-            RuntimeRuleKind.GOAL -> this.createValue(br.children[0], scope)
+            RuntimeRuleKind.GOAL -> this.createValue(br.children[0], path, scope)
             RuntimeRuleKind.EMBEDDED -> TODO()
         }
     }
@@ -209,28 +232,66 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
         }
     }
 
-    private fun createScope(scope: ScopeSimple<AsmElementSimple>?, el: AsmElementSimple): ScopeSimple<AsmElementSimple>? {
+    private fun createScope(scope: ScopeSimple<AsmElementPath>?, el: AsmElementSimple): ScopeSimple<AsmElementPath>? {
         return if (null == scope) {
             null
         } else {
             if (scopeModel.isScope(el.typeName)) {
-                val newScope = scope.childScope(el.typeName)
-                el.ownScope = newScope
-                newScope
+                val refInParent = scopeModel.createReferenceLocalToScope(scope,el)
+                if (null!=refInParent) {
+                    val newScope = scope.createOrGetChildScope(refInParent, el.typeName)
+                    el.ownScope = newScope
+                    newScope
+                } else {
+                    _issues.add(
+                        LanguageIssue(
+                            LanguageIssueKind.ERROR,
+                            LanguageProcessorPhase.SYNTAX_ANALYSIS,
+                            this.locationMap[el],
+                            "Trying to create child scope but cannot create a reference for $el"
+                        )
+                    )
+                    scope
+                }
             } else {
                 scope
             }
         }
     }
 
-    private fun addToScope(scope: ScopeSimple<AsmElementSimple>?, el: AsmElementSimple) {
+    private fun addToScope(scope: ScopeSimple<AsmElementPath>?, el: AsmElementSimple) {
         if (null == scope) {
             //do nothing
         } else {
-            val scopeName = scope.forTypeName
-            val referableName = getReferable(scopeName, el)
-            if (null != referableName) {
-                scope.addToScope(referableName, el.typeName, el)
+            if (scopeModel.shouldCreateReference(scope.forTypeName, el.typeName)) {
+                //val reference = scopeModel.createReferenceFromRoot(scope, el)
+                val scopeLocalReference = scopeModel.createReferenceLocalToScope(scope, el)
+                if (null != scopeLocalReference) {
+                    val contextRef = scopeModel.createReferenceFromRoot(scope,el)
+                    if (null==contextRef) {
+                        _issues.add(
+                            LanguageIssue(
+                                LanguageIssueKind.ERROR,
+                                LanguageProcessorPhase.SYNTAX_ANALYSIS,
+                                this.locationMap[el],
+                                "Cannot create a reference from root in '$scope' for $el"
+                            )
+                        )
+                    } else {
+                        scope.addToScope(scopeLocalReference, el.typeName, contextRef)
+                    }
+                } else {
+                    _issues.add(
+                        LanguageIssue(
+                            LanguageIssueKind.ERROR,
+                            LanguageProcessorPhase.SYNTAX_ANALYSIS,
+                            this.locationMap[el],
+                            "Cannot create a local reference in '$scope' for $el"
+                        )
+                    )
+                }
+            } else {
+                // no need to add it to scope
             }
         }
     }
@@ -249,7 +310,7 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
     }
 }
 
-internal fun ScopeModel.resolveReferencesElement(el: AsmElementSimple, locationMap: Map<Any, InputLocation>, scope: ScopeSimple<AsmElementSimple>?): List<LanguageIssue> {
+internal fun ScopeModel.resolveReferencesElement(el: AsmElementSimple, locationMap: Map<Any, InputLocation>, scope: ScopeSimple<AsmElementPath>?): List<LanguageIssue> {
     val scopeModel = this
     val issues = mutableListOf<LanguageIssue>()
     val elScope = el.ownScope ?: scope
@@ -262,7 +323,9 @@ internal fun ScopeModel.resolveReferencesElement(el: AsmElementSimple, locationM
                     //can't set reference, but no issue
                 } else if (v is AsmElementReference) {
                     val typeNames = scopeModel.getReferredToTypeNameFor(el.typeName, prop.name)
-                    val referreds = typeNames.mapNotNull { elScope.findOrNull(v.reference, it) }
+                    val referreds:List<AsmElementPath> = typeNames.mapNotNull {
+                        elScope.findOrNull(v.reference, it) as AsmElementPath?
+                    }
                     if (1 < referreds.size) {
                         val location = locationMap[el] //TODO: should be property location
                         issues.add(
@@ -286,6 +349,7 @@ internal fun ScopeModel.resolveReferencesElement(el: AsmElementSimple, locationM
                             )
                         )
                     } else {
+                        val el = scopeModel.resolveReference(scope.rootScope,referred)
                         el.getPropertyAsReference(prop.name)?.value = referred
                     }
 

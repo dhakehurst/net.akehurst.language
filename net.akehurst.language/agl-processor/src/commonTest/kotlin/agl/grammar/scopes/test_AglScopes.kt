@@ -44,7 +44,7 @@ class test_AglScopes {
         val expected = ScopeModel()
 
         assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.identifiables }, asm?.scopes?.flatMap { it.identifiables })
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, asm?.references)
         assertEquals(emptyList(), issues)
     }
@@ -65,7 +65,7 @@ class test_AglScopes {
         val expected = ScopeModel()
 
         assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.identifiables }, asm?.scopes?.flatMap { it.identifiables })
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, asm?.references)
         assertEquals(emptyList(), issues)
     }
@@ -93,11 +93,11 @@ class test_AglScopes {
         )
 
         val expected = ScopeModel().apply {
-            scopes.add(Scope("rule1"))
+            scopes["rule1"]=(ScopeDefinition("rule1"))
         }
 
         assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.identifiables }, asm?.scopes?.flatMap { it.identifiables })
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, asm?.references)
         assertEquals(emptyList(), issues)
     }
@@ -125,11 +125,11 @@ class test_AglScopes {
         )
 
         val expected = ScopeModel().apply {
-            scopes.add(Scope("ruleX"))
+            scopes["ruleX"]=(ScopeDefinition("ruleX"))
         }
 
         assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.identifiables }, asm?.scopes?.flatMap { it.identifiables })
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, asm?.references)
         assertEquals(
             listOf(
@@ -165,13 +165,13 @@ class test_AglScopes {
         )
 
         val expected = ScopeModel().apply {
-            scopes.add(Scope("rule1").apply {
+            scopes["rule1"]=(ScopeDefinition("rule1").apply {
                 identifiables.add(Identifiable("rule2", "rule3"))
             })
         }
 
         assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.identifiables }, asm?.scopes?.flatMap { it.identifiables })
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, asm?.references)
         assertEquals(emptyList(), issues)
     }
@@ -203,13 +203,13 @@ class test_AglScopes {
         )
 
         val expected = ScopeModel().apply {
-            scopes.add(Scope("rule1").apply {
+            scopes["rule1"]=(ScopeDefinition("rule1").apply {
                 identifiables.add(Identifiable("ruleX", "rule3"))
             })
         }
 
         assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.identifiables }, asm?.scopes?.flatMap { it.identifiables })
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, asm?.references)
         assertEquals(
             listOf(
@@ -250,13 +250,13 @@ class test_AglScopes {
         )
 
         val expected = ScopeModel().apply {
-            scopes.add(Scope("rule1").apply {
+            scopes["rule1"]=(ScopeDefinition("rule1").apply {
                 identifiables.add(Identifiable("rule2", "ruleX"))
             })
         }
 
         assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.identifiables }, asm?.scopes?.flatMap { it.identifiables })
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, asm?.references)
         assertEquals(
             listOf(
@@ -300,7 +300,7 @@ class test_AglScopes {
         }
 
         assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.identifiables }, asm?.scopes?.flatMap { it.identifiables })
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, asm?.references)
         assertEquals(emptyList(), issues)
     }
@@ -335,7 +335,7 @@ class test_AglScopes {
         }
 
         assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.identifiables }, asm?.scopes?.flatMap { it.identifiables })
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, asm?.references)
         assertEquals(
             listOf(
@@ -362,7 +362,7 @@ class test_AglScopes {
         }
 
         assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.identifiables }, asm?.scopes?.flatMap { it.identifiables })
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, asm?.references)
         assertEquals(emptyList(), issues)
     }

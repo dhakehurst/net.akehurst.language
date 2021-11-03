@@ -16,18 +16,26 @@
 
 package net.akehurst.language.api.asm
 
+value class AsmElementPath(val value:String) {
+    companion object {
+        val ROOT = AsmElementPath("/")
+    }
+    operator fun plus(segment: String)= AsmElementPath("$value/$segment")
+}
+
 class AsmSimple {
     private var _nextElementId = 0
 
     val rootElements: List<AsmElementSimple> = mutableListOf()
+    val index = mutableMapOf<AsmElementPath, AsmElementSimple>()
 
     fun addRoot(root: AsmElementSimple) {
         (rootElements as MutableList).add(root)
     }
 
-    fun createNonRootElement(typeName: String) = AsmElementSimple(_nextElementId++, this, typeName)
+    fun createNonRootElement(asmPath:AsmElementPath, typeName: String) = AsmElementSimple(asmPath, this, typeName)
 
-    fun createRootElement(typeName: String) = createNonRootElement(typeName).also { this.addRoot(it) }
+    fun createRootElement(typeName: String) = createNonRootElement(AsmElementPath.ROOT,typeName).also { this.addRoot(it) }
 
     fun asString(indent: String, currentIndent: String = ""): String = this.rootElements.joinToString(separator = "\n") {
         it.asString(indent, currentIndent)
@@ -36,7 +44,7 @@ class AsmSimple {
 }
 
 class AsmElementSimple(
-    val id: Int,
+    val asmPath: AsmElementPath,
     val asm: AsmSimple,
     val typeName: String
 ) {
@@ -44,6 +52,10 @@ class AsmElementSimple(
 
     var ownScope: ScopeSimple<AsmElementSimple>? = null
     val properties: Map<String, AsmElementProperty> get() = _properties
+
+    init {
+        this.asm.index[asmPath] = this
+    }
 
     fun hasProperty(name: String): Boolean = _properties.containsKey(name)
 
@@ -102,14 +114,14 @@ class AsmElementSimple(
         return ":$typeName $propsStr"
     }
 
-    override fun hashCode(): Int = id
+    override fun hashCode(): Int = asmPath.hashCode()
 
     override fun equals(other: Any?): Boolean = when (other) {
-        is AsmElementSimple -> this.id == other.id && this.asm == other.asm
+        is AsmElementSimple -> this.asmPath == other.asmPath && this.asm == other.asm
         else -> false
     }
 
-    override fun toString(): String = ":$typeName($id)"
+    override fun toString(): String = ":$typeName($asmPath)"
 
 }
 
@@ -139,3 +151,70 @@ val AsmElementSimple.children: List<AsmElementSimple>
     = this.properties.values
         .flatMap { if (it.value is List<*>) it.value else listOf(it.value) }
         .filterIsInstance<AsmElementSimple>()
+
+
+/**
+ * detailed comparison of elements an properties
+ */
+fun AsmSimple.equalTo(other: AsmSimple): Boolean {
+    return when {
+        this.rootElements.size != other.rootElements.size -> false
+        else ->{
+            for (i in 0..this.rootElements.size) {
+                val t = this.rootElements[i]
+                val o= other.rootElements[i]
+                if (t.equalTo(o).not()) return false
+            }
+            return true
+        }
+    }
+}
+
+fun AsmElementSimple.equalTo(other: AsmElementSimple): Boolean {
+    return when {
+        this.asmPath != other.asmPath -> false
+        this.typeName != other.typeName -> false
+        this.properties.size != other.properties.size -> false
+        else -> {
+            this.properties.all { (k,v)->
+                val o = other.properties[k]
+                if(null==o) {
+                    false
+                } else {
+                    v.equalTo(o)
+                }
+            }
+        }
+    }
+}
+
+fun AsmElementProperty.equalTo(other: AsmElementProperty): Boolean {
+    return when {
+        this.name!=other.name -> false
+        this.isReference!=other.isReference -> false
+        else -> {
+            val t = this.value
+            val o = other.value
+            if (this.isReference) {
+                if (t is AsmElementReference && o is AsmElementReference) {
+                    t.equalTo(o)
+                } else {
+                    error("Cannot compare property values: ${t} and ${o}")
+                }
+            } else {
+                if(t is AsmElementSimple && o is AsmElementSimple) {
+                    t.equalTo(o)
+                } else {
+                    t==o
+                }
+            }
+        }
+    }
+}
+
+fun AsmElementReference.equalTo(other: AsmElementReference): Boolean {
+    return when {
+        this.reference!=other.reference -> false
+        else -> true
+    }
+}

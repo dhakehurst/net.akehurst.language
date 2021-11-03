@@ -16,16 +16,36 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.grammar.scopes.ScopeModel
+import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementSimple
+import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.ScopeSimple
 import net.akehurst.language.api.processor.SentenceContext
 
-class ContextSimple(
-    parentScope: ScopeSimple<AsmElementSimple>?=null,
-    rootScopeTypeName:String
-) : SentenceContext {
+class ContextSimple() : SentenceContext {
 
-    val scope = ScopeSimple<AsmElementSimple>(parentScope,rootScopeTypeName)
+    /**
+     * The items in the scope contain a ScopePath to an element in an AsmSimple model
+     */
+    val rootScope = ScopeSimple<AsmElementPath>(null, "", ScopeModel.ROOT_SCOPE_TYPE_NAME)
+}
 
 
+
+fun ScopeModel.createReferenceLocalToScope(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): String? {
+    val prop = this.getReferablePropertyNameFor(scope.forTypeName, element.typeName)
+    return when (prop) {
+        null -> null
+        ScopeModel.IDENTIFY_BY_NOTHING -> ""
+        else -> element.getPropertyAsString(prop)
+    }
+}
+
+fun ScopeModel.createReferenceFromRoot(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): AsmElementPath {
+    return element.asmPath
+}
+
+fun ScopeModel.resolveReference(asm:AsmSimple, rootScope: ScopeSimple<AsmElementPath>, reference: AsmElementPath): AsmElementSimple? {
+    return asm.index[reference]
 }
