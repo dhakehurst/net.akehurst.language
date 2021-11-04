@@ -36,7 +36,6 @@ class test_AglScopes {
 
         val text = """
             // single line comment
-            references { }
         """.trimIndent()
 
         val (asm, issues) = aglProc.process<ScopeModel, Any>(text, AglScopesGrammar.goalRuleName)
@@ -57,7 +56,6 @@ class test_AglScopes {
                line
                comment
             */
-            references { }
         """.trimIndent()
 
         val (asm, issues) = aglProc.process<ScopeModel, Any>(text, AglScopesGrammar.goalRuleName)
@@ -83,7 +81,6 @@ class test_AglScopes {
 
         val text = """
             scope rule1 { }
-            references { }
         """.trimIndent()
 
         val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
@@ -115,7 +112,6 @@ class test_AglScopes {
 
         val text = """
             scope ruleX { }
-            references { }
         """.trimIndent()
 
         val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
@@ -155,7 +151,6 @@ class test_AglScopes {
             scope rule1 {
                 identify rule2 by rule3
             }
-            references { }
         """.trimIndent()
 
         val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
@@ -193,7 +188,6 @@ class test_AglScopes {
             scope rule1 {
                 identify ruleX by rule3
             }
-            references { }
         """.trimIndent()
 
         val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
@@ -240,7 +234,6 @@ class test_AglScopes {
             scope rule1 {
                 identify rule2 by ruleX
             }
-            references { }
         """.trimIndent()
 
         val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(

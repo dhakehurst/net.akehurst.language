@@ -57,7 +57,7 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
 
     override fun configure(configurationContext: SentenceContext, configuration: String): List<LanguageIssue> {
         //TODO: pass grammar as context ?
-        val proc = Agl.registry.agl.scopes.processor ?: error("Cross-Reference language not found!")
+        val proc = Agl.registry.agl.scopes.processor ?: error("Scopes language not found!")
         val (sm, issues) = proc.process<ScopeModel, SentenceContext>(
             sentence = configuration,
             context = configurationContext

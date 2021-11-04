@@ -65,6 +65,7 @@ object Agl {
             val (grammars, issues) = aglProc.process<List<Grammar>, Any>(grammarDefinitionStr, "grammarDefinition", AutomatonKind.LOOKAHEAD_1, null)
             if (null != grammars) {
                 val goal = goalRuleName ?: grammars.last().rule.first { it.isSkip.not() }.name
+                //TODO: what to do with issues if there are any?
                 return when {
                     goal.contains(".") -> {
                         val grammarName = goal.substringBefore(".")
@@ -84,8 +85,10 @@ object Agl {
                     throw LanguageProcessorException("Unable to parse grammarDefinitionStr:\n $issuesStr", null)
                 }
             }
-        } catch (e:Throwable) {
-            throw LanguageProcessorException("Unable to create processor for grammarDefinitionStr", e)
+        } catch (e: LanguageProcessorException) {
+            throw e
+        } catch (e: Throwable) {
+            throw LanguageProcessorException("Unable to create processor for grammarDefinitionStr: ${e.message}", e)
         }
     }
 

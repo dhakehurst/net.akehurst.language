@@ -49,29 +49,39 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextFromGrammar> {
         val asm = this.declarations(sppt.root.asBranch)
 
         if (null != context) {
-            asm.scopes.forEach { (k,scope) ->
-                if (ScopeModel.ROOT_SCOPE_TYPE_NAME==scope.scopeFor) {
+            asm.scopes.forEach { (k, scope) ->
+                val msgStart = if (ScopeModel.ROOT_SCOPE_TYPE_NAME == scope.scopeFor) {
                     //do nothing
+                    "In root scope"
                 } else {
                     if (context.scope.isMissing(scope.scopeFor, "Rule")) {
                         val loc = this.locationMap[PropertyValue(scope, "typeReference")]
                         issues.raise(loc, "Rule '${scope.scopeFor}' not found for scope")
+                    } else {
+                        //OK
                     }
-                    scope.identifiables.forEach { identifiable ->
-                        if (context.scope.isMissing(identifiable.typeName, "Rule")) {
-                            val loc = this.locationMap[PropertyValue(identifiable, "typeReference")]
-                            issues.raise(loc, "In scope for '${scope.scopeFor}' Rule '${identifiable.typeName}' not found as identifiable type")
-                        }
+                    "In scope for '${scope.scopeFor}' Rule"
+                }
+                scope.identifiables.forEach { identifiable ->
+                    if (context.scope.isMissing(identifiable.typeName, "Rule")) {
+                        val loc = this.locationMap[PropertyValue(identifiable, "typeReference")]
+                        issues.raise(loc, "$msgStart '${identifiable.typeName}' not found as identifiable type")
+                    } else {
+                        // only check this if the typeName is valid - else it is always invalid
+                        //TODO: check this in context of typeName Rule
                         if (context.scope.isMissing(identifiable.propertyName, "Rule")) {
                             val loc = this.locationMap[PropertyValue(identifiable, "propertyName")]
                             issues.raise(
                                 loc,
-                                "In scope for '${scope.scopeFor}' Rule '${identifiable.propertyName}' not found for identifying property of '${identifiable.typeName}'"
+                                "$msgStart '${identifiable.propertyName}' not found for identifying property of '${identifiable.typeName}'"
                             )
+                        } else {
+                            //OK
                         }
                     }
                 }
             }
+
             asm.references.forEach { ref ->
                 if (context.scope.isMissing(ref.inTypeName, "Rule")) {
                     val loc = this.locationMap[PropertyValue(ref, "in")]
@@ -97,15 +107,15 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextFromGrammar> {
         this.add(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, location, message))
     }
 
-    // declarations = rootIdentifiables scopes references
+    // declarations = rootIdentifiables scopes referencesOpt
     private fun declarations(node: SPPTBranch): ScopeModel {
         val asm = ScopeModel()
         val rootIdentifiables = this.rootIdentifiables(node.branchChild(0))
         val scopes = this.scopes(node.branchChild(1))
-        val references = this.references(node.branchChild(2))
+        val references = this.referencesOpt(node.branchChild(2))
         asm.scopes[ScopeModel.ROOT_SCOPE_TYPE_NAME]?.identifiables?.addAll(rootIdentifiables)
         scopes.forEach {
-            asm.scopes[it.scopeFor]=it
+            asm.scopes[it.scopeFor] = it
         }
         asm.references.addAll(references)
         locationMap[asm] = node.location
@@ -153,6 +163,13 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextFromGrammar> {
         locationMap[PropertyValue(identifiable, "typeReference")] = node.branchChild(0).location
         locationMap[PropertyValue(identifiable, "propertyName")] = node.branchChild(1).location
         return identifiable
+    }
+
+    // referencesOpt = references?
+    private fun referencesOpt(node: SPPTBranch): List<ReferenceDefinition> {
+        return node.branchNonSkipChildren.flatMap {
+            this.references(it.asBranch)
+        }
     }
 
     // references = 'references' '{' referenceDefinitions '}'

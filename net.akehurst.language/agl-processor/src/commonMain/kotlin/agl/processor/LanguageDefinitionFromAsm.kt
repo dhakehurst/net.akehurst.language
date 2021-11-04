@@ -32,8 +32,8 @@ class LanguageDefinitionFromAsm(
     override var defaultGoalRule: String?,
     style: String?,
     format: String?,
-    override val syntaxAnalyser: SyntaxAnalyser<*, *>?,
-    override val semanticAnalyser: SemanticAnalyser<*, *>?
+    syntaxAnalyser: SyntaxAnalyser<*, *>?,
+    semanticAnalyser: SemanticAnalyser<*, *>?
 ) : LanguageDefinition {
     constructor(identity: String, grammar: Grammar) : this(identity, grammar, null, null, null, null, null)
 
@@ -58,6 +58,18 @@ class LanguageDefinitionFromAsm(
 
     override var format: String? by Delegates.observable(format) { _, oldValue, newValue ->
         formatObservers.forEach { it(oldValue, newValue) }
+    }
+
+    override var syntaxAnalyser: SyntaxAnalyser<*, *>? by Delegates.observable(syntaxAnalyser) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+
+    override var semanticAnalyser: SemanticAnalyser<*, *>? by Delegates.observable(semanticAnalyser) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
     }
 
     override val processor: LanguageProcessor? get() = this._processor_cache.value

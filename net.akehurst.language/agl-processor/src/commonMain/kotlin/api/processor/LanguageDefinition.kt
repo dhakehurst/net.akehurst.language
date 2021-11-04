@@ -25,8 +25,8 @@ interface LanguageDefinition {
     var defaultGoalRule: String?
     var style: String?
     var format: String?
-    val syntaxAnalyser: SyntaxAnalyser<*,*>?
-    val semanticAnalyser: SemanticAnalyser<*,*>?
+    var syntaxAnalyser: SyntaxAnalyser<*,*>?
+    var semanticAnalyser: SemanticAnalyser<*,*>?
 
     val processor: LanguageProcessor?
 
