@@ -88,12 +88,12 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val expected = asmSimple {
             root("unit") {
-                property("declaration", listOf(
+                propertyListOfElement("declaration") {
                     element("datatype") {
-                        property("ID", "A")
-                        property("property", emptyList<AsmElementSimple>())
+                        propertyString("ID", "A")
+                        propertyListOfElement("property") {}
                     }
-                ))
+                }
             }
         }
 
@@ -113,16 +113,16 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val expected = asmSimple {
             root("unit") {
-                property("declaration", listOf(
+                propertyListOfElement("declaration") {
                     element("datatype") {
-                        property("ID", "A")
-                        property("property", emptyList<AsmElementSimple>())
-                    },
-                    element("datatype") {
-                        property("ID", "B")
-                        property("property", emptyList<AsmElementSimple>())
+                        propertyString("ID", "A")
+                        propertyListOfElement("property") {}
                     }
-                ))
+                    element("datatype") {
+                        propertyString("ID", "B")
+                        propertyListOfElement("property") {}
+                    }
+                }
             }
         }
 
@@ -145,20 +145,20 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val expected = asmSimple {
             root("unit") {
-                property("declaration", listOf(
+                propertyListOfElement("declaration") {
                     element("datatype") {
-                        property("ID", "A")
-                        property("property", listOf(
+                        propertyString("ID", "A")
+                        propertyListOfElement("property") {
                             element("property") {
-                                property("ID", "a")
-                                property("typeReference") {
+                                propertyString("ID", "a")
+                                propertyElement("typeReference") {
                                     reference("type", "String")
-                                    property("typeArguments", null)
+                                    propertyString("typeArguments", null)
                                 }
                             }
-                        ))
+                        }
                     }
-                ))
+                }
             }
         }
         val expItems = listOf(
@@ -187,23 +187,23 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val expected = asmSimple(syntaxAnalyser.scopeModel, ContextSimple()) {
             root("unit") {
-                property("declaration", listOf(
+                propertyListOfElement("declaration") {
                     element("primitive") {
-                        property("ID", "String")
-                    },
+                        propertyString("ID", "String")
+                    }
                     element("datatype") {
-                        property("ID", "A")
-                        property("property", listOf(
+                        propertyString("ID", "A")
+                        propertyListOfElement("property") {
                             element("property") {
-                                property("ID", "a")
-                                property("typeReference") {
+                                propertyString("ID", "a")
+                                propertyElement("typeReference") {
                                     reference("type", "String")
-                                    property("typeArguments", null)
+                                    propertyString("typeArguments", null)
                                 }
                             }
-                        ))
+                        }
                     }
-                ))
+                }
             }
         }
 

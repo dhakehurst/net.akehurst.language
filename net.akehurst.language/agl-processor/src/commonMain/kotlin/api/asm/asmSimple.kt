@@ -16,11 +16,19 @@
 
 package net.akehurst.language.api.asm
 
-value class AsmElementPath(val value:String) {
+class AsmElementPath(val value:String) {
     companion object {
         val ROOT = AsmElementPath("/")
     }
     operator fun plus(segment: String)= AsmElementPath("$value/$segment")
+
+    override fun hashCode(): Int=value.hashCode()
+    override fun equals(other: Any?): Boolean=when(other) {
+        is AsmElementPath -> this.value==other.value
+        else -> false
+    }
+
+    override fun toString(): String = value
 }
 
 class AsmSimple {
@@ -50,7 +58,6 @@ class AsmElementSimple(
 ) {
     private var _properties = mutableMapOf<String, AsmElementProperty>()
 
-    var ownScope: ScopeSimple<AsmElementSimple>? = null
     val properties: Map<String, AsmElementProperty> get() = _properties
 
     init {

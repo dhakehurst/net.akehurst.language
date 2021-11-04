@@ -28,7 +28,7 @@ class ScopeModel {
         scopes[ROOT_SCOPE_TYPE_NAME]=ScopeDefinition(ROOT_SCOPE_TYPE_NAME)
     }
 
-    fun isScope(scopeFor: String): Boolean {
+    fun isScopeDefinition(scopeFor: String): Boolean {
         return scopes.containsKey(scopeFor)
     }
 

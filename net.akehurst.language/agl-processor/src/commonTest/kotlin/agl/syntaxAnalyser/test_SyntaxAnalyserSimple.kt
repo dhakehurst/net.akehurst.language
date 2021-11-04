@@ -26,7 +26,7 @@ import kotlin.test.assertNotNull
 class test_SyntaxAnalyserSimple {
 
     @Test
-    fun oneLiteral() {
+    fun oneLiteral_ignored_because_not_a_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -37,14 +37,40 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a"
 
         val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
-        val (asm,issues) = proc.process<AsmSimple, Any>(sentence)
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
         assertNotNull(asm)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
 
         val expected = asmSimple() {
             root("S") {
-                property("'a'", "a")
+            }
+        }.rootElements[0]
+
+        assertEquals(expected.asString("  "), actual.asString("  "))
+    }
+
+    @Test
+    fun oneLiteral_as_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a ;
+                leaf a = 'a' ;
+            }
+        """.trimIndent()
+
+        val sentence = "a"
+
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        assertNotNull(asm)
+        assertEquals(emptyList(), issues)
+        val actual = asm.rootElements[0]
+
+        val expected = asmSimple() {
+            root("S") {
+                propertyString("a", "a")
             }
         }.rootElements[0]
 
@@ -64,14 +90,14 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a"
 
         val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
-        val (asm,issues) = proc.process<AsmSimple, Any>(sentence)
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
         assertNotNull(asm)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
 
         val expected = asmSimple() {
             root("S") {
-                property("ID", "a")
+                propertyString("ID", "a")
             }
         }.rootElements[0]
 
@@ -93,16 +119,15 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a : A"
 
         val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
-        val (asm,issues) = proc.process<AsmSimple, Any>(sentence)
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
         assertNotNull(asm)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
 
         val expected = asmSimple() {
             root("S") {
-                property("ID", "a")
-                property("':'", ":")
-                property("type", "A")
+                propertyString("ID", "a")
+                propertyString("type", "A")
             }
         }.rootElements[0]
 
@@ -126,16 +151,16 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a 8 fred"
 
         val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
-        val (asm,issues) = proc.process<AsmSimple, Any>(sentence)
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
         assertNotNull(asm)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
 
         val expected = asmSimple() {
             root("S") {
-                property("ID", "a")
-                property("NUMBER", "8")
-                property("NAME", "fred")
+                propertyString("ID", "a")
+                propertyString("NUMBER", "8")
+                propertyString("NAME", "fred")
             }
         }.rootElements[0]
 
@@ -160,48 +185,48 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
 
         val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
-        val (asm1,issues1) = proc.process<AsmSimple, Any>("a 8")
+        val (asm1, issues1) = proc.process<AsmSimple, Any>("a 8")
         assertNotNull(asm1)
-        assertEquals(emptyList(),issues1)
+        assertEquals(emptyList(), issues1)
         val actual1 = asm1.rootElements[0]
 
         val expected1 = asmSimple() {
             root("S") {
-                property("ID", "a")
-                property("item", "A") {
-                    property("NUMBER", "8")
+                propertyString("ID", "a")
+                propertyElement("item", "A") {
+                    propertyString("NUMBER", "8")
                 }
             }
         }.rootElements[0]
         assertEquals(expected1.asString("  "), actual1.asString("  "))
 
-        val (asm2,issues2) = proc.process<AsmSimple, Any>("a fred")
+        val (asm2, issues2) = proc.process<AsmSimple, Any>("a fred")
         assertNotNull(asm2)
-        assertEquals(emptyList(),issues2)
+        assertEquals(emptyList(), issues2)
         val actual2 = asm2.rootElements[0]
 
         val expected2 = asmSimple() {
             root("S") {
-                property("ID", "a")
-                property("item", "B") {
-                    property("NAME", "fred")
+                propertyString("ID", "a")
+                propertyElement("item", "B") {
+                    propertyString("NAME", "fred")
                 }
             }
         }.rootElements[0]
         assertEquals(expected2.asString("  "), actual2.asString("  "))
 
 
-        val (asm3,issues3) = proc.process<AsmSimple, Any>("a fred 8")
+        val (asm3, issues3) = proc.process<AsmSimple, Any>("a fred 8")
         assertNotNull(asm3)
-        assertEquals(emptyList(),issues3)
+        assertEquals(emptyList(), issues3)
         val actual3 = asm3.rootElements[0]
 
         val expected3 = asmSimple() {
             root("S") {
-                property("ID", "a")
-                property("item", "C") {
-                    property("NAME", "fred")
-                    property("NUMBER", "8")
+                propertyString("ID", "a")
+                propertyElement("item", "C") {
+                    propertyString("NAME", "fred")
+                    propertyString("NUMBER", "8")
                 }
             }
         }.rootElements[0]
@@ -224,9 +249,9 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a 8 fred"
 
         val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
-        val (asm,issues) = proc.process<AsmSimple, Any>(sentence)
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
         assertNotNull(asm)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
 
         assertEquals("S", actual.typeName)
@@ -253,16 +278,16 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a fred"
 
         val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
-        val (asm,issues) = proc.process<AsmSimple, Any>(sentence)
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
         assertNotNull(asm)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
 
         val expected = asmSimple() {
             root("S") {
-                property("ID", "a")
-                property("NUMBER", null)
-                property("NAME", "fred")
+                propertyString("ID", "a")
+                propertyString("NUMBER", null)
+                propertyString("NAME", "fred")
             }
         }.rootElements[0]
         assertEquals(expected.asString("  "), actual.asString("  "))
@@ -284,15 +309,15 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a"
 
         val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
-        val (asm,issues) = proc.process<AsmSimple, Any>(sentence)
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
         assertNotNull(asm)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
 
         val expected = asmSimple() {
             root("S") {
-                property("ID", "a")
-                property("NAME", emptyList<String>())
+                propertyString("ID", "a")
+                propertyListOfString("NAME", emptyList<String>())
             }
         }.rootElements[0]
         assertEquals(expected.asString("  "), actual.asString("  "))
@@ -314,15 +339,15 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a adam betty charles"
 
         val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
-        val (asm,issues) = proc.process<AsmSimple, Any>(sentence)
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
         assertNotNull(asm)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
 
         val expected = asmSimple() {
             root("S") {
-                property("ID", "a")
-                property("NAME", listOf("adam", "betty", "charles"))
+                propertyString("ID", "a")
+                propertyListOfString("NAME", listOf("adam", "betty", "charles"))
             }
         }.rootElements[0]
         assertEquals(expected.asString("  "), actual.asString("  "))
@@ -346,33 +371,31 @@ class test_SyntaxAnalyserSimple {
         val sentence = "bk1 adam ant 12345, betty boo 34567, charlie chaplin 98765"
 
         val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
-        val (asm,issues) = proc.process<AsmSimple, Any>(sentence)
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
         assertNotNull(asm)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
 
         val expected = asmSimple {
             root("addressBook") {
-                property("ID", "bk1")
-                property("contacts", listOf(
+                propertyString("ID", "bk1")
+                propertyListOfElement("contacts") {
                     element("person") {
-                        property("NAME", "adam")
-                        property("NAME2", "ant")
-                        property("NUMBER", "12345")
-                    },
-                    ",",
-                    element("person") {
-                        property("NAME", "betty")
-                        property("NAME2", "boo")
-                        property("NUMBER", "34567")
-                    },
-                    ",",
-                    element("person") {
-                        property("NAME", "charlie")
-                        property("NAME2", "chaplin")
-                        property("NUMBER", "98765")
+                        propertyString("NAME", "adam")
+                        propertyString("NAME2", "ant")
+                        propertyString("NUMBER", "12345")
                     }
-                ))
+                    element("person") {
+                        propertyString("NAME", "betty")
+                        propertyString("NAME2", "boo")
+                        propertyString("NUMBER", "34567")
+                    }
+                    element("person") {
+                        propertyString("NAME", "charlie")
+                        propertyString("NAME2", "chaplin")
+                        propertyString("NUMBER", "98765")
+                    }
+                }
             }
         }.rootElements[0]
         assertEquals(expected.asString("  "), actual.asString("  "))
@@ -398,49 +421,47 @@ class test_SyntaxAnalyserSimple {
         val sentence = "graph [fontsize=ss, labelloc=yy label=bb; splines=true overlap=false]"
 
         val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
-        val (asm,issues) = proc.process<AsmSimple, Any>(sentence)
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
         assertNotNull(asm)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
 
         val expected = asmSimple {
             root("attr_stmt") {
-                property("attr_type", "graph")
-                property(
-                    "attr_lists", listOf(
-                        element("attr_list") {
-                            property("'['", "[")
-                            property("attr_list_content", listOf(
-                                element("attr") {
-                                    property("ID", "fontsize")
-                                    property("'='", "=")
-                                    property("ID2", "ss")
-                                }, ",",
-                                element("attr") {
-                                    property("ID", "labelloc")
-                                    property("'='", "=")
-                                    property("ID2", "yy")
-                                }, "",
-                                element("attr") {
-                                    property("ID", "label")
-                                    property("'='", "=")
-                                    property("ID2", "bb")
-                                }, ";",
-                                element("attr") {
-                                    property("ID", "splines")
-                                    property("'='", "=")
-                                    property("ID2", "true")
-                                }, "",
-                                element("attr") {
-                                    property("ID", "overlap")
-                                    property("'='", "=")
-                                    property("ID2", "false")
-                                }
-                            ))
-                            property("']'", "]")
-                        },
-                    )
-                )
+                propertyString("attr_type", "graph")
+                propertyListOfElement("attr_lists") {
+                    element("attr_list") {
+                        propertyString("'['", "[")
+                        propertyListOfElement("attr_list_content") {
+                            element("attr") {
+                                propertyString("ID", "fontsize")
+                                propertyString("'='", "=")
+                                propertyString("ID2", "ss")
+                            }
+                            element("attr") {
+                                propertyString("ID", "labelloc")
+                                propertyString("'='", "=")
+                                propertyString("ID2", "yy")
+                            }
+                            element("attr") {
+                                propertyString("ID", "label")
+                                propertyString("'='", "=")
+                                propertyString("ID2", "bb")
+                            }
+                            element("attr") {
+                                propertyString("ID", "splines")
+                                propertyString("'='", "=")
+                                propertyString("ID2", "true")
+                            }
+                            element("attr") {
+                                propertyString("ID", "overlap")
+                                propertyString("'='", "=")
+                                propertyString("ID2", "false")
+                            }
+                        }
+                        propertyString("']'", "]")
+                    }
+                }
             }
         }.rootElements[0]
         assertEquals(expected.asString("  "), actual.asString("  "))

@@ -42,10 +42,10 @@ fun ScopeModel.createReferenceLocalToScope(scope: ScopeSimple<AsmElementPath>, e
     }
 }
 
-fun ScopeModel.createReferenceFromRoot(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): AsmElementPath {
-    return element.asmPath
-}
+//fun ScopeModel.createReferenceFromRoot(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): AsmElementPath {
+//    return element.asmPath
+//}
 
-fun ScopeModel.resolveReference(asm:AsmSimple, rootScope: ScopeSimple<AsmElementPath>, reference: AsmElementPath): AsmElementSimple? {
-    return asm.index[reference]
-}
+//fun ScopeModel.resolveReference(asm:AsmSimple, rootScope: ScopeSimple<AsmElementPath>, reference: AsmElementPath): AsmElementSimple? {
+//    return asm.index[reference]
+//}

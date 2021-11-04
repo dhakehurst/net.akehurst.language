@@ -43,6 +43,7 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
     private var _asm: AsmSimple? = null
     private var _context: ContextSimple? = null // cached value, provided on call to transform
     private val _issues = mutableListOf<LanguageIssue>()
+    private val _scopeMap = mutableMapOf<AsmElementSimple,ScopeSimple<AsmElementPath>>()
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
     var scopeModel: ScopeModel = ScopeModel()
@@ -75,7 +76,7 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
         _asm?.addRoot(value as AsmElementSimple)
 
         _asm!!.rootElements.forEach {
-            val iss = scopeModel.resolveReferencesElement(it, locationMap, context?.rootScope)
+            val iss = scopeModel.resolveReferencesElement(it, locationMap, context?.rootScope,this._scopeMap)
             this._issues.addAll(iss)
         }
 
@@ -125,8 +126,8 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
                         } else {
                             val name = createPropertyName(rr)
                             val nname = if (count.containsKey(name)) {
-                                val i = count[name]!!
-                                count[name] = i + 1
+                                val i = count[name]!! +1
+                                count[name] = i
                                 name + i
                             } else {
                                 count[name] = 1
@@ -170,7 +171,6 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
                             el.setProperty(name, value, false)
                             el
                         } else {
-                            TODO("childScope?")
                             val list = br.nonSkipChildren.mapIndexedNotNull { i,b->
                                 val childPath = path+i.toString()
                                 this.createValue(b,childPath, scope)
@@ -186,16 +186,31 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
                     RuntimeRuleListKind.SEPARATED_LIST -> {
                         val name = br.runtimeRule.rhs.items[RuntimeRuleItem.SLIST__ITEM].tag
                         // if it is the root of the tree we want an element not a list TODO
-                        val list = br.nonSkipChildren.mapIndexedNotNull { i,b->
-                            val childPath = path+i.toString()
-                            TODO("childScope?")
-                            this.createValue(b,childPath, scope)
-                        }
-                        if (br.runtimeRule.rhs.multiMax == 1) {
-                            val value = if (list.isEmpty()) null else list[0]
-                            value
+                        if (br == br.tree?.root) {
+                            val el = _asm!!.createNonRootElement(path, br.name)
+                            val childsScope = createScope(scope, el)
+                            val list = br.nonSkipChildren.mapIndexedNotNull { i,b->
+                                val childPath = path+i.toString()
+                                this.createValue(b,childPath, childsScope)
+                            }
+                            val value = if (br.runtimeRule.rhs.multiMax == 1) {
+                                if (list.isEmpty()) null else list[0]
+                            } else {
+                                list
+                            }
+                            el.setProperty(name, value, false)
+                            el
                         } else {
-                            list
+                            val list = br.nonSkipChildren.mapIndexedNotNull { i,b->
+                                val childPath = path+i.toString()
+                                this.createValue(b,childPath, scope)
+                            }
+                            if (br.runtimeRule.rhs.multiMax == 1) {
+                                val value = if (list.isEmpty()) null else list[0]
+                                value
+                            } else {
+                                list
+                            }
                         }
                     }
                     else -> TODO()
@@ -236,11 +251,11 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
         return if (null == scope) {
             null
         } else {
-            if (scopeModel.isScope(el.typeName)) {
+            if (scopeModel.isScopeDefinition(el.typeName)) {
                 val refInParent = scopeModel.createReferenceLocalToScope(scope,el)
                 if (null!=refInParent) {
                     val newScope = scope.createOrGetChildScope(refInParent, el.typeName)
-                    el.ownScope = newScope
+                    _scopeMap[el]=newScope
                     newScope
                 } else {
                     _issues.add(
@@ -267,19 +282,8 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
                 //val reference = scopeModel.createReferenceFromRoot(scope, el)
                 val scopeLocalReference = scopeModel.createReferenceLocalToScope(scope, el)
                 if (null != scopeLocalReference) {
-                    val contextRef = scopeModel.createReferenceFromRoot(scope,el)
-                    if (null==contextRef) {
-                        _issues.add(
-                            LanguageIssue(
-                                LanguageIssueKind.ERROR,
-                                LanguageProcessorPhase.SYNTAX_ANALYSIS,
-                                this.locationMap[el],
-                                "Cannot create a reference from root in '$scope' for $el"
-                            )
-                        )
-                    } else {
-                        scope.addToScope(scopeLocalReference, el.typeName, contextRef)
-                    }
+                    val contextRef = el.asmPath
+                    scope.addToScope(scopeLocalReference, el.typeName, contextRef)
                 } else {
                     _issues.add(
                         LanguageIssue(
@@ -310,10 +314,10 @@ class SyntaxAnalyserSimple() : SyntaxAnalyser<AsmSimple, ContextSimple> {
     }
 }
 
-internal fun ScopeModel.resolveReferencesElement(el: AsmElementSimple, locationMap: Map<Any, InputLocation>, scope: ScopeSimple<AsmElementPath>?): List<LanguageIssue> {
+internal fun ScopeModel.resolveReferencesElement(el: AsmElementSimple, locationMap: Map<Any, InputLocation>, parentScope: ScopeSimple<AsmElementPath>?, scopeMap:Map<AsmElementSimple,ScopeSimple<AsmElementPath>>): List<LanguageIssue> {
     val scopeModel = this
     val issues = mutableListOf<LanguageIssue>()
-    val elScope = el.ownScope ?: scope
+    val elScope = scopeMap[el] ?: parentScope
     if (null != elScope) {
         el.properties.forEach { e ->
             val prop = e.value
@@ -349,8 +353,8 @@ internal fun ScopeModel.resolveReferencesElement(el: AsmElementSimple, locationM
                             )
                         )
                     } else {
-                        val el = scopeModel.resolveReference(scope.rootScope,referred)
-                        el.getPropertyAsReference(prop.name)?.value = referred
+                        val rel = el.asm.index[referred]
+                        el.getPropertyAsReference(prop.name)?.value = rel
                     }
 
                 } else {
@@ -369,7 +373,7 @@ internal fun ScopeModel.resolveReferencesElement(el: AsmElementSimple, locationM
             }
         }
         el.children.forEach {
-            val chIss = resolveReferencesElement(it, locationMap, elScope)
+            val chIss = resolveReferencesElement(it, locationMap, elScope,scopeMap)
             issues.addAll(chIss)
         }
     }
