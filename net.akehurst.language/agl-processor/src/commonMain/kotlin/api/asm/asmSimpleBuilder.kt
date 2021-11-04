@@ -37,10 +37,11 @@ class AsmSimpleBuilder(
 ) {
 
     private val _asm = AsmSimple()
-    private val _scopeMap = mutableMapOf<AsmElementSimple, ScopeSimple<AsmElementPath>>()
+    private val _scopeMap = mutableMapOf<AsmElementPath, ScopeSimple<AsmElementPath>>()
 
     fun root(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
-        val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, AsmElementPath("/"), typeName, true, _context?.rootScope)
+        val path = AsmElementPath.ROOT+(_asm.rootElements.size).toString()
+        val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, path, typeName, true, _context?.rootScope)
         b.init()
         return b.build()
     }
@@ -56,14 +57,26 @@ class AsmSimpleBuilder(
 @AsmSimpleBuilderMarker
 class AsmElementSimpleBuilder(
     private val _scopeModel: ScopeModel,
-    private val _scopeMap: MutableMap<AsmElementSimple, ScopeSimple<AsmElementPath>>,
+    private val _scopeMap: MutableMap<AsmElementPath, ScopeSimple<AsmElementPath>>,
     private val _asm: AsmSimple,
-    private val _asmPath: AsmElementPath,
+    _asmPath: AsmElementPath,
     _typeName: String,
     _isRoot: Boolean,
-    private val _scope: ScopeSimple<AsmElementPath>?
+    _parentScope: ScopeSimple<AsmElementPath>?
 ) {
-    private val _element = if (_isRoot) _asm.createRootElement(_typeName) else _asm.createNonRootElement(_asmPath, _typeName)
+    private val _element = _asm.createElement(_asmPath, _typeName).also {
+        if (_isRoot) _asm.addRoot(it)
+    }
+    private val _elementScope = _parentScope?.let {
+        if (_scopeModel.isScopeDefinition(_element.typeName)) {
+            val refInParent = _scopeModel.createReferenceLocalToScope(_parentScope, _element) ?: error("Trying to create child scope but cannot create a reference for $_element")
+            val newScope = _parentScope.createOrGetChildScope(refInParent, _element.typeName)
+            _scopeMap[_asmPath] = newScope
+            newScope
+        } else {
+            _parentScope
+        }
+    }
 
     private fun _property(name: String, value: Any?) {
         _element.setProperty(name, value, false)
@@ -72,18 +85,8 @@ class AsmElementSimpleBuilder(
     fun propertyString(name: String, value: String?) = this._property(name, value)
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElement(name, name, init)
     fun propertyElement(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
-        val childScope = _scope?.let {
-            if (_scopeModel.isScopeDefinition(_element.typeName)) {
-                val refInParent = _scopeModel.createReferenceLocalToScope(_scope, _element) ?: error("Trying to create child scope but cannot create a reference for $_element")
-                val newScope = _scope.createOrGetChildScope(refInParent, _element.typeName)
-                _scopeMap[_element] = newScope
-                newScope
-            } else {
-                _scope
-            }
-        }
         val newPath = _element.asmPath + name
-        val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, typeName, false, childScope)
+        val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, typeName, false, _elementScope)
         b.init()
         val el = b.build()
         this._element.setProperty(name, el, false)
@@ -92,7 +95,8 @@ class AsmElementSimpleBuilder(
 
     fun propertyListOfString(name: String, list: List<String>) = this._property(name, list)
     fun propertyListOfElement(name: String, init: ListAsmElementSimpleBuilder.() -> Unit): List<AsmElementSimple> {
-        val b = ListAsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, _asmPath, _scope)
+        val newPath = _element.asmPath + name
+        val b = ListAsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, _elementScope)
         b.init()
         val list = b.build()
         this._element.setProperty(name, list, false)
@@ -104,14 +108,14 @@ class AsmElementSimpleBuilder(
     }
 
     fun build(): AsmElementSimple {
-        if (null == _scope) {
+        if (null == _elementScope) {
             //do nothing
         } else {
-            val scopeFor = _scope.forTypeName
+            val scopeFor = _elementScope.forTypeName
             val referablePropertyName = _scopeModel.getReferablePropertyNameFor(scopeFor, _element.typeName)
             val referableName = referablePropertyName?.let { _element.getPropertyAsString(it) }
             if (null != referableName) {
-                _scope.addToScope(referableName, _element.typeName, _element.asmPath)
+                _elementScope.addToScope(referableName, _element.typeName, _element.asmPath)
             }
         }
         return _element
@@ -121,17 +125,17 @@ class AsmElementSimpleBuilder(
 @AsmSimpleBuilderMarker
 class ListAsmElementSimpleBuilder(
     private val _scopeModel: ScopeModel,
-    private val _scopeMap: MutableMap<AsmElementSimple, ScopeSimple<AsmElementPath>>,
+    private val _scopeMap: MutableMap<AsmElementPath, ScopeSimple<AsmElementPath>>,
     private val _asm: AsmSimple,
     private val _asmPath: AsmElementPath,
-    private val _scope: ScopeSimple<AsmElementPath>?
+    private val _parentScope: ScopeSimple<AsmElementPath>?
 ) {
 
     private val _list = mutableListOf<AsmElementSimple>()
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val newPath = _asmPath + (_list.size).toString()
-        val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, typeName, false, _scope)
+        val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, typeName, false, _parentScope)
         b.init()
         val el = b.build()
         _list.add(el)

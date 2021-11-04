@@ -232,7 +232,7 @@ grammar Mscript {
         val (actual,issues) = sut.parse(text,"REAL")
 
         val expIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,0,0,0),"")
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^1")
         )
         assertNull(actual)
         assertEquals(expIssues,issues)

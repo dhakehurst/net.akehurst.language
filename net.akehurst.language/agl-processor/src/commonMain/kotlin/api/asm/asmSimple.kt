@@ -20,7 +20,7 @@ class AsmElementPath(val value:String) {
     companion object {
         val ROOT = AsmElementPath("/")
     }
-    operator fun plus(segment: String)= AsmElementPath("$value/$segment")
+    operator fun plus(segment: String)= if(this==ROOT) AsmElementPath("/$segment") else AsmElementPath("$value/$segment")
 
     override fun hashCode(): Int=value.hashCode()
     override fun equals(other: Any?): Boolean=when(other) {
@@ -41,9 +41,7 @@ class AsmSimple {
         (rootElements as MutableList).add(root)
     }
 
-    fun createNonRootElement(asmPath:AsmElementPath, typeName: String) = AsmElementSimple(asmPath, this, typeName)
-
-    fun createRootElement(typeName: String) = createNonRootElement(AsmElementPath.ROOT,typeName).also { this.addRoot(it) }
+    fun createElement(asmPath:AsmElementPath, typeName: String) = AsmElementSimple(asmPath, this, typeName)
 
     fun asString(indent: String, currentIndent: String = ""): String = this.rootElements.joinToString(separator = "\n") {
         it.asString(indent, currentIndent)
