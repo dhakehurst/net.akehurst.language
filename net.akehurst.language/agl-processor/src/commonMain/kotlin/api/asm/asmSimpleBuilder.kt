@@ -40,7 +40,7 @@ class AsmSimpleBuilder(
     private val _scopeMap = mutableMapOf<AsmElementPath, ScopeSimple<AsmElementPath>>()
 
     fun root(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
-        val path = AsmElementPath.ROOT+(_asm.rootElements.size).toString()
+        val path = AsmElementPath.ROOT + (_asm.rootElements.size).toString()
         val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, path, typeName, true, _context?.rootScope)
         b.init()
         return b.build()
@@ -67,14 +67,17 @@ class AsmElementSimpleBuilder(
     private val _element = _asm.createElement(_asmPath, _typeName).also {
         if (_isRoot) _asm.addRoot(it)
     }
-    private val _elementScope = _parentScope?.let {
-        if (_scopeModel.isScopeDefinition(_element.typeName)) {
-            val refInParent = _scopeModel.createReferenceLocalToScope(_parentScope, _element) ?: error("Trying to create child scope but cannot create a reference for $_element")
-            val newScope = _parentScope.createOrGetChildScope(refInParent, _element.typeName)
-            _scopeMap[_asmPath] = newScope
-            newScope
-        } else {
-            _parentScope
+    private val _elementScope by lazy {
+        _parentScope?.let {
+            if (_scopeModel.isScopeDefinition(_element.typeName)) {
+                val refInParent = _scopeModel.createReferenceLocalToScope(_parentScope, _element)
+                    ?: error("Trying to create child scope but cannot create a reference for $_element")
+                val newScope = _parentScope.createOrGetChildScope(refInParent, _element.typeName)
+                _scopeMap[_asmPath] = newScope
+                newScope
+            } else {
+                _parentScope
+            }
         }
     }
 
@@ -108,14 +111,15 @@ class AsmElementSimpleBuilder(
     }
 
     fun build(): AsmElementSimple {
-        if (null == _elementScope) {
+        val es = _elementScope
+        if (null == es) {
             //do nothing
         } else {
-            val scopeFor = _elementScope.forTypeName
+            val scopeFor = es.forTypeName
             val referablePropertyName = _scopeModel.getReferablePropertyNameFor(scopeFor, _element.typeName)
             val referableName = referablePropertyName?.let { _element.getPropertyAsString(it) }
             if (null != referableName) {
-                _elementScope.addToScope(referableName, _element.typeName, _element.asmPath)
+                es.addToScope(referableName, _element.typeName, _element.asmPath)
             }
         }
         return _element

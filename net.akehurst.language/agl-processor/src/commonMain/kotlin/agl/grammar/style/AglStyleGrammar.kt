@@ -20,14 +20,6 @@ import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
 import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.grammar.Rule
 
-/**
-    rules = rule* ;
-    rule = selectorExpression '{' styleList '}' ;
-    selectorExpression = selectorSingle ; //TODO
-    selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
-    styleList = style* ;
-    style = STYLE_ID ':' STYLE_VALUE ';' ;
- */
 internal class AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglStyle") {
     companion object {
         const val goalRuleName = "rules"
@@ -59,6 +51,19 @@ internal class AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.
     init {
         super.rule.addAll(createRules())
     }
+
+    //TODO: gen this from the ASM
+    override fun toString(): String = """
+        namespace net.akehurst.language.agl
+        grammar AglStyle {
+            rules = rule* ;
+            rule = selectorExpression '{' styleList '}' ;
+            selectorExpression = selectorSingle ; //TODO
+            selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
+            styleList = style* ;
+            style = STYLE_ID ':' STYLE_VALUE ';' ;
+        }
+    """.trimIndent()
 }
 
 

@@ -124,5 +124,46 @@ internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
     init {
         super.rule.addAll(createRules())
     }
+    //TODO: gen this from the ASM
+    override fun toString(): String = """
+        namespace net.akehurst.language.agl
+        grammar AglGrammar {
+            skip WHITESPACE = "\s+" ;
+            skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
+            skip SINGLE_LINE_COMMENT = "//.*?${'$'}" ;
+    
+            grammarDefinition = namespace definitions ;
+            namespace = 'namespace' qualifiedName ;
+            definitions = grammar+ ;
+            grammar = 'grammar' IDENTIFIER extends? '{' rules '}' ;
+            extends = 'extends' [qualifiedName / ',']+ ;
+            rules = rule+ ;
+            rule = ruleTypeLabels IDENTIFIER '=' rhs ';' ;
+            rhs = empty | concatenation | choice ;
+            ruleTypeLabels = 'override'? 'skip'? 'leaf'? ;
+            empty = ;
+            choice = ambiguousChoice | priorityChoice | simpleChoice ;
+            ambiguousChoice = [ concatenation / '||' ]2+ ;
+            priorityChoice = [ concatenation / '<' ]2+ ;
+            simpleChoice = [ concatenation / '|' ]2+ ;
+            concatenation = concatenationItem+ ;
+            concatenationItem = simpleItem | listOfItems ;
+            simpleItem = terminal | nonTerminal | group ;
+            listOfItems = simpleList | separatedList ;
+            multiplicity = '*' | '+' | '?' | oneOrMore | range ;
+            oneOrMore = POSITIVE_INTEGER '+' ;
+            range = POSITIVE_INTEGER '..' POSITIVE_INTEGER ;
+            simpleList = simpleItem multiplicity ;
+            separatedList = '[' simpleItem '/' terminal ']' multiplicity ;
+            group = '(' choice ')' ;
+            nonTerminal = qualifiedName ;
+            terminal = LITERAL | PATTERN ;
+            qualifiedName = [IDENTIFIER / '.']+ ;
+            IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*";
+            LITERAL = "'([^'\\]|\\'|\\\\)*'" ;
+            PATTERN = "\"(\\\"|[^\"])*\"" ;
+            POSITIVE_INTEGER = "[0-9]+" ;
+        }
+    """.trimIndent()
 }
 

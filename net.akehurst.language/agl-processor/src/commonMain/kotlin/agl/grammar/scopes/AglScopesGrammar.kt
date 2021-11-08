@@ -21,22 +21,7 @@ import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.grammar.Rule
 
 /**
-    declarations = rootIdentifiables scopes references?
-    rootIdentifiables = identifiable*
-    scopes = scope*
-    scope = 'scope' typeReference '{' identifiables '}
-    identifiables = identifiable*
-    identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
 
-    references = 'references' '{' referenceDefinitions '}'
-    referenceDefinitions = referenceDefinition*
-    referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
-    typeReferences = [typeReferences / '|']+
-
-    propertyReferenceOrNothing = '§nothing' | propertyReference
-    typeReference = IDENTIFIER     // same as grammar rule name
-    propertyReference = IDENTIFIER // same as grammar rule name
-    leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
  */
 internal class AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglScopes") {
     companion object {
@@ -69,4 +54,26 @@ internal class AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst.
     init {
         super.rule.addAll(createRules())
     }
+    //TODO: gen this from the ASM
+    override fun toString(): String = """
+        namespace net.akehurst.language.agl
+        grammar AglScopes {
+            declarations = rootIdentifiables scopes references?
+            rootIdentifiables = identifiable*
+            scopes = scope*
+            scope = 'scope' typeReference '{' identifiables '}
+            identifiables = identifiable*
+            identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
+        
+            references = 'references' '{' referenceDefinitions '}'
+            referenceDefinitions = referenceDefinition*
+            referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
+            typeReferences = [typeReferences / '|']+
+        
+            propertyReferenceOrNothing = '§nothing' | propertyReference
+            typeReference = IDENTIFIER     // same as grammar rule name
+            propertyReference = IDENTIFIER // same as grammar rule name
+            leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
+        }
+    """.trimIndent()
 }

@@ -150,3 +150,6 @@ Transition { State(71-RP(group,0,1)) -- WIDTH['[', LITERAL, PATTERN, '(', IDENTI
 Transition { State(71-RP(group,0,1)) -- WIDTH['[', LITERAL, PATTERN, '(', IDENTIFIER, '<', ')', '|', '*', '+', '?', POSITIVE_INTEGER][null] --> State(42-RP(PATTERN,0,-1)) }
 Transition { State(71-RP(group,0,1)) -- WIDTH[§empty.§priorityChoice§sList2, §empty.§simpleChoice§sList3, '[', LITERAL, PATTERN, '(', IDENTIFIER][null] --> State(44-RP('(',0,-1)) }
 Transition { State(71-RP(group,0,1)) -- WIDTH['.', '[', LITERAL, PATTERN, '(', IDENTIFIER, '<', ')', '|', '*', '+', '?', POSITIVE_INTEGER][null] --> State(12-RP(IDENTIFIER,0,-1)) }
+
+
+{"$type":"$OBJECT","$class":"net.akehurst.language.editor.common.messages.MessageProcessorCreate","languageId":"language-grammar","editorId":null,"sessionId":"session2","grammarStr":null}
