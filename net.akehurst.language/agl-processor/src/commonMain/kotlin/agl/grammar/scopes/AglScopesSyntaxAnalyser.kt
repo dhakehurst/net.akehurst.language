@@ -25,7 +25,7 @@ import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextFromGrammar> {
+class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext> {
 
     data class PropertyValue(
         val asmObject: Any,
@@ -45,7 +45,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextFromGrammar> {
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, context: ContextFromGrammar?): Pair<ScopeModel, List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, context: SentenceContext?): Pair<ScopeModel, List<LanguageIssue>> {
         val asm = this.declarations(sppt.root.asBranch)
 
         if (null != context) {
@@ -54,7 +54,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextFromGrammar> {
                     //do nothing
                     "In root scope"
                 } else {
-                    if (context.scope.isMissing(scope.scopeFor, "Rule")) {
+                    if (context.rootScope.isMissing(scope.scopeFor, "Rule")) {
                         val loc = this.locationMap[PropertyValue(scope, "typeReference")]
                         issues.raise(loc, "Rule '${scope.scopeFor}' not found for scope")
                     } else {
@@ -63,13 +63,13 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextFromGrammar> {
                     "In scope for '${scope.scopeFor}' Rule"
                 }
                 scope.identifiables.forEach { identifiable ->
-                    if (context.scope.isMissing(identifiable.typeName, "Rule")) {
+                    if (context.rootScope.isMissing(identifiable.typeName, "Rule")) {
                         val loc = this.locationMap[PropertyValue(identifiable, "typeReference")]
                         issues.raise(loc, "$msgStart '${identifiable.typeName}' not found as identifiable type")
                     } else {
                         // only check this if the typeName is valid - else it is always invalid
                         //TODO: check this in context of typeName Rule
-                        if (context.scope.isMissing(identifiable.propertyName, "Rule")) {
+                        if (context.rootScope.isMissing(identifiable.propertyName, "Rule")) {
                             val loc = this.locationMap[PropertyValue(identifiable, "propertyName")]
                             issues.raise(
                                 loc,
@@ -83,16 +83,16 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, ContextFromGrammar> {
             }
 
             asm.references.forEach { ref ->
-                if (context.scope.isMissing(ref.inTypeName, "Rule")) {
+                if (context.rootScope.isMissing(ref.inTypeName, "Rule")) {
                     val loc = this.locationMap[PropertyValue(ref, "in")]
                     issues.raise(loc, "Referring type Rule '${ref.inTypeName}' not found")
                 }
-                if (context.scope.isMissing(ref.referringPropertyName, "Rule")) {
+                if (context.rootScope.isMissing(ref.referringPropertyName, "Rule")) {
                     val loc = this.locationMap[PropertyValue(ref, "propertyReference")]
                     issues.raise(loc, "For reference in '${ref.inTypeName}' referring property Rule '${ref.referringPropertyName}' not found")
                 }
                 ref.refersToTypeName.forEachIndexed { i, n ->
-                    if (context.scope.isMissing(n, "Rule")) {
+                    if (context.rootScope.isMissing(n, "Rule")) {
                         val loc = this.locationMap[PropertyValue(ref, "typeReferences[$i]")]
                         issues.raise(loc, "For reference in '${ref.inTypeName}' referred to type Rule '$n' not found")
                     }

@@ -28,7 +28,7 @@ class ContextSimple() : SentenceContext {
     /**
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
      */
-    var rootScope = ScopeSimple<AsmElementPath>(null, "", ScopeModel.ROOT_SCOPE_TYPE_NAME)
+    override var rootScope = ScopeSimple<AsmElementPath>(null, "", ScopeModel.ROOT_SCOPE_TYPE_NAME)
 }
 
 

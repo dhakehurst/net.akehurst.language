@@ -23,6 +23,9 @@ class GrammarDefault(
     override val name: String
 ) : GrammarAbstract(namespace, name) {
 
+    // override this so that property is correctly exported/defined in JS and available for serialisation
+    override val rule: MutableList<Rule>
+        get() = super.rule
 }
 
 abstract class GrammarAbstract(
@@ -32,7 +35,7 @@ abstract class GrammarAbstract(
 
     override val extends: MutableList<Grammar> = mutableListOf<Grammar>()
 
-    override var rule: MutableList<Rule> = mutableListOf<Rule>() //TODO: should be a val, but currently serialisation needs it to be a var
+    override val rule: MutableList<Rule> = mutableListOf<Rule>()
 
     override val allRule: List<Rule> by lazy {
         //TODO: Handle situation where super grammar/rule is included more than once ?

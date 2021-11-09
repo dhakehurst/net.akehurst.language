@@ -15,9 +15,13 @@
  */
 package net.akehurst.language.agl.grammar.style
 
+import net.akehurst.language.agl.grammar.scopes.AglScopesSyntaxAnalyser
 import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserAbstract
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.style.AglStyle
 import net.akehurst.language.api.style.AglStyleRule
@@ -25,7 +29,9 @@ import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 
-internal class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract<List<AglStyleRule>,Any>() {
+internal class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract<List<AglStyleRule>,SentenceContext>() {
+
+    private val issues = mutableListOf<LanguageIssue>()
 
     init {
         this.register("rules", this::rules as BranchHandler<List<AglStyleRule>>)
@@ -44,9 +50,23 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserAbstract<List<AglStyleRule
     override fun configure(configurationContext: SentenceContext, configuration: String): List<LanguageIssue> {
         return emptyList()
     }
-    override fun transform(sppt: SharedPackedParseTree, context: Any?): Pair<List<AglStyleRule>, List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, context: SentenceContext?): Pair<List<AglStyleRule>, List<LanguageIssue>> {
         val rules:List<AglStyleRule> =  this.transformBranch(sppt.root.asBranch, "")
+
+        if (null != context) {
+            rules.forEach {
+                if (context.rootScope.isMissing(it.selector, "Rule")) {
+                    val loc = this.locationMap[AglScopesSyntaxAnalyser.PropertyValue(it, "typeReference")]
+                    issues.raise(loc, "Rule '${it.selector}' not found for scope")
+                }
+            }
+        }
+
         return Pair(rules, emptyList()) //TODO
+    }
+
+    private fun MutableList<LanguageIssue>.raise(location: InputLocation?, message: String) {
+        this.add(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, location, message))
     }
 
     // rules : rule* ;

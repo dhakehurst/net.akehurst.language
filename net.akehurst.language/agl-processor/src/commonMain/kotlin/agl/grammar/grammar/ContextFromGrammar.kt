@@ -27,11 +27,11 @@ class ContextFromGrammar(
     val grammar: Grammar
 ) : SentenceContext {
 
-    val scope = ScopeSimple<Rule>(null, "", grammar.name)
+    override val rootScope = ScopeSimple<Rule>(null, "", grammar.name)
 
     init {
         grammar.allRule.forEach {
-            scope.addToScope(it.name, "Rule", it)
+            rootScope.addToScope(it.name, "Rule", it)
         }
     }
 

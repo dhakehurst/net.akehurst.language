@@ -16,19 +16,11 @@
 
 package net.akehurst.language.api.asm
 
-class AsmElementPath(val value:String) {
+data class AsmElementPath(val value:String) {
     companion object {
         val ROOT = AsmElementPath("/")
     }
     operator fun plus(segment: String)= if(this==ROOT) AsmElementPath("/$segment") else AsmElementPath("$value/$segment")
-
-    override fun hashCode(): Int=value.hashCode()
-    override fun equals(other: Any?): Boolean=when(other) {
-        is AsmElementPath -> this.value==other.value
-        else -> false
-    }
-
-    override fun toString(): String = value
 }
 
 class AsmSimple {
@@ -56,19 +48,19 @@ class AsmElementSimple(
 ) {
     private var _properties = mutableMapOf<String, AsmElementProperty>()
 
-    val properties: Map<String, AsmElementProperty> get() = _properties
+    val properties: Map<String, AsmElementProperty> = _properties
 
     init {
         this.asm.index[asmPath] = this
     }
 
-    fun hasProperty(name: String): Boolean = _properties.containsKey(name)
+    fun hasProperty(name: String): Boolean = properties.containsKey(name)
 
-    fun getProperty(name: String): Any? = _properties[name]
-    fun getPropertyAsString(name: String): String? = _properties[name]?.value as String?
-    fun getPropertyAsAsmElement(name: String): AsmElementSimple? = _properties[name]?.value as AsmElementSimple?
-    fun getPropertyAsReference(name: String): AsmElementReference? = _properties[name]?.value as AsmElementReference?
-    fun getPropertyAsList(name: String): List<Any> = _properties[name]?.value as List<Any>
+    fun getProperty(name: String): Any? = properties[name]
+    fun getPropertyAsString(name: String): String? = properties[name]?.value as String?
+    fun getPropertyAsAsmElement(name: String): AsmElementSimple? = properties[name]?.value as AsmElementSimple?
+    fun getPropertyAsReference(name: String): AsmElementReference? = properties[name]?.value as AsmElementReference?
+    fun getPropertyAsList(name: String): List<Any> = properties[name]?.value as List<Any>
 
     fun setPropertyAsString(name: String, value: String?) = setProperty(name, value, false)
     fun setPropertyAsListOfString(name: String, value: List<String>?) = setProperty(name, value, false)
@@ -86,14 +78,14 @@ class AsmElementSimple(
         value.forEach { this._properties[it.name] = it }
     }
 
-    private fun Any.asString(indent: String, currentIndent: String = ""): String = when (this) {
+    private fun Any.asStringAny(indent: String, currentIndent: String = ""): String = when (this) {
         is String -> "'$this'"
         is List<*> -> when (this.size) {
             0 -> "[]"
-            1 -> "[${this[0]?.asString(indent, currentIndent)}]"
+            1 -> "[${this[0]?.asStringAny(indent, currentIndent)}]"
             else -> {
                 val newIndent = currentIndent + indent
-                this.joinToString(separator = "\n$newIndent", prefix = "[\n$newIndent", postfix = "\n$currentIndent]") { it?.asString(indent, newIndent) ?: "null" }
+                this.joinToString(separator = "\n$newIndent", prefix = "[\n$newIndent", postfix = "\n$currentIndent]") { it?.asStringAny(indent, newIndent) ?: "null" }
             }
         }
         is AsmElementSimple -> this.asString(indent, currentIndent)
@@ -113,7 +105,7 @@ class AsmElementSimple(
             } else if (null == it.value) {
                 "${it.name} = null"
             } else {
-                "${it.name} = ${it.value.asString(indent, newIndent)}"
+                "${it.name} = ${it.value.asStringAny(indent, newIndent)}"
             }
         }
         return ":$typeName $propsStr"

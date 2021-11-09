@@ -14,10 +14,21 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.processor
+package net.akehurst.language.api.asm
 
-import net.akehurst.language.api.asm.ScopeSimple
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
-interface SentenceContext {
-    val rootScope: ScopeSimple<*>
+class test_asmSimple {
+
+    @Test
+    fun xxxxx() {
+        val asm = AsmSimple()
+        val el = AsmElementSimple(AsmElementPath("/"),asm,"Test")
+        el.zzzzz = "hello"
+
+        assertEquals("hello",el.zzzzz)
+        assertEquals(emptyMap(),el.properties)
+    }
+
 }
