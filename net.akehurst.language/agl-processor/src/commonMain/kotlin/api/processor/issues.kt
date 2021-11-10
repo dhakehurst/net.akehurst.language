@@ -34,5 +34,5 @@ data class LanguageIssue(
     val phase: LanguageProcessorPhase,
     val location: InputLocation?,
     val message: String,
-    val data: Any? = null
+    val data: Any? = null //Set<String> for PARSE
 )
