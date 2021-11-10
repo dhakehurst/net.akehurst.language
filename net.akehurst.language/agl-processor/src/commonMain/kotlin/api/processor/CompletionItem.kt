@@ -16,10 +16,8 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.grammar.Rule
-
 data class CompletionItem(
-	val rule:Rule,
+	val ruleName:String,
 	val text: String
 ){
 }
