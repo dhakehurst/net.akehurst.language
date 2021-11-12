@@ -15,7 +15,6 @@
  */
 package net.akehurst.language.agl.grammar.style
 
-import net.akehurst.language.agl.grammar.scopes.AglScopesSyntaxAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -29,6 +28,11 @@ import net.akehurst.language.api.style.AglStyleRule
 
 
 internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, SentenceContext> {
+
+    companion object {
+        //not sure if this should be here or in grammar object
+        const val KEYWORD_STYLE_ID = "\$keyword"
+    }
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
     private val _issues = mutableListOf<LanguageIssue>()
@@ -46,12 +50,25 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, Sente
         val rules: List<AglStyleRule> = this.rules(sppt.root.asBranch, sppt.root.asBranch.branchNonSkipChildren, "")
 
         if (null != context) {
-            rules.forEach {
-                if (context.rootScope.isMissing(it.selector, "Rule")) {
-                    val loc = this.locationMap[it.selector]
-                    _issues.raise(loc, "Rule '${it.selector}' not found for scope")
-                }else {
-                    //no issues
+            rules.forEach { rule ->
+                rule.selector.forEach { sel ->
+                    if (KEYWORD_STYLE_ID == sel) {
+                        //it is ok
+                    } else {
+                        if (context.rootScope.isMissing(sel, "Rule")) {
+                            val loc = this.locationMap[rule]
+                            if (sel.startsWith("'") && sel.endsWith("'")) {
+                                _issues.raise(loc, "Terminal Literal ${sel} not found for style rule")
+                            } else if (sel.startsWith("\"") && sel.endsWith("\"")) {
+                                _issues.raise(loc, "Terminal Pattern ${sel} not found for style rule")
+
+                            } else {
+                                _issues.raise(loc, "Rule '${sel}' not found for style rule")
+                            }
+                        } else {
+                            //no issues
+                        }
+                    }
                 }
             }
         }
@@ -76,7 +93,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, Sente
 
     // rule = selectorExpression '{' styleList '}' ;
     fun rule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): AglStyleRule {
-        val selector = children[0].nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")  //TODO: ? selector combinations, and/or/contains etc
+        val selector = selectorExpression(children[0], children[0].branchNonSkipChildren, arg)  //TODO: ? selector combinations, and/or/contains etc
         val rule = AglStyleRule(selector)
         val styles: List<AglStyle> = this.styleList(children[1], children[1].branchNonSkipChildren, arg)
         styles.forEach {
@@ -87,14 +104,29 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, Sente
         return asm
     }
 
-    // selectorExpression = selectorSingle ; //TODO
-    fun selectorExpression(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): String {
-        return selectorSingle(children[0], children[0].branchNonSkipChildren, arg)
+    // selectorExpression
+    //             = selectorSingle
+    //             | selectorAndComposition
+    //             ; //TODO
+    fun selectorExpression(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<String> {
+        return when (children[0].name) {
+            "selectorSingle" -> selectorSingle(children[0], children[0].branchNonSkipChildren, arg)
+            "selectorAndComposition" -> selectorAndComposition(children[0], children[0].branchNonSkipChildren, arg)
+            else -> error("Internal Error (AglStyleSyntaxAnalyser):Unhandled choice in 'selectorExpression' of '${children[0].name}'")
+        }
+    }
+
+    // selectorAndComposition = [selectorSingle /',']2+ ;
+    fun selectorAndComposition(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<String> {
+        return children.flatMap {
+            selectorSingle(it, it.branchNonSkipChildren, arg)
+        }
     }
 
     // selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
-    fun selectorSingle(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): String {
-        return target.nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")
+    fun selectorSingle(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<String> {
+        val str = target.nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")
+        return listOf(str)
     }
 
     // styleList = style* ;
@@ -108,7 +140,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, Sente
     fun style(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): AglStyle {
         val name = target.nonSkipChildren[0].nonSkipMatchedText
         val value = target.nonSkipChildren[2].nonSkipMatchedText
-        val asm= AglStyle(name, value)
+        val asm = AglStyle(name, value)
         this.locationMap[asm] = target.location
         return asm
     }

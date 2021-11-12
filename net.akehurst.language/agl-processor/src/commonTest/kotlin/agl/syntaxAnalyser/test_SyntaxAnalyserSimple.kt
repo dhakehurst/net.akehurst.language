@@ -127,13 +127,14 @@ class test_SyntaxAnalyserSimple {
         val expected = asmSimple() {
             root("S") {
                 propertyString("ID", "a")
-                propertyString("type", "A")
+                propertyElement("type") {
+                    propertyString("value", "A")
+                }
             }
         }.rootElements[0]
 
         assertEquals(expected.asString("  "), actual.asString("  "))
     }
-
 
     @Test
     fun concatenation() {
@@ -161,6 +162,84 @@ class test_SyntaxAnalyserSimple {
                 propertyString("ID", "a")
                 propertyString("NUMBER", "8")
                 propertyString("NAME", "fred")
+            }
+        }.rootElements[0]
+
+        assertEquals(expected.asString("  "), actual.asString("  "))
+    }
+
+    @Test
+    fun root_choice_twoLiteral() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' | 'b' ;
+            }
+        """.trimIndent()
+
+        val sentence = "a"
+
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        assertNotNull(asm)
+        assertEquals(emptyList(), issues)
+        val actual = asm.rootElements[0]
+
+        val expected = asmSimple() {
+            root("S") {
+                propertyString("value","a")
+            }
+        }.rootElements[0]
+
+        assertEquals(expected.asString("  "), actual.asString("  "))
+    }
+
+    @Test
+    fun root_empty() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a'? ;
+            }
+        """.trimIndent()
+
+        val sentence = ""
+
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        assertNotNull(asm)
+        assertEquals(emptyList(), issues)
+        val actual = asm.rootElements[0]
+
+        val expected = asmSimple() {
+            root("S") {
+                propertyString("value",null)
+            }
+        }.rootElements[0]
+
+        assertEquals(expected.asString("  "), actual.asString("  "))
+    }
+
+    @Test
+    fun root_multi_literals() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a'* ;
+            }
+        """.trimIndent()
+
+        val sentence = "aaaa"
+
+        val proc = Agl.processorFromString(grammarStr, null, SyntaxAnalyserSimple())
+        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        assertNotNull(asm)
+        assertEquals(emptyList(), issues)
+        val actual = asm.rootElements[0]
+
+        val expected = asmSimple() {
+            root("S") {
+                propertyListOfString("value",listOf("a","a","a","a"))
             }
         }.rootElements[0]
 
@@ -435,27 +514,22 @@ class test_SyntaxAnalyserSimple {
                         propertyListOfElement("attr_list_content") {
                             element("attr") {
                                 propertyString("ID", "fontsize")
-                                propertyString("'='", "=")
                                 propertyString("ID2", "ss")
                             }
                             element("attr") {
                                 propertyString("ID", "labelloc")
-                                propertyString("'='", "=")
                                 propertyString("ID2", "yy")
                             }
                             element("attr") {
                                 propertyString("ID", "label")
-                                propertyString("'='", "=")
                                 propertyString("ID2", "bb")
                             }
                             element("attr") {
                                 propertyString("ID", "splines")
-                                propertyString("'='", "=")
                                 propertyString("ID2", "true")
                             }
                             element("attr") {
                                 propertyString("ID", "overlap")
-                                propertyString("'='", "=")
                                 propertyString("ID2", "false")
                             }
                         }

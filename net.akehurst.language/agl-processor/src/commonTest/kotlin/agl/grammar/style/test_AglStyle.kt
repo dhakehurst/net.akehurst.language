@@ -69,7 +69,7 @@ class test_AglStyle {
 
         assertNotNull(actual)
         assertEquals(1, actual.size)
-        assertEquals("class", actual[0].selector)
+        assertEquals("class", actual[0].selector.first())
         assertEquals(2, actual[0].styles.size)
     }
 
@@ -92,6 +92,7 @@ class test_AglStyle {
         assertNotNull(actual)
         assertEquals(2, actual.size)
     }
+
     @Test
     fun regexWithQuotes() {
         val text = """
@@ -107,4 +108,16 @@ class test_AglStyle {
         assertEquals(1, actual.size)
     }
 
+    @Test
+    fun selectorAndComposition() {
+
+        val text = """
+            selector1,selector2,selector { }
+        """.trimIndent()
+
+        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
+
+        assertNotNull(actual)
+        assertEquals(1, actual.size)
+    }
 }

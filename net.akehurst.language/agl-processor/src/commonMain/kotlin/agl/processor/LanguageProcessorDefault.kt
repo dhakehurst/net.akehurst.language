@@ -25,6 +25,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromRuntimeRules
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
@@ -38,6 +39,7 @@ import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.typeModel.TypeModel
 
 internal class LanguageProcessorDefault(
     override val grammar: Grammar,
@@ -47,15 +49,20 @@ internal class LanguageProcessorDefault(
     val semanticAnalyser: SemanticAnalyser<*, *>?
 ) : LanguageProcessor {
 
-    private val _scanner by lazy { Scanner(this._converterToRuntimeRules.runtimeRuleSet) }
     private val _converterToRuntimeRules: ConverterToRuntimeRules by lazy { ConverterToRuntimeRules(this.grammar) }
+    private val _runtimeRuleSet by lazy { this._converterToRuntimeRules.runtimeRuleSet }
+    private val _scanner by lazy { Scanner(this._runtimeRuleSet) }
 
     //internal so that tests can use it
-    internal val parser: Parser by lazy { ScanOnDemandParser(this._converterToRuntimeRules.runtimeRuleSet) }
+    internal val parser: Parser by lazy { ScanOnDemandParser(this._runtimeRuleSet) }
     private val _completionProvider: CompletionProvider by lazy { CompletionProvider(this.grammar) }
 
     override val spptParser: SPPTParser by lazy {
         SPPTParserDefault((parser as ScanOnDemandParser).runtimeRuleSet)
+    }
+
+    override val typeModel: TypeModel by lazy {
+        TypeModelFromRuntimeRules(this._runtimeRuleSet.runtimeRules).derive()
     }
 
     override fun interrupt(message: String) {
@@ -79,7 +86,7 @@ internal class LanguageProcessorDefault(
     }
 
     override fun <AsmType : Any,ContextType : Any> syntaxAnalysis(sppt: SharedPackedParseTree,context: ContextType?): Triple<AsmType?,List<LanguageIssue>,Map<*,InputLocation>> {
-        val sa:SyntaxAnalyser<AsmType,ContextType> = (this.syntaxAnalyser ?: SyntaxAnalyserSimple()) as SyntaxAnalyser<AsmType, ContextType>
+        val sa:SyntaxAnalyser<AsmType,ContextType> = (this.syntaxAnalyser ?: SyntaxAnalyserSimple(this.typeModel)) as SyntaxAnalyser<AsmType, ContextType>
         sa.clear()
         val (asm: AsmType, issues) = sa.transform(sppt,context)
         return Triple(asm,issues, sa.locationMap)

@@ -21,6 +21,7 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.typeModel.TypeModel
 
 /**
  * A LanguageProcessor is used to process a sentence using a given grammar.
@@ -40,6 +41,11 @@ interface LanguageProcessor {
      * useful for testing parser output
      */
     val spptParser: SPPTParser
+
+    /**
+     * model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
+     */
+    val typeModel: TypeModel
 
     /**
      * can be called from a different thread to stop the parser

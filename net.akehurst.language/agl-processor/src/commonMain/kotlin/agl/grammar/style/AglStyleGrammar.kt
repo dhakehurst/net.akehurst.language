@@ -31,7 +31,8 @@ internal class AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.
 
             b.rule("rules").multi(0,-1, b.nonTerminal("rule"))
             b.rule("rule").concatenation(b.nonTerminal("selectorExpression"), b.terminalLiteral("{"), b.nonTerminal("styleList"), b.terminalLiteral("}"))
-            b.rule("selectorExpression").choiceLongestFromConcatenationItem(b.nonTerminal("selectorSingle"))
+            b.rule("selectorExpression").choiceLongestFromConcatenationItem(b.nonTerminal("selectorAndComposition"),b.nonTerminal("selectorSingle"))
+            b.rule("selectorAndComposition").separatedList(2,-1,b.terminalLiteral(","),b.nonTerminal("selectorSingle"))
             b.rule("selectorSingle").choiceLongestFromConcatenationItem(b.nonTerminal("LITERAL"), b.nonTerminal("PATTERN"), b.nonTerminal("IDENTIFIER"), b.nonTerminal("META_IDENTIFIER"))
             // these must match what is in the AglGrammarGrammar
             b.leaf("LITERAL").concatenation(b.terminalPattern("'([^'\\\\]|\\\\.)*'"))
@@ -42,7 +43,7 @@ internal class AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.
 
             b.rule("styleList").multi(0,-1,b.nonTerminal("style"))
             b.rule("style").concatenation(b.nonTerminal("STYLE_ID"), b.terminalLiteral(":"), b.nonTerminal("STYLE_VALUE"), b.terminalLiteral(";"))
-            b.leaf("STYLE_ID").concatenation(b.terminalPattern("[-a-zA-Z@_$][-a-zA-Z_0-9@]*"));
+            b.leaf("STYLE_ID").concatenation(b.terminalPattern("[-a-zA-Z_][-a-zA-Z_0-9]*"));
             b.leaf("STYLE_VALUE").concatenation(b.terminalPattern("([^;:]*)"))
 
             return b.grammar.rule
@@ -58,7 +59,11 @@ internal class AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.
         grammar AglStyle {
             rules = rule* ;
             rule = selectorExpression '{' styleList '}' ;
-            selectorExpression = selectorSingle ; //TODO
+            selectorExpression
+             = selectorSingle
+             | selectorAndComposition
+             ; //TODO
+            selectorAndComposition = [selectorSingle /',']2+ ;
             selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
             styleList = style* ;
             style = STYLE_ID ':' STYLE_VALUE ';' ;
