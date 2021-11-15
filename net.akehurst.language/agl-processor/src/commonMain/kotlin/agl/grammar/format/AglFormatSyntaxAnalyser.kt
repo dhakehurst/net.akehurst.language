@@ -19,6 +19,7 @@ import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.processor.SentenceContext
 
 internal class AglFormatSyntaxAnalyser : SyntaxAnalyser<Any,Any> {
@@ -31,7 +32,8 @@ internal class AglFormatSyntaxAnalyser : SyntaxAnalyser<Any,Any> {
     override fun configure(configurationContext: SentenceContext, configuration: String): List<LanguageIssue> {
         TODO("not implemented")
     }
-    override fun transform(sppt: SharedPackedParseTree, context: Any?): Pair<Any, List<LanguageIssue>> {
+
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: Any?): Pair<Any, List<LanguageIssue>> {
         TODO("not implemented")
     }
 }

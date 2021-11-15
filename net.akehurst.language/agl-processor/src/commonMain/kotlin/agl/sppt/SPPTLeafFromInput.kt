@@ -25,74 +25,56 @@ import net.akehurst.language.api.sppt.*
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties
 /*internal */ class SPPTLeafFromInput internal constructor(
-        input: InputFromString,
-        runtimeRule: RuntimeRule,
-        startPosition: Int,
-        nextInputPosition: Int,
-        priority: Int
+    input: InputFromString,
+    runtimeRule: RuntimeRule,
+    startPosition: Int,
+    nextInputPosition: Int,
+    priority: Int
 ) : SPPTNodeFromInputAbstract(input, runtimeRule, 0, startPosition, nextInputPosition, priority), SPPTLeaf {
 
     companion object {
         val NONE = object : SPPTLeaf {
-            override val isPattern: Boolean
-                get() = TODO("not implemented")
-            override val isLiteral: Boolean
-                get() = TODO("not implemented")
-            override val tagList: List<String>
-                get() = TODO("not implemented")
-            override val eolPositions: List<Int>
-                get() = TODO("not implemented")
-            override val metaTags: List<String>
-                get() = TODO("not implemented")
-            override val identity: SPPTNodeIdentity
-                get() = TODO("not implemented")
-            override val name: String
-                get() = TODO("not implemented")
-            override val runtimeRuleNumber: Int
-                get() = TODO("not implemented")
-            override val option: Int
-                get() = TODO("not implemented")
-            override val location: InputLocation
-                get() = TODO("not implemented")
-            override val lastLeaf: SPPTLeaf
-                get() = TODO("not implemented")
-            override val startPosition: Int
-                get() = TODO("not implemented")
-            override val matchedTextLength: Int
-                get() = TODO("not implemented")
-            override val nextInputPosition: Int
-                get() = TODO("not implemented")
-            override val priority: Int
-                get() = TODO("not implemented")
-            override val matchedText: String
-                get() = TODO("not implemented")
-            override val nonSkipMatchedText: String
-                get() = TODO("not implemented")
-            override val numberOfLines: Int
-                get() = TODO("not implemented")
-            override val isEmptyLeaf: Boolean
-                get() = TODO("not implemented")
-            override val isEmptyMatch: Boolean
-                get() = TODO("not implemented")
-            override val isLeaf: Boolean
-                get() = true
-            override val isBranch: Boolean
-                get() = false
-            override val isSkip: Boolean
-                get() = TODO("not implemented")
-            override val asLeaf: SPPTLeaf
-                get() = TODO("not implemented")
-            override val asBranch: SPPTBranch
-                get() = TODO("not implemented")
+            override val isPattern: Boolean get() = TODO("not implemented")
+            override val isLiteral: Boolean get() = TODO("not implemented")
+            override val tagList: List<String> get() = TODO("not implemented")
+            override val eolPositions: List<Int> get() = TODO("not implemented")
+            override val metaTags: List<String> get() = TODO("not implemented")
+            override val identity: SPPTNodeIdentity get() = TODO("not implemented")
+            override val name: String get() = TODO("not implemented")
+            override val runtimeRuleNumber: Int get() = TODO("not implemented")
+            override val option: Int get() = TODO("not implemented")
+            override val location: InputLocation get() = TODO("not implemented")
+            override val lastLeaf: SPPTLeaf get() = TODO("not implemented")
+            override val startPosition: Int get() = TODO("not implemented")
+            override val matchedTextLength: Int get() = TODO("not implemented")
+            override val nextInputPosition: Int get() = TODO("not implemented")
+            override val priority: Int get() = TODO("not implemented")
+            override val matchedText: String get() = TODO("not implemented")
+            override val nonSkipMatchedText: String get() = TODO("not implemented")
+            override val numberOfLines: Int get() = TODO("not implemented")
+            override val isEmptyLeaf: Boolean get() = TODO("not implemented")
+            override val isEmptyMatch: Boolean get() = TODO("not implemented")
+            override val isLeaf: Boolean get() = true
+            override val isExplicitelyNamed: Boolean get() = false
+            override val isBranch: Boolean get() = false
+            override val isSkip: Boolean get() = TODO("not implemented")
+            override val asLeaf: SPPTLeaf get() = TODO("not implemented")
+            override val asBranch: SPPTBranch get() = TODO("not implemented")
             override var parent: SPPTBranch?
                 get() = TODO("not implemented")
-                set(value) {TODO("not implemented")}
+                set(value) {
+                    TODO("not implemented")
+                }
             override var tree: SharedPackedParseTree?
                 get() = TODO("not implemented")
-                set(value) {TODO("not implemented")}
+                set(value) {
+                    TODO("not implemented")
+                }
+
             override fun setTags(arg: List<String>) {
                 TODO("not implemented")
             }
+
             override fun contains(other: SPPTNode): Boolean {
                 TODO("not implemented")
             }
@@ -104,19 +86,20 @@ import net.akehurst.language.api.sppt.*
     override val isPattern: Boolean get() = runtimeRule.isPattern
     override val isLiteral: Boolean get() = runtimeRule.isPattern.not()
     override val isLeaf: Boolean get() = true
+    override val isExplicitelyNamed: Boolean get() = this.runtimeRule.tag!=null
     override val isBranch: Boolean get() = false
     override val asBranch: SPPTBranch get() = throw SPPTException("Not a Branch", null)
-    override val location: InputLocation get() = input.locationFor(startPosition,matchedTextLength)
+    override val location: InputLocation get() = input.locationFor(startPosition, matchedTextLength)
     override val lastLeaf: SPPTLeaf get() = this
     override val asLeaf: SPPTLeaf get() = this
-    override  var tagList: List<String> = mutableListOf<String>() //TODO: initialise late
+    override var tagList: List<String> = mutableListOf<String>() //TODO: initialise late
     override lateinit var eolPositions: List<Int> // = emptyList()
 
     override val matchedText: String get() = input[startPosition, nextInputPosition]
     override val isEmptyLeaf: Boolean get() = this.runtimeRule.isEmptyRule
     override val metaTags: List<String> by lazy { //TODO: make this configurable on the LanguageProcessor
         val map = mutableMapOf<String, String>(
-                "\$keyword" to "'[a-zA-Z_][a-zA-Z0-9_-]*'"
+            "\$keyword" to "'[a-zA-Z_][a-zA-Z0-9_-]*'"
         )
         map.mapNotNull {
             when {

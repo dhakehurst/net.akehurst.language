@@ -88,7 +88,7 @@ internal class LanguageProcessorDefault(
     override fun <AsmType : Any,ContextType : Any> syntaxAnalysis(sppt: SharedPackedParseTree,context: ContextType?): Triple<AsmType?,List<LanguageIssue>,Map<*,InputLocation>> {
         val sa:SyntaxAnalyser<AsmType,ContextType> = (this.syntaxAnalyser ?: SyntaxAnalyserSimple(this.typeModel)) as SyntaxAnalyser<AsmType, ContextType>
         sa.clear()
-        val (asm: AsmType, issues) = sa.transform(sppt,context)
+        val (asm: AsmType, issues) = sa.transform(sppt,{rsn, rn -> this._converterToRuntimeRules.originalRuleItemFor(rsn,rn)}, context)
         return Triple(asm,issues, sa.locationMap)
     }
 
@@ -146,7 +146,7 @@ internal class LanguageProcessorDefault(
         val parserExpected: Set<RuntimeRule> = this.parser.expectedAt(goal, sentence, position, ak)
         val grammarExpected: List<RuleItem> = parserExpected
             .filter { it !== RuntimeRuleSet.END_OF_TEXT }
-            .map { this._converterToRuntimeRules.originalRuleItemFor(it) }
+            .map { this._converterToRuntimeRules.originalRuleItemFor(it.runtimeRuleSetNumber, it.number) }
         val expected = grammarExpected.flatMap { this._completionProvider.provideFor(it, desiredDepth) }
         return expected.toSet().toList()
     }

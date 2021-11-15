@@ -16,6 +16,7 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -46,7 +47,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, Sente
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, context: SentenceContext?): Pair<List<AglStyleRule>, List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: SentenceContext?): Pair<List<AglStyleRule>, List<LanguageIssue>> {
         val rules: List<AglStyleRule> = this.rules(sppt.root.asBranch, sppt.root.asBranch.branchNonSkipChildren, "")
 
         if (null != context) {

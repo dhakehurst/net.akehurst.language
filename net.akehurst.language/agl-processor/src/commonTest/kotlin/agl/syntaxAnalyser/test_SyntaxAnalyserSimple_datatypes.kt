@@ -22,6 +22,7 @@ import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
+import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -29,10 +30,13 @@ import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_SyntaxAnalyserSimple_datatypes {
 
-    companion object {
+    private companion object {
+        val grammarProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
+
         val grammarStr = """
             namespace test
             
@@ -53,7 +57,13 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         """.trimIndent()
 
-        val syntaxAnalyser = SyntaxAnalyserSimple()
+        val typeModel by lazy {
+            val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+            assertNotNull(grammars)
+            assertTrue(gramIssues.isEmpty())
+            TypeModelFromGrammar(grammars.last()).derive()
+        }
+        val syntaxAnalyser = SyntaxAnalyserSimple(typeModel)
         val processor = Agl.processorFromString(
             grammarStr,
             "unit",

@@ -44,6 +44,7 @@ interface RuleType {
 
 class BuiltInType private constructor(override val name: String) : RuleType {
     companion object {
+        val NOTHING = BuiltInType("\$Nothing")
         val STRING = BuiltInType("\$String")
         val LIST = BuiltInType("\$List")
     }

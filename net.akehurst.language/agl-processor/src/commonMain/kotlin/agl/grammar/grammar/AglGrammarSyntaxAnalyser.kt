@@ -74,7 +74,7 @@ internal class AglGrammarSyntaxAnalyser(
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, context: GrammarContext?): Pair<List<Grammar>, List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: GrammarContext?): Pair<List<Grammar>, List<LanguageIssue>> {
         val grammars = this.transformBranch<List<Grammar>>(sppt.root.asBranch, "")
         return Pair(grammars, _issues) //TODO
     }

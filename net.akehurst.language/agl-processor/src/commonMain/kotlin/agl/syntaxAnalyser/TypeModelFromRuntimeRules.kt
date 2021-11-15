@@ -22,7 +22,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 
 internal class TypeModelFromRuntimeRules(
-    private val _runtimeRules: List<RuntimeRule>
+    private val _runtimeRules: List<RuntimeRule> //TODO: make this come from Grammar Rules rather than runtime rules
 ) {
 
     private val _ruleToType = mutableMapOf<RuntimeRule, RuleType>()

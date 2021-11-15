@@ -17,6 +17,7 @@ package net.akehurst.language.agl.grammar.scopes
 
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -45,7 +46,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext> {
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, context: SentenceContext?): Pair<ScopeModel, List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: SentenceContext?): Pair<ScopeModel, List<LanguageIssue>> {
         val asm = this.declarations(sppt.root.asBranch)
 
         if (null != context) {

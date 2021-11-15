@@ -425,9 +425,8 @@ class test_AglGrammar {
 
         val (actual1, issues1) = p.parse("")
         assertEquals(null, actual1)
-        val expIssues1 = listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 0, 0, 0), "", null))
+        val expIssues1 = listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'")))
         assertEquals(expIssues1, issues1)
-
 
         val (actual2, issues2) = p.parse("a");
         val expected2 = p.spptParser.parse(
@@ -575,7 +574,9 @@ class test_AglGrammar {
 
         val (actual1, issues1) = p.parse("")
         assertEquals(null, actual1)
-        assertEquals(emptyList(), issues1)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(0,1,1,1),"^", setOf("'a'"))
+        ), issues1)
 
         val (actual2, issues2) = p.parse("a");
         val expected2 = p.spptParser.parse(
@@ -614,11 +615,15 @@ class test_AglGrammar {
 
         val (actual0, issues0) = p.parse("")
         assertEquals(null, actual0)
-        assertEquals(emptyList(), issues0)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(0,1,1,1),"^", setOf("'a'"))
+        ), issues0)
 
         val (actual1, issues1) = p.parse("a")
         assertEquals(null, actual1)
-        assertEquals(emptyList(), issues1)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(1,2,1,1),"a^", setOf("'a'"))
+        ), issues1)
 
         val (actual2, issues2) = p.parse("aa");
         val expected2 = p.spptParser.parse(
@@ -657,11 +662,15 @@ class test_AglGrammar {
 
         val (actual0, issues0) = p.parse("")
         assertEquals(null, actual0)
-        assertEquals(emptyList(), issues0)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(0,1,1,1),"^", setOf("'a'"))
+        ), issues0)
 
         val (actual1, issues1) = p.parse("a")
         assertEquals(null, actual1)
-        assertEquals(emptyList(), issues1)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(1,2,1,1),"a^", setOf("'a'"))
+        ), issues1)
 
         val (actual2, issues2) = p.parse("aa");
         val expected2 = p.spptParser.parse(
@@ -683,9 +692,12 @@ class test_AglGrammar {
         assertEquals(expected5, actual5)
         assertEquals(emptyList(), issues5)
 
-        assertFailsWith<ParseFailedException> {
-            val actual6 = p.parse("aaaaaa")
-        }
+        val (actual6,issues6) = p.parse("aaaaaa")
+        assertEquals(null,actual6)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(6,7,1,1),"aaaaaa^", setOf("<EOT>"))
+        ),issues6)
+
     }
 
     @Test
@@ -724,7 +736,9 @@ class test_AglGrammar {
 
         val (actual2, issues2) = p.parse("aa")
         assertEquals(null, actual2)
-        assertEquals(emptyList(), issues2)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(1,2,1,1),"a^a", setOf("<EOT>"))
+        ), issues2)
     }
 
     @Test
@@ -788,7 +802,9 @@ class test_AglGrammar {
 
         val (actual0, issues0) = p.parse("")
         assertEquals(null, actual0)
-        assertEquals(emptyList(), issues0)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(0,1,1,1),"^", setOf("'a'"))
+        ), issues0)
 
         val (actual1, issues1) = p.parse("a")
         val expected1 = p.spptParser.parse(
@@ -827,11 +843,15 @@ class test_AglGrammar {
 
         val (actual0, issues0) = p.parse("")
         assertEquals(null, actual0)
-        assertEquals(emptyList(), issues0)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(0,1,1,1),"^", setOf("'a'"))
+        ), issues0)
 
         val (actual1, issues1) = p.parse("a")
         assertEquals(null, actual1)
-        assertEquals(emptyList(), issues1)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(1,2,1,1),"a^", setOf("','"))
+        ), issues1)
 
         val (actual2, issues2) = p.parse("a,a");
         val expected2 = p.spptParser.parse(
@@ -918,19 +938,27 @@ class test_AglGrammar {
 
         val (actual1, issues1) = p.parse("")
         assertEquals(null,actual1)
-        assertEquals(emptyList(), issues1)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(0,1,1,1),"^", setOf("'a'"))
+        ), issues1)
 
         val (actual2, issues2) = p.parse("a")
         assertEquals(null,actual2)
-        assertEquals(emptyList(), issues2)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(1,2,1,1),"a^", setOf("'b'","c"))
+        ), issues2)
 
         val (actual3, issues3) = p.parse("b")
         assertEquals(null,actual3)
-        assertEquals(emptyList(), issues3)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(0,1,1,1),"^b", setOf("'a'"))
+        ), issues3)
 
         val (actual4, issues4) = p.parse("c")
         assertEquals(null,actual4)
-        assertEquals(emptyList(), issues4)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(0,1,1,1),"^c", setOf("'a'"))
+        ), issues4)
 
         val (actual5, issues5) = p.parse("ab");
         val expected5 = p.spptParser.parse(
@@ -979,11 +1007,15 @@ class test_AglGrammar {
 
         val (actual1,issues1) = p.parse("")
         assertEquals(null,actual1)
-        assertEquals(emptyList(),issues1)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(0,1,1,1),"^", setOf("'a'"))
+        ),issues1)
 
         val (actual2,issues2) = p.parse("a")
         assertEquals(null,actual2)
-        assertEquals(emptyList(),issues2)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(1,2,1,1),"a^", setOf("b"))
+        ),issues2)
 
         val (actual3,issues3) = p.parse("abbb");
         val expected3 = p.spptParser.parse(

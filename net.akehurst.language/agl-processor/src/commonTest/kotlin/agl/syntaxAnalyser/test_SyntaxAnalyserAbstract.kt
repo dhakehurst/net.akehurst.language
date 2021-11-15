@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -38,7 +39,7 @@ class TestSyntaxAnalyser : SyntaxAnalyserAbstract<Any,Any>() {
     override fun configure(configurationContext: SentenceContext, configuration: String):List<LanguageIssue> {
         TODO("not implemented")
     }
-    override fun transform(sppt: SharedPackedParseTree, context: Any?): Pair<Any, List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: Any?): Pair<Any, List<LanguageIssue>> {
         return Pair(1, emptyList())
     }
 
