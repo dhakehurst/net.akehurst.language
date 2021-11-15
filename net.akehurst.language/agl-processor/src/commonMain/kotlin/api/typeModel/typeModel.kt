@@ -79,4 +79,6 @@ data class PropertyDeclaration(
     init {
         owner.appendProperty(name, this)
     }
+
+    override fun toString(): String = "$name: ${type.name}}"
 }

@@ -67,6 +67,10 @@ class ElementTypeBuilder(
         PropertyDeclaration(_elementType, propertyName, BuiltInType.STRING)
     }
 
+    fun propertyUnnamedListType() {
+        PropertyDeclaration(_elementType, TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, BuiltInType.LIST)
+    }
+
     fun propertyListOfStringType(propertyName: String) {
         //TODO: listElementType
         PropertyDeclaration(_elementType, propertyName, BuiltInType.LIST)

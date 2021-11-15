@@ -49,7 +49,7 @@ internal class TypeModelFromGrammar(
             val rhs = rule.rhs
             val ruleType = when (rhs) {
                 // rhs's are only ever these things (currently)
-                is EmptyRule -> BuiltInType.NOTHING
+                is EmptyRule -> findOrCreateElementType(rule.name)
                 is Choice -> {
                     // if all rhs gives ElementType then this ruleType is a super type of all rhs
                     // else rhs maps to properties
@@ -157,13 +157,35 @@ internal class TypeModelFromGrammar(
     }
 
     private fun createPropertyDeclaration(et: ElementType, ruleItem: ConcatenationItem): PropertyDeclaration? {
-        val propType = typeForRuleItem(ruleItem)
+
         return when (ruleItem) {
             is EmptyRule -> null
             is Terminal -> null //PropertyDeclaration(et, UNNAMED_STRING_VALUE, propType)
-            is NonTerminal -> PropertyDeclaration(et, ruleItem.name, propType)
-            is SimpleList -> PropertyDeclaration(et, propertyNameFor(ruleItem.item), propType)
-            is SeparatedList -> PropertyDeclaration(et, propertyNameFor(ruleItem.item), propType)
+            is NonTerminal -> {
+                val rhs = ruleItem.referencedRule.rhs
+                when (rhs) {
+                    is Terminal -> PropertyDeclaration(et, propertyNameFor(ruleItem), BuiltInType.STRING)
+                    is Concatenation -> when {
+                        1 ==rhs.items.size -> when(rhs.items[0]) {
+                            is Terminal -> PropertyDeclaration(et, propertyNameFor(ruleItem), BuiltInType.STRING)
+                            is ListOfItems -> {
+                                val propType = typeForRuleItem(ruleItem.referencedRule.rhs) //to get list type
+                                PropertyDeclaration(et, propertyNameFor(ruleItem), propType)
+                            }
+                            else -> PropertyDeclaration(et, propertyNameFor(ruleItem), typeForRuleItem(ruleItem))
+                        }
+                        else -> PropertyDeclaration(et, propertyNameFor(ruleItem), typeForRuleItem(ruleItem))
+                    }
+                    is Choice -> TODO()
+
+                    else -> {
+                        val propType = typeForRuleItem(ruleItem)
+                        PropertyDeclaration(et, propertyNameFor(ruleItem), propType)
+                    }
+                }
+            }
+            is SimpleList -> PropertyDeclaration(et, propertyNameFor(ruleItem.item), typeForRuleItem(ruleItem))
+            is SeparatedList -> PropertyDeclaration(et, propertyNameFor(ruleItem.item), typeForRuleItem(ruleItem))
             is Group -> TODO()
             else -> error("Internal error, unhandled subtype of ConcatenationItem")
         }

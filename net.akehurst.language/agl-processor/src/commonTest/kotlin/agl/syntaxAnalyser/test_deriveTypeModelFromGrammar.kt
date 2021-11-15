@@ -74,7 +74,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
-    fun root_nonleaf_literal() {
+    fun nonleaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -96,7 +96,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
-    fun root_leaf_literal() {
+    fun leaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -120,7 +120,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
-    fun root_nonLeaf_pattern() {
+    fun nonLeaf_pattern() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -142,7 +142,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
-    fun root_leaf_pattern() {
+    fun leaf_pattern() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -166,7 +166,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
-    fun root_empty() {
+    fun empty() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -188,18 +188,22 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
-    fun root_choice_literal() {
-        val rrs = runtimeRuleSet {
-            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                literal("a")
-                literal("b")
-                literal("c")
+    fun choice_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' | 'b' | 'c' ;
             }
-        }
-        val actual = TypeModelFromRuntimeRules(rrs.runtimeRules).derive()
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyStringType("value")
+                propertyUnnamedStringType()
             }
         }
 
@@ -207,16 +211,22 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
-    fun root_multi_literal() {
-        val rrs = runtimeRuleSet {
-            concatenation("S") { ref("as") }
-            multi("as", 0, -1, "'a'")
-            literal("'a'", "a")
-        }
-        val actual = TypeModelFromRuntimeRules(rrs.runtimeRules).derive()
+    fun multi_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a'* ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyListOfStringType("as") // of String
+                propertyUnnamedListType() // of String
             }
         }
 
@@ -224,7 +234,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
-    fun root_slist_literal() {
+    fun slist_literal() {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("as") }
             sList("as", 0, -1, "'a'", "','")
@@ -242,7 +252,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
-    fun root_slist_nonTerm() {
+    fun slist_nonTerm() {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("as") }
             sList("as", 0, -1, "a", "','")
@@ -256,6 +266,64 @@ class test_deriveTypeModelFromGrammar {
             }
             elementType("a") {
                 propertyStringType("value")
+            }
+        }
+
+        _assertEquals(expected, actual)
+    }
+
+    @Test
+    fun nonTerm_nonTerm_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a b c ;
+                a = 'a' ;
+                b = 'b' ;
+                c = 'c' ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
+        val expected = typeModel {
+            elementType("S") {
+                propertyStringType("a")
+                propertyStringType("b")
+                propertyStringType("c")
+            }
+            elementType("a") {}
+            elementType("b") {}
+            elementType("c") {}
+        }
+
+        _assertEquals(expected, actual)
+    }
+
+    @Test
+    fun nonTerm_multi_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = as ;
+                as = 'a'* ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
+        val expected = typeModel {
+            elementType("S") {
+                propertyListOfStringType("as") // of String
+            }
+            elementType("as") {
+                propertyUnnamedListType() // of String
             }
         }
 
