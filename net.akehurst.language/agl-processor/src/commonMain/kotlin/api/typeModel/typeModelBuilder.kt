@@ -16,6 +16,8 @@
 
 package net.akehurst.language.api.typeModel
 
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
+
 @DslMarker
 annotation class TypeModelDslMarker
 
@@ -55,6 +57,10 @@ class ElementTypeBuilder(
     fun superType(superTypeName: String) {
         val st = _model.findOrCreateType(superTypeName)
         _elementType.superType.add(st)
+    }
+
+    fun propertyUnnamedStringType() {
+        PropertyDeclaration(_elementType, TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, BuiltInType.STRING)
     }
 
     fun propertyStringType(propertyName: String) {

@@ -41,6 +41,7 @@ import net.akehurst.language.api.sppt.*
             override val metaTags: List<String> get() = TODO("not implemented")
             override val identity: SPPTNodeIdentity get() = TODO("not implemented")
             override val name: String get() = TODO("not implemented")
+            override val runtimeRuleSetNumber: Int get() = TODO("not implemented")
             override val runtimeRuleNumber: Int get() = TODO("not implemented")
             override val option: Int get() = TODO("not implemented")
             override val location: InputLocation get() = TODO("not implemented")
@@ -86,7 +87,7 @@ import net.akehurst.language.api.sppt.*
     override val isPattern: Boolean get() = runtimeRule.isPattern
     override val isLiteral: Boolean get() = runtimeRule.isPattern.not()
     override val isLeaf: Boolean get() = true
-    override val isExplicitelyNamed: Boolean get() = this.runtimeRule.tag!=null
+    override val isExplicitelyNamed: Boolean get() = this.runtimeRule.name!=null
     override val isBranch: Boolean get() = false
     override val asBranch: SPPTBranch get() = throw SPPTException("Not a Branch", null)
     override val location: InputLocation get() = input.locationFor(startPosition, matchedTextLength)

@@ -56,7 +56,7 @@ internal class test_aObcLiteral : test_ScanOnDemandParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
 
         val expIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,0,0,0),"",null)
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^",setOf("'a'"))
         )
         assertEquals(null, sppt)
         assertEquals(expIssues, issues)

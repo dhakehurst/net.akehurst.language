@@ -61,6 +61,14 @@ class BuiltInType private constructor(override val name: String) : RuleType {
 data class ElementType(override val name: String) : RuleType {
     val superType = mutableListOf<RuleType>()
     val property = mutableMapOf<String, PropertyDeclaration>()
+    private val _propertyIndex = mutableListOf<PropertyDeclaration>()
+
+    fun getPropertyByIndex(i:Int):PropertyDeclaration = _propertyIndex[i]
+    fun appendProperty(name: String, propertyDeclaration: PropertyDeclaration) {
+        check(propertyDeclaration.owner==this)
+        this.property[name]=propertyDeclaration
+        this._propertyIndex.add(propertyDeclaration)
+    }
 }
 
 data class PropertyDeclaration(
@@ -69,6 +77,6 @@ data class PropertyDeclaration(
     val type: RuleType
 ) {
     init {
-        owner.property[name] = this
+        owner.appendProperty(name, this)
     }
 }

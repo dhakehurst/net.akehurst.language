@@ -152,7 +152,7 @@ class test_SyntaxAnalyserSimple {
             root("S") {
                 propertyString("ID", "a")
                 propertyElement("type") {
-                    propertyString("value", "A")
+                    propertyUnnamedString( "A")
                 }
             }
         }.rootElements[0]
@@ -219,7 +219,7 @@ class test_SyntaxAnalyserSimple {
 
         val expected = asmSimple() {
             root("S") {
-                propertyString("value","a")
+                propertyUnnamedString("a")
             }
         }.rootElements[0]
 
@@ -249,7 +249,7 @@ class test_SyntaxAnalyserSimple {
 
         val expected = asmSimple() {
             root("S") {
-                propertyString("value",null)
+                propertyUnnamedString(null)
             }
         }.rootElements[0]
 

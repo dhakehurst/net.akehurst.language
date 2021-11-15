@@ -39,7 +39,6 @@ import net.akehurst.language.api.sppt.*
     // option -> children
     internal var grownChildrenAlternatives = mutableMapOf<Int, GrowingChildren>()
 
-
     // --- SPPTBranch ---
 
     override val childrenAlternatives: Set<List<SPPTNode>>
@@ -137,9 +136,7 @@ import net.akehurst.language.api.sppt.*
         return r
     }
 
-    override fun hashCode(): Int {
-        return this.identity.hashCode()
-    }
+    override fun hashCode(): Int = (((this.runtimeRuleSetNumber*31)+this.runtimeRuleNumber)*31)+this.startPosition
 
     override fun equals(other: Any?): Boolean {
         if (other !is SPPTBranch) {

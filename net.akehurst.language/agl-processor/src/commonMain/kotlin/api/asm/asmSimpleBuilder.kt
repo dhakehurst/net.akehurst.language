@@ -18,6 +18,7 @@ package net.akehurst.language.api.asm
 
 import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
 import net.akehurst.language.agl.syntaxAnalyser.resolveReferencesElement
 
@@ -85,6 +86,7 @@ class AsmElementSimpleBuilder(
         _element.setProperty(name, value, false)
     }
 
+    fun propertyUnnamedString(value: String?) = this._property(TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, value)
     fun propertyString(name: String, value: String?) = this._property(name, value)
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElement(name, name, init)
     fun propertyElement(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {

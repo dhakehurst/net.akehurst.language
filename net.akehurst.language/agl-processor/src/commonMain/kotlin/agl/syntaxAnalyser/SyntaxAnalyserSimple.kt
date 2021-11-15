@@ -50,6 +50,7 @@ class SyntaxAnalyserSimple(
     private var _context: ContextSimple? = null // cached value, provided on call to transform
     private val _issues = mutableListOf<LanguageIssue>()
     private val _scopeMap = mutableMapOf<AsmElementPath, ScopeSimple<AsmElementPath>>()
+    private lateinit var _mapToGrammar:(Int,Int)->RuleItem
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
     var scopeModel: ScopeModel = ScopeModel()
@@ -76,6 +77,7 @@ class SyntaxAnalyserSimple(
     }
 
     override fun transform(sppt: SharedPackedParseTree, mapToGrammar:(Int,Int)->RuleItem, context: ContextSimple?): Pair<AsmSimple, List<LanguageIssue>> {
+        this._mapToGrammar = mapToGrammar
         this._context = context
         _asm = AsmSimple()
         val path = AsmElementPath.ROOT + (_asm!!.rootElements.size).toString()
@@ -136,6 +138,7 @@ class SyntaxAnalyserSimple(
     private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, scope: ScopeSimple<AsmElementPath>?): Any? {
         val br = target as SPPTBranchFromInputAndGrownChildren //SPPTBranchDefault //TODO: make write thing available on interface
         val elType = typeModel.let { typeModel.findType(target.name) }
+        val ruleItem = this._mapToGrammar(target.runtimeRuleSetNumber,target.runtimeRuleNumber)
         return when {
             null == elType -> TODO()
             BuiltInType.STRING == elType -> TODO()
@@ -143,18 +146,31 @@ class SyntaxAnalyserSimple(
             elType is ElementType -> {
                 val el = _asm!!.createElement(path, elType.name)
                 val childsScope = createScope(scope, el)
+                var i = 0
                 for(ch in br.nonSkipChildren) {
-                    val propName = ch.name
-                    if (elType.property.containsKey(propName)) {
-                        val childPath = path + propName
-                        val propValue = this.createValue(ch, childPath, childsScope)
-                        setPropertyOrReference(el, propName, propValue)
-                    } else {
-                        if (elType.property.containsKey(TypeModelFromGrammar.UNNAMED_STRING_VALUE) && ch.isLeaf && ch.asLeaf.isExplicitelyNamed.not()) {
-                                val propValue = createValueFromLeaf(ch.asLeaf)
-                                setPropertyOrReference(el, TypeModelFromGrammar.UNNAMED_STRING_VALUE, propValue)
+                    if (ch.isLeaf) {
+                        val lfch = ch.asLeaf
+                        if(lfch.isExplicitelyNamed) {
+                            val propDecl = elType.getPropertyByIndex(i)
+                            if (elType.property.containsKey(propDecl.name)) {
+                                val propValue = createValueFromLeaf(lfch)
+                                setPropertyOrReference(el, propDecl.name, propValue)
+                                i++
+                            } else {
+                                error("should not happen")
+                            }
                         } else {
                             // ignore child because it is not mapped to a property
+                        }
+                    } else {
+                        val propDecl = elType.getPropertyByIndex(i)
+                        if (elType.property.containsKey(propDecl.name)) {
+                            val childPath = path + propDecl.name
+                            val propValue = this.createValue(ch, childPath, childsScope)
+                            setPropertyOrReference(el, propDecl.name, propValue)
+                            i++
+                        } else {
+                            error("should not happen")
                         }
                     }
                 }
@@ -176,13 +192,13 @@ class SyntaxAnalyserSimple(
                     val value = this.createValue(br.children[0], path, scope)
                     if (null == value) {
                         val el = _asm!!.createElement(path, br.name)
-                        val pName = TypeModelFromGrammar.UNNAMED_STRING_VALUE //TODO: maybe a better option
+                        val pName = TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME //TODO: maybe a better option
                         this.setPropertyOrReference(el, pName, value)
                         el
                     } else when (value) {
                         is String -> {
                             val el = _asm!!.createElement(path, br.name)
-                            val pName = TypeModelFromGrammar.UNNAMED_STRING_VALUE //TODO: maybe a better option
+                            val pName = TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME //TODO: maybe a better option
                             this.setPropertyOrReference(el, pName, value)
                             el
                         }

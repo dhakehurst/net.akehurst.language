@@ -364,7 +364,11 @@ internal class ConverterToRuntimeRules(
     private fun createRhsForSimpleList(target: SimpleList, arg: String): RuntimeRuleItem {
         val item = this.visitSimpleItem(target.item, arg)
         val items = when (target.min) {
-            0 -> arrayOf(item, createEmptyRuntimeRuleFor(arg))
+            0 -> {
+                val emptyRule = this.createEmptyRuntimeRuleFor(arg)
+                this.originalRuleItem[Pair(emptyRule.runtimeRuleSetNumber, emptyRule.number)] = target
+                arrayOf(item, emptyRule)
+            }
             else -> arrayOf(item)
         }
         return RuntimeRuleItem(RuntimeRuleRhsItemsKind.LIST, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.MULTI, target.min, target.max, items)
@@ -380,7 +384,11 @@ internal class ConverterToRuntimeRules(
         //     SeparatedListKind.Right -> RuntimeRuleListKind.RIGHT_ASSOCIATIVE_LIST
         // }
         val items = when (target.min) {
-            0 -> arrayOf(item, separator, createEmptyRuntimeRuleFor(arg))
+            0 -> {
+                val emptyRule = this.createEmptyRuntimeRuleFor(arg)
+                this.originalRuleItem[Pair(emptyRule.runtimeRuleSetNumber, emptyRule.number)] = target
+                arrayOf(item, separator, emptyRule)
+            }
             else -> arrayOf(item, separator)
         }
         return RuntimeRuleItem(RuntimeRuleRhsItemsKind.LIST, RuntimeRuleChoiceKind.NONE, kind, target.min, target.max, items)

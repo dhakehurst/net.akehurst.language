@@ -35,8 +35,12 @@ interface SPPTNode {
     val name: String
 
     /**
-     *
-     *  the rule number from the runtime grammar that caused this node to be constructed, derived from identity
+     *  the runtime-rule-set number from the runtime grammar that caused this node to be constructed
+     */
+    val runtimeRuleSetNumber: Int
+
+    /**
+     *  the runtime-rule number from the runtime grammar that caused this node to be constructed
      */
     val runtimeRuleNumber: Int
 

@@ -32,19 +32,23 @@ import net.akehurst.language.api.sppt.*
     override val priority: Int                      //not needed as part of the SPPTNode, but needed for the parsing algorithm
 ) : SPPTNode {
 
-    var embeddedIn : String? = null
+    var embeddedIn: String? = null
 
-    override val identity: SPPTNodeIdentity = SPPTNodeIdentityDefault(
+    override val identity: SPPTNodeIdentity by lazy {
+        SPPTNodeIdentityDefault(
+            this.runtimeRule.runtimeRuleSetNumber,
             this.runtimeRule.number,
-            this.startPosition//,
-            //this.nextInputPosition - this.startPosition
-    )
+            this.startPosition
+        )
+    }
 
     override val name: String get() = this.runtimeRule.tag
 
-    override val runtimeRuleNumber: Int get() { return this.identity.runtimeRuleNumber }
+    override val runtimeRuleSetNumber: Int get() = this.identity.runtimeRuleSetNumber
 
-    override val matchedTextLength: Int get() { return this.nextInputPosition - this.startPosition}//this.identity.matchedTextLength }
+    override val runtimeRuleNumber: Int get() = this.identity.runtimeRuleNumber
+
+    override val matchedTextLength: Int get() = this.nextInputPosition - this.startPosition
 
     override val isSkip: Boolean get() = runtimeRule.isSkip
 
@@ -63,20 +67,22 @@ import net.akehurst.language.api.sppt.*
 
     private var _tree: SharedPackedParseTree? = null
     override var tree: SharedPackedParseTree?
-    get() = if (null != this._tree || null==this.parent) {
-        this._tree
-    } else {
-        var br = this.parent
-        while (null!=br?.parent) {
-           br = br.parent
+        get() = if (null != this._tree || null == this.parent) {
+            this._tree
+        } else {
+            var br = this.parent
+            while (null != br?.parent) {
+                br = br.parent
+            }
+            br?.tree
         }
-        br?.tree
-    }
-    set(value) { _tree = value }
+        set(value) {
+            _tree = value
+        }
 
-    override val location: InputLocation get() = input.locationFor(startPosition,matchedTextLength)
+    override val location: InputLocation get() = input.locationFor(startPosition, matchedTextLength)
 
-    abstract override fun hashCode() : Int
+    abstract override fun hashCode(): Int
 
     abstract override fun equals(other: Any?): Boolean
 

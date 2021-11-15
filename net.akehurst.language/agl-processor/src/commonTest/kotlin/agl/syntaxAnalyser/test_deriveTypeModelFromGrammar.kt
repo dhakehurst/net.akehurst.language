@@ -16,12 +16,14 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.typeModel.*
 import kotlin.test.*
 
-class test_deriveTypeModelFromRuntimeRules {
+class test_deriveTypeModelFromGrammar {
 
     private fun _assertEquals(expected: TypeModel, actual: TypeModel) {
         assertEquals(expected.types.size, actual.types.size)
@@ -67,15 +69,26 @@ class test_deriveTypeModelFromRuntimeRules {
         }
     }
 
+    private companion object {
+        val grammarProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
+    }
+
     @Test
-    fun root_literal() {
-        val rrs = runtimeRuleSet {
-            concatenation("S") { literal("a") }
-        }
-        val actual = TypeModelFromRuntimeRules(rrs.runtimeRules).derive()
+    fun root_nonleaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyStringType("value")
             }
         }
 
@@ -83,14 +96,69 @@ class test_deriveTypeModelFromRuntimeRules {
     }
 
     @Test
-    fun root_pattern() {
-        val rrs = runtimeRuleSet {
-            concatenation("S") { pattern("[a-z]+") }
-        }
-        val actual = TypeModelFromRuntimeRules(rrs.runtimeRules).derive()
+    fun root_leaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a ;
+                leaf a = 'a' ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyStringType("value")
+                propertyStringType("a")
+            }
+        }
+
+        _assertEquals(expected, actual)
+    }
+
+    @Test
+    fun root_nonLeaf_pattern() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = "[a-z]" ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
+        val expected = typeModel {
+            elementType("S") {
+            }
+        }
+
+        _assertEquals(expected, actual)
+    }
+
+    @Test
+    fun root_leaf_pattern() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = v ;
+                leaf v = "[a-z]" ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
+        val expected = typeModel {
+            elementType("S") {
+                propertyStringType("v")
             }
         }
 
@@ -99,10 +167,18 @@ class test_deriveTypeModelFromRuntimeRules {
 
     @Test
     fun root_empty() {
-        val rrs = runtimeRuleSet {
-            concatenation("S") { empty() }
-        }
-        val actual = TypeModelFromRuntimeRules(rrs.runtimeRules).derive()
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S =  ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
             }

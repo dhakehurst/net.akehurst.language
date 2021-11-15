@@ -28,12 +28,12 @@ import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.test.*
 
-internal class test_literal : test_ScanOnDemandParserAbstract() {
+internal class test_pattern__a : test_ScanOnDemandParserAbstract() {
 
-    //  S = 'a'
+    //  S = "a"
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("S") { literal("a") }
+            concatenation("S") { pattern("a") }
         }
         val goal = "S"
     }
@@ -48,12 +48,11 @@ internal class test_literal : test_ScanOnDemandParserAbstract() {
 
         super.test(
             rrs = rrs,
-            goal=goal,
+            goal= goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
             expected
         )
-
     }
 
     @Test
@@ -63,8 +62,7 @@ internal class test_literal : test_ScanOnDemandParserAbstract() {
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^b", setOf("'a'"))
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^b", setOf("'a'"))
         ),issues)
     }
-
 }

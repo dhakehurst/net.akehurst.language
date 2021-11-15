@@ -18,10 +18,16 @@ package net.akehurst.language.parser.scanondemand
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.parser.scanondemand.choicePriority.test_ifThenElse_Priority
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 
 internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
@@ -54,13 +60,11 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = ""
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'"), ex.expected)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^", setOf("'a'"))
+        ),issues)
     }
 
     @Test
