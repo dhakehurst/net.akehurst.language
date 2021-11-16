@@ -25,7 +25,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromRuntimeRules
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
@@ -62,7 +62,7 @@ internal class LanguageProcessorDefault(
     }
 
     override val typeModel: TypeModel by lazy {
-        TypeModelFromRuntimeRules(this._runtimeRuleSet.runtimeRules).derive()
+        TypeModelFromGrammar(this.grammar).derive()
     }
 
     override fun interrupt(message: String) {

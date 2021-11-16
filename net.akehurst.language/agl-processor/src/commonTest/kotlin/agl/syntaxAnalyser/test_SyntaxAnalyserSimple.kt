@@ -279,7 +279,7 @@ class test_SyntaxAnalyserSimple {
 
         val expected = asmSimple() {
             root("S") {
-                propertyListOfString("value",listOf("a","a","a","a"))
+                propertyUnnamedListOfString(listOf("a","a","a","a"))
             }
         }.rootElements[0]
 
@@ -381,12 +381,15 @@ class test_SyntaxAnalyserSimple {
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
 
-        assertEquals("S", actual.typeName)
-        assertEquals(3, actual.properties.size)
-        assertEquals(true, actual.hasProperty("ID"))
-        assertEquals("a", actual.getPropertyAsString("ID"))
-        assertEquals("8", actual.getPropertyAsString("NUMBER"))
-        assertEquals("fred", actual.getPropertyAsString("NAME"))
+        val expected = asmSimple() {
+            root("S") {
+                propertyString("ID","a")
+                propertyString("NUMBER","8")
+                propertyString("NAME","fred")
+            }
+        }.rootElements[0]
+
+        assertEquals(expected.asString("  "), actual.asString("  "))
     }
 
     @Test
@@ -584,18 +587,22 @@ class test_SyntaxAnalyserSimple {
                                 propertyString("ID", "fontsize")
                                 propertyString("ID2", "ss")
                             }
+                            string(",")
                             element("attr") {
                                 propertyString("ID", "labelloc")
                                 propertyString("ID2", "yy")
                             }
+                            string("")
                             element("attr") {
                                 propertyString("ID", "label")
                                 propertyString("ID2", "bb")
                             }
+                            string(";")
                             element("attr") {
                                 propertyString("ID", "splines")
                                 propertyString("ID2", "true")
                             }
+                            string("")
                             element("attr") {
                                 propertyString("ID", "overlap")
                                 propertyString("ID2", "false")

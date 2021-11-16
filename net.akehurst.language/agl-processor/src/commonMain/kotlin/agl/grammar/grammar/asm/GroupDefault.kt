@@ -40,5 +40,6 @@ class GroupDefault(override val choice: Choice) : SimpleItemAbstract(), Group {
 	override val allNonTerminal: Set<NonTerminal> by lazy {
 		this.choice.allNonTerminal
 	}
-	
+
+	override fun toString(): String = "( $choice )"
 }

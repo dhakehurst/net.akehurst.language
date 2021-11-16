@@ -98,8 +98,9 @@ class AsmElementSimpleBuilder(
         return el
     }
 
+    fun propertyUnnamedListOfString(list: List<String>) = this._property(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_VALUE, list)
     fun propertyListOfString(name: String, list: List<String>) = this._property(name, list)
-    fun propertyListOfElement(name: String, init: ListAsmElementSimpleBuilder.() -> Unit): List<AsmElementSimple> {
+    fun propertyListOfElement(name: String, init: ListAsmElementSimpleBuilder.() -> Unit): List<Any> {
         val newPath = _element.asmPath + name
         val b = ListAsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, _elementScope)
         b.init()
@@ -137,7 +138,19 @@ class ListAsmElementSimpleBuilder(
     private val _parentScope: ScopeSimple<AsmElementPath>?
 ) {
 
-    private val _list = mutableListOf<AsmElementSimple>()
+    private val _list = mutableListOf<Any>()
+
+    fun string(value: String){
+        _list.add(value)
+    }
+
+    fun list(init: ListAsmElementSimpleBuilder.() -> Unit) {
+        val newPath = _asmPath + (_list.size).toString()
+        val b = ListAsmElementSimpleBuilder(_scopeModel, _scopeMap, _asm, newPath, _parentScope)
+        b.init()
+        val list = b.build()
+        _list.add(list)
+    }
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val newPath = _asmPath + (_list.size).toString()
@@ -148,7 +161,7 @@ class ListAsmElementSimpleBuilder(
         return el
     }
 
-    fun build(): List<AsmElementSimple> {
+    fun build(): List<Any> {
         return this._list
     }
 }

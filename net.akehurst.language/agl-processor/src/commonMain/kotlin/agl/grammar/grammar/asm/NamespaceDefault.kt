@@ -20,4 +20,6 @@ import net.akehurst.language.api.grammar.Namespace
 
 data class NamespaceDefault(override val qualifiedName: String) : Namespace {
 
+
+    override fun toString(): String = "namespace $qualifiedName"
 }

@@ -56,34 +56,34 @@ class ElementTypeBuilder(
 
     fun superType(superTypeName: String) {
         val st = _model.findOrCreateType(superTypeName)
-        _elementType.superType.add(st)
+        _elementType.addSuperType(st as ElementType)
     }
 
-    fun propertyUnnamedStringType() {
-        PropertyDeclaration(_elementType, TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, BuiltInType.STRING)
+    fun propertyUnnamedStringType(isNullable:Boolean, childIndex:Int, ) {
+        PropertyDeclaration(_elementType, TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, BuiltInType.STRING,isNullable,childIndex)
     }
 
-    fun propertyStringType(propertyName: String) {
-        PropertyDeclaration(_elementType, propertyName, BuiltInType.STRING)
+    fun propertyStringType(propertyName: String, isNullable:Boolean,childIndex:Int) {
+        PropertyDeclaration(_elementType, propertyName, BuiltInType.STRING,isNullable,childIndex)
     }
 
-    fun propertyUnnamedListType() {
-        PropertyDeclaration(_elementType, TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, BuiltInType.LIST)
+    fun propertyUnnamedListType(isNullable:Boolean,childIndex:Int) {
+        PropertyDeclaration(_elementType, TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, BuiltInType.LIST,isNullable,childIndex)
     }
 
-    fun propertyListOfStringType(propertyName: String) {
+    fun propertyListOfStringType(propertyName: String, isNullable:Boolean,childIndex:Int) {
         //TODO: listElementType
-        PropertyDeclaration(_elementType, propertyName, BuiltInType.LIST)
+        PropertyDeclaration(_elementType, propertyName, BuiltInType.LIST,isNullable,childIndex)
     }
 
-    fun propertyListType(propertyName: String, listElementType: String) {
+    fun propertyListType(propertyName: String, listElementType: String, isNullable:Boolean, childIndex:Int) {
         //TODO: listElementType
-        PropertyDeclaration(_elementType, propertyName, BuiltInType.LIST)
+        PropertyDeclaration(_elementType, propertyName, BuiltInType.LIST,isNullable, childIndex)
     }
 
-    fun propertyElementType(propertyName: String, elementTypeName: String) {
+    fun propertyElementType(propertyName: String, elementTypeName: String, isNullable:Boolean, childIndex:Int) {
         val t = _model.findOrCreateType(elementTypeName)
-        PropertyDeclaration(_elementType, propertyName, t)
+        PropertyDeclaration(_elementType, propertyName, t,isNullable, childIndex)
     }
 
     fun build(): ElementType {

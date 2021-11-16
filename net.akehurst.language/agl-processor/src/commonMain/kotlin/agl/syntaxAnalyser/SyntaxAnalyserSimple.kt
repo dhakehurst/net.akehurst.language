@@ -43,14 +43,14 @@ import net.akehurst.language.api.typeModel.TypeModel
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 class SyntaxAnalyserSimple(
-    val typeModel:TypeModel
+    val typeModel: TypeModel
 ) : SyntaxAnalyser<AsmSimple, ContextSimple> {
 
     private var _asm: AsmSimple? = null
     private var _context: ContextSimple? = null // cached value, provided on call to transform
     private val _issues = mutableListOf<LanguageIssue>()
     private val _scopeMap = mutableMapOf<AsmElementPath, ScopeSimple<AsmElementPath>>()
-    private lateinit var _mapToGrammar:(Int,Int)->RuleItem
+    private lateinit var _mapToGrammar: (Int, Int) -> RuleItem
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
     var scopeModel: ScopeModel = ScopeModel()
@@ -76,7 +76,7 @@ class SyntaxAnalyserSimple(
         return issues
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar:(Int,Int)->RuleItem, context: ContextSimple?): Pair<AsmSimple, List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: ContextSimple?): Pair<AsmSimple, List<LanguageIssue>> {
         this._mapToGrammar = mapToGrammar
         this._context = context
         _asm = AsmSimple()
@@ -136,41 +136,73 @@ class SyntaxAnalyserSimple(
     }
 
     private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, scope: ScopeSimple<AsmElementPath>?): Any? {
-        val br = target as SPPTBranchFromInputAndGrownChildren //SPPTBranchDefault //TODO: make write thing available on interface
         val elType = typeModel.let { typeModel.findType(target.name) }
-        val ruleItem = this._mapToGrammar(target.runtimeRuleSetNumber,target.runtimeRuleNumber)
         return when {
             null == elType -> TODO()
             BuiltInType.STRING == elType -> TODO()
             BuiltInType.LIST == elType -> TODO()
             elType is ElementType -> {
-                val el = _asm!!.createElement(path, elType.name)
+                val actualType = when {
+                    elType.subType.isNotEmpty() -> elType.subType.first { it.name == target.nonSkipChildren[0].name }
+                    else -> elType
+                }
+                val actualTarget = when {
+                    elType.subType.isNotEmpty() -> target.nonSkipChildren[0]
+                    else -> target
+                }
+                val el = _asm!!.createElement(path, actualType.name)
                 val childsScope = createScope(scope, el)
-                var i = 0
-                for(ch in br.nonSkipChildren) {
-                    if (ch.isLeaf) {
-                        val lfch = ch.asLeaf
-                        if(lfch.isExplicitelyNamed) {
-                            val propDecl = elType.getPropertyByIndex(i)
-                            if (elType.property.containsKey(propDecl.name)) {
-                                val propValue = createValueFromLeaf(lfch)
-                                setPropertyOrReference(el, propDecl.name, propValue)
-                                i++
-                            } else {
-                                error("should not happen")
+                for (propDecl in actualType.property.values) {
+                    val propType = propDecl.type
+                    val childPath = path + propDecl.name
+                    when (propType) {
+                        is BuiltInType -> {
+                            val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
+                            val propValue = when (propType) {
+                                BuiltInType.STRING -> when {
+                                    ch.isLeaf -> this.createValue(ch, childPath, childsScope)
+                                    ch.isEmptyMatch -> null
+                                    else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
+                                }
+                                BuiltInType.LIST -> when {
+                                    actualTarget.isList -> when {
+                                        actualTarget.isEmptyLeaf -> emptyList<Any>()
+                                        else -> actualTarget.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
+                                            val childPath2 = childPath + ci.toString()
+                                            if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
+                                                null
+                                            } else {
+                                                this.createValue(b, childPath2, childsScope)
+                                            }
+                                        }
+                                    }
+                                    else -> when {
+                                        ch.isEmptyLeaf -> emptyList<Any>()
+                                        else -> ch.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
+                                            val childPath2 = childPath + ci.toString()
+                                            if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
+                                                null
+                                            } else {
+                                                this.createValue(b, childPath2, childsScope)
+                                            }
+                                        }
+                                    }
+                                }
+                                else -> error("Internal error: BuiltInType '' not handled")
                             }
-                        } else {
-                            // ignore child because it is not mapped to a property
-                        }
-                    } else {
-                        val propDecl = elType.getPropertyByIndex(i)
-                        if (elType.property.containsKey(propDecl.name)) {
-                            val childPath = path + propDecl.name
-                            val propValue = this.createValue(ch, childPath, childsScope)
                             setPropertyOrReference(el, propDecl.name, propValue)
-                            i++
-                        } else {
-                            error("should not happen")
+                        }
+                        is ElementType -> {
+                            val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
+                            val propValue = when {
+                                propDecl.isNullable && ch.isOptional -> when {
+                                    ch.isEmptyLeaf -> null
+                                    else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
+                                }
+                                propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 ->this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
+                                else ->this.createValue(ch, childPath, childsScope)
+                            }
+                            setPropertyOrReference(el, propDecl.name, propValue)
                         }
                     }
                 }
@@ -204,7 +236,7 @@ class SyntaxAnalyserSimple(
                         }
                         is List<*> -> {
                             val el = _asm!!.createElement(path, br.name)
-                            val pName = TypeModelFromGrammar.UNNAMED_LIST_VALUE //TODO: maybe a better option
+                            val pName = TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_VALUE //TODO: maybe a better option
                             this.setPropertyOrReference(el, pName, value)
                             el
                         }

@@ -16,6 +16,10 @@
 
 package net.akehurst.language.api.typeModel
 
+import net.akehurst.language.agl.collections.MutableOrderedSet
+import net.akehurst.language.agl.collections.OrderedSet
+import net.akehurst.language.agl.collections.mutableOrderedSetOf
+
 class TypeModel {
 
     val types = mutableMapOf<String, RuleType>()
@@ -59,9 +63,15 @@ class BuiltInType private constructor(override val name: String) : RuleType {
 }
 
 data class ElementType(override val name: String) : RuleType {
-    val superType = mutableListOf<RuleType>()
+    val superType:OrderedSet<ElementType> = mutableOrderedSetOf<ElementType>()
+    val subType:Set<ElementType> = mutableSetOf<ElementType>()
     val property = mutableMapOf<String, PropertyDeclaration>()
     private val _propertyIndex = mutableListOf<PropertyDeclaration>()
+
+    fun addSuperType(type:ElementType) {
+        (this.superType as MutableOrderedSet).add(type)
+        (type.subType as MutableSet).add(this)
+    }
 
     fun getPropertyByIndex(i:Int):PropertyDeclaration = _propertyIndex[i]
     fun appendProperty(name: String, propertyDeclaration: PropertyDeclaration) {
@@ -74,11 +84,16 @@ data class ElementType(override val name: String) : RuleType {
 data class PropertyDeclaration(
     val owner: ElementType,
     val name: String,
-    val type: RuleType
+    val type: RuleType,
+    val isNullable: Boolean,
+    val childIndex: Int // to indicate the child number in an SPPT
 ) {
     init {
         owner.appendProperty(name, this)
     }
 
-    override fun toString(): String = "$name: ${type.name}}"
+    override fun toString(): String  {
+        val nullable = if (isNullable) "?" else ""
+        return "$name: ${type.name}$nullable"
+    }
 }

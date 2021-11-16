@@ -45,4 +45,12 @@ data class RuleDefault(
 
 	override val nodeType: NodeType = NodeTypeDefault(this.name)
 
+
+	override fun toString(): String{
+		var f = ""
+		if (isOverride) f+="override "
+		if (isSkip) f+="skip "
+		if (isLeaf) f+="leaf "
+		return "$f$name = $rhs ;"
+	}
 }

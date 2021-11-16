@@ -38,7 +38,7 @@ interface SPPTLeaf : SPPTNode {
     /**
      * true if this node is a leaf node from an named leaf (i.e. literal or pattern marked as a 'leaf' rule)
      */
-    val isExplicitelyNamed:Boolean
+    val isExplicitlyNamed:Boolean
 
     /**
      * list of names of all the parent nodes leading to this leaf

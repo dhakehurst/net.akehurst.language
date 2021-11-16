@@ -45,4 +45,5 @@ class NonTerminalDefault(
         setOf(this)
     }
 
+    override fun toString(): String = name //TODO embedded
 }

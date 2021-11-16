@@ -113,6 +113,16 @@ interface SPPTNode {
     val isLeaf: Boolean
 
     /**
+     * does the node represent an optional item (i.e. '?')
+     */
+    val isOptional:Boolean
+
+    /**
+     * does the node represent a List
+     */
+    val isList:Boolean
+
+    /**
      *
      *  true if this node is a branch
      */

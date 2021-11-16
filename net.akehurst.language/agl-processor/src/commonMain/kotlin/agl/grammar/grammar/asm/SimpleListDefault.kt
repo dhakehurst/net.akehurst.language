@@ -42,5 +42,15 @@ class SimpleListDefault(
 	override val allNonTerminal: Set<NonTerminal> by lazy {
 		this.item.allNonTerminal
 	}
-	
+
+	override fun toString(): String {
+		val mult = when{
+			0==min && 1==max -> "?"
+			0==min && -1==max -> "*"
+			1==min && -1==max -> "+"
+			-1==max -> " $min+"
+			else -> " $min..$max"
+		}
+		return "$item$mult"
+	}
 }

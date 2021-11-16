@@ -42,4 +42,6 @@ class ConcatenationDefault(override val items: List<ConcatenationItem>) : RuleIt
 		this.items.flatMap { it.allNonTerminal }.toSet()
 	}
 
+	override fun toString(): String = this.items.joinToString(separator = " ")
+
 }

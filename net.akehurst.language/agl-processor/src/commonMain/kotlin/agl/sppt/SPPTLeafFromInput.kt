@@ -55,9 +55,11 @@ import net.akehurst.language.api.sppt.*
             override val numberOfLines: Int get() = TODO("not implemented")
             override val isEmptyLeaf: Boolean get() = TODO("not implemented")
             override val isEmptyMatch: Boolean get() = TODO("not implemented")
-            override val isLeaf: Boolean get() = true
-            override val isExplicitelyNamed: Boolean get() = false
-            override val isBranch: Boolean get() = false
+            override val isLeaf: Boolean get() = TODO("not implemented")
+            override val isList: Boolean get() = TODO("not implemented")
+            override val isOptional: Boolean get() = TODO("not implemented")
+            override val isExplicitlyNamed: Boolean get() = TODO("not implemented")
+            override val isBranch: Boolean get() = TODO("not implemented")
             override val isSkip: Boolean get() = TODO("not implemented")
             override val asLeaf: SPPTLeaf get() = TODO("not implemented")
             override val asBranch: SPPTBranch get() = TODO("not implemented")
@@ -87,7 +89,7 @@ import net.akehurst.language.api.sppt.*
     override val isPattern: Boolean get() = runtimeRule.isPattern
     override val isLiteral: Boolean get() = runtimeRule.isPattern.not()
     override val isLeaf: Boolean get() = true
-    override val isExplicitelyNamed: Boolean get() = this.runtimeRule.name!=null
+    override val isExplicitlyNamed: Boolean get() = this.runtimeRule.isExplicitlyNamed
     override val isBranch: Boolean get() = false
     override val asBranch: SPPTBranch get() = throw SPPTException("Not a Branch", null)
     override val location: InputLocation get() = input.locationFor(startPosition, matchedTextLength)

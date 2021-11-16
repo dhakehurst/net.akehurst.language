@@ -85,7 +85,6 @@ class test_SyntaxAnalyserSimple_datatypes {
         }
     }
 
-
     @Test
     fun datatype_with_no_properties() {
         val sentence = """

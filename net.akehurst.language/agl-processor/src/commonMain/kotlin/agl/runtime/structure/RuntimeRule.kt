@@ -40,7 +40,7 @@ internal class RuntimeRule(
     // isGenerated - also w.r.t. AsmSimple so we know if we should try and get a property name from the elements
     // not sure if I really want to add the data to this class as only used for AsmSimple not runtime use?
 
-
+    val isExplicitlyNamed: Boolean get() = this.name!=null
     val tag:String = this.name?:if (this.isPattern) "\"$value\"" else "'$value'"
 
     //TODO: get rid of this rhsOpt hack!

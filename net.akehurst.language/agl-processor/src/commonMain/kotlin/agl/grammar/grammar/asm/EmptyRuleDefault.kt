@@ -40,4 +40,5 @@ class EmptyRuleDefault : RuleItemAbstract(), EmptyRule {
         throw GrammarRuleItemNotFoundException("subitem ${index} not found")
     }
 
+    override fun toString(): String = "/* empty */"
 }

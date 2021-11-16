@@ -25,12 +25,13 @@ internal class TypeModelFromGrammar(
 
     companion object {
         const val UNNAMED_STRING_PROPERTY_NAME = "\$value"
-        const val UNNAMED_LIST_VALUE = "\$value"
+        const val UNNAMED_LIST_PROPERTY_VALUE = "\$value"
     }
 
     private val _ruleToType = mutableMapOf<Rule, RuleType>()
     private val _typeModel = TypeModel()
     private val _typeForRuleItem = mutableMapOf<RuleItem, RuleType>()
+    private val _uniquePropertyNames = mutableMapOf<Pair<ElementType, String>, Int>()
 
     internal fun derive(): TypeModel {
         for (rule in _grammar.allRule) {
@@ -58,15 +59,18 @@ internal class TypeModelFromGrammar(
                     when {
                         subtypes.all { it is ElementType } -> {
                             subtypes.forEach {
-                                (it as ElementType).superType.add(choiceType)
+                                (it as ElementType).addSuperType(choiceType)
                             }
                             choiceType
                         }
                         subtypes.all { it === BuiltInType.STRING } -> {
-                            PropertyDeclaration(choiceType, UNNAMED_STRING_PROPERTY_NAME, BuiltInType.STRING)
+                            createUniquePropertyDeclaration(choiceType, UNNAMED_STRING_PROPERTY_NAME, BuiltInType.STRING, false, 0)
                             choiceType
                         }
-                        subtypes.all { it === BuiltInType.LIST } -> BuiltInType.LIST
+                        subtypes.all { it === BuiltInType.LIST } -> {
+                            createUniquePropertyDeclaration(choiceType, UNNAMED_LIST_PROPERTY_VALUE, BuiltInType.LIST, false, 0)
+                            choiceType
+                        }
                         else -> TODO()
                     }
                 }
@@ -80,7 +84,7 @@ internal class TypeModelFromGrammar(
 
     private fun typeForRuleItem(ruleItem: RuleItem): RuleType {
         val type = _typeForRuleItem[ruleItem]
-        return if (null!=type) {
+        return if (null != type) {
             type
         } else {
             val ruleType = when (ruleItem) {
@@ -127,8 +131,8 @@ internal class TypeModelFromGrammar(
 
     private fun typeForConcatenation(name: String, items: List<ConcatenationItem>): ElementType {
         val concatType = findOrCreateElementType(name)
-        items.forEach {
-            createPropertyDeclaration(concatType, it)
+        items.forEachIndexed { idx, it ->
+            createPropertyDeclaration(concatType, it, idx)
         }
         return concatType
     }
@@ -141,7 +145,7 @@ internal class TypeModelFromGrammar(
             subtypes.all { it is ElementType } -> {
                 val choiceType = findOrCreateElementType(name)
                 subtypes.forEach {
-                    (it as ElementType).superType.add(choiceType)
+                    (it as ElementType).addSuperType(choiceType)
                 }
                 choiceType
             }
@@ -156,36 +160,43 @@ internal class TypeModelFromGrammar(
         return rt
     }
 
-    private fun createPropertyDeclaration(et: ElementType, ruleItem: ConcatenationItem): PropertyDeclaration? {
-
+    private fun createPropertyDeclaration(et: ElementType, ruleItem: ConcatenationItem, childIndex: Int): PropertyDeclaration? {
         return when (ruleItem) {
             is EmptyRule -> null
-            is Terminal -> null //PropertyDeclaration(et, UNNAMED_STRING_VALUE, propType)
+            is Terminal -> null //createUniquePropertyDeclaration(et, UNNAMED_STRING_VALUE, propType)
             is NonTerminal -> {
                 val rhs = ruleItem.referencedRule.rhs
                 when (rhs) {
-                    is Terminal -> PropertyDeclaration(et, propertyNameFor(ruleItem), BuiltInType.STRING)
+                    is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), BuiltInType.STRING, false, childIndex)
                     is Concatenation -> when {
-                        1 ==rhs.items.size -> when(rhs.items[0]) {
-                            is Terminal -> PropertyDeclaration(et, propertyNameFor(ruleItem), BuiltInType.STRING)
+                        1 == rhs.items.size -> when (rhs.items[0]) {
+                            is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), BuiltInType.STRING, false,childIndex)
                             is ListOfItems -> {
                                 val propType = typeForRuleItem(ruleItem.referencedRule.rhs) //to get list type
-                                PropertyDeclaration(et, propertyNameFor(ruleItem), propType)
+                                val isNullable = (rhs.items[0] as ListOfItems).min==0 && (rhs.items[0] as ListOfItems).min==-1
+                                createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), propType, isNullable, childIndex)
                             }
-                            else -> PropertyDeclaration(et, propertyNameFor(ruleItem), typeForRuleItem(ruleItem))
+                            else -> createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), typeForRuleItem(ruleItem), false,childIndex)
                         }
-                        else -> PropertyDeclaration(et, propertyNameFor(ruleItem), typeForRuleItem(ruleItem))
+                        else -> createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), typeForRuleItem(ruleItem),false, childIndex)
                     }
-                    is Choice -> TODO()
+                    is Choice -> {
+                        val pName = propertyNameFor(ruleItem)
+                        val choiceType = typeForChoice(pName, rhs.alternative)
+                        createUniquePropertyDeclaration(et, pName, choiceType, false, childIndex)
+                    }
 
                     else -> {
                         val propType = typeForRuleItem(ruleItem)
-                        PropertyDeclaration(et, propertyNameFor(ruleItem), propType)
+                        createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), propType, false, childIndex)
                     }
                 }
             }
-            is SimpleList -> PropertyDeclaration(et, propertyNameFor(ruleItem.item), typeForRuleItem(ruleItem))
-            is SeparatedList -> PropertyDeclaration(et, propertyNameFor(ruleItem.item), typeForRuleItem(ruleItem))
+            is SimpleList -> {
+                val isNullable = ruleItem.min==0 && ruleItem.max==1
+                createUniquePropertyDeclaration(et, propertyNameFor(ruleItem.item), typeForRuleItem(ruleItem), isNullable, childIndex)
+            }
+            is SeparatedList -> createUniquePropertyDeclaration(et, propertyNameFor(ruleItem.item), typeForRuleItem(ruleItem),false,  childIndex)
             is Group -> TODO()
             else -> error("Internal error, unhandled subtype of ConcatenationItem")
         }
@@ -198,4 +209,17 @@ internal class TypeModelFromGrammar(
         is Group -> TODO()
         else -> error("Internal error, unhandled subtype of SimpleItem")
     }
+
+    private fun createUniquePropertyDeclaration(et: ElementType, name: String, type: RuleType, isNullable:Boolean, childIndex: Int): PropertyDeclaration? {
+        val nameCount = this._uniquePropertyNames[Pair(et, name)]
+        val uniqueName = if (null == nameCount) {
+            this._uniquePropertyNames[Pair(et, name)] = 2
+            name
+        } else {
+            this._uniquePropertyNames[Pair(et, name)] = nameCount + 1
+            "$name$nameCount"
+        }
+        return PropertyDeclaration(et, uniqueName, type, isNullable, childIndex)
+    }
+
 }

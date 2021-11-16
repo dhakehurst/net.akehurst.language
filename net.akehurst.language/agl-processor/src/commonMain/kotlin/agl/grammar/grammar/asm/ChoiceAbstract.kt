@@ -45,4 +45,6 @@ abstract class ChoiceAbstract(
 		this.alternative.flatMap { it.allNonTerminal }.toSet()
 	}
 
+	override fun toString(): String = this.alternative.joinToString(separator = " | ")
+
 }

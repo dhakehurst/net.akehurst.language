@@ -49,4 +49,5 @@ class TerminalDefault(override val value: String, override val isPattern: Boolea
         emptySet<NonTerminal>()
     }
 
+    override fun toString(): String = if (isPattern) "\"$value\"" else "'$value'"
 }

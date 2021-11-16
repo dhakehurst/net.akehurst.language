@@ -17,8 +17,6 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.typeModel.*
 import kotlin.test.*
@@ -50,6 +48,12 @@ class test_deriveTypeModelFromGrammar {
             val actEl = actual.superType[i]
             _assertEquals(expEl, actEl)
         }
+        assertEquals(expected.subType.size, actual.subType.size, "Wrong number of subTypes for '${expected.name}'")
+        for (i in 0 until expected.subType.size) {
+            val expEl = expected.subType.toList()[i] //TODO: set set equality !
+            val actEl = actual.subType.toList()[i]
+            _assertEquals(expEl, actEl)
+        }
         assertEquals(expected.property.size, actual.property.size, "Wrong number of properties for '${expected.name}'")
         for (k in expected.property.keys) {
             val expEl = expected.property[k]
@@ -64,6 +68,8 @@ class test_deriveTypeModelFromGrammar {
             null == expected || null == actual -> fail("should never be null")
             else -> {
                 assertEquals(expected.name, actual.name)
+                assertEquals(expected.isNullable, actual.isNullable)
+                assertEquals(expected.childIndex, actual.childIndex)
                 assertEquals(expected.type.name, actual.type.name)
             }
         }
@@ -112,7 +118,7 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyStringType("a")
+                propertyStringType("a",false,0)
             }
         }
 
@@ -158,7 +164,7 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyStringType("v")
+                propertyStringType("v",false,0)
             }
         }
 
@@ -203,12 +209,36 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyUnnamedStringType()
+                propertyUnnamedStringType(false,0)
             }
         }
 
         _assertEquals(expected, actual)
     }
+
+    @Test
+    fun optional_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a'? ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
+        val expected = typeModel {
+            elementType("S") {
+                propertyUnnamedStringType(true, 0) // of String
+            }
+        }
+
+        _assertEquals(expected, actual)
+    }
+
 
     @Test
     fun multi_literal() {
@@ -226,7 +256,7 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyUnnamedListType() // of String
+                propertyUnnamedListType(false,0) // of String
             }
         }
 
@@ -235,16 +265,25 @@ class test_deriveTypeModelFromGrammar {
 
     @Test
     fun slist_literal() {
-        val rrs = runtimeRuleSet {
-            concatenation("S") { ref("as") }
-            sList("as", 0, -1, "'a'", "','")
-            literal("'a'", "a")
-            literal("','", ",")
-        }
-        val actual = TypeModelFromRuntimeRules(rrs.runtimeRules).derive()
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = as ;
+                as = ['a' / ',']* ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyListOfStringType("as")
+                propertyListOfStringType("as",false,0)
+            }
+            elementType("as") {
+                propertyUnnamedListType(false,0)
             }
         }
 
@@ -253,19 +292,28 @@ class test_deriveTypeModelFromGrammar {
 
     @Test
     fun slist_nonTerm() {
-        val rrs = runtimeRuleSet {
-            concatenation("S") { ref("as") }
-            sList("as", 0, -1, "a", "','")
-            concatenation("a") { literal("a") }
-            literal("','", ",")
-        }
-        val actual = TypeModelFromRuntimeRules(rrs.runtimeRules).derive()
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = as ;
+                as = [a / ',']* ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyListType("as", "a") // of String
+                propertyListType("as", "a",false,0) // of String
+            }
+            elementType("as") {
+                propertyListOfStringType("a",false,0)
             }
             elementType("a") {
-                propertyStringType("value")
             }
         }
 
@@ -273,7 +321,41 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
-    fun nonTerm_nonTerm_nonTerm() {
+    fun slist_multi_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = ass ;
+                ass = [as / ',']* ;
+                as = a* ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
+        val expected = typeModel {
+            elementType("S") {
+                propertyListType("ass", BuiltInType.LIST.name,false,0) // of String
+            }
+            elementType("ass") {
+                propertyListOfStringType("as",false,0)
+            }
+            elementType("as") {
+                propertyListOfStringType("a",false,0)
+            }
+            elementType("a") {
+            }
+        }
+
+        _assertEquals(expected, actual)
+    }
+
+    @Test
+    fun nonTerm_x3_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -291,9 +373,40 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyStringType("a")
-                propertyStringType("b")
-                propertyStringType("c")
+                propertyStringType("a",false,0)
+                propertyStringType("b",false,1)
+                propertyStringType("c",false,2)
+            }
+            elementType("a") {}
+            elementType("b") {}
+            elementType("c") {}
+        }
+
+        _assertEquals(expected, actual)
+    }
+
+    @Test
+    fun nonTerm_x3_literal_with_separator() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a ',' b ',' c ;
+                a = 'a' ;
+                b = 'b' ;
+                c = 'c' ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
+        val expected = typeModel {
+            elementType("S") {
+                propertyStringType("a",false,0)
+                propertyStringType("b",false,2)
+                propertyStringType("c",false,4)
             }
             elementType("a") {}
             elementType("b") {}
@@ -320,10 +433,10 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyListOfStringType("as") // of String
+                propertyListOfStringType("as",false,0) // of String
             }
             elementType("as") {
-                propertyUnnamedListType() // of String
+                propertyUnnamedListType(false,0) // of String
             }
         }
 
