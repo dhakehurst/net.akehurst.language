@@ -106,7 +106,7 @@ internal class ScanOnDemandParser(
         val location = input.locationFor(errorPos,errorLength)//InputLocation(errorPos, errorColumn, errorLine, errorLength)
 
         val contextInText = rp.graph.input.contextInText(location.position)
-        return LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, location, "$contextInText", expected)
+        return LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, location, contextInText, expected)
         //throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location, expected, )
 
     }

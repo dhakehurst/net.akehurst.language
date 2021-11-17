@@ -18,11 +18,14 @@ package net.akehurst.language.parser.scanondemand.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
     //TODO: make this use || ambiguouse choice
@@ -49,14 +52,16 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun S_S_empty_fails() {
+    fun empty_fails() {
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+            ), issues
+        )
     }
 
     @Test

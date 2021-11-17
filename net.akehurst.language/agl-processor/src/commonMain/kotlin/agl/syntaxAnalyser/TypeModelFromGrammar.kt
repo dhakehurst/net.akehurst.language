@@ -24,6 +24,7 @@ internal class TypeModelFromGrammar(
 ) {
 
     companion object {
+        const val UNNAMED_ANY_PROPERTY_NAME = "\$value"
         const val UNNAMED_STRING_PROPERTY_NAME = "\$value"
         const val UNNAMED_LIST_PROPERTY_VALUE = "\$value"
     }
@@ -151,7 +152,11 @@ internal class TypeModelFromGrammar(
             }
             subtypes.all { it === net.akehurst.language.api.typeModel.BuiltInType.STRING } -> BuiltInType.STRING
             subtypes.all { it === net.akehurst.language.api.typeModel.BuiltInType.LIST } -> BuiltInType.LIST
-            else -> TODO()
+            else -> {
+                val choiceType = findOrCreateElementType(name)
+                createUniquePropertyDeclaration(choiceType, UNNAMED_ANY_PROPERTY_NAME,BuiltInType.ANY, false,0)
+                choiceType
+            }
         }
     }
 

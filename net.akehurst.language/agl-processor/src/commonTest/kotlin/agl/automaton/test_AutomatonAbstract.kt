@@ -21,7 +21,6 @@ import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 internal abstract class test_AutomatonUtilsAbstract {
     companion object {

@@ -20,16 +20,13 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.parser.scanondemand.choiceEqual.test_OperatorPrecedence2
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 internal class test_bodmas3_WS : test_ScanOnDemandParserAbstract() {
 
@@ -84,9 +81,9 @@ internal class test_bodmas3_WS : test_ScanOnDemandParserAbstract() {
         val sentence = ""
 
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
-        assertNotNull(sppt)
+        assertNull(sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"",arrayOf("?"))
+            parseError(InputLocation(0,1,1,1),"^",setOf("\"[a-zA-Z]+\"","'true'","'false'","'('"))
         ),issues)
     }
 

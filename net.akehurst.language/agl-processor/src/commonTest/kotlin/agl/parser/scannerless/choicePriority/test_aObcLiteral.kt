@@ -17,21 +17,18 @@
 package net.akehurst.language.parser.scanondemand.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 internal class test_aObcLiteral : test_ScanOnDemandParserAbstract() {
 
-    // r = a < b c;
+    // S = a < b c;
     // a = 'a' ;
     // b = 'b' ;
     // c = 'c' ;
@@ -42,7 +39,7 @@ internal class test_aObcLiteral : test_ScanOnDemandParserAbstract() {
                 ref("bc")
             }
             concatenation("a") { literal("a") }
-            concatenation("bc") { ref("a"); ref("b") }
+            concatenation("bc") { ref("b"); ref("c") }
             concatenation("b") { literal("b") }
             concatenation("c") { literal("c") }
         }
@@ -56,7 +53,7 @@ internal class test_aObcLiteral : test_ScanOnDemandParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
 
         val expIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^",setOf("'a'"))
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^",setOf("'a'","'b'"))
         )
         assertEquals(null, sppt)
         assertEquals(expIssues, issues)
@@ -82,7 +79,7 @@ internal class test_aObcLiteral : test_ScanOnDemandParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
 
         val expIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,2,1,0),"",null)
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1,2,1,1),"a^b", setOf("<EOT>"))
         )
         assertEquals(null, sppt)
         assertEquals(expIssues, issues)
@@ -95,7 +92,7 @@ internal class test_aObcLiteral : test_ScanOnDemandParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
 
         val expIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,2,1,0),"",null)
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1,2,1,1),"a^bc",setOf("<EOT>"))
         )
         assertEquals(null, sppt)
         assertEquals(expIssues, issues)

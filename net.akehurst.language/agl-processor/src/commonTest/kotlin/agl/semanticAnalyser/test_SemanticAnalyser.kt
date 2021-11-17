@@ -1,11 +1,10 @@
 package agl.semanticAnalyser
 
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-
 import kotlin.test.Test
 
 class test_SemanticAnalyser {

@@ -51,6 +51,7 @@ class BuiltInType private constructor(override val name: String) : RuleType {
         val NOTHING = BuiltInType("\$Nothing")
         val STRING = BuiltInType("\$String")
         val LIST = BuiltInType("\$List")
+        val ANY = BuiltInType("\$Any")
     }
 
     override fun hashCode(): Int = name.hashCode()

@@ -16,11 +16,9 @@
 
 package net.akehurst.language.parser.scanondemand.multi
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 internal class test_multi_0_n_literal : test_ScanOnDemandParserAbstract() {
 

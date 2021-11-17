@@ -17,11 +17,11 @@
 package net.akehurst.language.parser.scanondemand.multi
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
 
@@ -38,25 +38,22 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
             literal("'b'", "b")
             pattern("V", "[a-c]")
         }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val goal = "S"
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
-        assertEquals(setOf("'a'","'b'","V"), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^", setOf("'a'","'b'","V"))
+        ),issues)
     }
 
     @Test
     fun abcd() {
-        val goal = "S"
         val sentence = "abcd"
 
         val expected = """
@@ -79,7 +76,6 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun acd() {
-        val goal = "S"
         val sentence = "acd"
 
         val expected = """
@@ -102,7 +98,6 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun bcd() {
-        val goal = "S"
         val sentence = "bcd"
 
         val expected = """
@@ -125,7 +120,6 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun cd() {
-        val goal = "S"
         val sentence = "cd"
 
         val expected = """
@@ -147,7 +141,6 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
     }
     @Test
     fun ad() {
-        val goal = "S"
         val sentence = "ad"
 
         val expected = """

@@ -20,13 +20,14 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.sppt.SPPT2InputText
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import test.assertEqualsWarning
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
+import kotlin.test.*
 import kotlin.time.ExperimentalTime
 import kotlin.time.TimeSource
 import kotlin.time.measureTimedValue
@@ -103,13 +104,28 @@ class test_Java8_Singles_antlrSpec {
     }
 
     @Test
+    fun ok_Binary_Literal() {
+        val sentence = "0b011"
+        val goal = "variableInitializer"
+
+        val (sppt, issues) = proc.parse(sentence, goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+
+    }
+
+    @Test
     fun bad_Binary_Literal() {
         val sentence = "0b012"
         val goal = "variableInitializer"
 
-            val (sppt, issues) = proc.parse(sentence, goal)
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        val (sppt, issues) = proc.parse(sentence, goal)
+        assertNull(sppt)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4,5,1,1),
+                "0b01^2",
+                setOf("'.'", "'::'", "'++'", "'--'", "<EOT>", "'['", "'*'", "'/'", "'%'", "'+'", "'-'", "'<'", "'>'", "'<='", "'>='", "'instanceof'", "'=='", "'!='", "'&'", "'^'", "'|'", "'&&'", "'||'", "'?'"))
+        ),issues)
 
     }
 
@@ -137,8 +153,12 @@ public class BadBinaryLiterals {
             """.trimIndent()
         val goal = "compilationUnit"
         val (sppt, issues) = proc.parse(sentence, goal)
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        assertNull(sppt)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(799,28,16,1),
+                "...t1 = 0b01.^01;  // no...",
+                setOf("'new'", "'<'", "Identifier"))
+        ),issues)
 
     }
 

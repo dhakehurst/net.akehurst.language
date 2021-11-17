@@ -48,7 +48,11 @@ internal class InputFromString(
     fun contextInText(position: Int): String {
         val startIndex = maxOf(0, position - contextSize)
         val endIndex = minOf(this.text.length, position + contextSize)
-        return this.text.substring(startIndex, position) + "^" + this.text.substring(position,endIndex)
+        val prefix = if (startIndex > 0) "..." else ""
+        val forText = this.text.substring(startIndex, position)
+        val aftText = this.text.substring(position,endIndex)
+        val postFix = if (endIndex < this.text.length) "..." else ""
+        return  "$prefix$forText^$aftText$postFix"
     }
 
     //internal val leaves: MutableMap<LeafIndex, SPPTLeafDefault?> = mutableMapOf()

@@ -18,11 +18,11 @@ package net.akehurst.language.parser.scanondemand.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_acsOads : test_ScanOnDemandParserAbstract() {
 
@@ -30,34 +30,34 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
     // acs = 'a' | acs1
     // acs1 = acs 'c' 'a'
     // ads = 'a' | ads1
-    // ads1 = acs 'd' 'a'
-    private val rrs = runtimeRuleSet {
-        choice("S",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
-            ref("acs")
-            ref("ads")
+    // ads1 = ads 'd' 'a'
+    private companion object {
+        private val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+                ref("acs")
+                ref("ads")
+            }
+            choice("acs", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); ref("acs1") }
+            concatenation("acs1") { ref("acs"); literal("c"); literal("a") }
+            choice("ads", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); ref("ads1") }
+            concatenation("ads1") { ref("ads"); literal("d"); literal("a") }
         }
-        choice("acs",RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a") ; ref("acs1")}
-        concatenation("acs1") { ref("acs"); literal("c"); literal("a") }
-        choice("ads",RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a") ; ref("ads1")}
-        concatenation("ads1") { ref("ads"); literal("d"); literal("a") }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val goal = "S"
         val sentence = ""
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'"), ex.expected)
+        val (sppt,issues) = super.testFail(rrs,goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^", setOf("'a'"))
+        ),issues)
     }
 
     @Test
     fun aca() {
-        val goal = "S"
         val sentence = "aca"
 
         val expected = """
@@ -83,7 +83,6 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun ada() {
-        val goal = "S"
         val sentence = "ada"
 
         val expected = """
@@ -109,7 +108,6 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-        val goal = "S"
         val sentence = "a"
 
         val expected = """

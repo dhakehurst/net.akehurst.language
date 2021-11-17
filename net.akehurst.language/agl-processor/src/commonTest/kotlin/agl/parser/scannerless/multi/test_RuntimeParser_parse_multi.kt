@@ -16,17 +16,15 @@
 
 package net.akehurst.language.parser.scanondemand.multi
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.agl.sppt.SPPTParserDefault
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 internal class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract() {
 
@@ -36,55 +34,49 @@ internal class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract(
     // b = 'b'
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("r") { ref("m") }
+            concatenation("S") { ref("m") }
             concatenation("m") { literal("a"); ref("bm"); literal("a") }
             multi("bm",0,1,"'b'")
             literal("'b'","b")
         }
-        val goal = "r"
-        val parser = ScanOnDemandParser(rrs)
-    }
-
-    private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree? {
-        return sp.parseForGoal(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1).first
+        val goal = "S"
     }
 
     @Test
-    fun rma01__r__empty_fails() {
-        val inputText = ""
+    fun empty_fails() {
+        val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            test_parse(parser, goal, inputText)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+        ),issues)
     }
 
     @Test
-    fun rma01__r__a_fails() {
-        val inputText = "a"
+    fun a_fails() {
+        val sentence = "a"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            test_parse(parser, goal, inputText)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"a^",setOf("'b'","'a'"))
+        ),issues)
     }
 
     @Test
-    fun rmab01a__r__aa() {
-        val inputText = "aa"
+    fun aa() {
+        val sentence = "aa"
 
-        val actual = test_parse(parser, goal, inputText)
+        val expected = "S { m { 'a' bm|1 { §empty } 'a' } }"
 
-        assertNotNull(actual)
-
-        val p = SPPTParserDefault(rrs)
-        val expected = p.addTree("r { m { 'a' bm|1 { §empty } 'a' } }")
-
-        assertEquals(expected.toStringAll, actual.toStringAll)
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
     }
 
 }

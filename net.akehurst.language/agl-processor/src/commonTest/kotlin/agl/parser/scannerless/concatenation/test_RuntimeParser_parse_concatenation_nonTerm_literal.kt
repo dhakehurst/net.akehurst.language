@@ -14,52 +14,38 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scanondemand
+package net.akehurst.language.parser.scanondemand.concatenation
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
-internal class test_pattern__a : test_ScanOnDemandParserAbstract() {
+internal class test_RuntimeParser_parse_concatenation_nonTerm_literal : test_ScanOnDemandParserAbstract() {
 
-    //  S = "a"
+    // S = ab 'c';
+    // ab = 'a' 'b' ;
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("S") { pattern("a") }
+            concatenation("S") { ref("ab"); literal("c") }
+            concatenation("ab") { literal("a"); literal("b") }
         }
         val goal = "S"
     }
 
     @Test
-    fun a() {
-        val sentence = "a"
+    fun abc() {
+        val sentence = "abc"
 
         val expected = """
-            S{ "a":'a' }
+            S{ ab {'a' 'b'} 'c' }
         """.trimIndent()
 
-        super.test(
+        val actual = super.test(
             rrs = rrs,
-            goal= goal,
+            goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expected
+            expectedTrees = *arrayOf(expected)
         )
-    }
-
-    @Test
-    fun b_fails() {
-        val sentence = "b"
-
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
-        assertNull(sppt)
-        assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^b", setOf("\"a\""))
-        ),issues)
     }
 }

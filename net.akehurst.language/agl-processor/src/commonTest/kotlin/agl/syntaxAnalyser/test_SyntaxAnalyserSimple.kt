@@ -20,8 +20,6 @@ import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

@@ -18,13 +18,16 @@ package net.akehurst.language.parser.scanondemand.examples
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
 
@@ -56,6 +59,7 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
             concatenation("A") { literal("c") }
             concatenation("B") { literal("c") }
         }
+        val goal = "S"
     }
 
     @BeforeTest
@@ -65,33 +69,28 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a_fails() {
-        val goal = "S"
         val sentence = "a"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(2, ex.location.column, "column is wrong")
-        assertEquals(setOf("'b'", "'d'"), ex.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"a^",setOf("'c'"))
+        ),issues)
     }
 
     @Test
     fun d_fails() {
-        val goal = "S"
         val sentence = "d"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(1, ex.location.column, "column is wrong")
-        assertEquals(setOf("'c'", "'a'"), ex.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^d",setOf("'a'","'b'"))
+        ),issues)
     }
 
     @Test
     fun da() {
-        val goal = "S"
         val sentence = "da"
 
         val expected = """
@@ -109,7 +108,6 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun bdc() {
-        val goal = "S"
         val sentence = "bdc"
 
         val expected = """
@@ -127,7 +125,6 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun dc() {
-        val goal = "S"
         val sentence = "dc"
 
         val expected = """
@@ -145,7 +142,6 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun bda() {
-        val goal = "S"
         val sentence = "bda"
 
         val expected = """

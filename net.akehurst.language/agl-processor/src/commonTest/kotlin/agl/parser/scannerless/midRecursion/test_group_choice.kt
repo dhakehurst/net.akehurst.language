@@ -54,12 +54,12 @@ internal class test_group_choice : test_ScanOnDemandParserAbstract() {
             concatenation("group") { literal("("); ref("choice"); literal(")") }
             pattern("ID","[a-zA-Z]+")
         }
+        val goal = "S"
     }
 
     @Test
     fun rEQaSEMI() {
         val sentence = "r=a;"
-        val goal = "S"
 
         val expected = """
          S { rules { normalRule {
@@ -82,7 +82,6 @@ internal class test_group_choice : test_ScanOnDemandParserAbstract() {
     @Test
     fun bac() {
         val sentence = "r=(a);"
-        val goal = "S"
 
         val expected = """
          S { rules { normalRule {
@@ -108,7 +107,6 @@ internal class test_group_choice : test_ScanOnDemandParserAbstract() {
     @Test
     fun bbacc() {
         val sentence = "r=((a));"
-        val goal = "S"
 
         val expected = """
  S { rules { normalRule {

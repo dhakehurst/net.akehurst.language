@@ -18,11 +18,14 @@ package net.akehurst.language.parser.scanondemand.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
 
@@ -52,23 +55,22 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
                 literal("Z")
             }
         }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val goal = "S"
         val sentence = ""
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^",setOf("'W'","'X'","'Y'","'Z'","'if'"))
+        ),issues)
     }
 
     @Test
     fun ifthenelse() {
-        val goal = "S"
         val sentence = "ifWthenXelseY"
 
         val expected = """
@@ -101,7 +103,6 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun ifthen() {
-        val goal = "S"
         val sentence = "ifWthenX"
 
         val expected = """
@@ -130,7 +131,6 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun ifthenelseifthen() {
-        val goal = "S"
         val sentence = "ifWthenXelseifYthenZ"
 
         val expected = """
@@ -170,7 +170,6 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun ifthenifthenelse() {
-        val goal = "S"
         val sentence = "ifWthenifXthenYelseZ"
 
         val expected = """

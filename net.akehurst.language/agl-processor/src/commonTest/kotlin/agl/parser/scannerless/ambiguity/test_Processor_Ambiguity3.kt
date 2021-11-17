@@ -18,11 +18,14 @@ package net.akehurst.language.parser.scanondemand.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
     /**
@@ -43,7 +46,7 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
      * P2 = P a ;
      */
     private companion object {
-        val S = runtimeRuleSet {
+        val rrs = runtimeRuleSet {
             choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("S1")
                 ref("S2")
@@ -90,22 +93,26 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
     fun empty_fails() {
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(S, goal, sentence,1)
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+            ), issues
+        )
     }
 
     @Test
     fun a_fails() {
         val sentence = "a"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(S, goal, sentence,1)
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1,2,1,1),"a^",setOf("'a'","'b'","'c'"))
+            ), issues
+        )
     }
 
     @Test
@@ -120,7 +127,7 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-            rrs = S,
+            rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
@@ -140,7 +147,7 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-            rrs = S,
+            rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
@@ -187,7 +194,7 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-            rrs = S,
+            rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
@@ -202,7 +209,7 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
         val expected = "S { S1 {" + "P|1 { P2 {".repeat(49) + "P|2 {'a'}" + "'a' } }".repeat(49) + "'b'} }"
 
         val actual = super.test(
-            rrs = S,
+            rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,

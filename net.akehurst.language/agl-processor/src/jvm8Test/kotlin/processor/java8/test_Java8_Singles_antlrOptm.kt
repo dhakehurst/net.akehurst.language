@@ -20,8 +20,12 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.sppt.SPPT2InputText
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import test.assertEqualsWarning
 import kotlin.test.*
 
@@ -150,8 +154,16 @@ class test_Java8_Singles_antlrOptm {
         val goal = "variableInitializer"
 
             val (sppt,issues) = proc.parse(sentence,goal)
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        assertNull(sppt)
+        assertEquals(listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4,5,1,1),
+                "0b01^2",
+                setOf("<EOT>", "'.'", "'['", "'++'", "'--'",  "'*'", "'/'", "'%'", "'+'", "'-'", "'<'", "'>'", "'<='", "'>='", "INSTANCEOF",
+                    "'=='", "'!='", "'&'", "'^'", "'|'", "'&&'", "'||'", "'?'",
+                    "'='","'+='","'-='","'*='","'/='","'&='","'|='","'^='","'>>='","'>>>='","'<<='","'%='","'::'"
+                ))
+        ),issues)
 
     }
 
@@ -179,8 +191,13 @@ public class BadBinaryLiterals {
             """.trimIndent()
         val goal = "compilationUnit"
         val (sppt,issues) = proc.parse(sentence,goal)
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        assertNull(sppt)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(799,28,16,1),
+                "...t1 = 0b01.^01;  // no...",
+                setOf("IDENTIFIER", "THIS", "SUPER","NEW","'<'")
+            )
+        ),issues)
 
     }
 

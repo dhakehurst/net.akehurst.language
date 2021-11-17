@@ -16,45 +16,33 @@
 
 package net.akehurst.language.parser.scanondemand.listSeparated
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.parser.scanondemand.choicePriority.test_OperatorPrecedence2
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 internal class test_literal_a01 : test_ScanOnDemandParserAbstract() {
 
     // S = ['a' / ',']?
     private companion object {
         val rrs = runtimeRuleSet {
-            sList("S",0,1,"','","'a'")
+            sList("S",0,1,"'a'","','")
             literal("','",",")
             literal("'a'","a")
         }
         val goal = "S"
     }
 
-    private fun literal_a01(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_S = b.rule("S").separatedList(0, 1, b.literal(","), r_a)
-        return b
-    }
-
     @Test
     fun empty() {
         val sentence = ""
 
-        val expected = "S { §empty }"
+        val expected = "S|1 { §empty }"
 
         super.test(rrs, goal, sentence,1,expected)
     }
@@ -73,9 +61,9 @@ internal class test_literal_a01 : test_ScanOnDemandParserAbstract() {
         val sentence = "aa"
 
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
-        assertNotNull(sppt)
+        assertNull(sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"",arrayOf("?"))
+            parseError(InputLocation(1,2,1,1),"a^a",setOf("<EOT>"))
         ),issues)
     }
 
@@ -84,10 +72,10 @@ internal class test_literal_a01 : test_ScanOnDemandParserAbstract() {
         val sentence = "a,"
 
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
-        assertNotNull(sppt)
+        assertNull(sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"",arrayOf("?"))
-        ),issues)
+            parseError(InputLocation(1,2,1,1),"a^,",setOf("<EOT>"))
+       ),issues)
 
     }
 
@@ -96,9 +84,9 @@ internal class test_literal_a01 : test_ScanOnDemandParserAbstract() {
         val sentence = "a,a"
 
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
-        assertNotNull(sppt)
+        assertNull(sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"",arrayOf("?"))
+            parseError(InputLocation(1,2,1,1),"a^,a",setOf("<EOT>"))
         ),issues)
 
     }

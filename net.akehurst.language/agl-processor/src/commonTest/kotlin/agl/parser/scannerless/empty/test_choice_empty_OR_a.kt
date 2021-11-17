@@ -16,6 +16,7 @@
 
 package net.akehurst.language.parser.scanondemand
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -25,14 +26,36 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_pattern__a : test_ScanOnDemandParserAbstract() {
+internal class test_choice_empty_OR_a : test_ScanOnDemandParserAbstract() {
 
-    //  S = "a"
+    //  S = 'a' | e
+    //  e = <empty>
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("S") { pattern("a") }
+            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                ref("e")
+            }
+            concatenation("e"){ empty() }
         }
         val goal = "S"
+    }
+
+    @Test
+    fun empty() {
+        val sentence = ""
+
+        val expected = """
+         S {  }
+        """.trimIndent()
+
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -40,15 +63,15 @@ internal class test_pattern__a : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S{ "a":'a' }
+         S { 'a' }
         """.trimIndent()
 
-        super.test(
+        val actual = super.test(
             rrs = rrs,
-            goal= goal,
+            goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 1,
-            expected
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -56,10 +79,11 @@ internal class test_pattern__a : test_ScanOnDemandParserAbstract() {
     fun b_fails() {
         val sentence = "b"
 
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
+        val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^b", setOf("\"a\""))
+            parseError(InputLocation(0,1,1,1),"^b",setOf("'a'","<EOT>"))
         ),issues)
     }
+
 }

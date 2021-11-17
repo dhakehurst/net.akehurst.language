@@ -18,48 +18,45 @@ package net.akehurst.language.parser.scanondemand
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_pattern__a : test_ScanOnDemandParserAbstract() {
+internal class test_empty : test_ScanOnDemandParserAbstract() {
 
-    //  S = "a"
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("S") { pattern("a") }
+            concatenation("S") { empty() }
         }
         val goal = "S"
     }
 
     @Test
-    fun a() {
-        val sentence = "a"
+    fun empty() {
+        val sentence = ""
 
         val expected = """
-            S{ "a":'a' }
+         S { §empty }
         """.trimIndent()
 
-        super.test(
+        val actual = super.test(
             rrs = rrs,
-            goal= goal,
+            goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 1,
-            expected
+            expectedNumGSSHeads = 2,
+            expectedTrees = *arrayOf(expected)
         )
     }
 
     @Test
-    fun b_fails() {
-        val sentence = "b"
+    fun a_fails() {
+        val sentence = "a"
 
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
+        val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^b", setOf("\"a\""))
+            parseError(InputLocation(0,1,1,1),"^a",setOf("<EOT>"))
         ),issues)
     }
+
 }

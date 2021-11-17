@@ -18,11 +18,14 @@ package net.akehurst.language.parser.scanondemand.choiceAmbiguous
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
 
@@ -50,23 +53,23 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
             multi("bOpt", 0, 1, "'b'")
             literal("'b'", "b")
         }
+
+        val goal = "S"
     }
 
     @Test
     fun deterministic_empty_fails() {
-        val goal = "S"
         val sentence = ""
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(deterministic, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        val (sppt,issues)=super.testFail(deterministic, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+        ),issues)
     }
 
     @Test
     fun deterministic_a() {
-        val goal = "S"
         val sentence = "a"
 
         val expected = """
@@ -87,7 +90,6 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun deterministic_ab() {
-        val goal = "S"
         val sentence = "ab"
 
         val expected = """
@@ -112,19 +114,17 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
     /////////////////////
     @Test
     fun ambiguous_empty_fails() {
-        val goal = "S"
         val sentence = ""
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(ambiguous, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        val (sppt,issues)=super.testFail(ambiguous, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+        ),issues)
     }
 
     @Test
     fun ambiguous_a() {
-        val goal = "S"
         val sentence = "a"
 
         val expected1 = """
@@ -152,7 +152,6 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun ambiguous_ab() {
-        val goal = "S"
         val sentence = "ab"
 
         val expected = """

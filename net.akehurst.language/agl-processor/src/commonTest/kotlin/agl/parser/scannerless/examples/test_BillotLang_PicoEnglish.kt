@@ -18,11 +18,14 @@ package net.akehurst.language.parser.scanondemand.examples
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_BillotLang_PicoEnglish : test_ScanOnDemandParserAbstract() {
     /**
@@ -42,33 +45,34 @@ internal class test_BillotLang_PicoEnglish : test_ScanOnDemandParserAbstract() {
      * VP = 'v' NP
      * PP = 'p' NP
      */
-    private val rrs = runtimeRuleSet {
-        choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("S1"); ref("S2") }
-        concatenation("S1") { ref("NP"); ref("VP") }
-        concatenation("S2") { ref("S"); ref("PP") }
-        choice("NP", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("NP1"); ref("NP2"); ref("NP3") }
-        concatenation("NP1") { literal("n") }
-        concatenation("NP2") { literal("d");literal("n") }
-        concatenation("NP3") { ref("NP"); ref("PP") }
-        concatenation("VP") { literal("v"); ref("NP") }
-        concatenation("PP") { literal("p"); ref("NP") }
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("S1"); ref("S2") }
+            concatenation("S1") { ref("NP"); ref("VP") }
+            concatenation("S2") { ref("S"); ref("PP") }
+            choice("NP", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("NP1"); ref("NP2"); ref("NP3") }
+            concatenation("NP1") { literal("n") }
+            concatenation("NP2") { literal("d");literal("n") }
+            concatenation("NP3") { ref("NP"); ref("PP") }
+            concatenation("VP") { literal("v"); ref("NP") }
+            concatenation("PP") { literal("p"); ref("NP") }
+        }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val goal = "S"
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val (sppt,issues)=super.testFail(rrs,goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^",setOf("'n'","'d'"))
+        ),issues)
     }
 
     @Test
     fun nvn() {
-        val goal = "S"
         val sentence = "nvn"
 
         val expected = """

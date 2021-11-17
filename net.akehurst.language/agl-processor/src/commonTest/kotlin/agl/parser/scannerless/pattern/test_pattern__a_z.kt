@@ -16,17 +16,14 @@
 
 package net.akehurst.language.parser.scanondemand
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 internal class test_pattern__a_z : test_ScanOnDemandParserAbstract() {
 
@@ -44,7 +41,7 @@ internal class test_pattern__a_z : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S{ 'a' }
+            S{ "[a-c]":'a' }
         """.trimIndent()
 
         super.test(
@@ -61,7 +58,7 @@ internal class test_pattern__a_z : test_ScanOnDemandParserAbstract() {
         val sentence = "b"
 
         val expected = """
-            S{ 'b' }
+            S{ "[a-c]":'b' }
         """.trimIndent()
 
         super.test(
@@ -78,7 +75,7 @@ internal class test_pattern__a_z : test_ScanOnDemandParserAbstract() {
         val sentence = "c"
 
         val expected = """
-            S{ 'c' }
+            S{ "[a-c]":'c' }
         """.trimIndent()
 
         super.test(
@@ -97,7 +94,7 @@ internal class test_pattern__a_z : test_ScanOnDemandParserAbstract() {
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^b", setOf("'a'"))
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^d", setOf("\"[a-c]\""))
         ),issues)
     }
 }

@@ -19,13 +19,11 @@ package net.akehurst.language.agl.grammar.grammar
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 class test_AglGrammar {
@@ -891,7 +889,9 @@ class test_AglGrammar {
 
         val (actual0, issues0) = p.parse("")
         assertEquals(null, actual0)
-        assertEquals(emptyList(), issues0)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(0,1,1,1),"^",setOf("'a'"))
+        ), issues0)
 
         val (actual1, issues1) = p.parse("a")
         assertEquals(null, actual1)

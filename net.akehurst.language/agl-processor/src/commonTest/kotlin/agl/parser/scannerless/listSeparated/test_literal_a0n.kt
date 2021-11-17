@@ -16,13 +16,15 @@
 
 package net.akehurst.language.parser.scanondemand.listSeparated
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
@@ -72,13 +74,11 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
     fun aa_fails() {
         val sentence = "aa"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
-        assertEquals(setOf("','", RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"a^a",setOf("','","<EOT>"))
+        ),issues)
     }
 
     @Test
@@ -100,13 +100,11 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
     fun acaa_fails() {
         val sentence = "a,aa"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(4, e.location.column)
-        assertEquals(setOf("','", RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(3,4,1,1),"a,a^a",setOf("','","<EOT>"))
+        ),issues)
     }
 
     @Test

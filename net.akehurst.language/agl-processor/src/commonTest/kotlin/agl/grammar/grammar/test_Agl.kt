@@ -16,12 +16,8 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.asm.AsmSimple
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
 
 internal class test_Agl {
 

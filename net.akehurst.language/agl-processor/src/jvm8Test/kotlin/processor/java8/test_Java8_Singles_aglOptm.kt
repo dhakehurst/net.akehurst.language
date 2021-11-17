@@ -20,13 +20,14 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.sppt.SPPT2InputText
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import test.assertEqualsWarning
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
+import kotlin.test.*
 
 class test_Java8_Singles_aglOptm {
 
@@ -35,7 +36,7 @@ class test_Java8_Singles_aglOptm {
         val proc: LanguageProcessor by lazy { createJava8Processor(grammarFile, true) }
 
         fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor {
-            val grammarStr = this::class.java.getResource(path).readText()
+            val grammarStr = this::class.java.getResource(path)?.readText() ?: error("file not found '$path'")
             val proc = Agl.processorFromString(grammarStr)
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
             //proc.buildFor(forRule)//TODO: use build
@@ -146,6 +147,16 @@ class test_Java8_Singles_aglOptm {
     }
 
     @Test
+    fun ClassBody_FieldDeclaration() {
+        TODO("override of 'ClassBody' does not seem to be working !")
+        val sentence = "{ int valid = 0b0; }"
+        val goal = "ClassBody"
+        val (sppt,issues) = proc.buildFor(goal).parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+    }
+
+    @Test
     fun CompilationUnit_FieldDeclaration() {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "CompilationUnit"
@@ -159,9 +170,14 @@ class test_Java8_Singles_aglOptm {
         val sentence = "0b012"
         val goal = "VariableInitializer"
 
-            val (sppt,issues) = proc.parse(sentence,goal)
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNull(sppt)
+        assertEquals(listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4,5,1,1),
+                "0b01^2",
+                setOf("'.'", "ASSIGNMENT_OPERATOR", "'::'", "'?'", "INFIX_OPERATOR", "POSTFIX_OPERATOR", "'['", "<EOT>"))
+        ),issues)
 
     }
 
@@ -189,7 +205,7 @@ public class BadBinaryLiterals {
             """.trimIndent()
         val goal = "CompilationUnit"
         val (sppt,issues) = proc.parse(sentence,goal)
-        assertNotNull(sppt)
+        assertNull(sppt)
         assertEquals(emptyList(),issues)
 
     }

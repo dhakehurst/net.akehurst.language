@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scanondemand.listSeparated
+package net.akehurst.language.parser.scanondemand.concatenation
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
@@ -26,24 +26,38 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_literal_a2n : test_ScanOnDemandParserAbstract() {
+internal class test_RuntimeParser_parse_concatenation_literal : test_ScanOnDemandParserAbstract() {
 
-    // S = [a / ',']2+
-    // a = 'a'
     private companion object {
         val rrs = runtimeRuleSet {
-            sList("S", 2, -1, "a", "','")
-            concatenation("a") { literal("a") }
-            literal("','",",")
+            concatenation("S") { literal("a"); literal("b"); literal("c") }
         }
         val goal = "S"
+    }
+
+    @Test
+    fun abc() {
+        val sentence = "abc"
+
+        val expected = """
+            S{ 'a' 'b' 'c' }
+        """.trimIndent()
+
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
+        assertEquals(9,actual?.seasons)
     }
 
     @Test
     fun empty_fails() {
         val sentence = ""
 
-        val (sppt, issues) = super.testFail(rrs, Companion.goal, sentence, 1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
         assertEquals(
             listOf(
@@ -60,75 +74,34 @@ internal class test_literal_a2n : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1,2,1,1),"a^",setOf("','"))
+                parseError(InputLocation(1,2,1,1),"a^",setOf("'b'"))
             ), issues
         )
     }
 
     @Test
-    fun ac_fails() {
-        val sentence = "a,"
+    fun ab_fails() {
+        val sentence = "ab"
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2,3,1,1),"a,^",setOf("'a'"))
+                parseError(InputLocation(2,3,1,1),"ab^",setOf("'c'"))
             ), issues
         )
     }
 
     @Test
-    fun aa_fails() {
-        val sentence = "aa"
+    fun abcd_fails() {
+        val sentence = "abcd"
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1,2,1,1),"a^a",setOf("','"))
+                parseError(InputLocation(3,4,1,1),"abc^d",setOf("<EOT>"))
             ), issues
         )
     }
-
-    @Test
-    fun aca() {
-        val sentence = "a,a"
-
-        val expected = "S {'a' ',' 'a'}"
-
-        super.test(rrs, Companion.goal, sentence, 1, expected)
-    }
-
-    @Test
-    fun acaa_fails() {
-        val sentence = "a,aa"
-
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
-        assertNull(sppt)
-        assertEquals(
-            listOf(
-                parseError(InputLocation(3,4,1,1),"a,a^a",setOf("','","<EOT>"))
-            ), issues
-        )
-    }
-
-    @Test
-    fun acaca() {
-        val sentence = "a,a,a"
-
-        val expected = "S {'a' ',' 'a' ',' 'a'}"
-
-        super.test(rrs, Companion.goal, sentence, 1, expected)
-    }
-
-    @Test
-    fun acax100() {
-        val sentence = "a" + ",a".repeat(99)
-
-        val expected = "S {'a'" + " ',' 'a'".repeat(99) + "}"
-
-        super.test(rrs, Companion.goal, sentence, 1, expected)
-    }
-
 }

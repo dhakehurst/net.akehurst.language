@@ -18,42 +18,40 @@ package net.akehurst.language.parser.scanondemand.multi
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_multi_1_n_choice : test_ScanOnDemandParserAbstract() {
 
     // S = AB+
     // AB = a | b
     private companion object {
-        private val rrs = runtimeRuleSet {
+        val rrs = runtimeRuleSet {
             multi("S", 1, -1, "AB")
             choice("AB", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")
                 literal("b")
             }
         }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val goal = "S"
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^", setOf("'a'","'b'"))
+        ),issues)
     }
 
     @Test
     fun a() {
-        val goal = "S"
         val sentence = "a"
 
         val expected = """
@@ -71,7 +69,6 @@ internal class test_multi_1_n_choice : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun b() {
-        val goal = "S"
         val sentence = "b"
 
         val expected = """
@@ -89,7 +86,6 @@ internal class test_multi_1_n_choice : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aa() {
-        val goal = "S"
         val sentence = "aa"
 
         val expected = """
@@ -107,7 +103,6 @@ internal class test_multi_1_n_choice : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aaa() {
-        val goal = "S"
         val sentence = "aaa"
 
         val expected = """
@@ -125,7 +120,6 @@ internal class test_multi_1_n_choice : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a50() {
-        val goal = "S"
         val sentence = "a".repeat(50)
 
         val expected = "S { "+"AB{'a'} ".repeat(50)+" }"
@@ -141,7 +135,6 @@ internal class test_multi_1_n_choice : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a500() {
-        val goal = "S"
         val sentence = "a".repeat(500)
 
         val expected = "S { "+"AB{'a'} ".repeat(500)+" }"
@@ -157,7 +150,6 @@ internal class test_multi_1_n_choice : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a2000() {
-        val goal = "S"
         val sentence = "a".repeat(2000)
 
         val expected = "S { "+"AB{'a'} ".repeat(2000)+" }"

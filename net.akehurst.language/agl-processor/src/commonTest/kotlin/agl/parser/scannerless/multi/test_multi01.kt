@@ -16,19 +16,12 @@
 
 package net.akehurst.language.parser.scanondemand.multi
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 internal class test_multi01 : test_ScanOnDemandParserAbstract() {
 
@@ -69,9 +62,9 @@ internal class test_multi01 : test_ScanOnDemandParserAbstract() {
         val sentence = "aa"
 
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
-        assertNotNull(sppt)
+        assertNull(sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"",arrayOf("?"))
+            parseError(InputLocation(1,2,1,1),"a^a", setOf("<EOT>"))
         ),issues)
     }
 

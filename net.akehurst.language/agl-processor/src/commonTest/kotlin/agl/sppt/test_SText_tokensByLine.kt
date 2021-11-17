@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals

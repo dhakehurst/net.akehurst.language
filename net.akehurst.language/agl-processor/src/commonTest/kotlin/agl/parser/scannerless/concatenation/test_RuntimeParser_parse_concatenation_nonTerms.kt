@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scanondemand.ambiguity
+package net.akehurst.language.parser.scanondemand.concatenation
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -27,28 +26,24 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_Processor_Ambiguity2 : test_ScanOnDemandParserAbstract() {
-    /**
-     * S = 'a' | S S ;
-     */
-    /**
-     * S = 'a' | S1 ;
-     * S1 = S S ;
-     */
+internal class test_RuntimeParser_parse_concatenation_nonTerms : test_ScanOnDemandParserAbstract() {
+
+    // S = a b c;
+    // a = 'a' ;
+    // b = 'b' ;
+    // c = 'c' ;
     private companion object {
         val rrs = runtimeRuleSet {
-            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                literal("a")
-                ref("S1")
-            }
-            concatenation("S1") { ref("S"); ref("S") }
+            concatenation("S") { ref("a"); ref("b"); ref("c") }
+            concatenation("a") { literal("a") }
+            concatenation("b") { literal("b") }
+            concatenation("c") { literal("c") }
         }
         val goal = "S"
     }
 
-
     @Test
-    fun empty_fails() {
+    fun abc2_S_empty_fails() {
         val sentence = ""
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
@@ -61,32 +56,40 @@ internal class test_Processor_Ambiguity2 : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun S_S_a() {
+    fun abc2_S_a_fails() {
         val sentence = "a"
 
-        val expected = """
-            S { 'a' }
-        """.trimIndent()
-
-        val actual = super.test(
-            rrs = rrs,
-            goal = goal,
-            sentence = sentence,
-            expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1,2,1,1),"a^",setOf("'b'"))
+            ), issues
         )
     }
 
     @Test
-    fun S_S_aa() {
-        val sentence = "aa"
+    fun abc2_S_ab_fails() {
+        val sentence = "ab"
+
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(2,3,1,1),"ab^",setOf("'c'"))
+            ), issues
+        )
+    }
+
+    @Test
+    fun abc2_S_abc() {
+        val sentence = "abc"
 
         val expected = """
-            S|1 {
-              S1 {
-                S { 'a' }
-                S { 'a' }
-              }
+            S {
+                a { 'a' }
+                b { 'b' }
+                c { 'c' }
             }
         """.trimIndent()
 
@@ -100,31 +103,16 @@ internal class test_Processor_Ambiguity2 : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun S_S_aaa() {
-        val sentence = "aaa"
+    fun abc2_S_abcd_fails() {
+        val sentence = "abcd"
 
-        val expected = """
-            S|1 {
-              S1 {
-                S|1 {
-                  S1 {
-                    S { 'a' }
-                    S { 'a' }
-                  }
-                }
-                S { 'a' }
-              }
-            }
-        """.trimIndent()
-
-        val actual = super.test(
-            rrs = rrs,
-            goal = goal,
-            sentence = sentence,
-            expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(3,4,1,1),"abc^d",setOf("<EOT>"))
+            ), issues
         )
     }
-
 
 }

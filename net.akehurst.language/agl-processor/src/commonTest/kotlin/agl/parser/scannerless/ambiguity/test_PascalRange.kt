@@ -18,11 +18,14 @@ package net.akehurst.language.parser.scanondemand.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_PascalRange : test_ScanOnDemandParserAbstract() {
 
@@ -34,7 +37,7 @@ internal class test_PascalRange : test_ScanOnDemandParserAbstract() {
      *
      */
     private companion object {
-        val S = runtimeRuleSet {
+        val rrs = runtimeRuleSet {
             choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("range")
                 ref("real")
@@ -50,11 +53,13 @@ internal class test_PascalRange : test_ScanOnDemandParserAbstract() {
     fun expr_empty_fails() {
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(S, goal, sentence,1)
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0,1,1,1),"^",setOf("\"[0-9]+\"","\"([0-9]+[.][0-9]*)|([.][0-9]+)\""))
+            ), issues
+        )
     }
 
     @Test
@@ -68,7 +73,7 @@ internal class test_PascalRange : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-            rrs = S,
+            rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
@@ -91,7 +96,7 @@ internal class test_PascalRange : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-            rrs = S,
+            rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,

@@ -15,14 +15,17 @@
  */
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class test_mscript {
     companion object {
@@ -232,7 +235,9 @@ grammar Mscript {
         val (actual,issues) = sut.parse(text,"REAL")
 
         val expIssues = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^1")
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^1",
+            setOf("\"[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?\"")
+                )
         )
         assertNull(actual)
         assertEquals(expIssues,issues)

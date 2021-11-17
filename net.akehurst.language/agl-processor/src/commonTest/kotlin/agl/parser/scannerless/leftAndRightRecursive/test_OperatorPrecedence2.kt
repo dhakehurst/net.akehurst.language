@@ -20,15 +20,10 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 internal class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
@@ -47,7 +42,7 @@ internal class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
         val rrs = runtimeRuleSet {
             skip("WS") { pattern("\\s+") }
             concatenation("S") { ref("expr") }
-            choice("expr",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("expr", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
                 ref("root")
                 ref("group")
                 ref("div")
@@ -59,32 +54,33 @@ internal class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
                 ref("var")
                 ref("bool")
             }
-            sList("div",2,-1,"expr","'/'")
-            sList("mul",2,-1,"expr","'*'")
-            sList("add",2,-1,"expr","'+'")
-            sList("sub",2,-1,"expr","'-'")
+            sList("div", 2, -1, "expr", "'/'")
+            sList("mul", 2, -1, "expr", "'*'")
+            sList("add", 2, -1, "expr", "'+'")
+            sList("sub", 2, -1, "expr", "'-'")
             concatenation("group") { literal("("); ref("expr"); literal(")") }
-            choice("bool",RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("true");literal("false") }
+            choice("bool", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("true");literal("false") }
             concatenation("var") { pattern("[a-zA-Z]+") }
-            literal("'/'","/")
-            literal("'*'","*")
-            literal("'+'","+")
-            literal("'-'","-")
+            literal("'/'", "/")
+            literal("'*'", "*")
+            literal("'+'", "+")
+            literal("'-'", "-")
         }
         val goal = "S"
     }
+
     private fun S(): RuntimeRuleSetBuilder {
         val b = RuntimeRuleSetBuilder()
         val r_expr = b.rule("expr").build()
         val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
-        val r_bool = b.rule("bool").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,b.literal("true"), b.literal("false"))
+        val r_bool = b.rule("bool").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("true"), b.literal("false"))
         val r_group = b.rule("group").concatenation(b.literal("("), r_expr, b.literal(")"))
         val r_div = b.rule("div").separatedList(2, -1, b.literal("/"), r_expr)
         val r_mul = b.rule("mul").separatedList(2, -1, b.literal("*"), r_expr)
         val r_add = b.rule("add").separatedList(2, -1, b.literal("+"), r_expr)
         val r_sub = b.rule("sub").separatedList(2, -1, b.literal("-"), r_expr)
-        val r_root = b.rule("root").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,r_var, r_bool)
-        b.rule(r_expr).choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,r_root, r_group, r_div, r_mul, r_add, r_sub)
+        val r_root = b.rule("root").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_var, r_bool)
+        b.rule(r_expr).choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_root, r_group, r_div, r_mul, r_add, r_sub)
         b.rule("S").concatenation(r_expr)
         b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
         return b
@@ -94,11 +90,13 @@ internal class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
     fun empty_fails() {
         val sentence = ""
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
-        assertNotNull(sppt)
-        assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"",arrayOf("?"))
-        ),issues)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0,1,1,1),"^", setOf("\"[a-zA-Z]+\"","'true'","'false'","'('"))
+            ), issues
+        )
     }
 
 
