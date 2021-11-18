@@ -95,7 +95,7 @@ internal class test_literal_a2n : test_ScanOnDemandParserAbstract() {
     fun aca() {
         val sentence = "a,a"
 
-        val expected = "S {'a' ',' 'a'}"
+        val expected = "S { a{'a'} ',' a{'a'}}"
 
         super.test(rrs, Companion.goal, sentence, 1, expected)
     }
@@ -117,7 +117,7 @@ internal class test_literal_a2n : test_ScanOnDemandParserAbstract() {
     fun acaca() {
         val sentence = "a,a,a"
 
-        val expected = "S {'a' ',' 'a' ',' 'a'}"
+        val expected = "S {a{'a'} ',' a{'a'} ',' a{'a'}}"
 
         super.test(rrs, Companion.goal, sentence, 1, expected)
     }

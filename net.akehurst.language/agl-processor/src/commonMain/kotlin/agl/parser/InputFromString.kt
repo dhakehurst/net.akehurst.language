@@ -25,13 +25,13 @@ import net.akehurst.language.api.sppt.SPPTLeaf
 import kotlin.math.min
 
 internal class InputFromString(
-        numTerminalRules: Int,
-        sentence: String
+    numTerminalRules: Int,
+    sentence: String
 ) {
 
     data class Match(
-            val matchedText: String,
-            val eolPositions: List<Int>
+        val matchedText: String,
+        val eolPositions: List<Int>
     )
 
     companion object {
@@ -48,11 +48,23 @@ internal class InputFromString(
     fun contextInText(position: Int): String {
         val startIndex = maxOf(0, position - contextSize)
         val endIndex = minOf(this.text.length, position + contextSize)
-        val prefix = if (startIndex > 0) "..." else ""
         val forText = this.text.substring(startIndex, position)
-        val aftText = this.text.substring(position,endIndex)
+        val aftText = this.text.substring(position, endIndex)
+        val startOfLine = forText.lastIndexOfAny(listOf("\n", "\r"))
+        val s = if (-1==startOfLine) {
+            0
+        } else {
+            startOfLine + 1
+        }
+        val forTextAfterLastEol = forText.substring(s)
+        val startOrStartOfLine = startIndex + startOfLine
+        val prefix = when {
+            startOfLine > 0 -> ""
+            startIndex > 0 -> "..."
+            else -> ""
+        }
         val postFix = if (endIndex < this.text.length) "..." else ""
-        return  "$prefix$forText^$aftText$postFix"
+        return "$prefix$forTextAfterLastEol^$aftText$postFix"
     }
 
     //internal val leaves: MutableMap<LeafIndex, SPPTLeafDefault?> = mutableMapOf()
@@ -87,7 +99,7 @@ internal class InputFromString(
         return EOL_PATTERN.findAll(text).map { it.range.first }.toList()
     }
 
-    private fun matchLiteral(position: Int, patternText: String):RegexMatcher.MatchResult? {
+    private fun matchLiteral(position: Int, patternText: String): RegexMatcher.MatchResult? {
         val stext = this.text.substring(position)
         val match = stext.startsWith(patternText)//regionMatches(position, patternText, 0, patternText.length, false)
         val matchedText = if (match) patternText else null
@@ -120,7 +132,7 @@ internal class InputFromString(
     private fun matchRegEx2(position: Int, regex: Regex): RegexMatcher.MatchResult? {
         //val stext = this.text.substring(position)
         //val matchedText = regex.matchAtStart(stext)
-        val matchedText = regex.matchAt(this.text,position)?.value
+        val matchedText = regex.matchAt(this.text, position)?.value
         return if (null == matchedText)
             null
         else {
@@ -129,6 +141,7 @@ internal class InputFromString(
             //matchedText
         }
     }
+
     private fun matchRegEx3(position: Int, regex: Regex): String? {//RegexMatcher.MatchResult? {
         val stext = this.text.substring(position)
         val match = regex.find(stext)
@@ -140,6 +153,7 @@ internal class InputFromString(
             match.value
         }
     }
+
     internal fun tryMatchText(position: Int, terminalRule: RuntimeRule): RegexMatcher.MatchResult? {
         val matched = when {
             (position >= this.text.length) -> if (terminalRule.value == END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
@@ -177,7 +191,7 @@ internal class InputFromString(
         return if (terminalRuntimeRule.isEmptyRule) {
             //val location = this.nextLocation(lastLocation, 0)
             //val leaf = SPPTLeafDefault(terminalRuntimeRule, location, true, "", 0)
-            val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, atInputPosition,0)
+            val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, atInputPosition, 0)
             this.leaves[terminalRuntimeRule, atInputPosition] = leaf
             //val cindex = CompleteNodeIndex(terminalRuntimeRule.number, inputPosition)//0, index.startPosition)
             //this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
@@ -190,7 +204,7 @@ internal class InputFromString(
             } else {
                 //val location = this.nextLocation(lastLocation, match.length)//match.matchedText.length)
                 val nextInputPosition = atInputPosition + match.matchedText.length
-                val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, nextInputPosition,0)//.matchedText, 0)
+                val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, nextInputPosition, 0)//.matchedText, 0)
                 leaf.eolPositions = match.eolPositions
                 this.leaves[terminalRuntimeRule, atInputPosition] = leaf
                 //val cindex = CompleteNodeIndex(terminalRuntimeRule.number, inputPosition)//0, index.startPosition)
@@ -220,10 +234,10 @@ internal class InputFromString(
      * nextInputPosition - 0 index position of next 'token', so we can calculate length
      */
     fun locationFor(startPosition: Int, length: Int): InputLocation {
-        val before = this.text.substring(0,startPosition)
-        val line = before.count { it=='\n' } +1
+        val before = this.text.substring(0, startPosition)
+        val line = before.count { it == '\n' } + 1
         val column = startPosition - before.lastIndexOf('\n')
-        return InputLocation(startPosition,column,line,length)
+        return InputLocation(startPosition, column, line, length)
     }
 
 }

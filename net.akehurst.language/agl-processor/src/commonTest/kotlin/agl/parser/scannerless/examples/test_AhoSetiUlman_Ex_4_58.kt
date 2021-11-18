@@ -79,22 +79,44 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun d_fails() {
-        val sentence = "d"
+    fun b_fails() {
+        val sentence = "b"
 
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^d",setOf("'a'","'b'"))
+            parseError(InputLocation(1,2,1,1),"b^",setOf("'c'"))
         ),issues)
     }
 
     @Test
-    fun da() {
-        val sentence = "da"
+    fun c_fails() {
+        val sentence = "c"
+
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^c",setOf("'a'","'b'"))
+        ),issues)
+    }
+
+    @Test
+    fun ac_fails() {
+        val sentence = "ac"
+
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(2,3,1,1),"ac^",setOf("'d'","'e'"))
+        ),issues)
+    }
+
+    @Test
+    fun acd() {
+        val sentence = "acd"
 
         val expected = """
-            S { S1 { A { 'd' } 'a' } }
+            S { S1 { 'a' A { 'c' } 'd' } }
         """.trimIndent()
 
         val actual = super.test(
@@ -102,50 +124,50 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun bdc() {
-        val sentence = "bdc"
+    fun bcd() {
+        val sentence = "bcd"
 
         val expected = """
-            S|1 { S2 { 'b' A { 'd' } 'c' } }
+            S|1 { S2 { 'b' B { 'c' } 'd' } }
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun dc() {
-        val sentence = "dc"
+    fun ace() {
+        val sentence = "ace"
 
         val expected = """
-            S|2 { S3 { B { 'd' } 'c' } }
+            S|2 { S3 { 'a' B { 'c' } 'e' } }
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
         )
     }
 
     @Test
-    fun bda() {
-        val sentence = "bda"
+    fun bce() {
+        val sentence = "bce"
 
         val expected = """
-            S|3 { S4 { 'b' B { 'd' } 'a' } }
+            S|3 { S4 { 'b' A { 'c' } 'e' } }
         """.trimIndent()
 
         val actual = super.test(

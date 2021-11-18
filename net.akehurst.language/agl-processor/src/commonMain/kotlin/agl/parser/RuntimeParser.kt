@@ -166,6 +166,18 @@ internal class RuntimeParser(
         }
     }
 
+    fun growWidthOfAllHeadsOnce() {
+        this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
+        this.toGrowPrevious.clear()
+        this.graph.growingHead.clear()
+        for (gn in this.toGrow) {
+            checkInterrupt()
+            val previous = this.graph.pop(gn)
+            this.toGrowPrevious[gn] = previous
+            this.growWidthOnly(gn, previous)
+        }
+    }
+
     fun tryGrowHeightOrGraft(): Set<GrowingNode> {
         val poss = mutableSetOf<GrowingNode>()
         // try height or graft
@@ -233,7 +245,7 @@ internal class RuntimeParser(
                             doGraft(gn, prev, transition, true)
                         }
                     }
-    //                Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
+                    //                Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                 }
             }
             //}
@@ -269,6 +281,18 @@ internal class RuntimeParser(
         }
     }
 
+    fun grow2(noLookahead: Boolean) {
+        this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
+        this.toGrowPrevious.clear()
+        this.graph.growingHead.clear()
+        for (gn in this.toGrow) {
+            checkInterrupt()
+            val previous = this.graph.pop(gn)
+            this.toGrowPrevious[gn] = previous
+            this.growNode(gn, previous, noLookahead)
+        }
+    }
+
     internal fun growNode(gn: GrowingNode, previous: Collection<PreviousInfo>, noLookahead: Boolean) {
         when (gn.runtimeRules.first().kind) {//FIXME
             RuntimeRuleKind.GOAL -> this.growGoalNode(gn, noLookahead)
@@ -286,7 +310,7 @@ internal class RuntimeParser(
                 Transition.ParseAction.WIDTH -> doWidth(gn, emptySet(), it, noLookahead)
                 Transition.ParseAction.HEIGHT -> error("Should never happen")
                 Transition.ParseAction.GRAFT -> error("Should never happen")
-      //          Transition.ParseAction.GRAFT_OR_HEIGHT -> error("Should never happen")
+                //          Transition.ParseAction.GRAFT_OR_HEIGHT -> error("Should never happen")
                 Transition.ParseAction.GOAL -> doGoal(gn)
                 Transition.ParseAction.EMBED -> TODO()
             }
@@ -310,7 +334,7 @@ internal class RuntimeParser(
                         Transition.ParseAction.WIDTH -> doWidth(gn, setOf(previous), tr, noLookahead)
                         Transition.ParseAction.HEIGHT -> doHeight(gn, previous, tr, noLookahead)
                         Transition.ParseAction.GRAFT -> doGraft(gn, previous, tr, noLookahead)
- //                       Transition.ParseAction.GRAFT_OR_HEIGHT -> error("Should never happen")
+                        //                       Transition.ParseAction.GRAFT_OR_HEIGHT -> error("Should never happen")
                         Transition.ParseAction.GOAL -> error("Should never happen")
                         Transition.ParseAction.EMBED -> doEmbedded(gn, setOf(previous), tr, noLookahead)
                     }
@@ -336,7 +360,7 @@ internal class RuntimeParser(
                                 Transition.ParseAction.WIDTH -> doWidth(gn, setOf(previous), tr, noLookahead)
                                 Transition.ParseAction.HEIGHT -> doHeight(gn, previous, tr, noLookahead)
                                 Transition.ParseAction.GRAFT -> doGraft(gn, previous, tr, noLookahead)
-  //                              Transition.ParseAction.GRAFT_OR_HEIGHT -> error("Should never happen")
+                                //                              Transition.ParseAction.GRAFT_OR_HEIGHT -> error("Should never happen")
                                 Transition.ParseAction.GOAL -> error("Should never happen")
                                 Transition.ParseAction.EMBED -> doEmbedded(gn, setOf(previous), tr, noLookahead)
                             }

@@ -61,7 +61,7 @@ internal class test_AhoSetiUlman_4_54 : test_ScanOnDemandParserAbstract() {
         val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(10,2,1,1),"d^",setOf("'c'","'d'"))
+            parseError(InputLocation(1,2,1,1),"d^",setOf("'c'","'d'"))
         ),issues)
     }
 
@@ -85,7 +85,7 @@ internal class test_AhoSetiUlman_4_54 : test_ScanOnDemandParserAbstract() {
         val sentence = "dcd"
 
         val expected = """
-            S { C { 'd' } C{ C1 { 'c' C { 'd' } } } }
+            S { C { 'd' } C{ C|1 { 'c' C { 'd' } } } }
         """.trimIndent()
 
         super.test(rrs, goal,sentence,1,expected)

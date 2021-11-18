@@ -87,7 +87,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1,2,1,1),"^",setOf("'a'","'c'"))
+                parseError(InputLocation(1,2,1,1),"d^",setOf("'a'","'c'"))
             ), issues
         )
     }

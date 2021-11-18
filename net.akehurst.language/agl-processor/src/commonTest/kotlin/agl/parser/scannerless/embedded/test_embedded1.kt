@@ -54,7 +54,7 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         val (sppt, issues) = super.testFail(Sn, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^d", setOf("\"[a-c]\""))
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^d", setOf("'b'"))
         ),issues)
     }
 
