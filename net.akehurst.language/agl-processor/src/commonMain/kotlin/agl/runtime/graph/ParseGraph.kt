@@ -269,14 +269,14 @@ internal class ParseGraph(
         return this.addGrowingHead(gnindex, gn)
     }
 
-    private fun findOrCreateGrowingNode(newState: ParserState, lookahead: LookaheadSet, newChildren: GrowingChildren, previous: Set<PreviousInfo>) {
-        val gnindex = GrowingNode.indexFromGrowingChildren(newState, lookahead, newChildren)//, nextInputPosition, priority)
+    private fun findOrCreateGrowingNode(newState: ParserState, newRuntimeLookahead: LookaheadSet, newChildren: GrowingChildren, previous: Set<PreviousInfo>) {
+        val gnindex = GrowingNode.indexFromGrowingChildren(newState, newRuntimeLookahead, newChildren)//, nextInputPosition, priority)
         val existingGrowing = this.growing[gnindex] //?: findSimilarGrowing(newState)
 
         if (null == existingGrowing) {
             val existingHead = this.growingHead[gnindex]
             if (null == existingHead) {
-                val nn = this.createGrowingNode(newState, lookahead, newChildren)
+                val nn = this.createGrowingNode(newState, newRuntimeLookahead, newChildren)
                 when {
                     newState.isAtEnd -> {
                         this.addAndRegisterGrowingPrevious(nn, previous)
@@ -289,15 +289,17 @@ internal class ParseGraph(
                 }
             } else {
                 //merge
-                mergeOrDropWithPriority(existingHead, newState, lookahead, newChildren)
+                val nn = mergeOrDropWithPriority(existingHead, newState, newRuntimeLookahead, newChildren)
+                this.addAndRegisterGrowingPrevious(nn, previous)
+                this.growingHead[gnindex] = nn
             }
         } else {
             // TODO("handle use of lookahead here! passed in lhs is not same as existing node lhs")
-            if (lookahead == existingGrowing.runtimeLookahead) {
+            if (newRuntimeLookahead == existingGrowing.runtimeLookahead) {
                 this.addAndRegisterGrowingPrevious(existingGrowing, previous)
                 this.addGrowingHead(gnindex, existingGrowing)
             } else {
-                val mergedLhs = lookahead.union(newState.stateSet, existingGrowing.runtimeLookahead)
+                val mergedLhs = newRuntimeLookahead.union(newState.stateSet, existingGrowing.runtimeLookahead)
                 val nn = this.createGrowingNode(newState, mergedLhs, newChildren)
                 when {
                     newState.isAtEnd -> {
@@ -307,7 +309,6 @@ internal class ParseGraph(
                     else -> {
                         this.addAndRegisterGrowingPrevious(nn, previous)
                         this.addGrowingHead(gnindex, nn) // replaces with existing growing head if there is one that matches the index already
-
                     }
                 }
             }
@@ -331,11 +332,11 @@ internal class ParseGraph(
                         when(rr.kind) {
                             RuntimeRuleKind.NON_TERMINAL -> when (rr.rhs.itemsKind){
                                 RuntimeRuleRhsItemsKind.LIST ->{
-                                    TODO()
+                                    existingNode // TODO ??
                                 }
                                 RuntimeRuleRhsItemsKind.EMPTY -> error("Should never happen")
                                 RuntimeRuleRhsItemsKind.CHOICE -> error("Should never happen")
-                                RuntimeRuleRhsItemsKind.CONCATENATION -> error("Should never happen")
+                                RuntimeRuleRhsItemsKind.CONCATENATION -> existingNode // TODO ??error("Should never happen")
                             }
                             RuntimeRuleKind.GOAL -> error("Should never happen")
                             RuntimeRuleKind.TERMINAL -> error("Should never happen")
@@ -343,7 +344,7 @@ internal class ParseGraph(
                         }
                     }
                     else -> {
-                        TODO()
+                        existingNode // TODO ??
                     }
                 }
             }

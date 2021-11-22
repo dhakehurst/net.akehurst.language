@@ -158,6 +158,7 @@ val lastLocation
     fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {
         var r = "$currentState,$startPosition,$nextInputPosition,"
         r += if (this.currentState.isAtEnd) "C" else this.currentState.rulePositions.first().position
+        r+= this.runtimeLookahead.content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
         //val name = this.currentState.runtimeRules.joinToString(prefix = "[", separator = ",", postfix = "]") { "${it.tag}(${it.number})" }
         //r += ":" + name
 /*

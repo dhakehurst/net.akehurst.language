@@ -102,9 +102,11 @@ internal class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
         val sentence = "true"
 
         val expected = """
+            S {
               expr { root|1 {
                 bool { 'true' }
               } }
+            }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
@@ -206,7 +208,7 @@ internal class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|4 {
                 add {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
                   '+' WS { "\s+" : ' ' }
@@ -226,7 +228,7 @@ internal class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|5 {
                 sub {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
                   '-' WS { "\s+" : ' ' }

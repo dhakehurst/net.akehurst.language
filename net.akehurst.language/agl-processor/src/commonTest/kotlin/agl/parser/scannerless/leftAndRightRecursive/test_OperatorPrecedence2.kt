@@ -118,9 +118,9 @@ internal class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
         val sentence = "true"
 
         val expected = """
-              expr { root|1 {
+              S{ expr { root|1 {
                 bool { 'true' }
-              } }
+              } } }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)

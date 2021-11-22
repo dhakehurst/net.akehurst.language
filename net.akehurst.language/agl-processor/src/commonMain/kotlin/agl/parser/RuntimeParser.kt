@@ -277,8 +277,6 @@ internal class RuntimeParser(
         // graph.growingHead will become empty if node is not grown.
         // Within growNodeReduce, a node is not grown if it next wants a shift action,
         // rather it is put onto the wait or 'readyForShift' list
-        this.readyForShift.clear()
-        this.readyForShiftPrevious.clear()
         while (this.graph.growingHead.isNotEmpty()) {
             // growing heads should now be ready to height or graft, just pass on any that are shift actions
             this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
@@ -298,6 +296,8 @@ internal class RuntimeParser(
             val gnindex = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.children)
             graph.growingHead[gnindex] = gn
         }
+        this.readyForShift.clear()
+        this.readyForShiftPrevious.clear()
         return growStep
     }
 

@@ -98,13 +98,13 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
 
         val expected = """
           S { E|1 { I {
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
               op|2 { '+' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
               op|2 { '+' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
               op|2 { '+' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
             } } }
         """.trimIndent()
 
@@ -117,15 +117,15 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
 
         val expected = """
           S { E|1 { I {
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
               op|2 { '+' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
               op|2 { '+' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
               op|2 { '+' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
               op|2 { '+' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
             } } }
         """.trimIndent()
 
@@ -138,15 +138,15 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
 
         val expected = """
           S { E|1 { I {
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
               op { '/' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
               op|1 { '*' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
               op|2 { '+' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
               op|3 { '-' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v' }
             } } }
         """.trimIndent()
 
