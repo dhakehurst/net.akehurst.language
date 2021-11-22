@@ -64,6 +64,7 @@ internal class ClosureItemLC1(
                 other.next == this.next &&
                 other.lookaheadSet == this.lookaheadSet &&
                 other.parentItem?.lookaheadSet == this.parentItem?.lookaheadSet
+                && other.allPrev==this.allPrev
         else -> false
     }
 
@@ -216,7 +217,7 @@ internal class BuildCacheLC1(
             } else {
                 val lhs = this.createLookaheadSet(hg.lhs.content.union(existing.lhs.content))
                 val upLhs = this.createLookaheadSet(hg.upLhs.content.union(existing.upLhs.content))
-                map[hg.parent] = HeightGraftInfo(hg.parent, hg.parentNext, lhs, upLhs)
+                map[hg.parent] = HeightGraftInfo(hg.ancestors, hg.parent, hg.parentNext, lhs, upLhs)
             }
         }
     }
@@ -228,33 +229,35 @@ internal class BuildCacheLC1(
         for (fromRp in from) {
             val upFilt = upCls.filter { fromRp == it.rulePosition.item }
             val res = upFilt.flatMap { clsItem ->
+                val ancestors = clsItem.allPrev.map { it.rulePosition.runtimeRule }
                 val parent = clsItem.rulePosition
                 val upLhs = clsItem.parentItem?.lookaheadSet ?: LookaheadSet.UP
                 val pns = parent.next()
                 pns.map { parentNext ->
                     val lhsc = this.stateSet.buildCache.firstOf(parentNext, upLhs)// this.stateSet.expectedAfter(parentNext)
                     val lhs = this.createLookaheadSet(lhsc)
-                    HeightGraftInfo(listOf(parent), listOf(parentNext), lhs, upLhs)
+                    HeightGraftInfo(ancestors,listOf(parent), listOf(parentNext), lhs, upLhs)
                 }
             }
-            val grpd = res.groupBy { listOf(it.parent, it.parentNext) }//, it.lhs) }
+            val grpd = res.groupBy { it.ancestors}//, it.lhs) }
                 .map {
-                    val parent = it.key[0] as List<RulePosition>
-                    val parentNext = it.key[1] as List<RulePosition>
+                    val ancestors = it.key as List<RuntimeRule>
+                    val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
+                    val parent = it.value.flatMap { it.parent }.toSet().toList()
                     val lhs = createLookaheadSet(it.value.flatMap { it.lhs.content }.toSet())
                     val upLhs = createLookaheadSet(it.value.flatMap { it.upLhs.content }.toSet())
-                    HeightGraftInfo((parent), (parentNext), lhs, upLhs)
+                    HeightGraftInfo(ancestors, (parent), (parentNext), lhs, upLhs)
                 }
             grouped.addAll(grpd)
         }
-        val grouped2 = grouped.groupBy { listOf(it.parent.first().runtimeRule.kind == RuntimeRuleKind.GOAL, it.lhs, it.upLhs) }
-            .map {
-                val parent = it.value.flatMap { it.parent }.toSet().toList()
-                val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
-                val lhs = it.key[1] as LookaheadSet
-                val upLhs = it.key[2] as LookaheadSet
-                HeightGraftInfo(parent, parentNext, lhs, upLhs)
-            }
+       // val grouped2 = grouped.groupBy { listOf(it.parent.first().runtimeRule.kind == RuntimeRuleKind.GOAL, it.lhs, it.upLhs) }
+       //     .map {
+       //         val parent = it.value.flatMap { it.parent }.toSet().toList()
+       //         val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
+       //         val lhs = it.key[1] as LookaheadSet
+       //         val upLhs = it.key[2] as LookaheadSet
+       //         HeightGraftInfo(parent, parentNext, lhs, upLhs)
+       //     }
         //return grouped2.toSet() //TODO: returns wrong because for {A,B}-H->{C,D} maybe only A grows into C & B into D
         return grouped.toSet() //TODO: gives too many heads in some cases where can be grouped2
     }

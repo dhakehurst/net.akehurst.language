@@ -189,6 +189,7 @@ internal class BuildCacheLC0(
         // upCls is the closure down from prev
         val upFilt = upCls.filter { from.contains(it.rulePosition.item) }
         val res = upFilt.flatMap { clsItem ->
+            val ancestors = clsItem.allPrev.map { it.rulePosition.runtimeRule }
             val parent = clsItem.rulePosition
             val upLhs = when (parent.runtimeRule.kind) {
                 RuntimeRuleKind.GOAL -> if (parent.isAtEnd) LookaheadSet.UP else LookaheadSet.ANY
@@ -200,26 +201,28 @@ internal class BuildCacheLC0(
                     RuntimeRuleKind.GOAL -> LookaheadSet.UP
                     else -> LookaheadSet.ANY
                 }
-                HeightGraftInfo(listOf(parent), listOf(parentNext), lhs, upLhs)
+                HeightGraftInfo(ancestors,listOf(parent), listOf(parentNext), lhs, upLhs)
             }
         }
-        val grouped = res.groupBy { listOf(it.parent, it.parentNext) }//, it.lhs) }
+        val grouped = res.groupBy { listOf(it.ancestors, it.parentNext) }//, it.lhs) }
             .map {
-                val parent = it.key[0] as List<RulePosition>
+                val ancestors = it.key[0] as List<RuntimeRule>
                 val parentNext = it.key[1] as List<RulePosition>
+                val parent = it.value[0].parent // should all be the same as ancestors are the same
                 val lhs = if (it.value.map { it.lhs }.contains(LookaheadSet.ANY)) LookaheadSet.ANY else LookaheadSet.UP
                 val upLhs = if (it.value.map { it.upLhs }.contains(LookaheadSet.ANY)) LookaheadSet.ANY else LookaheadSet.UP
-                HeightGraftInfo((parent), (parentNext), lhs, upLhs)
+                HeightGraftInfo(ancestors,(parent), (parentNext), lhs, upLhs)
             }
-        val grouped2 = grouped.groupBy { listOf(it.lhs, it.upLhs, it.parentNext.map { it.position }) }
-            .map {
-                val parent = it.value.flatMap { it.parent }.toSet().toList()
-                val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
-                val lhs = it.key[0] as LookaheadSet
-                val upLhs = it.key[1] as LookaheadSet
-                HeightGraftInfo(parent, parentNext, lhs, upLhs)
-            }
-        return grouped2.toSet()
+        //val grouped2 = grouped.groupBy { listOf(it.lhs, it.upLhs, it.parentNext.map { it.position }) }
+        //    .map {
+        //        val parent = it.value.flatMap { it.parent }.toSet().toList()
+        //        val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
+        //        val lhs = it.key[0] as LookaheadSet
+        //        val upLhs = it.key[1] as LookaheadSet
+        //        HeightGraftInfo(parent, parentNext, lhs, upLhs)
+        //    }
+        //return grouped2.toSet() //TODO: returns wrong because for {A,B}-H->{C,D} maybe only A grows into C & B into D
+        return grouped.toSet() //TODO: gives too many heads in some cases where can be grouped2
     }
 
     // return the terminals at the bottom of each closure

@@ -109,7 +109,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraftInfo(listOf(RP(aOpt, 0, 0)), listOf(RP(aOpt, 0, EOR)), lhs_bcU, lhs_bcU)
+                HeightGraftInfo(emptyList(), listOf(RP(aOpt, 0, 0)), listOf(RP(aOpt, 0, EOR)), lhs_bcU, lhs_bcU)
         )
         assertEquals(expected, actual)
 

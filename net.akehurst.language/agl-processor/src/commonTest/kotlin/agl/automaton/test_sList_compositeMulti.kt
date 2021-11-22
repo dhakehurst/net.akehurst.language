@@ -139,7 +139,7 @@ TODO()
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraftInfo(
+                HeightGraftInfo(emptyList(),
                     listOf(RP(S, 0, 0)),
                     listOf(RP(S, 0, EOR)),
                     lhs_U,

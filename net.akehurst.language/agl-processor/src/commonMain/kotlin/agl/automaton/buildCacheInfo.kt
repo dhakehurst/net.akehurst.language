@@ -36,8 +36,16 @@ internal data class WidthInfo(
 )
 
 internal data class HeightGraftInfo(
+    val ancestors: List<RuntimeRule>,
     val parent: List<RulePosition>,
     val parentNext: List<RulePosition>, // to state
     val lhs: LookaheadSet,
     val upLhs: LookaheadSet
-)
+) {
+    override fun toString(): String {
+        val ancestorsStr = ancestors.joinToString(prefix = "[", postfix = "]", separator = "-") { it.tag }
+        val lhsStr = lhs.content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
+        val upLhsStr = upLhs.content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
+        return "HeightGraftInfo(ancestors=$ancestorsStr, parent=$parent, parentNext=$parentNext, lhs=$lhsStr, upLhs=$upLhsStr)"
+    }
+}

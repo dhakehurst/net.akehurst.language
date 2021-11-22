@@ -171,10 +171,10 @@ internal class GrowingChildNode(
 
     override fun toString(): String = when {
         null == this.state -> children.joinToString(separator = " ") {
-            "${it.startPosition},${it.nextInputPosition},${it.name}"
+            "${it.startPosition},${it.nextInputPosition},${it.name}[${it.option}]"
         }
         else -> children.joinToString(separator = "|") {
-            "${it.startPosition},${it.nextInputPosition},${it.name}"
+            "${it.startPosition},${it.nextInputPosition},${it.name}[${it.option}]"
         }
     }
 

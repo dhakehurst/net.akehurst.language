@@ -219,7 +219,7 @@ internal class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|4 {
                 add {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
                   '+' WS { "\s+" : ' ' }
@@ -238,7 +238,7 @@ internal class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|5 {
                 sub {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
                   '-' WS { "\s+" : ' ' }

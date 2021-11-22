@@ -24,7 +24,6 @@ import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
@@ -32,7 +31,6 @@ import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.math.max
 
@@ -64,12 +62,14 @@ internal class ScanOnDemandParser(
         var totalWork = maxNumHeads
 
         do {
-            rp.grow(false)
-            seasons++
+            //rp.grow(false)
+            val stats = rp.grow2(false)
+            seasons += stats
             maxNumHeads = max(maxNumHeads, rp.graph.growingHead.size)
             totalWork += rp.graph.growingHead.size
             // } while (rp.graph.canGrow)
         } while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not()))
+
         //TODO: when parsing an ambiguous grammar,
         // how to know we have found all goals? - keep going until cangrow is false
         // but - how to stop .. some grammars don't stop if we don't do test for a goal!
@@ -139,10 +139,10 @@ internal class ScanOnDemandParser(
                     val exp = trs.flatMap { tr ->
                         when (tr.action) {
                             Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                            Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.lookahead)
+                            Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.runtimeLookahead)
                             Transition.ParseAction.EMBED -> TODO()
-                            Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.lookahead).content
-                            Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.lookahead }.flatMap { rp.stateSet.createWithParent(tr.lookaheadGuard, it).content }
+                            Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.runtimeLookahead).content
+                            Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.runtimeLookahead }.flatMap { rp.stateSet.createWithParent(tr.lookaheadGuard, it).content }
     //                        Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                         }
                     }
@@ -156,10 +156,10 @@ internal class ScanOnDemandParser(
                         val exp = trs.flatMap { tr ->
                             when (tr.action) {
                                 Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                                Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.lookahead)
-                                Transition.ParseAction.EMBED -> lg.currentState.firstOf(lg.lookahead)
-                                Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.lookahead).content
-                                Transition.ParseAction.GRAFT -> rp.stateSet.createWithParent(tr.lookaheadGuard, prev.lookahead).content
+                                Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.runtimeLookahead)
+                                Transition.ParseAction.EMBED -> lg.currentState.firstOf(lg.runtimeLookahead)
+                                Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.runtimeLookahead).content
+                                Transition.ParseAction.GRAFT -> rp.stateSet.createWithParent(tr.lookaheadGuard, prev.runtimeLookahead).content
        //                         Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                             }
                         }
@@ -184,11 +184,11 @@ internal class ScanOnDemandParser(
         val matches = gns.toMutableList()
         // try grow last leaf with no lookahead
         for (gn in rp.lastGrownLinked) {
-            val gnindex = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.lookahead, gn.children)
+            val gnindex = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.children)
             graph.growingHead[gnindex] = gn
         }
         do {
-            rp.grow(true)
+            rp.grow2(true)
             for (gn in rp.lastGrown) {
                 // may need to change this to finalInputPos!
                 if (input.isEnd(gn.nextInputPosition)) {
@@ -211,7 +211,7 @@ internal class ScanOnDemandParser(
             val prev = gn_prev.second?.map { it.node.currentState }
             val trans = rp.transitionsEndingInNonEmptyFrom(gn.currentState, prev?.toSet())
             trans.map { tr ->
-                val lh = tr.lookaheadGuard.resolve(gn.lookahead)
+                val lh = tr.lookaheadGuard.resolve(gn.runtimeLookahead)
                 Pair(tr, lh)
             }
         }.toSet()
@@ -221,7 +221,7 @@ internal class ScanOnDemandParser(
             val lh = tr_lh.second
             when(tr.action) {
                 Transition.ParseAction.GOAL -> lh
-                Transition.ParseAction.WIDTH -> tr.to.runtimeRules
+                Transition.ParseAction.WIDTH -> tr.to.runtimeRulesSet
                 Transition.ParseAction.GRAFT -> lh
        //         Transition.ParseAction.GRAFT_OR_HEIGHT -> lh
                 Transition.ParseAction.HEIGHT -> lh
@@ -245,7 +245,7 @@ internal class ScanOnDemandParser(
 
         val matches = mutableListOf<Pair<GrowingNode, Collection<PreviousInfo>?>>()
         do {
-            rp.grow(false)
+            rp.grow2(false)
             for (gn in rp.lastGrown) {
                 if (input.isEnd(gn.nextInputPosition)) {
                     val prev = rp.toGrowPrevious[gn]

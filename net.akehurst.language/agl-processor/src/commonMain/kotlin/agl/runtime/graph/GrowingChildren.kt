@@ -115,6 +115,8 @@ internal class GrowingChildren {
 
     val lastChild: GrowingChildNode? get() = this._lastChild
 
+    val matchedTextLength get() = this.nextInputPosition - this.startPosition
+
     fun firstChild(ruleOption: RuleOptionId?): GrowingChildNode? = when {
         null == this._firstChildAlternatives -> this._firstChild
         null == ruleOption -> null //skip will not have alternatives
@@ -296,6 +298,10 @@ internal class GrowingChildren {
         this.nextInputPosition = other.nextInputPosition
     }
 
+    fun mergeOrDropWithPriority(growingChildren: GrowingChildren) {
+        //TODO(  )
+    }
+
     override fun toString(): String = when {
         isEmpty -> "{}"
         else -> {
@@ -338,7 +344,7 @@ internal class GrowingChildren {
                                         res[rpId] = res[rpId]!! + skip
                                         skip = ""
                                     }
-                                    res[rpId] = res[rpId]!! + n[rpId].joinToString() { it.name }
+                                    res[rpId] = res[rpId]!! + n[rpId].joinToString() { "${it.name}|${it.option}" }
                                 }
                             }
                             n = n.next(this.nextChildAlt(index, rpId), rpId)
@@ -362,7 +368,7 @@ internal class GrowingChildren {
                                         res[rpId] = res[rpId]!! + skip
                                         skip = ""
                                     }
-                                    res[rpId] = res[rpId]!! + n[rpId].joinToString() { it.name }
+                                    res[rpId] = res[rpId]!! + n[rpId].joinToString() { "${it.name}|${it.option}" }
                                 }
                             }
                         }
@@ -370,9 +376,8 @@ internal class GrowingChildren {
                 }
             }
 
-            res.entries.map { "(${this.startPosition},${this.nextInputPosition},${it.key?.runtimeRule?.tag}[${it.key?.option}]) -> ${it.value.joinToString()}" }.joinToString(separator = "\n")
+            res.entries.map { "(${this.startPosition},${this.nextInputPosition},${it.key?.runtimeRule?.tag}|${it.key?.option}) -> ${it.value.joinToString()}" }.joinToString(separator = "\n")
         }
     }
-
 
 }

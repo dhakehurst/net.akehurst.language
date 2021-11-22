@@ -99,6 +99,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
 
         val expected = listOf(
                 HeightGraftInfo(
+                    listOf(G),
                     listOf(RulePosition(S, 0, 0)),
                     listOf(RulePosition(S, 0, 1)),
                     lhs_b,

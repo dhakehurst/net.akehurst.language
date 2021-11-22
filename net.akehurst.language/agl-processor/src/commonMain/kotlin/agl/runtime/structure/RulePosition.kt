@@ -63,7 +63,7 @@ internal class RulePosition(
             else -> runtimeRule.item(option, position)
         }
 
-    val priority
+    val priority //TODO: I think that priority is always == option !
         get() = when (this.runtimeRule.kind) {
             RuntimeRuleKind.EMBEDDED,
             RuntimeRuleKind.TERMINAL -> 0

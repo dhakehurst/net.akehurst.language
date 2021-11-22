@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
 
 /*
@@ -28,16 +29,19 @@ import net.akehurst.language.agl.automaton.ParserState
   - size of a list ( only relevant for MULTI and SEPARATED_LIST)
  */
 internal data class GrowingNodeIndex(
-        val state: ParserState,
-        val lhsNumber:Int,
-        val startPosition: Int,
-        val nextInputPosition: Int,
-        val listSize:Int //for use with MULTI and SEPARATED_LIST
+    //val state: ParserState,
+    val runtimeRules: List<RuntimeRule>,
+    val positions:List<Int>,
+    val lhsNumber:Int,
+    val startPosition: Int,
+    val nextInputPosition: Int,
+    val listSize:Int //for use with MULTI and SEPARATED_LIST
 //        val priority: Int
 ) {
 
 
     override fun toString(): String {
-        return "{state=${state},lhs=$lhsNumber,startPos=${startPosition}, nextPos=$nextInputPosition, listSize=$listSize}"
+        val x = runtimeRules.mapIndexed { index, runtimeRule -> "${runtimeRule.tag}[${positions[index]}]" }
+        return "{rp=$x,lhs=$lhsNumber,startPos=${startPosition}, nextPos=$nextInputPosition, listSize=$listSize}"
     }
 }

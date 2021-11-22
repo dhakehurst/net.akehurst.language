@@ -24,14 +24,13 @@ import kotlin.test.Test
 internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract() {
 
     // S = E
-    // E = var | I | '(' E ')'
+    // E = 'v' | I | '(' E ')'
     // I = [E / '+']2+ ;
-    // var = "[a-z]+"
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("E") }
             choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                ref("var")
+                literal("v")
                 ref("I")
                 ref("par")
             }
@@ -43,17 +42,17 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
                 literal("-")
             }
             concatenation("par") { literal("("); ref("E"); literal(")") }
-            concatenation("var") { pattern("[a-z]+") }
+
         }
         val goal = "S"
     }
 
     @Test
-    fun a() {
-        val sentence = "a"
+    fun v() {
+        val sentence = "v"
 
         val expected = """
-            S { E { var { "[a-z]+":'a' } } }
+            S { E { 'v' } }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1,expected)
@@ -65,9 +64,9 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
 
         val expected = """
          S { E|1 { I {
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v'  }
               op|2 { '+' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v'  }
             } } }
         """.trimIndent()
 
@@ -81,11 +80,11 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
         //think this should be excluded because of priority I < 'a'
         val expected1 = """
          S { E|1 { I {
-              E { var { "[a-z]+" : 'v' } }
+              E {  'v'  }
               op|2 { '+' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v'  }
               op|2 { '+' }
-              E { var { "[a-z]+" : 'v' } }
+              E { 'v'  }
             } } }
         """.trimIndent()
 

@@ -106,13 +106,13 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-            HeightGraftInfo(
+            HeightGraftInfo(emptyList(),
                 listOf(RulePosition(S, 0, 0)),
                 listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
                 lhs_U,
                 lhs_U
             ),
-            HeightGraftInfo(
+            HeightGraftInfo(emptyList(),
                 listOf(RulePosition(S1, 0, 0)),
                 listOf(RulePosition(S1, 0, 1)),
                 lhs_a,
@@ -144,7 +144,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         val actual = s2.heightOrGraftInto(s0)
 
         val expected = setOf(
-            HeightGraftInfo(
+            HeightGraftInfo(emptyList(),
                 listOf(RulePosition(G, 0, 0)),
                 listOf(RulePosition(G, 0, RulePosition.END_OF_RULE)),
                 lhs_U,
@@ -160,7 +160,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         val actual = s2.heightOrGraftInto(s3)
 
         val expected = setOf(
-            HeightGraftInfo(
+            HeightGraftInfo(emptyList(),
                 listOf(RulePosition(S1, 0, 1)),
                 listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE)),
                 lhs_U,
@@ -195,7 +195,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
 
 
         val expected = setOf(
-            HeightGraftInfo(
+            HeightGraftInfo(emptyList(),
                 listOf(RulePosition(S, 1, 0)),
                 listOf(RulePosition(S, 1, RulePosition.END_OF_RULE)),
                 lhs_U,

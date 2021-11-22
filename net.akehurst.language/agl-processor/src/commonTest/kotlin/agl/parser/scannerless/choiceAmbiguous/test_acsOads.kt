@@ -29,14 +29,16 @@ import kotlin.test.assertNull
 
 internal class test_acsOads : test_ScanOnDemandParserAbstract() {
 
-    // S = acs || ads
+    // S = ambig
+    // ambig = acs || ads
     // acs = 'a' | acs1
     // acs1 = acs 'c' 'a'
     // ads = 'a' | ads1
     // ads1 = acs 'd' 'a'
     private companion object {
         val rrs = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.AMBIGUOUS) {
+            concatenation("S") { ref("ambig") }
+            choice("ambig", RuntimeRuleChoiceKind.AMBIGUOUS) {
                 ref("acs")
                 ref("ads")
             }
@@ -64,7 +66,7 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
         val sentence = "aca"
 
         val expected = """
-            S {
+            S { ambig {
                 acs|1 {
                     acs1 {
                         acs { 'a' }
@@ -72,7 +74,7 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
                         'a'
                     }
                 }
-            }
+            } }
         """.trimIndent()
 
         val actual = super.test(
@@ -89,7 +91,7 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
         val sentence = "ada"
 
         val expected = """
-            S|1 {
+            S { ambig|1 {
                 ads|1 {
                     ads1 {
                         ads { 'a' }
@@ -97,7 +99,7 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
                         'a'
                     }
                 }
-            }
+            }}
         """.trimIndent()
 
         val actual = super.test(
@@ -114,11 +116,11 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val expected1 = """
-            S { acs { 'a' } }
+            S { ambig { acs { 'a' } } }
         """.trimIndent()
 
         val expected2 = """
-            S|1 { ads { 'a' } }
+            S { ambig|1 { ads { 'a' } } }
         """.trimIndent()
 
         val actual = super.test(

@@ -37,7 +37,7 @@ internal class ToStringVisitor(val lineSeparator: String, val indentIncrement: S
 
     override fun visitLeaf(target: SPPTLeaf, arg: Indent): Set<String> {
         val t = when {
-            target.isEmptyLeaf -> "${target.name}"
+            target.isEmptyLeaf -> target.name
             (target.isLiteral) -> {
                 "'${target.matchedText.replace("\n", "\u23CE").replace("\t","\u2B72")}'"
             }

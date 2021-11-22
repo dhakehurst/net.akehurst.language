@@ -45,11 +45,12 @@ import net.akehurst.language.api.sppt.*
         )
     }
 
-    override val name: String get() = this.runtimeRule.tag
-
     override val runtimeRuleSetNumber: Int get() = this.identity.runtimeRuleSetNumber
 
     override val runtimeRuleNumber: Int get() = this.identity.runtimeRuleNumber
+
+
+    override val name: String get() = this.runtimeRule.tag
 
     override val matchedTextLength: Int get() = this.nextInputPosition - this.startPosition
 

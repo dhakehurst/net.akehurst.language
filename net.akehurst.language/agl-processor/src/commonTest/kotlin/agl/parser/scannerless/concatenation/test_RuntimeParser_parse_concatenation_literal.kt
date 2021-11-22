@@ -48,9 +48,9 @@ internal class test_RuntimeParser_parse_concatenation_literal : test_ScanOnDeman
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
-        assertEquals(9,actual?.seasons)
+        assertEquals(11,actual?.seasons)
     }
 
     @Test

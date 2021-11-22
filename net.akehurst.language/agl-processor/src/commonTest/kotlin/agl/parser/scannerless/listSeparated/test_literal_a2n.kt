@@ -28,12 +28,11 @@ import kotlin.test.assertNull
 
 internal class test_literal_a2n : test_ScanOnDemandParserAbstract() {
 
-    // S = [a / ',']2+
-    // a = 'a'
+    // S = ['a' / ',']2+
     private companion object {
         val rrs = runtimeRuleSet {
-            sList("S", 2, -1, "a", "','")
-            concatenation("a") { literal("a") }
+            sList("S", 2, -1, "'a'", "','")
+            literal("'a'","a")
             literal("','",",")
         }
         val goal = "S"
@@ -95,7 +94,7 @@ internal class test_literal_a2n : test_ScanOnDemandParserAbstract() {
     fun aca() {
         val sentence = "a,a"
 
-        val expected = "S { a{'a'} ',' a{'a'}}"
+        val expected = "S { 'a' ',' 'a'}"
 
         super.test(rrs, Companion.goal, sentence, 1, expected)
     }
@@ -117,7 +116,7 @@ internal class test_literal_a2n : test_ScanOnDemandParserAbstract() {
     fun acaca() {
         val sentence = "a,a,a"
 
-        val expected = "S {a{'a'} ',' a{'a'} ',' a{'a'}}"
+        val expected = "S {'a' ',' 'a' ',' 'a'}"
 
         super.test(rrs, Companion.goal, sentence, 1, expected)
     }
