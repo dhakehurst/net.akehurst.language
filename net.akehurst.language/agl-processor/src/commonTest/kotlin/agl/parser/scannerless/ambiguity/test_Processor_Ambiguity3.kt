@@ -156,6 +156,55 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
+    fun aab() {
+        val sentence = "aab"
+
+        val expected = """
+             S { S1 {
+                P|1 { P2 {
+                    P|2 { 'a' }
+                    'a'
+                  } }
+                'b'
+              } }
+        """.trimIndent()
+
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun aaab() {
+        val sentence = "aaab"
+
+        val expected = """
+             S { S1 {
+                P|1 { P2 {
+                    P|1 { P2 {
+                        P|2 { 'a' }
+                        'a'
+                      } }
+                    'a'
+                  } }
+                'b'
+              } }
+        """.trimIndent()
+
+        val actual = super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
+        )
+    }
+
+    @Test
     fun a10b() {
         val sentence = "a".repeat(10) + "b"
 

@@ -268,7 +268,8 @@ internal class RuntimeParser(
             checkInterrupt()
             val previous = this.graph.pop(gn)
             this.toGrowPrevious[gn] = previous
-            this.growNodeShift(gn, previous, noLookahead)
+            val merged = this.graph.tryMergeWithExistingHead(gn,previous)
+            if(null==merged) this.growNodeShift(gn, previous, noLookahead)
         }
         growStep++
 
@@ -286,7 +287,8 @@ internal class RuntimeParser(
                 checkInterrupt()
                 val previous = this.graph.pop(gn)
                 this.toGrowPrevious[gn] = previous
-                this.growNodeReduce(gn, previous, noLookahead)
+                val merged = this.graph.tryMergeWithExistingHead(gn,previous)
+                if(null==merged) this.growNodeReduce(gn, previous, noLookahead)
             }
             growStep++
         }

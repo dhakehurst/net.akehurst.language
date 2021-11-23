@@ -195,7 +195,7 @@ class test_GrowingChildren {
         val actual = sut?.firstNonSkipChild(RuleOptionId(S, 0))
         val expected = sut?.firstChild(null)?.nextChild!!.nextChild
         assertEquals(expected, actual)
-        assertEquals("(0,6,'a'[0]) -> WS, CM, 'a'", sut.toString())
+        assertEquals("(0,6,'a'|0) -> WS, CM, 'a'|0", sut.toString())
     }
 
     @Test

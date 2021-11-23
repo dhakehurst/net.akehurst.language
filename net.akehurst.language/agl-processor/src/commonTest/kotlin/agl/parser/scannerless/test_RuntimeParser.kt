@@ -55,7 +55,7 @@ internal class test_RuntimeParser {
 
         val actual = sp.expectedAt("S", "", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
 
-        val expected = listOf(r_S)
+        val expected = listOf(r_a)
 
         assertEquals(expected, actual)
     }

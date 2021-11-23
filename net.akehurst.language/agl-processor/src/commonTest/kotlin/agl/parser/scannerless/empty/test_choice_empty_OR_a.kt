@@ -46,7 +46,7 @@ internal class test_choice_empty_OR_a : test_ScanOnDemandParserAbstract() {
         val sentence = ""
 
         val expected = """
-         S { §empty }
+         S|1 { e { §empty } }
         """.trimIndent()
 
         val actual = super.test(

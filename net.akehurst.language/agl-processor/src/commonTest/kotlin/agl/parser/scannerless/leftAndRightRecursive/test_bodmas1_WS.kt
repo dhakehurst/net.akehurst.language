@@ -114,7 +114,7 @@ internal class test_bodmas1_WS : test_ScanOnDemandParserAbstract() {
 
         val actual = super.test(
             rrs = rrs,
-            goal = Companion.goal,
+            goal = "expr",
             sentence = sentence,
             expectedNumGSSHeads = 1,
             expectedTrees = *arrayOf(expected)

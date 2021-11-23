@@ -112,7 +112,7 @@ internal class test_bodmas3_WS : test_ScanOnDemandParserAbstract() {
               } }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(rrs,"expr", sentence, 1, expected)
     }
 
     @Test
@@ -211,10 +211,10 @@ internal class test_bodmas3_WS : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|2 {
                 infix {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
-                  op { '+' WS { "\s+" : ' ' } }
+                  op|2 { '+' WS { "\s+" : ' ' } }
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }
@@ -231,10 +231,10 @@ internal class test_bodmas3_WS : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr {
+              expr|2 {
                 infix {
                   expr { root { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } } }
-                  op { '-' WS { "\s+" : ' ' } }
+                  op|3 { '-' WS { "\s+" : ' ' } }
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }
                 }
               }

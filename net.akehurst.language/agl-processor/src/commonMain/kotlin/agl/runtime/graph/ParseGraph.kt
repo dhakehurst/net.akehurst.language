@@ -224,7 +224,7 @@ internal class ParseGraph(
         }
     }
 
-    private fun addAndRegisterGrowingPrevious(gn: GrowingNode, previous: Set<PreviousInfo>) {
+    private fun addAndRegisterGrowingPrevious(gn: GrowingNode, previous: Iterable<PreviousInfo>) {
         for (info in previous) {
             gn.addPrevious(info)
             this.addGrowing(info.node)
@@ -322,32 +322,7 @@ internal class ParseGraph(
         val existingChoiceKindList = existingNode.currentState.choiceKind
         check(newChoiceKindList == existingChoiceKindList) //TODO: could remove for performance
         return when (existingChoiceKindList.size) {
-            0 -> { // could be a LIST which encodes choice between middle and end of the list
-                val newRR = newState.runtimeRulesSet
-                val existingRR = existingNode.currentState.runtimeRulesSet
-                check(newRR == existingRR) //TODO: could remove for performance
-                when (newRR.size) {
-                    1 -> {
-                        val rr = newRR.first()
-                        when(rr.kind) {
-                            RuntimeRuleKind.NON_TERMINAL -> when (rr.rhs.itemsKind){
-                                RuntimeRuleRhsItemsKind.LIST ->{
-                                    existingNode // TODO ??
-                                }
-                                RuntimeRuleRhsItemsKind.EMPTY -> error("Should never happen")
-                                RuntimeRuleRhsItemsKind.CHOICE -> error("Should never happen")
-                                RuntimeRuleRhsItemsKind.CONCATENATION -> existingNode // TODO ??error("Should never happen")
-                            }
-                            RuntimeRuleKind.GOAL -> error("Should never happen")
-                            RuntimeRuleKind.TERMINAL -> error("Should never happen")
-                            RuntimeRuleKind.EMBEDDED -> error("Should never happen")
-                        }
-                    }
-                    else -> {
-                        existingNode // TODO ??
-                    }
-                }
-            }
+            0 -> existingNode // TODO: could be a LIST which encodes choice between middle and end of the list?
             1 -> {
                 val choiceKind = existingChoiceKindList[0]
                 val existingNodePriority = existingNode.currentState.priority[0]
@@ -374,6 +349,55 @@ internal class ParseGraph(
                                 existingChildrenLength > newChildrenLength -> existingNode
                                 newChildrenLength > existingChildrenLength -> createGrowingNode(newState, newLookahead, newChildren)
                                 else -> existingNode// both the same so cannot choose, use existing - TODO don't really want this to happen!! - see "vav"
+                            }
+                        }
+                    }
+                    RuntimeRuleChoiceKind.AMBIGUOUS -> {
+                        TODO()
+                    }//existingNode.children.join(newChildren); existingNode }
+                    RuntimeRuleChoiceKind.NONE -> error("Should never happen")
+                }
+            }
+            else -> {
+                TODO()
+            }
+        }
+    }
+
+    private fun mergeOrDropWithPriority(existingNode: GrowingNode, newNode: GrowingNode): GrowingNode {
+        // the Rule for the existingNode will be same as Rule for newState,
+        // but the position & priority of newState will/could be different
+        val newChoiceKindList = newNode.currentState.choiceKind
+        val existingChoiceKindList = existingNode.currentState.choiceKind
+        check(newChoiceKindList == existingChoiceKindList) //TODO: could remove for performance
+        return when (existingChoiceKindList.size) {
+            0 -> existingNode // TODO: could be a LIST which encodes choice between middle and end of the list?
+            1 -> {
+                val choiceKind = existingChoiceKindList[0]
+                val existingNodePriority = existingNode.currentState.priority[0]
+                val newChildrenPriority = newNode.currentState.priority[0]
+                val existingChildrenLength = existingNode.matchedTextLength
+                val newChildrenLength = newNode.matchedTextLength
+                when (choiceKind) {
+                    RuntimeRuleChoiceKind.LONGEST_PRIORITY -> {
+                        when {
+                            existingChildrenLength > newChildrenLength -> existingNode
+                            newChildrenLength > existingChildrenLength -> newNode
+                            else -> when {
+                                existingNodePriority > newChildrenPriority -> existingNode
+                                newChildrenPriority > existingNodePriority -> newNode
+                                else -> TODO() //existingNode// both the same so cannot choose, use existing - TODO don't really want this to happen!! - see "vav"
+                            }
+                        }
+                    }
+                    RuntimeRuleChoiceKind.PRIORITY_LONGEST -> {
+                        when {
+                            existingNodePriority > newChildrenPriority -> existingNode
+                            newChildrenPriority > existingNodePriority -> newNode
+                            else -> when {
+                                existingChildrenLength > newChildrenLength -> existingNode
+                                newChildrenLength > existingChildrenLength -> newNode
+                                else -> TODO() //existingNode// both the same so cannot choose, use existing - TODO don't really want this to happen!! - see "vav"
                             }
                         }
                     }
@@ -704,6 +728,20 @@ internal class ParseGraph(
         val previous = gn.previous
         gn.newPrevious()
         return previous.values
+    }
+
+    // return if not merged null else node merged with
+    fun tryMergeWithExistingHead(gn:GrowingNode,previous: Collection<PreviousInfo>) :GrowingNode? {
+        val gnindex = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.children)
+        val existingHead = this.growingHead[gnindex]
+        return if (null==existingHead) {
+           null
+        } else {
+            val nn = mergeOrDropWithPriority(existingHead, gn)
+            this.addAndRegisterGrowingPrevious(nn, previous)
+            this.growingHead[gnindex] = nn
+            nn
+        }
     }
 
     fun pushToStackOf(
