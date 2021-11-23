@@ -18,7 +18,6 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.collections.BinaryHeap
-import net.akehurst.language.agl.collections.binaryHeap
 import net.akehurst.language.agl.collections.binaryHeapMin
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.*
@@ -47,8 +46,9 @@ internal class ParseGraph(
     //internal val completeNodes = CompletedNodesStore<SPPTBranch>(numNonTerminalRules, input.text.length + 1)
     internal val growing: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
     internal val _goals: MutableSet<SPPTNode> = mutableSetOf()
+
     //val growingHead: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
-    val growingHead: BinaryHeap<Int,GrowingNode> = binaryHeapMin()
+    val growingHead: BinaryHeap<Int, GrowingNode> = binaryHeapMin()
 
     val canGrow: Boolean get() = !this.growingHead.isEmpty()
 
@@ -165,7 +165,7 @@ internal class ParseGraph(
         this.completeNodes[runtimeRule, cn.startPosition] = cn
     }*/
 
-    private fun addGrowing(gn: GrowingNode) {
+    private fun addGrowing( gn: GrowingNode) {
         val gnindex = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.children)//, nextInputPosition, gn.priority)
         val existing = this.growing[gnindex]
         if (null == existing) {
@@ -177,7 +177,19 @@ internal class ParseGraph(
             }
         }
     }
-
+    private fun addGrowing(gnindex:GrowingNodeIndex, gn: GrowingNode): GrowingNode {
+        val existing = this.growing[gnindex]
+        return if (null == existing) {
+            this.growing[gnindex] = gn
+            gn
+        } else {
+            // merge
+            for (info in gn.previous.values) {
+                existing.addPrevious(info)
+            }
+            existing
+        }
+    }
     private fun addGrowing(gn: GrowingNode, previous: Set<PreviousInfo>): GrowingNode {
         //val startPosition = gn.startPosition
         //val nextInputPosition = gn.nextInputPosition
@@ -205,27 +217,8 @@ internal class ParseGraph(
         this.growing.remove(gnindex)
     }
 
-    fun addGrowingHead(gnindex: GrowingNodeIndex, gn: GrowingNode): GrowingNode {
-        val existingGrowing = this.growing[gnindex]
-        return if (null == existingGrowing) {
-            val existing = this.growingHead[gnindex]
-            if (null == existing) {
-                this.growingHead[gnindex] = gn
-                gn
-            } else {
-                // merge, GrowingNodeIndex includes startPosition and nextInputPosition
-                // so comparing nextInputPosition will compare length..but its not useful!
-
-
-                for (info in gn.previous.values) {
-                    existing.addPrevious(info)
-                }
-                existing
-            }
-        } else {
-            // don't add the head, previous should already have been merged
-            existingGrowing
-        }
+    fun addGrowingHead(gn: GrowingNode) {
+        this.growingHead[gn.nextInputPosition] = gn
     }
 
     private fun addAndRegisterGrowingPrevious(gn: GrowingNode, previous: Iterable<PreviousInfo>) {
@@ -261,52 +254,27 @@ internal class ParseGraph(
         if (skipNodes.isNotEmpty()) {
             gn.skipNodes = skipNodes
         }
-        return this.addGrowingHead(gnindex, gn)
+        this.addGrowing(gnindex, gn)
+        return gn
     }
 
-    private fun findOrCreateGrowingNode(newState: ParserState, newRuntimeLookahead: LookaheadSet, newChildren: GrowingChildren, previous: Set<PreviousInfo>) {
+    private fun findOrCreateGrowingNode(newState: ParserState, newRuntimeLookahead: LookaheadSet, newChildren: GrowingChildren, previous: Set<PreviousInfo>): GrowingNode {
         val gnindex = GrowingNode.indexFromGrowingChildren(newState, newRuntimeLookahead, newChildren)//, nextInputPosition, priority)
         val existingGrowing = this.growing[gnindex] //?: findSimilarGrowing(newState)
 
-        if (null == existingGrowing) {
-            val existingHead = this.growingHead[gnindex]
-            if (null == existingHead) {
-                val nn = this.createGrowingNode(newState, newRuntimeLookahead, newChildren)
-                when {
-                    newState.isAtEnd -> {
-                        this.addAndRegisterGrowingPrevious(nn, previous)
-                        this.addGrowingHead(gnindex, nn) // replaces with existing growing head if there is one that matches the index already
-                    }
-                    else -> {
-                        this.addAndRegisterGrowingPrevious(nn, previous)
-                        this.addGrowingHead(gnindex, nn) // replaces with existing growing head if there is one that matches the index already
-                    }
-                }
-            } else {
-                //merge
-                val nn = mergeOrDropWithPriority(existingHead, newState, newRuntimeLookahead, newChildren)
-                this.addAndRegisterGrowingPrevious(nn, previous)
-                this.growingHead[gnindex] = nn
-            }
+        return if (null == existingGrowing) {
+            val nn = this.createGrowingNode(newState, newRuntimeLookahead, newChildren)
+            this.addAndRegisterGrowingPrevious(nn, previous)
+            this.addGrowing(gnindex, nn)
+            this.addGrowingHead(nn)
+            nn
         } else {
-            // TODO("handle use of lookahead here! passed in lhs is not same as existing node lhs")
-            if (newRuntimeLookahead == existingGrowing.runtimeLookahead) {
-                this.addAndRegisterGrowingPrevious(existingGrowing, previous)
-                this.addGrowingHead(gnindex, existingGrowing)
-            } else {
-                val mergedLhs = newRuntimeLookahead.union(newState.stateSet, existingGrowing.runtimeLookahead)
-                val nn = this.createGrowingNode(newState, mergedLhs, newChildren)
-                when {
-                    newState.isAtEnd -> {
-                        this.addAndRegisterGrowingPrevious(nn, previous)
-                        this.addGrowingHead(gnindex, nn) // replaces with existing growing head if there is one that matches the index already
-                    }
-                    else -> {
-                        this.addAndRegisterGrowingPrevious(nn, previous)
-                        this.addGrowingHead(gnindex, nn) // replaces with existing growing head if there is one that matches the index already
-                    }
-                }
-            }
+            //merge
+            val nn = mergeOrDropWithPriority(existingGrowing, newState, newRuntimeLookahead, newChildren)
+            this.addAndRegisterGrowingPrevious(nn, previous)
+            this.addGrowing(gnindex, nn)
+            this.addGrowingHead(nn)
+            nn
         }
     }
 
@@ -726,15 +694,16 @@ internal class ParseGraph(
     }
 
     // return if not merged null else node merged with
-    fun tryMergeWithExistingHead(gn:GrowingNode,previous: Collection<PreviousInfo>) :GrowingNode? {
+    fun tryMergeWithExistingHead(gn: GrowingNode, previous: Collection<PreviousInfo>): GrowingNode? {
         val gnindex = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.children)
-        val existingHead = this.growingHead[gnindex]
-        return if (null==existingHead) {
-           null
+        val existing = this.growing[gnindex]
+        return if (null == existing) {
+            null
         } else {
-            val nn = mergeOrDropWithPriority(existingHead, gn)
+            val nn = mergeOrDropWithPriority(existing, gn)
             this.addAndRegisterGrowingPrevious(nn, previous)
-            this.growingHead[gnindex] = nn
+            this.addGrowing(gnindex, gn)
+            this.addGrowingHead(nn)
             nn
         }
     }

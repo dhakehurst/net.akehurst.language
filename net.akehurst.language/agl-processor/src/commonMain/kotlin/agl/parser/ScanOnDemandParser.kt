@@ -61,14 +61,13 @@ internal class ScanOnDemandParser(
         var maxNumHeads = rp.graph.growingHead.size
         var totalWork = maxNumHeads
 
-        do {
-            //rp.grow(false)
-            val stats = rp.grow2(false)
-            seasons += stats
+        while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
+            val gn = rp.graph.growingHead.extractRoot() ?: error("Should never be null")
+            rp.grow3(gn, false)
+            seasons += 1
             maxNumHeads = max(maxNumHeads, rp.graph.growingHead.size)
             totalWork += rp.graph.growingHead.size
-            // } while (rp.graph.canGrow)
-        } while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not()))
+        }
 
         //TODO: when parsing an ambiguous grammar,
         // how to know we have found all goals? - keep going until cangrow is false
