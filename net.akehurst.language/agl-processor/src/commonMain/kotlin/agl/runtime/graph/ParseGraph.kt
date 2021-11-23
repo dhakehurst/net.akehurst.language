@@ -17,6 +17,9 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
+import net.akehurst.language.agl.collections.BinaryHeap
+import net.akehurst.language.agl.collections.binaryHeap
+import net.akehurst.language.agl.collections.binaryHeapMin
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
@@ -44,7 +47,8 @@ internal class ParseGraph(
     //internal val completeNodes = CompletedNodesStore<SPPTBranch>(numNonTerminalRules, input.text.length + 1)
     internal val growing: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
     internal val _goals: MutableSet<SPPTNode> = mutableSetOf()
-    val growingHead: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
+    //val growingHead: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
+    val growingHead: BinaryHeap<Int,GrowingNode> = binaryHeapMin()
 
     val canGrow: Boolean get() = !this.growingHead.isEmpty()
 
@@ -229,15 +233,6 @@ internal class ParseGraph(
             gn.addPrevious(info)
             this.addGrowing(info.node)
         }
-    }
-
-    private fun findSimilarGrowing(newState: ParserState): GrowingNode? {
-        val opts = this.growing.values.filter { gn ->
-            gn.currentState.rulePositions.any { rp ->
-                newState.rulePositions.any { it.runtimeRule == rp.runtimeRule }
-            }
-        }
-        return opts.firstOrNull()
     }
 
     //TODO: combine next 3 methods!

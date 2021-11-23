@@ -22,6 +22,8 @@ fun <K : Comparable<K>, V> binaryHeapMax(): BinaryHeap<K, V> = binaryHeap { pare
 
 fun <K : Comparable<K>, V> binaryHeap(comparator: (parent: K, child: K) -> Boolean): BinaryHeap<K, V> = BinaryHeapComparable(comparator)
 
+infix fun <K, V> K.to(that: V): BinaryHeap.Entry<K, V> = BinaryHeapComparable.Entry(this, that)
+
 interface BinaryHeap<K : Comparable<K>, V> : Iterable<V> {
 
     interface Entry<K, V> {
@@ -48,12 +50,17 @@ interface BinaryHeap<K : Comparable<K>, V> : Iterable<V> {
      * peek(key)
      */
     operator fun get(key: K): List<V>
+
+    fun isEmpty(): Boolean
+    fun isNotEmpty(): Boolean
     fun insert(key: K, value: V)
     fun peekOneOf(key: K): V?
     fun peekAll(key: K): List<V>
     fun extractRoot(): V?
     fun extractRootAndThenInsert(key: K, value: V): V?
     fun insertAndThenExtractRoot(key: K, value: V): V
+
+    fun clear()
 }
 
 class BinaryHeapComparable<K : Comparable<K>, V>(
@@ -61,6 +68,12 @@ class BinaryHeapComparable<K : Comparable<K>, V>(
 ) : BinaryHeap<K, V> {
 
     class Entry<K, V>(override val key: K, override val value: V) : BinaryHeap.Entry<K, V> {
+        override fun hashCode(): Int = (key.hashCode() * 31) + value.hashCode()
+        override fun equals(other: Any?): Boolean = when {
+            other !is BinaryHeap.Entry<*, *> -> false
+            else -> this.key == other.key && this.value == other.value
+        }
+
         override fun toString(): String = "$key -> $value"
     }
 
@@ -77,6 +90,9 @@ class BinaryHeapComparable<K : Comparable<K>, V>(
 
     override operator fun set(key: K, value: V) = this.insert(key, value)
     override fun get(key: K): List<V> = this.peekAll(key)
+
+    override fun isEmpty(): Boolean = 0 == this.size
+    override fun isNotEmpty(): Boolean = 0 != this.size
 
     override fun insert(key: K, value: V) {
         val e = Entry(key, value)
@@ -133,9 +149,13 @@ class BinaryHeapComparable<K : Comparable<K>, V>(
 
     override fun peekAll(key: K): List<V> = searchSubTreeFor(0, key)
 
-    fun parentIndexOf(childIndex: Int) = (childIndex - 1) / 2
-    fun leftChildIndexOf(parentIndex: Int) = (2 * parentIndex) + 1
-    fun rightChildIndexOf(parentIndex: Int) = (2 * parentIndex) + 2
+    override fun clear() {
+        this._elements.clear()
+    }
+
+    private fun parentIndexOf(childIndex: Int) = (childIndex - 1) / 2
+    private fun leftChildIndexOf(parentIndex: Int) = (2 * parentIndex) + 1
+    private fun rightChildIndexOf(parentIndex: Int) = (2 * parentIndex) + 2
 
     private fun searchSubTreeFor(startEntryIndex: Int, key: K): List<V> {
         val elements = mutableListOf<V>()
