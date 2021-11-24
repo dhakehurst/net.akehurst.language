@@ -755,7 +755,7 @@ internal class ParseGraph(
     ): GrowingNode? {
         val growingChildren = GrowingChildren()
             .appendChild(newState, listOf(leafNode))
-            ?.appendSkipIfNotEmpty(skipNodes)
+            ?.appendSkipIfNotEmpty(newState,skipNodes)
         //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
         val newGn = growingChildren?.let {
             this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, it, oldHead, previous, skipNodes)
@@ -769,7 +769,7 @@ internal class ParseGraph(
         (embeddedNode as SPPTNodeFromInputAbstract).embeddedIn = runtimeRule.tag
         val growingChildren = GrowingChildren()
             .appendChild(newState, listOf(embeddedNode))
-            ?.appendSkipIfNotEmpty(skipNodes)
+            ?.appendSkipIfNotEmpty(newState,skipNodes)
         growingChildren?.let {
             this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, it, oldHead, previous, skipNodes)
         }
@@ -781,7 +781,7 @@ internal class ParseGraph(
         var growingChildren = parent.children.appendChild(nextState, nextChildAlts)
         growingChildren = when {
             null == skipChildren -> growingChildren
-            else -> growingChildren?.appendSkipIfNotEmpty(skipChildren)
+            else -> growingChildren?.appendSkipIfNotEmpty(nextState,skipChildren)
         }
 
         //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
@@ -801,7 +801,7 @@ internal class ParseGraph(
         var growingChildren = GrowingChildren().appendChild(newState, firstChildAlts)
         growingChildren = when {
             null == skipChildren -> growingChildren
-            else -> growingChildren?.appendSkipIfNotEmpty(skipChildren)
+            else -> growingChildren?.appendSkipIfNotEmpty(newState, skipChildren)
         }
         //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
         growingChildren?.let {

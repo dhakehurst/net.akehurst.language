@@ -39,7 +39,7 @@ internal class GrowingChildNode(
     }
 
     var nextChild: GrowingChildNode? = null
-    var nextChildAlternatives: MutableMap<List<RuleOptionId>, MutableList<GrowingChildNode>>? = null
+    var nextChildAlternatives: MutableMap<List<RuleOptionId>?, MutableList<GrowingChildNode>>? = null
 
     val isLast: Boolean get() = null == nextChild && null == nextChildAlternatives
 
@@ -67,7 +67,7 @@ internal class GrowingChildNode(
                         val alternativeNextChild = node
                         when {
                             alternativeNextChild.nextInputPosition != existingNextChild.nextInputPosition -> {
-                                val nextChildAlternatives = mutableMapOf<List<RuleOptionId>, MutableList<GrowingChildNode>>()
+                                val nextChildAlternatives = mutableMapOf<List<RuleOptionId>?, MutableList<GrowingChildNode>>()
                                 val alts = mutableListOf(existingNextChild)
                                 nextChildAlternatives[state!!.rulePositionIdentity] = alts
                                 this.nextChild = null
@@ -84,7 +84,7 @@ internal class GrowingChildNode(
                         }
                     }
                     else -> {
-                        val nextChildAlternatives = mutableMapOf<List<RuleOptionId>, MutableList<GrowingChildNode>>()
+                        val nextChildAlternatives = mutableMapOf<List<RuleOptionId>?, MutableList<GrowingChildNode>>()
                         nextChildAlternatives[existingNextChild.state!!.rulePositionIdentity] = mutableListOf(existingNextChild)
                         this.nextChild = null
                         val alternativeNextChild = node
@@ -135,7 +135,7 @@ internal class GrowingChildNode(
     fun next(altNext: Int, ruleOption: RuleOptionId): GrowingChildNode? = when {
         null != nextChildAlternatives -> nextChildAlternatives!!.entries.firstOrNull {
             val rpIds = it.key
-            rpIds.any { it == ruleOption }
+            rpIds?.any { it == ruleOption } ?: false
         }?.value?.get(altNext)
         null == nextChild -> null
         else -> nextChild
