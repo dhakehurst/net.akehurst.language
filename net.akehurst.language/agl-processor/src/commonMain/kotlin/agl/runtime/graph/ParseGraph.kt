@@ -46,6 +46,8 @@ internal class ParseGraph(
     //internal val completeNodes = CompletedNodesStore<SPPTBranch>(numNonTerminalRules, input.text.length + 1)
     internal val growing: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
     internal val _goals: MutableSet<SPPTNode> = mutableSetOf()
+    // choiceRule -> all heads that have been grown from this choice
+    private val _grownChildren  = mutableMapOf<CompleteChildrenIndex, GrowingChildren>()
 
     //val growingHead: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
     val growingHead: BinaryHeap<Int, GrowingNode> = binaryHeapMin()
@@ -55,6 +57,22 @@ internal class ParseGraph(
     val goals: Set<SPPTNode> get() = this._goals
 
     var goalMatchedAll = true
+
+    val hasNextHead:Boolean get() = this.growingHead.isNotEmpty()
+
+    val nextHeadNextInputPosition:Int get() = this.growingHead.peekRoot?.nextInputPosition ?: Int.MAX_VALUE
+    val growingHeadMaxNextInputPosition:Int get() = this.growingHead.toList().lastOrNull()?.nextInputPosition ?: -1 //TODO: cache rather than compute
+
+    /**
+     * extract head with min nextInputPosition
+     * assumes there is one - check with hasNextHead
+     */
+    fun nextHead():GrowingNode  {
+        val gn = this.growingHead.extractRoot()!!
+        val gnindex = GrowingNode.indexForGrowingNode(gn)
+        this.growing.remove(gnindex)
+        return gn
+    }
 
     fun reset() {
         this.input.reset()
@@ -124,6 +142,17 @@ internal class ParseGraph(
     }
 
     fun createGrowingNode(state: ParserState, lookahead: LookaheadSet, growingChildren: GrowingChildren): GrowingNode {
+        if (state.isAtEnd) {
+            state.runtimeRulesSet.forEach {
+                val ci = CompleteChildrenIndex(it, growingChildren.startPosition)
+                val existing=this._grownChildren[ci]
+                if (null==existing) {
+                    this._grownChildren[ci] = growingChildren
+                } else {
+                    existing.mergeOrDropWithPriority(growingChildren)
+                }
+            }
+        }
         return GrowingNode(this, state, lookahead, growingChildren)
     }
 /*
@@ -165,8 +194,8 @@ internal class ParseGraph(
         this.completeNodes[runtimeRule, cn.startPosition] = cn
     }*/
 
-    private fun addGrowing( gn: GrowingNode) {
-        val gnindex = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.children)//, nextInputPosition, gn.priority)
+    private fun addGrowing(gn: GrowingNode) {
+        val gnindex = GrowingNode.indexForGrowingNode(gn)//, nextInputPosition, gn.priority)
         val existing = this.growing[gnindex]
         if (null == existing) {
             this.growing[gnindex] = gn
@@ -177,7 +206,8 @@ internal class ParseGraph(
             }
         }
     }
-    private fun addGrowing(gnindex:GrowingNodeIndex, gn: GrowingNode): GrowingNode {
+
+    private fun addGrowing(gnindex: GrowingNodeIndex, gn: GrowingNode): GrowingNode {
         val existing = this.growing[gnindex]
         return if (null == existing) {
             this.growing[gnindex] = gn
@@ -190,6 +220,7 @@ internal class ParseGraph(
             existing
         }
     }
+
     private fun addGrowing(gn: GrowingNode, previous: Set<PreviousInfo>): GrowingNode {
         //val startPosition = gn.startPosition
         //val nextInputPosition = gn.nextInputPosition
@@ -218,6 +249,12 @@ internal class ParseGraph(
     }
 
     fun addGrowingHead(gn: GrowingNode) {
+        this.addGrowing(gn)
+        this.growingHead[gn.nextInputPosition] = gn
+    }
+
+    fun addGrowingHead(gnindex: GrowingNodeIndex, gn: GrowingNode) {
+        this.addGrowing(gnindex, gn)
         this.growingHead[gn.nextInputPosition] = gn
     }
 
@@ -254,7 +291,7 @@ internal class ParseGraph(
         if (skipNodes.isNotEmpty()) {
             gn.skipNodes = skipNodes
         }
-        this.addGrowing(gnindex, gn)
+        this.addGrowingHead(gnindex, gn)
         return gn
     }
 
@@ -265,14 +302,16 @@ internal class ParseGraph(
         return if (null == existingGrowing) {
             val nn = this.createGrowingNode(newState, newRuntimeLookahead, newChildren)
             this.addAndRegisterGrowingPrevious(nn, previous)
-            this.addGrowing(gnindex, nn)
             this.addGrowingHead(nn)
             nn
         } else {
             //merge
             val nn = mergeOrDropWithPriority(existingGrowing, newState, newRuntimeLookahead, newChildren)
+            if (nn!=existingGrowing) {
+                // could be a child of a head that has already reduced
+                TODO("Invalidate/remove head corresponding to the node")
+            }
             this.addAndRegisterGrowingPrevious(nn, previous)
-            this.addGrowing(gnindex, nn)
             this.addGrowingHead(nn)
             nn
         }
@@ -679,8 +718,7 @@ internal class ParseGraph(
             lookahead,
             growingChildren
         )
-        val gi = GrowingNode.indexFromGrowingChildren(goalState, lookahead, growingChildren)
-        this.addGrowingHead(gi, goalGN)
+        this.addGrowingHead(goalGN)
     }
 
     fun pop(gn: GrowingNode): Collection<PreviousInfo> {
@@ -702,7 +740,6 @@ internal class ParseGraph(
         } else {
             val nn = mergeOrDropWithPriority(existing, gn)
             this.addAndRegisterGrowingPrevious(nn, previous)
-            this.addGrowing(gnindex, gn)
             this.addGrowingHead(nn)
             nn
         }
@@ -825,4 +862,6 @@ internal class ParseGraph(
         this.goalMatchedAll = this.input.isEnd(completeNode.nextInputPosition)
     }
 
+
+    override fun toString(): String = this.growingHead.toString()
 }

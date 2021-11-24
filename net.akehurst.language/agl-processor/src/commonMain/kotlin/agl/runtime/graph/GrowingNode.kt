@@ -28,6 +28,8 @@ internal class GrowingNode(
     val children: GrowingChildren
 ) {
     companion object {
+        fun indexForGrowingNode(gn:GrowingNode) = indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.children)
+
         fun indexFromGrowingChildren(state: ParserState, lhs: LookaheadSet, growingChildren: GrowingChildren): GrowingNodeIndex {
             val listSize = listSize(state.runtimeRules.first(), growingChildren.numberNonSkip)
             return GrowingNodeIndex(state.runtimeRules,state.positions, lhs.number, growingChildren.startPosition, growingChildren.nextInputPosition, listSize)

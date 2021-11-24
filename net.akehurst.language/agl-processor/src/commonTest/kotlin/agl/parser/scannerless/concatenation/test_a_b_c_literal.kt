@@ -26,7 +26,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_RuntimeParser_parse_concatenation_literal : test_ScanOnDemandParserAbstract() {
+internal class test_a_b_c_literal : test_ScanOnDemandParserAbstract() {
 
     private companion object {
         val rrs = runtimeRuleSet {
@@ -50,7 +50,7 @@ internal class test_RuntimeParser_parse_concatenation_literal : test_ScanOnDeman
             expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
-        assertEquals(11,actual?.seasons)
+        assertEquals(9,actual?.seasons)
     }
 
     @Test

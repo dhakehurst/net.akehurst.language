@@ -28,7 +28,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_bodmas3_WS : test_ScanOnDemandParserAbstract() {
+internal class test_bodmas_infix_sList_op_choiceEqual_WS : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // expr = root | group | infix ;

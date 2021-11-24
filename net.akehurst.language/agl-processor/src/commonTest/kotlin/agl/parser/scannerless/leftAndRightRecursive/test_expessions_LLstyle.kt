@@ -37,7 +37,7 @@ internal class test_expessions_LLstyle : test_ScanOnDemandParserAbstract() {
             concatenation("E1") { ref("E"); literal("o"); ref("P") }
             concatenation("P") { literal("a") }
         }
-        val goal = "S"
+        const val goal = "S"
     }
 
 
@@ -49,12 +49,12 @@ internal class test_expessions_LLstyle : test_ScanOnDemandParserAbstract() {
             S { E { P {'a'} } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -66,12 +66,12 @@ internal class test_expessions_LLstyle : test_ScanOnDemandParserAbstract() {
             S { E|1 { E1 { E{ P {'a'} } 'o' P {'a'} } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -91,12 +91,12 @@ internal class test_expessions_LLstyle : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -121,12 +121,12 @@ internal class test_expessions_LLstyle : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 

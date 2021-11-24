@@ -221,4 +221,7 @@ class BinaryHeapComparable<K : Comparable<K>, V>(
         override fun hasNext(): Boolean = _nextIndex < _sorted.size
         override fun next(): V = _sorted[_nextIndex].value.also { _nextIndex++ }
     }
+
+
+    override fun toString(): String = this._elements.joinToString(separator = "\n") { it.toString() }
 }

@@ -28,9 +28,12 @@ internal class GrowingChildren {
     var nextInputPosition: Int = -1
     var startPosition: Int = -1
 
+    val containedFor = mutableSetOf<List<RuleOptionId>>()
+
     private var _firstChild: GrowingChildNode? = null
-    private var _firstChildAlternatives: MutableMap<List<RuleOptionId>, MutableList<GrowingChildNode>>? = null
-    private var _lastChild: GrowingChildNode? = null
+    private var _firstChildAlternatives: MutableMap<List<RuleOptionId>?, MutableList<GrowingChildNode>>? = null
+    //private var _lastChild: GrowingChildNode? = null
+    private var _lastChildAlternatives: MutableMap<List<RuleOptionId>?, GrowingChildNode> = mutableMapOf()
     private var _nextChildAlts: MutableMap<Int, MutableMap<List<RuleOptionId>, Int>>? = null
 
     private fun clone(): GrowingChildren {
@@ -43,11 +46,12 @@ internal class GrowingChildren {
         if (null != this._firstChildAlternatives) {
             cl._firstChildAlternatives = mutableMapOf()
             this._firstChildAlternatives!!.entries.forEach {
-                val l = it.value.toMutableList()
+                val l = it.value.toMutableList() // copy the list of nodes, it can get modified in the original
                 cl._firstChildAlternatives!![it.key] = l
             }
         }
-        cl._lastChild = this._lastChild
+        //cl._lastChild = this._lastChild
+        cl._lastChildAlternatives.putAll(this._lastChildAlternatives)
         if (null != this._nextChildAlts) {
             cl._nextChildAlts = mutableMapOf()
             this._nextChildAlts!!.entries.forEach {
@@ -113,7 +117,7 @@ internal class GrowingChildren {
             }
         }
 
-    val lastChild: GrowingChildNode? get() = this._lastChild
+    //val lastChild: GrowingChildNode? get() = this._lastChild
 
     val matchedTextLength get() = this.nextInputPosition - this.startPosition
 
@@ -121,8 +125,14 @@ internal class GrowingChildren {
         null == this._firstChildAlternatives -> this._firstChild
         null == ruleOption -> null //skip will not have alternatives
         else -> this._firstChildAlternatives!!.entries.firstOrNull {
-            it.key.contains(ruleOption)
+            it.key?.contains(ruleOption) ?: false
         }?.value?.get(this.nextChildAlt(0, ruleOption))
+    }
+
+    fun lastChild(ruleOption: List<RuleOptionId>?): GrowingChildNode? = when {
+        //null == this._lastChildAlternatives -> this._lastChild
+        null == ruleOption -> null //skip will not have alternatives
+        else -> this._lastChildAlternatives.get(ruleOption)
     }
 
     fun firstNonSkipChild(ruleOption: RuleOptionId): GrowingChildNode? {
@@ -135,16 +145,34 @@ internal class GrowingChildren {
         return r
     }
 
-    fun setFirstChildAlternative() {
+    fun setFirstChild(ruleOption: List<RuleOptionId>?, node: GrowingChildNode) {
+        when {
+            this.isEmpty -> this._firstChild = node
+            else -> {
+                _firstChildAlternatives = mutableMapOf()
+                val alts = mutableListOf(this._firstChild!!)
+                this._firstChildAlternatives!![ruleOption] = alts
+                this._firstChild = null
+                alts.add(node)
+            }
+        }
+    }
 
+    private fun setLastChild(ruleOption: List<RuleOptionId>?, node: GrowingChildNode) {
+        this._lastChildAlternatives[ruleOption] = node
     }
 
     fun appendChild(state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildren? {
+        val ruleOption = state.rulePositionIdentity
+        containedFor.add(ruleOption)
         return when {
             isEmpty -> {
-                _firstChild = GrowingChildNode(state, nextChildAlts)
+               // _firstChild = GrowingChildNode(state, nextChildAlts)
+                val node = GrowingChildNode(state, nextChildAlts)
+                this.setFirstChild(ruleOption, node)
                 startPosition = nextChildAlts[0].startPosition
-                _lastChild = _firstChild
+               // _lastChild = _firstChild
+                this.setLastChild(ruleOption, _firstChild!!)
                 this.length++
                 this.numberNonSkip++
                 //check(1 == nextChildAlts.map { it.nextInputPosition }.toSet().size)
@@ -160,11 +188,11 @@ internal class GrowingChildren {
                         val res = this.clone()
                         res._firstChildAlternatives = mutableMapOf()
                         val alts = mutableListOf(res._firstChild!!)
-                        res._firstChildAlternatives!![state.rulePositionIdentity] = alts
+                        res._firstChildAlternatives!![ruleOption] = alts
                         res._firstChild = null
                         alts.add(alternativeNextChild)
-                        res.incNextChildAlt(0, state.rulePositionIdentity)
-                        res._lastChild = alternativeNextChild
+                        res.incNextChildAlt(0, ruleOption)
+                        res.setLastChild(ruleOption,alternativeNextChild)
                         // because its a duplicate of existing goal
                         // will not changed the length or numberNonSkip
                         res.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
@@ -174,7 +202,7 @@ internal class GrowingChildren {
                         val changeLength = lisc.isLast
                         val appended = lisc.appendLast(this, this.length - 1, state, nextChildAlts)
                         appended?.let {
-                            this._lastChild = it
+                            this.setLastChild(ruleOption,it)
                             if (changeLength) {
                                 this.length++
                                 this.numberNonSkip++
@@ -190,16 +218,19 @@ internal class GrowingChildren {
             }
             else -> {
                 val res = this.clone()
-                val lastChild = res._lastChild!!
-                val appended = lastChild.appendLast(res, res.length, state, nextChildAlts)
-                appended?.let {
-                    res._lastChild = it
-                    res.length++
-                    res.numberNonSkip++
-                    //check(1 == nextChildAlts.map { it.nextInputPosition }.toSet().size)
-                    res.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
-                    res
+                val nextChild = GrowingChildNode(state,nextChildAlts)
+                for(lastChild in res._lastChildAlternatives.values) {
+                    val appended = lastChild.appendLast(res, res.length, nextChild)
+                    appended?.let {
+                        res.setLastChild(ruleOption, it)
+                        res.length++
+                        res.numberNonSkip++
+                        //check(1 == nextChildAlts.map { it.nextInputPosition }.toSet().size)
+                        res.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
+                        res
+                    }
                 }
+                res
             }
         }
     }
@@ -210,14 +241,17 @@ internal class GrowingChildren {
             this
         } else {
             if (isEmpty) {
-                this._firstChild = GrowingChildNode(null, skipChildren)
+                //this._firstChild = GrowingChildNode(null, skipChildren)
+                val node = GrowingChildNode(null, skipChildren)
+                this.setFirstChild(null, node)
                 this.startPosition = skipChildren[0].startPosition
-                this._lastChild = _firstChild
+                //this._lastChild = _firstChild
+                this.setLastChild(null,node)
                 this.length++
                 this.nextInputPosition = skipChildren.last().nextInputPosition
                 this
             } else {
-                val lastChild = this.lastChild!!
+                val lastChild = this.lastChild(null)!!
                 when {
                     lastChild.isLast -> {
                         val res = this.clone()
@@ -278,28 +312,46 @@ internal class GrowingChildren {
     }
 
     fun concatenate(other: GrowingChildren) {
-        val lasChild = this._lastChild!!
-        lasChild.nextChild = other._firstChild
-        if (null != other._firstChildAlternatives) {
-            lasChild.nextChildAlternatives = mutableMapOf()
-            other._firstChildAlternatives!!.entries.forEach {
-                val l = it.value.toMutableList()
-                lasChild.nextChildAlternatives!![it.key] = l
+        for(ruleOption in other.containedFor) {
+            val lastChild = this.lastChild(ruleOption)!!
+            lastChild.nextChild = other._firstChild
+            if (null != other._firstChildAlternatives) {
+                lastChild.nextChildAlternatives = mutableMapOf()
+                other._firstChildAlternatives!!.entries.forEach {
+                    val l = it.value.toMutableList()
+                    lastChild.nextChildAlternatives!![it.key] = l
+                }
             }
-        }
-        if (null != other._nextChildAlts) {
-            other._nextChildAlts!!.forEach {
-                this._nextChildAlts!![it.key + this.length] = it.value.toMutableMap()
+            if (null != other._nextChildAlts) {
+                other._nextChildAlts!!.forEach {
+                    this._nextChildAlts!![it.key + this.length] = it.value.toMutableMap()
+                }
             }
+            this._lastChildAlternatives = other._lastChildAlternatives
+            this.length += other.length
+            this.numberNonSkip += other.numberNonSkip
+            this.nextInputPosition = other.nextInputPosition
         }
-        this._lastChild = other._lastChild
-        this.length += other.length
-        this.numberNonSkip += other.numberNonSkip
-        this.nextInputPosition = other.nextInputPosition
     }
 
-    fun mergeOrDropWithPriority(growingChildren: GrowingChildren) {
-        //TODO(  )
+    fun mergeOrDropWithPriority(other: GrowingChildren) {
+        when{
+            other.isEmpty -> Unit
+            this.isEmpty -> {
+                _firstChild = other._firstChild
+                startPosition = other.startPosition
+                this._lastChildAlternatives = other._lastChildAlternatives
+                this.length = other.length
+                this.numberNonSkip = other.numberNonSkip
+                this.nextInputPosition = other.nextInputPosition //FIXME: not really correct, are all children same length?
+            }
+            this.startPosition != other.startPosition -> error("Cannot merge children starting at a different position")
+            else -> {
+                for(ruleOption in other.containedFor) {
+                    TODO()
+                }
+            }
+        }
     }
 
     override fun toString(): String = when {

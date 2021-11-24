@@ -62,9 +62,8 @@ internal class ScanOnDemandParser(
         var totalWork = maxNumHeads
 
         while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
-            val gn = rp.graph.growingHead.extractRoot() ?: error("Should never be null")
-            rp.grow3(gn, false)
-            seasons += 1
+            val steps = rp.grow3(false)
+            seasons += steps
             maxNumHeads = max(maxNumHeads, rp.graph.growingHead.size)
             totalWork += rp.graph.growingHead.size
         }
@@ -182,18 +181,15 @@ internal class ScanOnDemandParser(
 
         val matches = gns.toMutableList()
         // try grow last leaf with no lookahead
-        for (gn in rp.lastGrownLinked) {
-            val gnindex = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.children)
-            graph.growingHead[gnindex] = gn
-        }
+        rp.resetGraphToLastGrown()
         do {
-            rp.grow2(true)
+            rp.grow3(true)
             for (gn in rp.lastGrown) {
                 // may need to change this to finalInputPos!
                 if (input.isEnd(gn.nextInputPosition)) {
                     // lastGrown is combination of growing and toGrow
                     //  the previous of groowing is on the node, of toGrow is in the Map
-                    val prev = rp.toGrowPrevious[gn] ?: gn.previous.values
+                    val prev = rp.grownInLastPassPrevious[gn] ?: gn.previous.values
                     matches.add(Pair(gn, prev))
                 }
             }
@@ -244,10 +240,10 @@ internal class ScanOnDemandParser(
 
         val matches = mutableListOf<Pair<GrowingNode, Collection<PreviousInfo>?>>()
         do {
-            rp.grow2(false)
+            rp.grow3(false)
             for (gn in rp.lastGrown) {
                 if (input.isEnd(gn.nextInputPosition)) {
-                    val prev = rp.toGrowPrevious[gn]
+                    val prev = rp.grownInLastPassPrevious[gn]
                     if (prev==null && gn.currentState.isGoal.not()) {
                         //don't include it TODO: why does this happen?
                     } else {

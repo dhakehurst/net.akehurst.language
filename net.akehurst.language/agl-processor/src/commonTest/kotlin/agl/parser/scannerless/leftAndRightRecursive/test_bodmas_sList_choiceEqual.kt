@@ -27,15 +27,15 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_OperatorPrecedence2 : test_ScanOnDemandParserAbstract() {
+internal class test_bodmas_sList_choiceEqual : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // expr = root | group | div | mul | add | sub ;
     // root = var < bool
-    // sub = [ expr / '-' expr]2+ ;
-    // add = [ expr / '+' expr]2+ ;
-    // mul = [ expr / '*' expr]2+ ;
-    // div = [ expr / '/' expr]2+ ;
+    // sub = [ expr / '-' ]2+ ;
+    // add = [ expr / '+' ]2+ ;
+    // mul = [ expr / '*' ]2+ ;
+    // div = [ expr / '/' ]2+ ;
     // group = '(' expr ')' ;
     // bool = 'true' | 'false' ;
     // var = "[a-zA-Z]+" ;
