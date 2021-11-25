@@ -19,14 +19,18 @@ package net.akehurst.language.agl.parser
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
+import net.akehurst.language.agl.runtime.graph.GrowingChildren
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.PreviousInfo
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
+import net.akehurst.language.agl.runtime.structure.RuleOption
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
+import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.parser.ParserInterruptedException
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTNode
@@ -35,7 +39,7 @@ import kotlin.math.max
 internal class RuntimeParser(
     internal val stateSet: ParserStateSet,
     private val skipStateSet: ParserStateSet?, // null if this is a skipParser
-    goalRule: RuntimeRule,
+    val userGoalRule: RuntimeRule,
     //possibleEndOfText_: LookaheadSet,
     private val input: InputFromString
 ) {
@@ -43,7 +47,7 @@ internal class RuntimeParser(
         val defaultStartLocation = InputLocation(0, 0, 1, 0)
     }
 
-    val graph = ParseGraph(goalRule, input, this.stateSet.usedTerminalRules.size, this.stateSet.usedNonTerminalRules.size)
+    val graph = ParseGraph(input, this.stateSet.usedTerminalRules.size, this.stateSet.usedNonTerminalRules.size)
 
     //var possibleEndOfText = possibleEndOfText_; private set
 
@@ -241,7 +245,7 @@ internal class RuntimeParser(
             val skipLhc = gn.currentState.rulePositions.flatMap { this.stateSet.buildCache.firstOf(it, LookaheadSet.EOT) }.toSet()
             val skipLh = this.stateSet.createLookaheadSet(skipLhc)
             val skipNodes = this.tryParseSkipUntilNone(skipLh, gn.startPosition, noLookahead)
-            gn.children.appendSkipIfNotEmpty(skipNodes) //ok because gn.children should be empty
+            gn.children.appendSkipIfNotEmpty(emptyList(),skipNodes) //ok because gn.children should be empty
             this.graph.addGrowingHead(gn)
     }
 
@@ -326,6 +330,67 @@ internal class RuntimeParser(
         return growStep
     }
      */
+
+    internal fun longestMatch(seasons: Int, maxNumHeads: Int, embedded: Boolean): SPPTNode? {
+        return if (!this.graph.goals.isEmpty() && this.graph.goals.size >= 1) {
+            var lt = this.graph.goals.iterator().next()
+            for (gt in this.graph.goals) {
+                if (gt.matchedTextLength > lt.matchedTextLength) {
+                    lt = gt
+                }
+            }
+            if (embedded) {
+                useGoal(lt) // next token is from the parent grammar, no need to check anything
+            } else {
+                when {
+                    this.input.isEnd(lt.nextInputPosition + 1).not() -> {
+                        val location = this.input.locationFor(lt.nextInputPosition - 1, 1)
+                        throw ParseFailedException(
+                            "Goal does not match full text",
+                            SharedPackedParseTreeDefault(lt, seasons, maxNumHeads),
+                            location,
+                            emptySet(),
+                            this.input.contextInText(location.position)
+                        )
+                    }
+                    else -> {
+                        useGoal(lt)
+                    }
+                }
+            }
+        } else {
+            null;
+        }
+    }
+
+    private fun useGoal(lt: SPPTNode): SPPTNode {
+        //FIXME: use GrowingChildren
+        // need to re-write top of the tree so that any initial skip nodes come under the userGoal node
+        val goal = lt as SPPTBranchFromInputAndGrownChildren
+
+        val goalRpId = listOf(RuleOption(this.userGoalRule, 0))
+        val goalFirstChildren = goal.grownChildrenAlternatives.values.first()
+        val userGoalNode = if (goalFirstChildren.hasSkipAtStart) {
+            //has skip at start
+            val skipNodes = goalFirstChildren.firstChild(this.stateSet.startState.rulePositionIdentity)!!.children
+            val ugn = goalFirstChildren.firstNonSkipChild(goalRpId)!!.children[0] as SPPTBranchFromInputAndGrownChildren
+            val startPosition = skipNodes[0].startPosition
+            val nugn = SPPTBranchFromInputAndGrownChildren(this.input, ugn.runtimeRule, ugn.option, startPosition, ugn.nextInputPosition, ugn.priority)
+            ugn.grownChildrenAlternatives.values.forEach {
+                val nc = GrowingChildren().appendSkipIfNotEmpty(emptyList(),skipNodes)
+                //nc._firstChild!!.nextChild = it.firstChild
+                //nc._lastChild = it.lastChild
+                nc.concatenate(it)
+                nugn.grownChildrenAlternatives[ugn.option] = nc
+            }
+            nugn
+        } else {
+
+            goalFirstChildren.firstChild(goalRpId)!!.children[0]
+        }
+        return userGoalNode
+    }
+
 
     internal fun growNode(gn: GrowingNode, previous: Collection<PreviousInfo>, noLookahead: Boolean) {
         when (gn.runtimeRules.first().kind) {//FIXME
@@ -698,7 +763,7 @@ internal class RuntimeParser(
             seasons++
             maxNumHeads = max(maxNumHeads, embeddedParser.graph.growingHead.size)
         } while (embeddedParser.graph.canGrow && (embeddedParser.graph.goals.isEmpty() || embeddedParser.graph.goalMatchedAll.not()))
-        val match = embeddedParser.graph.longestMatch(seasons, maxNumHeads, true) as SPPTBranch?
+        val match = embeddedParser.longestMatch(seasons, maxNumHeads, true) as SPPTBranch?
         if (match != null) {
             //TODO: parse skipNodes
             val skipLh = this.stateSet.createWithParent(transition.lookaheadGuard, curGn.runtimeLookahead)

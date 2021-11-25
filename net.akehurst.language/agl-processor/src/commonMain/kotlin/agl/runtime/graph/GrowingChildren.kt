@@ -16,11 +16,11 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.RuleOptionId
 import net.akehurst.language.api.sppt.SPPTNode
 
-
+//TODO: there is a lot of code here very specific to handling
+// initial skip...maybe there is a better way!
 internal class GrowingChildren {
 
     var length: Int = 0; private set
@@ -31,13 +31,15 @@ internal class GrowingChildren {
     val containedFor = mutableSetOf<List<RuleOptionId>>()
 
     private var _firstChild: GrowingChildNode? = null
-    private var _firstChildAlternatives: MutableMap<List<RuleOptionId>?, MutableList<GrowingChildNode>>? = null
+    private var _firstChildAlternatives: MutableMap<List<RuleOptionId>, MutableList<GrowingChildNode>>? = null
+
     //private var _lastChild: GrowingChildNode? = null
     private var _lastChildAlternatives: MutableMap<List<RuleOptionId>?, GrowingChildNode> = mutableMapOf()
     private var _nextChildAlts: MutableMap<Int, MutableMap<List<RuleOptionId>, Int>>? = null
 
     private fun clone(): GrowingChildren {
         val cl = GrowingChildren()
+        cl.containedFor.addAll(this.containedFor)
         cl.length = this.length
         cl.numberNonSkip = this.numberNonSkip
         cl.nextInputPosition = this.nextInputPosition
@@ -75,6 +77,19 @@ internal class GrowingChildren {
         }
     }
 
+    private fun nextChildAlt(childIndex: Int, ruleOptionList: List<RuleOptionId>): Int {
+        return when {
+            null == _nextChildAlts -> 0
+            else -> {
+                val m = _nextChildAlts!![childIndex]
+                when {
+                    null == m -> 0
+                    else -> m[ruleOptionList] ?: 0
+                }
+            }
+        }
+    }
+
     internal fun incNextChildAlt(childIndex: Int, value: List<RuleOptionId>) {
         if (null == _nextChildAlts) _nextChildAlts = mutableMapOf()
         var m = _nextChildAlts!![childIndex]
@@ -89,7 +104,8 @@ internal class GrowingChildren {
             m[value] = v + 1
         }
     }
-    internal fun setNextChildAlt(childIndex: Int, value: List<RuleOptionId>, altNum:Int) {
+
+    internal fun setNextChildAlt(childIndex: Int, value: List<RuleOptionId>, altNum: Int) {
         if (null == _nextChildAlts) _nextChildAlts = mutableMapOf()
         var m = _nextChildAlts!![childIndex]
         if (null == m) {
@@ -100,7 +116,7 @@ internal class GrowingChildren {
     }
 
     val isEmpty: Boolean get() = null == _firstChild && null == _firstChildAlternatives
-    val hasSkipAtStart: Boolean get() = null == _firstChild!!.state
+    val hasSkipAtStart: Boolean get() = _firstChild!!.isSkip
 
     val lastInitialSkipChild: GrowingChildNode?
         get() = when {
@@ -109,7 +125,7 @@ internal class GrowingChildren {
             else -> {
                 var n = this._firstChild
                 var last: GrowingChildNode? = null
-                while (null != n && null == n.state) {
+                while (null != n && n.isSkip) {
                     last = n
                     n = n.nextChild
                 }
@@ -121,37 +137,46 @@ internal class GrowingChildren {
 
     val matchedTextLength get() = this.nextInputPosition - this.startPosition
 
-    fun firstChild(ruleOption: RuleOptionId): GrowingChildNode? = when {
+    // only used in RuntimeParser.useGoal && internally in this class
+    fun firstChild(ruleOption: List<RuleOptionId>): GrowingChildNode? = when {
         null == this._firstChildAlternatives -> this._firstChild
-        null == ruleOption -> null //skip will not have alternatives
+        //null == ruleOption -> null //skip will not have alternatives
         else -> this._firstChildAlternatives!!.entries.firstOrNull {
-            it.key?.contains(ruleOption) ?: false
+            it.key.isEmpty() || // initial skip is first child for anything, emptyList is used to mark initialSkip
+            it.key==ruleOption
         }?.value?.get(this.nextChildAlt(0, ruleOption))
     }
 
-    fun lastChild(ruleOption: List<RuleOptionId>): GrowingChildNode? = when {
-        //null == this._lastChildAlternatives -> this._lastChild
-        null == ruleOption -> null //skip will not have alternatives
-        else -> this._lastChildAlternatives.get(ruleOption)
+    private fun firstChildWithIndexContaining(ruleOption: RuleOptionId): GrowingChildNode? = when {
+        null == this._firstChildAlternatives -> this._firstChild
+        //null == ruleOption -> null //skip will not have alternatives
+        else -> this._firstChildAlternatives!!.entries.firstOrNull {
+            it.key.isEmpty() || // initial skip is first child for anything, emptyList is used to mark initialSkip
+                    it.key.contains(ruleOption)
+        }?.value?.get(this.nextChildAlt(0, ruleOption))
     }
 
-    fun firstNonSkipChild(ruleOption: RuleOptionId): GrowingChildNode? {
+    fun lastChild(ruleOption: List<RuleOptionId>): GrowingChildNode? =  this._lastChildAlternatives[ruleOption]
+
+    // only used in RuntimeParser.useGoal
+    fun firstNonSkipChild(ruleOption: List<RuleOptionId>): GrowingChildNode? {
         var r = this.firstChild(ruleOption)
         var index = 1
-        while (null != r && null == r.state) {
+        while (null != r && r.isSkip) {
             r = r.next(this.nextChildAlt(index, ruleOption), ruleOption)
             index++
         }
         return r
     }
 
-    fun setFirstChild(ruleOption: List<RuleOptionId>, node: GrowingChildNode) {
+    fun setFirstChild(ruleOptionList: List<RuleOptionId>, node: GrowingChildNode) {
+        this.containedFor.add(ruleOptionList)
         when {
             this.isEmpty -> this._firstChild = node
             else -> {
                 _firstChildAlternatives = mutableMapOf()
                 val alts = mutableListOf(this._firstChild!!)
-                this._firstChildAlternatives!![ruleOption] = alts
+                this._firstChildAlternatives!![ruleOptionList] = alts
                 this._firstChild = null
                 alts.add(node)
             }
@@ -162,25 +187,24 @@ internal class GrowingChildren {
         this._lastChildAlternatives[ruleOption] = node
     }
 
-    fun appendChild(state: ParserState, nextChildAlts: List<SPPTNode>): GrowingChildren? {
-        val ruleOption = state.rulePositionIdentity
-        containedFor.add(ruleOption)
-        val alternativeNextChild = GrowingChildNode(state, nextChildAlts)
+    fun appendChild(ruleOptionList: List<RuleOptionId>, nextChildAlts: List<SPPTNode>): GrowingChildren? {
+        val nextChild = GrowingChildNode(ruleOptionList, nextChildAlts, false)
         return when {
             isEmpty -> {
-               // _firstChild = GrowingChildNode(state, nextChildAlts)
-                val node = GrowingChildNode(state, nextChildAlts)
-                this.setFirstChild(ruleOption, node)
+                // _firstChild = GrowingChildNode(state, nextChildAlts)
+                this.setFirstChild(ruleOptionList, nextChild)
                 startPosition = nextChildAlts[0].startPosition
-               // _lastChild = _firstChild
-                this.setLastChild(ruleOption, _firstChild!!)
+                // _lastChild = _firstChild
+                this.setLastChild(ruleOptionList, _firstChild!!)
                 this.length++
                 this.numberNonSkip++
                 //check(1 == nextChildAlts.map { it.nextInputPosition }.toSet().size)
                 this.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
+                this.containedFor.add(ruleOptionList)
                 this
             }
-            state.isGoal -> {
+            ruleOptionList.isEmpty() -> {
+                TODO("I think this never happens")
                 val lisc = lastInitialSkipChild
                 when {
                     null == lisc -> { // must be duplicate of firstNode which is goal
@@ -188,76 +212,95 @@ internal class GrowingChildren {
                         val res = this.clone()
                         res._firstChildAlternatives = mutableMapOf()
                         val alts = mutableListOf(res._firstChild!!)
-                        res._firstChildAlternatives!![ruleOption] = alts
+                        res._firstChildAlternatives!![ruleOptionList] = alts
                         res._firstChild = null
-                        alts.add(alternativeNextChild)
-                        res.incNextChildAlt(0, ruleOption)
-                        res.setLastChild(ruleOption,alternativeNextChild)
+                        alts.add(nextChild)
+                        res.incNextChildAlt(0, ruleOptionList)
+                        res.setLastChild(ruleOptionList, nextChild)
                         // because its a duplicate of existing goal
                         // will not changed the length or numberNonSkip
                         res.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
+                        res.containedFor.add(ruleOptionList)
                         res
                     }
                     else -> { // must be initial skip and duplicate of existing goal
                         val changeLength = lisc.isLast
-                        val appended = lisc.appendLast(this, this.length - 1, alternativeNextChild)
+                        val appended = lisc.appendLast(this, this.length - 1, nextChild)
                         appended?.let {
-                            this.setLastChild(ruleOption,it)
+                            this.setLastChild(ruleOptionList, it)
                             if (changeLength) {
                                 this.length++
                                 this.numberNonSkip++
                             } else {
                                 // because its a duplicate of existing goal
-                                // will not changed the length or numberNonSkip
+                                // will not change the length or numberNonSkip
                             }
                             this.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
+                            this.containedFor.add(ruleOptionList)
                             this
                         }
                     }
                 }
             }
+            // only contains initialSkip
+            this.containedFor.all { it.isEmpty() } -> {
+                var res = GrowingChildren()
+                //res.length = this.length+1
+                //res.numberNonSkip = this.numberNonSkip+1
+                //res.nextInputPosition = nextChildAlts[0].nextInputPosition
+                //res.startPosition = this.startPosition
+                var nc = this._firstChild
+                while(null!=nc) {
+                    //TODO: find a more perf way to do this if needed..but maybe this is ok as only doen for initial skip
+                    res = res.appendSkipIfNotEmpty(ruleOptionList, nc.children)
+                    nc = nc.nextChild
+                }
+                val lastChild = res.lastInitialSkipChild ?: TODO()
+                val appended = lastChild.appendLast(res, this.length, nextChild)
+                res.setLastChild(ruleOptionList, appended)
+                res.length++
+                res.numberNonSkip++
+                res.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
+                res.containedFor.add(ruleOptionList)
+                res
+            }
             else -> {
                 val res = this.clone()
-                val nextChild = alternativeNextChild
-                for(lastChild in res._lastChildAlternatives.values) {
-                    val appended = lastChild.appendLast(res, res.length, nextChild)
-                    appended?.let {
-                        res.setLastChild(ruleOption, it)
-                    }
-                }
+                val lastChild = res.lastChild(ruleOptionList)?: TODO("?")
+                val appended = lastChild.appendLast(res, res.length, nextChild)
+                res.setLastChild(ruleOptionList, appended)
                 res.length++
                 res.numberNonSkip++
                 //check(1 == nextChildAlts.map { it.nextInputPosition }.toSet().size)
                 res.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
+                res.containedFor.add(ruleOptionList)
                 res
             }
         }
     }
 
-    fun appendSkipIfNotEmpty(state: ParserState, skipChildren: List<SPPTNode>): GrowingChildren {
-        val ruleOption = state.rulePositionIdentity
-        val nextChild =  GrowingChildNode(null, skipChildren)
+    fun appendSkipIfNotEmpty(ruleOptionList: List<RuleOptionId>, skipChildren: List<SPPTNode>): GrowingChildren {
+        val nextChild = GrowingChildNode(ruleOptionList, skipChildren,true)
         return if (skipChildren.isEmpty()) {
             //do nothing
             this
         } else {
             if (isEmpty) {
+                this.containedFor.add(ruleOptionList)
                 //this._firstChild = GrowingChildNode(null, skipChildren)
-                this.setFirstChild(ruleOption, nextChild)
+                this.setFirstChild(ruleOptionList, nextChild)
                 this.startPosition = skipChildren[0].startPosition
                 //this._lastChild = _firstChild
-                this.setLastChild(ruleOption,nextChild)
+                this.setLastChild(ruleOptionList, nextChild)
                 this.length++
                 this.nextInputPosition = skipChildren.last().nextInputPosition
                 this
             } else {
                 val res = this.clone()
-                for(lastChild in res._lastChildAlternatives.values) {
-                    val appended = lastChild.appendLast(res, res.length, nextChild)
-                    appended?.let {
-                        res.setLastChild(lastChild.state!!.rulePositionIdentity, it)
-                    }
-                }
+                res.containedFor.add(ruleOptionList)
+                val lastChild = res.lastChild(ruleOptionList)?: TODO("?")
+                val appended = lastChild.appendLast(res, res.length, nextChild)
+                res.setLastChild(ruleOptionList, appended)
                 res.length++
                 //check(1 == nextChildAlts.map { it.nextInputPosition }.toSet().size)
                 res.nextInputPosition = skipChildren[0].nextInputPosition //FIXME: not really correct, are all children same length?
@@ -268,12 +311,12 @@ internal class GrowingChildren {
 
     operator fun get(ruleOption: RuleOptionId): List<SPPTNode> {
         return when {
-            isEmpty -> emptyList()
+            this.isEmpty -> emptyList()
             else -> {
                 val res = mutableListOf<SPPTNode>()
-                var n: GrowingChildNode? = firstChild(ruleOption)
+                var n: GrowingChildNode? = this.firstChildWithIndexContaining(ruleOption)
                 var index = 1
-                while (null != n && _lastChildAlternatives.values.contains(n).not()) {
+                while (null != n && this._lastChildAlternatives.values.contains(n).not()) {
                     res.addAll(n[ruleOption])
                     n = n.next(this.nextChildAlt(index, ruleOption), ruleOption)
                     index++
@@ -282,16 +325,17 @@ internal class GrowingChildren {
                     //this list of children died
                     error("TODO")
                 } else {
-                   TODO()// res.addAll(_lastChild!![ruleOption])
+                    TODO()// res.addAll(_lastChild!![ruleOption])
                 }
                 res
             }
         }
     }
 
+    // only used in context of rewriting initial skip !
     fun concatenate(other: GrowingChildren) {
-        for(ruleOption in other.containedFor) {
-            val lastChild = this.lastChild(ruleOption)!!
+        for (ruleOptionList in other.containedFor) {
+            val lastChild = this.lastChild(ruleOptionList)!!
             lastChild.nextChild = other._firstChild
             if (null != other._firstChildAlternatives) {
                 lastChild.nextChildAlternatives = mutableMapOf()
@@ -313,7 +357,7 @@ internal class GrowingChildren {
     }
 
     fun mergeOrDropWithPriority(other: GrowingChildren) {
-        when{
+        when {
             other.isEmpty -> Unit
             this.isEmpty -> {
                 _firstChild = other._firstChild
@@ -325,7 +369,7 @@ internal class GrowingChildren {
             }
             this.startPosition != other.startPosition -> error("Cannot merge children starting at a different position")
             else -> {
-                for(ruleOption in other.containedFor) {
+                for (ruleOption in other.containedFor) {
                     TODO()
                 }
             }
@@ -333,6 +377,52 @@ internal class GrowingChildren {
     }
 
     override fun toString(): String = when {
+        this.isEmpty -> "{}"
+        else -> {
+            val res = mutableMapOf<RuleOptionId?, List<String>>()
+            val initialSkip = mutableListOf<String>()
+
+            for (ruleOptionList in this.containedFor) {
+                var n = firstChild(ruleOptionList)
+                var skip = ""
+                var index = 1
+                while (null != n && n!=this._lastChildAlternatives[ruleOptionList]) {
+                    for(ro in ruleOptionList) {
+                        when {
+                            n!!.isSkip ->res[ro] = (res[ro] ?: emptyList()) + n[ro].joinToString() { it.name }
+                            else -> res[ro] = (res[ro] ?: emptyList()) + n[ro].joinToString() { "${it.name}|${it.option}" }
+                        }
+                        n = n.next(this.nextChildAlt(index, ro), ro)
+                        index++
+                    }
+                }
+                when {
+                    ruleOptionList.isEmpty() -> when { //only contains initialskip
+                        null==n -> (res[null] ?: emptyList())+"-X"
+                        else -> res[null] = (res[null] ?: emptyList())+ n[null].joinToString() { it.name }
+                    }
+                    else -> {
+                        for (ro in ruleOptionList) {
+                            if (null == n) {
+                                //this list of children died
+                                res[ro] = (res[ro] ?: emptyList()) + "-X"
+                            } else {
+                                when {
+                                    n.isSkip -> res[ro] = (res[ro] ?: emptyList()) + n[ro].joinToString() { it.name }
+                                    else -> res[ro] = (res[ro] ?: emptyList()) + n[ro].joinToString() { "${it.name}|${it.option}" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            res.entries.map { "(${this.startPosition},${this.nextInputPosition},${it.key?.runtimeRule?.tag}|${it.key?.option}) -> ${it.value.joinToString()}" }
+                .joinToString(separator = "\n")
+        }
+    }
+/*
+     fun toString1(): String = when {
         isEmpty -> "{}"
         else -> {
             val res = mutableMapOf<RuleOptionId?, List<String>>()
@@ -340,7 +430,7 @@ internal class GrowingChildren {
 
             var sn = _firstChild
             var lastSkip = sn
-            while (sn != null && null == sn.state) {
+            while (sn != null && sn.isSkip) {
                 initialSkip.add(sn.children.joinToString() { it.name })
                 lastSkip = sn
                 sn = sn.nextChild
@@ -355,7 +445,7 @@ internal class GrowingChildren {
                     else -> emptyList()
                 }
                 //sn (lastSkip.next) is the first nonSkip node
-                else -> sn.state?.rulePositionIdentity ?: emptyList()
+                else -> sn.ruleOptionList ?: emptyList()
             }
             when {
                 rpIds.isEmpty() -> res[null] = initialSkip
@@ -366,9 +456,8 @@ internal class GrowingChildren {
                         var skip = ""
                         var index = 1
                         while (null != n && _lastChildAlternatives.values.contains(n).not()) {
-                            val state = n.state
                             when {
-                                null == state -> skip += n.children.joinToString { it.name } //skipNodes
+                                n.isSkip -> skip += n.children.joinToString { it.name } //skipNodes
                                 else -> {
                                     if (skip.isNotBlank()) {
                                         res[rpId] = res[rpId]!! + skip
@@ -384,9 +473,8 @@ internal class GrowingChildren {
                             //this list of children died
                             res[rpId] = res[rpId]!! + "-X"
                         } else {
-                            val state = n.state
                             when {
-                                null == state -> {
+                                n.isSkip -> {
                                     skip += n.children.joinToString { it.name } //skipNodes
                                     if (skip.isNotBlank()) {
                                         res[rpId] = res[rpId]!! + skip
@@ -406,8 +494,9 @@ internal class GrowingChildren {
                 }
             }
 
-            res.entries.map { "(${this.startPosition},${this.nextInputPosition},${it.key?.runtimeRule?.tag}|${it.key?.option}) -> ${it.value.joinToString()}" }.joinToString(separator = "\n")
+            res.entries.map { "(${this.startPosition},${this.nextInputPosition},${it.key?.runtimeRule?.tag}|${it.key?.option}) -> ${it.value.joinToString()}" }
+                .joinToString(separator = "\n")
         }
     }
-
+*/
 }

@@ -30,7 +30,6 @@ import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 
 internal class ParseGraph(
-    val userGoalRule: RuntimeRule,
     val input: InputFromString,
     numTerminalRules: Int,
     numNonTerminalRules: Int
@@ -80,65 +79,6 @@ internal class ParseGraph(
         this.growing.clear()
         this._goals.clear()
         this.growingHead.clear()
-    }
-
-    fun longestMatch(seasons: Int, maxNumHeads: Int, embedded: Boolean): SPPTNode? {
-        return if (!this.goals.isEmpty() && this.goals.size >= 1) {
-            var lt = this.goals.iterator().next()
-            for (gt in this.goals) {
-                if (gt.matchedTextLength > lt.matchedTextLength) {
-                    lt = gt
-                }
-            }
-            if (embedded) {
-                useGoal(lt) // next token is from the parent grammar, no need to check anything
-            } else {
-                when {
-                    this.input.isEnd(lt.nextInputPosition + 1).not() -> {
-                        val location = this.input.locationFor(lt.nextInputPosition - 1, 1)
-                        throw ParseFailedException(
-                            "Goal does not match full text",
-                            SharedPackedParseTreeDefault(lt, seasons, maxNumHeads),
-                            location,
-                            emptySet(),
-                            this.input.contextInText(location.position)
-                        )
-                    }
-                    else -> {
-                        useGoal(lt)
-                    }
-                }
-            }
-        } else {
-            null;
-        }
-    }
-
-    fun useGoal(lt: SPPTNode): SPPTNode {
-        //FIXME: use GrowingChildren
-        // need to re-write top of the tree so that any initial skip nodes come under the userGoal node
-        val goal = lt as SPPTBranchFromInputAndGrownChildren
-
-        val goalRpId = RuleOption(this.userGoalRule, 0)
-        val goalFirstChildren = goal.grownChildrenAlternatives.values.first()
-        val userGoalNode = if (goalFirstChildren.hasSkipAtStart) {
-            //has skip at start
-            val skipNodes = goalFirstChildren.firstChild(null)!!.children
-            val ugn = goalFirstChildren.firstNonSkipChild(RuleOption(this.userGoalRule, 0))!!.children[0] as SPPTBranchFromInputAndGrownChildren
-            val startPosition = skipNodes[0].startPosition
-            val nugn = SPPTBranchFromInputAndGrownChildren(this.input, ugn.runtimeRule, ugn.option, startPosition, ugn.nextInputPosition, ugn.priority)
-            ugn.grownChildrenAlternatives.values.forEach {
-                val nc = GrowingChildren().appendSkipIfNotEmpty(skipNodes)
-                //nc._firstChild!!.nextChild = it.firstChild
-                //nc._lastChild = it.lastChild
-                nc.concatenate(it)
-                nugn.grownChildrenAlternatives[ugn.option] = nc
-            }
-            nugn
-        } else {
-            goalFirstChildren.firstChild(goalRpId)!!.children[0]
-        }
-        return userGoalNode
     }
 
     fun createGrowingNode(state: ParserState, lookahead: LookaheadSet, growingChildren: GrowingChildren): GrowingNode {
@@ -754,8 +694,8 @@ internal class ParseGraph(
         skipNodes: List<SPPTNode>
     ): GrowingNode? {
         val growingChildren = GrowingChildren()
-            .appendChild(newState, listOf(leafNode))
-            ?.appendSkipIfNotEmpty(newState,skipNodes)
+            .appendChild(newState.rulePositionIdentity, listOf(leafNode))
+            ?.appendSkipIfNotEmpty(newState.rulePositionIdentity,skipNodes)
         //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
         val newGn = growingChildren?.let {
             this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, it, oldHead, previous, skipNodes)
@@ -768,8 +708,8 @@ internal class ParseGraph(
         val runtimeRule = newState.runtimeRules.first()// should only ever be one
         (embeddedNode as SPPTNodeFromInputAbstract).embeddedIn = runtimeRule.tag
         val growingChildren = GrowingChildren()
-            .appendChild(newState, listOf(embeddedNode))
-            ?.appendSkipIfNotEmpty(newState,skipNodes)
+            .appendChild(newState.rulePositionIdentity, listOf(embeddedNode))
+            ?.appendSkipIfNotEmpty(newState.rulePositionIdentity,skipNodes)
         growingChildren?.let {
             this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, it, oldHead, previous, skipNodes)
         }
@@ -778,10 +718,10 @@ internal class ParseGraph(
     }
 
     fun growNextChild(nextState: ParserState, runtimeLookahead: LookaheadSet, parent: GrowingNode, nextChildAlts: List<SPPTNode>, skipChildren: List<SPPTNode>?) {
-        var growingChildren = parent.children.appendChild(nextState, nextChildAlts)
+        var growingChildren = parent.children.appendChild(nextState.rulePositionIdentity, nextChildAlts)
         growingChildren = when {
             null == skipChildren -> growingChildren
-            else -> growingChildren?.appendSkipIfNotEmpty(nextState,skipChildren)
+            else -> growingChildren?.appendSkipIfNotEmpty(nextState.rulePositionIdentity,skipChildren)
         }
 
         //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
@@ -798,10 +738,10 @@ internal class ParseGraph(
     }
 
     fun createWithFirstChild(newState: ParserState, runtimeLookahead: LookaheadSet, firstChildAlts: List<SPPTNode>, previous: Set<PreviousInfo>, skipChildren: List<SPPTNode>?) {
-        var growingChildren = GrowingChildren().appendChild(newState, firstChildAlts)
+        var growingChildren = GrowingChildren().appendChild(newState.rulePositionIdentity, firstChildAlts)
         growingChildren = when {
             null == skipChildren -> growingChildren
-            else -> growingChildren?.appendSkipIfNotEmpty(newState, skipChildren)
+            else -> growingChildren?.appendSkipIfNotEmpty(newState.rulePositionIdentity, skipChildren)
         }
         //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
         growingChildren?.let {

@@ -21,7 +21,9 @@ internal typealias RuleOptionId = RuleOption //TODO: Make this an Int
 internal data class RuleOption(
     val runtimeRule: RuntimeRule,
     val option: Int
-)
+) {
+    val isGoal = this.runtimeRule.kind == RuntimeRuleKind.GOAL
+}
 
 internal class RulePosition(
     val runtimeRule: RuntimeRule,
