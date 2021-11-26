@@ -191,7 +191,7 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -213,7 +213,7 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         }
 
         times.forEach {
-            println(it.inMilliseconds.toInt())
+            println(it.inWholeMilliseconds.toInt())
         }
     }
 }

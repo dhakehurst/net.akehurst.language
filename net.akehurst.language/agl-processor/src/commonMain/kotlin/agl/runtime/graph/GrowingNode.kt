@@ -25,7 +25,7 @@ internal class GrowingNode(
     val graph: ParseGraph,
     val currentState: ParserState,
     val runtimeLookahead: LookaheadSet,
-    val children: GrowingChildren
+    val children: GrowingChildren //TODO: don't actually need the children to be part of this
 ) {
     companion object {
         fun indexForGrowingNode(gn:GrowingNode) = indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.children)
@@ -82,49 +82,30 @@ val lastLocation
 
     var previous: MutableMap<GrowingNodeIndex, PreviousInfo> = mutableMapOf()
     val next: MutableSet<GrowingNode> = mutableSetOf() //TODO: do we actually need this?
-    val isLeaf: Boolean
-        get() {
-            return this.runtimeRules.first().kind == RuntimeRuleKind.TERMINAL
-        }
-    val isEmptyMatch: Boolean
-        get() {
-            // match empty if start and next-input positions are the same and children are complete
-            return this.currentState.isAtEnd && this.startPosition == this.nextInputPosition
-        }
+    val isLeaf: Boolean get()= this.runtimeRules.first().kind == RuntimeRuleKind.TERMINAL
+    val isEmptyMatch: Boolean get() = this.currentState.isAtEnd && this.startPosition == this.nextInputPosition
 
-    private var _asCompletedNodes: MutableList<SPPTNode>? = null
-    val asCompletedNodes1: List<SPPTNode> get() {
-         if (null==_asCompletedNodes && this.isLeaf) {
-             this._asCompletedNodes = mutableListOf(
-                 this.graph.input.leaves[this.runtimeRules.first(), startPosition] ?: error("Internal Error: leaf node not found!")
-             )
-        }
-        return _asCompletedNodes ?: error("Internal Error: completedNodes not set")
-    }
-
-    val asCompletedNodes2: List<SPPTNode> by lazy {
+    val asCompletedNodes: List<SPPTNode> by lazy {
         if (this.isLeaf) {
             listOf(
                 this.graph.input.leaves[this.runtimeRules.first(), startPosition] ?: error("Internal Error: leaf node not found!")
             )
         } else {
-                this.currentState.rulePositions.mapNotNull {
-                    if (it.isAtEnd) {
-                        val input = this.graph.input
-                        val rr = it.runtimeRule
-                        val option = it.option
-                        val priority = it.priority
-                        val cn = SPPTBranchFromInputAndGrownChildren(input, rr, option, startPosition, nextInputPosition, priority)
-                        cn.grownChildrenAlternatives[option] = this.children
-                        cn
-                    } else {
-                        null
-                    }
+            this.currentState.rulePositions.mapNotNull {
+                if (it.isAtEnd) {
+                    val input = this.graph.input
+                    val rr = it.runtimeRule
+                    val option = it.option
+                    val priority = it.priority
+                    val cn = SPPTBranchFromInputAndGrownChildren(input, rr, option, startPosition, nextInputPosition, priority)
+                    cn.grownChildrenAlternatives[option] = this.children
+                    cn
+                } else {
+                    null
                 }
+            }
         }
     }
-
-    val asCompletedNodes: List<SPPTNode> get() = this.asCompletedNodes2
 
     fun newPrevious() {
         this.previous = mutableMapOf()
@@ -150,11 +131,6 @@ val lastLocation
 
     fun removeNext(value: GrowingNode) {
         this.next.remove(value)
-    }
-
-    fun addCompleted(runtimeRule: RuntimeRule, completedNode:SPPTNode) {
-        if (null==this._asCompletedNodes) this._asCompletedNodes = mutableListOf()
-        this._asCompletedNodes?.add(completedNode)
     }
 
     fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {

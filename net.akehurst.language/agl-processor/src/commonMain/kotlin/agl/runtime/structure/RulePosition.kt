@@ -23,6 +23,8 @@ internal data class RuleOption(
     val option: Int
 ) {
     val isGoal = this.runtimeRule.kind == RuntimeRuleKind.GOAL
+
+    override fun toString(): String = "RuleOption{${runtimeRule.tag},$option}"
 }
 
 internal class RulePosition(

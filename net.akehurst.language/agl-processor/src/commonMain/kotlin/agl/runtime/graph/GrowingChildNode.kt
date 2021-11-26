@@ -24,13 +24,13 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
 import net.akehurst.language.api.sppt.SPPTNode
 
 internal class GrowingChildNode(
-        val ruleOptionList: List<RuleOptionId>,
+        val ruleOptionList: Set<RuleOptionId>,
         val children: List<SPPTNode>,
         val isSkip:Boolean
 ) {
 
     companion object {
-        private fun List<RuleOptionId>.isDuplicateOf(other: List<RuleOptionId>?): Boolean = when {
+        private fun Set<RuleOptionId>.isDuplicateOf(other: Set<RuleOptionId>?): Boolean = when {
             null == other -> false
             this == other -> true
             else -> {
@@ -40,7 +40,7 @@ internal class GrowingChildNode(
     }
 
     var nextChild: GrowingChildNode? = null
-    var nextChildAlternatives: MutableMap<List<RuleOptionId>?, MutableList<GrowingChildNode>>? = null
+    var nextChildAlternatives: MutableMap<Set<RuleOptionId>?, MutableList<GrowingChildNode>>? = null
 
     val isLast: Boolean get() = null == nextChild && null == nextChildAlternatives
 
@@ -68,7 +68,7 @@ internal class GrowingChildNode(
                         val alternativeNextChild = node
                         when {
                             alternativeNextChild.nextInputPosition != existingNextChild.nextInputPosition -> {
-                                val nextChildAlternatives = mutableMapOf<List<RuleOptionId>?, MutableList<GrowingChildNode>>()
+                                val nextChildAlternatives = mutableMapOf<Set<RuleOptionId>?, MutableList<GrowingChildNode>>()
                                 val alts = mutableListOf(existingNextChild)
                                 nextChildAlternatives[ruleOptionList] = alts
                                 this.nextChild = null
@@ -85,7 +85,7 @@ internal class GrowingChildNode(
                         }
                     }
                     else -> {
-                        val nextChildAlternatives = mutableMapOf<List<RuleOptionId>?, MutableList<GrowingChildNode>>()
+                        val nextChildAlternatives = mutableMapOf<Set<RuleOptionId>?, MutableList<GrowingChildNode>>()
                         nextChildAlternatives[existingNextChild.ruleOptionList] = mutableListOf(existingNextChild)
                         this.nextChild = null
                         val alternativeNextChild = node
@@ -142,7 +142,7 @@ internal class GrowingChildNode(
         null == nextChild -> null
         else -> nextChild
     }
-    internal fun next(altNext: Int, ruleOptionList: List<RuleOptionId>): GrowingChildNode? = when {
+    internal fun next(altNext: Int, ruleOptionList: Set<RuleOptionId>): GrowingChildNode? = when {
         null != nextChildAlternatives -> nextChildAlternatives?.get(ruleOptionList)?.get(altNext)
         null == nextChild -> null
         else -> nextChild

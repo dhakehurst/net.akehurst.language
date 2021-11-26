@@ -83,7 +83,7 @@ internal class ParserState(
         AutomatonKind.LOOKAHEAD_1 -> TransitionCacheLC1()
     }
 
-    val rulePositionIdentity = rulePositions.map { it.identity }
+    val rulePositionIdentity = rulePositions.map { it.identity }.toSet()
 
     val runtimeRules: List<RuntimeRule> by lazy {
         this.rulePositions.map { it.runtimeRule }.toList()

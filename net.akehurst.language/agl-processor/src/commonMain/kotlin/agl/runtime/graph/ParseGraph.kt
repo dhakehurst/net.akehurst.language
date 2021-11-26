@@ -89,7 +89,8 @@ internal class ParseGraph(
                 if (null==existing) {
                     this._grownChildren[ci] = growingChildren
                 } else {
-                    existing.mergeOrDropWithPriority(growingChildren)
+                    //TODO: existing.mergeOrDropWithPriority(growingChildren)
+
                 }
             }
         }
@@ -249,7 +250,7 @@ internal class ParseGraph(
             val nn = mergeOrDropWithPriority(existingGrowing, newState, newRuntimeLookahead, newChildren)
             if (nn!=existingGrowing) {
                 // could be a child of a head that has already reduced
-                TODO("Invalidate/remove head corresponding to the node")
+                //TODO("Invalidate/remove head corresponding to the node")
             }
             this.addAndRegisterGrowingPrevious(nn, previous)
             this.addGrowingHead(nn)
@@ -709,10 +710,9 @@ internal class ParseGraph(
         (embeddedNode as SPPTNodeFromInputAbstract).embeddedIn = runtimeRule.tag
         val growingChildren = GrowingChildren()
             .appendChild(newState.rulePositionIdentity, listOf(embeddedNode))
-            ?.appendSkipIfNotEmpty(newState.rulePositionIdentity,skipNodes)
-        growingChildren?.let {
-            this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, it, oldHead, previous, skipNodes)
-        }
+            .appendSkipIfNotEmpty(newState.rulePositionIdentity,skipNodes)
+        this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, growingChildren, oldHead, previous, skipNodes)
+
         //TODO: do we need to check for longest ?
         //this.addBranchToCompetedNodes(runtimeRule,embeddedNode )//TODO: should this be here or in leaves ?
     }
@@ -721,19 +721,17 @@ internal class ParseGraph(
         var growingChildren = parent.children.appendChild(nextState.rulePositionIdentity, nextChildAlts)
         growingChildren = when {
             null == skipChildren -> growingChildren
-            else -> growingChildren?.appendSkipIfNotEmpty(nextState.rulePositionIdentity,skipChildren)
+            else -> growingChildren.appendSkipIfNotEmpty(nextState.rulePositionIdentity,skipChildren)
         }
 
         //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
-        growingChildren?.let {
-            val previous = parent.previous
-            for (pi in previous.values) {
-                pi.node.removeNext(parent)
-            }
-            this.findOrCreateGrowingNode(nextState, runtimeLookahead, it, previous.values.toSet()) //FIXME: don't convert to set
-            if (parent.next.isEmpty()) {
-                this.removeGrowing(parent)
-            }
+        val previous = parent.previous
+        for (pi in previous.values) {
+            pi.node.removeNext(parent)
+        }
+        this.findOrCreateGrowingNode(nextState, runtimeLookahead, growingChildren, previous.values.toSet()) //FIXME: don't convert to set
+        if (parent.next.isEmpty()) {
+            this.removeGrowing(parent)
         }
     }
 
@@ -741,12 +739,10 @@ internal class ParseGraph(
         var growingChildren = GrowingChildren().appendChild(newState.rulePositionIdentity, firstChildAlts)
         growingChildren = when {
             null == skipChildren -> growingChildren
-            else -> growingChildren?.appendSkipIfNotEmpty(newState.rulePositionIdentity, skipChildren)
+            else -> growingChildren.appendSkipIfNotEmpty(newState.rulePositionIdentity, skipChildren)
         }
         //check(growingChildren.nextInputPosition == growingChildren.lastChild?.nextInputPosition)
-        growingChildren?.let {
-            this.findOrCreateGrowingNode(newState, runtimeLookahead, it, previous)
-        }
+        this.findOrCreateGrowingNode(newState, runtimeLookahead, growingChildren, previous)
     }
 
     fun isLookingAt(lookaheadGuard: LookaheadSet, runtimeLookahead: LookaheadSet?, nextInputPosition: Int): Boolean {
@@ -801,7 +797,6 @@ internal class ParseGraph(
         this._goals.add(completeNode)
         this.goalMatchedAll = this.input.isEnd(completeNode.nextInputPosition)
     }
-
 
     override fun toString(): String = this.growingHead.toString()
 }

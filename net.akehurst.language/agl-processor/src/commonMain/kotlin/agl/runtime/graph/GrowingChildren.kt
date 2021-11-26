@@ -28,14 +28,34 @@ internal class GrowingChildren {
     var nextInputPosition: Int = -1
     var startPosition: Int = -1
 
-    val containedFor = mutableSetOf<List<RuleOptionId>>()
+    var containedFor = mutableSetOf<Set<RuleOptionId>>(); private set
 
     private var _firstChild: GrowingChildNode? = null
-    private var _firstChildAlternatives: MutableMap<List<RuleOptionId>, MutableList<GrowingChildNode>>? = null
+    private var _firstChildAlternatives: MutableMap<Set<RuleOptionId>, MutableList<GrowingChildNode>>? = null
 
     //private var _lastChild: GrowingChildNode? = null
-    private var _lastChildAlternatives: MutableMap<List<RuleOptionId>?, GrowingChildNode> = mutableMapOf()
-    private var _nextChildAlts: MutableMap<Int, MutableMap<List<RuleOptionId>, Int>>? = null
+    private var _lastChildAlternatives: MutableMap<Set<RuleOptionId>, GrowingChildNode> = mutableMapOf()
+    private var _nextChildAlts: MutableMap<Int, MutableMap<Set<RuleOptionId>, Int>>? = null
+
+    val isEmpty: Boolean get() = null == _firstChild && null == _firstChildAlternatives
+    val hasSkipAtStart: Boolean get() = _firstChild!!.isSkip
+
+    val lastInitialSkipChild: GrowingChildNode?
+        get() = when {
+            isEmpty -> null
+            null != this._firstChildAlternatives -> null //skips never have alternatives
+            else -> {
+                var n = this._firstChild
+                var last: GrowingChildNode? = null
+                while (null != n && n.isSkip) {
+                    last = n
+                    n = n.nextChild
+                }
+                last
+            }
+        }
+
+    val matchedTextLength get() = this.nextInputPosition - this.startPosition
 
     private fun clone(): GrowingChildren {
         val cl = GrowingChildren()
@@ -45,6 +65,7 @@ internal class GrowingChildren {
         cl.nextInputPosition = this.nextInputPosition
         cl.startPosition = this.startPosition
         cl._firstChild = this._firstChild
+        cl._lastChildAlternatives.putAll(this._lastChildAlternatives)
         if (null != this._firstChildAlternatives) {
             cl._firstChildAlternatives = mutableMapOf()
             this._firstChildAlternatives!!.entries.forEach {
@@ -52,8 +73,6 @@ internal class GrowingChildren {
                 cl._firstChildAlternatives!![it.key] = l
             }
         }
-        //cl._lastChild = this._lastChild
-        cl._lastChildAlternatives.putAll(this._lastChildAlternatives)
         if (null != this._nextChildAlts) {
             cl._nextChildAlts = mutableMapOf()
             this._nextChildAlts!!.entries.forEach {
@@ -77,7 +96,7 @@ internal class GrowingChildren {
         }
     }
 
-    private fun nextChildAlt(childIndex: Int, ruleOptionList: List<RuleOptionId>): Int {
+    private fun nextChildAlt(childIndex: Int, ruleOptionList: Set<RuleOptionId>): Int {
         return when {
             null == _nextChildAlts -> 0
             else -> {
@@ -90,7 +109,7 @@ internal class GrowingChildren {
         }
     }
 
-    internal fun incNextChildAlt(childIndex: Int, value: List<RuleOptionId>) {
+    internal fun incNextChildAlt(childIndex: Int, value: Set<RuleOptionId>) {
         if (null == _nextChildAlts) _nextChildAlts = mutableMapOf()
         var m = _nextChildAlts!![childIndex]
         if (null == m) {
@@ -105,7 +124,7 @@ internal class GrowingChildren {
         }
     }
 
-    internal fun setNextChildAlt(childIndex: Int, value: List<RuleOptionId>, altNum: Int) {
+    internal fun setNextChildAlt(childIndex: Int, value: Set<RuleOptionId>, altNum: Int) {
         if (null == _nextChildAlts) _nextChildAlts = mutableMapOf()
         var m = _nextChildAlts!![childIndex]
         if (null == m) {
@@ -115,36 +134,14 @@ internal class GrowingChildren {
         m[value] = altNum
     }
 
-    val isEmpty: Boolean get() = null == _firstChild && null == _firstChildAlternatives
-    val hasSkipAtStart: Boolean get() = _firstChild!!.isSkip
-
-    val lastInitialSkipChild: GrowingChildNode?
-        get() = when {
-            isEmpty -> null
-            null != this._firstChildAlternatives -> null //skips never have alternatives
-            else -> {
-                var n = this._firstChild
-                var last: GrowingChildNode? = null
-                while (null != n && n.isSkip) {
-                    last = n
-                    n = n.nextChild
-                }
-                last
-            }
-        }
-
-    //val lastChild: GrowingChildNode? get() = this._lastChild
-
-    val matchedTextLength get() = this.nextInputPosition - this.startPosition
-
     // only used in RuntimeParser.useGoal && internally in this class
-    fun firstChild(ruleOption: List<RuleOptionId>): GrowingChildNode? = when {
+    fun firstChild(ruleOptionSet: Set<RuleOptionId>): GrowingChildNode? = when {
         null == this._firstChildAlternatives -> this._firstChild
         //null == ruleOption -> null //skip will not have alternatives
         else -> this._firstChildAlternatives!!.entries.firstOrNull {
             it.key.isEmpty() || // initial skip is first child for anything, emptyList is used to mark initialSkip
-            it.key==ruleOption
-        }?.value?.get(this.nextChildAlt(0, ruleOption))
+            it.key==ruleOptionSet
+        }?.value?.get(this.nextChildAlt(0, ruleOptionSet))
     }
 
     private fun firstChildWithIndexContaining(ruleOption: RuleOptionId): GrowingChildNode? = when {
@@ -156,10 +153,14 @@ internal class GrowingChildren {
         }?.value?.get(this.nextChildAlt(0, ruleOption))
     }
 
-    fun lastChild(ruleOption: List<RuleOptionId>): GrowingChildNode? =  this._lastChildAlternatives[ruleOption]
+    fun lastChild(ruleOption: Set<RuleOptionId>): GrowingChildNode? =  this._lastChildAlternatives[ruleOption]
+
+    fun lastChild2(ruleOption: Set<RuleOptionId>): GrowingChildNode? =  this._lastChildAlternatives.entries.firstOrNull {
+        it.key.containsAll(ruleOption)
+    }?.value
 
     // only used in RuntimeParser.useGoal
-    fun firstNonSkipChild(ruleOption: List<RuleOptionId>): GrowingChildNode? {
+    fun firstNonSkipChild(ruleOption: Set<RuleOptionId>): GrowingChildNode? {
         var r = this.firstChild(ruleOption)
         var index = 1
         while (null != r && r.isSkip) {
@@ -169,8 +170,7 @@ internal class GrowingChildren {
         return r
     }
 
-    fun setFirstChild(ruleOptionList: List<RuleOptionId>, node: GrowingChildNode) {
-        this.containedFor.add(ruleOptionList)
+    private fun setFirstChild(ruleOptionList: Set<RuleOptionId>, node: GrowingChildNode) {
         when {
             this.isEmpty -> this._firstChild = node
             else -> {
@@ -181,26 +181,27 @@ internal class GrowingChildren {
                 alts.add(node)
             }
         }
+        this.setLastChild(ruleOptionList, node)
+        if (node.isSkip.not()) this.numberNonSkip=1
+        this.length = 1
+        this.containedFor.add(ruleOptionList)
     }
 
-    private fun setLastChild(ruleOption: List<RuleOptionId>, node: GrowingChildNode) {
+    private fun setLastChild(ruleOption: Set<RuleOptionId>, node: GrowingChildNode) {
         this._lastChildAlternatives[ruleOption] = node
     }
 
-    fun appendChild(ruleOptionList: List<RuleOptionId>, nextChildAlts: List<SPPTNode>): GrowingChildren? {
+    /**
+     * create new GrowingChildren unless empty
+     */
+    //TODO: do we need to create new object or can we reuse existing because it may not be used anymore ?
+    fun appendChild(ruleOptionList: Set<RuleOptionId>, nextChildAlts: List<SPPTNode>): GrowingChildren {
         val nextChild = GrowingChildNode(ruleOptionList, nextChildAlts, false)
         return when {
             isEmpty -> {
-                // _firstChild = GrowingChildNode(state, nextChildAlts)
                 this.setFirstChild(ruleOptionList, nextChild)
                 startPosition = nextChildAlts[0].startPosition
-                // _lastChild = _firstChild
-                this.setLastChild(ruleOptionList, _firstChild!!)
-                this.length++
-                this.numberNonSkip++
-                //check(1 == nextChildAlts.map { it.nextInputPosition }.toSet().size)
                 this.nextInputPosition = nextChildAlts[0].nextInputPosition //FIXME: not really correct, are all children same length?
-                this.containedFor.add(ruleOptionList)
                 this
             }
             ruleOptionList.isEmpty() -> {
@@ -245,10 +246,6 @@ internal class GrowingChildren {
             // only contains initialSkip
             this.containedFor.all { it.isEmpty() } -> {
                 var res = GrowingChildren()
-                //res.length = this.length+1
-                //res.numberNonSkip = this.numberNonSkip+1
-                //res.nextInputPosition = nextChildAlts[0].nextInputPosition
-                //res.startPosition = this.startPosition
                 var nc = this._firstChild
                 while(null!=nc) {
                     //TODO: find a more perf way to do this if needed..but maybe this is ok as only doen for initial skip
@@ -266,7 +263,7 @@ internal class GrowingChildren {
             }
             else -> {
                 val res = this.clone()
-                val lastChild = res.lastChild(ruleOptionList)?: TODO("?")
+                val lastChild = res.lastChild(ruleOptionList)?: res.lastChild2(ruleOptionList)?: error("should never be null!")
                 val appended = lastChild.appendLast(res, res.length, nextChild)
                 res.setLastChild(ruleOptionList, appended)
                 res.length++
@@ -279,20 +276,19 @@ internal class GrowingChildren {
         }
     }
 
-    fun appendSkipIfNotEmpty(ruleOptionList: List<RuleOptionId>, skipChildren: List<SPPTNode>): GrowingChildren {
+    /**
+     * create new GrowingChildren unless empty
+     */
+    //TODO: do we need to create new object or can we reuse existing because it may not be used anymore ?
+    fun appendSkipIfNotEmpty(ruleOptionList: Set<RuleOptionId>, skipChildren: List<SPPTNode>): GrowingChildren {
         val nextChild = GrowingChildNode(ruleOptionList, skipChildren,true)
         return if (skipChildren.isEmpty()) {
             //do nothing
             this
         } else {
             if (isEmpty) {
-                this.containedFor.add(ruleOptionList)
-                //this._firstChild = GrowingChildNode(null, skipChildren)
                 this.setFirstChild(ruleOptionList, nextChild)
                 this.startPosition = skipChildren[0].startPosition
-                //this._lastChild = _firstChild
-                this.setLastChild(ruleOptionList, nextChild)
-                this.length++
                 this.nextInputPosition = skipChildren.last().nextInputPosition
                 this
             } else {
@@ -325,7 +321,9 @@ internal class GrowingChildren {
                     //this list of children died
                     error("TODO")
                 } else {
-                    TODO()// res.addAll(_lastChild!![ruleOption])
+                    res.addAll(
+                        n[ruleOption]
+                    )
                 }
                 res
             }
@@ -356,14 +354,21 @@ internal class GrowingChildren {
         }
     }
 
+    /**
+     * merge other into this
+     */
+    //TODO: should it return a new object?
     fun mergeOrDropWithPriority(other: GrowingChildren) {
         when {
             other.isEmpty -> Unit
             this.isEmpty -> {
-                _firstChild = other._firstChild
-                startPosition = other.startPosition
+                this._firstChild = other._firstChild
+                this._firstChildAlternatives = other._firstChildAlternatives
+                this._nextChildAlts = other._nextChildAlts
                 this._lastChildAlternatives = other._lastChildAlternatives
                 this.length = other.length
+                this.containedFor = other.containedFor
+                this.startPosition = other.startPosition
                 this.numberNonSkip = other.numberNonSkip
                 this.nextInputPosition = other.nextInputPosition //FIXME: not really correct, are all children same length?
             }
