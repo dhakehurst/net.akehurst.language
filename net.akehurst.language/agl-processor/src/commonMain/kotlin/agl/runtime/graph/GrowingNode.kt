@@ -25,20 +25,22 @@ internal class GrowingNode(
     val graph: ParseGraph,
     val currentState: ParserState,
     val runtimeLookahead: LookaheadSet,
-    val children: GrowingChildren //TODO: don't actually need the children to be part of this
+    val startPosition:Int,
+    val nextInputPosition: Int,
+    val numNonSkipChildren: Int
 ) {
     companion object {
-        fun indexForGrowingNode(gn:GrowingNode) = indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.children)
+        fun indexForGrowingNode(gn:GrowingNode) = indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.startPosition, gn.nextInputPosition, gn.numNonSkipChildren)
 
-        fun indexFromGrowingChildren(state: ParserState, lhs: LookaheadSet, growingChildren: GrowingChildren): GrowingNodeIndex {
-            val listSize = listSize(state.runtimeRules.first(), growingChildren.numberNonSkip)
-            return GrowingNodeIndex(state.runtimeRules,state.positions, lhs.number, growingChildren.startPosition, growingChildren.nextInputPosition, listSize)
+        fun indexFromGrowingChildren(state: ParserState, lhs: LookaheadSet, startPosition: Int, nextInputPosition: Int, numNonSkipChildren:Int): GrowingNodeIndex {
+            val listSize = listSize(state.runtimeRules.first(), numNonSkipChildren)
+            return GrowingNodeIndex(state.runtimeRules,state.positions, lhs.number, startPosition, nextInputPosition, listSize)
         }
 
         // used for start and leaf
-        fun index(state: ParserState, lhs: LookaheadSet, startPosition: Int, nextInputPosition: Int, listSize: Int): GrowingNodeIndex {
-            return GrowingNodeIndex(state.runtimeRules,state.positions, lhs.number, startPosition, nextInputPosition, listSize)
-        }
+        //fun index(state: ParserState, lhs: LookaheadSet, startPosition: Int, nextInputPosition: Int, listSize: Int): GrowingNodeIndex {
+        //    return GrowingNodeIndex(state.runtimeRules,state.positions, lhs.number, startPosition, nextInputPosition, listSize)
+        //}
 
         // used to augment the GrowingNodeIndex (GSS node identity) for MULTI and SEPARATED_LIST
         // needed because the 'RulePosition' does not capture the 'position' in the list
@@ -60,11 +62,7 @@ internal class GrowingNode(
     //FIXME: shouldn't really do this, shouldn't store these in sets!!
     private val hashCode_cache = arrayOf(this.currentState, this.startPosition).contentHashCode()
 
-    val nextInputPosition: Int get() = children.nextInputPosition
-    val numNonSkipChildren: Int get() = children.numberNonSkip
-
     //val location: InputLocation get() = children.location
-    val startPosition get() = children.startPosition
     val matchedTextLength: Int = this.nextInputPosition - this.startPosition
     val runtimeRules = currentState.runtimeRulesSet
     val terminalRule = runtimeRules.first()
@@ -85,6 +83,7 @@ val lastLocation
     val isLeaf: Boolean get()= this.runtimeRules.first().kind == RuntimeRuleKind.TERMINAL
     val isEmptyMatch: Boolean get() = this.currentState.isAtEnd && this.startPosition == this.nextInputPosition
 
+    /*
     val asCompletedNodes: List<SPPTNode> by lazy {
         if (this.isLeaf) {
             listOf(
@@ -106,6 +105,7 @@ val lastLocation
             }
         }
     }
+*/
 
     fun newPrevious() {
         this.previous = mutableMapOf()
@@ -113,14 +113,14 @@ val lastLocation
 
     fun addPrevious(info: PreviousInfo) {
         val gn = info.node
-        val gi = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.children)
+        val gi = GrowingNode.indexForGrowingNode(gn)
         this.previous.put(gi, info)
         info.node.addNext(this)
     }
 
     fun addPrevious(previousNode: GrowingNode) {
         val info = PreviousInfo(previousNode)
-        val gi = GrowingNode.indexFromGrowingChildren(previousNode.currentState, previousNode.runtimeLookahead, previousNode.children)
+        val gi = GrowingNode.indexForGrowingNode(previousNode)
         this.previous.put(gi, info)
         previousNode.addNext(this)
     }
