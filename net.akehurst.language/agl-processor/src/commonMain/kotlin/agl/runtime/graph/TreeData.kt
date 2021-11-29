@@ -54,24 +54,7 @@ internal class TreeData {
         return when (keys.size) {
             0 -> emptySet()
             1 -> setOf(this._complete[keys[0]]!!)
-            else -> when (runtimeRule.kind) {
-                RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {
-                    RuntimeRuleRhsItemsKind.CHOICE -> when (runtimeRule.rhs.choiceKind) {
-                        RuntimeRuleChoiceKind.NONE -> error("should not happen")
-                        RuntimeRuleChoiceKind.LONGEST_PRIORITY -> {
-                            setOf(keys.mapNotNull { this._complete[it] }.maxByOrNull { it.last().nextInputPosition }!!)
-                        }
-                        RuntimeRuleChoiceKind.PRIORITY_LONGEST -> {
-                            setOf(keys.map { Pair(it.state.priority.first(), this._complete[it]) }.maxByOrNull { it.first }!!.second!!)
-                        }
-                        RuntimeRuleChoiceKind.AMBIGUOUS -> {
-                            TODO()
-                        }
-                    }
-                    else -> error("should not happen")
-                }
-                else -> error("should not happen")
-            }
+            else -> error("should not happen")
         }
     }
 
